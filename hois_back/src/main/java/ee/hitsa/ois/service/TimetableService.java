@@ -30,9 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -1823,7 +1820,7 @@ public class TimetableService {
         	}
         }
         
-        extendedList = extendedList.stream().filter(distinctByKey(TimePeriod::getId)).collect(Collectors.toSet());
+        extendedList = extendedList.stream().filter(StreamUtil.distinctByKey(TimePeriod::getId)).collect(Collectors.toSet());
         
         document.setTimeperiods(new TimePeriods(extendedList));
         
@@ -1870,7 +1867,8 @@ public class TimetableService {
                 .toMappedSet(r -> new ee.hitsa.ois.xml.exportTimetable.Subject("SU_" 
                 + resultAsString(r, 0),
                 resultAsString(r, 1)), dbJournals);
-        subjects = subjects.stream().filter(distinctByKey(ee.hitsa.ois.xml.exportTimetable.Subject::getId)).collect(Collectors.toSet());
+        subjects = subjects.stream().filter(StreamUtil.distinctByKey(ee.hitsa.ois.xml.exportTimetable.Subject::getId))
+                .collect(Collectors.toSet());
         document.setSubjects(new Subjects(subjects));
         
         //Set teacher
@@ -1892,7 +1890,9 @@ public class TimetableService {
                     resultAsString(r, 1),
                     resultAsString(r, 2),
                     resultAsString(r, 3).substring(resultAsString(r, 3).length()-1)), dbTeachers);
-            teachers = teachers.stream().filter(distinctByKey(ee.hitsa.ois.xml.exportTimetable.Teacher::getId)).collect(Collectors.toSet());
+            teachers = teachers.stream()
+                    .filter(StreamUtil.distinctByKey(ee.hitsa.ois.xml.exportTimetable.Teacher::getId))
+                    .collect(Collectors.toSet());
             document.setTeachers(new Teachers(teachers));
         }
       
@@ -1905,7 +1905,8 @@ public class TimetableService {
                 		return new ee.hitsa.ois.xml.exportTimetable.Class("CL_" + resultAsString(r, 2),resultAsString(r, 3), new ClassTeacher("TR_" + resultAsString(r, 4)));
                 	}
                 }, dbJournals);
-        classes = classes.stream().filter(distinctByKey(ee.hitsa.ois.xml.exportTimetable.Class::getId)).collect(Collectors.toSet());
+        classes = classes.stream().filter(StreamUtil.distinctByKey(ee.hitsa.ois.xml.exportTimetable.Class::getId))
+                .collect(Collectors.toSet());
         document.setClasses(new Classes(classes));
         
         //Set lessons
@@ -1985,7 +1986,7 @@ public class TimetableService {
         },dbJournals);
         
         // Filter duplicate journal identifiers
-         Set<Lesson> filteredLessons = lessons.stream().filter(distinctByKey(p->p.id)).collect(Collectors.toSet());
+         Set<Lesson> filteredLessons = lessons.stream().filter(StreamUtil.distinctByKey(p->p.id)).collect(Collectors.toSet());
         // Extend lessons, until this moment, teachers are kept as list of strings on one line divided by space
         Set<Lesson> extendedLessons = extendLessonsByTeacher(filteredLessons);
         
@@ -2003,12 +2004,7 @@ public class TimetableService {
 			return lessonNumber.toString();
 		}
 	}
-	
-	public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
-	    Set<Object> seen = ConcurrentHashMap.newKeySet();
-	    return t -> seen.add(keyExtractor.apply(t));
-	}
-	
+
 	private Set<Lesson> extendLessonsByTeacher(Set<Lesson> lessons) {
 		Set<Lesson> extendedLessons = new HashSet<>();
         
@@ -2036,6 +2032,9 @@ public class TimetableService {
 	public void checkUntiscodes(LocalDate startDate, LocalDate endDate, StudyPeriod studyPeriod, HoisUserDetails user) {
         Long schoolId = user.getSchoolId();
         Integer weekNr = studyPeriod.getWeekNrForDate(startDate);
+        if (weekNr == null) {
+            throw new HoisException("timetable.management.exportError");
+        }
         JpaNativeQueryBuilder journalQuery = new JpaNativeQueryBuilder("from journal_omodule_theme jot " +
                 "join journal j on jot.journal_id = j.id " +
                 "join journal_capacity jc on jc.journal_id = j.id " +
@@ -2080,18 +2079,18 @@ public class TimetableService {
         
         if (!teacherCodes.isEmpty() && !journalCodes.isEmpty()) {
         	throw new HoisException("Järgnevatel õpperühmade juhatajatel puudub tunniplaani kood : " +
-        			String.join(", ", teacherCodes.stream().filter(distinctByKey(TeacherStudentGroupAndCode::getName))
+        			String.join(", ", teacherCodes.stream().filter(StreamUtil.distinctByKey(TeacherStudentGroupAndCode::getName))
         					.map(TeacherStudentGroupAndCode::getName).collect(Collectors.toList())) + ".\n" +
         			"Järgnevatel päevikutel puudub tunniplaani kood : " +
-        			String.join(", ", journalCodes.stream().filter(distinctByKey(JournalNameAndCode::getJournalName))
+        			String.join(", ", journalCodes.stream().filter(StreamUtil.distinctByKey(JournalNameAndCode::getJournalName))
         					.map(JournalNameAndCode::getJournalName).collect(Collectors.toList())) + ".");
         } else if (!teacherCodes.isEmpty()) {
         	throw new HoisException("Järgnevatel õpperühmade juhatajatel puudub tunniplaani kood : " +
-        			String.join(", ", teacherCodes.stream().filter(distinctByKey(TeacherStudentGroupAndCode::getName))
+        			String.join(", ", teacherCodes.stream().filter(StreamUtil.distinctByKey(TeacherStudentGroupAndCode::getName))
         					.map(TeacherStudentGroupAndCode::getName).collect(Collectors.toList())) + ".");
         } else if (!journalCodes.isEmpty()) {
         	throw new HoisException("Järgnevatel päevikutel puudub tunniplaani kood : " +
-        			String.join(", ", journalCodes.stream().filter(distinctByKey(JournalNameAndCode::getJournalName))
+        			String.join(", ", journalCodes.stream().filter(StreamUtil.distinctByKey(JournalNameAndCode::getJournalName))
         					.map(JournalNameAndCode::getJournalName).collect(Collectors.toList())) + ".");
         }
         List<Long> journalIds = StreamUtil.toMappedList(r->resultAsLong(r, 5), dbJournals);
@@ -2112,7 +2111,7 @@ public class TimetableService {
             		.filter(p->p.getTeacherCode() == null || "null".equals(p.getTeacherCode())).collect(Collectors.toList());
             if (!teacherCodes.isEmpty()) {
             	throw new HoisException("Järgnevatel õpetajatel puudub tunniplaani kood : " +
-            			String.join(", ", teacherCodes.stream().filter(distinctByKey(TeacherStudentGroupAndCode::getName)).map(TeacherStudentGroupAndCode::getName).collect(Collectors.toList())) + ".");
+            			String.join(", ", teacherCodes.stream().filter(StreamUtil.distinctByKey(TeacherStudentGroupAndCode::getName)).map(TeacherStudentGroupAndCode::getName).collect(Collectors.toList())) + ".");
             }
         }
     }

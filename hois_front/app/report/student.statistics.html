@@ -2,7 +2,7 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form name="searchForm" ng-submit="load()" novalidate>
+      <form name="searchForm" ng-submit="load()" novalidate ng-model-options="{allowInvalid: true}">
         <div layout="row">
           <div layout="row" flex="45">
             <md-input-container>

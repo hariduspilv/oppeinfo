@@ -48,7 +48,6 @@ import ee.hitsa.ois.domain.enterprise.PracticeApplication;
 import ee.hitsa.ois.domain.enterprise.PracticeEvaluation;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.ContractStatus;
@@ -174,6 +173,10 @@ public class ContractService {
             + "subject.id, subject.name_et as subject_name_et, subject.name_en as subject_name_en, "
             + "subject.outcomes_et as subject_outcomes_et, subject.outcomes_en as subject_outcomes_en, "
             + "subject.credits as subject_credits";
+
+    private static final String ABSENCE_REJECT_CONTRACT_DELETED = "Leping kustutatud";
+    private static final String ABSENCE_REJECT_CONTRACT_CANCELED = "Leping tühistatud";
+    private static final String ABSENCE_REJECT_CONTRACT_ENDED = "Leping lõpetatud";
 
     /**
      * Search contracts.
@@ -437,7 +440,7 @@ public class ContractService {
     public void delete(HoisUserDetails user, Contract contract) {
         if (contract.getStudentAbsence() != null) {
             contract.getStudentAbsence().setContract(null);
-            studentAbsenceService.reject(user, contract.getStudentAbsence(), null);
+            studentAbsenceService.reject(user, contract.getStudentAbsence(), ABSENCE_REJECT_CONTRACT_DELETED);
         }
         EntityUtil.setUsername(user.getUsername(), em);
         // delete also practice journal(s)
@@ -530,10 +533,7 @@ public class ContractService {
         if (ignoreDate || (contract.getEndDate() != null && contract.getEndDate().isBefore(LocalDate.now()))) {
             setContractStatus(contract, ContractStatus.LEPING_STAATUS_L);
             if (contract.getStudentAbsence() != null) {
-                StudentAbsence absence = contract.getStudentAbsence();
-                absence.setIsRejected(Boolean.TRUE);
-                absence.setIsAccepted(Boolean.FALSE);
-                EntityUtil.save(absence, em);
+                studentAbsenceService.reject("", contract.getStudentAbsence(), ABSENCE_REJECT_CONTRACT_ENDED);
             }
             EntityUtil.save(contract, em);
         }
@@ -625,18 +625,24 @@ public class ContractService {
         return UUID.randomUUID().toString();
     }
 
-	public Contract cancel(HoisUserDetails user, Contract contract, ContractCancelForm contractForm) {
-	    EntityUtil.bindToEntity(contractForm, contract, "cancelReason");
-		contract.setCancelReason(em.getReference(Classifier.class, contractForm.getCancelReason()));
-		Person canceler = em.getReference(Person.class, user.getPersonId());
-		contract.setCanceledBy(canceler.getFullname());
-		contract.setStatus(em.getReference(Classifier.class, ContractStatus.LEPING_STAATUS_T.name()));
-		EntityUtil.setUsername(user.getUsername(), em);
-		return EntityUtil.save(contract, em);
-	}
-	
-	public Page<StudentGroupContractSearchDto> searchStudentGroupContract(HoisUserDetails user, StudentGroupContractSearchCommand command, Pageable pageable) {
-	    JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENTGROUP_CONTRACT_SEARCH_FROM).sort(pageable).groupBy(STUDENTGROUP_CONTRACT_GROUP_BY);
+    public Contract cancel(HoisUserDetails user, Contract contract, ContractCancelForm contractForm) {
+        EntityUtil.bindToEntity(contractForm, contract, "cancelReason");
+        contract.setCancelReason(em.getReference(Classifier.class, contractForm.getCancelReason()));
+        Person canceler = em.getReference(Person.class, user.getPersonId());
+        contract.setCanceledBy(canceler.getFullname());
+        contract.setStatus(em.getReference(Classifier.class, ContractStatus.LEPING_STAATUS_T.name()));
+
+        if (contract.getStudentAbsence() != null) {
+            studentAbsenceService.reject(user, contract.getStudentAbsence(), ABSENCE_REJECT_CONTRACT_CANCELED);
+        }
+
+        EntityUtil.setUsername(user.getUsername(), em);
+        return EntityUtil.save(contract, em);
+    }
+
+    public Page<StudentGroupContractSearchDto> searchStudentGroupContract(HoisUserDetails user,
+            StudentGroupContractSearchCommand command, Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENTGROUP_CONTRACT_SEARCH_FROM).sort(pageable).groupBy(STUDENTGROUP_CONTRACT_GROUP_BY);
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("s.student_group_id = :studentGroupId", "studentGroupId", command.getStudentGroup());
         if (command.getActive() != null && command.getActive().booleanValue()) {
@@ -683,8 +689,19 @@ public class ContractService {
             dto.setTeacher(new AutocompleteResult(resultAsLong(r, 11), teacherName, teacherName));
             dto.setStudentGroup(resultAsString(r, 14));
             dto.setModuleSubjects(contract.getModuleSubjects().stream()
-                    .map(p -> p.getModule() != null && p.getModule().getCurriculumModule() != null ?
-                            new AutocompleteResult(null, p.getModule().getCurriculumModule().getNameEt(), p.getModule().getCurriculumModule().getNameEn()) 
+                    .map(p -> {
+                        if (p.getModule() != null && p.getModule().getCurriculumModule() != null && p.getTheme() != null && StringUtils.isNotEmpty(p.getTheme().getNameEt())) {
+                            String nameEt = p.getModule().getCurriculumModule().getNameEt() + "(" + p.getTheme().getNameEt() + ")";
+                            return new AutocompleteResult(null, nameEt, nameEt);
+                        } else if (p.getModule() != null && p.getModule().getCurriculumModule() != null) {
+                            return new AutocompleteResult(null, p.getModule().getCurriculumModule().getNameEt(), p.getModule().getCurriculumModule().getNameEn());
+                        }
+                        return null;
+                    }
+                    ).collect(Collectors.toList()));
+            dto.setHigherModuleSubjects(contract.getModuleSubjects().stream()
+                    .map(p -> p.getSubject() != null && p.getSubject().getNameEt() != null ?
+                            new AutocompleteResult(null, p.getSubject().getNameEt(), p.getSubject().getNameEt()) 
                             : null)
                     .collect(Collectors.toList()));
             return dto;

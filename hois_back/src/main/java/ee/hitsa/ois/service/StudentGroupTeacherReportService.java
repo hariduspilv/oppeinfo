@@ -29,6 +29,9 @@ import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.enums.CurriculumModuleType;
+import ee.hitsa.ois.enums.DirectiveStatus;
+import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.OccupationalGrade;
@@ -115,7 +118,7 @@ public class StudentGroupTeacherReportService {
         List<Long> studentIds = StreamUtil.toMappedList(s -> s.getId(), students);
 
         Set<Long> moduleIds = new HashSet<>();
-        Set<Long> practiceModuleIds = new HashSet<>();
+        Map<Long, Boolean> practiceModules = new HashMap<>();
         Map<Long, List<AutocompleteResult>> journalsByModules = new HashMap<>();
         if (studentIds.size() > 0) {
             if (Boolean.FALSE.equals(criteria.getOnlyModuleGrades())) {
@@ -123,8 +126,10 @@ public class StudentGroupTeacherReportService {
                 Set<Long> journalModuleIds = journalsByModules.keySet();
                 moduleIds.addAll(journalModuleIds);
 
-                practiceModuleIds = studentGroupModulePracticeModules(criteria, studentIds);
-                moduleIds.addAll(practiceModuleIds);
+                if (criteria.getEntryTypes().contains(JournalEntryType.SISSEKANNE_L.name())) {
+                    practiceModules = studentGroupModulePracticeModules(criteria, studentIds);
+                    moduleIds.addAll(practiceModules.keySet());
+                }
             }
 
             Set<Long> gradedModuleIds = Boolean.TRUE.equals(criteria.getModuleGrade())
@@ -156,22 +161,22 @@ public class StudentGroupTeacherReportService {
         qb.sort("case when lower(module_code) = 'kutsemoodul_p' then 1" + " when lower(module_code) = 'kutsemoodul_y'"
                 + " then 2 when lower(module_code) = 'kutsemoodul_v' then 3" + " else 4 end, name_et, id");
 
-        List<?> rows = qb.select("id, name_et, name_en, module_code, is_practice", em).getResultList();
+        List<?> rows = qb.select("id, name_et, name_en, module_code", em).getResultList();
 
         Map<Long, List<AutocompleteResult>> moduleThemesByModules = new HashMap<>();
-        if (!practiceModuleIds.isEmpty()) {
-            moduleThemesByModules = studentGroupModulePracticeModuleThemes(studentIds, practiceModuleIds);
+        if (!practiceModules.isEmpty()) {
+            moduleThemesByModules = studentGroupModulePracticeModuleThemes(criteria, studentIds, practiceModules.keySet());
         }
 
         for (Object r : rows) {
             String moduleCode = resultAsString(r, 3);
             ModuleTypeDto type = moduleTypes.get(moduleCode);
             if (type != null) {
-                addModuleToType(criteria, r, type, journalsByModules, moduleThemesByModules);
+                addModuleToType(criteria, r, type, practiceModules, journalsByModules, moduleThemesByModules);
             } else {
                 type = new ModuleTypeDto();
                 type.setCode(moduleCode);
-                addModuleToType(criteria, r, type, journalsByModules, moduleThemesByModules);
+                addModuleToType(criteria, r, type, practiceModules, journalsByModules, moduleThemesByModules);
                 moduleTypes.put(moduleCode, type);
             }
         }
@@ -183,14 +188,16 @@ public class StudentGroupTeacherReportService {
     }
 
     private static void addModuleToType(StudentGroupTeacherCommand criteria, Object row, ModuleTypeDto type,
-            Map<Long, List<AutocompleteResult>> journalsByModules,
+            Map<Long, Boolean> practiceModuleIds, Map<Long, List<AutocompleteResult>> journalsByModules,
             Map<Long, List<AutocompleteResult>> moduleThemesByModules) {
         ModuleDto module = new ModuleDto();
         module.setId(resultAsLong(row, 0));
         module.setNameEt(resultAsString(row, 1));
         module.setNameEn(resultAsString(row, 2));
         module.setType(resultAsString(row, 3));
-        module.setIsPracticeModule(resultAsBoolean(row, 4));
+        module.setIsPracticeModule(Boolean.valueOf(practiceModuleIds.containsKey(module.getId())));
+        module.setIsPracticeModuleGraded(Boolean.valueOf(module.getIsPracticeModule().booleanValue() 
+                && practiceModuleIds.get(module.getId()).booleanValue()));
 
         if (journalsByModules.containsKey(module.getId())) {
             module.setJournals(journalsByModules.get(module.getId()));
@@ -207,8 +214,11 @@ public class StudentGroupTeacherReportService {
         int count = 0;
         if (Boolean.FALSE.equals(criteria.getOnlyModuleGrades())) {
             count += module.getJournals().size();
-            count += module.getPracticeModuleThemes().size();
-            count += Boolean.TRUE.equals(module.getIsPracticeModule()) ? 1 : 0;
+
+            if (Boolean.TRUE.equals(module.getIsPracticeModule())) {
+                count += module.getPracticeModuleThemes().size();
+                count += Boolean.TRUE.equals(module.getIsPracticeModuleGraded()) ? 1 : 0;
+            }
         }
         count += Boolean.TRUE.equals(criteria.getModuleGrade()) ? 1 : 0;
         module.setColspan(Long.valueOf(count > 0 ? count : 1));
@@ -276,7 +286,7 @@ public class StudentGroupTeacherReportService {
                         Collectors.toList())));
     }
 
-    private Set<Long> studentGroupModulePracticeModules(StudentGroupTeacherCommand criteria, List<Long> studentIds) {
+    private Map<Long, Boolean> studentGroupModulePracticeModules(StudentGroupTeacherCommand criteria, List<Long> studentIds) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from practice_journal pj"
                 + " join practice_journal_module_subject pjms on pj.id = pjms.practice_journal_id"
                 + " join curriculum_version_omodule cvo on pjms.curriculum_version_omodule_id = cvo.id"
@@ -295,13 +305,22 @@ public class StudentGroupTeacherReportService {
                 qb.parameter("studyPeriodEnd", DateUtils.lastMomentOfDay(criteria.getStudyPeriodEnd()));
             }
         }
-        List<?> data = qb.select("cvo.curriculum_module_id", em).getResultList();
-
-        return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
+        List<?> data = qb.select("cvo.curriculum_module_id, case when pjms.curriculum_version_omodule_theme_id is null then true"
+                + " else false end as full_module_graded", em).getResultList();
+        Map<Long, Boolean> practiceModules = new HashMap<>();
+        for (Object row : data) {
+            Long moduleId = resultAsLong(row, 0);
+            Boolean fullModuleGraded = resultAsBoolean(row, 1);
+            if (!practiceModules.containsKey(moduleId)
+                    || (Boolean.TRUE.equals(fullModuleGraded) && Boolean.FALSE.equals(practiceModules.get(moduleId)))) {
+                practiceModules.put(moduleId, fullModuleGraded);
+            }
+        }
+        return practiceModules;
     }
 
-    private Map<Long, List<AutocompleteResult>> studentGroupModulePracticeModuleThemes(List<Long> studentIds,
-            Set<Long> moduleIds) {
+    private Map<Long, List<AutocompleteResult>> studentGroupModulePracticeModuleThemes(
+            StudentGroupTeacherCommand criteria, List<Long> studentIds, Set<Long> moduleIds) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from practice_journal pj"
                 + " join practice_journal_module_subject pjms on pj.id = pjms.practice_journal_id"
                 + " join curriculum_version_omodule cvo on pjms.curriculum_version_omodule_id = cvo.id"
@@ -309,8 +328,19 @@ public class StudentGroupTeacherReportService {
                 + " join student s on pj.student_id = s.id");
         qb.requiredCriteria("s.id in (:studentIds)", "studentIds", studentIds);
         qb.requiredCriteria("cvo.curriculum_module_id in (:moduleIds)", "moduleIds", moduleIds);
+        qb.optionalCriteria("pj.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
         qb.filter("pj.grade_code is not null");
 
+        if (Boolean.TRUE.equals(criteria.getJournalsWithEntries())) {
+            qb.optionalCriteria("pj.grade_inserted >= :from", "from", criteria.getFrom(), DateUtils::firstMomentOfDay);
+            qb.optionalCriteria("pj.grade_inserted <= :thru", "thru", criteria.getThru(), DateUtils::lastMomentOfDay);
+
+            if (criteria.getStudyPeriod() != null) {
+                qb.filter("pj.grade_inserted >= :studyPeriodStart and pj.grade_inserted <= :studyPeriodEnd");
+                qb.parameter("studyPeriodStart", DateUtils.firstMomentOfDay(criteria.getStudyPeriodStart()));
+                qb.parameter("studyPeriodEnd", DateUtils.lastMomentOfDay(criteria.getStudyPeriodEnd()));
+            }
+        }
         qb.sort("name_et");
         List<?> data = qb.select("distinct cvo.curriculum_module_id, cvot.id, cvot.name_et", em).getResultList();
 
@@ -346,6 +376,7 @@ public class StudentGroupTeacherReportService {
 
     private static List<ResultColumnDto> resultColumns(StudentGroupTeacherCommand criteria, List<ModuleDto> modules) {
         List<ResultColumnDto> resultColumns = new ArrayList<>();
+
         for (ModuleDto module : modules) {
             if (Boolean.FALSE.equals(criteria.getOnlyModuleGrades())) {
                 for (AutocompleteResult journal : module.getJournals()) {
@@ -360,10 +391,12 @@ public class StudentGroupTeacherReportService {
                         column.setPracticeModuleTheme(theme);
                         resultColumns.add(column);
                     }
-                    ResultColumnDto column = new ResultColumnDto();
-                    column.setFullPracticeModule(
-                            new AutocompleteResult(module.getId(), module.getNameEt(), module.getNameEn()));
-                    resultColumns.add(column);
+                    if (Boolean.TRUE.equals(module.getIsPracticeModuleGraded())) {
+                        ResultColumnDto column = new ResultColumnDto();
+                        column.setFullPracticeModule(
+                                new AutocompleteResult(module.getId(), module.getNameEt(), module.getNameEn()));
+                        resultColumns.add(column);
+                    }
                 }
             }
 
@@ -388,25 +421,68 @@ public class StudentGroupTeacherReportService {
     }
 
     private List<StudentDto> studentGroupStudents(StudentGroupTeacherCommand criteria) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s" + " join person p on s.person_id = p.id"
-                + " join student_group sg on s.student_group_id = sg.id"
-                + " left join curriculum_version cv on s.curriculum_version_id = cv.id");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s"
+                + " join person p on s.person_id = p.id"
+                + " join student_group sg on s.student_group_id = sg.id");
         qb.requiredCriteria("sg.id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
         qb.optionalCriteria("s.id = :studentId", "studentId", criteria.getStudent());
 
         qb.sort("p.lastname, p.firstname");
-        List<?> data = qb.select("s.id, p.firstname, p.lastname, s.status_code, cv.is_individual", em).getResultList();
+        List<?> data = qb.select("s.id, p.firstname, p.lastname, s.status_code", em).getResultList();
 
+        List<Long> studentIndividualCurriculums = studentIndividualCurriculums(criteria,
+                StreamUtil.toMappedList(r -> resultAsLong(r, 0), data));
         List<StudentDto> students = StreamUtil.toMappedList(r -> {
             StudentDto student = new StudentDto();
-            student.setId(resultAsLong(r, 0));
+            Long studentId = resultAsLong(r, 0);
+            student.setId(studentId);
             student.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
             student.setStatus(resultAsString(r, 3));
-            student.setIsIndividualCurriculum(resultAsBoolean(r, 4));
+            student.setIsIndividualCurriculum(Boolean.valueOf(studentIndividualCurriculums.contains(studentId)));
             return student;
         }, data);
 
         return students;
+    }
+
+    private List<Long> studentIndividualCurriculums(StudentGroupTeacherCommand criteria, List<Long> studentIds) {
+        if (studentIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s "
+                + "join directive_student ds on ds.student_id = s.id "
+                + "join directive d on d.id = ds.directive_id "
+                + "left join (directive_student ds_lop join directive d_lop on d_lop.id = ds_lop.directive_id "
+                + "and d_lop.type_code = :lopDirectiveType and d_lop.status_code = :directiveStatus) "
+                + "on ds_lop.directive_student_id = ds.id and ds_lop.canceled = false");
+        
+        StudyYear studyYear = criteria.getStudyYear() != null
+                ? em.getReference(StudyYear.class, criteria.getStudyYear())
+                : null;
+
+        qb.requiredCriteria("s.id in (:studentIds)", "studentIds", studentIds);
+        qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_INDOK);
+        qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus",
+                DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+        qb.parameter("lopDirectiveType", DirectiveType.KASKKIRI_INDOKLOP.name());
+        qb.filter("ds.canceled = false");
+
+        if (studyYear != null) {
+            qb.optionalCriteria("ds.start_date <= :studyYearEnd", "studyYearEnd", studyYear.getEndDate(),
+                    DateUtils::firstMomentOfDay);
+            qb.optionalCriteria("coalesce(ds_lop.start_date, ds.end_date) >= :studyYearStart", "studyYearStart",
+                    studyYear.getStartDate(), DateUtils::lastMomentOfDay);
+        } else if (criteria.getFrom() != null && criteria.getThru() != null) {
+            qb.optionalCriteria("ds.start_date <= :thru", "thru", criteria.getThru(), DateUtils::firstMomentOfDay);
+            qb.optionalCriteria("coalesce(ds_lop.start_date, ds.end_date) >= :from", "from", criteria.getFrom(),
+                    DateUtils::lastMomentOfDay);
+        } else {
+            qb.optionalCriteria("ds.start_date <= :from and coalesce(ds_lop.start_date, ds.end_date) >= :from", "from",
+                    criteria.getFrom());
+        }
+
+        List<?> data = qb.select("s.id", em).getResultList();
+        return StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
     }
 
     private void setStudentGroupStudentAverages(StudentGroupTeacherCommand criteria, List<StudentDto> students) {
@@ -775,12 +851,17 @@ public class StudentGroupTeacherReportService {
 
     private void setStudentPracticeModuleResults(StudentGroupTeacherCommand criteria, List<Long> studentIds,
             List<ResultColumnDto> resultColumns, Map<Long, List<StudentResultColumnDto>> studentResultColumns) {
-        List<Long> practiceModuleIds = StreamUtil.toMappedList(m -> m.getFullPracticeModule().getId(),
-                StreamUtil.toFilteredList(m -> m.getFullPracticeModule() != null, resultColumns));
+        Set<Long> practiceModuleIds = StreamUtil.nullSafeList(resultColumns).stream()
+                .filter(m -> m.getFullPracticeModule() != null).map(m -> m.getFullPracticeModule().getId())
+                .collect(Collectors.toSet());
+        Set<Long> practiceModuleThemeIds = StreamUtil.nullSafeList(resultColumns).stream()
+                .filter(m -> m.getPracticeModuleTheme() != null).map(m -> m.getPracticeModuleTheme().getId())
+                .collect(Collectors.toSet());
         Map<Long, List<StudentResultDto>> studentPracticeModuleResults = new HashMap<>();
 
-        if (!practiceModuleIds.isEmpty()) {
-            studentPracticeModuleResults = studentPracticeModuleResults(criteria, studentIds, practiceModuleIds);
+        if (!practiceModuleIds.isEmpty() || !practiceModuleThemeIds.isEmpty()) {
+            studentPracticeModuleResults = studentPracticeModuleResults(criteria, studentIds, practiceModuleIds,
+                    practiceModuleThemeIds);
         }
         if (!studentResultColumns.isEmpty()) {
             for (Long studentId : studentResultColumns.keySet()) {
@@ -820,14 +901,25 @@ public class StudentGroupTeacherReportService {
     }
 
     private Map<Long, List<StudentResultDto>> studentPracticeModuleResults(StudentGroupTeacherCommand criteria,
-            List<Long> studentIds, List<Long> practiceModuleIds) {
+            List<Long> studentIds, Set<Long> practiceModuleIds, Set<Long> practiceModuleThemeIds) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from practice_journal pj"
                 + " join practice_journal_module_subject pjms on pj.id = pjms.practice_journal_id"
                 + " join curriculum_version_omodule cvo on pjms.curriculum_version_omodule_id = cvo.id"
                 + " left join curriculum_version_omodule_theme cvot on pjms.curriculum_version_omodule_theme_id = cvot.id");
 
         qb.requiredCriteria("pj.student_id in (:studentIds)", "studentIds", studentIds);
-        qb.requiredCriteria("cvo.curriculum_module_id in (:practiceModuleIds)", "practiceModuleIds", practiceModuleIds);
+
+        if (!practiceModuleIds.isEmpty() && !practiceModuleThemeIds.isEmpty()) {
+            qb.filter("(cvo.curriculum_module_id in (:practiceModuleIds) or cvot.id in (:practiceModuleThemeIds))");
+            qb.parameter("practiceModuleIds", practiceModuleIds);
+            qb.parameter("practiceModuleThemeIds", practiceModuleThemeIds);
+        } else if (!practiceModuleIds.isEmpty()) {
+            qb.requiredCriteria("cvo.curriculum_module_id in (:practiceModuleIds)", "practiceModuleIds",
+                    practiceModuleIds);
+        } else {
+            qb.requiredCriteria("cvot.id in (:practiceModuleThemeIds)", "practiceModuleThemeIds",
+                    practiceModuleThemeIds);
+        }
 
         qb.optionalCriteria("pj.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
         qb.optionalCriteria("pj.grade_inserted >= :from", "from", criteria.getFrom(), DateUtils::firstMomentOfDay);
@@ -1030,12 +1122,60 @@ public class StudentGroupTeacherReportService {
     }
 
     private List<ResultReport> negativeResults(StudentGroupTeacherCommand criteria) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s " + "join person p on p.id = s.person_id "
+        Map<String, Object> queryParameters = new HashMap<>();
+
+        JpaNativeQueryBuilder qb = negativeJournalResultsQb(criteria);
+        String journalResults = qb.querySql("s.id student_id, p.firstname, p.lastname, j.id journal_id, "
+                + "j.name_et journal_name_et, j.name_et journal_name_en, je.entry_type_code, jes.grade_code, jes.grade_inserted, "
+                + "coalesce(jes.grade_inserted_by, jes.changed_by, jes.inserted_by) as grade_inserted_by, "
+                + "false as is_practice_journal", false);
+        queryParameters.putAll(qb.queryParameters());
+
+        qb = negativePracticeJournalResultsQb(criteria);
+        String practicejournalResults = qb.querySql("s2.id student_id, p2.firstname, p2.lastname, pj.id journal_id, "
+                + "cm.name_et || ' - ' || mcl.name_et || ' (' || cv.code || ')' || coalesce(' ' || cvot.name_et, '') journal_name_et, "
+                + "cm.name_en || ' - ' || mcl.name_en || ' (' || cv.code || ')' || coalesce(' ' || cvot.name_et, '') journal_name_en, "
+                + "null entry_type_code, pj.grade_code, pj.grade_inserted, tp.firstname || ' ' || tp.lastname grade_inserted_by, "
+                + "true as is_practice_journal", false);
+        queryParameters.putAll(qb.queryParameters());
+
+        qb = new JpaNativeQueryBuilder("from (" + journalResults + " union all " 
+                + "select student_id, firstname, lastname, journal_id, "
+                + "string_agg(journal_name_et, ', ') journal_name_et, string_agg(journal_name_en, ' ') journal_name_en, "
+                + "null entry_type_code, grade_code, grade_inserted, grade_inserted_by, is_practice_journal "
+                + "from (" + practicejournalResults + " order by journal_name_et, journal_name_en) as pjr "
+                + "group by student_id, firstname, lastname, journal_id, grade_code, grade_inserted, "
+                + "grade_inserted_by, is_practice_journal) as results");
+
+        qb.sort("lastname, firstname, journal_name_et, journal_name_en, grade_inserted desc");
+        List<?> data = qb.select("student_id, firstname, lastname, journal_id, "
+                + "journal_name_et, journal_name_en, entry_type_code, grade_code, grade_inserted, grade_inserted_by, "
+                + "is_practice_journal", em, queryParameters).getResultList();
+
+        return StreamUtil.toMappedList(r -> {
+            ResultReport result = new ResultReport();
+            result.setStudentId(resultAsLong(r, 0));
+            result.setFirstname(resultAsString(r, 1));
+            result.setLastname(resultAsString(r, 2));
+            result.setJournal(new AutocompleteResult(resultAsLong(r, 3), resultAsString(r, 4), resultAsString(r, 5)));
+            result.setEntryType(resultAsString(r, 6));
+            result.setGrade(resultAsString(r, 7));
+            result.setGradeInserted(resultAsLocalDate(r, 8));
+            result.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 9)));
+            result.setIsPracticeJournal(resultAsBoolean(r, 10));
+            return result;
+        }, data);
+    }
+
+    private static JpaNativeQueryBuilder negativeJournalResultsQb(StudentGroupTeacherCommand criteria) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s "
+                + "join person p on p.id = s.person_id "
                 + "join student_group sg on sg.id = s.student_group_id "
                 + "join journal_student js on js.student_id = s.id " + "join journal j on j.id = js.journal_id "
                 + "join journal_entry_student jes on jes.journal_student_id = js.id "
                 + "join journal_entry je on je.id = jes.journal_entry_id");
         qb.requiredCriteria("sg.id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
+        qb.optionalCriteria("s.id = :studentId", "studentId", criteria.getStudent());
         qb.optionalCriteria("j.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
         qb.optionalCriteria("je.entry_type_code in (:entryTypeCodes)", "entryTypeCodes", criteria.getEntryTypes());
         qb.optionalCriteria("jes.grade_code in (:negativeGrades)", "negativeGrades", NEGATIVE_GRADES);
@@ -1048,26 +1188,39 @@ public class StudentGroupTeacherReportService {
             qb.parameter("studyPeriodStart", DateUtils.firstMomentOfDay(criteria.getStudyPeriodStart()));
             qb.parameter("studyPeriodEnd", DateUtils.lastMomentOfDay(criteria.getStudyPeriodEnd()));
         }
+        return qb;
+    }
 
-        qb.sort("p.lastname, p.firstname, journal_name_et, jes.grade_inserted desc");
-        List<?> data = qb
-                .select("s.id, p.firstname, p.lastname, j.id journal_id, "
-                        + "j.name_et journal_name_et, je.entry_type_code, jes.grade_code, jes.grade_inserted, "
-                        + "coalesce(jes.grade_inserted_by, jes.changed_by, jes.inserted_by) as grade_inserted_by", em)
-                .getResultList();
+    private static JpaNativeQueryBuilder negativePracticeJournalResultsQb(StudentGroupTeacherCommand criteria) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s2 "
+                + "join person p2 on p2.id = s2.person_id "
+                + "join student_group sg2 on sg2.id = s2.student_group_id "
+                + "join practice_journal pj on pj.student_id = s2.id "
+                + "join practice_journal_module_subject pjms on pjms.practice_journal_id = pj.id "
+                + "join curriculum_version_omodule cvo on cvo.id = pjms.curriculum_version_omodule_id "
+                + "join curriculum_module cm on cm.id = cvo.curriculum_module_id "
+                + "join classifier mcl on mcl.code = cm.module_code "
+                + "left join curriculum_version_omodule_theme cvot on cvot.id = pjms.curriculum_version_omodule_theme_id "
+                + "join curriculum_version cv on cv.id = cvo.curriculum_version_id "
+                + "join teacher t on t.id = pj.teacher_id "
+                + "join person tp on tp.id = t.person_id");
+        
+        qb.requiredCriteria("sg2.id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
+        qb.optionalCriteria("s2.id = :studentId", "studentId", criteria.getStudent());
+        qb.optionalCriteria("pj.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
+        qb.optionalCriteria("pj.grade_code in (:negativeGrades)", "negativeGrades", NEGATIVE_GRADES);
 
-        return StreamUtil.toMappedList(r -> {
-            ResultReport result = new ResultReport();
-            result.setStudentId(resultAsLong(r, 0));
-            result.setFirstname(resultAsString(r, 1));
-            result.setLastname(resultAsString(r, 2));
-            result.setJournal(new AutocompleteResult(resultAsLong(r, 3), resultAsString(r, 4), resultAsString(r, 4)));
-            result.setEntryType(resultAsString(r, 5));
-            result.setGrade(resultAsString(r, 6));
-            result.setGradeInserted(resultAsLocalDate(r, 7));
-            result.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 8)));
-            return result;
-        }, data);
+        qb.optionalCriteria("pj.grade_inserted >= :entryFrom", "entryFrom", criteria.getFrom(),
+                DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("pj.grade_inserted <= :entryThru", "entryThru", criteria.getThru(),
+                DateUtils::lastMomentOfDay);
+
+        if (criteria.getStudyPeriod() != null) {
+            qb.filter("pj.grade_inserted >= :studyPeriodStart and pj.grade_inserted <= :studyPeriodEnd");
+            qb.parameter("studyPeriodStart", DateUtils.firstMomentOfDay(criteria.getStudyPeriodStart()));
+            qb.parameter("studyPeriodEnd", DateUtils.lastMomentOfDay(criteria.getStudyPeriodEnd()));
+        }
+        return qb;
     }
 
     public byte[] negativeResultsAsExcel(HoisUserDetails user, StudentGroupTeacherCommand criteria) {

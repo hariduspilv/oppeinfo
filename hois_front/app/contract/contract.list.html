@@ -2,7 +2,7 @@
   <div flex>
     <fieldset ng-if="auth.isAdmin()">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+      <form name="searchForm" ng-submit="searchForm.$valid && loadAndSave()" novalidate class="nomargin" ng-model-options="{allowInvalid: true}">
         <div layout="row" layout-sm="column" layout-xs="column">
           <div flex="45" flex-sm="100" flex-xs="100">
             <div layout="column" flex>
@@ -109,7 +109,7 @@
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
           <md-button ng-if="!auth.isStudent() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" class="md-raised" ng-click="newContract()">{{'main.button.create' | translate}}</md-button>
-          <md-button ng-if="auth.isAdmin()" md-no-ink class="md-raised" ng-click="sendToEkis()">{{'contract.sendToEkis' | translate}}</md-button>
+          <md-button ng-if="auth.isAdmin() && tabledata.content" md-no-ink class="md-raised" ng-click="sendToEkis()">{{'contract.sendToEkis' | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>

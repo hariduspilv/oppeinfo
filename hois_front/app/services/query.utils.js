@@ -52,7 +52,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
       }
     };
 
-    var createQueryForm = function(scope, url, defaultParams, postLoad) {
+    var createQueryForm = function(scope, url, defaultParams, postLoad, useLoadingWheel, ignoreStorage) {
       scope.criteria = angular.extend({}, defaultPagingParams);
 
       scope.directiveControllers = [];
@@ -61,34 +61,6 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
         scope.directiveControllers.forEach(function (c) { 
           c.clear();
         });
-        //Input field clearing fix
-        var charCounters = document.getElementsByClassName("md-char-counter");
-        for (var char = 0; char < charCounters.length; char++) {
-          charCounters[char].innerHTML = "0 / " + charCounters[char].innerHTML.split("/")[1];
-        }
-
-        var inputs = angular.element(document).find("input");
-        for (var index = 0; index < inputs.length; index++) {
-          inputs[index].value = "";
-        }
-        var formName = inputs[0].form.getAttribute("name");
-        //might not find form when ng-if is used outside form
-        var form = scope[formName];
-        if (form) {
-          for (var g = 0; g < form.$$controls.length; g++) {
-            for (var key in form.$error) {
-              form.$$controls[g].$setValidity(key, true);
-            }
-          }
-        }
-  
-        var containers = document.getElementsByClassName("md-input-has-value");
-        var iterations = containers.length;
-        for (var focused = 0; focused < iterations; focused++) {
-          //use first only because removing class name changes containers list
-          containers[0].classList.remove("md-input-has-value");
-        }
-        
       };
 
       if(scope.fromStorage === undefined) {
@@ -102,7 +74,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
         $sessionStorage[key] = JSON.stringify(criteria);
       };
 
-      if(!('_menu' in $route.current.params)) {
+      if(!('_menu' in $route.current.params) && !ignoreStorage) {
         var storedCriteria = scope.fromStorage(url);
         if(angular.isNumber(storedCriteria.page)) {
           storedCriteria.page = storedCriteria.page + 1;
@@ -120,6 +92,16 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
 
       scope.tabledata = {};
 
+      var _afterLoadData = function(resultData) {
+        try {
+          scope.afterLoadData(resultData);
+        } finally {
+          if (useLoadingWheel) {
+            loadingWheel(scope, false);
+          }
+        }
+      };
+
       scope.afterLoadData = function(resultData) {
         scope.tabledata.content = resultData.content;
         scope.tabledata.totalElements = resultData.totalElements;
@@ -131,10 +113,32 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
         }
       };
 
+      var _errorAfterLoadData = function() {
+        try {
+          scope.errorAfterLoadData();
+        } finally {
+          if (useLoadingWheel) {
+            loadingWheel(scope, false);
+          }
+        }
+      };
+
+      scope.errorAfterLoadData = function() {
+        if (useLoadingWheel) {
+          loadingWheel(scope, false);
+        }
+      };
+
       scope.loadData = function() {
+        if (useLoadingWheel) {
+          loadingWheel(scope, true);
+        }
         var query = scope.getCriteria();
-        scope.toStorage(url, query);
-        scope.tabledata.$promise = endpoint(url).search(query, scope.afterLoadData);
+        if (!ignoreStorage) {
+          scope.toStorage(url, query);
+        }
+        scope.tabledata.$promise = endpoint(url).search(query, _afterLoadData, _errorAfterLoadData);
+        return scope.tabledata.$promise;
       };
     };
 
@@ -160,8 +164,8 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
       });
     };
 
-    var loadingWheel = function(scope, busy) {
-      scope.$root.$emit('backendBusy', {busy: busy});
+    var loadingWheel = function(scope, busy, multiple) {
+      scope.$root.$emit('backendBusy', {busy: busy, isMultiple: multiple});
     };
 
     return {getQueryParams: getQueryParams, clearQueryParams: clearQueryParams, createQueryForm: createQueryForm,
@@ -176,6 +180,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
           var parentEl = angular.element(document.body);
           $mdDialog.show({
             parent: parentEl,
+            multiple: params.isMultiple ? true : false,
             template:
               '<md-dialog style="background-color:transparent;box-shadow:none">' +
               '<div layout="row" layout-sm="column" layout-align="center center" aria-label="wait" style="height:120px;">'+

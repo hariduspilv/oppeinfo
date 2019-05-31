@@ -46,53 +46,55 @@
       </div>
     </div>
 
-    <label class="md-subhead">{{'committee.memberIs' | translate}}</label>
-
-    <md-table-container>
-      <table md-table>
-        <thead md-head>
-          <tr md-row>
-            <th md-column>{{'committee.isChairman' | translate}}</th>
-            <th md-column ng-if="!showPersonSearch">{{'committee.external' | translate}}</th>
-            <th md-column>{{'committee.member' | translate}}</th>
-            <th md-column></th>
-          </tr>
-        </thead>
-        <tbody md-body>
-          <tr md-row ng-repeat="member in record.members" ng-class-odd="'odd'" ng-class-even="'even'">
-            <ng-form name="committeeMemberForm">
-              <td md-cell>
-                <md-checkbox ng-model="member.isChairman" ng-change="assingChairman(member)"
-                        aria-label="{{'committee.isChairman' | translate}} {{member.memberName}}">
-                </md-checkbox>
-              </td>
-              <td md-cell ng-if="!showPersonSearch">
-                <md-checkbox ng-model="member.isExternal"
-                        aria-label="{{'committee.external' | translate}} {{member.memberName}}">
-                </md-checkbox>
-              </td>
-              <td md-cell>
-                <md-input-container ng-if="member.isExternal">
-                  <input type="text" ng-model="member.memberName" md-maxlength="100" aria-label="{{'committee.name' | translate}} {{member.memberName}}" required>
-                </md-input-container>
-                <md-input-container ng-if="!member.isExternal && !showPersonSearch">
-                  <hois-select ng-model="member.teacher" type="teacher" criteria="{valid: true, selectedTeacherId: member.teacher}"
-                    aria-label="{{'committee.name' | translate}} {{member.memberName}}" required></hois-select>
-                </md-input-container>
-                <div layout="row" flex="100" ng-if="showPersonSearch">
-                  <hois-autocomplete flex ng-model="member.person" method="committeeMembers" no-paging="true" label="committee.member" aria-label="{{'committee.member' | translate}} {{member.memberName}}" required></hois-autocomplete>
-                </div>
-              </td>
-              <td md-cell><a class="remove nomargin" ng-click="removeMember(member)">&times;</a></td>
-            </ng-form>
-          </tr>
-        </tbody>
-      </table>
-    </md-table-container>
-    <br>
-    <div layout="row">
-      <md-button class="md-raised" ng-click="addMember()">{{'committee.addMember' | translate}}</md-button>
-    </div>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'committee.memberIs' | translate}}</legend>
+      <div layout="row">
+        <md-button class="md-raised" ng-click="addMember()">{{'committee.addMember' | translate}}</md-button>
+      </div>
+      <md-table-container>
+        <table md-table class="secondary-table">
+          <thead md-head>
+            <tr md-row>
+              <th md-column>{{'committee.isChairman' | translate}}</th>
+              <th md-column ng-if="allowExternalPerson">{{'committee.external' | translate}}</th>
+              <th md-column>{{'committee.member' | translate}}</th>
+              <th md-column></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="member in record.members" ng-class-odd="'odd'" ng-class-even="'even'">
+              <ng-form name="committeeMemberForm">
+                <td md-cell>
+                  <md-checkbox ng-model="member.isChairman" ng-change="assingChairman(member)"
+                          aria-label="{{'committee.isChairman' | translate}} {{member.memberName}}">
+                  </md-checkbox>
+                </td>
+                <td md-cell ng-if="allowExternalPerson">
+                  <md-checkbox ng-model="member.isExternal" ng-change="member.person = null"
+                          aria-label="{{'committee.external' | translate}} {{member.memberName}}">
+                  </md-checkbox>
+                </td>
+                <td md-cell>
+                  <div layout="row" ng-if="member.isExternal">
+                    <md-input-container flex>
+                      <input type="text" ng-model="member.memberName" md-maxlength="100" aria-label="{{'committee.name' | translate}} {{member.memberName}}" required>
+                    </md-input-container>
+                  </div>
+                  <md-input-container ng-if="!member.isExternal && !showPersonSearch">
+                    <hois-select ng-model="member.teacher" type="teacher" criteria="{valid: true, selectedTeacherId: member.teacher}"
+                      aria-label="{{'committee.name' | translate}} {{member.memberName}}" required></hois-select>
+                  </md-input-container>
+                  <div layout="row" flex="100" ng-if="!member.isExternal && showPersonSearch">
+                    <hois-autocomplete flex ng-model="member.person" method="committeeMembers" no-paging="true" label="committee.member" aria-label="{{'committee.member' | translate}} {{member.memberName}}" required></hois-autocomplete>
+                  </div>
+                </td>
+                <td md-cell><a class="remove nomargin" ng-click="removeMember(member)">&times;</a></td>
+              </ng-form>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </fieldset>
     <br>
     <div>
       <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>

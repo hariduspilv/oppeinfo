@@ -43,10 +43,12 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.directive.DirectiveStudentModule;
 import ee.hitsa.ois.domain.sais.SaisApplicationGraduatedSchool;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ContractStatus;
@@ -82,6 +84,7 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.ErrorForField;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveConfirmForm;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.directive.DirectiveViewStudentDto;
 
 @Transactional
@@ -107,9 +110,13 @@ public class DirectiveConfirmService {
     @Autowired
     private StudentService studentService;
     @Autowired
+    private StudentAbsenceService studentAbsenceService;
+    @Autowired
     private UserService userService;
     @Autowired
     private Validator validator;
+
+    private static final String ABSENCE_REJECT_DIRECTIVE_CANCELED = "Käskkiri tühistatud";
 
     public Directive sendToConfirm(Directive directive, boolean ekis) {
         AssertionFailedException.throwIf(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, directive.getStatus()), "Invalid directive status");
@@ -124,6 +131,8 @@ public class DirectiveConfirmService {
         }
         Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
         Map<Long, List<DirectiveStudent>> scholarships = findScholarships(directive);
+        Map<Long, List<Long>> individualCurriculumSuitableModules = individualCurriculumSuitableModules(directive); 
+        Map<Long, List<DirectiveStudent>> individualCurriculums = findIndividualCurriculums(directive);
         Set<Long> changedStudents = DirectiveType.KASKKIRI_TYHIST.equals(directiveType) ? new HashSet<>(directiveService.changedStudentsForCancel(directive.getCanceledDirective())) : Collections.emptySet();
         List<DirectiveViewStudentDto> invalidStudents = new ArrayList<>();
         // validate each student's data for given directive
@@ -219,7 +228,48 @@ public class DirectiveConfirmService {
                         allErrors.add(createStudentExistsError(existRow.longValue()));
                     }
                 }
-            } else if(DirectiveType.KASKKIRI_STIPTOET.equals(directiveType)) {
+            } else if (DirectiveType.KASKKIRI_INDOK.equals(directiveType)) {
+                if (ds.getModules() == null || ds.getModules().isEmpty()) {
+                    allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "modules")));
+                } else {
+                    List<Long> studentSuitableModules = individualCurriculumSuitableModules
+                            .get(EntityUtil.getId(ds.getStudent()));
+                    for (DirectiveStudentModule module : ds.getModules()) {
+                        System.out.println(EntityUtil.getId(module.getCurriculumVersionOmodule()));
+                        if (!studentSuitableModules.contains(EntityUtil.getId(module.getCurriculumVersionOmodule()))) {
+                            allErrors.add(new ErrorForField("directive.moduleAlreadyGraded", propertyPath(rowNum, "modules"),
+                                    AutocompleteResult.of(module.getCurriculumVersionOmodule(), false)));
+                        }
+                    }
+                }
+            } else if (DirectiveType.KASKKIRI_INDOKLOP.equals(directiveType)) {
+                DirectiveStudent formIndividualCurriculum = ds.getDirectiveStudent();
+                if (formIndividualCurriculum != null) {
+                    List<DirectiveStudent> studentIndividualCurriculums = individualCurriculums
+                            .get(EntityUtil.getId(ds.getStudent()));
+                    if (studentIndividualCurriculums != null && !studentIndividualCurriculums.isEmpty()) {
+                        Map<Long, DirectiveStudent> mappedIndividualCurriculums = StreamUtil.toMap(i -> i.getId(), i -> i,
+                                studentIndividualCurriculums);
+                        DirectiveStudent allowedIndividualCurriculum = mappedIndividualCurriculums
+                                .get(EntityUtil.getId(ds.getDirectiveStudent()));
+                        if (allowedIndividualCurriculum != null && formIndividualCurriculum.equals(allowedIndividualCurriculum)) {
+                            if (ds.getStartDate() != null) {
+                                if (ds.getStartDate().isBefore(allowedIndividualCurriculum.getStartDate())
+                                        || ds.getStartDate().isAfter(allowedIndividualCurriculum.getEndDate())) {
+                                    allErrors.add(new ErrorForField("directive.notInIndividualCurriculumDateRange",
+                                            propertyPath(rowNum, "startDate")));
+                                }
+                            } else {
+                                allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "startDate")));
+                            }
+                        } else {
+                            allErrors.add(new ErrorForField("directive.notValid", propertyPath(rowNum, "directiveStudent")));
+                        }
+                    } else {
+                        allErrors.add(new ErrorForField("directive.notValid", propertyPath(rowNum, "directiveStudent")));
+                    }
+                }
+            } else if (DirectiveType.KASKKIRI_STIPTOET.equals(directiveType)) {
                 // check students which do not qualify for directive
                 // status should be active and no overlapping academic leave
                 String reason = null;
@@ -363,7 +413,7 @@ public class DirectiveConfirmService {
 
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
         if(DirectiveType.KASKKIRI_TYHIST.equals(directiveType)) {
-            cancelDirective(directive);
+            cancelDirective(confirmer, directive);
         } else {
             Classifier studentStatus = directiveType.studentStatus() != null ? em.getReference(Classifier.class, directiveType.studentStatus().name()) : null;
             Classifier applicationStatus = em.getReference(Classifier.class, ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name());
@@ -477,6 +527,10 @@ public class DirectiveConfirmService {
             student.setStudyEnd(confirmDate);
             userService.disableUser(student, LocalDate.now().minusDays(1));
             break;
+        case KASKKIRI_OTEGEVUS:
+            if (Boolean.TRUE.equals(directiveStudent.getIsAbsence())) {
+                studentAbsenceService.createDirectiveAbsence(directiveStudent);
+            }
         default:
             break;
         }
@@ -505,7 +559,7 @@ public class DirectiveConfirmService {
         }
     }
 
-    private void cancelDirective(Directive directive) {
+    private void cancelDirective(String confirmer, Directive directive) {
         // cancellation may include only some students
         Map<Long, DirectiveStudent> includedStudents = StreamUtil.toMap(ds -> EntityUtil.getId(ds.getStudent()), ds -> ds, directive.getStudents());
         Directive canceledDirective = directive.getCanceledDirective();
@@ -550,6 +604,11 @@ public class DirectiveConfirmService {
                     case KASKKIRI_VALIS:
                         student.setStatus(original.getStatus());
                         break;
+                    case KASKKIRI_OTEGEVUS:
+                        StudentAbsence absence = ds.getStudentAbsence();
+                        if (absence != null) {
+                            studentAbsenceService.reject(confirmer, absence, ABSENCE_REJECT_DIRECTIVE_CANCELED);
+                        }
                     default:
                         if(canceledDirectiveType.studentStatus() != null) {
                             student.setStatus(original.getStatus());
@@ -672,6 +731,39 @@ public class DirectiveConfirmService {
             .setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
             .setParameter(4, DirectiveType.KASKKIRI_STIPTOETL.name())
             .setParameter(5, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+            .getResultList();
+
+        return data.stream().collect(Collectors.groupingBy(r -> EntityUtil.getId(r.getStudent())));
+    }
+
+    Map<Long, List<Long>> individualCurriculumSuitableModules(Directive directive) {
+        if (!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_INDOK)
+                || directive.getStudents().isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Long> studentIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudent()), directive.getStudents());
+        JpaNativeQueryBuilder qb = directiveService.individualCurriculumModulesQb(studentIds, null);
+        List<?> data = qb.select("s.id student_id, cvo.id module_id", em).getResultList();
+        return StreamUtil.nullSafeList(data).stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toList())));
+    }
+
+    Map<Long, List<DirectiveStudent>> findIndividualCurriculums(Directive directive) {
+        if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_INDOKLOP) || directive.getStudents().isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Long> studentIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudent()), directive.getStudents());
+        List<DirectiveStudent> data = em.createQuery("select ds from DirectiveStudent ds " +
+                "where ds.canceled = false and ds.student.id in (?1) and ds.directive.type.code = ?2 and ds.directive.status.code = ?3 and ds.endDate >= CURRENT_DATE " +
+                "and (not exists (select ds2 from DirectiveStudent ds2 where ds2.canceled = false and ds2.directive.type.code = ?4 and ds2.id = ds.id) " +
+                "or ds.id in (select ds3.id from DirectiveStudent ds3 where ds3.directive.id = ?5))", DirectiveStudent.class)
+            .setParameter(1, studentIds)
+            .setParameter(2, DirectiveType.KASKKIRI_INDOK.name())
+            .setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+            .setParameter(4, DirectiveType.KASKKIRI_INDOKLOP.name())
+            .setParameter(5, EntityUtil.getId(directive))
             .getResultList();
 
         return data.stream().collect(Collectors.groupingBy(r -> EntityUtil.getId(r.getStudent())));

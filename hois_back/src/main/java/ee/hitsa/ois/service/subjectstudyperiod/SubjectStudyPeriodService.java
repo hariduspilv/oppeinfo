@@ -3,10 +3,6 @@ package ee.hitsa.ois.service.subjectstudyperiod;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -81,18 +77,7 @@ public class SubjectStudyPeriodService {
         }
         subjectStudyPeriod.setTeachers(newTeachers);
     }
-    
-    /**
-     * Removes duplicate values using keyExtractor
-     * 
-     * @param keyExtractor
-     * @return
-     */
-    private static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
-        Set<Object> seen = ConcurrentHashMap.newKeySet();
-        return t -> seen.add(keyExtractor.apply(t));
-    }
-    
+
     /**
      * There was a problem when there could be duplicates in list subjectStudyPeriod.getStudentGroups()
      * 
@@ -100,8 +85,9 @@ public class SubjectStudyPeriodService {
      * @param newStudentGroupIds
      */
     private void updateStudentGroups(SubjectStudyPeriod subjectStudyPeriod, List<Long> newStudentGroupIds) { 
-        Map<Long, SubjectStudyPeriodStudentGroup> oldStudentGroupsMap = StreamUtil.toMap(t -> EntityUtil.getId(t.getStudentGroup()),
-                subjectStudyPeriod.getStudentGroups().stream().filter(distinctByKey(con -> EntityUtil.getId(con.getStudentGroup()))));
+        Map<Long, SubjectStudyPeriodStudentGroup> oldStudentGroupsMap = StreamUtil
+                .toMap(t -> EntityUtil.getId(t.getStudentGroup()), subjectStudyPeriod.getStudentGroups().stream()
+                        .filter(StreamUtil.distinctByKey(con -> EntityUtil.getId(con.getStudentGroup()))));
         List<SubjectStudyPeriodStudentGroup> newStudentGroups = new ArrayList<>();
         for (Long studentGroupId : newStudentGroupIds) {
             SubjectStudyPeriodStudentGroup studentGroup = oldStudentGroupsMap.get(studentGroupId);

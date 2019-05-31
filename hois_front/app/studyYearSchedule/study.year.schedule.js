@@ -160,6 +160,9 @@ function ($scope, $route, $timeout, QueryUtils, ArrayUtils, message, DataUtils, 
     };
 
     $scope.isValidGroup = function (group) {
+        if ($scope.criteria.studyYear === null) {
+            return true;
+        }
         return DataUtils.isValidObject($scope.criteria.studyYear.startDate, $scope.criteria.studyYear.endDate, group.validFrom, group.validThru);
     };
 
@@ -304,6 +307,7 @@ function ($scope, $route, $timeout, QueryUtils, ArrayUtils, message, DataUtils, 
     } else {
         if ($scope.criteria.studyYear !== $scope.lastPickedStudyYear) {
             $scope.isPastStudyYear = DataUtils.isPastStudyYearOrPeriod($scope.criteria.studyYear);
+            $scope.criteria.studyYear.studyPeriods = DataUtils.sortStudyYearsOrPeriods($scope.criteria.studyYear.studyPeriods);
             $scope.criteria.studyPeriods = $scope.criteria.studyYear.studyPeriods.map(function(p){return p.id;});
             getSchedules();
             getWeeks();

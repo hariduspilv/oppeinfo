@@ -1,5 +1,7 @@
 package ee.hitsa.ois.service.ekis;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+
 import java.lang.invoke.MethodHandles;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -40,7 +42,6 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
-import ee.hitsa.ois.domain.directive.DirectiveStudentOccupation;
 import ee.hitsa.ois.domain.enterprise.Enterprise;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.school.School;
@@ -53,11 +54,15 @@ import ee.hitsa.ois.enums.CertificateType;
 import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.HigherAssessment;
+import ee.hitsa.ois.enums.OccupationalGrade;
+import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.service.StudentAbsenceService;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.DirectiveUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
@@ -255,22 +260,12 @@ public class EkisService {
         if (higher) {
             moduleStream = moduleSubjects.stream().map(ms -> ms.getSubject().getNameEt());
             aimStream = moduleSubjects.stream().map(ms -> {
-                if (ms.getModule() == null 
-                        || ms.getModule().getCurriculumVersion() == null
-                        || ms.getModule().getCurriculumVersion().getModules() == null) return null;
-                List<String> aims = ms.getModule().getCurriculumVersion().getModules().stream()
-                        .filter(p -> p != null)
-                        .map(p -> p.getObjectivesEt()).collect(Collectors.toList());
-                return aims.stream().filter(r -> r != null).collect(Collectors.joining(", "));
+                if (ms.getSubject() == null) return null;
+                return ms.getSubject().getObjectivesEt();
             });
             outcomesStream = moduleSubjects.stream().map(ms -> {
-                if (ms.getModule() == null 
-                        || ms.getModule().getCurriculumVersion() == null
-                        || ms.getModule().getCurriculumVersion().getModules() == null) return null;
-                List<String> outcomes = ms.getModule().getCurriculumVersion().getModules().stream()
-                        .filter(p -> p != null)
-                        .map(p -> p.getOutcomesEt()).collect(Collectors.toList());
-                return outcomes.stream().filter(r -> r != null).collect(Collectors.joining(", "));
+                if (ms.getSubject() == null) return null;
+                return ms.getSubject().getOutcomesEt();
             });
         } else {
             moduleStream = moduleSubjects.stream().map(ms -> {
@@ -300,8 +295,8 @@ public class EkisService {
         request.setOrgTutorTel(String.join(",", supervisors.stream().map(p->p.getSupervisorPhone()).filter(p->p != null).collect(Collectors.toList())));
         request.setOrgTutorEmail(String.join(",", supervisors.stream().map(p->p.getSupervisorEmail()).filter(p->p != null).collect(Collectors.toList())));
         request.setProgramme(contract.getPracticePlan());
-        request.setOutcomes(outcomesStream != null ? outcomesStream.collect(Collectors.joining(", ")) : null);
-        request.setAim(aimStream != null ? aimStream.collect(Collectors.joining(", ")) : null);
+        request.setOutcomes(outcomesStream.filter(p -> p != null).collect(Collectors.joining(", ")));
+        request.setAim(aimStream.filter(p -> p != null).collect(Collectors.joining(", ")));
         request.setStartDate(date(contract.getStartDate()));
         request.setEndDate(date(contract.getEndDate()));
         request.setSchoolTutorId(contract.getContractCoordinator() != null ? contract.getContractCoordinator().getIdcode() : null);
@@ -328,7 +323,7 @@ public class EkisService {
         return EntityUtil.save(entity, em);
     }
 
-    private static Content studentForRegisterDirective(DirectiveType directiveType, DirectiveStudent ds) {
+    private Content studentForRegisterDirective(DirectiveType directiveType, DirectiveStudent ds) {
         Content content = new Content();
         Person person = ds.getPerson();
         Student student = ds.getStudent();
@@ -416,20 +411,46 @@ public class EkisService {
             content.setFinsource(name(ds.getFin()));
             content.setLang(name(ds.getLanguage()));
             break;
+        case KASKKIRI_INDOK:
+            content.setStartDate(date(ds.getStartDate()));
+            content.setEndDate(date(ds.getEndDate()));
+            break;
+        case KASKKIRI_INDOKLOP:
+            content.setEndDate(date(ds.getStartDate()));
+            break;
         case KASKKIRI_LOPET:
+            boolean higher = StudentUtil.isHigher(student);
+
             content.setCurricula(curriculum(ds));
             content.setKudos(yesNo(ds.getIsCumLaude()));
             content.setDegree(name(ds.getCurriculumGrade()));
-            List<DirectiveStudentOccupation> occupations = ds.getOccupations();
-            if (occupations != null) {
-                Classifier occupation = occupations.stream().map(DirectiveStudentOccupation::getOccupation)
-                        .sorted(Comparator.comparing(EntityUtil::getCode)).findFirst().orElse(null);
-                if (occupation != null) {
-                    content.setOccupation(name(occupation));
-                    StreamUtil.nullSafeList(student.getOccupationCertificates()).stream()
-                            .filter(c -> occupation.equals(c.getOccupation()) && c.getSpeciality() != null)
-                            .findFirst().ifPresent(c -> content.setSpecialization(name(c.getSpeciality())));
-                }
+
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from protocol_student ps "
+                    + "join protocol_student_occupation pso on pso.protocol_student_id = ps.id "
+                    + "join classifier pso_cl on pso_cl.code = pso.occupation_code "
+                    + "left join classifier pso_cl2 on pso_cl2.code = pso.part_occupation_code "
+                    + "join protocol p on p.id = ps.protocol_id "
+                    + "left join student_occupation_certificate soc on soc.id = pso.student_occupation_certificate_id "
+                    + "left join classifier soc_cl on soc_cl.code = soc.speciality_code");
+
+            qb.requiredCriteria("ps.student_id = :studentId", "studentId", EntityUtil.getId(student));
+            qb.filter("p.is_final = true");
+            qb.requiredCriteria("p.status_code = :pstatus", "pstatus", ProtocolStatus.PROTOKOLL_STAATUS_K.name());
+            qb.requiredCriteria("ps.grade_code in :grades", "grades", higher ?
+                    Stream.of(HigherAssessment.values()).filter(HigherAssessment::getIsPositive)
+                        .map(HigherAssessment::name).collect(Collectors.toList())
+                    : OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
+
+            qb.groupBy("pso_cl.name_et, pso_cl2.name_et");
+            qb.sort("pso_cl.name_et, pso_cl2.name_et");
+            List<?> data = qb.select(" coalesce(pso_cl2.name_et, pso_cl.name_et) occupation "
+                    + ", string_agg(soc_cl.name_et, ',') specialization", em).setMaxResults(1).getResultList();
+
+            if (!data.isEmpty()) {
+                String occupation = resultAsString(data.get(0), 0);
+                String specialization = resultAsString(data.get(0), 1);
+                content.setOccupation(occupation);
+                content.setSpecialization(specialization != null ? specialization : null);
             }
             break;
         case KASKKIRI_OKAVA:
@@ -477,6 +498,13 @@ public class EkisService {
             content.setEndDate(periodEnd(ds));
             content.setOuterschool(Boolean.TRUE.equals(ds.getIsAbroad()) ? ds.getAbroadSchool() : (ds.getEhisSchool() != null ? ds.getEhisSchool().getNameEt() : null));
             break;
+        case KASKKIRI_KIITUS:
+        case KASKKIRI_NOOMI:
+            content.setReason(ds.getAddInfo());
+        case KASKKIRI_OTEGEVUS:
+        case KASKKIRI_PRAKTIK:
+            content.setStartDate(date(ds.getStartDate()));
+            content.setEndDate(date(ds.getEndDate()));
         default:
             break;
         }

@@ -15,7 +15,10 @@
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.reason" name="students[{{$index}}].reason" model-value-attr="code" main-classifier-code="EKSMAT_POHJUS" aria-label="{{'directive.student.reason' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.reason" name="students[{{$index}}].reason" model-value-attr="code" main-classifier-code="EKSMAT_POHJUS" 
+            criteria="{vocational: formState.school.vocational, higher: formState.school.higher}" aria-label="{{'directive.student.reason' | translate}}"
+            only-valid>
+          </hois-classifier-select>
           <div class="invalid" ng-show="directiveForm['students['+$index+'].reason'].$error.required">
             {{'main.required' | translate}}
           </div>

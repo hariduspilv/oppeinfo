@@ -27,6 +27,8 @@
                       <div flex="5">&nbsp;</div>
                       <md-checkbox ng-model="subOccupation.selected" disabled>
                         <hois-classifier-value ng-model="subOccupation" main-classifier-code="OSAKUTSE,SPETSKUTSE" class="inline"></hois-classifier-value>
+                        {{subOccupation.mainClassCode === 'OSAKUTSE' ? " (" + ('stateCurriculum.enter.occupation.partial' | translate) + ")" : ""}}
+                        {{subOccupation.mainClassCode === 'SPETSKUTSE' ? " (" + ('stateCurriculum.enter.occupation.specialty' | translate) + ")" : ""}}
                       </md-checkbox>
                     </div>
                   </div>

@@ -1,5 +1,5 @@
 <md-dialog aria-label="select contract dialog">
-    <form name="dialogForm" ng-submit="checkChecked()" novalidate ng-cloak>
+    <form name="dialogForm" ng-submit="loadData()" novalidate ng-cloak>
       <md-toolbar>
         <div class="md-toolbar-tools">
           <h2 flex>{{"contract.select" | translate}}</h2>
@@ -17,7 +17,7 @@
                 label="{{'document.student'}}"></hois-autocomplete>
             </div>
             <div layout="row">
-                <md-button class="md-raised md-primary" ng-click="loadData()">{{'main.button.search' | translate}}</md-button>
+                <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             </div>
             <div flex>
                 <md-table-container>
@@ -42,7 +42,7 @@
                             </td>
                             <td md-cell>{{currentLanguageNameField(row.student)}}</td>
                             <td md-cell>{{row.studentGroup}}</td>
-                            <td md-cell>{{row.contractNr}}</td>
+                            <td md-cell>{{row.contractNr ? row.contractNr : '-' }}</td>
                             <td md-cell>{{row.startDate | hoisDate}} - {{row.endDate | hoisDate}}</td>
                             <td md-cell>{{row.enterpriseName}}</td>
                             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
@@ -57,7 +57,7 @@
         </div>
       </md-dialog-content>
       <md-dialog-actions layout="row" layout-align="start start">
-        <md-button class="md-raised" type="submit">{{"contract.copy" | translate}}</md-button>
+        <md-button class="md-raised" ng-click="checkChecked()">{{"contract.copy" | translate}}</md-button>
       </md-dialog-actions>
     </form>
   </md-dialog>

@@ -1,0 +1,103 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="searchForm" ng-submit="loadData()" ng-model-options="{allowInvalid: true}" novalidate>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div flex="45" flex-sm="100" flex-xs="100">
+            <hois-autocomplete ng-model="criteria.studentObject" method="students"
+              name="student" label="report.individualCurriculumStatistics.student" 
+              additional-query-params="{higher: false, studentGroupTeacher: teacherId}">
+            </hois-autocomplete>
+          </div>
+
+          <div ng-if="auth.isAdmin()" flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <hois-autocomplete ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers"
+              method="studentgroups" name="studentGroup" label="report.individualCurriculumStatistics.studentGroup"
+              additional-query-params="{higher: false, studentGroupTeacherId: teacherId}"></hois-autocomplete>
+          </div>
+
+          <md-input-container ng-if="auth.isTeacher()" flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label class="textInput">{{'report.individualCurriculumStatistics.studentGroup' | translate}}</label>
+            <md-select ng-model="criteria.studentGroup">
+              <md-option md-option-empty></md-option>
+              <md-option ng-value="studentGroup.id" ng-repeat="studentGroup in formState.studentGroups | orderBy: currentLanguageNameField()">
+                {{currentLanguageNameField(studentGroup)}}
+              </md-option>
+            </md-select>
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'report.individualCurriculumStatistics.moduleName' | translate}}</label>
+            <input type="text" ng-model="criteria.moduleName" md-maxlength="255">
+          </md-input-container>
+
+          <div flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <hois-autocomplete ng-model="criteria.curriculumVersion" ha-attribute="id" ha-controller="directiveControllers"
+              method="curriculumversions" name="curriculumVersion" label="moduleProtocol.curriculumVersion" 
+              additional-query-params="{higher: false, closed: false}"></hois-autocomplete>
+          </div>
+        </div>
+
+        <div layout="row">
+          <md-input-container>
+            <label>{{'main.from' | translate}}</label>
+            <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru"></md-datepicker>
+          </md-input-container>
+          <md-input-container flex-offset="5">
+            <label>{{'main.thru' | translate}}</label>
+            <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button ng-href="{{excel(formState.xlsUrl, criteria)}}" class="md-button md-raised">{{'main.button.printXls'| translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="p.lastname, p.firstname">{{'report.individualCurriculumStatistics.name' | translate}}</th>
+            <th md-column md-order-by="sg.code">{{'report.individualCurriculumStatistics.group' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguage()==='en' ? 'cm.name_en' : 'cm.name_et'}}">{{'report.individualCurriculumStatistics.module' | translate}}</th>
+            <th md-column>{{'report.individualCurriculumStatistics.distinction' | translate}}</th>
+            <th md-column></th>
+            <th md-column md-order-by="ds.start_date, ds.end_date">{{'report.individualCurriculumStatistics.dates' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <a md-no-ink class="md-primary" ng-href="#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>
+            </td>
+            <td md-cell>{{currentLanguageNameField(row.studentGroup)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.curriculumModule)}}</td>
+            <td md-cell>{{row.addInfo ? (row.addInfo | hoisLimitTo: 100: !row.showAll) : '-'}}</td>
+            <td md-cell>
+              <span class="custom-tooltip" ng-if="!row.showAll && row.addInfo.length > 150" ng-click="row.showAll = true">
+                {{'report.individualCurriculumStatistics.showMore' | translate}}</span>
+              <span class="custom-tooltip" ng-if="row.showAll" ng-click="row.showAll = false">
+                {{'report.individualCurriculumStatistics.showLess' | translate}}</span>
+            </td>
+            <td md-cell>{{row.startDate | hoisDate}} - {{row.endDate | hoisDate}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page"
+      md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+      md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
+  </div>
+</div>

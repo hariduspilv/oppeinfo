@@ -1,5 +1,8 @@
 package ee.hitsa.ois.web.dto;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -19,7 +22,7 @@ public class HigherProtocolStudentDto extends VersionedCommand implements Protoc
     @ClassifierRestriction(MainClassCode.KORGHINDAMINE)
     private String grade;
     private String gradeValue;
-    private String practiceResult;
+    private List<ProtocolPracticeJournalResultDto> practiceJournalResults = new ArrayList<>();
     private Long studentId;
     private AutocompleteResult student;
     @Size(max = 255)
@@ -33,13 +36,13 @@ public class HigherProtocolStudentDto extends VersionedCommand implements Protoc
         s.setStudent(new AutocompleteResult(EntityUtil.getId(student), name, name));
         return s;
     }
-    
-    public String getPracticeResult() {
-        return practiceResult;
+
+    public List<ProtocolPracticeJournalResultDto> getPracticeJournalResults() {
+        return practiceJournalResults;
     }
 
-    public void setPracticeResult(String practiceResult) {
-        this.practiceResult = practiceResult;
+    public void setPracticeJournalResults(List<ProtocolPracticeJournalResultDto> practiceJournalResults) {
+        this.practiceJournalResults = practiceJournalResults;
     }
 
     public String getGradeValue() {

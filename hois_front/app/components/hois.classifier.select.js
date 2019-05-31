@@ -223,7 +223,11 @@ angular.module('hitsaOis')
             }
             // changedShowOnlyValues value true means "show all items"
             for(var key in scope.optionsByCode) {
-              scope.optionsByCode[key].hide = (changedShowOnlyValues !== true && showOptions.indexOf(key) === -1);
+              var option = scope.optionsByCode[key];
+              option.hide = (changedShowOnlyValues !== true && showOptions.indexOf(key) === -1);
+              if (angular.isDefined(scope.onlyValid) && option.hide === false && !Classifier.isValid(option)) {
+                option.hide = true;
+              }
             }
             deselectHiddenValue();
           });
@@ -248,7 +252,11 @@ angular.module('hitsaOis')
             }
 
             for(var key in scope.optionsByCode) {
-              scope.optionsByCode[key].hide = (hideOptions.indexOf(key) !== -1);
+              var option = scope.optionsByCode[key];
+              option.hide = hideOptions.indexOf(key) !== -1;
+              if (angular.isDefined(scope.onlyValid) && option.hide === false && !Classifier.isValid(option)) {
+                option.hide = true;
+              }
             }
             deselectHiddenValue();
           });

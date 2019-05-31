@@ -31,6 +31,7 @@ public class JournalDto {
     private List<String> journalTeachers = new ArrayList<>();
     private List<AutocompleteResult> curriculumModules = new ArrayList<>();
     private List<JournalModuleDescriptionDto> moduleDescriptions = new ArrayList<>();
+    private List<JournalStudentIndividualCurriculumDto> individualCurriculums = new ArrayList<>();
     private JournalLessonHoursDto lessonHours;
     @ClassifierRestriction(MainClassCode.PAEVIK_STAATUS)
     private String status;
@@ -164,7 +165,7 @@ public class JournalDto {
     public void setCurriculumModules(List<AutocompleteResult> curriculumModules) {
         this.curriculumModules = curriculumModules;
     }
-    
+
     public JournalLessonHoursDto getLessonHours() {
         return lessonHours;
     }
@@ -212,7 +213,15 @@ public class JournalDto {
     public void setModuleDescriptions(List<JournalModuleDescriptionDto> moduleDescriptions) {
         this.moduleDescriptions = moduleDescriptions;
     }
-    
+
+    public List<JournalStudentIndividualCurriculumDto> getIndividualCurriculums() {
+        return individualCurriculums;
+    }
+
+    public void setIndividualCurriculums(List<JournalStudentIndividualCurriculumDto> individualCurriculums) {
+        this.individualCurriculums = individualCurriculums;
+    }
+
     public Boolean getModuleOutcomesAsEntries() {
         return moduleOutcomesAsEntries;
     }

@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', 'dialogService', '$filter',
-  function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, dialogService, $filter) {
+angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', 'dialogService', '$filter', '$translate',
+  function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, dialogService, $filter, $translate) {
     $scope.auth = $route.current.locals.auth;
     var MS_PER_MINUTE = 60000;
     var MS_PER_FITEENMINUTES = MS_PER_MINUTE * 15;
@@ -14,6 +14,10 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
     $scope.weekday = ["daySun", "dayMon", "dayTue", "dayWed", "dayThu", "dayFri", "daySat"];
     var baseUrl = '/timetables';
     $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
+
+    $translate.onReady(function() {
+      $scope.loaded = true;
+    });
 
     function initializeData(result) {
       $scope.capacityTypes = result.timetableCapacities;

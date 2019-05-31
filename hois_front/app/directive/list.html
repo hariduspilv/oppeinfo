@@ -1,6 +1,6 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin" >
+    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin" ng-model-options="{allowInvalid: true}">
 	    <fieldset tabindex="1">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
       <div layout="row" layout-sm="column" layout-xs="column">

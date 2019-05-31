@@ -5,6 +5,7 @@ import java.util.List;
 
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.FinalProtocolUtil;
@@ -36,11 +37,12 @@ public class FinalHigherProtocolStudentDto extends HigherProtocolStudentDto {
         
         if (protocolStudent.getProtocolStudentOccupations() != null) {
             protocolStudent.getProtocolStudentOccupations().forEach(oc -> {
+                StudentOccupationCertificate certificate = oc.getStudentOccupationCertificate();
                 dto.getCurriculumOccupations()
                         .add(new FinalProtocolStudentOccupationDto(
-                                oc.getStudentOccupationCertificate() != null ? oc.getStudentOccupationCertificate().getCertificateNr() : null, 
-                                oc.getOccupation().getCode(), null,
-                                oc.getStudentOccupationCertificate() != null ? oc.getStudentOccupationCertificate().getId() : null));
+                                certificate != null ? certificate.getCertificateNr() : null, 
+                                oc.getOccupation().getCode(), null, null,
+                                certificate != null ? certificate.getId() : null));
             });
         }
         

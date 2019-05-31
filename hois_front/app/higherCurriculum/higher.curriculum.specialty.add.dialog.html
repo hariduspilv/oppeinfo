@@ -13,15 +13,15 @@
       <span flex></span>
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
 	  <div layout="column">
-        <md-input-container flex>
+        <md-input-container>
             <label>{{'curriculum.specialty.nameEt' | translate}}</label>
             <input ng-model="data.nameEt" type="text" required md-maxlength="100">
         </md-input-container>
-        <md-input-container flex>
+        <md-input-container>
             <label>{{'curriculum.specialty.nameEn' | translate}}</label>
             <input ng-model="data.nameEn" type="text" required md-maxlength="100">
         </md-input-container>
-        <md-input-container flex>
+        <md-input-container>
             <label>{{'curriculum.specialty.credits' | translate}}</label>
             <input name="credits" ng-model="data.credits" type="number" required min="0" max="{{maxCredits}}" pattern="^\d+(\.\d{1})?$">
            <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
@@ -36,19 +36,19 @@
                 </div>
             </div>
         </md-input-container>
-        <md-input-container flex>
+        <md-input-container>
             <label>{{'main.additionalInfo' | translate}}</label>
             <textarea ng-model="data.description" md-maxlength="1000" max-rows="10" ></textarea>
         </md-input-container>
-        <md-input-container flex>
+        <md-input-container>
         <label>{{'occupation.givenOccupation' | translate}}</label>
         <hois-classifier-select ng-model="data.occupation" ng-change="occupationSelected()" main-classifier-code="KUTSE" model-value-attr="code" only-valid></hois-classifier-select>
         </md-input-container>
-        <md-input-container flex ng-show="data.occupation">
+        <md-input-container ng-show="data.occupation">
             <label>{{'curriculum.specialty.specialtyReferenceEt' | translate}}</label>
             <input ng-model="data.occupationEt" type="text" md-maxlength="255" ng-required="data.occupation">
         </md-input-container>
-        <md-input-container flex ng-show="data.occupation">
+        <md-input-container ng-show="data.occupation">
             <label>{{'curriculum.specialty.specialtyReferenceEn' | translate}}</label>
             <input ng-model="data.occupationEn" type="text" md-maxlength="255" ng-required="data.occupation">
         </md-input-container>

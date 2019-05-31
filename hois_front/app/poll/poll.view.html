@@ -1,0 +1,130 @@
+
+<div id="scrolling_div" style="overflow: auto;">
+    <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
+        <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/{{::criteria.id}}/view?_noback" name="poll.data">
+            {{'poll.basicData.label' | translate}}</md-nav-item>
+        <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/questions/{{::criteria.id}}/view?_noback" name="enterprise.questions">
+            {{'poll.questions.label' | translate}}</md-nav-item>
+        <!-- <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/results/{{::criteria.id}}/view?_noback" name="enterprise.results">
+            {{'poll.results' | translate}}</md-nav-item> -->
+    </md-nav-bar>
+</div>
+      
+<div class="ois-form-layout-padding ois-form-layout" layout="row" ng-cloak>
+    <form name="pollForm" role="form" ng-submit="save()" flex novalidate>
+        <div layout="column" class="form-readonly" flex>
+            <div layout="row">
+                <md-input-container flex="50">
+                    <label>{{'poll.type' | translate}}</label>
+                    <hois-classifier-value ng-model="criteria.typeCode" main-classifier-code="KYSITLUS"></hois-classifier-value>
+                </md-input-container>
+            </div>
+            <div layout="row">
+                <md-input-container flex="100">
+                    <label class="textInput">{{'poll.basicData.name' | translate}}</label>
+                    <hois-value value="criteria.nameEt"></hois-value>
+                </md-input-container>
+            </div>
+            <div layout="row" flex="100">
+                <md-input-container flex>
+                    <label class="textInput">{{'poll.basicData.foreWord' | translate}}</label>
+                    <hois-value value="criteria.foreword"></hois-value>
+                </md-input-container>
+            </div>
+            <div layout="row" flex>
+                <md-input-container flex>
+                    <label class="textInput">{{'poll.basicData.afterWord' | translate}}</label>
+                    <hois-value value="criteria.afterword"></hois-value>
+                </md-input-container>
+            </div>
+            <div ng-if="formState.targetCodes.length > 0" layout="row">
+                <md-table-container flex="50" style="max-height: 200px">
+                    <table md-table class="secondary-table">
+                        <thead md-head>
+                            <tr md-row>
+                                <th md-column width="90%">{{'poll.target' | translate}}</th>
+                                <th md-column width="10%"></th>
+                            </tr>
+                        </thead>
+                        <tbody md-body>
+                        <tr md-row ng-repeat="targetCode in formState.targetCodes" ng-class-odd="'odd'" ng-class-even="'even'">
+                            <td md-cell>{{currentLanguageNameField(targetCode)}}</td>
+                            <td md-cell>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </md-table-container>
+            </div>
+            <div ng-if="formState.studentGroups.length > 0" layout="row">
+                <md-table-container flex="50" style="max-height: 200px">
+                    <table md-table class="secondary-table">
+                        <thead md-head>
+                            <tr md-row>
+                                <th md-column width="90%">{{'poll.studentgroups' | translate}}</th>
+                                <th md-column width="10%"></th>
+                            </tr>
+                        </thead>
+                        <tbody md-body>
+                        <tr md-row ng-repeat="studentgroup in formState.studentGroups" ng-class-odd="'odd'" ng-class-even="'even'">
+                            <td md-cell>{{currentLanguageNameField(studentgroup)}}</td>
+                            <td md-cell>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </md-table-container>
+            </div>
+            <br>
+            <md-input-container flex="45" ng-if="criteria.typeCode === 'KYSITLUS_O'">
+                <md-checkbox ng-model="criteria.isTeacherComment" aria-label="required" disabled style="margin-bottom: 0px">
+                    {{'poll.basicData.teacherCanComment' | translate}}
+                </md-checkbox>
+            </md-input-container>
+            <md-input-container flex="45" ng-if="criteria.typeCode === 'KYSITLUS_O' && criteria.isTeacherComment">
+                <md-checkbox ng-model="criteria.isTeacherCommentVisible" aria-label="required" disabled>
+                    {{'poll.basicData.teacherCommentVisible' | translate}}
+                </md-checkbox>
+            </md-input-container>
+            <div layout="row" ng-if="criteria.typeCode === 'KYSITLUS_O' || criteria.typeCode === 'KYSITLUS_P'">
+                <md-input-container flex="20">
+                    <label>{{'poll.basicData.journalFrom' | translate}}</label>
+                    <hois-value value="criteria.journalFrom | hoisDate"></hois-value>
+                </md-input-container>
+                <md-input-container flex="20" flex-offset="5">
+                    <label>{{'poll.basicData.journalThru' | translate}}</label>
+                    <hois-value value="criteria.journalThru | hoisDate"></hois-value>
+                </md-input-container>
+            </div>
+            <div layout="row">
+                <md-input-container flex="20">
+                    <label>{{'main.validFrom' | translate}}</label>
+                    <hois-value value="criteria.validFrom | hoisDate"></hois-value>
+                </md-input-container>
+                <md-input-container flex="20" flex-offset="5">
+                    <label>{{'main.validThru' | translate}}</label>
+                    <hois-value value="criteria.validThru | hoisDate"></hois-value>
+                </md-input-container>
+            </div>
+            <div layout="row">
+                <md-input-container flex="25">
+                    <label>{{'poll.basicData.notificationDate' | translate}}</label>
+                    <hois-value value="criteria.reminderDt | hoisDate"></hois-value>
+                </md-input-container>
+            </div>
+            <div layout="row" ng-if="formState.status !== undefined">
+                <md-input-container flex="25">
+                    <label>{{'poll.basicData.status' | translate}}</label>
+                    <hois-value value="currentLanguageNameField(formState.status)"></hois-value>
+                </md-input-container>
+            </div>
+        </div>
+        <div layout="row" layout-xs="column">
+            <md-button flex-xs="100" ng-if="auth.isAdmin() && formState.status.code !== 'KYSITLUS_STAATUS_K'" ng-href="#/poll/{{::criteria.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+            <!-- <md-button flex-xs="100" ng-if="auth.isAdmin() && criteria.id" ng-click="saveAndLoad()" class="md-raised">{{'poll.copy' | translate}}</md-button> -->
+            <md-button flex-xs="100" ng-if="auth.isAdmin() && formState.status.code === 'KYSITLUS_STAATUS_K'" ng-click="removeConfirm()" class="md-raised">{{'poll.basicData.removeConfirm' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="test()" class="md-raised">{{'poll.test' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="back('#/poll')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        </div>
+    </form>
+</div>

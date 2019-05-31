@@ -80,6 +80,10 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     });
   }
 
+  $scope.hideInvalid = function (cl) {
+    return !Classifier.isValid(cl);
+  };
+
   $scope.finished = function (quickUpdateInProgress) {
     var rowHeight = quickUpdateInProgress ? STUDENT_ROW_WITH_INPUT_HEIGHT : STUDENT_ROW_HEIGHT;
     angular.element(document.getElementsByClassName("container"))
@@ -285,6 +289,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       dialogScope.gradeInputAsSelect = $scope.formState.gradeInputAsSelect;
       dialogScope.grades = $scope.grades;
       dialogScope.gradeInputRegex = $scope.gradeInputRegex;
+      dialogScope.hideInvalid = $scope.hideInvalid;
 
       dialogScope.entryDateChanged = function () {
         getStudentsWithAcceptedAbsences(true);
@@ -741,6 +746,12 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     dialogService.showDialog('journal/journal.moduleDescription.dialog.html', function (dialogScope) {
       dialogScope.moduleDescription = moduleDescription;
       dialogScope.isDistinctiveAssessment = moduleDescription.assessment === 'KUTSEHINDAMISVIIS_E' ? true : false;
+    });
+  };
+
+  $scope.individualCurriculumDialog = function (individualCurriculum) {
+    dialogService.showDialog('journal/journal.individualCurriculum.dialog.html', function (dialogScope) {
+      dialogScope.individualCurriculum = individualCurriculum;
     });
   };
 

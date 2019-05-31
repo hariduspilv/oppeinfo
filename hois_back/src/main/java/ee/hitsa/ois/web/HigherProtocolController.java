@@ -165,10 +165,8 @@ public class HigherProtocolController {
         byte[] pdfData = pdfService.generate(HigherProtocolReport.TEMPLATE_NAME,
                 higherProtocolService.higherProtocolReport(protocol));
         
-        MobileIdSession session = bdocService.mobileSign("protokoll.pdf",
-                MediaType.APPLICATION_PDF_VALUE,
-                pdfData,
-                user.getMobileNumber());
+        MobileIdSession session = bdocService.mobileSign("protokoll.pdf", MediaType.APPLICATION_PDF_VALUE, pdfData,
+                user.getPersonId());
 
         httpSession.setAttribute(MOBILE_SESSCODE, session.getSesscode());
         return EntityMobileSignDto.of(savedProtocol, session.getChallengeID());

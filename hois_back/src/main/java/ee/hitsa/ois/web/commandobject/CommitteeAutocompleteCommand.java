@@ -8,6 +8,7 @@ public class CommitteeAutocompleteCommand extends SearchCommand {
     private LocalDate validFrom;
     private LocalDate validThru;
     private Long memberPerson;
+    private Boolean valid;
 
     public String getType() {
         return type;
@@ -40,5 +41,14 @@ public class CommitteeAutocompleteCommand extends SearchCommand {
     public void setMemberPerson(Long memberPerson) {
         this.memberPerson = memberPerson;
     }
+
+    public Boolean getValid() {
+        return valid;
+    }
+
+    public void setValid(Boolean valid) {
+        this.valid = valid;
+    }
+    
 
 }

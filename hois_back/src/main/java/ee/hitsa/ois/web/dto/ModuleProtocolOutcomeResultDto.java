@@ -13,8 +13,13 @@ public class ModuleProtocolOutcomeResultDto {
     
     @ClassifierRestriction(MainClassCode.KUTSEHINDAMINE)
     private String grade;
-    
-    public ModuleProtocolOutcomeResultDto(Long journalId, Long curriculumModuleOutcomeId, String grade, LocalDateTime gradeInserted) {
+
+    public ModuleProtocolOutcomeResultDto() {
+        
+    }
+
+    public ModuleProtocolOutcomeResultDto(Long journalId, Long curriculumModuleOutcomeId, String grade,
+            LocalDateTime gradeInserted) {
         this.journalId = journalId;
         this.curriculumModuleOutcomeId = curriculumModuleOutcomeId;
         this.grade = grade;

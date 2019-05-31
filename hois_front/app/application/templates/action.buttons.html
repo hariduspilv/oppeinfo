@@ -1,22 +1,35 @@
 <div ng-if="isStudentRepresentative()" layout-xs="column">
     <md-button ng-if="application.canEditStudent && application.id > 0 && application.status === 'AVALDUS_STAATUS_KOOST' && application.needsRepresentativeConfirm === true" ng-click="submit()" class="md-raised md-primary">{{'main.button.allowSubmit' | translate}}</md-button>
     <md-button ng-if="application.canEditStudent && application.id > 0 && application.status === 'AVALDUS_STAATUS_KOOST' && application.needsRepresentativeConfirm === true" class="md-raised" ng-click="reject()">{{'main.button.reject' | translate}}</md-button>
+    <md-button ng-if="application.canEditStudent && application.id > 0 && application.status === 'AVALDUS_STAATUS_KINNITAM' && application.type === 'AVALDUS_LIIK_TUGI'"
+      ng-click="confirmConfirmation()" class="md-raised md-primary">{{'application.confirmDecision' | translate}}</md-button>
 </div>
 
 <div ng-if="!isStudentRepresentative()" layout-xs="column">
   <md-button ng-if="application.canEditStudent && application.id > 0 && application.status === 'AVALDUS_STAATUS_KOOST' && 
-    ((!auth.isAdmin() && application.needsRepresentativeConfirm === false) || (auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS')))" 
+    ((!auth.isAdmin() && application.needsRepresentativeConfirm === false) || auth.isTeacher() || (auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS')))" 
     ng-click="submit()" class="md-raised md-primary">{{'main.button.submit' | translate}}</md-button>
   <md-button ng-if="application.canEditStudent && application.id > 0 &&
-    (application.type === 'AVALDUS_LIIK_MUU' || application.type === 'AVALDUS_LIIK_OVERSKAVA' || application.type === 'AVALDUS_LIIK_RAKKAVA') &&
+    (application.type === 'AVALDUS_LIIK_MUU' || application.type === 'AVALDUS_LIIK_OVERSKAVA' || application.type === 'AVALDUS_LIIK_RAKKAVA' || application.type === 'AVALDUS_LIIK_TUGI') &&
     (application.status === 'AVALDUS_STAATUS_ESIT' || application.status === 'AVALDUS_STAATUS_YLEVAAT') && 
     (auth.isAdmin() && isAuthorized('ROLE_OIGUS_K_TEEMAOIGUS_AVALDUS'))" 
     ng-click="confirm()" class="md-raised md-primary">{{'main.button.confirm' | translate}}</md-button>
-  <md-button ng-if="application.canEditStudent && application.id > 0 && (application.status === 'AVALDUS_STAATUS_YLEVAAT' 
+  <md-button ng-if="application.canEditStudent && application.id > 0 && 
+    application.status === 'AVALDUS_STAATUS_KINNITAM' && application.type === 'AVALDUS_LIIK_TUGI' &&
+    ((auth.isStudent() && application.isAdult) || auth.isParent() || (auth.isAdmin() && isAuthorized('ROLE_OIGUS_K_TEEMAOIGUS_AVALDUS')))"
+    ng-click="confirmConfirmation()" class="md-raised md-primary">{{'application.confirmDecision' | translate}}</md-button>
+  <md-button ng-if="application.canEditStudent && application.id > 0 && 
+    (application.status === 'AVALDUS_STAATUS_TAGASI' || application.status === 'AVALDUS_STAATUS_KINNITAM' || application.status === 'AVALDUS_STAATUS_KINNITATUD') &&
+    application.type === 'AVALDUS_LIIK_TUGI' && (application.committeeDecisionAdded || application.representativeConfirmed) &&
+    (auth.isAdmin() && isAuthorized('ROLE_OIGUS_K_TEEMAOIGUS_AVALDUS'))"
+    ng-click="removeConfirmation()" class="md-raised md-primary">{{'application.removeConfirmation' | translate}}</md-button>
+  <md-button ng-if="application.canEditStudent && application.id > 0 && ((application.status === 'AVALDUS_STAATUS_YLEVAAT' && (application.type !== 'AVALDUS_LIIK_TUGI' || !application.committee))
     || (application.status === 'AVALDUS_STAATUS_KOOST' && application.needsRepresentativeConfirm)) 
     && (auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS'))" 
     class="md-raised" ng-click="reject()">{{'main.button.reject' | translate}}</md-button>
   <md-button ng-if="application.canEditStudent && application.id > 0 && application.status === 'AVALDUS_STAATUS_KOOST'
     && !(auth.isAdmin() && !isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS'))" 
     ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+  <md-button ng-if="application.id > 0 && application.representativeConfirmed && application.type === 'AVALDUS_LIIK_TUGI'" 
+    ng-href="{{pdfUrl()}}" target="_blank" class="md-raised">{{'main.button.print' | translate}}</md-button>
 </div>

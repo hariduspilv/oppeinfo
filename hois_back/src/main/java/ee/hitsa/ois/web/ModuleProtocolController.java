@@ -201,11 +201,9 @@ public class ModuleProtocolController {
         Protocol savedProtocol = moduleProtocolService.save(protocol, moduleProtocolSaveForm);
         byte[] pdfData = pdfService.generate(ModuleProtocolReport.TEMPLATE_NAME,
                 moduleProtocolService.moduleProtocolReport(savedProtocol));
-        
-        MobileIdSession session = bdocService.mobileSign("mooduli_protokoll.pdf",
-                MediaType.APPLICATION_PDF_VALUE,
-                pdfData,
-                user.getMobileNumber());
+
+        MobileIdSession session = bdocService.mobileSign("mooduli_protokoll.pdf", MediaType.APPLICATION_PDF_VALUE,
+                pdfData, user.getPersonId());
 
         httpSession.setAttribute(MOBILE_SESSCODE, session.getSesscode());
         return EntityMobileSignDto.of(savedProtocol, session.getChallengeID());

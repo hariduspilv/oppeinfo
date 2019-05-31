@@ -17,6 +17,7 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.Directive;
@@ -34,6 +35,7 @@ import ee.hitsa.ois.validation.ApplicationValidation.Ovorm;
 import ee.hitsa.ois.validation.ApplicationValidation.Valis;
 import ee.hitsa.ois.validation.ApplicationValidation.Overskava;
 import ee.hitsa.ois.validation.ApplicationValidation.Rakkava;
+import ee.hitsa.ois.validation.ApplicationValidation.Tugi;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.PeriodRange;
 import ee.hitsa.ois.validation.Required;
@@ -135,7 +137,7 @@ public class Application extends BaseEntityWithId implements Period {
     @Required(groups = {Valis.class})
     private Classifier abroadProgramme;
 
-    @Required(groups = {Muu.class})
+    @Required(groups = {Muu.class, Tugi.class})
     private String otherText;
 
     private Boolean needsRepresentativeConfirm = Boolean.FALSE;
@@ -155,6 +157,27 @@ public class Application extends BaseEntityWithId implements Period {
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @Required(groups = {Overskava.class, Rakkava.class})
     private StudentGroup studentGroup;
+    
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    private Committee committee;
+    @Size(max = 10000)
+    private String decision;
+    private Boolean isDecided;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "application_id", nullable = false, updatable = false)
+    private Set<ApplicationSupportService> supportServices;
+    @Size(max = 10000)
+    private String implementationPlan;
+    /** Means that representative has or has not accepted confirmation of this application. */
+    private Boolean isRepresentativeConfirmed;
+    
+    private LocalDateTime committeeAdded;
+    private LocalDateTime committeeDecisionAdded;
+    private LocalDateTime representativeConfirmed;
+    @Size(max = 4000)
+    private String committeeAddInfo;
+    @Size(max = 4000)
+    private String representativeDecisionAddInfo;
 
     @OneToMany
     @JoinColumn(name = "application_id", nullable = false, updatable = false, insertable = false)
@@ -417,6 +440,95 @@ public class Application extends BaseEntityWithId implements Period {
 
     public void setDirective(Directive directive) {
         this.directive = directive;
+    }
+
+    public Committee getCommittee() {
+        return committee;
+    }
+
+    public void setCommittee(Committee committee) {
+        this.committee = committee;
+    }
+
+    public String getDecision() {
+        return decision;
+    }
+
+    public void setDecision(String decision) {
+        this.decision = decision;
+    }
+
+    public Boolean getIsDecided() {
+        return isDecided;
+    }
+
+    public void setIsDecided(Boolean isDecided) {
+        this.isDecided = isDecided;
+    }
+
+    public Boolean getIsRepresentativeConfirmed() {
+        return isRepresentativeConfirmed;
+    }
+
+    public void setIsRepresentativeConfirmed(Boolean isRepresentativeConfirmed) {
+        this.isRepresentativeConfirmed = isRepresentativeConfirmed;
+    }
+
+    public Set<ApplicationSupportService> getSupportServices() {
+        return supportServices != null ? supportServices : (supportServices = new HashSet<>());
+    }
+
+    public void setSupportServices(Set<ApplicationSupportService> supportServices) {
+        this.supportServices.clear();
+        this.supportServices.addAll(supportServices);
+    }
+
+    public String getImplementationPlan() {
+        return implementationPlan;
+    }
+
+    public void setImplementationPlan(String implementationPlan) {
+        this.implementationPlan = implementationPlan;
+    }
+
+    public LocalDateTime getCommitteeAdded() {
+        return committeeAdded;
+    }
+
+    public void setCommitteeAdded(LocalDateTime committeeAdded) {
+        this.committeeAdded = committeeAdded;
+    }
+
+    public LocalDateTime getCommitteeDecisionAdded() {
+        return committeeDecisionAdded;
+    }
+
+    public void setCommitteeDecisionAdded(LocalDateTime committeeDecisionAdded) {
+        this.committeeDecisionAdded = committeeDecisionAdded;
+    }
+
+    public LocalDateTime getRepresentativeConfirmed() {
+        return representativeConfirmed;
+    }
+
+    public void setRepresentativeConfirmed(LocalDateTime representativeConfirmed) {
+        this.representativeConfirmed = representativeConfirmed;
+    }
+
+    public String getCommitteeAddInfo() {
+        return committeeAddInfo;
+    }
+
+    public void setCommitteeAddInfo(String committeeAddInfo) {
+        this.committeeAddInfo = committeeAddInfo;
+    }
+
+    public String getRepresentativeDecisionAddInfo() {
+        return representativeDecisionAddInfo;
+    }
+
+    public void setRepresentativeDecisionAddInfo(String representativeDecisionAddInfo) {
+        this.representativeDecisionAddInfo = representativeDecisionAddInfo;
     }
 
     public List<DirectiveStudent> getDirectiveStudents() {

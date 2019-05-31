@@ -46,7 +46,9 @@
           </div>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.reason" name="students[{{$index}}].reason" criteria="{vocational: row.oldCurriculumVersion.isVocational ? true : undefined, higher: !row.oldCurriculumVersion.isVocational ? true : undefined}" model-value-attr="code" main-classifier-code="AKADPUHKUS_POHJUS" aria-label="{{'directive.student.reason' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.reason" name="students[{{$index}}].reason" only-valid ignore-preselected
+            criteria="{vocational: row.oldCurriculumVersion.isVocational ? true : undefined, higher: !row.oldCurriculumVersion.isVocational ? true : undefined}"
+            model-value-attr="code" main-classifier-code="AKADPUHKUS_POHJUS" aria-label="{{'directive.student.reason' | translate}}"></hois-classifier-select>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].reason'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>
           </div>

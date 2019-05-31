@@ -3,12 +3,15 @@ package ee.hitsa.ois.web.commandobject.directive;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 
+import ee.hitsa.ois.domain.directive.DirectiveStudentModule;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.DirectiveValidation.Immat;
@@ -16,6 +19,8 @@ import ee.hitsa.ois.validation.EstonianIdCode;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.StudyPeriodRange;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.directive.ExistingDirectiveStudentDto;
 
 public class DirectiveForm extends VersionedCommand {
 
@@ -176,6 +181,14 @@ public class DirectiveForm extends VersionedCommand {
         private Long student;
         private Long saisApplication;
         private Long scholarshipApplication;
+        @Size(max=4000, message="maxlength")
+        private String addInfo;
+        private Boolean isAbsence;
+        private List<String> occupations;
+        private Map<String, List<String>> specialities;
+        private List<DirectiveFormStudentModule> modules;
+        private List<ExistingDirectiveStudentDto> existingDirectiveStudents;
+        private Long directiveStudent;
 
         public Long getId() {
             return id;
@@ -456,5 +469,114 @@ public class DirectiveForm extends VersionedCommand {
         public void setScholarshipApplication(Long scholarshipApplication) {
             this.scholarshipApplication = scholarshipApplication;
         }
+
+        public String getAddInfo() {
+            return addInfo;
+        }
+
+        public void setAddInfo(String addInfo) {
+            this.addInfo = addInfo;
+        }
+
+        public Boolean getIsAbsence() {
+            return isAbsence;
+        }
+
+        public void setIsAbsence(Boolean isAbsence) {
+            this.isAbsence = isAbsence;
+        }
+
+        public List<String> getOccupations() {
+            return occupations;
+        }
+
+        public void setOccupations(List<String> occupations) {
+            this.occupations = occupations;
+        }
+
+        public Map<String, List<String>> getSpecialities() {
+            return specialities;
+        }
+
+        public void setSpecialities(Map<String, List<String>> specialities) {
+            this.specialities = specialities;
+        }
+
+        public List<DirectiveFormStudentModule> getModules() {
+            return modules;
+        }
+
+        public void setModules(List<DirectiveFormStudentModule> modules) {
+            this.modules = modules;
+        }
+
+        public List<ExistingDirectiveStudentDto> getExistingDirectiveStudents() {
+            return existingDirectiveStudents;
+        }
+
+        public void setExistingDirectiveStudents(List<ExistingDirectiveStudentDto> existingDirectiveStudents) {
+            this.existingDirectiveStudents = existingDirectiveStudents;
+        }
+
+        public Long getDirectiveStudent() {
+            return directiveStudent;
+        }
+
+        public void setDirectiveStudent(Long directiveStudent) {
+            this.directiveStudent = directiveStudent;
+        }
+
+    }
+
+    public static class DirectiveFormStudentModule {
+        private Long id;
+        private AutocompleteResult module;
+        @Required
+        private Long curriculumVersionOmodule;
+        @Required
+        @Size(max = 4000, message = "maxlength")
+        private String addInfo;
+
+        public static DirectiveFormStudentModule of(DirectiveStudentModule directiveStudentModule) {
+            DirectiveFormStudentModule dto = new DirectiveFormStudentModule();
+            dto.setId(directiveStudentModule.getId());
+            dto.setModule(AutocompleteResult.of(directiveStudentModule.getCurriculumVersionOmodule(), false));
+            dto.setCurriculumVersionOmodule(EntityUtil.getId(directiveStudentModule.getCurriculumVersionOmodule()));
+            dto.setAddInfo(directiveStudentModule.getAddInfo());
+            return dto;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public AutocompleteResult getModule() {
+            return module;
+        }
+
+        public void setModule(AutocompleteResult module) {
+            this.module = module;
+        }
+
+        public Long getCurriculumVersionOmodule() {
+            return curriculumVersionOmodule;
+        }
+
+        public void setCurriculumVersionOmodule(Long curriculumVersionOmodule) {
+            this.curriculumVersionOmodule = curriculumVersionOmodule;
+        }
+
+        public String getAddInfo() {
+            return addInfo;
+        }
+
+        public void setAddInfo(String addInfo) {
+            this.addInfo = addInfo;
+        }
+
     }
 }

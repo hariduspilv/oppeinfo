@@ -32,6 +32,7 @@ public class StudentAbsenceDto extends StudentAbsenceForm {
     private Map<LocalDate, Map<Long, Boolean>> acceptedLessonsByDate;
     private Long maxLessonNr;
     private Long contractId;
+    private Long directiveStudentId;
     
     public static StudentAbsenceDto of(StudentAbsence studentAbsence) {
         StudentAbsenceDto dto = EntityUtil.bindToDto(studentAbsence, new StudentAbsenceDto(), "student");
@@ -65,6 +66,7 @@ public class StudentAbsenceDto extends StudentAbsenceForm {
         dto.setMaxLessonNr(studentAbsence.getStudentAbsenceLessons().stream().map(StudentAbsenceLesson::getLessonNr)
                 .max(Comparator.comparing(Long::valueOf)).orElse(Long.valueOf(0)));
         dto.setContractId(EntityUtil.getNullableId(studentAbsence.getContract()));
+        dto.setDirectiveStudentId(EntityUtil.getNullableId(studentAbsence.getDirectiveStudent()));
         return dto;
     }
 
@@ -186,6 +188,14 @@ public class StudentAbsenceDto extends StudentAbsenceForm {
 
     public void setContractId(Long contractId) {
         this.contractId = contractId;
+    }
+
+    public Long getDirectiveStudentId() {
+        return directiveStudentId;
+    }
+
+    public void setDirectiveStudentId(Long directiveStudentId) {
+        this.directiveStudentId = directiveStudentId;
     }
 
 }

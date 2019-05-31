@@ -132,6 +132,10 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
       $translate.use(languageCode);
     };
 
+    $rootScope.currentLanguage = function() {
+      return $scope.currentLanguage();  
+    }
+
     $scope.currentLanguage = function() {
       return $translate.use();
     };

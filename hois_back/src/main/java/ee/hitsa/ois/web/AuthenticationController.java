@@ -1,14 +1,19 @@
 package ee.hitsa.ois.web;
 
+import java.lang.invoke.MethodHandles;
 import java.net.URLEncoder;
 import java.security.Principal;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -21,12 +26,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.auth.EstonianIdCardAuthenticationToken;
 import ee.hitsa.ois.auth.LoginMethod;
 import ee.hitsa.ois.config.HoisJwtProperties;
 import ee.hitsa.ois.domain.User;
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.service.UserService;
@@ -38,6 +45,7 @@ import ee.hitsa.ois.service.security.MobileIdLoginService;
 import ee.hitsa.ois.service.security.MobileIdSession;
 import ee.hitsa.ois.service.security.MobileIdSessionResponse;
 import ee.hitsa.ois.service.security.MobileIdStatus;
+import ee.hitsa.ois.service.security.TaraService;
 import ee.hitsa.ois.util.EntityUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -45,6 +53,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 
 @RestController
 public class AuthenticationController {
+
+    protected static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Autowired
     private HoisUserDetailsService userDetailsService;
@@ -54,6 +64,8 @@ public class AuthenticationController {
     private HoisJwtProperties hoisJwtProperties;
     @Autowired
     private MobileIdLoginService mobileIdService;
+    @Autowired
+    private TaraService taraService;
     @Autowired
     private LdapService ldapService;
     @Autowired
@@ -147,6 +159,39 @@ public class AuthenticationController {
             SecurityContextHolder.getContext().setAuthentication(token);
         }
         return status;
+    }
+
+    @RequestMapping("/taraLogin")
+    public void taraLogin(HttpServletResponse response, Language lang) throws Exception {
+        log.info("TARA authentication started");
+        String crsfToken = UUID.randomUUID().toString();
+        Cookie cookie = new Cookie("taraStateToken", crsfToken);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        response.addCookie(cookie);
+        response.sendRedirect(taraService.authenticationRequest(crsfToken, lang));
+    }
+
+    @CrossOrigin
+    @RequestMapping("/taraCallback")
+    public void taraCallback(@RequestParam String code, @RequestParam String state, HttpServletRequest request,
+            HttpServletResponse response)
+            throws Exception {
+        String idcode = taraService.getAuthenticatedPerson(code, state, request);
+
+        String token = "";
+        Principal principal = SecurityContextHolder.getContext().getAuthentication();
+        if (principal != null) {
+            token = Jwts.builder()
+                    .setSubject(idcode)
+                    .claim(hoisJwtProperties.getClaimLoginMethod(), LoginMethod.LOGIN_TYPE_T.name())
+                    .setExpiration(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(1)))
+                    .signWith(SignatureAlgorithm.HS512, hoisJwtProperties.getSecret())
+                    .compact();
+            addJwtHeader(response, token);
+        }
+        // TODO: uses idloginRedirect because frontend would be the same, if old id login is remove rename everything
+        response.sendRedirect(idloginRedirect + "?token=" + token + "&redirect=" + frontendBaseUrl);
     }
 
     @PostMapping("/ldap")

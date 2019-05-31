@@ -7,13 +7,15 @@ public class LoadTypeDto {
     private Boolean isCapacity = Boolean.FALSE;
     private String capacityValue;
     
-    private Boolean plannedLessons;
-    private Boolean occurredLessons;
+    private Boolean plannedLessons = Boolean.FALSE;
+    private Boolean journalOccurredLessons = Boolean.FALSE;
+    private Boolean timetableOccurredLessons = Boolean.FALSE;
     private String capacityCode;
 
-    private Boolean substitutableEvents;
-    private Boolean singleEvents;
-    private Boolean grandTotal;
+    private Boolean substitutableEvents = Boolean.FALSE;
+    private Boolean singleEvents = Boolean.FALSE;
+    private Boolean journalGrandTotal  = Boolean.FALSE;
+    private Boolean timetableGrandTotal  = Boolean.FALSE;
 
     public Long getPeriodIndex() {
         return periodIndex;
@@ -55,12 +57,20 @@ public class LoadTypeDto {
         this.plannedLessons = plannedLessons;
     }
 
-    public Boolean getOccurredLessons() {
-        return occurredLessons;
+    public Boolean getJournalOccurredLessons() {
+        return journalOccurredLessons;
     }
 
-    public void setOccurredLessons(Boolean occurredLessons) {
-        this.occurredLessons = occurredLessons;
+    public void setJournalOccurredLessons(Boolean journalOccurredLessons) {
+        this.journalOccurredLessons = journalOccurredLessons;
+    }
+
+    public Boolean getTimetableOccurredLessons() {
+        return timetableOccurredLessons;
+    }
+
+    public void setTimetableOccurredLessons(Boolean timetableOccurredLessons) {
+        this.timetableOccurredLessons = timetableOccurredLessons;
     }
 
     public String getCapacityCode() {
@@ -87,12 +97,20 @@ public class LoadTypeDto {
         this.singleEvents = singleEvents;
     }
 
-    public Boolean getGrandTotal() {
-        return grandTotal;
+    public Boolean getJournalGrandTotal() {
+        return journalGrandTotal;
     }
 
-    public void setGrandTotal(Boolean grandTotal) {
-        this.grandTotal = grandTotal;
+    public void setJournalGrandTotal(Boolean journalGrandTotal) {
+        this.journalGrandTotal = journalGrandTotal;
+    }
+
+    public Boolean getTimetableGrandTotal() {
+        return timetableGrandTotal;
+    }
+
+    public void setTimetableGrandTotal(Boolean timetableGrandTotal) {
+        this.timetableGrandTotal = timetableGrandTotal;
     }
 
 }

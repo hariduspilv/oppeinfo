@@ -63,6 +63,10 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
     });
   }
 
+  $scope.hideInvalid = function (cl) {
+    return !Classifier.isValid(cl);
+  }
+
   $scope.gradeChanged = function(row) {
     if (row) {
       var savedResult = $filter('filter')($scope.savedStudents, {id: row.id}, true)[0];
@@ -94,19 +98,29 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
 
       protocolStudent.curriculumOccupations.forEach(function (curriculumOccupation) {
         if (curriculumOccupation.partOccupationCode) {
-          protocolStudent.occupations[curriculumOccupation.partOccupationCode] = {
-            code: curriculumOccupation.partOccupationCode,
-            certificateNr: curriculumOccupation.certificateNr,
-            ceritificateId: curriculumOccupation.studentOccupationCertificateId,
-            granted: true
-          };
+          if (angular.isDefined(protocolStudent.occupations[curriculumOccupation.partOccupationCode])) {
+            var addedCertificateNr = protocolStudent.occupations[curriculumOccupation.partOccupationCode].certificateNr;
+            protocolStudent.occupations[curriculumOccupation.partOccupationCode].certificateNr = addedCertificateNr + ", " + curriculumOccupation.certificateNr;
+          } else {
+            protocolStudent.occupations[curriculumOccupation.partOccupationCode] = {
+              code: curriculumOccupation.partOccupationCode,
+              certificateNr: curriculumOccupation.certificateNr,
+              ceritificateId: curriculumOccupation.studentOccupationCertificateId,
+              granted: true
+            };
+          }
         } else if (!curriculumOccupation.partOccupationCode) {
-          protocolStudent.occupations[curriculumOccupation.occupationCode] = {
-            code: curriculumOccupation.occupationCode,
-            certificateNr: curriculumOccupation.certificateNr,
-            ceritificateId: curriculumOccupation.studentOccupationCertificateId,
-            granted: true
-          };
+          if (angular.isDefined(protocolStudent.occupations[curriculumOccupation.occupationCode])) {
+            var addedCertificateNr = protocolStudent.occupations[curriculumOccupation.occupationCode].certificateNr;
+            protocolStudent.occupations[curriculumOccupation.occupationCode].certificateNr = addedCertificateNr + ", " + curriculumOccupation.certificateNr;
+          } else {
+            protocolStudent.occupations[curriculumOccupation.occupationCode] = {
+              code: curriculumOccupation.occupationCode,
+              certificateNr: curriculumOccupation.certificateNr,
+              ceritificateId: curriculumOccupation.studentOccupationCertificateId,
+              granted: true
+            };
+          }
         }
       });
     });
@@ -211,20 +225,16 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
       finalDate: $scope.protocol.finalDate,
       committeeId: $scope.protocol.committee,
       protocolCommitteeMembers: getPresentCommitteeMembers($scope.committeeMembers),
-      protocolStudents: getStudentsWithOccupations($scope.protocol.protocolStudents)
+      protocolStudents: getStudentsWithOccupations()
     };
 
-    if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
-      ProtocolUtils.signBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, 'finalProtocol.messages.confirmed', entityToDto, resolveDeferredIfExists);
-    } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
-      ProtocolUtils.mobileSignBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, 'finalProtocol.messages.confirmed', entityToDto, resolveDeferredIfExists);
-    }
+    ProtocolUtils.signBeforeConfirm($scope.auth, endpoint + '/' + $scope.protocol.id, data, 'finalProtocol.messages.confirmed',
+      entityToDto, resolveDeferredIfExists);
     return deferredEntityToDto.promise;
   };
 
   var FinalVocationlProtocolEndpoint = QueryUtils.endpoint(endpoint);
   $scope.save = function () {
-    var protocolStudents = getStudentsWithOccupations($scope.protocol.protocolStudents);
     if(!validationPassed()) {
       return false;
     }
@@ -234,14 +244,14 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
       finalDate: $scope.protocol.finalDate,
       committeeId: $scope.protocol.committee,
       protocolCommitteeMembers: getPresentCommitteeMembers($scope.committeeMembers),
-      protocolStudents: getStudentsWithOccupations($scope.protocol.protocolStudents) })
+      protocolStudents: getStudentsWithOccupations() })
       .$update().then(function (result) {
         message.info('main.messages.create.success');
         entityToDto(result);
       }).catch(angular.noop);
   };
   
-  function getStudentsWithOccupations(students) {
+  function getStudentsWithOccupations() {
     var protocolStudents = $scope.protocol.protocolStudents;
 
     protocolStudents.forEach(function (student) {

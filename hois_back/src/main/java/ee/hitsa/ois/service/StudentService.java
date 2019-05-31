@@ -589,9 +589,10 @@ public class StudentService {
         if (logo != null) {
             dto.setPhoto(EntityUtil.bindToDto(logo, new OisFileCommand()));
         }
+        setStudentIndividualCurriculum(dto);
         return dto;
     }
-    
+
     public StudentCurriculumCompletion getStudentCurriculumCompletion(Student student) {
         List<StudentCurriculumCompletion> result = em.createQuery("select scc"
                 + " from StudentCurriculumCompletion scc where scc.student = ?1", 
@@ -600,7 +601,30 @@ public class StudentService {
                 .getResultList();
         return result.isEmpty() ? null : result.get(0);
     }
-    
+
+    private void setStudentIndividualCurriculum(StudentViewDto studentDto) {
+        List<?> result = em.createNativeQuery("select ds.start_date, coalesce(ds_lop.start_date, ds.end_date)"
+                + " from directive_student ds"
+                + " join directive d on d.id = ds.directive_id"
+                + " left join (directive_student ds_lop join directive d_lop on d_lop.id = ds_lop.directive_id "
+                + " and d_lop.type_code = :lopDirectiveType and d_lop.status_code = :directiveStatus) "
+                + " on ds_lop.directive_student_id = ds.id and ds_lop.canceled = false"
+                + " where ds.student_id = :studentId and d.type_code = :directiveType"
+                + " and d.status_code = :directiveStatus and ds.canceled = false"
+                + " and ds.start_date <= :today and coalesce(ds_lop.start_date, ds.end_date) >= :today")
+                .setParameter("studentId", studentDto.getId())
+                .setParameter("directiveType", DirectiveType.KASKKIRI_INDOK.name())
+                .setParameter("directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+                .setParameter("lopDirectiveType", DirectiveType.KASKKIRI_INDOKLOP.name())
+                .setParameter("today", JpaQueryUtil.parameterAsTimestamp(LocalDate.now()))
+                .getResultList();
+        if (!result.isEmpty()) {
+            studentDto.setIndividualCurriculum(Boolean.TRUE);
+            studentDto.setIndividualCurriculumStart(resultAsLocalDate(result.get(0), 0));
+            studentDto.setIndividualCurriculumEnd(resultAsLocalDate(result.get(0), 1));
+        }
+    }
+
     public Collection<StudentVocationalResultByTimeDto> vocationalResultsByTimeResults(Student student) {
         String journalResults = 
                 "select false as module, coalesce(je.entry_date,jes.grade_inserted) as kp, j.id, j.name_et, " + 
@@ -890,13 +914,18 @@ public class StudentService {
         String journalSelect = "cvo_id, cm_id, cv_code, cm_name_et, mcl_name_et, cm_name_en, mcl_name_en, cvot_id, cvot_name_et, cvot_credits, "
                 + "grade_code, grade_inserted, teacher_id, teacher_firstname, teacher_lastname, sy_year_code, sy_start_date, "
                 + "is_apel_transfer, is_formal, curriculum_version_result";
-        
-        String journalCurriculumResults = " select distinct on (cvot.id, teacher_id) cvo.id cvo_id, cm.id cm_id, "
+
+        // first value and partition is used to get the most suitable module's themes
+        // if journal has a module that is in student's curriculum version then that module's themes results are taken
+        String journalCurriculumResults = " select * from (select distinct on (cvot.id, teacher_id) cvo.id cvo_id, cm.id cm_id, "
                 + "cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits, "
                 + "jes.grade_code grade_code, jes.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
                 + "tp.lastname teacher_lastname, cvot.id cvot_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, "
                 + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, "
-                + "false is_apel_transfer, false is_formal, cvo.id = :curriculumVersionId curriculum_version_result "
+                + "false is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result,"
+                + "first_value(jot.lesson_plan_module_id) over(partition by jot.journal_id order by case when "
+                + "cvo.curriculum_version_id = :curriculumVersionId then 1 else 0 end desc, "
+                + "case when cm.curriculum_id = :curriculumId then 1 else 0 end desc, cvo.curriculum_version_id) as lp_id, jot.lesson_plan_module_id "
                 + "from journal_student js "
                 + "join journal_omodule_theme jot on jot.journal_id = js.journal_id "
                 + "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id "
@@ -914,14 +943,15 @@ public class StudentService {
                 + "left join person tp on tp.id = t.person_id "
                 + "where js.student_id = :studentId and je.entry_type_code = :entryTypeCode and jes.grade_code is not null "
                     + "and cm.id in (select cmo.curriculum_module_id from curriculum_version cv "
-                    + "join curriculum_version_omodule cmo on cv.id = cmo.curriculum_version_id where cv.id = :curriculumVersionId)";
+                    + "join curriculum_version_omodule cmo on cv.id = cmo.curriculum_version_id where cv.id = :curriculumVersionId)) "
+                + "x where lesson_plan_module_id = lp_id";
         
         String journalExtraCurriculumResults = " select distinct on (cvot.id, teacher_id) cvo.id cvo_id, cm.id cm_id, "
                 + "cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits, "
                 + "jes.grade_code grade_code, jes.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
                 + "tp.lastname teacher_lastname, cvot.id cvot_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, "
                 + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, "
-                + "false is_apel_transfer, false is_formal, cvo.id = :curriculumVersionId curriculum_version_result "
+                + "false is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result, null, null "
                 + "from journal_student js "
                 + "join journal_omodule_theme jot on jot.journal_id = js.journal_id "
                 + "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id "
@@ -951,7 +981,7 @@ public class StudentService {
                 + "cvot.credits cvot_credits, pj.grade_code grade_code, pj.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
                 + "tp.lastname teacher_lastname, cvot.id cvot_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, " 
                 + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, "
-                + "false is_apel_transfer, false is_formal, cvo.id = :curriculumVersionId curriculum_version_result "
+                + "false is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result, null, null "
                 + "from practice_journal pj "
                 + "join practice_journal_module_subject pjms on pj.id = pjms.practice_journal_id "
                 + "join curriculum_version_omodule_theme cvot on cvot.id = pjms.curriculum_version_omodule_theme_id "
@@ -971,7 +1001,7 @@ public class StudentService {
                 + "cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, mcl.name_en mcl_name_en, "
                 + "cvot.id cvot_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits, aai.grade_code grade_code, aa.confirmed grade_inserted, null as teacher_id, "
                 + "null teacher_firstname, null teacher_lastname, sy.year_code sy_year_code, sy.start_date sy_start_date, "
-                + "true is_apel_transfer, false is_formal, cvo.id = :curriculumVersionId curriculum_version_result "
+                + "true is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result "
                 + "from apel_application aa join apel_application_record aar on aa.id = aar.apel_application_id "
                 + "join apel_application_informal_subject_or_module aai on aar.id = aai.apel_application_record_id "
                 + "join curriculum_version_omodule_theme cvot on aai.curriculum_version_omodule_theme_id = cvot.id "
@@ -986,7 +1016,7 @@ public class StudentService {
                 + "mcl.name_et mcl_name_et, cm.name_en cm_name_en, mcl.name_en mcl_name_en, "
                 + "cvot.id cvot_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits, 'KUTSEHINDAMINE_A' grade_code, aa.confirmed grade_inserted, null as teacher_id, "
                 + "null teacher_firstname, null teacher_lastname, sy.year_code sy_year_code, sy.start_date sy_start_date, "
-                + "true is_apel_transfer, true is_formal, cvo.id = :curriculumVersionId curriculum_version_result "
+                + "true is_apel_transfer, true is_formal, cv.id = :curriculumVersionId curriculum_version_result "
                 + "from apel_application aa join apel_application_record aar on aa.id = aar.apel_application_id "
                 + "join apel_application_formal_subject_or_module aaf on aar.id = aaf.apel_application_record_id "
                 + "join apel_application_formal_replaced_subject_or_module aarf on aar.id = aarf.apel_application_record_id "
@@ -1007,6 +1037,7 @@ public class StudentService {
         qb.parameter("entryTypeCode", JournalEntryType.SISSEKANNE_L.name());
         qb.parameter("studentId", EntityUtil.getId(student));
         qb.parameter("curriculumVersionId", EntityUtil.getId(student.getCurriculumVersion()));
+        qb.parameter("curriculumId", EntityUtil.getId(student.getCurriculumVersion().getCurriculum()));
         qb.parameter("applicationStatus", ApelApplicationStatus.VOTA_STAATUS_C.name());
 
         List<?> rows = qb.select("cvo_id, cm_id, cv_code, cm_name_et, mcl_name_et, cm_name_en, mcl_name_en,"

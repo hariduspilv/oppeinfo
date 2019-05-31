@@ -7,10 +7,16 @@ import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_ENNIST;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_FINM;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_IMMAT;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_IMMATV;
+import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_INDOK;
+import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_INDOKLOP;
+import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_KIITUS;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_LOPET;
+import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_NOOMI;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_OKAVA;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_OKOORM;
+import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_OTEGEVUS;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_OVORM;
+import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_PRAKTIK;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_STIPTOET;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_STIPTOETL;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_TYHIST;
@@ -63,10 +69,11 @@ import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
-import ee.hitsa.ois.domain.directive.DirectiveStudentOccupation;
+import ee.hitsa.ois.domain.directive.DirectiveStudentModule;
 import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.school.School;
@@ -115,6 +122,7 @@ import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveDataCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm.DirectiveFormStudent;
+import ee.hitsa.ois.web.commandobject.directive.DirectiveForm.DirectiveFormStudentModule;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveSearchCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveStudentSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -126,6 +134,7 @@ import ee.hitsa.ois.web.dto.directive.DirectiveStudentDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveStudentSearchDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveViewDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveViewStudentDto;
+import ee.hitsa.ois.web.dto.directive.ExistingDirectiveStudentDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalStudyProgramme;
 
 @Transactional
@@ -150,6 +159,8 @@ public class DirectiveService {
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_EKSMAT, EnumUtil.toNameList(OPPURSTAATUS_O, OPPURSTAATUS_V));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_ENNIST, EnumUtil.toNameList(OPPURSTAATUS_K));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_FINM, EnumUtil.toNameList(OPPURSTAATUS_O));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_INDOK, StudentStatus.STUDENT_STATUS_ACTIVE);
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_INDOKLOP, StudentStatus.STUDENT_STATUS_ACTIVE);
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_LOPET, EnumUtil.toNameList(OPPURSTAATUS_O));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_OKAVA, EnumUtil.toNameList(OPPURSTAATUS_O));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_OKOORM, EnumUtil.toNameList(OPPURSTAATUS_O));
@@ -157,6 +168,10 @@ public class DirectiveService {
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_STIPTOET, StudentStatus.STUDENT_STATUS_ACTIVE);
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_VALIS, EnumUtil.toNameList(OPPURSTAATUS_O));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_STIPTOETL, StudentStatus.STUDENT_STATUS_ACTIVE);
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_KIITUS, StudentStatus.STUDENT_STATUS_ACTIVE);
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_NOOMI, StudentStatus.STUDENT_STATUS_ACTIVE);
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_OTEGEVUS, StudentStatus.STUDENT_STATUS_ACTIVE);
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_PRAKTIK, StudentStatus.STUDENT_STATUS_ACTIVE);
 
         for(ApplicationType appType : ApplicationType.values()) {
             if(appType.directiveType() != null) {
@@ -191,13 +206,62 @@ public class DirectiveService {
      */
     public DirectiveDto get(HoisUserDetails user, Directive directive) {
         DirectiveDto dto;
-        if(ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType())) {
+        if (ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType())) {
             dto = DirectiveCancelDto.of(directive, changedStudentsForCancel(directive.getCanceledDirective()));
         } else {
             dto = DirectiveDto.of(directive);
+            if (ClassifierUtil.equals(DirectiveType.KASKKIRI_INDOKLOP, directive.getType())) {
+                setExistingDirectiveStudentDtos(dto);
+            } else if (ClassifierUtil.equals(DirectiveType.KASKKIRI_LOPET, directive.getType())) {
+                setOccupations(dto);
+            }
         }
         dto.setCanEditDirective(Boolean.valueOf(UserUtil.canEditDirective(user, directive)));
         return dto;
+    }
+
+    private void setExistingDirectiveStudentDtos(DirectiveDto dto) {
+        List<? extends DirectiveFormStudent> studentDtos = dto.getStudents();
+        List<Long> studentIds = StreamUtil.toMappedList(s -> s.getStudent(), studentDtos);
+
+        if (!studentIds.isEmpty()) {
+            Map<Long, List<ExistingDirectiveStudentDto>> existingDirectiveStudents = studentExistingIndividualCurriculums(
+                    dto.getId(), studentIds);
+            studentDtos.forEach(studentDto -> {
+                studentDto.setExistingDirectiveStudents(existingDirectiveStudents.get(studentDto.getStudent()));
+            });
+        }
+    }
+
+    private void setOccupations(DirectiveDto dto) {
+        List<? extends DirectiveFormStudent> studentDtos = dto.getStudents();
+        Set<Long> studentIds = StreamUtil.toMappedSet(s -> s.getStudent(), studentDtos);
+
+        if (!studentIds.isEmpty()) {
+            setStudentOccupations(studentDtos, studentIds, dto.getIsHigher().booleanValue());
+        }
+    }
+
+    private void setStudentOccupations(List<? extends DirectiveFormStudent> studentDtos, Set<Long> studentIds, boolean isHigher) {
+        Map<Long, List<String>> occupations = occupations(studentIds, isHigher);
+        Map<Long, List<String>> partOccupations = partOccupations(studentIds, isHigher);
+        Map<Long, Map<String, List<String>>> specialities = specialities(studentIds, isHigher);
+
+        for (DirectiveFormStudent dto : studentDtos) {
+            Long studentId = dto.getStudent();
+            if (occupations.containsKey(studentId)) {
+                dto.setOccupations(occupations.get(studentId));
+            }
+            if (partOccupations.containsKey(studentId)) {
+                if (dto.getOccupations() == null) {
+                    dto.setOccupations(new ArrayList<>());
+                }
+                dto.getOccupations().addAll(partOccupations.get(studentId));
+            }
+            if (specialities.containsKey(studentId)) {
+                dto.setSpecialities(specialities.get(studentId));
+            }
+        }
     }
 
     /**
@@ -221,6 +285,10 @@ public class DirectiveService {
             filtered = StreamUtil.toMappedSet(r -> Long.valueOf(((Number)r).longValue()), data);
         }
         DirectiveViewDto dto = DirectiveViewDto.of(directive, filtered, !user.isSchoolAdmin());
+
+        if (ClassifierUtil.equals(DirectiveType.KASKKIRI_LOPET, directive.getType())) {
+            setViewOccupations(dto);
+        }
 
         if(!ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType())
            && ClassifierUtil.oneOf(directive.getStatus(), DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD,  DirectiveStatus.KASKKIRI_STAATUS_TYHISTATUD)
@@ -256,6 +324,38 @@ public class DirectiveService {
         dto.setUserCanConfirm(Boolean.valueOf(userCanConfirm(user, directive)));
         dto.setUserCanEdit(Boolean.valueOf(UserUtil.canEditDirective(user, directive)));
         return dto;
+    }
+
+    private void setViewOccupations(DirectiveViewDto dto) {
+        List<DirectiveViewStudentDto> studentDtos = dto.getStudents();
+        Set<Long> studentIds = StreamUtil.toMappedSet(s -> s.getStudent(), studentDtos);
+
+        if (!studentIds.isEmpty()) {
+            setViewStudentOccupations(studentDtos, studentIds, dto.getIsHigher().booleanValue());
+        }
+    }
+
+    private void setViewStudentOccupations(List<DirectiveViewStudentDto> studentDtos, Set<Long> studentIds,
+            boolean isHigher) {
+        Map<Long, List<String>> occupations = occupations(studentIds, isHigher);
+        Map<Long, List<String>> partOccupations = partOccupations(studentIds, isHigher);
+        Map<Long, Map<String, List<String>>> specialities = specialities(studentIds, isHigher);
+
+        for (DirectiveViewStudentDto dto : studentDtos) {
+            Long studentId = dto.getStudent();
+            if (occupations.containsKey(studentId)) {
+                dto.setOccupations(occupations.get(studentId));
+            }
+            if (partOccupations.containsKey(studentId)) {
+                if (dto.getOccupations() == null) {
+                    dto.setOccupations(new ArrayList<>());
+                }
+                dto.getOccupations().addAll(partOccupations.get(studentId));
+            }
+            if (specialities.containsKey(studentId)) {
+                dto.setSpecialities(specialities.get(studentId));
+            }
+        }
     }
 
     /**
@@ -437,10 +537,6 @@ public class DirectiveService {
                     cumLaudes(fetchedStudentIds, isHigher) : Collections.emptySet();
             Set<Long> studentsWithCertificate = !fetchedStudentIds.isEmpty() && KASKKIRI_LOPET.equals(directiveType) ?
                     occupationCertificates(fetchedStudentIds) : Collections.emptySet();
-            Map<Long, List<String>> occupations = !fetchedStudentIds.isEmpty() && KASKKIRI_LOPET.equals(directiveType) ?
-                    occupations(fetchedStudentIds, isHigher) : Collections.emptyMap();
-            Map<Long, List<String>> partOccupations = !fetchedStudentIds.isEmpty() && KASKKIRI_LOPET.equals(directiveType) ?
-                    partOccupations(fetchedStudentIds, isHigher) : Collections.emptyMap();
             List<DirectiveStudent> messagesToStudents = new ArrayList<>();
             for(DirectiveFormStudent formStudent : StreamUtil.nullSafeList(form.getStudents())) {
                 Long directiveStudentId = formStudent.getId();
@@ -471,7 +567,8 @@ public class DirectiveService {
                     setPerson(formStudent, directiveStudent);
                 }
 
-                EntityUtil.bindToEntity(formStudent, directiveStudent, classifierRepository, "application", "directive", "person", "student");
+                EntityUtil.bindToEntity(formStudent, directiveStudent, classifierRepository, "application", "directive",
+                        "person", "student", "occupations", "modules");
 
                 directiveStudent.setStudentGroup(EntityUtil.getOptionalOne(StudentGroup.class, formStudent.getStudentGroup(), em));
                 directiveStudent.setCurriculumVersion(EntityUtil.getOptionalOne(CurriculumVersion.class, formStudent.getCurriculumVersion(), em));
@@ -480,18 +577,22 @@ public class DirectiveService {
 
                 Student student = directiveStudent.getStudent();
                 Long studentId = EntityUtil.getNullableId(student);
-                switch(directiveType) {
+                switch (directiveType) {
                 case KASKKIRI_AKAD:
                     adjustPeriod(directiveStudent);
+                    break;
+                case KASKKIRI_INDOK:
+                    bindDirectiveStudentModules(directiveStudent, formStudent);
+                    break;
+                case KASKKIRI_INDOKLOP:
+                    directiveStudent.setDirectiveStudent(
+                            EntityUtil.getOptionalOne(DirectiveStudent.class, formStudent.getDirectiveStudent(), em));
                     break;
                 case KASKKIRI_LOPET:
                     directiveStudent.setCurriculumVersion(student.getCurriculumVersion());
                     directiveStudent.setIsCumLaude(Boolean.valueOf(cumLaude.contains(studentId)));
                     directiveStudent.setCurriculumGrade(getCurriculumGrade(studentId));
                     directiveStudent.setIsOccupationExamPassed(Boolean.valueOf(studentsWithCertificate.contains(studentId)));
-                    saveOccupations(directiveStudent, Stream.concat(
-                            occupations.containsKey(studentId) ? occupations.get(studentId).stream() : Stream.empty(), 
-                            partOccupations.containsKey(studentId) ? partOccupations.get(studentId).stream() : Stream.empty()));
                     break;
                 case KASKKIRI_VALIS:
                     adjustPeriod(directiveStudent);
@@ -529,27 +630,18 @@ public class DirectiveService {
         return !result.isEmpty();
     }
 
-    private void saveOccupations(DirectiveStudent directiveStudent, Stream<String> codes) {
-        List<DirectiveStudentOccupation> occupations = directiveStudent.getOccupations();
-        if (occupations == null) {
-            directiveStudent.setOccupations(occupations = new ArrayList<>());
-        }
-        saveOccupations(directiveStudent, occupations, codes);
-    }
-
-    private void saveOccupations(DirectiveStudent directiveStudent, List<DirectiveStudentOccupation> occupations, Stream<String> codes) {
-        Map<String, DirectiveStudentOccupation> remaining = StreamUtil.toMap(
-                dso -> EntityUtil.getCode(dso.getOccupation()), occupations);
-        codes.forEach(code -> {
-            DirectiveStudentOccupation occupation = remaining.remove(code);
-            if (occupation == null) {
-                occupation = new DirectiveStudentOccupation();
-                occupation.setDirectiveStudent(directiveStudent);
-                occupation.setOccupation(em.getReference(Classifier.class, code));
-                occupations.add(occupation);
-            }
-        });
-        occupations.removeAll(remaining.values());
+    public void bindDirectiveStudentModules(DirectiveStudent directiveStudent, DirectiveFormStudent formStudent) {
+        EntityUtil.bindEntityCollection(directiveStudent.getModules(), DirectiveStudentModule::getId,
+                formStudent.getModules(), DirectiveFormStudentModule::getId, moduleForm -> {
+                    DirectiveStudentModule module = EntityUtil.bindToEntity(moduleForm, new DirectiveStudentModule(),
+                            "curriculumVersionOmodule");
+                    module.setDirectiveStudent(directiveStudent);
+                    module.setCurriculumVersionOmodule(em.getReference(CurriculumVersionOccupationModule.class,
+                            moduleForm.getCurriculumVersionOmodule()));
+                    return module;
+                }, (moduleForm, module) -> {
+                    EntityUtil.bindToEntity(moduleForm, module);
+                });
     }
 
     /**
@@ -674,12 +766,10 @@ public class DirectiveService {
         }, students);
         if(KASKKIRI_LOPET.equals(directiveType)) {
             Set<Long> fetchedStudentIds = StreamUtil.toMappedSet(DirectiveStudentDto::getStudent, result);
-            if(!fetchedStudentIds.isEmpty()) {
+            if (!fetchedStudentIds.isEmpty()) {
                 boolean isHigher = cmd.getIsHigher().booleanValue();
                 Set<Long> cumLaude = cumLaudes(fetchedStudentIds, isHigher);
                 Set<Long> studentsWithCertificate = occupationCertificates(fetchedStudentIds);
-                Map<Long, List<String>> occupations = occupations(fetchedStudentIds, isHigher);
-                Map<Long, List<String>> partOccupations = partOccupations(fetchedStudentIds, isHigher);
                 for (DirectiveStudentDto dto : result) {
                     Long studentId = dto.getStudent();
                     dto.setIsCumLaude(Boolean.valueOf(cumLaude.contains(studentId)));
@@ -688,18 +778,19 @@ public class DirectiveService {
                         dto.setCurriculumGrade(AutocompleteResult.of(curriculumGrade));
                     }
                     dto.setIsOccupationExamPassed(Boolean.valueOf(studentsWithCertificate.contains(studentId)));
-                    if (occupations.containsKey(studentId)) {
-                        dto.setOccupations(occupations.get(studentId));
-                    }
-                    if (partOccupations.containsKey(studentId)) {
-                        if (dto.getOccupations() == null) {
-                            dto.setOccupations(new ArrayList<>());
-                        }
-                        dto.getOccupations().addAll(partOccupations.get(studentId));
-                    }
+                }
+                setStudentOccupations(result, fetchedStudentIds, isHigher);
+            }
+        } else if (KASKKIRI_INDOKLOP.equals(directiveType)) {
+            Map<Long, List<ExistingDirectiveStudentDto>> individualCurriculums = studentExistingIndividualCurriculums(
+                    cmd.getDirective(), studentIds);
+            for (DirectiveStudentDto dto : result) {
+                List<ExistingDirectiveStudentDto> directiveStudents = individualCurriculums.get(dto.getStudent());
+                if (directiveStudents != null) {
+                    dto.setExistingDirectiveStudents(directiveStudents);
                 }
             }
-        } else if(KASKKIRI_STIPTOETL.equals(directiveType)) {
+        } else if (KASKKIRI_STIPTOETL.equals(directiveType)) {
             // load startDate/endDate from latest KASKKIRI_STIPTOET directive
             List<?> data = em.createNativeQuery("select ds.student_id, ds.start_date, ds.end_date, ds.scholarship_application_id from directive_student ds " +
                     "join directive d on ds.directive_id = d.id where ds.student_id in (?1) and d.type_code = ?2 and d.status_code = ?3 and ds.canceled = false " +
@@ -719,6 +810,46 @@ public class DirectiveService {
             }
         }
         return result;
+    }
+
+    private Map<Long, List<ExistingDirectiveStudentDto>> studentExistingIndividualCurriculums(Long directiveId,
+            List<Long> studentIds) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive d "
+                + "join directive_student ds on ds.directive_id = d.id");
+        qb.requiredCriteria("ds.student_id in (:studentIds)", "studentIds", studentIds);
+        qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_INDOK);
+
+        qb.filter("((ds.canceled = false and d.status_code = :directiveStatus and ds.end_date >= :today)"
+                + (directiveId != null ? " or ds.id in (select ds2.directive_student_id from directive d2 "
+                + "join directive_student ds2 on ds2.directive_id = d2.id where d2.id = :directiveId))" : ")"));
+        qb.parameter("directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
+        qb.parameter("today", JpaQueryUtil.parameterAsTimestamp(LocalDate.now()));
+
+        qb.filter("(not exists (select 1 from directive d3 join directive_student ds3 on ds3.directive_id = d3.id "
+                + "where ds3.canceled = false and d3.type_code = :lopDirectiveType and ds3.student_id = ds.student_id "
+                + "and ds3.directive_student_id = ds.id)"
+                + (directiveId != null ? " or ds.id in (select ds4.directive_student_id from directive d4 "
+                + "join directive_student ds4 on ds4.directive_id = d4.id where d4.id = :directiveId))" : ")"));
+        qb.parameter("lopDirectiveType", DirectiveType.KASKKIRI_INDOKLOP.name());
+
+        if (directiveId != null) {
+            qb.parameter("directiveId", directiveId);
+        }
+
+        List<?> data = qb.select("ds.student_id, ds.id, d.directive_nr, ds.start_date, ds.end_date", em)
+                .getResultList();
+        if (data.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
+            ExistingDirectiveStudentDto eds = new ExistingDirectiveStudentDto();
+            eds.setId(resultAsLong(r, 1));
+            eds.setDirectiveNr(resultAsString(r, 2));
+            eds.setStartDate(resultAsLocalDate(r, 3));
+            eds.setEndDate(resultAsLocalDate(r, 4));
+            return eds;
+        }, Collectors.toList())));
     }
 
     /**
@@ -800,6 +931,20 @@ public class DirectiveService {
                     "scholarshipDirectiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
             qb.parameter("scholarshipEndDirectiveType", DirectiveType.KASKKIRI_STIPTOETL.name());
             break;
+        case KASKKIRI_INDOKLOP:
+            // should exists confirmed and not canceled KASKKIRI_INDOK that
+            // doesn't have already connected KASKKIRI_INDOKLOP
+            qb.filter("exists (select d_lop.id from directive d_lop "
+                    + "join directive_student ds_lop on ds_lop.directive_id = d_lop.id and ds_lop.canceled = false and ds_lop.student_id = s.id "
+                    + "where d_lop.type_code = :lopDirectiveType and d_lop.status_code = :lopDirectiveStatus and ds_lop.end_date > :today "
+                    + "and not exists (select 1 from directive d_lop2 join directive_student ds_lop2 on ds_lop2.directive_id = d_lop2.id "
+                    + "where ds_lop2.canceled = false and d_lop2.type_code = :existingLopDirective and ds_lop2.student_id = s.id "
+                    + "and ds_lop2.directive_student_id = ds_lop.id))");
+            qb.parameter("lopDirectiveType", DirectiveType.KASKKIRI_INDOK.name());
+            qb.parameter("lopDirectiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
+            qb.parameter("today", LocalDate.now());
+            qb.parameter("existingLopDirective", DirectiveType.KASKKIRI_INDOKLOP.name());
+            break;
         case KASKKIRI_LOPET:
             qb.filter("scc.study_backlog = 0");
             break;
@@ -816,6 +961,11 @@ public class DirectiveService {
             qb.parameter("scholarshipDirectiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
             qb.parameter("scholarshipTypeCode", criteria.getScholarshipType());
             break;
+        case KASKKIRI_KIITUS:
+        case KASKKIRI_INDOK:
+        case KASKKIRI_NOOMI:
+        case KASKKIRI_OTEGEVUS:
+            qb.filter("c.is_higher = false");
         default:
             break;
         }
@@ -1280,7 +1430,8 @@ public class DirectiveService {
     private static JpaNativeQueryBuilder occupationBaseQuery(Set<Long> studentIds, boolean isHigher) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from protocol_student ps"
                 + " join protocol_student_occupation pso on pso.protocol_student_id = ps.id"
-                + " join protocol p on p.id = ps.protocol_id");
+                + " join protocol p on p.id = ps.protocol_id "
+                + " left join student_occupation_certificate soc on soc.id = pso.student_occupation_certificate_id");
         qb.requiredCriteria("ps.student_id in :students", "students", studentIds);
         qb.filter("p.is_final = true");
         qb.requiredCriteria("p.status_code = :pstatus", "pstatus", ProtocolStatus.PROTOKOLL_STAATUS_K.name());
@@ -1300,6 +1451,21 @@ public class DirectiveService {
             Long studentId = resultAsLong(r, 0);
             result.computeIfAbsent(studentId, k -> new ArrayList<>())
                     .add(resultAsString(r, 1));
+        }
+        return result;
+    }
+
+    private Map<Long, Map<String, List<String>>> specialities(Set<Long> studentIds, boolean isHigher) {
+        JpaNativeQueryBuilder qb = occupationBaseQuery(studentIds, isHigher);
+        qb.filter("soc.speciality_code is not null");
+        List<?> data = qb.select("distinct ps.student_id, pso.occupation_code, soc.speciality_code", em)
+                .getResultList();
+        Map<Long, Map<String, List<String>>> result = new HashMap<>();
+        for (Object r : data) {
+            Long studentId = resultAsLong(r, 0);
+            result.computeIfAbsent(studentId, k -> new HashMap<>());
+            String occupation = resultAsString(r, 1);
+            result.get(studentId).computeIfAbsent(occupation, k -> new ArrayList<>()).add(resultAsString(r, 2));
         }
         return result;
     }
@@ -1384,5 +1550,44 @@ public class DirectiveService {
         if(school != null && !EntityUtil.getId(directive.getSchool()).equals(EntityUtil.getId(school))) {
             throw new AssertionFailedException("School mismatch");
         }
+    }
+
+    public List<AutocompleteResult> individualCurriculumModules(Student student, Long directiveId) {
+        JpaNativeQueryBuilder qb = individualCurriculumModulesQb(Arrays.asList(EntityUtil.getId(student)), directiveId);
+
+        List<?> data = qb.select("cvo.id, cm.name_et, mcl.name_et mcl_name_et, cm.name_en, mcl.name_en mcl_name_en", em)
+                .getResultList();
+        return StreamUtil.toMappedList(r -> new AutocompleteResult(resultAsLong(r, 0),
+                CurriculumUtil.moduleName(resultAsString(r, 1), resultAsString(r, 2)),
+                CurriculumUtil.moduleName(resultAsString(r, 3), resultAsString(r, 4))), data);
+    }
+
+    public JpaNativeQueryBuilder individualCurriculumModulesQb(List<Long> studentIds, Long directiveId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
+                "from student s" + " join curriculum_version cv on s.curriculum_version_id = cv.id"
+                        + " join curriculum_version_omodule cvo on cv.id = cvo.curriculum_version_id"
+                        + " join curriculum_module cm on cvo.curriculum_module_id = cm.id"
+                        + " join classifier mcl on cm.module_code = mcl.code");
+
+        qb.optionalCriteria("s.id in (:studentIds)", "studentIds", studentIds);
+        qb.requiredCriteria("cm.module_code in (:moduleCodes)", "moduleCodes",
+                EnumUtil.toNameList(CurriculumModuleType.KUTSEMOODUL_P, CurriculumModuleType.KUTSEMOODUL_Y));
+
+        qb.filter("(not exists (select 1 from student_vocational_result svr"
+                + " where svr.curriculum_version_omodule_id = cvo.id and svr.student_id = s.id"
+                + " and svr.grade_code in (:positiveGradeCodes))"
+                + (directiveId != null
+                        ? " or exists (select 1 from directive_student_module dsm"
+                                + " join directive_student ds on dsm.directive_student_id = ds.id"
+                                + " and s.id = ds.student_id and ds.directive_id = :directiveId"
+                                + " where dsm.curriculum_version_omodule_id = cvo.id))"
+                        : ")"));
+
+        if (directiveId != null) {
+            qb.parameter("directiveId", directiveId);
+        }
+        qb.parameter("positiveGradeCodes", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
+
+        return qb;
     }
 }

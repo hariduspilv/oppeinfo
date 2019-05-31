@@ -14,6 +14,7 @@ public class ResultReport {
     private String grade;
     private LocalDate gradeInserted;
     private String gradeInsertedBy;
+    private Boolean isPracticeJournal;
 
     public Long getStudentId() {
         return studentId;
@@ -77,6 +78,14 @@ public class ResultReport {
 
     public void setGradeInsertedBy(String gradeInsertedBy) {
         this.gradeInsertedBy = gradeInsertedBy;
+    }
+
+    public Boolean getIsPracticeJournal() {
+        return isPracticeJournal;
+    }
+
+    public void setIsPracticeJournal(Boolean isPracticeJournal) {
+        this.isPracticeJournal = isPracticeJournal;
     }
 
 }

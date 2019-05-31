@@ -1,0 +1,28 @@
+<md-table-container>
+  <table md-table md-row-select="formState.cancelSelect" multiple ng-model="formState.selectedStudents" class="secondary-table">
+    <thead md-head>
+      <tr md-row>
+        <th md-column>{{'directive.student.order' | translate}}</th>
+        <th md-column>{{'directive.student.fullname' | translate}}</th>
+        <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column>{{'directive.student.curriculumVersion' | translate}}</th>
+        <th md-column>{{'directive.student.studentGroup' | translate}}</th>
+        <th md-column style="min-width:400px;">{{'directive.student.reason' | translate}}</th>
+      </tr>
+    </thead>
+    <tbody md-body>
+      <tr md-row ng-disabled="!row.selectable" md-select="row" md-select-id="student" md-auto-select ng-repeat="row in record.students | orderBy:'+lastname'" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>{{$index + 1}}.</td>
+        <td md-cell>{{::row.fullname}}</td>
+        <td md-cell>{{::row.idcode}}</td>
+        <td md-cell>{{currentLanguageNameField(row.curriculumVersionObject)}}</td>
+        <td md-cell>{{currentLanguageNameField(row.studentGroupObject)}}</td>
+        <td md-cell>
+          <md-input-container style="width:100%;">
+            <textarea ng-model="row.addInfo" md-maxlength="4000" max-rows="5" aria-label="{{'directive.student.reason' | translate}}" disabled></textarea>
+          </md-input-container>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</md-table-container>

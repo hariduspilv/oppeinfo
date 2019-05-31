@@ -1,7 +1,8 @@
 <div layout="row" layout-sm="column" layout-xs="column">
     <md-input-container flex="60" flex-sm="100" flex-xs="100">
-      <label>{{'application.reason' | translate}}</label>
-      <hois-classifier-select ng-model="application.reason" model-value-attr="code"
-      required main-classifier-code="EKSMAT_POHJUS" only-valid></hois-classifier-select>
+        <label>{{'application.reason' | translate}}</label>
+        <hois-classifier-select ng-model="application.reason" model-value-attr="code" main-classifier-code="EKSMAT_POHJUS"
+            criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" only-valid required >
+        </hois-classifier-select>
     </md-input-container>
 </div>

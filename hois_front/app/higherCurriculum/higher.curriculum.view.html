@@ -1,24 +1,26 @@
 <div class="ois-form-layout-padding">
   <form name="higherCurriculumForm" layout="column" class="nomargin">
     <div layout="row" layout-sm="column" layout-xs="column">
-      <fieldset tabindex="1" layout="column" flex="30" flex-sm="100" flex-xs="100" class="higher-curriculum-top-fieldset">
+      <fieldset tabindex="1" flex="30" flex-sm="100" flex-xs="100" class="higher-curriculum-top-fieldset">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.nameTitle' | translate}}</legend>
-        <md-input-container flex="100">
-          <label>{{'curriculum.nameEt' | translate}}</label>
-          <input ng-model="curriculum.nameEt" type="text" readonly>
-        </md-input-container>
-        <md-input-container flex="100">
-          <label>{{'curriculum.nameEn' | translate}}</label>
-          <input ng-model="curriculum.nameEn" type="text" readonly>
-        </md-input-container>
-        <md-input-container flex="100">
-          <label>{{'curriculum.nameGenitiveEt' | translate}}</label>
-          <input ng-model="curriculum.nameGenitiveEt" type="text" readonly>
-        </md-input-container>
-        <md-input-container flex="1000">
-          <label>{{'curriculum.nameGenitiveEn' | translate}}</label>
-          <input ng-model="curriculum.nameGenitiveEn" type="text" readonly>
-        </md-input-container>
+        <div layout="column">
+          <md-input-container flex="100">
+            <label>{{'curriculum.nameEt' | translate}}</label>
+            <input ng-model="curriculum.nameEt" type="text" readonly>
+          </md-input-container>
+          <md-input-container flex="100">
+            <label>{{'curriculum.nameEn' | translate}}</label>
+            <input ng-model="curriculum.nameEn" type="text" readonly>
+          </md-input-container>
+          <md-input-container flex="100">
+            <label>{{'curriculum.nameGenitiveEt' | translate}}</label>
+            <input ng-model="curriculum.nameGenitiveEt" type="text" readonly>
+          </md-input-container>
+          <md-input-container flex="1000">
+            <label>{{'curriculum.nameGenitiveEn' | translate}}</label>
+            <input ng-model="curriculum.nameGenitiveEn" type="text" readonly>
+          </md-input-container>
+        </div>
       </fieldset>
       <fieldset tabindex="2" flex="66" flex-offset="4" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.mainData' | translate}}</legend>
@@ -360,14 +362,15 @@
     <div>&nbsp;</div>
     <fieldset tabindex="12" ng-show="gradeRequired()">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.grade.label' | translate}}</legend>
-      <div ng-repeat="item in curriculum.grades | orderBy: currentLanguageNameField()" layout="column">
-        <div layout="row" class="occupation-row align-center" ng-class-odd="'odd'" ng-class-even="'even'">
-          <div flex="35">
-            <a ng-click="openViewGradeDialog(item)" href="">{{currentLanguageNameField(item)}}</a>
+      <md-table-container>
+        <div ng-repeat="item in curriculum.grades | orderBy: currentLanguageNameField()" layout="column">
+          <div layout="row" class="occupation-row align-center" ng-class-odd="'odd'" ng-class-even="'even'">
+            <div flex="35">
+              <a ng-click="openViewGradeDialog(item)" href="">{{currentLanguageNameField(item)}}</a>
+            </div>
           </div>
         </div>
-      </div>
-
+      </md-table-container>
     </fieldset>
 
     <fieldset tabindex="11">

@@ -4,7 +4,8 @@
             <md-input-container>
                 <label>{{'certificate.type' | translate}}</label>
                 <hois-classifier-select ng-model="record.type" model-value-attr="code" main-classifier-code="TOEND_LIIK" required
-                ng-disabled="record.id" filter-values="forbiddenTypes" ignore-preselected></hois-classifier-select>
+                  ng-disabled="record.id" filter-values="forbiddenTypes" only-valid ignore-preselected
+                  criteria="{higher: auth.school.higher, vocational: auth.school.vocational}"></hois-classifier-select>
             </md-input-container>
 
             <div ng-show="!isOtherCertificate()">

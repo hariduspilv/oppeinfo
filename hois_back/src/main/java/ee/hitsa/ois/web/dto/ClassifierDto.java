@@ -4,8 +4,9 @@ import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.Translatable;
 
-public class ClassifierDto extends InsertedChangedVersionDto {
+public class ClassifierDto extends InsertedChangedVersionDto implements Translatable {
 
     private String code;
     private String nameEt;
@@ -44,6 +45,7 @@ public class ClassifierDto extends InsertedChangedVersionDto {
         this.code = code;
     }
 
+    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -52,6 +54,7 @@ public class ClassifierDto extends InsertedChangedVersionDto {
         this.nameEt = nameEt;
     }
 
+    @Override
     public String getNameEn() {
         return nameEn;
     }
@@ -60,6 +63,7 @@ public class ClassifierDto extends InsertedChangedVersionDto {
         this.nameEn = nameEn;
     }
 
+    @Override
     public String getNameRu() {
         return nameRu;
     }

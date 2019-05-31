@@ -1,4 +1,4 @@
-VERSIOON:  1.2.2/20190422
+VERSIOON:  1.3.0/20190527
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -10,24 +10,24 @@ README.md - tarne ja installeerimise kirjeldus
 /hois_html - rakenduse genereeritud html-id
 
 
-EELDUS: ver. 1.2.1/20190308
+EELDUS: ver. 1.2.2/20190422
 ------------------------------------------------------
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skripti on db/install20190422.sql
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skripti on db/install20190527.sql
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
 
 Andmebaasi installeerimiseks:
-1. käivitada install20190422.sql skript, nt
+1. käivitada install20190527.sql skript, nt
    
-   psql -h devhois -f install20190422.sql 2>&1 | tee log.txt
+   psql -h devhois -f install20190527.sql 2>&1 | tee log.txt
    
    , kus
    
    -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install20190422.sql - install faili nimi
+   -f install20190527.sql - install faili nimi
    log.txt - andmebaasi installeerimise logi fail
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
@@ -39,26 +39,27 @@ RAKENDUSE INSTALLEERIMINE:
 1. Backendi paigaldamiseks
 	1. Teisendada kaasa pandud hois_back.jar /opt/hois kausta
 	2. veenduda, et /opt/hois kaustas on olemas muudetud application.properties fail	
-	3. Lisada application.properties faili järgmised read (rahvastiku registri päringu parameetrid) ja vajadusel muuta vastavad parameetrid õigeks (turvaserveri asukoht, versioon, klient):
+	3. Lisada application.properties faili järgmised read (TARA ühenduse parameetrid) ja muuta vastavad parameetrid õigeks ():
         
 
-		# RR ("Rahvastikuregister") configuration
-		# NB! userID - päringu esitaja, peab olema see isik, kellel on luba RR päringuid esitada. Testsüsteemis see on EE11111111111
-		rr.endpoint=http://TURVASERVER/cgi-bin/consumer-proxy
-		rr.userId=EE11111111111
-		rr.service.xRoadInstance=ee-dev
-		rr.service.memberClass=GOV
-		rr.service.memberCode=70008440
-		rr.service.subsystemCode=rr
-		
-		rr.client.xRoadInstance=ee-dev
-		rr.client.memberClass=COM
-		rr.client.memberCode=10239452
-		rr.client.subsystemCode=generic-consumer
-		
-		
-		# Kõikide isikute RR andmete uuendamise cron 1 kord kuus
-		hois.jobs.rr.cron=0 0 3 * * *
+		# TARA configuration
+		# Klientrakenduse identifikaator (client_id OpenID Connect protokolli kohaselt), vajab muutmist 
+		tara.clientId=tahvel
+		# TARA klientrakenduse parool, saadakse RIAst, vajab muutmist
+		tara.clientSecret=XXX
+		# TARA soovitud identifitseerimisviisid
+		tara.scope=openid,idcard,mid,banklink,smartid
+		# TARA klientrakenduse asukoht
+		tara.userAuthorizationUri=https://tara-test.ria.ee/oidc/authorize
+		# TARA klientrakenduse token'i asukoht
+		tara.accessTokenUri=https://tara-test.ria.ee/oidc/token
+		# TARA klientrakenduse jwks asukoht
+		tara.jwkUrl=https://tara-test.ria.ee/oidc/jwks
+		# Klientrakenduse tagasisuunamis-URL (redirect-URL), OpenID Connect protokolli kohaselt), vajab muutmist ja hiljem ka nginx vms koha seadistamist (vt allpool 3. TARA tagasisuunamise seadistamine)
+		tara.redirectUri=https://test.tahvel.eenet.ee/callback
+		# TARA issuer
+		tara.issuer=https://tara-test.ria.ee
+
 		
 	4. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
 	
@@ -78,4 +79,25 @@ RAKENDUSE INSTALLEERIMINE:
 	NB! valede parameetrite puhul rakendus töötab pisut aeglasemalt ja konsool annab vigu:
 		OPTIONS https://bdr.plumbr.io/api/browser/data/xhr?accountId=PLUMBR_ACCOUNT_ID 401
 		Failed to load https://bdr.plumbr.io/api/browser/data/xhr?accountId=PLUMBR_ACCOUNT_ID: Response for preflight does not have HTTP ok status.
+
+3. TARA tagasisuunamise seadistamine
+	
+	Õnnestunud sisse logimise puhul kasutaja suunatakse tagasi Tahvli rakendusse. Vastav url peab olema RIAs registreeritud ja Tahvlis õigesti seadistatud. 
+	Sõltumata asukohast tara.redirectUri kirjeldatud parameeter peab lõppkokkuvõttes suunama Tahvli rakendusse http://backend/hois_back/taraCallback koos kõikide parameetritega.
+	
+	Üks seadistamise viis on seadistada Tahvli nginx, lisades sinna uus location /callback
+	
+	location /callback {
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header Host $http_host;
+		proxy_redirect off;
+		proxy_connect_timeout      240;
+		proxy_send_timeout         240;
+		proxy_read_timeout         240;
+	    client_max_body_size 100M;
+		proxy_pass http://backend/hois_back/taraCallback$is_args$args;
+	}
+
+    Pärast seadistamist nginx vajab restarti
+	
 		

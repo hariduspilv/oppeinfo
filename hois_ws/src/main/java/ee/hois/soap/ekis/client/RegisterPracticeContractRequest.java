@@ -25,8 +25,6 @@ public class RegisterPracticeContractRequest {
     private String orgTutorTel;
     private String orgTutorEmail;
     private String programme;
-    private String outcomes;
-    private String aim;
     private String startDate;
     private String endDate;
     private String schoolTutorId;
@@ -246,21 +244,5 @@ public class RegisterPracticeContractRequest {
 
     public void setPlace(String place) {
         this.place = place;
-    }
-
-    public String getOutcomes() {
-        return outcomes;
-    }
-
-    public void setOutcomes(String outcomes) {
-        this.outcomes = outcomes;
-    }
-
-    public String getAim() {
-        return aim;
-    }
-
-    public void setAim(String aim) {
-        this.aim = aim;
     }
 }

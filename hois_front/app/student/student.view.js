@@ -20,7 +20,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
           $scope.student.imageUrl = '?' + new Date().getTime();
         }
       });
-    }
+    };
     loadStudent();
 
     $scope.representativesCriteria = { order: 'person.lastname', size: 5, page: 1 };
@@ -532,7 +532,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
     $scope.currentNavItem = 'student.documents';
     $scope.auth = $route.current.locals.auth;
 
-    $scope.applicationsCriteria = { size: 5, page: 1, order: 'submitted', studentId: $scope.studentId };
+    $scope.applicationsCriteria = { size: 5, page: 1, order: '-inserted', studentId: $scope.studentId };
     $scope.applications = {};
     var applicationsMapper = Classifier.valuemapper({ type: 'AVALDUS_LIIK', status: 'AVALDUS_STAATUS' });
     $scope.afterApplicationsLoad = function (result) {
@@ -785,8 +785,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
       $scope.currentNavItem = 'student.rr';
 
-      QueryUtils.createQueryForm($scope, '/logs/rr/changelogs');
-      angular.extend($scope.criteria, {order: '-wrcl.inserted', student: $scope.studentId});
+      QueryUtils.createQueryForm($scope, '/logs/rr/changelogs', {order: '-wrcl.inserted', student: $scope.studentId}, undefined, undefined, true);
 
       $scope.loadData();
     }]);

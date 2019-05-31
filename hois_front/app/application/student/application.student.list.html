@@ -29,7 +29,7 @@
   </div>
 </div>
 
-<div layout-padding ng-if="!auth.isParent()">
+<div layout-padding ng-if="!auth.isParent() || applicationTypesApplicable['AVALDUS_LIIK_TUGI'].isAllowed === true">
   <div flex>
     <md-table-container>
       <table md-table class="secondary-table" md-progress="applicationTypes.$promise">
@@ -40,10 +40,10 @@
         </tr>
         </thead>
         <tbody md-body>
-        <tr md-row ng-repeat="row in applicationTypes" ng-class-odd="'odd'" ng-class-even="'even'" ng-if="applicationTypesApplicable[row.code]">
+        <tr md-row ng-repeat="row in applicationTypes" ng-class-odd="'odd'" ng-class-even="'even'" ng-if="applicationTypesApplicable[row.code] && (!auth.isParent() || (auth.isParent() && row.code === 'AVALDUS_LIIK_TUGI'))">
           <td md-cell>{{currentLanguageNameField(row)}}</td>
           <td md-cell>
-            <md-button md-no-ink ng-if="applicationTypesApplicable[row.code].isAllowed === true && auth.isStudent()" class="md-primary change-button"
+            <md-button md-no-ink ng-if="applicationTypesApplicable[row.code].isAllowed === true && (auth.isStudent() || (auth.isParent() && row.code === 'AVALDUS_LIIK_TUGI'))" class="md-primary change-button"
               ng-href="#/applications/student/new/{{row.code}}">
               {{'main.button.apply' | translate}}
             </md-button>

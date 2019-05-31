@@ -1,10 +1,43 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('ProtocolUtils', function ($mdDialog, $timeout, $rootScope, $window, QueryUtils, config, message) {
+  .factory('ProtocolUtils', function ($mdDialog, $timeout, $rootScope, $window, QueryUtils, config, dialogService, message) {
     var protocolUtils = {};
 
-    protocolUtils.signBeforeConfirm = function (endpoint, data, confirmMessage, callback, failCallback) {
+    protocolUtils.signBeforeConfirm = function (auth, endpoint, data, confirmMessage, callback, failCallback) {
+      if (auth.loginMethod === 'LOGIN_TYPE_I') {
+        protocolUtils.idcardSignBeforeConfirm(endpoint, data, confirmMessage, callback, failCallback);
+      } else if (auth.loginMethod === 'LOGIN_TYPE_M') {
+        protocolUtils.mobileSignBeforeConfirm(endpoint, data, confirmMessage, callback, failCallback);
+      } else if (auth.loginMethod === 'LOGIN_TYPE_T') {
+        dialogService.showDialog('components/tara.protocol.confirm.dialog.html', function (dialogScope) {
+          dialogScope.signType = null;
+
+          dialogScope.idcard = function () {
+            dialogScope.signType = 'IDCARD';
+            dialogScope.submit();
+          };
+
+          dialogScope.mobileid = function () {
+            dialogScope.signType = 'MOBILE_ID';
+            dialogScope.submit();
+          };
+        }, function (submittedDialogScope) {
+          if (submittedDialogScope.signType === 'IDCARD') {
+            protocolUtils.idcardSignBeforeConfirm(endpoint, data, confirmMessage, callback, failCallback);
+          } else if (submittedDialogScope.signType === 'MOBILE_ID') {
+            protocolUtils.mobileSignBeforeConfirm(endpoint, data, confirmMessage, callback, failCallback);
+          }
+        }, function () {
+          message.error('main.messages.error.signingCancelled');
+          if (angular.isFunction(failCallback)) {
+            failCallback();
+          }
+        });
+      }
+    };
+
+    protocolUtils.idcardSignBeforeConfirm = function (endpoint, data, confirmMessage, callback, failCallback) {
       $window.hwcrypto.getCertificate({ lang: 'en' }).then(function (certificate) {
         data.certificate = certificate.hex;
         QueryUtils.endpoint(endpoint + '/signToConfirm').save(data, function (result) {
@@ -25,7 +58,7 @@ angular.module('hitsaOis')
       }).catch(function (reason) {
         //no_implementation, no_certificates, user_cancel, technical_error
         if (reason.message === 'user_cancel') {
-          message.error('main.messages.error.idCardSigningCancelled');
+          message.error('main.messages.error.signingCancelled');
         } else {
           message.error('main.messages.error.readingIdCardFailed');
         }
@@ -52,7 +85,7 @@ angular.module('hitsaOis')
         } else {
           message.error('main.messages.error.mobileIdSignFailed');
           if (angular.isFunction(failCallback)) {
-            failCallback(reason);
+            failCallback();
           }
         }
       });
@@ -84,7 +117,7 @@ angular.module('hitsaOis')
             $mdDialog.hide();
             message.error('main.messages.error.mobileIdSignFailed');
             if (angular.isFunction(failCallback)) {
-              failCallback(reason);
+              failCallback();
             }
           }
         }
@@ -100,7 +133,8 @@ angular.module('hitsaOis')
     };
 
     protocolUtils.canEditConfirmedProtocol = function (auth, protocol) {
-      return protocol.canBeEdited && protocol.canBeConfirmed && (auth.loginMethod === 'LOGIN_TYPE_I' || auth.loginMethod === 'LOGIN_TYPE_M');
+      return protocol.canBeEdited && protocol.canBeConfirmed && 
+        (auth.loginMethod === 'LOGIN_TYPE_I' || auth.loginMethod === 'LOGIN_TYPE_M' || auth.loginMethod === 'LOGIN_TYPE_T');
     };
 
     protocolUtils.canAddDeleteStudents = function (auth, protocol) {
@@ -109,7 +143,7 @@ angular.module('hitsaOis')
 
     protocolUtils.canConfirm = function(auth, protocol) {
       return protocol.canBeConfirmed && allProtocolStudentsGraded(protocol) && allChangedGradesHaveAddInfo(protocol) && 
-        (auth.loginMethod === 'LOGIN_TYPE_I' || auth.loginMethod === 'LOGIN_TYPE_M');
+        (auth.loginMethod === 'LOGIN_TYPE_I' || auth.loginMethod === 'LOGIN_TYPE_M' || auth.loginMethod === 'LOGIN_TYPE_T');
     };
 
     function allProtocolStudentsGraded(protocol) {

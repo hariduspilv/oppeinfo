@@ -7,8 +7,6 @@ angular.module('hitsaOis').controller('ApplicationStudentListController', functi
   QueryUtils.createQueryForm($scope, '/students/'+studentId+'/applications', {order: 'type.' + $scope.currentLanguageNameField()}, applicationsMapper.objectmapper);
   $q.all(applicationsMapper.promises).then($scope.loadData);
 
-  if (!$scope.auth.isParent()) {
-    $scope.applicationTypesApplicable = QueryUtils.endpoint('/applications/student/'+studentId+'/applicable').search();
-    $scope.applicationTypes = Classifier.queryForDropdown({mainClassCode: 'AVALDUS_LIIK'});
-  }
+  $scope.applicationTypesApplicable = QueryUtils.endpoint('/applications/student/'+studentId+'/applicable').search();
+  $scope.applicationTypes = Classifier.queryForDropdown({mainClassCode: 'AVALDUS_LIIK'});
 });

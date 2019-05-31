@@ -13,7 +13,8 @@ angular.module('hitsaOis').controller('PracticeEvaluationSearchController', ['$q
 ]).controller('PracticeEvaluationEditController', ['$scope', '$route', '$location', 'dialogService', 'message', 'QueryUtils', 'Classifier', 'FormUtils', 'ArrayUtils',
   function ($scope, $route, $location, dialogService, message, QueryUtils, Classifier, FormUtils, ArrayUtils) {
     var baseUrl = '/practiceEvaluation';
-    var id = $route.current.params.id;
+    var id = $route.current.params.id;  
+    $scope.auth = $route.current.locals.auth;
 
     Classifier.queryForDropdown({mainClassCode: 'PRAKTIKA_KRITEERIUM'}).$promise.then(function(result) {
       $scope.criteriaMap = Classifier.toMap(result);

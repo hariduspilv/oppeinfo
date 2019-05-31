@@ -28,8 +28,10 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
       entry.acadHours = DataUtils.getAcademicHours(entry.hours);
     });
     $scope.practiceJournal = entity;
-    $scope.practiceJournal.endDateDisplay = new Date($scope.practiceJournal.endDate);
-    $scope.practiceJournal.endDateDisplay.setDate($scope.practiceJournal.endDateDisplay.getDate() + 30);
+    if ($scope.auth.isStudent()) {
+      $scope.practiceJournal.endDateDisplay = new Date($scope.practiceJournal.endDate);
+      $scope.practiceJournal.endDateDisplay.setDate($scope.practiceJournal.endDateDisplay.getDate() + 30);
+    }
     updateTotal();
   }
 
@@ -54,6 +56,10 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
   }
 
   $scope.getAstronomicalHours = DataUtils.getAstronomicalHours;
+  
+  $scope.hideInvalid = function (cl) {
+    return !Classifier.isValid(cl);
+  };
 
   $scope.setAstronomicalHours = function(row, akadHours) {
     row.hours = DataUtils.getAstronomicalHoursAsDouble(akadHours);

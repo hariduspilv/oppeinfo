@@ -6,6 +6,7 @@ import java.util.List;
 import ee.hitsa.ois.domain.FinalThesis;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.FinalProtocolUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -30,15 +31,17 @@ public class FinalVocationalProtocolStudentDto extends ModuleProtocolStudentDto 
         FinalThesis thesis = student.getFinalThesis();
         dto.setTheme(thesis != null ? new AutocompleteResult(student.getFinalThesis().getId(),
                 student.getFinalThesis().getThemeEt(), student.getFinalThesis().getThemeEn()) : null);
-        
+
         if (protocolStudent.getProtocolStudentOccupations() != null) {
             protocolStudent.getProtocolStudentOccupations().forEach(oc -> {
+                StudentOccupationCertificate certificate = oc.getStudentOccupationCertificate();
                 dto.getCurriculumOccupations()
                         .add(new FinalProtocolStudentOccupationDto(
-                                oc.getStudentOccupationCertificate() != null ? oc.getStudentOccupationCertificate().getCertificateNr() : null, 
-                                oc.getOccupation().getCode(),
-                                oc.getPartOccupation() != null ? oc.getPartOccupation().getCode() : null,
-                                oc.getStudentOccupationCertificate() != null ? oc.getStudentOccupationCertificate().getId() : null));
+                                certificate != null ? certificate.getCertificateNr() : null,
+                                EntityUtil.getNullableCode(oc.getOccupation()),
+                                EntityUtil.getNullableCode(oc.getPartOccupation()),
+                                certificate != null ? EntityUtil.getNullableCode(certificate.getSpeciality()) : null,
+                                certificate != null ? certificate.getId() : null));
             });
         }
 

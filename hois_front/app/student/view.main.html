@@ -50,8 +50,9 @@
     </div>
 
     <div layout="column">
-      <hois-collapsable label="('student.study' | translate) + ' (' + currentLanguageNameField(student.school) + ')'">
-
+      <hois-collapsable label="('student.study' | translate) + ' (' + currentLanguageNameField(student.school) + ')' 
+        + (student.individualCurriculum ? ' - ' + ('student.statuses.individualCurriculumShort' | translate) + ' ('
+        + (student.individualCurriculumStart | hoisDate) + '-' + (student.individualCurriculumEnd | hoisDate) + ')' : '')">
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <label>{{'student.status' | translate}}</label>
@@ -121,6 +122,32 @@
             <hois-value value="student.studentCard"></hois-value>
           </md-input-container>
           <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.card.status' | translate}}</label>
+            <hois-classifier-value ng-model="student.studentCardStatus" main-classifier-code="OPILASPILET_STAATUS"></hois-classifier-value>
+          </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.card.validThru' | translate}}</label>
+            <hois-value value="student.studentCardValidThru | hoisDate"></hois-value>
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100">
+            <label>{{'student.card.givenDate' | translate}}</label>
+            <hois-value value="student.studentCardGivenDt | hoisDate"></hois-value>
+          </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.card.returnDate' | translate}}</label>
+            <hois-value value="student.studentCardReturnedDt | hoisDate"></hois-value>
+          </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.card.repeating' | translate}}</label>
+            <hois-value value="student.isStudentCardRepetitive ? ('main.yes' | translate) : ('main.no' | translate)"></hois-value>
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <label>{{'student.previousStudyLevel' | translate}}</label>
             <hois-classifier-value ng-model="student.previousStudyLevel" main-classifier-code="OPPEASTE"></hois-classifier-value>
           </md-input-container>

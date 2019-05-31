@@ -31,6 +31,7 @@ angular.module('hitsaOis').controller('FormSearchController', ['$q', '$route', '
 ]).controller('FormEditController', ['$route', '$scope', 'message', 'Classifier', 'FormUtils', 'QueryUtils', 'dialogService',
 function($route, $scope, message, Classifier, FormUtils, QueryUtils, dialogService) {
   var baseUrl = '/forms';
+  $scope.auth = $route.current.locals.auth;
 
   $scope.actionType = $route.current.params.action;
   $scope.getButtonLabelKey = function() {

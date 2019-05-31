@@ -167,6 +167,7 @@ angular.module('hitsaOis')
               authenticateMobileId($scope.mobilenumber);
             }
           };
+          $scope.taraLoginUrl = config.apiUrl + '/taraLogin' + ($rootScope.currentLanguage() === 'en' ? '?lang=EN': '');
         },
         templateUrl: 'login/login.dialog.html',
         parent: angular.element(document.body),

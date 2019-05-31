@@ -1,7 +1,8 @@
 'use strict';
 
 
-angular.module('hitsaOis').controller('ApplicationController', function ($scope, dialogService, oisFileService, QueryUtils, message, $location, $route, DataUtils, ArrayUtils, $q, Curriculum, Classifier) {
+angular.module('hitsaOis').controller('ApplicationController', function ($scope, dialogService, oisFileService, QueryUtils, message, $location,
+  $route, DataUtils, ArrayUtils, $q, Curriculum, Classifier, FormUtils, $timeout, config, $http) {
   var ApplicationsEndpoint = QueryUtils.endpoint('/applications');
 
   $scope.removeFromArray = ArrayUtils.remove;
@@ -24,6 +25,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
 
   $scope.applicationEditView = false;
   $scope.application = {files: [], status: 'AVALDUS_STAATUS_KOOST'};
+  $scope.showOnlyTypes = $scope.auth.isTeacher() ? ['AVALDUS_LIIK_TUGI'] : true;
 
   var entity = $route.current.locals.entity;
   if (angular.isDefined(entity)) {
@@ -36,7 +38,11 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       }
     });
   }
+
   if (angular.isDefined(entity)) {
+    if (entity.hasBeenSeenByAdmin === true) { // Hack to remove OptimisticLock
+      entity.version++;
+    }
     entityToForm(entity);
   }
 
@@ -253,6 +259,77 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     loadFormDeferred.resolve();
   }
 
+  function applicationTugi(loadFormDeferred) {
+    $scope.onTugiClChange = function () {
+      if ($scope.formState.supportService) {
+        var exists = $scope.application.supportServices.find(function (r) {
+          return r.code === $scope.formState.supportService.code;
+        }) === undefined;
+        if (exists) {
+          $scope.application.supportServices.push($scope.formState.supportService);
+        }
+        $scope.formState.supportService = undefined;
+      }
+    }
+
+    $scope.deleteService = function (service) {
+      for(var i = 0; i < $scope.application.supportServices.length; i++){ 
+        if ($scope.application.supportServices[i].code === service.code) {
+          $scope.application.supportServices.splice(i, 1); 
+        }
+      }
+    }
+
+    $scope.tugiIndivCurriculum = ($scope.application.supportServices || []).find(function (cl) {
+      return cl.code === 'TUGITEENUS_1';
+    }) !== undefined;
+    if (!$scope.isView && $scope.auth.isAdmin()) {
+      $scope.$watchCollection('application.supportServices', function (newValues, oldValues) {
+        if (newValues !== oldValues) {
+          $scope.tugiIndivCurriculum = (newValues || []).find(function (cl) {
+            return cl.code === 'TUGITEENUS_1';
+          }) !== undefined;
+        }
+      });
+
+      $scope.formState = {
+        committees: QueryUtils.endpoint("/autocomplete/committeesList").query({type: 'KOMISJON_A', valid: true}, function(results) {
+          if ($scope.application.id && $scope.application.committee) {
+            var committee = $scope.application.committee;
+            $scope.application.committee = committee.id;
+            for (var i = 0; i < results.length; i++) {
+              if (results[i].id === committee.id) {
+                return;
+              }
+            }
+            results.push(committee);
+          }
+        }),
+        modules: QueryUtils.endpoint('/applications/studentIndividualCurriculumModules/:id').query({id: $scope.application.student.id}).$promise.then(function (result) {
+          $scope.curriculumVersionModules = result;
+          $scope.application.selectedModules = [];
+
+          if ($scope.application.supportModules) {
+            $scope.application.supportModules.forEach(function (individualModule) {
+              
+              var curriculumModule = ($scope.curriculumVersionModules || []).find(function (cvModule) {
+                return cvModule.module.id === individualModule.module.id;
+              });
+              if (curriculumModule) {
+                $scope.application.selectedModules.push(curriculumModule);
+                curriculumModule.id = individualModule.id;
+                curriculumModule.addInfo = individualModule.addInfo;
+              }
+            });
+          }
+        })
+      };
+      $q.all($scope.formState.committees).then(loadFormDeferred.resolve);
+    } else {
+      loadFormDeferred.resolve();
+    }
+  }
+
   function loadFormData(type, studentId) {
     var loadFormDeferred = $q.defer();
     if (['AVALDUS_LIIK_AKAD', 'AVALDUS_LIIK_FINM', 'AVALDUS_LIIK_OVORM', 'AVALDUS_LIIK_OKAVA', 'AVALDUS_LIIK_OVERSKAVA', 'AVALDUS_LIIK_RAKKAVA'].indexOf(type) !== -1) {
@@ -297,30 +374,55 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       applicationEksmat(loadFormDeferred);
     } else if (type === 'AVALDUS_LIIK_MUU') {
       applicationMuu(loadFormDeferred);
+    } else if (type === 'AVALDUS_LIIK_TUGI') {
+      applicationTugi(loadFormDeferred);
     }
 
     loadFormDeferred.promise.then(function () {
       $scope.applicationEditView = true;
       var type = $scope.application.type.substring($scope.application.type.lastIndexOf('_') + 1).toLowerCase();
       $scope.templateUrlByType = 'application/templates/application.type.' + type + "." + ($scope.isView ? 'view' : 'edit') + ".html";
+      $timeout(setPristineWhenFinished);
     }, function (rejectMessage) {
       message.error(rejectMessage);
       $scope.applicationEditView = false;
     });
   }
 
+  function setPristineWhenFinished() {
+    if ($http.pendingRequests.length > 0) {
+      $timeout(setPristineWhenFinished);
+    } else {
+      if ($scope.applicationForm) {
+        $scope.applicationForm.$setPristine();
+      }
+    }
+  }
+
   $scope.applicationTypeChange = function () {
     $scope.application.student = undefined;
-    if ($scope.application.type === 'AVALDUS_LIIK_AKAD') {
-      $scope.studentSearchCriteria = { active: true, nominalStudy: true };
-    } else if ($scope.application.type === 'AVALDUS_LIIK_AKADK') {
-      $scope.studentSearchCriteria = { active: true, academicLeave: true };
-    } else if ($scope.application.type === 'AVALDUS_LIIK_VALIS') {
-      $scope.studentSearchCriteria = { studying: true, higher: true };
-    } else if ($scope.application.type === 'AVALDUS_LIIK_OVORM') {
-      $scope.studentSearchCriteria = { studying: true, higher: true };
-    } else {
-      $scope.studentSearchCriteria = { studying: true };
+    switch ($scope.application.type) {
+      case 'AVALDUS_LIIK_AKAD':
+        $scope.studentSearchCriteria = { active: true, nominalStudy: true };
+        break;
+      case 'AVALDUS_LIIK_AKADK':
+        $scope.studentSearchCriteria = { active: true, academicLeave: true };
+        break;
+      case 'AVALDUS_LIIK_VALIS':
+      case 'AVALDUS_LIIK_OVORM':
+      case 'AVALDUS_LIIK_OVERSKAVA':
+        $scope.studentSearchCriteria = { studying: true, higher: true };
+        break;
+      case 'AVALDUS_LIIK_RAKKAVA':
+      case 'AVALDUS_LIIK_TUGI':
+        $scope.studentSearchCriteria = { studying: true, higher: false };
+        break;
+      default:
+        $scope.studentSearchCriteria = { studying: true };
+        break;
+    }
+    if ($scope.auth.isTeacher()) {
+      angular.extend($scope.studentSearchCriteria, {studentGroup: $scope.auth.teacherGroupIds});
     }
   };
 
@@ -353,6 +455,16 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       });
     });
   };
+  
+  $scope.onOisFileChange = function () {
+    if ($scope.applicationForm.fileData && $scope.applicationForm.fileData.$modelValue && $scope.applicationForm.fileData.$modelValue[0]) {
+      oisFileService.getFromLfFile($scope.applicationForm.fileData.$modelValue[0], function (file) {
+        $scope.application.oisFile = file;
+      });
+    } else {
+      $scope.application.oisFile = undefined;
+    }
+  };
 
   $scope.getUrl = oisFileService.getUrl;
 
@@ -361,34 +473,79 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       $scope.auth.student === $scope.application.student.id && $scope.auth.isParent();
   };
 
-  $scope.submit = function () {
+  function submit() {
     QueryUtils.endpoint('/applications/' + $scope.application.id + '/submit/').put().$promise.then(function (response) {
       message.info('application.messages.submitted');
       if ($scope.auth.isAdmin() || $scope.isView) {
         entityToForm(response);
+        $scope.applicationForm.$setPristine();
       } else {
         $location.url('/applications/' + $scope.application.id + '/view?_noback');
       }
     }).catch(angular.noop);
+  }
+
+  $scope.submit = function () {
+    $scope.strictRequired = false;
+    $timeout(function () {
+      FormUtils.withValidForm($scope.applicationForm, function () {
+        if (angular.isDefined($scope.applicationForm) && $scope.applicationForm.$dirty === true ) {
+          dialogService.confirmDialog({prompt: 'main.messages.confirmSave'}, function() {  
+            var application = new ApplicationsEndpoint($scope.application);
+            application.$update().then(function (response) {
+              entityToForm(response);
+              submit();
+            }).catch(angular.noop);
+          });
+        } else {
+          submit();
+        }
+      });
+    });
   };
 
-  $scope.confirm = function () {
+  function confirm() {
     QueryUtils.endpoint('/applications/' + $scope.application.id + '/confirm/').put().$promise.then(function (response) {
       message.info('application.messages.confirmed');
       if ($scope.isView) {
         entityToForm(response);
+        $scope.applicationForm.$setPristine();
       } else {
         $location.url('/applications/' + $scope.application.id + '/view?_noback');
       }
     }).catch(angular.noop);
+  }
+
+  $scope.confirm = function () {
+    $scope.strictRequired = true;
+    $timeout(function () {
+      FormUtils.withValidForm($scope.applicationForm, function () {
+        if (angular.isDefined($scope.applicationForm) && $scope.applicationForm.$dirty === true ) {
+          dialogService.confirmDialog({prompt: 'main.messages.confirmSave'}, function() {  
+            var application = new ApplicationsEndpoint($scope.application);
+            application.$update().then(function (response) {
+              entityToForm(response);
+              confirm();
+            }).catch(angular.noop);
+          });
+        } else {
+          confirm();
+        }
+      });
+    });
   };
 
-  $scope.reject = function () {
-    dialogService.showDialog('application/reject.dialog.html', null, function (submittedDialogScope) {
-      QueryUtils.endpoint('/applications/' + $scope.application.id + '/reject/').put({ reason: submittedDialogScope.rejectReason }).$promise.then(function (response) {
-        message.info('application.messages.rejected');
+  $scope.confirmConfirmation = function () {
+    FormUtils.withValidForm($scope.applicationForm, function () {
+      QueryUtils.endpoint('/applications/' + $scope.application.id + '/confirmConfirmation').put({
+        confirm: $scope.application.agreeWithDecision,
+        oisFile: $scope.application.oisFile,
+        representativeDecisionAddInfo: $scope.application.representativeDecisionAddInfo
+      }).$promise.then(function (response) {
+        message.info('application.messages.confirmed');
         if ($scope.isView) {
           entityToForm(response);
+          $scope.applicationForm.$setPristine();
         } else {
           $location.url('/applications/' + $scope.application.id + '/view?_noback');
         }
@@ -396,23 +553,61 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     });
   };
 
-  $scope.save = function () {
-    $scope.applicationForm.$setSubmitted();
-    if ($scope.applicationForm.$valid) {
-      var application = new ApplicationsEndpoint($scope.application);
-      if (angular.isDefined($scope.application.id)) {
-        application.$update().then(function () {
-          message.info('main.messages.update.success');
-          entityToForm(application);
+  $scope.removeConfirmation = function () {
+    dialogService.confirmDialog({prompt: $scope.application.representativeConfirmed ?
+      'application.messages.confirmRemovingFinalConfirmation' : 'application.messages.confirmRemovingConfirmation'}, function() {
+      QueryUtils.endpoint('/applications/' + $scope.application.id + '/removeConfirmation').put().$promise.then(function (response) {
+        message.info('application.messages.removeConfirmationSuccess');
+        if ($scope.isView) {
+          entityToForm(response);
           $scope.applicationForm.$setPristine();
+        } else {
+          $location.url('/applications/' + $scope.application.id + '/view?_noback');
+        }
+      }).catch(angular.noop);
+    });
+  };
+  
+  $scope.pdfUrl = function () {
+    return config.apiUrl + "/applications/print/" + $scope.application.id + "/application.pdf";
+  };
+
+  $scope.reject = function () {
+    $scope.strictRequired = false;
+    $timeout(function () {
+      dialogService.showDialog('application/reject.dialog.html', null, function (submittedDialogScope) {
+        QueryUtils.endpoint('/applications/' + $scope.application.id + '/reject/').put({ reason: submittedDialogScope.rejectReason }).$promise.then(function (response) {
+          message.info('application.messages.rejected');
+          if ($scope.isView) {
+            entityToForm(response);
+            $scope.applicationForm.$setPristine();
+          } else {
+            $location.url('/applications/' + $scope.application.id + '/view?_noback');
+          }
         }).catch(angular.noop);
-      } else {
-        application.$save().then(function () {
-          message.info('main.messages.create.success');
-          $location.url('/applications/' + application.id + '/edit?_noback');
-        }).catch(angular.noop);
-      }
-    }
+      });
+    });
+  };
+
+  $scope.save = function () {
+    $scope.strictRequired = false;
+    $timeout(function () {
+      FormUtils.withValidForm($scope.applicationForm, function () {
+        var application = new ApplicationsEndpoint($scope.application);
+        if (angular.isDefined($scope.application.id)) {
+          application.$update().then(function () {
+            message.info('main.messages.update.success');
+            entityToForm(application);
+            $scope.applicationForm.$setPristine();
+          }).catch(angular.noop);
+        } else {
+          application.$save().then(function () {
+            message.info('main.messages.create.success');
+            $location.url('/applications/' + application.id + '/edit?_noback');
+          }).catch(angular.noop);
+        }
+      });
+    });
   };
 
   $scope.delete = function () {

@@ -45,6 +45,10 @@ angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController'
     entityToForm(entity);
   }
 
+  $scope.hideInvalid = function (cl) {
+    return !Classifier.isValid(cl);
+  };
+  
   $scope.getNames = function(names) {
     return names.map(function(elem){return elem.supervisorName;}).join(', ');
   };

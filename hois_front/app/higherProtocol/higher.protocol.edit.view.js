@@ -152,6 +152,10 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
   }
 
   $scope.grades = Classifier.queryForDropdown({ mainClassCode: 'KORGHINDAMINE' });
+  
+  $scope.hideInvalid = function (cl) {
+    return !Classifier.isValid(cl);
+  };
 
   $scope.calculate = function() {
     QueryUtils.endpoint(baseUrl + "/" + $scope.record.id + "/calculate").query($scope.calculateGrades).$promise.then(function(response){
@@ -168,11 +172,8 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
       return deferredEntityToDto.promise;
     }
 
-    if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
-      ProtocolUtils.signBeforeConfirm(baseUrl + '/' + $scope.record.id, $scope.record, 'higherProtocol.message.confirmed', entityToDto, resolveDeferredIfExists);
-    } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
-      ProtocolUtils.mobileSignBeforeConfirm(baseUrl + '/' + $scope.record.id, $scope.record, 'higherProtocol.message.confirmed', entityToDto, resolveDeferredIfExists);
-    }
+    ProtocolUtils.signBeforeConfirm($scope.auth, baseUrl + '/' + $scope.record.id, $scope.record, 'higherProtocol.message.confirmed', 
+      entityToDto, resolveDeferredIfExists);
     return deferredEntityToDto.promise;
   };
 

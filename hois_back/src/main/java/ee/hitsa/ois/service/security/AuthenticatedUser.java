@@ -32,6 +32,7 @@ public class AuthenticatedUser implements Serializable {
     private Integer sessionTimeoutInSeconds;
     private List<Long> teacherGroupIds;
     private Boolean isCurriculumTeacher;
+    private List<String> committees;
 
     public AuthenticatedUser(String name, Long user, String roleCode, Long student, Long teacher, Integer sessionTimeoutInSeconds) {
         this.name = name;
@@ -158,5 +159,13 @@ public class AuthenticatedUser implements Serializable {
 
     public void setIsCurriculumTeacher(Boolean isCurriculumTeacher) {
         this.isCurriculumTeacher = isCurriculumTeacher;
+    }
+
+    public List<String> getCommittees() {
+        return committees;
+    }
+
+    public void setCommittees(List<String> committees) {
+        this.committees = committees;
     }
 }

@@ -6,8 +6,8 @@ function ($scope, $route, QueryUtils, USER_ROLES, AuthService) {
 
   var baseUrl = "/committees";
   $scope.committeeType = $route.current.params.type;
-  $scope.showName = ['KOMISJON_T', 'KOMISJON_V'].indexOf($scope.committeeType) !== -1;
-  $scope.showPersonSearch = ['KOMISJON_T', 'KOMISJON_V'].indexOf($scope.committeeType) !== -1;
+  $scope.showName = ['KOMISJON_T', 'KOMISJON_V', 'KOMISJON_A'].indexOf($scope.committeeType) !== -1;
+  $scope.showPersonSearch = ['KOMISJON_T', 'KOMISJON_V', 'KOMISJON_A'].indexOf($scope.committeeType) !== -1;
 
   QueryUtils.createQueryForm($scope, baseUrl, {type: $scope.committeeType, order: 'c.id'});
   var _clearCriteria = $scope.clearCriteria;

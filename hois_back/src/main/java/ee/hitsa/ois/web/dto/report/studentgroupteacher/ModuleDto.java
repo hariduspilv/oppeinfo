@@ -14,6 +14,7 @@ public class ModuleDto implements Translatable {
     private String type;
     private List<AutocompleteResult> journals = new ArrayList<>();
     private Boolean isPracticeModule;
+    private Boolean isPracticeModuleGraded;
     private List<AutocompleteResult> practiceModuleThemes = new ArrayList<>();
     private Long colspan;
 
@@ -65,6 +66,14 @@ public class ModuleDto implements Translatable {
 
     public void setIsPracticeModule(Boolean isPracticeModule) {
         this.isPracticeModule = isPracticeModule;
+    }
+
+    public Boolean getIsPracticeModuleGraded() {
+        return isPracticeModuleGraded;
+    }
+
+    public void setIsPracticeModuleGraded(Boolean isPracticeModuleGraded) {
+        this.isPracticeModuleGraded = isPracticeModuleGraded;
     }
 
     public List<AutocompleteResult> getPracticeModuleThemes() {

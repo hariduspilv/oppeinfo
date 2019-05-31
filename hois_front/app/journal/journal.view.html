@@ -300,6 +300,10 @@
       <div ng-repeat="module in journal.moduleDescriptions | orderBy: ['-isModule', currentLanguageNameField()]">
         <a href="" class="md-raised small-link" ng-click="moduleDescriptionDialog(module)">{{currentLanguageNameField(module)}}</a>
       </div>
+      <div ng-repeat="individualCurriculum in journal.individualCurriculums | orderBy: 'fullname'">
+        <a class="md-raised small-link" ng-click="individualCurriculumDialog(individualCurriculum)">
+          {{individualCurriculum.fullname}} - {{'journal.individualCurriculumDistinction' | translate}}</a>
+      </div>
     </hois-collapsable>
   </div>
 </div>

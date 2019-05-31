@@ -1,5 +1,5 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
-    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate>
+    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate ng-model-options="{allowInvalid: true}">
         <fieldset ng-if="!auth.isStudent() && !auth.isParent()">
             <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
             <div layout="column">

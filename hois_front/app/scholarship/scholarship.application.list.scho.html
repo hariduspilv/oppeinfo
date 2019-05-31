@@ -3,7 +3,7 @@
   <div layout="column">
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form ng-submit="reloadTable()" name="applicationSearchForm">
+      <form ng-submit="reloadTable()" name="applicationSearchForm" ng-model-options="{allowInvalid: true}">
         <div layout="row" flex>
           <md-input-container flex="20">
             <label class="textInput">{{'stipend.scholarshipType' | translate}}</label>

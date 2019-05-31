@@ -937,40 +937,40 @@ angular.module('hitsaOis')
     }
 
     function plannedLessonsTitle(teacher, capacityTypes) {
-      var plannedLessonsTitle = "";
+      var title = "";
       for (var ctIndex = 0; ctIndex < capacityTypes.length; ctIndex++) {
         var capacityType = capacityTypes[ctIndex];
         if (teacher.plannedLessonsByCapacity && teacher.plannedLessonsByCapacity[capacityType.code]) {
-          plannedLessonsTitle += capacityType.value.toUpperCase() + ": " + teacher.plannedLessonsByCapacity[capacityType.code] + NEW_LINE_HEX;
+          title += capacityType.value.toUpperCase() + ": " + teacher.plannedLessonsByCapacity[capacityType.code] + NEW_LINE_HEX;
         }
       }
-      return plannedLessonsTitle;
+      return title;
     }
 
     function studyLoadTitle(teacher, capacityTypes, weekIndex) {
-      var studyLoadTitle = "";
+      var title = "";
       for (var ctIndex = 0; ctIndex < capacityTypes.length; ctIndex++) {
         var capacityType = capacityTypes[ctIndex];
         if (teacher.studyLoadByWeekAndCapacity && teacher.studyLoadByWeekAndCapacity[capacityType.code] &&
           teacher.studyLoadByWeekAndCapacity[capacityType.code][weekIndex]) {
-          studyLoadTitle += capacityType.value.toUpperCase() + ": " +
+          title += capacityType.value.toUpperCase() + ": " +
             teacher.studyLoadByWeekAndCapacity[capacityType.code][weekIndex] + NEW_LINE_HEX;
         }
       }
-      return studyLoadTitle;
+      return title;
     }
 
     function studyLoadSpTitle(teacher, capacityTypes, spIndex) {
-      var studyLoadSpTitle = "";
+      var title = "";
       for (var ctIndex = 0; ctIndex < capacityTypes.length; ctIndex++) {
         var capacityType = capacityTypes[ctIndex];
         if (teacher.studyLoadByPeriodAndCapacity && teacher.studyLoadByPeriodAndCapacity[capacityType.code] &&
           teacher.studyLoadByPeriodAndCapacity[capacityType.code][spIndex]) {
-          studyLoadSpTitle += capacityType.value.toUpperCase() + ": " +
+          title += capacityType.value.toUpperCase() + ": " +
             teacher.studyLoadByPeriodAndCapacity[capacityType.code][spIndex] + NEW_LINE_HEX;
         }
       }
-      return studyLoadSpTitle;
+      return title;
     }
 
     return lessonPlanTableService;

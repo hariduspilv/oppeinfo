@@ -102,6 +102,7 @@ angular.module('hitsaOis')
     var id = $route.current.params.id;
     var changedByOtherIdCodeChange = false;
     $scope.forbiddenTypes = [];
+    $scope.auth = $route.current.locals.auth;
 
     $rootScope.removeLastUrlFromHistory(function(lastUrl){
       return lastUrl && (lastUrl.indexOf('certificate/' + id + '/view') !== -1 || lastUrl.indexOf('certificate/new') !== -1);

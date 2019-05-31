@@ -208,6 +208,11 @@
     "email": "E-mail address",
     "sum": "In total",
     "menu": {
+      "poll": {
+        "label": "Poll",
+        "data": "Poll data",
+        "statistics": "Poll statistics"
+      },
       "practice" : {
         "label": "Internship",
         "practiceContracts": "Internship contracts",
@@ -2372,6 +2377,76 @@
       "error": "There exists a competition unarchived with this code already"
     }
   },
+  "poll": {
+    "name": "Poll name",
+    "type": "Poll type",
+    "target": "Poll target",
+    "targets": "Poll targets",
+    "status": "Status",
+    "studentgroup": "Studentgroup",
+    "studentgroups": "Studentgroups",
+    "poll": "Poll",
+    "period": "Poll period",
+    "test": "Test",
+    "copy": "Copy",
+    "confirmBack": "Form data is unsaved, are you sure?",
+    "basicData": {
+      "label": "Basic data",
+      "name": "Name",
+      "foreWord": "Foreword",
+      "afterWord": "Afterword",
+      "pickAll": "Pick all",
+      "removeAll": "Remove all",
+      "journalFrom": "Journal end date from",
+      "journalThru": "Journal end date until",
+      "notificationDate": "Notification sending date",
+      "duplicateTargetCode": "Duplicate target code",
+      "reminderError": "Must be between Valid from – Valid thru",
+      "teacherCanComment": "Teacher can comment",
+      "teacherCommentVisible": "Teacher comment visible to students",
+      "atleastOne": "At least one poll target needs to be chosen",
+      "status": "Status",
+      "confirm": "Are you sure you wish to confirm the poll?",
+      "themeError": "Poll has no questions",
+      "deleteConfirm": "Are you sure you wish to delete the poll?",
+      "removeConfirm": "Remove confirmation",
+      "confirmRemoveConfirm": "Are you sure you wish to remove confirmation?",
+      "removed": "Confirmation removed",
+      "confirmError": "Confirmation failed",
+      "removeConfirmError": "Removing confirmation failed",
+      "nameError": "Poll with this name already exists",
+      "confirmed": "Poll confirmed"
+    },
+    "questions": {
+      "label": "Questions",
+      "addTheme": "Add Theme",
+      "theme": "Theme",
+      "themes": "Themes",
+      "deleteTheme": "Are you sure you wish to delete poll theme along with questions?",
+      "deleteQuestion": "Are you sure you wish to delete the question?",
+      "sameNameError": "Question with this name already exists in the theme",
+      "sameThemeError": "Theme with this name already exists",
+      "addQuestion": "Add new question",
+      "addAnswer": "Add new answer",
+      "change": "Change",
+      "question": "Question",
+      "mandatory": "Mandatory",
+      "displayRow": "Display in row",
+      "displayColumn": "Display in column",
+      "files": "files",
+      "helpText": "Additional information",
+      "weight": "Answer weight",
+      "answer": "Answer",
+      "answerType": "Answer type",
+      "pick": "Pick question",
+      "themesMissing": "Themes are missing",
+      "questionsMissing": "Questions are missing",
+      "confirmedError": "Not allowed to delete all the themes of a confirmed poll",
+      "changeTheme": "Change theme",
+      "orAddNew": "Or add new"
+    },
+    "results": "Tulemused"
+  },
   "studyYearSchedule": {
     "studyYear": "School year",
     "schoolDepartment": "Structural unit",
@@ -2488,7 +2563,8 @@
       "type": "Kind of timetable",
       "selectCopyTarget": "Timetable to add classes into",
       "difference": "Difference XLS",
-      "plan": "Plan XLSX"
+      "plan": "Plan XLSX",
+      "exportError": "Exported week is not between study period dates"
     },
     "view": {
       "publicize": "Reveal"

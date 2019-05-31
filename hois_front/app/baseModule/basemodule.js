@@ -14,6 +14,14 @@ function ($scope, QueryUtils, $route, USER_ROLES, AuthService) {
         canCreate: $scope.auth.isAdmin() && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_BAASMOODUL)
     };
 
+    $scope.clearFields = function() {
+        $scope.criteria.curriculumVersion = undefined;
+        $scope.criteria.curriculum = undefined;
+        $scope.queryC = "";
+        $scope.queryCV = "";
+        $scope.clearCriteria();
+    };
+
     $scope.searchCurriculums = function (name) {
         return autocompleteCurriculum.query({name: name}).$promise;
     };

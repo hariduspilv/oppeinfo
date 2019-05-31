@@ -14,6 +14,7 @@ import javax.persistence.OneToOne;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Contract;
+import ee.hitsa.ois.domain.directive.DirectiveStudent;
 
 @Entity
 public class StudentAbsence extends BaseEntityWithId {
@@ -29,10 +30,13 @@ public class StudentAbsence extends BaseEntityWithId {
     private Boolean isRejected;
     private Boolean isLessonAbsence;
     private String rejectReason;
-    
+
     @OneToOne
     private Contract contract;
-    
+
+    @OneToOne
+    private DirectiveStudent directiveStudent;
+
     @OneToMany(mappedBy="studentAbsence", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudentAbsenceLesson> studentAbsenceLessons = new ArrayList<>();
 
@@ -123,4 +127,13 @@ public class StudentAbsence extends BaseEntityWithId {
     public void setRejectReason(String rejectReason) {
         this.rejectReason = rejectReason;
     }
+
+    public DirectiveStudent getDirectiveStudent() {
+        return directiveStudent;
+    }
+
+    public void setDirectiveStudent(DirectiveStudent directiveStudent) {
+        this.directiveStudent = directiveStudent;
+    }
+
 }

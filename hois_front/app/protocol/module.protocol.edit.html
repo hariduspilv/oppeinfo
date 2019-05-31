@@ -51,7 +51,7 @@
                   <td md-cell ng-if="protocol.protocolVdata.isPractice">
                     <span ng-repeat="journalResult in row.practiceJournalResults | orderBy: 'inserted'">
                       <span>
-                        <span>{{gradeValue(journalResult.grade)}}</span>
+                        <span ng-class="{badResult: !gradeUtil.isPositive(journalResult.grade)}">{{gradeValue(journalResult.grade)}}</span>
                         <md-tooltip>
                           <span ng-if="journalResult.themes.length === 0">{{currentLanguageNameField(protocol.protocolVdata.curriculumVersionOccupationModule)}}</span>
                           <span ng-if="journalResult.themes.length > 0" ng-repeat="theme in journalResult.themes track by $index">
@@ -76,7 +76,7 @@
                     </span>
                   </td>
                   <td md-cell>
-                    <hois-select class="protocolGradeSelect" ng-model="row.grade" values="grades" show-property="value" value-property="code"
+                    <hois-select class="protocolGradeSelect" ng-model="row.grade" values="grades" show-property="value" value-property="code" hide-values="hideInvalid"
                       aria-label="grade" ng-change="gradeChanged(row)" ng-disabled="!formState.canEditProtocol || !row.canBeDeleted"></hois-select>
                   </td>
                   <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">

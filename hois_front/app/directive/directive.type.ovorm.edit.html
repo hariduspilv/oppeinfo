@@ -20,7 +20,9 @@
           <hois-classifier-value ng-model="row.oldStudyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.studyForm" name="students[{{$index}}].studyForm" criteria="{higher: true}" filter-values="[row.oldStudyForm]" model-value-attr="code" main-classifier-code="OPPEVORM" aria-label="{{'directive.student.newStudyForm' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.studyForm" name="students[{{$index}}].studyForm" criteria="{higher: true}"
+            only-valid filter-values="[row.oldStudyForm]" model-value-attr="code" main-classifier-code="OPPEVORM" ignore-preselected
+            aria-label="{{'directive.student.newStudyForm' | translate}}"></hois-classifier-select>
           <div class="invalid" ng-show="directiveForm['students['+$index+'].studyForm'].$error.required">
             {{'main.required' | translate}}
           </div>

@@ -18,9 +18,15 @@ public enum DirectiveType {
     KASKKIRI_VALIS(null, DirectiveValidation.Valis.class),
     KASKKIRI_IMMAT(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Immat.class, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel", "nominalStudyEnd"),
     KASKKIRI_IMMATV(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Immat.class, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel"),
+    KASKKIRI_INDOK(null, DirectiveValidation.Indok.class),
+    KASKKIRI_INDOKLOP(null, DirectiveValidation.Indoklop.class),
     KASKKIRI_TYHIST(null, null),
     KASKKIRI_STIPTOET(null, DirectiveValidation.Stiptoet.class),
-    KASKKIRI_STIPTOETL(null, DirectiveValidation.Stiptoetl.class);
+    KASKKIRI_STIPTOETL(null, DirectiveValidation.Stiptoetl.class),
+    KASKKIRI_KIITUS(null, DirectiveValidation.Kiitus.class),
+    KASKKIRI_NOOMI(null, DirectiveValidation.Noomi.class),
+    KASKKIRI_PRAKTIK(null, DirectiveValidation.Praktik.class),
+    KASKKIRI_OTEGEVUS(null, DirectiveValidation.Otegevus.class);
     // TODO not yet implemented
     // KASKKIRI_KYLALIS(null, null, "nominalStudyEnd");
 

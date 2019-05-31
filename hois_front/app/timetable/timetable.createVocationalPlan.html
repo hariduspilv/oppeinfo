@@ -14,10 +14,12 @@
     </div>
     <hois-collapsable expanded="false" label="('timetable.timetablePlan.showGroups' | translate)">
       <fieldset tabindex="1">
-        <div layout="column">
-          <md-checkbox ng-model="plan.selectAll" flex-offset="5" ng-change="selectAllChanged()">
-            {{'timetable.timetablePlan.selectAll' | translate}}
-          </md-checkbox>
+        <div>
+          <div flex>
+            <md-checkbox ng-model="plan.selectAll" flex-offset="5" ng-change="selectAllChanged()">
+              {{'timetable.timetablePlan.selectAll' | translate}}
+            </md-checkbox>
+          </div>
           <md-grid-list ng-app="app" md-cols="5" md-cols-md="3" md-cols-sm="2" md-cols-xs="1" md-row-height="6:1">
             <md-grid-tile ng-repeat="group in plan.studentGroups">
               <md-checkbox ng-model="group._selected" ng-change="updateGroups()">

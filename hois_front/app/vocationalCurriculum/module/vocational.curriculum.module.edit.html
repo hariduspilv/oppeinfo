@@ -138,9 +138,9 @@
             <div layout="column">
               <div ng-repeat="partOccupation in item.partOccupations | orderBy" flex layout="row">
                 <div flex="5">&nbsp;</div>
-                <md-checkbox ng-model="occupationsSelected[partOccupation]" ng-change="validateOccupations()"
-                  >
+                <md-checkbox ng-model="occupationsSelected[partOccupation]" ng-change="validateOccupations()">
                   <hois-classifier-value ng-model="partOccupation" main-classifier-code="OSAKUTSE" class="inline" show-date></hois-classifier-value>
+                  ({{'stateCurriculum.enter.occupation.partial' | translate}})
                 </md-checkbox>
               </div>
             </div>
@@ -148,9 +148,9 @@
             <div layout="column">
               <div ng-repeat="speciality in item.specialities | orderBy" layout="row">
                 <div flex="5">&nbsp;</div>
-                <md-checkbox ng-model="specialitiesSelected[speciality]" ng-change="validateOccupations()"
-                  >
+                <md-checkbox ng-model="specialitiesSelected[speciality]" ng-change="validateOccupations()">
                   <hois-classifier-value ng-model="speciality" main-classifier-code="SPETSKUTSE" class="inline" show-date></hois-classifier-value>
+                  ({{'stateCurriculum.enter.occupation.specialty' | translate}})
                 </md-checkbox>
               </div>
             </div>
@@ -165,8 +165,8 @@
       <div layout="row" flex>
         <md-input-container flex="45">
           <label>{{'module.type' | translate}}</label>
-          <hois-classifier-select name="module" ng-model="module.module" show-only-values="possibleTypes" main-classifier-code="KUTSEMOODUL"
-            required ng-disabled="module.id && !module.basicDataCanBeEdited" model-value-attr="code"></hois-classifier-select>
+          <hois-classifier-select name="module" ng-model="module.module" show-only-values="possibleTypes" main-classifier-code="KUTSEMOODUL" criteria="{vocational: true}"
+            required ng-disabled="module.id && !module.basicDataCanBeEdited" only-valid ignore-preselected model-value-attr="code"></hois-classifier-select>
         </md-input-container>
         <md-input-container flex="10" flex-sm="50" flex-xs="50" flex-offset="5">
           <label>{{'module.credits' | translate}}</label>

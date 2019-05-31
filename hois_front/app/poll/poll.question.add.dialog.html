@@ -1,0 +1,148 @@
+<style>
+    .link-no-underline {
+        text-decoration: none;
+    }
+    .link-disabled {
+        color: #d7dde5;
+    }
+</style>
+<md-dialog aria-label="add question dialog" flex="50">
+    <form name="dialogForm" ng-submit="submit()" novalidate ng-cloak>
+        <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h2 flex>{{"poll.questions.label" | translate}}</h2>
+            <md-button class="md-icon-button" ng-click="cancel()">
+            <md-icon md-font-set="material-icons">close</md-icon>
+            </md-button>
+        </div>
+        </md-toolbar>
+        <md-dialog-content>
+        <div class="md-dialog-content" flex>
+            <div layout="column">
+                <div layout="row">
+                    <md-input-container flex>
+                        <label>{{'poll.questions.theme' | translate}}</label>
+                        <hois-select ng-model="criteria.theme" values="themes" value-property="id" show-property="nameEt" required ng-change="checkName(criteria.theme)"></hois-select>
+                    </md-input-container>
+                </div>
+                <div layout="row">
+                    <md-input-container flex>
+                        <label>{{'poll.questions.pick' | translate}}</label>
+                        <hois-select ng-model="criteria.question" values="questions" value-property="id" show-property="nameEt" ng-change="loadQuestion(criteria.question)"></hois-select>
+                    </md-input-container>
+                </div>
+                <div layout="row" flex-align="center center">
+                    <h3 style="margin: 3px 0px 3px 0px !important">{{'poll.questions.orAddNew' | translate}}</h3>
+                </div>
+                <div layout="row">
+                    <md-input-container flex>
+                        <label>{{'poll.questions.question' | translate}}</label>
+                        <input ng-model="criteria.nameEt" type="text" md-maxlength="255" name="nameEt" required>
+                        <ng-messages for="dialogForm.nameEt.$error" role="alert">
+                            <ng-message when="nameEtError">{{'poll.questions.sameNameError' | translate}}</ng-message>
+                        </ng-messages>
+                    </md-input-container>
+                </div>
+                <div layout="row" flex>
+                    <md-input-container flex>
+                        <label class="textInput">{{'poll.questions.helpText' | translate}}</label>
+                        <textarea ng-model="criteria.addInfoEt" ng-disabled="criteria.disabled || (new && criteria.question)" md-maxlength="4000" max-rows="4"></textarea>
+                    </md-input-container>
+                </div>
+                <div layout="row" flex>
+                    <md-input-container flex>
+                        <md-checkbox ng-model="criteria.isRequired">{{'poll.questions.mandatory' | translate}}</md-checkbox>
+                    </md-input-container>
+                </div>
+                <div layout="row" flex>
+                    <md-input-container flex="60">
+                        <label>{{'poll.questions.answerType' | translate}}</label>
+                        <hois-classifier-select ng-model="criteria.type" main-classifier-code="VASTUS"
+                         model-value-attr="code" required ng-disabled="criteria.disabled || (new && criteria.question)"></hois-classifier-select>
+                    </md-input-container>
+                    <div ng-if="criteria.type === 'VASTUS_M' || criteria.type ===  'VASTUS_R' || criteria.type === 'VASTUS_S'" layout="row" flex="35" layout-align="left center" flex-offset="5">
+                        <md-input-container flex>
+                            <md-radio-group name="criteria.isInRow" ng-model="criteria.isInRow" required="{{question.isRequried}}" layout="row" flex>
+                                <md-radio-button ng-value="true" flex>{{'poll.questions.displayRow' | translate}}</md-radio-button>
+                                <md-radio-button ng-value="false" flex>{{'poll.questions.displayColumn' | translate}}</md-radio-button>
+                            </md-radio-group>
+                        </md-input-container>
+                    </div>
+                </div>
+                <div ng-if="criteria.type === 'VASTUS_M' || criteria.type ===  'VASTUS_R' || criteria.type === 'VASTUS_V' || criteria.type === 'VASTUS_S'" layout="column" flex>
+                    <div ng-repeat="item in criteria.answers track by $index" class="occupation-row align-center" layout="row" flex="100">
+                        <div layout="row" layout-align="start center" flex="100">
+                            <div layout="row" flex="20">
+                                <md-input-container flex>
+                                    <label class="textInput">{{'poll.questions.weight' | translate}}</label>
+                                    <input ng-model="item.answerNr" name="answerNr" ng-disabled="criteria.disabled || (new && criteria.question)" type="number" max="32767" min="0" required>
+                                </md-input-container>
+                            </div>
+                            <div layout="row" flex="70">
+                                <md-input-container flex>
+                                    <label class="textInput">{{'poll.questions.answer' | translate}}</label>
+                                    <input ng-model="item.nameEt" type="text" ng-disabled="criteria.disabled || (new && criteria.question)" name="{{$index}}" md-maxlength="255" required ng-change="checkAnswer($index)">
+                                    <ng-messages for="dialogForm[$index].$error" role="alert" layout="row">
+                                        <ng-message when="answerEtError">{{'poll.questions.sameNameError' | translate}}</ng-message>
+                                    </ng-messages>
+                                </md-input-container>
+                            </div>
+                            <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                            <div ng-if="!(criteria.disabled || (new && criteria.question))" layout="row" layout-align="center center">
+                                <div flex>
+                                    <a class="remove" ng-click="deleteAnswer(item)">&times;&nbsp;&nbsp;</a>
+                                    <div ng-if="item.disabled">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                                </div>
+                                <div flex>
+                                    <p ng-if="$first" class="link-disabled">&#9650;&nbsp;</p>
+                                    <a ng-if="!$first" class="link-no-underline" ng-click="swapCriteria($index, $index - 1)">&#9650;&nbsp;</a>
+                                </div>
+                                <div flex>
+                                    <p ng-if="$last" class="link-disabled">&#9660;&nbsp;</p>
+                                    <a ng-if="!$last" class="link-no-underline" ng-click="swapCriteria($index, $index + 1)">&#9660;&nbsp;</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div layout="row" ng-if="!(criteria.disabled || (new && criteria.question))">
+                        <md-button class="md-primary" ng-click="addAnswer()">{{'poll.questions.addAnswer' | translate}}</md-button>
+                    </div>
+                </div>
+                <div layout="column" flex>
+                    <md-table-container>
+                        <table md-table class="secondary-table">
+                        <thead md-head>
+                            <tr md-row>
+                            <th md-column><span>{{'poll.questions.files' | translate}}</span></th>
+                            <th md-column>
+                                <md-button flex class="md-primary" ng-click="openAddFileDialog()" style="text-transform: none">{{'main.button.uploadFile' | translate}}</md-button>
+                            </th>
+                            </tr>
+                        </thead>
+                        <tbody md-body>
+                            <tr md-row ng-repeat="file in criteria.files | orderBy: 'oisFile.fname'" ng-class-odd="'odd'" ng-class-even="'even'">
+                            <td md-cell>
+                                {{file.oisFile.fname}}
+                                <a ng-href="{{getFileUrl(file.oisFile)}}" download target="_blank" rel="noopener noreferrer">
+                                    <md-icon md-font-set="material-icons">file_download</md-icon>
+                                </a>
+                            </td>
+                            <td md-cell>
+                                <md-button class="remove nomargin" ng-click="deleteFile(file)">&times;</md-button>
+                            </td>
+                            </tr>
+                        </tbody>
+                        </table>
+                    </md-table-container>
+                </div>
+            </div>
+        </div>
+        </md-dialog-content>
+    
+        <md-dialog-actions layout="row" layout-xs="column" layout-align="start start" layout-align-xs="none none">
+            <md-button flex-xs="100" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+            <md-button ng-if="criteria.id" flex-xs="100" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+            <md-button flex-xs="100" class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+        </md-dialog-actions>
+    </form>
+</md-dialog>

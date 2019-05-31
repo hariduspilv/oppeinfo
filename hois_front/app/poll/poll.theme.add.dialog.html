@@ -1,0 +1,33 @@
+<md-dialog aria-label="add question dialog" flex="50">
+    <form name="dialogForm" ng-submit="submit()" novalidate ng-cloak>
+        <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h2 flex>{{"poll.questions.themes" | translate}}</h2>
+            <md-button class="md-icon-button" ng-click="cancel()">
+            <md-icon md-font-set="material-icons">close</md-icon>
+            </md-button>
+        </div>
+        </md-toolbar>
+        <md-dialog-content>
+        <div class="md-dialog-content" flex>
+            <div layout="column">
+                <div layout="row">
+                    <md-input-container flex>
+                        <label>{{'poll.questions.theme' | translate}}</label>
+                        <input ng-model="criteria.nameEt" type="text" md-maxlength="255" ng-change="checkTheme()" name="nameEt" required>
+                        <ng-messages for="dialogForm.nameEt.$error" role="alert">
+                            <ng-message when="nameEtError">{{'poll.questions.sameThemeError' | translate}}</ng-message>
+                        </ng-messages>
+                    </md-input-container>
+                </div>
+            </div>
+        </div>
+        </md-dialog-content>
+    
+        <md-dialog-actions layout="row" layout-xs="column" layout-align="start start" layout-align-xs="none none">
+            <md-button flex-xs="100" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+            <md-button ng-if="criteria.id" flex-xs="100" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+            <md-button flex-xs="100" class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+        </md-dialog-actions>
+    </form>
+</md-dialog>

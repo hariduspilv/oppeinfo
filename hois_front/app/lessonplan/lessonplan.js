@@ -767,7 +767,7 @@
 
           dialogScope.getStudyLoadSpTitle = function (teacherId, studyPeriodIndex) {
             return LessonPlanTableService.getStudyLoadSpTitle(teacherId, dialogScope.formState.teachers,
-              dialogScope.formState.capacityTypes, studyPeriodIndex)
+              dialogScope.formState.capacityTypes, studyPeriodIndex);
           };
 
         }, function (submittedDialogScope) {

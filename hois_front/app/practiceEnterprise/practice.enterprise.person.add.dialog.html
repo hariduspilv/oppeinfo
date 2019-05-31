@@ -107,7 +107,8 @@
             <div layout="column" flex="50">
                 <md-input-container flex>
                     <label class="textInput">{{'enterprise.personsTab.personIdCodeCountry' | translate}}</label>
-                    <hois-classifier-select ng-model="enterprise.country" name="country" model-value-attr="code" main-classifier-code="RIIK"></hois-classifier-select>
+                    <hois-classifier-select ng-model="enterprise.country" name="country" model-value-attr="code" main-classifier-code="RIIK"
+                      ignore-preselected only-valid criteria="{higher: auth.school.higher, vocational: auth.school.vocational}"></hois-classifier-select>
                 </md-input-container>
             </div>
         </div>

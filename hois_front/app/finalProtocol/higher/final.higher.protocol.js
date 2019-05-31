@@ -76,6 +76,10 @@ function ($route, $location, $scope, $filter, $q, ArrayUtils, Classifier, DataUt
       resolveDeferredIfExists();
     });
   }
+  
+  $scope.hideInvalid = function (cl) {
+    return !Classifier.isValid(cl);
+  }
 
   $scope.gradeChanged = function(row) {
     if (row) {
@@ -162,11 +166,8 @@ function ($route, $location, $scope, $filter, $q, ArrayUtils, Classifier, DataUt
       protocolStudents: getStudentsWithResults($scope.protocol.protocolStudents)
     };
 
-    if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
-      ProtocolUtils.signBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, 'finalProtocol.messages.confirmed', entityToDto, resolveDeferredIfExists);
-    } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
-      ProtocolUtils.mobileSignBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, 'finalProtocol.messages.confirmed', entityToDto, resolveDeferredIfExists);
-    }
+    ProtocolUtils.signBeforeConfirm($scope.auth, endpoint + '/' + $scope.protocol.id, data, 'finalProtocol.messages.confirmed',
+      entityToDto, resolveDeferredIfExists);
     return deferredEntityToDto.promise;
   };
 

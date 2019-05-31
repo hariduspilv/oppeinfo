@@ -65,7 +65,8 @@ angular.module('hitsaOis')
     }
 
     function setTypes() {
-      QueryUtils.endpoint(baseUrl + '/versionHmoduleTypes/' + versionId).query().$promise.then(function (response) {
+      var url = baseUrl + '/versionHmoduleTypes/' + versionId + ($scope.data.id ? "/" + $scope.data.id : "");
+      QueryUtils.endpoint(url).query().$promise.then(function (response) {
         $scope.moduleTypes = response;
         $scope.data.typeObject = $scope.moduleTypes.find(function (el) {
           if ($scope.data.type !== 'KORGMOODUL_M') {

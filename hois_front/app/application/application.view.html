@@ -1,68 +1,103 @@
-<div class="ois-form-layout-padding form-readonly" ng-cloak>
+<div class="ois-form-layout-padding" ng-cloak>
 
   <div flex>
-    <form layout="column">
-      <div style="padding-top: 1em">
-
-        <md-input-container ng-if="!application.isAdult && application.needsRepresentativeConfirm === true && application.status === 'AVALDUS_STAATUS_KOOST'" flex="60" flex-sm="100" flex-xs="100">
-          <b>{{'application.missingRepresentativeConfirmation' | translate}}</b>
-        </md-input-container>
-
-        <div ng-include="'application/templates/application.information.html'"></div>
-        <div ng-include="templateUrlByType"></div>
-
-
-        <div layout="row" layout-sm="column" layout-xs="column"  >
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'application.additionalInfo' | translate}}</label>
-            <hois-value value="application.addInfo"></hois-value>
+    <form layout="column" name="applicationForm">
+      <div class="form-readonly">
+        <div style="padding-top: 1em">
+          <md-input-container ng-if="!application.isAdult && application.needsRepresentativeConfirm === true && application.status === 'AVALDUS_STAATUS_KOOST'" flex="60" flex-sm="100" flex-xs="100">
+            <b>{{'application.missingRepresentativeConfirmation' | translate}}</b>
           </md-input-container>
-        </div>
+          <md-input-container ng-if="!application.isAdult && auth.isStudent() && application.status === 'AVALDUS_STAATUS_KINNITAM' && application.type === 'AVALDUS_LIIK_TUGI'" flex="60" flex-sm="100" flex-xs="100">
+            <b>{{'application.missingRepresentativeConfirmation' | translate}}</b>
+          </md-input-container>
 
-        <div layout="column" flex>
-		<fieldset>
-    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
-        <md-table-container>
-          <table md-table class="secondary-table">
-            <thead md-head>
-              <tr md-row>
-                <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
-                <th md-column><span>{{'file.additionDate' | translate}}</span></th>
-                <th md-column>{{'file.addedBy' | translate}}</th>
-              </tr>
-            </thead>
-            <tbody md-body>
-              <tr md-row ng-repeat="file in application.files | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td md-cell>
-                  {{file.oisFile.fname}}
-                  <a ng-href="{{getUrl(file.oisFile, 'application')}}" target="_blank" rel="noopener noreferrer">
-                    <md-icon md-font-set="material-icons">file_download</md-icon>
-                  </a>
-                </td>
-                <td md-cell>
-                  {{file.inserted | hoisDateTime}}
-                </td>
-                <td md-cell>
-                  {{file.insertedBy}}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </md-table-container>
-		  </fieldset>
+          <div ng-if="application.type !== 'AVALDUS_LIIK_TUGI'" ng-include="'application/templates/application.information.html'"></div>
+          <div ng-include="templateUrlByType"></div>
+
+          <div layout="row" layout-sm="column" layout-xs="column" ng-if="application.type !== 'AVALDUS_LIIK_TUGI'">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label class="textInput">{{'application.additionalInfo' | translate}}</label>
+              <hois-value value="application.addInfo"></hois-value>
+            </md-input-container>
+          </div>
+
+          <div layout="column" flex>
+            <fieldset>
+              <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
+              <md-table-container>
+                <table md-table class="secondary-table">
+                  <thead md-head>
+                    <tr md-row>
+                      <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
+                      <th md-column><span>{{'file.additionDate' | translate}}</span></th>
+                      <th md-column>{{'file.addedBy' | translate}}</th>
+                    </tr>
+                  </thead>
+                  <tbody md-body>
+                    <tr md-row ng-repeat="file in application.files | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+                      <td md-cell>
+                        {{file.oisFile.fname}}
+                        <a ng-href="{{getUrl(file.oisFile, 'application')}}" target="_blank" rel="noopener noreferrer">
+                          <md-icon md-font-set="material-icons">file_download</md-icon>
+                        </a>
+                      </td>
+                      <td md-cell>
+                        {{file.inserted | hoisDateTime}}
+                      </td>
+                      <td md-cell>
+                        {{file.insertedBy}}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </md-table-container>
+            </fieldset>
+          </div>
         </div>
+        <div>&nbsp;</div>
       </div>
-      <div>&nbsp;</div>
-
+      
+      <div ng-if="application.canEditStudent && application.id > 0
+          && application.status === 'AVALDUS_STAATUS_KINNITAM' && application.type === 'AVALDUS_LIIK_TUGI'
+          && ((auth.isStudent() && application.isAdult) || auth.isParent() || (auth.isAdmin() && isAuthorized('ROLE_OIGUS_K_TEEMAOIGUS_AVALDUS')))">
+        <fieldset>
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'application.agreement' | translate}}</legend>
+          <div layout="column">
+            <md-input-container style="max-width: 360px" >
+              <label>{{'application.agreeWithDecision' | translate}}</label>
+              <md-select ng-model="application.agreeWithDecision" required>
+                <md-option ng-value="false">{{'main.no' | translate}}</md-option>
+                <md-option ng-value="true">{{'main.yes' | translate}}</md-option>
+              </md-select>
+            </md-input-container>
+            <md-input-container>
+              <label>{{'application.representativeDecisionAddInfo' | translate}}</label>
+              <textarea ng-model="application.representativeDecisionAddInfo" md-maxlength="4000" max-rows="10"></textarea>
+            </md-input-container>
+            <div layout="column" ng-if="auth.isAdmin()">
+              <md-input-container flex>
+                <lf-ng-md-file-input name="fileData" lf-files="fileData" lf-browse-label="{{'main.addFile' | translate}}"
+                  lf-remove-label="{{'main.button.delete' | translate}}" lf-placeholder="{{'application.agreementFile' | translate}}"
+                  lf-filesize="5MB" disallow-same-file="application.files" ng-change="onOisFileChange()"> </lf-ng-md-file-input>
+              </md-input-container>
+              <div ng-messages="applicationForm.fileData.$error">
+                <div class="invalid" ng-message="filesize">{{'main.messages.error.fileTooLarge' | translate}} 5MB!</div>
+                <div class="invalid" ng-message="samefile">{{'main.messages.error.fileAlreadyExists' | translate}}</div>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+        <div>&nbsp;</div>
+      </div>
 
       <div layout="row" layout-xs="column">
         <md-button ng-if="application.canEditStudent && ((application.status === 'AVALDUS_STAATUS_KOOST' 
-        && ((auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS')) || auth.isStudent()))
+        && ((auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS')) || (auth.isStudent() || (auth.isParent() && application.type === 'AVALDUS_LIIK_TUGI'))))
         || (application.status === 'AVALDUS_STAATUS_YLEVAAT' && (auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS'))))"
           ng-href="#/applications/{{application.id}}/edit?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
         <div ng-include="'application/templates/action.buttons.html'"></div>
-        <md-button ng-if="auth.isStudent()" ng-click="back('#/applications/student')" class="md-raised">{{'main.button.back' | translate}}</md-button>
-        <md-button ng-if="!auth.isStudent()" ng-click="back('#/applications/', applicationForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="auth.isStudent() || auth.isParent()" ng-click="back('#/applications/student')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="!(auth.isStudent() || auth.isParent())" ng-click="back('#/applications/', applicationForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>
   </div>

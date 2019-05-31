@@ -1,6 +1,7 @@
 package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
@@ -59,6 +60,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.HigherProtocolDto;
 import ee.hitsa.ois.web.dto.HigherProtocolSearchDto;
 import ee.hitsa.ois.web.dto.HigherProtocolStudentDto;
+import ee.hitsa.ois.web.dto.ProtocolPracticeJournalResultDto;
 import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 
@@ -320,37 +322,30 @@ public class HigherProtocolService extends AbstractProtocolService {
 
         if(Boolean.TRUE.equals(dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getIsPracticeSubject())) {
             Set<Long> students = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
-            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
-                    "from practice_journal pj join classifier c on c.code = pj.grade_code");
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from practice_journal pj "
+                    + "join practice_journal_module_subject pjms on pjms.practice_journal_id = pj.id");
 
             qb.requiredCriteria("pj.student_id in (:studentId)", "studentId", students);
-            qb.requiredCriteria("pj.subject_id = :subjectId", "subjectId",
+            qb.requiredCriteria("pjms.subject_id = :subjectId", "subjectId",
                     dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getSubject().getId());
+            qb.filter("pj.grade_code is not null");
 
-            List<?> data = qb.select("pj.student_id, c.value, c.value2", em).getResultList();
+            List<?> data = qb.select("pj.student_id, pj.id, pj.grade_code, pj.grade_inserted", em).getResultList();
 
-            assertDoesNotHaveDuplicates(data);
-
-            Boolean isLetterGrades = protocol.getSchool().getIsLetterGrade();
-            Map<Long, String> practiceResults = StreamUtil.toMap(r -> resultAsLong(r, 0),
-                    Boolean.TRUE.equals(isLetterGrades) ? r -> resultAsString(r, 2) : r -> resultAsString(r, 1), data);
+            Map<Long, List<ProtocolPracticeJournalResultDto>> practiceResults = StreamUtil.nullSafeList(data).stream()
+                    .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r ->
+                    new ProtocolPracticeJournalResultDto(resultAsLong(r, 1), resultAsString(r, 2),
+                            resultAsLocalDateTime(r, 3), null), Collectors.toList())));
 
             for(HigherProtocolStudentDto protocolStudent : dto.getProtocolStudents()) {
                 Long studentId = protocolStudent.getStudent().getId();
-                String practiceResult = practiceResults.get(studentId);
-                if(practiceResult != null) {
-                    protocolStudent.setPracticeResult(practiceResult);
+                List<ProtocolPracticeJournalResultDto> studentResults = practiceResults.get(studentId);
+                if (studentResults != null) {
+                    protocolStudent.setPracticeJournalResults(studentResults);
                 }
             }
         }
         return dto;
-    }
-
-    private static void assertDoesNotHaveDuplicates(List<?> data) {
-        Set<Long> existingIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
-        if(data.size() != existingIds.size()) {
-            throw new ValidationFailedException("higherProtocol.error.duplicatesInPracticeResults");
-        }
     }
 
     public HigherProtocolReport higherProtocolReport(Protocol protocol) {

@@ -25,7 +25,8 @@
               </md-input-container>
               <md-input-container flex="50" flex-offset="5">
                 <label class="textInput">{{'studyYear.studyPeriodEvent.eventType' | translate}}</label>
-                <hois-classifier-select ng-model="studyPeriodEvent.eventType" model-value-attr="code" main-classifier-code="SYNDMUS" required></hois-classifier-select>
+                <hois-classifier-select ng-model="studyPeriodEvent.eventType" model-value-attr="code" main-classifier-code="SYNDMUS"
+                  only-valid ignore-preselected criteria="{higher: auth.school.higher, vocational: auth.school.vocational}" required></hois-classifier-select>
               </md-input-container>
             </div>
           </div>

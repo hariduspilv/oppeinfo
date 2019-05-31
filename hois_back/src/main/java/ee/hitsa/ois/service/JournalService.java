@@ -54,6 +54,8 @@ import ee.hitsa.ois.domain.timetable.JournalEntryStudentHistory;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudentLessonAbsence;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.enums.Absence;
+import ee.hitsa.ois.enums.DirectiveStatus;
+import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.MessageType;
@@ -100,9 +102,11 @@ import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentHistoryDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentLessonAbsenceDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentResultDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryTableDto;
+import ee.hitsa.ois.web.dto.timetable.JournalModuleDescriptionDto;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentApelResultDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
+import ee.hitsa.ois.web.dto.timetable.JournalStudentIndividualCurriculumDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentRemarkDto;
 import ee.hitsa.ois.web.dto.timetable.JournalXlsDto;
 import ee.hitsa.ois.web.dto.timetable.StudentJournalAbsenceDto;
@@ -263,7 +267,69 @@ public class JournalService {
         dto.setCanEdit(Boolean.valueOf(JournalUtil.hasPermissionToChange(user, journal)));
         dto.setCanReview(Boolean.valueOf(JournalUtil.hasPermissionToReview(user, journal)));
         dto.setLessonHours(usedHours(journal));
+        setStudentIndividualCurriculums(dto);
         return dto;
+    }
+
+    private static JpaNativeQueryBuilder studentIndividualCurriculumsQb(Long journalId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j " +
+                "join journal_student js on js.journal_id = j.id " +
+                "join student s on s.id = js.student_id " +
+                "join person p on p.id = s.person_id " +
+                "join directive_student ds on ds.student_id = s.id "+
+                "join directive d on d.id = ds.directive_id " +
+                "join directive_student_module dsm on dsm.directive_student_id = ds.id " +
+                "join curriculum_version_omodule cvo on cvo.id = dsm.curriculum_version_omodule_id " +
+                "join curriculum_module cm on cm.id = cvo.curriculum_module_id " +
+                "join study_year sy on sy.id = j.study_year_id " +
+                "left join (directive_student ds_lop join directive d_lop on d_lop.id = ds_lop.directive_id and d_lop.type_code = :lopDirectiveType " +
+                "and d_lop.status_code = :directiveStatus) on ds_lop.directive_student_id = ds.id and ds_lop.canceled = false");
+
+        qb.requiredCriteria("j.id = :journalId", "journalId", journalId);
+        qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_INDOK);
+        qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus",
+                DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+        qb.filter("ds.canceled = false and coalesce(j.end_date, sy.end_date) >= ds.start_date");
+        qb.filter("cm.id in (select cm2.id from journal_omodule_theme jot " +
+                "join curriculum_version_omodule_theme cvot on jot.curriculum_version_omodule_theme_id = cvot.id " +
+                "join curriculum_version_omodule cvo2 on cvo2.id = cvot.curriculum_version_omodule_id " +
+                "join curriculum_module cm2 on cm2.id = cvo2.curriculum_module_id " +
+                "where jot.journal_id = j.id)");
+        qb.parameter("lopDirectiveType", DirectiveType.KASKKIRI_INDOKLOP.name());
+        return qb;
+    }
+
+    private void setStudentIndividualCurriculums(JournalDto journalDto) {
+        List<JournalStudentIndividualCurriculumDto> individualCurriculums = new ArrayList<>();
+        JpaNativeQueryBuilder qb = studentIndividualCurriculumsQb(journalDto.getId());
+
+        List<?> data = qb.select("s.id student_id, p.firstname, p.lastname, cm.id curriculum_id, "
+                + "cm.name_et, cm.name_en, dsm.add_info, ds.start_date, "
+                + "coalesce(ds_lop.start_date, ds.end_date)", em).getResultList();
+        Map<Long, List<Object>> dataByStudents = StreamUtil.nullSafeList(data).stream()
+                .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.toList()));
+        for (Long studentId : dataByStudents.keySet()) {
+            List<Object> modules = dataByStudents.get(studentId);
+            List<JournalModuleDescriptionDto> distinctionDtos = new ArrayList<>();
+            for (Object module : modules) {
+                JournalModuleDescriptionDto distinction = new JournalModuleDescriptionDto();
+                distinction.setNameEt(resultAsString(module, 4));
+                distinction.setNameEn(resultAsString(module, 5));
+                distinction.setAddInfo(resultAsString(module, 6));
+                distinction.setStartDate(resultAsLocalDate(module, 7));
+                distinction.setEndDate(resultAsLocalDate(module, 8));
+                distinctionDtos.add(distinction);
+            }
+
+            JournalStudentIndividualCurriculumDto individualCurriculumDto = new JournalStudentIndividualCurriculumDto();
+            individualCurriculumDto.setStudentId(studentId);
+            String fullname = PersonUtil.fullname(resultAsString(dataByStudents.get(studentId).get(0), 1),
+                    resultAsString(dataByStudents.get(studentId).get(0), 2));
+            individualCurriculumDto.setFullname(fullname);
+            individualCurriculumDto.setDistinctions(distinctionDtos);
+            individualCurriculums.add(individualCurriculumDto);
+        }
+        journalDto.setIndividualCurriculums(individualCurriculums);
     }
 
     public Journal confirm(Journal journal) {
@@ -903,20 +969,27 @@ public class JournalService {
         Map<Long, JournalStudentDto> mappedStudentDtos = students.stream().map(JournalStudentDto::of)
                 .collect(Collectors.toMap(r -> r.getStudentId(), r -> r));
 
-        Set<Long> omodules = StreamUtil.toMappedSet(t -> EntityUtil.getId(
-                t.getCurriculumVersionOccupationModuleTheme().getModule()), journal.getJournalOccupationModuleThemes());
-        Map<Long, List<JournalStudentApelResultDto>> journalStudentApelResuts = !mappedStudentDtos.isEmpty()
-                ? journalStudentApelResults(omodules, mappedStudentDtos.keySet())
-                : new HashMap<>();
-        for (Long studentId : journalStudentApelResuts.keySet()) {
-            mappedStudentDtos.get(studentId).setApelResults(journalStudentApelResuts.get(studentId));
-        }
+        if (!mappedStudentDtos.isEmpty()) {
+            Set<Long> studentIds = mappedStudentDtos.keySet();
+            Set<Long> omodules = StreamUtil.toMappedSet(
+                    t -> EntityUtil.getId(t.getCurriculumVersionOccupationModuleTheme().getModule()),
+                    journal.getJournalOccupationModuleThemes());
 
-        Map<Long, List<JournalStudentRemarkDto>> journalStudentRemarks = !mappedStudentDtos.isEmpty()
-                ? journalStudentRemarks(journal, mappedStudentDtos.keySet())
-                : new HashMap<>();
-        for (Long studentId : journalStudentRemarks.keySet()) {
-            mappedStudentDtos.get(studentId).setRemarks(journalStudentRemarks.get(studentId));
+            Map<Long, List<JournalStudentApelResultDto>> journalStudentApelResuts = journalStudentApelResults(omodules,
+                    studentIds);
+            for (Long studentId : journalStudentApelResuts.keySet()) {
+                mappedStudentDtos.get(studentId).setApelResults(journalStudentApelResuts.get(studentId));
+            }
+
+            Map<Long, List<JournalStudentRemarkDto>> journalStudentRemarks = journalStudentRemarks(journal, studentIds);
+            for (Long studentId : journalStudentRemarks.keySet()) {
+                mappedStudentDtos.get(studentId).setRemarks(journalStudentRemarks.get(studentId));
+            }
+
+            Set<Long> studentsWithIndividualCurriculums = studentsWithIndividualCurriculums(EntityUtil.getId(journal));
+            for (Long studentId : studentsWithIndividualCurriculums) {
+                mappedStudentDtos.get(studentId).setIsIndividualCurriculum(Boolean.TRUE);
+            }
         }
 
         List<JournalStudentDto> studentDtos = new ArrayList<>();
@@ -1010,6 +1083,13 @@ public class JournalService {
         return result;
     }
 
+    private Set<Long> studentsWithIndividualCurriculums(Long journalId) {
+        JpaNativeQueryBuilder qb = studentIndividualCurriculumsQb(journalId);
+
+        List<?> data = qb.select("s.id", em).getResultList();
+        return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
+    }
+
     public JournalLessonHoursDto usedHours(Journal journal) {
         List<JournalCapacity> capacities = journal.getJournalCapacities();
         Set<JournalEntry> entries = journal.getJournalEntries();
@@ -1037,7 +1117,7 @@ public class JournalService {
         
         return dto;
     }
-    
+
     private static Integer calculatePlannedHours(List<JournalCapacity> capacities, String typeCode) {
         return Integer.valueOf(capacities.stream()
                 .filter(it -> typeCode == null
@@ -1066,7 +1146,7 @@ public class JournalService {
         Map<Long, JournalEntryStudentAcceptedAbsenceDto> acceptedAbsences = new HashMap<>();
         Map<Long, List<StudentAbsenceDto>> wholeDayAbsences = wholeDayAcceptedAbsences(journal, entryDate);
         Map<Long, Set<Long>> lessonAbsences = lessonAbsences(journal, entryDate);
-        
+
         for (Long journalStudent : wholeDayAbsences.keySet()) {
             boolean practice = wholeDayAbsences.get(journalStudent).stream().anyMatch(a -> a.getContractId() != null);
             
@@ -1076,7 +1156,7 @@ public class JournalService {
             dto.setPractice(Boolean.valueOf(practice));
             acceptedAbsences.put(journalStudent, dto);
         }
-        
+
         for (Long journalStudent : lessonAbsences.keySet()) {
             JournalEntryStudentAcceptedAbsenceDto dto = acceptedAbsences.get(journalStudent);
             if (dto == null) {
@@ -1093,14 +1173,16 @@ public class JournalService {
     private Map<Long, List<StudentAbsenceDto>> wholeDayAcceptedAbsences(Journal journal, LocalDate entryDate) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_student js "
                 + "join student_absence sa on sa.student_id = js.student_id "
-                + "left join contract c on c.id = sa.contract_id");
+                + "left join contract c on c.id = sa.contract_id "
+                + "left join directive_student ds on ds.id = sa.directive_student_id");
         qb.requiredCriteria("js.journal_id = :journalId", "journalId", EntityUtil.getId(journal));
         qb.requiredCriteria("sa.valid_from <= :entryDate", "entryDate", entryDate);
         qb.requiredCriteria("coalesce(sa.valid_thru, sa.valid_from) >= :entryDate", "entryDate", entryDate);
         qb.filter("coalesce(sa.is_lesson_absence, false) = false");
         qb.filter("sa.is_accepted = true");
 
-        List<?> result = qb.select("js.id student_id, sa.id absence_id, c.id contract_id, c.is_practice_absence", em).getResultList();
+        List<?> result = qb.select("js.id student_id, sa.id absence_id, c.id contract_id, "
+                + "c.is_practice_absence, ds.id directive_student_id", em).getResultList();
         return result.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
             StudentAbsenceDto dto = new StudentAbsenceDto();
             dto.setId(resultAsLong(r, 1));
@@ -1108,12 +1190,15 @@ public class JournalService {
             if (Boolean.TRUE.equals(resultAsBoolean(r, 3))) {
                 dto.setContractId(resultAsLong(r, 2));
             }
+            dto.setDirectiveStudentId(resultAsLong(r, 4));
             return dto;
         }, Collectors.toList())));
     }
     
     private Map<Long, Set<Long>> lessonAbsences(Journal journal, LocalDate entryDate) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_student js join student_absence sa on js.student_id = sa.student_id join student_absence_lesson sal on sa.id = sal.student_absence_id");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_student js "
+                + "join student_absence sa on js.student_id = sa.student_id "
+                + "join student_absence_lesson sal on sa.id = sal.student_absence_id");
         qb.requiredCriteria("js.journal_id = :journalId", "journalId", EntityUtil.getId(journal));
         qb.requiredCriteria("sal.absence = :entryDate", "entryDate", entryDate);
         qb.filter("sa.is_accepted");

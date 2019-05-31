@@ -2,7 +2,7 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form name="seachForm" ng-submit="seachForm.$valid && loadData()" class="ois-form-layout nomargin" layout="column">
+      <form name="seachForm" ng-submit="seachForm.$valid && loadData()" class="ois-form-layout nomargin" ng-model-options="{ allowInvalid: true}" layout="column">
         <div layout="column" flex>
           <md-input-container  ng-if="auth.isMainAdmin()" flex>
             <label>{{'school.label' | translate}}</label>

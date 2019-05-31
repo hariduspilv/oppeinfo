@@ -6,8 +6,9 @@ function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $locat
   var baseUrl = "/committees";
   var id = $route.current.params.id;
   $scope.committeeType = $route.current.params.type;
-  $scope.showName = ['KOMISJON_T', 'KOMISJON_V'].indexOf($scope.committeeType) !== -1;
-  $scope.showPersonSearch = ['KOMISJON_T', 'KOMISJON_V'].indexOf($scope.committeeType) !== -1;
+  $scope.showName = ['KOMISJON_T', 'KOMISJON_V', 'KOMISJON_A'].indexOf($scope.committeeType) !== -1;
+  $scope.showPersonSearch = ['KOMISJON_T', 'KOMISJON_V', 'KOMISJON_A'].indexOf($scope.committeeType) !== -1;
+  $scope.allowExternalPerson = ['KOMISJON_A', 'KOMISJON_K'].indexOf($scope.committeeType) !== -1;
   $scope.formState = {};
 
   var Endpoint = QueryUtils.endpoint(baseUrl);

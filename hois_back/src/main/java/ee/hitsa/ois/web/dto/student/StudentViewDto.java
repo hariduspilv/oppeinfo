@@ -26,6 +26,12 @@ public class StudentViewDto extends StudentForm {
     private AutocompleteResult studentGroup;
     private String speciality;
     private Short course;
+    private String studentCard;
+    private String studentCardStatus;
+    private LocalDate studentCardValidThru;
+    private LocalDate studentCardGivenDt;
+    private LocalDate studentCardReturnedDt;
+    private Boolean isStudentCardRepetitive;
     private LocalDate studyStart;
     private LocalDate studyEnd;
     private String studyForm;
@@ -43,6 +49,9 @@ public class StudentViewDto extends StudentForm {
     private BigDecimal kkh;
     private Boolean isCurriculumFulfilled;
     private Boolean hasRemarksPastSevenDays;
+    private Boolean individualCurriculum = Boolean.FALSE;
+    private LocalDate individualCurriculumStart;
+    private LocalDate individualCurriculumEnd;
     private List<StudentOccupationCertificateDto> occupationCertificates;
 
     public Long getId() {
@@ -115,6 +124,54 @@ public class StudentViewDto extends StudentForm {
 
     public void setCourse(Short course) {
         this.course = course;
+    }
+
+    public String getStudentCard() {
+        return studentCard;
+    }
+
+    public void setStudentCard(String studentCard) {
+        this.studentCard = studentCard;
+    }
+
+    public String getStudentCardStatus() {
+        return studentCardStatus;
+    }
+
+    public void setStudentCardStatus(String studentCardStatus) {
+        this.studentCardStatus = studentCardStatus;
+    }
+
+    public LocalDate getStudentCardValidThru() {
+        return studentCardValidThru;
+    }
+
+    public void setStudentCardValidThru(LocalDate studentCardValidThru) {
+        this.studentCardValidThru = studentCardValidThru;
+    }
+
+    public LocalDate getStudentCardGivenDt() {
+        return studentCardGivenDt;
+    }
+
+    public void setStudentCardGivenDt(LocalDate studentCardGivenDt) {
+        this.studentCardGivenDt = studentCardGivenDt;
+    }
+
+    public LocalDate getStudentCardReturnedDt() {
+        return studentCardReturnedDt;
+    }
+
+    public void setStudentCardReturnedDt(LocalDate studentCardReturnedDt) {
+        this.studentCardReturnedDt = studentCardReturnedDt;
+    }
+
+    public Boolean getIsStudentCardRepetitive() {
+        return isStudentCardRepetitive;
+    }
+
+    public void setIsStudentCardRepetitive(Boolean isStudentCardRepetitive) {
+        this.isStudentCardRepetitive = isStudentCardRepetitive;
     }
 
     public LocalDate getStudyStart() {
@@ -243,6 +300,30 @@ public class StudentViewDto extends StudentForm {
 
     public void setHasRemarksPastSevenDays(Boolean hasRemarksPastSevenDays) {
         this.hasRemarksPastSevenDays = hasRemarksPastSevenDays;
+    }
+
+    public Boolean getIndividualCurriculum() {
+        return individualCurriculum;
+    }
+
+    public void setIndividualCurriculum(Boolean individualCurriculum) {
+        this.individualCurriculum = individualCurriculum;
+    }
+
+    public LocalDate getIndividualCurriculumStart() {
+        return individualCurriculumStart;
+    }
+
+    public void setIndividualCurriculumStart(LocalDate individualCurriculumStart) {
+        this.individualCurriculumStart = individualCurriculumStart;
+    }
+
+    public LocalDate getIndividualCurriculumEnd() {
+        return individualCurriculumEnd;
+    }
+
+    public void setIndividualCurriculumEnd(LocalDate individualCurriculumEnd) {
+        this.individualCurriculumEnd = individualCurriculumEnd;
     }
 
     public List<StudentOccupationCertificateDto> getOccupationCertificates() {

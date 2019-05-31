@@ -22,32 +22,32 @@
             <label>{{'module.type' | translate}}</label>
             <md-select ng-model="data.typeObject" required>
               <md-option ng-repeat="type in moduleTypes | filter: {'code': 'KORGMOODUL_M'}" ng-value="type">
-                {{currentLanguageNameField(type)}}
+                {{type | hoisValidDates }}
               </md-option>
               <md-option ng-repeat="type in moduleTypes | filter: {'code': '!KORGMOODUL_M'} | orderBy: 'nameEt'" ng-value="type">
-                {{currentLanguageNameField(type)}}
+                {{type | hoisValidDates }}
               </md-option>
             </md-select>
           </md-input-container>
         </div>
 
         <div ng-if="data.typeObject.code === 'KORGMOODUL_M'" layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex>
+          <md-input-container>
             <label>{{'module.typeNameEt' | translate}}</label>
             <input ng-model="data.typeNameEt" type="text" required md-maxlength="255">
           </md-input-container>
-          <md-input-container flex>
+          <md-input-container>
             <label>{{'module.typeNameEn' | translate}}</label>
             <input ng-model="data.typeNameEn" type="text" required md-maxlength="255">
           </md-input-container>
         </div>
 
 
-        <md-input-container flex>
+        <md-input-container>
           <label>{{'module.nameEt' | translate}}</label>
           <input ng-model="data.nameEt" type="text" required md-maxlength="255">
         </md-input-container>
-        <md-input-container flex>
+        <md-input-container>
           <label>{{'module.nameEn' | translate}}</label>
           <input ng-model="data.nameEn" type="text" required md-maxlength="255">
         </md-input-container>
@@ -67,7 +67,7 @@
           <label>{{'module.studyOutcomesEn' | translate}}</label>
           <textarea ng-model="data.outcomesEn" md-maxlength="20000" max-rows="10"></textarea>
         </md-input-container>
-        <div flex>
+        <div>
           <fieldset ng-show="formState.moduleMustHaveSubjects">
             <legend md-colors="{color: 'primary-800'}" ng-class="{invalid: higherModuleForm.$submitted && !subjectsValid()}" class="md-title-small">{{'curriculum.version.subjects' | translate}}&nbsp;*</legend>
             <div layout="row">
@@ -116,7 +116,7 @@
                       <md-checkbox ng-model="subject.optional" aria-label="subject is mandatory" ng-change="setCompulsoryStudyCredits(subject)"></md-checkbox>
                     </td>
                     <td md-cell layout="row">
-                      <md-input-container flex>
+                      <md-input-container>
                         <md-select ng-model="subject.studyYearNumber" ng-required="subject.autumn || subject.spring">
                           <md-option md-option-empty></md-option>
                           <md-option ng-value="opt" ng-repeat="opt in studyYears">{{opt}}</md-option>
@@ -148,7 +148,7 @@
         </div>
         <div>&nbsp;</div>
 
-        <md-input-container flex>
+        <md-input-container>
           <label>{{'module.optionalEap' | translate}}</label>
           <input name="optionalStudyCredits" ng-model="data.optionalStudyCredits" type="number" required ng-change="data.totalCredits = data.optionalStudyCredits + data.compulsoryStudyCredits"
             min="0" max="999" pattern="^\d+(\.\d{1})?$">
@@ -164,11 +164,11 @@
             </div>
           </div>
         </md-input-container>
-        <md-input-container flex ng-show="formState.moduleMustHaveSubjects">
+        <md-input-container ng-show="formState.moduleMustHaveSubjects">
           <label>{{'module.mandatoryEap' | translate}}</label>
           <input ng-model="data.compulsoryStudyCredits" type="number" readonly>
         </md-input-container>
-        <md-input-container flex ng-show="formState.moduleMustHaveSubjects">
+        <md-input-container ng-show="formState.moduleMustHaveSubjects">
           <label>{{'module.overallEap' | translate}}</label>
           <input name="totalCredits" ng-model="data.totalCredits" type="number" readonly max="999">
           <div ng-messages="higherModuleForm.totalCredits.$error" ng-show="higherModuleForm.totalCredits.$error">

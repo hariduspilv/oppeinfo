@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Enums;
+
+import ee.hitsa.ois.domain.Classifier;
+
 public abstract class EnumUtil {
 
     /**
@@ -25,5 +29,22 @@ public abstract class EnumUtil {
      */
     public static Set<String> toNameSet(Enum<?>... values) {
         return Arrays.stream(values).map(Enum::name).collect(Collectors.toCollection(HashSet::new));
+    }
+    
+    /**
+     * Returns an enum or null in case if no value has been found.
+     * @param enumClass
+     * @param name
+     * @return Enum
+     */
+    public static <T extends Enum<T>> T valueOf(Class<T> enumClass, String name) {
+        return Enums.getIfPresent(enumClass, name).orNull();
+    }
+
+    public static <T extends Enum<T>> T valueOf(Class<T> enumClass, Classifier classifier) {
+        if (classifier == null) {
+            return null;
+        }
+        return Enums.getIfPresent(enumClass, EntityUtil.getCode(classifier)).orNull();
     }
 }

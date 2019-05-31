@@ -27,8 +27,6 @@ public class StudentForm extends VersionedCommand {
     private LocalDate nominalStudyEnd;
     @ClassifierRestriction(MainClassCode.FINTAPSUSTUS)
     private String finSpecific;
-    @Size(max = 100)
-    private String studentCard;
     @Size(max = 255)
     private String schoolEmail;
     @Required
@@ -86,14 +84,6 @@ public class StudentForm extends VersionedCommand {
 
     public void setFinSpecific(String finSpecific) {
         this.finSpecific = finSpecific;
-    }
-
-    public String getStudentCard() {
-        return studentCard;
-    }
-
-    public void setStudentCard(String studentCard) {
-        this.studentCard = studentCard;
     }
 
     public String getSchoolEmail() {

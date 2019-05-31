@@ -1,6 +1,6 @@
 <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
   <form name="subjectForm" layout="column">
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.code' | translate}}</label>
       <input ng-model="subject.code" name="code" type="text" md-maxlength="20" ng-required="true"
       ng-model-options="{ debounce: 250 }" unique="subjectCodeUniqueQuery">
@@ -10,15 +10,15 @@
         </div>
       </div>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.nameEt' | translate}}</label>
       <input ng-model="subject.nameEt" type="text" md-maxlength="255" ng-required="true">
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.nameEn' | translate}}</label>
       <input ng-model="subject.nameEn" type="text" md-maxlength="255" ng-required="true">
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.credits' | translate}}</label>
       <input name="credits" ng-model="subject.credits" type="number" ng-required="true" step="0.1" max="999" min="0.1">
       <div ng-messages="subjectForm.credits.$error" ng-show="subjectForm.credits.$dirty">
@@ -30,69 +30,69 @@
         </div>
       </div>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.assessment' | translate}}</label>
       <hois-classifier-select ng-model="subject.assessment" model-value-attr="code" main-classifier-code="HINDAMISVIIS" ng-required="true"></hois-classifier-select>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.assessmentDescription' | translate}}</label>
       <textarea ng-model="subject.assessmentDescription" md-maxlength="10000" max-rows="2"></textarea>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.language' | translate}}</label>
       <hois-classifier-select ng-model="subject.languages" model-value-attr="code" main-classifier-code="OPPEKEEL" criteria="{higher: true}" multiple></hois-classifier-select>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.objectivesEt' | translate}}</label>
       <textarea ng-model="subject.objectivesEt" md-maxlength="10000" max-rows="2" ng-required="true"></textarea>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.objectivesEn' | translate}}</label>
       <textarea ng-model="subject.objectivesEn" md-maxlength="10000" max-rows="2" ng-required="true"></textarea>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.outcomesEt' | translate}}</label>
       <textarea ng-model="subject.outcomesEt" md-maxlength="10000" max-rows="2" ng-required="true"></textarea>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.outcomesEn' | translate}}</label>
       <textarea ng-model="subject.outcomesEn" md-maxlength="10000" max-rows="2" ng-required="true"></textarea>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.descriptionEt' | translate}}</label>
       <textarea ng-model="subject.descriptionEt" md-maxlength="4000" max-rows="2"></textarea>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.descriptionEn' | translate}}</label>
       <textarea ng-model="subject.descriptionEn" md-maxlength="4000" max-rows="2"></textarea>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.independentStudyEt' | translate}}</label>
       <textarea ng-model="subject.independentStudyEt" md-maxlength="4000" max-rows="2"></textarea>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.independentStudyEn' | translate}}</label>
       <textarea ng-model="subject.independentStudyEn" md-maxlength="4000" max-rows="2"></textarea>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.studyLiterature' | translate}}</label>
       <textarea ng-model="subject.studyLiterature" md-maxlength="4000" max-rows="2"></textarea>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.evaluationEt' | translate}}</label>
       <textarea ng-model="subject.evaluationEt" md-maxlength="10000" max-rows="2"></textarea>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.evaluationEn' | translate}}</label>
       <textarea ng-model="subject.evaluationEn" md-maxlength="10000" max-rows="2"></textarea>
     </md-input-container>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.additionalInfo' | translate}}</label>
       <textarea ng-model="subject.additionalInfo" md-maxlength="4000" max-rows="2"></textarea>
     </md-input-container>
     
     <div>&nbsp;</div>
-    <div flex layout="column">
+    <div layout="column">
       <fieldset tabindex="1">
         <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subject.prerequisiteAndSubstituteSubjects' | translate}}</legend>
 
@@ -137,13 +137,13 @@
       </fieldset>
     </div>
     <div>&nbsp;</div>
-    <md-input-container flex>
+    <md-input-container>
       <label>{{'subject.linkDepartment' | translate}}</label>
       <hois-select ng-model="subject.schoolDepartment.id" values="departments"></hois-select>
     </md-input-container>
 
     <br>
-    <md-input-container flex>
+    <md-input-container>
           <md-checkbox ng-model="subject.isPractice">
             {{'subject.isPractice' | translate}}
           </md-checkbox>

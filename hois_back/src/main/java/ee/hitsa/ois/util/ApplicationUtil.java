@@ -4,6 +4,11 @@ import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,14 +16,71 @@ import org.slf4j.LoggerFactory;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.MessageType;
+import ee.hitsa.ois.message.ConfirmationNeededMessage;
+import ee.hitsa.ois.message.StudentApplicationChosenCommitteeMessage;
+import ee.hitsa.ois.message.StudentApplicationCreated;
+import ee.hitsa.ois.message.StudentApplicationRejectedMessage;
+import ee.hitsa.ois.service.AutomaticMessageService;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
 public abstract class ApplicationUtil {
+    
+    public enum OperationType {
+        SAVE,
+        SUBMIT,
+        CONFIRM,
+        CONFIRM_CONFIRMATION,
+        REJECT;
+    }
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
     private static final long DAYS_IN_YEAR = 365L;
+
+    public static final Set<ApplicationType> CAN_BE_CONFIRMED = new HashSet<>();
+    public static final Set<ApplicationType> REQUIRE_REPRESENTATIVE_CONFIRM = new HashSet<>();
+    public static final Map<ApplicationType, Map<OperationType, BiConsumer<Application, AutomaticMessageService>>> SEND_MESSAGE_CALL = new HashMap<>(); 
+    
+    static {
+        CAN_BE_CONFIRMED.add(ApplicationType.AVALDUS_LIIK_MUU);
+        CAN_BE_CONFIRMED.add(ApplicationType.AVALDUS_LIIK_OVERSKAVA);
+        CAN_BE_CONFIRMED.add(ApplicationType.AVALDUS_LIIK_RAKKAVA);
+        CAN_BE_CONFIRMED.add(ApplicationType.AVALDUS_LIIK_TUGI);
+        REQUIRE_REPRESENTATIVE_CONFIRM.add(ApplicationType.AVALDUS_LIIK_TUGI);
+        
+        BiConsumer<Application, AutomaticMessageService> emptyConsumer = (e, s) -> {};
+        
+        Map<OperationType, BiConsumer<Application, AutomaticMessageService>> defaultMessageCalls = new HashMap<>();
+        defaultMessageCalls.put(OperationType.SAVE, emptyConsumer);
+        defaultMessageCalls.put(OperationType.SUBMIT, emptyConsumer);
+        defaultMessageCalls.put(OperationType.CONFIRM, emptyConsumer);
+        defaultMessageCalls.put(OperationType.CONFIRM_CONFIRMATION, emptyConsumer);
+        defaultMessageCalls.put(OperationType.REJECT, emptyConsumer);
+        
+        SEND_MESSAGE_CALL.put(ApplicationType.AVALDUS_LIIK_TUGI, new HashMap<>(defaultMessageCalls));
+        SEND_MESSAGE_CALL.get(ApplicationType.AVALDUS_LIIK_TUGI).put(OperationType.SUBMIT, (application, service) -> {
+            StudentApplicationCreated dataBean = new StudentApplicationCreated(application);
+            service.sendMessageToStudentAndRepresentativeAndSchoolAdmins(MessageType.TEATE_LIIK_OP_AVALDUS, application.getStudent(), dataBean, true);
+        });
+        SEND_MESSAGE_CALL.get(ApplicationType.AVALDUS_LIIK_TUGI).put(OperationType.REJECT, (application, service) -> {
+            StudentApplicationRejectedMessage dataBean = new StudentApplicationRejectedMessage(application);
+            service.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS_TL, application.getStudent(), dataBean);
+        });
+        SEND_MESSAGE_CALL.get(ApplicationType.AVALDUS_LIIK_TUGI).put(OperationType.SAVE, (application, service) -> {
+            StudentApplicationChosenCommitteeMessage dataBean = new StudentApplicationChosenCommitteeMessage(application);
+            service.sendMessageToStudentAndRepresentativeAndSchoolAdmins(MessageType.TEATE_LIIK_OP_AVALDUS_YL, application.getStudent(), dataBean, true);
+        });
+        SEND_MESSAGE_CALL.get(ApplicationType.AVALDUS_LIIK_TUGI).put(OperationType.CONFIRM, (application, service) -> {
+            if (Boolean.FALSE.equals(application.getIsDecided())) {
+                SEND_MESSAGE_CALL.get(ApplicationType.AVALDUS_LIIK_TUGI).get(OperationType.REJECT).accept(application, service);
+            } else {
+                ConfirmationNeededMessage dataBean = new ConfirmationNeededMessage(application);
+                service.sendMessageToStudentAndRepresentativeAndSchoolAdmins(MessageType.TEATE_LIIK_AV_KINNIT, application.getStudent(), dataBean, true);
+            }
+        });
+    }
 
     public static void assertPeriod(Application application, int years, long daysUsed) {
         long applicationDays = ChronoUnit.DAYS.between(getStartDate(application), getEndDate(application));

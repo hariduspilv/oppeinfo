@@ -2,7 +2,7 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" layout="column">
+      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" layout="column" ng-model-options="{allowInvalid: true}">
         <div layout="row" layout-sm="column" layout-xs="column"  >
             <md-input-container flex="100">
               <label>{{'application.type' | translate}}</label>
@@ -95,7 +95,7 @@
           <td md-cell>{{row.inserted | hoisDateTime}}</td>
           <td md-cell>{{row.submitted | hoisDateTime}}</td>
           <td md-cell>
-            <md-button ng-if="((row.status.code === 'AVALDUS_STAATUS_KOOST') || (row.status.code === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin()))
+            <md-button ng-if="((row.status.code === 'AVALDUS_STAATUS_KOOST') || ((row.status.code === 'AVALDUS_STAATUS_YLEVAAT' || row.status.code === 'AVALDUS_STAATUS_ESIT') && auth.isAdmin()))
             && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS') && row.canEditStudent"
               md-no-ink class="md-primary change-button" ng-href="#/applications/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
           </td>

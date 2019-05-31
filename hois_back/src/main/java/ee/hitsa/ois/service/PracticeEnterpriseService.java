@@ -12,7 +12,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,7 +79,6 @@ import ee.hitsa.ois.web.commandobject.student.StudentPracticeStatisticsSearchCom
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ContactDto;
 import ee.hitsa.ois.web.dto.ContractSearchDto;
-import ee.hitsa.ois.web.dto.SupervisorDto;
 import ee.hitsa.ois.web.dto.enterprise.ContractStatisticsDto;
 import ee.hitsa.ois.web.dto.enterprise.EnterpriseAdmissionDto;
 import ee.hitsa.ois.web.dto.enterprise.EnterpriseAdmissionWithStudentGroupsDto;
@@ -870,7 +868,7 @@ public class PracticeEnterpriseService {
 			if (!StringUtils.isBlank(row.getContactPersonEmail()) && row.getContactPersonEmail().length() > 100) {
                 failed.add(new EnterpriseImportedRowMessageDto(rowNr, maxValueMessage("SeotudIsikuEpost", new Integer(100))));
             }
-			if (!StringUtils.isBlank(row.getContactPersonIdCodeCountry()) && !riikClassifierCodes.contains("RIIK_" + row.getContactPersonIdCodeCountry())) {
+			if (!StringUtils.isBlank(row.getContactPersonIdCode()) && !riikClassifierCodes.contains("RIIK_" + row.getContactPersonIdCodeCountry())) {
 				failed.add(new EnterpriseImportedRowMessageDto(rowNr, incorrectMessage("SeotudIsikuIsikukoodRiik")));
 			}
             if (!StringUtils.isBlank(row.getContactPersonIdCode()) && row.getContactPersonIdCode().length() > 50) {
@@ -1149,7 +1147,7 @@ public class PracticeEnterpriseService {
 							if (StringUtils.isBlank(person.getIdcode())) {
 								person.setIdcode(row.getContactPersonIdCode());
 							}
-							if (person.getIdcodeCountry() == null) {
+							if (person.getIdcodeCountry() == null && !StringUtils.isBlank(row.getContactPersonIdCodeCountry()) && riikClassifierCodes.contains("RIIK_" + row.getContactPersonIdCodeCountry())) {
 								person.setIdcodeCountry(em.getReference(Classifier.class, "RIIK_" + row.getContactPersonIdCodeCountry()));
 							}
 							person.setPhone(row.getContactPersonPhone());
@@ -1167,7 +1165,9 @@ public class PracticeEnterpriseService {
 					person.setSupervisor(getBooleanValue(row.getContactPersonIsSupervisor()));
 					person.setEmail(row.getEmail());
 					person.setIdcode(row.getContactPersonIdCode());
-					person.setIdcodeCountry(em.getReference(Classifier.class, "RIIK_" + row.getContactPersonIdCodeCountry()));
+					if (!StringUtils.isBlank(row.getContactPersonIdCodeCountry()) && riikClassifierCodes.contains("RIIK_" + row.getContactPersonIdCodeCountry())) {
+					    person.setIdcodeCountry(em.getReference(Classifier.class, "RIIK_" + row.getContactPersonIdCodeCountry()));
+					}
 					person.setPhone(row.getContactPersonPhone());
 					person.setPosition(row.getContactPersonProfession());
 					person.setEnterpriseSchool(school);
@@ -1321,7 +1321,7 @@ public class PracticeEnterpriseService {
     public List<ContactDto> enterpriseContacts(HoisUserDetails user, Enterprise enterprise) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from enterprise e "
                 + "join enterprise_school es on es.enterprise_id = e.id "
-                + "left join enterprise_school_person esp on esp.enterprise_school_id = es.id ");
+                + "left join enterprise_school_person esp on esp.enterprise_school_id = es.id ").sort("esp.firstname, esp.lastname");
         qb.requiredCriteria("e.id = :esId", "esId", EntityUtil.getId(enterprise));
         qb.requiredCriteria("es.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.filter("esp.is_contact = true");

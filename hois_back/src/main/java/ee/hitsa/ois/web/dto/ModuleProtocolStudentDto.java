@@ -28,7 +28,7 @@ public class ModuleProtocolStudentDto {
     private String addInfo;
     private List<ModuleProtocolJournalResultDto> journalResults = new ArrayList<>();
     private List<ModuleProtocolOutcomeResultDto> outcomeResults = new ArrayList<>();
-    private List<ModuleProtocolPracticeJournalResultDto> practiceJournalResults = new ArrayList<>();
+    private List<ProtocolPracticeJournalResultDto> practiceJournalResults = new ArrayList<>();
     
     /**
      * This variable does not consider user rights, it is checked by ModuleProtocolDto.canBeEdited
@@ -81,9 +81,10 @@ public class ModuleProtocolStudentDto {
                 .filter(pj -> StreamUtil.nullSafeSet(pj.getModuleSubjects()).stream().filter(r -> r.getModule() != null)
                         .map(r -> EntityUtil.getId(r.getModule())).collect(Collectors.toList())
                         .contains(EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule())))
-                .forEach(pj -> dto.getPracticeJournalResults()
-                        .add(new ModuleProtocolPracticeJournalResultDto(pj.getId(), pj.getModuleSubjects(), EntityUtil.getCode(pj.getGrade()),
-                                pj.getGradeInserted() != null ? pj.getGradeInserted() : pj.getInserted())));
+                    .forEach(pj -> dto.getPracticeJournalResults()
+                            .add(new ProtocolPracticeJournalResultDto(pj.getId(), EntityUtil.getCode(pj.getGrade()),
+                                    pj.getGradeInserted() != null ? pj.getGradeInserted() : pj.getInserted(),
+                                    pj.getModuleSubjects())));
         }
         dto.setCanBeDeleted(Boolean.valueOf(ProtocolUtil.studentCanBeDeleted(protocolStudent)));
         return dto;
@@ -145,11 +146,11 @@ public class ModuleProtocolStudentDto {
         this.outcomeResults = outcomeResults;
     }
     
-    public List<ModuleProtocolPracticeJournalResultDto> getPracticeJournalResults() {
+    public List<ProtocolPracticeJournalResultDto> getPracticeJournalResults() {
         return practiceJournalResults;
     }
 
-    public void setPracticeJournalResults(List<ModuleProtocolPracticeJournalResultDto> practiceJournalResults) {
+    public void setPracticeJournalResults(List<ProtocolPracticeJournalResultDto> practiceJournalResults) {
         this.practiceJournalResults = practiceJournalResults;
     }
 

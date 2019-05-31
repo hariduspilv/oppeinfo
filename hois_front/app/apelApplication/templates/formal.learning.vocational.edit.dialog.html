@@ -168,7 +168,7 @@
                   <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_V'" flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                     <label>{{'apel.formalLearnings.result' | translate}}</label>
                     <hois-select ng-model="record.newTransferableSubjectOrModule.grade" values="grades" show-property="value" value-property="code"
-                      aria-label="grade" required></hois-select>
+                      aria-label="grade" required hide-values="hideInvalid"></hois-select>
                   </md-input-container>
                   <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                     <label>{{'apel.formalLearnings.result' | translate}}</label>

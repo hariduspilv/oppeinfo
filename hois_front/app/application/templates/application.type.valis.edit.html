@@ -18,7 +18,8 @@
             <md-input-container flex="60" flex-sm="100" flex-xs="100">
               <label>{{'main.educationInstitution' | translate}}</label>
               <hois-classifier-select ng-model="application.ehisSchool" main-classifier-code="EHIS_KOOL"
-              filter-values="[studentEhisSchool]" by-property="ehisSchool" model-value-attr="code" ng-required="!application.isAbroad"></hois-classifier-select>
+                criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" only-valid
+                filter-values="[studentEhisSchool]" by-property="ehisSchool" model-value-attr="code" ng-required="!application.isAbroad"></hois-classifier-select>
             </md-input-container>
           </div>
 
@@ -33,7 +34,8 @@
             <md-input-container flex="60" flex-sm="100" flex-xs="100">
               <label>{{'main.country' | translate}}</label>
               <hois-classifier-select ng-model="application.country" main-classifier-code="RIIK"
-              filter-values="['RIIK_EST']" model-value-attr="code" ng-required="application.isAbroad"></hois-classifier-select>
+                criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" only-valid
+                filter-values="['RIIK_EST']" model-value-attr="code" ng-required="application.isAbroad"></hois-classifier-select>
             </md-input-container>
           </div>
 
@@ -44,7 +46,8 @@
           <div layout="row" layout-sm="column" layout-xs="column" >
             <md-input-container flex="60" flex-sm="100" flex-xs="100">
               <label>{{'main.purposeOfStudies' | translate}}</label>
-              <hois-classifier-select ng-model="application.abroadPurpose" main-classifier-code="VALISOPE_EESMARK"
+              <hois-classifier-select ng-model="application.abroadPurpose" main-classifier-code="VALISOPE_EESMARK" ignore-preselected
+                criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" only-valid
                 model-value-attr="code" required></hois-classifier-select>
             </md-input-container>
           </div>
@@ -53,6 +56,7 @@
             <md-input-container flex="60" flex-sm="100" flex-xs="100">
               <label>{{'main.programmeOfStudies' | translate}}</label>
               <hois-classifier-select ng-model="application.abroadProgramme" main-classifier-code="VALISKOOL_PROGRAMM"
+                criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" only-valid
                 model-value-attr="code" required></hois-classifier-select>
             </md-input-container>
           </div>

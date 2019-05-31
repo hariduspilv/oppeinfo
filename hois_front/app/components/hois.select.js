@@ -28,6 +28,7 @@ angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curricu
       loadAfterDefer: '=',
       warningParam: '@',
       sortedQuery: '=',
+      hideValues: '&?'
     },
     link: function postLink(scope, element, attrs) {
       scope.isMultiple = angular.isDefined(scope.multiple);
@@ -43,7 +44,10 @@ angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curricu
       scope.orderBy = !scope.sortedQuery ? (scope.showProperty ? scope.showProperty : $rootScope.currentLanguageNameField()) : null;
 
       function doFilter() {
-        scope.filteredOptions = (scope.options || []).filter(function(it) {return scope.hideOptions.indexOf(it[scope.valueProperty]) === -1; });
+        scope.filteredOptions = (scope.options || []).filter(function(it) {
+          return scope.hideOptions.indexOf(it[scope.valueProperty]) === -1 &&
+            (!scope.hideValues || !angular.isFunction(scope.hideValues()) || !scope.hideValues()(it) || it[scope.valueProperty] === scope.ngModel);
+        });
       }
 
       function afterLoad(result) {
@@ -78,51 +82,79 @@ angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curricu
 
       function loadValues() {
         if (angular.isDefined(attrs.type)) {
-          if (attrs.type === 'building') {
-            scope.options = QueryUtils.endpoint('/autocomplete/buildings').query();
-          } else if (attrs.type === 'curriculum') {
-            scope.options = QueryUtils.endpoint('/autocomplete/curriculumsauto').query(scope.criteria);
-          } else if (attrs.type === 'curriculumversion') {
-            scope.options = Curriculum.queryVersions(scope.criteria);
-          } else if (attrs.type === 'directivecoordinator') {
-            scope.options = QueryUtils.endpoint('/autocomplete/directivecoordinators').query(scope.criteria);
-          } else if (attrs.type === 'journal') {
-            scope.options = QueryUtils.endpoint('/autocomplete/journals').query(scope.criteria);
-          } else if (attrs.type === 'school') {
-            scope.options = School.getAll();
-          } else if (attrs.type === 'studentgroup') {
-            scope.options = QueryUtils.endpoint('/autocomplete/studentgroups').query(scope.criteria);
-          } else if (attrs.type === 'studyyear') {
-            scope.options = QueryUtils.endpoint('/autocomplete/studyYears').query({}, afterStudyYearsLoad);
-          } else if (attrs.type === 'teacher') {
-            scope.options = QueryUtils.endpoint('/autocomplete/teachersList').query(scope.criteria);
-          } else if (attrs.type === 'enterprise') {
-            scope.options = QueryUtils.endpoint('/autocomplete/enterprises').query();
-          } else if (attrs.type === 'enterpriseLocations') {
-            scope.options = QueryUtils.endpoint('/autocomplete/enterpriseLocations').query(scope.criteria);
-          } else if (attrs.type === 'supervisors') {
-            scope.options = QueryUtils.endpoint('/autocomplete/supervisors').query(scope.criteria);
-          } else if (attrs.type === 'contacts') {
-            scope.options = QueryUtils.endpoint('/autocomplete/contacts').query(scope.criteria);
-          } else if (attrs.type === 'practiceEvaluation') {
-            scope.options = QueryUtils.endpoint('/autocomplete/practiceEvaluation').query(scope.criteria);
-          } else if(attrs.type === 'saisadmissioncode') {
-            scope.options = QueryUtils.endpoint('/autocomplete/saisAdmissionCodes').query();
-          } else if(attrs.type === 'saisCurriculumClassifiers') {
-            scope.options = QueryUtils.endpoint('/autocomplete/saisCurriculumClassifiers').query();
-          } else if(attrs.type === 'saisadmissioncodearchived') {
-            scope.options = QueryUtils.endpoint('/autocomplete/saisAdmissionCodesArchived').query();
-          } else if (attrs.type === 'subject') {
-            scope.options = QueryUtils.endpoint('/autocomplete/subjectsList').query(scope.criteria);
-          } else if(attrs.type === 'studyperiod') {
-            scope.options = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
-          } else if(attrs.type === 'studyperiodyear') {
-            if (!scope.showProperty) {
-              scope.showProperty = 'display';
-            }
-            scope.options = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query(afterStudyPeriodsWithYearLoad);
-          } else if(attrs.type === 'apelschool') {
-            scope.options = QueryUtils.endpoint('/autocomplete/apelschools').query();
+          var endpointUrl;
+          switch (attrs.type) {
+            case 'school':
+              scope.options = School.getAll();
+              break;
+            case 'curriculumversion':
+              scope.options = Curriculum.queryVersions(scope.criteria);
+              break;
+            case 'studyyear':
+              scope.options = QueryUtils.endpoint('/autocomplete/studyYears').query({}, afterStudyYearsLoad);
+              break;
+            case 'curriculum':
+              endpointUrl = endpointUrl || '/autocomplete/curriculumsauto';
+              /* falls through */
+            case 'directivecoordinator':
+              endpointUrl = endpointUrl || '/autocomplete/directivecoordinators';
+              /* falls through */
+            case 'journal':
+              endpointUrl = endpointUrl || '/autocomplete/journals';
+              /* falls through */
+            case 'studentgroup':
+              endpointUrl = endpointUrl || '/autocomplete/studentgroups';
+              /* falls through */
+            case 'teacher':
+              endpointUrl = endpointUrl || '/autocomplete/teachersList';
+              /* falls through */
+            case 'enterpriseLocations':
+              endpointUrl = endpointUrl || '/autocomplete/enterpriseLocations';
+              /* falls through */
+            case 'supervisors':
+              endpointUrl = endpointUrl || '/autocomplete/supervisors';
+              /* falls through */
+            case 'contacts':
+              endpointUrl = endpointUrl || '/autocomplete/contacts';
+              /* falls through */
+            case 'practiceEvaluation':
+              endpointUrl = endpointUrl || '/autocomplete/practiceEvaluation';
+              /* falls through */
+            case 'subject':
+              endpointUrl = endpointUrl || '/autocomplete/enterpriseLocations';
+              /* falls through */
+            case 'committee':
+              endpointUrl = endpointUrl || '/autocomplete/committeesList';
+              scope.options = QueryUtils.endpoint(endpointUrl).query(scope.criteria);
+              break;
+            case 'enterprise':
+              endpointUrl = endpointUrl || '/autocomplete/enterprises';
+              /* falls through */
+            case 'saisadmissioncode':
+              endpointUrl = endpointUrl || '/autocomplete/saisAdmissionCodes';
+              /* falls through */
+            case 'saisCurriculumClassifiers':
+              endpointUrl = endpointUrl || '/autocomplete/saisCurriculumClassifiers';
+              /* falls through */
+            case 'saisadmissioncodearchived':
+              endpointUrl = endpointUrl || '/autocomplete/saisAdmissionCodesArchived';
+              /* falls through */
+            case 'building':
+              endpointUrl = endpointUrl || '/autocomplete/buildings';
+              /* falls through */
+            case 'apelschool':
+              endpointUrl = endpointUrl || '/autocomplete/apelschools';
+              /* falls through */
+            case 'studyperiod':
+              endpointUrl = endpointUrl || '/autocomplete/studyPeriods';
+              scope.options = QueryUtils.endpoint(endpointUrl).query();
+              break;
+            case 'studyperiodyear':
+              if (!scope.showProperty) {
+                scope.showProperty = 'display';
+              }
+              scope.options = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query(afterStudyPeriodsWithYearLoad);
+              break;
           }
 
           if (angular.isDefined(scope.options) && angular.isDefined(scope.options.$promise)) {

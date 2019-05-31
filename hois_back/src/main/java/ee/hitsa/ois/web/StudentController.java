@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -166,7 +168,9 @@ public class StudentController {
         Map<String, Object> result = new HashMap<>();
         int pagesize = 5;
         // TODO correct sorting
-        result.put("applications", applications(user, student, new PageRequest(0, pagesize, null, "inserted")));
+        result.put("applications", applications(user, student, new PageRequest(0, pagesize, new Sort(
+                new Sort.Order(Direction.DESC, "inserted")
+        ))));
         if(user.isStudent()) {
             result.put("applicationTypesApplicable", applicationService.applicableApplicationTypes(student));
         }

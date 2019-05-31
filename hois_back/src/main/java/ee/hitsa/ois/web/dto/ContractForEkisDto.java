@@ -10,7 +10,7 @@ public class ContractForEkisDto {
     private String enterpriseContactPersonName;
     private String enterpriseName;
     private List<AutocompleteResult> moduleSubjects;
-    
+    private List<AutocompleteResult> higherModuleSubjects;
 
     public Long getId() {
         return id;
@@ -66,6 +66,14 @@ public class ContractForEkisDto {
 
     public void setModuleSubjects(List<AutocompleteResult> moduleSubjects) {
         this.moduleSubjects = moduleSubjects;
+    }
+
+    public List<AutocompleteResult> getHigherModuleSubjects() {
+        return higherModuleSubjects;
+    }
+
+    public void setHigherModuleSubjects(List<AutocompleteResult> higherModuleSubjects) {
+        this.higherModuleSubjects = higherModuleSubjects;
     }
 
 }

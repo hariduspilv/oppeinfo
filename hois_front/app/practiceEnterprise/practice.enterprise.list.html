@@ -21,62 +21,62 @@
 </style>
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
     <div flex>
-      <fieldset ng-if="auth.isAdmin()">
-        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-        <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
-          <div layout="column" flex>
+      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin" ng-model-options="{ allowInvalid: true}">
+        <fieldset ng-if="auth.isAdmin()">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+            <div layout="column" flex>
 
-            <div layout="row">
-              <div flex="50" flex-xs="100">
-                <div layout="column" flex>
-                  <md-input-container>
-                    <label class="textInput">{{'enterprise.name' | translate}}</label>
-                    <input ng-model="criteria.enterpriseName" type="text" md-maxlength="255">
-                  </md-input-container>
+              <div layout="row">
+                <div flex="50" flex-xs="100">
+                  <div layout="column" flex>
+                    <md-input-container>
+                      <label class="textInput">{{'enterprise.name' | translate}}</label>
+                      <input ng-model="criteria.enterpriseName" type="text" md-maxlength="255">
+                    </md-input-container>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div layout="row">
-              <div flex="25" flex-xs="100">
-                <div layout="column" flex>
-                  <md-input-container>
-                    <label class="textInput">{{'enterprise.regCode' | translate}}</label>
-                    <input ng-model="criteria.enterpriseCode" type="text" md-maxlength="20">
-                  </md-input-container>
+              <div layout="row">
+                <div flex="25" flex-xs="100">
+                  <div layout="column" flex>
+                    <md-input-container>
+                      <label class="textInput">{{'enterprise.regCode' | translate}}</label>
+                      <input ng-model="criteria.enterpriseCode" type="text" md-maxlength="20">
+                    </md-input-container>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div layout="row">
-              <div flex="50" flex-xs="100">
-                <div layout="column" flex>
-                  <md-input-container>
-                      <label>{{'enterprise.schoolGrade' | translate}}</label>
-                      <hois-classifier-select ng-model="criteria.ratingCode" model-value-attr="code" main-classifier-code="PR_HINNANG"></hois-classifier-select>
-                  </md-input-container>
+              <div layout="row">
+                <div flex="50" flex-xs="100">
+                  <div layout="column" flex>
+                    <md-input-container>
+                        <label>{{'enterprise.schoolGrade' | translate}}</label>
+                        <hois-classifier-select ng-model="criteria.ratingCode" model-value-attr="code" main-classifier-code="PR_HINNANG"></hois-classifier-select>
+                    </md-input-container>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <md-input-container flex="45">
-                <md-checkbox ng-model="criteria.enterpriseActive" aria-label="required">
-                  {{'enterprise.isActive' | translate}}
-                </md-checkbox>
-            </md-input-container>
-  
-            <div layout="row" layout-xs="column">
-              <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-              <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-              <md-button ng-href="#/practice/enterprise/new" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" class="md-raised">{{'main.button.create' | translate}}</md-button>
-              <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" ng-click="importEnterprise()">{{'enterprise.import' | translate}}</md-button>
-              <a ng-href="{{csvSampleFileUrl}}" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" class="md-button md-raised">{{'main.button.csvSampleFile' | translate}}</a>
-            </div>
+              <md-input-container flex="45">
+                  <md-checkbox ng-model="criteria.enterpriseActive" aria-label="required">
+                    {{'enterprise.isActive' | translate}}
+                  </md-checkbox>
+              </md-input-container>
+    
+              <div layout="row" layout-xs="column">
+                <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+                <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+                <md-button ng-href="#/practice/enterprise/new" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" class="md-raised">{{'main.button.create' | translate}}</md-button>
+                <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" ng-click="importEnterprise()">{{'enterprise.import' | translate}}</md-button>
+                <a ng-href="{{csvSampleFileUrl}}" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" class="md-button md-raised">{{'main.button.csvSampleFile' | translate}}</a>
+              </div>
 
-          </div>
-          <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+            </div>
+            <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+          </fieldset>
         </form>
-      </fieldset>
     </div>
   </div>
   <div layout-padding>

@@ -2,7 +2,7 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" layout="column">
+      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" ng-model-options="{allowInvalid: true}" layout="column">
         <div layout="row" layout-sm="column" layout-xs="column"  >
             <md-input-container flex="100">
               <label>{{'reception.admission.code' | translate}}</label>

@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ee.hitsa.ois.domain.Person;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
-import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StudentUtil;
@@ -32,20 +30,16 @@ public class JournalStudentDto {
     public static JournalStudentDto of(Student student) {
         JournalStudentDto dto = new JournalStudentDto();
         dto.setStudentId(student.getId());
-        
+
         Person person = student.getPerson();
         dto.setFirstname(person.getFirstname());
         dto.setLastname(person.getLastname());
         dto.setFullname(PersonUtil.fullname(person));
-        
+
         if (student.getStudentGroup() != null) {
             dto.setStudentGroup(student.getStudentGroup().getCode());
         }
-        if (student.getCurriculumVersion() != null) {
-            CurriculumVersion cv = student.getCurriculumVersion();
-            dto.setCurriculum(CurriculumUtil.versionName(cv.getCode(), cv.getCurriculum().getNameEt()));
-            dto.setIsIndividualCurriculum(cv.getIndividual());
-        }
+        dto.setIsIndividualCurriculum(Boolean.FALSE);
         dto.setStatus(EntityUtil.getCode(student.getStatus()));
         dto.setCanEdit(Boolean.valueOf(StudentUtil.isActive(student)));
         return dto;
@@ -139,7 +133,7 @@ public class JournalStudentDto {
     }
 
     public List<JournalStudentApelResultDto> getApelResults() {
-        return apelResults != null ?  apelResults : (apelResults = new ArrayList<>());
+        return apelResults != null ? apelResults : (apelResults = new ArrayList<>());
     }
 
     public void setApelResults(List<JournalStudentApelResultDto> apelResults) {

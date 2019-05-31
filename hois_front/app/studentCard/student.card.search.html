@@ -1,0 +1,101 @@
+<div ng-include="'studentCard/student.card.navbar.tmpl.html'"></div>
+
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate ng-model-options="{ allowInvalid: true }">
+      <fieldset tabindex="1">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <hois-autocomplete flex="45" flex-sm="100" flex-xs="100" ng-model="criteria.studentGroup" 
+            ha-controller="directiveControllers" method="studentgroups" name="studentGroup"
+            label="{{'student.studentGroup'}}" additional-query-params="{valid: true}"></hois-autocomplete>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'student.name' | translate}}</label>
+            <input ng-model="criteria.name" name="name" type="text" md-maxlength="255" autofocus>
+          </md-input-container>
+
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label class="textInput">{{'student.idcode' | translate}}</label>
+            <input ng-model="criteria.idcode" name="idcode" type="text" minlength="11" md-maxlength="11">
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'student.card.nr' | translate}}</label>
+            <input ng-model="criteria.cardNr" name="cardNr" type="text" md-maxlength="50">
+          </md-input-container>
+
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.card.status' | translate}}</label>
+            <hois-classifier-select multiple ng-model="criteria.status" main-classifier-code="OPILASPILET_STAATUS" 
+              model-value-attr="code"></hois-classifier-select>
+          </md-input-container>
+        </div>
+
+        <div layout="row" flex>
+          <md-input-container class="md-block">
+            <md-checkbox ng-model="criteria.notActiveStudents" name="notActiveStudents">
+              {{'student.card.showNotActiveStudents' | translate}}</md-checkbox>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="canEdit" ng-href="{{orderUrl('order')}}" target="_blank">{{'student.card.order' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="canEdit" ng-href="{{orderUrl('orderAgain')}}" target="_blank">{{'student.card.orderAgain' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="canEdit" ng-href="{{orderUrl('orderExtension')}}" target="_blank">{{'student.card.orderExtension' | translate}}</md-button>
+          <md-button class="md-raised" ng-href="{{excelUrl()}}" target="_blank">{{'main.button.printXls' | translate}}</md-button>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</div>
+
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise" ng-model="selectedStudents" >
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="p.lastname, p.firstname">{{'student.name' | translate}}</th>
+            <th md-column md-order-by="sg.code">{{'student.studentGroup' | translate}}</th>
+            <th md-column md-order-by="case when s.ois_file_id is not null then false else true">{{'student.card.pictureExists' | translate}}</th>
+            <th md-column md-order-by="s.student_card">{{'student.card.nr' | translate}}</th>
+            <th md-column md-order-by="s.student_card_status_code">{{'student.card.status' | translate}}</th>
+            <th md-column md-order-by="s.student_card_valid_thru">{{'student.card.validThru' | translate}}</th>
+            <th md-column md-order-by="s.student_card_given_dt">{{'student.card.givenDate' | translate}}</th>
+            <th md-column md-order-by="s.student_card_returned_dt">{{'student.card.returnDate' | translate}}</th>
+            <th md-column md-order-by="s.is_student_card_repetitive">{{'student.card.repeating' | translate}}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row md-select="row.studentId" ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell><a ng-href="#/students/{{::row.studentId}}/main">{{::row.fullname}}</a></td>
+            <td md-cell>{{currentLanguageNameField(row.studentGroup)}}</td>
+            <td md-cell>{{row.pictureExists ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
+            <td md-cell>{{row.cardNr}}</td>
+            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+            <td md-cell>{{row.validThru | hoisDate}}</td>
+            <td md-cell>{{row.givenDate | hoisDate}}</td>
+            <td md-cell>{{row.returnedDate | hoisDate}}</td>
+            <td md-cell>{{row.isStudentCardRepetitive ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
+            <td md-cell>
+              <a ng-if="row.isStudentActive && canEdit" class="md-button md-primary" ng-click="orderRepetition(row)">{{'student.card.operation.orderRepetition.label' | translate}}</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page"
+      md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+      md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
+  </div>
+</div>

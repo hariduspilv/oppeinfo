@@ -23,7 +23,9 @@
           <hois-value value="row.endDate | hoisDate"></hois-value>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.reason" name="students[{{$index}}].reason" criteria="{higher: formState.school.higher ? true : undefined, vocational: formState.school.vocational ? true : undefined}" model-value-attr="code" main-classifier-code="KASKKIRI_STIPTOETL_POHJUS" aria-label="{{'directive.student.reason' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.reason" name="students[{{$index}}].reason" ignore-preselected
+            criteria="{higher: formState.school.higher ? true : undefined, vocational: formState.school.vocational ? true : undefined}"
+            model-value-attr="code" main-classifier-code="KASKKIRI_STIPTOETL_POHJUS" aria-label="{{'directive.student.reason' | translate}}" only-valid></hois-classifier-select>
           <div class="invalid" ng-show="directiveForm['students['+$index+'].reason'].$error.required">
             {{'main.required' | translate}}
           </div>

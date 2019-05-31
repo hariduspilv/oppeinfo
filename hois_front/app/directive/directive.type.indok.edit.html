@@ -1,0 +1,66 @@
+<md-table-container>
+  <table md-table class="secondary-table">
+    <thead md-head>
+      <tr md-row>
+        <th md-column>{{'directive.student.order' | translate}}</th>
+        <th md-column>{{'directive.student.fullname' | translate}}</th>
+        <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column>{{'directive.student.curriculum' | translate}}</th>
+        <th md-column>{{'directive.student.studentGroup' | translate}}</th>
+        <th md-column class="required">{{'main.from' | translate}}</th>
+        <th md-column class="required">{{'main.thru' | translate}}</th>
+        <th md-column class="required">{{'directive.student.modules' | translate}}</th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody md-body>
+      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>{{$index + 1}}.</td>
+        <td md-cell>{{::row.fullname}}</td>
+        <td md-cell>{{::row.idcode}}</td>
+        <td md-cell>{{currentLanguageNameField(row.curriculumVersionObject)}}</td>
+        <td md-cell>{{currentLanguageNameField(row.studentGroupObject)}}</td>
+        <td md-cell>  
+          <md-input-container>
+            <md-datepicker ng-model="row.startDate" md-max-date="row.endDate" name="students[{{$index}}].startDate"
+              aria-label="{{'main.from' | translate}}"></md-datepicker>
+          </md-input-container>
+          <div class="invalid" ng-messages="directiveForm['students['+$index+'].startDate'].$error">
+            <p ng-message="required">{{'main.required' | translate}}</p>
+          </div>
+        </td>
+        <td md-cell>
+          <md-input-container>
+            <md-datepicker ng-model="row.endDate" md-min-date="row.startDate" name="students[{{$index}}].endDate"
+              aria-label="{{'main.thru' | translate}}"></md-datepicker>
+          </md-input-container>
+          <div class="invalid" ng-messages="directiveForm['students['+$index+'].endDate'].$error">
+            <p ng-message="required">{{'main.required' | translate}}</p>
+          </div>
+        </td>
+        <td md-cell>
+          <div ng-repeat="module in row.modules | orderBy: 'module.' + currentLanguageNameVariable() track by $index">
+            {{$index + 1}}. {{currentLanguageNameField(module.module)}}</div>
+
+          <!-- hidden input to show "required" error if necessary -->
+          <input ng-show="false" ng-model="row.modules" name="students[{{$index}}].modules">
+          <div class="invalid" ng-messages="directiveForm['students['+$index+'].modules'].$error">
+            <p ng-message="required">{{'directive.atleastOneModuleRequired' | translate}}</p>
+            <p ng-message="serverside">
+              <p ng-repeat="err in directiveForm['students['+$index+'].modules'].$serverError">{{err.code | translate}}: {{currentLanguageNameField(err.object)}}</p>
+            </p>
+          </div>
+        </td>
+        <td md-cell>
+          <md-button md-no-ink class="md-primary change-button" ng-click="individualCurriculumModules(row.student, $index)">
+            <span>{{!row.modules || row.modules.length === 0 ? ('main.button.add' | translate) : ('main.button.change' | translate)}}</span>
+          </md-button>
+        </td>
+        <td md-cell>
+          <a ng-click="deleteStudent(row)" md-no-ink  class="remove">&times;</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</md-table-container>

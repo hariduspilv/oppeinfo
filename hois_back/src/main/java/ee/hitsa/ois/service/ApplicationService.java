@@ -9,9 +9,11 @@ import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -25,13 +27,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.application.ApplicationFile;
 import ee.hitsa.ois.domain.application.ApplicationPlannedSubject;
 import ee.hitsa.ois.domain.application.ApplicationPlannedSubjectEquivalent;
+import ee.hitsa.ois.domain.application.ApplicationSupportService;
+import ee.hitsa.ois.domain.application.ApplicationSupportServiceModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
@@ -39,10 +45,14 @@ import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.AcademicLeaveReason;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
+import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.MessageType;
+import ee.hitsa.ois.enums.OccupationalGrade;
+import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.message.ConfirmationNeededMessage;
 import ee.hitsa.ois.message.StudentApplicationConfirmed;
 import ee.hitsa.ois.message.StudentApplicationCreated;
@@ -51,6 +61,7 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApplicationUtil;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
@@ -59,18 +70,22 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
+import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.OisFileForm;
+import ee.hitsa.ois.web.commandobject.application.ApplicationConfirmConfirmationForm;
 import ee.hitsa.ois.web.commandobject.application.ApplicationForm;
 import ee.hitsa.ois.web.commandobject.application.ApplicationRejectForm;
 import ee.hitsa.ois.web.commandobject.application.ApplicationSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.application.ApplicationApplicableDto;
 import ee.hitsa.ois.web.dto.application.ApplicationDto;
 import ee.hitsa.ois.web.dto.application.ApplicationPlannedSubjectDto;
 import ee.hitsa.ois.web.dto.application.ApplicationPlannedSubjectEquivalentDto;
 import ee.hitsa.ois.web.dto.application.ApplicationSearchDto;
+import ee.hitsa.ois.web.dto.application.ApplicationSupportServiceModuleDto;
 import ee.hitsa.ois.web.dto.application.ValidAcademicLeaveDto;
 
 @Transactional
@@ -123,6 +138,19 @@ public class ApplicationService {
         qb.optionalContains(Arrays.asList("person.firstname", "person.lastname", "person.firstname || ' ' || person.lastname"), "name", criteria.getStudentName());
 
         qb.optionalCriteria("person.idcode = :idcode", "idcode", criteria.getStudentIdCode());
+        
+        if (user.isSchoolAdmin()) {
+            if (Boolean.TRUE.equals(criteria.getConnectedByCommittee())) {
+                qb.requiredCriteria("exists(select 1 from committee_member cm where cm.committee_id = a.committee_id and cm.person_id = :personId)", "personId", user.getPersonId());
+            }
+        } else if (user.isTeacher()) {
+            if (Boolean.TRUE.equals(criteria.getConnectedByCommittee())) {
+                qb.requiredCriteria("(exists(select 1 from student_group sg where student.student_group_id = sg.id and sg.teacher_id = :teacherId) or exists(select 1 from committee_member cm where cm.committee_id = a.committee_id and"
+                        + " (cm.person_id = :personId or cm.teacher_id = :teacherId)))", "personId", user.getPersonId());
+                qb.parameter("teacherId", user.getTeacherId());
+            }
+        }
+        
 
         return JpaQueryUtil.pagingResult(qb, APPLICATION_SELECT, em, pageable).map(r -> {
             ApplicationSearchDto dto = new ApplicationSearchDto();
@@ -150,12 +178,12 @@ public class ApplicationService {
      */
     public Application create(HoisUserDetails user, ApplicationForm applicationForm) {
         Student student = em.getReference(Student.class, applicationForm.getStudent().getId());
-        if(!(UserUtil.isStudent(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
+        if(!(UserUtil.isStudent(user, student) || UserUtil.isStudentRepresentative(user, student) || UserUtil.isStudentGroupTeacher(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
             throw new ValidationFailedException(String.format("user %s is not allowed to create application", user.getUsername()));
         }
 
         Map<String, ApplicationApplicableDto> applicable = applicableApplicationTypes(student);
-        //ApplicationType type = ApplicationType.valueOfDefault(applicationForm.getType());
+
         if (Boolean.FALSE.equals(applicable.get(applicationForm.getType()).getIsAllowed())) {
             throw new ValidationFailedException(applicable.get(applicationForm.getType()).getReason());
         }
@@ -177,15 +205,49 @@ public class ApplicationService {
     public Application save(HoisUserDetails user, Application application, ApplicationForm applicationForm) {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.bindToEntity(applicationForm, application, classifierRepository, "student", "files", "plannedSubjects",
-                "studyPeriodStart", "studyPeriodStart", "accademicApplication", "newCurriculumVersion", "oldCurriculumVersion", "submitted", "studentGroup");
+                "studyPeriodStart", "studyPeriodStart", "accademicApplication", "newCurriculumVersion", "oldCurriculumVersion",
+                "submitted", "studentGroup", "committee", "supportServices", "isDecided", "selectedModules");
 
         application.setStudyPeriodStart(EntityUtil.getOptionalOne(StudyPeriod.class, applicationForm.getStudyPeriodStart(), em));
         application.setStudyPeriodEnd(EntityUtil.getOptionalOne(StudyPeriod.class, applicationForm.getStudyPeriodEnd(), em));
         application.setOldCurriculumVersion(EntityUtil.getOptionalOne(CurriculumVersion.class, applicationForm.getOldCurriculumVersion(), em));
         application.setNewCurriculumVersion(EntityUtil.getOptionalOne(CurriculumVersion.class, applicationForm.getNewCurriculumVersion(), em));
         application.setStudent(EntityUtil.getOptionalOne(Student.class, applicationForm.getStudent(), em));
+        if (applicationForm.getCommittee() != null && application.getCommitteeAdded() == null) {
+            application.setCommitteeAdded(LocalDateTime.now());
+            ApplicationType type = EnumUtil.valueOf(ApplicationType.class, application.getType());
+            if (ApplicationUtil.SEND_MESSAGE_CALL.containsKey(type)) {
+                ApplicationUtil.SEND_MESSAGE_CALL.get(type).get(ApplicationUtil.OperationType.SAVE).accept(application, automaticMessageService);
+            }
+        }
+        application.setCommittee(EntityUtil.getOptionalOne(Committee.class, applicationForm.getCommittee() != null ? applicationForm.getCommittee().getId() : null, em));
         if (ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_OVERSKAVA, application.getType()) || ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_RAKKAVA, application.getType())) {
             application.setStudentGroup(EntityUtil.getOptionalOne(StudentGroup.class, applicationForm.getStudentGroup(), em));
+        }
+        if (ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_TUGI, application.getType())) {
+            application.setIsDecided(applicationForm.getIsDecided());
+            EntityUtil.bindEntityCollection(application.getSupportServices(), s -> ClassifierSelection.of(s.getSupportService()).getCode(),
+                applicationForm.getSupportServices(), s -> s.getCode(),
+                s -> {
+                    ApplicationSupportService entity = new ApplicationSupportService();
+                    entity.setApplication(application);
+                    entity.setSupportService(em.getReference(Classifier.class, s.getCode()));
+                    return entity;
+                });
+            Optional<ApplicationSupportService> opt = application.getSupportServices().stream().filter(s -> ClassifierUtil.equals(SupportServiceType.TUGITEENUS_1, s.getSupportService())).findFirst();
+            if (opt.isPresent()) {
+                EntityUtil.bindEntityCollection(opt.get().getModules(), m -> m.getId(),
+                        applicationForm.getSelectedModules() == null ? Collections.emptyList() : applicationForm.getSelectedModules(), m -> m.getId(),
+                        dto -> {
+                            ApplicationSupportServiceModule entity = new ApplicationSupportServiceModule();
+                            entity.setModule(em.getReference(CurriculumVersionOccupationModule.class, dto.getModule().getId()));
+                            entity.setAddInfo(dto.getAddInfo());
+                            entity.setSupportService(opt.get());
+                            return entity;
+                        }, (nValue, oValue) -> {
+                            oValue.setAddInfo(nValue.getAddInfo());
+                        });
+            }
         }
 
         ValidAcademicLeaveDto validAcademicLeave = applicationForm.getValidAcademicLeave();
@@ -317,7 +379,10 @@ public class ApplicationService {
         if(UserUtil.isSchoolAdmin(user, student.getSchool())) {
             setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_YLEVAAT);
             application.setSubmitted(LocalDateTime.now());
-        } if (UserUtil.isAdultStudent(user, student) || UserUtil.isStudentRepresentative(user, student)) {
+        } else if (UserUtil.isStudentGroupTeacher(user, student)) {
+            setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_ESIT);
+            application.setSubmitted(LocalDateTime.now());
+        } else if (UserUtil.isAdultStudent(user, student) || UserUtil.isStudentRepresentative(user, student)) {
             setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_ESIT);
             application.setSubmitted(LocalDateTime.now());
             application.setNeedsRepresentativeConfirm(Boolean.FALSE);
@@ -325,7 +390,8 @@ public class ApplicationService {
             application.setNeedsRepresentativeConfirm(Boolean.TRUE);
         }
         application = EntityUtil.save(application, em);
-        if (!UserUtil.isStudent(user, student)) {
+        
+        if (!UserUtil.isStudent(user, student) && !ApplicationUtil.SEND_MESSAGE_CALL.containsKey(EnumUtil.valueOf(ApplicationType.class, application.getType()))) {
             StudentApplicationCreated data = new StudentApplicationCreated(application);
             automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS, student, data);
         }
@@ -339,15 +405,43 @@ public class ApplicationService {
     }
 
     public Application confirm(Application application) {
-        proccessApplicationConfirmation(application);
-        setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_KINNITATUD);
+        if (ApplicationUtil.REQUIRE_REPRESENTATIVE_CONFIRM.contains(EnumUtil.valueOf(ApplicationType.class, application.getType())) &&
+                !ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_KINNITAM, application.getStatus())) {
+            setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_KINNITAM);
+            if (ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_TUGI, application.getType())) {
+                application.setCommitteeDecisionAdded(LocalDateTime.now());
+                if (Boolean.FALSE.equals(application.getIsDecided())) {
+                    setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_TAGASI);
+                }
+            }
+        } else {
+            proccessApplicationConfirmation(application);
+            setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_KINNITATUD);
+        }
         return EntityUtil.save(application, em);
     }
 
-    public ApplicationDto get(HoisUserDetails user, Application application) {
-        return ApplicationDto.of(setSeenBySchoolAdmin(user, application));
+    public ApplicationDto get(HoisUserDetails user, Application application, boolean updateStatus) {
+        // XXX Can be OptimisticLock!
+        ApplicationStatus oldStatus = EnumUtil.valueOf(ApplicationStatus.class, application.getStatus());
+        if (updateStatus) {
+            application = setSeenBySchoolAdmin(user, application);
+            if (oldStatus != null && oldStatus.equals(ApplicationStatus.AVALDUS_STAATUS_ESIT) && !oldStatus.equals(EnumUtil.valueOf(ApplicationStatus.class, application.getStatus()))) {
+                ApplicationDto dto = ApplicationDto.of(application);
+                dto.setHasBeenSeenByAdmin(Boolean.TRUE);
+                return dto;
+            }
+        }
+        return ApplicationDto.of(application);
     }
 
+    /**
+     * XXX NB! Version is not changed until transaction is finished. So be careful of OptimisticLock!!!
+     * 
+     * @param user
+     * @param application
+     * @return
+     */
     private Application setSeenBySchoolAdmin(HoisUserDetails user, Application application) {
         if (UserUtil.isSchoolAdmin(user, application.getStudent().getSchool()) &&
                 ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_ESIT, application.getStatus())) {
@@ -404,7 +498,7 @@ public class ApplicationService {
 
         for (Classifier classifier : classifierService.findAllByMainClassCode(MainClassCode.AVALDUS_LIIK)) {
             String type = classifier.getCode();
-            if (existingApplications.contains(type)) {
+            if (existingApplications.contains(type) && !ApplicationType.AVALDUS_LIIK_TUGI.name().equals(type)) {
                 result.put(type, new ApplicationApplicableDto("application.messages.applicationAlreadyExists"));
             } else {
                 if (ApplicationType.AVALDUS_LIIK_AKAD.name().equals(type)) {
@@ -456,14 +550,25 @@ public class ApplicationService {
 
     public void sendRejectionNotificationMessage(Application application, HoisUserDetails user) {
         log.info("rejection notification message sent to student {}", EntityUtil.getId(application.getStudent()));
-        StudentApplicationRejectedMessage data = new StudentApplicationRejectedMessage(application);
-        automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS_TL, application.getStudent(), data, user);
+        ApplicationType type = EnumUtil.valueOf(ApplicationType.class, application.getType());
+        if (ApplicationUtil.SEND_MESSAGE_CALL.containsKey(type)) {
+            ApplicationUtil.SEND_MESSAGE_CALL.get(type).get(ApplicationUtil.OperationType.REJECT).accept(application, automaticMessageService);
+        } else {
+            StudentApplicationRejectedMessage data = new StudentApplicationRejectedMessage(application);
+            automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS_TL, application.getStudent(), data, user);
+        }
     }
 
     public void sendConfirmationNotificationMessage(Application application, HoisUserDetails user) {
         log.info("confirmation notification message sent to student {}", EntityUtil.getId(application.getStudent()));
-        StudentApplicationConfirmed data = new StudentApplicationConfirmed(application);
-        automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS_KINNIT, application.getStudent(), data, user);
+        ApplicationType type = EnumUtil.valueOf(ApplicationType.class, application.getType());
+        // TODO: Make so that if there is no type then run default (let's say, key is null) operations.
+        if (ApplicationUtil.SEND_MESSAGE_CALL.containsKey(type)) {
+            ApplicationUtil.SEND_MESSAGE_CALL.get(type).get(ApplicationUtil.OperationType.CONFIRM).accept(application, automaticMessageService);
+        } else {
+            StudentApplicationConfirmed data = new StudentApplicationConfirmed(application);
+            automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS_KINNIT, application.getStudent(), data, user);
+        }
     }
 
     private void setApplicationStatus(Application application, ApplicationStatus status) {
@@ -478,5 +583,79 @@ public class ApplicationService {
             student.setStudentGroup(application.getStudentGroup());
             EntityUtil.save(student, em);
         }
+    }
+
+    public List<ApplicationSupportServiceModuleDto> individualCurriculumModules(Student student, Long applicationId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s"
+                + " join curriculum_version cv on s.curriculum_version_id = cv.id"
+                + " join curriculum_version_omodule cvo on cv.id = cvo.curriculum_version_id"
+                + " join curriculum_module cm on cvo.curriculum_module_id = cm.id"
+                + " join classifier mcl on cm.module_code = mcl.code");
+
+        qb.requiredCriteria("s.id = :studentId", "studentId", EntityUtil.getId(student));
+        qb.requiredCriteria("cm.module_code in (:moduleCodes)", "moduleCodes",
+                EnumUtil.toNameList(CurriculumModuleType.KUTSEMOODUL_P, CurriculumModuleType.KUTSEMOODUL_Y));
+
+        qb.filter("(not exists (select 1 from student_vocational_result svr"
+                + " where svr.curriculum_version_omodule_id = cvo.id and svr.student_id = :studentId"
+                + " and svr.grade_code in (:positiveGradeCodes))"
+                + (applicationId != null ? " or exists (select 1 from application_support_service_module assm"
+                    + " join application_support_service ass on assm.application_support_service_id = ass.id"
+                    + " join application a on a.id = ass.application_id"
+                    + " and s.id = a.student_id and a.id = :applicationId"
+                    + " where assm.curriculum_version_omodule_id = cvo.id))" : ")"));
+
+        qb.parameter("studentId", EntityUtil.getId(student));
+        if (applicationId != null) {
+            qb.parameter("applicationId", applicationId);
+        }
+        qb.parameter("positiveGradeCodes", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
+
+        List<?> data = qb.select("cvo.id, cm.name_et, mcl.name_et mcl_name_et, cm.name_en, mcl.name_en mcl_name_en", em)
+                .getResultList();
+        return StreamUtil.toMappedList(r -> {
+            ApplicationSupportServiceModuleDto dto = new ApplicationSupportServiceModuleDto();
+            String moduleEt = resultAsString(r, 1);
+            String moduleEn = resultAsString(r, 3);
+            String clEt = resultAsString(r, 2);
+            String clEn = resultAsString(r, 4);
+            dto.setModule(new AutocompleteResult(resultAsLong(r, 0),
+                CurriculumUtil.moduleName(moduleEt, clEt),
+                CurriculumUtil.moduleName(moduleEn != null ? moduleEn : moduleEt, clEn != null ? clEn : clEt)));
+            return dto;
+        }, data);
+    }
+
+    public void confirmConfirmation(HoisUserDetails user, Application application, ApplicationConfirmConfirmationForm form) {
+        if (Boolean.TRUE.equals(form.getConfirm())) {
+            confirm(application);
+            application.setIsRepresentativeConfirmed(Boolean.TRUE);
+        } else if (Boolean.FALSE.equals(form.getConfirm())) {
+            ApplicationRejectForm rejectForm = new ApplicationRejectForm();
+            rejectForm.setReason(TranslateUtil.translate("application.supportService.rejectDefault", Language.ET));
+            reject(application, rejectForm);
+            application.setIsRepresentativeConfirmed(Boolean.FALSE);
+        }
+        
+        application.setRepresentativeDecisionAddInfo(form.getRepresentativeDecisionAddInfo());
+        if (user.isSchoolAdmin() && form.getOisFile() != null) {
+            ApplicationFile file = new ApplicationFile();
+            file.setOisFile(EntityUtil.bindToEntity(form.getOisFile(), new OisFile()));
+            application.getFiles().add(file);
+        }
+        
+        application.setRepresentativeConfirmed(LocalDateTime.now());
+
+        
+    }
+
+    public void removeConfirmation(Application application) {
+        // reset confirmation info
+        application.setIsRepresentativeConfirmed(null);
+        application.setRepresentativeDecisionAddInfo(null);
+        // reset dates
+        application.setRepresentativeConfirmed(null);
+        application.setCommitteeDecisionAdded(null);
+        setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_YLEVAAT);
     }
 }

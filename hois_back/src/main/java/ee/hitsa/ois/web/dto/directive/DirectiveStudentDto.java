@@ -1,13 +1,12 @@
 package ee.hitsa.ois.web.dto.directive;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
-import ee.hitsa.ois.domain.directive.DirectiveStudentOccupation;
 import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
@@ -22,6 +21,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SaisAdmissionUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
+import ee.hitsa.ois.web.commandobject.directive.DirectiveForm.DirectiveFormStudentModule;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
@@ -35,7 +35,6 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private String oldLanguage;
     private Boolean isCumLaude;
     private Boolean isOccupationExamPassed;
-    private List<String> occupations;
     private AutocompleteResult curriculumGrade;
     private String bankAccount;
     private Boolean applicationIsPeriod;
@@ -43,7 +42,9 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private LocalDate applicationEndDate;
     private AutocompleteResult applicationStudyPeriodStart;
     private AutocompleteResult applicationStudyPeriodEnd;
-    
+    private AutocompleteResult studentGroupObject;
+    private AutocompleteResult curriculumVersionObject;
+
     private Boolean isFullLoad = Boolean.FALSE;
     private Boolean isPartialLoad = Boolean.FALSE;
     private Boolean isUndefinedLoad = Boolean.FALSE;
@@ -118,14 +119,6 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
 
     public void setIsOccupationExamPassed(Boolean isOccupationExamPassed) {
         this.isOccupationExamPassed = isOccupationExamPassed;
-    }
-
-    public List<String> getOccupations() {
-        return occupations;
-    }
-
-    public void setOccupations(List<String> occupations) {
-        this.occupations = occupations;
     }
 
     public AutocompleteResult getCurriculumGrade() {
@@ -206,6 +199,22 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
 
     public void setIsUndefinedLoad(Boolean isUndefinedLoad) {
         this.isUndefinedLoad = isUndefinedLoad;
+    }
+
+    public AutocompleteResult getStudentGroupObject() {
+        return studentGroupObject;
+    }
+
+    public void setStudentGroupObject(AutocompleteResult studentGroupObject) {
+        this.studentGroupObject = studentGroupObject;
+    }
+
+    public AutocompleteResult getCurriculumVersionObject() {
+        return curriculumVersionObject;
+    }
+
+    public void setCurriculumVersionObject(AutocompleteResult curriculumVersionObject) {
+        this.curriculumVersionObject = curriculumVersionObject;
     }
 
     public static DirectiveStudentDto of(ScholarshipApplication application, DirectiveType directiveType) {
@@ -293,11 +302,10 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         if (grade != null) {
             dto.setCurriculumGrade(AutocompleteResult.of(grade));
         }
-        List<DirectiveStudentOccupation> occups = directiveStudent.getOccupations();
-        if (occups != null && !occups.isEmpty()) {
-            dto.setOccupations(StreamUtil.toMappedList(o -> EntityUtil.getCode(o.getOccupation()), occups));
-        }
-        return EntityUtil.bindToDto(directiveStudent, dto, "occupations");
+        dto.setModules(StreamUtil.nullSafeList(directiveStudent.getModules()).stream()
+                .map(m -> DirectiveFormStudentModule.of(m)).collect(Collectors.toList()));
+        dto.setDirectiveStudent(EntityUtil.getNullableId(directiveStudent.getDirectiveStudent()));
+        return EntityUtil.bindToDto(directiveStudent, dto, "occupations", "modules", "directiveStudent");
     }
 
     public static DirectiveStudentDto of(SaisApplication application) {
@@ -344,6 +352,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             break;
         case KASKKIRI_LOPET:
             dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
+            
             // TODO
             // dto.setIsCumLaude(isCumLaude);
             // dto.setIsOccupationExamPassed(isOccupationExamPassed);
@@ -365,6 +374,15 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
             dto.setStudentGroup(EntityUtil.getNullableId(student.getStudentGroup()));
             break;
+        case KASKKIRI_INDOK:
+        case KASKKIRI_INDOKLOP:
+        case KASKKIRI_KIITUS:
+        case KASKKIRI_NOOMI:
+            dto.setCurriculumVersion(student.getCurriculumVersion().getId());
+            dto.setCurriculumVersionObject(AutocompleteResult.of(student.getCurriculumVersion()));
+            dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getId() : null);
+            dto.setStudentGroupObject(student.getStudentGroup() != null ? AutocompleteResult.of(student.getStudentGroup()) : null);
+            break;
         default:
             break;
         }
@@ -381,4 +399,6 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         dto.setSex(EntityUtil.getNullableCode(person.getSex()));
         dto.setCitizenship(EntityUtil.getNullableCode(person.getCitizenship()));
     }
+    
+    
 }

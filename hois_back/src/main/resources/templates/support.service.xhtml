@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>{{ "report.support.service.title" | translate }}</title>
+    <style type="text/css">
+    	@page {
+		    size: A4;
+		    margin: 70px;
+		}
+		
+		body, h1, h2 {
+			font-size: 9pt;
+		}
+		
+		table {
+    		border-collapse: collapse;
+    		border-spacing: 0;
+    		width: 100%;
+		}
+		
+		td, th {
+    		border: 1px solid black;
+		}
+		
+		table.borderless {
+    		border: none;
+		}
+		
+		table.borderless td, table.borderless th {
+			border: none;
+		}
+		
+		table.center {
+			margin-left: auto;
+			margin-right: auto;
+			width: 50%;
+		}
+		
+		table.center td {
+			white-space: nowrap;
+		}
+		
+		table.center td + td {
+			padding-left: 8pt;
+			width: 100%;
+		}
+		
+		table.spacing th {
+			text-align: left;
+			padding: 2pt;
+		}
+		
+		table.spacing td {
+			text-align: left;
+			padding: 10pt 2pt 5pt 2pt;
+		}
+		
+		h1 {
+			text-align: center;
+		}
+    </style>
+  </head>
+  <body>
+	<h1>{{"report.support.service.title" | translate}}</h1>
+	<table class="center borderless">
+		<tr>
+			<td>{{"report.support.service.student" | translate}}:</td>
+			<td>{{content.student}}</td>
+		</tr>
+		<tr>
+			<td>{{"report.support.service.curriculumVersion" | translate}}:</td>
+			<td>{{content.curriculumVersion}}</td>
+		</tr>
+		<tr>
+			<td>{{"report.support.service.submittedDt" | translate}}:</td>
+			<td>{{content.submittedDt.toString() | date(existingFormat='yyyy-MM-dd', format='dd.MM.yyyy')}}</td>
+		</tr>
+		<tr>
+			<td>{{"report.support.service.submitter" | translate}}:</td>
+			<td>{{content.submitter}}</td>
+		</tr>
+		<tr>
+			<td>{{"report.support.service.status" | translate}}:</td>
+			<td>{{content.status}}</td>
+		</tr>
+	</table>
+	<h2>{{"report.support.service.serviceDescription" | translate}}</h2>
+	<table class="spacing">
+		<tr>
+			<th style="width:50%">{{"report.support.service.description" | translate}}</th>
+			<th style="width:50%">{{"report.support.service.addInfo" | translate}}</th>
+		</tr>
+		<tr>
+			<td>{{content.description}}</td>
+			<td>{{content.addInfo}}</td>
+		</tr>
+	</table>
+	<br/>
+	<h2>{{"report.support.service.committeeDecision" | translate}}</h2>
+	<table class="spacing">
+		<tr>
+			<th style="width: 20%;">{{"report.support.service.committee" | translate}}</th>
+			<th style="width: 30%;">{{"report.support.service.committeeDecisionDt" | translate}}</th>
+			<th style="width: 15%;">{{"report.support.service.committeeDecisionCol" | translate}}</th>
+			<th style="width: 35%;">{{"report.support.service.committeeDecisionAddInfo" | translate}}</th>
+		</tr>
+		<tr>
+			<td>{{content.committee}}</td>
+			<td>{{content.committeeDecisionDate.toString() | date(existingFormat='yyyy-MM-dd\'T\'HH:mm:ss.SSS', format='dd.MM.yyyy HH:mm:ss')}}</td>
+			<td>{% if content.committeeDecision == true %} {{"yes" | translate}} {% else %} {{"no" | translate }} {% endif %}</td>
+			<td>{{content.committeeDecisionAddInfo}}</td>
+		</tr>
+	</table>
+	{% if content.supportServices is not empty %}
+	<br/>
+	<h2>{{"report.support.service.supportService" | translate}}</h2>
+	<table class="spacing">
+  		{% for service in content.supportServices %}
+		<tr>
+			<td colspan="2">{{service.name}}</td>
+		</tr>
+		{% if service.code == 'TUGITEENUS_1' %}
+		{% if content.supportModules is not empty %}
+		{% for module in content.supportModules %}
+		<tr>
+			<td style="width: 35%; text-align: right;">{{module.name}}</td>
+			<td style="width: 65%;">{{module.description}}</td>
+		</tr>
+		{% endfor %}
+		{% endif %}
+		{% endif %}
+		{% endfor %}
+	</table>
+	{% endif %}
+	{% if content.implementationPlan is not null %}
+	<br/>
+	<h2>{{"report.support.service.implementationPlan" | translate}}</h2>
+	<table class="spacing">
+		<tr>
+			<td>{{content.implementationPlan}}</td>
+		</tr>
+	</table>
+	{% endif %}
+	<br/>
+	<h2>{{"report.support.service.agreement" | translate}}</h2>
+	<table class="spacing">
+		<tr>
+			<th style="width: 20%;">{{"report.support.service.confirmer" | translate}}</th>
+			<th style="width: 30%;">{{"report.support.service.confirmedDt" | translate}}</th>
+			<th style="width: 15%;">{{"report.support.service.isConfirmed" | translate}}</th>
+			<th style="width: 35%;">{{"report.support.service.reason" | translate}}</th>
+		</tr>
+		<tr>
+			<td>{{content.confirmer}}</td>
+			<td>{{content.confirmedDt.toString() | date(existingFormat='yyyy-MM-dd\'T\'HH:mm:ss.SSS', format='dd.MM.yyyy HH:mm:ss')}}</td>
+			<td>{% if content.isConfirmed == true %} {{"yes" | translate}} {% else %} {{"no" | translate }} {% endif %}</td>
+			<td>{{content.reason}}</td>
+		</tr>
+	</table>
+	{% if content.files is not empty %}
+	<br/>
+	<h2>{{"report.support.service.files" | translate}}</h2>
+	<table class="spacing">
+		<tr>
+			<th style="width: 20%;">{{"report.support.service.file.adder" | translate}}</th>
+			<th style="width: 30%;">{{"report.support.service.file.addedDt" | translate}}</th>
+			<th style="width: 50%;">{{"report.support.service.file.name" | translate}}</th>
+		</tr>
+		{% for file in content.files %}
+		<tr>
+			<td>{{file.adder}}</td>
+			<td>{{file.addedDt.toString() | date(existingFormat='yyyy-MM-dd\'T\'HH:mm:ss.SSS', format='dd.MM.yyyy HH:mm:ss')}}</td>
+			<td>{{file.name}}</td>
+		</tr>
+		{% endfor %}
+	</table>
+	{% endif %}
+	<br/>
+	<br/>
+	<div>
+		<span style="float: left;">__________________<br/>{{"report.support.service.date" | translate}}</span>
+		<span style="float: right;">__________________<br/><span style="float: right;">{{"report.support.service.allkiri" | translate}}</span></span>
+	</div>
+  </body>
+</html>

@@ -14,6 +14,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 
 import ee.hitsa.ois.auth.EstonianIdCardAuthenticationToken;
 import ee.hitsa.ois.auth.LoginMethod;
+import ee.hitsa.ois.auth.tara.TaraAuthenticationToken;
 import ee.hitsa.ois.config.HoisJwtProperties;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
@@ -55,6 +56,9 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
                     if (LoginMethod.LOGIN_TYPE_I.name().equals(loginMethod)) {
                         token = new EstonianIdCardAuthenticationToken(hoisUserDetails);
                         hoisUserDetails.setLoginMethod(LoginMethod.LOGIN_TYPE_I);
+                    } else if (LoginMethod.LOGIN_TYPE_T.name().equals(loginMethod)) {
+                        token = new TaraAuthenticationToken(hoisUserDetails);
+                        hoisUserDetails.setLoginMethod(LoginMethod.LOGIN_TYPE_T);
                     } else {
                         token = new PreAuthenticatedAuthenticationToken(username, username);
                     }

@@ -1,6 +1,8 @@
 package ee.hitsa.ois.web.curriculum;
 
 import java.util.AbstractMap.SimpleEntry;
+import java.util.stream.Collectors;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -115,6 +117,11 @@ public class CurriculumVersionHigherModuleController {
 
     @GetMapping("/versionHmoduleTypes/{id:\\d+}")
     public List<ClassifierSelection> getCurriculumVersionHmoduleTypes(@WithEntity CurriculumVersion version) {
+        return getCurriculumVersionHmoduleTypes(version, null);
+    }
+
+    @GetMapping("/versionHmoduleTypes/{id:\\d+}/{module:\\d+}")
+    public List<ClassifierSelection> getCurriculumVersionHmoduleTypes(@WithEntity CurriculumVersion version, @WithEntity("module") CurriculumVersionHigherModule module) {
         /*
          * is_valid and is_higher is not considered at
          * autocompleteService.classifiers()
@@ -124,8 +131,13 @@ public class CurriculumVersionHigherModuleController {
         List<ClassifierSelection> otherTypes = curriculumVersionHigherModuleService.getCurriculumVersionHmoduleTypes(
                 EntityUtil.getId(version.getCurriculum().getSchool()));
         classifiers.addAll(otherTypes);
-        return classifiers;
+        LocalDate now = LocalDate.now();
+        return classifiers.stream()
+                .filter(cl -> (module != null && module.getType().getCode().equals(cl.getCode()))
+                        || (cl.getValidFrom() == null || !cl.getValidFrom().isAfter(now)) && (cl.getValidThru() == null || !cl.getValidThru().isBefore(now)))
+                .collect(Collectors.toList());
     }
+    
     
     @GetMapping("/curriculumYears/{id:\\d+}")
     public SimpleEntry<String, Short> getCurriculumStudyYears(@PathVariable("id") Long curriculumId) {

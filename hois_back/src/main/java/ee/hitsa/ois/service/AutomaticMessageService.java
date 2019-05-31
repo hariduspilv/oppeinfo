@@ -3,9 +3,12 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -83,6 +86,33 @@ public class AutomaticMessageService {
             List<String> receivers = StreamUtil.toMappedList(Person::getEmail, persons);
             mailService.sendMail(message, receivers);
         }
+    }
+    
+    /**
+     * Sends a message to student and his/her representative (in case if student needs it that means student is not adult or needs representative) and school admins.
+     * 
+     * @param type Message type
+     * @param student Student
+     * @param dataBean Message
+     * @param ignorRepreIfAdult does not send a msg to representative if student is an adult and does not need repre.
+     */
+    public void sendMessageToStudentAndRepresentativeAndSchoolAdmins(MessageType type, Student student, Object dataBean, boolean ignorRepreIfAdult) {
+        Set<Person> persons = new HashSet<>(getPersonsWithRole(student.getSchool(), Role.ROLL_A));
+        
+        if (!persons.contains(student.getPerson())) {
+            persons.add(student.getPerson());
+        }
+        
+        if (!ignorRepreIfAdult || !StudentUtil.isAdultAndDoNotNeedRepresentative(student)) {
+            persons.addAll(getStudentRepresentativePersons(student, null));
+        }
+        
+        Message message = sendMessageToPersons(type, student.getSchool(), new ArrayList<>(persons), dataBean);
+        
+        if (message != null) {
+            
+        }
+        
     }
 
     public void sendMessageToStudent(MessageType type, Student student, Object dataBean) {

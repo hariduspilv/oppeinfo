@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.commandobject.report;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.constraints.NotNull;
@@ -17,7 +18,7 @@ public class StudentGroupTeacherCommand {
     private Long curriculumVersion;
     private LocalDate from;
     private LocalDate thru;
-    private List<String> entryTypes;
+    private List<String> entryTypes = new ArrayList<>();
     private Boolean moduleGrade = Boolean.FALSE;
     private Boolean absencesPerJournals = Boolean.FALSE;
     private Boolean journalsWithEntries = Boolean.FALSE;

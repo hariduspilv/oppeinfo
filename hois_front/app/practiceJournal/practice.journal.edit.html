@@ -80,7 +80,7 @@
       </div>
 
       <div ng-if="!formState.isHigher && !practiceJournal.contract" layout="row" layout-sm="column" layout-xs="column" flex>
-        <md-button class="md-primary" ng-click="addModuleSubject()">{{'practiceJournal.button.addModule' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="addModuleSubject()">{{'practiceJournal.button.addModule' | translate}}</md-button>
       </div>
 
       <div ng-if="formState.isHigher" ng-repeat="subject in practiceJournal.moduleSubjects track by $index" layout="row" layout-sm="column" layout-xs="column" flex="50">
@@ -116,7 +116,7 @@
       </div>
 
       <div layout="row" layout-sm="column" layout-xs="column" flex ng-if="formState.isHigher &&!practiceJournal.contract">
-        <md-button class="md-primary" ng-click="addModuleSubject()">{{'practiceJournal.button.addSubject' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="addModuleSubject()">{{'practiceJournal.button.addSubject' | translate}}</md-button>
       </div>
 
 

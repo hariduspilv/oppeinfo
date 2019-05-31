@@ -71,7 +71,7 @@
                   <td md-cell>{{row.studentGroup}}</td>
                   <td md-cell>
                     <hois-select class="protocolGradeSelect" ng-model="row.grade" values="grades" show-property="{{auth.school.letterGrades ? 'value2' : 'value'}}" 
-                      value-property="code" aria-label="grade" ng-change="gradeChanged(row)" ng-disabled="!formState.canEditProtocol"></hois-select>
+                      hide-values="hideInvalid" value-property="code" aria-label="grade" ng-change="gradeChanged(row)" ng-disabled="!formState.canEditProtocol"></hois-select>
                   </td>
                   <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
                     <md-input-container ng-if="row.gradeHasChanged">

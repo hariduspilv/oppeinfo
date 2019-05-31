@@ -7,15 +7,19 @@ public class PeriodDetailLoadDto {
 
     private Map<Long, Long> plannedHours = new HashMap<>();
     private Map<Long, Map<String, Long>> capacityPlannedHours = new HashMap<>();
-    private Map<Long, Long> occurredLessons = new HashMap<>();
-    private Map<Long, Map<String, Long>> capacityOccurredLessons = new HashMap<>();
+    private Map<Long, Long> journalOccurredLessons = new HashMap<>();
+    private Map<Long, Map<String, Long>> capacityJournalOccurredLessons = new HashMap<>();
+    private Map<Long, Long> timetableOccurredLessons = new HashMap<>();
+    private Map<Long, Map<String, Long>> capacityTimetableOccurredLessons = new HashMap<>();
     private Map<Long, Long> substitutedLessons = new HashMap<>();
     private Map<Long, Long> singleEvents = new HashMap<>();
-    
+
     private Long totalPlannedHours;
     private Map<String, Long> totalCapacityPlannedHours = new HashMap<>();
-    private Long totalOccurredLessons;
-    private Map<String, Long> totalCapacityOccurredLessons = new HashMap<>();
+    private Long journalTotalOccurredLessons;
+    private Map<String, Long> journalTotalCapacityOccurredLessons = new HashMap<>();
+    private Long timetableTotalOccurredLessons;
+    private Map<String, Long> timetableTotalCapacityOccurredLessons = new HashMap<>();
     private Long totalSubstitutedLessons;
     private Long totalSingleEvents;
 
@@ -35,20 +39,36 @@ public class PeriodDetailLoadDto {
         this.capacityPlannedHours = capacityPlannedHours;
     }
 
-    public Map<Long, Long> getOccurredLessons() {
-        return occurredLessons;
+    public Map<Long, Long> getJournalOccurredLessons() {
+        return journalOccurredLessons;
     }
 
-    public void setOccurredLessons(Map<Long, Long> occurredLessons) {
-        this.occurredLessons = occurredLessons;
+    public void setJournalOccurredLessons(Map<Long, Long> journalOccurredLessons) {
+        this.journalOccurredLessons = journalOccurredLessons;
     }
 
-    public Map<Long, Map<String, Long>> getCapacityOccurredLessons() {
-        return capacityOccurredLessons;
+    public Map<Long, Map<String, Long>> getCapacityJournalOccurredLessons() {
+        return capacityJournalOccurredLessons;
     }
 
-    public void setCapacityOccurredLessons(Map<Long, Map<String, Long>> capacityOccurredLessons) {
-        this.capacityOccurredLessons = capacityOccurredLessons;
+    public void setCapacityJournalOccurredLessons(Map<Long, Map<String, Long>> capacityJournalOccurredLessons) {
+        this.capacityJournalOccurredLessons = capacityJournalOccurredLessons;
+    }
+
+    public Map<Long, Long> getTimetableOccurredLessons() {
+        return timetableOccurredLessons;
+    }
+
+    public void setTimetableOccurredLessons(Map<Long, Long> timetableOccurredLessons) {
+        this.timetableOccurredLessons = timetableOccurredLessons;
+    }
+
+    public Map<Long, Map<String, Long>> getCapacityTimetableOccurredLessons() {
+        return capacityTimetableOccurredLessons;
+    }
+
+    public void setCapacityTimetableOccurredLessons(Map<Long, Map<String, Long>> capacityTimetableOccurredLessons) {
+        this.capacityTimetableOccurredLessons = capacityTimetableOccurredLessons;
     }
 
     public Map<Long, Long> getSubstitutedLessons() {
@@ -83,20 +103,36 @@ public class PeriodDetailLoadDto {
         this.totalCapacityPlannedHours = totalCapacityPlannedHours;
     }
 
-    public Long getTotalOccurredLessons() {
-        return totalOccurredLessons;
+    public Long getJournalTotalOccurredLessons() {
+        return journalTotalOccurredLessons;
     }
 
-    public void setTotalOccurredLessons(Long totalOccurredLessons) {
-        this.totalOccurredLessons = totalOccurredLessons;
+    public void setJournalTotalOccurredLessons(Long journalTotalOccurredLessons) {
+        this.journalTotalOccurredLessons = journalTotalOccurredLessons;
     }
 
-    public Map<String, Long> getTotalCapacityOccurredLessons() {
-        return totalCapacityOccurredLessons;
+    public Map<String, Long> getJournalTotalCapacityOccurredLessons() {
+        return journalTotalCapacityOccurredLessons;
     }
 
-    public void setTotalCapacityOccurredLessons(Map<String, Long> totalCapacityOccurredLessons) {
-        this.totalCapacityOccurredLessons = totalCapacityOccurredLessons;
+    public void setJournalTotalCapacityOccurredLessons(Map<String, Long> journalTotalCapacityOccurredLessons) {
+        this.journalTotalCapacityOccurredLessons = journalTotalCapacityOccurredLessons;
+    }
+
+    public Long getTimetableTotalOccurredLessons() {
+        return timetableTotalOccurredLessons;
+    }
+
+    public void setTimetableTotalOccurredLessons(Long timetableTotalOccurredLessons) {
+        this.timetableTotalOccurredLessons = timetableTotalOccurredLessons;
+    }
+
+    public Map<String, Long> getTimetableTotalCapacityOccurredLessons() {
+        return timetableTotalCapacityOccurredLessons;
+    }
+
+    public void setTimetableTotalCapacityOccurredLessons(Map<String, Long> timetableTotalCapacityOccurredLessons) {
+        this.timetableTotalCapacityOccurredLessons = timetableTotalCapacityOccurredLessons;
     }
 
     public Long getTotalSubstitutedLessons() {

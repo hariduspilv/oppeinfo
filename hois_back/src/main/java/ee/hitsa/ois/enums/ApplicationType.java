@@ -13,6 +13,7 @@ public enum ApplicationType {
     AVALDUS_LIIK_FINM(DirectiveType.KASKKIRI_FINM, ApplicationValidation.Finm.class),
     AVALDUS_LIIK_RAKKAVA(null, ApplicationValidation.Rakkava.class),
     AVALDUS_LIIK_OVERSKAVA(null, ApplicationValidation.Overskava.class),
+    AVALDUS_LIIK_TUGI(null, ApplicationValidation.Tugi.class),
     AVALDUS_LIIK_MUU(null, ApplicationValidation.Muu.class);
 
     private final DirectiveType directiveType;

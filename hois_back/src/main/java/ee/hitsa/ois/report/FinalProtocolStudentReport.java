@@ -2,10 +2,14 @@ package ee.hitsa.ois.report;
 
 import static ee.hitsa.ois.util.TranslateUtil.name;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.protocol.ProtocolStudentOccupation;
+import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -33,15 +37,27 @@ public class FinalProtocolStudentReport {
         }
 
         gradeName = student.getGrade() != null ? name(student.getGrade(), lang) : null;
+
         List<ProtocolStudentOccupation> nonPartOccupations = StreamUtil.toFilteredList(
                 pso -> pso.getOccupation() != null && pso.getPartOccupation() == null,
                 student.getProtocolStudentOccupations());
-        occupations = StreamUtil.toMappedList(pso -> ClassifierUtil.getNullableNameEt(pso.getOccupation()),
-                nonPartOccupations);
+        occupations = new ArrayList<>();
+        for (ProtocolStudentOccupation pso : nonPartOccupations) {
+            String occupation = ClassifierUtil.getNullableNameEt(pso.getOccupation());
+            StudentOccupationCertificate certificate = pso.getStudentOccupationCertificate();
+            if (certificate != null) {
+                Classifier speciality = certificate.getSpeciality();
+                if (speciality != null) {
+                    occupation += " (" + ClassifierUtil.getNullableNameEt(speciality) + ")";
+                }
+            }
+            occupations.add(occupation);
+        }
 
-        if (isVocational.booleanValue()) {
-            partOccupations = StreamUtil.toMappedList(pso -> ClassifierUtil.getNullableNameEt(pso.getPartOccupation()),
-                    student.getProtocolStudentOccupations());
+        if (Boolean.TRUE.equals(isVocational)) {
+            partOccupations = StreamUtil.nullSafeList(student.getProtocolStudentOccupations()).stream()
+                    .filter(pso -> pso.getPartOccupation() != null)
+                    .map(pso -> ClassifierUtil.getNullableNameEt(pso.getPartOccupation())).collect(Collectors.toList());
             curriculumGrade = null;
         } else {
             partOccupations = null;

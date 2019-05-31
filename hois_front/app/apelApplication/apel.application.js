@@ -400,6 +400,10 @@
       }
     }
 
+    $scope.hideInvalid = function (cl) {
+      return !Classifier.isValid(cl);
+    };
+
     $scope.changeInformalTransferStatus = function (informalSubjectOrModule) {
       var subjectOrModuleId = informalSubjectOrModule.subjectId || informalSubjectOrModule.moduleId;
       var recordIndex = getRecordIndex(informalSubjectOrModule.recordId);
@@ -718,6 +722,7 @@
         dialogScope.apelSchools = QueryUtils.endpoint('/autocomplete/apelschools').query();
         dialogScope.gradesMap = $scope.gradesMap;
         dialogScope.assessmentsMap = $scope.assessmentsMap;
+        dialogScope.hideInvalid = $scope.hideInvalid;
 
         if (dialogScope.isVocational) {
           dialogScope.curriculumModules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query(
@@ -1408,30 +1413,34 @@
 
     function getModulesAndThemes(result) {
       var modulesAndThemes = [];
-      result = sortByName(result);
-    
-      for (var i = 0; i < result.length; i++) {
-        modulesAndThemes.push({
-          id: result[i].id,
-          moduleId: result[i].id,
-          themeId: null,
-          nameEt: result[i].nameEt,
-          nameEn: result[i].nameEn,
-          isModule: true
-        });
-        var themes = sortByName(result[i].themes);
-        for (var j = 0; j < themes.length; j++) {
+      if (result) {
+        result = sortByName(result);
+      
+        for (var i = 0; i < result.length; i++) {
           modulesAndThemes.push({
-            id: themes[j].id,
+            id: result[i].id,
             moduleId: result[i].id,
-            themeId: themes[j].id,
-            nameEt: result[i].nameEt + "/" + themes[j].nameEt,
-            nameEn: result[i].nameEn + "/" + themes[j].nameEn,
-            isModule: false,
+            themeId: null,
+            nameEt: result[i].nameEt,
+            nameEn: result[i].nameEn,
+            isModule: true
           });
+          var themes = sortByName(result[i].themes);
+          if (themes) {
+            for (var j = 0; j < themes.length; j++) {
+              modulesAndThemes.push({
+                id: themes[j].id,
+                moduleId: result[i].id,
+                themeId: themes[j].id,
+                nameEt: result[i].nameEt + "/" + themes[j].nameEt,
+                nameEn: result[i].nameEn + "/" + themes[j].nameEn,
+                isModule: false,
+              });
+            }
+          }
         }
+        return modulesAndThemes;
       }
-      return modulesAndThemes;
     }
 
     function sortByName(array) {
@@ -1711,6 +1720,10 @@
       $scope.application.status = "VOTA_STAATUS_K";
     }
     $scope.applicationPdfUrl = config.apiUrl + '/apelApplications/print/' + $scope.application.id + '/application.pdf';
+    
+    $scope.hideInvalid = function (cl) {
+      return !Classifier.isValid(cl);
+    };
 
     $scope.removeConfirmation = function () {
       dialogService.confirmDialog({

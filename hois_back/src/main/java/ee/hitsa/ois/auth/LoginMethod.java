@@ -16,5 +16,13 @@ public enum LoginMethod {
     /**
      * Username/Password
      */
-    LOGIN_TYPE_K
+    LOGIN_TYPE_K,
+    /**
+     * TARA
+     */
+    LOGIN_TYPE_T,
+    /**
+     * HarID
+     */
+    LOGIN_TYPE_H
 }

@@ -52,6 +52,14 @@ public class StudentBase extends BaseEntityWithId {
     private Classifier finSpecific;
     private String studyCompany;
     private String boardingSchool;
+    private Boolean isStudentCardRepetitive;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier studentCardStatus;
+    private LocalDate studentCardValidThru;
+    private Boolean isStudentCardGiven;
+    private LocalDate studentCardGivenDt;
+    private Boolean isStudentCardReturned;
+    private LocalDate studentCardReturnedDt;
 
     public CurriculumVersion getCurriculumVersion() {
         return curriculumVersion;
@@ -219,5 +227,61 @@ public class StudentBase extends BaseEntityWithId {
 
     public void setBoardingSchool(String boardingSchool) {
         this.boardingSchool = boardingSchool;
+    }
+
+    public Boolean getIsStudentCardRepetitive() {
+        return isStudentCardRepetitive;
+    }
+
+    public void setIsStudentCardRepetitive(Boolean isStudentCardRepetitive) {
+        this.isStudentCardRepetitive = isStudentCardRepetitive;
+    }
+
+    public Classifier getStudentCardStatus() {
+        return studentCardStatus;
+    }
+
+    public void setStudentCardStatus(Classifier studentCardStatus) {
+        this.studentCardStatus = studentCardStatus;
+    }
+
+    public LocalDate getStudentCardValidThru() {
+        return studentCardValidThru;
+    }
+
+    public void setStudentCardValidThru(LocalDate studentCardValidThru) {
+        this.studentCardValidThru = studentCardValidThru;
+    }
+
+    public Boolean getIsStudentCardGiven() {
+        return isStudentCardGiven;
+    }
+
+    public void setIsStudentCardGiven(Boolean isStudentCardGiven) {
+        this.isStudentCardGiven = isStudentCardGiven;
+    }
+
+    public LocalDate getStudentCardGivenDt() {
+        return studentCardGivenDt;
+    }
+
+    public void setStudentCardGivenDt(LocalDate studentCardGivenDt) {
+        this.studentCardGivenDt = studentCardGivenDt;
+    }
+
+    public Boolean getIsStudentCardReturned() {
+        return isStudentCardReturned;
+    }
+
+    public void setIsStudentCardReturned(Boolean isStudentCardReturned) {
+        this.isStudentCardReturned = isStudentCardReturned;
+    }
+
+    public LocalDate getStudentCardReturnedDt() {
+        return studentCardReturnedDt;
+    }
+
+    public void setStudentCardReturnedDt(LocalDate studentCardReturnedDt) {
+        this.studentCardReturnedDt = studentCardReturnedDt;
     }
 }

@@ -199,10 +199,8 @@ public class FinalVocationalProtocolController {
         Boolean isLetterGrades = protocol.getSchool().getIsLetterGrade();
         byte[] pdfData = pdfService.generate(FinalProtocolReport.VOCATIONAL_TEMPLATE_NAME,
                 new FinalProtocolReport(savedProtocol, isLetterGrades));
-        MobileIdSession session = bdocService.mobileSign("lopueksami_protokoll.pdf",
-                MediaType.APPLICATION_PDF_VALUE,
-                pdfData,
-                user.getMobileNumber());
+        MobileIdSession session = bdocService.mobileSign("lopueksami_protokoll.pdf", MediaType.APPLICATION_PDF_VALUE,
+                pdfData, user.getPersonId());
 
         httpSession.setAttribute(MOBILE_SESSCODE, session.getSesscode());
         return EntityMobileSignDto.of(savedProtocol, session.getChallengeID());

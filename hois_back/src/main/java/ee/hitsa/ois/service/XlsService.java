@@ -275,7 +275,7 @@ public class XlsService {
         }
 
         public List<?> colspanArray(int colspan) {
-            return new ArrayList<>(Collections.nCopies(colspan - 1, null));
+            return new ArrayList<>(Collections.nCopies(colspan > 0 ? colspan - 1 : 0, null));
         }
 
         public Long hideZeroValue(int value) {

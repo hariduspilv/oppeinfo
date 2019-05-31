@@ -33,7 +33,7 @@
               </th>
               <th md-column md-order-by="student_person.lastname,student_person.firstname">{{'student.label' | translate}}</th>
               <th md-column>{{'lessonplan.studentGroup' | translate}}</th>
-              <th md-column>{{'module.practice' | translate}}</th>
+              <th md-column>{{auth.higher ? ('main.subjects' | translate) : ('practiceJournal.moduleAndTheme' | translate)}}</th>
               <th md-column>{{'practice.contract.enterprise' | translate}}</th>
               <th md-column>{{'contract.supervisors' | translate}}</th>
               <th md-column>{{'contract.schoolSupervisor' | translate}}</th>
@@ -49,7 +49,7 @@
                 </td>
                 <td md-cell>{{currentLanguageNameField(row.student)}}</td>
                 <td md-cell>{{row.studentGroup ? row.studentGroup : '-' }}</td>
-                <td md-cell>{{row.moduleSubjects ? currentLanguageNameField(row.moduleSubjects) : '-' }}</td>
+                <td md-cell>{{auth.higher ? currentLanguageNameField(row.higherModuleSubjects) : currentLanguageNameField(row.moduleSubjects) }}</td>
                 <td md-cell>{{row.enterpriseName ? row.enterpriseName : '-' }}</td>
                 <td md-cell>{{row.enterpriseContactPersonName ? row.enterpriseContactPersonName : '-' }}</td>
                 <td md-cell>{{row.teacher ? currentLanguageNameField(row.teacher) : '-' }}</td>
@@ -78,6 +78,6 @@
           <md-button md-no-ink class="md-raised"
           ng-click="sendToEkis()">{{'contract.sendToEkis' | translate}}</md-button>
       </div>
-      <md-button class="md-raised md-default" ng-click="back()">{{'main.button.back' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-click="back('#/contracts')">{{'main.button.back' | translate}}</md-button>
     </div> 
   </div>

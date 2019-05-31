@@ -161,10 +161,10 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
         });
         $scope.formState.contacts = result;
         if ($scope.contract.contactPersonName === undefined) {
-          if (result.length >= 1) {
-            $scope.contract.contactPersonName = result[0].contactPersonName;
-            $scope.contract.contactPersonEmail= result[0].contactPersonEmail;
-            $scope.contract.contactPersonPhone= result[0].contactPersonPhone;
+          if ($scope.formState.contacts.length >= 1) {
+            $scope.contract.contactPersonName = $scope.formState.contacts[0].contactPersonName;
+            $scope.contract.contactPersonEmail= $scope.formState.contacts[0].contactPersonEmail;
+            $scope.contract.contactPersonPhone= $scope.formState.contacts[0].contactPersonPhone;
           } else {
             if ($scope.contract.contactPersonName !== undefined && $scope.contract.contactPersonName !== null && !$scope.formState.contactsByName[$scope.contract.contactPersonName]) {
               $scope.contract.contactPersonEmail = undefined;
@@ -435,6 +435,7 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
     dialogService.showDialog('contract/contract.select.dialog.html', function (dialogScope) {
       var clMapper = Classifier.valuemapper({ status: 'LEPING_STAATUS' });
       QueryUtils.createQueryForm(dialogScope, '/contracts/all', {order: 'student_person.lastname,student_person.firstname'}, clMapper.objectmapper);
+
       dialogScope.setStudentGroup = function(studentGroup) {
         dialogScope.criteria.studentGroup = studentGroup.id;
       };
@@ -469,15 +470,19 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
       //Set student from contract
       if(angular.isDefined($scope.contract.student)) {
         dialogScope.student = $scope.contract.student;
+        dialogScope.setStudent($scope.contract.student);
       } else if (angular.isDefined($scope.formState.student)) {
         dialogScope.student = $scope.formState.student;
+        dialogScope.setStudent($scope.formState.student);
       }
 
       //Set studentGroup from contract
       if(angular.isDefined($scope.studentGroup)) {
         dialogScope.studentGroup = $scope.studentGroup;
+        dialogScope.setStudentGroup($scope.studentGroup);
       } else if (angular.isDefined($scope.formState.student)) {
         dialogScope.studentGroup = $scope.formState.student.studentGroup;
+        dialogScope.setStudentGroup($scope.formState.student.studentGroup);
       }
 
       dialogScope.checkChecked = function() {
@@ -492,6 +497,8 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
           dialogScope.submit();
         }
       };
+      
+      $q.all(clMapper.promises).then(dialogScope.loadData());
     }, function (submittedDialogScope) {
       var contract = submittedDialogScope.checked[0];
       QueryUtils.endpoint('/contracts').get({id: contract.id}).$promise.then(function (entity) {
@@ -507,9 +514,8 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
         entity.id = $scope.contract.id;
         entity.status = $scope.contract.status;
         entity.version = $scope.contract.version;
-        entity.moduleSubjects = $scope.contract.moduleSubjects;
         entity.subject = $scope.contract.subject;
-        if ($scope.contract.practiceApplication !== undefined) {
+        if ($scope.contract.practiceApplication !== undefined && $scope.contract.practiceApplication !== null) {
           //When contract is practice application
           //Keep enterprise values unchanged
           entity.enterprise = $scope.contract.enterprise;

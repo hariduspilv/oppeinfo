@@ -27,11 +27,13 @@ import ee.hitsa.ois.service.StudentGroupTeacherReportService;
 import ee.hitsa.ois.service.TeacherDetailLoadService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.report.CurriculumCompletionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumSubjectsCommand;
+import ee.hitsa.ois.web.commandobject.report.IndividualCurriculumStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.ScholarshipStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentGroupTeacherCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentSearchCommand;
@@ -42,6 +44,7 @@ import ee.hitsa.ois.web.commandobject.report.TeacherLoadCommand;
 import ee.hitsa.ois.web.commandobject.report.VotaCommand;
 import ee.hitsa.ois.web.dto.report.CurriculumCompletionDto;
 import ee.hitsa.ois.web.dto.report.CurriculumSubjectsDto;
+import ee.hitsa.ois.web.dto.report.IndividualCurriculumSatisticsDto;
 import ee.hitsa.ois.web.dto.report.StudentSearchDto;
 import ee.hitsa.ois.web.dto.report.StudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.TeacherLoadDto;
@@ -243,7 +246,7 @@ public class ReportController {
         HttpUtil.xls(response, "teachersdetailload.xlsx", teacherDetailLoadService
                 .teacherDetailLoadJournalSubjectsAsExcel(user.getSchoolId(), criteria, teacher));
     }
-    
+
     @GetMapping("/scholarships/statistics.xlsx")
     public void scholarshipStatisticsAsExcel(HoisUserDetails user, @Valid ScholarshipStatisticsCommand criteria, HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user);
@@ -251,4 +254,35 @@ public class ReportController {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMYYYY");
         HttpUtil.xls(response, String.format("toestip_rmp_%s_%s.xlsx", formatter.format(criteria.getFrom()), formatter.format(criteria.getThru())), reportService.scholarshipStatisticsAsExcel(user, criteria));
     }
+
+    @GetMapping("/individualcurriculumstatistics")
+    public Page<IndividualCurriculumSatisticsDto> individualCurriculumStatistics(HoisUserDetails user,
+            @Valid IndividualCurriculumStatisticsCommand criteria, Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        if (user.isSchoolAdmin()) {
+            UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_INDIVID);
+        } else if (user.isTeacher()) {
+            UserUtil.assertIsTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_RYHMAJUHATAJA);
+        } else {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+        return reportService.individualCurriculumStatistics(user, criteria, pageable);
+    }
+
+    @GetMapping("/individualcurriculumstatistics.xls")
+    public void individualCurriculumStatistics(HoisUserDetails user,
+            @Valid IndividualCurriculumStatisticsCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        if (user.isSchoolAdmin()) {
+            UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_INDIVID);
+        } else if (user.isTeacher()) {
+            UserUtil.assertIsTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_RYHMAJUHATAJA);
+        } else {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+        HttpUtil.xls(response, "individualcurriculumstatistics.xls",
+                reportService.individualCurriculumStatisticsAsExcel(user, criteria));
+    }
+
+    
 }

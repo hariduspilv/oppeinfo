@@ -91,12 +91,17 @@ public class CommitteeService {
         if(Boolean.FALSE.equals(criteria.getShowInvalid())) {
             qb.filter(" (c.valid_from <= current_date and c.valid_thru >= current_date) ");
         }
-        qb.optionalCriteria("exists(select cm3.id from committee_member cm3 where cm3.committee_id = c.id and cm3.member_name = :memberName)", 
-                "memberName", criteria.getMemberName());
-        qb.optionalCriteria("exists(select cm3.id from committee_member cm3 where cm3.committee_id = c.id and cm3.teacher_id = :teacherId)", 
-                "teacherId", criteria.getTeacher());
-        qb.optionalCriteria("exists(select cm3.id from committee_member cm3 where cm3.committee_id = c.id and cm3.person_id = :personId)", 
-                "personId", criteria.getPerson());
+        qb.optionalCriteria("exists(select cm3.id from committee_member cm3 " 
+                + "left join teacher t3 on t3.id = cm3.teacher_id left join person p3 on p3.id = t3.person_id or p3.id = cm3.person_id "
+                + "where cm3.committee_id = c.id and (upper(case when cm3.is_external then cm3.member_name else p3.firstname || ' ' || p3.lastname end) like :searchName))", "searchName",
+                criteria.getMemberName() == null ? null : JpaQueryUtil.toContains(criteria.getMemberName()));
+        
+//        qb.optionalCriteria("exists(select cm3.id from committee_member cm3 where cm3.committee_id = c.id and cm3.member_name = :memberName)", 
+//                "memberName", criteria.getMemberName());
+//        qb.optionalCriteria("exists(select cm3.id from committee_member cm3 where cm3.committee_id = c.id and cm3.teacher_id = :teacherId)", 
+//                "teacherId", criteria.getTeacher());
+//        qb.optionalCriteria("exists(select cm3.id from committee_member cm3 where cm3.committee_id = c.id and cm3.person_id = :personId)", 
+//                "personId", criteria.getPerson());
         
         qb.groupBy(" c.id ");
         return JpaQueryUtil.pagingResult(qb, COMMITTEE_SELECT, em, pageable).map(row -> {

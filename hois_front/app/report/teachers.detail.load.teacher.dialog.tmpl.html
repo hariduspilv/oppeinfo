@@ -33,7 +33,8 @@
       <div ng-if="!periodCapacitiesRow" layout="row" layout-sm="column" layout-align="space-around">
         <md-progress-circular md-mode="indeterminate"></md-progress-circular>
       </div>
-      <div ng-include="'report/teachers.detail.load.table.tmpl.html'"></div>
+      <div ng-if="!criteria.isHigher" ng-include="'report/teachers.detail.load.table.vocational.tmpl.html'"></div>
+      <div ng-if="criteria.isHigher" ng-include="'report/teachers.detail.load.table.higher.tmpl.html'"></div>
     </div>
   </md-dialog-content>
 

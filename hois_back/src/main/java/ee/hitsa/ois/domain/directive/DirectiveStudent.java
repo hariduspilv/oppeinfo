@@ -2,6 +2,7 @@ package ee.hitsa.ois.domain.directive;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -10,6 +11,7 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
@@ -21,6 +23,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.util.Period;
@@ -31,6 +34,8 @@ import ee.hitsa.ois.validation.DirectiveValidation.Eksmat;
 import ee.hitsa.ois.validation.DirectiveValidation.Ennist;
 import ee.hitsa.ois.validation.DirectiveValidation.Finm;
 import ee.hitsa.ois.validation.DirectiveValidation.Immat;
+import ee.hitsa.ois.validation.DirectiveValidation.Indok;
+import ee.hitsa.ois.validation.DirectiveValidation.Indoklop;
 import ee.hitsa.ois.validation.DirectiveValidation.Lopet;
 import ee.hitsa.ois.validation.DirectiveValidation.Okava;
 import ee.hitsa.ois.validation.DirectiveValidation.Okoorm;
@@ -41,7 +46,7 @@ import ee.hitsa.ois.validation.DirectiveValidation.Valis;
 import ee.hitsa.ois.validation.PeriodRange;
 import ee.hitsa.ois.validation.Required;
 
-@DateRange(from = "startDate", thru = "endDate", groups = Stiptoet.class)
+@DateRange(from = "startDate", thru = "endDate", groups = {Indok.class, Stiptoet.class})
 @PeriodRange(groups = {Akad.class, Valis.class})
 @Entity
 public class DirectiveStudent extends BaseEntityWithId implements Period {
@@ -52,9 +57,9 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @Required(groups = {Akad.class, Akadk.class, Eksmat.class, Ennist.class, Finm.class, Lopet.class, Okava.class, Okoorm.class, Ovorm.class, Valis.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Student student;
-    @Required(groups = {Akadk.class, Stiptoet.class})
+    @Required(groups = {Akadk.class, Indok.class, Indoklop.class, Stiptoet.class})
     private LocalDate startDate;
-    @Required(groups = Stiptoet.class)
+    @Required(groups = {Indok.class, Stiptoet.class})
     private LocalDate endDate;
     @Required(groups = {Akad.class, Eksmat.class, Stiptoetl.class})
     @ManyToOne(fetch = FetchType.LAZY)
@@ -132,8 +137,19 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private ScholarshipApplication scholarshipApplication;
     @Required(groups = Stiptoet.class)
     private BigDecimal amountPaid;
+    //TODO not used anymore, should be removed along with directive_student_occupation table
     @OneToMany(mappedBy = "directiveStudent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DirectiveStudentOccupation> occupations;
+    @OneToMany(mappedBy = "directiveStudent", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DirectiveStudentModule> modules = new ArrayList<>();
+    @Required(groups = {Indoklop.class})
+    @ManyToOne(fetch = FetchType.LAZY)
+    private DirectiveStudent directiveStudent;
+    private String addInfo;
+    private Boolean isAbsence;
+
+    @OneToOne(mappedBy = "directiveStudent")
+    private StudentAbsence studentAbsence;
 
     public Directive getDirective() {
         return directive;
@@ -435,5 +451,45 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     public void setOccupations(List<DirectiveStudentOccupation> occupations) {
         this.occupations = occupations;
     }
-    
+
+    public List<DirectiveStudentModule> getModules() {
+        return modules;
+    }
+
+    public void setModules(List<DirectiveStudentModule> modules) {
+        this.modules = modules;
+    }
+
+    public DirectiveStudent getDirectiveStudent() {
+        return directiveStudent;
+    }
+
+    public void setDirectiveStudent(DirectiveStudent directiveStudent) {
+        this.directiveStudent = directiveStudent;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
+    }
+
+    public Boolean getIsAbsence() {
+        return isAbsence;
+    }
+
+    public void setIsAbsence(Boolean isAbsence) {
+        this.isAbsence = isAbsence;
+    }
+
+    public StudentAbsence getStudentAbsence() {
+        return studentAbsence;
+    }
+
+    public void setStudentAbsence(StudentAbsence studentAbsence) {
+        this.studentAbsence = studentAbsence;
+    }
+
 }

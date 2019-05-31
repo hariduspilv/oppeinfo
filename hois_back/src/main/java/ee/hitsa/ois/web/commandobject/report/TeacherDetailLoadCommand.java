@@ -26,6 +26,7 @@ public class TeacherDetailLoadCommand {
     private Boolean byMonths;
     private Boolean byCapacities;
     private Boolean showPlannedLessons;
+    private Boolean showTimetableLoad;
     private Boolean showSingleEvents;
 
     public Long getStudyYear() {
@@ -146,6 +147,14 @@ public class TeacherDetailLoadCommand {
 
     public void setShowPlannedLessons(Boolean showPlannedLessons) {
         this.showPlannedLessons = showPlannedLessons;
+    }
+
+    public Boolean getShowTimetableLoad() {
+        return showTimetableLoad;
+    }
+
+    public void setShowTimetableLoad(Boolean showTimetableLoad) {
+        this.showTimetableLoad = showTimetableLoad;
     }
 
     public Boolean getShowSingleEvents() {

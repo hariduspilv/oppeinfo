@@ -7,9 +7,11 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -85,8 +87,11 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
 
         School school = user.getSchool();
         AuthenticatedSchool authenticatedSchool = null;
+        Long schoolId = school != null ? school.getId() : null;
+        Long teacherId = authenticatedUser.getTeacher();
+        
         if (school != null) {
-            SchoolService.SchoolType type = schoolService.schoolType(school.getId());
+            SchoolService.SchoolType type = schoolService.schoolType(schoolId);
             authenticatedSchool = new AuthenticatedSchool(school.getId(), type.isHigher(), type.isVocational(),
                     type.isDoctoral(), school.getIsLetterGrade() != null ? school.getIsLetterGrade().booleanValue() : false,
                     EntityUtil.getCode(school.getEhisSchool()));
@@ -108,15 +113,26 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
                 authenticatedUser.setVocational(Boolean.valueOf(Boolean.FALSE.equals(higher)));
                 authenticatedUser.setHigher(Boolean.valueOf(Boolean.TRUE.equals(higher)));
                 authenticatedUser.setDoctoral(Boolean.valueOf(studyLevel.startsWith("7")));
+                
+                authenticatedUser.setCommittees(Collections.emptyList());
             } else {
                 // take values from school
                 authenticatedUser.setVocational(Boolean.valueOf(type.isVocational()));
                 authenticatedUser.setHigher(Boolean.valueOf(type.isHigher()));
                 authenticatedUser.setDoctoral(Boolean.valueOf(type.isDoctoral()));
+                
+                Query committeeQuery = em.createNativeQuery("select distinct c.type_code from committee_member cm "
+                        + "join committee c on cm.committee_id = c.id "
+                        + "where c.school_id = ?1 and (cm.person_id = ?2 "
+                        + (teacherId != null ? "or cm.teacher_id = ?3)" : ")")).setParameter(1, schoolId).setParameter(2, user.getPerson().getId());
+                if (teacherId != null) {
+                    committeeQuery.setParameter(3, teacherId);
+                }
+                List<?> committeeList = committeeQuery.getResultList();
+                authenticatedUser.setCommittees(StreamUtil.toMappedList(r -> resultAsString(r, 0), committeeList));
             }
         }
-        Long schoolId = school != null ? school.getId() : null;
-        Long teacherId = authenticatedUser.getTeacher();
+        
         if (teacherId != null) {
             List<?> result = em.createNativeQuery("select sg.id from student_group sg where sg.teacher_id = ?1")
                 .setParameter(1, teacherId)

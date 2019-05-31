@@ -461,16 +461,6 @@ angular.module('hitsaOis')
               }
           }
         }
-        // module cannot be both in specialty and partOccupation of the same occupation
-        for(var j = 0; j < occupations.length; j++) {
-            var specialities2 = occupations[j].specialities;
-            var partOccupations = occupations[j].partOccupations;
-            if(specialities2 && partOccupations) {
-                if(anySpecAdded(specialities2) && anyPartOccupationAdded(partOccupations)) {
-                    return null;
-                }
-            }
-        }
         return true;
     }
 

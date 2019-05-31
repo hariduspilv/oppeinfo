@@ -598,7 +598,7 @@ angular.module('hitsaOis')
 
             scope.validateOccupations = function() {
                 scope.occupationsValid = scope.occupationsSelectedCorrectly() ? true : null;
-                scope.suboccupationsValid = scope.suboccupationsSelectedCorrectly() ? true : null;
+                scope.suboccupationsValid = true; //scope.suboccupationsSelectedCorrectly() ? true : null;
             };
             scope.validateOccupations();
 

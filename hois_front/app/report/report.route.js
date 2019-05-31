@@ -126,5 +126,19 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
           return Session.roleCode === 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PARING) !== -1;
         }
       }
+    }).when('/reports/individualcurriculum/statistics', {
+      templateUrl: 'report/individual.curriculum.statistics.html',
+      controller: 'IndividualCurriculumStatisticsController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: function(Session, roles) {
+          return Session.vocational && ((Session.roleCode === 'ROLL_O' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_RYHMAJUHATAJA) !== -1)
+            || (Session.roleCode === 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_INDIVID) !== -1));
+        }
+      },
+      resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); }
+      }
     });
 });

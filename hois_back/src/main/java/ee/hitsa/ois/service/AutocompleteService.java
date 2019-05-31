@@ -20,9 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -605,9 +602,11 @@ public class AutocompleteService {
                     .stream().collect(Collectors.groupingBy(t -> t.getModuleId()));
             
             for (CurriculumVersionOccupationModuleResult module : modules) {
+                List<CurriculumVersionOccupationModuleThemeResult> moduleThemes = themesByModule.get(module.getId());
                 modulesAndThemes.add(new CurriculumVersionOModulesAndThemesResult(module.getId(), module.getNameEt(),
                         module.getNameEn(), module.getCredits(), module.getAssessment(), module.getGradeCode(),
-                        module.getGradeDate(), module.getTeachers(), themesByModule.get(module.getId())));
+                        module.getGradeDate(), module.getTeachers(),
+                        moduleThemes != null ? moduleThemes : new ArrayList<>()));
             }
         }
         return modulesAndThemes;
@@ -1379,6 +1378,11 @@ public class AutocompleteService {
         qb.optionalContains("concat(c.name_et, ' (', p.firstname, ' ', p.lastname,')')", "name", command.getName());
         qb.optionalCriteria("c.valid_from >= :validFrom", "validFrom", command.getValidFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("d.valid_thru <= :validThru", "validThru", command.getValidThru(), DateUtils::lastMomentOfDay);
+        if (Boolean.TRUE.equals(command.getValid())) {
+            qb.filter(" (c.valid_from <= current_date and c.valid_thru >= current_date) ");
+        } else if (Boolean.FALSE.equals(command.getValid())) {
+            qb.filter(" (c.valid_from > current_date or c.valid_thru < current_date) ");
+        }
         
         if (command.getMemberPerson() != null) {
             qb.filter("exists (select p2.id from person p2 "
@@ -1469,13 +1473,9 @@ public class AutocompleteService {
             return locations;
         }, data);
         eslAddress.addAll(esAddress);
-        List<AutocompleteResult> filteredAddresses = eslAddress.stream().filter(p->p.getNameEt() != null).filter(distinctByKey(AutocompleteResult::getNameEt)).collect(Collectors.toList());
+        List<AutocompleteResult> filteredAddresses = eslAddress.stream().filter(p -> p.getNameEt() != null)
+                .filter(StreamUtil.distinctByKey(AutocompleteResult::getNameEt)).collect(Collectors.toList());
         return filteredAddresses;
-    }
-    
-    public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
-        Set<Object> seen = ConcurrentHashMap.newKeySet();
-        return t -> seen.add(keyExtractor.apply(t));
     }
 
     public List<SupervisorDto> enterpriseSupervisors(HoisUserDetails user, SearchCommand lookup) {

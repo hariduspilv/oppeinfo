@@ -49,6 +49,7 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumCompletionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumSubjectsCommand;
+import ee.hitsa.ois.web.commandobject.report.IndividualCurriculumStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.ScholarshipStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsByPeriodCommand;
@@ -59,6 +60,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
 import ee.hitsa.ois.web.dto.report.CurriculumCompletionDto;
 import ee.hitsa.ois.web.dto.report.CurriculumSubjectsDto;
+import ee.hitsa.ois.web.dto.report.IndividualCurriculumSatisticsDto;
 import ee.hitsa.ois.web.dto.report.ScholarshipReportDto;
 import ee.hitsa.ois.web.dto.report.StudentSearchDto;
 import ee.hitsa.ois.web.dto.report.StudentStatisticsDto;
@@ -832,5 +834,51 @@ public class ReportService {
             return Boolean.TRUE.equals(transfer) && ApelApplicationStatus.VOTA_STAATUS_C.name().equals(applicationStatus);
         }
     }
-    
+
+    public Page<IndividualCurriculumSatisticsDto> individualCurriculumStatistics(HoisUserDetails user,
+            IndividualCurriculumStatisticsCommand criteria, Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s " +
+                "join person p on p.id = s.person_id " +
+                "left join student_group sg on sg.id = s.student_group_id "+
+                "join directive_student ds on ds.student_id = s.id "+
+                "join directive d on d.id = ds.directive_id " +
+                "join directive_student_module dsm on dsm.directive_student_id = ds.id " +
+                "join curriculum_version_omodule cvo on cvo.id = dsm.curriculum_version_omodule_id " +
+                "join curriculum_module cm on cm.id = cvo.curriculum_module_id " +
+                "left join (directive_student ds_lop join directive d_lop on d_lop.id = ds_lop.directive_id and d_lop.type_code = :lopDirectiveType " +
+                "and d_lop.status_code = :directiveStatus) on ds_lop.directive_student_id = ds.id and ds_lop.canceled = false")
+                .sort(pageable);
+
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_INDOK);
+        qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus",
+                DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+        qb.optionalCriteria("s.id = :studentId", "studentId", criteria.getStudent());
+        qb.optionalCriteria("sg.id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
+        qb.optionalContains(Arrays.asList("cm.name_et", "cm.name_en"), "moduleName", criteria.getModuleName());
+        qb.optionalCriteria("cvo.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
+                criteria.getCurriculumVersion());
+        qb.optionalCriteria("ds.start_date >= :from", "from", criteria.getFrom());
+        qb.optionalCriteria("coalesce(ds_lop.start_date, ds.end_date) <= :thru", "thru", criteria.getThru());
+        qb.filter("ds.canceled = false");
+
+        if (user.isTeacher()) {
+            qb.requiredCriteria("sg.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+        }
+        qb.parameter("lopDirectiveType",  DirectiveType.KASKKIRI_INDOKLOP.name());
+
+        return JpaQueryUtil.pagingResult(qb, "s.id student_id, p.firstname, p.lastname, "
+                + "sg.id group_id, sg.code, cm.id curriculum_id, cm.name_et, cm.name_en, dsm.add_info, "
+                + "ds.start_date, coalesce(ds_lop.start_date, ds.end_date)", em, pageable)
+                .map(r -> new IndividualCurriculumSatisticsDto(r));
+    }
+
+    public byte[] individualCurriculumStatisticsAsExcel(HoisUserDetails user, IndividualCurriculumStatisticsCommand criteria) {
+        List<IndividualCurriculumSatisticsDto> rows = individualCurriculumStatistics(user, criteria,
+                new PageRequest(0, Integer.MAX_VALUE)).getContent();
+        Map<String, Object> data = new HashMap<>();
+        data.put("criteria", criteria);
+        data.put("rows", rows);
+        return xlsService.generate("individualcurriculumstatistics.xls", data);
+    }
 }

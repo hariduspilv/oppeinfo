@@ -6,7 +6,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
             <label>{{'application.type' | translate}}</label>
-            <hois-classifier-select ng-model="application.type" model-value-attr="code" main-classifier-code="AVALDUS_LIIK" only-valid
+            <hois-classifier-select ng-model="application.type" model-value-attr="code" main-classifier-code="AVALDUS_LIIK" only-valid show-only-values="showOnlyTypes"
               criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" ng-change="applicationTypeChange()"></hois-classifier-select>
           </md-input-container>
         </div>
@@ -29,7 +29,7 @@
         <md-button ng-if="(application.status === 'AVALDUS_STAATUS_KOOST' || (application.status === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())) && (!application.id || application.canEditStudent)"
           class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
         <div ng-include="'application/templates/action.buttons.html'"></div>
-        <md-button ng-click="back(auth.isStudent() ? '#/applications/student' : '#/applications/', applicationForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-click="back(auth.isStudent() || auth.isParent() ? '#/applications/student' : '#/applications/', applicationForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
       <div ng-hide="applicationEditView" layout="row">
         <md-button ng-click="back('#/applications/')" class="md-raised">{{'main.button.back' | translate}}</md-button>

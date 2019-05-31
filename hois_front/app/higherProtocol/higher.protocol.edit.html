@@ -52,7 +52,10 @@
             <ng-form name="higherProtocolStudentForm">
               <td md-cell>{{student.student.nameEt}}</td>
               <td md-cell ng-show="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject">
-                <span ng-class="{badResult: !gradeUtil.isPositiveValue(student.practiceResult, auth.school.letterGrades)}">{{student.practiceResult}}</span>
+                <span ng-repeat="journalResult in student.practiceJournalResults | orderBy: 'inserted'">
+                  <span ng-class="{badResult: !gradeUtil.isPositive(journalResult.grade)}">{{gradeValue(journalResult.grade)}}</span>
+                  <span ng-if="!$last">/</span>
+                </span>
               </td>
               <td md-cell ng-repeat="result in record.subjectStudyPeriodMidtermTaskDto.studentResults | filter: filterStudentResults(student)">
                 <span ng-if="!result.isText">{{result.points}}</span>
@@ -60,7 +63,7 @@
               </td>
               <td md-cell>
                 <hois-select class="protocolGradeSelect" ng-model="student.grade" values="grades" value-property="code" show-property="{{auth.school.letterGrades ? 'value2' : 'value'}}"
-                  ng-disabled="!formState.canEditProtocol" aria-label="{{'higherProtocol.finalGrade' | translate}}" ng-change="gradeChanged(student)"></hois-select>
+                  hide-values="hideInvalid" ng-disabled="!formState.canEditProtocol" aria-label="{{'higherProtocol.finalGrade' | translate}}" ng-change="gradeChanged(student)"></hois-select>
               </td>
               <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
                 <md-input-container ng-if="student.gradeHasChanged">

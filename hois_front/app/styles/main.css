@@ -496,7 +496,8 @@ md-input-container:not(.md-input-invalid) .md-select-value > span:not(.md-select
 
 #groupSelection md-grid-list md-grid-tile figure
 {
-  -webkit-justify-content: left!important;
+  -webkit-justify-content: flex-start !important;
+  justify-content: flex-start !important;
 }
 
 #vTimetable div {
@@ -1210,7 +1211,8 @@ hois-created-modified {
 /*New styles*/
 fieldset{
 	border-style: solid;
-	border-width: 1px;
+  border-width: 1px;
+  border-color: rgb(192, 192, 192); /* Chrome uses a default `threedface` which is rgb(192,192,192). Other browsers (Edge, Firefox) used rgb(240,240,240) */
   min-width: 0;
 }
 
@@ -1272,7 +1274,7 @@ fieldset legend.md-title-small {
 .form-readonly md-input-container > div, .readonly > div{
     font-size:13px;
 	padding-left: 2px;
-	background-image: linear-gradient(to right, rgb(192,192,192) 33%, rgba(255,255,255,0) 0%);
+	background-image: linear-gradient(to right, rgb(192,192,192) 34%, rgba(255,255,255,0) 0%); /* Edge shows border only after 34% */
 	background-position: center bottom 1px; /* https://stackoverflow.com/a/53788820 Chrome puts (cuts 1px) border line behind displayable block */
 	background-size: 3px 1px;
 	background-repeat: repeat-x;
@@ -2544,6 +2546,10 @@ label.ui-btn {
 .detail-load-table th, .detail-load-table td {
   padding-left: 5px;
   padding-right: 5px;
+}
+
+.detail-load-table tr:nth-child(3) th {
+  white-space: nowrap;
 }
 
 .student-group-teacher-table tr:nth-child(3) th {

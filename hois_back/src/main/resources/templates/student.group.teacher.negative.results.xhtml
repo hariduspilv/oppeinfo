@@ -20,7 +20,14 @@
           <table class="journalResults">
             <tbody>
               <tr>
-                <td width="15%">{{ result.grade }} ({{ result.entryType }})</td>
+                <td width="15%">
+                  <span>{{ result.grade }}</span>
+                  {% if result.entryType is not empty %}
+                    <span>({{ result.entryType }})</span>
+                  {% elseif result.isPracticeJournal %}
+                    <span>({{ "studentgroupteacher.practice" | translate }})</span>
+                  {% endif %}
+                </td>
                 <td width="15%">{{ result.gradeInserted | hoisDate }}</td>
                 <td width="70%">{{ result.gradeInsertedBy }}</td>
               </tr>

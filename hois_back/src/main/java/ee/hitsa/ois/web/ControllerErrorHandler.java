@@ -40,6 +40,7 @@ import ee.hitsa.ois.exception.EntityRemoveException;
 import ee.hitsa.ois.exception.SingleMessageWithParamsException;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 @ControllerAdvice
 public class ControllerErrorHandler {
@@ -196,14 +197,26 @@ public class ControllerErrorHandler {
 
         public static class ErrorForField extends Error {
             private final String field;
+            private final AutocompleteResult object;
 
             public ErrorForField(String code, String field) {
                 super(code);
                 this.field = field;
+                this.object = null;
+            }
+
+            public ErrorForField(String code, String field, AutocompleteResult object) {
+                super(code);
+                this.field = field;
+                this.object = object;
             }
 
             public String getField() {
                 return field;
+            }
+
+            public AutocompleteResult getObject() {
+                return object;
             }
         }
     }

@@ -13,10 +13,21 @@
       setTeacherCapacities(scope, teachers);
     }
     scope.plannedLessonsColspan = reportData.criteria.showPlannedLessons ? (scope.reportData.teacherCapacities.length || 1) : 0;
+    
+    scope.journalOccurredLessonsColspan = 0;
+    if (!reportData.criteria.isHigher) {
+      scope.journalOccurredLessonsColspan = (scope.reportData.teacherCapacities.length || 1) + (scope.entriesWithoutCapacity ? 1 : 0);
+    }
     // last addition is because of substitutable lessons
-    scope.occurredLessonsColspan = (scope.reportData.teacherCapacities.length || 1) + (scope.entriesWithoutCapacity ? 1 : 0) +
-      (reportData.criteria.showSingleEvents ? 1 : 0) + 1;
-    scope.periodColspan = scope.plannedLessonsColspan + scope.occurredLessonsColspan;
+    scope.timetableOccurredLessonsColspan = 0;
+    if (reportData.criteria.isHigher || reportData.criteria.showTimetableLoad) {
+      scope.timetableOccurredLessonsColspan = (scope.reportData.teacherCapacities.length || 1) + (scope.entriesWithoutCapacity ? 1 : 0) +
+        (reportData.criteria.showSingleEvents ? 1 : 0) + 1;
+    }
+
+    scope.periodColspan = scope.plannedLessonsColspan + scope.journalOccurredLessonsColspan + scope.timetableOccurredLessonsColspan;
+    // last addition is because of timetable occured lessons totals
+    scope.totalsColspan = scope.periodColspan + (scope.reportData.criteria.byCapacities ? 1 : 0) + 1;
 
     scope.periodTypesRow = [];
     scope.periodCapacitiesRow = [];
@@ -118,7 +129,24 @@
     if (criteria.showPlannedLessons) {
       scope.periodTypesRow.push({ index: periodIndex, plannedLessons: true, colspan: scope.plannedLessonsColspan });
     }
-    scope.periodTypesRow.push({ index: periodIndex, occurredLessons: true, colspan: scope.occurredLessonsColspan });
+
+    if (!criteria.isHigher) {
+      scope.periodTypesRow.push({
+        index: periodIndex,
+        journalOccurredLessons: true,
+        colspan: scope.journalOccurredLessonsColspan,
+        divider: !criteria.showTimetableLoad
+      });
+    } 
+    
+    if (criteria.isHigher || criteria.showTimetableLoad) {
+      scope.periodTypesRow.push({
+        index: periodIndex,
+        timetableOccurredLessons: true,
+        colspan: scope.timetableOccurredLessonsColspan,
+        divider: true,
+      });
+    }
   }
 
   function addPeriodCapacitiesRowPeriod(scope, periodIndex, criteria, teacherCapacities) {
@@ -132,26 +160,55 @@
         }
       }
       
-      scope.periodCapacitiesRow = scope.periodCapacitiesRow.concat(teacherCapacities.map(function (c) {
-        return { index: periodIndex, occurredLessons: true, value: c.value, code: c.code };
-      }));
-      if (teacherCapacities.length === 0) {
-        scope.periodCapacitiesRow.push({});
+      if (!criteria.isHigher) {
+        if (teacherCapacities.length === 0) {
+          scope.periodCapacitiesRow.push({ divider: !scope.entriesWithoutCapacity && !criteria.showTimetableLoad });
+        }
+
+        scope.periodCapacitiesRow = scope.periodCapacitiesRow.concat(teacherCapacities.map(function (c) {
+          return { index: periodIndex, journalOccurredLessons: true, value: c.value, code: c.code };
+        }));
+        if (scope.entriesWithoutCapacity) {
+          scope.periodCapacitiesRow.push({ index: periodIndex, value: NO_CAPACITY_TYPE, code: NO_CAPACITY_TYPE, 
+            journalOccurredLessons: true, divider: !criteria.showTimetableLoad });
+        } else if (teacherCapacities.length !== 0) {
+          scope.periodCapacitiesRow[scope.periodCapacitiesRow.length - 1].divider = !criteria.showTimetableLoad;
+        }
+      }
+  
+      if (criteria.isHigher || criteria.showTimetableLoad) {
+        if (teacherCapacities.length === 0) {
+          scope.periodCapacitiesRow.push({});
+        }
+        
+        scope.periodCapacitiesRow = scope.periodCapacitiesRow.concat(teacherCapacities.map(function (c) {
+          return { index: periodIndex, timetableOccurredLessons: true, value: c.value, code: c.code };
+        }));
+        if (scope.entriesWithoutCapacity) {
+          scope.periodCapacitiesRow.push({ index: periodIndex, value: NO_CAPACITY_TYPE, code: NO_CAPACITY_TYPE, 
+            timetableOccurredLessons: true });
+        }
       }
     } else {
       if (criteria.showPlannedLessons) {
         scope.periodCapacitiesRow.push({ index: periodIndex, name: 'study', plannedLessons: true });
       }
-      scope.periodCapacitiesRow.push({ index: periodIndex, name: 'study', occurredLessons: true });
+
+      if (!criteria.isHigher) {
+        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'study', journalOccurredLessons: true, divider: !criteria.isHigher && !criteria.showTimetableLoad});
+      }
+  
+      if (criteria.isHigher || criteria.showTimetableLoad) {
+        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'study', timetableOccurredLessons: true});
+      }
     }
 
-    if (scope.entriesWithoutCapacity) {
-      scope.periodCapacitiesRow.push({ index: periodIndex, value: NO_CAPACITY_TYPE, code: NO_CAPACITY_TYPE, occurredLessons: true });
+    if (criteria.isHigher || criteria.showTimetableLoad) {
+      scope.periodCapacitiesRow.push({ index: periodIndex, name: 'substitute', substitutableEvents: true, divider: !criteria.showSingleEvents});
     }
 
-    scope.periodCapacitiesRow.push({ index: periodIndex, name: 'substitute', substitutableEvents: true });
     if (criteria.showSingleEvents) {
-      scope.periodCapacitiesRow.push({ index: periodIndex, name: 'singleEvent', singleEvent: true});
+      scope.periodCapacitiesRow.push({ index: periodIndex, name: 'singleEvent', singleEvent: true, divider: true});
     }
   }
 
@@ -172,7 +229,6 @@
       };
 
       function loadReportData() {
-        QueryUtils.loadingWheel($scope, true);
         $scope.content = $scope.tabledata.content;
         QueryUtils.endpoint('/reports/teachers/detailload/data').get($scope.criteria).$promise.then(function (reportData) {
           DataUtils.convertStringToDates(reportData.criteria, ['from', 'thru']);
@@ -264,10 +320,24 @@
         }
       };
 
+      $scope.showTimetableLoadChanged = function () {
+        if (!$scope.criteria.showTimetableLoad) {
+          $scope.criteria.showSingleEvents = false;
+        }
+      };
+
+      $scope.excelUrl = function () {
+        $scope.criteria.isHigher = false;
+        return $scope.excel($scope.formState.xlsUrl, $scope.criteria);
+      };
+
       var loadData = $scope.loadData;
       $scope.loadData = function() {
         $scope.criteria.isHigher = false;
-        FormUtils.withValidForm($scope.searchForm, loadData);
+        FormUtils.withValidForm($scope.searchForm, function () {
+          QueryUtils.loadingWheel($scope, true);
+          loadData();
+        });
       };
 
       $scope.teacherJournalsDialog = function (teacher) {
@@ -309,11 +379,9 @@
       };
 
       function loadReportData() {
-        QueryUtils.loadingWheel($scope, true);
         $scope.content = $scope.tabledata.content;
         QueryUtils.endpoint('/reports/teachers/detailload/data').get($scope.criteria).$promise.then(function (reportData) {
           var teachers = $scope.tabledata ? $scope.tabledata.content : null;
-          //TODO: get rid of month?
           setReportData($scope, null, teachers, reportData);
           $scope.reportData.byTeachers = true;
           $scope.$broadcast('refreshFixedColumns');
@@ -388,10 +456,18 @@
         }
       };
 
+      $scope.excelUrl = function () {
+        $scope.criteria.isHigher = true;
+        return $scope.excel($scope.formState.xlsUrl, $scope.criteria);
+      };
+
       var loadData = $scope.loadData;
       $scope.loadData = function() {
         $scope.criteria.isHigher = true;
-        FormUtils.withValidForm($scope.searchForm, loadData);
+        FormUtils.withValidForm($scope.searchForm, function () {
+          QueryUtils.loadingWheel($scope, true);
+          loadData();
+        });
       };
 
       $scope.teacherSubjectsDialog = function (teacher) {

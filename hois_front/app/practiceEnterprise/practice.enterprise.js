@@ -36,6 +36,7 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
 
   $scope.addNewPerson = function (row) {
     dialogService.showDialog('practiceEnterprise/practice.enterprise.person.add.dialog.html', function (dialogScope) {
+      dialogScope.auth = $scope.auth;
       dialogScope.delete = function () {
         dialogService.confirmDialog({ prompt: 'enterprise.personsTab.deleteConfirm' }, function () {
           var PersonEndpoint = QueryUtils.endpoint('/practiceEnterprise/person/' + row.id);
@@ -108,6 +109,7 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
 
   $scope.addNewLocation = function (row) {
     dialogService.showDialog('practiceEnterprise/practice.enterprise.location.add.dialog.html', function (dialogScope) {
+      dialogScope.auth = $scope.auth;
       dialogScope.delete = function () {
         dialogService.confirmDialog({ prompt: 'enterprise.locationsTab.deleteConfirm' }, function () {
           var LocationEndpoint = QueryUtils.endpoint('/practiceEnterprise/location/' + row.id);

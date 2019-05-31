@@ -38,7 +38,8 @@ public abstract class UserUtil {
     public static boolean canSubmitApplication(HoisUserDetails user, Application application) {
         if(ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_KOOST, application.getStatus())) {
             Student student = application.getStudent();
-            return isStudent(user, student) || isSchoolAdmin(user, student.getSchool()) || isStudentRepresentative(user, student);
+            return isStudent(user, student) || isSchoolAdmin(user, student.getSchool()) || isStudentRepresentative(user, student) || isStudentGroupTeacher(user, student)
+                    || (ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_TUGI, application.getType()));
         }
         return false;
     }
@@ -53,20 +54,39 @@ public abstract class UserUtil {
             return Boolean.TRUE.equals(application.getNeedsRepresentativeConfirm()) && (isStudentRepresentative(user, student) || isSchoolAdmin(user, student.getSchool()));
         }
         if (ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name().equals(status)) {
-            return isSchoolAdmin(user, student.getSchool());
+            return isSchoolAdmin(user, student.getSchool()) && (!ApplicationType.AVALDUS_LIIK_TUGI.name().equals(EntityUtil.getCode(application.getType())) || application.getCommittee() == null);
         }
         return false;
     }
 
     public static boolean canConfirmApplication(HoisUserDetails user, Application application) {
-        String type = EntityUtil.getCode(application.getType());
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
-        return (ApplicationType.AVALDUS_LIIK_MUU.name().equals(type) || ApplicationType.AVALDUS_LIIK_OVERSKAVA.name().equals(type) || ApplicationType.AVALDUS_LIIK_RAKKAVA.name().equals(type))
+        return (ApplicationUtil.CAN_BE_CONFIRMED.contains(EnumUtil.valueOf(ApplicationType.class, EntityUtil.getCode(application.getType()))))
                 && (ApplicationStatus.AVALDUS_STAATUS_ESIT.name().equals(status) 
                         || ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name().equals(status)) 
                 && isSchoolAdmin(user, student.getSchool()) 
                 && hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_AVALDUS)
+                && StudentUtil.canBeEdited(student);
+    }
+    
+    public static boolean canConfirmApplicationConfirmation(HoisUserDetails user, Application application) {
+        String status = EntityUtil.getCode(application.getStatus());
+        Student student = application.getStudent();
+        return (ApplicationUtil.REQUIRE_REPRESENTATIVE_CONFIRM.contains(EnumUtil.valueOf(ApplicationType.class, EntityUtil.getCode(application.getType()))))
+                && ApplicationStatus.AVALDUS_STAATUS_KINNITAM.name().equals(status)
+                && (isSchoolAdmin(user, student.getSchool()) || isAdultStudent(user, student) || isStudentRepresentative(user, student))
+                && StudentUtil.canBeEdited(student);
+    }
+    
+    public static boolean canRemoveApplicationConfirmation(HoisUserDetails user, Application application) {
+        String status = EntityUtil.getCode(application.getStatus());
+        Student student = application.getStudent();
+        return (ApplicationUtil.REQUIRE_REPRESENTATIVE_CONFIRM.contains(EnumUtil.valueOf(ApplicationType.class, EntityUtil.getCode(application.getType()))))
+                && (ApplicationStatus.AVALDUS_STAATUS_KINNITAM.name().equals(status) || ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name().equals(status)
+                        || ApplicationStatus.AVALDUS_STAATUS_TAGASI.name().equals(status))
+                && (application.getCommitteeDecisionAdded() != null || application.getRepresentativeConfirmed() != null) 
+                && isSchoolAdmin(user, student.getSchool())
                 && StudentUtil.canBeEdited(student);
     }
 
@@ -326,6 +346,10 @@ public abstract class UserUtil {
 
     public static void assertIsTeacher(HoisUserDetails user) {
         throwAccessDeniedIf(!user.isTeacher(), "User is not teacher");
+    }
+
+    public static void assertIsTeacher(HoisUserDetails user, Permission permission, PermissionObject object) {
+        throwAccessDeniedIf(!user.isTeacher() || !hasPermission(user, permission, object), "User is not teacher or has no rights");
     }
 
     public static void assertCanUpdateUser(String role) {

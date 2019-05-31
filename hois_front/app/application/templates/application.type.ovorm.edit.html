@@ -9,7 +9,8 @@
   <div layout="row" layout-sm="column" layout-xs="column">
     <md-input-container flex="60" flex-sm="100" flex-xs="100">
       <label>{{'application.newStudyForm' | translate}}</label>
-      <hois-classifier-select ng-model="application.newStudyForm" model-value-attr="code"
+      <hois-classifier-select ng-model="application.newStudyForm" model-value-attr="code" ignore-preselected
+        criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" only-valid
         main-classifier-code="OPPEVORM" criteria="{higher: true}" filter-values="[application.oldStudyForm]" required></hois-classifier-select>
     </md-input-container>
   </div>

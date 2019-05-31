@@ -1,5 +1,5 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
-  <div flex>
+  <div flex ng-model-options="{allowInvalid: true}">
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
       <form ng-if="auth.isStudent() || auth.isParent()" name="searchForm" ng-submit="load()" novalidate

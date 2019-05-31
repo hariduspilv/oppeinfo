@@ -4,7 +4,9 @@
       <div layout="column">
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.type' | translate}}</label>
-          <hois-classifier-select ng-model="record.type" name="type" ng-change="directiveTypeChanged()" ng-disabled="formState.state !== 'CHOOSETYPE'" model-value-attr="code" main-classifier-code="KASKKIRI" filter-values="formState.excludedTypes" required autofocus></hois-classifier-select>
+          <hois-classifier-select ng-model="record.type" name="type" ng-change="directiveTypeChanged()" ng-disabled="formState.state !== 'CHOOSETYPE'"
+            model-value-attr="code" main-classifier-code="KASKKIRI" filter-values="formState.excludedTypes" only-valid
+            required autofocus></hois-classifier-select>
         </md-input-container>
       </div>
 
@@ -24,7 +26,7 @@
         </md-input-container>
       </div>
 
-      <div flex ng-if="formState.state === 'CHOOSETYPE' && formState.students && record.type !== 'KASKKIRI_IMMAT' && record.type !== 'KASKKIRI_IMMATV'">
+      <div flex ng-if="formState.state === 'CHOOSETYPE' && withoutInitialSelection.indexOf(record.type) === -1">
         <div>&nbsp;</div>
         <md-table-container>
           <table md-table md-row-select multiple ng-model="formState.selectedStudents">
@@ -95,7 +97,7 @@
             <hois-value value="record.insertedBy"></hois-value>
           </md-input-container>
         </div>
-
+        
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.addInfo' | translate}}</label>
           <textarea ng-model="record.addInfo" md-maxlength="4000" max-rows="10"></textarea>
@@ -110,7 +112,7 @@
           <label class="textInput">{{'directive.cancelType' | translate}}</label>
           <hois-classifier-select ng-model="record.cancelType" ng-change="cancelTypeChanged()" filter-values="[formState.changedStudents.length > 0 ? 'KASKKIRI_TYHISTAMISE_VIIS_T' : undefined]" ng-required="record.type === 'KASKKIRI_TYHIST'" main-classifier-code="KASKKIRI_TYHISTAMISE_VIIS" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
-
+  
         <div>&nbsp;</div>
         <md-table-container>
           <fieldset>

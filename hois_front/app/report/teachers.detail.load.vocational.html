@@ -62,8 +62,12 @@
             aria-label="{{'report.teachersDetailLoad.showPlannedLessons' | translate}}">
             {{'report.teachersDetailLoad.showPlannedLessons' | translate}}
           </md-checkbox>
-          <md-checkbox flex="15" flex-md="30" flex-sm="100" flex-xs="100" ng-model="criteria.showSingleEvents"
-            aria-label="{{'report.teachersDetailLoad.showSingleEvents' | translate}}">
+          <md-checkbox flex="15" flex-md="30" flex-sm="100" flex-xs="100" ng-model="criteria.showTimetableLoad"
+            ng-change="showTimetableLoadChanged()" aria-label="{{'report.teachersDetailLoad.showTimetableLoad' | translate}}">
+            {{'report.teachersDetailLoad.showTimetableLoad' | translate}}
+          </md-checkbox>
+          <md-checkbox flex="15" flex-md="30" flex-sm="100" flex-xs="100" ng-model="criteria.showSingleEvents" 
+            ng-disabled="!criteria.showTimetableLoad" aria-label="{{'report.teachersDetailLoad.showSingleEvents' | translate}}">
             {{'report.teachersDetailLoad.showSingleEvents' | translate}}
           </md-checkbox>
         </div>
@@ -71,8 +75,7 @@
         <div layout="row">
           <md-button class="md-raised md-primary" type="submit">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-          <md-button ng-href="{{excel(formState.xlsUrl, criteria)}}" ng-disabled="!criteria.studyYear" 
-            class="md-button md-raised">{{'main.button.printXls'| translate}}</md-button>
+          <md-button ng-href="{{excelUrl()}}" ng-disabled="!criteria.studyYear" class="md-button md-raised">{{'main.button.printXls'| translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>
@@ -95,7 +98,7 @@
     </div>
   </div>
   <div flex>
-    <div ng-include="'report/teachers.detail.load.table.tmpl.html'"></div>
+    <div ng-include="'report/teachers.detail.load.table.vocational.tmpl.html'"></div>
     <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" 
       md-total="{{tabledata.totalElements}}" md-on-paginate="loadData" 
       md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"

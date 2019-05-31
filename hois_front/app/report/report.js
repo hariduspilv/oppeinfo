@@ -48,7 +48,10 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
     $scope.formState = {xlsUrl: 'reports/students/statistics/studentstatistics.xls',
                         filterValues: {OPPURSTAATUS: ['OPPURSTAATUS_K', 'OPPURSTAATUS_L']}};
 
-    QueryUtils.createQueryForm($scope, '/reports/students/statistics', {order: 'c.name_et', result: 'OPPEVORM'}, function() {
+    QueryUtils.createQueryForm($scope, '/reports/students/statistics', {
+      order: $scope.currentLanguage() === 'en' ? 'c.nameEn' : 'c.nameEt',
+      result: 'OPPEVORM'
+    }, function() {
       var resultType = $scope.criteria.result;
       $scope.savedCriteria = angular.copy($scope.criteria);
       if($scope.formState.resultType !== resultType) {
@@ -86,21 +89,58 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
 
     $scope.loadData();
   }
-]).controller('ReportStudentStatisticsByperiodController', ['$scope', '$route', 'Classifier', 'QueryUtils', 'Session',
-  function ($scope, $route, Classifier, QueryUtils, Session) {
+]).controller('ReportStudentStatisticsByperiodController', ['$scope', '$route', 'Classifier', 'QueryUtils',
+  function ($scope, $route, Classifier, QueryUtils) {
     $scope.auth = $route.current.locals.auth;
     var classifierMapping = {OPPURSTAATUS_A: 'AKADPUHKUS_POHJUS', OPPURSTAATUS_K: 'EKSMAT_POHJUS'};
-    var school = Session.school || {};
     $scope.formState = {xlsUrl: 'reports/students/statistics/studentstatisticsbyperiod.xls'};
 
-    QueryUtils.createQueryForm($scope, '/reports/students/statistics/byperiod', {order: 'c.name_et', result: 'OPPURSTAATUS_A'}, function() {
-      var resultType = $scope.criteria.result;
-      if($scope.formState.resultType !== resultType) {
+    QueryUtils.createQueryForm($scope, '/reports/students/statistics/byperiod', {
+      order: $scope.currentLanguage() === 'en' ? 'c.nameEn' : 'c.nameEt', 
+      result: 'OPPURSTAATUS_A'
+    }, function() {
+      setResultClassifiers($scope.criteria.result);
+    });
+
+    function setResultClassifiers(resultType) {
+      $scope.formState.resultDef = [];
+      // get all classifiers by main class code
+      if ($scope.formState.resultType !== resultType) {
         $scope.formState.resultType = resultType;
         var mainClassCode = classifierMapping[resultType];
-        $scope.formState.resultDef = mainClassCode ? Classifier.queryForDropdown({mainClassCode: mainClassCode, higher: school.higher, vocational: school.vocational}) : undefined;
+        $scope.resultDef = mainClassCode ? Classifier.queryForDropdown({mainClassCode: mainClassCode}) : undefined;
       }
-    });
+      // get classifiers from search result curriculums
+      if (angular.isDefined($scope.resultDef)) {
+        var queryClassifiers = queryResultClassifiers();
+  
+        $scope.resultDef.$promise.then(function () {
+          for (var i = 0; i < $scope.resultDef.length; i++) {
+            var classifier = $scope.resultDef[i];
+            if (queryClassifiers.indexOf(classifier.code) !== -1) {
+              $scope.formState.resultDef.push(classifier);
+            }
+          }
+        });
+      }
+    }
+
+    function queryResultClassifiers() {
+      var classifiers = [];
+      for (var i = 0; i < $scope.tabledata.content.length; i++) {
+        var curriculum = $scope.tabledata.content[i];
+
+        var curriculumResultClassifiers = Object.keys(curriculum.result);
+        for (var j = 0; j < curriculumResultClassifiers.length; j++) {
+          var result = curriculumResultClassifiers[j];
+          if (classifiers.indexOf(result) === -1) {
+            classifiers.push(result);
+          }
+        }
+      }
+      return classifiers;
+    }
+
     $scope.criteria.from = new Date().withoutTime();
     var _clearCriteria = $scope.clearCriteria;
     $scope.clearCriteria = function() {
@@ -344,6 +384,15 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
       $timeout(searchUsingStoredCriteria);
     }
   }
+  
+  function setEntryTypeCriteria() {
+    $scope.criteria.entryTypes = [];
+    angular.forEach($scope.criteria.entryType, function (boolean, type) {
+      if (boolean) {
+        $scope.criteria.entryTypes.push(type);
+      }
+    });
+  }
 
   if(!$scope.storedCriteria || angular.equals({}, $scope.storedCriteria)) {
     $scope.criteria = {entryType: {'SISSEKANNE_H': true, 'SISSEKANNE_R': true, 'SISSEKANNE_O': true, 'SISSEKANNE_L': true}};
@@ -415,15 +464,6 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
   $scope.entryTypeChanged = function () {
     setEntryTypeCriteria();
   };
-
-  function setEntryTypeCriteria() {
-    $scope.criteria.entryTypes = [];
-    angular.forEach($scope.criteria.entryType, function (boolean, type) {
-      if (boolean) {
-        $scope.criteria.entryTypes.push(type);
-      }
-    });
-  }
 
   $scope.negativeResultsChanged = function () {
     if ($scope.criteria.negativeResults) {
@@ -513,7 +553,7 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
   $scope.filterAbsences = function (absenceCode) {
     return function (absence) {
       return absence.absence.code === absenceCode;
-    }
+    };
   };
 
   $scope.openRemarkDialog = function (student) {
@@ -541,4 +581,62 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
   //   }
   //   return false;
   // }
+}
+]).controller("IndividualCurriculumStatisticsController", ['$route', '$scope', 'DataUtils', 'FormUtils', 'QueryUtils', function ($route, $scope, DataUtils, FormUtils, QueryUtils) {
+  $scope.auth = $route.current.locals.auth;
+  $scope.teacherId = $scope.auth.teacher;
+  $scope.criteria = {};
+
+  var baseUrl = '/reports/individualcurriculumstatistics';
+  QueryUtils.createQueryForm($scope, baseUrl, {order: 'p.lastname, p.firstname'});
+
+  $scope.formState = {
+    studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(),
+    xlsUrl: 'reports/individualcurriculumstatistics.xls'
+  };
+  $scope.formState.studyYears.$promise.then(function () {
+    if('_menu' in $route.current.params) {
+      if (!$scope.criteria.from && !$scope.criteria.thru) {
+        var sy = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyYears);
+        DataUtils.convertStringToDates(sy, ['from', 'thru']);
+        if (sy) {
+          $scope.criteria.from = sy ? sy.startDate : null;
+          $scope.criteria.thru = sy ? sy.endDate : null;
+        }
+      }
+    }
+    $scope.loadData();
+  });
+
+  if ($scope.auth.isTeacher()) {
+    QueryUtils.endpoint('/autocomplete/studentgroups').query({
+      valid: true,
+      higher: false,
+      studentGroupTeacherId: $scope.auth.teacher
+    }).$promise.then(function (studentGroups) {
+      $scope.formState.studentGroups = studentGroups;
+      if (!$scope.criteria.studentGroup) {
+        $scope.criteria.studentGroup = studentGroups.length === 1 ? studentGroups[0].id : null;
+      }
+    });
+  }
+
+  $scope.$watch('criteria.studentObject', function () {
+    $scope.criteria.student = $scope.criteria.studentObject ? $scope.criteria.studentObject.id : null;
+  });
+
+  var loadData = $scope.loadData;
+  $scope.loadData = function() {
+    FormUtils.withValidForm($scope.searchForm, loadData);
+  };
+
+  $scope.directiveControllers = [];
+  var clearCriteria = $scope.clearCriteria;
+  $scope.clearCriteria = function () {
+    clearCriteria();
+    $scope.directiveControllers.forEach(function (c) {
+      c.clear();
+    });
+  };
+  
 }]);

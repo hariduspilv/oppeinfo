@@ -17,6 +17,7 @@ import ee.hitsa.ois.domain.timetable.JournalCapacity;
 import ee.hitsa.ois.domain.timetable.JournalCapacityType;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.domain.timetable.JournalTeacherCapacity;
+import ee.hitsa.ois.web.dto.WeekDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanTeacherLoadDto;
 
 /**
@@ -217,6 +218,19 @@ public abstract class LessonPlanUtil {
             }
             return weekStudyLoads;
         }
+    }
+
+    public static List<WeekDto> weeks(List<Short> weekNrs, List<LocalDate> weekBeginningDates) {
+        Map<Short, WeekDto> weekMap = new HashMap<>();
+        for (int i = 0; i < weekNrs.size(); i++) {
+            Short weekNr = weekNrs.get(i);
+            if (!weekMap.containsKey(weekNr)) {
+                LocalDate weekStart = weekBeginningDates.get(i);
+                LocalDate weekEnd = weekStart.plusDays(6);
+                weekMap.put(weekNr, new WeekDto(weekNr, weekStart, weekEnd));
+            }
+        }
+        return new ArrayList<>(weekMap.values());
     }
 
     public static Map<Short, LocalDate> weekBeginningDateMap(List<Short> weekNrs, List<LocalDate> weekBeginningDates) {

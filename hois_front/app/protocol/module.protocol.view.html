@@ -36,7 +36,7 @@
                   <td md-cell ng-if="protocol.protocolVdata.isPractice">
                     <span ng-repeat="journalResult in row.practiceJournalResults | orderBy: 'inserted'">
                       <span>
-                        <span>{{gradeValue(journalResult.grade)}}</span>
+                        <span ng-class="{badResult: !gradeUtil.isPositive(journalResult.grade)}">{{gradeValue(journalResult.grade)}}</span>
                         <md-tooltip>{{journalResult.theme ? currentLanguageNameField(journalResult.theme) : currentLanguageNameField(protocol.protocolVdata.curriculumVersionOccupationModule)}}</md-tooltip>
                         <span ng-if="!$last">/</span>
                       </span>

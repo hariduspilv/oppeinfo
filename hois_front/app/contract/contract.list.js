@@ -4,6 +4,7 @@ angular.module('hitsaOis').controller('ContractListController', function ($scope
   $scope.auth = $route.current.locals.auth;
   var clMapper = Classifier.valuemapper({ status: 'LEPING_STAATUS' });
   QueryUtils.createQueryForm($scope, '/contracts', {order: 'student_person.lastname,student_person.firstname'}, clMapper.objectmapper);
+  $scope.formState = {};
 
   // Do not show 'notFound' message
   if ($scope.auth.isStudent()) {
@@ -13,12 +14,18 @@ angular.module('hitsaOis').controller('ContractListController', function ($scope
       clMapper.objectmapper(resultData.content);
     };
   }
+
+  $scope.loadAndSave = function() {
+    $scope.loadData();
+    $scope.formState.studentGroup = $scope.criteria.studentGroup;
+    $scope.formState.studentName = $scope.criteria.studentName;
+  };
   
   $scope.sendToEkis = function() {
     $location.path("/practice/studentgroup/ekis").search({
-      "":"_menu",
-      studentGroup: $scope.criteria.studentGroup,
-      studentName: $scope.criteria.studentName
+      "_menu": true,
+      studentGroup: $scope.formState.studentGroup,
+      studentName: $scope.formState.studentName
     });
   };
 
@@ -31,7 +38,7 @@ angular.module('hitsaOis').controller('ContractListController', function ($scope
     });
   };
 
-  $q.all(clMapper.promises).then($scope.loadData);
+  $q.all(clMapper.promises).then($scope.loadAndSave());
 
   $scope.newContract = function () {
     if ($scope.auth.school.higher && $scope.auth.school.vocational) {

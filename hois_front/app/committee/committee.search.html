@@ -2,12 +2,12 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin" ng-model-options="{allowInvalid: true}">
 
-        <div layout="row" layout-sm="column" layout-xs="column" ng-if="!showPersonSearch">
+        <!-- <div layout="row" layout-sm="column" layout-xs="column" ng-if="!showPersonSearch">
           <md-input-container flex>
             <label>{{'committee.member' | translate}}</label>
-            <!-- <hois-select ng-model="criteria.memberName" values="members" value-property="name" show-property="name"></hois-select> -->
+            < !-- <hois-select ng-model="criteria.memberName" values="members" value-property="name" show-property="name"></hois-select> -- >
             <md-select ng-model="criteria.member">
               <md-option ng-value="">
             </md-option>
@@ -20,6 +20,12 @@
         <div layout="row" ng-if="showPersonSearch">
           <hois-autocomplete flex ng-model="criteria.person" method="committeeMembers" no-paging="true" 
           ha-controller="directiveControllers" label="committee.member"></hois-autocomplete>
+        </div> -->
+        <div layout="row">
+          <md-input-container flex="100">
+            <label>{{'committee.memberName' | translate}}</label>
+            <input type="text" ng-model="criteria.memberName" md-maxlength="255">
+          </md-input-container>
         </div>
         <div layout="row" ng-if="showName">
           <md-input-container flex="100">

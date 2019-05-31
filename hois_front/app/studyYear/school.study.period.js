@@ -60,6 +60,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
   .controller('StudyYearsEditController', function ($location, $mdDialog, $route, $scope, $translate, Classifier, dialogService, message, DataUtils, 
       QueryUtils, USER_ROLES, AuthService) {
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEPERIOOD);
+    $scope.auth = $route.current.locals.auth;
 
     var id = $route.current.params.id;
     var code = $route.current.params.code;
@@ -197,6 +198,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       var StudyPeriodEventEndpoint = QueryUtils.endpoint('/school/studyYears/'+$scope.studyYear.id+'/studyPeriodEvents');
       var parentScope = $scope;
       var DialogController = function ($scope) {
+        $scope.auth = parentScope.auth;
         if (item) {
           $scope.studyPeriodEvent = new StudyPeriodEventEndpoint(item);
           if ($scope.studyPeriodEvent.studyPeriod) {

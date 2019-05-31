@@ -1,0 +1,51 @@
+<md-dialog aria-label="modules dialog" flex="60" flex-sm="100" flex-xs="100">
+  <form name="dialogForm" ng-submit="dialogForm.$valid && changeModules()" novalidate ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{'directive.student.modules'| translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <div class="md-dialog-content">
+        <div layout-padding>
+          <div flex>
+            <md-table-container>
+              <table md-table md-row-select multiple ng-model="formState.selectedModules" md-progress="curriculumVersionModules.$promise">
+                <thead md-head>
+                  <tr md-row>
+                    <th md-column>{{'directive.student.module' | translate}}</th>
+                    <th md-column>{{'directive.student.distinction' | translate}}</th>
+                  </tr>
+                </thead>
+                <tbody md-body>
+                  <tr md-row md-select="row.id" ng-disabled="formState.viewForm" ng-repeat="row in curriculumVersionModules | orderBy: currentLanguageNameField()" 
+                    ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell>{{currentLanguageNameField(row)}}</td>
+                    <td md-cell style="width: 50%;">
+                      <md-input-container style="width: 100%;">
+                        <hois-value ng-if="formState.viewForm" value="row.addInfo"></hois-value>
+                        <textarea ng-if="!formState.viewForm" ng-model="row.addInfo" md-maxlength="4000" max-rows="5" 
+                          aria-label="{{'directive.student.distinction' | translate}}" ng-disabled="formState.selectedModules.indexOf(row.id) === -1" 
+                          ng-required="formState.selectedModules.indexOf(row.id) !== -1"></textarea>
+                      </md-input-container>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </md-table-container>
+          </div>
+        </div>
+      </div>
+    </md-dialog-content>
+
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button ng-if="!formState.viewForm" type="submit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+      <md-button ng-click="cancel()" class="md-raised">{{'main.button.close' | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

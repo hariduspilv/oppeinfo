@@ -22,6 +22,10 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($fil
     $scope.formState.showJournals = true;
     $scope.formState.showOutcomes = true;
   }
+  
+  $scope.hideInvalid = function (cl) {
+    return !Classifier.isValid(cl);
+  };
 
   $scope.$watch('formState.showJournals', function() {
     stateStorageService.changeState(schoolId, stateKey, {showJournals: $scope.formState.showJournals});
@@ -230,11 +234,8 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($fil
       protocolStudents: $scope.protocol.protocolStudents,
     };
 
-    if ($scope.auth.loginMethod === 'LOGIN_TYPE_I') {
-      ProtocolUtils.signBeforeConfirm(endpoint + '/' + $scope.protocol.id, data, 'moduleProtocol.messages.confirmed',entityToDto, resolveDeferredIfExists);
-    } else if ($scope.auth.loginMethod === 'LOGIN_TYPE_M') {
-      ProtocolUtils.mobileSignBeforeConfirm(endpoint  + '/' + $scope.protocol.id, data, 'moduleProtocol.messages.confirmed', entityToDto, resolveDeferredIfExists);
-    }
+    ProtocolUtils.signBeforeConfirm($scope.auth, endpoint + '/' + $scope.protocol.id, data, 'moduleProtocol.messages.confirmed',
+      entityToDto, resolveDeferredIfExists);
     return deferredEntityToDto.promise;
   };
 

@@ -3,12 +3,13 @@ package ee.hitsa.ois.web.dto.directive;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
-import ee.hitsa.ois.domain.directive.DirectiveStudentOccupation;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentBase;
 import ee.hitsa.ois.domain.student.StudentHistory;
@@ -17,6 +18,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.web.commandobject.directive.DirectiveForm.DirectiveFormStudentModule;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class DirectiveViewStudentDto {
@@ -63,9 +65,16 @@ public class DirectiveViewStudentDto {
     private Boolean isCumLaude;
     private Boolean isOccupationExamPassed;
     private List<String> occupations;
+    private Map<String, List<String>> specialities;
     private AutocompleteResult curriculumGrade;
     private String bankAccount;
     private BigDecimal amountPaid;
+    private AutocompleteResult studentGroupObject;
+    private AutocompleteResult curriculumVersionObject;
+    private String addInfo;
+    private Boolean isAbsence;
+    private List<DirectiveFormStudentModule> modules;
+    private ExistingDirectiveStudentDto directiveStudentObject;
 
     public Long getStudent() {
         return student;
@@ -403,6 +412,14 @@ public class DirectiveViewStudentDto {
         this.occupations = occupations;
     }
 
+    public Map<String, List<String>> getSpecialities() {
+        return specialities;
+    }
+
+    public void setSpecialities(Map<String, List<String>> specialities) {
+        this.specialities = specialities;
+    }
+
     public AutocompleteResult getCurriculumGrade() {
         return curriculumGrade;
     }
@@ -425,6 +442,54 @@ public class DirectiveViewStudentDto {
 
     public void setAmountPaid(BigDecimal amountPaid) {
         this.amountPaid = amountPaid;
+    }
+
+    public AutocompleteResult getStudentGroupObject() {
+        return studentGroupObject;
+    }
+
+    public void setStudentGroupObject(AutocompleteResult studentGroupObject) {
+        this.studentGroupObject = studentGroupObject;
+    }
+
+    public AutocompleteResult getCurriculumVersionObject() {
+        return curriculumVersionObject;
+    }
+
+    public void setCurriculumVersionObject(AutocompleteResult curriculumVersionObject) {
+        this.curriculumVersionObject = curriculumVersionObject;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
+    }
+
+    public Boolean getIsAbsence() {
+        return isAbsence;
+    }
+
+    public void setIsAbsence(Boolean isAbsence) {
+        this.isAbsence = isAbsence;
+    }
+
+    public List<DirectiveFormStudentModule> getModules() {
+        return modules;
+    }
+
+    public void setModules(List<DirectiveFormStudentModule> modules) {
+        this.modules = modules;
+    }
+
+    public ExistingDirectiveStudentDto getDirectiveStudentObject() {
+        return directiveStudentObject;
+    }
+
+    public void setDirectiveStudentObject(ExistingDirectiveStudentDto directiveStudentObject) {
+        this.directiveStudentObject = directiveStudentObject;
     }
 
     public static DirectiveViewStudentDto of(DirectiveStudent directiveStudent) {
@@ -484,6 +549,19 @@ public class DirectiveViewStudentDto {
                 dto.setOldFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
             }
             break;
+        case KASKKIRI_INDOK:
+            dto.setCurriculumVersionObject(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);
+            dto.setStudentGroupObject(directiveStudent.getStudentGroup() != null ? AutocompleteResult.of(directiveStudent.getStudentGroup()) : null);
+            dto.setModules(StreamUtil.nullSafeList(directiveStudent.getModules()).stream()
+                    .map(m -> DirectiveFormStudentModule.of(m)).collect(Collectors.toList()));
+            break;
+        case KASKKIRI_INDOKLOP:
+            dto.setCurriculumVersionObject(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);
+            dto.setStudentGroupObject(directiveStudent.getStudentGroup() != null ? AutocompleteResult.of(directiveStudent.getStudentGroup()) : null);
+            dto.setDirectiveStudentObject(directiveStudent.getDirectiveStudent() != null
+                    ? ExistingDirectiveStudentDto.of(directiveStudent.getDirectiveStudent())
+                    : null);
+            break;
         case KASKKIRI_IMMAT:
         case KASKKIRI_IMMATV:
             dto.setNewCurriculumVersion(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);
@@ -495,10 +573,6 @@ public class DirectiveViewStudentDto {
                 CurriculumGrade grade = directiveStudent.getCurriculumGrade();
                 if (grade != null) {
                     dto.setCurriculumGrade(AutocompleteResult.of(grade));
-                }
-                List<DirectiveStudentOccupation> occups = directiveStudent.getOccupations();
-                if (occups != null && !occups.isEmpty()) {
-                    dto.setOccupations(StreamUtil.toMappedList(o -> EntityUtil.getCode(o.getOccupation()), occups));
                 }
             }
             break;
@@ -520,6 +594,15 @@ public class DirectiveViewStudentDto {
             dto.setNewStudyPeriodStart(directiveStudent.getStudyPeriodStart() != null ? AutocompleteResult.of(directiveStudent.getStudyPeriodStart()) : null);
             dto.setNewStudyPeriodEnd(directiveStudent.getStudyPeriodEnd() != null ? AutocompleteResult.of(directiveStudent.getStudyPeriodEnd()) : null);
             break;
+        case KASKKIRI_KIITUS:
+        case KASKKIRI_NOOMI:
+            dto.setCurriculumVersionObject(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);
+            dto.setStudentGroupObject(directiveStudent.getStudentGroup() != null ? AutocompleteResult.of(directiveStudent.getStudentGroup()) : null);
+            break;
+        case KASKKIRI_OTEGEVUS:
+            dto.setStartDate(directiveStudent.getStartDate());
+            dto.setEndDate(directiveStudent.getEndDate());
+            dto.setIsAbsence(directiveStudent.getIsAbsence());
         default:
             break;
         }

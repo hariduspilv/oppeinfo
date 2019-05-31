@@ -11,11 +11,17 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
                         higherStudyForms: Classifier.queryForDropdown({mainClassCode: 'OPPEVORM', higher: true}),
                         scholarshipEditable: false};
 
+    $scope.withoutInitialSelection = [
+      'KASKKIRI_IMMAT', 'KASKKIRI_IMMATV', 'KASKKIRI_KIITUS', 'KASKKIRI_NOOMI', 'KASKKIRI_OTEGEVUS', 
+      'KASKKIRI_PRAKTIK', 'KASKKIRI_INDOK'
+    ];
+
     if(!canceledDirective) {
       $scope.formState.excludedTypes.push('KASKKIRI_TYHIST');
     }
 
     var occupationMap;
+    var specialitiesMap;
     if(!$scope.formState.school.higher) {
       $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
       $scope.formState.excludedTypes.push('KASKKIRI_OVORM');
@@ -24,6 +30,15 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       occupations.$promise.then(function() {
         occupationMap = Classifier.toMap(occupations);
       });
+      var specialities = Classifier.queryForDropdown({mainClassCodes: 'SPETSKUTSE'});
+      specialities.$promise.then(function() {
+        specialitiesMap = Classifier.toMap(specialities);
+      });
+    }
+    if(!$scope.formState.school.vocational) {
+      $scope.formState.excludedTypes.push('KASKKIRI_KIITUS');
+      $scope.formState.excludedTypes.push('KASKKIRI_NOOMI');
+      $scope.formState.excludedTypes.push('KASKKIRI_OTEGEVUS');
     }
 
     function setScholarshipEditable() {
@@ -43,13 +58,25 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       }
     }
 
+    function mapStudentSpecialities(student) {
+      if (student.specialities) {
+        Object.keys(student.specialities).forEach(function (occupation) {
+          student.specialities[occupation] = student.specialities[occupation].map(function(code) {
+            return specialitiesMap[code];
+          });
+        });
+      }
+    }
+
     function studentConverter(students) {
       var result = DataUtils.convertStringToDates(students, ['startDate', 'endDate']);
       if (occupationMap) {
         if (angular.isArray(result)) {
           result.forEach(mapStudentOccupations);
+          result.forEach(mapStudentSpecialities);
         } else {
           mapStudentOccupations(result);
+          mapStudentSpecialities(result);
         }
       }
       return result;
@@ -141,9 +168,10 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     }
 
     function studentsToDirective(students, callback) {
-      var data = {type: $scope.record.type, scholarshipType: $scope.record.scholarshipType, canceledDirective: canceledDirective,
-                  curriculumVersion: $scope.formState.curriculumVersion, studyLevel: $scope.formState.studyLevel,
-                  students: students.map(function(i) { return i.id; }), isHigher: $scope.record.isHigher};
+      var data = {id: $scope.record.id, type: $scope.record.type, scholarshipType: $scope.record.scholarshipType, 
+        canceledDirective: canceledDirective, curriculumVersion: $scope.formState.curriculumVersion, 
+        studyLevel: $scope.formState.studyLevel, students: students.map(function(i) { return i.id; }), 
+        isHigher: $scope.record.isHigher};
 
       QueryUtils.endpoint(baseUrl+'/directivedata').save(data, callback);
     }
@@ -238,7 +266,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       if(scholarship) {
         data.scholarshipType = $scope.record.scholarshipType;
       }
-      if(data.type !== 'KASKKIRI_IMMAT' && data.type !== 'KASKKIRI_IMMATV') {
+      if($scope.withoutInitialSelection.indexOf(data.type) === -1) {
         if(!scholarship || data.scholarshipType) {
           QueryUtils.endpoint(baseUrl+'/findstudents').search(data, function(result) {
             $scope.formState.students = result.content;
@@ -489,6 +517,69 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         }).catch(angular.noop);
       });
     };
+
+    $scope.allStudyActivityChange = function(variable, newValue) {
+      if (variable !== 'isAbsence') {
+        if (!$scope.record.studyActivityStartDate || !$scope.record.studyActivityEndDate) {
+          $scope.record.studyActivityIsAbsence = false;
+          $scope.allStudyActivityChange("isAbsence", false);
+        }
+      }
+      if (!newValue) {
+        return;
+      }
+      $scope.record.students.forEach(function (s) {
+        s[variable] = newValue;
+      });
+    };
+
+    $scope.studyActivityDateChange = function(row) {
+      if (!row.startDate || !row.endDate) {
+        row.isAbsence = false;
+      }
+    };
+
+    $scope.individualCurriculumModules = function(studentId, studentIndex) {
+      dialogService.showDialog('directive/indok.modules.dialog.html', function (dialogScope) {
+        dialogScope.formState = { viewForm: $scope.record.type === 'KASKKIRI_TYHIST', selectedModules: [] };
+        dialogScope.student = $scope.record.students[studentIndex];
+        
+        QueryUtils.endpoint(baseUrl + '/studentIndividualCurriculumModules/:id').query({id: studentId, directiveId: id}).$promise.then(function (result) {
+          dialogScope.curriculumVersionModules = result;
+
+          if (dialogScope.student.modules) {
+            dialogScope.student.modules.forEach(function (individualModule) {
+              dialogScope.formState.selectedModules.push(individualModule.curriculumVersionOmodule);
+              
+              var curriculumModule = (dialogScope.curriculumVersionModules || []).filter(function (cvModule) {
+                return cvModule.id === individualModule.curriculumVersionOmodule;
+              })[0];
+              if (curriculumModule) {
+                curriculumModule.directiveStudentModuleId = individualModule.id;
+                curriculumModule.addInfo = individualModule.addInfo;
+              }
+            });
+          }
+        });
+
+        dialogScope.changeModules = function () {
+          dialogScope.submit();
+        };
+      }, function (submittedDialogScope) {
+        var modules = [];
+        submittedDialogScope.curriculumVersionModules.forEach(function (module) {
+          if (submittedDialogScope.formState.selectedModules.indexOf(module.id) !== -1) {
+            modules.push({
+              id: module.directiveStudentModuleId,
+              curriculumVersionOmodule: module.id,
+              module: {id: module.id, nameEt: module.nameEt, nameEn: module.nameEn},
+              addInfo: module.addInfo
+            });
+          }
+        });
+        $scope.record.students[studentIndex].modules = modules;
+      });
+    };
   }
 ]).controller('DirectiveViewController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'FormUtils', 'Session',
   function ($location, $route, $scope, dialogService, message, Classifier, QueryUtils, FormUtils, Session) {
@@ -498,12 +589,16 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
 
     $scope.formState = {school: Session.school || {}};
     
-    var occupations;
     var occupationMap;
+    var specialitiesMap;
     if(!$scope.formState.school.higher) {
-      occupations = Classifier.queryForDropdown({mainClassCodes: 'KUTSE,OSAKUTSE'});
+      var occupations = Classifier.queryForDropdown({mainClassCodes: 'KUTSE,OSAKUTSE'});
       occupations.$promise.then(function() {
         occupationMap = Classifier.toMap(occupations);
+      });
+      var specialities = Classifier.queryForDropdown({mainClassCodes: 'SPETSKUTSE'});
+      specialities.$promise.then(function() {
+        specialitiesMap = Classifier.toMap(specialities);
       });
     }
 
@@ -515,21 +610,28 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       clMapper.objectmapper($scope.record.cancelingDirectives || []);
       $scope.record.students.forEach(function(it) {
         it._foreign = !it.idcode;
+        mapStudentOccupations(it);
+        mapStudentSpecialities(it);
       });
-      if (occupations) {
-        occupations.$promise.then(function() {
-          if (occupationMap) {
-            $scope.record.students.forEach(function(it) {
-              if (it.occupations) {
-                it.occupations = it.occupations.map(function(code) {
-                  return occupationMap[code];
-                });
-              }
-            });
-          }
+    });
+    
+    function mapStudentOccupations(student) {
+      if (student.occupations) {
+        student.occupations = student.occupations.map(function(code) {
+          return occupationMap[code];
         });
       }
-    });
+    }
+
+    function mapStudentSpecialities(student) {
+      if (student.specialities) {
+        Object.keys(student.specialities).forEach(function (occupation) {
+          student.specialities[occupation] = student.specialities[occupation].map(function(code) {
+            return specialitiesMap[code];
+          });
+        });
+      }
+    }
 
     $scope.cancelDirective = function() {
       dialogService.confirmDialog({prompt: 'directive.cancelconfirm'}, function() {
@@ -555,6 +657,31 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         }).catch(angular.noop);
       });
     };
+
+    $scope.individualCurriculumModules = function(studentId, studentIndex) {
+      dialogService.showDialog('directive/indok.modules.dialog.html', function (dialogScope) {
+        dialogScope.formState = { viewForm: true, selectedModules: [] };
+        dialogScope.student = $scope.record.students[studentIndex];
+        
+        QueryUtils.endpoint(baseUrl + '/studentIndividualCurriculumModules/:id').query({id: studentId, directiveId: id}).$promise.then(function (result) {
+          dialogScope.curriculumVersionModules = result;
+
+          if (dialogScope.student.modules) {
+            dialogScope.student.modules.forEach(function (individualModule) {
+              dialogScope.formState.selectedModules.push(individualModule.curriculumVersionOmodule);
+              
+              var curriculumModule = (dialogScope.curriculumVersionModules || []).filter(function (cvModule) {
+                return cvModule.id === individualModule.curriculumVersionOmodule;
+              })[0];
+              if (curriculumModule) {
+                curriculumModule.directiveStudentModuleId = individualModule.id;
+                curriculumModule.addInfo = individualModule.addInfo;
+              }
+            });
+          }
+        });
+      });
+    };
   }
 ]).controller('DirectiveListController', ['$q', '$scope', 'Classifier', 'QueryUtils', 'Session',
   function ($q, $scope, Classifier, QueryUtils, Session) {
@@ -564,6 +691,11 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
       $scope.formState.excludedTypes.push('KASKKIRI_OVORM');
       $scope.formState.excludedTypes.push('KASKKIRI_VALIS');
+    }
+    if(!$scope.formState.school.vocational) {
+      $scope.formState.excludedTypes.push('KASKKIRI_KIITUS');
+      $scope.formState.excludedTypes.push('KASKKIRI_NOOMI');
+      $scope.formState.excludedTypes.push('KASKKIRI_OTEGEVUS');
     }
 
     var clMapper = Classifier.valuemapper({type: 'KASKKIRI', status: 'KASKKIRI_STAATUS'});

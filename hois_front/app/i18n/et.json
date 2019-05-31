@@ -109,7 +109,7 @@
         },
         "nopermission": "Vajalikud õigused puuduvad",
         "mobileIdSignFailed": "Allkirjastamine ebaõnnestus",
-        "idCardSigningCancelled": "Allkirjastamine katkestatud",
+        "signingCancelled": "Allkirjastamine katkestatud",
         "readingIdCardFailed": "Allkirjastamine ebaõnnestus",
         "max": "Maksimaalne väärtus {{max}}",
         "maxlength": "Tekst liiga pikk",
@@ -153,6 +153,9 @@
         "mobilenumber": "Mobiilinumber",
         "notMobileIdUser": "See number ei ole Mobiil-ID kasutaja",
         "instructions": "Toimige palun telefonile ilmuvate juhiste kohaselt. Enne PIN-koodi sisestamist veenduge, et telefoni ekraanil olev kontrollkood on sama, mis allpool näidatud. Peale edukat isikutuvastust suunatakse teid automaatselt järgmisele lehele."
+      },
+      "tara": {
+        "title": "TARA"
       },
       "error": "Sisselogimine ebaõnnestus"
     },
@@ -236,6 +239,11 @@
       "december": "Detsember"
     },
     "menu": {
+      "poll": {
+        "label": "Küsitlused",
+        "data": "Küsitluste andmed",
+        "statistics": "Küsitluste statistika"
+      },
       "practice" : {
         "label": "Praktika",
         "practiceApplications": "Praktika taotlused",
@@ -319,7 +327,8 @@
         "apelSchools": "VÕTA koolid",
         "apelCommittees": "VÕTA komisjonid",
         "scholarshipCommittees": "Õppetoet/Stip komisjonid",
-        "studentGroupYearTransfer": "Uude aastasse viimine"
+        "studentGroupYearTransfer": "Uude aastasse viimine",
+        "supportCommittees": "Tugiteenuste komisjonid"
       },
       "mainData": {
         "classifiers": "Klassifikaatorid",
@@ -377,7 +386,8 @@
         "teachersLoadDetailVocational": "Õp. koormus detail (kutse)",
         "teachersLoadDetailHigher": "Õp. koormus detail (kõrg)",
         "vota": "VÕTA statistika",
-        "studentGroupTeacher": "Rühmajuhataja aruanne"
+        "studentGroupTeacher": "Rühmajuhataja aruanne",
+        "individualCurriculumStatistics": "IÕK statistika"
       },
       "graduation": {
         "label": "Lõpetamine",
@@ -398,6 +408,7 @@
         "absences": "Puudumistõendid",
         "groupAbsences": "Puudumised",
         "resultCard": "Õpitulemuste kaart",
+        "studentCard": "Õpilaspiletid",
         "rrChanges": "RR muutuste logi"
       },
       "studentGroup": {
@@ -545,10 +556,14 @@
       "apel": {
         "label": "VÕTA"
       },
+      "individualCurriculumStatistics": {
+        "label": "IÕK statistika"
+      },
       "studentGroupTeacher": {
         "label": "Rühmajuhataja aruanne"
       }
-    }
+    },
+    "nagivationBar": "Navigeerimisriba"
   },
   "home": {
     "expiringOccupationStandards": {
@@ -1031,7 +1046,6 @@
       "idcode": "Isikukood",
       "birthdate": "Sünniaeg",
       "firstname": "Eesnimi",
-
       "lastname": "Perekonnanimi",
       "studyStartAndBase": "Õpingute algus ja alus",  
       "studyEndAndBase": "Õpingute lõpp ja alus",
@@ -1056,6 +1070,31 @@
       "transferred": "ülekantud",
       "apel": "arvestatud VÕTAga",
       "print": "Trüki õpitulemuste kaart"
+    },
+    "card": {
+      "label": "Õpilaspiletid",
+      "search": "Otsing",
+      "management": "Haldamine",
+      "nr": "Õpilaspileti nr",
+      "status": "Õpilaspileti staatus",
+      "showNotActiveStudents": "Kuva ka mitteaktiivsed õppijad",
+      "order": "Telli",
+      "orderAgain": "Telli uuesti",
+      "orderExtension": "Telli pikendamine",
+      "pictureExists": "Pilt olemas",
+      "validThru": "Kehtiv kuni",
+      "given": "Käes",
+      "givenDate": "Kätteandmise kp",
+      "returned": "Tagastatud",
+      "returnDate": "Tagastamise kp",
+      "repeating": "Korduv",
+      "operation": {
+        "orderRepetition": {
+          "label": "Telli kordus",
+          "prompt": "Kustutatakse eelnev õpilaspileti info ja uus õpilaspilet märgitakse korduvaks. Kas oled kindel?",
+          "success": "Korduse tellimine õnnestus"
+        }
+      }
     },
     "journal": {
       "journals": "Päevikud",
@@ -1108,7 +1147,7 @@
       "finished": "lõpetanud",
       "finishedShort": "L",
       "individualCurriculum": "indivi. õppekava",
-      "individualCurriculumShort": "IÕ"
+      "individualCurriculumShort": "IÕK"
     },
     "studentTimetable": "Tunniplaan"
   },
@@ -1318,6 +1357,10 @@
     "type": "Käskkirja liik",
     "vocational": "Kutseõpe",
     "higher": "Kõrgõpe",
+    "atleastOneModuleRequired": "Vähemalt üks moodul peab olema lisatud",
+    "moduleAlreadyGraded": "Moodul juba hinnatud",
+    "notInIndividualCurriculumDateRange": "Lõpetamise kuupäev peab jääma individuaalse õppekava kuupäevade vahemikku",
+    "notValid": "Käskkiri ei kehti",
     "coordinator": {
       "alreadyexist": "Sellise isikukoodiga isik on juba dokumentide kooskõlastaja",
       "deleteconfirm": "Kas oled kindel, et soovid kooskõlastaja kustutada?",
@@ -1349,6 +1392,9 @@
       "curriculum": "Õppekava",
       "curriculumGrade": "Omistatav kraad",
       "curriculumVersion": "Õppekava",
+      "directive": "Käskkiri",
+      "directiveNr": "Käskkirja nr",
+      "distinction": "Erisus",
       "estonianEducationalInstitute": "Eesti õppeasutus",
       "foreignEducationalInstitute": "Välismaa õppeasutus",
       "fin": "Finantseerimise allikas",
@@ -1371,9 +1417,13 @@
       "newStudyForm": "Uus õppevorm",
       "newStudyLoad": "Õppekoormuse muutmise suund",
       "nominalStudyEnd": "Nominaalaja eeldatav lõpp",
+      "module": "Moodul",
+      "modules": "Moodul(id)",
       "occupations": "Kutsed/Osakutsed",
       "oldCurriculumVersion": "Kehtiv õppekava",
       "oldStudyForm": "Kehtiv õppevorm",
+      "practiceStartDate": "Praktika algus",
+      "practiceEndDate": "Praktika lõpp",
       "previousStudyLevel": "Eelnev haridus",
       "reason": "Põhjus",
       "school": "Õppeasutus",
@@ -1382,6 +1432,9 @@
       "stipEndReason": "Põhjus",
       "stipStartDate": "Maksmise periood alates",
       "studentGroup": "Õppegrupp/rühm",
+      "studyActivityStartDate": "Õppetegevuse algus",
+      "studyActivityEndDate": "Õppetegevuse lõpp",
+      "studyActivityIsAbsence": "Vabandatav puudumine",
       "studyForm": "Õppevorm",
       "studyLevel": "Õppetase",
       "studyLoad": "Õppekoormus",
@@ -1946,7 +1999,7 @@
       "noPModules": "Igale kutsele/osakutsele/spetsialiseerumisele peab olema lisatud vähemalt üks põhiõpingute moodul",
       "noModule": "Vähemalt üks moodul peab olema lisatud õppekavasse",
       "noSummaryFile": "Puudub õppekava koondfail PDF formaadis EHISesse saatmiseks",
-      "moduleOccupations": "Üks ja sama moodul ei tohi olla samaaegselt seotud nii kutse/osakutsega ja spetsialiseerumisega",
+      "moduleOccupations": "Üks ja sama moodul ei tohi olla samaaegselt seotud nii kutse ja selles kutses oleva spetsialiseerumisega",
       "occupationNotSelected": "Vähemalt üks kutse või osakutse peab olema valitud",
       "fileSize": "Fail on liiga suur (max 10MB)",
       "credits": "Vale moodulite maht",
@@ -2681,6 +2734,7 @@
     "studentName": "Õppija nimi",
     "studentIdCode": "Õppija isikukood",
     "addStudent": "Lisa õppija",
+    "createdBy": "Avalduse koostaja",
     "reason": "Põhjus",
     "additionalInfo": "Lisainfo",
     "validFinancialSource": "Kehtiv finantseerimisallikas",
@@ -2714,6 +2768,33 @@
     "otherText": "Tekst",
     "deleteconfirm": "Kas oled kindel, et soovid avalduse kustutada?",
     "missingRepresentativeConfirmation": "Avaldusel puudub lapsevanema/esindaja kinnitus!",
+    "supportService": {
+      "text": "Kirjeldus",
+      "isRepresentativeConfirmed": "Komisjoni otsusega nõustumine",
+      "representativeConfirmed": "Esindaja/õppija on nõus pakutavate teenustega",
+      "representativeRejected": "Esindaja/õppija ei ole nõus pakutavate teenustega",
+      "committee": "Tugiteenuste komisjon",
+      "isDecided": "Komisjoni otsus",
+      "decision": "Komisjoni otsuse täpsustus",
+      "supportServices": "Tugimeede",
+      "implementationPlan": "Rakendusplaan",
+      "individualCurriculum": "Individuaalne õppekava",
+      "committeeAddInfo": "Komisjoni lisainfo"
+    },
+    "agreeWithDecision": "Esindaja/õppija on nõus pakutavate teenustega",
+    "agreement": "Nõusoleku väljad",
+    "addAgreementFile": "Lisa nõusoleku fail",
+    "agreementFile": "Nõusoleku fail",
+    "removeConfirmation": "Võta kinnitus maha",
+    "representativeDecisionAddInfo": "Esindaja/õppija põhjendus",
+    "confirmDecision": "Kinnita otsus",
+    "committee": "Komisjon",
+    "representativeConfirmed": "Esindaja/õppija kinnituse kuupäev",
+    "committeeDecisionAdded": "Komisjoni otsuse lisamise kuupäev",
+    "committeeDecisionConfirmed": "Komisjoni otsuse kinnitamise kuupäev",
+    "committeeAdded": "Komisjoni lisamise kuupäev",
+    "representativeOrStudent": "Esindaja/õppija",
+    "label": "Avaldus",
     "messages": {
       "applicationAlreadyExists": "Avaldus juba eksisteerib",
       "academicLeaveApplicationNotfound": "Akadeemilise puhkuse avaldust ei leitud",
@@ -2739,7 +2820,11 @@
       "studentNotOnAcademicLeave": "Õppija ei ole akadeemilisel puhkusel",
       "noValidAcademicLeaveApplicationFound": "Õpilasel ei ole ühtegi kehtivat akadeemilise puhkuse avaldust",
       "sameCurriculumVersion": "Sama rakenduskava/õppekava versioon ei saa olla",
-      "noConnectionBetweenGroupAndVersion": "Õpperühm ei ole seotud rakenduskava/õppekava versiooniga"
+      "noConnectionBetweenGroupAndVersion": "Õpperühm ei ole seotud rakenduskava/õppekava versiooniga",
+      "emptyNecessaryFields": "Avaldust ei ole võimalik kinnitada, vajalikud andmed puuduvad",
+      "confirmRemovingConfirmation": "Avalduselt eemaldatakse komisjoni kinnitus, kas soovid jätkata?",
+      "confirmRemovingFinalConfirmation": "Avalduselt eemaldatakse esindaja ja komisjoni kinnitused, kas soovid jätkata?",
+      "removeConfirmationSuccess": "Kinnituse mahavõtmine õnnestus"
     }
   },
   "reception": {
@@ -2804,6 +2889,76 @@
       "revertedArchived": "Võetud arhiivist tagasi",
       "error": "Sama koodiga mittearhiveeritud konkurss juba eksisteerib"
     }
+  },
+  "poll": {
+    "name": "Küsitluse nimetus",
+    "type": "Küsitluse tüüp",
+    "target": "Sihtrühm",
+    "targets": "Sihtrühmad",
+    "status": "Staatus",
+    "studentgroup": "Õpperühm",
+    "studentgroups": "Õpperühmad",
+    "poll": "Küsitlus",
+    "period": "Kehtivuse periood",
+    "test": "Testi",
+    "copy": "Kopeeri",
+    "confirmBack": "Vormil olevad andmed on salvestamata, kas oled kindel?",
+    "basicData": {
+      "label": "Põhiandmed",
+      "name": "Nimetus",
+      "foreWord": "Eessõna",
+      "afterWord": "Järelsõna",
+      "pickAll": "Vali kõik",
+      "removeAll": "Eemalda kõik",
+      "journalFrom": "Päeviku lõpp alates",
+      "journalThru": "Päeviku lõpp kuni",
+      "notificationDate": "Meeldetuletuse kp ",
+      "duplicateTargetCode": "Sihtrühm on juba valitud",
+      "reminderError": "Peab langema vahemikku Kehtiv alates – Kehtiv kuni",
+      "teacherCanComment": "Õpetaja saab kommenteerida",
+      "teacherCommentVisible": "Õpetaja kommentaar on õpilastele nähtav",
+      "atleastOne": "Vähemalt üks sihtrühm peab olema valitud",
+      "status": "Staatus",
+      "confirm": "Kas olete kindel, et soovite küsitluse kinnitada?",
+      "themeError": "Küsitlusel puuduvad teemad",
+      "deleteConfirm": "Kas olete kindel, et soovite küsitluse kustutada?",
+      "removeConfirm": "Eemalda kinnitus",
+      "confirmRemoveConfirm": "Kas olete kindel, et soovite küsitluse kinnituse eemaldada?",
+      "removed": "Kinnitus eemaldatud",
+      "confirmError": "Kinnitamine ebaõnnestus, küsitlusel puudub teema või küsimus",
+      "removeConfirmError": "Kinnituse eemaldamine ebaõnnestus",
+      "nameError": "Sama nimetusega küsitlus on juba olemas",
+      "confirmed": "Küsimustik on kinnitatud"
+    },
+    "questions": {
+      "label": "Küsimused",
+      "addTheme": "Lisa teema",
+      "theme": "Teema",
+      "themes": "Küsitluse teemad",
+      "deleteTheme": "Kas olete kindel, et soovite teema koos küsimustega kustutada?",
+      "deleteQuestion": "Kas olete kindel, et soovite küsimuse kustutada?",
+      "sameNameError": "Sama nimega küsimus on juba teemas olemas",
+      "sameThemeError": "Sama nimega teema on juba olemas",
+      "addQuestion": "Lisa küsimus",
+      "addAnswer": "Lisa uus vastusevariant",
+      "change": "Muuda",
+      "question": "Küsimus",
+      "mandatory": "Kohustuslik",
+      "displayRow": "Kuva reas",
+      "displayColumn": "Kuva tulbas",
+      "files": "Failid",
+      "helpText": "Abitekst",
+      "weight": "Kaal",
+      "answer": "Vastusevariant",
+      "answerType": "Vastuse tüüp",
+      "pick": "Vali küsimus",
+      "themesMissing": "Teemad puuduvad",
+      "questionsMissing": "Küsimused puuduvad",
+      "confirmedError": "Kinnitatud küsitluse kõiki teemasid ei saa eemaldada",
+      "changeTheme": "Muuda teemat",
+      "orAddNew": "Või lisa uus"
+    },
+    "results": "Tulemused"
   },
   "studyYearSchedule": {
     "studyYear": "Õppeaasta",
@@ -2957,7 +3112,8 @@
       "plan": "Plaan XLSX",
       "xmlExport": "Tunniplaani eksport",
       "xmlImport": "Tunniplaani import",
-      "importXml": "Impordi tunniplaan"
+      "importXml": "Impordi tunniplaan",
+      "exportError": "Eksporditav nädal ei ole õppeperioodi kuupäevade vahemikus"
     },
     "view": {
       "publicize": "Avalikusta"
@@ -3052,6 +3208,7 @@
     "studentGroups": "Õpperühm(ad)",
     "teachersHigher": "Õppejõud",
     "teachersVocational": "Õpetaja(d)",
+    "module": "Moodul",
     "modules": "Moodul(id)",
     "plannedAndEnteredLessonsCount": "Planeeritud ja sissekantud tundide arv",
     "plannedAndEnteredLessonsCount1": "Planeeritud ja sissekantud",
@@ -3095,6 +3252,8 @@
     "lesson": "tund",
     "showAbsenceLessons": "Näita puudumisi tundide kaupa",
     "showOnlyMyJournals": "Kuva ainult minu päevikud",
+    "individualCurriculumDistinction": "IÕK erisus",
+    "distinction": "Erisus",
     "entry": {
       "date": "Sissekande kp",
       "new": "Sissekanne (uus)",
@@ -3158,6 +3317,11 @@
     "button": {
       "unconfirm": "Tühista kinnitus"
     }
+  },
+  "protocol": {
+    "confirmLabel": "Protokolli kinnitamine",
+    "idcard": "ID-kaart",
+    "mobileid": "Mobiil-ID"
   },
   "moduleProtocol": {
     "create": "Loo protokoll",
@@ -3251,7 +3415,6 @@
     "create": "Loo protokoll",
     "error": {
       "addInfoRequired": "Kinnitatud protokolli hinde muutmisel on märkuse sisestamine kohustuslik",
-      "duplicatesInPracticeResults": "Õppijal on mitu tulemust ühe praktika aine eest",
       "noRightsToChange": "Õigused salvestamiseks puuduvad",
       "noRightsToConfirm": "Õigused kinnitamiseks puuduvad",
       "noStudents": "Protokoll peab sisaldama õppijaid",
@@ -3616,6 +3779,7 @@
       "byMonths": "Kuvada kuude kaupa",
       "byCapacities": "Kuvada õppetöö liikide kaupa",
       "showPlannedLessons": "Kuvada planeeritud tunnid",
+      "showTimetableLoad": "Kuvada tunniplaani koormus",
       "showSingleEvents": "Kuvada üksiksündmused",
       "capacityMissing": "õppetöö liik puudu",
       "week": "nädal",
@@ -3623,6 +3787,7 @@
       "occurred": "Toimunud",
       "singleEvent": "Üksik.",
       "substitute": "Asend.",
+      "timetableShort": "(t)", 
       "study": "Õppetöö",
       "journal": "Päevik",
       "journals": "Päevikud",
@@ -3635,6 +3800,19 @@
       "types": " Õppetoetuse/stipendiumi liik",
       "entriesFrom": "Sissekanded alates",
       "entriesThru": "Sissekanded kuni"
+    },
+    "individualCurriculumStatistics": {
+      "student": "Õppija",
+      "studentGroup": "Õpperühm",
+      "moduleName": "Mooduli nimi",
+      "curriculumVersion": "Rakenduskava",
+      "name": "Nimi",
+      "group": "Rühm",
+      "module": "Moodul",
+      "distinction": "Erisus",
+      "dates": "Kuupäevad",
+      "showMore": "Näita rohkem",
+      "showLess": "Näita vähem"
     }
   },
   "contract": {
@@ -4244,6 +4422,7 @@
     "member": "Komisjoni liige",
     "memberIs": "Komisjoni liige on:",
     "members": "Komisjoni liikmed",
+    "memberName": "Komisjoni liikme nimi",
     "message": {
       "deleted": "Komisjon on kustutatud",
       "committeeMemberInScholarshipDecision": "Eemaldatud komisjoni liige on seotud otsusega"

@@ -8,6 +8,7 @@ import ee.hitsa.ois.validation.Required;
 
 public class DirectiveDataCommand {
 
+    private Long directive;
     @Required
     @ClassifierRestriction(MainClassCode.KASKKIRI)
     private String type;
@@ -18,6 +19,14 @@ public class DirectiveDataCommand {
     private List<String> studyLevel;
     private Long canceledDirective;
     private List<Long> students;
+
+    public Long getDirective() {
+        return directive;
+    }
+
+    public void setDirective(Long directive) {
+        this.directive = directive;
+    }
 
     public String getType() {
         return type;

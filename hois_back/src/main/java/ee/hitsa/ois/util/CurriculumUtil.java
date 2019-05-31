@@ -40,6 +40,10 @@ public abstract class CurriculumUtil {
         return curriculumCode+" - "+curriculumName;
     }
 
+    public static String moduleName(String moduleName, String moduleClassifierName) {
+        return moduleName + " - " + moduleClassifierName;
+    }
+
     public static String moduleName(String moduleName, String moduleClassifierName, String curriculumCode) {
         return moduleName + " - " + moduleClassifierName + " (" + curriculumCode + ")";
     }

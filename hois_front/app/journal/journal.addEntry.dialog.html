@@ -182,7 +182,7 @@
                       <span ng-if="row.canEdit && !(row.apelTransferredFinalResult && journalEntry.entryType === 'SISSEKANNE_L') && !(journalEntry.moodleGradeItemId && journalEntry.entryType !== 'SISSEKANNE_L')">
                         <md-input-container>
                           <hois-select ng-if="gradeInputAsSelect" ng-model="journalEntryStudents[row.id].grade" values="grades" show-property="value" 
-                            value-property="code" ng-change="journalEntryStudentChanged(row)" aria-label="grade"></hois-select>
+                            hide-values="hideInvalid" value-property="code" ng-change="journalEntryStudentChanged(row)" aria-label="grade"></hois-select>
                           <input ng-if="!gradeInputAsSelect" ng-model="journalEntryStudents[row.id].gradeValue" style="width: 75px;"
                             ng-change="journalEntryStudentChanged(row)" type="text" ng-pattern="gradeInputRegex" aria-label="grade">
                         </md-input-container>
@@ -194,7 +194,7 @@
                       <span ng-if="!row.canEdit || (row.apelTransferredFinalResult && journalEntry.entryType === 'SISSEKANNE_L') || (journalEntry.moodleGradeItemId && journalEntry.entryType !== 'SISSEKANNE_L')">
                         <md-input-container>
                           <hois-select ng-model="journalEntryStudents[row.id].grade" values="grades" show-property="value" 
-                            value-property="code" aria-label="grade" disabled></hois-select>
+                            hide-values="hideInvalid" value-property="code" aria-label="grade" disabled></hois-select>
                         </md-input-container>
                       </span>
                     </td>

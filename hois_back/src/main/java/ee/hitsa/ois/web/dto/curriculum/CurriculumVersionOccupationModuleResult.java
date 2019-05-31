@@ -5,14 +5,14 @@ import java.time.LocalDate;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
-public class CurriculumVersionOccupationModuleResult  extends AutocompleteResult {
+public class CurriculumVersionOccupationModuleResult extends AutocompleteResult {
 
     private BigDecimal credits;
     private String assessment;
     private String gradeCode;
     private LocalDate gradeDate;
     private String teachers;
-    
+
     public CurriculumVersionOccupationModuleResult(Long id, String nameEt, String nameEn, BigDecimal credits, String assessment,
             String gradeCode, LocalDate gradeDate, String teachers) {
         super(id, nameEt, nameEn);
@@ -22,7 +22,7 @@ public class CurriculumVersionOccupationModuleResult  extends AutocompleteResult
         this.gradeDate = gradeDate;
         this.teachers = teachers;
     }
-    
+
     public BigDecimal getCredits() {
         return credits;
     }

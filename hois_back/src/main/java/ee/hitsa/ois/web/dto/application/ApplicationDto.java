@@ -3,16 +3,20 @@ package ee.hitsa.ois.web.dto.application;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.util.ApplicationUtil;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DirectiveUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
 
 public class ApplicationDto extends InsertedChangedVersionDto {
@@ -50,11 +54,29 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     private String otherText;
     private Set<ApplicationPlannedSubjectDto> plannedSubjects;
     private Set<ApplicationFileDto> files;
-    private Boolean canEditStudent;
+    
     private AutocompleteResult studentGroup;
+    
+    private AutocompleteResult committee;
+    private Boolean isDecided;
+    private String decision;
+    private String implementationPlan;
+    private Set<ClassifierDto> supportServices;
+    private Set<ApplicationSupportServiceModuleDto> supportModules;
+
+    private LocalDateTime committeeAdded;
+    private LocalDateTime committeeDecisionAdded;
+    private LocalDateTime representativeConfirmed;
+    private String committeeAddInfo;
+    private Boolean isRepresentativeConfirmed;
+    private String representativeDecisionAddInfo;
+
+    private Boolean canEditStudent;
+    
+    private Boolean hasBeenSeenByAdmin;
 
     public static ApplicationDto of(Application application) {
-        ApplicationDto dto = EntityUtil.bindToDto(application, new ApplicationDto(), "files", "plannedSubjects", "validAcademicLeave", "studentGroup");
+        ApplicationDto dto = EntityUtil.bindToDto(application, new ApplicationDto(), "files", "plannedSubjects", "validAcademicLeave", "studentGroup", "supportServices");
         dto.setFiles(StreamUtil.toMappedSet(ApplicationFileDto::of, application.getFiles()));
         dto.setPlannedSubjects(StreamUtil.toMappedSet(ApplicationPlannedSubjectDto::of, application.getPlannedSubjects()));
         if (application.getStudentGroup() != null) {
@@ -65,6 +87,15 @@ public class ApplicationDto extends InsertedChangedVersionDto {
         if (directiveStudent != null) {
             dto.setValidAcademicLeave(ValidAcademicLeaveDto.of(directiveStudent));
         }
+        if (application.getCommittee() != null) {
+            dto.setCommittee(AutocompleteResult.of(application.getCommittee()));
+        }
+        dto.setSupportServices(StreamUtil.toMappedSet(s -> ClassifierDto.of(s.getSupportService()), application.getSupportServices()));
+        dto.setSupportModules(application.getSupportServices().stream()
+                .filter(s -> ClassifierUtil.equals(SupportServiceType.TUGITEENUS_1, s.getSupportService()))
+                .flatMap(s -> s.getModules().stream())
+                .map(ApplicationSupportServiceModuleDto::of)
+                .collect(Collectors.toSet()));
         dto.setIsAdult(Boolean.valueOf(StudentUtil.isAdultAndDoNotNeedRepresentative(application.getStudent())));
         dto.setCanEditStudent(Boolean.valueOf(StudentUtil.canBeEdited(application.getStudent())));
         return dto;
@@ -362,4 +393,109 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     public void setStudentGroup(AutocompleteResult studentGroup) {
         this.studentGroup = studentGroup;
     }
+
+    public AutocompleteResult getCommittee() {
+        return committee;
+    }
+
+    public void setCommittee(AutocompleteResult committee) {
+        this.committee = committee;
+    }
+
+    public Boolean getIsDecided() {
+        return isDecided;
+    }
+
+    public void setIsDecided(Boolean isDecided) {
+        this.isDecided = isDecided;
+    }
+
+    public String getDecision() {
+        return decision;
+    }
+
+    public void setDecision(String decision) {
+        this.decision = decision;
+    }
+
+    public String getImplementationPlan() {
+        return implementationPlan;
+    }
+
+    public void setImplementationPlan(String implementationPlan) {
+        this.implementationPlan = implementationPlan;
+    }
+
+    public Set<ClassifierDto> getSupportServices() {
+        return supportServices;
+    }
+
+    public void setSupportServices(Set<ClassifierDto> supportServices) {
+        this.supportServices = supportServices;
+    }
+
+    public Set<ApplicationSupportServiceModuleDto> getSupportModules() {
+        return supportModules;
+    }
+
+    public void setSupportModules(Set<ApplicationSupportServiceModuleDto> supportModules) {
+        this.supportModules = supportModules;
+    }
+
+    public LocalDateTime getCommitteeAdded() {
+        return committeeAdded;
+    }
+
+    public void setCommitteeAdded(LocalDateTime committeeAdded) {
+        this.committeeAdded = committeeAdded;
+    }
+
+    public LocalDateTime getCommitteeDecisionAdded() {
+        return committeeDecisionAdded;
+    }
+
+    public void setCommitteeDecisionAdded(LocalDateTime committeeDecisionAdded) {
+        this.committeeDecisionAdded = committeeDecisionAdded;
+    }
+
+    public LocalDateTime getRepresentativeConfirmed() {
+        return representativeConfirmed;
+    }
+
+    public void setRepresentativeConfirmed(LocalDateTime representativeConfirmed) {
+        this.representativeConfirmed = representativeConfirmed;
+    }
+
+    public String getCommitteeAddInfo() {
+        return committeeAddInfo;
+    }
+
+    public void setCommitteeAddInfo(String committeeAddInfo) {
+        this.committeeAddInfo = committeeAddInfo;
+    }
+
+    public String getRepresentativeDecisionAddInfo() {
+        return representativeDecisionAddInfo;
+    }
+
+    public void setRepresentativeDecisionAddInfo(String representativeDecisionAddInfo) {
+        this.representativeDecisionAddInfo = representativeDecisionAddInfo;
+    }
+
+    public Boolean getIsRepresentativeConfirmed() {
+        return isRepresentativeConfirmed;
+    }
+
+    public void setIsRepresentativeConfirmed(Boolean isRepresentativeConfirmed) {
+        this.isRepresentativeConfirmed = isRepresentativeConfirmed;
+    }
+
+    public Boolean getHasBeenSeenByAdmin() {
+        return hasBeenSeenByAdmin;
+    }
+
+    public void setHasBeenSeenByAdmin(Boolean hasBeenSeenByAdmin) {
+        this.hasBeenSeenByAdmin = hasBeenSeenByAdmin;
+    }
+    
 }

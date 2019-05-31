@@ -24,10 +24,13 @@ public abstract class HttpUtil {
     private static final Pattern INVALID_FILENAME_SYMBOLS = Pattern.compile("[\\/:*?\"<>|]");
 
     public static final NoContentResponse NO_CONTENT_RESPONSE = new NoContentResponse();
+    
     public static final String APPLICATION_PDF = "application/pdf";
     public static final String APPLICATION_XML = "application/xml";
     public static final String APPLICATION_XLS = "application/vnd.ms-excel";
     public static final String TEXT_CSV_UTF8 = "text/csv; Charset=UTF-8";
+    public static final String APPLICATION_ZIP = "application/zip";
+    
     private static final byte[] UTF8_BOM = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 
     public static CreatedResponse created(BaseEntityWithId entity) {
@@ -55,6 +58,23 @@ public abstract class HttpUtil {
 
     public static void xml(HttpServletResponse response, String filename, byte[] xml) throws IOException {
         file(response, filename, APPLICATION_XML, xml);
+    }
+    
+    /**
+     * NB! Response output stream should be written AFTER.
+     * Call it before closing output stream.
+     * 
+     * @param response
+     * @param filename
+     * @throws IOException
+     */
+    public static void zip(HttpServletResponse response, String filename) throws IOException {
+        file(response, filename, APPLICATION_ZIP);
+    }
+    
+    public static void file(HttpServletResponse response, String filename, String filetype) {
+        response.setContentType(filetype);
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + toValidFilename(filename) + "\"");
     }
 
     public static void file(HttpServletResponse response, String filename, String filetype, byte[] data) throws IOException {

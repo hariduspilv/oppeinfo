@@ -134,7 +134,7 @@
                 <div ng-if="journalEntry.quickUpdate" layout="row" layout-align="end center" flex>
                   <md-input-container ng-if="formState.gradeInputAsSelect" class="quickUpdateGrade">
                     <hois-select ng-model="journalEntry.quickUpdateStudents[row.id].grade" values="grades" show-property="value" value-property="code"
-                      aria-label="grade" ng-change="quickUpdateGradeChanged(journalEntry, row.id)" 
+                      aria-label="grade" ng-change="quickUpdateGradeChanged(journalEntry, row.id)" hide-values="hideInvalid"
                       ng-disabled="!row.canEdit || (row.apelTransferredFinalResult && journalEntry.entryType.code === 'SISSEKANNE_L')"></hois-select>
                   </md-input-container>
                   <md-input-container ng-if="!formState.gradeInputAsSelect" class="quickUpdateGradeAsInput">
@@ -223,7 +223,11 @@
 <div layout-padding>
   <hois-collapsable label="('journal.curriculumVersionModuleOrThemeDescription' | translate)" expanded="false">
     <div ng-repeat="module in journal.moduleDescriptions | orderBy: ['-isModule', currentLanguageNameField()]">
-      <a href="" class="md-raised small-link" ng-click="moduleDescriptionDialog(module)">{{currentLanguageNameField(module)}}</a>
+      <a class="md-raised small-link" ng-click="moduleDescriptionDialog(module)">{{currentLanguageNameField(module)}}</a>
+    </div>
+    <div ng-repeat="individualCurriculum in journal.individualCurriculums | orderBy: 'fullname'">
+      <a class="md-raised small-link" ng-click="individualCurriculumDialog(individualCurriculum)">
+        {{individualCurriculum.fullname}} - {{'journal.individualCurriculumDistinction' | translate}}</a>
     </div>
   </hois-collapsable>
 </div>

@@ -10,6 +10,7 @@ import java.util.Base64;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.EntityManager;
 import javax.xml.soap.Detail;
 import javax.xml.soap.SOAPFault;
 import javax.xml.ws.soap.SOAPFaultException;
@@ -40,6 +41,7 @@ import ee.hitsa.ois.bdoc.MobileIdSession;
 import ee.hitsa.ois.bdoc.UnsignedBdocContainer;
 import ee.hitsa.ois.config.MobileIdProperties;
 import ee.hitsa.ois.domain.OisFile;
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hois.soap.dds.service.AddDataFileRequest;
 import ee.hois.soap.dds.service.AddDataFileResponse;
@@ -66,6 +68,8 @@ public class BdocService {
 
     private Configuration configuration;
 
+    @Autowired
+    private EntityManager em;
     @Autowired
     private DigiDocServiceClient ddsClient;
     @Autowired
@@ -183,7 +187,7 @@ public class BdocService {
         return certificateVerifier;
     }
     
-    public MobileIdSession mobileSign(String fileName, String mimeType, byte[] file, String mobileNumber) {
+    public MobileIdSession mobileSign(String fileName, String mimeType, byte[] file, Long personId) {
         MobileIdSession session = new MobileIdSession();
         try {
             StartSessionResponse sessionResponse = ddsClient.startSession(properties.getEndpoint());
@@ -211,7 +215,8 @@ public class BdocService {
             MobileSignRequest signRequest = new MobileSignRequest();
             signRequest.setSesscode(session.getSesscode());
             signRequest.setSignersCountry("EE");
-            signRequest.setSignerPhoneNo(mobileNumber);
+            Person person = em.getReference(Person.class, personId);
+            signRequest.setSignerIDCode(person.getIdcode());
             signRequest.setServiceName(properties.getServiceName());
             signRequest.setAdditionalDataToBeDisplayed(properties.getMessageToDisplay());
             signRequest.setLanguage("EST");

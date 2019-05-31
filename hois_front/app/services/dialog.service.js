@@ -17,7 +17,7 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils', 
     /**
      * For form validation to work dialog form name must be dialogForm
      */
-    this.showDialog = function(templateUrl, dialogController, submitCallback, cancelCallback) { //, userConfig - not used anymore
+    this.showDialog = function(templateUrl, dialogController, submitCallback, cancelCallback, isMultiple) { //, userConfig - not used anymore
       var submitted = false;
       //var config = angular.extend({}, userConfig);
       $mdDialog.show({
@@ -50,7 +50,9 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils', 
           }
         },
         templateUrl: templateUrl,
-/*      multiple: true,*/
+        multiple: isMultiple ? true : false,
+        preserveScope: isMultiple ? true : false,
+        bindToController: isMultiple ? true : false,
         //clickOutsideToClose: angular.isDefined(config.clickOutsideToClose) ? config.clickOutsideToClose === true : true,
         //dialog general behaviour is that clicking outside should not close dialog
         clickOutsideToClose: false,

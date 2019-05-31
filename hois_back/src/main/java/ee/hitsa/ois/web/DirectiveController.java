@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.exception.AssertionFailedException;
@@ -43,6 +45,7 @@ import ee.hitsa.ois.web.commandobject.directive.DirectiveDataCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveSearchCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveStudentSearchCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.directive.DirectiveCoordinatorDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveSearchDto;
@@ -168,6 +171,13 @@ public class DirectiveController {
     public void deleteCoordinator(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") DirectiveCoordinator coordinator, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, coordinator.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_DOKALLKIRI);
         directiveService.delete(user, coordinator);
+    }
+
+    @GetMapping("/studentIndividualCurriculumModules/{id:\\d+}")
+    public List<AutocompleteResult> individualCurriculumModules(HoisUserDetails user, @WithEntity Student student,
+            @RequestParam(value = "directiveId", required = false) Long directiveId) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KASKKIRI);
+        return directiveService.individualCurriculumModules(student, directiveId);
     }
 
     private static void assertCanEditDirective(HoisUserDetails user, Directive directive) {

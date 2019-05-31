@@ -45,7 +45,7 @@
           <label>{{'timetable.timetablePlan.lessonAmount' | translate}}</label>
           <input ng-model="plan.lessonAmount" type="number" autofocus aria-label="lessonamount">
         </md-input-container>
-        <md-input-container flex="100" flex-gt-sm="60" flex-offset-gt-sm="5">
+        <md-input-container flex="100" flex-gt-sm="60" flex-offset-gt-sm="5" ng-if="loaded">
           <label>{{'timetable.timetablePlan.repetition' | translate}}</label>
           <hois-classifier-select ng-model="plan.repeatCode" model-value-attr="code" aria-label="repeatcode" main-classifier-code="TUNNIPLAAN_SYNDMUS_KORDUS">
           </hois-classifier-select>

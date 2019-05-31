@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -15,8 +16,10 @@ import ee.hitsa.ois.validation.StudyPeriodRange;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.OisFileForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
 import ee.hitsa.ois.web.dto.application.ApplicationPlannedSubjectDto;
+import ee.hitsa.ois.web.dto.application.ApplicationSupportServiceModuleDto;
 import ee.hitsa.ois.web.dto.application.ValidAcademicLeaveDto;
 
 @DateRange(from = "startDate", thru = "endDate")
@@ -94,6 +97,18 @@ public class ApplicationForm extends InsertedChangedVersionDto {
     private String otherText;
     
     private EntityConnectionCommand studentGroup;
+    
+    private EntityConnectionCommand committee;
+    @Size(max = 10000)
+    private String decision;
+    private Boolean isDecided;
+    @Size(max = 10000)
+    private String implementationPlan;
+    @Size(max = 4000)
+    private String committeeAddInfo;
+    private Set<ClassifierDto> supportServices;
+    @Valid
+    private Set<ApplicationSupportServiceModuleDto> selectedModules;
 
     private Set<OisFileForm> files;
 
@@ -330,6 +345,62 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     public void setStudentGroup(EntityConnectionCommand studentGroup) {
         this.studentGroup = studentGroup;
+    }
+
+    public EntityConnectionCommand getCommittee() {
+        return committee;
+    }
+
+    public void setCommittee(EntityConnectionCommand committee) {
+        this.committee = committee;
+    }
+
+    public String getDecision() {
+        return decision;
+    }
+
+    public void setDecision(String decision) {
+        this.decision = decision;
+    }
+
+    public Boolean getIsDecided() {
+        return isDecided;
+    }
+
+    public void setIsDecided(Boolean isDecided) {
+        this.isDecided = isDecided;
+    }
+
+    public String getImplementationPlan() {
+        return implementationPlan;
+    }
+
+    public void setImplementationPlan(String implementationPlan) {
+        this.implementationPlan = implementationPlan;
+    }
+
+    public String getCommitteeAddInfo() {
+        return committeeAddInfo;
+    }
+
+    public void setCommitteeAddInfo(String committeeAddInfo) {
+        this.committeeAddInfo = committeeAddInfo;
+    }
+
+    public Set<ApplicationSupportServiceModuleDto> getSelectedModules() {
+        return selectedModules;
+    }
+
+    public void setSelectedModules(Set<ApplicationSupportServiceModuleDto> selectedModules) {
+        this.selectedModules = selectedModules;
+    }
+
+    public Set<ClassifierDto> getSupportServices() {
+        return supportServices;
+    }
+
+    public void setSupportServices(Set<ClassifierDto> supportServices) {
+        this.supportServices = supportServices;
     }
 
     public Set<ApplicationPlannedSubjectDto> getPlannedSubjects() {

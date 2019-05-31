@@ -324,6 +324,11 @@ public class AutocompleteController {
         return asPage(autocompleteService.committees(user.getSchoolId(), lookup));
     }
 
+    @GetMapping("/committeesList")
+    public List<AutocompleteResult> committeesList(HoisUserDetails user, CommitteeAutocompleteCommand lookup) {
+        return autocompleteService.committees(user.getSchoolId(), lookup);
+    }
+
     @GetMapping("/committeeMembers")
     public List<AutocompleteResult> committeeMembers(HoisUserDetails user, @Valid SearchCommand lookup) {
         UserUtil.assertIsSchoolAdmin(user);

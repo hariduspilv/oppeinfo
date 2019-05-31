@@ -121,9 +121,6 @@
 		<part name="end_date" type="xsd:string"/>
 		<part name="school_tutor_id" type="xsd:string"/>
 		<part name="place" type="xsd:string"/>
-		<!--NEW ELEMENTS -->
-		<part name="outcomes" type="xsd:string"/>
-        <part name="aim" type="xsd:string"/>
 	</message>
 	<message name="registerPracticeContractResponse">
 		<part name="return" type="tns:answer"/>

@@ -97,6 +97,14 @@ angular.module('hitsaOis')
             }
           },
           {
+            name: 'main.menu.student.studentCard',
+            url: "/studentCards?_menu",
+            icon: "announcement",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
             name: 'main.menu.student.rrChanges',
             url: "/rr/changelogs?_menu",
             icon:"view_week"
@@ -350,6 +358,24 @@ angular.module('hitsaOis')
       });
 
       sections.push({
+        name: 'main.menu.poll.label',
+        type: 'toggle',
+        icon: "question_answer",
+        pages: [
+          {
+            name: 'main.menu.poll.data',
+            url: '/poll?_menu',
+            icon:"search"
+          // },
+          // {
+          //   name: 'main.menu.poll.statistics',
+          //   url: "/poll/statistics?_menu",
+          //   icon:"blur_circular"
+          }
+        ]
+      });
+
+      sections.push({
         name: 'main.menu.reports.label',
         type: 'toggle',
         icon: "search",
@@ -411,6 +437,14 @@ angular.module('hitsaOis')
             name: 'main.menu.reports.vota',
             url: "/reports/vota?_menu",
             icon:"transfer_within_a_station"
+          },
+          {
+            name: 'main.menu.reports.individualCurriculumStatistics',
+            url: "/reports/individualcurriculum/statistics?_menu",
+            icon:"face",
+            studyLevel: {
+              vocational: true
+            }
           },
           {
             name: 'main.menu.reports.studentGroupTeacher',
@@ -693,6 +727,11 @@ angular.module('hitsaOis')
             icon:"record_voice_over"
           },
           {
+            name: 'main.menu.settings.supportCommittees',
+            url: '/committees/KOMISJON_A?_menu',
+            icon: "record_voice_over"
+          },
+          {
             name: 'main.menu.settings.studentGroupYearTransfer',
             url: "/studentGroupYearTransfer?_menu",
             icon:"sync"
@@ -701,7 +740,7 @@ angular.module('hitsaOis')
       });
     }
 
-    function getTeacherSections(authenticatedUser) {
+    function getTeacherSections() {
       sections.push({
         name: 'main.menu.curriculums.label',
         url: "/curriculum?_menu",
@@ -877,6 +916,14 @@ angular.module('hitsaOis')
           vocational: true
         }
       });
+
+      sections.push({
+        type: 'link',
+        name: 'main.menu.documents.applications',
+        url: "/applications?_menu",
+        icon: "font_download",
+      });
+      
       sections.push({
         name: 'main.menu.scholarships.scholarshipApplications',
         url: "/scholarships/applications/scholarships?_menu",
@@ -943,10 +990,21 @@ angular.module('hitsaOis')
       });
 
       sections.push({
+        name: 'main.menu.individualCurriculumStatistics.label',
+        type: 'link',
+        url: '/reports/individualcurriculum/statistics?_menu',
+        icon: 'face',
+        studyLevel: {
+          vocational: true
+        },
+        studentGroupTeacher: true
+      });
+
+      sections.push({
         name: 'main.menu.studentGroupTeacher.label',
         type: 'link',
-        url: "/reports/studentgroupteacher?_menu",
-        icon: "accessibility_new",
+        url: '/reports/studentgroupteacher?_menu',
+        icon: 'accessibility_new',
         studyLevel: {
           vocational: true
         },

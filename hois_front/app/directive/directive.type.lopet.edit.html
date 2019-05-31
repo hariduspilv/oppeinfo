@@ -23,6 +23,12 @@
         <td md-cell ng-if="!record.isHigher">
           <div ng-repeat="occupation in row.occupations | orderBy: 'nameEt'">
             {{currentLanguageNameField(occupation)}}
+            <span ng-if="row.specialities[occupation.code]">
+              (<span ng-repeat="speciality in row.specialities[occupation.code]">
+                <span>{{currentLanguageNameField(speciality)}}</span>
+                <span ng-if="!$last">, </span>
+              </span>)           
+            </span>
           </div>
         </td>
         <td md-cell>

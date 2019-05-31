@@ -23,6 +23,7 @@ import org.springframework.util.StringUtils;
 import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentAbsenceLesson;
 import ee.hitsa.ois.enums.Absence;
@@ -83,6 +84,9 @@ public class StudentAbsenceService {
             + "where sy.id = :studyYear "
             + "and sy.start_date <= sa.valid_from "
             + "and (case when sa.valid_thru is null then sa.valid_from >= sy.start_date and sa.valid_from <= sy.end_date else sy.start_date <= sa.valid_thru and sy.end_date >= sa.valid_from end)) ";
+
+    private static final String PRACTICE_JOURNAL_CAUSE = "Praktikal (leping)";
+    private static final String DIRECTIVE_CAUSE = "Õppetegevus (käskiri)";
 
     public Page<StudentAbsenceDto> search(HoisUserDetails user, StudentAbsenceSearchCommand criteria,
             Pageable pageable) {
@@ -169,11 +173,16 @@ public class StudentAbsenceService {
         updateJournalEntryStudentAbsenceLessons(studentAbsence);
         return EntityUtil.save(studentAbsence, em);
     }
-    
+
     public StudentAbsence reject(HoisUserDetails user, StudentAbsence studentAbsence, String rejectReason) {
+        return reject(PersonUtil.fullname(em.getReference(Person.class, user.getPersonId())), studentAbsence,
+                rejectReason);
+    }
+
+    public StudentAbsence reject(String rejecter, StudentAbsence studentAbsence, String rejectReason) {
         studentAbsence.setIsRejected(Boolean.TRUE);
         studentAbsence.setIsAccepted(Boolean.FALSE);
-        studentAbsence.setAcceptedBy(PersonUtil.fullname(em.getReference(Person.class, user.getPersonId())));
+        studentAbsence.setAcceptedBy(rejecter);
         studentAbsence.setRejectReason(StringUtils.hasText(rejectReason) ? rejectReason : null);
         return EntityUtil.save(studentAbsence, em);
     }
@@ -233,13 +242,13 @@ public class StudentAbsenceService {
         List<?> data = qb.select("sa.id", em).setMaxResults(1).getResultList();
         return !data.isEmpty();
     }
-    
+
     public void createContractAbsence(Contract contract) {
         StudentAbsence studentAbsence = new StudentAbsence();
         studentAbsence.setStudent(contract.getStudent());
         studentAbsence.setValidFrom(contract.getStartDate());
         studentAbsence.setValidThru(contract.getEndDate());
-        studentAbsence.setCause("Praktikal (leping)");
+        studentAbsence.setCause(PRACTICE_JOURNAL_CAUSE);
         studentAbsence.setIsAccepted(Boolean.TRUE);
         studentAbsence.setIsRejected(Boolean.FALSE);
         studentAbsence.setContract(contract);
@@ -249,5 +258,19 @@ public class StudentAbsenceService {
                 : Absence.PUUDUMINE_V;
         updateJournalEntryStudentAbsences(studentAbsence, absenceCode);
         EntityUtil.save(contract, em);
+    }
+
+    public void createDirectiveAbsence(DirectiveStudent directiveStudent) {
+        StudentAbsence studentAbsence = new StudentAbsence();
+        studentAbsence.setStudent(directiveStudent.getStudent());
+        studentAbsence.setValidFrom(directiveStudent.getStartDate());
+        studentAbsence.setValidThru(directiveStudent.getEndDate());
+        studentAbsence.setCause(DIRECTIVE_CAUSE);
+        studentAbsence.setIsAccepted(Boolean.TRUE);
+        studentAbsence.setIsRejected(Boolean.FALSE);
+        studentAbsence.setIsLessonAbsence(Boolean.FALSE);
+        studentAbsence.setDirectiveStudent(directiveStudent);
+        updateJournalEntryStudentAbsences(studentAbsence, Absence.PUUDUMINE_V);
+        EntityUtil.save(studentAbsence, em);
     }
 }

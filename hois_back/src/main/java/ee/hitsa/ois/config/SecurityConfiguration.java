@@ -46,6 +46,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/mIdLogin").permitAll()
                 .antMatchers("/mIdStatus").permitAll()
                 .antMatchers("/SingleSignOnService").permitAll()
+                .antMatchers("/taraLogin").permitAll()
+                .antMatchers("/taraCallback").permitAll()
                 .antMatchers(HttpMethod.GET, "/public/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/autocomplete/classifiers").permitAll()
                 .antMatchers(HttpMethod.GET, "/autocomplete/schools").permitAll()
@@ -70,7 +72,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             .addFilter(new JwtAuthorizationFilter(authenticationManager(), userDetailsService, hoisJwtProperties))
             .csrf()
                 .csrfTokenRepository(getRootCookieCsrfTokenRepository())
-                .ignoringAntMatchers("/ldap", "/mIdLogin");
+                .ignoringAntMatchers("/ldap", "/mIdLogin", "/taraLogin");
 
         http.logout()
                 .addLogoutHandler(userDetailsService)
