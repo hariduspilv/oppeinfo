@@ -25,8 +25,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
 
   $scope.applicationEditView = false;
   $scope.application = {files: [], status: 'AVALDUS_STAATUS_KOOST'};
-  $scope.showOnlyTypes = $scope.auth.isTeacher() ? ['AVALDUS_LIIK_TUGI'] : true;
-
+  
   var entity = $route.current.locals.entity;
   if (angular.isDefined(entity)) {
     entity.$promise.then(function (response) {
@@ -38,6 +37,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       }
     });
   }
+  
+  $scope.showOnlyTypes = !angular.isDefined(entity) && $scope.auth.isTeacher() ? ['AVALDUS_LIIK_TUGI'] : true;
 
   if (angular.isDefined(entity)) {
     if (entity.hasBeenSeenByAdmin === true) { // Hack to remove OptimisticLock
