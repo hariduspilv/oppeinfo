@@ -14,6 +14,7 @@
         <th md-column>{{'directive.student.fin' | translate}}</th>
         <th md-column class="required">{{'directive.student.finSpecific' | translate}}</th>
         <th md-column class="required">{{'directive.student.studentGroup' | translate}}</th>
+        <th md-column ng-if="formState.school.vocational" ng-class="{required: !formState.school.higher}">{{'directive.student.dormitory' | translate}}</th>
       </tr>
     </thead>
     <tbody md-body>
@@ -49,6 +50,14 @@
         <td md-cell>
           <hois-select ng-model="row.studentGroup" name="students[{{$index}}].studentGroup" values="formState.studentGroupMap[row.curriculumVersion]" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].studentGroup'].$error">
+            <p ng-message="required">{{'main.required' | translate}}</p>
+          </div>
+        </td>
+        <td md-cell ng-if="formState.school.vocational">
+          <hois-classifier-select ng-model="row.dormitory" name="students[{{$index}}].dormitory" model-value-attr="code"
+            main-classifier-code="YHISELAMU" aria-label="{{'directive.student.dormitory' | translate}}"
+            ng-disabled="row.curriculumVersionObject && !row.curriculumVersionObject.isVocational"></hois-classifier-select>
+          <div class="invalid" ng-messages="directiveForm['students['+$index+'].dormitory'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>
           </div>
         </td>

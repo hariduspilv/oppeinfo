@@ -85,4 +85,10 @@ public abstract class DateUtils {
     public static LocalDateTime toLocalDateTime(XMLGregorianCalendar cal) {
         return cal.toGregorianCalendar().toZonedDateTime().toLocalDateTime();
     }
+
+    public static boolean periodsOverlap(LocalDate firstPeriodStart, LocalDate firstPeriodEnd,
+            LocalDate secondPeriodStart, LocalDate secondPeriodEnd) {
+        return (firstPeriodStart.isEqual(secondPeriodEnd) || firstPeriodStart.isBefore(secondPeriodEnd))
+                && (firstPeriodEnd.isEqual(secondPeriodStart) || firstPeriodEnd.isAfter(secondPeriodStart));
+    }
 }

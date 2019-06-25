@@ -2,7 +2,8 @@ package ee.hitsa.ois.web.commandobject.poll;
 
 import java.util.ArrayList;
 import java.util.List;
-import ee.hitsa.ois.web.commandobject.OisFileForm;
+
+import ee.hitsa.ois.web.commandobject.OisFileEditDto;
 import ee.hitsa.ois.web.dto.poll.QuestionAnswerDto;
 
 public class QuestionCommand implements Comparable<QuestionCommand> {
@@ -16,7 +17,7 @@ public class QuestionCommand implements Comparable<QuestionCommand> {
     private Boolean isInRow;
     private Long question;
     private List<QuestionAnswerDto> answers = new ArrayList<>();
-    private List<OisFileForm> files = new ArrayList<>();
+    private List<OisFileEditDto> files = new ArrayList<>();
     public Long getTheme() {
         return theme;
     }
@@ -65,10 +66,10 @@ public class QuestionCommand implements Comparable<QuestionCommand> {
     public void setIsRequired(Boolean isRequired) {
         this.isRequired = isRequired;
     }
-    public List<OisFileForm> getFiles() {
+    public List<OisFileEditDto> getFiles() {
         return files;
     }
-    public void setFiles(List<OisFileForm> files) {
+    public void setFiles(List<OisFileEditDto> files) {
         this.files = files;
     }
     @Override

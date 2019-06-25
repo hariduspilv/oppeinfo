@@ -38,17 +38,19 @@ import ee.hitsa.ois.web.commandobject.timetable.TimetableEditForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventHigherForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventVocationalForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableManagementSearchCommand;
-import ee.hitsa.ois.web.dto.OisFileDto;
+import ee.hitsa.ois.web.dto.TimetableImportErrorDto;
 import ee.hitsa.ois.web.dto.timetable.GroupTimetableDto;
 import ee.hitsa.ois.web.dto.timetable.HigherTimetablePlanDto;
 import ee.hitsa.ois.web.dto.timetable.RoomTimetableDto;
 import ee.hitsa.ois.web.dto.timetable.TeacherTimetableDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableDatesDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableImportDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableManagementSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetablePlanDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudentStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudyYearWeekDto;
+import ee.hitsa.ois.web.dto.timetable.UntisCodeError;
 import ee.hitsa.ois.web.dto.timetable.VocationalTimetablePlanDto;
 import ee.hitsa.ois.xml.exportTimetable.Document;
 
@@ -241,17 +243,17 @@ public class TimetableController {
     }
     
     @GetMapping("/exportTimetableCheck")
-    public void exportTimetableCheck(HoisUserDetails user, @RequestParam("startDate") LocalDate startDate, @RequestParam("endDate") LocalDate endDate, @RequestParam("studyPeriod") @WithEntity("studyPeriod") StudyPeriod studyPeriod, HttpServletResponse response) throws IOException {
+    public UntisCodeError exportTimetableCheck(HoisUserDetails user, @RequestParam("startDate") LocalDate startDate, @RequestParam("endDate") LocalDate endDate, @RequestParam("studyPeriod") @WithEntity("studyPeriod") StudyPeriod studyPeriod) {
     	UserUtil.assertIsSchoolAdmin(user);
-    	timetableService.checkUntiscodes(startDate, endDate, studyPeriod, user);
+    	return timetableService.checkUntiscodes(startDate, endDate, studyPeriod, user);
     }
     
-    @PostMapping("/importXml/{studyPeriod:\\d+}")
-    public TimetableDto importXml(HoisUserDetails user,@Valid @RequestBody OisFileDto oisFile, @RequestParam("startDate") LocalDate startDate, @RequestParam("endDate") LocalDate endDate, @WithEntity("studyPeriod") StudyPeriod studyPeriod, @RequestParam("isHigher") Boolean isHigher, HttpServletResponse response) throws IOException {
+    @PostMapping("/importXml")
+    public TimetableImportErrorDto importXml(HoisUserDetails user,@Valid @RequestBody TimetableImportDto dto) {
     	UserUtil.assertIsSchoolAdmin(user);
-    	TimetableDto timetableDto = new TimetableDto();
-    	timetableDto.setStatus(timetableService.importXml(user, oisFile, startDate, endDate, studyPeriod, isHigher));
-    	return timetableDto;
+    	TimetableImportErrorDto errorDto = new TimetableImportErrorDto();
+    	errorDto.setErrors(timetableService.importXml(user, dto));
+    	return errorDto;
     }
 
 }

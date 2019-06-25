@@ -49,7 +49,7 @@
               </span>
             </td>
             <td md-cell>
-              <span ng-class="{'journal-remark': row.isRemark}">
+              <span ng-class="{'journal-remark': row.isRemark}" style="word-break: break-word">
                 <span>{{row.addInfo ? row.addInfo : '-'}}</span>
                 <md-tooltip ng-if="row.isRemark" class="tooltip-multiline">
                   <div>{{row.remarkInserted | hoisDate}}, {{row.remarkInsertedBy}}</div>
@@ -139,7 +139,7 @@
               </tr>
               <tr md-row ng-if="row.addInfo">
                 <td md-cell>
-                  <span ng-class="{'journal-remark': row.isRemark}">
+                  <span ng-class="{'journal-remark': row.isRemark}" style="word-break: break-word">
                     <span>{{row.addInfo}}</span>
                     <md-tooltip ng-if="row.isRemark && row.remarkInsertedBy" class="tooltip-multiline">
                       <div>{{row.remarkInserted | hoisDate}}, {{row.remarkInsertedBy}}</div>

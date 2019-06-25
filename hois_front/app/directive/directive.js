@@ -36,9 +36,13 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       });
     }
     if(!$scope.formState.school.vocational) {
+      $scope.formState.excludedTypes.push('KASKKIRI_INDOK');
+      $scope.formState.excludedTypes.push('KASKKIRI_INDOKLOP');
       $scope.formState.excludedTypes.push('KASKKIRI_KIITUS');
       $scope.formState.excludedTypes.push('KASKKIRI_NOOMI');
       $scope.formState.excludedTypes.push('KASKKIRI_OTEGEVUS');
+      $scope.formState.excludedTypes.push('KASKKIRI_TUGI');
+      $scope.formState.excludedTypes.push('KASKKIRI_TUGILOPP');
     }
 
     function setScholarshipEditable() {
@@ -70,16 +74,48 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
 
     function studentConverter(students) {
       var result = DataUtils.convertStringToDates(students, ['startDate', 'endDate']);
-      if (occupationMap) {
-        if (angular.isArray(result)) {
+      if (angular.isArray(result)) {
+        if (occupationMap) {
           result.forEach(mapStudentOccupations);
           result.forEach(mapStudentSpecialities);
-        } else {
+        }
+        result.forEach(typeSpecificConverts);
+      } else {
+        if (occupationMap) {
           mapStudentOccupations(result);
           mapStudentSpecialities(result);
         }
+        typeSpecificConverts(result);
       }
       return result;
+    }
+
+    function typeSpecificConverts(student) {
+      switch ($scope.record.type) {
+        case 'KASKKIRI_INDOKLOP':
+          if (!student.directiveStudent && student.existingDirectiveStudents && student.existingDirectiveStudents.length === 1) {
+            student.directiveStudent = student.existingDirectiveStudents[0].id;
+          }
+          break;
+        case 'KASKKIRI_STIPTOET':
+          if (!student.scholarshipApplication && student.scholarshipApplications && student.scholarshipApplications.length === 1) {
+            student.scholarshipApplication = student.scholarshipApplications[0].id;
+            $scope.scholarshipApplicationChanged(student);
+          }
+          break;
+        case 'KASKKIRI_STIPTOETL':
+          if (!student.directiveStudent && student.existingDirectiveStudents && student.existingDirectiveStudents.length === 1) {
+            student.directiveStudent = student.existingDirectiveStudents[0].id;
+            $scope.scholarshipDirectiveChanged(student);
+          }
+          break;
+        case 'KASKKIRI_TUGILOPP': 
+          $scope.mapStudentDirective(student);
+          if (!student.directiveStudent && student.existingDirectiveStudents && student.existingDirectiveStudents.length === 1) {
+            student.directiveStudent = student.existingDirectiveStudents[0].id;
+          }
+          break;
+      }
     }
 
     function afterLoad(result) {
@@ -129,6 +165,13 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       }
     });
 
+    $scope.$watchCollection('formState.selectedStudents', function (newValue) {
+      $scope.formState.selectedStudentIds = (newValue || []).reduce(function (map, object) {
+        map[object.id] = object;
+        return map;
+      }, {});
+    });
+
     function loadFormData() {
       var type = $scope.record.type;
       if(['KASKKIRI_ENNIST', 'KASKKIRI_IMMAT', 'KASKKIRI_IMMATV', 'KASKKIRI_OKAVA', 'KASKKIRI_OVORM'].indexOf(type) !== -1) {
@@ -167,12 +210,27 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       }
     }
 
-    function studentsToDirective(students, callback) {
+    /**
+     * 
+     * @param {Array<Number>} students 
+     * @param {Map<Number, Number>=} studentApplicationRelationship 
+     * @param {Function} callback 
+     */
+    function studentsToDirective(students, studentApplicationRelationship, callback) {
       var data = {id: $scope.record.id, type: $scope.record.type, scholarshipType: $scope.record.scholarshipType, 
         canceledDirective: canceledDirective, curriculumVersion: $scope.formState.curriculumVersion, 
         studyLevel: $scope.formState.studyLevel, students: students.map(function(i) { return i.id; }), 
         isHigher: $scope.record.isHigher};
-
+      
+      if ($scope.record.type === 'KASKKIRI_TUGI') {
+        if (!studentApplicationRelationship) {
+          studentApplicationRelationship = {};
+        }
+        data.studentApplication = {};
+        students.forEach(function (student) {
+          data.studentApplication[student.id] = studentApplicationRelationship[student.id];
+        });
+      }
       QueryUtils.endpoint(baseUrl+'/directivedata').save(data, callback);
     }
 
@@ -188,7 +246,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       $scope.record = new Endpoint({students: []});
       if(canceledDirective) {
         $scope.record.type = 'KASKKIRI_TYHIST';
-        studentsToDirective([], function(result) {
+        studentsToDirective([], {}, function(result) {
           var data = result.toJSON();
           angular.copy(data, $scope.record);
           afterLoad(data);
@@ -293,16 +351,28 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     };
 
     $scope.addDirective = function() {
+      if ($scope.record.type === 'KASKKIRI_TUGI') {
+        $scope.directiveForm.$setSubmitted();
+        if(!$scope.directiveForm.$valid) {
+          message.error('main.messages.form-has-errors');
+          return;
+        }
+      }
       $scope.formState.state = 'EDIT';
-      studentsToDirective($scope.formState.selectedStudents, function(result) {
+      studentsToDirective($scope.formState.selectedStudents, $scope.formState.studentApplicationRelationship, function(result) {
         angular.copy(result.toJSON(), $scope.record);
         $scope.record.students = studentConverter(result.students);
       });
       loadFormData();
     };
 
-    function storeStudents(students) {
-      studentsToDirective(students, function(result) {
+    /**
+     * 
+     * @param {Array<Number>} students 
+     * @param {Map<Number, Number>=} studentApplicationRelationship 
+     */
+    function storeStudents(students, studentApplicationRelationship) {
+      studentsToDirective(students, studentApplicationRelationship, function(result) {
         for(var i = 0, cnt = result.students.length; i < cnt; i++) {
           $scope.record.students.push(studentConverter(result.students[i]));
         }
@@ -336,7 +406,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       $mdDialog.show({
         controller: function($scope) {
           var baseUrl = '/directives/findstudents';
-          $scope.formState = {selectedStudents: [], type: data.type};
+          $scope.formState = {selectedStudents: [], type: data.type, studentApplicationRelationship: {}};
 
           QueryUtils.createQueryForm($scope, baseUrl);
 
@@ -344,9 +414,16 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
             $scope.criteria.studentGroup = $scope.criteria.studentGroupObject ? $scope.criteria.studentGroupObject.id : null;
           });
 
+          $scope.$watchCollection('formState.selectedStudents', function (newValue) {
+            $scope.formState.selectedStudentIds = (newValue || []).reduce(function (map, object) {
+              map[object.id] = object;
+              return map;
+            }, {});
+          });
+
           $scope.cancel = $mdDialog.hide;
           $scope.select = function() {
-            storeStudents($scope.formState.selectedStudents);
+            storeStudents($scope.formState.selectedStudents, $scope.formState.studentApplicationRelationship);
             $mdDialog.hide();
           };
 
@@ -443,7 +520,12 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       var curriculumVersion = $scope.formState.curriculumVersionMap[row.curriculumVersion];
       if(curriculumVersion && curriculumVersion.isVocational) {
         row.studyForm = curriculumVersion.studyForm;
+        row.dormitory = row.dormitory ? row.dormitory : 'YHISELAMU_E';
+        row.studyLoad = null;
+      } else {
+        row.dormitory = null;
       }
+      row.curriculumVersionObject = curriculumVersion;
     };
 
     $scope.visibleStudyForms = function(curriculumVersion) {
@@ -539,22 +621,96 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       }
     };
 
-    $scope.individualCurriculumModules = function(studentId, studentIndex) {
+    $scope.scholarshipApplicationChanged = function(row) {
+      if (row.scholarshipApplication) {
+        var application = row.scholarshipApplications.filter(function (sa) {
+          return row.scholarshipApplication === sa.id;
+        })[0];
+        row.startDate = application.startDate;
+        row.endDate = application.endDate;
+        row.bankAccount = application.bankAccount;
+        row.amountPaid = application.amountPaid;
+      } else {
+        row.startDate = null;
+        row.endDate = null;
+        row.bankAccount = null;
+        row.amountPaid = null;
+      }
+    };
+
+    $scope.scholarshipDirectiveChanged = function(row) {
+      if (row.directiveStudent) {
+        var directiveStudent = row.existingDirectiveStudents.filter(function (ds) {
+          return row.directiveStudent === ds.id;
+        })[0];
+        row.startDate = directiveStudent.startDate;
+        row.endDate = directiveStudent.endDate;
+        row.scholarshipApplication = directiveStudent.scholarshipApplicationId;
+      } else {
+        row.startDate = null;
+        row.endDate = null;
+        row.scholarshipApplication = null;
+      }
+    };
+
+    /**
+     * Works for row.directiveStudent. We need to know object parameters as well. Not only ID.
+     */
+    $scope.mapStudentDirective = function(row) {
+      row.directiveStudentObject = (row.existingDirectiveStudents || []).find(function (r) {
+        return r.id === row.directiveStudent;
+      });
+      if (row.directiveStudentObject && typeof row.directiveStudentObject.endDate === 'string') {
+        row.directiveStudentObject = DataUtils.convertStringToDates(row.directiveStudentObject, ['startDate', 'endDate']);
+      }
+    };
+
+    $scope.individualCurriculumModules = function(student, studentIndex) {
       dialogService.showDialog('directive/indok.modules.dialog.html', function (dialogScope) {
+        var studentId = student.student;
         dialogScope.formState = { viewForm: $scope.record.type === 'KASKKIRI_TYHIST', selectedModules: [] };
-        dialogScope.student = $scope.record.students[studentIndex];
+        dialogScope.student = student;
+        dialogScope.existingIndividualCurriculums = false;
         
-        QueryUtils.endpoint(baseUrl + '/studentIndividualCurriculumModules/:id').query({id: studentId, directiveId: id}).$promise.then(function (result) {
+        QueryUtils.endpoint(baseUrl + '/studentIndividualCurriculumModules/:id').query({
+          id: studentId,
+          directiveId: id
+        }).$promise.then(function (result) {
           dialogScope.curriculumVersionModules = result;
+
+          (dialogScope.curriculumVersionModules || []).forEach(function (cvModule) {
+            // should not exist on any other individual curriculum
+            var valid = true;
+
+            if (cvModule.existingModules) {
+              dialogScope.existingIndividualCurriculums = true; 
+              
+              for (var i = 0; i < cvModule.existingModules.length; i++) {
+                var existingModuleStart = new Date(cvModule.existingModules[i].startDate);
+                existingModuleStart.setHours(0, 0, 0, 0);
+                var existingModuleEnd = new Date(cvModule.existingModules[i].endDate);
+                existingModuleEnd.setHours(0, 0, 0, 0);
+
+                if (DataUtils.isValidObject(dialogScope.student.startDate, dialogScope.student.endDate, existingModuleStart,
+                    existingModuleEnd)) {
+                  valid = false;
+                  break;
+                }
+              }
+            }
+            cvModule.valid = valid;
+          });
 
           if (dialogScope.student.modules) {
             dialogScope.student.modules.forEach(function (individualModule) {
-              dialogScope.formState.selectedModules.push(individualModule.curriculumVersionOmodule);
-              
               var curriculumModule = (dialogScope.curriculumVersionModules || []).filter(function (cvModule) {
                 return cvModule.id === individualModule.curriculumVersionOmodule;
               })[0];
-              if (curriculumModule) {
+
+              if (curriculumModule) { 
+                if (curriculumModule.valid) {
+                  dialogScope.formState.selectedModules.push(individualModule.curriculumVersionOmodule);
+                }
                 curriculumModule.directiveStudentModuleId = individualModule.id;
                 curriculumModule.addInfo = individualModule.addInfo;
               }
@@ -658,10 +814,11 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       });
     };
 
-    $scope.individualCurriculumModules = function(studentId, studentIndex) {
+    $scope.individualCurriculumModules = function(student) {
       dialogService.showDialog('directive/indok.modules.dialog.html', function (dialogScope) {
+        var studentId = student.student;
         dialogScope.formState = { viewForm: true, selectedModules: [] };
-        dialogScope.student = $scope.record.students[studentIndex];
+        dialogScope.student = student;
         
         QueryUtils.endpoint(baseUrl + '/studentIndividualCurriculumModules/:id').query({id: studentId, directiveId: id}).$promise.then(function (result) {
           dialogScope.curriculumVersionModules = result;
@@ -693,9 +850,13 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       $scope.formState.excludedTypes.push('KASKKIRI_VALIS');
     }
     if(!$scope.formState.school.vocational) {
+      $scope.formState.excludedTypes.push('KASKKIRI_INDOK');
+      $scope.formState.excludedTypes.push('KASKKIRI_INDOKLOP');
       $scope.formState.excludedTypes.push('KASKKIRI_KIITUS');
       $scope.formState.excludedTypes.push('KASKKIRI_NOOMI');
       $scope.formState.excludedTypes.push('KASKKIRI_OTEGEVUS');
+      $scope.formState.excludedTypes.push('KASKKIRI_TUGI');
+      $scope.formState.excludedTypes.push('KASKKIRI_TUGILOPP');
     }
 
     var clMapper = Classifier.valuemapper({type: 'KASKKIRI', status: 'KASKKIRI_STAATUS'});

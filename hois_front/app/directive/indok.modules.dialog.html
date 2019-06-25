@@ -20,19 +20,23 @@
                   <tr md-row>
                     <th md-column>{{'directive.student.module' | translate}}</th>
                     <th md-column>{{'directive.student.distinction' | translate}}</th>
+                    <th md-column ng-if="!formState.viewForm && existingIndividualCurriculums">{{'directive.student.existingIndividualCurriculum' | translate}}</th>
                   </tr>
                 </thead>
                 <tbody md-body>
-                  <tr md-row md-select="row.id" ng-disabled="formState.viewForm" ng-repeat="row in curriculumVersionModules | orderBy: currentLanguageNameField()" 
+                  <tr md-row md-select="row.id" ng-disabled="formState.viewForm || !row.valid" ng-repeat="row in curriculumVersionModules | orderBy: currentLanguageNameField()" 
                     ng-class-odd="'odd'" ng-class-even="'even'">
                     <td md-cell>{{currentLanguageNameField(row)}}</td>
-                    <td md-cell style="width: 50%;">
+                    <td md-cell style="width: 45%;">
                       <md-input-container style="width: 100%;">
                         <hois-value ng-if="formState.viewForm" value="row.addInfo"></hois-value>
                         <textarea ng-if="!formState.viewForm" ng-model="row.addInfo" md-maxlength="4000" max-rows="5" 
                           aria-label="{{'directive.student.distinction' | translate}}" ng-disabled="formState.selectedModules.indexOf(row.id) === -1" 
                           ng-required="formState.selectedModules.indexOf(row.id) !== -1"></textarea>
                       </md-input-container>
+                    </td>
+                    <td ng-if="!formState.viewForm && existingIndividualCurriculums" md-cell style="width: 20%;">
+                      <li ng-repeat="module in row.existingModules">{{::module.startDate | hoisDate}} - {{::module.endDate | hoisDate}}</li>
                     </td>
                   </tr>
                 </tbody>

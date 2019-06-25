@@ -71,6 +71,13 @@ public class AutomaticMessageService {
         }
     }
 
+    /**
+     * NB! Uses an email of person for student instead of the student's emaili.
+     * 
+     * @param type
+     * @param student
+     * @param dataBean
+     */
     public void sendMessageToStudentAndSchoolAdmins(MessageType type, Student student, Object dataBean) {
         School school = student.getSchool();
         Person studentPerson = student.getPerson();
@@ -91,26 +98,22 @@ public class AutomaticMessageService {
     /**
      * Sends a message to student and his/her representative (in case if student needs it that means student is not adult or needs representative) and school admins.
      * 
+     * It should create 2 different messages for (1) student with representative (if needs) and (2) admins
+     * 
      * @param type Message type
      * @param student Student
      * @param dataBean Message
      * @param ignorRepreIfAdult does not send a msg to representative if student is an adult and does not need repre.
      */
-    public void sendMessageToStudentAndRepresentativeAndSchoolAdmins(MessageType type, Student student, Object dataBean, boolean ignorRepreIfAdult) {
-        Set<Person> persons = new HashSet<>(getPersonsWithRole(student.getSchool(), Role.ROLL_A));
+    public void sendMessageToStudentAndRepresentativeAndSchoolAdmins(MessageType type, Student student, Object dataBean) {
+        sendMessageToStudent(type, student, dataBean);
         
-        if (!persons.contains(student.getPerson())) {
-            persons.add(student.getPerson());
-        }
-        
-        if (!ignorRepreIfAdult || !StudentUtil.isAdultAndDoNotNeedRepresentative(student)) {
-            persons.addAll(getStudentRepresentativePersons(student, null));
-        }
-        
-        Message message = sendMessageToPersons(type, student.getSchool(), new ArrayList<>(persons), dataBean);
+        Set<Person> admins = new HashSet<>(getPersonsWithRole(student.getSchool(), Role.ROLL_A));
+        Message message = sendMessageToPersons(type, student.getSchool(), new ArrayList<>(admins), dataBean);
         
         if (message != null) {
-            
+            List<String> receivers = StreamUtil.toMappedList(Person::getEmail, admins);
+            mailService.sendMail(message, receivers);
         }
         
     }

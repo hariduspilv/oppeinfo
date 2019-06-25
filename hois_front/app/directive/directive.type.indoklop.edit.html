@@ -7,7 +7,7 @@
         <th md-column>{{'directive.student.idcode' | translate}}</th>
         <th md-column>{{'directive.student.curriculum' | translate}}</th>
         <th md-column>{{'directive.student.studentGroup' | translate}}</th>
-        <th md-column class="required">{{'main.from' | translate}}</th>
+        <th md-column class="required">{{'directive.student.validEnd' | translate}}</th>
         <th md-column class="required">{{'directive.student.directive' | translate}}</th>
         <th></th>
       </tr>
@@ -32,7 +32,8 @@
         </td>
         <td md-cell>
           <md-input-container style="width: 250px">
-            <md-select ng-model="row.directiveStudent" name="students[{{$index}}].directiveStudent">
+            <md-select ng-model="row.directiveStudent" name="students[{{$index}}].directiveStudent" 
+              ng-disabled="row.directiveStudent && row.existingDirectiveStudents.length === 1">
               <md-option ng-value="existingDirective.id" ng-repeat="existingDirective in row.existingDirectiveStudents">
                 {{existingDirective.directiveNr}} ({{existingDirective.startDate | hoisDate}} - {{existingDirective.endDate | hoisDate}})
               </md-option>
@@ -46,7 +47,7 @@
           </div>
         </td>
         <td md-cell>
-          <a ng-click="deleteStudent(row)" md-no-ink  class="remove">&times;</a>
+          <a ng-click="deleteStudent(row)" md-no-ink class="remove">&times;</a>
         </td>
       </tr>
     </tbody>

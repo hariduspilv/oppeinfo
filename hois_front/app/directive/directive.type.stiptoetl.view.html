@@ -5,18 +5,24 @@
         <th md-column>{{'directive.student.order' | translate}}</th>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
         <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column>{{'directive.student.directive' | translate}}</th>
         <th md-column>{{'directive.student.stipStartDate' | translate}}</th>
         <th md-column>{{'directive.student.stipEndDate' | translate}}</th>
         <th md-column>{{'directive.student.stipEndReason' | translate}}</th>
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-disabled="!row.selectable" md-select="row" md-select-id="student" md-auto-select ng-repeat="row in record.students | orderBy:'+lastname'" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row ng-disabled="!row.selectable" md-select="row" md-select-id="student" ng-repeat="row in record.students | orderBy:'+lastname'" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>
           <a class="md-primary" ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</a>
         </td>
         <td md-cell>{{::row.idcode}}</td>
+        <td md-cell>
+          <span ng-if="row.directiveStudentObject">
+            {{::row.directiveStudentObject.directiveNr}} ({{::row.directiveStudentObject.scholarshipTermNameEt}}, {{::row.directiveStudentObject.confirmDate | hoisDate}})
+          </span>
+        </td>
         <td md-cell>
           <hois-value value="row.startDate | hoisDate"></hois-value>
         </td>

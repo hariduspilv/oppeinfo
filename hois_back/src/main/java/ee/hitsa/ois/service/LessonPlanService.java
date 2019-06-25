@@ -446,7 +446,6 @@ public class LessonPlanService {
             List<CurriculumVersionOccupationModuleTheme> journalThemeEquivalents, LessonPlan lessonPlan,
             LessonPlanModule lessonPlanModuleCopy) {
         Journal journalCopy = new Journal();
-        journalCopy = new Journal();
         journalCopy.setSchool(lessonPlan.getSchool());
         journalCopy.setAssessment(journal.getAssessment());
         journalCopy.setNameEt(journal.getNameEt());
@@ -509,17 +508,20 @@ public class LessonPlanService {
                 .flatMap(r -> r.getWeekNrs().stream()).collect(Collectors.toList());
         Map<StudyPeriod, List<Short>> weekNrsByStudyPeriod = lessonPlan.getStudyYear().getStudyPeriods()
                 .stream().collect(Collectors.toMap(r -> r, r -> r.getWeekNrs()));
+        Map<Classifier, JournalCapacityType> journalCopyCapacityTypes = StreamUtil.toMap(jct -> jct.getCapacityType(),
+                journalCopy.getJournalCapacityTypes());
 
         for (JournalCapacity jc : journal.getJournalCapacities()) {
             if (lessonPlanWeekNrs.contains(jc.getWeekNr())) {
                 StudyPeriod studyPeriod = weekNrsByStudyPeriod.entrySet().stream()
                         .filter(sp -> sp.getValue().stream().anyMatch(nr -> nr == jc.getWeekNr()))
                         .map(sp -> sp.getKey()).findFirst().orElse(null);
-                
+
                 JournalCapacity journalCapacityCopy = new JournalCapacity();
                 journalCapacityCopy.setJournal(journalCopy);
                 journalCapacityCopy.setStudyPeriod(studyPeriod);
-                journalCapacityCopy.setJournalCapacityType(jc.getJournalCapacityType());
+                journalCapacityCopy.setJournalCapacityType(journalCopyCapacityTypes
+                        .get(jc.getJournalCapacityType().getCapacityType()));
                 journalCapacityCopy.setWeekNr(jc.getWeekNr());
                 journalCapacityCopy.setHours(jc.getHours());
                 journalCopy.getJournalCapacities().add(journalCapacityCopy);

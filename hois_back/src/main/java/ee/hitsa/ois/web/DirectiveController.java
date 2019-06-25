@@ -45,12 +45,12 @@ import ee.hitsa.ois.web.commandobject.directive.DirectiveDataCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveSearchCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveStudentSearchCommand;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.directive.DirectiveCoordinatorDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveSearchDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveStudentSearchDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveViewDto;
+import ee.hitsa.ois.web.dto.directive.IndividualCurriculumModuleDto;
 
 @RestController
 @RequestMapping("/directives")
@@ -174,7 +174,7 @@ public class DirectiveController {
     }
 
     @GetMapping("/studentIndividualCurriculumModules/{id:\\d+}")
-    public List<AutocompleteResult> individualCurriculumModules(HoisUserDetails user, @WithEntity Student student,
+    public List<IndividualCurriculumModuleDto> individualCurriculumModules(HoisUserDetails user, @WithEntity Student student,
             @RequestParam(value = "directiveId", required = false) Long directiveId) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KASKKIRI);
         return directiveService.individualCurriculumModules(student, directiveId);

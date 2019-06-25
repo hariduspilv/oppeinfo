@@ -54,6 +54,7 @@
                   <tr md-row>
                     <th md-column>{{'directive.student.fullname' | translate}}</th>
                     <th md-column>{{'directive.student.idcode' | translate}}</th>
+                    <th md-column ng-if="formState.type === 'KASKKIRI_TUGI'">{{'directive.student.application' | translate}}</th>
                     <th md-column ng-if="formState.type !== 'KASKKIRI_IMMAT' && formState.tpye !== 'KASKKIRI_IMMATV'">{{'directive.student.curriculum' | translate}}</th>
                     <th md-column ng-if="formState.type !== 'KASKKIRI_IMMAT' && formState.tpye !== 'KASKKIRI_IMMATV'">{{'directive.student.studentGroup' | translate}}</th>
                   </tr>
@@ -62,6 +63,18 @@
                   <tr md-row md-select="row" md-select-id="id" md-auto-select ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
                     <td md-cell>{{::row.fullname}}</td>
                     <td md-cell>{{::row.idcode}}</td>
+                    <td md-cell ng-if="formState.type === 'KASKKIRI_TUGI'">
+                      <md-input-container style="width: 100%;" ng-if="row.applications.length > 1">
+                        <md-select ng-model="formState.studentApplicationRelationship[row.id]" ng-required="!!formState.selectedStudentIds[row.id]">
+                          <md-option ng-value="opt.id" ng-repeat="opt in row.applications">
+                            {{opt.confirmed ? "(" + (opt.confirmed | hoisDateTime) + ") " + opt.description : opt.description}}
+                          </md-option>
+                        </md-select>
+                      </md-input-container>
+                      <span ng-if="row.applications.length === 1" ng-init="formState.studentApplicationRelationship[row.id] = row.applications[0].id">
+                        {{row.applications[0].confirmed ? "(" + (row.applications[0].confirmed | hoisDateTime) + ") " + row.applications[0].description : row.applications[0].description}}
+                      </span>
+                    </td>
                     <td md-cell ng-if="formState.type !== 'KASKKIRI_IMMAT' && formState.tpye !== 'KASKKIRI_IMMATV'">{{$root.currentLanguageNameField(row.curriculumVersion)}}</td>
                     <td md-cell ng-if="formState.type !== 'KASKKIRI_IMMAT' && formState.tpye !== 'KASKKIRI_IMMATV'">{{::row.studentGroup}}</td>
                   </tr>

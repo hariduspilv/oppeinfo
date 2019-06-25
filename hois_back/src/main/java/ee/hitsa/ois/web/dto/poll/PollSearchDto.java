@@ -12,6 +12,8 @@ public class PollSearchDto {
     private LocalDate validFrom;
     private LocalDate validThru;
     private String status;
+    private String insertedBy;
+    private String changedBy;
     
     public String getName() {
         return name;
@@ -54,6 +56,18 @@ public class PollSearchDto {
     }
     public void setTargetCodes(List<String> targetCodes) {
         this.targetCodes = targetCodes;
+    }
+    public String getInsertedBy() {
+        return insertedBy;
+    }
+    public void setInsertedBy(String insertedBy) {
+        this.insertedBy = insertedBy;
+    }
+    public String getChangedBy() {
+        return changedBy;
+    }
+    public void setChangedBy(String changedBy) {
+        this.changedBy = changedBy;
     }
 
 }

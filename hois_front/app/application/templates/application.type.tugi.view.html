@@ -1,11 +1,11 @@
-<div layout="column" flex="60" flex-sm="100" flex-xs="100" class="inner-form">
+<div layout="column" flex class="inner-form" style="margin-top: -1em;">
   <div layout="column">
       <md-input-container class="label-only">
         <label>{{'application.type' | translate}}</label>
         <hois-classifier-value ng-model="application.type" main-classifier-code="AVALDUS_LIIK"></hois-classifier-value>
       </md-input-container>
   </div>
-  <div ng-if="!(auth.isStudent() || auth.isParent())" layout="column">
+  <div ng-if="!(auth.isStudent())" layout="column">
       <md-input-container class="label-only">
         <label>{{'student.label' | translate}}</label>
         <hois-value value="application.student.nameEt" href-value="'#/students/' + application.student.id + '/main'"></hois-value>
@@ -23,58 +23,12 @@
       <hois-value value="application.insertedBy"></hois-value>
     </md-input-container>
   </div>
-  <div ng-if="application.status === 'AVALDUS_STAATUS_TAGASI' && application.rejectReason && !application.representativeConfirmed" layout="row" layout-sm="column" layout-xs="column">
+  <div ng-if="application.status === 'AVALDUS_STAATUS_TAGASI' && application.rejectReason && !application.representativeConfirmed && !application.committeeDecisionAdded" layout="column">
     <md-input-container class="label-only">
       <label>{{'application.rejectReason' | translate}}</label>
       <hois-value value="application.rejectReason"></hois-value>
     </md-input-container>
   </div>
-  <div ng-if="(application.status === 'AVALDUS_STAATUS_TAGASI' || application.status === 'AVALDUS_STAATUS_KINNITATUD') && application.representativeConfirmed">&nbsp;</div>
-  <fieldset ng-if="(application.status === 'AVALDUS_STAATUS_TAGASI' || application.status === 'AVALDUS_STAATUS_KINNITATUD') && application.representativeConfirmed">
-    <legend class="md-title-small">
-      <span md-colors="{color: 'primary-800'}" style="margin-right: 16px;">{{'application.representativeOrStudent' | translate}}</span>
-    </legend>
-    <div layout="column">
-      <div ng-if="(application.status === 'AVALDUS_STAATUS_TAGASI' || application.status === 'AVALDUS_STAATUS_KINNITATUD') && application.representativeConfirmed" layout="column">
-        <md-input-container class="label-only">
-          <label>{{'application.supportService.isRepresentativeConfirmed' | translate}}</label>
-          <hois-value value="(application.isRepresentativeConfirmed === true ? 'application.supportService.representativeConfirmed' : 'application.supportService.representativeRejected') | translate"></hois-value>
-        </md-input-container>
-      </div>
-      <div ng-if="(application.status === 'AVALDUS_STAATUS_TAGASI' || application.status === 'AVALDUS_STAATUS_KINNITATUD') && application.representativeDecisionAddInfo" layout="column">
-        <md-input-container class="label-only">
-          <label>{{'application.representativeDecisionAddInfo' | translate}}</label>
-          <hois-value value="application.representativeDecisionAddInfo"></hois-value>
-        </md-input-container>
-      </div>
-      <div layout="column" ng-if="application.representativeConfirmed">
-        <md-input-container class="label-only">
-          <label>{{'application.representativeConfirmed' | translate}}</label>
-          <hois-value value="application.representativeConfirmed | hoisDate"></hois-value>
-        </md-input-container>
-      </div>
-    </div>
-  </fieldset>
-  <div ng-if="application.committeeDecisionAdded || application.committeeAdded">&nbsp;</div>
-  <fieldset ng-if="application.committeeDecisionAdded || application.committeeAdded">
-    <!-- <legend class="md-title-small">
-      <span md-colors="{color: 'primary-800'}" style="margin-right: 16px;">{{'application.label' | translate}}</span>
-    </legend> -->
-    <div layout="column">
-      <div layout="column" ng-if="application.committeeDecisionAdded">
-        <md-input-container class="label-only">
-          <label>{{'application.committeeDecisionAdded' | translate}}</label>
-          <hois-value value="application.committeeDecisionAdded | hoisDate"></hois-value>
-        </md-input-container>
-      </div>
-      <div layout="column" ng-if="application.committeeAdded">
-        <md-input-container class="label-only">
-          <label>{{'application.committeeAdded' | translate}}</label>
-          <hois-value value="application.committeeAdded | hoisDate"></hois-value>
-        </md-input-container>
-      </div>
-    </div>
-  </fieldset>
   <div>&nbsp;</div>
   <fieldset>
     <legend class="md-title-small">
@@ -109,6 +63,18 @@
       <legend class="md-title-small">
         <span md-colors="{color: 'primary-800'}" style="margin-right: 16px;">{{'application.committee' | translate}}</span>
       </legend>
+      <div layout="column" ng-if="application.committeeAdded">
+        <md-input-container class="label-only">
+          <label>{{'application.committeeAdded' | translate}}</label>
+          <hois-value value="application.committeeAdded | hoisDate"></hois-value>
+        </md-input-container>
+      </div>
+      <div layout="column" ng-if="application.committeeDecisionAdded">
+        <md-input-container class="label-only">
+          <label>{{'application.committeeDecisionAdded' | translate}}</label>
+          <hois-value value="application.committeeDecisionAdded | hoisDate"></hois-value>
+        </md-input-container>
+      </div>
       <div layout="column">
         <md-input-container>
           <label>{{'application.supportService.committee' | translate}}</label>
@@ -169,6 +135,32 @@
             <hois-value value="application.committeeAddInfo"></hois-value>
           </md-input-container>
         </div> -->
+      </div>
+    </fieldset>
+    <div ng-if="(application.status === 'AVALDUS_STAATUS_TAGASI' || application.status === 'AVALDUS_STAATUS_KINNITATUD') && application.representativeConfirmed">&nbsp;</div>
+    <fieldset ng-if="(application.status === 'AVALDUS_STAATUS_TAGASI' || application.status === 'AVALDUS_STAATUS_KINNITATUD') && application.representativeConfirmed">
+      <legend class="md-title-small">
+        <span md-colors="{color: 'primary-800'}" style="margin-right: 16px;">{{'application.representativeOrStudentDecision' | translate}}</span>
+      </legend>
+      <div layout="column">
+        <div ng-if="(application.status === 'AVALDUS_STAATUS_TAGASI' || application.status === 'AVALDUS_STAATUS_KINNITATUD') && application.representativeConfirmed" layout="column">
+          <md-input-container class="label-only">
+            <label>{{'application.supportService.isRepresentativeConfirmed' | translate}}</label>
+            <hois-value value="(application.isRepresentativeConfirmed === true ? 'application.supportService.representativeConfirmed' : 'application.supportService.representativeRejected') | translate"></hois-value>
+          </md-input-container>
+        </div>
+        <div ng-if="(application.status === 'AVALDUS_STAATUS_TAGASI' || application.status === 'AVALDUS_STAATUS_KINNITATUD') && application.representativeDecisionAddInfo" layout="column">
+          <md-input-container class="label-only">
+            <label>{{'application.representativeDecisionAddInfo' | translate}}</label>
+            <hois-value value="application.representativeDecisionAddInfo"></hois-value>
+          </md-input-container>
+        </div>
+        <div layout="column" ng-if="application.representativeConfirmed">
+          <md-input-container class="label-only">
+            <label>{{'application.representativeConfirmed' | translate}}</label>
+            <hois-value value="application.representativeConfirmed | hoisDate"></hois-value>
+          </md-input-container>
+        </div>
       </div>
     </fieldset>
     <div>&nbsp;</div>

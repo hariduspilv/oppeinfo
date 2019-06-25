@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -93,6 +94,18 @@ public abstract class HttpUtil {
     public static String getIpAddress(HttpServletRequest request) {
         String forwarded = request.getHeader("X-FORWARDED-FOR");
         return forwarded != null ? forwarded : request.getRemoteAddr();
+    }
+
+    public static Cookie getCookie(HttpServletRequest request, String cookieName) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals(cookieName)) {
+                    return cookie;
+                }
+            }
+        }
+        return null;
     }
 
     public static class CreatedResponse extends ResponseEntity<Map<String, ?>> {

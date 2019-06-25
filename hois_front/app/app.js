@@ -107,7 +107,11 @@ angular
 
     return {
      'request': function(config) {
-       showHideBusy(config, true);
+        if (angular.isDefined(config.loading)) {
+          showHideBusy(config, config.loading);
+        } else {
+          showHideBusy(config, true);
+        }
        return config;
      },
      'response': function(response) {

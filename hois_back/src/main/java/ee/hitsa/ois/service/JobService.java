@@ -73,7 +73,10 @@ public class JobService {
         // cancelling directive is not sent to ehis (it's changed manually in ehis)
         // akad and akadk are sent when student status changes
         // valis and lopetamine are sent manually
-        if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_TYHIST, DirectiveType.KASKKIRI_AKAD, DirectiveType.KASKKIRI_AKADK, DirectiveType.KASKKIRI_LOPET, DirectiveType.KASKKIRI_VALIS)) {
+        // HITSAOIS-569: kiitus, noomi, otegevus and praktik are not sent to ehis.
+        if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_TYHIST, DirectiveType.KASKKIRI_AKAD, DirectiveType.KASKKIRI_AKADK, DirectiveType.KASKKIRI_LOPET,
+                DirectiveType.KASKKIRI_VALIS, DirectiveType.KASKKIRI_KIITUS, DirectiveType.KASKKIRI_NOOMI, DirectiveType.KASKKIRI_OTEGEVUS, DirectiveType.KASKKIRI_PRAKTIK,
+                DirectiveType.KASKKIRI_TUGILOPP)) {
             submitEhisSend(directive, null);
         }
 

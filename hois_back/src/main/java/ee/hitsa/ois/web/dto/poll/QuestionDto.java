@@ -3,7 +3,7 @@ package ee.hitsa.ois.web.dto.poll;
 import java.util.ArrayList;
 import java.util.List;
 
-import ee.hitsa.ois.web.commandobject.OisFileForm;
+import ee.hitsa.ois.web.commandobject.OisFileEditDto;
 
 public class QuestionDto implements Comparable<QuestionDto> {
     
@@ -16,8 +16,9 @@ public class QuestionDto implements Comparable<QuestionDto> {
     private Boolean isInRow;
     private Long question;
     private Boolean disabled;
+    private String answerTxt;
     private List<QuestionAnswerDto> answers = new ArrayList<>();
-    private List<OisFileForm> files = new ArrayList<>();
+    private List<OisFileEditDto> files = new ArrayList<>();
     
     public String getNameEt() {
         return nameEt;
@@ -61,10 +62,10 @@ public class QuestionDto implements Comparable<QuestionDto> {
     public void setIsRequired(Boolean isRequired) {
         this.isRequired = isRequired;
     }
-    public List<OisFileForm> getFiles() {
+    public List<OisFileEditDto> getFiles() {
         return files;
     }
-    public void setFiles(List<OisFileForm> files) {
+    public void setFiles(List<OisFileEditDto> files) {
         this.files = files;
     }
     @Override
@@ -94,6 +95,12 @@ public class QuestionDto implements Comparable<QuestionDto> {
     }
     public void setDisabled(Boolean disabled) {
         this.disabled = disabled;
+    }
+    public String getAnswerTxt() {
+        return answerTxt;
+    }
+    public void setAnswerTxt(String answerTxt) {
+        this.answerTxt = answerTxt;
     }
 
 }

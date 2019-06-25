@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -52,6 +53,7 @@ import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.message.StudentAbsenceCreated;
 import ee.hitsa.ois.repository.ClassifierRepository;
@@ -79,11 +81,13 @@ import ee.hitsa.ois.web.commandobject.student.StudentSpecialitySearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SpecialityAutocompleteResult;
 import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
+import ee.hitsa.ois.web.dto.StudentSupportServiceDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeDto;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
+import ee.hitsa.ois.web.dto.student.StudentDormitoryHistoryDto;
 import ee.hitsa.ois.web.dto.student.StudentForeignstudyDto;
 import ee.hitsa.ois.web.dto.student.StudentModuleResultDto;
 import ee.hitsa.ois.web.dto.student.StudentPracticeContractDto;
@@ -564,6 +568,8 @@ public class StudentService {
         dto.setUserIsStudentGroupTeacher(Boolean.valueOf(UserUtil.isStudentGroupTeacher(user, student)));
         dto.setUserCanViewStudentSpecificData(Boolean.valueOf(UserUtil.canViewStudentSpecificData(user, student)));
         dto.setUserCanUpdateRR(Boolean.valueOf(UserUtil.canUpdateStudentRR(user, student)));
+        dto.setUserCanViewStudentSupportServices(Boolean.valueOf(UserUtil.canViewStudentSupportServices(user, student)));
+        dto.setUserCanViewPrivateStudentSupportServices(Boolean.valueOf(UserUtil.canViewPrivateStudentSupportServices(user, student)));
         if(!(Boolean.TRUE.equals(dto.getUserIsSchoolAdmin()) || UserUtil.isStudent(user, student) || UserUtil.isStudentRepresentative(user, student))) {
             dto.setSpecialNeed(null);
             dto.setIsRepresentativeMandatory(null);
@@ -584,6 +590,7 @@ public class StudentService {
             dto.setHasRemarksPastSevenDays(studentRemarkService.studentHasRemarksPastSevenDays(student));
         }
         dto.setOccupationCertificates(occupationCertificates(student));
+        dto.setDormitoryHistory(dormitoryHistory(student));
 
         OisFile logo = student.getPhoto();
         if (logo != null) {
@@ -611,11 +618,26 @@ public class StudentService {
                 + " on ds_lop.directive_student_id = ds.id and ds_lop.canceled = false"
                 + " where ds.student_id = :studentId and d.type_code = :directiveType"
                 + " and d.status_code = :directiveStatus and ds.canceled = false"
-                + " and ds.start_date <= :today and coalesce(ds_lop.start_date, ds.end_date) >= :today")
+                + " and ds.start_date <= :today and coalesce(ds_lop.start_date, ds.end_date) >= :today"
+                + " union all"
+                + " select ds2.start_date, coalesce(ds_lop2.start_date, ds2.end_date)"
+                + " from directive_student ds2"
+                + " join directive d2 on d2.id = ds2.directive_id"
+                + " join application a on a.id = ds2.application_id"
+                + " join application_support_service ass on ass.application_id = a.id"
+                + " left join (directive_student ds_lop2 join directive d_lop2 on d_lop2.id = ds_lop2.directive_id"
+                + " and d_lop2.type_code = :lopDirectiveType2 and d_lop2.status_code = :directiveStatus)"
+                + " on ds_lop2.directive_student_id = ds2.id and ds_lop2.canceled = false"
+                + " where ds2.student_id = :studentId and d2.type_code = :directiveType2 and d2.status_code = :directiveStatus"
+                + " and ds2.canceled = false and ass.support_service_code = :supportServiceCode" 
+                + " and ds2.start_date <= :today and coalesce(ds_lop2.start_date, ds2.end_date) >= :today")
                 .setParameter("studentId", studentDto.getId())
                 .setParameter("directiveType", DirectiveType.KASKKIRI_INDOK.name())
                 .setParameter("directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
                 .setParameter("lopDirectiveType", DirectiveType.KASKKIRI_INDOKLOP.name())
+                .setParameter("directiveType2", DirectiveType.KASKKIRI_TUGI.name())
+                .setParameter("supportServiceCode", SupportServiceType.TUGITEENUS_1.name())
+                .setParameter("lopDirectiveType2", DirectiveType.KASKKIRI_TUGILOPP.name())
                 .setParameter("today", JpaQueryUtil.parameterAsTimestamp(LocalDate.now()))
                 .getResultList();
         if (!result.isEmpty()) {
@@ -1180,6 +1202,28 @@ public class StudentService {
         return StreamUtil.toMappedList(StudentOccupationCertificateDto::new, data);
     }
 
+    private List<StudentDormitoryHistoryDto> dormitoryHistory(Student student) {
+        List<?> data = em.createNativeQuery("select sh.inserted, sh.dormitory_code from student s "
+                + "join student_history sh on sh.student_id = s.id "
+                + "where s.id = ?1 and sh.dormitory_code is not null order by sh.inserted desc")
+                .setParameter(1, EntityUtil.getId(student))
+                .getResultList();
+
+        List<StudentDormitoryHistoryDto> dormitoryHistory = new ArrayList<>();
+        for (Object row : data) {
+            StudentDormitoryHistoryDto newerHistoryDto = dormitoryHistory.size() > 0
+                    ? dormitoryHistory.get(dormitoryHistory.size() - 1) : null;
+            StudentDormitoryHistoryDto historyDto = new StudentDormitoryHistoryDto(resultAsLocalDate(row, 0),
+                    resultAsString(row, 1));
+            if (newerHistoryDto != null && newerHistoryDto.getDormitory().equals(historyDto.getDormitory())) {
+                newerHistoryDto.setDate(historyDto.getDate());
+            } else {
+                dormitoryHistory.add(historyDto);
+            }
+        }
+        return dormitoryHistory;
+    }
+
     public List<StudentModuleResultDto> higherChangeableModules(Long studentId) {
         Query q = em.createNativeQuery("select shr.id, coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id), "
                 + "shr.subject_name_et, shr.subject_name_en, shr.credits, shr.grade, shr.grade_date from student_higher_result shr "
@@ -1305,6 +1349,75 @@ public class StudentService {
                 .getResultList();
         return StreamUtil.toMap(r -> resultAsLong(r, 0), r -> new StudentVocationalStudyProgramme(resultAsDecimal(r, 1),
                 resultAsDecimal(r, 2), resultAsDecimal(r, 3), resultAsDecimal(r, 4)), data);
+    }
+
+
+    public Page<StudentSupportServiceDto> supportServices(Student student, Pageable pageable, boolean showPrivate) {
+        HashMap<String, Object> params = new HashMap<>();
+        return JpaQueryUtil.pagingResult(supportServicesQB(student, params, pageable, showPrivate),
+                "id, entry_date, title, \"content\", validity_code, is_public, ois_file_id, submitter, artificial, ending_id", params, em, pageable)
+                .map(r -> new StudentSupportServiceDto(r, EntityUtil.getOptionalOne(OisFile.class, resultAsLong(r, 6), em)));
+    }
+
+    public List<StudentSupportServiceDto> supportServicesList(Student student, boolean showPrivate, LocalDate from, LocalDate thru) {
+        HashMap<String, Object> params = new HashMap<>();
+        JpaNativeQueryBuilder qb = supportServicesQB(student, params, null, showPrivate);
+        qb.optionalCriteria("entry_date >= :from", "from", from);
+        qb.optionalCriteria("entry_date <= :thru", "thru", thru);
+        qb.sort("entry_date desc");
+        List<?> results = qb.select("id, entry_date, title, \"content\", validity_code, is_public, ois_file_id, submitter, artificial, ending_id", em, params).getResultList();
+        return StreamUtil.toMappedList(r -> new StudentSupportServiceDto(r, EntityUtil.getOptionalOne(OisFile.class, resultAsLong(r, 6), em)), results);
+    }
+    
+    private static JpaNativeQueryBuilder studentSupportServices(Student student) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_support_service sss");
+        qb.requiredCriteria("sss.student_id = :studentId", "studentId", student.getId());
+        return qb;
+    }
+    
+    private static JpaNativeQueryBuilder directiveSupportServices(Student student) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds "
+                + "join directive d on d.id = ds.directive_id "
+                + "join application a on a.id = ds.application_id " // Application should be for every ds.
+                + "join application_support_service ass on ass.application_id = a.id " // If there is a decision and it is TRUE then it HAS TO have at least 1 service.
+                + "join (select c.id as c_id, concat ( c.name_et, ' - (', "
+                + "coalesce(string_agg( p.firstname || ' ' || p.lastname, ', ' order by p.firstname, p.lastname ), cm.member_name), ')' ) as submitter "
+                + "from committee c join committee_member cm on c.id = cm.committee_id and cm.is_chairman "
+                + "left join person p on p.id = cm.person_id group by c.id, cm.member_name) as sub on sub.c_id = a.committee_id "
+                + "left join directive_student ds2 on ds.id = ds2.directive_student_id and ds2.canceled = false "
+                + "left join directive d2 on d2.id = ds2.directive_id and d2.type_code = :lopDirectiveType and d2.status_code = :lopDirectiveStatus");
+        qb.requiredCriteria("ds.student_id = :studentId", "studentId", student.getId());
+        qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_TUGI.name());
+        qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
+        qb.filter("ds.canceled = false");
+        qb.parameter("lopDirectiveType", DirectiveType.KASKKIRI_TUGILOPP.name());
+        qb.parameter("lopDirectiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
+        qb.groupBy("d.id, ds.id, d.confirm_date, sub.submitter, d2.id, coalesce (ds2.start_date, ds.end_date)");
+        return qb;
+    }
+    
+    private static JpaNativeQueryBuilder supportServicesQB(Student student, Map<String, Object> parameters, Pageable pageable, boolean showPrivate) {
+        JpaNativeQueryBuilder qb = studentSupportServices(student);
+        String supportServicesQuery = qb.querySql("sss.id as id, sss.entry_date as entry_date, sss.name_et as title,"
+                + "sss.\"content\" as \"content\", sss.validity_code as validity_code, sss.is_public as is_public,"
+                + "sss.ois_file_id as ois_file_id, sss.changed_by as submitter, false as artificial, null as ending_id", false);
+        parameters.putAll(qb.queryParameters());
+
+        qb = directiveSupportServices(student); 
+        String directiveServicesQuery = qb.querySql("d.id as id, d.confirm_date as entry_date, null as title, "
+                + "string_agg( ass.support_service_code, ';' order by ass.support_service_code) as \"content\", "
+                + "case when coalesce ( ds2.start_date, ds.end_date) >= current_date then 'TUGIKEHTIV_K' else 'TUGIKEHTIV_L' end as validity_code, "
+                + "true as is_public, null as ois_file_id, sub.submitter as submitter, true as artificial, d2.id as ending_id", false);
+        parameters.putAll(qb.queryParameters());
+
+        qb = new JpaNativeQueryBuilder("from (" + supportServicesQuery + " union all " + directiveServicesQuery + ") as support_services");
+        if (pageable != null) {
+            qb.sort(pageable);
+        }
+        if (!showPrivate) {
+            qb.filter("is_public is true");
+        }
+        return qb;
     }
 
 }

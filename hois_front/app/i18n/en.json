@@ -96,6 +96,7 @@
         "fileAlreadyExists": "Same file already exists",
         "integer": "Must be whole number!",
         "estonianIdcode": "Personal identification code does not correspond to standard",
+        "ekis": "Connection with EKIS disturbed. Fault: {{message}}",
         "configuration": {
           "missingAutomaticMessageTemplate": "System misses valid automatic notice template \"{{template}}\""
         },
@@ -473,6 +474,7 @@
         "label": "My study information",
         "journal": "Journal",
         "practiceJournals": "Journals of internship",
+        "practiceApplications": "Internship applications",
         "results": "Learning outcomes",
         "declaration": "Declaration",
         "examRegistration": "Registration to exam",
@@ -511,10 +513,12 @@
       "absences": "Absences and being late (30d)",
       "absence": {
         "absences": "Absences",
-        "beingLate": "Being late"
+        "beingLate": "Being late",
+        "addAbsence": "Add absence"
       },
       "declaredSubjects": "Subjects declared at the moment",
       "lastResults": "Latest grades",
+      "remarks": "Remarks (30d)",
       "today": "Today",
       "tomorrow": "Tomorrow",
       "later": "Henceforth",
@@ -2378,9 +2382,13 @@
     }
   },
   "poll": {
+    "respond": "Respond to Poll",
     "name": "Poll name",
     "type": "Poll type",
+    "responseTime": "Response time",
+    "responseStatus": "Response status",
     "target": "Poll target",
+    "chooseTarget": "Choose target",
     "targets": "Poll targets",
     "status": "Status",
     "studentgroup": "Studentgroup",
@@ -2390,6 +2398,23 @@
     "test": "Test",
     "copy": "Copy",
     "confirmBack": "Form data is unsaved, are you sure?",
+    "journals": "Journals",
+    "response": {
+      "school": "School",
+      "student": "Student",
+      "enterprise": "Enterprise",
+      "practiceDuration": "Internship duration"
+    },
+    "messages": {
+      "noPollFound": "Poll wasn't found",
+      "statusNotConfirmed": "Poll isn't confirmed",
+      "acceptingAnswersHasntStarted": "Accepting answers hasn't started",
+      "acceptingAnswersHasEnded": "Accepting answers has ended",
+      "pollEnded": "Poll response has been recorded already",
+      "noResponse": "Poll is not ready to accept answers",
+      "noPoll": "Poll was not found",
+      "matchingTarget": "Matching target from poll is missing"
+    },
     "basicData": {
       "label": "Basic data",
       "name": "Name",
@@ -2401,9 +2426,11 @@
       "journalThru": "Journal end date until",
       "notificationDate": "Notification sending date",
       "duplicateTargetCode": "Duplicate target code",
+      "duplicateJournal": "Duplicate journal",
       "reminderError": "Must be between Valid from – Valid thru",
       "teacherCanComment": "Teacher can comment",
       "teacherCommentVisible": "Teacher comment visible to students",
+      "atleastOneJournal": "At least one journal needs to be chosen",
       "atleastOne": "At least one poll target needs to be chosen",
       "status": "Status",
       "confirm": "Are you sure you wish to confirm the poll?",
@@ -2412,10 +2439,16 @@
       "removeConfirm": "Remove confirmation",
       "confirmRemoveConfirm": "Are you sure you wish to remove confirmation?",
       "removed": "Confirmation removed",
-      "confirmError": "Confirmation failed",
+      "confirmError": "Confirmation failed, poll has no themes or not all themes have questions",
       "removeConfirmError": "Removing confirmation failed",
       "nameError": "Poll with this name already exists",
-      "confirmed": "Poll confirmed"
+      "confirmed": "Poll confirmed",
+      "declarationPeriod": "Declaration period",
+      "studentCanSeeResponse": "Student can see response",
+      "insertedBy": "Inserted by",
+      "changedBy": "Changed by",
+      "changeDates": "Change response times",
+      "target": "Target"
     },
     "questions": {
       "label": "Questions",
@@ -2425,6 +2458,7 @@
       "deleteTheme": "Are you sure you wish to delete poll theme along with questions?",
       "deleteQuestion": "Are you sure you wish to delete the question?",
       "sameNameError": "Question with this name already exists in the theme",
+      "sameAnswerError": "Answer with this name already exists",
       "sameThemeError": "Theme with this name already exists",
       "addQuestion": "Add new question",
       "addAnswer": "Add new answer",
@@ -2443,7 +2477,13 @@
       "questionsMissing": "Questions are missing",
       "confirmedError": "Not allowed to delete all the themes of a confirmed poll",
       "changeTheme": "Change theme",
-      "orAddNew": "Or add new"
+      "orAddNew": "Or add new",
+      "isThemePageable": "Make theme pageable",
+      "isRepedetiveVocational": "Display per journal",
+      "isRepedetiveHigher": "Display per subject"
+    },
+    "answer": {
+      "confirm": "Are you sure, you wish to confirm your answer? After confirmation, answering is no longer accepted."
     },
     "results": "Tulemused"
   },
@@ -2453,6 +2493,7 @@
     "studentGroup": "Study group",
     "week": "week",
     "studyType": "Kind of studies",
+    "showMine": "Show my school year schedule",
     "durationInWeeks": "Duration in weeks",
     "addInfo": "Comment",
     "error": {
@@ -2535,6 +2576,23 @@
     }
   },
   "timetable": {
+    "importDialog": {
+      "label": "Timetable import result",
+      "errors": {
+        "teachers": "Missing teachers",
+        "rooms": "Missing rooms",
+        "studentgroups": "Missing student groups",
+        "hourData": "Missing info about lesson times",
+        "nrFormat": "Lesson day or time is not in number format",
+        "documentFormat": "Missing journal times, document not in the right format",
+        "relationToTimetable": "Journal is not related to the timetable"
+      }
+    },
+    "exportDialog": {
+      "label": "Timetable export result",
+      "missingJournalTeacherCodes": "Teachers missing timetable codes",
+      "missingJournalCodes": "Journals missing timetable codes"
+    },
     "options": "Timetables according to study groups, teachers or rooms",
     "weekday": "Weekday",
     "weekdays": "Weekdays",
@@ -3115,6 +3173,8 @@
     "hours": "Volume in hours",
     "start": "Start of contract",
     "end": "End of contract",
+    "acadHours": "Duration in academic hours",
+    "astroHours": "Duration in astonomical hours",
     "practicePlace": "Internship location",
     "practicePlaceDistanceWork": "Long distance internship",
     "practicePlaceEnterprise": "Enterprise internship",
@@ -3135,6 +3195,8 @@
     "deleteconfirm":"Are you sure you wish to delete contract?",
     "vocationalOrHigherSelect": "Either professional training or higher education?",
     "vocationalOrHigherContract": "Please select whether you wish to add contract of professional training or higher education?",
+    "markPracticeAsAtPractice": "Mark internship as practice in journal (PR)",
+    "markPracticeAsExcused": "Mark internship as excused in journal (V)",
     "missing": "praktikalepingud puuduvad",
     "cancel": "Cancel contract",
     "cancelInfo": "Cancellation info",
@@ -3491,6 +3553,69 @@
     "teacher": "Teacher",
     "threshold": "Threshold",
     "thresholdPercentage": "Threshold’s %"
+  },
+  "practiceApplication": {
+    "tabLabel": "Internship applications",
+    "canApplyForPractice": "Saab praktikale kandideerida",
+    "openAdmissions": "Open admissions",
+    "passedAdmissions": "Passed admissions",
+    "enterpriseName": "Enterprise",
+    "period": "Period",
+    "places": "Places",
+    "submittedApplications": "Submitted applications",
+    "addInfo": "Additional info",
+    "submitDate": "Submission date",
+    "status": "Status",
+    "rejectReason": "Rejection reason",
+    "applyFor": "Apply",
+    "annul": "Annul",
+    "viewContract": "View contract",
+    "addContract": "Add contract",
+    "studentAddInfo": "Add info",
+    "studentName":"Student",
+    "studentGroup":"Student group",
+    "submitFrom": "Submitted from",
+    "submitThru": "Submitted until",
+    "addInfoFromStudent": "Additional info by student",
+    "applyPeriod": "Application period",
+    "periods": {
+      "tabLabel": "Application periods",
+      "enterpriseName": "Enterprise",
+      "places": "Places",
+      "openedAtTheMoment": "Opened at this moment"
+    },
+    "messages": {
+      "applicationSubmitted": "Application submitted",
+      "applicationAnnulled": "Application annulled",
+      "applicationRejected": "Application rejected",
+      "applicationAccepted": "Application accepted"
+    },
+    "prompt": {
+      "applyConfirm": "Are you sure, you wish to apply for intenship?",
+      "annulConfirm": "Are you sure, you wish to annul?",
+      "rejectConfirm": "Are you sure, you wish to reject the application?",
+      "acceptConfirm": "Are you sure, you wish to accept the application?"
+    },
+    "errors": {
+      "noplaces": "Application places are full"
+    }
+  },
+  "practiceEvaluation": {
+    "nameEt": "Practice evaluation",
+    "addInfo": "Additional info",
+    "isActive": "Active",
+    "target": "Target group",
+    "criteria": {
+      "label": "Criteria",
+      "nameEt": "Criteria name",
+      "addInfo": "Criteria additional information",
+      "type": "Criteria type",
+      "deleteconfirm": "Are you sure, you wish to delete the criteria?"
+    },
+    "deleteconfirm": "Are you sure, you wish to delete the evaluation form?",
+    "error": {
+      "evaluationWithNameExists": "There exists an evaluation with this name"
+    }
   },
   "practiceJournal": {
     "open": "Open for change",

@@ -41,6 +41,7 @@ import com.google.common.base.Objects;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentVocationalResult;
@@ -61,6 +62,7 @@ import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.message.StudentRemarkCreated;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.JournalRepository;
@@ -271,7 +273,7 @@ public class JournalService {
         return dto;
     }
 
-    private static JpaNativeQueryBuilder studentIndividualCurriculumsQb(Long journalId) {
+    private static JpaNativeQueryBuilder indokIndividualCurriculums(Long journalId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j " +
                 "join journal_student js on js.journal_id = j.id " +
                 "join student s on s.id = js.student_id " +
@@ -299,13 +301,60 @@ public class JournalService {
         return qb;
     }
 
+    private static JpaNativeQueryBuilder tugiIndividualCurriculums(Long journalId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j2 " +
+                "join journal_student js2 on js2.journal_id = j2.id " +
+                "join student s2 on s2.id = js2.student_id " +
+                "join person p2 on p2.id = s2.person_id " +
+                "join directive_student ds2 on ds2.student_id = s2.id "+
+                "join directive d2 on d2.id = ds2.directive_id " +
+                "join application a on a.id = ds2.application_id " +
+                "join application_support_service ass on ass.application_id = a.id " +
+                "join application_support_service_module assm on assm.application_support_service_id = ass.id " +
+                "join curriculum_version_omodule cvo3 on cvo3.id = assm.curriculum_version_omodule_id " +
+                "join curriculum_module cm3 on cm3.id = cvo3.curriculum_module_id " +
+                "join study_year sy2 on sy2.id = j2.study_year_id " +
+                "left join (directive_student ds_lop2 join directive d_lop2 on d_lop2.id = ds_lop2.directive_id " +
+                "and d_lop2.type_code = :lopDirectiveType2 and d_lop2.status_code = :directiveStatus) " +
+                "on ds_lop2.directive_student_id = ds2.id and ds_lop2.canceled = false");
+
+        qb.requiredCriteria("j2.id = :journalId", "journalId", journalId);
+        qb.requiredCriteria("d2.type_code = :directiveType2", "directiveType2", DirectiveType.KASKKIRI_TUGI);
+        qb.requiredCriteria("d2.status_code = :directiveStatus", "directiveStatus",
+                DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+        qb.requiredCriteria("ass.support_service_code = :supportServiceCode", "supportServiceCode",
+                SupportServiceType.TUGITEENUS_1);
+        qb.filter("ds2.canceled = false and coalesce(j2.end_date, sy2.end_date) >= ds2.start_date");
+        qb.filter("cm3.id in (select cm4.id from journal_omodule_theme jot2 " +
+                "join curriculum_version_omodule_theme cvot2 on jot2.curriculum_version_omodule_theme_id = cvot2.id " +
+                "join curriculum_version_omodule cvo4 on cvo4.id = cvot2.curriculum_version_omodule_id " +
+                "join curriculum_module cm4 on cm4.id = cvo4.curriculum_module_id " +
+                "where jot2.journal_id = j2.id)");
+        qb.parameter("lopDirectiveType2", DirectiveType.KASKKIRI_TUGILOPP.name());
+        return qb;
+    }
+
     private void setStudentIndividualCurriculums(JournalDto journalDto) {
         List<JournalStudentIndividualCurriculumDto> individualCurriculums = new ArrayList<>();
-        JpaNativeQueryBuilder qb = studentIndividualCurriculumsQb(journalDto.getId());
+        Long journalId = journalDto.getId();
 
-        List<?> data = qb.select("s.id student_id, p.firstname, p.lastname, cm.id curriculum_id, "
-                + "cm.name_et, cm.name_en, dsm.add_info, ds.start_date, "
-                + "coalesce(ds_lop.start_date, ds.end_date)", em).getResultList();
+        JpaNativeQueryBuilder qb = indokIndividualCurriculums(journalId);
+        String indokQuery = qb.querySql("s.id student_id, p.firstname, p.lastname, cm.id curriculum_id, "
+                + "cm.name_et cm_name_et, cm.name_en cm_name_en, dsm.add_info, ds.start_date, "
+                + "coalesce(ds_lop.start_date, ds.end_date) end_date", false);
+        Map<String, Object> parameters = new HashMap<>(qb.queryParameters());
+
+        qb = tugiIndividualCurriculums(journalId);
+        String tugiQuery = qb.querySql("s2.id student_id, p2.firstname, p2.lastname, cm3.id curriculum_id, "
+                + "cm3.name_et cm_name_et, cm3.name_en cm_name_en, assm.add_info, ds2.start_date, "
+                + "coalesce(ds_lop2.start_date, ds2.end_date) end_date", false);
+        parameters.putAll(qb.queryParameters());
+
+        qb = new JpaNativeQueryBuilder("from (" + indokQuery + " union all " + tugiQuery + ") as ic");
+        List<?> data = qb.select("student_id, firstname, lastname, curriculum_id, "
+                + "cm_name_et, cm_name_en, add_info, start_date, end_date", em, parameters)
+                .getResultList();
+        
         Map<Long, List<Object>> dataByStudents = StreamUtil.nullSafeList(data).stream()
                 .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.toList()));
         for (Long studentId : dataByStudents.keySet()) {
@@ -477,12 +526,12 @@ public class JournalService {
         JournalEntry finalResultEntry = journalFinalResultEntry(journal);
         Map<Long, List<JournalStudentApelResultDto>> journalStudentApelResults = new HashMap<>();
         if (finalResultEntry != null) {
-            Set<Long> omodules = StreamUtil.toMappedSet(
-                    t -> EntityUtil.getId(t.getCurriculumVersionOccupationModuleTheme().getModule()),
-                    journal.getJournalOccupationModuleThemes());
-            journalStudentApelResults = !command.getStudents().isEmpty()
-                    ? journalStudentApelResults(omodules, StreamUtil.toMappedSet(r -> r, command.getStudents()))
-                    : new HashMap<>();
+            Set<CurriculumVersionOccupationModuleTheme> themes = StreamUtil.toMappedSet(
+                    t -> t.getCurriculumVersionOccupationModuleTheme(), journal.getJournalOccupationModuleThemes());
+            Set<Long> themeIds = StreamUtil.toMappedSet(t -> EntityUtil.getId(t), themes);
+            Set<Long> omoduleIds = StreamUtil.toMappedSet(t -> EntityUtil.getId(t.getModule()), themes);
+            journalStudentApelResults = !command.getStudents().isEmpty() ? journalStudentApelResults(omoduleIds,
+                    themeIds, StreamUtil.toMappedSet(r -> r, command.getStudents())) : new HashMap<>();
         }
         
         for (Long student : command.getStudents()) {
@@ -971,12 +1020,13 @@ public class JournalService {
 
         if (!mappedStudentDtos.isEmpty()) {
             Set<Long> studentIds = mappedStudentDtos.keySet();
-            Set<Long> omodules = StreamUtil.toMappedSet(
-                    t -> EntityUtil.getId(t.getCurriculumVersionOccupationModuleTheme().getModule()),
-                    journal.getJournalOccupationModuleThemes());
+            Set<CurriculumVersionOccupationModuleTheme> themes = StreamUtil.toMappedSet(
+                    t -> t.getCurriculumVersionOccupationModuleTheme(), journal.getJournalOccupationModuleThemes());
+            Set<Long> themeIds = StreamUtil.toMappedSet(t -> EntityUtil.getId(t), themes);
+            Set<Long> omoduleIds = StreamUtil.toMappedSet(t -> EntityUtil.getId(t.getModule()), themes);
 
-            Map<Long, List<JournalStudentApelResultDto>> journalStudentApelResuts = journalStudentApelResults(omodules,
-                    studentIds);
+            Map<Long, List<JournalStudentApelResultDto>> journalStudentApelResuts = journalStudentApelResults(
+                    omoduleIds, themeIds, studentIds);
             for (Long studentId : journalStudentApelResuts.keySet()) {
                 mappedStudentDtos.get(studentId).setApelResults(journalStudentApelResuts.get(studentId));
             }
@@ -1002,7 +1052,8 @@ public class JournalService {
         return studentDtos;
     }
     
-    private Map<Long, List<JournalStudentApelResultDto>> journalStudentApelResults(Set<Long> omodules, Set<Long> students) {
+    private Map<Long, List<JournalStudentApelResultDto>> journalStudentApelResults(Set<Long> omoduleIds,
+            Set<Long> themeIds, Set<Long> students) {
         String informalApelResults = "select aa.student_id, " +
             "case when aai.curriculum_version_omodule_theme_id is not null then false else true end as module, " +
             "case when aai.curriculum_version_omodule_theme_id is not null then cm.name_et || ' - ' || mcl.name_et || '/' || cvot.name_et " + 
@@ -1016,7 +1067,8 @@ public class JournalService {
             "left join curriculum_version_omodule_theme cvot on aai.curriculum_version_omodule_theme_id=cvot.id " + 
             "join curriculum_module cm on cvo.curriculum_module_id=cm.id " + 
             "join classifier mcl on mcl.code = cm.module_code " + 
-            "where aa.student_id in (:studentIds) and cvo.id in (:moduleIds) and aa.status_code='VOTA_STAATUS_C' and aai.transfer = true ";
+            "where aa.student_id in (:studentIds) and cvo.id in (:moduleIds) and (cvot.id in (:themeIds) or cvot.id is null) " +
+            "and aa.status_code='VOTA_STAATUS_C' and aai.transfer = true ";
         
         String formalApelResults = "select distinct aa.student_id, " +
             "case when aafr.curriculum_version_omodule_theme_id is not null then false else true end as module, " +
@@ -1037,12 +1089,14 @@ public class JournalService {
             "left join curriculum_version_omodule_theme cvot on aafr.curriculum_version_omodule_theme_id=cvot.id " +
             "join curriculum_module cm on cvo.curriculum_module_id=cm.id " +
             "join classifier mcl on mcl.code = cm.module_code " +
-            "where aa.student_id in (:studentIds) and cvo.id in (:moduleIds) and aa.status_code='VOTA_STAATUS_C' and aaf.transfer = true";
+            "where aa.student_id in (:studentIds) and cvo.id in (:moduleIds) and (cvot.id in (:themeIds) or cvot.id is null) " +
+            "and aa.status_code='VOTA_STAATUS_C' and aaf.transfer = true";
         
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from (" + informalApelResults + " union all " + formalApelResults + ") as apel_results");
         qb.parameter("studentIds", students);
-        qb.parameter("moduleIds", omodules);
+        qb.parameter("moduleIds", omoduleIds);
+        qb.parameter("themeIds", themeIds);
         List<?> data = qb.select("*",em).getResultList();
 
         Map<Long, List<JournalStudentApelResultDto>> result = data.stream()
@@ -1084,9 +1138,16 @@ public class JournalService {
     }
 
     private Set<Long> studentsWithIndividualCurriculums(Long journalId) {
-        JpaNativeQueryBuilder qb = studentIndividualCurriculumsQb(journalId);
+        JpaNativeQueryBuilder qb = indokIndividualCurriculums(journalId);
+        String indokQuery = qb.querySql("s.id student_id", false);
+        Map<String, Object> parameters = new HashMap<>(qb.queryParameters());
 
-        List<?> data = qb.select("s.id", em).getResultList();
+        qb = tugiIndividualCurriculums(journalId);
+        String tugiQuery = qb.querySql("s2.id student_id", false);
+        parameters.putAll(qb.queryParameters());
+
+        qb = new JpaNativeQueryBuilder("from (" + indokQuery + " union all " + tugiQuery + ") as ic");
+        List<?> data = qb.select("student_id", em, parameters).getResultList();
         return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
     }
 

@@ -40,6 +40,7 @@ import javax.transaction.Transactional;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -99,7 +100,6 @@ import ee.hitsa.ois.web.commandobject.timetable.TimetableEventVocationalForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableManagementSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
-import ee.hitsa.ois.web.dto.OisFileDto;
 import ee.hitsa.ois.web.dto.RoomDto;
 import ee.hitsa.ois.web.dto.timetable.DateRangeDto;
 import ee.hitsa.ois.web.dto.timetable.GroupTimetableDto;
@@ -107,6 +107,7 @@ import ee.hitsa.ois.web.dto.timetable.HigherTimetablePlanDto;
 import ee.hitsa.ois.web.dto.timetable.HigherTimetableStudentGroupCapacityDto;
 import ee.hitsa.ois.web.dto.timetable.HigherTimetableStudentGroupDto;
 import ee.hitsa.ois.web.dto.timetable.LessonTimeDto;
+import ee.hitsa.ois.web.dto.timetable.NameAndCode;
 import ee.hitsa.ois.web.dto.timetable.RoomTimetableDto;
 import ee.hitsa.ois.web.dto.timetable.SubjectTeacherPairDto;
 import ee.hitsa.ois.web.dto.timetable.TeacherTimetableDto;
@@ -114,12 +115,14 @@ import ee.hitsa.ois.web.dto.timetable.TimetableCurriculumDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableDatesDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableImportDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableJournalDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableManagementSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudentGroupCapacityDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudentGroupDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudentStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudyYearWeekDto;
+import ee.hitsa.ois.web.dto.timetable.UntisCodeError;
 import ee.hitsa.ois.web.dto.timetable.VocationalTimetablePlanDto;
 import ee.hitsa.ois.xml.exportTimetable.ClassTeacher;
 import ee.hitsa.ois.xml.exportTimetable.Classes;
@@ -1805,12 +1808,12 @@ public class TimetableService {
         
         //Set periods by week day
         for (TimePeriod period : timePeriods) {
-        	Integer weekdayNr = 1;
+        	int weekdayNr = 1;
         	for (Boolean isWeekDay : period.getDays()) {
-        		if (isWeekDay) {
+        		if (isWeekDay != null && isWeekDay.booleanValue()) {
         			extendedList.add(new TimePeriod(
         					"TP_" + weekdayNr + period.getId(),
-            				weekdayNr,
+            				Integer.valueOf(weekdayNr),
             				period.getPeriod(),
             				period.getStarttime(),
             				period.getEndtime()
@@ -1901,9 +1904,8 @@ public class TimetableService {
                 .toMappedSet(r -> {
                 	if (resultAsString(r, 4) == null) {
                 		return new ee.hitsa.ois.xml.exportTimetable.Class("CL_" + resultAsString(r, 2),resultAsString(r, 3));
-                	} else {
-                		return new ee.hitsa.ois.xml.exportTimetable.Class("CL_" + resultAsString(r, 2),resultAsString(r, 3), new ClassTeacher("TR_" + resultAsString(r, 4)));
                 	}
+                    return new ee.hitsa.ois.xml.exportTimetable.Class("CL_" + resultAsString(r, 2),resultAsString(r, 3), new ClassTeacher("TR_" + resultAsString(r, 4)));
                 }, dbJournals);
         classes = classes.stream().filter(StreamUtil.distinctByKey(ee.hitsa.ois.xml.exportTimetable.Class::getId))
                 .collect(Collectors.toSet());
@@ -1993,19 +1995,19 @@ public class TimetableService {
         document.setLessons(new Lessons(extendedLessons));
 		return document;
 	}
-	private String getLessonNumber(Integer lessonNumber) {
+	
+	private static String getLessonNumber(Integer lessonNumber) {
 		if (lessonNumber == null) {
 			return "00";
 		}
 		int lessonNumberLength = lessonNumber.toString().length();
 		if (lessonNumberLength == 1) {
 			return "0" + lessonNumber;
-		} else {
-			return lessonNumber.toString();
 		}
+        return lessonNumber.toString();
 	}
 
-	private Set<Lesson> extendLessonsByTeacher(Set<Lesson> lessons) {
+	private static Set<Lesson> extendLessonsByTeacher(Set<Lesson> lessons) {
 		Set<Lesson> extendedLessons = new HashSet<>();
         
         for (Lesson lesson : lessons) {
@@ -2029,7 +2031,7 @@ public class TimetableService {
         return extendedLessons;
 	}
 	
-	public void checkUntiscodes(LocalDate startDate, LocalDate endDate, StudyPeriod studyPeriod, HoisUserDetails user) {
+	public UntisCodeError checkUntiscodes(LocalDate startDate, LocalDate endDate, StudyPeriod studyPeriod, HoisUserDetails user) {
         Long schoolId = user.getSchoolId();
         Integer weekNr = studyPeriod.getWeekNrForDate(startDate);
         if (weekNr == null) {
@@ -2066,32 +2068,25 @@ public class TimetableService {
                 " p2.lastname as teacher2lastname," +
                 " t2.untis_code as teacher2untiscode";
         List<?> dbJournals= journalQuery.select(journalSelect, em).getResultList();
-        List<TeacherStudentGroupAndCode> teacherCodes = StreamUtil
-        		.toMappedList(r-> new TeacherStudentGroupAndCode(resultAsString(r, 7) + " " + resultAsString(r, 8), resultAsString(r, 4)), dbJournals);
-        List<TeacherStudentGroupAndCode> timetableTeachers = StreamUtil
-        		.toMappedList(r-> new TeacherStudentGroupAndCode(resultAsString(r, 10) + " " + resultAsString(r, 11), resultAsString(r, 12)), dbJournals);
+        List<NameAndCode> teacherCodes = StreamUtil
+        		.toMappedList(r-> new NameAndCode(resultAsString(r, 7) + " " + resultAsString(r, 8), resultAsString(r, 4)), dbJournals);
+        List<NameAndCode> timetableTeachers = StreamUtil
+        		.toMappedList(r-> new NameAndCode(resultAsString(r, 10) + " " + resultAsString(r, 11), resultAsString(r, 12)), dbJournals);
         teacherCodes.addAll(timetableTeachers);
-        List<JournalNameAndCode> journalCodes = StreamUtil.toMappedList(r-> new JournalNameAndCode(resultAsString(r, 1), resultAsString(r, 0)), dbJournals);
+        List<NameAndCode> journalCodes = StreamUtil.toMappedList(r-> new NameAndCode(resultAsString(r, 1), resultAsString(r, 0)), dbJournals);
         teacherCodes = teacherCodes.stream()
-        		.filter(p->(p.getTeacherCode() == null || "null".equals(p.getTeacherCode())) && !"null null".equals(p.getName())).collect(Collectors.toList());
+        		.filter(p->(StringUtils.isEmpty(p.getCode()) || "null".equals(p.getCode())) && !"null null".equals(p.getName())).collect(Collectors.toList());
         journalCodes = journalCodes.stream()
-        		.filter(p->p.getJournalCode() == null || "null".equals(p.getJournalCode())).collect(Collectors.toList());
-        
-        if (!teacherCodes.isEmpty() && !journalCodes.isEmpty()) {
-        	throw new HoisException("Järgnevatel õpperühmade juhatajatel puudub tunniplaani kood : " +
-        			String.join(", ", teacherCodes.stream().filter(StreamUtil.distinctByKey(TeacherStudentGroupAndCode::getName))
-        					.map(TeacherStudentGroupAndCode::getName).collect(Collectors.toList())) + ".\n" +
-        			"Järgnevatel päevikutel puudub tunniplaani kood : " +
-        			String.join(", ", journalCodes.stream().filter(StreamUtil.distinctByKey(JournalNameAndCode::getJournalName))
-        					.map(JournalNameAndCode::getJournalName).collect(Collectors.toList())) + ".");
-        } else if (!teacherCodes.isEmpty()) {
-        	throw new HoisException("Järgnevatel õpperühmade juhatajatel puudub tunniplaani kood : " +
-        			String.join(", ", teacherCodes.stream().filter(StreamUtil.distinctByKey(TeacherStudentGroupAndCode::getName))
-        					.map(TeacherStudentGroupAndCode::getName).collect(Collectors.toList())) + ".");
-        } else if (!journalCodes.isEmpty()) {
-        	throw new HoisException("Järgnevatel päevikutel puudub tunniplaani kood : " +
-        			String.join(", ", journalCodes.stream().filter(StreamUtil.distinctByKey(JournalNameAndCode::getJournalName))
-        					.map(JournalNameAndCode::getJournalName).collect(Collectors.toList())) + ".");
+        		.filter(p->StringUtils.isEmpty(p.getCode()) || "null".equals(p.getCode())).collect(Collectors.toList());
+        List<String> journals = null;
+        List<String> journalTeachers = null;
+        if (!teacherCodes.isEmpty()) {
+            journalTeachers = teacherCodes.stream().filter(StreamUtil.distinctByKey(NameAndCode::getName))
+                    .map(NameAndCode::getName).collect(Collectors.toList());
+        }
+        if (!journalCodes.isEmpty()) {
+            journals = journalCodes.stream().filter(StreamUtil.distinctByKey(NameAndCode::getName))
+                    .map(NameAndCode::getName).collect(Collectors.toList());
         }
         List<Long> journalIds = StreamUtil.toMappedList(r->resultAsLong(r, 5), dbJournals);
         if (!journalIds.isEmpty()) {
@@ -2103,85 +2098,33 @@ public class TimetableService {
             		+ " where jt.journal_id in :journalIds");
             teacherQuery.setParameter("journalIds", journalIds);
             List<?> dbTeachers = teacherQuery.getResultList();
-            
-            //Using StudentGroup as teacher first and last name.
-            List<TeacherStudentGroupAndCode> nameAndCode = StreamUtil
-            		.toMappedList(r-> new TeacherStudentGroupAndCode(resultAsString(r, 1) + " " + resultAsString(r, 2), resultAsString(r, 0)), dbTeachers);
+            List<NameAndCode> nameAndCode = StreamUtil
+            		.toMappedList(r-> new NameAndCode(resultAsString(r, 1) + " " + resultAsString(r, 2), resultAsString(r, 0)), dbTeachers);
             nameAndCode = nameAndCode.stream()
-            		.filter(p->p.getTeacherCode() == null || "null".equals(p.getTeacherCode())).collect(Collectors.toList());
+            		.filter(p->StringUtils.isEmpty(p.getCode()) || "null".equals(p.getCode())).collect(Collectors.toList());
+            teacherCodes.addAll(nameAndCode);
             if (!teacherCodes.isEmpty()) {
-            	throw new HoisException("Järgnevatel õpetajatel puudub tunniplaani kood : " +
-            			String.join(", ", teacherCodes.stream().filter(StreamUtil.distinctByKey(TeacherStudentGroupAndCode::getName)).map(TeacherStudentGroupAndCode::getName).collect(Collectors.toList())) + ".");
+                journalTeachers = teacherCodes.stream().filter(StreamUtil.distinctByKey(NameAndCode::getName))
+                        .map(NameAndCode::getName).collect(Collectors.toList());
             }
         }
+        UntisCodeError errors = new UntisCodeError();
+        errors.setJournals(journals);
+        errors.setTeachers(journalTeachers);
+        return errors;
     }
-	
-	private class TeacherStudentGroupAndCode {
-		private String name;
-		private String teacherCode;
-		private Long teacherId;
-		
-		public TeacherStudentGroupAndCode(String name, String teacherCode, Long teacherId) {
-			this.name = name;
-			this.teacherCode = teacherCode;
-			this.teacherId = teacherId;
-		}
-		
-		public TeacherStudentGroupAndCode(String name, String teacherCode) {
-			this.name = name;
-			this.teacherCode = teacherCode;
-		}
-		public String getName() {
-			return name;
-		}
-		public void setName(String name) {
-			this.name = name;
-		}
-		public String getTeacherCode() {
-			return teacherCode;
-		}
-		public void setTeacherCode(String teacherCode) {
-			this.teacherCode = teacherCode;
-		}
-		public Long getTeacherId() {
-			return teacherId;
-		}
-		public void setTeacherId(Long teacherId) {
-			this.teacherId = teacherId;
-		}
-	}
-	
-	private class JournalNameAndCode {
-		private String journalName;
-		private String journalCode;
-		public JournalNameAndCode(String journalName, String journalCode) {
-			this.journalName = journalName;
-			this.journalCode = journalCode;
-		}
-		public String getJournalCode() {
-			return journalCode;
-		}
-		public void setJournalCode(String journalCode) {
-			this.journalCode = journalCode;
-		}
-		public String getJournalName() {
-			return journalName;
-		}
-		public void setJournalName(String journalName) {
-			this.journalName = journalName;
-		}
-	}
 
-	public String importXml(HoisUserDetails user, OisFileDto oisFile, LocalDate startDate, LocalDate endDate, StudyPeriod studyPeriod, Boolean isHigher) {
-		String returnValue = null;
+	public Set<NameAndCode> importXml(HoisUserDetails user, TimetableImportDto dto) {
+	    Set<NameAndCode> returnValue = new HashSet<>();
+	    StudyPeriod studyPeriod = em.getReference(StudyPeriod.class, dto.getStudyPeriod());
 		org.w3c.dom.Document document = null;
 		 try {
-			document = byteArrayToDocument(oisFile.getFdata());
+			document = byteArrayToDocument(dto.getOisFile().getFdata());
 		} catch (Exception e) {
 			throw new HoisException( "Fail pole XML formaadis.");
 		}
 		if (document != null) {
-			Integer weekNr = studyPeriod.getWeekNrForDate(startDate);
+			Integer weekNr = studyPeriod.getWeekNrForDate(dto.getStartDate());
 			Long schoolId = user.getSchoolId();
 			Timetable timetable;
 	        try {
@@ -2192,13 +2135,13 @@ public class TimetableService {
 		        		+ "and tt.endDate = ?4 " 
 		        		+ "and tt.isHigher = ?5", Timetable.class)
 		        		.setParameter(1, schoolId)
-		        		.setParameter(2, studyPeriod.getId())
-		        		.setParameter(3, startDate)
-		        		.setParameter(4, endDate)
-		        		.setParameter(5, isHigher)
+		        		.setParameter(2, dto.getStudyPeriod())
+		        		.setParameter(3, dto.getStartDate())
+		        		.setParameter(4, dto.getEndDate())
+		        		.setParameter(5, dto.getIsHigher())
 		        		.getSingleResult();
 	        } catch (NoResultException nre) {
-	        	throw new HoisException("Nädala " +  documentDateFormatHois.format(startDate) + " - " +  documentDateFormatHois.format(endDate) + " kohta puudub tunniplaan.");
+	        	timetable = createTimetable(user, dto);
 	        }
 	        
 	        // Delete existing imported timetable events and remove them from java object
@@ -2233,7 +2176,7 @@ public class TimetableService {
 	            	try {
 	            		timetableObject = timetableObjectRepository.findByJournalAndTimetable(journal, timetable);
 	            	} catch(EntityNotFoundException e) {
-	            		returnValue = "Päevik " + journalId + " ei kuulu " + timetable.getId() + " tunniplaani.";
+	            		returnValue.add(new NameAndCode(journal.getNameEt(), "timetable.importDialog.errors.relationToTimetable"));
 	            		continue;
 	            	}
 	            }
@@ -2252,7 +2195,7 @@ public class TimetableService {
 					}
 				}
 				if (lessontimesNodeList == null) {
-					returnValue = "Dokument on vales formaadis, päevikul " + journalId + " puuduvad ajad.";
+				    returnValue.add(new NameAndCode(journal.getNameEt(), "timetable.importDialog.errors.documentFormat"));
 					continue;
 				}
 				for (int lessontimesNodeChild = 0; lessontimesNodeChild < lessontimesNodeList.getLength(); lessontimesNodeChild++) {
@@ -2278,14 +2221,14 @@ public class TimetableService {
 				            	} else if (lessonTimeNode.getNodeType() == Node.ELEMENT_NODE && "assigned_endtime".equals(lessonTimeNode.getNodeName())) {
 				            		endTime = lessonTimeNode.getTextContent();
 				            	} else if (lessonTimeNode.getNodeType() == Node.ELEMENT_NODE && "assigned_room".equals(lessonTimeNode.getNodeName())) {
-				            		buildingRoomCodes = new ArrayList<String>(Arrays.asList(lessonTimeNode.getAttributes().item(0).getTextContent().split(" ")));
+				            		buildingRoomCodes = new ArrayList<>(Arrays.asList(lessonTimeNode.getAttributes().item(0).getTextContent().split(" ")));
 				            	}
 				            }
 			            } catch (NumberFormatException nfe) {
-			            	throw new HoisException("Tunni päev või periood ei ole numbriformaadis.");
+			            	throw new HoisException("timetable.importDialog.errors.nrFormat");
 			            }
 			            if (day == null || period == null || startTime == null || endTime == null) {
-			            	returnValue = "Päeviku " + journal.getNameEt() + " tunni toimumise kohta pole piisavalt andmeid.";
+			                returnValue.add(new NameAndCode(journal.getNameEt(), "timetable.importDialog.errors.hourData"));
 			            	continue;
 			            }
 			            
@@ -2297,17 +2240,17 @@ public class TimetableService {
 			            	if (lessonNode.getNodeType() == Node.ELEMENT_NODE && "lesson_teacher".equals(lessonNode.getNodeName())) {
 			            		teacherUntisCode = lessonNode.getAttributes().item(0).getTextContent().substring(3);
 			            	} else if (lessonNode.getNodeType() == Node.ELEMENT_NODE && "lesson_classes".equals(lessonNode.getNodeName())) {
-			            		studentGroupCodes = new ArrayList<String>(Arrays.asList(lessonNode.getAttributes().item(0).getTextContent().split(" ")));
+			            		studentGroupCodes = new ArrayList<>(Arrays.asList(lessonNode.getAttributes().item(0).getTextContent().split(" ")));
 			            	}
 			            }
 			            
 			            if (studentGroupCodes == null) {
-			            	returnValue = "Päevikul " + journal.getNameEt() + " puuduvad õpperühmad.";
+			                returnValue.add(new NameAndCode(journal.getNameEt(), "timetable.importDialog.errors.studentgroups"));
 			            	continue;
 			            } else if (buildingRoomCodes == null) {
-			            	returnValue = "Päevikul " + journal.getNameEt() + " puuduvad ruumid.";
+			                returnValue.add(new NameAndCode(journal.getNameEt(), "timetable.importDialog.errors.rooms"));
 			            } else if (teacherUntisCode == null) {
-			            	returnValue = "Päevikul " + journal.getNameEt() + " puudub õpetaja.";
+			                returnValue.add(new NameAndCode(journal.getNameEt(), "timetable.importDialog.errors.teachers"));
 			            	continue;
 			            }
 			            
@@ -2348,13 +2291,13 @@ public class TimetableService {
 			            TimetableEvent timetableEvent = new TimetableEvent();
 			            LocalTime startHourMinutes = LocalTime.parse(startTime, documentTimeFormatShort);
 			            LocalTime endHourMinutes = LocalTime.parse(endTime, documentTimeFormatShort);
-			            timetableEvent.setStart(startDate.plusDays(day-1).atTime(startHourMinutes.getHour(), startHourMinutes.getMinute()));
-			            timetableEvent.setEnd(startDate.plusDays(day-1).atTime(endHourMinutes.getHour(), endHourMinutes.getMinute()));
+			            timetableEvent.setStart(dto.getStartDate().plusDays(day-1).atTime(startHourMinutes.getHour(), startHourMinutes.getMinute()));
+			            timetableEvent.setEnd(dto.getStartDate().plusDays(day-1).atTime(endHourMinutes.getHour(), endHourMinutes.getMinute()));
 			            timetableEvent.setLessonNr(period);
 			            timetableEvent.setTimetableObject(timetableObject);
 			            timetableEvent.setSchool(em.getReference(School.class, user.getSchoolId()));
 			            timetableEvent.setRepeatCode(em.getReference(Classifier.class, TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_EI.name()));
-			            timetableEvent.setIsImported(true);
+			            timetableEvent.setIsImported(Boolean.TRUE);
 			            
 			            TimetableEventTime timetableEventTime = new TimetableEventTime();
 			            timetableEventTime.setStart(timetableEvent.getStart());
@@ -2421,9 +2364,10 @@ public class TimetableService {
 			        }
 				}
 				List<TimetableObject> timetableObjects = timetable.getTimetableObjects();
-				Boolean gotEvent = false;
+				boolean gotEvent = false;
 				for (TimetableObject timetableObj : timetableObjects) {
-					if (!timetableObj.getTimetableEvents().isEmpty() && timetableObj.getTimetableEvents().stream().anyMatch(p->p.getIsImported())) {
+					if (timetableObj != null && timetableObj.getTimetableEvents() != null && !timetableObj.getTimetableEvents().isEmpty() 
+					        && timetableObj.getTimetableEvents().stream().anyMatch(p -> p != null && p.getIsImported() != null && p.getIsImported().booleanValue())) {
 						gotEvent = true;
 						break;
 					}
@@ -2433,10 +2377,11 @@ public class TimetableService {
 				}
 			}
 		}
-		return returnValue;
+		return returnValue.stream().filter(StreamUtil.distinctByKey(NameAndCode::toString))
+                .collect(Collectors.toSet());
 	}
 	
-	private org.w3c.dom.Document byteArrayToDocument(byte[] bytes) throws Exception {
+	private static org.w3c.dom.Document byteArrayToDocument(byte[] bytes) throws Exception {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	    factory.setNamespaceAware(true);
 	    DocumentBuilder builder = factory.newDocumentBuilder();

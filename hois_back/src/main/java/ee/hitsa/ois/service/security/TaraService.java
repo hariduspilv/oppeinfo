@@ -39,9 +39,9 @@ import com.auth0.jwk.UrlJwkProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ee.hitsa.ois.auth.IdentityTokenResponse;
 import ee.hitsa.ois.auth.LoginMethod;
-import ee.hitsa.ois.auth.tara.TaraAuthenticationToken;
-import ee.hitsa.ois.auth.tara.TaraIdTokenResponse;
+import ee.hitsa.ois.auth.OAuthAuthenticationToken;
 import ee.hitsa.ois.config.TaraConfiguration;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.WsTaraLog;
@@ -50,6 +50,7 @@ import ee.hitsa.ois.enums.TaraRequestType;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.service.UserService;
 import ee.hitsa.ois.util.ExceptionUtil;
+import ee.hitsa.ois.util.HttpUtil;
 
 @Transactional
 @Service
@@ -91,7 +92,7 @@ public class TaraService {
     public String getAuthenticatedPerson(String authCode, String state, HttpServletRequest request) throws Exception {
         insertRedirectRequestLog(state, request);
 
-        Cookie csrfTokenCookie = getStateCookie(request);
+        Cookie csrfTokenCookie = HttpUtil.getCookie(request, "taraStateToken");
         if (csrfTokenCookie != null && csrfTokenCookie.getValue().equals(state)) {
             Map<String, Object> claims = getValidAccessTokenClaims(state, authCode);
 
@@ -114,20 +115,8 @@ public class TaraService {
         return null;
     }
 
-    private static Cookie getStateCookie(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals("taraStateToken")) {
-                    return cookie;
-                }
-            }
-        }
-        return null;
-    }
-
     private Map<String, Object> getValidAccessTokenClaims(String state, String authCode) throws Exception {
-        ResponseEntity<TaraIdTokenResponse> response = null;
+        ResponseEntity<IdentityTokenResponse> response = null;
         LinkedMultiValueMap<String, Object> params = new LinkedMultiValueMap<>();
         Exception identiyRequextException = null;
 
@@ -164,7 +153,7 @@ public class TaraService {
         return null;
     }
 
-    private ResponseEntity<TaraIdTokenResponse> identityTokenRequest(LinkedMultiValueMap<String, Object> params) {
+    private ResponseEntity<IdentityTokenResponse> identityTokenRequest(LinkedMultiValueMap<String, Object> params) {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -176,8 +165,8 @@ public class TaraService {
         headers.add("Authorization", "Basic " + base64ClientIdSec);
 
         HttpEntity<LinkedMultiValueMap<String, Object>> request = new HttpEntity<>(params, headers);
-        ResponseEntity<TaraIdTokenResponse> response = restTemplate.postForEntity(taraConfiguration.getAccessTokenUri(),
-                request, TaraIdTokenResponse.class);
+        ResponseEntity<IdentityTokenResponse> response = restTemplate.postForEntity(taraConfiguration.getAccessTokenUri(),
+                request, IdentityTokenResponse.class);
         return response;
     }
 
@@ -187,7 +176,7 @@ public class TaraService {
         String issuer = (String) claims.get("iss");
         if (!taraConfiguration.getIssuer().equals(issuer)) {
             valid = false;
-            log.error("Issuer dooe not match");
+            log.error("Issuer does not match");
         }
 
         String addressee = (String) claims.get("aud");
@@ -216,7 +205,7 @@ public class TaraService {
         userService.createPersonUserIfNecessary(idcode, lastname, firstname);
         HoisUserDetails hoisUserDetails = userDetailsService.loadUserByUsername(idcode);
 
-        TaraAuthenticationToken token = new TaraAuthenticationToken(hoisUserDetails);
+        OAuthAuthenticationToken token = new OAuthAuthenticationToken(hoisUserDetails);
         hoisUserDetails.setLoginMethod(LoginMethod.LOGIN_TYPE_T);
         token.setDetails(hoisUserDetails);
         token.setAuthenticated(true);
@@ -224,7 +213,7 @@ public class TaraService {
     }
 
     private RsaVerifier verifier(String signatureKeyIdentifier) throws Exception {
-        JwkProvider provider = new UrlJwkProvider(new URL(taraConfiguration.getJwkUrl()));
+        JwkProvider provider = new UrlJwkProvider(new URL(taraConfiguration.getJwkUri()));
         Jwk jwk = provider.get(signatureKeyIdentifier);
         return new RsaVerifier((RSAPublicKey) jwk.getPublicKey());
     }
@@ -257,7 +246,7 @@ public class TaraService {
     }
 
     private WsTaraLog insertIdentiyTokenRequestLog(String uuid, String requestUri,
-            LinkedMultiValueMap<String, Object> params, TaraIdTokenResponse response, Exception exception)
+            LinkedMultiValueMap<String, Object> params, IdentityTokenResponse response, Exception exception)
             throws JsonProcessingException {
         WsTaraLog logRecord = new WsTaraLog();
         logRecord.setUid(uuid);

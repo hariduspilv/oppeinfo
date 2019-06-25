@@ -22,6 +22,7 @@ angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curricu
       required: '@',
       values: '@',
       valueProperty: '@',
+      orderByProperty: '@',
       showProperty: '@',
       preselectCurrent: '@',
       selectCurrentStudyYear: '@',
@@ -41,7 +42,7 @@ angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curricu
       scope.filteredOptions = [];
       scope.hideOptions = [];
 
-      scope.orderBy = !scope.sortedQuery ? (scope.showProperty ? scope.showProperty : $rootScope.currentLanguageNameField()) : null;
+      scope.orderBy = !scope.sortedQuery ? (scope.showProperty ? scope.showProperty : $rootScope.currentLanguageNameField()) : scope.orderByProperty;
 
       function doFilter() {
         scope.filteredOptions = (scope.options || []).filter(function(it) {
@@ -121,7 +122,7 @@ angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curricu
               endpointUrl = endpointUrl || '/autocomplete/practiceEvaluation';
               /* falls through */
             case 'subject':
-              endpointUrl = endpointUrl || '/autocomplete/enterpriseLocations';
+              endpointUrl = endpointUrl || '/autocomplete/subjectsList';
               /* falls through */
             case 'committee':
               endpointUrl = endpointUrl || '/autocomplete/committeesList';

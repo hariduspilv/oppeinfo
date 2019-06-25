@@ -32,6 +32,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.ExceptionUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.rr.PopulationRegisterChangesSearchDto;
 import ee.hitsa.ois.web.dto.rr.PopulationRegisterSearchDto;
@@ -147,8 +148,12 @@ public class PopulationRegisterLogService {
 
     public void savePersonData(Person person, String firstname, String lastname, Classifier citizenship, Classifier residence,
             String address, String addressAds, String addressAdsOid, String postcode) {
-        person.setFirstname(firstname);
-        person.setLastname(lastname);
+        if (!StringUtils.equalsIgnoreCase(person.getFirstname(), firstname)) {
+            person.setFirstname(PersonUtil.initCapName(firstname));
+        }
+        if (!StringUtils.equalsIgnoreCase(person.getLastname(), lastname)) {
+            person.setLastname(PersonUtil.initCapName(lastname));
+        }
         person.setCitizenship(citizenship);
         person.setResidenceCountry(residence);
         person.setAddress(address);

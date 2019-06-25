@@ -36,6 +36,7 @@ import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -110,11 +111,12 @@ public class ReportService {
         qb.optionalCriteria("s.status_code = :status", "status", criteria.getStatus());
         qb.optionalCriteria("s.fin_code = :fin", "fin", criteria.getFin());
         qb.optionalCriteria("s.fin_specific_code = :fin", "fin", criteria.getFinSpecific());
+        qb.optionalCriteria("s.dormitory_code = :dormitory", "dormitory", criteria.getDormitory());
         qb.optionalCriteria("s.language_code = :language", "language", criteria.getLanguage());
 
         Page<StudentSearchDto> result = JpaQueryUtil.pagingResult(qb, "s.id, p.firstname, p.lastname, coalesce(p.idcode, p.foreign_idcode) as idcode, s.study_start, c.orig_study_level_code, " +
                 "cv.code, c.name_et, c.name_en, c.mer_code, sg.code as student_group_code, s.study_load_code, s.study_form_code, s.status_code, " +
-                "s.fin_code, s.fin_specific_code, s.language_code, s.email, scc.credits"
+                "s.fin_code, s.fin_specific_code, s.language_code, s.email, scc.credits, s.dormitory_code"
         , em, pageable).map(r -> new StudentSearchDto(r));
 
         Set<Long> studentIds = result.getContent().stream().map(StudentSearchDto::getId).collect(Collectors.toSet());
@@ -837,6 +839,28 @@ public class ReportService {
 
     public Page<IndividualCurriculumSatisticsDto> individualCurriculumStatistics(HoisUserDetails user,
             IndividualCurriculumStatisticsCommand criteria, Pageable pageable) {
+        JpaNativeQueryBuilder qb = indokIndividualCurriculums(user, criteria);
+        String indokQuery = qb.querySql("s.id student_id, p.firstname, p.lastname, sg.id group_id, sg.code group_code, "
+                + "cm.id curriculum_id, cm.name_et cm_name_et, cm.name_en cm_name_en, dsm.add_info, "
+                + "ds.start_date, coalesce(ds_lop.start_date, ds.end_date) end_date", false);
+        Map<String, Object> parameters = new HashMap<>(qb.queryParameters());
+
+        qb = tugiIndividualCurriculums(user, criteria); 
+        String tugiQuery = qb.querySql("s2.id student_id, p2.firstname, p2.lastname, sg2.id group_id, "
+                + "sg2.code group_code, cm2.id curriculum_id, cm2.name_et cm_name_et, cm2.name_en cm_name_en, "
+                + "assm.add_info, ds2.start_date, coalesce(ds_lop2.start_date, ds2.end_date)", false);
+       parameters.putAll(qb.queryParameters());
+
+        qb = new JpaNativeQueryBuilder("from (" + indokQuery + " union all " + tugiQuery + ") as individual_curriculums")
+                .sort(pageable);
+        
+        return JpaQueryUtil.pagingResult(qb, "student_id, firstname, lastname, group_id, group_code, "
+                + "curriculum_id, cm_name_et, cm_name_en, add_info, start_date, end_date", parameters, em, pageable)
+                .map(r -> new IndividualCurriculumSatisticsDto(r));
+    }
+
+    private static JpaNativeQueryBuilder indokIndividualCurriculums(HoisUserDetails user,
+            IndividualCurriculumStatisticsCommand criteria) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s " +
                 "join person p on p.id = s.person_id " +
                 "left join student_group sg on sg.id = s.student_group_id "+
@@ -846,8 +870,7 @@ public class ReportService {
                 "join curriculum_version_omodule cvo on cvo.id = dsm.curriculum_version_omodule_id " +
                 "join curriculum_module cm on cm.id = cvo.curriculum_module_id " +
                 "left join (directive_student ds_lop join directive d_lop on d_lop.id = ds_lop.directive_id and d_lop.type_code = :lopDirectiveType " +
-                "and d_lop.status_code = :directiveStatus) on ds_lop.directive_student_id = ds.id and ds_lop.canceled = false")
-                .sort(pageable);
+                "and d_lop.status_code = :directiveStatus) on ds_lop.directive_student_id = ds.id and ds_lop.canceled = false");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_INDOK);
@@ -867,10 +890,45 @@ public class ReportService {
         }
         qb.parameter("lopDirectiveType",  DirectiveType.KASKKIRI_INDOKLOP.name());
 
-        return JpaQueryUtil.pagingResult(qb, "s.id student_id, p.firstname, p.lastname, "
-                + "sg.id group_id, sg.code, cm.id curriculum_id, cm.name_et, cm.name_en, dsm.add_info, "
-                + "ds.start_date, coalesce(ds_lop.start_date, ds.end_date)", em, pageable)
-                .map(r -> new IndividualCurriculumSatisticsDto(r));
+        return qb;
+    }
+
+    private static JpaNativeQueryBuilder tugiIndividualCurriculums(HoisUserDetails user,
+            IndividualCurriculumStatisticsCommand criteria) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s2 " +
+                "join person p2 on p2.id = s2.person_id " +
+                "left join student_group sg2 on sg2.id = s2.student_group_id " +
+                "join directive_student ds2 on ds2.student_id = s2.id " +
+                "join directive d2 on d2.id = ds2.directive_id " +
+                "join application a on a.id = ds2.application_id " +
+                "join application_support_service ass on ass.application_id = a.id " +
+                "join application_support_service_module assm on assm.application_support_service_id = ass.id " +
+                "join curriculum_version_omodule cvo2 on cvo2.id = assm.curriculum_version_omodule_id " +
+                "join curriculum_module cm2 on cm2.id = cvo2.curriculum_module_id " +
+                "left join (directive_student ds_lop2 join directive d_lop2 on d_lop2.id = ds_lop2.directive_id and d_lop2.type_code = :lopDirectiveType2 " +
+                "and d_lop2.status_code = :directiveStatus) on ds_lop2.directive_student_id = ds2.id and ds_lop2.canceled = false");
+
+        qb.requiredCriteria("s2.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("d2.type_code = :directiveType2", "directiveType2", DirectiveType.KASKKIRI_TUGI);
+        qb.requiredCriteria("d2.status_code = :directiveStatus", "directiveStatus",
+                DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+        qb.requiredCriteria("ass.support_service_code = :supportServiceCode", "supportServiceCode",
+                SupportServiceType.TUGITEENUS_1);
+        qb.optionalCriteria("s2.id = :studentId", "studentId", criteria.getStudent());
+        qb.optionalCriteria("sg2.id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
+        qb.optionalContains(Arrays.asList("cm2.name_et", "cm2.name_en"), "moduleName", criteria.getModuleName());
+        qb.optionalCriteria("cvo2.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
+                criteria.getCurriculumVersion());
+        qb.optionalCriteria("ds2.start_date >= :from", "from", criteria.getFrom());
+        qb.optionalCriteria("coalesce(ds_lop2.start_date, ds2.end_date) <= :thru", "thru", criteria.getThru());
+        qb.filter("ds2.canceled = false");
+
+        if (user.isTeacher()) {
+            qb.requiredCriteria("sg2.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+        }
+        qb.parameter("lopDirectiveType2",  DirectiveType.KASKKIRI_TUGILOPP.name());
+
+        return qb;
     }
 
     public byte[] individualCurriculumStatisticsAsExcel(HoisUserDetails user, IndividualCurriculumStatisticsCommand criteria) {

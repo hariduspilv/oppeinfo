@@ -3,13 +3,12 @@ package ee.hitsa.ois.web.dto.poll;
 import java.util.ArrayList;
 import java.util.List;
 
-import ee.hitsa.ois.web.commandobject.poll.QuestionCommand;
-
 public class ThemeDto implements Comparable<ThemeDto> {
     
     private Long id;
     private String nameEt;
     private Short orderNr;
+    private Boolean isRepetitive;
     private List<QuestionDto> questions = new ArrayList<>();
     
     public Long getId() {
@@ -48,6 +47,12 @@ public class ThemeDto implements Comparable<ThemeDto> {
     }
     public void setQuestions(List<QuestionDto> questions) {
         this.questions = questions;
+    }
+    public Boolean getIsRepetitive() {
+        return isRepetitive;
+    }
+    public void setIsRepetitive(Boolean isRepetitive) {
+        this.isRepetitive = isRepetitive;
     }
 
 }

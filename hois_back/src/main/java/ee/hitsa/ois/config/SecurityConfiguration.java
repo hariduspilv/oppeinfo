@@ -48,6 +48,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/SingleSignOnService").permitAll()
                 .antMatchers("/taraLogin").permitAll()
                 .antMatchers("/taraCallback").permitAll()
+                .antMatchers("/haridLogin").permitAll()
+                .antMatchers("/haridCallback").permitAll()
                 .antMatchers(HttpMethod.GET, "/public/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/autocomplete/classifiers").permitAll()
                 .antMatchers(HttpMethod.GET, "/autocomplete/schools").permitAll()
@@ -67,12 +69,13 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET, "/timetableevents/timetableByRoom/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/timetableevents/timetableSearch/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/oisfile/get/studymaterial/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/oisfile/get/pollThemeQuestionFile/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
             .addFilter(new JwtAuthorizationFilter(authenticationManager(), userDetailsService, hoisJwtProperties))
             .csrf()
                 .csrfTokenRepository(getRootCookieCsrfTokenRepository())
-                .ignoringAntMatchers("/ldap", "/mIdLogin", "/taraLogin");
+                .ignoringAntMatchers("/ldap", "/mIdLogin", "/taraLogin", "/haridLogin");
 
         http.logout()
                 .addLogoutHandler(userDetailsService)
@@ -137,15 +140,18 @@ class UniqueUrlSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.antMatcher("/practiceJournals/supervisor/{uuid}/**")
-            .authorizeRequests()
-                .anyRequest()
-                .permitAll()
-                .and()
-            .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-            .csrf()
-                .disable();
+        http.
+            requestMatchers()
+                .antMatchers("/practiceJournals/supervisor/{uuid}/**", "/poll/supervisor/{uuid}/**")
+                    .and()
+                .authorizeRequests()
+                    .anyRequest()
+                    .permitAll()
+                    .and()
+                .sessionManagement()
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    .and()
+                .csrf()
+                    .disable();
     }
 }

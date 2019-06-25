@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>{{ "report.support.services.title" | translate }}</title>
+    <style type="text/css">
+    	@page {
+		    size: A4;
+		    margin: 70px;
+		}
+		
+		body, h2 {
+			font-size: 12pt;
+		}
+		
+		table {
+    		border-collapse: collapse;
+    		border-spacing: 0;
+    		width: 100%;
+		}
+		
+    	tr, td, th {
+		    page-break-inside: avoid !important;
+		}
+		
+		td, th {
+    		border: 1px solid black;
+		}
+		
+		table.spacing th {
+			text-align: left;
+			padding: 2pt;
+		}
+		
+		table.spacing td {
+			text-align: left;
+			padding: 2pt;
+		}
+		
+		h1 {
+			font-size: 14pt;
+			text-align: center;
+		}
+		
+		h2 {
+			margin-top: 40pt;
+		}
+		
+		p {
+			margin-top: 0.5em !important;
+    		margin-bottom: 0.5em !important;
+		}
+		
+		.break-long-words { /*https://stackoverflow.com/a/36555643*/
+			overflow-wrap: break-word;
+			word-wrap: break-word;
+			word-break: break-all;
+			word-break: break-word;
+			hyphens: auto;
+		}
+    </style>
+  </head>
+  <body>
+	<h1>{{"report.support.services.title" | translate}}</h1>
+	<p><b>{{"report.support.services.idcode" | translate}}:</b> {{content.idcode}}</p>
+	<p><b>{{"report.support.services.firstname" | translate}}:</b> {{content.firstName}}</p>
+	<p><b>{{"report.support.services.lastname" | translate}}:</b> {{content.lastName}}</p>
+	<p><b>{{"report.support.services.curriculumnamecode" | translate}}:</b> {{content.curriculum}}, {{content.curriculumCode}}</p>
+	<p><b>{{"report.support.services.curriculumversion" | translate}}:</b> {{content.curriculumVersion}}</p>
+	<p><b>{{"report.support.services.from" | translate}}:</b> {{content.from.toString() | date(existingFormat='yyyy-MM-dd', format='dd.MM.yyyy')}}</p>
+	<p><b>{{"report.support.services.thru" | translate}}:</b> {{content.thru.toString() | date(existingFormat='yyyy-MM-dd', format='dd.MM.yyyy')}}</p>
+	
+	<h2>{{"report.support.services.entries" | translate}}:</h2>
+	<table class="spacing">
+		<tr>
+			<th>{{"report.support.services.table.date" | translate}}</th>
+			<th style="width: 15%;">{{"report.support.services.table.title" | translate}}</th>
+			<th style="width: 30%;">{{"report.support.services.table.content" | translate}}</th>
+			<th>{{"report.support.services.table.validity" | translate}}</th>
+			<th>{{"report.support.services.table.public" | translate}}</th>
+			<th style="width: 10%;">{{"report.support.services.table.file" | translate}}</th>
+			<th style="width: 15%;">{{"report.support.services.table.submitter" | translate}}</th>
+		</tr>
+		{% for entry in content.services %}
+		<tr>
+			<td>{{entry.entryDate.toString() | date(existingFormat='yyyy-MM-dd', format='dd.MM.yyyy')}}</td>
+			<td>{{entry.title}}</td>
+			<td>
+			{% if entry.contentArr is not empty %}
+				<ul style="padding-left: 30px !important;">
+				{% for classifier in entry.contentArr %}
+					<li>{{classifier}}</li>				
+				{% endfor %}
+				</ul>
+			{% else %}
+				{{entry.content}}
+			{% endif %}
+			</td>
+			<td>{{entry.validity}}</td>
+			<td>{% if entry.isPublic == true %} {{"yes" | translate}} {% else %} {{"no" | translate }} {% endif %}</td>
+			<td>{% if entry.hasFile == true %} {{"report.support.services.table.addedFile" | translate}} {% endif %}</td>
+			<td class="break-long-words">{{entry.submitter}}</td>
+		</tr>
+		{% endfor %}
+	</table>
+  </body>
+</html>

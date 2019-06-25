@@ -48,7 +48,6 @@ import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
-import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
@@ -70,7 +69,6 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
-import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.OisFileForm;
@@ -178,8 +176,10 @@ public class ApplicationService {
      */
     public Application create(HoisUserDetails user, ApplicationForm applicationForm) {
         Student student = em.getReference(Student.class, applicationForm.getStudent().getId());
-        if(!(UserUtil.isStudent(user, student) || UserUtil.isStudentRepresentative(user, student) || UserUtil.isStudentGroupTeacher(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
-            throw new ValidationFailedException(String.format("user %s is not allowed to create application", user.getUsername()));
+        if(!(UserUtil.isStudent(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
+            if (!ApplicationType.AVALDUS_LIIK_TUGI.name().equals(applicationForm.getType()) || !(UserUtil.isStudentRepresentative(user, student) || UserUtil.isStudentGroupTeacher(user, student))) {
+                throw new ValidationFailedException(String.format("user %s is not allowed to create application", user.getUsername()));
+            }
         }
 
         Map<String, ApplicationApplicableDto> applicable = applicableApplicationTypes(student);
@@ -226,7 +226,7 @@ public class ApplicationService {
         }
         if (ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_TUGI, application.getType())) {
             application.setIsDecided(applicationForm.getIsDecided());
-            EntityUtil.bindEntityCollection(application.getSupportServices(), s -> ClassifierSelection.of(s.getSupportService()).getCode(),
+            EntityUtil.bindEntityCollection(application.getSupportServices(), s -> s.getSupportService().getCode(),
                 applicationForm.getSupportServices(), s -> s.getCode(),
                 s -> {
                     ApplicationSupportService entity = new ApplicationSupportService();
@@ -411,7 +411,10 @@ public class ApplicationService {
             if (ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_TUGI, application.getType())) {
                 application.setCommitteeDecisionAdded(LocalDateTime.now());
                 if (Boolean.FALSE.equals(application.getIsDecided())) {
-                    setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_TAGASI);
+                    ApplicationRejectForm form = new ApplicationRejectForm();
+                    // FIXME Decision has max-length 10000 while Reason has 4000.
+                    form.setReason(application.getDecision() != null && application.getDecision().length() > 4000 ? application.getDecision().substring(0, 3998) + "..." : application.getDecision());
+                    return reject(application, form);
                 }
             }
         } else {
@@ -426,13 +429,16 @@ public class ApplicationService {
         ApplicationStatus oldStatus = EnumUtil.valueOf(ApplicationStatus.class, application.getStatus());
         if (updateStatus) {
             application = setSeenBySchoolAdmin(user, application);
+            ApplicationDto dto = ApplicationDto.of(application);
             if (oldStatus != null && oldStatus.equals(ApplicationStatus.AVALDUS_STAATUS_ESIT) && !oldStatus.equals(EnumUtil.valueOf(ApplicationStatus.class, application.getStatus()))) {
-                ApplicationDto dto = ApplicationDto.of(application);
                 dto.setHasBeenSeenByAdmin(Boolean.TRUE);
-                return dto;
             }
+            dto.setCanRemoveConfirmation(Boolean.valueOf(canRemoveApplicationConfirmation(user, application)));
+            return dto;
         }
-        return ApplicationDto.of(application);
+        ApplicationDto dto = ApplicationDto.of(application);
+        dto.setCanRemoveConfirmation(Boolean.valueOf(canRemoveApplicationConfirmation(user, application)));
+        return dto;
     }
 
     /**
@@ -449,6 +455,33 @@ public class ApplicationService {
             return EntityUtil.save(application, em);
         }
         return application;
+    }
+    
+    /**
+     * Checks user rights for removing confirmation.
+     * If we find a directive with this application then we should check if the directive not "deleted".
+     * In this case we cannot remove confirmation for this application. 
+     * 
+     * @param user
+     * @param application
+     * @return
+     */
+    public boolean canRemoveApplicationConfirmation(HoisUserDetails user, Application application) {
+        boolean rolesAndRights = UserUtil.canRemoveApplicationConfirmation(user, application); // default
+        if (rolesAndRights) {
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from application a "
+                    + "join directive_student ds on ds.application_id = a.id "
+                    + "join directive d on d.id = ds.directive_id");
+            qb.requiredCriteria("a.id = :applicationId", "applicationId", application.getId());
+            qb.requiredCriteria("a.type_code = :applicationType", "applicationType", ApplicationType.AVALDUS_LIIK_TUGI.name());
+            qb.requiredCriteria("a.status_code = :applicationStatus", "applicationStatus", ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name());
+            qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_TUGI.name());
+            qb.requiredCriteria("d.status_code in (:directiveStatus)", "directiveStatus", EnumUtil.toNameList(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL,
+                    DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD, DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL));
+            qb.filter("ds.canceled is not true");
+            return qb.select("1", em).setMaxResults(1).getResultList().isEmpty();
+        }
+        return rolesAndRights; // a.k.a. false.
     }
 
     public DirectiveStudent findLastValidAcademicLeaveWithoutRevocation(Long studentId) {
@@ -632,7 +665,7 @@ public class ApplicationService {
             application.setIsRepresentativeConfirmed(Boolean.TRUE);
         } else if (Boolean.FALSE.equals(form.getConfirm())) {
             ApplicationRejectForm rejectForm = new ApplicationRejectForm();
-            rejectForm.setReason(TranslateUtil.translate("application.supportService.rejectDefault", Language.ET));
+            rejectForm.setReason(form.getRepresentativeDecisionAddInfo());
             reject(application, rejectForm);
             application.setIsRepresentativeConfirmed(Boolean.FALSE);
         }
@@ -645,8 +678,6 @@ public class ApplicationService {
         }
         
         application.setRepresentativeConfirmed(LocalDateTime.now());
-
-        
     }
 
     public void removeConfirmation(Application application) {
@@ -656,6 +687,8 @@ public class ApplicationService {
         // reset dates
         application.setRepresentativeConfirmed(null);
         application.setCommitteeDecisionAdded(null);
+        // reset committee decision "NO"
+        application.setRejectReason(null);
         setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_YLEVAAT);
     }
 }

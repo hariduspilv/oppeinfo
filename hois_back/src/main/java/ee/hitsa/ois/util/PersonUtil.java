@@ -107,4 +107,47 @@ public abstract class PersonUtil {
             person.setAddressAdsOid(null);
         }
     }
+    
+//    /**
+//     * TODO Create Tests for this one.
+//     * 
+//     * @param args
+//     */
+//    public static void main(String[] args) {
+//        Arrays.asList("O’CONNEŽ-ŠUSLIK TESTNUMBER MARY ÄNN", "ALEXANDER VON HUMBOLDT", "VOLVO", "TEST VONVON", "TEST 8NAME",
+//                "CARL ABCÄÖÜÕ-ŽŠ", "PEGGY SUGGY", "PILVI VALIKOVILVI", "DAR'YA MURUMÄGI", "KADRI KOVVALAG", "PAUL KULD",
+//                "KALLE VALIKOVILLE", "KRIS LUTSVVK", "IRA ŽEN-ŠUN", "WILLEM VORR", "LIISA CASK", "MIRRY METSSAR",
+//                "EVELLIINA-MARGARIITA KUUSEOKS-KUUSEPUU", "MART RAUDSEPP-LIIK", "RENEK METSASOO", "KAIDO MONROVIA",
+//                "KARIN VALIKOVIRIN", "ALEKSANDERA LIANNYI", "INGVER VALIKOVIVER").forEach(fullname -> {
+//                    System.out.println(String.format("Before: %s\nAfter REGEX: %s\n", fullname, initCapName(fullname)));
+//                });
+//    }
+    
+    /**
+     * WorldUtils.capitalizeFully does not work as postgresql initcap.
+     * Java Regex cannot user \L to make characters into lower case. It should be done via toLowerCase manually.
+     * 
+     * How it works:
+     * It finds any letter or digit and then takes as group letters (which can be transformed to lowercase) or digits (stops on any other symbol as "-+*'" etc)
+     * 
+     * @param fullname
+     */
+    public static String initCapName(String fullname) {
+        // To make it ignore some words regex should be this way:
+        // ((?<=[\\p{L}])([\\p{Lu}]*)|(?<=\\s)(%s)(?=\\s)) - where %s should be similar to String.join("|", INITCAP_EXCLUDING_WORDS)
+        // and similar to this list (any iterable):
+        // private static final String[] INITCAP_EXCLUDING_WORDS = new String[] {"VON"};
+        Matcher matcher = Pattern.compile("(?<=[\\p{L}\\d])([\\p{Lu}\\d]*)").matcher(fullname);
+        StringBuilder builder = new StringBuilder();
+        
+        int last = 0;
+        while (matcher.find()) {
+            builder.append(fullname.substring(last, matcher.start()));
+            builder.append(matcher.group(0).toLowerCase());
+            last = matcher.end();
+        }
+        builder.append(fullname.substring(last));
+        return builder.toString();
+    }
+    
 }

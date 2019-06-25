@@ -73,6 +73,9 @@ public class ApplicationDto extends InsertedChangedVersionDto {
 
     private Boolean canEditStudent;
     
+    /** TUGI application specific */
+    private Boolean canRemoveConfirmation;
+    
     private Boolean hasBeenSeenByAdmin;
 
     public static ApplicationDto of(Application application) {
@@ -88,7 +91,7 @@ public class ApplicationDto extends InsertedChangedVersionDto {
             dto.setValidAcademicLeave(ValidAcademicLeaveDto.of(directiveStudent));
         }
         if (application.getCommittee() != null) {
-            dto.setCommittee(AutocompleteResult.of(application.getCommittee()));
+            dto.setCommittee(AutocompleteResult.of(application.getCommittee(), true));
         }
         dto.setSupportServices(StreamUtil.toMappedSet(s -> ClassifierDto.of(s.getSupportService()), application.getSupportServices()));
         dto.setSupportModules(application.getSupportServices().stream()
@@ -497,5 +500,12 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     public void setHasBeenSeenByAdmin(Boolean hasBeenSeenByAdmin) {
         this.hasBeenSeenByAdmin = hasBeenSeenByAdmin;
     }
-    
+
+    public Boolean getCanRemoveConfirmation() {
+        return canRemoveConfirmation;
+    }
+
+    public void setCanRemoveConfirmation(Boolean canRemoveConfirmation) {
+        this.canRemoveConfirmation = canRemoveConfirmation;
+    }
 }

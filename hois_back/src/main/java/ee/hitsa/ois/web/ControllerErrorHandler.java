@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -217,6 +218,26 @@ public class ControllerErrorHandler {
 
             public AutocompleteResult getObject() {
                 return object;
+            }
+        }
+
+        public static class ErrorForIcpField extends ErrorForField {
+            private final LocalDate startDate;
+            private final LocalDate endDate;
+
+            public ErrorForIcpField(String code, String field, AutocompleteResult object, LocalDate startDate,
+                    LocalDate endDate) {
+                super(code, field, object);
+                this.startDate = startDate;
+                this.endDate = endDate;
+            }
+
+            public LocalDate getStartDate() {
+                return startDate;
+            }
+
+            public LocalDate getEndDate() {
+                return endDate;
             }
         }
     }

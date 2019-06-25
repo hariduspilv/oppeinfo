@@ -11,17 +11,24 @@ public class PollForm {
     private Long id;
     private String afterword;
     private String foreword;
+    private String insertedBy;
+    private String changedBy;
     private LocalDate validFrom;
     private LocalDate validThru;
     private LocalDate reminderDt;
     private LocalDate journalFrom;
     private LocalDate journalThru;
+    private Long studyPeriod;
     private String nameEt;
     private List<AutocompleteResult> studentGroups;
     private List<ClassifierSelection> targetCodes;
+    private List<Long> teacherOccupations;
+    private List<AutocompleteResult> journals;
     private Boolean isTeacherComment;
     private Boolean isTeacherCommentVisible;
-    private String typeCode;
+    private Boolean isStudentVisible;
+    private Boolean responded;
+    private String type;
     private String status;
     private long themes;
     
@@ -73,11 +80,11 @@ public class PollForm {
     public void setTargetCodes(List<ClassifierSelection> targetCodes) {
         this.targetCodes = targetCodes;
     }
-    public String getTypeCode() {
-        return typeCode;
+    public String getType() {
+        return type;
     }
-    public void setTypeCode(String typeCode) {
-        this.typeCode = typeCode;
+    public void setType(String type) {
+        this.type = type;
     }
     public String getNameEt() {
         return nameEt;
@@ -120,6 +127,48 @@ public class PollForm {
     }
     public void setJournalThru(LocalDate journalThru) {
         this.journalThru = journalThru;
+    }
+    public List<Long> getTeacherOccupations() {
+        return teacherOccupations;
+    }
+    public void setTeacherOccupations(List<Long> teacherOccupations) {
+        this.teacherOccupations = teacherOccupations;
+    }
+    public List<AutocompleteResult> getJournals() {
+        return journals;
+    }
+    public void setJournals(List<AutocompleteResult> journals) {
+        this.journals = journals;
+    }
+    public Long getStudyPeriod() {
+        return studyPeriod;
+    }
+    public void setStudyPeriod(Long studyPeriod) {
+        this.studyPeriod = studyPeriod;
+    }
+    public Boolean getIsStudentVisible() {
+        return isStudentVisible;
+    }
+    public void setIsStudentVisible(Boolean isStudentVisible) {
+        this.isStudentVisible = isStudentVisible;
+    }
+    public String getInsertedBy() {
+        return insertedBy;
+    }
+    public void setInsertedBy(String insertedBy) {
+        this.insertedBy = insertedBy;
+    }
+    public String getChangedBy() {
+        return changedBy;
+    }
+    public void setChangedBy(String changedBy) {
+        this.changedBy = changedBy;
+    }
+    public Boolean getResponded() {
+        return responded;
+    }
+    public void setResponded(Boolean responded) {
+        this.responded = responded;
     }
 
 }

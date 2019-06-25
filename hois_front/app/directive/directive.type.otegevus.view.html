@@ -5,16 +5,20 @@
         <th md-column>{{'directive.student.order' | translate}}</th>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
         <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column>{{'directive.student.curriculumVersion' | translate}}</th>
+        <th md-column>{{'directive.student.studentGroup' | translate}}</th>
         <th md-column>{{'directive.student.studyActivityStartDate' | translate}}</th>
         <th md-column>{{'directive.student.studyActivityEndDate' | translate}}</th>
         <th md-column>{{'directive.student.studyActivityIsAbsence' | translate}}</th>
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-disabled="!row.selectable" md-select="row" md-select-id="student" md-auto-select ng-repeat="row in record.students | orderBy:'+lastname'" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row ng-disabled="!row.selectable" md-select="row" md-select-id="student" ng-repeat="row in record.students | orderBy:'+lastname'" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
+        <td md-cell>{{currentLanguageNameField(row.curriculumVersionObject)}}</td>
+        <td md-cell>{{currentLanguageNameField(row.studentGroupObject)}}</td>
         <td md-cell>{{::row.startDate | hoisDate}}</td>
         <td md-cell>{{::row.endDate | hoisDate}}</td>
         <td md-cell>{{row.isAbsence ? ('main.yes' | translate) : ('main.no' | translate)}}</td>

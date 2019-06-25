@@ -81,9 +81,9 @@
                             <div layout="row" flex="70">
                                 <md-input-container flex>
                                     <label class="textInput">{{'poll.questions.answer' | translate}}</label>
-                                    <input ng-model="item.nameEt" type="text" ng-disabled="criteria.disabled || (new && criteria.question)" name="{{$index}}" md-maxlength="255" required ng-change="checkAnswer($index)">
+                                    <input ng-model="item.nameEt" type="text" ng-disabled="criteria.disabled || (new && criteria.question)" name="{{$index}}" md-maxlength="255" required ng-change="checkAnswer()">
                                     <ng-messages for="dialogForm[$index].$error" role="alert" layout="row">
-                                        <ng-message when="answerEtError">{{'poll.questions.sameNameError' | translate}}</ng-message>
+                                        <ng-message when="answerEtError">{{'poll.questions.sameAnswerError' | translate}}</ng-message>
                                     </ng-messages>
                                 </md-input-container>
                             </div>
@@ -122,8 +122,8 @@
                         <tbody md-body>
                             <tr md-row ng-repeat="file in criteria.files | orderBy: 'oisFile.fname'" ng-class-odd="'odd'" ng-class-even="'even'">
                             <td md-cell>
-                                {{file.oisFile.fname}}
-                                <a ng-href="{{getFileUrl(file.oisFile)}}" download target="_blank" rel="noopener noreferrer">
+                                {{file.fname}}
+                                <a ng-href="{{(file.fdata === undefined || file.fdata === null) ? getUrl(file, 'pollThemeQuestionFile') : getFileUrl(file)}}" download target="_blank" rel="noopener noreferrer">
                                     <md-icon md-font-set="material-icons">file_download</md-icon>
                                 </a>
                             </td>

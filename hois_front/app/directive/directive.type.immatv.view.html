@@ -13,10 +13,11 @@
         <th md-column>{{'directive.student.fin' | translate}}</th>
         <th md-column>{{'directive.student.finSpecific' | translate}}</th>
         <th md-column>{{'directive.student.studentGroup' | translate}}</th>
+        <th md-column ng-if="formState.school.vocational">{{'directive.student.dormitory' | translate}}</th>
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-disabled="!row.selectable" md-select="row" md-select-id="student" md-auto-select ng-repeat="row in record.students | orderBy:'+lastname'" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row ng-disabled="!row.selectable" md-select="row" md-select-id="student" ng-repeat="row in record.students | orderBy:'+lastname'" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell ng-if="row.student">
           <a class="md-primary" ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</a>
@@ -43,6 +44,9 @@
           <hois-classifier-value ng-model="row.finSpecific" main-classifier-code="FINTAPSUSTUS"></hois-classifier-value>
         </td>
         <td md-cell>{{::row.newStudentGroup}}</td>
+        <td md-cell ng-if="formState.school.vocational">
+          <hois-classifier-value ng-model="row.dormitory" main-classifier-code="YHISELAMU"></hois-classifier-value>
+        </td>
       </tr>
     </tbody>
   </table>

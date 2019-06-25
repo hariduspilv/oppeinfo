@@ -2,14 +2,6 @@ package ee.hitsa.ois.web.commandobject.student;
 
 import java.time.LocalDate;
 
-import javax.validation.constraints.NotNull;
-
-import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.StudyPeriodWithYearIdDto;
-import ee.hitsa.ois.web.dto.enterprise.EnterpriseResult;
-import ee.hitsa.ois.web.dto.student.StudentGroupResult;
-
 public class StudentPracticeStatisticsSearchCommand {
 	
 	private Long enterprise;

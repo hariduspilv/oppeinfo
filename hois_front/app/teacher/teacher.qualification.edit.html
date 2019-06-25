@@ -90,7 +90,7 @@
                         </md-input-container>
                     </div>
 
-                    <span ng-if="teacher.isVocational">
+                <span ng-if="teacher.isVocational">
                   <div layout="row" layout-sm="column" layout-xs="column">
                     <md-input-container flex="25" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
                       <label>{{'teacher.qualification.diplomaNr' | translate}}</label>
@@ -110,7 +110,7 @@
                   <div layout="row" layout-sm="column" layout-xs="column">
                     <md-input-container flex="25" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
                         <label>{{'teacher.qualification.specialty' | translate}}</label>
-                        <input ng-model="qualification.specialty" name="qualification[{{$index}}].specialty" md-maxlength="255" type="text">
+                        <input ng-model="qualification.specialty" name="qualification[{{$index}}].specialty" md-maxlength="255" type="text" required>
                         <div ng-messages="qualificationsForm['qualification['+$index+'].specialty'].$error">
                           <div ng-message="md-maxlength">
                             {{'main.messages.error.maxlength' | translate}}
@@ -119,8 +119,8 @@
                     </md-input-container>
                     <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                       <label>{{'teacher.qualification.language' | translate}}</label>
-                      <hois-classifier-select ng-model="qualification.language"
-                                              main-classifier-code="EHIS_OPETAJA_KEEL" model-value-attr="code"></hois-classifier-select>
+                      <hois-classifier-select ng-model="qualification.language" main-classifier-code="EHIS_OPETAJA_KEEL" 
+                        model-value-attr="code" required></hois-classifier-select>
                     </md-input-container>
                     <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                       <label>{{'teacher.qualification.addInfo' | translate}}</label>

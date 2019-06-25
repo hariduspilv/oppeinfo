@@ -77,6 +77,15 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         translationLoaded: function($translate) { return $translate.onReady(); } ,
         auth: function (AuthResolver) { return AuthResolver.resolve(); },
       }
+    }).when('/students/:id/supportService', {
+      templateUrl: 'student/view.supportservice.html',
+      controller: 'StudentViewSupportServiceController',
+      controllerAs: 'controller',
+      data: authorizedRoles,
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+      }
     }).when('/students', {
       templateUrl: 'student/list.html',
       controller: 'SimpleListController',

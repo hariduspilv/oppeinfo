@@ -6,6 +6,7 @@ public class QuestionAnswerDto implements Comparable<QuestionAnswerDto>{
     private String nameEt;
     private Short orderNr;
     private Long id;
+    private Boolean chosen;
     
     public Short getAnswerNr() {
         return answerNr;
@@ -40,6 +41,12 @@ public class QuestionAnswerDto implements Comparable<QuestionAnswerDto>{
     }
     public void setOrderNr(Short orderNr) {
         this.orderNr = orderNr;
+    }
+    public Boolean getChosen() {
+        return chosen;
+    }
+    public void setChosen(Boolean chosen) {
+        this.chosen = chosen;
     }
 
 }

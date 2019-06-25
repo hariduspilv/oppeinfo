@@ -20,19 +20,27 @@ angular.module('hitsaOis').controller('TimetableManagementController',
       }
     };
 
-    $scope.openAddFileDialog = function (studyPeriod, startDate) {
+    $scope.openAddFileDialog = function (studyPeriod, params) {
       dialogService.showDialog('timetable/dialog/file.import.dialog.html', function() {
       }, function (submitScope) {
         var data = submitScope.data;
         oisFileService.getFromLfFile(data.file[0], function(file) {
             data.oisFile = file;
-            var ImportTimetableEndpoint = QueryUtils.endpoint('/timetables/importXml/' + studyPeriod);
-            var newFile = new ImportTimetableEndpoint(data.oisFile);
-            newFile.$save(startDate).then(function(response) {
-                if (response.status !== null) {
-                  message.error(response.status);
+            var ImportTimetableEndpoint = QueryUtils.endpoint('/timetables/importXml');
+            var criteria = {};
+            criteria.oisFile = data.oisFile;
+            criteria.studyPeriod = studyPeriod;
+            criteria.code = params.isHigher ? 'TUNNIPLAAN_LIIK_H' : 'TUNNIPLAAN_LIIK_V';
+            angular.extend(criteria, params);
+            var newFile = new ImportTimetableEndpoint(criteria);
+            newFile.$save().then(function(response) {
+                if (response.errors !== null && response.errors.length !== 0) {
+                  dialogService.showDialog('timetable/dialog/import.result.dialog.html', function (dialogScope) {
+                    dialogScope.timetable = response;
+                  }, null);
                 }
                 message.info('main.messages.create.success');
+                $scope.loadData();
             }).catch(angular.noop);
         });
       });
@@ -40,8 +48,13 @@ angular.module('hitsaOis').controller('TimetableManagementController',
 
     $scope.exportTimetable = function(url, params) {
       QueryUtils.endpoint("/timetables/exportTimetableCheck").search(params).$promise.then(function (response) {
-        if (!response._error) {
+        if ((response.teachers === null || response.teachers.length === 0) &&
+          (response.journals === null || response.journals.length === 0)) {
           $window.location.href = $rootScope.excel(url, params);
+        } else {
+          dialogService.showDialog('timetable/dialog/export.result.dialog.html', function (dialogScope) {
+            dialogScope.timetable = response;
+          }, null);
         }
       });
     };
@@ -130,4 +143,4 @@ angular.module('hitsaOis').controller('TimetableManagementController',
         $location.url('/timetable/' + result.id + '/view');
       });
     };
-  });
+});

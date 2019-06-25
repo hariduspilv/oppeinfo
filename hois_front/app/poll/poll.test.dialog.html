@@ -19,13 +19,10 @@
         <md-dialog-content>
         <div class="md-dialog-content" flex>
             <div layout="row">
-                <h1 style="word-break: break-word; color: rgb(21, 101, 192)">{{'poll.basicData.foreWord' | translate}}</h1>
-            </div>
-            <div layout="row">
-                <p style="word-break: break-word">{{criteria.foreword}}</p>
+                <p style="word-break: break-word; font-size: 15px;">{{criteria.foreword}}</p>
             </div>
             <div ng-if="criteria.themes" layout="column">
-                <div ng-repeat="item in criteria.themes track by $index" class="occupation-row align-center" layout="row" flex>
+                <div ng-repeat="item in criteria.themes track by $index" class="occupation-row align-center" layout="row" flex ng-style="{'margin-top': $first ? '0px' : '16px'}">
                     <fieldset flex="100">
                         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{item.orderNr + ' ' + item.nameEt}}</legend>
                         <div ng-repeat="question in item.questions track by $index" layout="row" flex>
@@ -34,29 +31,29 @@
                                     <div layout="row">
                                         <div layout="column" flex="100">
                                             <div layout="row" layout-align="start center">
-                                                <h2 style="word-break: break-word">{{item.orderNr + '.' + question.orderNr + ' ' + (question.isRequired ? '*' : '') + question.nameEt}}</h2>
+                                                <h2 style="word-break: break-word; margin-bottom: 0px;">{{item.orderNr + '.' + question.orderNr + ' ' + (question.isRequired ? '*' : '') + question.nameEt}}</h2>
                                             </div>
                                         </div>
                                     </div>
                                     <div layout="{{question.pictures.length !== 0 ? 'row' : 'column'}}">
                                         <div layout="column" flex="35">
                                             <div ng-repeat="file in question.files track by $index">
-                                                <img ng-if="file.oisFile.ftype.indexOf('image') !== -1" flex style="display: block; margin-left: auto; margin-right: auto; max-width: 100%; max-height: 100%" ng-src="{{getUrl(file.oisFile)}}">
-                                                <div ng-if="file.oisFile.ftype.indexOf('image') === -1">
-                                                    {{file.oisFile.fname}}
-                                                    <a ng-href="{{getUrl(file.oisFile)}}" target="_blank" rel="noopener noreferrer" download>
+                                                <img ng-if="file.ftype.indexOf('image') !== -1" flex style="display: block; margin-left: auto; margin-right: auto; max-width: 100%; max-height: 100%" ng-src="{{getUrl(file)}}">
+                                                <div ng-if="file.ftype.indexOf('image') === -1">
+                                                    {{file.fname}}
+                                                    <a ng-href="{{getUrl(file)}}" target="_blank" rel="noopener noreferrer" download>
                                                         <md-icon md-font-set="material-icons">file_download</md-icon>
                                                     </a>
                                                 </div>
                                             </div>
                                         </div>
                                         <div layout="column" flex="{{question.pictures.length !== 0 ? '60' : '100'}}" flex-offset="{{question.pictures.length !== 0 ? '5' : '0'}}">
-                                            <p style="word-break: break-word">{{question.addInfoEt}}</p>
+                                            <p style="word-break: break-word; margin-top: 0px;font-style: italic;">{{question.addInfoEt}}</p>
                                             <div ng-if="question.type === 'VASTUS_S'" layout="{{question.isInRow ? 'row' : 'column'}}" flex="100">
                                                 <div ng-repeat="answer in question.answers track by $index" flex>
                                                     <md-input-container flex>
                                                         <md-checkbox ng-model="s" aria-label="required">
-                                                            {{answer.nameEt}}
+                                                            <span style="word-break: break-word">{{answer.nameEt}}</span>
                                                         </md-checkbox>
                                                     </md-input-container>
                                                 </div>
@@ -91,7 +88,7 @@
                                             <div ng-if="question.type === 'VASTUS_V'" layout="row">
                                                 <md-input-container flex>
                                                     <label>{{answer.nameEt}}</label>
-                                                    <hois-select ng-model="s" values="question.answers" required="{{question.isRequried}}"></hois-select>
+                                                    <hois-select ng-model="s" values="question.answers" sorted-query="true" order-by-property="orderNr" required="{{question.isRequried}}"></hois-select>
                                                 </md-input-container>
                                             </div>
                                         </div>
@@ -104,10 +101,7 @@
                 </div>
             </div>
             <div layout="row">
-                <h1 style="word-break: break-word; color: rgb(21, 101, 192)">{{'poll.basicData.afterWord' | translate}}</h1>
-            </div>
-            <div layout="row">
-                <p style="word-break: break-word">{{criteria.afterword}}</p>
+                <p style="word-break: break-word; font-size: 15px;">{{criteria.afterword}}</p>
             </div>
         </div>
         </md-dialog-content>

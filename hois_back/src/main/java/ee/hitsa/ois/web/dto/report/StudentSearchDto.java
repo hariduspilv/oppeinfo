@@ -34,6 +34,7 @@ public class StudentSearchDto {
     private final String language;
     private final String email;
     private final BigDecimal credits;
+    private final String dormitory;
     private List<StudentOccupationCertificateDto> occupationCertificates;
 
     public StudentSearchDto(Object record) {
@@ -56,6 +57,7 @@ public class StudentSearchDto {
         language = resultAsString(record, 16);
         email = resultAsString(record, 17);
         credits = resultAsDecimal(record, 18);
+        dormitory = resultAsString(record, 19);
     }
 
     public Long getId() {
@@ -128,6 +130,10 @@ public class StudentSearchDto {
 
     public BigDecimal getCredits() {
         return credits;
+    }
+
+    public String getDormitory() {
+        return dormitory;
     }
 
     public List<StudentOccupationCertificateDto> getOccupationCertificates() {

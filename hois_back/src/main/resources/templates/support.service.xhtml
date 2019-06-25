@@ -19,6 +19,10 @@
     		width: 100%;
 		}
 		
+    	tr, td, th {
+		    page-break-inside: avoid !important;
+		}
+		
 		td, th {
     		border: 1px solid black;
 		}
@@ -32,9 +36,8 @@
 		}
 		
 		table.center {
-			margin-left: auto;
-			margin-right: auto;
-			width: 50%;
+			margin: 0 auto;
+			width: auto;
 		}
 		
 		table.center td {
@@ -43,7 +46,6 @@
 		
 		table.center td + td {
 			padding-left: 8pt;
-			width: 100%;
 		}
 		
 		table.spacing th {

@@ -1,5 +1,8 @@
 package ee.hitsa.ois.web.dto.directive;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class DirectiveStudentSearchDto {
@@ -9,6 +12,7 @@ public class DirectiveStudentSearchDto {
     private String idcode;
     private AutocompleteResult curriculumVersion;
     private String studentGroup;
+    private List<ApplicationMinDto> applications;
 
     public Long getId() {
         return id;
@@ -48,5 +52,39 @@ public class DirectiveStudentSearchDto {
 
     public void setStudentGroup(String studentGroup) {
         this.studentGroup = studentGroup;
+    }
+
+    public List<ApplicationMinDto> getApplications() {
+        return applications;
+    }
+
+    public void setApplications(List<ApplicationMinDto> applications) {
+        this.applications = applications;
+    }
+    
+    public static class ApplicationMinDto {
+        
+        private Long id;
+        private String description;
+        private LocalDateTime confirmed;
+        
+        public Long getId() {
+            return id;
+        }
+        public void setId(Long id) {
+            this.id = id;
+        }
+        public String getDescription() {
+            return description;
+        }
+        public void setDescription(String description) {
+            this.description = description;
+        }
+        public LocalDateTime getConfirmed() {
+            return confirmed;
+        }
+        public void setConfirmed(LocalDateTime confirmed) {
+            this.confirmed = confirmed;
+        }
     }
 }

@@ -16,6 +16,7 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
+import ee.hitsa.ois.domain.student.StudentSupportService;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
@@ -38,9 +39,10 @@ public abstract class UserUtil {
     public static boolean canSubmitApplication(HoisUserDetails user, Application application) {
         if(ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_KOOST, application.getStatus())) {
             Student student = application.getStudent();
-            return isStudent(user, student) || isSchoolAdmin(user, student.getSchool()) || isStudentRepresentative(user, student) || isStudentGroupTeacher(user, student)
-                    || (ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_TUGI, application.getType()));
+            return isStudent(user, student) || isSchoolAdmin(user, student.getSchool()) || isStudentRepresentative(user, student) || (isStudentGroupTeacher(user, student)
+                    || ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_TUGI, application.getType()));
         }
+        
         return false;
     }
 
@@ -85,8 +87,10 @@ public abstract class UserUtil {
         return (ApplicationUtil.REQUIRE_REPRESENTATIVE_CONFIRM.contains(EnumUtil.valueOf(ApplicationType.class, EntityUtil.getCode(application.getType()))))
                 && (ApplicationStatus.AVALDUS_STAATUS_KINNITAM.name().equals(status) || ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name().equals(status)
                         || ApplicationStatus.AVALDUS_STAATUS_TAGASI.name().equals(status))
-                && (application.getCommitteeDecisionAdded() != null || application.getRepresentativeConfirmed() != null) 
+                && ((application.getIsDecided() != null && application.getCommitteeDecisionAdded() != null) // checks Boolean and LocalDateTime
+                        || (application.getIsRepresentativeConfirmed() != null && application.getRepresentativeConfirmed() != null)) // checks Boolean and LocalDateTime
                 && isSchoolAdmin(user, student.getSchool())
+                && hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_AVALDUS) // Has to have an user right.
                 && StudentUtil.canBeEdited(student);
     }
 
@@ -120,10 +124,42 @@ public abstract class UserUtil {
     
     public static boolean canUpdateStudentRR(HoisUserDetails user, Student student) {
         return StudentUtil.isActive(student) && (
-                (UserUtil.isSchoolAdmin(user, student.getSchool()) && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_RR)) ||
-                UserUtil.isStudentRepresentative(user, student) ||
+                (isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_RR)) ||
+                isStudentRepresentative(user, student) ||
                 (isStudent(user, student) && StudentUtil.isAdultAndDoNotNeedRepresentative(student))
                 );
+    }
+
+    public static boolean canViewStudentSupportServices(HoisUserDetails user, Student student) {
+        return isStudent(user, student) || isActiveStudentRepresentative(user, student)
+                || isTeacher(user, student.getSchool()) || isSchoolAdmin(user, student.getSchool());
+    }
+
+    public static boolean canViewPrivateStudentSupportServices(HoisUserDetails user, Student student) {
+        return isStudent(user, student) ||isActiveStudentRepresentative(user, student)
+                || isStudentGroupTeacher(user, student) || (isSchoolAdmin(user, student.getSchool())
+                        && hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_TUGITEENUS));
+    }
+    
+    public static boolean canViewStudentSupportServices(HoisUserDetails user, Student student, StudentSupportService service) {
+        if (!student.equals(service.getStudent())) {
+            return false;
+        }
+        if (isStudent(user, student) || isActiveStudentRepresentative(user, student)) {
+            return true;
+        }
+        if (isTeacher(user, student.getSchool()) && (Boolean.TRUE.equals(service.getIsPublic()) || isStudentGroupTeacher(user, student))) {
+            return true;
+        }
+        if (isSchoolAdmin(user, student.getSchool()) && (Boolean.TRUE.equals(service.getIsPublic()) || hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_TUGITEENUS))) {
+            return true;
+        }
+        return false;
+    }
+
+
+    public static boolean canEditStudentSupportServices(HoisUserDetails user, Student student) {
+        return UserUtil.isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_TUGITEENUS) && StudentUtil.canBeEdited(student);
     }
 
     /**
@@ -407,6 +443,21 @@ public abstract class UserUtil {
     
     public static void assertCanUpdateStudentRR(HoisUserDetails user, Student student) {
         ValidationFailedException.throwIf(!canUpdateStudentRR(user, student), "main.messages.error.nopermission");
+    }
+
+    public static void assertCanViewStudentSupportServices(HoisUserDetails user, Student student) {
+        ValidationFailedException.throwIf(!canViewStudentSupportServices(user, student), "main.messages.error.nopermission");
+    }
+    
+    public static void assertCanViewPrivateStudentSupportServices(HoisUserDetails user, Student student) {
+        ValidationFailedException.throwIf(!canViewPrivateStudentSupportServices(user, student), "main.messages.error.nopermission");
+    }
+
+    public static void assertCanViewStudentSupportServices(HoisUserDetails user, Student student, StudentSupportService service) {
+        ValidationFailedException.throwIf(!canViewStudentSupportServices(user, student, service), "main.messages.error.nopermission");
+    }
+    public static void assertCanEditStudentSupportServices(HoisUserDetails user, Student student) {
+        ValidationFailedException.throwIf(!canEditStudentSupportServices(user, student), "main.messages.error.nopermission");
     }
 
     private static String roleName(Permission permission, PermissionObject object) {

@@ -10,7 +10,7 @@
           
           <md-input-container ng-if="auth.isTeacher()" flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'report.studentGroupTeacher.studentGroup' | translate}}</label>
-            <md-select ng-model="formState.studentGroup" ng-change="studentGroupChanged()" required>
+            <md-select ng-model="formState.studentGroup" ng-change="studentGroupChanged()" ng-model-options="{trackBy: '$value.id'}" required>
               <md-option ng-value="studentGroup" ng-repeat="studentGroup in formState.studentGroups | orderBy: currentLanguageNameField()">
                 {{currentLanguageNameField(studentGroup)}}
               </md-option>

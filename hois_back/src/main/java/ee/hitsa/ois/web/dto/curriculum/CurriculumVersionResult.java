@@ -3,6 +3,8 @@ package ee.hitsa.ois.web.dto.curriculum;
 import java.util.List;
 import java.util.Set;
 
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 /**
@@ -24,6 +26,18 @@ public class CurriculumVersionResult extends AutocompleteResult {
         this.schoolDepartment = schoolDepartment;
         this.studyForm = studyForm;
         this.isVocational = isVocational;
+    }
+
+    // Constructor meant for DirectiveStudent where filtering is not needed 
+    public CurriculumVersionResult(CurriculumVersion curriculumVersion) {
+        super(curriculumVersion.getId(),
+                CurriculumUtil.versionName(curriculumVersion.getCode(), curriculumVersion.getCurriculum().getNameEt()),
+                CurriculumUtil.versionName(curriculumVersion.getCode(), curriculumVersion.getCurriculum().getNameEn()));
+
+        this.curriculum = curriculumVersion.getCurriculum().getId();
+        this.schoolDepartment = null;
+        this.studyForm = null;
+        this.isVocational = Boolean.valueOf(!Boolean.TRUE.equals(curriculumVersion.getCurriculum().getHigher()));
     }
 
     public Long getCurriculum() {

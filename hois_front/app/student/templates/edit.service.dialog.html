@@ -1,0 +1,86 @@
+<md-dialog aria-label="{{'student.supportService.operation.' + (service.id ? 'editService' : 'addService') + '.label' | translate}}" flex="60" flex-sm="100" flex-xs="100">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{'student.supportService.operation.' + (service.id ? 'editService' : 'addService') + '.label' | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="close()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <div class="ois-form-layout" layout="column" style="margin: 8px 16px;" ng-cloak>
+        <md-input-container>
+          <label>{{'student.supportService.entryDate' | translate}}</label>
+          <md-datepicker ng-model="service.entryDate" name="entryDate" required></md-datepicker>
+        </md-input-container>
+        <md-input-container>
+          <label>{{'student.supportService.title' | translate}}</label>
+          <input ng-model="service.nameEt" name="title" type="text" md-maxlength="255" required>
+        </md-input-container>
+        <md-input-container>
+          <label>{{'student.supportService.content' | translate}}</label>
+          <textarea ng-model="service.content" name="content" max-rows="5" md-maxlength="4000" required></textarea>
+        </md-input-container>
+        <md-input-container>
+          <label>{{'student.supportService.validity' | translate}}</label>
+          <hois-classifier-select ng-model="service.validity" model-value-attr="code" main-classifier-code="TUGIKEHTIV" required></hois-classifier-select>
+        </md-input-container>
+        <md-input-container>
+          <md-checkbox ng-model="service.isPublic" name="public">{{'student.supportService.public' | translate}}</md-checkbox>
+        </md-input-container>
+        <md-table-container ng-show="service.file">
+          <table md-table class="secondary-table">
+            <thead md-head>
+              <tr md-row>
+                <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
+                <th md-column></th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row>
+                <td md-cell>
+                  <div layout="row" flex>
+                    <div flex="60">
+                      {{service.file.fname}}
+                    </div>
+                    <div flex>
+                      <a ng-href="{{getUrl(service.file, 'supportservice')}}" download target="_blank" rel="noopener noreferrer">
+                        <md-icon md-font-set="material-icons">file_download</md-icon>
+                      </a>
+                    </div>
+                  </div>
+                </td>
+                <td md-cell>
+                  <md-button class="remove nomargin" ng-click="service.file = undefined">&times;</md-button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+        <md-input-container ng-show="!service.file">
+          <lf-ng-md-file-input name="file" lf-files="data.file" lf-browse-label="{{'main.addFile' | translate}}"
+            lf-remove-label="{{'main.button.delete' | translate}}" lf-placeholder="{{'student.supportService.file' | translate}}"
+            lf-filesize="5MB"></lf-ng-md-file-input>
+        </md-input-container>
+        <div ng-messages="dialogForm.file.$error" ng-show="!service.file">
+          <div class="invalid" ng-message="required">{{'main.messages.error.selectFile' | translate}}</div>
+          <div class="invalid" ng-message="filesize">{{'main.messages.error.fileTooLarge' | translate}} 5MB!</div>
+        </div>
+        <md-input-container class="readonly readonly-reverse-margin">
+          <label>{{'student.supportService.entrySubmitter' | translate}}</label>
+          <hois-value value="service.entrySubmitter"></hois-value>
+        </md-input-container>
+      </div>
+    </md-dialog-content>
+
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button ng-if="service.id" class="md-raised md-primary" ng-click="delete()">{{"main.button.delete" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="close()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

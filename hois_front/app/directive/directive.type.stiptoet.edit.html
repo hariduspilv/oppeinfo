@@ -5,6 +5,7 @@
         <th md-column>{{'directive.student.order' | translate}}</th>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
         <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column>{{'directive.student.scholarship' | translate}}</th>
         <th md-column>{{'directive.student.bankAccount' | translate}}</th>
         <th md-column ng-class="{required: formState.scholarshipEditable}">{{'directive.student.amountPaid' | translate}}</th>
         <th md-column ng-class="{required: formState.scholarshipEditable}">{{'directive.student.stipStartDate' | translate}}</th>
@@ -17,11 +18,26 @@
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
-        <td md-cell>{{::row.bankAccount}}</td>
+        <td md-cell>
+          <md-input-container style="width: 250px">
+            <md-select ng-model="row.scholarshipApplication" ng-change="scholarshipApplicationChanged(row)" name="students[{{$index}}].scholarshipApplication"
+              ng-disabled="row.scholarshipApplication && row.scholarshipApplications.length === 1">
+              <md-option ng-value="application.id" ng-repeat="application in row.scholarshipApplications">
+                {{application.nameEt}}
+              </md-option>
+            </md-select>
+          </md-input-container>
+          <div class="invalid" ng-messages="directiveForm['students['+$index+'].scholarshipApplication'].$error">
+            <p ng-message="required">{{'main.required' | translate}}</p>
+            <p ng-message="serverside">
+              <span ng-repeat="err in directiveForm['students['+$index+'].scholarshipApplication'].$serverError">{{err.code | translate}}</span>
+            </p>
+          </div>
+        </td>
+        <td md-cell>{{row.bankAccount}}</td>
         <td md-cell>
           <md-input-container>
-            <hois-value ng-if="!formState.scholarshipEditable" value="row.amountPaid"></hois-value>
-            <input ng-if="formState.scholarshipEditable" type="number" name="students[{{$index}}].amountPaid" ng-model="row.amountPaid" min="0" max="9999">
+            <input ng-model="row.amountPaid" ng-disabled="!formState.scholarshipEditable" min="0" max="9999" type="number" name="students[{{$index}}].amountPaid">
           </md-input-container>
           <div ng-messages="directiveForm['students['+$index+'].amountPaid'].$error" ng-show="directiveForm['students['+$index+'].amountPaid'].$dirty">
             <div ng-message="max">
@@ -33,15 +49,13 @@
           </div>
         </td>
         <td md-cell>
-          <hois-value ng-if="!formState.scholarshipEditable" value="row.startDate | hoisDate"></hois-value>
-          <md-datepicker ng-if="formState.scholarshipEditable" md-max-date="row.endDate" name="students[{{$index}}].startDate" ng-model="row.startDate"></md-datepicker>
+          <md-datepicker ng-model="row.startDate" ng-disabled="!formState.scholarshipEditable" md-max-date="row.endDate" name="students[{{$index}}].startDate"></md-datepicker>
           <div class="invalid" ng-show="directiveForm['students['+$index+'].startDate'].$error.required">
             {{'main.required' | translate}}
           </div>
         </td>
         <td md-cell>
-          <hois-value ng-if="!formState.scholarshipEditable" value="row.endDate | hoisDate"></hois-value>
-          <md-datepicker ng-if="formState.scholarshipEditable" md-min-date="row.startDate" name="students[{{$index}}].endDate" ng-model="row.endDate"></md-datepicker>
+          <md-datepicker ng-model="row.endDate" ng-disabled="!formState.scholarshipEditable" md-min-date="row.startDate" name="students[{{$index}}].endDate"></md-datepicker>
           <div class="invalid" ng-show="directiveForm['students['+$index+'].endDate'].$error.required">
             {{'main.required' | translate}}
           </div>

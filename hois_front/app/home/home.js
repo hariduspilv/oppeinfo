@@ -9,8 +9,8 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     };
 
   }
-]).controller('AuthenticatedHomeController', ['$rootScope', '$scope', '$timeout', 'AUTH_EVENTS', 'AuthService', 'USER_ROLES', 'ArrayUtils', 'QueryUtils', '$resource', 'config', 'Session', '$filter', '$mdDialog', 'message',
-  function ($rootScope, $scope, $timeout, AUTH_EVENTS, AuthService, USER_ROLES, ArrayUtils, QueryUtils, $resource, config, Session, $filter, $mdDialog, message) {
+]).controller('AuthenticatedHomeController', ['$rootScope', '$scope', '$timeout', 'AUTH_EVENTS', 'AuthService', 'USER_ROLES', 'ArrayUtils', 'QueryUtils', '$resource', 'config', 'Session', '$filter', '$mdDialog', 'message', 'dialogService', 'oisFileService', 'FormUtils', 'Classifier', '$q',
+  function ($rootScope, $scope, $timeout, AUTH_EVENTS, AuthService, USER_ROLES, ArrayUtils, QueryUtils, $resource, config, Session, $filter, $mdDialog, message, dialogService, oisFileService, FormUtils, Classifier, $q) {
     /**
      * Still under question if we need to add a delay for timeout.
      */
@@ -131,6 +131,146 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
       });
     };
 
+    $scope.loadPolls = function() {
+      var clMapper = Classifier.valuemapper({status: 'KYSITVASTUSSTAATUS', type: 'KYSITLUS'});
+      /** Väline ekspert, Lapsevanem, Õpetaja, Õppija, Admin töötaja */
+      var acceptedRoles = ['ROLL_V', 'ROLL_L', 'ROLL_O', 'ROLL_T', 'ROLL_A'];
+      $scope.displayPoll = false;
+      $scope.canAnswerPoll = acceptedRoles.indexOf(Session.roleCode) !== -1;
+      if(!$scope.canAnswerPoll) {
+          return;
+      }
+      QueryUtils.endpoint("/poll/polls").query({}, function(response) {
+        $scope.polls = response;
+        if ($scope.polls !== undefined && $scope.polls.length !== 0) {
+          $scope.displayPoll = true;
+          $q.all(clMapper.promises).then(function () {
+            clMapper.objectmapper($scope.polls);
+          });
+        }
+      });
+    };
+
+    $scope.openPoll = function() {
+      if ($scope.polls.length === 1) {
+        var PollEndPoint = QueryUtils.endpoint('/poll/withAnswers');
+        QueryUtils.loadingWheel($scope, true);
+        PollEndPoint.get({id: $scope.polls[0].id}).$promise.then(function (response) {
+          markImages(response.themes);
+          QueryUtils.loadingWheel($scope, false);
+          $scope.openResponse($scope.polls[0], response);
+        });
+      } else if ($scope.polls.length > 1) {
+        $scope.openResponseList($scope.polls);
+      }
+    };
+
+    function markImages(themes) {
+      for (var theme = 0; theme < themes.length; theme++) {
+          for (var question = 0; question < themes[theme].questions.length; question++) {
+              var pictures = themes[theme].questions[question].files.filter(function (file) {
+                  return file.ftype.indexOf('image') !== -1;
+              });
+              themes[theme].questions[question].pictures = pictures;
+          }
+      }
+    }
+
+    $scope.openResponseList = function(polls) {
+      dialogService.showDialog('poll/poll.response.list.dialog.html', function (dialogScope) {
+        dialogScope.polls = polls;
+        dialogScope.openResponse = function(row) {
+          dialogScope.row = row;
+          dialogScope.submit();
+        };
+      }, function(submittedDialogScope) {
+        var PollEndPoint = QueryUtils.endpoint('/poll/withAnswers');
+        QueryUtils.loadingWheel($scope, true, true);
+        PollEndPoint.get({id: submittedDialogScope.row.id}).$promise.then(function (response) {
+          markImages(response.themes);
+          QueryUtils.loadingWheel($scope, false, true);
+          $scope.openResponse(submittedDialogScope.row, response);
+        });
+      }, null, true);
+    };
+
+
+    $scope.openResponse = function(row, response) {
+      dialogService.showDialog('poll/poll.response.dialog.html', function (dialogScope) {
+        dialogScope.formState = {};
+        dialogScope.formState.name = row.name;
+        dialogScope.criteria = response;
+
+        dialogScope.getUrl = function(photo) {
+            return oisFileService.getUrl(photo, 'pollThemeQuestionFile');
+        };
+
+        dialogScope.checkErrors = function() {
+          var hasErrors = false;
+          dialogScope.criteria.themes.forEach(function(theme) {
+            theme.questions.forEach(function (question) {
+              if ((question.type === 'VASTUS_M' || question.type === 'VASTUS_S') && question.isRequired) {
+                var showError = true;
+                question.answers.forEach(function(answer) {
+                  if (answer.chosen === true) {
+                    showError = false;
+                  }
+                });
+                if (showError) {
+                  question.requiredError = true;
+                  hasErrors = true;
+                } else {
+                  question.requiredError = false;
+                }
+              } else if (question.type === 'VASTUS_R'  && question.isRequired && (question.answerTxt === undefined || question.answerTxt === null)) {
+                question.requiredError = true;
+                hasErrors = true;
+              } else {
+                question.requiredError = false;
+              }
+            });
+          });
+          return hasErrors;
+        };
+
+        dialogScope.confirm = function() {
+          var hasErrors = dialogScope.checkErrors();
+          FormUtils.withValidForm(dialogScope.responseForm, function() {
+              if (!hasErrors) {
+                dialogService.confirmDialog({ prompt: 'poll.answer.confirm' }, function () {
+                  var Endpoint = QueryUtils.endpoint('/poll/' + row.id + '/saveAnswer/final');
+                  var pollEndPoint = new Endpoint(dialogScope.criteria);
+                  pollEndPoint.$update().then(function () {
+                      dialogService.messageDialog({ prompt: 'poll.answer.confirmed' }, function () {
+                        $scope.loadPolls();
+                        dialogScope.cancel();
+                      });
+                  });
+                });
+              } else {
+                message.error('main.messages.form-has-errors');
+              }
+          });
+        };
+
+        dialogScope.save = function () {
+            var Endpoint = QueryUtils.endpoint('/poll/' + row.id + '/saveAnswer/');
+            var pollEndPoint = new Endpoint(dialogScope.criteria);
+            pollEndPoint.$postWithoutLoad();
+        };
+
+        dialogScope.clearRadio = function(question) {
+            question.answerTxt = null;
+            dialogScope.save();
+        };
+
+        dialogScope.close = function() {
+          $scope.loadPolls();
+          dialogScope.cancel();
+        };
+      }, null, null, true);
+    };
+
     $scope.readMessage = function(message) {
         message.clicked = !message.clicked;
         if(!message.isRead) {
@@ -151,6 +291,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
       $scope.pageLoadingHandler.reset();
       $scope.loadGeneralMessages();
       $scope.loadUnreadMessages();
+      $scope.loadPolls();
       checkIfCanCreateAbsence();
       checkIfCanApplyForPractice();
       checkIfHasSubjectProgramNotification();

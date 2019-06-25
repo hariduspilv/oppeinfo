@@ -5,18 +5,14 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.PracticeJournal;
-import ee.hitsa.ois.domain.PracticeJournalEvaluation;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.PracticeJournalUserRights;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.practice.PracticeEvaluationCriteriaDto;
-import ee.hitsa.ois.web.dto.practice.PracticeEvaluationDto;
 
 public class PracticeJournalDto extends VersionedCommand {
 

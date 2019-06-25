@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.commandobject.directive;
 
 import java.util.List;
+import java.util.Map;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
@@ -19,6 +20,7 @@ public class DirectiveDataCommand {
     private List<String> studyLevel;
     private Long canceledDirective;
     private List<Long> students;
+    private Map<Long, Long> studentApplication;
 
     public Long getDirective() {
         return directive;
@@ -82,5 +84,13 @@ public class DirectiveDataCommand {
 
     public void setStudents(List<Long> students) {
         this.students = students;
+    }
+
+    public Map<Long, Long> getStudentApplication() {
+        return studentApplication;
+    }
+
+    public void setStudentApplication(Map<Long, Long> studentApplication) {
+        this.studentApplication = studentApplication;
     }
 }

@@ -29,6 +29,7 @@ import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.TranslateUtil;
@@ -177,8 +178,8 @@ public class PopulationRegisterService {
                 log.setOldLastname(data.getPerson().getLastname());
                 log.setOldAddress(data.getPerson().getAddress());
                 log.setOldAddressAdsOid(data.getPerson().getAddressAdsOid());
-                log.setNewFirstname(firstName);
-                log.setNewLastname(lastName);
+                log.setNewFirstname(StringUtils.equalsIgnoreCase(data.getPerson().getFirstname(), firstName) ? data.getPerson().getFirstname() : PersonUtil.initCapName(firstName));
+                log.setNewLastname(StringUtils.equalsIgnoreCase(data.getPerson().getLastname(), lastName) ? data.getPerson().getLastname() : PersonUtil.initCapName(lastName));
                 log.setNewAddress(address);
                 log.setNewAddressAdsOid(oids);
                 log.setPerson(data.getPerson());

@@ -47,7 +47,7 @@
   <div layout="row" flex="100">
     <hois-autocomplete flex ng-model="formState.curriculum" method="curriculums" label="stipend.curriculums" ng-required="missingCurriculums"
       additional-query-params="{higher: false, closed: false}"></hois-autocomplete>
-    <md-button ng-click="addAllCurriculums()" class="md-raised">{{'stipend.addAllCurriculums' | translate}}</md-button>
+    <md-button ng-click="addAllCurriculums({higher: false, closed: false})" class="md-raised">{{'stipend.addAllCurriculums' | translate}}</md-button>
   </div>
   <div layout="column" class="common-label" flex="95" ng-repeat="curriculum in stipend.curriculums | orderBy: ['curriculum.' + currentLanguageNameField(), 'code']">
     <div layout="row" flex layout-align="start center">

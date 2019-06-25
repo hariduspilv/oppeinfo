@@ -92,5 +92,12 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KYSITLUS]
       }
+    })
+    .when('/poll/supervisor/:uuid', {
+      templateUrl: 'poll/poll.response.html',
+      controller: 'PollSupervisorController',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+      }
     });
 }]);

@@ -132,8 +132,8 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controllerAs: 'controller',
       data: {
         authorizedRoles: function(Session, roles) {
-          return Session.vocational && ((Session.roleCode === 'ROLL_O' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_RYHMAJUHATAJA) !== -1)
-            || (Session.roleCode === 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_INDIVID) !== -1));
+          return Session.vocational && ((Session.roleCode === 'ROLL_O' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_RYHMAJUHATAJA) !== -1) ||
+            (Session.roleCode === 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_INDIVID) !== -1));
         }
       },
       resolve: {

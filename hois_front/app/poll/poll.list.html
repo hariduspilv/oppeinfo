@@ -40,14 +40,14 @@
             </div>
 
             <div layout="row">
-            <div flex="50" flex-xs="100">
-                <div layout="column" flex>
-                <md-input-container>
-                    <label>{{'poll.target' | translate}}</label>
-                    <hois-classifier-select ng-model="criteria.targetCode" model-value-attr="code" main-classifier-code="KYSITLUS_SIHT"></hois-classifier-select>
-                </md-input-container>
+                <div flex="50">
+                    <div layout="column" flex>
+                        <md-input-container>
+                            <label>{{'poll.target' | translate}}</label>
+                            <hois-classifier-select ng-model="criteria.targetCode" model-value-attr="code" main-classifier-code="KYSITLUS_SIHT"></hois-classifier-select>
+                        </md-input-container>
+                    </div>
                 </div>
-            </div>
             </div>
 
             <div layout="row" layout-xs="column">
@@ -72,6 +72,8 @@
             <th md-column md-order-by="targetcodes">{{'poll.targets' | translate}}</th>
             <th md-column md-order-by="p.valid_from">{{'poll.period' | translate}}</th>
             <th md-column md-order-by="p.status_code">{{'poll.status' | translate}}</th>
+            <th md-column md-order-by="p.inserted_by">{{'poll.basicData.insertedBy' | translate}}</th>
+            <th md-column md-order-by="p.changed_by">{{'poll.basicData.changedBy' | translate}}</th>
             <th md-column></th>
         </tr>
         </thead>
@@ -82,6 +84,8 @@
             <td md-cell>{{row.targetCodes ? currentLanguageNameField(row.targetCodes) : '-'}}</td>
             <td md-cell>{{(row.validFrom | hoisDate)  + ' - ' + (row.validThru | hoisDate)}}</td>
             <td md-cell>{{row.status ? currentLanguageNameField(row.status) : '-'}}</td>
+            <td md-cell>{{row.insertedBy ? row.insertedBy : '-'}}</td>
+            <td md-cell>{{row.changedBy ? row.changedBy : '-'}}</td>
             <td ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" md-cell>
             <md-button ng-if="row.status.code !== 'KYSITLUS_STAATUS_K'" md-no-ink class="md-primary change-button" 
                 ng-href="#/poll/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>

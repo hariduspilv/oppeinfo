@@ -5,13 +5,15 @@
         <th md-column>{{'directive.student.order' | translate}}</th>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
         <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column>{{'directive.student.curriculumVersion' | translate}}</th>
+        <th md-column>{{'directive.student.studentGroup' | translate}}</th>
         <th md-column>{{'directive.student.studyActivityStartDate' | translate}}</th>
         <th md-column>{{'directive.student.studyActivityEndDate' | translate}}</th>
         <th md-column>{{'directive.student.studyActivityIsAbsence' | translate}}</th>
         <th></th>
       </tr>
       <tr>
-        <th colspan="3"></th>
+        <th colspan="5"></th>
         <th md-column>
           <md-datepicker ng-model="record.studyActivityStartDate" md-max-date="record.studyActivityEndDate"
             ng-blur="allStudyActivityChange('startDate', record.studyActivityStartDate)" aria-label="{{'directive.student.studyActivityStartDate' | translate}}"></md-datepicker>
@@ -32,6 +34,8 @@
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
+        <td md-cell>{{currentLanguageNameField(row.curriculumVersionObject)}}</td>
+        <td md-cell>{{currentLanguageNameField(row.studentGroupObject)}}</td>
         <td md-cell>
           <md-datepicker ng-model="row.startDate" md-max-date="row.endDate" name="students[{{$index}}].startDate"
             ng-change="studyActivityDateChange(row)" aria-label="{{'directive.student.studyActivityStartDate' | translate}}"></md-datepicker>

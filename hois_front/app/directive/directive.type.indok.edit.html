@@ -48,12 +48,14 @@
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].modules'].$error">
             <p ng-message="required">{{'directive.atleastOneModuleRequired' | translate}}</p>
             <p ng-message="serverside">
-              <p ng-repeat="err in directiveForm['students['+$index+'].modules'].$serverError">{{err.code | translate}}: {{currentLanguageNameField(err.object)}}</p>
+              <p ng-repeat="err in directiveForm['students['+$index+'].modules'].$serverError">
+                {{ err.code | translate : {module: currentLanguageNameField(err.object), startDate : (err.startDate | hoisDate), endDate : (err.endDate | hoisDate) } }}
+              </p>
             </p>
           </div>
         </td>
         <td md-cell>
-          <md-button md-no-ink class="md-primary change-button" ng-click="individualCurriculumModules(row.student, $index)">
+          <md-button md-no-ink class="md-primary change-button" ng-click="individualCurriculumModules(row, $index)">
             <span>{{!row.modules || row.modules.length === 0 ? ('main.button.add' | translate) : ('main.button.change' | translate)}}</span>
           </md-button>
         </td>

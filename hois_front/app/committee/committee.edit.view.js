@@ -40,6 +40,12 @@ function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $locat
     $scope.record = new Endpoint({type: $scope.committeeType, members: []});
   }
 
+  $scope.clearMember = function(member) {
+    member.memberName = undefined;
+    member.person = undefined;
+    member.teacher = undefined;
+  };
+
   $scope.addMember = function() {
     $scope.record.members.push({isExternal: false, isChairman: false});
     $scope.committeeEditForm.$setDirty();

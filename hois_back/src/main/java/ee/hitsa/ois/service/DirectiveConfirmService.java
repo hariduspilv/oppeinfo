@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,6 +40,8 @@ import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.Job;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.application.ApplicationSupportService;
+import ee.hitsa.ois.domain.application.ApplicationSupportServiceModule;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.Directive;
@@ -59,6 +62,7 @@ import ee.hitsa.ois.enums.JobType;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.ScholarshipStatus;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.exception.SingleMessageWithParamsException;
@@ -83,9 +87,12 @@ import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.ErrorForField;
+import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.ErrorForIcpField;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveConfirmForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.directive.DirectiveViewStudentDto;
+import ee.hitsa.ois.web.dto.directive.ExistingIndividualCurriculumModuleDto;
+import ee.hitsa.ois.web.dto.directive.IndividualCurriculumModuleDto;
 
 @Transactional
 @Service
@@ -131,8 +138,10 @@ public class DirectiveConfirmService {
         }
         Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
         Map<Long, List<DirectiveStudent>> scholarships = findScholarships(directive);
-        Map<Long, List<Long>> individualCurriculumSuitableModules = individualCurriculumSuitableModules(directive); 
+        Map<Long, List<IndividualCurriculumModuleDto>> individualCurriculumSuitableModules = individualCurriculumSuitableModules(directive);
         Map<Long, List<DirectiveStudent>> individualCurriculums = findIndividualCurriculums(directive);
+        Map<Long, List<ScholarshipApplication>> scholarshipApplications = findScholarshipApplications(directive);
+        Map<Long, List<DirectiveStudent>> terminationScholarships = findScholarshipsAvailableForTermination(directive);
         Set<Long> changedStudents = DirectiveType.KASKKIRI_TYHIST.equals(directiveType) ? new HashSet<>(directiveService.changedStudentsForCancel(directive.getCanceledDirective())) : Collections.emptySet();
         List<DirectiveViewStudentDto> invalidStudents = new ArrayList<>();
         // validate each student's data for given directive
@@ -211,6 +220,10 @@ public class DirectiveConfirmService {
                     if(ds.getStudyLoad() == null && CurriculumUtil.isHigher(curriculum)) {
                         allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "studyLoad")));
                     }
+                    // check by hand because it is required only in vocational study
+                    if(ds.getDormitory() == null && CurriculumUtil.isVocational(curriculum)) {
+                        allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "dormitory")));
+                    }
                     Set<Long> uniqueRows = new LinkedHashSet<>();
                     if (directiveService.studentExists(EntityUtil.getId(directive.getSchool()), EntityUtil.getId(ds.getPerson()), 
                             EntityUtil.getId(curriculum))) {
@@ -232,13 +245,25 @@ public class DirectiveConfirmService {
                 if (ds.getModules() == null || ds.getModules().isEmpty()) {
                     allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "modules")));
                 } else {
-                    List<Long> studentSuitableModules = individualCurriculumSuitableModules
-                            .get(EntityUtil.getId(ds.getStudent()));
+                    Map<Long, IndividualCurriculumModuleDto> studentSuitableModules = StreamUtil.toMap(m -> m.getId(),
+                            individualCurriculumSuitableModules.get(EntityUtil.getId(ds.getStudent())));
                     for (DirectiveStudentModule module : ds.getModules()) {
-                        System.out.println(EntityUtil.getId(module.getCurriculumVersionOmodule()));
-                        if (!studentSuitableModules.contains(EntityUtil.getId(module.getCurriculumVersionOmodule()))) {
+                        IndividualCurriculumModuleDto suitableModule = studentSuitableModules
+                                .get(EntityUtil.getId(module.getCurriculumVersionOmodule()));
+                        if (suitableModule == null) {
                             allErrors.add(new ErrorForField("directive.moduleAlreadyGraded", propertyPath(rowNum, "modules"),
                                     AutocompleteResult.of(module.getCurriculumVersionOmodule(), false)));
+                        } else if (ds.getStartDate() != null && ds.getEndDate() != null
+                                && suitableModule.getExistingModules() != null) {
+                            for (ExistingIndividualCurriculumModuleDto existingModule : suitableModule
+                                    .getExistingModules()) {
+                                if (DateUtils.periodsOverlap(ds.getStartDate(), ds.getEndDate(),
+                                        existingModule.getStartDate(), existingModule.getEndDate())) {
+                                    allErrors.add(new ErrorForIcpField("directive.moduleAlreadyInIndividualCurriculum",
+                                            propertyPath(rowNum, "modules"), AutocompleteResult.of(module.getCurriculumVersionOmodule(), false),
+                                            existingModule.getStartDate(), existingModule.getEndDate()));
+                                }
+                            }
                         }
                     }
                 }
@@ -247,23 +272,18 @@ public class DirectiveConfirmService {
                 if (formIndividualCurriculum != null) {
                     List<DirectiveStudent> studentIndividualCurriculums = individualCurriculums
                             .get(EntityUtil.getId(ds.getStudent()));
-                    if (studentIndividualCurriculums != null && !studentIndividualCurriculums.isEmpty()) {
-                        Map<Long, DirectiveStudent> mappedIndividualCurriculums = StreamUtil.toMap(i -> i.getId(), i -> i,
-                                studentIndividualCurriculums);
-                        DirectiveStudent allowedIndividualCurriculum = mappedIndividualCurriculums
-                                .get(EntityUtil.getId(ds.getDirectiveStudent()));
-                        if (allowedIndividualCurriculum != null && formIndividualCurriculum.equals(allowedIndividualCurriculum)) {
-                            if (ds.getStartDate() != null) {
-                                if (ds.getStartDate().isBefore(allowedIndividualCurriculum.getStartDate())
-                                        || ds.getStartDate().isAfter(allowedIndividualCurriculum.getEndDate())) {
-                                    allErrors.add(new ErrorForField("directive.notInIndividualCurriculumDateRange",
-                                            propertyPath(rowNum, "startDate")));
-                                }
-                            } else {
-                                allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "startDate")));
+                    boolean formIndividualCurriculumAllowed = StreamUtil.nullSafeList(studentIndividualCurriculums).stream()
+                            .anyMatch(s -> s.equals(formIndividualCurriculum));
+
+                    if (formIndividualCurriculumAllowed) {
+                        if (ds.getStartDate() != null) {
+                            if (ds.getStartDate().isBefore(formIndividualCurriculum.getStartDate())
+                                    || ds.getStartDate().isAfter(formIndividualCurriculum.getEndDate())) {
+                                allErrors.add(new ErrorForField("directive.notInIndividualCurriculumDateRange",
+                                        propertyPath(rowNum, "startDate")));
                             }
                         } else {
-                            allErrors.add(new ErrorForField("directive.notValid", propertyPath(rowNum, "directiveStudent")));
+                            allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "startDate")));
                         }
                     } else {
                         allErrors.add(new ErrorForField("directive.notValid", propertyPath(rowNum, "directiveStudent")));
@@ -281,6 +301,20 @@ public class DirectiveConfirmService {
                 if(reason != null) {
                     invalidStudents.add(createInvalidStudent(ds, reason));
                 }
+
+                ScholarshipApplication formApplication = ds.getScholarshipApplication();
+                if (formApplication != null) {
+                    List<ScholarshipApplication> studentApplications = scholarshipApplications
+                            .get(EntityUtil.getId(ds.getStudent()));
+                    boolean formScholarshipAllowed = StreamUtil.nullSafeList(studentApplications).stream()
+                            .anyMatch(s -> s.equals(formApplication));
+                    if (!formScholarshipAllowed) {
+                        allErrors.add(new ErrorForField("directive.scholarshipNotAccepted",
+                                propertyPath(rowNum, "scholarshipApplication")));
+                    }
+                } else {
+                    allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "scholarshipApplication")));
+                }
             } else if (DirectiveType.KASKKIRI_STIPTOETL.equals(directiveType)) {
                 // status should be active
                 String reason = null;
@@ -289,6 +323,56 @@ public class DirectiveConfirmService {
                 }
                 if(reason != null) {
                     invalidStudents.add(createInvalidStudent(ds, reason));
+                }
+
+                DirectiveStudent formScholarshipDirective = ds.getDirectiveStudent();
+                List<DirectiveStudent> studentTerminationScholarships = terminationScholarships
+                        .get(EntityUtil.getId(ds.getStudent()));
+                boolean formDirectiveAllowed = StreamUtil.nullSafeList(studentTerminationScholarships).stream()
+                        .anyMatch(s -> s.equals(formScholarshipDirective));
+                if (!formDirectiveAllowed) {
+                    allErrors.add(new ErrorForField("directive.notValid", propertyPath(rowNum, "directiveStudent")));
+                }
+            } else if (DirectiveType.KASKKIRI_TUGI.equals(directiveType)) {
+                Optional<ApplicationSupportService> assOpt = StreamUtil.nullSafeSet(ds.getApplication().getSupportServices()).stream()
+                        .filter(s -> ClassifierUtil.equals(SupportServiceType.TUGITEENUS_1, s.getSupportService()))
+                        .findFirst();
+                if (assOpt.isPresent()) {
+                    ApplicationSupportService ass = assOpt.get();
+                    if (ds.getStartDate() != null && ds.getEndDate() != null) {
+                        Map<Long, IndividualCurriculumModuleDto> studentSuitableModules = StreamUtil.toMap(m -> m.getId(),
+                                individualCurriculumSuitableModules.get(EntityUtil.getId(ds.getStudent())));
+
+                        for (ApplicationSupportServiceModule module : ass.getModules()) {
+                            IndividualCurriculumModuleDto suitableModule = studentSuitableModules
+                                    .get(EntityUtil.getId(module.getModule()));
+
+                            if (suitableModule.getExistingModules() != null) {
+                                for (ExistingIndividualCurriculumModuleDto existingModule : suitableModule
+                                        .getExistingModules()) {
+                                    if (DateUtils.periodsOverlap(ds.getStartDate(), ds.getEndDate(),
+                                            existingModule.getStartDate(), existingModule.getEndDate())) {
+                                        allErrors.add(new ErrorForIcpField("directive.moduleAlreadyInIndividualCurriculum",
+                                                propertyPath(rowNum, "modules"), AutocompleteResult.of(module.getModule(), false),
+                                                existingModule.getStartDate(), existingModule.getEndDate()));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else if (DirectiveType.KASKKIRI_TUGILOPP.equals(directiveType)) {
+                DirectiveStudent otherDirectiveStudent = ds.getDirectiveStudent();
+                if (otherDirectiveStudent != null) {
+                    if (ds.getStartDate() != null) {
+                        if (ds.getStartDate().isBefore(otherDirectiveStudent.getStartDate())
+                                || ds.getStartDate().isAfter(otherDirectiveStudent.getEndDate())) {
+                            allErrors.add(new ErrorForField("directive.notInSupportServiceDateRange",
+                                    propertyPath(rowNum, "startDate")));
+                        }
+                    } else {
+                        allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "startDate")));
+                    }
                 }
             } else if(DirectiveType.KASKKIRI_TYHIST.equals(directiveType)) {
                 // check that it's last modification of student
@@ -736,17 +820,45 @@ public class DirectiveConfirmService {
         return data.stream().collect(Collectors.groupingBy(r -> EntityUtil.getId(r.getStudent())));
     }
 
-    Map<Long, List<Long>> individualCurriculumSuitableModules(Directive directive) {
-        if (!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_INDOK)
+    Map<Long, List<IndividualCurriculumModuleDto>> individualCurriculumSuitableModules(Directive directive) {
+        if (!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_INDOK, DirectiveType.KASKKIRI_TUGI)
                 || directive.getStudents().isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        if (ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_TUGI)
+                && !supportServiceIncludesIndividualCurriculum(directive)) {
             return Collections.emptyMap();
         }
 
         List<Long> studentIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudent()), directive.getStudents());
         JpaNativeQueryBuilder qb = directiveService.individualCurriculumModulesQb(studentIds, null);
         List<?> data = qb.select("s.id student_id, cvo.id module_id", em).getResultList();
-        return StreamUtil.nullSafeList(data).stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
-                Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toList())));
+
+        Map<Long, Map<Long, List<ExistingIndividualCurriculumModuleDto>>> existingModules = directiveService
+                .existingIndividualCurriculumModules(studentIds, null);
+
+        return StreamUtil.nullSafeList(data).stream()
+                .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
+                    IndividualCurriculumModuleDto dto = new IndividualCurriculumModuleDto();
+                    dto.setId(resultAsLong(r, 1));
+                    dto.setExistingModules(existingModules.containsKey(resultAsLong(r, 0))
+                            ? existingModules.get(resultAsLong(r, 0)).get(resultAsLong(r, 1))
+                            : null);
+                    return dto;
+                }, Collectors.toList())));
+    }
+
+    private boolean supportServiceIncludesIndividualCurriculum(Directive directive) {
+        List<?> data = em.createNativeQuery("select ds.id from directive d "
+                + "join directive_student ds on ds.directive_id = d.id "
+                + "join application a on a.id = ds.application_id "
+                + "join application_support_service ass on ass.application_id = a.id "
+                + "where d.id = ?1 and ass.support_service_code = ?2")
+                .setParameter(1, EntityUtil.getId(directive))
+                .setParameter(2, SupportServiceType.TUGITEENUS_1.name())
+                .setMaxResults(1).getResultList();
+        return !data.isEmpty();
     }
 
     Map<Long, List<DirectiveStudent>> findIndividualCurriculums(Directive directive) {
@@ -764,6 +876,50 @@ public class DirectiveConfirmService {
             .setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
             .setParameter(4, DirectiveType.KASKKIRI_INDOKLOP.name())
             .setParameter(5, EntityUtil.getId(directive))
+            .getResultList();
+
+        return data.stream().collect(Collectors.groupingBy(r -> EntityUtil.getId(r.getStudent())));
+    }
+
+    Map<Long, List<ScholarshipApplication>> findScholarshipApplications(Directive directive) {
+        if (!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_STIPTOET)
+                || directive.getStudents().isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Long> studentIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudent()), directive.getStudents());
+        List<ScholarshipApplication> data = em.createQuery("select sa from ScholarshipApplication sa " +
+                "where sa.student.id in (?1) and sa.scholarshipTerm.type.code = ?2 and sa.status.code = ?3 " +
+                "and not exists (select ds from DirectiveStudent ds where ds.canceled = false and ds.directive.type.code = ?4 " +
+                "and ds.scholarshipApplication.id = sa.id and ds.directive.id != ?5)", ScholarshipApplication.class)
+            .setParameter(1, studentIds)
+            .setParameter(2, EntityUtil.getNullableCode(directive.getScholarshipType()))
+            .setParameter(3, ScholarshipStatus.STIPTOETUS_STAATUS_A.name())
+            .setParameter(4, DirectiveType.KASKKIRI_STIPTOET.name())
+            .setParameter(5, EntityUtil.getId(directive))
+            .getResultList();
+
+        return data.stream().collect(Collectors.groupingBy(r -> EntityUtil.getId(r.getStudent())));
+    }
+
+    Map<Long, List<DirectiveStudent>> findScholarshipsAvailableForTermination(Directive directive) {
+        if (!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_STIPTOETL)
+                || directive.getStudents().isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Long> studentIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudent()), directive.getStudents());
+        List<DirectiveStudent> data = em.createQuery("select ds from DirectiveStudent ds " +
+                "where ds.canceled = false and ds.student.id in (?1) and ds.directive.type.code = ?2 " +
+                "and ds.directive.scholarshipType.code = ?3 and ds.directive.status.code = ?4 and ds.endDate >= CURRENT_DATE " +
+                "and (not exists (select ds2 from DirectiveStudent ds2 where ds2.canceled = false and ds2.directive.type.code = ?5 and ds2.id = ds.id) " +
+                "or ds.id in (select ds3.id from DirectiveStudent ds3 where ds3.directive.id = ?6))", DirectiveStudent.class)
+            .setParameter(1, studentIds)
+            .setParameter(2, DirectiveType.KASKKIRI_STIPTOET.name())
+            .setParameter(3, EntityUtil.getNullableCode(directive.getScholarshipType()))
+            .setParameter(4, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+            .setParameter(5, DirectiveType.KASKKIRI_STIPTOETL.name())
+            .setParameter(6, EntityUtil.getId(directive))
             .getResultList();
 
         return data.stream().collect(Collectors.groupingBy(r -> EntityUtil.getId(r.getStudent())));

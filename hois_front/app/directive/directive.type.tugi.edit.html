@@ -1,0 +1,80 @@
+<md-table-container>
+  <table md-table class="secondary-table">
+    <thead md-head>
+      <tr md-row>
+        <th md-column>{{'directive.student.order' | translate}}</th>
+        <th md-column>{{'directive.student.fullname' | translate}}</th>
+        <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column>{{'directive.student.studentGroup' | translate}}</th>
+        <th md-column style="min-width: 200px;">{{'directive.student.supportServices' | translate}}</th>
+        <th md-column style="min-width: 200px;">{{'directive.student.supportModules' | translate}}</th>
+        <th md-column class="required">{{'directive.student.nominalStudyEnd' | translate}}</th>
+        <th md-column class="required">{{'directive.student.supportServiceStartDate' | translate}}</th>
+        <th md-column class="required">{{'directive.student.supportServiceEndDate' | translate}}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody md-body>
+      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>{{$index + 1}}.</td>
+        <td md-cell>{{::row.fullname}}</td>
+        <td md-cell>{{::row.idcode}}</td>
+        <td md-cell>{{::(currentLanguageNameField(row.studentGroupObject))}}</td>
+        <td md-cell>
+          <ul style="padding-left: 1.5em;">
+            <li ng-repeat="service in row.supportServices | orderBy: currentLanguageNameField()" style="margin-bottom: 0.25em;">{{::(currentLanguageNameField(service))}}</li>
+          </ul>
+        </td>
+        <td md-cell>
+          <ul style="padding-left: 1.5em;">
+            <li ng-repeat="module in row.supportModules | orderBy: currentLanguageNameField()" style="margin-bottom: 0.25em;">{{::(currentLanguageNameField(module))}}</li>
+          </ul>
+
+          <!-- hidden input to show errors if necessary -->
+          <input ng-show="false" ng-model="row.modules" name="students[{{$index}}].modules">
+          <div class="invalid" ng-messages="directiveForm['students['+$index+'].modules'].$error">
+            <p ng-message="serverside">
+              <p ng-repeat="err in directiveForm['students['+$index+'].modules'].$serverError">
+                {{ err.code | translate : {module: currentLanguageNameField(err.object), startDate : (err.startDate | hoisDate), endDate : (err.endDate | hoisDate) } }}
+              </p>
+            </p>
+          </div>
+        </td>
+        <td md-cell>
+          <md-datepicker ng-model="row.nominalStudyEnd" name="students[{{$index}}].nominalStudyEnd"
+            aria-label="{{'directive.student.nominalStudyEnd' | translate}}"></md-datepicker>
+          <div class="invalid" ng-messages="directiveForm['students['+$index+'].nominalStudyEnd'].$error">
+            <p ng-message="required">{{'main.required' | translate}}</p>
+          </div>
+        </td>
+        <td md-cell>
+          <md-datepicker ng-model="row.startDate" md-max-date="row.endDate" name="students[{{$index}}].startDate"
+            aria-label="{{'directive.student.supportServiceStartDate' | translate}}"></md-datepicker>
+          <div class="invalid" ng-messages="directiveForm['students['+$index+'].startDate'].$error">
+            <p ng-message="required">{{'main.required' | translate}}</p>
+          </div>
+        </td>
+        <td md-cell>
+          <md-datepicker ng-model="row.endDate" md-min-date="row.startDate" name="students[{{$index}}].endDate"
+            aria-label="{{'directive.student.supportServiceEndDate' | translate}}"></md-datepicker>
+          <div class="invalid" ng-messages="directiveForm['students['+$index+'].endDate'].$error">
+            <p ng-message="required">{{'main.required' | translate}}</p>
+          </div>
+        </td>
+        <td md-cell>
+          <a ng-click="deleteStudent(row)" md-no-ink class="remove">&times;</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</md-table-container>
+
+<style>
+  /* Overrides default user-agent style for error message */
+  div.invalid p {
+    margin-block-start: 0.25em;
+    margin-block-end: 0.25em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+  }
+</style>

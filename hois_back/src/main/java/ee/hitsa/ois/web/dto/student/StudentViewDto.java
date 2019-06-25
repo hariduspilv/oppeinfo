@@ -44,6 +44,8 @@ public class StudentViewDto extends StudentForm {
     private Boolean userIsStudentGroupTeacher;
     private Boolean userCanViewStudentSpecificData;
     private Boolean userCanUpdateRR;
+    private Boolean userCanViewStudentSupportServices;
+    private Boolean userCanViewPrivateStudentSupportServices;
     private BigDecimal curriculumCredits;
     private BigDecimal credits;
     private BigDecimal kkh;
@@ -53,6 +55,7 @@ public class StudentViewDto extends StudentForm {
     private LocalDate individualCurriculumStart;
     private LocalDate individualCurriculumEnd;
     private List<StudentOccupationCertificateDto> occupationCertificates;
+    private List<StudentDormitoryHistoryDto> dormitoryHistory;
 
     public Long getId() {
         return id;
@@ -262,6 +265,22 @@ public class StudentViewDto extends StudentForm {
         this.userCanUpdateRR = userCanUpdateRR;
     }
 
+    public Boolean getUserCanViewStudentSupportServices() {
+        return userCanViewStudentSupportServices;
+    }
+
+    public void setUserCanViewStudentSupportServices(Boolean userCanViewStudentSupportServices) {
+        this.userCanViewStudentSupportServices = userCanViewStudentSupportServices;
+    }
+
+    public Boolean getUserCanViewPrivateStudentSupportServices() {
+        return userCanViewPrivateStudentSupportServices;
+    }
+
+    public void setUserCanViewPrivateStudentSupportServices(Boolean userCanViewPrivateStudentSupportServices) {
+        this.userCanViewPrivateStudentSupportServices = userCanViewPrivateStudentSupportServices;
+    }
+
     public BigDecimal getCurriculumCredits() {
         return curriculumCredits;
     }
@@ -332,6 +351,14 @@ public class StudentViewDto extends StudentForm {
 
     public void setOccupationCertificates(List<StudentOccupationCertificateDto> occupationCertificates) {
         this.occupationCertificates = occupationCertificates;
+    }
+
+    public List<StudentDormitoryHistoryDto> getDormitoryHistory() {
+        return dormitoryHistory;
+    }
+
+    public void setDormitoryHistory(List<StudentDormitoryHistoryDto> dormitoryHistory) {
+        this.dormitoryHistory = dormitoryHistory;
     }
 
     public static StudentViewDto of(Student student) {

@@ -1,28 +1,32 @@
 package ee.hitsa.ois.web.dto.directive;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.sais.SaisApplication;
-import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
-import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.Dormitory;
 import ee.hitsa.ois.enums.FinSource;
 import ee.hitsa.ois.enums.FinSpecific;
 import ee.hitsa.ois.enums.StudyLoad;
+import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.util.ClassifierUtil;
-import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SaisAdmissionUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm.DirectiveFormStudentModule;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 
 public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
 
@@ -43,11 +47,14 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private AutocompleteResult applicationStudyPeriodStart;
     private AutocompleteResult applicationStudyPeriodEnd;
     private AutocompleteResult studentGroupObject;
-    private AutocompleteResult curriculumVersionObject;
+    private CurriculumVersionResult curriculumVersionObject;
 
     private Boolean isFullLoad = Boolean.FALSE;
     private Boolean isPartialLoad = Boolean.FALSE;
     private Boolean isUndefinedLoad = Boolean.FALSE;
+    
+    private List<AutocompleteResult> supportServices;
+    private List<AutocompleteResult> supportModules;
 
     public String getFullname() {
         return fullname;
@@ -209,23 +216,28 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         this.studentGroupObject = studentGroupObject;
     }
 
-    public AutocompleteResult getCurriculumVersionObject() {
+    public CurriculumVersionResult getCurriculumVersionObject() {
         return curriculumVersionObject;
     }
 
-    public void setCurriculumVersionObject(AutocompleteResult curriculumVersionObject) {
+    public void setCurriculumVersionObject(CurriculumVersionResult curriculumVersionObject) {
         this.curriculumVersionObject = curriculumVersionObject;
     }
 
-    public static DirectiveStudentDto of(ScholarshipApplication application, DirectiveType directiveType) {
-        DirectiveStudentDto dto = of(application.getStudent(), directiveType);
-        dto.setStartDate(DateUtils.startDate(application));
-        dto.setEndDate(DateUtils.endDate(application));
-        dto.setBankAccount(application.getBankAccount());
-        ScholarshipTerm term = application.getScholarshipTerm();
-        dto.setAmountPaid(term.getAmountPaid());
-        dto.setScholarshipApplication(application.getId());
-        return dto;
+    public List<AutocompleteResult> getSupportServices() {
+        return supportServices;
+    }
+
+    public void setSupportServices(List<AutocompleteResult> supportServices) {
+        this.supportServices = supportServices;
+    }
+
+    public List<AutocompleteResult> getSupportModules() {
+        return supportModules;
+    }
+
+    public void setSupportModules(List<AutocompleteResult> supportModules) {
+        this.supportModules = supportModules;
     }
 
     public static DirectiveStudentDto of(Application application, DirectiveType directiveType) {
@@ -261,6 +273,15 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             break;
         case KASKKIRI_OVORM:
             dto.setStudyForm(EntityUtil.getNullableCode(application.getNewStudyForm()));
+            break;
+        case KASKKIRI_TUGI:
+            dto.setNominalStudyEnd(application.getStudent().getNominalStudyEnd());
+            dto.setStudentGroup(application.getStudent().getStudentGroup() != null ? application.getStudent().getStudentGroup().getId() : null);
+            dto.setStudentGroupObject(application.getStudent().getStudentGroup() != null ? AutocompleteResult.of(application.getStudent().getStudentGroup()) : null);
+            dto.setSupportServices(application.getSupportServices().stream().map(service -> new AutocompleteResult(null, ClassifierDto.of(service.getSupportService()))).collect(Collectors.toList()));
+            dto.setSupportModules(application.getSupportServices().stream()
+                    .filter(service -> ClassifierUtil.equals(SupportServiceType.TUGITEENUS_1, service.getSupportService()))
+                    .flatMap(service -> service.getModules().stream()).map(module -> AutocompleteResult.of(module.getModule())).collect(Collectors.toList()));
             break;
         case KASKKIRI_VALIS:
             dto.setIsAbroad(application.getIsAbroad());
@@ -310,7 +331,9 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
 
     public static DirectiveStudentDto of(SaisApplication application) {
         DirectiveStudentDto dto = EntityUtil.bindToDto(application, new DirectiveStudentDto());
-        dto.setCurriculumVersion(EntityUtil.getId(application.getSaisAdmission().getCurriculumVersion()));
+        CurriculumVersion cv = application.getSaisAdmission().getCurriculumVersion();
+        dto.setCurriculumVersion(cv.getId());
+        dto.setCurriculumVersionObject(new CurriculumVersionResult(cv));
         if(!application.getGraduatedSchools().isEmpty()) {
             dto.setPreviousStudyLevel(EntityUtil.getCode(application.getGraduatedSchools().stream().findAny().get().getStudyLevel()));
         }
@@ -325,6 +348,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             s = higher ? FinSpecific.FINTAPSUSTUS_X : FinSpecific.FINTAPSUSTUS_T;
         }
         dto.setFinSpecific(s.name());
+        dto.setDormitory(CurriculumUtil.isVocational(cv.getCurriculum()) ? Dormitory.YHISELAMU_E.name() : null);
         return dto;
     }
 
@@ -378,8 +402,14 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         case KASKKIRI_INDOKLOP:
         case KASKKIRI_KIITUS:
         case KASKKIRI_NOOMI:
+        case KASKKIRI_OTEGEVUS:
+        case KASKKIRI_PRAKTIK:
             dto.setCurriculumVersion(student.getCurriculumVersion().getId());
-            dto.setCurriculumVersionObject(AutocompleteResult.of(student.getCurriculumVersion()));
+            dto.setCurriculumVersionObject(new CurriculumVersionResult(student.getCurriculumVersion()));
+            dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getId() : null);
+            dto.setStudentGroupObject(student.getStudentGroup() != null ? AutocompleteResult.of(student.getStudentGroup()) : null);
+            break;
+        case KASKKIRI_TUGILOPP:
             dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getId() : null);
             dto.setStudentGroupObject(student.getStudentGroup() != null ? AutocompleteResult.of(student.getStudentGroup()) : null);
             break;

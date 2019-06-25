@@ -38,6 +38,7 @@ import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.service.UserService;
 import ee.hitsa.ois.service.security.AuthenticatedUser;
+import ee.hitsa.ois.service.security.HarIdService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
 import ee.hitsa.ois.service.security.LdapService;
@@ -66,6 +67,8 @@ public class AuthenticationController {
     private MobileIdLoginService mobileIdService;
     @Autowired
     private TaraService taraService;
+    @Autowired
+    private HarIdService harIdService;
     @Autowired
     private LdapService ldapService;
     @Autowired
@@ -181,10 +184,43 @@ public class AuthenticationController {
 
         String token = "";
         Principal principal = SecurityContextHolder.getContext().getAuthentication();
-        if (principal != null) {
+        if (idcode != null && principal != null) {
             token = Jwts.builder()
                     .setSubject(idcode)
                     .claim(hoisJwtProperties.getClaimLoginMethod(), LoginMethod.LOGIN_TYPE_T.name())
+                    .setExpiration(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(1)))
+                    .signWith(SignatureAlgorithm.HS512, hoisJwtProperties.getSecret())
+                    .compact();
+            addJwtHeader(response, token);
+        }
+        // TODO: uses idloginRedirect because frontend would be the same, if old id login is remove rename everything
+        response.sendRedirect(idloginRedirect + "?token=" + token + "&redirect=" + frontendBaseUrl);
+    }
+
+    @RequestMapping("/haridLogin")
+    public void harIdLogin(HttpServletResponse response) throws Exception {
+        log.info("HarID authentication started");
+        String crsfToken = UUID.randomUUID().toString();
+        Cookie cookie = new Cookie("haridStateToken", crsfToken);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        response.addCookie(cookie);
+        response.sendRedirect(harIdService.authenticationRequest(crsfToken));
+    }
+
+    @CrossOrigin
+    @RequestMapping("/haridCallback")
+    public void harIdCallback(@RequestParam String code, @RequestParam String state, HttpServletRequest request,
+            HttpServletResponse response)
+            throws Exception {
+        String idcode = harIdService.getAuthenticatedPerson(code, state, request);
+
+        String token = "";
+        Principal principal = SecurityContextHolder.getContext().getAuthentication();
+        if (idcode != null && principal != null) {
+            token = Jwts.builder()
+                    .setSubject(idcode)
+                    .claim(hoisJwtProperties.getClaimLoginMethod(), LoginMethod.LOGIN_TYPE_H.name())
                     .setExpiration(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(1)))
                     .signWith(SignatureAlgorithm.HS512, hoisJwtProperties.getSecret())
                     .compact();

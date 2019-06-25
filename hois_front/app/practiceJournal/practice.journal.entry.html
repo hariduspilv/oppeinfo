@@ -2,7 +2,7 @@
   <div flex>
     <form name="practiceJournalEntryForm" ng-submit="save()" novalidate layout="column">
       <div class="form-readonly" layout="column">
-        <div layout="row" ng-if="practiceJournal.endDateDisplay">
+        <div layout="row" ng-if="auth.isStudent()">
           <div md-colors="{color: 'orange'}">
             <md-icon md-colors="{color: 'orange'}" md-font-set="material-icons">info_outline</md-icon>
             <span>{{'practiceJournal.canAddEntries' | translate}}

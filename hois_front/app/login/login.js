@@ -168,6 +168,7 @@ angular.module('hitsaOis')
             }
           };
           $scope.taraLoginUrl = config.apiUrl + '/taraLogin' + ($rootScope.currentLanguage() === 'en' ? '?lang=EN': '');
+          $scope.haridLoginUrl = config.apiUrl + '/haridLogin';
         },
         templateUrl: 'login/login.dialog.html',
         parent: angular.element(document.body),

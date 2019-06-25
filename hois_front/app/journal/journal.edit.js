@@ -225,6 +225,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     stateStorageService.changeState(schoolId, stateKey, {
       selectedEntryTypes: selectedEntryTypes
     });
+    $scope.$broadcast('refreshFixedColumns');
   };
 
   $scope.getEntryColor = function (type) {
@@ -295,21 +296,18 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         getStudentsWithAcceptedAbsences(true);
       };
 
-      function getStudentsWithAcceptedAbsences(setAbsences) {
+      function getStudentsWithAcceptedAbsences(changeAbsences) {
         if(!dialogScope.journalEntry.entryDate) {
           dialogScope.acceptedAbsences = null;
-          if (setAbsences) {
-            setAcceptedAbsences();
-          }
+          setAcceptedAbsences(changeAbsences);
           return;
         }
+
         QueryUtils.endpoint('/journals/' + entity.id + '/studentsWithAcceptedAbsences')
         .query({entryDate: dialogScope.journalEntry.entryDate}).$promise.then(function (response) {
           dialogScope.acceptedAbsences = response;
           dialogScope.previousEntryDate = dialogScope.journalEntry.entryDate;
-          if (setAbsences) {
-            setAcceptedAbsences();
-          }
+          setAcceptedAbsences(changeAbsences);
         });
       }
 
@@ -326,42 +324,85 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       };
 
       dialogScope.startLessonNrChanged = function () {
-        setAcceptedAbsences();
+        setAcceptedAbsences(true);
       };
 
-      function setAcceptedAbsences() {
+      function setAcceptedAbsences(changeAbsences) {
         dialogScope.journalStudents.forEach(function(js) {
           if (StudentUtil.isActive(js.status)) {
             var studentAbsences = getStudentAcceptedAbsences(js.id);
+            
+            if (angular.isObject(studentAbsences)) {
+              if (studentAbsences.wholeDay) {
+                dialogScope.journalEntryStudents[js.id].hasWholeDayAcceptedAbsence = true;
+                dialogScope.journalEntryStudents[js.id].wholeDayAbsenceCode = studentAbsences.practice ? 'PUUDUMINE_PR' : 'PUUDUMINE_V';
+              } 
 
-            var hasWholeDayAcceptedAbsence = angular.isObject(studentAbsences) && studentAbsences.wholeDay;
-            if (hasWholeDayAcceptedAbsence) {
-              var absenceCode = studentAbsences.practice ? 'PUUDUMINE_PR' : 'PUUDUMINE_V';
-              if (studentAbsences.practice) {
-                dialogScope.journalEntryStudents[js.id].practice = true;
-                dialogScope.journalEntryStudentAbsenceChanged(js, dialogScope.journalEntryStudents[js.id].practice, absenceCode);
-              } else {
-                dialogScope.journalEntryStudents[js.id].excused = true;
-                dialogScope.journalEntryStudentAbsenceChanged(js, dialogScope.journalEntryStudents[js.id].excused, absenceCode);
+              if (studentAbsences.lessons) {
+                studentAbsences.lessons.forEach(function (lessonNr) {
+                  var entryLessonNr = getEntryLessonNr(lessonNr);
+                  if (entryLessonNr > 0) {
+                    if (angular.isObject(dialogScope.journalEntryStudents[js.id].lessonAbsences[entryLessonNr])) {
+                      // from groupAbsences form you can set whatever absence type you want, this checks if correct accepted absence is set
+                      var setAbsenceCode = dialogScope.journalEntryStudents[js.id].lessonAbsences[entryLessonNr].absence;
+                      var acceptedAbsenceCode = getAcceptedAbsenceCode(studentAbsences, lessonNr);
+
+                      dialogScope.journalEntryStudents[js.id].lessonAbsences[entryLessonNr].accepted = setAbsenceCode === acceptedAbsenceCode;
+                    }
+                  }
+                });
               }
             } else {
-              dialogScope.journalEntryStudents[js.id].excused = false;
-              if (dialogScope.journalEntryStudents[js.id].absence === 'PUUDUMINE_V' ||
-                dialogScope.journalEntryStudents[js.id].absence === 'PUUDUMINE_PR') {
-                dialogScope.journalEntryStudentAbsenceChanged(js, null, null);
-              }
+              dialogScope.journalEntryStudents[js.id].hasWholeDayAcceptedAbsence = false;
+              dialogScope.journalEntryStudents[js.id].wholeDayAbsenceCode = null;
             }
-            setAcceptedLessonAbsences(js, studentAbsences);
+
+            if (changeAbsences) {
+              setWholeLessonAbsence(js, studentAbsences);
+              setAcceptedLessonAbsences(js, studentAbsences);
+            }
           }
         });
       }
 
+      function setWholeLessonAbsence(journalStudent, studentAbsences) {
+        var hasWholeDayAcceptedAbsence = angular.isObject(studentAbsences) && studentAbsences.wholeDay;
+
+        if (hasWholeDayAcceptedAbsence) {
+          if (studentAbsences.practice) {
+            dialogScope.journalEntryStudents[journalStudent.id].practice = true;
+            dialogScope.journalEntryStudentAbsenceChanged(journalStudent, true, 'PUUDUMINE_PR');
+          } else {
+            dialogScope.journalEntryStudents[journalStudent.id].excused = true;
+            dialogScope.journalEntryStudentAbsenceChanged(journalStudent, true, 'PUUDUMINE_V');
+          }
+        } else {
+          dialogScope.journalEntryStudents[journalStudent.id].practice = false;
+          dialogScope.journalEntryStudents[journalStudent.id].excused = false;
+          if (dialogScope.journalEntryStudents[journalStudent.id].absence === 'PUUDUMINE_V' ||
+            dialogScope.journalEntryStudents[journalStudent.id].absence === 'PUUDUMINE_PR') {
+            dialogScope.journalEntryStudentAbsenceChanged(journalStudent, null, null);
+          }
+        }
+      }
+
       function setAcceptedLessonAbsences(journalStudent, studentAbsences) {
         var lessonAbsences = angular.isObject(studentAbsences) ? studentAbsences.lessons : null;
+        var hasWholeDayAcceptedAbsence = angular.isObject(studentAbsences) && studentAbsences.wholeDay;
 
-        // remove previously set accepted lesson absences
         angular.forEach(dialogScope.journalEntryStudents[journalStudent.id].lessonAbsences, function (it) {
-          if (it.absence === 'PUUDUMINE_V' || it.absence === 'PUUDUMINE_PR') {
+          // remove previously set accepted lesson absences
+          if (it.accepted) {
+            it.accepted = false;
+            it.absence = null;
+            dialogScope.journalEntryStudentAbsenceChanged(journalStudent, null, null, it.lessonNr);
+          }
+
+          // remove not allowed set absences
+          if (hasWholeDayAcceptedAbsence && (it.absence === 'PUUDUMINE_H' || it.absence === 'PUUDUMINE_P')) {
+            it.absence = null;
+            dialogScope.journalEntryStudentAbsenceChanged(journalStudent, null, null, it.lessonNr);
+          } else if (!hasWholeDayAcceptedAbsence && (it.absence === 'PUUDUMINE_V' || it.absence === 'PUUDUMINE_PR')) {
             it.absence = null;
             dialogScope.journalEntryStudentAbsenceChanged(journalStudent, null, null, it.lessonNr);
           }
@@ -369,32 +410,43 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
         if (lessonAbsences) {
           lessonAbsences.forEach(function (lessonNr) {
-            // calculate entry lesson nr equivalent to absence lesson nr
-            var entryLessonNr = dialogScope.journalEntry.startLessonNr && dialogScope.journalEntry.startLessonNr > 1 ?
-              lessonNr + (1 - dialogScope.journalEntry.startLessonNr) : lessonNr;
+            var entryLessonNr = getEntryLessonNr(lessonNr);
 
-            // if calculated lesson nr is not higher than 0 then accepted absence lesson is not included in entry lessons
             if (entryLessonNr > 0) {
               if (!angular.isObject(dialogScope.journalEntryStudents[journalStudent.id].lessonAbsences[entryLessonNr])) {
                 dialogScope.journalEntryStudents[journalStudent.id].lessonAbsences[entryLessonNr] = {};
               }
+              dialogScope.journalEntryStudents[journalStudent.id].lessonAbsences[entryLessonNr].accepted = true;
               dialogScope.journalEntryStudents[journalStudent.id].lessonAbsences[entryLessonNr].lessonNr = entryLessonNr;
               dialogScope.journalEntryStudents[journalStudent.id].lessonAbsences[entryLessonNr].excused = true;
-              dialogScope.journalEntryStudentAbsenceChanged(journalStudent, 
-                dialogScope.journalEntryStudents[journalStudent.id].lessonAbsences[entryLessonNr].excused, 'PUUDUMINE_V', entryLessonNr);
+              dialogScope.journalEntryStudentAbsenceChanged(journalStudent, true, 'PUUDUMINE_V', entryLessonNr);
             }
           });
         }
       }
 
-      dialogScope.hasWholeDayAcceptedAbsence = function (row) {
-        var js = dialogScope.journalEntryStudents[row.id];
-        return js && js.absence === 'PUUDUMINE_V' || js.absence === 'PUUDUMINE_PR';
-      };
+      // calculate entry lesson nr equivalent to absence lesson nr
+      function getEntryLessonNr(absenceLessonNr) {
+        // if calculated lesson nr is not higher than 0 then accepted absence lesson is not included in entry lessons
+        return dialogScope.journalEntry.startLessonNr && dialogScope.journalEntry.startLessonNr > 1 ?
+          absenceLessonNr + (1 - dialogScope.journalEntry.startLessonNr) : absenceLessonNr;
+      }
 
+      function getAbsenceLessonNr(entryLessonNr) {
+        return dialogScope.journalEntry.startLessonNr && dialogScope.journalEntry.startLessonNr > 1 ?
+          entryLessonNr + (dialogScope.journalEntry.startLessonNr - 1) : entryLessonNr;
+      }
+
+      dialogScope.hasSavedWholeDayAcceptedAbsence = function (row) {
+        var js = dialogScope.journalEntryStudents[row.id];
+        return js && js.hasWholeDayAcceptedAbsence && (js.absence === 'PUUDUMINE_V' || js.absence === 'PUUDUMINE_PR');
+      };
+    
       dialogScope.hasAcceptedLessonAbsence = function (row, lessonNr) {
         var js = dialogScope.journalEntryStudents[row.id];
-        return js && js.lessonAbsences[lessonNr]  && js.lessonAbsences[lessonNr].absence === 'PUUDUMINE_V';
+      
+        return js && js.lessonAbsences[lessonNr] && angular.isDefined(js.lessonAbsences[lessonNr].accepted) &&
+          js.lessonAbsences[lessonNr].accepted;
       };
 
       function setStudentAbsenceCheckboxValues(it) {
@@ -443,8 +495,8 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
           DataUtils.convertStringToDates(it.journalEntryStudentHistories, ["gradeInserted"]);
           classifierMapper.objectmapper(it.journalEntryStudentHistories);
           setStudentAbsenceCheckboxValues(it);
-          getStudentsWithAcceptedAbsences(false);
         });
+        getStudentsWithAcceptedAbsences(false);
         dialogScope.savedJournalEntryStudents = angular.copy(dialogScope.journalEntryStudents);
         editEntity.journalEntryCapacityTypes.forEach(function (it) {
           dialogScope.selectedCapacityTypes[it] = true;
@@ -480,6 +532,12 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
             journalEntryStudentsRow.late = false;
             journalEntryStudentsRow.practice = false;
             break;
+          default:
+            journalEntryStudentsRow.practice = false;
+            journalEntryStudentsRow.withoutReason = false;
+            journalEntryStudentsRow.late = false;
+            journalEntryStudentsRow.excused = false;
+            break;
         }
       }
 
@@ -507,13 +565,14 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         if (absence === 'PUUDUMINE_P' && angular.isObject(studentAbsences)) {
           absence = getAcceptedAbsenceCode(studentAbsences, lessonNr);
         }
-                
+        
         if (lessonNr) {
           if (!angular.isObject(dialogScope.journalEntryStudents[row.id].lessonAbsences[lessonNr])) {
             dialogScope.journalEntryStudents[row.id].lessonAbsences[lessonNr] = {};
           }
           dialogScope.journalEntryStudents[row.id].lessonAbsences[lessonNr].lessonNr = lessonNr;
           dialogScope.journalEntryStudents[row.id].lessonAbsences[lessonNr].absence = checkboxValue ? absence : null;
+          dialogScope.journalEntryStudents[row.id].lessonAbsences[lessonNr].accepted = checkboxValue ? isAcceptedLessonAbsence(studentAbsences, lessonNr) : false;
         } else {
           dialogScope.journalEntryStudents[row.id].absence = checkboxValue ? absence : null;
         }
@@ -524,6 +583,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
         var journalEntryStudentsRow = lessonNr ? dialogScope.journalEntryStudents[row.id].lessonAbsences[lessonNr]
           : dialogScope.journalEntryStudents[row.id];
+        
         changeAbsenceCheckboxValues(journalEntryStudentsRow, absence, checkboxValue);
       };
 
@@ -534,18 +594,25 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         return studentAbsences;
       }
 
+      function isAcceptedLessonAbsence(studentAbsences, lessonNr) {
+        var absenceLessonNr = getAbsenceLessonNr(lessonNr);
+        return studentAbsences && studentAbsences.lessons && studentAbsences.lessons.indexOf(absenceLessonNr) !== -1;
+      }
+
       function getAcceptedAbsenceCode(studentAbsences, lessonNr) {
         if (lessonNr) {
-          var entryLessonNr = dialogScope.journalEntry.startLessonNr && dialogScope.journalEntry.startLessonNr > 1 ?
-            lessonNr + (dialogScope.journalEntry.startLessonNr - 1) : lessonNr;
-
-          if (studentAbsences.lessons && studentAbsences.lessons.indexOf(entryLessonNr) !== -1) {
-            return 'PUUDUMINE_V';
+          var absenceLessonNr = getAbsenceLessonNr(lessonNr);
+          if (studentAbsences.lessons && studentAbsences.lessons.indexOf(absenceLessonNr) !== -1) {
+            return studentAbsences.practice ? 'PUUDUMINE_PR' : 'PUUDUMINE_V';
           }
           // no equivalent lesson and therefore absence stays as without reason
           return 'PUUDUMINE_P';
+        } else {
+          if (studentAbsences.wholeDay) {
+            return studentAbsences.practice ? 'PUUDUMINE_PR' : 'PUUDUMINE_V';
+          }
+          return 'PUUDUMINE_P';
         }
-        return studentAbsences.practice ? 'PUUDUMINE_PR' : 'PUUDUMINE_V';
       }
 
       dialogScope.setJournalEntryTypeChanged = function (entryType) {

@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.application.ApplicationSupportService;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
@@ -29,12 +31,14 @@ import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.report.ApplicationTugiReport;
 import ee.hitsa.ois.service.ApplicationService;
 import ee.hitsa.ois.service.AutomaticMessageService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApplicationUtil;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.HttpUtil;
@@ -107,9 +111,12 @@ public class ApplicationController {
 
     @PutMapping("/{id:\\d+}")
     public ApplicationDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Application application, @Valid @RequestBody ApplicationForm applicationForm) {
-        if (!(UserUtil.isSchoolAdmin(user, application.getStudent().getSchool()) || UserUtil.isStudent(user, application.getStudent()) || UserUtil.isStudentGroupTeacher(user, application.getStudent())
-                || UserUtil.isStudentRepresentative(user, application.getStudent())) || !StudentUtil.canBeEdited(application.getStudent())) {
-            throw new ValidationFailedException("main.messages.error.nopermission");
+        if (!(UserUtil.isSchoolAdmin(user, application.getStudent().getSchool()) || UserUtil.isStudent(user, application.getStudent())) || !StudentUtil.canBeEdited(application.getStudent())) {
+            if (!ApplicationType.AVALDUS_LIIK_TUGI.name().equals(applicationForm.getType())
+                    || !(UserUtil.isStudentRepresentative(user, application.getStudent()) || UserUtil.isStudentGroupTeacher(user, application.getStudent()))) {
+                throw new ValidationFailedException("main.messages.error.nopermission");
+            }
+            
         }
         checkUpdateBusinessRules(user, application, applicationForm);
         return get(user, applicationService.save(user, application, applicationForm));
@@ -209,7 +216,7 @@ public class ApplicationController {
     public ApplicationDto removeConfirmation(HoisUserDetails user, @WithEntity Application application) {
         ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
 
-        if (!UserUtil.canRemoveApplicationConfirmation(user, application)) {
+        if (!applicationService.canRemoveApplicationConfirmation(user, application)) {
             throw new ValidationFailedException(String.format("user %s is not allowed to remove application confirmation %d with status %s", user.getUsername(), application.getId(), status));
         }
 
@@ -244,7 +251,10 @@ public class ApplicationController {
         }
         ApplicationType type = EnumUtil.valueOf(ApplicationType.class, application.getType());
         if (ApplicationType.AVALDUS_LIIK_TUGI.equals(type)) {
-            HttpUtil.pdf(response, "avaldus.pdf", pdfService.generate(ApplicationTugiReport.TEMPLATE_NAME, new ApplicationTugiReport(application, lang == null ? Language.ET : lang)));
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMYYYY");
+            String fileName = String.format("%s_%s_%s.pdf", "tugimeede", application.getStudent().getPerson().getFullname(),
+                    formatter.format(application.getRepresentativeConfirmed())).replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
+            HttpUtil.pdf(response, fileName, pdfService.generate(ApplicationTugiReport.TEMPLATE_NAME, new ApplicationTugiReport(application, lang == null ? Language.ET : lang)));
         }
     }
 
@@ -304,8 +314,16 @@ public class ApplicationController {
         case AVALDUS_STAATUS_KINNITAM:
             if (ApplicationType.AVALDUS_LIIK_TUGI.equals(type)) {
                 if (application.getIsDecided() == null || application.getDecision() == null
-                        || (Boolean.TRUE.equals(application.getIsDecided()) && (application.getSupportServices().isEmpty() || application.getImplementationPlan() == null))) {
+                        || (Boolean.TRUE.equals(application.getIsDecided())
+                                && (application.getSupportServices().isEmpty() || application.getImplementationPlan() == null))) {
                     throw new ValidationFailedException("application.messages.emptyNecessaryFields");
+                } else if (Boolean.TRUE.equals(application.getIsDecided()) && !application.getSupportServices().isEmpty()) {
+                    ApplicationSupportService service1 = application.getSupportServices().stream()
+                            .filter(service -> ClassifierUtil.equals(SupportServiceType.TUGITEENUS_1, service.getSupportService()))
+                            .findFirst().orElse(null);
+                    if (service1 != null && service1.getModules().isEmpty()) {
+                        throw new ValidationFailedException("application.messages.emptyNecessaryFields");
+                    }
                 }
             }
             break;

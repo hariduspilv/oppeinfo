@@ -24,6 +24,7 @@ public class StudentSearchCommand {
     private String fin;
     private String finSpecific;
     private String language;
+    private String dormitory;
     private Boolean isHigher;
 
     public String getName() {
@@ -144,6 +145,14 @@ public class StudentSearchCommand {
 
     public void setLanguage(String language) {
         this.language = language;
+    }
+
+    public String getDormitory() {
+        return dormitory;
+    }
+
+    public void setDormitory(String dormitory) {
+        this.dormitory = dormitory;
     }
 
     public Boolean getIsHigher() {

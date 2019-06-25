@@ -1,0 +1,46 @@
+<md-dialog aria-label="add enterprise dialog" flex="80">
+    <md-toolbar>
+        <div class="md-toolbar-tools">
+            <h2 flex>{{"poll.questions.label" | translate}}</h2>
+            <md-button class="md-icon-button" ng-click="cancel()">
+            <md-icon md-font-set="material-icons">close</md-icon>
+            </md-button>
+        </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <div ng-if="polls !== undefined && polls !== null && polls.length !== 0">
+          <md-table-container style="max-height: 400px;">
+            <table md-table>
+              <thead md-head>
+                  <tr md-row>
+                      <th md-column>{{'poll.type' | translate}}</th>
+                      <th md-column>{{'poll.name' | translate}}</th>
+                      <th md-column>{{'poll.responseTime' | translate}}</th>
+                      <th md-column>{{'poll.responseStatus' | translate}}</th>
+                      <th md-column></th>
+                  </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="row in polls | orderBy:'validThru'" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>{{row.type ? currentLanguageNameField(row.type) : '-'}}</td>
+                  <td md-cell>{{row.name ? currentLanguageNameField(row.name) : '-'}}</td>
+                  <td md-cell>{{(row.validFrom | hoisDate) + ' - ' + (row.validThru | hoisDate)}}</td>
+                  <td md-cell>{{row.status ? currentLanguageNameField(row.status) : '-'}}</td>
+                  <td md-cell>
+                    <div>
+                      <md-button md-no-ink class="md-primary change-button" ng-click="openResponse(row)">{{'poll.respond' | translate}}</md-button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </div>
+      </div>
+    </md-dialog-content>
+    
+    <md-dialog-actions layout="row" layout-align="start start">
+        <md-button class="md-raised md-primary" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+</md-dialog>

@@ -20,6 +20,7 @@ public class PollTheme extends BaseEntityWithId {
     private String nameEt;
     private String nameEn;
     private Short orderNr;
+    private Boolean isRepetitive;
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "poll_theme_id", nullable = false, updatable = false, insertable = false)
     private List<PollThemeQuestion> pollThemeQuestions = new ArrayList<>();
@@ -53,6 +54,12 @@ public class PollTheme extends BaseEntityWithId {
     }
     public void setPollThemeQuestions(List<PollThemeQuestion> pollThemeQuestions) {
         this.pollThemeQuestions = pollThemeQuestions;
+    }
+    public Boolean getIsRepetitive() {
+        return isRepetitive;
+    }
+    public void setIsRepetitive(Boolean isRepetitive) {
+        this.isRepetitive = isRepetitive;
     }
 
 }

@@ -4,7 +4,7 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
   function ($q, $scope, $route, Classifier, QueryUtils) {
     $scope.auth = $route.current.locals.auth;
     var certificateMapper = Classifier.valuemapper({occupationCode: 'KUTSE', partOccupationCode: 'OSAKUTSE', specialityCode: 'SPETSKUTSE'});
-    var clMapper = Classifier.valuemapper({fin: 'FINALLIKAS', finSpecific: 'FINTAPSUSTUS', language: 'OPPEKEEL',
+    var clMapper = Classifier.valuemapper({dormitory: 'YHISELAMU', fin: 'FINALLIKAS', finSpecific: 'FINTAPSUSTUS', language: 'OPPEKEEL',
       studyLevel: 'OPPEASTE', studyForm: 'OPPEVORM', studyLoad: 'OPPEKOORMUS', status: 'OPPURSTAATUS'});
 
     function certMapper(it) {
@@ -381,7 +381,7 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
     if ($scope.studentGroupTeacherReportForm && $scope.studentGroupTeacherReportForm.$valid) {
       $scope.search();
     } else {
-      $timeout(searchUsingStoredCriteria);
+      $timeout(searchUsingStoredCriteria, 200);
     }
   }
   
@@ -588,7 +588,7 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
   $scope.criteria = {};
 
   var baseUrl = '/reports/individualcurriculumstatistics';
-  QueryUtils.createQueryForm($scope, baseUrl, {order: 'p.lastname, p.firstname'});
+  QueryUtils.createQueryForm($scope, baseUrl, {order: 'lastname, firstname'});
 
   $scope.formState = {
     studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(),

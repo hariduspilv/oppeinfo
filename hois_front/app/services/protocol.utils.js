@@ -3,13 +3,14 @@
 angular.module('hitsaOis')
   .factory('ProtocolUtils', function ($mdDialog, $timeout, $rootScope, $window, QueryUtils, config, dialogService, message) {
     var protocolUtils = {};
+    var CONFIRM_LOGIN_TYPES = ['LOGIN_TYPE_I', 'LOGIN_TYPE_M', 'LOGIN_TYPE_T', 'LOGIN_TYPE_H'];
 
     protocolUtils.signBeforeConfirm = function (auth, endpoint, data, confirmMessage, callback, failCallback) {
       if (auth.loginMethod === 'LOGIN_TYPE_I') {
         protocolUtils.idcardSignBeforeConfirm(endpoint, data, confirmMessage, callback, failCallback);
       } else if (auth.loginMethod === 'LOGIN_TYPE_M') {
         protocolUtils.mobileSignBeforeConfirm(endpoint, data, confirmMessage, callback, failCallback);
-      } else if (auth.loginMethod === 'LOGIN_TYPE_T') {
+      } else if (auth.loginMethod === 'LOGIN_TYPE_T' || auth.loginMethod === 'LOGIN_TYPE_H') {
         dialogService.showDialog('components/tara.protocol.confirm.dialog.html', function (dialogScope) {
           dialogScope.signType = null;
 
@@ -133,8 +134,7 @@ angular.module('hitsaOis')
     };
 
     protocolUtils.canEditConfirmedProtocol = function (auth, protocol) {
-      return protocol.canBeEdited && protocol.canBeConfirmed && 
-        (auth.loginMethod === 'LOGIN_TYPE_I' || auth.loginMethod === 'LOGIN_TYPE_M' || auth.loginMethod === 'LOGIN_TYPE_T');
+      return protocol.canBeEdited && protocol.canBeConfirmed && CONFIRM_LOGIN_TYPES.indexOf(auth.loginMethod) !== -1;
     };
 
     protocolUtils.canAddDeleteStudents = function (auth, protocol) {
@@ -143,7 +143,7 @@ angular.module('hitsaOis')
 
     protocolUtils.canConfirm = function(auth, protocol) {
       return protocol.canBeConfirmed && allProtocolStudentsGraded(protocol) && allChangedGradesHaveAddInfo(protocol) && 
-        (auth.loginMethod === 'LOGIN_TYPE_I' || auth.loginMethod === 'LOGIN_TYPE_M' || auth.loginMethod === 'LOGIN_TYPE_T');
+        CONFIRM_LOGIN_TYPES.indexOf(auth.loginMethod) !== -1;
     };
 
     function allProtocolStudentsGraded(protocol) {

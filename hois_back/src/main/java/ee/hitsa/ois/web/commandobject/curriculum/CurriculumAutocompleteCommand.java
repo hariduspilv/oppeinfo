@@ -8,6 +8,7 @@ public class CurriculumAutocompleteCommand extends SearchCommand {
     private Boolean closed;
     private Long teacher;
     private Integer minSpecialities;
+    private String studyLevel;
 
     public Boolean getHigher() {
         return higher;
@@ -39,6 +40,14 @@ public class CurriculumAutocompleteCommand extends SearchCommand {
 
     public void setMinSpecialities(Integer minSpecialities) {
         this.minSpecialities = minSpecialities;
+    }
+
+    public String getStudyLevel() {
+        return studyLevel;
+    }
+
+    public void setStudyLevel(String studyLevel) {
+        this.studyLevel = studyLevel;
     }
 
 }

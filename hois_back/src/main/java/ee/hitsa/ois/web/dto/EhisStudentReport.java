@@ -278,4 +278,24 @@ public class EhisStudentReport {
             return abroadProgramme;
         }
     }
+
+    public static class Dormitory extends EhisStudentReport {
+        private final String dormitory;
+        private final LocalDate changeDate;
+
+        public Dormitory(Student student, WsEhisStudentLog log, String dormitory, LocalDate changeDate) {
+            fill(student, log);
+
+            this.dormitory = dormitory;
+            this.changeDate = changeDate;
+        }
+
+        public String getDormitory() {
+            return dormitory;
+        }
+
+        public LocalDate getChangeDate() {
+            return changeDate;
+        }
+    }
 }

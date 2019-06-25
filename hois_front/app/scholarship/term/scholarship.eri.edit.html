@@ -12,7 +12,7 @@
 </div>
 <div layout="row">
   <div flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-    <label class="date-period-label">{{'stipend.applicationPeriod' | translate}} *</label>
+    <label class="date-period-label">{{'stipend.applicationPeriod' | translate}}</label>
   </div>
   <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
     <md-datepicker ng-model="stipend.applicationStart" md-max-date="stipend.applicationEnd" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
@@ -24,7 +24,7 @@
 </div>
 <div layout="row">
   <div flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-    <label class="date-period-label">{{'stipend.paymentPeriod' | translate}} *</label>
+    <label class="date-period-label">{{'stipend.paymentPeriod' | translate}}</label>
   </div>
   <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100" flex-offset="5">
     <md-datepicker ng-model="stipend.paymentStart" md-max-date="stipend.paymentEnd" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
@@ -47,7 +47,7 @@
   <div layout="row" flex="100">
     <hois-autocomplete flex ng-model="formState.curriculum" method="curriculums" label="stipend.curriculums" ng-required="missingCurriculums"
       additional-query-params="{higher: false, closed: false}"></hois-autocomplete>
-    <md-button ng-click="addAllCurriculums()" class="md-raised">{{'stipend.addAllCurriculums' | translate}}</md-button>
+    <md-button ng-click="addAllCurriculums({higher: false, closed: false})" class="md-raised">{{'stipend.addAllCurriculums' | translate}}</md-button>
   </div>
   <div layout="column" class="common-label" flex="95" ng-repeat="curriculum in stipend.curriculums | orderBy: ['curriculum.' + currentLanguageNameField(), 'code']">
     <div layout="row" flex layout-align="start center">

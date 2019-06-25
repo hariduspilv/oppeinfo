@@ -77,15 +77,19 @@
             <hois-classifier-select ng-model="criteria.fin" model-value-attr="code" main-classifier-code="FINALLIKAS"></hois-classifier-select>
           </md-input-container>
           <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
-            <label>{{'report.student.language' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.language" model-value-attr="code" main-classifier-code="OPPEKEEL"></hois-classifier-select>
+            <label class="textInput">{{'report.student.finSpecific' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.finSpecific" model-value-attr="code" main-classifier-code="FINTAPSUSTUS"></hois-classifier-select>
           </md-input-container>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45">
-            <label class="textInput">{{'report.student.finSpecific' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.finSpecific" model-value-attr="code" main-classifier-code="FINTAPSUSTUS"></hois-classifier-select>
+            <label>{{'report.student.language' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.language" model-value-attr="code" main-classifier-code="OPPEKEEL"></hois-classifier-select>
+          </md-input-container>
+          <md-input-container ng-if="auth.vocational" flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'report.student.dormitory' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.dormitory" model-value-attr="code" main-classifier-code="YHISELAMU"></hois-classifier-select>
           </md-input-container>
         </div>
 
@@ -118,6 +122,7 @@
             <th md-column>{{'report.student.status' | translate}}</th>
             <th md-column>{{'report.student.fin' | translate}}</th>
             <th md-column>{{'report.student.finSpecific' | translate}}</th>
+            <th md-column ng-if="auth.vocational">{{'report.student.dormitory' | translate}}</th>
             <th md-column>{{'report.student.language' | translate}}</th>
             <th md-column>{{'report.student.credits' | translate}}</th>
             <th md-column>{{'report.student.occupationcertificate' | translate}}</th>
@@ -140,6 +145,7 @@
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
             <td md-cell>{{currentLanguageNameField(row.fin)}}</td>
             <td md-cell>{{currentLanguageNameField(row.finSpecific)}}</td>
+            <td md-cell ng-if="auth.vocational">{{currentLanguageNameField(row.dormitory)}}</td>
             <td md-cell>{{currentLanguageNameField(row.language)}}</td>
             <td md-cell>{{::row.credits}}</td>
             <td md-cell>

@@ -99,6 +99,10 @@ angular.module('hitsaOis')
                 lookup.query(query, function (data) {
                   deferred.resolve(data);
                 });
+              } else if(url === '/autocomplete/journalsAndStudentGroups') {
+                lookup.query(query, function (data) {
+                  deferred.resolve(data);
+                });
               } else if(scope.noPaging === 'true') {
                 lookup.query(query, function (data) {
                   deferred.resolve(data);

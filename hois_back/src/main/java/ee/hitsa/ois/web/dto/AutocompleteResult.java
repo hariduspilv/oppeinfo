@@ -1,5 +1,8 @@
 package ee.hitsa.ois.web.dto;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import ee.hitsa.ois.domain.Building;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Committee;
@@ -22,6 +25,7 @@ import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.enterprise.Enterprise;
 import ee.hitsa.ois.domain.enterprise.PracticeEvaluation;
+import ee.hitsa.ois.domain.poll.PollJournal;
 import ee.hitsa.ois.domain.sais.SaisAdmission;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
@@ -39,6 +43,7 @@ import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EnterpriseUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
@@ -219,6 +224,24 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
         return new AutocompleteResult(studentGroup.getId(), code, code);
     }
     
+    public static AutocompleteResult of(PollJournal pollJournal) {
+        Journal journal = pollJournal.getJournal();
+        Set<String> studentGroups = journal.getJournalOccupationModuleThemes().stream()
+                .filter(js -> js.getLessonPlanModule() != null && js.getLessonPlanModule().getLessonPlan() != null &&
+                js.getLessonPlanModule().getLessonPlan().getStudentGroup() != null && js.getLessonPlanModule().getLessonPlan().getStudentGroup().getCode() != null)
+                .filter(StreamUtil.distinctByKey(js -> js.getLessonPlanModule().getLessonPlan().getStudentGroup().getCode()))
+                .map(js -> js.getLessonPlanModule().getLessonPlan().getStudentGroup().getCode())
+                .collect(Collectors.toSet());
+        String journalStudentGroups = null;
+        if (studentGroups != null) {
+            journalStudentGroups = String.join(",", studentGroups);
+        }
+        String journalAndStudentGroups = journal.getNameEt() +
+                ((journalStudentGroups == null || "".equals(journalStudentGroups)) ? "" : " (" + journalStudentGroups + ")");
+        AutocompleteResult dto = new AutocompleteResult(journal.getId(), journalAndStudentGroups, journalAndStudentGroups);
+        return dto;
+    }
+    
     public static AutocompleteResult of(PracticeEvaluation evaluation) {
         String name = evaluation.getNameEt();
         return new AutocompleteResult(evaluation.getId(), name, name);
@@ -275,5 +298,24 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
 
     public static AutocompleteResult of(Committee committee) {
         return new AutocompleteResult(committee.getId(), committee.getNameEt(), committee.getNameEt());
+    }
+    
+    public static AutocompleteResult of(Committee committee, boolean full) {
+        if (full) {
+            String name = committee.getNameEt() == null ? "-" : committee.getNameEt();
+            String members = StreamUtil.nullSafeList(committee.getMembers()).stream()
+                    .filter(member -> member.getPerson() != null)
+                    .map(member -> member.getPerson().getFullname())
+                    .sorted()
+                    .collect(Collectors.joining(", "));
+            String fullName;
+            if (members != null) {
+                fullName = String.format("%s (%s)", name, members);
+            } else {
+                fullName = name;
+            }
+            return new AutocompleteResult(committee.getId(), fullName, fullName);
+        }
+        return of(committee);
     }
 }

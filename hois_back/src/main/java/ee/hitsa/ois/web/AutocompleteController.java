@@ -288,9 +288,20 @@ public class AutocompleteController {
     public Page<AutocompleteResult> journalsAndSubjects(HoisUserDetails user, JournalAndSubjectAutocompleteCommand lookup) {
         return asPage(autocompleteService.journalsAndSubjects(user.getSchoolId(), lookup));
     }
+    
+    /**
+     * Ignores study year, study year will be selected from current study year
+     * @param user
+     * @param lookup
+     * @return journals with student groups as "journal_name(student_groups)"
+     */
+    @GetMapping("/journalsAndStudentGroups")
+    public List<AutocompleteResult> journalsAndStudentGroups(HoisUserDetails user, JournalAndSubjectAutocompleteCommand lookup) {
+        return autocompleteService.journalsAndStudentGroups(user.getSchoolId(), lookup);
+    }
 
     @GetMapping("/enterprises")
-    public List<EnterpriseResult> enterprises(HoisUserDetails user, SearchCommand lookup) {
+    public List<EnterpriseResult> enterprises(SearchCommand lookup) {
         return autocompleteService.enterprises(lookup);
     }
     

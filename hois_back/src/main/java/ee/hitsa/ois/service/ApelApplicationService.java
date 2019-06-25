@@ -356,7 +356,6 @@ public class ApelApplicationService {
             EntityUtil.bindToEntity(form, subjectOrModule, "subject", "curriculumVersionHmodule",
                     "curriculumVersionOmodule", "curriculumVersionOmoduleTheme", "outcomes");
             subjectOrModule = updateInformalSubjectOrModule(form, subjectOrModule);
-            updateInformalSubjectsOrModulesOutcomes(form, subjectOrModule);
             validateInformalSubjectOrModule(record, subjectOrModule);
         });
     }

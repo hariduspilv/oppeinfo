@@ -235,7 +235,8 @@ angular.module('hitsaOis')
     '/timetable/room/:schoolId/:roomId/:weekIndex?',
     '/studyMaterial/:schoolId/vocational/:journalId/view',
     '/studyMaterial/:schoolId/higher/:subjectStudyPeriodId/view',
-    '/practiceJournals/supervisor/:uuid'
+    '/practiceJournals/supervisor/:uuid',
+    '/poll/supervisor/:uuid'
   ])
   .service('Session', function () {
     this.school = {};
@@ -336,6 +337,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_V_TEEMAOIGUS_SYNDMUS: 'ROLE_OIGUS_V_TEEMAOIGUS_SYNDMUS',	//Sündmused
     ROLE_OIGUS_V_TEEMAOIGUS_T: 'ROLE_OIGUS_V_TEEMAOIGUS_T',	//Õppuri üldine õigus
     ROLE_OIGUS_V_TEEMAOIGUS_TOEND: 'ROLE_OIGUS_V_TEEMAOIGUS_TOEND',	//Tõendid
+    ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS: 'ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS', // Tugiteenus
     ROLE_OIGUS_V_TEEMAOIGUS_TUNDAEG: 'ROLE_OIGUS_V_TEEMAOIGUS_TUNDAEG',	//Tundide ajad
     ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN: 'ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN',	//Tunnijaotusplaan
     ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN: 'ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN',	//Tunniplaan
@@ -410,6 +412,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_M_TEEMAOIGUS_SYNDMUS: 'ROLE_OIGUS_M_TEEMAOIGUS_SYNDMUS',	//Sündmused
     ROLE_OIGUS_M_TEEMAOIGUS_T: 'ROLE_OIGUS_M_TEEMAOIGUS_T',	//Õppuri üldine õigus
     ROLE_OIGUS_M_TEEMAOIGUS_TOEND: 'ROLE_OIGUS_M_TEEMAOIGUS_TOEND',	//Tõendid
+    ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS: 'ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS', // Tugiteenus
     ROLE_OIGUS_M_TEEMAOIGUS_TUNDAEG: 'ROLE_OIGUS_M_TEEMAOIGUS_TUNDAEG',	//Tundide ajad
     ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN: 'ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN',	//Tunnijaotusplaan
     ROLE_OIGUS_M_TEEMAOIGUS_TUNNIPLAAN: 'ROLE_OIGUS_M_TEEMAOIGUS_TUNNIPLAAN',	//Tunniplaan

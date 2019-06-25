@@ -971,7 +971,7 @@ public class PracticeEnterpriseService {
 		}
 		
 		if (failed.isEmpty()) {
-			if (row.getCountry().equals("EST") && !"J".equals(row.getPerson())) {
+			if (row.getCountry().equals("EST") && "E".equalsIgnoreCase(row.getPerson())) {
 				EnterpriseRegCodeCheckDto regCodeCheckDto = new EnterpriseRegCodeCheckDto();
 				regCodeCheckDto.setRegCode(row.getRegCode());
 				regCodeCheckDto.setCountry(row.getCountry());
@@ -995,7 +995,7 @@ public class PracticeEnterpriseService {
 			EnterpriseSchool school = null;
 			try {
 				enterprise = em.createQuery("select e from Enterprise e "
-		        		+ ("J".equalsIgnoreCase(row.getPerson()) ? "where lower(e.name) = '" + row.getName().toLowerCase() + "' ": "where e.regCode = "+ row.getRegCode() + " ")
+		        		+ ("J".equalsIgnoreCase(row.getPerson()) ? "where lower(e.name) = '" + row.getName().toLowerCase() + "' ": "where e.regCode = '" + row.getRegCode() + "' ")
 		        		+ "and e.country.code = ?1", Enterprise.class)
 		        		.setParameter(1, "RIIK_" + row.getCountry())
 		        		.getSingleResult();
@@ -1009,7 +1009,7 @@ public class PracticeEnterpriseService {
 			try {
 				school = em.createQuery("select s from EnterpriseSchool s "
 		        		+ "where s.school.id = ?1 "
-		        		+ ("J".equalsIgnoreCase(row.getPerson()) ? "and lower(s.enterprise.name) = '" + row.getName().toLowerCase() + "' " : "and s.enterprise.regCode = "+ row.getRegCode() + " ")
+		        		+ ("J".equalsIgnoreCase(row.getPerson()) ? "and lower(s.enterprise.name) = '" + row.getName().toLowerCase() + "' " : "and s.enterprise.regCode = '" + row.getRegCode() + "' ")
 		        		+ "and s.enterprise.country.code = ?2", EnterpriseSchool.class)
 		        		.setParameter(1, user.getSchoolId())
 		        		.setParameter(2, "RIIK_" + row.getCountry())
@@ -1028,8 +1028,11 @@ public class PracticeEnterpriseService {
 				if (enterprise.getCountry() == null) {
 					enterprise.setCountry(em.getReference(Classifier.class, "RIIK_" + row.getCountry()));
 				}
-				if (StringUtils.isBlank(enterprise.getRegCode())) {
+				if (StringUtils.isBlank(enterprise.getRegCode()) && "E".equalsIgnoreCase(row.getPerson())) {
 					enterprise.setRegCode(row.getRegCode());
+				}
+				if (enterprise.getPerson().booleanValue()) {
+				    enterprise.setRegCode(null);
 				}
 				if (StringUtils.isBlank(enterprise.getName())) {
 					enterprise.setName(row.getName());
@@ -1038,7 +1041,9 @@ public class PracticeEnterpriseService {
 			} else {
 				enterprise = new Enterprise();
 				enterprise.setName(row.getName());
-				enterprise.setRegCode(row.getRegCode());
+				if ("E".equalsIgnoreCase(row.getPerson())) {
+				    enterprise.setRegCode(row.getRegCode());
+				}
 				enterprise.setPerson(getBooleanValue(row.getPerson()));
 				enterprise.setCountry(em.getReference(Classifier.class, "RIIK_" + row.getCountry()));
 				succeeded.add(new EnterpriseImportedRowMessageDto(rowNr, "Lisatud ettevõte.", enterprise.getRegCode(), enterprise.getName()));

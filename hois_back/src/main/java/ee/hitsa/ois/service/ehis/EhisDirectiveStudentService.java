@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -25,6 +26,7 @@ import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hois.xroad.ehis.generated.KhlAkadPuhkusAlgus;
 import ee.hois.xroad.ehis.generated.KhlEnnistamine;
+import ee.hois.xroad.ehis.generated.KhlErivajadusedArr;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusLisa;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
 import ee.hois.xroad.ehis.generated.KhlLyhiajaliseltValismaal;
@@ -85,6 +87,9 @@ public class EhisDirectiveStudentService extends EhisService {
                 case KASKKIRI_IMMAT:
                 case KASKKIRI_IMMATV:
                     admissionMatriculation(directiveStudent);
+                    break;
+                case KASKKIRI_TUGI:
+                    setSpecialNeeds(directiveStudent);
                     break;
                 default:
                     break;
@@ -374,8 +379,8 @@ public class EhisDirectiveStudentService extends EhisService {
         Classifier studyLoad = student.getStudyLoad() == null ? em.getReference(Classifier.class, StudyLoad.OPPEKOORMUS_MTA.name()) : student.getStudyLoad();
         khlKorgharidusLisa.setKlOppekoormus(ehisValue(studyLoad));
         khlKorgharidusLisa.setKlRahastAllikas(ehisValue(student.getFinSpecific()));
-
         khlKorgharidusLisa.setKlEelnevHaridus(ehisValue(student.getPreviousStudyLevel()));
+        khlKorgharidusLisa.setKlYhiselamu(ehisValue(student.getDormitory()));
 
         khlOppur.getLisamine().setKorgharidus(khlKorgharidusLisa);
         khlOppeasutusList.getOppeasutus().get(0).getOppur().add(khlOppur);
@@ -408,6 +413,25 @@ public class EhisDirectiveStudentService extends EhisService {
         } catch(Exception e) {
             return bindingException(directiveStudent.getDirective(), e);
         }
+    }
+    
+    private void setSpecialNeeds(DirectiveStudent directiveStudent) {
+        Student student = directiveStudent.getStudent();
+        Directive directive = directiveStudent.getDirective();
+        
+        KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+        
+        KhlErivajadusedArr erivajadusedArr = new KhlErivajadusedArr();
+        erivajadusedArr.setMuutusKp(date(directive.getConfirmDate()));
+        List<String> erivajadused = erivajadusedArr.getKlErivajadus();
+        
+        erivajadused.addAll(directiveStudent.getApplication().getSupportServices().stream()
+            .map(service -> ehisValue(service.getSupportService())).collect(Collectors.toList()));
+
+        KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+        khlKorgharidusMuuda.setErivajadused(erivajadusedArr);
+        khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+        makeRequest(directive, khlOppeasutusList);
     }
     
     private StudentHistory getStudentHistory(Student student) {

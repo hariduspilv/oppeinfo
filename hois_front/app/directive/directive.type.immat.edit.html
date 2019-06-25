@@ -19,6 +19,7 @@
         <th md-column class="required">{{'directive.student.language' | translate}}</th>
         <th md-column class="required">{{'directive.student.studentGroup' | translate}}</th>
         <th md-column class="required">{{'directive.student.previousStudyLevel' | translate}}</th>
+        <th md-column ng-if="formState.school.vocational" ng-class="{required: !formState.school.higher}">{{'directive.student.dormitory' | translate}}</th>
         <th></th>
       </tr>
     </thead>
@@ -88,7 +89,8 @@
         </td>
         <td md-cell ng-if="formState.school.higher">
           <hois-classifier-select ng-model="row.studyLoad" name="students[{{$index}}].studyLoad" criteria="{higher: true}" only-valid ignore-preselected
-            model-value-attr="code" main-classifier-code="OPPEKOORMUS" aria-label="{{'directive.student.studyLoad' | translate}}"></hois-classifier-select>
+            model-value-attr="code" main-classifier-code="OPPEKOORMUS" aria-label="{{'directive.student.studyLoad' | translate}}"
+            ng-disabled="row.curriculumVersionObject && row.curriculumVersionObject.isVocational"></hois-classifier-select>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].studyLoad'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>
           </div>
@@ -142,6 +144,14 @@
             criteria="{vocational: formState.school.vocational, higher: formState.school.higher}" only-valid ignore-preselected
             model-value-attr="code" main-classifier-code="OPPEASTE" aria-label="{{'directive.student.previousStudyLevel' | translate}}"></hois-classifier-select>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].previousStudyLevel'].$error">
+            <p ng-message="required">{{'main.required' | translate}}</p>
+          </div>
+        </td>
+        <td md-cell ng-if="formState.school.vocational">
+          <hois-classifier-select ng-model="row.dormitory" name="students[{{$index}}].dormitory"
+            model-value-attr="code" main-classifier-code="YHISELAMU" aria-label="{{'directive.student.dormitory' | translate}}"
+            ng-disabled="row.curriculumVersionObject && !row.curriculumVersionObject.isVocational"></hois-classifier-select>
+          <div class="invalid" ng-messages="directiveForm['students['+$index+'].dormitory'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>
           </div>
         </td>

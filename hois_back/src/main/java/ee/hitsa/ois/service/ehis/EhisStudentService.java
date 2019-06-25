@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service.ehis;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
@@ -9,7 +10,9 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.Query;
 import javax.transaction.Transactional;
@@ -43,6 +46,7 @@ import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.commandobject.ehis.EhisStudentForm;
 import ee.hitsa.ois.web.dto.EhisStudentReport;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
+import ee.hois.xroad.ehis.generated.KhlMuudAndmedMuutmine;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
 import ee.hois.xroad.ehis.generated.KhlOppekavaTaitmine;
 import ee.hois.xroad.ehis.generated.KhlVOTA;
@@ -61,10 +65,43 @@ public class EhisStudentService extends EhisService {
     public List<? extends EhisStudentReport> exportStudents(Long schoolId, EhisStudentForm ehisStudentForm) {
         switch (ehisStudentForm.getDataType()) {
         case CURRICULA_FULFILMENT: return curriculumFulfillment(schoolId);
+        case DORMITORY: return dormitoryChanges(schoolId, ehisStudentForm);
         case FOREIGN_STUDY: return foreignStudy(schoolId, ehisStudentForm);
         case GRADUATION: return graduation(schoolId, ehisStudentForm);
         case VOTA: return vota(schoolId, ehisStudentForm);
         default: throw new AssertionFailedException("Unknown datatype");
+        }
+    }
+
+    private List<EhisStudentReport.Dormitory> dormitoryChanges(Long schoolId, EhisStudentForm ehisStudentForm) {
+        List<EhisStudentReport.Dormitory> dormitoryChanges = new ArrayList<>();
+
+        Map<Student, ChangedDormitory> changes = findStudentsWithChangedDormitory(schoolId, ehisStudentForm);
+        for (Student student : changes.keySet()) {
+            ChangedDormitory studentChange = changes.get(student);
+
+            WsEhisStudentLog log = dormitoryChange(student, studentChange.getCode(), studentChange.getDate());
+            dormitoryChanges.add(new EhisStudentReport.Dormitory(student, log,  studentChange.getCode(),
+                    studentChange.getDate()));
+        }
+        return dormitoryChanges;
+    }
+
+    private WsEhisStudentLog dormitoryChange(Student student, String dormitory, LocalDate changeDate) {
+        try {
+            KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+
+            KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+            KhlMuudAndmedMuutmine khlMuudAndmedMuutmine = new KhlMuudAndmedMuutmine();
+            Classifier clDormitory = em.getReference(Classifier.class, dormitory);
+            khlMuudAndmedMuutmine.setMuutusKp(date(changeDate));
+            khlMuudAndmedMuutmine.setKlYhiselamu(ehisValue(clDormitory));
+            khlKorgharidusMuuda.setMuudAndmedMuutmine(khlMuudAndmedMuutmine);
+            khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+
+            return makeRequest(student, khlOppeasutusList);
+        } catch (Exception e) {
+            return bindingException(student, e);
         }
     }
 
@@ -298,6 +335,36 @@ public class EhisStudentService extends EhisService {
                 .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
                 .getResultList();
     }
+    
+    private Map<Student, ChangedDormitory> findStudentsWithChangedDormitory(Long schoolId, EhisStudentForm criteria) {
+        Map<Student, ChangedDormitory> studentChanges = new HashMap<>();
+        List<?> data = em.createNativeQuery("select student_id, last_dormitory_code, first_dormitory_code,"
+                + " (select min(sh.inserted) from student_history sh where sh.student_id = x.student_id and sh.dormitory_code = x.last_dormitory_code"
+                + " and sh.inserted >= ?3 and sh.inserted <= ?4) as change_date from ("
+                + " select distinct sh.student_id, first_value(sh.dormitory_code) over (partition by sh.student_id order by sh.inserted desc) as last_dormitory_code,"
+                + " first_value(coalesce(sh2.dormitory_code, 'x')) over (partition by sh2.student_id order by sh2.inserted asc) as first_dormitory_code"
+                + " from student_history sh"
+                + " join student s on sh.student_id = s.id"
+                + " left join student_history sh2 on sh.student_id = sh2.student_id and sh2.inserted <= ?3"
+                + " where s.school_id = ?1 and s.status_code in ?2 and coalesce(sh.dormitory_code, 'x') != 'x'"
+                + " and sh.inserted >= ?3 and sh.inserted <= ?4) x where x.first_dormitory_code != x.last_dormitory_code")
+                .setParameter(1, schoolId)
+                .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
+                .setParameter(3, JpaQueryUtil.parameterAsTimestamp(DateUtils.firstMomentOfDay(criteria.getFrom())))
+                .setParameter(4, JpaQueryUtil.parameterAsTimestamp(DateUtils.lastMomentOfDay(criteria.getThru())))
+                .getResultList();
+
+        Map<Long, ChangedDormitory> changedDormitories = StreamUtil.toMap(r -> resultAsLong(r, 0),
+                r -> new ChangedDormitory(resultAsString(r, 1), resultAsLocalDate(r, 3)), data);
+        if (!data.isEmpty()) {
+            List<Student> students = em.createQuery("select s from Student s where s.id in ?1", Student.class)
+                    .setParameter(1, changedDormitories.keySet()).getResultList();
+            for (Student s : students) {
+                studentChanges.put(s, changedDormitories.get(s.getId()));
+            }
+        }
+        return studentChanges;
+    }
 
     private List<DirectiveStudent> findForeignStudents(Long schoolId, EhisStudentForm criteria) {
         return em.createQuery(
@@ -323,5 +390,24 @@ public class EhisStudentService extends EhisService {
     @Override
     protected String getServiceCode() {
         return LAE_KORGHARIDUS_SERVICE_CODE;
+    }
+
+    public static class ChangedDormitory {
+        private final String code;
+        private final LocalDate date;
+
+        public ChangedDormitory(String code, LocalDate date) {
+            this.code = code;
+            this.date = date;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public LocalDate getDate() {
+            return date;
+        }
+
     }
 }

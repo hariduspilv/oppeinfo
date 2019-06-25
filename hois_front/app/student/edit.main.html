@@ -116,6 +116,11 @@
           <md-datepicker class="wider-datepicker" ng-model="student.previousSchoolEndDate"></md-datepicker>
         </md-input-container>
 
+        <md-input-container ng-if="student.isVocational" class="md-block">
+          <label>{{'student.dormitory' | translate}}</label>
+          <hois-classifier-select ng-model="student.dormitory" name="dormitory" main-classifier-code="YHISELAMU" required model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+
       </hois-collapsable>
 
       <hois-collapsable label="('student.specialNeeds' | translate)" ng-if="student.userIsSchoolAdmin || student.userIsStudentGroupTeacher">

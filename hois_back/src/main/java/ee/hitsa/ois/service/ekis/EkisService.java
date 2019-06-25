@@ -10,8 +10,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -68,6 +70,7 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hois.soap.LogResult;
 import ee.hois.soap.ekis.client.DeleteDirectiveRequest;
 import ee.hois.soap.ekis.client.EkisClient;
@@ -493,6 +496,13 @@ public class EkisService {
             content.setStipType(value(ds.getDirective().getScholarshipType()));
             content.setStipName(name(ds.getDirective().getScholarshipType()));
             break;
+        case KASKKIRI_TUGI:
+            content.setEndDate(date(ds.getEndDate()));
+            content.setStartDate(date(ds.getStartDate()));
+            break;
+        case KASKKIRI_TUGILOPP:
+            content.setEndDate(date(ds.getStartDate()));
+            break;
         case KASKKIRI_VALIS:
             content.setStartDate(periodStart(ds));
             content.setEndDate(periodEnd(ds));
@@ -505,6 +515,7 @@ public class EkisService {
         case KASKKIRI_PRAKTIK:
             content.setStartDate(date(ds.getStartDate()));
             content.setEndDate(date(ds.getEndDate()));
+            break;
         default:
             break;
         }
@@ -525,7 +536,9 @@ public class EkisService {
             ekisLogService.insertLog(logRecord, school, result.getLog());
 
             if(result.hasError()) {
-                throw new ValidationFailedException(result.getLog().getError().getMessage());
+                Map<Object, Object> params = new HashMap<>();
+                params.put("message", new AutocompleteResult(null, result.getLog().getError().getMessage(), result.getLog().getError().getMessage()));
+                throw new ValidationFailedException("main.messages.error.ekis", params);
             }
         }
         return errorValue;

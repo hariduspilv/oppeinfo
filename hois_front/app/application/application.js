@@ -226,7 +226,13 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     }
     $scope.formState = {
       curriculum: student.curriculum,
-      curriculumVersions: QueryUtils.endpoint("/autocomplete/curriculumversions").query({valid: true, higher: true, curriculumId: student.curriculum, hasGroup: true}, function(result) {
+      curriculumVersions: QueryUtils.endpoint("/autocomplete/curriculumversions").query({
+        valid: true,
+        higher: true,
+        curriculumId: student.curriculum,
+        hasGroup: true,
+        studyForm: student.studyForm
+      }, function(result) {
         $scope.formState.curriculumVersions = result.filter(function (r) {
           return r.id !== $scope.application.oldCurriculumVersion.id;
         });
@@ -242,7 +248,13 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     }
     $scope.formState = {
       curriculum: student.curriculum,
-      curriculumVersions: QueryUtils.endpoint("/autocomplete/curriculumversions").query({valid: true, higher: false, curriculumId: student.curriculum, hasGroup: true}, function(result) {
+      curriculumVersions: QueryUtils.endpoint("/autocomplete/curriculumversions").query({
+        valid: true,
+        higher: false,
+        curriculumId: student.curriculum,
+        hasGroup: true,
+        studyForm: student.studyForm
+      }, function(result) {
         $scope.formState.curriculumVersions = result.filter(function (r) {
           return r.id !== $scope.application.oldCurriculumVersion.id;
         });
@@ -261,6 +273,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
   }
 
   function applicationTugi(loadFormDeferred) {
+    $scope.application.selectedModules = []; // Should be declared before because of possible error with table where used multiselect.
     $scope.onTugiClChange = function () {
       if ($scope.formState.supportService) {
         var exists = $scope.application.supportServices.find(function (r) {
@@ -271,7 +284,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
         }
         $scope.formState.supportService = undefined;
       }
-    }
+    };
 
     $scope.deleteService = function (service) {
       for(var i = 0; i < $scope.application.supportServices.length; i++){ 
@@ -279,7 +292,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
           $scope.application.supportServices.splice(i, 1); 
         }
       }
-    }
+    };
 
     $scope.tugiIndivCurriculum = ($scope.application.supportServices || []).find(function (cl) {
       return cl.code === 'TUGITEENUS_1';
@@ -296,19 +309,17 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       $scope.formState = {
         committees: QueryUtils.endpoint("/autocomplete/committeesList").query({type: 'KOMISJON_A', valid: true}, function(results) {
           if ($scope.application.id && $scope.application.committee) {
-            var committee = $scope.application.committee;
-            $scope.application.committee = committee.id;
             for (var i = 0; i < results.length; i++) {
-              if (results[i].id === committee.id) {
+              if (results[i].id === $scope.application.committee.id) {
+                angular.extend(results[i], $scope.application.committee);
                 return;
               }
             }
-            results.push(committee);
+            results.push($scope.application.committee);
           }
         }),
         modules: QueryUtils.endpoint('/applications/studentIndividualCurriculumModules/:id').query({id: $scope.application.student.id}).$promise.then(function (result) {
           $scope.curriculumVersionModules = result;
-          $scope.application.selectedModules = [];
 
           if ($scope.application.supportModules) {
             $scope.application.supportModules.forEach(function (individualModule) {
@@ -323,9 +334,13 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
               }
             });
           }
-        })
+        }),
+        supportServices: Classifier.queryForDropdown({
+          mainClassCode: 'TUGITEENUS',
+          higher: $scope.auth.school.higher ? true : undefined,
+          vocational: $scope.auth.school.vocational ? true : undefined})
       };
-      $q.all($scope.formState.committees).then(loadFormDeferred.resolve);
+      $q.all($scope.formState.committees, $scope.formState.modules, $scope.formState.supportServices).then(loadFormDeferred.resolve);
     } else {
       loadFormDeferred.resolve();
     }
@@ -491,7 +506,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     $timeout(function () {
       FormUtils.withValidForm($scope.applicationForm, function () {
         if (angular.isDefined($scope.applicationForm) && $scope.applicationForm.$dirty === true ) {
-          dialogService.confirmDialog({prompt: 'main.messages.confirmSave'}, function() {  
+          dialogService.confirmDialog({prompt: 'application.messages.confirmSaveAndSubmit'}, function() {  
             var application = new ApplicationsEndpoint($scope.application);
             application.$update().then(function (response) {
               entityToForm(response);
@@ -499,10 +514,16 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
             }).catch(angular.noop);
           });
         } else {
-          submit();
+          dialogService.confirmDialog({prompt: 'application.messages.confirmSubmit'}, function() {
+            submit();
+          });
         }
       });
     });
+  };
+  
+  $scope.getStar = function(additionalCheck) {
+    return $scope.strictRequired || (angular.isDefined(additionalCheck) && !additionalCheck) ? '' : ' *';
   };
 
   function confirm() {
@@ -522,7 +543,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     $timeout(function () {
       FormUtils.withValidForm($scope.applicationForm, function () {
         if (angular.isDefined($scope.applicationForm) && $scope.applicationForm.$dirty === true ) {
-          dialogService.confirmDialog({prompt: 'main.messages.confirmSave'}, function() {  
+          dialogService.confirmDialog({prompt: 'application.messages.confirmSaveAndConfirm'}, function() {  
             var application = new ApplicationsEndpoint($scope.application);
             application.$update().then(function (response) {
               entityToForm(response);
@@ -530,7 +551,9 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
             }).catch(angular.noop);
           });
         } else {
-          confirm();
+          dialogService.confirmDialog({prompt: 'application.messages.confirmConfirm'}, function() {  
+            confirm();
+          });
         }
       });
     });
@@ -630,5 +653,11 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     $scope.application.endDate = undefined;
     $scope.application.studyPeriodStart = undefined;
     $scope.application.studyPeriodEnd = undefined;
+  };
+
+  $scope.isValid = function () {
+    return function (cl) {
+      return Classifier.isValid(cl);
+    };
   };
 });

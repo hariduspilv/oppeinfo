@@ -42,6 +42,8 @@ import ee.hitsa.ois.validation.DirectiveValidation.Okoorm;
 import ee.hitsa.ois.validation.DirectiveValidation.Ovorm;
 import ee.hitsa.ois.validation.DirectiveValidation.Stiptoet;
 import ee.hitsa.ois.validation.DirectiveValidation.Stiptoetl;
+import ee.hitsa.ois.validation.DirectiveValidation.Tugi;
+import ee.hitsa.ois.validation.DirectiveValidation.Tugilopp;
 import ee.hitsa.ois.validation.DirectiveValidation.Valis;
 import ee.hitsa.ois.validation.PeriodRange;
 import ee.hitsa.ois.validation.Required;
@@ -57,9 +59,9 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @Required(groups = {Akad.class, Akadk.class, Eksmat.class, Ennist.class, Finm.class, Lopet.class, Okava.class, Okoorm.class, Ovorm.class, Valis.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Student student;
-    @Required(groups = {Akadk.class, Indok.class, Indoklop.class, Stiptoet.class})
+    @Required(groups = {Akadk.class, Indok.class, Indoklop.class, Stiptoet.class, Tugi.class, Tugilopp.class})
     private LocalDate startDate;
-    @Required(groups = {Indok.class, Stiptoet.class})
+    @Required(groups = {Indok.class, Stiptoet.class, Tugi.class})
     private LocalDate endDate;
     @Required(groups = {Akad.class, Eksmat.class, Stiptoetl.class})
     @ManyToOne(fetch = FetchType.LAZY)
@@ -94,7 +96,7 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private StudyPeriod studyPeriodStart;
     @ManyToOne(fetch = FetchType.LAZY)
     private StudyPeriod studyPeriodEnd;
-    @Required(groups = Ennist.class) // Immat is checked by hand
+    @Required(groups = {Ennist.class, Tugi.class}) // Immat is checked by hand
     private LocalDate nominalStudyEnd;
     @Required(groups = Valis.class)
     private Boolean isAbroad;
@@ -133,7 +135,6 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private Boolean canceled;
     private String bankAccount;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(updatable = false)
     private ScholarshipApplication scholarshipApplication;
     @Required(groups = Stiptoet.class)
     private BigDecimal amountPaid;
@@ -142,11 +143,13 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private List<DirectiveStudentOccupation> occupations;
     @OneToMany(mappedBy = "directiveStudent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DirectiveStudentModule> modules = new ArrayList<>();
-    @Required(groups = {Indoklop.class})
+    @Required(groups = {Indoklop.class, Stiptoetl.class, Tugilopp.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private DirectiveStudent directiveStudent;
     private String addInfo;
     private Boolean isAbsence;
+    @ManyToOne(fetch = FetchType.LAZY) // Immat is checked by hand (only higher)
+    private Classifier dormitory;
 
     @OneToOne(mappedBy = "directiveStudent")
     private StudentAbsence studentAbsence;
@@ -490,6 +493,14 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
 
     public void setStudentAbsence(StudentAbsence studentAbsence) {
         this.studentAbsence = studentAbsence;
+    }
+
+    public Classifier getDormitory() {
+        return dormitory;
+    }
+
+    public void setDormitory(Classifier dormitory) {
+        this.dormitory = dormitory;
     }
 
 }

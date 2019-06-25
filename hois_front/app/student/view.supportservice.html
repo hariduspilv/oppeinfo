@@ -1,0 +1,109 @@
+<div ng-cloak>
+  <div ng-if="student && student.isVocational===true" ng-include="'student/templates/view.navbar.vocational.tmpl.html'"></div>
+  <div ng-if="student && student.isVocational===false" ng-include="'student/templates/view.navbar.higher.tmpl.html'"></div>
+</div>
+
+<div layout-padding ng-cloak>
+  <div flex>
+    <div layout="row" layout-xs="column" flex class="form-readonly">
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label>{{'student.label' | translate}}</label>
+          <hois-value value="student.person.firstname + ' ' + student.person.lastname"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'student.idcode' | translate}}</label>
+          <hois-value value="student.person.idcode"></hois-value>
+        </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label>{{'student.studyForm' | translate}}</label>
+          <hois-classifier-value ng-model="student.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'student.curriculum' | translate}}</label>
+          <hois-value value="currentLanguageNameField(student.curriculumVersion)"></hois-value>
+        </md-input-container>
+      </div>
+    </div>
+    <hois-collapsable label="('student.supportService.label' | translate)">
+      <md-table-container>
+        <table md-table md-progress="supportServices.$promise" class="secondary-table">
+          <thead md-head md-order="supportServicesCriteria.order" md-on-reorder="loadSupportServices">
+            <tr md-row>
+              <th md-column ng-if="auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS') && student.id && ['OPPURSTAATUS_K', 'OPPURSTAATUS_L'].indexOf(student.status) === -1"></th>
+              <th md-column>{{'student.supportService.order' | translate}}</th>
+              <th md-column md-order-by="entry_date">{{'student.supportService.entryDate' | translate}}</th>
+              <th md-column>{{'student.supportService.title' | translate}}</th>
+              <th md-column style="min-width: 300px;">{{'student.supportService.content' | translate}}</th>
+              <th md-column md-order-by="validity_code">{{'student.supportService.validity' | translate}}</th>
+              <th md-column md-order-by="is_public">{{'student.supportService.public' | translate}}</th>
+              <th md-column>{{'student.supportService.file' | translate}}</th>
+              <th md-column md-order-by="submitter">{{'student.supportService.entrySubmitter' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in supportServices.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell ng-if="auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS') && student.id && ['OPPURSTAATUS_K', 'OPPURSTAATUS_L'].indexOf(student.status) === -1">
+                <a href="#" onclick="return false;" ng-click="editService(row)" ng-if="!row.isArtificial">{{'journal.entry.open' | translate}}</a>
+              </td>
+              <td md-cell>{{$index + 1}}</td>
+              <td md-cell>{{::row.entryDate | hoisDate}}</td>
+              <td md-cell>{{::(row.nameEt ? row.nameEt : ('student.supportService.directive' | translate))}}</td>
+              <td md-cell ng-if="isArray(row.content)" style="padding-bottom: 4px;">
+                <ul style="padding-left: 1.5em;">
+                  <li ng-repeat="ss in row.content" style="margin-bottom: 0.25em;">
+                    <hois-classifier-value ng-model="ss" main-classifier-code="TUGITEENUS"></hois-classifier-value>
+                  </li>
+                </ul>
+                <div style="float: right;" layout="column">
+                    <a style="text-align: right;" href="#/directives/{{row.id}}/view">{{'student.supportService.viewDirective' | translate}}</a>
+                    <a ng-if="row.endingDirectiveId" style="text-align: right;" href="#/directives/{{row.endingDirectiveId}}/view">
+                      {{'student.supportService.viewDirectiveEnd' | translate}}</a>
+                </div>
+              </td>
+              <td md-cell ng-if="!isArray(row.content)">
+                <hois-value value="row.content | hoisLimitTo: 200:!row.showAll"></hois-value>
+                <a style="float: right;" ng-if="!row.showAll && row.content.length > 200" ng-click="row.showAll = true">{{'student.supportService.showMore' | translate}}</a>
+                <a style="float: right;" ng-if="row.showAll" ng-click="row.showAll = false">{{'student.supportService.showLess' | translate}}</a>
+              </td>
+              <td md-cell>
+                <hois-classifier-value ng-model="row.validity" main-classifier-code="TUGIKEHTIV"></hois-classifier-value>
+              </td>
+              <td md-cell>{{::((row.isPublic ? 'main.yes' : 'main.no') | translate)}}</td>
+              <td md-cell>
+                {{row.file.fname}}
+                <a ng-if="row.file" ng-href="{{getUrl(row.file, 'supportservice')}}" download target="_blank" rel="noopener noreferrer">
+                  <md-icon md-font-set="material-icons">file_download</md-icon>
+                </a>
+              </td>
+              <td md-cell>{{::row.entrySubmitter}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination ng-if="supportServices.totalElements > supportServicesCriteria.size" md-limit="supportServicesCriteria.size"
+        md-limit-options="[5, 10, 20, 50]" md-page="supportServicesCriteria.page" md-total="{{supportServices.totalElements}}" md-on-paginate="loadSupportServices"
+        md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+        md-page-select></md-table-pagination>
+        <md-button ng-if="auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS') && student.id && ['OPPURSTAATUS_K', 'OPPURSTAATUS_L'].indexOf(student.status) === -1" ng-click="editService()" class="md-primary md-raised">{{'student.supportService.operation.addService.label' | translate}}</md-button>
+        <md-button ng-if="student.userCanViewPrivateStudentSupportServices && supportServices.totalElements > 0" ng-click="printServices()" class="md-raised">{{'student.supportService.operation.printServices.label' | translate}}</md-button>
+    </hois-collapsable>
+    <hois-collapsable label="('student.supportService.ehis' | translate)" ng-if="false">
+      
+    </hois-collapsable>
+    <md-button ng-if="!auth.isStudent() && !auth.isParent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>
+
+<style>
+  table.secondary-table th md-icon > svg {
+    fill: grey !important;
+  }
+  
+  table.secondary-table th,
+  table.secondary-table td {
+    padding-right: 28px !important;
+  }
+</style>

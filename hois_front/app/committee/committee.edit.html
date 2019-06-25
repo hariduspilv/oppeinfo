@@ -70,21 +70,23 @@
                   </md-checkbox>
                 </td>
                 <td md-cell ng-if="allowExternalPerson">
-                  <md-checkbox ng-model="member.isExternal" ng-change="member.person = null"
+                  <md-checkbox ng-model="member.isExternal" ng-change="clearMember(member)"
                           aria-label="{{'committee.external' | translate}} {{member.memberName}}">
                   </md-checkbox>
                 </td>
                 <td md-cell>
-                  <div layout="row" ng-if="member.isExternal">
+                  <div layout="row" ng-if="member.isExternal" flex="100">
                     <md-input-container flex>
                       <input type="text" ng-model="member.memberName" md-maxlength="100" aria-label="{{'committee.name' | translate}} {{member.memberName}}" required>
                     </md-input-container>
                   </div>
-                  <md-input-container ng-if="!member.isExternal && !showPersonSearch">
-                    <hois-select ng-model="member.teacher" type="teacher" criteria="{valid: true, selectedTeacherId: member.teacher}"
-                      aria-label="{{'committee.name' | translate}} {{member.memberName}}" required></hois-select>
-                  </md-input-container>
-                  <div layout="row" flex="100" ng-if="!member.isExternal && showPersonSearch">
+                  <div layout="column" ng-if="!member.isExternal && !showPersonSearch">
+                    <md-input-container flex>
+                      <hois-select ng-model="member.teacher" type="teacher" criteria="{valid: true, selectedTeacherId: member.teacher}"
+                        aria-label="{{'committee.name' | translate}} {{member.memberName}}" required></hois-select>
+                    </md-input-container>
+                  </div>
+                  <div layout="column" ng-if="!member.isExternal && showPersonSearch">
                     <hois-autocomplete flex ng-model="member.person" method="committeeMembers" no-paging="true" label="committee.member" aria-label="{{'committee.member' | translate}} {{member.memberName}}" required></hois-autocomplete>
                   </div>
                 </td>

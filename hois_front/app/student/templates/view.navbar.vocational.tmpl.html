@@ -1,18 +1,80 @@
-<md-nav-bar hide-xs md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection">
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/main?_noback" name="student.main">{{'student.main' | translate}}</md-nav-item>
-  <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/results?_noback"
-    name="student.results">{{'student.results' | translate}}</md-nav-item>
-  <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/absences?_noback"
-    name="student.absences">{{'student.absences' | translate}}</md-nav-item>
-  <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/documents?_noback"
-    name="student.documents">{{'student.documents' | translate}}</md-nav-item>
-  <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/remarks?_noback"
-    name="student.remarks" ng-class="{'highlighted-nav-item': student.hasRemarksPastSevenDays}">{{'student.remarks' | translate}}</md-nav-item>
-  <md-nav-item ng-if="auth.isAdmin() && student.status && student.status !== 'OPPURSTAATUS_L' && student.status !== 'OPPURSTAATUS_K'"
-    md-nav-href="#/students/{{::studentId}}/timetable?_noback" name="student.timetable">{{'student.studentTimetable' | translate}}</md-nav-item>
-  <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/rr?_noback"
-    name="student.rr">{{'rr.student.tabLabel' | translate}}</md-nav-item>
-</md-nav-bar>
+<md-content hide-xs>
+  <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" hois-navbar-overflowed>
+    <md-nav-item md-nav-href="#/students/{{::studentId}}/main?_noback" name="student.main">{{'student.main' | translate}}</md-nav-item>
+    <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/results?_noback"
+      name="student.results">{{'student.results' | translate}}</md-nav-item>
+    <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/absences?_noback"
+      name="student.absences">{{'student.absences' | translate}}</md-nav-item>
+    <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/documents?_noback"
+      name="student.documents">{{'student.documents' | translate}}</md-nav-item>
+    <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/remarks?_noback"
+      name="student.remarks" ng-class="{'highlighted-nav-item': student.hasRemarksPastSevenDays}">{{'student.remarks' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isAdmin() && student.status && student.status !== 'OPPURSTAATUS_L' && student.status !== 'OPPURSTAATUS_K'"
+      md-nav-href="#/students/{{::studentId}}/timetable?_noback" name="student.timetable">{{'student.studentTimetable' | translate}}</md-nav-item>
+    <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/rr?_noback"
+      name="student.rr">{{'rr.student.tabLabel' | translate}}</md-nav-item>
+    <md-nav-item ng-if="student.userCanViewStudentSupportServices" md-nav-href="#/students/{{::studentId}}/supportService?_noback"
+      name="student.supportService">{{'student.supportService.label' | translate}}</md-nav-item>
+  </md-nav-bar>
+</md-content>
+<!-- <md-tabs hide-xs class="horizontal-menu" md-border-bottom md-stretch-tabs="never">
+  <md-tab>
+    <a ng-href="#/students/{{::studentId}}/main?_noback" md-active="currentNavItem === 'student.main'">
+      <div>
+        <span>{{'student.main' | translate}}</span>
+      </div>
+    </a>
+  </md-tab>
+  <md-tab ng-if="student.userCanViewStudentSpecificData" md-active="currentNavItem === 'student.results'">
+    <a ng-href="#/students/{{::studentId}}/results?_noback">
+      <div>
+        <span>{{'student.results' | translate}}</span>
+      </div>
+    </a>
+  </md-tab>
+  <md-tab ng-if="student.userCanViewStudentSpecificData" md-active="currentNavItem === 'student.absences'">
+    <a ng-href="#/students/{{::studentId}}/absences?_noback">
+      <div>
+        <span>{{'student.absences' | translate}}</span>
+      </div>
+    </a>
+  </md-tab>
+  <md-tab ng-if="student.userCanViewStudentSpecificData" md-active="currentNavItem === 'student.documents'">
+    <a ng-href="#/students/{{::studentId}}/documents?_noback">
+      <div>
+        <span>{{'student.documents' | translate}}</span>
+      </div>
+    </a>
+  </md-tab>
+  <md-tab ng-if="student.userCanViewStudentSpecificData" md-active="currentNavItem === 'student.remarks'">
+    <a ng-href="#/students/{{::studentId}}/remarks?_noback">
+      <div>
+        <span ng-style="student.hasRemarksPastSevenDays && currentNavItem !== 'student.remarks' ? {'color': 'red'} : ''">{{'student.remarks' | translate}}</span>
+      </div>
+    </a>
+  </md-tab>
+  <md-tab ng-if="auth.isAdmin() && student.status && student.status !== 'OPPURSTAATUS_L' && student.status !== 'OPPURSTAATUS_K'" md-active="currentNavItem === 'student.timetable'">
+    <a ng-href="#/students/{{::studentId}}/timetable?_noback">
+      <div>
+        <span>{{'student.studentTimetable' | translate}}</span>
+      </div>
+    </a>
+  </md-tab>
+  <md-tab ng-if="student.userCanViewStudentSpecificData" md-active="currentNavItem === 'student.rr'">
+    <a ng-href="#/students/{{::studentId}}/rr?_noback">
+      <div>
+        <span>{{'rr.student.tabLabel' | translate}}</span>
+      </div>
+    </a>
+  </md-tab>
+  <md-tab ng-if="student.userCanViewStudentSupportServices" md-active="currentNavItem === 'student.supportService'">
+    <a ng-href="#/students/{{::studentId}}/supportService?_noback">
+      <div>
+        <span>{{'student.supportService.label' | translate}}</span>
+      </div>
+    </a>
+  </md-tab>
+</md-tabs> -->
 
 <div hide-gt-xs layout="column">
   <md-button class="md-raised" flex ng-href="#/students/{{::studentId}}/main?_noback" ng-class="{'md-accent': currentNavItem === 'student.main'}"
@@ -29,4 +91,28 @@
   <md-button class="md-raised" ng-if="auth.isAdmin() && student.status !== 'OPPURSTAATUS_L' && student.status !== 'OPPURSTAATUS_K'"
     ng-class="{'md-accent': currentNavItem === 'student.timetable'}" ng-href="#/students/{{::studentId}}/timetable?_noback"
     name="student.timetable">{{'student.studentTimetable' | translate}}</md-button>
+  <md-button class="md-raised" ng-if="student.userCanViewStudentSpecificData" ng-class="{'md-accent': currentNavItem === 'student.rr'}"
+    ng-href="#/students/{{::studentId}}/rr?_noback" name="student.rr">{{'rr.student.tabLabel' | translate}}</md-button>
+  <md-button class="md-raised" ng-if="student.userCanViewStudentSupportServices" ng-class="{'md-accent': currentNavItem === 'student.supportService'}"
+    ng-href="#/students/{{::studentId}}/supportService?_noback" name="student.supportService">{{'student.supportService.label' | translate}}</md-button>
 </div>
+
+<!-- <style>
+  md-tabs.horizontal-menu md-tab-item a,
+  md-tabs.horizontal-menu md-tab-item a:hover,
+  md-tabs.horizontal-menu md-tab-item a:visited {
+    text-decoration: none !important;
+  }
+
+  md-tabs.horizontal-menu md-tab-item:not(.md-active) span {
+    color: grey;
+  }
+
+  md-tabs.horizontal-menu md-tab-item {
+    padding: 0 !important;
+  }
+
+  md-tabs.horizontal-menu md-tab-item a > div {
+    padding: 12px 24px;
+  }
+</style> -->

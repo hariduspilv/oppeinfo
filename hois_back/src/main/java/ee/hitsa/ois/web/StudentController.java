@@ -3,11 +3,13 @@ package ee.hitsa.ois.web;
 import static ee.hitsa.ois.util.UserUtil.assertIsSchoolAdmin;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
@@ -28,14 +30,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
+import ee.hitsa.ois.domain.student.StudentSupportService;
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.HoisException;
+import ee.hitsa.ois.report.SupportServicesReport;
 import ee.hitsa.ois.service.ApplicationService;
+import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.StudentResultCardService;
 import ee.hitsa.ois.service.StudentResultHigherService;
 import ee.hitsa.ois.service.StudentService;
+import ee.hitsa.ois.service.SupportServiceService;
 import ee.hitsa.ois.service.ehis.EhisStudentService;
 import ee.hitsa.ois.service.rr.PopulationRegisterService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -53,8 +60,11 @@ import ee.hitsa.ois.web.commandobject.student.StudentModuleListChangeForm;
 import ee.hitsa.ois.web.commandobject.student.StudentResultCardForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentSpecialitySearchCommand;
+import ee.hitsa.ois.web.commandobject.student.StudentSupportServiceForm;
+import ee.hitsa.ois.web.commandobject.student.StudentSupportServicePrintCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.EhisStudentReport;
+import ee.hitsa.ois.web.dto.StudentSupportServiceDto;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
 import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
@@ -86,6 +96,12 @@ public class StudentController {
     private StudentResultCardService studentResultCardService;
     @Autowired
     private PopulationRegisterService rrService;
+    @Autowired
+    private SupportServiceService supportServiceService;
+    @Autowired
+    private PdfService pdfService;
+    @Autowired
+    private EntityManager em;
 
     @GetMapping
     public Page<StudentSearchDto> search(HoisUserDetails user, @Valid StudentSearchCommand criteria, Pageable pageable) {
@@ -217,6 +233,56 @@ public class StudentController {
     public List<AutocompleteResult> specialities(HoisUserDetails user, @WithEntity Student student) {
         UserUtil.assertCanViewStudentSpecificData(user, student);
         return studentService.specialities(student);
+    }
+
+    @GetMapping("/{id:\\d+}/supportservices")
+    public Page<StudentSupportServiceDto> supportServices(HoisUserDetails user, @WithEntity Student student, Pageable pageable) {
+        UserUtil.assertCanViewStudentSupportServices(user, student);
+        if (user.isTeacher() && !UserUtil.isStudentGroupTeacher(user, student)) {
+            return studentService.supportServices(student, pageable, false);
+        }
+        if (user.isSchoolAdmin() && !UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_TUGITEENUS)) {
+            return studentService.supportServices(student, pageable, false);
+        }
+        return studentService.supportServices(student, pageable, true);
+    }
+
+    @GetMapping("/{id:\\d+}/supportservices/print.pdf")
+    public void supportServices(HoisUserDetails user, HttpServletResponse response, @RequestParam(required = false) Language lang,
+            @WithEntity Student student, @Valid StudentSupportServicePrintCommand cmd) throws IOException {
+        UserUtil.assertCanViewPrivateStudentSupportServices(user, student);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMYYYY");
+        String fileName = String.format("%s_%s_%s_%s.pdf", "tugiteenuste_valjavote", student.getPerson().getFullname(), formatter.format(cmd.getFrom()),
+                formatter.format(cmd.getThru())).replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
+        HttpUtil.pdf(response, fileName, pdfService.generate(SupportServicesReport.TEMPLATE_NAME,
+                new SupportServicesReport(student, cmd.getFrom(), cmd.getThru(),
+                        studentService.supportServicesList(student, true, cmd.getFrom(), cmd.getThru()),
+                        em, lang == null ? Language.ET : lang)));
+    }
+    
+    @GetMapping("/{id:\\d+}/supportservice/{serviceId:\\d+}")
+    public StudentSupportServiceDto getSupportService(HoisUserDetails user, @WithEntity Student student, @WithEntity("serviceId") StudentSupportService service) {
+        UserUtil.assertCanViewStudentSupportServices(user, student, service);
+        return supportServiceService.get(service);
+    }
+    
+    @PostMapping("/{id:\\d+}/supportservice")
+    public StudentSupportServiceDto createSupportService(HoisUserDetails user, @WithEntity Student student, @RequestBody @Valid StudentSupportServiceForm form) {
+        UserUtil.assertCanEditStudentSupportServices(user, student);
+        return supportServiceService.get(supportServiceService.create(student, form));
+    }
+
+    @PutMapping("/{id:\\d+}/supportservice/{serviceId:\\d+}")
+    public StudentSupportServiceDto updateSupportService(HoisUserDetails user, @WithEntity Student student,
+            @WithEntity("serviceId") StudentSupportService service, @RequestBody @Valid StudentSupportServiceForm form) {
+        UserUtil.assertCanEditStudentSupportServices(user, student);
+        return supportServiceService.get(supportServiceService.update(service, form));
+    }
+    
+    @DeleteMapping("/{id:\\d+}/supportservice/{serviceId:\\d+}")
+    public void deleteSupportService(HoisUserDetails user, @WithEntity Student student, @WithEntity("serviceId") StudentSupportService service) {
+        UserUtil.assertCanEditStudentSupportServices(user, student);
+        supportServiceService.delete(service);
     }
 
     @PostMapping("/ehisStudentExport")

@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'oisFileService',
-
+angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog', '$q', '$route', '$scope', 'dialogService',
+  'message', 'Classifier', 'QueryUtils', 'oisFileService',
   function ($mdDialog, $q, $route, $scope, dialogService, message, Classifier, QueryUtils, oisFileService) {
     var auth = $route.current.locals.auth;
     var studentId = (auth.isStudent() || auth.isParent() ? auth.student : $route.current.params.id);
@@ -11,9 +11,13 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     $scope.studentId = studentId;
     $scope.currentNavItem = 'student.main';
 
+    var dormitoryMapper = Classifier.valuemapper({ dormitory: 'YHISELAMU' });
     var loadStudent = function () {
       QueryUtils.endpoint(baseUrl).get({ id: studentId }, function (result) {
         $scope.student = result;
+        $scope.student.dormitoryHistory.forEach(function (history) {
+          dormitoryMapper.objectmapper(history);
+        });
         if ($scope.student.photo) {
           $scope.student.imageUrl = oisFileService.getUrl($scope.student.photo, 'student');
         } else {
@@ -155,7 +159,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
       });
     };
   }
-]).controller('StudentViewResultsController', ['$route', '$scope', '$localStorage', 'QueryUtils', 'config', 'StudentUtil', 
+]).controller('StudentViewResultsController', ['$route', '$scope', '$localStorage', 'QueryUtils', 'config', 'StudentUtil',
 function ($route, $scope, $localStorage, QueryUtils, config, StudentUtil) {
   $scope.auth = $route.current.locals.auth;
 
@@ -526,8 +530,9 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       });
     };
 
-  }]).controller('StudentViewDocumentsController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', 'CertificateUtil', 'CertificateType', function ($q, $route, $scope, Classifier, QueryUtils, CertificateUtil, CertificateType) {
-   // var studentId = (auth.isStudent() ? auth.student : $route.current.params.id);
+  }]).controller('StudentViewDocumentsController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', 'CertificateUtil', 'CertificateType',
+    function ($q, $route, $scope, Classifier, QueryUtils, CertificateUtil, CertificateType) {
+    // var studentId = (auth.isStudent() ? auth.student : $route.current.params.id);
     $scope.studentId = ($route.current.locals.auth.isStudent() || $route.current.locals.auth.isParent() ? $route.current.locals.auth.student : $route.current.params.id);
     $scope.currentNavItem = 'student.documents';
     $scope.auth = $route.current.locals.auth;
@@ -698,7 +703,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       $scope.studentId = $route.current.params.id;
       $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
       $scope.currentNavItem = 'student.absences';
-
+      
       $scope.absencesCriteria = { size: 20, page: 1, order: 'validFrom, validThru' };
 
       $scope.loadAbsences = function () {
@@ -757,7 +762,8 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       };
 
       $scope.loadAbsences();
-    }]).controller('StudentViewRemarksController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', function ($q, $route, $scope, Classifier, QueryUtils) {
+    }]).controller('StudentViewRemarksController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils',
+      function ($q, $route, $scope, Classifier, QueryUtils) {
       $scope.auth = $route.current.locals.auth;
       $scope.studentId = $route.current.params.id;
       $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
@@ -779,7 +785,8 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       
       $q.all(clMapper.promises).then($scope.loadRemarks);
 
-    }]).controller('StudentViewRRController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', function ($q, $route, $scope, Classifier, QueryUtils) {
+    }]).controller('StudentViewRRController', ['$route', '$scope', 'QueryUtils',
+      function ($route, $scope, QueryUtils) {
       $scope.auth = $route.current.locals.auth;
       $scope.studentId = $route.current.params.id;
       $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
@@ -788,4 +795,108 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       QueryUtils.createQueryForm($scope, '/logs/rr/changelogs', {order: '-wrcl.inserted', student: $scope.studentId}, undefined, undefined, true);
 
       $scope.loadData();
+    }]).controller('StudentViewSupportServiceController', ['$route', '$scope', 'QueryUtils', '$timeout', 'dialogService',
+      'oisFileService', 'message', 'config', '$httpParamSerializer',
+      function ($route, $scope, QueryUtils, $timeout, dialogService, oisFileService, message, config, $httpParamSerializer) {
+      $scope.auth = $route.current.locals.auth;
+      $scope.studentId = $route.current.params.id;
+      $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
+      $scope.currentNavItem = 'student.supportService';
+
+      $scope.isArray = angular.isArray;
+      $scope.getUrl = oisFileService.getUrl;
+
+      $scope.editService = function(service) {
+        dialogService.showDialog("student/templates/edit.service.dialog.html", function (dialogScope) {
+          if (!service) {
+            dialogScope.service = {entryDate: new Date(), entrySubmitter: $scope.auth.fullname};
+          } else {
+            dialogScope.service = angular.copy(service, {});
+          }
+
+          dialogScope.getUrl = $scope.getUrl;
+
+          dialogScope.update = function () {
+            QueryUtils.endpoint("/students/" + $scope.studentId + "/supportservice")
+            .update(dialogScope.service).$promise.then(function () {
+              message.info("main.messages.update.success");
+              $scope.loadSupportServices();
+            });
+          };
+
+          dialogScope.save = function () {
+            QueryUtils.endpoint("/students/" + $scope.studentId + "/supportservice").save(dialogScope.service, function () {
+              message.info("main.messages.create.success");
+              $scope.loadSupportServices();
+            });
+          };
+
+          dialogScope.delete = function () {
+            dialogService.confirmDialog({ prompt: 'student.supportService.operation.deleteService.message' }, function () {
+              QueryUtils.endpoint("/students/" + $scope.studentId + "/supportservice").delete(dialogScope.service, function () {
+                message.info("main.messages.delete.success");
+                dialogScope.cancel();
+                $scope.loadSupportServices();
+              });
+            });
+          };
+          
+          dialogScope.close = function () {
+            dialogScope.dialogForm.$setSubmitted();
+            if (dialogScope.dialogForm.$dirty) {
+              dialogService.confirmDialog({prompt: 'main.messages.confirmFormDataNotSaved'}, function() {
+                dialogScope.cancel();
+              });
+            } else {
+              dialogScope.cancel();
+            }
+          };
+        }, function (submittedDialogScope) {
+          var data = submittedDialogScope.data;
+          if (data && data.file[0]) {
+            oisFileService.getFromLfFile(data.file[0], function (file) {
+              submittedDialogScope.service.file = file;
+              if (submittedDialogScope.service.id) {
+                submittedDialogScope.update();
+              } else {
+                submittedDialogScope.save();
+              }
+            });
+          } else {
+            if (submittedDialogScope.service.id) {
+              submittedDialogScope.update();
+            } else {
+              submittedDialogScope.save();
+            }
+          }
+        });
+      };
+
+      $scope.printServices = function () {
+        dialogService.showDialog("student/templates/print.services.dialog.html", function (dialogScope) {
+          dialogScope.pdfUrl = function() {
+            return config.apiUrl + "/students/" + $scope.studentId + "/supportservices/print.pdf?" + $httpParamSerializer({from: dialogScope.from, thru: dialogScope.thru});
+          };
+        });
+      };
+
+      $scope.supportServicesCriteria = { size: 10, page: 1, order: "-entry_date"};
+      $scope.supportServices = {};
+
+      function afterSupportServicesLoad(result) {
+        $scope.supportServices.content = result.content;
+        $scope.supportServices.totalElements = result.totalElements;
+        $scope.supportServices.content.forEach(function (service) {
+          if (service.isArtificial) {
+            service.content = service.content.split(";");
+          }
+        });
+      }
+
+      $scope.loadSupportServices = function() {
+        var query = angular.extend({}, QueryUtils.getQueryParams($scope.supportServicesCriteria), { id: $scope.studentId });
+        $scope.supportServices.$promise = QueryUtils.endpoint('/students/:id/supportservices').search(query, afterSupportServicesLoad);
+      };
+
+      $scope.loadSupportServices();
     }]);

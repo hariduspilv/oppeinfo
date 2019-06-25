@@ -17,8 +17,10 @@ import ee.hitsa.ois.message.StudentRepresentativeApplicationRejectedMessage;
 import ee.hitsa.ois.message.StudentRepresentativeEnding;
 import ee.hitsa.ois.message.StudentResultMessage;
 import ee.hitsa.ois.message.StudentScholarshipEnding;
+import ee.hitsa.ois.message.SupportServiceEnding;
 import ee.hitsa.ois.message.TimetableChanged;
 import ee.hitsa.ois.message.TimetableEventCreated;
+import ee.hitsa.ois.message.ContractSupervisorMessage;
 
 public enum MessageType {
 
@@ -40,8 +42,10 @@ public enum MessageType {
     TEATE_LIIK_OA_TULEMUS(StudentResultMessage.class),
     TEATE_LIIK_OP_MARKUS(StudentRemarkCreated.class),
     TEATE_LIIK_PRAKTIKA_URL(PracticeJournalUniqueUrlMessage.class),
+    TEATE_LIIK_TUGI_LOPP(SupportServiceEnding.class),
     TEATE_LIIK_TUNN_SYNDMUS(TimetableEventCreated.class),
-    TEATE_LIIK_VOTA(ApelApplicationCreated.class);
+    TEATE_LIIK_VOTA(ApelApplicationCreated.class),
+    TEATE_LIIK_KYSI_EV_JUHENDAJA(ContractSupervisorMessage.class);
 
     private final Class<?> dataBean;
 

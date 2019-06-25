@@ -28,13 +28,23 @@
 
 <div class="ois-form-layout-padding ois-form-layout" layout="row" ng-cloak>
     <form name="pollForm" role="form" class="nomargin" ng-submit="save()" flex novalidate>
+        <div layout="row">
+            <md-checkbox ng-model="criteria.isThemePageable" aria-label="required" ng-change="saveThemePageable()">
+                {{'poll.questions.isThemePageable' | translate}}
+            </md-checkbox>
+        </div>
         <div ng-if="criteria.themes" layout="column">
             <h2 ng-if="criteria.themes.length === 0">{{'poll.questions.themesMissing' | translate}}</h2>
-            <div ng-repeat="item in criteria.themes track by $index" class="occupation-row align-center" layout="row">
+            <div ng-repeat="item in criteria.themes track by $index" class="occupation-row align-center" layout="row" ng-style="{'margin-top': $first ? '0px' : '16px'}">
                 <div flex>
                     <fieldset>
                         <legend md-colors="{color: 'primary-800'}" class="md-title-small" style="word-break: break-word">{{item.orderNr + ' ' + item.nameEt}}</legend>
                         <div layout="row" layout-align="end center">
+                            <md-input-container flex ng-if="formState.type === 'KYSITLUS_O'">
+                                <md-checkbox ng-model="item.isRepetitive" aria-label="required" ng-change="saveThemeRepetitive(item)">
+                                    {{auth.higher ? ('poll.questions.isRepedetiveHigher' | translate) : ('poll.questions.isRepedetiveVocational' | translate)}}
+                                </md-checkbox>
+                            </md-input-container>
                             <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
                             <md-button class="md-primary" ng-click="addQuestion(item)">{{'poll.questions.addQuestion' | translate}}</md-button>
                             <md-button class="md-primary" ng-click="addNewTheme(item)">{{'poll.questions.changeTheme' | translate}}</md-button>
@@ -58,7 +68,7 @@
                                     <div layout="row">
                                         <div layout="column" flex="80">
                                             <div layout="row" layout-align="start center">
-                                                <h2><span style="word-break: break-word">{{item.orderNr + '.' + question.orderNr + ' ' + (question.isRequired ? '*' : '') + question.nameEt}}</span></h2>
+                                                <h2><span style="word-break: break-word; margin-bottom: 0px;">{{item.orderNr + '.' + question.orderNr + ' ' + (question.isRequired ? '*' : '') + question.nameEt}}</span></h2>
                                             </div>
                                         </div>
                                         <div layout="column" flex="20">
@@ -83,22 +93,22 @@
                                     <div layout="{{question.pictures.length !== 0 ? 'row' : 'column'}}">
                                         <div layout="column" flex="35">
                                             <div ng-repeat="file in question.files track by $index">
-                                                <img ng-if="file.oisFile.ftype.indexOf('image') !== -1" flex style="display: block; margin-left: auto; margin-right: auto; max-width: 100%; max-height: 100%" ng-src="{{getUrl(file.oisFile)}}">
-                                                <div ng-if="file.oisFile.ftype.indexOf('image') === -1">
-                                                    {{file.oisFile.fname}}
-                                                    <a ng-href="{{getUrl(file.oisFile)}}" target="_blank" rel="noopener noreferrer" download>
+                                                <img ng-if="file.ftype.indexOf('image') !== -1" flex style="display: block; margin-left: auto; margin-right: auto; max-width: 100%; max-height: 100%" ng-src="{{getUrl(file)}}">
+                                                <div ng-if="file.ftype.indexOf('image') === -1">
+                                                    {{file.fname}}
+                                                    <a ng-href="{{getUrl(file)}}" target="_blank" rel="noopener noreferrer" download>
                                                         <md-icon md-font-set="material-icons">file_download</md-icon>
                                                     </a>
                                                 </div>
                                             </div>
                                         </div>
                                         <div layout="column" flex="{{question.pictures.length !== 0 ? '60' : '100'}}" flex-offset="{{question.pictures.length !== 0 ? '5' : '0'}}">
-                                            <p style="word-break: break-word">{{question.addInfoEt}}</p>
+                                            <p style="word-break: break-word; margin-top: 0px;font-style: italic;">{{question.addInfoEt}}</p>
                                             <div ng-if="question.type === 'VASTUS_S'" layout="{{question.isInRow ? 'row' : 'column'}}" flex="100">
                                                 <div ng-repeat="answer in question.answers track by $index" flex>
                                                     <md-input-container flex>
                                                         <md-checkbox ng-model="s" aria-label="required">
-                                                            {{answer.nameEt}}
+                                                            <span style="word-break: break-word">{{answer.nameEt}}</span>
                                                         </md-checkbox>
                                                     </md-input-container>
                                                 </div>
@@ -112,7 +122,6 @@
                                                     <div ng-if="pollForm.$submitted" ng-messages="pollForm.radio.$error" >
                                                         <div ng-message="required">{{'main.messages.error.inputFieldIsRequired' | translate}}</div>
                                                     </div>
-                                                    <md-button ng-if="!question.isRequired" ng-click="clearRadio(question)" class="md-raised">{{'main.button.clear' | translate}}</md-button>
                                                 </md-input-container>
                                             </div>
                                             <div ng-if="question.type === 'VASTUS_M'" layout="{{question.isInRow ? 'row' : 'column'}}">
@@ -132,7 +141,7 @@
                                             </div>
                                             <div ng-if="question.type === 'VASTUS_V'" layout="row">
                                                 <md-input-container flex>
-                                                    <hois-select ng-model="s" values="question.answers" required="{{question.isRequried}}" aria-label="answers"></hois-select>
+                                                    <hois-select ng-model="s" values="question.answers" sorted-query="true" order-by-property="orderNr" required="{{question.isRequried}}" aria-label="answers"></hois-select>
                                                 </md-input-container>
                                             </div>
                                         </div>
@@ -147,6 +156,7 @@
         </div>
         <div layout="row" layout-xs="column">
             <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="addNewTheme()" class="md-raised">{{'poll.questions.addTheme' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="test()" class="md-raised">{{'poll.test' | translate}}</md-button>
             <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="back('#/poll')" class="md-raised">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>

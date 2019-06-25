@@ -5,7 +5,7 @@
       <form name="searchForm" ng-submit="loadData()" ng-model-options="{allowInvalid: true}" novalidate>
         <div layout="row" layout-sm="column" layout-xs="column">
           <div flex="45" flex-sm="100" flex-xs="100">
-            <hois-autocomplete ng-model="criteria.studentObject" method="students"
+            <hois-autocomplete ng-model="criteria.studentObject" method="students" ha-controller="directiveControllers"
               name="student" label="report.individualCurriculumStatistics.student" 
               additional-query-params="{higher: false, studentGroupTeacher: teacherId}">
             </hois-autocomplete>
@@ -68,12 +68,12 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="p.lastname, p.firstname">{{'report.individualCurriculumStatistics.name' | translate}}</th>
-            <th md-column md-order-by="sg.code">{{'report.individualCurriculumStatistics.group' | translate}}</th>
-            <th md-column md-order-by="{{currentLanguage()==='en' ? 'cm.name_en' : 'cm.name_et'}}">{{'report.individualCurriculumStatistics.module' | translate}}</th>
+            <th md-column md-order-by="lastname, firstname">{{'report.individualCurriculumStatistics.name' | translate}}</th>
+            <th md-column md-order-by="group_code">{{'report.individualCurriculumStatistics.group' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguage()==='en' ? 'cm_name_en' : 'cm_name_et'}}">{{'report.individualCurriculumStatistics.module' | translate}}</th>
             <th md-column>{{'report.individualCurriculumStatistics.distinction' | translate}}</th>
             <th md-column></th>
-            <th md-column md-order-by="ds.start_date, ds.end_date">{{'report.individualCurriculumStatistics.dates' | translate}}</th>
+            <th md-column md-order-by="start_date, end_date" style="width: 150px">{{'report.individualCurriculumStatistics.dates' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>

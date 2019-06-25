@@ -207,8 +207,8 @@ public class UserService {
             try {
                 if (person == null) {
                     person = new Person();
-                    person.setLastname(lastname);
-                    person.setFirstname(firstname);
+                    person.setLastname(PersonUtil.initCapName(lastname));
+                    person.setFirstname(PersonUtil.initCapName(firstname));
                     person.setIdcode(idcode);
                     person.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(idcode));
                     person.setSex(em.getReference(Classifier.class, EstonianIdCodeValidator.sexFromIdcode(idcode)));

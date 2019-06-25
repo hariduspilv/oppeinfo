@@ -158,6 +158,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
           // update without id
           put:    {method: 'PUT', interceptor: resourceErrorHandler},
           put2:   {method: 'PUT'},
+          postWithoutLoad:   {method: 'PUT', loading: false, url: idPath, params: {id: '@id'}, interceptor: resourceErrorHandler},
           // search functions
           search: {method: 'GET', interceptor: resourceErrorHandler},
           query:  {method: 'GET', isArray:true, interceptor: resourceErrorHandler},

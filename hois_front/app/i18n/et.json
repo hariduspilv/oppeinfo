@@ -104,6 +104,7 @@
         "fileAlreadyExists": "Sama fail juba eksisteerib",
         "integer": "Peab olema täisarv!",
         "estonianIdcode": "Isikukood ei vasta standardile",
+        "ekis": "Andmevahetus EKISega häiritud. Veateade: {{message}}",
         "configuration": {
           "missingAutomaticMessageTemplate": "Süsteemis on puudu kehtiv automaatse teate mall \"{{template}}\""
         },
@@ -156,6 +157,9 @@
       },
       "tara": {
         "title": "TARA"
+      },
+      "harid": {
+        "title": "HarID"
       },
       "error": "Sisselogimine ebaõnnestus"
     },
@@ -831,6 +835,7 @@
     "curriculumVersion": "Õppekava versioon",
     "curriculumSpeciality": "Peaeriala",
     "documents": "Dokumendid",
+    "dormitory": "Ühiselamu",
     "remarks": "Märkused",
     "email": "E-posti aadress",
     "fin": "Finantseerimise allikas",
@@ -876,6 +881,38 @@
     "studyStart": "Õpingute algus",
     "studyEnd": "Õpingute lõpp",
     "studyLevel": "Õppetase",
+    "supportService": {
+      "label": "Tugiteenused",
+      "ehis": "Tugimeetmed EHISest",
+      "order": "Jrk nr",
+      "entryDate": "Sissekande kp",
+      "title": "Pealkiri",
+      "content": "Sisu",
+      "validity": "Kehtivus",
+      "public": "Avalik",
+      "file": "Fail",
+      "entrySubmitter": "Sissekandja",
+      "operation": {
+        "addService": {
+          "label": "Lisa uus sissekanne"
+        },
+        "editService": {
+          "label": "Muuda sissekanne"
+        },
+        "printServices": {
+          "label": "Trüki väljavõte",
+          "message": "Sissekannete ajavahemik"
+        },
+        "deleteService": {
+          "message": "Kas oled kindel, et soovid sissekannet kustutada?"
+        }
+      },
+      "directive": "Käskkiri",
+      "viewDirective": "Vaata käskkirja",
+      "viewDirectiveEnd": "Vaata lõpetamise käskkirja",
+      "showMore": "Näita rohkem",
+      "showLess": "Näita vähem"
+    },
     "error": {
       "checkRequired": "Vähemalt üks õppija peab valitud olema",
       "addressRequired": "Aadress on kohustuslik",
@@ -1348,6 +1385,7 @@
     "scholarshipType": "Stipendiumi/õppetoetuse liik",
     "scholarshipOverlapsAcademicLeave": "Akadeemilise puhkuse periood kattub maksmise perioodiga",
     "scholarshipStudentNotActive": "Õppija pole aktiivne",
+    "scholarshipNotAccepted": "Taotlus ei ole aktsepteeritud",
     "studentsNotValid": "Õppijad ei vasta käskkirja tingimustele. Kas kustutada õppijad ja saata käskkiri uuesti kinnitamisele?",
     "sendToConfirm": "Saada kinnitamisele",
     "sendToConfirmWithoutEkis": "Saada kinnitamisele ilma EKISeta",
@@ -1358,8 +1396,10 @@
     "vocational": "Kutseõpe",
     "higher": "Kõrgõpe",
     "atleastOneModuleRequired": "Vähemalt üks moodul peab olema lisatud",
-    "moduleAlreadyGraded": "Moodul juba hinnatud",
+    "moduleAlreadyGraded": "Moodul \"{{module}}\" on juba hinnatud",
+    "moduleAlreadyInIndividualCurriculum": "Moodul \"{{module}}\" on juba ajavahemikus {{startDate}} - {{endDate}} IÕK-s",
     "notInIndividualCurriculumDateRange": "Lõpetamise kuupäev peab jääma individuaalse õppekava kuupäevade vahemikku",
+    "notInSupportServiceDateRange": "Lõpetamise kuupäev peab jääma tugiteenuse ajavahemikku",
     "notValid": "Käskkiri ei kehti",
     "coordinator": {
       "alreadyexist": "Sellise isikukoodiga isik on juba dokumentide kooskõlastaja",
@@ -1383,6 +1423,7 @@
       "akadStartDate": "Akad. puhkuse algus",
       "alreadyexist": "Õppija on juba käskkirjal",
       "amountPaid": "Summa",
+      "application": "Avaldus",
       "applicationAkadEndDate": "Lõpp avaldusel",
       "applicationAkadStartDate": "Algus avaldusel",
       "bankAccount": "Arveldusarve number",
@@ -1395,7 +1436,9 @@
       "directive": "Käskkiri",
       "directiveNr": "Käskkirja nr",
       "distinction": "Erisus",
+      "dormitory": "Ühiselamu",
       "estonianEducationalInstitute": "Eesti õppeasutus",
+      "existingIndividualCurriculum": "Olemasolev IÕK",
       "foreignEducationalInstitute": "Välismaa õppeasutus",
       "fin": "Finantseerimise allikas",
       "name": "Õppija nimi",
@@ -1428,6 +1471,7 @@
       "reason": "Põhjus",
       "school": "Õppeasutus",
       "sex": "Sugu",
+      "scholarship": "Stipendium/õppetoetus",
       "stipEndDate": "Maksmise periood kuni",
       "stipEndReason": "Põhjus",
       "stipStartDate": "Maksmise periood alates",
@@ -1440,6 +1484,11 @@
       "studyLoad": "Õppekoormus",
       "studyLoadOPPEKOORMUS_OSA": "täis > osa",
       "studyLoadOPPEKOORMUS_TAIS": "osa > täis",
+      "supportModules": "IÕK moodul(id)",
+      "supportServices": "Tugimeede",
+      "supportServiceStartDate": "Tugiteenuse algus",
+      "supportServiceEndDate": "Tugiteenuse lõpp",
+      "validEnd": "Kehtivuse lõpp",
       "valisEndDate": "Välisõppe lõpp",
       "valisStartDate": "Välisõppe algus"
     }
@@ -2793,7 +2842,7 @@
     "committeeDecisionAdded": "Komisjoni otsuse lisamise kuupäev",
     "committeeDecisionConfirmed": "Komisjoni otsuse kinnitamise kuupäev",
     "committeeAdded": "Komisjoni lisamise kuupäev",
-    "representativeOrStudent": "Esindaja/õppija",
+    "representativeOrStudentDecision": "Esindaja/õppija otsus",
     "label": "Avaldus",
     "messages": {
       "applicationAlreadyExists": "Avaldus juba eksisteerib",
@@ -2824,7 +2873,11 @@
       "emptyNecessaryFields": "Avaldust ei ole võimalik kinnitada, vajalikud andmed puuduvad",
       "confirmRemovingConfirmation": "Avalduselt eemaldatakse komisjoni kinnitus, kas soovid jätkata?",
       "confirmRemovingFinalConfirmation": "Avalduselt eemaldatakse esindaja ja komisjoni kinnitused, kas soovid jätkata?",
-      "removeConfirmationSuccess": "Kinnituse mahavõtmine õnnestus"
+      "removeConfirmationSuccess": "Kinnituse mahavõtmine õnnestus",
+      "confirmSubmit": "Kas oled kindel, et soovid esitada?",
+      "confirmSaveAndSubmit": "Kas oled kindel, et soovid vormil olevad andmed salvestada ja esitada?",
+      "confirmConfirm": "Kas oled kindel, et soovid kinnitada?",
+      "confirmSaveAndConfirm": "Kas oled kindel, et soovid vormil olevad andmed salvestada ja kinnitada?"
     }
   },
   "reception": {
@@ -2891,9 +2944,13 @@
     }
   },
   "poll": {
+    "respond": "Vasta küsitlusele",
     "name": "Küsitluse nimetus",
     "type": "Küsitluse tüüp",
+    "responseTime": "Vastamise ajavahemik",
+    "responseStatus": "Vastamise staatus",
     "target": "Sihtrühm",
+    "chooseTarget": "Vali sihtrühm",
     "targets": "Sihtrühmad",
     "status": "Staatus",
     "studentgroup": "Õpperühm",
@@ -2902,7 +2959,24 @@
     "period": "Kehtivuse periood",
     "test": "Testi",
     "copy": "Kopeeri",
+    "journals": "Päevikud",
     "confirmBack": "Vormil olevad andmed on salvestamata, kas oled kindel?",
+    "response": {
+      "school": "Õppeasutus",
+      "student": "Õppuri nimi",
+      "enterprise": "Ettevõte",
+      "practiceDuration": "Praktika kestus"
+    },
+    "messages": {
+      "noPollFound": "Küsitlust ei leitud",
+      "statusNotConfirmed": "Küsitlus pole kinnitatud",
+      "acceptingAnswersHasntStarted": "Küsitlusele vastamise aeg pole alanud",
+      "acceptingAnswersHasEnded": "Küsitlusele vastamise aeg on möödas",
+      "pollEnded": "Küsitlusele on juba vastatud",
+      "noResponse": "Küsimustikku ei saa veel täita",
+      "noPoll": "Küsimustikku ei leitud",
+      "matchingTarget": "Küsimustiku vastav sihtgrupp puudub"
+    },
     "basicData": {
       "label": "Põhiandmed",
       "name": "Nimetus",
@@ -2914,9 +2988,11 @@
       "journalThru": "Päeviku lõpp kuni",
       "notificationDate": "Meeldetuletuse kp ",
       "duplicateTargetCode": "Sihtrühm on juba valitud",
+      "duplicateJournal": "Päevik on juba valitud",
       "reminderError": "Peab langema vahemikku Kehtiv alates – Kehtiv kuni",
       "teacherCanComment": "Õpetaja saab kommenteerida",
       "teacherCommentVisible": "Õpetaja kommentaar on õpilastele nähtav",
+      "atleastOneJournal": "Vähemalt üks päevik peab olema valitud",
       "atleastOne": "Vähemalt üks sihtrühm peab olema valitud",
       "status": "Staatus",
       "confirm": "Kas olete kindel, et soovite küsitluse kinnitada?",
@@ -2925,10 +3001,16 @@
       "removeConfirm": "Eemalda kinnitus",
       "confirmRemoveConfirm": "Kas olete kindel, et soovite küsitluse kinnituse eemaldada?",
       "removed": "Kinnitus eemaldatud",
-      "confirmError": "Kinnitamine ebaõnnestus, küsitlusel puudub teema või küsimus",
+      "confirmError": "Kinnitamine ebaõnnestus, küsitlusel puudub teema või mõnel teemal puudub küsimus",
       "removeConfirmError": "Kinnituse eemaldamine ebaõnnestus",
       "nameError": "Sama nimetusega küsitlus on juba olemas",
-      "confirmed": "Küsimustik on kinnitatud"
+      "confirmed": "Küsimustik on kinnitatud",
+      "declarationPeriod": "Deklareerimise õppeperiood",
+      "studentCanSeeResponse": "Õppija näeb tagasisidet",
+      "insertedBy": "Sisestaja",
+      "changedBy": "Muutja",
+      "changeDates": "Muuda vastamise aegu",
+      "target": "Sihtrühm"
     },
     "questions": {
       "label": "Küsimused",
@@ -2938,6 +3020,7 @@
       "deleteTheme": "Kas olete kindel, et soovite teema koos küsimustega kustutada?",
       "deleteQuestion": "Kas olete kindel, et soovite küsimuse kustutada?",
       "sameNameError": "Sama nimega küsimus on juba teemas olemas",
+      "sameAnswerError": "Sama nimega vastusevariant on juba küsimuses olemas",
       "sameThemeError": "Sama nimega teema on juba olemas",
       "addQuestion": "Lisa küsimus",
       "addAnswer": "Lisa uus vastusevariant",
@@ -2956,7 +3039,14 @@
       "questionsMissing": "Küsimused puuduvad",
       "confirmedError": "Kinnitatud küsitluse kõiki teemasid ei saa eemaldada",
       "changeTheme": "Muuda teemat",
-      "orAddNew": "Või lisa uus"
+      "orAddNew": "Või lisa uus",
+      "isThemePageable": "Kuva teemad lehtede kaupa",
+      "isRepedetiveVocational": "Kuva iga päeviku kohta",
+      "isRepedetiveHigher": "Kuva iga õppeaine kohta"
+    },
+    "answer": {
+      "confirm": "Kas olete kindel, et soovite vastuse kinnitada? Peale kinnitamist enam küsimustikule vastata ei saa.",
+      "confirmed": "Vastused on ära saadetud, täname vastamast!"
     },
     "results": "Tulemused"
   },
@@ -3074,6 +3164,23 @@
     }
   },
   "timetable": {
+    "importDialog": {
+      "label": "Tunniplaani impordi tulemus",
+      "errors": {
+        "teachers": "Puuduvad õpetajad",
+        "rooms": "Puuduvad ruumid",
+        "studentgroups": "Puuduvad õpperühmad",
+        "hourData": "Tunni toimumise kohta pole piisavalt andmeid",
+        "nrFormat": "Tunni päev või periood ei ole numbriformaadis",
+        "documentFormat": "Dokument on vales formaadis, päevikul puuduvad ajad",
+        "relationToTimetable": "Päevik ei kuulu tunniplaani"
+      }
+    },
+    "exportDialog": {
+      "label": "Tunniplaani ekspordi tulemus",
+      "missingJournalTeacherCodes": "Järgnevatel õpperühmade juhatatel puudub tunniplaani kood",
+      "missingJournalCodes": "Järgnevatel päevikutel puudub tunniplaani kood"
+    },
     "optionsHigher": "Tunniplaanid õpperühmade-, õppejõudude või ruumide järgi",
     "optionsVocational": "Tunniplaanid õpperühmade-, õpetajate või ruumide järgi",
     "weekday": "Nädalapäev",
@@ -3470,11 +3577,13 @@
       "abroadProgramme": "Programm",
       "abroadPurpose": "Eesmärk",
       "academicNr": "Akadeemilise õiendi nr",
+      "changeDate": "Muutmise kuupäev",
       "country": "Sihtriik",
       "cumLaude": "cum laude",
       "curriculum": "Õppekava",
       "dataType": "Saadetavad andmed",
       "docNr": "Lõpudokumendi number",
+      "DORMITORY": "Ühiselamu",
       "extraNr": "lisalehed",
       "error": "Sõnumi saatmine õnnestus",
       "fromDate": "Alates",
@@ -3651,6 +3760,7 @@
       "birthdate_thru": "Sünnikp. kuni",
       "credits": "Tehtud ainepunktide arv",
       "curriculum": "Õppekava",
+      "dormitory": "Ühiselamu",
       "email": "E-posti aadress",
       "fin": "Finantseerimise allikas",
       "finSpecific": "Finantseerimise allika täpsustus",

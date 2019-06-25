@@ -170,6 +170,13 @@
             <label>{{'student.previousSchoolEndDate' | translate}}</label>
             <hois-value value="student.previousSchoolEndDate | hoisYear"></hois-value>
           </md-input-container>
+          <md-input-container ng-if="student.isVocational" flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.dormitory' | translate}}</label>
+            <hois-classifier-value ng-model="student.dormitory" main-classifier-code="YHISELAMU"></hois-classifier-value>
+            <md-tooltip ng-if="student.dormitoryHistory.length > 0" class="tooltip-multiline">
+              <div ng-repeat="history in student.dormitoryHistory">{{currentLanguageNameField(history.dormitory)}} {{history.date | hoisDate}}</div>
+            </md-tooltip>
+          </md-input-container>
         </div>
       </hois-collapsable>
     </div>

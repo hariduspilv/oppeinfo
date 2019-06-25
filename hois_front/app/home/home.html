@@ -1,12 +1,15 @@
 <div layout-padding>
   <div ng-if="state.currentUser" ng-controller="AuthenticatedHomeController as ctrl" layout="column">
+    <div ng-if="displayPoll" layout-margin>
+        <md-button ng-click="openPoll()" class="md-raised" md-colors="{background: 'pink-500'}">{{'poll.respond' | translate}}</md-button>
+    </div>
     <div flex ng-if="canCreateAbsence" layout-margin>
       <md-button ng-click="addAbsence()" class="md-primary md-raised">{{'home.student.absence.addAbsence' | translate}}</md-button>
     </div>
     <div layout-margin>
       <div ng-if="canApplyForPractice">
         <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'accent'}">
+          <div md-colors="{color: 'accent'}" layout layout-align="left center">
             <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
             <span>{{'practiceApplication.canApplyForPractice' | translate}} <a href="/#/practice/application/myData?_menu">{{'main.button.view' | translate}}</a></span>
           </div>
@@ -14,7 +17,7 @@
       </div>
       <div ng-if="hasUnconfirmedPrograms.has">
         <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'warn'}">
+          <div md-colors="{color: 'warn'}" layout layout-align="left center">
             <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
             <span>{{'subjectProgram.youHaveUnconfirmedPrograms' | translate}} <a ng-href="/#/subjectProgram?_menu">{{'main.button.view' | translate}}</a></span>
           </div>
@@ -22,7 +25,7 @@
       </div>
       <div ng-if="hasUncompletedPrograms.has">
         <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'warn'}">
+          <div md-colors="{color: 'warn'}" layout layout-align="left center">
             <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
             <span>{{'subjectProgram.youHaveUncompletedPrograms' | translate}} <a ng-href="/#/subjectStudyPeriods?_menu">{{'main.button.view' | translate}}</a></span>
           </div>
@@ -30,7 +33,7 @@
       </div>
       <div ng-if="hasExpiredBaseModules.length">
         <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'warn'}">
+          <div md-colors="{color: 'warn'}" layout layout-align="left center">
             <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
             <span>{{'basemodule.youHaveExpiredBaseModules' | translate}} <a ng-href="/#/basemodule?_menu">{{'main.button.view' | translate}}</a></span>
           </div>
@@ -38,7 +41,7 @@
       </div>
       <div ng-if="hasUnacceptedAbsences">
         <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'warn'}">
+          <div md-colors="{color: 'warn'}" layout layout-align="left center">
             <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
             <span>{{'absence.youHaveUnacceptedAbsences' | translate}} <a ng-href="/#/absences?_menu">{{'main.button.view' | translate}}</a></span>
           </div>
@@ -46,7 +49,7 @@
       </div>
       <div ng-if="hasTodaysAbsences">
         <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'warn'}">
+          <div md-colors="{color: 'warn'}" layout layout-align="left center">
             <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
             <span>{{'absence.youHaveTodaysAbsences' | translate}} <a ng-href="/#/groupAbsences?today">{{'main.button.view' | translate}}</a></span>
           </div>
@@ -54,7 +57,7 @@
       </div>
       <div ng-if="unconfirmedJournals && unconfirmedJournals.count > 0">
         <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'accent'}">
+          <div md-colors="{color: 'accent'}" layout layout-align="left center">
             <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
             <span ng-if="unconfirmedJournals.count === 1">{{'journal.unconfirmedCountOne' | translate}}</span>
             <span ng-if="unconfirmedJournals.count > 1">{{'journal.unconfirmedCount' | translate:unconfirmedJournals}}</span>
@@ -63,7 +66,7 @@
       </div>
       <div ng-if="studentGroupRemarks && studentGroupRemarks.size > 0">
         <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'accent'}">
+          <div md-colors="{color: 'accent'}" layout layout-align="left center">
             <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
             <span ng-if="unconfirmedJournals.count === 1">{{'journal.unconfirmedCountOne' | translate}}</span>
             <span ng-if="unconfirmedJournals.count > 1">{{'journal.unconfirmedCount' | translate:unconfirmedJournals}}</span>
@@ -72,7 +75,7 @@
       </div>
       <div ng-if="rrHasRecentChangeLogs">
         <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'warn'}">
+          <div md-colors="{color: 'warn'}" layout layout-align="left center">
             <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
             <span>{{'rr.home.hasRecentChangeLogs' | translate}} <a ng-href="/#/rr/changelogs?_menu">{{'main.button.view' | translate}}</a></span>
           </div>

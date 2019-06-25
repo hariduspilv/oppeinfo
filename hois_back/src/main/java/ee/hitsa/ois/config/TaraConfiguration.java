@@ -20,7 +20,7 @@ public class TaraConfiguration {
     private String userAuthorizationUri;
     private String redirectUri;
     private String issuer;
-    private String jwkUrl;
+    private String jwkUri;
 
     public String getClientId() {
         return clientId;
@@ -78,12 +78,12 @@ public class TaraConfiguration {
         this.issuer = issuer;
     }
 
-    public String getJwkUrl() {
-        return jwkUrl;
+    public String getJwkUri() {
+        return jwkUri;
     }
 
-    public void setJwkUrl(String jwkUrl) {
-        this.jwkUrl = jwkUrl;
+    public void setJwkUri(String jwkUri) {
+        this.jwkUri = jwkUri;
     }
 
 }

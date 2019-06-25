@@ -35,6 +35,7 @@ import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.OccupationalGrade;
+import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.report.ReportUtil;
 import ee.hitsa.ois.report.studentgroupteacher.NegativeResultsJournalReport;
 import ee.hitsa.ois.report.studentgroupteacher.NegativeResultsReport;
@@ -449,16 +450,32 @@ public class StudentGroupTeacherReportService {
         if (studentIds.isEmpty()) {
             return new ArrayList<>();
         }
+
+        StudyYear studyYear = criteria.getStudyYear() != null
+                ? em.getReference(StudyYear.class, criteria.getStudyYear())
+                : null;
+
+        JpaNativeQueryBuilder qb = indokIndividualCurriculums(criteria, studentIds, studyYear);
+        String indokQuery = qb.querySql("s.id", false);
+        Map<String, Object> parameters = new HashMap<>(qb.queryParameters());
+
+        qb = tugiIndividualCurriculums(criteria, studentIds, studyYear);
+        String tugiQuery = qb.querySql("s2.id", false);
+        parameters.putAll(qb.queryParameters());
+
+        qb = new JpaNativeQueryBuilder("from (" + indokQuery + " union all " + tugiQuery + ") as ic");
+        List<?> data = qb.select("id", em, parameters).getResultList();
+        return StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
+    }
+
+    private static JpaNativeQueryBuilder indokIndividualCurriculums(StudentGroupTeacherCommand criteria, List<Long> studentIds,
+            StudyYear studyYear) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s "
                 + "join directive_student ds on ds.student_id = s.id "
                 + "join directive d on d.id = ds.directive_id "
                 + "left join (directive_student ds_lop join directive d_lop on d_lop.id = ds_lop.directive_id "
                 + "and d_lop.type_code = :lopDirectiveType and d_lop.status_code = :directiveStatus) "
                 + "on ds_lop.directive_student_id = ds.id and ds_lop.canceled = false");
-        
-        StudyYear studyYear = criteria.getStudyYear() != null
-                ? em.getReference(StudyYear.class, criteria.getStudyYear())
-                : null;
 
         qb.requiredCriteria("s.id in (:studentIds)", "studentIds", studentIds);
         qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_INDOK);
@@ -480,9 +497,43 @@ public class StudentGroupTeacherReportService {
             qb.optionalCriteria("ds.start_date <= :from and coalesce(ds_lop.start_date, ds.end_date) >= :from", "from",
                     criteria.getFrom());
         }
+        return qb;
+    }
 
-        List<?> data = qb.select("s.id", em).getResultList();
-        return StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
+    private static JpaNativeQueryBuilder tugiIndividualCurriculums(StudentGroupTeacherCommand criteria,
+            List<Long> studentIds, StudyYear studyYear) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s2 "
+                + "join directive_student ds2 on ds2.student_id = s2.id "
+                + "join directive d2 on d2.id = ds2.directive_id "
+                + "join application a on a.id = ds2.application_id "
+                + "join application_support_service ass on ass.application_id = a.id "
+                + "left join (directive_student ds_lop2 join directive d_lop2 on d_lop2.id = ds_lop2.directive_id "
+                + "and d_lop2.type_code = :lopDirectiveType2 and d_lop2.status_code = :directiveStatus) "
+                + "on ds_lop2.directive_student_id = ds2.id and ds_lop2.canceled = false");
+
+        qb.requiredCriteria("s2.id in (:studentIds)", "studentIds", studentIds);
+        qb.requiredCriteria("d2.type_code = :directiveType2", "directiveType2", DirectiveType.KASKKIRI_TUGI);
+        qb.requiredCriteria("d2.status_code = :directiveStatus", "directiveStatus",
+                DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+        qb.requiredCriteria("ass.support_service_code = :supportServiceCode", "supportServiceCode",
+                SupportServiceType.TUGITEENUS_1);
+        qb.parameter("lopDirectiveType2", DirectiveType.KASKKIRI_TUGILOPP.name());
+        qb.filter("ds2.canceled = false");
+
+        if (studyYear != null) {
+            qb.optionalCriteria("ds2.start_date <= :studyYearEnd", "studyYearEnd", studyYear.getEndDate(),
+                    DateUtils::firstMomentOfDay);
+            qb.optionalCriteria("coalesce(ds_lop2.start_date, ds2.end_date) >= :studyYearStart", "studyYearStart",
+                    studyYear.getStartDate(), DateUtils::lastMomentOfDay);
+        } else if (criteria.getFrom() != null && criteria.getThru() != null) {
+            qb.optionalCriteria("ds2.start_date <= :thru", "thru", criteria.getThru(), DateUtils::firstMomentOfDay);
+            qb.optionalCriteria("coalesce(ds_lop2.start_date, ds2.end_date) >= :from", "from", criteria.getFrom(),
+                    DateUtils::lastMomentOfDay);
+        } else {
+            qb.optionalCriteria("ds2.start_date <= :from and coalesce(ds_lop2.start_date, ds2.end_date) >= :from", "from",
+                    criteria.getFrom());
+        }
+        return qb;
     }
 
     private void setStudentGroupStudentAverages(StudentGroupTeacherCommand criteria, List<StudentDto> students) {

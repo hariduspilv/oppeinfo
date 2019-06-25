@@ -3,6 +3,8 @@ package ee.hitsa.ois.web.commandobject.poll;
 import java.time.LocalDate;
 import java.util.List;
 
+import ee.hitsa.ois.web.dto.AutocompleteResult;
+
 public class PollCommand {
     
     private String afterword;
@@ -15,9 +17,13 @@ public class PollCommand {
     private String nameEt;
     private List<Long> studentGroups;
     private List<String> targetCodes;
+    private List<AutocompleteResult> journals;
+    private Long studyPeriod;
     private Boolean isTeacherComment;
     private Boolean isTeacherCommentVisible;
-    private String typeCode;
+    private Boolean isStudentVisible;
+    private List<Long> teacherOccupations;
+    private String type;
     private String status;
     
     public String getAfterword() {
@@ -55,12 +61,6 @@ public class PollCommand {
     }
     public void setNameEt(String nameEt) {
         this.nameEt = nameEt;
-    }
-    public String getTypeCode() {
-        return typeCode;
-    }
-    public void setTypeCode(String typeCode) {
-        this.typeCode = typeCode;
     }
     public List<Long> getStudentGroups() {
         return studentGroups;
@@ -103,5 +103,35 @@ public class PollCommand {
     }
     public void setJournalThru(LocalDate journalThru) {
         this.journalThru = journalThru;
+    }
+    public List<AutocompleteResult> getJournals() {
+        return journals;
+    }
+    public void setJournals(List<AutocompleteResult> journals) {
+        this.journals = journals;
+    }
+    public Long getStudyPeriod() {
+        return studyPeriod;
+    }
+    public void setStudyPeriod(Long studyPeriod) {
+        this.studyPeriod = studyPeriod;
+    }
+    public String getType() {
+        return type;
+    }
+    public void setType(String type) {
+        this.type = type;
+    }
+    public Boolean getIsStudentVisible() {
+        return isStudentVisible;
+    }
+    public void setIsStudentVisible(Boolean isStudentVisible) {
+        this.isStudentVisible = isStudentVisible;
+    }
+    public List<Long> getTeacherOccupations() {
+        return teacherOccupations;
+    }
+    public void setTeacherOccupations(List<Long> teacherOccupations) {
+        this.teacherOccupations = teacherOccupations;
     }
 }

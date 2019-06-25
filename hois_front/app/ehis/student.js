@@ -3,12 +3,13 @@
 angular.module('hitsaOis').controller('StudentEhisController', ['$scope', 'message', 'QueryUtils', function ($scope, message, QueryUtils) {
 
   var CURRICULA_FULFILMENT = 'CURRICULA_FULFILMENT';
+  var DORMITORY = 'DORMITORY';
   var FOREIGN_STUDY = 'FOREIGN_STUDY';
   var GRADUATION = 'GRADUATION';
   var VOTA = 'VOTA';
 
-  $scope.dataTypes = [CURRICULA_FULFILMENT, FOREIGN_STUDY, GRADUATION, VOTA];
-  $scope.displayDates = [FOREIGN_STUDY, GRADUATION, VOTA];
+  $scope.dataTypes = [CURRICULA_FULFILMENT, DORMITORY, FOREIGN_STUDY, GRADUATION, VOTA];
+  $scope.displayDates = [DORMITORY, FOREIGN_STUDY, GRADUATION, VOTA];
   $scope.criteria = {from: new Date(), thru: new Date()};
 
   function processResult(result) {

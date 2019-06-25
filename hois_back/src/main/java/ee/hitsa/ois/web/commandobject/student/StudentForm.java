@@ -36,6 +36,8 @@ public class StudentForm extends VersionedCommand {
     private String boardingSchool;
     private String previousSchoolName;
     private LocalDate previousSchoolEndDate;
+    @ClassifierRestriction(MainClassCode.YHISELAMU)
+    private String dormitory;
 
     // special needs
     private Boolean isSpecialNeed;
@@ -132,6 +134,14 @@ public class StudentForm extends VersionedCommand {
 
     public void setPreviousSchoolEndDate(LocalDate previousSchoolEndDate) {
         this.previousSchoolEndDate = previousSchoolEndDate;
+    }
+
+    public String getDormitory() {
+        return dormitory;
+    }
+
+    public void setDormitory(String dormitory) {
+        this.dormitory = dormitory;
     }
 
     public Boolean getIsSpecialNeed() {

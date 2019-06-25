@@ -108,8 +108,8 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$route', '$
       }
     });
 
-    $scope.addAllCurriculums = function () {
-      QueryUtils.endpoint('/autocomplete/curriculumsauto').query({higher: false, closed: false}, function (curriculums) {
+    $scope.addAllCurriculums = function (criteria) {
+      QueryUtils.endpoint('/autocomplete/curriculumsauto').query(criteria, function (curriculums) {
         if (!angular.isArray($scope.stipend.curriculums)) {
           $scope.stipend.curriculums = [];
         }

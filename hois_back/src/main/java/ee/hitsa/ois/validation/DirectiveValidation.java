@@ -24,5 +24,7 @@ public interface DirectiveValidation {
     interface Noomi extends DirectiveValidation { }
     interface Praktik extends DirectiveValidation { }
     interface Otegevus extends DirectiveValidation { }
+    interface Tugi extends DirectiveValidation { }
+    interface Tugilopp extends DirectiveValidation { }
     
 }

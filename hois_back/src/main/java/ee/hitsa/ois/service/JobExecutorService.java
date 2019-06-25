@@ -60,6 +60,13 @@ public class JobExecutorService {
     private TeacherService teacherService;
     @Autowired
     private PopulationRegisterService rrService;
+    @Autowired
+    private DirectiveService directiveService;
+    @Autowired
+    private PollService pollService;
+    
+    @Value("${hois.jobs.supportService.message.days}")
+    private Integer supportServiceMessageDays;
 
     @Value("${hois.jobs.message.representative.days}")
     private Integer representativeMessageDays;
@@ -159,7 +166,26 @@ public class JobExecutorService {
             studentRepresentativeService.sendRepresentativeEndingMessages(representativeMessageDays);
         }, AUTHENTICATION_MSG);
     }
-
+    
+    /**
+     * Automatic task to send email containing Poll to practiceJournal supervisors
+     */
+    @Scheduled(cron = "${hois.jobs.email.supervisor}")
+    public void sendEmails() {
+        withAuthentication(() -> {
+            pollService.sendPracticeJournalSupervisorEmails();
+        }, AUTHENTICATION_MSG);
+    }
+    
+    /**
+     * Automatic task to check TUGI directive and send a notification message.
+     */
+    @Scheduled(cron = "${hois.jobs.supportService.message.cron}")
+    public void sendSupportServiceMessages() {
+        withAuthentication(() -> {
+            directiveService.sendSupportServiceMessages(supportServiceMessageDays);
+        }, AUTHENTICATION_MSG);
+    }
     /**
      * Job execution wrapper.
      * If actual handler returns without exception, job is marked as done, otherwise failed (and exception is logged).

@@ -1247,6 +1247,17 @@ fieldset legend.md-title-small {
 	padding-left: 2px;
 }
 
+/* 
+ * The style definition above about .readonly and .form-readonly creates a problem
+ * where field name is places outside of the element "border".
+ * 
+ * This one fixes it. Should be applied manually.
+ */
+.readonly-reverse-margin {
+  margin-bottom: 0px !important;
+  margin-top: 18px !important;
+}
+
 .form-readonly md-input-container > label, .readonly > label{
     transform: translate3d(2px, 4px, 0) scale(0.85)!important;
 }

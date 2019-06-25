@@ -1,0 +1,36 @@
+<md-dialog aria-label="{{'student.supportService.operation.printServices.label' | translate}}" flex="40" flex-sm="60" flex-xs="100">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{'student.supportService.operation.printServices.label' | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <div class="ois-form-layout" layout="column" style="margin: 8px 16px;" ng-cloak>
+        <p class="md-body-2">{{'student.supportService.operation.printServices.message' | translate}}</p>
+        <div layout="row">
+          <md-input-container>
+            <label>{{'main.from' | translate}}</label>
+            <md-datepicker ng-model="from" name="from" md-max-date="thru" required></md-datepicker>
+          </md-input-container>
+          <md-input-container>
+            <label>{{'main.thru' | translate}}</label>
+            <md-datepicker ng-model="thru" name="thru" md-min-date="from" required></md-datepicker>
+          </md-input-container>
+        </div>
+      </div>
+    </md-dialog-content>
+
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-primary md-raised" ng-disabled="!from || !thru || dialogForm.$invalid"
+        ng-href="{{pdfUrl()}}" ng-click="!(!from || !thru || dialogForm.$invalid) && cancel()" target="_blank">{{'main.button.printPdf' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

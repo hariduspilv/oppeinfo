@@ -14,7 +14,7 @@
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
         <div layout="column">
 
-          <div flex>
+          <div>
             <fieldset tabindex="1">
               <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.occupationPartOccupationSpecialize' | translate}}</legend>
               <div layout="column">
@@ -39,7 +39,7 @@
           </div>
           <div>&nbsp;</div>
 
-          <div layout="row" flex>
+          <div layout="row">
             <md-input-container flex="45">
               <label>{{'stateCurriculum.enter.module.type' | translate}}</label>
               <hois-classifier-select ng-model="data.module" main-classifier-code="KUTSEMOODUL" disabled
@@ -51,24 +51,24 @@
             </md-input-container>
           </div>
 
-          <md-input-container flex>
+          <md-input-container>
             <label>{{'stateCurriculum.enter.module.nameEt' | translate}}</label>
             <input ng-model="data.nameEt" type="text" readonly>
           </md-input-container>
-          <md-input-container flex>
+          <md-input-container>
             <label>{{'stateCurriculum.enter.module.nameEn' | translate}}</label>
             <input ng-model="data.nameEn" type="text" readonly>
           </md-input-container>
-          <md-input-container flex>
+          <md-input-container>
             <label>{{'stateCurriculum.enter.module.objectiveEt' | translate}}</label>
             <textarea ng-model="data.objectivesEt" max-rows="10" readonly></textarea>
           </md-input-container>
-          <md-input-container flex>
+          <md-input-container>
             <label>{{'stateCurriculum.enter.module.objectiveEn' | translate}}</label>
             <textarea ng-model="data.objectivesEn" max-rows="10" readonly></textarea>
           </md-input-container>
 
-          <div flex>
+          <div>
             <fieldset tabindex="2">
               <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.studyOutcome' | translate}}</legend>
 
@@ -87,11 +87,11 @@
             </fieldset>
           </div>
           <div>&nbsp;</div>
-          <md-input-container flex>
+          <md-input-container>
             <label>{{'stateCurriculum.enter.module.criteriaEt' | translate}}</label>
             <textarea ng-model="data.assessmentsEt" max-rows="10" readonly></textarea>
           </md-input-container>
-          <md-input-container flex>
+          <md-input-container>
             <label>{{'stateCurriculum.enter.module.criteriaEn' | translate}}</label>
             <textarea ng-model="data.assessmentsEn" max-rows="10" readonly></textarea>
           </md-input-container>

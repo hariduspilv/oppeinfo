@@ -21,6 +21,7 @@ import ee.hitsa.ois.validation.StudyPeriodRange;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.directive.ExistingDirectiveStudentDto;
+import ee.hitsa.ois.web.dto.directive.ScholarshipApplicationSelectDto;
 
 public class DirectiveForm extends VersionedCommand {
 
@@ -187,8 +188,11 @@ public class DirectiveForm extends VersionedCommand {
         private List<String> occupations;
         private Map<String, List<String>> specialities;
         private List<DirectiveFormStudentModule> modules;
+        private List<ScholarshipApplicationSelectDto> scholarshipApplications;
         private List<ExistingDirectiveStudentDto> existingDirectiveStudents;
         private Long directiveStudent;
+        @ClassifierRestriction(MainClassCode.YHISELAMU)
+        private String dormitory;
 
         public Long getId() {
             return id;
@@ -510,6 +514,14 @@ public class DirectiveForm extends VersionedCommand {
             this.modules = modules;
         }
 
+        public List<ScholarshipApplicationSelectDto> getScholarshipApplications() {
+            return scholarshipApplications;
+        }
+
+        public void setScholarshipApplications(List<ScholarshipApplicationSelectDto> scholarshipApplications) {
+            this.scholarshipApplications = scholarshipApplications;
+        }
+
         public List<ExistingDirectiveStudentDto> getExistingDirectiveStudents() {
             return existingDirectiveStudents;
         }
@@ -524,6 +536,14 @@ public class DirectiveForm extends VersionedCommand {
 
         public void setDirectiveStudent(Long directiveStudent) {
             this.directiveStudent = directiveStudent;
+        }
+
+        public String getDormitory() {
+            return dormitory;
+        }
+
+        public void setDormitory(String dormitory) {
+            this.dormitory = dormitory;
         }
 
     }

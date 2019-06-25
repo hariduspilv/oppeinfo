@@ -16,8 +16,8 @@ public enum DirectiveType {
     KASKKIRI_OKOORM(null, DirectiveValidation.Okoorm.class, "studyLoad", "fin", "finSpecific"),
     KASKKIRI_OVORM(null, DirectiveValidation.Ovorm.class, "studyForm", "studentGroup"),
     KASKKIRI_VALIS(null, DirectiveValidation.Valis.class),
-    KASKKIRI_IMMAT(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Immat.class, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel", "nominalStudyEnd"),
-    KASKKIRI_IMMATV(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Immat.class, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel"),
+    KASKKIRI_IMMAT(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Immat.class, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel", "nominalStudyEnd", "dormitory"),
+    KASKKIRI_IMMATV(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Immat.class, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel", "dormitory"),
     KASKKIRI_INDOK(null, DirectiveValidation.Indok.class),
     KASKKIRI_INDOKLOP(null, DirectiveValidation.Indoklop.class),
     KASKKIRI_TYHIST(null, null),
@@ -26,7 +26,9 @@ public enum DirectiveType {
     KASKKIRI_KIITUS(null, DirectiveValidation.Kiitus.class),
     KASKKIRI_NOOMI(null, DirectiveValidation.Noomi.class),
     KASKKIRI_PRAKTIK(null, DirectiveValidation.Praktik.class),
-    KASKKIRI_OTEGEVUS(null, DirectiveValidation.Otegevus.class);
+    KASKKIRI_OTEGEVUS(null, DirectiveValidation.Otegevus.class),
+    KASKKIRI_TUGI(null, DirectiveValidation.Tugi.class),
+    KASKKIRI_TUGILOPP(null, DirectiveValidation.Tugilopp.class);
     // TODO not yet implemented
     // KASKKIRI_KYLALIS(null, null, "nominalStudyEnd");
 
@@ -53,6 +55,7 @@ public enum DirectiveType {
     }
 
     // these types require always application
+    // TUGI is ignored. Application control added as additional filter.
     public static final EnumSet<DirectiveType> ONLY_FROM_APPLICATION = EnumSet.of(
             KASKKIRI_AKAD, KASKKIRI_AKADK, KASKKIRI_OKAVA, KASKKIRI_FINM, KASKKIRI_OVORM, KASKKIRI_VALIS);
 }

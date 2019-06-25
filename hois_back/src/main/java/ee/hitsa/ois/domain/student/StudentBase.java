@@ -60,6 +60,8 @@ public class StudentBase extends BaseEntityWithId {
     private LocalDate studentCardGivenDt;
     private Boolean isStudentCardReturned;
     private LocalDate studentCardReturnedDt;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier dormitory;
 
     public CurriculumVersion getCurriculumVersion() {
         return curriculumVersion;
@@ -284,4 +286,13 @@ public class StudentBase extends BaseEntityWithId {
     public void setStudentCardReturnedDt(LocalDate studentCardReturnedDt) {
         this.studentCardReturnedDt = studentCardReturnedDt;
     }
+
+    public Classifier getDormitory() {
+        return dormitory;
+    }
+
+    public void setDormitory(Classifier dormitory) {
+        this.dormitory = dormitory;
+    }
+
 }

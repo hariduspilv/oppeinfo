@@ -37,6 +37,8 @@ public class OisFileService {
         QUERIES.put("school", "select s.logo from School s where s.logo.id = ?1");
         QUERIES.put("student", "select s.photo from Student s where s.photo.id = ?1");
         QUERIES.put("studymaterial", "select m.oisFile from StudyMaterial m where m.oisFile.id = ?1");
+        QUERIES.put("supportservice", "select sss.oisFile from StudentSupportService sss where sss.oisFile.id = ?1");
+        QUERIES.put("pollThemeQuestionFile", "select ptqf.oisFile from PollThemeQuestionFile ptqf where ptqf.oisFile.id = ?1");
     }
 
     @Autowired
@@ -52,6 +54,20 @@ public class OisFileService {
     @Value("${file.cypher.key}")
     public void setKey(String keyFromProps) {
         key = keyFromProps;
+    }
+    
+    public static Long getId(String id) {
+        if (id == null) return null;
+        byte[] deCoded = Base64.decodeBase64(id);
+        try {
+            Key aesKey = new SecretKeySpec(key.getBytes(), "AES");
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.DECRYPT_MODE, aesKey);
+            id = new String(cipher.doFinal(deCoded));
+        } catch(@SuppressWarnings("unused") Exception e) {
+            return null;
+        }
+        return Long.valueOf(id);
     }
 
     public void get(String type, String id, HttpServletResponse response) throws IOException {

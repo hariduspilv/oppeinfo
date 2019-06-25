@@ -175,11 +175,30 @@
               if (angular.isDefined($scope.record.studyYear) && angular.isDefined($scope.record.studentGroup)) {
                 var studyYear = $scope.formState.studyYears.find(function (it) { return it.id === $scope.record.studyYear; });
                 var studentGroup = $scope.formState.studentGroups.find(function (it) { return it.id === $scope.record.studentGroup; });
-                var curriculumLessonPlans = $scope.formState.curriculumLessonPlans[studentGroup.curriculum];
+                var curriculumLessonPlans = studentGroup ? $scope.formState.curriculumLessonPlans[studentGroup.curriculum] : null;
                 if (curriculumLessonPlans) {
                   $scope.formState.previousLessonplans = curriculumLessonPlans.filter(function (it) {
                     return new Date(it.studyYearEndDate).getTime() <= new Date(studyYear.endDate).getTime();
                   });
+                }
+              }
+
+              // checks needed because of studentGroup autocomplete
+              if (angular.isDefined($scope.record.studentGroup)) {
+                var studentGroupValid = angular.isDefined($scope.formState.studentGroupMap[$scope.record.studyYear].find(function (it) {
+                  return it.id === $scope.record.studentGroup;
+                }));
+                if (!studentGroupValid) {
+                  $scope.record.studentGroup = null;
+                }
+              }
+
+              if (angular.isDefined($scope.record.previousLessonplan)) {
+                var previousLessonPlanValid = angular.isDefined($scope.formState.previousLessonplans.find(function (it) {
+                  return it.lessonplan === $scope.record.previousLessonplan;
+                }));
+                if (!previousLessonPlanValid) {
+                  $scope.record.previousLessonplan = null;
                 }
               }
             });

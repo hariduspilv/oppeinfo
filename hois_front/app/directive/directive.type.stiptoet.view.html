@@ -5,6 +5,7 @@
         <th md-column>{{'directive.student.order' | translate}}</th>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
         <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column>{{'directive.student.scholarship' | translate}}</th>
         <th md-column>{{'directive.student.bankAccount' | translate}}</th>
         <th md-column>{{'directive.student.amountPaid' | translate}}</th>
         <th md-column>{{'directive.student.stipStartDate' | translate}}</th>
@@ -12,12 +13,13 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-disabled="!row.selectable" md-select="row" md-select-id="student" md-auto-select ng-repeat="row in record.students | orderBy:'+lastname'" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row ng-disabled="!row.selectable" md-select="row" md-select-id="student" ng-repeat="row in record.students | orderBy:'+lastname'" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>
           <a class="md-primary" ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</a>
         </td>
         <td md-cell>{{::row.idcode}}</td>
+        <td md-cell>{{currentLanguageNameField(row.scholarshipApplicationObject)}}</td>
         <td md-cell>{{::row.bankAccount}}</td>
         <td md-cell>
           <hois-value value="row.amountPaid"></hois-value>
