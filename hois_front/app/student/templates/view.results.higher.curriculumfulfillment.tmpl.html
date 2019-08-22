@@ -3,7 +3,7 @@
   <hois-collapsable-header ng-if="module.id > -1">
     <div layout="row">
       <div flex="30">
-        <span>{{'curriculum.module' | translate}} {{currentLanguageNameField(module)}} {{module.totalCredits}} EAP</span>
+        <span>{{currentLanguageNameField(module)}} {{module.totalCredits}} EAP</span>
         <span ng-if="module.type !== 'KORGMOODUL_M'">(<hois-classifier-value class="inline" ng-model="module.type" main-classifier-code="KORGMOODUL"></hois-classifier-value>)</span>
         <span ng-if="module.type === 'KORGMOODUL_M'">({{currentLanguage()=='et' ? module.typeNameEt : module.typeNameEn}})</span>
       </div>
@@ -37,7 +37,8 @@
           <td md-cell>{{'student.result.higher.teacher' | translate}}</td>
           <td md-cell>{{'student.result.isOk' | translate}}</td>
         </tr>
-        <tr md-row ng-repeat="subjectResult in higherResults.subjectResults | filter: filterSubjectResultsByModule(module) | filter: {isOptional: false} | orderBy: currentLanguageNameField()">
+        <tr md-row ng-repeat="subjectResult in higherResults.subjectResults | filter: filterSubjectResultsByModule(module) 
+          | filter: {isOptional: false} | orderBy: 'subject.' + currentLanguageNameVariable()">
           <td md-cell>
             <span ng-if="subjectResult.isApelTransfer" class="apelAsterisk">*</span>
             <span>{{currentLanguageNameField(subjectResult.subject)}}</span>
@@ -90,7 +91,7 @@
         </tr>
         <tr md-row ng-repeat="subjectResult in higherResults.subjectResults
           | filter: filterSubjectResultsByModule(module) | filter: {isOptional: true} | filter: {electiveModule: '!'}
-          | orderBy: currentLanguageNameField()">
+          | orderBy: 'subject.' + currentLanguageNameVariable()">
           <td md-cell>
             <span ng-if="subjectResult.isApelTransfer" class="apelAsterisk">*</span>
             <span>{{currentLanguageNameField(subjectResult.subject)}}</span>
@@ -134,7 +135,7 @@
         </tr>
 
         <tr md-row ng-repeat="subjectResult in higherResults.subjectResults | filter: filterSubjectResultsByModule(module) | filter: {isOptional: true} |
-                                filter: {electiveModule: electiveModule.referenceNumber} | orderBy: currentLanguageNameField()">
+                                filter: {electiveModule: electiveModule.referenceNumber} | orderBy: 'subject.' + currentLanguageNameVariable()">
           <td md-cell>{{currentLanguageNameField(subjectResult.subject)}}</td>
           <td md-cell>{{subjectResult.subject.code}}</td>
           <td md-cell>{{subjectResult.subject.credits}}</td>

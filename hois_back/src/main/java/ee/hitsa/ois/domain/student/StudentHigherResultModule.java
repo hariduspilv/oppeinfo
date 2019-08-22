@@ -33,6 +33,8 @@ public class StudentHigherResultModule extends BaseEntity {
     @JoinColumn(nullable = false, updatable = true)
     private CurriculumVersionHigherModule curriculumVersionHmodule;
 
+    private Boolean isOptional;
+
     public StudentHigherResult getStudentHigherResult() {
         return studentHigherResult;
     }
@@ -48,5 +50,13 @@ public class StudentHigherResultModule extends BaseEntity {
     public void setCurriculumVersionHmodule(CurriculumVersionHigherModule curriculumVersionHmodule) {
         this.curriculumVersionHmodule = curriculumVersionHmodule;
     }
-    
+
+    public Boolean getIsOptional() {
+        return isOptional;
+    }
+
+    public void setIsOptional(Boolean isOptional) {
+        this.isOptional = isOptional;
+    }
+
 }

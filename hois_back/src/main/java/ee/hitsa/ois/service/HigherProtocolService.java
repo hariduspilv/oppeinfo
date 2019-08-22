@@ -199,6 +199,7 @@ public class HigherProtocolService extends AbstractProtocolService {
     }
 
     private void updateProtocolStudents(Protocol protocol, HigherProtocolSaveForm form) {
+        Boolean isLetterGrade = protocol.getSchool().getIsLetterGrade();
         EntityUtil.bindEntityCollection(protocol.getProtocolStudents(), ProtocolStudent::getId,
                 // no protocol students created here
                 form.getProtocolStudents(), HigherProtocolStudentDto::getId, null, (dto, ps) -> {
@@ -207,7 +208,7 @@ public class HigherProtocolService extends AbstractProtocolService {
                         addHistory(ps);
                         Classifier grade = em.getReference(Classifier.class, dto.getGrade());
                         Short mark = HigherAssessment.getGradeMark(dto.getGrade());
-                        gradeStudent(ps, grade, mark, Boolean.FALSE);
+                        gradeStudent(ps, grade, mark, isLetterGrade);
                     } else if (gradeRemoved(dto, ps)) {
                         HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);

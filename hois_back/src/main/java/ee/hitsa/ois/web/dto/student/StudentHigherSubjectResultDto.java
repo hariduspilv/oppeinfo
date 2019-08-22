@@ -27,6 +27,7 @@ public class StudentHigherSubjectResultDto {
     private Boolean isOk;
     private Boolean isApelTransfer;
     private Boolean isFormalLearning;
+    private Boolean isActive;
 
     public static StudentHigherSubjectResultDto ofHigherModuleSubject(CurriculumVersionHigherModuleSubject higherModuleSubject) {
         StudentHigherSubjectResultDto dto = new StudentHigherSubjectResultDto();
@@ -36,6 +37,7 @@ public class StudentHigherSubjectResultDto {
         dto.setIsOptional(higherModuleSubject.getOptional());
         dto.setElectiveModule(EntityUtil.getNullableId(higherModuleSubject.getElectiveModule()));
         dto.setHigherModule(getHigherModuleDto(higherModuleSubject.getModule()));
+        dto.setIsActive(Boolean.FALSE);
         return dto;
     }
 
@@ -166,7 +168,13 @@ public class StudentHigherSubjectResultDto {
     public void setIsFormalLearning(Boolean isFormalLearning) {
         this.isFormalLearning = isFormalLearning;
     }
-    
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
 }
-
-

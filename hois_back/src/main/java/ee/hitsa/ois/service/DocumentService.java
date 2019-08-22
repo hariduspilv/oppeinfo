@@ -767,18 +767,18 @@ public class DocumentService {
                 + "   first_value(sv.id) over(partition by student_id, coalesce(svm.curriculum_version_hmodule_id,sv.curriculum_version_hmodule_id) order by sv.grade_date desc,sv.grade desc) as id"
                 + " from student_higher_result sv"
                 + " left join student_higher_result_module svm on sv.id=svm.student_higher_result_id"
-                + " where sv.student_id=?1 and grade_code in ('KORGHINDAMINE_A','KORGHINDAMINE_1','KORGHINDAMINE_2','KORGHINDAMINE_3','KORGHINDAMINE_4','KORGHINDAMINE_5')"
+                + " where sv.student_id=?1 and sv.is_active = true and grade_code in ('KORGHINDAMINE_A','KORGHINDAMINE_1','KORGHINDAMINE_2','KORGHINDAMINE_3','KORGHINDAMINE_4','KORGHINDAMINE_5')"
                 + " and (svm.student_higher_result_id is not null)"
                 + " union"
                 + " select distinct 0, sv.id"
                 + " from student_higher_result sv"
                 + " left join student_higher_result_module svm on sv.id=svm.student_higher_result_id"
-                + " where sv.student_id=?1 and grade_code in ('KORGHINDAMINE_A','KORGHINDAMINE_1','KORGHINDAMINE_2','KORGHINDAMINE_3','KORGHINDAMINE_4','KORGHINDAMINE_5')"
+                + " where sv.student_id=?1 and sv.is_active = true and grade_code in ('KORGHINDAMINE_A','KORGHINDAMINE_1','KORGHINDAMINE_2','KORGHINDAMINE_3','KORGHINDAMINE_4','KORGHINDAMINE_5')"
                 + " and svm.student_higher_result_id is null) x on x.id=sv.id"
                 + " join classifier clf on clf.code=sv.grade_code"
                 + " left join (apel_school aps join classifier apc on apc.code = aps.country_code) on sv.apel_school_id=aps.id"
                 + " left join final_thesis ft on ft.student_id = sv.student_id"
-                + " left join (protocol_student ps join protocol pp on ps.protocol_id=pp.id)  on ps.id=sv.protocol_student_id"
+                + " left join (protocol_student ps join protocol pp on ps.protocol_id=pp.id) on ps.id=sv.protocol_student_id"
                 + " order by sv.grade_date asc")
                 .setParameter(1, studentId)
                 .getResultList();

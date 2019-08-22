@@ -92,6 +92,8 @@ public class StudentHigherResult {
     @JoinColumn(nullable = false, updatable = false)
     private StudentHigherResultModule changedModule;
 
+    private Boolean isActive;
+
     public Long getId() {
         return id;
     }
@@ -259,5 +261,13 @@ public class StudentHigherResult {
     public void setChangedModule(StudentHigherResultModule changedModule) {
         this.changedModule = changedModule;
     }
-    
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
 }

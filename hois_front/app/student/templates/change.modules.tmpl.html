@@ -3,25 +3,35 @@
   <table md-table class="secondary-table">
     <thead md-head>
       <tr md-row>
-        <th md-column>{{'student.result.module' | translate}}</th>
+        <th md-column>{{'student.result.higher.subject' | translate}}</th>
+        <th md-column>{{'student.result.higher.subjectCode' | translate}}</th>
         <th md-column>{{'student.result.higher.credits' | translate}}</th>
         <th md-column>{{'student.result.grade' | translate}}</th>
         <th md-column>{{'student.result.date' | translate}}</th>
         <th md-column>{{'student.result.oldModule' | translate}}</th>
+        <th md-column>{{'student.result.higher.isOptional' | translate}}</th>
         <th md-column>{{'student.result.newModule' | translate}}</th>
+        <th md-column>{{'student.result.higher.isOptional' | translate}}</th>
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="module in changeableModules | orderBy: currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
-        <td md-cell>{{currentLanguageNameField(module)}}</td>
-        <td md-cell>{{module.credits}}</td>
-        <td md-cell>{{module.grade}}</td>
-        <td md-cell>{{module.gradeDate | hoisDate}}</td>
-        <td md-cell>{{currentLanguageNameField(module.curriculumVersionModule)}}</td>
+      <tr md-row ng-repeat="subject in changeableModules | orderBy: currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>{{currentLanguageNameField(subject)}}</td>
+        <td md-cell>{{subject.subjectCode}}</td>
+        <td md-cell>{{subject.credits}}</td>
+        <td md-cell>{{subject.grade}}</td>
+        <td md-cell>{{subject.gradeDate | hoisDate}}</td>
+        <td md-cell>{{currentLanguageNameField(subject.curriculumVersionModule)}}</td>
         <td md-cell>
-          <md-select ng-model="module.curriculumVersionModuleId" aria-label="new module select" ng-change="ngchangetest(module)">
+          <md-checkbox ng-model="subject.oldIsOptional" aria-label="old is optional" disabled></md-checkbox>
+        </td>
+        <td md-cell>
+          <md-select ng-model="subject.curriculumVersionModuleId" aria-label="new module select" ng-change="ngchangetest(subject)">
             <md-option ng-repeat="val in higherCurriculumModules" ng-value="val.id">{{currentLanguageNameField(val)}}</md-option>
           </md-select>
+        </td>
+        <td md-cell>
+          <md-checkbox ng-model="subject.isOptional" aria-label="is optional" ng-disabled="!subject.curriculumVersionModuleId"></md-checkbox>
         </td>
       </tr>
     </tbody>
