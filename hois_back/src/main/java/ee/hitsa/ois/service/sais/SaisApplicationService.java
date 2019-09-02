@@ -712,11 +712,11 @@ public class SaisApplicationService {
                 addrString.append(address.getCounty());
             }
             if(StringUtils.hasText(address.getPostalcode())) {
-                if(addrString.length() > 0) {
-                    addrString.append(", ");
-                }
-                addrString.append(address.getPostalcode());
                 saisApplication.setPostcode(address.getPostalcode());
+            }
+
+            if (addrString.length() > 100) {
+                addrString.setLength(100);
             }
             saisApplication.setAddress(addrString.toString());
             saisApplication.setAddressAds(address.getAdsAddressCode());

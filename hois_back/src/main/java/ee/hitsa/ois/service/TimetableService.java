@@ -1415,7 +1415,8 @@ public class TimetableService {
     }
 
     public List<GroupTimetableDto> groupTimetables(Long schoolId) {
-        StudyYear current = studyYearService.getCurrentStudyYear(schoolId);
+         StudyYear current = studyYearService.getTimetableCurrentStudyYear(schoolId);
+
         if (current == null) {
             return null;
         }
@@ -1444,7 +1445,7 @@ public class TimetableService {
     }
 
     public List<TeacherTimetableDto> teacherTimetables(Long schoolId) {
-        StudyYear current = studyYearService.getCurrentStudyYear(schoolId);
+        StudyYear current = studyYearService.getTimetableCurrentStudyYear(schoolId);
         if (current == null) {
             return null;
         }
@@ -1486,7 +1487,7 @@ public class TimetableService {
     }
 
     public List<RoomTimetableDto> roomTimetables(Long schoolId) {
-        StudyYear current = studyYearService.getCurrentStudyYear(schoolId);
+        StudyYear current = studyYearService.getTimetableCurrentStudyYear(schoolId);
         if (current == null) {
             return null;
         }
@@ -1531,7 +1532,7 @@ public class TimetableService {
     }
     
     public List<TimetableStudyYearWeekDto> timetableStudyYearWeeks(Long schoolId) {
-        StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
+        StudyYear studyYear = studyYearService.getTimetableCurrentStudyYear(schoolId);
         if (studyYear == null) {
             return null;
         }
@@ -1554,7 +1555,7 @@ public class TimetableService {
     
     public List<TimetableStudentStudyYearWeekDto> timetableStudyYearWeeksStudent(Student student) {
         Long schoolId = EntityUtil.getId(student.getSchool());
-        StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
+        StudyYear studyYear = studyYearService.getTimetableCurrentStudyYear(schoolId);
         if (studyYear == null) {
             return null;
         }

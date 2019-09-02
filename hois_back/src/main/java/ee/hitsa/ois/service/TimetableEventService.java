@@ -903,7 +903,7 @@ public class TimetableEventService {
     }
     
     public Map<String, ?> searchTimetableFormData(Long schoolId) {
-        StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
+        StudyYear studyYear = studyYearService.getTimetableCurrentStudyYear(schoolId);
         if (studyYear == null) {
             return null;
         }
