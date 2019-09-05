@@ -29,7 +29,6 @@ angular.module('hitsaOis').controller('RemarkListController', ['$scope', '$route
     });
 
     QueryUtils.endpoint('/autocomplete/studentgroups').query({
-      valid: true,
       higher: false,
       studentGroupTeacherId: $scope.teacherId
     }).$promise.then(function (studentGroups) {

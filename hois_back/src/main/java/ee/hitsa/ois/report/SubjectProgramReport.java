@@ -7,7 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.subject.Subject;
@@ -63,6 +62,50 @@ public class SubjectProgramReport {
             @Override
             public int compare(SubjectProgramStudyContent o1, SubjectProgramStudyContent o2) {
                 if (ClassifierUtil.equals(StudyContentType.OPPETOOSISU_N, program.getStudyContentType())) {
+                    String regex = "^\\d+(\\-\\d+)?$";
+                    if (o1.getWeekNr() == o2.getWeekNr()) {
+                        return 0;
+                    }
+                    if (o1.getWeekNr() == null || o2.getWeekNr() == null) {
+                        return o1.getWeekNr() == null ? 1 : -1;
+                    }
+                    
+                    boolean isValid1 = o1.getWeekNr().matches(regex);
+                    boolean isValid2 = o2.getWeekNr().matches(regex);
+                    
+                    if (isValid1 && isValid2) {
+                        String[] splitted1 = o1.getWeekNr().split("-");
+                        String[] splitted2 = o2.getWeekNr().split("-");
+                        Long value1 = null;
+                        Long value2 = null;
+                        try {
+                            value1 = Long.valueOf(splitted1[0]);
+                        } catch (@SuppressWarnings("unused") NumberFormatException ex) { }
+                        try {
+                            value2 = Long.valueOf(splitted2[0]);
+                        } catch (@SuppressWarnings("unused") NumberFormatException ex) { }
+                        
+                        if (value1 != null && value2 != null) {
+                            if (value1.equals(value2) && (splitted1.length > 1 || splitted2.length > 1)) {
+                                if (splitted1.length > 1 && splitted2.length > 1) {
+                                    value1 = null;
+                                    value2 = null;
+                                    try {
+                                        value1 = Long.valueOf(splitted1[1]);
+                                    } catch (@SuppressWarnings("unused") NumberFormatException ex) { }
+                                    try {
+                                        value2 = Long.valueOf(splitted2[1]);
+                                    } catch (@SuppressWarnings("unused") NumberFormatException ex) { }
+                                    return value1 == value2 ? 0 : value1 == null ? 1 : value2 == null ? -1 : value1.compareTo(value2);
+                                }
+                                return splitted1.length > 1 ? 1 : -1;
+                            }
+                            return value1.compareTo(value2);
+                        }
+                        return value1 == value2 ? 0 : value1 == null ? 1 : -1;
+                    } else if (isValid1 || isValid2) {
+                        return isValid1 ? -1 : 1;
+                    }
                     return o1.getWeekNr().compareTo(o2.getWeekNr());
                 }
                 return o1.getStudyDt().compareTo(o2.getStudyDt());

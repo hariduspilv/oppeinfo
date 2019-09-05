@@ -30,7 +30,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                        <tr ng-repeat="ssp in record.subjectStudyPeriodDtos | filter:{ subject: subject.id }">
+                        <tr ng-repeat="ssp in record.subjectStudyPeriodDtos | filter:{ subject: subject.id }" ng-class="{'bold-top-line': $first}">
                             <td>
                                 <span ng-repeat="teacher in ssp.teachers" ng-class="{'invalid': !capacitiesUtil.teachersLoadOk(ssp)}">
                                     <span ng-if="$index > 0">, </span>
@@ -58,7 +58,7 @@
                             <td>{{capacitiesUtil.capacitiesSumBySsp(ssp)}}</td>
                         </tr>
                     </tbody>
-                    <tr class="bold" md-colors="{background: 'background-200'}">
+                    <tr class="bold bold-top-line" md-colors="{background: 'background-200'}">
                         <td>{{'subjectStudyPeriod.overall' | translate | uppercase}}</td>
                         <td ng-repeat="type in capacityTypes">{{capacitiesUtil.capacitiesSumByType(type.code)}}</td>
                         <td>{{capacitiesUtil.capacitiesSumOverall()}}</td>
@@ -76,3 +76,13 @@
     </form>
 </div>
 
+<style>
+    tr.bold-top-line,
+    tr.bold-top-line td {
+        border-top: #525252 2px solid !important;
+    }
+    .subject-study-period td,
+    .subject-study-period th {
+        border-bottom: none !important;
+    }
+</style>

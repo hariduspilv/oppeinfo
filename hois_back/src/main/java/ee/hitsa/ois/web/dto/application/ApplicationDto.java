@@ -75,7 +75,9 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     
     /** TUGI application specific */
     private Boolean canRemoveConfirmation;
-    
+    /** RAKKAVA application specific */
+    private Boolean canChangeThemeReplacements;
+
     private Boolean hasBeenSeenByAdmin;
 
     public static ApplicationDto of(Application application) {
@@ -508,4 +510,13 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     public void setCanRemoveConfirmation(Boolean canRemoveConfirmation) {
         this.canRemoveConfirmation = canRemoveConfirmation;
     }
+
+    public Boolean getCanChangeThemeReplacements() {
+        return canChangeThemeReplacements;
+    }
+
+    public void setCanChangeThemeReplacements(Boolean canChangeThemeReplacements) {
+        this.canChangeThemeReplacements = canChangeThemeReplacements;
+    }
+
 }

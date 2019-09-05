@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 
@@ -60,6 +61,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET, "/classifier/children/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/classifier/parents/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/curriculumVersion/schoolDepartments/curriculum/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/generalmessages/showsitemessages").permitAll()
                 .antMatchers(HttpMethod.GET, "/timetables/timetableStudyYearWeeks/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/timetables/group/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/timetables/teacher/**").permitAll()
@@ -142,7 +144,9 @@ class UniqueUrlSecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.
             requestMatchers()
-                .antMatchers("/practiceJournals/supervisor/{uuid}/**", "/poll/supervisor/{uuid}/**")
+                .antMatchers("/practiceJournals/supervisor/{uuid}/**",
+                        "/poll/supervisor/{uuid}/**", 
+                        "/poll/expert/{uuid}/**")
                     .and()
                 .authorizeRequests()
                     .anyRequest()
@@ -151,6 +155,36 @@ class UniqueUrlSecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .sessionManagement()
                     .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and()
+                .csrf()
+                    .disable();
+    }
+}
+
+@Configuration
+@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER - 4)
+class AsyncSecurityHolderInheritance extends WebSecurityConfigurerAdapter {
+    
+    @Autowired
+    private HoisUserDetailsService userDetailsService;
+    @Autowired
+    private HoisJwtProperties hoisJwtProperties;
+    
+    public AsyncSecurityHolderInheritance() {
+        super();
+        SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
+    }
+    
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+            .requestMatchers()
+                .antMatchers("/students/ehisStudentExport")
+                    .and()
+                .authorizeRequests()
+                    .anyRequest()
+                    .permitAll()
+                    .and()
+                .addFilter(new JwtAuthorizationFilter(authenticationManager(), userDetailsService, hoisJwtProperties))
                 .csrf()
                     .disable();
     }

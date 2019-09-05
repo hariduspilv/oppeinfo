@@ -83,7 +83,7 @@
           </tbody>
         </table>
       </md-table-container>
-      <md-table-pagination ng-if="supportServices.totalElements > supportServicesCriteria.size" md-limit="supportServicesCriteria.size"
+      <md-table-pagination ng-show="supportServices.totalElements > supportServicesCriteria.size" md-limit="supportServicesCriteria.size"
         md-limit-options="[5, 10, 20, 50]" md-page="supportServicesCriteria.page" md-total="{{supportServices.totalElements}}" md-on-paginate="loadSupportServices"
         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
         md-page-select></md-table-pagination>

@@ -54,6 +54,7 @@ public class SchoolForm extends VersionedCommand {
     private String nameGenitiveEt;
     private Boolean isMinorStudentAbsence;
     private Boolean isLetterGrade;
+    private Boolean isWithoutEkis;
     @Size(max = 100)
     private String finalSchoolType;
     @Size(max = 500)
@@ -238,6 +239,14 @@ public class SchoolForm extends VersionedCommand {
 
     public void setIsLetterGrade(Boolean isLetterGrade) {
         this.isLetterGrade = isLetterGrade;
+    }
+
+    public Boolean getIsWithoutEkis() {
+        return isWithoutEkis;
+    }
+
+    public void setIsWithoutEkis(Boolean isWithoutEkis) {
+        this.isWithoutEkis = isWithoutEkis;
     }
 
     public String getFinalSchoolType() {

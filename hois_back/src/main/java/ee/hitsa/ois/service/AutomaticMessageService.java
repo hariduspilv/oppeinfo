@@ -160,6 +160,14 @@ public class AutomaticMessageService {
             mailService.sendMail(message, Collections.singletonList(person.getEmail()));
         }
     }
+    
+    public void sendMessageToEmail(MessageType type, School school, Person person, Object data, String email) {
+        Message message = sendMessageToPersons(type, school, Collections.singletonList(person), data);
+
+        if (message != null) {
+            mailService.sendMail(message, Collections.singletonList(email));
+        }
+    }
 
     public void sendMessageToEnterprise(ContractSupervisor supervisor, School school, MessageType type, Object dataBean) {
         Message message = getMessage(type, school, dataBean);

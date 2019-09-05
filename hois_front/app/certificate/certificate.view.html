@@ -5,7 +5,7 @@
           <hois-classifier-value ng-model="record.type" main-classifier-code="TOEND_LIIK"></hois-classifier-value>
       </md-input-container>
 
-      <md-input-container ng-if="record.status === 'TOEND_STAATUS_V'">
+      <md-input-container ng-if="record.status === 'TOEND_STAATUS_V' || (auth.school.withoutEkis && record.certificateNr)">
           <label>{{'certificate.nr' | translate}}</label>
           <hois-value value="record.certificateNr"></hois-value>
       </md-input-container>
@@ -62,7 +62,8 @@
   <div layout="row">
       <md-button class="md-raised md-primary" ng-if="record.canBeChanged && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TOEND')" 
         ng-href="/#/certificate/{{::record.id}}/edit">{{'main.button.change' | translate}}</md-button>
-      <md-button class="md-raised md-default" ng-if="auth.isStudent() && record.status === 'TOEND_STAATUS_T'" ng-click="order()">{{'certificate.orderAgain' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-if="auth.isStudent() && record.status === 'TOEND_STAATUS_T' && !auth.school.withoutEkis" ng-click="order()">{{'certificate.orderAgain' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-if="record.id && auth.school.withoutEkis && auth.isAdmin()" ng-href="{{printUrl()}}" target="_blank">{{'main.button.print' | translate}}</md-button>
       <md-button class="md-raised md-default" ng-if="record.id && auth.isStudent() && record.status === 'TOEND_STAATUS_T'" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
       <md-button class="md-raised md-default" ng-click="back('#/certificate')">{{'main.button.back' | translate}}</md-button>
       <md-button class="md-raised md-default" ng-if="record.canViewFromEkis"

@@ -1,4 +1,3 @@
-
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
 <div flex>
     <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin" ng-model-options="{allowInvalid: true}">
@@ -11,27 +10,26 @@
                         <label class="textInput">{{'poll.name' | translate}}</label>
                         <input ng-model="criteria.pollName" type="text" md-maxlength="255">
                     </md-input-container>
-                </div>
-                <div layout="row" flex="50">
-                    <md-input-container flex="50" flex-offset="5">
-                        <label>{{'main.from' | translate}}</label>
-                        <md-datepicker name="from" ng-model="criteria.validFrom" md-max-date="criteria.validThru"></md-datepicker>
-                    </md-input-container>
-                    <md-input-container flex="50">
-                        <label>{{'main.thru' | translate}}</label>
-                        <md-datepicker name="thru" ng-model="criteria.validThru" md-min-date="criteria.validFrom"></md-datepicker>
-                    </md-input-container>
-                </div>
-            </div>
-
-            <div layout="row">
-                <div layout="column" flex="50">
                     <md-input-container>
                         <label>{{'poll.type' | translate}}</label>
                         <hois-classifier-select ng-model="criteria.typeCode" model-value-attr="code" main-classifier-code="KYSITLUS"></hois-classifier-select>
                     </md-input-container>
+                    <md-input-container>
+                        <label>{{'poll.target' | translate}}</label>
+                        <hois-classifier-select ng-model="criteria.targetCode" model-value-attr="code" main-classifier-code="KYSITLUS_SIHT"></hois-classifier-select>
+                    </md-input-container>
                 </div>
                 <div layout="column" flex="50">
+                    <div layout="row" layout-xs="column">
+                        <md-input-container flex="50" flex-xs="100" flex-offset="5">
+                            <label>{{'main.from' | translate}}</label>
+                            <md-datepicker name="from" ng-model="criteria.validFrom" md-max-date="criteria.validThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                        </md-input-container>
+                        <md-input-container flex="50" flex-xs="100" flex-offset-xs="5">
+                            <label>{{'main.thru' | translate}}</label>
+                            <md-datepicker name="thru" ng-model="criteria.validThru" md-min-date="criteria.validFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                        </md-input-container>
+                    </div>
                     <md-input-container flex-offset="5">
                         <label>{{'poll.status' | translate}}</label>
                         <hois-classifier-select ng-model="criteria.statusCode" model-value-attr="code" main-classifier-code="KYSITLUS_STAATUS"></hois-classifier-select>
@@ -39,20 +37,10 @@
                 </div>
             </div>
 
-            <div layout="row">
-                <div flex="50">
-                    <div layout="column" flex>
-                        <md-input-container>
-                            <label>{{'poll.target' | translate}}</label>
-                            <hois-classifier-select ng-model="criteria.targetCode" model-value-attr="code" main-classifier-code="KYSITLUS_SIHT"></hois-classifier-select>
-                        </md-input-container>
-                    </div>
-                </div>
-            </div>
-
             <div layout="row" layout-xs="column">
                 <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
                 <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+                <md-button class="md-raised" ng-click="testEmail()">{{'main.button.test' | translate}}</md-button>
                 <md-button ng-href="#/poll/new" class="md-raised">{{'main.button.create' | translate}}</md-button>
             </div>
         </div>

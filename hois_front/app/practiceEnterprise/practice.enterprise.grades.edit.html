@@ -47,7 +47,7 @@
                         <md-input-container>
                             <label>{{'enterprise.gradesTab.grade' | translate}}</label>
                             <hois-classifier-select ng-change="grade.ratingThru = undefined" ng-model="grade.ratingCode" model-value-attr="code"
-                              only-valid criteria="{higher: auth.school.higher, vocational: auth.school.vocational}" main-classifier-code="PR_HINNANG"
+                              only-valid criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" main-classifier-code="PR_HINNANG"
                               filter-values="['PR_HINNANG_X', 'PR_HINNANG_P']" required ignore-preselected></hois-classifier-select>
                         </md-input-container>
                     </div>

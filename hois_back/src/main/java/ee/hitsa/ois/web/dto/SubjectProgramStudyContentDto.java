@@ -12,7 +12,7 @@ public class SubjectProgramStudyContentDto extends VersionedCommand {
 
     private Long id;
     private Long subjectProgramId;
-    private Short weekNr;
+    private String weekNr;
     private LocalDate studyDt;
     @NotBlank
     private String studyInfo;
@@ -39,10 +39,10 @@ public class SubjectProgramStudyContentDto extends VersionedCommand {
     public void setSubjectProgramId(Long subjectProgramId) {
         this.subjectProgramId = subjectProgramId;
     }
-    public Short getWeekNr() {
+    public String getWeekNr() {
         return weekNr;
     }
-    public void setWeekNr(Short weekNr) {
+    public void setWeekNr(String weekNr) {
         this.weekNr = weekNr;
     }
     public LocalDate getStudyDt() {

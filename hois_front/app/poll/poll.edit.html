@@ -16,7 +16,7 @@
     <form name="pollForm" role="form" class="nomargin" ng-submit="save()" flex novalidate>
         <div layout="column" flex>
             <div layout="row">
-                <md-input-container flex="50">
+                <md-input-container flex="50" flex-xs="100">
                     <label>{{'poll.type' | translate}}</label>
                     <hois-classifier-select ng-model="criteria.type" model-value-attr="code" main-classifier-code="KYSITLUS" ng-disabled="disabled" required ng-change="emptyLists() && checkCases()"></hois-classifier-select>
                 </md-input-container>
@@ -29,31 +29,27 @@
                         <ng-message when="incorrectName">{{'poll.basicData.nameError' | translate}}</ng-message>
                     </ng-messages>
                 </md-input-container>
-                <div layout="row" flex>
-                    <md-input-container flex>
-                        <label class="textInput">{{'poll.basicData.foreWord' | translate}}</label>
-                        <textarea ng-model="criteria.foreword" md-maxlength="4000" max-rows="4"></textarea>
-                    </md-input-container>
-                </div>
-                <div layout="row" flex>
-                    <md-input-container flex>
-                        <label class="textInput">{{'poll.basicData.afterWord' | translate}}</label>
-                        <textarea ng-model="criteria.afterword" md-maxlength="4000" max-rows="4"></textarea>
-                    </md-input-container>
-                </div>
+                <md-input-container>
+                    <label class="textInput">{{'poll.basicData.foreWord' | translate}}</label>
+                    <textarea ng-model="criteria.foreword" md-maxlength="4000" max-rows="4"></textarea>
+                </md-input-container>
+                <md-input-container>
+                    <label class="textInput">{{'poll.basicData.afterWord' | translate}}</label>
+                    <textarea ng-model="criteria.afterword" md-maxlength="4000" max-rows="4"></textarea>
+                </md-input-container>
                 <fieldset>
                 <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'poll.basicData.target' | translate}}</legend>
-                    <div layout="row" ng-if="criteria.type !== 'KYSITLUS_O' && criteria.type !== 'KYSITLUS_T' && criteria.type !== 'KYSITLUS_V'">
-                        <div flex="50">
+                    <div layout="row" layout-xs="column" ng-if="criteria.type !== 'KYSITLUS_O' && criteria.type !== 'KYSITLUS_T' && criteria.type !== 'KYSITLUS_V'">
+                        <div flex="50" flex-xs="100">
                             <div layout="column" flex>
                                 <md-input-container>
                                     <label>{{'poll.chooseTarget' | translate}} <span>*</span></label>
-                                    <hois-select ng-model="formState.targetCode" value-property="code" values="formState.aim | filter: targetCodeFilter" ng-change="addTargetCode()"></hois-select>
+                                    <hois-select ng-model="formState.targetCode" value-property="code" values="formState.aim | filter: targetCodeFilter" ng-change="addTargetCode()" aria-label="targetcodes"></hois-select>
                                 </md-input-container>
                             </div>
                         </div>
-                        <md-button flex-offset="5" ng-click="addAllTargetCodes()" class="md-raised">{{"poll.basicData.pickAll" | translate}}</md-button>
-                        <md-button flex-offset="5" ng-if="formState.targetCodes.length > 0" ng-click="removeAllTargetCodes()" class="md-raised">{{"poll.basicData.removeAll" | translate}}</md-button>
+                        <md-button flex-offset="5" flex-offset-xs="0" ng-click="addAllTargetCodes()" class="md-raised">{{"poll.basicData.pickAll" | translate}}</md-button>
+                        <md-button ng-if="formState.targetCodes.length > 0" flex-offset-xs="0" ng-click="removeAllTargetCodes()" class="md-raised">{{"poll.basicData.removeAll" | translate}}</md-button>
                     </div>
                     <div ng-if="formState.targetCodes.length > 0" layout="row">
                         <md-table-container flex="50" style="max-height: 200px">
@@ -79,12 +75,12 @@
                                         <hois-select ng-model="criteria.teacherOccupations" values="formState.occupations" multiple></hois-select>
                                     </md-input-container>
                                 </div>
-                                <div flex="100" layout="row" ng-if="criteria.type === 'KYSITLUS_P' || (criteria.type === 'KYSITLUS_Y' && showJournalDates)">
-                                    <md-input-container flex>
+                                <div layout="row" layout-xs="column" ng-if="criteria.type === 'KYSITLUS_P' || (criteria.type === 'KYSITLUS_Y' && showJournalDates)">
+                                    <md-input-container flex-xs="100">
                                         <label>{{'poll.basicData.journalFrom' | translate}}</label>
                                         <md-datepicker name="from" ng-model="criteria.journalFrom" md-max-date="criteria.journalThru" required></md-datepicker>
                                     </md-input-container>
-                                    <md-input-container flex flex-offset="5">
+                                    <md-input-container flex-xs="100">
                                         <label>{{'poll.basicData.journalThru' | translate}}</label>
                                         <md-datepicker name="thru" ng-model="criteria.journalThru" md-min-date="criteria.journalFrom" required></md-datepicker>
                                     </md-input-container>
@@ -92,20 +88,29 @@
                                 <div layout="row" ng-if="auth.higher && criteria.type === 'KYSITLUS_O'">
                                     <md-input-container flex>
                                         <label>{{'poll.basicData.declarationPeriod' | translate}}</label>
-                                        <hois-select ng-model="criteria.studyPeriod" type="studyperiodyear" sorted-query="true" ng-required="auth.higher && (criteria.journals === undefined || criteria.journals.length === 0)" preselect-current></hois-select>
+                                        <hois-select ng-model="criteria.studyPeriod" type="studyperiodyear" sorted-query="true" ng-required="auth.higher && (criteria.journals === undefined || criteria.journals.length === 0)" preselect-current aria-label="studyperiod"></hois-select>
                                     </md-input-container>
+                                </div>
+                                <div class="form-readonly" ng-if="showExpertUrl && criteria.id">
+                                    <div layout="row" layout-xs="column" style="margin-top: 10px;">
+                                        <md-input-container flex>
+                                            <label>{{'poll.basicData.outsiderUrl' | translate}}</label>
+                                            <hois-value value="criteria.pollUrl"></hois-value>
+                                        </md-input-container>
+                                        <md-button copy-to-clipboard="{{criteria.pollUrl}}">{{'poll.basicData.copy' | translate}}</md-button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div ng-if="studentGroupAllowed">
-                        <div layout="row">
-                            <hois-autocomplete label="poll.studentgroup" flex="50" ng-model="formState.studentgroup" method="studentgroups" additional-query-params="{valid: true}"></hois-autocomplete>
-                            <md-button flex-offset="5" ng-click="addAllStudentgroups()" class="md-raised">{{"poll.basicData.pickAll" | translate}}</md-button>
-                            <md-button flex-offset="5" ng-if="formState.studentGroups.length > 0" ng-click="removeAllStudentgroups()" class="md-raised">{{"poll.basicData.removeAll" | translate}}</md-button>
+                        <div layout="row" layout-xs="column">
+                            <hois-autocomplete label="poll.studentgroup" flex="50" flex-xs="100" ng-model="formState.studentgroup" method="studentgroups" additional-query-params="{valid: true}"></hois-autocomplete>
+                            <md-button flex-offset="5" flex-offset-xs="0" ng-click="addAllStudentgroups()" class="md-raised">{{"poll.basicData.pickAll" | translate}}</md-button>
+                            <md-button ng-if="formState.studentGroups.length > 0" flex-offset-xs="0" ng-click="removeAllStudentgroups()" class="md-raised">{{"poll.basicData.removeAll" | translate}}</md-button>
                         </div>
                         <div ng-if="formState.studentGroups.length > 0" layout="row">
-                            <md-table-container flex="50" style="max-height: 200px">
+                            <md-table-container flex="50" flex-xs="100" style="max-height: 200px">
                                 <table md-table class="secondary-table">
                                     <thead md-head ng-hide="true">
                                         <tr md-row>
@@ -148,35 +153,35 @@
                     </div>
                 </fieldset>
                 <br>
-                <md-input-container flex="45" ng-if="criteria.type === 'KYSITLUS_O'">
+                <md-input-container ng-if="criteria.type === 'KYSITLUS_O'">
                     <md-checkbox ng-model="criteria.isTeacherComment" aria-label="required" ng-checked="formState.isTeacherComment">
                         {{'poll.basicData.teacherCanComment' | translate}}
                     </md-checkbox>
                 </md-input-container>
-                <md-input-container flex="45" ng-if="criteria.type === 'KYSITLUS_O' && criteria.isTeacherComment">
+                <md-input-container ng-if="criteria.type === 'KYSITLUS_O' && criteria.isTeacherComment">
                     <md-checkbox ng-model="criteria.isTeacherCommentVisible" aria-label="required" ng-checked="formState.isTeacherCommentVisible">
                         {{'poll.basicData.teacherCommentVisible' | translate}}
                     </md-checkbox>
                 </md-input-container>
-                <md-input-container flex="45">
+                <md-input-container ng-if="criteria.type === 'KYSITLUS_O'">
                     <md-checkbox ng-model="criteria.isStudentVisible" aria-label="required">
                         {{'poll.basicData.studentCanSeeResponse' | translate}}
                     </md-checkbox>
                 </md-input-container>
                 <div layout="row">
-                    <div flex="50">
+                    <div flex="50" flex-xs="100">
                         <md-input-container flex="50">
                             <label>{{'main.validFrom' | translate}}</label>
-                            <md-datepicker name="from" ng-model="criteria.validFrom" md-max-date="criteria.validThru" required ng-change="checkReminder()"></md-datepicker>
+                            <md-datepicker name="from" ng-model="criteria.validFrom" md-max-date="earlierDate(criteria.reminderDt, criteria.validThru)" required ng-change="checkReminder()"></md-datepicker>
                         </md-input-container>
-                        <md-input-container flex="50" flex-offset="5">
+                        <md-input-container flex="50" flex-offset="5" flex-offset-xs="0">
                             <label>{{'main.validThru' | translate}}</label>
-                            <md-datepicker name="thru" ng-model="criteria.validThru" md-min-date="criteria.validFrom" required ng-change="checkReminder()"></md-datepicker>
+                            <md-datepicker name="thru" ng-model="criteria.validThru" md-min-date="laterDate(criteria.reminderDt, criteria.validFrom)" required ng-change="checkReminder()"></md-datepicker>
                         </md-input-container>
                     </div>
                 </div>
                 <div layout="row">
-                    <md-input-container flex="25">
+                    <md-input-container flex="25" flex-xs="50">
                         <label>{{'poll.basicData.notificationDate' | translate}}</label>
                         <md-datepicker id="notificationDate" name="reminderDt" ng-model="criteria.reminderDt" md-min-date="criteria.validFrom" md-max-date="criteria.validThru" ng-change="checkReminder()" required></md-datepicker>
                         <ng-messages for="pollForm.reminderDt.$error" role="alert">
@@ -188,7 +193,7 @@
                     <div layout="column" ng-if="formState.insertedBy !== undefined">
                         <br>
                         <div layout="row">
-                            <md-input-container flex="25">
+                            <md-input-container flex="25" flex-xs="100">
                                 <label>{{'poll.basicData.insertedBy' | translate}}</label>
                                 <hois-value value="formState.insertedBy"></hois-value>
                             </md-input-container>
@@ -197,7 +202,7 @@
                     <div layout="column" ng-if="formState.changedBy !== undefined">
                         <br>
                         <div layout="row">
-                            <md-input-container flex="25">
+                            <md-input-container flex="25" flex-xs="100">
                                 <label>{{'poll.basicData.changedBy' | translate}}</label>
                                 <hois-value value="formState.changedBy"></hois-value>
                             </md-input-container>
@@ -206,7 +211,7 @@
                     <div layout="column" ng-if="formState.status !== undefined">
                         <br>
                         <div layout="row">
-                            <md-input-container flex="25">
+                            <md-input-container flex="25" flex-xs="100">
                                 <label>{{'poll.basicData.status' | translate}}</label>
                                 <hois-value value="currentLanguageNameField(formState.status)"></hois-value>
                             </md-input-container>

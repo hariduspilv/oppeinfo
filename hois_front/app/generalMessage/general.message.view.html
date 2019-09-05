@@ -22,8 +22,8 @@
         </md-input-container>
       </div>
 
-      <div>&nbsp;</div>
-      <fieldset tabindex="1">
+      <div ng-if="!auth.isMainAdmin()">&nbsp;</div>
+      <fieldset tabindex="1" ng-if="!auth.isMainAdmin()">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'generalmessage.targets' | translate}} *</legend>
 
         <div layout="column" class="common-label" ng-repeat="role in record.targets">

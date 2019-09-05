@@ -12,6 +12,188 @@
         }
     }
 
+    function pushToError(errorThemes, theme) {
+        if (theme.journal !== null && !errorThemes.includes(theme.journal.nameEt + ': ' + theme.nameEt)) {
+            errorThemes.push(theme.journal.nameEt + ': ' + theme.nameEt);
+        } else if (theme.subject !== null && !errorThemes.includes(theme.subject.nameEt + ': ' + theme.nameEt)) {
+            errorThemes.push(theme.subject.nameEt + ': ' + theme.nameEt);
+        } else if (!errorThemes.includes(theme.nameEt)) {
+            errorThemes.push(theme.nameEt);
+        }
+    }
+
+    function test(dialogService, criteria, QueryUtils, oisFileService, formState) {
+        dialogService.showDialog(criteria.isThemePageable ? 'poll/poll.test.by.theme.dialog.html' : 
+        ((criteria.type === 'KYSITLUS_O' || (formState !== undefined && formState.type === 'KYSITLUS_O')) ? 'poll/poll.test.by.subjectOrJournal.dialog.html' : 
+        'poll/poll.test.dialog.html'), function (dialogScope) {
+            dialogScope.formState = {};
+            dialogScope.criteria = {};
+            dialogScope.criteria.id = criteria.id;
+            dialogScope.criteria.foreword = criteria.foreword;
+            dialogScope.criteria.afterword = criteria.afterword;
+    
+            dialogScope.previousSubjectOrJournal = function(index) {
+                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index - 1].show = true;
+            };
+    
+            dialogScope.last = function(index) {
+                return index === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1;
+            };
+    
+            dialogScope.first = function(index) {
+                return index === 0;
+            };
+
+            dialogScope.firstPage = function(themeList) {
+                return Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0] === themeList;
+            };
+    
+            dialogScope.nextSubjectOrJournal = function(index) {
+                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index + 1].show = true;
+            };
+
+            function mapItems(itemById, list, repetitiveThemes, journal) {
+                list.forEach(function (item) {
+                    if (itemById[item.id] === undefined) {
+                        itemById[item.id] = [];
+                        if (journal) {
+                            itemById[item.id].journal = item;
+                        } else {
+                            itemById[item.id].subject = item;
+                        }
+                    }
+                    itemById[item.id].push.apply(itemById[item.id], angular.copy(repetitiveThemes));
+                });
+                return itemById;
+            }
+
+            dialogScope.refresh = function() {
+                QueryUtils.loadingWheel(dialogScope, true, true);
+                QueryUtils.endpoint("/poll/themes").get({id: dialogScope.criteria.id}).$promise.then(function (data) {
+                    angular.extend(dialogScope.criteria, data);
+                    if (criteria.higher) {
+                        dialogScope.criteria.subjects = [{id: -1, nameEt: "õppaine kood - Õppeaine nimetus (X EAP)", nameEn: "subject code - subject name (X EAP)"}];
+                        dialogScope.criteria.journals = [];
+                    } else {
+                        dialogScope.criteria.subjects = [];
+                        dialogScope.criteria.journals = [{id: -1, nameEt: "päevik (õpperühm)", nameEn: "journal (student group)"}];
+                    }
+                    markImages(dialogScope.criteria.themes);
+                    QueryUtils.loadingWheel(dialogScope, false, true);
+                    var repetitiveThemes = dialogScope.criteria.themes.filter(function (theme) {
+                        return theme.isRepetitive;
+                    });
+                    dialogScope.hasSubjectOrJournal = (dialogScope.criteria.subjects !== null && dialogScope.criteria.subjects.length !== 0) ||
+                                                      (dialogScope.criteria.journals !== null && dialogScope.criteria.journals.length !== 0);
+                    // Map journals or subjects with repedetive themes
+                    dialogScope.formState.themeBySubjectOrJournalId = {};
+                    if (!data.isThemePageable && data.type === 'KYSITLUS_O') {
+                        if (angular.isDefined(dialogScope.criteria.journals) && dialogScope.criteria.journals.length !== 0) {
+                            dialogScope.formState.themeBySubjectOrJournalId = 
+                            mapItems(dialogScope.formState.themeBySubjectOrJournalId, dialogScope.criteria.journals, repetitiveThemes, true);
+                        }
+                        if (angular.isDefined(dialogScope.criteria.subjects) && dialogScope.criteria.subjects.length !== 0) {
+                            dialogScope.formState.themeBySubjectOrJournalId = 
+                            mapItems(dialogScope.formState.themeBySubjectOrJournalId, dialogScope.criteria.subjects, repetitiveThemes, false);
+                        }
+                        dialogScope.criteria.themes.forEach(function (theme) {
+                            if (!theme.isRepetitive) {
+                                if (dialogScope.formState.themeBySubjectOrJournalId[null] === undefined) {
+                                    dialogScope.formState.themeBySubjectOrJournalId[null] = [];
+                                }
+                                dialogScope.formState.themeBySubjectOrJournalId[null].push(theme);
+                            }
+                        });
+                        Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0].show = true;
+                    } else if (data.isThemePageable && data.type === 'KYSITLUS_O'){
+                        var placeHolderList = [];
+                        dialogScope.criteria.journals.forEach(function (journal) {
+                            repetitiveThemes.forEach(function (theme) {
+                                theme.journal = angular.copy(journal);
+                            });
+                            placeHolderList.push.apply(placeHolderList, angular.copy(repetitiveThemes));
+                        });
+                        repetitiveThemes.forEach(function (theme) {
+                            theme.journal = null;
+                        });
+                        if (dialogScope.criteria.subjects !== null) {
+                            dialogScope.criteria.subjects.forEach(function (subject) {
+                                repetitiveThemes.forEach(function (theme) {
+                                    theme.subject = angular.copy(subject);
+                                });
+                                placeHolderList.push.apply(placeHolderList, angular.copy(repetitiveThemes));
+                            });
+                        }
+                        placeHolderList.push.apply(placeHolderList, dialogScope.criteria.themes.filter(function (theme) {
+                            return !theme.isRepetitive;
+                        }));
+                        dialogScope.criteria.themes = placeHolderList;
+                        if (dialogScope.criteria.themes.length !== 0) {
+                            dialogScope.criteria.themes[0].show = true;
+                        }
+                    } else {
+                        if (dialogScope.criteria.themes.length !== 0) {
+                            dialogScope.criteria.themes[0].show = true;
+                        }
+                    }
+                });
+            };
+
+            dialogScope.previousTheme = function(index) {
+                dialogScope.criteria.themes[index].show = false;
+                dialogScope.criteria.themes[index - 1].show = true;
+            };
+
+            dialogScope.nextTheme = function(index) {
+                dialogScope.criteria.themes[index].show = false;
+                dialogScope.criteria.themes[index + 1].show = true;
+            };
+
+            dialogScope.clearRadio = function(question) {
+                question.radio1 = null;
+            };
+
+            dialogScope.refresh();
+
+            dialogScope.getUrl = function(photo) {
+                return oisFileService.getUrl(photo, 'pollThemeQuestionFile');
+            };
+        }, null, null, true);
+    }
+
+    function checkErrorsFromThemes(themes) {
+        var hasErrors = false;
+        var errorThemes = [];
+        themes.forEach(function(theme) {
+          theme.questions.forEach(function (question) {
+            if ((question.type === 'VASTUS_M' || question.type === 'VASTUS_S') && question.isRequired) {
+              var showError = true;
+              question.answers.forEach(function(answer) {
+                if (answer.chosen === true) {
+                  showError = false;
+                }
+              });
+              if (showError) {
+                question.requiredError = true;
+                hasErrors = true;
+                pushToError(errorThemes, theme);
+              } else {
+                question.requiredError = false;
+              }
+            } else if ((question.type === 'VASTUS_R' || question.type === 'VASTUS_T' || question.type === 'VASTUS_V' )  && question.isRequired && (question.answerTxt === undefined || question.answerTxt === null)) {
+              question.requiredError = true;
+              hasErrors = true;
+              pushToError(errorThemes, theme);
+            } else {
+              question.requiredError = false;
+            }
+          });
+        });
+        return [hasErrors, errorThemes];
+    }
+
     angular.module('hitsaOis').controller('PollListController', function ($scope, $route, QueryUtils, Classifier, $q, message) {
         $scope.auth = $route.current.locals.auth;
         var clMapper = Classifier.valuemapper({
@@ -25,8 +207,560 @@
                 message.info('email saadetud');
             });
         };
-        QueryUtils.createQueryForm($scope, '/poll', {order: 'p.validFrom'}, clMapper.objectmapper);
+        QueryUtils.createQueryForm($scope, '/poll', {order: 'p.validFrom desc, p.inserted desc'}, clMapper.objectmapper);
         $q.all(clMapper.promises).then($scope.loadData);
+    }).controller('PollQuestionEditController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, oisFileService, message, FormUtils) {
+        $scope.auth = $route.current.locals.auth;
+        $scope.questionId = $route.current.params.id;
+        $scope.formState = {};
+
+        var clMapper = Classifier.valuemapper({
+            typeCode: 'KYSITLUS',
+            status: 'KYSITLUS_STAATUS',
+            targetCodes: 'KYSITLUS_SIHT',
+            type: 'VASTUS'
+        });
+
+        $scope.saveQuestion = function() {
+            FormUtils.withValidForm($scope.searchForm, function() {
+                var QuestionEndpoint = QueryUtils.endpoint('/poll/updateQuestion');
+                // type is not according to the dto
+                $scope.formState.question.type = undefined;
+                QuestionEndpoint = new QuestionEndpoint($scope.formState.question);
+                QuestionEndpoint.$update().then(function (response) {
+                    message.info('main.messages.create.success');
+                    clMapper.objectmapper(response);
+                    $scope.formState.question = response;
+                    $scope.searchForm.$setPristine();
+                }).catch(angular.noop);
+            });
+        };
+
+        $scope.checkAnswer = function() {
+            var falseFields = [];
+            for (var index = 0; index < $scope.formState.question.answers.length; index++) {
+                var ctrl1 = $scope.searchForm[index];
+                for (var index2 = 0; index2 < $scope.formState.question.answers.length; index2++) {
+                    var ctrl2 = $scope.searchForm[index2];
+                    if (index !== index2) {
+                        var answer1 = $scope.formState.question.answers[index];
+                        var answer2 = $scope.formState.question.answers[index2];
+                        var sameAnswer = answer1.nameEt !== undefined && answer2.nameEt !== undefined &&
+                        answer1.nameEt === answer2.nameEt;
+                        if (sameAnswer) {
+                            if (!falseFields.includes(ctrl1)) {
+                                falseFields.push(ctrl1);
+                            }
+                            if (!falseFields.includes(ctrl2)) {
+                                falseFields.push(ctrl2);
+                            }
+                        }
+                        if (ctrl1 !== undefined && !falseFields.includes(ctrl1) && !sameAnswer) {
+                            ctrl1.$setValidity('answerEtError', true);
+                            ctrl1.$setTouched();
+                        }
+                        if (ctrl2 !== undefined && !falseFields.includes(ctrl2) && !sameAnswer) {
+                            ctrl2.$setValidity('answerEtError', true);
+                            ctrl2.$setTouched();
+                        }
+                    }
+                }
+            }
+            falseFields.forEach(function (item) {
+                if (item !== undefined) {
+                    item.$setValidity('answerEtError', false);
+                    item.$setTouched();
+                }
+            });
+        };
+
+        $scope.test = function(row) {
+            test(dialogService, row, QueryUtils, oisFileService, {type: row.typeCode.code});
+        };
+
+        $scope.refresh = function() {
+            var QuestionEndPoint = QueryUtils.endpoint('/poll/question');
+            QueryUtils.createQueryForm($scope, '/poll/questionPolls/' + $scope.questionId, {order: 'p.validThru desc'}, clMapper.objectmapper);
+            $q.all(clMapper.promises).then(function() {
+                $scope.loadData();
+                QuestionEndPoint.get({id: $scope.questionId}).$promise.then(function (response) {
+                    clMapper.objectmapper(response);
+                    $scope.formState.question = response;
+                    $scope.searchForm.$setPristine();
+                });
+            });
+        };
+
+        $scope.refresh();
+    }).controller('PollQuestionsListController', function ($scope, $route, QueryUtils, Classifier, $q) {
+        $scope.auth = $route.current.locals.auth;
+        var clMapper = Classifier.valuemapper({
+            type: 'VASTUS'
+        });
+        QueryUtils.createQueryForm($scope, '/poll/questionsList', {}, clMapper.objectmapper);
+        $q.all(clMapper.promises).then($scope.loadData);
+    }).controller('PollSubjectsController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, oisFileService, $translate) {
+        $scope.auth = $route.current.locals.auth;
+        $scope.now = new Date();
+
+        $scope.canViewResult = function(endDate) {
+            return $scope.now >= new Date(endDate);
+        };
+
+        var clMapper = Classifier.valuemapper({
+            type: 'KYSITLUS',
+            status: 'KYSITVASTUSSTAATUS'
+        });
+
+        $scope.showJournalGraph = function(row) {
+            var newScope = {};
+            newScope.graphName = row.name;
+            newScope.journal = true;
+            newScope.teacherViewing = true;
+            newScope.pollId = row.poll.id;
+            var GraphEndpoint = QueryUtils.endpoint('/poll/graphWithoutStudentAnswer');
+            GraphEndpoint = new GraphEndpoint({pollId: row.poll.id, journalId: row.name.id});
+            loadEndpoint(GraphEndpoint, newScope);
+        };
+
+        $scope.showSubjectGraph = function(row) {
+            var newScope = {};
+            newScope.graphName = row.name;
+            newScope.journal = false;
+            newScope.teacherViewing = true;
+            newScope.pollId = row.poll.id;
+            var GraphEndpoint = QueryUtils.endpoint('/poll/graphWithoutStudentAnswer');
+            GraphEndpoint = new GraphEndpoint({pollId: row.poll.id, subjectId: row.name.id});
+            loadEndpoint(GraphEndpoint, newScope);
+        };
+
+        function loadEndpoint(endPoint, newScope) {
+            QueryUtils.loadingWheel($scope, true);
+            endPoint.$putWithoutLoad().then(function (response) {
+                QueryUtils.loadingWheel($scope, false);
+                dialogService.showDialog('poll/poll.answers.dialog.html', function (dialogScope) {
+                    dialogScope.graphName = newScope.graphName;
+                    dialogScope.journal = newScope.journal;
+                    dialogScope.teacherViewing = newScope.teacherViewing;
+                    dialogScope.pollId = newScope.pollId;
+                    dialogScope.formState = {};
+                    dialogScope.showGraph = true;
+                    dialogScope.criteria = {};
+        
+                    var tooltips = {
+                        callbacks: {
+                            beforeBody: function(t, d) {
+                                // Use pointBorderColor to hook additional information
+                                return d.datasets[0].pointBorderColor[t[0].index];
+                            }
+                        }
+                        };
+
+                    dialogScope.graph = response;
+                    if (response.comments != undefined && response.comments.length === 1 && dialogScope.teacherViewing) {
+                        dialogScope.criteria.addInfo = response.comments[0].addInfo;
+                        dialogScope.commentRef = response.comments[0].commentRef;
+                    }
+                    $translate('poll.answers.dialog.responseCount').then(function (translatedVal) {
+                        dialogScope.graph.graphByTheme.forEach(function (graphTheme) {
+                            var scales = {
+                                xAxes: [{
+                                    ticks: {
+                                        beginAtZero: true,
+                                        max: graphTheme.max
+                                    }
+                                }]
+                            };
+                            var translatedLabels = [];
+                            graphTheme.labels.forEach(function (label) {
+                                translatedLabels.push($scope.currentLanguageNameField(label));
+                            });
+                            var translatedLabelOverride = [];
+                            graphTheme.labelOverride.forEach(function (labelOverride) {
+                                var completeString = "";
+                                labelOverride.pointBorderColor.forEach(function (pointBorderColor){
+                                    completeString += $scope.currentLanguageNameField(pointBorderColor.answer) 
+                                    + "(" + pointBorderColor.answerNr + ")" + 
+                                    ": " + pointBorderColor.answers + "\n";
+                                });
+                                completeString += translatedVal + ": " + labelOverride.sum;
+                                translatedLabelOverride.push(completeString)
+                            });
+                            graphTheme.labelOverride.forEach(function (labelOverride) {
+                                labelOverride.pointBorderColor = translatedLabelOverride;
+                            });
+                            graphTheme.labels = translatedLabels;
+                            graphTheme.options.title.text = $scope.currentLanguageNameField(graphTheme.options.title.text);
+                            graphTheme.options.scales = scales;
+                            graphTheme.options.tooltips = tooltips;
+                        });
+                    });
+
+                    $translate('poll.answers.dialog.average').then(function (translatedVal) {
+                        dialogScope.graph.graphByTheme.forEach(function (theme) {
+                            theme.labelOverride[0].label = translatedVal;
+                        });
+                    });
+                    
+                    $translate('poll.answers.dialog.myAnswer').then(function (translatedVal) {
+                        dialogScope.graph.graphByTheme.forEach(function (theme) {
+                            theme.labelOverride[1] = {
+                                label: translatedVal
+                            }
+                        });
+                    });
+
+                    dialogScope.saveComment = function(addInfo) {
+                        var GraphEndpoint = QueryUtils.endpoint('/poll/comment/' + dialogScope.pollId);
+                        if (dialogScope.journal) {
+                            GraphEndpoint = new GraphEndpoint({journalId: dialogScope.graphName.id, comment: addInfo, commentRef: dialogScope.commentRef});
+                            GraphEndpoint.$putWithoutLoad();
+                        } else {
+                            GraphEndpoint = new GraphEndpoint({subjectId: dialogScope.graphName.id, comment: addInfo, commentRef: dialogScope.commentRef});
+                            GraphEndpoint.$putWithoutLoad();
+                        }
+                    };
+                    
+                }, null, null);
+            });
+        }
+
+        $scope.openAnswers = function(row) {
+            if ($scope.auth.higher) {
+                $scope.showSubjectGraph(row);
+            } else {
+                $scope.showJournalGraph(row);
+            }
+        };
+
+        QueryUtils.createQueryForm($scope, '/poll/answers/subjects', {order: 'p.validThru desc'}, clMapper.objectmapper);
+        $q.all(clMapper.promises).then($scope.loadData);
+
+        $scope.openResponse = function(row) {
+            var PollEndPoint;
+            if (row.type.code === 'KYSITLUS_O') {
+                PollEndPoint = QueryUtils.endpoint('/poll/withAnswersForView/journalOrSubject');
+            } else {
+                PollEndPoint = QueryUtils.endpoint('/poll/withAnswersForView');
+            }
+          QueryUtils.loadingWheel($scope, true, true);
+          PollEndPoint.get({id: row.id}).$promise.then(function (response) {
+            markImages(response.themes);
+            QueryUtils.loadingWheel($scope, false, true);
+            openResponse(row, response);
+          });
+        };
+
+        function openResponse(row, response) {
+            dialogService.showDialog(
+              row.isThemePageable ? 'poll/poll.response.by.theme.dialog.html' : 
+              (response.type === 'KYSITLUS_O' ? 
+              'poll/poll.response.by.subjectOrJournal.dialog.html' : 
+              'poll/poll.response.dialog.html'), function (dialogScope) {
+              dialogScope.formState = {};
+              dialogScope.formState.viewOnly = true;
+              dialogScope.formState.isThemePageable = row.isThemePageable;
+              dialogScope.formState.name = row.name;
+              var themesWithSubjectOrJournal = response.themes.filter(function(theme) {
+                return theme.journal !== null || theme.subject !== null;
+              });
+              dialogScope.hasSubjectOrJournal = themesWithSubjectOrJournal.length !== 0;
+              dialogScope.criteria = response;
+              dialogScope.getUrl = function(photo) {
+                  return oisFileService.getUrl(photo, 'pollThemeQuestionFile');
+              };
+      
+              // Map journals or subjects with repedetive themes
+              if (!row.isThemePageable && response.type === 'KYSITLUS_O') {
+                dialogScope.formState.themeBySubjectOrJournalId = {};
+                
+                dialogScope.criteria.themes.forEach(function (theme) {
+                  if (theme.journal !== null && theme.isRepetitive) {
+                    if (dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id] === undefined) {
+                      dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id] = [];
+                    }
+                    dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id].push(theme);
+                  } else if (theme.subject !== null && theme.isRepetitive) {
+                    if (dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id] === undefined) {
+                      dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id] = [];
+                    }
+                    dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id].push(theme);
+                  } else if (!theme.isRepetitive) {
+                    if (dialogScope.formState.themeBySubjectOrJournalId[null] === undefined) {
+                      dialogScope.formState.themeBySubjectOrJournalId[null] = [];
+                    }
+                    dialogScope.formState.themeBySubjectOrJournalId[null].push(theme);
+                  }
+                });
+                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0].show = true;
+              } else {
+                dialogScope.criteria.themes[0].show = true;
+              }
+      
+              dialogScope.previousSubjectOrJournal = function(index) {
+                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index - 1].show = true;
+              };
+      
+              dialogScope.last = function(index) {
+                return index === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1;
+              };
+      
+              dialogScope.first = function(index) {
+                return index === 0;
+              };
+      
+              dialogScope.nextSubjectOrJournal = function(index) {
+                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index + 1].show = true;
+              };
+      
+              dialogScope.previousTheme = function(index) {
+                  dialogScope.criteria.themes[index].show = false;
+                  dialogScope.criteria.themes[index - 1].show = true;
+              };
+      
+              dialogScope.nextTheme = function(index) {
+                  dialogScope.criteria.themes[index].show = false;
+                  dialogScope.criteria.themes[index + 1].show = true;
+              };
+      
+              dialogScope.close = function() {
+                dialogScope.cancel();
+              };
+            }, null, null, true);
+        }
+    }).controller('PollAnswersController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, oisFileService, $translate, message) {
+        $scope.auth = $route.current.locals.auth;
+
+        $scope.isInThePast = function(validThru) {
+            var validThruDate = new Date(validThru);
+            var now = new Date();
+            validThruDate.setHours(0, 0, 0, 0);
+            now.setHours(0, 0, 0, 0);
+            if (validThruDate < now) {
+                return true;
+            }
+            return false;
+        }
+
+        var clMapper = Classifier.valuemapper({
+            type: 'KYSITLUS',
+            status: 'KYSITVASTUSSTAATUS'
+        });
+        QueryUtils.createQueryForm($scope, '/poll/answers', {order: 'p.validThru desc'}, clMapper.objectmapper);
+        $q.all(clMapper.promises).then($scope.loadData);
+
+        $scope.openAnswers = function(row) {
+            openDialog(row, dialogService, QueryUtils);
+        };
+
+        function openDialog(row, dialogService, QueryUtils) {
+            QueryUtils.loadingWheel($scope, true);
+            QueryUtils.endpoint('/poll/answers').get({id: row.id}).$promise.then(function (response) {
+                QueryUtils.loadingWheel($scope, false);
+                if (response.journals.length === 0 && response.subjects.length === 0 && response.themes === false) {
+                    message.info("poll.answers.dialog.allTextFields");
+                    return;
+                }
+                dialogService.showDialog('poll/poll.answers.dialog.html', function (dialogScope) {
+                    dialogScope.formState = {};
+                    dialogScope.formState = row;
+                    dialogScope.criteria = response;
+
+                    var tooltips = {
+                        callbacks: {
+                            beforeBody: function(t, d) {
+                                // Use pointBorderColor to hook additional information
+                                return d.datasets[0].pointBorderColor[t[0].index];
+                            }
+                        }
+                    };
+
+                    function loadEndpoint(endPoint, dialogScope) {
+                        $translate('poll.answers.dialog.responseCount').then(function (translatedVal) {
+                            dialogScope.responseCount = translatedVal;
+                        });
+                        endPoint.$putWithoutLoad().then(function (response) {
+                            dialogScope.graph = response;
+                            if (response.comments != undefined) {
+                                dialogScope.comments = response.comments;
+                            }
+                            dialogScope.showGraph = true;
+                            dialogScope.graph.graphByTheme.forEach(function (graphTheme) {
+                                var scales = {
+                                    xAxes: [{
+                                        ticks: {
+                                            beginAtZero: true,
+                                            max: graphTheme.max
+                                        }
+                                    }]
+                                };
+                                var translatedLabels = [];
+                                graphTheme.labels.forEach(function (label) {
+                                    translatedLabels.push($scope.currentLanguageNameField(label));
+                                });
+                                var translatedLabelOverride = [];
+                                graphTheme.labelOverride.forEach(function (labelOverride) {
+                                    var completeString = "";
+                                    labelOverride.pointBorderColor.forEach(function (pointBorderColor){
+                                        completeString += $scope.currentLanguageNameField(pointBorderColor.answer) 
+                                        + "(" + pointBorderColor.answerNr + ")" + 
+                                        ": " + pointBorderColor.answers + "\n";
+                                    });
+                                    completeString += dialogScope.responseCount + ": " + labelOverride.sum;
+                                    translatedLabelOverride.push(completeString)
+                                });
+                                graphTheme.labelOverride.forEach(function (labelOverride) {
+                                    labelOverride.pointBorderColor = translatedLabelOverride;
+                                });
+                                graphTheme.labels = translatedLabels;
+                                graphTheme.options.title.text = $scope.currentLanguageNameField(graphTheme.options.title.text);
+                                graphTheme.options.scales = scales;
+                                graphTheme.options.tooltips = tooltips;
+                            });
+
+                            $translate('poll.answers.dialog.average').then(function (translatedVal) {
+                                dialogScope.graph.graphByTheme.forEach(function (theme) {
+                                    theme.labelOverride[0].label = translatedVal;
+                                });
+                            });
+                            
+                            $translate('poll.answers.dialog.myAnswer').then(function (translatedVal) {
+                                dialogScope.graph.graphByTheme.forEach(function (theme) {
+                                    theme.labelOverride[1] = {
+                                        label: translatedVal
+                                    }
+                                });
+                            });
+                        });
+                    }
+
+                    dialogScope.showOtherGraph = function() {
+                        dialogScope.overall = true;
+                        var GraphEndpoint = QueryUtils.endpoint('/poll/graph');
+                        GraphEndpoint = new GraphEndpoint({responseId: dialogScope.formState.id, themes: true});
+                        loadEndpoint(GraphEndpoint, dialogScope);
+                    };
+
+                    dialogScope.showJournalGraph = function(journal) {
+                        dialogScope.graphName = journal;
+                        dialogScope.journal = true;
+                        var GraphEndpoint = QueryUtils.endpoint('/poll/graph');
+                        GraphEndpoint = new GraphEndpoint({responseId: dialogScope.formState.id, journalId: journal.id});
+                        loadEndpoint(GraphEndpoint, dialogScope);
+                    };
+
+                    dialogScope.showSubjectGraph = function(subject) {
+                        dialogScope.graphName = subject;
+                        dialogScope.journal = false;
+                        var GraphEndpoint = QueryUtils.endpoint('/poll/graph');
+                        GraphEndpoint = new GraphEndpoint({responseId: dialogScope.formState.id, subjectId: subject.id});
+                        loadEndpoint(GraphEndpoint, dialogScope);
+                    };
+
+                    dialogScope.hideGraph = function() {
+                        dialogScope.overall = false;
+                        dialogScope.showGraph = false;
+                    };
+                }, null, null);
+            });
+        };
+
+        $scope.openResponse = function(row) {
+            var PollEndPoint;
+            if (row.type.code === 'KYSITLUS_O') {
+                PollEndPoint = QueryUtils.endpoint('/poll/withAnswersForView/journalOrSubject');
+            } else {
+                PollEndPoint = QueryUtils.endpoint('/poll/withAnswersForView');
+            }
+          QueryUtils.loadingWheel($scope, true, true);
+          PollEndPoint.get({id: row.id}).$promise.then(function (response) {
+            markImages(response.themes);
+            QueryUtils.loadingWheel($scope, false, true);
+            openResponse(row, response);
+          });
+        };
+
+        function openResponse(row, response) {
+            dialogService.showDialog(
+              row.isThemePageable ? 'poll/poll.response.by.theme.dialog.html' : 
+              (response.type === 'KYSITLUS_O' ? 
+              'poll/poll.response.by.subjectOrJournal.dialog.html' : 
+              'poll/poll.response.dialog.html'), function (dialogScope) {
+              dialogScope.formState = {};
+              dialogScope.formState.viewOnly = true;
+              dialogScope.formState.isThemePageable = row.isThemePageable;
+              dialogScope.formState.name = row.name;
+              var themesWithSubjectOrJournal = response.themes.filter(function(theme) {
+                return theme.journal !== null || theme.subject !== null;
+              });
+              dialogScope.hasSubjectOrJournal = themesWithSubjectOrJournal.length !== 0;
+              dialogScope.criteria = response;
+              dialogScope.getUrl = function(photo) {
+                  return oisFileService.getUrl(photo, 'pollThemeQuestionFile');
+              };
+      
+              // Map journals or subjects with repedetive themes
+              if (!row.isThemePageable && response.type === 'KYSITLUS_O') {
+                dialogScope.formState.themeBySubjectOrJournalId = {};
+                
+                dialogScope.criteria.themes.forEach(function (theme) {
+                  if (theme.journal !== null && theme.isRepetitive) {
+                    if (dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id] === undefined) {
+                      dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id] = [];
+                    }
+                    dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id].push(theme);
+                  } else if (theme.subject !== null && theme.isRepetitive) {
+                    if (dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id] === undefined) {
+                      dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id] = [];
+                    }
+                    dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id].push(theme);
+                  } else if (!theme.isRepetitive) {
+                    if (dialogScope.formState.themeBySubjectOrJournalId[null] === undefined) {
+                      dialogScope.formState.themeBySubjectOrJournalId[null] = [];
+                    }
+                    dialogScope.formState.themeBySubjectOrJournalId[null].push(theme);
+                  }
+                });
+                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0].show = true;
+              } else {
+                dialogScope.criteria.themes[0].show = true;
+              }
+      
+              dialogScope.previousSubjectOrJournal = function(index) {
+                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index - 1].show = true;
+              };
+      
+              dialogScope.last = function(index) {
+                return index === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1;
+              };
+      
+              dialogScope.first = function(index) {
+                return index === 0;
+              };
+      
+              dialogScope.nextSubjectOrJournal = function(index) {
+                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index + 1].show = true;
+              };
+      
+              dialogScope.previousTheme = function(index) {
+                  dialogScope.criteria.themes[index].show = false;
+                  dialogScope.criteria.themes[index - 1].show = true;
+              };
+      
+              dialogScope.nextTheme = function(index) {
+                  dialogScope.criteria.themes[index].show = false;
+                  dialogScope.criteria.themes[index + 1].show = true;
+              };
+      
+              dialogScope.close = function() {
+                dialogScope.cancel();
+              };
+            }, null, null, true);
+        }
     }).controller('PollQuestionsController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, ArrayUtils, oisFileService, $rootScope) {
         $scope.auth = $route.current.locals.auth;
         $scope.currentNavItem = 'poll.questions';
@@ -373,30 +1107,8 @@
         };
 
         $scope.test = function () {
-            dialogService.showDialog('poll/poll.test.dialog.html', function (dialogScope) {
-                dialogScope.formState = {};
-                dialogScope.criteria = $scope.criteria;
-
-                dialogScope.refresh = function() {
-                    var PollEndPoint = QueryUtils.endpoint('/poll');
-                    QueryUtils.loadingWheel(dialogScope, true, true);
-                    PollEndPoint.get({id: $scope.criteria.id}, function (result) {
-                        dialogScope.criteria.foreword = result.foreword;
-                        dialogScope.criteria.afterword = result.afterword;
-                        QueryUtils.loadingWheel(dialogScope, false, true);
-                    });
-                };
-
-                dialogScope.clearRadio = function(question) {
-                    question.radio1 = null;
-                };
-
-                dialogScope.refresh();
-
-                dialogScope.getUrl = function(photo) {
-                    return oisFileService.getUrl(photo, 'pollThemeQuestionFile');
-                };
-            }, null, null, true);
+            $scope.criteria.higher = $scope.auth.higher;
+            test(dialogService, $scope.criteria, QueryUtils, oisFileService, $scope.formState);
         };
 
         $scope.swapTheme = function(index1, index2) {
@@ -580,43 +1292,40 @@
             $scope.pollForm.$setDirty();
         };
 
-        $scope.test = function () {
-            dialogService.showDialog('poll/poll.test.dialog.html', function (dialogScope) {
-                dialogScope.formState = {};
-                dialogScope.criteria = {};
-                dialogScope.criteria.id = $scope.criteria.id;
-                dialogScope.criteria.foreword = $scope.criteria.foreword;
-                dialogScope.criteria.afterword = $scope.criteria.afterword;
-                dialogScope.refresh = function() {
-                    QueryUtils.loadingWheel(dialogScope, true, true);
-                    QueryUtils.endpoint("/poll/themes").get({id: dialogScope.criteria.id}).$promise.then(function (data) {
-                        angular.extend(dialogScope.criteria, data);
-                        markImages(dialogScope.criteria.themes);
-                        QueryUtils.loadingWheel(dialogScope, false, true);
-                    });
-                };
-
-                dialogScope.clearRadio = function(question) {
-                    question.radio1 = null;
-                };
-
-                dialogScope.refresh();
-
-                dialogScope.getUrl = function(photo) {
-                    return oisFileService.getUrl(photo, 'pollThemeQuestionFile');
-                };
-            }, null, null, true);
+        $scope.test = function() {
+            $scope.criteria.higher = $scope.auth.higher;
+            test(dialogService, $scope.criteria, QueryUtils, oisFileService);
         };
 
         $scope.checkReminder = function () {
             var ctrl = $scope.pollForm.reminderDt;
-            if (new Date($scope.criteria.reminderDt) < new Date($scope.criteria.validFrom) ||
-            new Date($scope.criteria.reminderDt) > new Date($scope.criteria.validThru)) {
-                ctrl.$setValidity('incorrect', false);
-            } else {
-                ctrl.$setValidity('incorrect', true);
+            if (ctrl !== undefined) {
+                if (new Date($scope.criteria.reminderDt) < new Date($scope.criteria.validFrom) ||
+                new Date($scope.criteria.reminderDt) > new Date($scope.criteria.validThru)) {
+                    ctrl.$setValidity('incorrect', false);
+                } else {
+                    ctrl.$setValidity('incorrect', true);
+                }
             }
         };
+
+        $scope.earlierDate = function(dateOne, dateTwo) {
+            if (dateOne === undefined) return dateTwo;
+            if (dateTwo === undefined) return dateOne;
+            if (new Date(dateOne) < new Date(dateTwo)) {
+                return dateOne;
+            }
+            return dateTwo;
+        }
+
+        $scope.laterDate = function(dateOne, dateTwo) {
+            if (dateOne === undefined) return dateTwo;
+            if (dateTwo === undefined) return dateOne;
+            if (new Date(dateOne) < new Date(dateTwo)) {
+                return dateTwo;
+            }
+            return dateOne;
+        }
 
         $scope.targetCodeFilter = function (value) {
             switch($scope.criteria.type) {
@@ -670,6 +1379,15 @@
             }
         }
 
+        function controlExpertUrl() {
+            var filteredExpert = $scope.formState.targetCodes.filter(function(it) {return it.code === 'KYSITLUS_SIHT_V';});
+            if (filteredExpert.length > 0) {
+                $scope.showExpertUrl = true;
+            } else {
+                $scope.showExpertUrl = false;
+            }
+        }
+
         $scope.checkCases = function () {
             filterTargetCodes();
             if (!angular.isArray($scope.formState.targetCodes)) {
@@ -681,6 +1399,7 @@
             }
             controlOccupations();
             controlJournalDates();
+            controlExpertUrl();
             var filteredListO = $scope.formState.targetCodes.filter(function(it) {return it.code === 'KYSITLUS_SIHT_O';});
             if ($scope.criteria.type === 'KYSITLUS_P' && filteredListO.length > 0) {
                 $scope.studentGroupAllowed = true;
@@ -812,7 +1531,7 @@
         $scope.confirm = function () {
             if ($scope.criteria.themes !== 0) {
                 dialogService.confirmDialog({
-                    prompt: 'poll.basicData.confirm'
+                    prompt: $scope.criteria.themeEmpty ? 'poll.basicData.themeEmpty' : 'poll.basicData.confirm'
                 }, function () {
                     $scope.save(true);
                 });
@@ -862,10 +1581,12 @@
 
     }).controller('PollSupervisorController', function ($scope, $route, oisFileService, FormUtils, $location, message, QueryUtils, dialogService) {
         $scope.formState = {};
-        var Endpoint = QueryUtils.endpoint('/poll/supervisor/' + $route.current.params.uuid + '/saveAnswer/');
+        var Endpoint;
         QueryUtils.endpoint('/poll/supervisor').get({id: $route.current.params.uuid}).$promise.then(function(response) {
             $scope.criteria = response;
+            $scope.criteria.themes[0].show = true;
             markImages($scope.criteria.themes);
+            Endpoint = QueryUtils.endpoint('/poll/supervisor/' + $scope.criteria.responseId + '/saveAnswer');
         }).catch(function (error) {
             $location.url('/');
         });
@@ -875,12 +1596,13 @@
         };
 
         $scope.confirm = function() {
-            var hasErrors = $scope.checkErrors();
+            var errorObject = checkErrorsFromThemes($scope.criteria.themes);
+            var hasErrors = errorObject[0];
             FormUtils.withValidForm($scope.responseForm, function() {
                 if (!hasErrors) {
                     dialogService.confirmDialog({ prompt: 'poll.answer.confirm' }, function () {
-                        var Endpoint = QueryUtils.endpoint('/poll/supervisor/' + $route.current.params.uuid + '/saveAnswer/final');
-                        var pollEndPoint = new Endpoint($scope.criteria);
+                        var Endpoint = QueryUtils.endpoint('/poll/supervisor/' + $scope.criteria.responseId + '/saveAnswer/final');
+                        var pollEndPoint = new Endpoint();
                         pollEndPoint.$update().then(function () {
                             dialogService.messageDialog({ prompt: 'poll.answer.confirmed' }, function () {
                                 $location.url('/');
@@ -888,14 +1610,18 @@
                         });
                     });
                 } else {
-                    message.error('main.messages.form-has-errors');
+                    if ($scope.criteria.isThemePageable) {
+                        message.error('poll.messages.required', {themes: errorObject[1].join(", ")});
+                    } else {
+                        message.error('main.messages.form-has-errors');
+                    }
                 }
             });
         };
 
-        $scope.save = function () {
-            var pollEndPoint = new Endpoint($scope.criteria);
-            pollEndPoint.$postWithoutLoad();
+        $scope.save = function (question) {
+            var pollEndPoint = new Endpoint(question);
+            pollEndPoint.$putWithoutLoad();
         };
 
         $scope.clearRadio = function(question) {
@@ -903,32 +1629,74 @@
             $scope.save();
         };
 
-        $scope.checkErrors = function() {
-            var hasErrors = false;
-            $scope.criteria.themes.forEach(function(theme) {
-              theme.questions.forEach(function (question) {
-                if ((question.type === 'VASTUS_M' || question.type === 'VASTUS_S') && question.isRequired) {
-                  var showError = true;
-                  question.answers.forEach(function(answer) {
-                    if (answer.chosen === true) {
-                      showError = false;
-                    }
-                  });
-                  if (showError) {
-                    question.requiredError = true;
-                    hasErrors = true;
-                  } else {
-                    question.requiredError = false;
-                  }
-                } else if (question.type === 'VASTUS_R'  && question.isRequired && (question.answerTxt === undefined || question.answerTxt === null)) {
-                  question.requiredError = true;
-                  hasErrors = true;
+        $scope.previousTheme = function(index) {
+            $scope.criteria.themes[index].show = false;
+            $scope.criteria.themes[index - 1].show = true;
+        };
+
+        $scope.nextTheme = function(index) {
+            $scope.criteria.themes[index].show = false;
+            $scope.criteria.themes[index + 1].show = true;
+        };
+
+    }).controller('PollExpertController', function ($scope, $route, oisFileService, FormUtils, $location, message, QueryUtils, dialogService) {
+        $scope.formState = {};
+        var Endpoint;
+        QueryUtils.endpoint('/poll/expert').get({id: $route.current.params.uuid}).$promise.then(function(response) {
+            $scope.criteria = response;
+            $scope.criteria.themes[0].show = true;
+            markImages($scope.criteria.themes);
+            Endpoint = QueryUtils.endpoint('/poll/expert/' + response.responseId + '/saveAnswer');
+        }).catch(function (error) {
+            $location.url('/');
+        });
+
+        $scope.previousTheme = function(index) {
+            $scope.criteria.themes[index].show = false;
+            $scope.criteria.themes[index - 1].show = true;
+        };
+
+        $scope.nextTheme = function(index) {
+            $scope.criteria.themes[index].show = false;
+            $scope.criteria.themes[index + 1].show = true;
+        };
+
+        $scope.getUrl = function(photo) {
+            return oisFileService.getUrl(photo, 'pollThemeQuestionFile');
+        };
+
+        $scope.confirm = function() {
+            var errorObject = checkErrorsFromThemes($scope.criteria.themes);
+            var hasErrors = errorObject[0];
+            FormUtils.withValidForm($scope.responseForm, function() {
+                if (!hasErrors) {
+                    dialogService.confirmDialog({ prompt: 'poll.answer.confirm' }, function () {
+                        var Endpoint = QueryUtils.endpoint('/poll/expert/' + $scope.criteria.responseId + '/saveAnswer/final');
+                        var pollEndPoint = new Endpoint();
+                        pollEndPoint.$update().then(function () {
+                            dialogService.messageDialog({ prompt: 'poll.answer.confirmed' }, function () {
+                                $location.url('/');
+                            });
+                        });
+                    });
                 } else {
-                  question.requiredError = false;
+                    if ($scope.criteria.isThemePageable) {
+                        message.error('poll.messages.required', {themes: errorObject[1].join(", ")});
+                    } else {
+                        message.error('main.messages.form-has-errors');
+                    }
                 }
-              });
             });
-            return hasErrors;
-          };
+        };
+
+        $scope.save = function (question) {
+            var pollEndPoint = new Endpoint(question);
+            pollEndPoint.$putWithoutLoad();
+        };
+
+        $scope.clearRadio = function(question) {
+            question.answerTxt = null;
+            $scope.save();
+        };
     });
 }());

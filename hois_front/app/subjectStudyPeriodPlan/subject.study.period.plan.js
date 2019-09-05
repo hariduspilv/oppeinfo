@@ -41,6 +41,12 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
     });
 
     $scope.curriculums = QueryUtils.endpoint('/subjectStudyPeriodPlans/curriculums').query();
+    
+    $scope.searchCurriculums = function (text) {
+        return DataUtils.filterArrayByText($scope.curriculums, text, function (obj, regex) {
+            return regex.test($scope.currentLanguageNameField(obj).toUpperCase());
+        });
+    };
 
     $scope.$watch('criteria.subjectObject', function() {
             $scope.criteria.subject = $scope.criteria.subjectObject ? $scope.criteria.subjectObject.id : null;
@@ -81,7 +87,7 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
 
     $scope.$watch('criteria.curriculum', function() {
             $scope.subjectQueryParams = $scope.criteria.curriculum ?
-            {curricula: [$scope.criteria.curriculum], status: ['AINESTAATUS_K']} : {status: ['AINESTAATUS_K']};
+            {curricula: [$scope.criteria.curriculum.id], status: ['AINESTAATUS_K']} : {status: ['AINESTAATUS_K']};
         }
     );
 

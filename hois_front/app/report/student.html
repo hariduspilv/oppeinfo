@@ -19,22 +19,22 @@
           <div layout="row" flex="45">
           <md-input-container>
               <label>{{'report.student.birthdate_from' | translate}}</label>
-              <md-datepicker ng-model="criteria.birthdateFrom" md-max-date="criteria.birthdateThru"></md-datepicker>
+              <md-datepicker ng-model="criteria.birthdateFrom" md-max-date="criteria.birthdateThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
             </md-input-container>
             <md-input-container flex-offset="5">
               <label>{{'report.student.birthdate_thru' | translate}}</label>
-              <md-datepicker ng-model="criteria.birthdateThru" md-min-date="criteria.birthdateFrom"></md-datepicker>
+              <md-datepicker ng-model="criteria.birthdateThru" md-min-date="criteria.birthdateFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
             </md-input-container>
           </div>
 
           <div layout="row"  flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <md-input-container>
               <label>{{'report.student.studyStart_from' | translate}}</label>
-              <md-datepicker ng-model="criteria.studyStartFrom" md-max-date="criteria.studyStartThru"></md-datepicker>
+              <md-datepicker ng-model="criteria.studyStartFrom" md-max-date="criteria.studyStartThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
             </md-input-container>
             <md-input-container flex-offset="5">
               <label>{{'report.student.studyStart_thru' | translate}}</label>
-              <md-datepicker ng-model="criteria.studyStartThru" md-min-date="criteria.studyStartFrom"></md-datepicker>
+              <md-datepicker ng-model="criteria.studyStartThru" md-min-date="criteria.studyStartFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
             </md-input-container>
           </div>
         </div>
@@ -87,7 +87,7 @@
             <label>{{'report.student.language' | translate}}</label>
             <hois-classifier-select ng-model="criteria.language" model-value-attr="code" main-classifier-code="OPPEKEEL"></hois-classifier-select>
           </md-input-container>
-          <md-input-container ng-if="auth.vocational" flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
+          <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'report.student.dormitory' | translate}}</label>
             <hois-classifier-select ng-model="criteria.dormitory" model-value-attr="code" main-classifier-code="YHISELAMU"></hois-classifier-select>
           </md-input-container>
@@ -122,7 +122,7 @@
             <th md-column>{{'report.student.status' | translate}}</th>
             <th md-column>{{'report.student.fin' | translate}}</th>
             <th md-column>{{'report.student.finSpecific' | translate}}</th>
-            <th md-column ng-if="auth.vocational">{{'report.student.dormitory' | translate}}</th>
+            <th md-column>{{'report.student.dormitory' | translate}}</th>
             <th md-column>{{'report.student.language' | translate}}</th>
             <th md-column>{{'report.student.credits' | translate}}</th>
             <th md-column>{{'report.student.occupationcertificate' | translate}}</th>
@@ -145,7 +145,7 @@
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
             <td md-cell>{{currentLanguageNameField(row.fin)}}</td>
             <td md-cell>{{currentLanguageNameField(row.finSpecific)}}</td>
-            <td md-cell ng-if="auth.vocational">{{currentLanguageNameField(row.dormitory)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.dormitory)}}</td>
             <td md-cell>{{currentLanguageNameField(row.language)}}</td>
             <td md-cell>{{::row.credits}}</td>
             <td md-cell>

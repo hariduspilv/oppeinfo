@@ -55,6 +55,7 @@ import ee.hitsa.ois.web.dto.application.ApplicationApplicableDto;
 import ee.hitsa.ois.web.dto.application.ApplicationDto;
 import ee.hitsa.ois.web.dto.application.ApplicationSearchDto;
 import ee.hitsa.ois.web.dto.application.ApplicationSupportServiceModuleDto;
+import ee.hitsa.ois.web.dto.application.ApplicationThemeReplacementDto;
 import ee.hitsa.ois.web.dto.application.ValidAcademicLeaveDto;
 
 @RestController
@@ -265,12 +266,21 @@ public class ApplicationController {
         return applicationService.individualCurriculumModules(student, applicationId);
     }
 
+    @GetMapping("/curriculumVersionThemeReplacements/{id:\\d+}")
+    public ApplicationThemeReplacementDto curriculumVersionThemeReplacements(HoisUserDetails user, @WithEntity Student student,
+            @RequestParam(value = "applicationId", required = false) Long applicationId,
+            @RequestParam(value = "curriculumVersionId", required = true) Long curriculumVersionId) {
+        UserUtil.canViewStudentSpecificData(user, student);
+        return applicationService.curriculumVersionThemeReplacements(student, applicationId, curriculumVersionId);
+    }
+
     @SuppressWarnings("fallthrough")
     private static void checkUpdateBusinessRules(HoisUserDetails user, Application application, ApplicationForm applicationForm) {
         UserUtil.assertSameSchool(user, application.getStudent().getSchool());
 
         Student student = application.getStudent();
         ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
+        ApplicationType type = ApplicationType.valueOf(EntityUtil.getCode(application.getType()));
 
         switch (status) {
         case AVALDUS_STAATUS_KOOST:
@@ -294,6 +304,14 @@ public class ApplicationController {
         case AVALDUS_STAATUS_KINNITAM:
             //fallthrough
         case AVALDUS_STAATUS_KINNITATUD:
+            if (ApplicationType.AVALDUS_LIIK_RAKKAVA.equals(type) && UserUtil.isSchoolAdmin(user, student.getSchool())) {
+                Long studentCurriculumVersion = EntityUtil.getId(student.getCurriculumVersion());
+                Long applicationCurriculumVersion = EntityUtil.getId(application.getNewCurriculumVersion());
+                if (UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_AVALDUS)
+                        && studentCurriculumVersion.equals(applicationCurriculumVersion)) {
+                    break;
+                }
+            }
             //fallthrough
         case AVALDUS_STAATUS_TAGASI:
             throw new ValidationFailedException(String.format("user %s is not allowed to update application %d with status %s", user.getUsername(), application.getId(), status.name()));

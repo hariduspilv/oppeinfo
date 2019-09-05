@@ -94,6 +94,9 @@ angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curricu
             case 'studyyear':
               scope.options = QueryUtils.endpoint('/autocomplete/studyYears').query({}, afterStudyYearsLoad);
               break;
+            case 'building':
+              endpointUrl = endpointUrl || '/autocomplete/buildings';
+              /* falls through */
             case 'curriculum':
               endpointUrl = endpointUrl || '/autocomplete/curriculumsauto';
               /* falls through */
@@ -139,9 +142,6 @@ angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curricu
               /* falls through */
             case 'saisadmissioncodearchived':
               endpointUrl = endpointUrl || '/autocomplete/saisAdmissionCodesArchived';
-              /* falls through */
-            case 'building':
-              endpointUrl = endpointUrl || '/autocomplete/buildings';
               /* falls through */
             case 'apelschool':
               endpointUrl = endpointUrl || '/autocomplete/apelschools';

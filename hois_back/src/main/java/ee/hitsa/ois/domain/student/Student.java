@@ -11,6 +11,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import ee.hitsa.ois.domain.Dormitory;
 import ee.hitsa.ois.domain.FinalThesis;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.PracticeJournal;
@@ -39,6 +40,8 @@ public class Student extends StudentBase {
     private FinalThesis finalThesis;
     @OneToMany(mappedBy = "student")
     private List<PracticeJournal> practiceJournals;
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Dormitory> boardingSchools;
 
     public Person getPerson() {
         return person;
@@ -119,5 +122,12 @@ public class Student extends StudentBase {
     public void setPracticeJournals(List<PracticeJournal> practiceJournals) {
         this.practiceJournals = practiceJournals;
     }
-    
+
+    public List<Dormitory> getBoardingSchools() {
+        return boardingSchools;
+    }
+
+    public void setBoardingSchools(List<Dormitory> boardingSchools) {
+        this.boardingSchools = boardingSchools;
+    }
 }

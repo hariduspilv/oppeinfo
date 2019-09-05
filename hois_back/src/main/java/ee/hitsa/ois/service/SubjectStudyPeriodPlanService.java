@@ -85,7 +85,7 @@ public class SubjectStudyPeriodPlanService {
             if(criteria.getSubject() != null) {
                 filters.add(cb.equal(root.get("id"), criteria.getSubject()));
             }
-            Long curriculum = criteria.getCurriculum();
+            Long curriculum = criteria.getCurriculum() != null ? criteria.getCurriculum().getId() : null;
             if (curriculum != null) {
                 Subquery<Long> curriculaQuery = query.subquery(Long.class);
                 Root<CurriculumVersion> curriculumVersionRoot = curriculaQuery.from(CurriculumVersion.class);

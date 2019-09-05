@@ -3,6 +3,7 @@ package ee.hitsa.ois.web;
 import static ee.hitsa.ois.util.UserUtil.assertIsSchoolAdmin;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.HashMap;
@@ -44,6 +45,7 @@ import ee.hitsa.ois.service.StudentResultHigherService;
 import ee.hitsa.ois.service.StudentService;
 import ee.hitsa.ois.service.SupportServiceService;
 import ee.hitsa.ois.service.ehis.EhisStudentService;
+import ee.hitsa.ois.service.ehis.EhisStudentService.ExportStudentsRequest;
 import ee.hitsa.ois.service.rr.PopulationRegisterService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -63,7 +65,8 @@ import ee.hitsa.ois.web.commandobject.student.StudentSpecialitySearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentSupportServiceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSupportServicePrintCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.EhisStudentReport;
+import ee.hitsa.ois.web.dto.EhisStudentExportRequestDto;
+import ee.hitsa.ois.web.dto.FutureStatusResponse;
 import ee.hitsa.ois.web.dto.StudentSupportServiceDto;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
 import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
@@ -286,9 +289,29 @@ public class StudentController {
     }
 
     @PostMapping("/ehisStudentExport")
-    public List<? extends EhisStudentReport> ehisStudentExport(HoisUserDetails user, @Valid @RequestBody EhisStudentForm ehisStudentForm) {
+    public Map<String, Object> ehisStudentExport(HoisUserDetails user, @Valid @RequestBody EhisStudentForm ehisStudentForm) {
         assertIsSchoolAdmin(user);
-        return ehisStudentService.exportStudents(user.getSchoolId(), ehisStudentForm);
+        String requestHash = String.format("%d-%d-%d-%d", Integer.valueOf(user.getUsername().hashCode()),
+                ehisStudentForm.getFrom() != null ? Integer.valueOf(ehisStudentForm.getFrom().hashCode()) : Integer.valueOf(0),
+                ehisStudentForm.getThru() != null ? Integer.valueOf(ehisStudentForm.getThru().hashCode()) : Integer.valueOf(0),
+                Integer.valueOf(LocalDateTime.now().hashCode()));
+        ehisStudentService.exportStudents(user, ehisStudentForm, requestHash);
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("key", requestHash);
+        return map;
+    }
+    
+    @GetMapping("/ehisStudentExportCheck")
+    public EhisStudentExportRequestDto ehisStudentExportCheck(HoisUserDetails user, @Valid EhisStudentForm ehisStudentForm) {
+        assertIsSchoolAdmin(user);
+        ExportStudentsRequest overlappedRequest = ehisStudentService.findOverlappedActiveExportStudentsRequest(user, ehisStudentForm);
+        return overlappedRequest != null && !overlappedRequest.isDone() ? EhisStudentExportRequestDto.of(overlappedRequest) : null;
+    }
+
+    @GetMapping("/ehisStudentExportStatus")
+    public FutureStatusResponse ehisStudentExportStatus(HoisUserDetails user, @RequestParam(required = true) String key) {
+        assertIsSchoolAdmin(user);
+        return ehisStudentService.exportStudentsStatus(user, key);
     }
 
     @GetMapping("/{id:\\d+}/vocationalResults")
@@ -318,13 +341,13 @@ public class StudentController {
     @GetMapping("/{id:\\d+}/higherChangeableModules")
     public List<StudentModuleResultDto> higherChangeableModules(HoisUserDetails user, @WithEntity Student student) {
         assertIsSchoolAdmin(user, student.getSchool());
-        return studentService.higherChangeableModules(student.getId());
+        return studentResultHigherService.higherChangeableModules(student);
     }
 
     @GetMapping("/{id:\\d+}/higherCurriculumModules")
     public List<AutocompleteResult> higherCurriculumModulesForSelection(HoisUserDetails user, @WithEntity Student student) {
         assertIsSchoolAdmin(user, student.getSchool());
-        return studentService.higherCurriculumModulesForSelection(student.getCurriculumVersion().getId());
+        return studentResultHigherService.higherCurriculumModulesForSelection(student);
     }
 
     @PostMapping("/{id:\\d+}/changeHigherCurriculumModules")
@@ -332,7 +355,7 @@ public class StudentController {
         if(!StudentUtil.isActive(student) || !UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)) {
             throw new AssertionFailedException("User cannot edit student data");
         }
-        studentService.changeHigherCurriculumVersionModules(student, form);
+        studentResultHigherService.changeHigherCurriculumVersionModules(student, form);
         return higherChangeableModules(user, student);
     }
 

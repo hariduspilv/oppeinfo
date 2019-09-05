@@ -46,6 +46,7 @@
           <tr md-row>
             <th md-column md-order-by="b.name">{{'building.name' | translate}}</th>
             <th md-column md-order-by="b.code">{{'building.code' | translate}}</th>
+            <th md-column>{{'room.isBoardingSchool' | translate}}</th>
             <th md-column md-order-by="b.address">{{'building.address' | translate}}</th>
             <th md-column md-order-by="r.name">{{'room.name' | translate}}</th>
             <th md-column md-order-by="r.code">{{'room.code' | translate}}</th>
@@ -60,6 +61,7 @@
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{::row.buildingName}}</td>
             <td md-cell>{{::row.buildingCode}}</td>
+            <td md-cell>{{row.isBoardingSchool ? 'main.yes' : 'main.no' | translate}}</td>
             <td md-cell>{{::row.buildingAddress}}</td>
             <td md-cell>{{::row.name}}</td>
             <td md-cell>{{::row.code}}</td>

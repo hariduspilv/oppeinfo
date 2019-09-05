@@ -14,11 +14,11 @@
             </md-input-container>
             <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
               <label>{{'main.from' | translate}}</label>
-              <md-datepicker name="from" ng-model="criteria.validFrom" md-max-date="criteria.validThru"></md-datepicker>
+              <md-datepicker name="from" ng-model="criteria.validFrom" md-max-date="criteria.validThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
             </md-input-container>
             <md-input-container flex="25" flex-sm="100" flex-xs="100">
               <label>{{'main.thru' | translate}}</label>
-              <md-datepicker name="thru" ng-model="criteria.validThru" md-min-date="criteria.validFrom"></md-datepicker>
+              <md-datepicker name="thru" ng-model="criteria.validThru" md-min-date="criteria.validFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
             </md-input-container>
           </div>
           <div layout="column">

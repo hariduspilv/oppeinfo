@@ -40,6 +40,7 @@ import ee.hitsa.ois.report.certificate.CertificateReportStudent;
 import ee.hitsa.ois.report.certificate.CertificateStudentResult;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
@@ -159,7 +160,7 @@ public class CertificateContentService {
         if (addOutcomes) {
             addHigherOutcomes(list, results);
         }
-        Collections.sort(results, StreamUtil.comparingWithNullsLast(CertificateStudentResult::getDate));
+        Collections.sort(results, StreamUtil.comparingWithNullsLast(CertificateStudentResult::getIsActive));
         return results;
     }
 
@@ -172,7 +173,7 @@ public class CertificateContentService {
         if (addOutcomes) {
             addVocationalOutcomes(data, results);
         }
-        Collections.sort(results, StreamUtil.comparingWithNullsLast(CertificateStudentResult::getDate));
+        Collections.sort(results, StreamUtil.comparingWithNullsLast(r -> DateUtils.parseDate(r.getDate())));
         return results;
     }
 

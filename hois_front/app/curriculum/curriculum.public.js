@@ -16,7 +16,7 @@ angular.module('hitsaOis')
     }
     
   }])
-  .controller('CurriculumPublicController', function ($scope, QueryUtils, $route) {
+  .controller('CurriculumPublicController', function ($scope, QueryUtils, $route, config) {
 	
     function entityToForm(curriculum) {
       $scope.curriculum = curriculum;
@@ -27,11 +27,12 @@ angular.module('hitsaOis')
     
     var entity = $route.current.locals.entity;
     if (angular.isDefined(entity)) {
+      $scope.publicUrl = config.apiUrl + '/public/curriculum/' + entity.id + '?format=json';
       entityToForm(entity);
     }
 
-}).controller('CurriculumPublicVersionController', ['$scope', 'Classifier', 'DataUtils', 'QueryUtils', '$q', '$route',
-function ($scope, Classifier, DataUtils, QueryUtils, $q, $route) {
+}).controller('CurriculumPublicVersionController', ['$scope', '$route', 'config',
+function ($scope, $route, config) {
   
   $scope.version = $route.current.locals.curriculumVersion;
   $scope.curriculum = $route.current.locals.curriculum;
@@ -40,6 +41,8 @@ function ($scope, Classifier, DataUtils, QueryUtils, $q, $route) {
   $scope.mappedSubjects = {};
 
   $scope.version.$promise.then(function(response) {
+    $scope.publicUrl = config.apiUrl + '/public/curriculum/' + $scope.curriculum.id + '/' + $scope.version.id +'?format=json';
+
     $scope.years = [];
     $scope.mappedSubjects = {};
 

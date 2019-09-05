@@ -16,7 +16,6 @@ public class CertificateDto extends CertificateForm {
     private Long id;
     private String wdUrl;
     private Long wdId;
-    private String certificateNr;
     private String status;
     private LocalDateTime inserted;
     private boolean canBeChanged;
@@ -44,14 +43,6 @@ public class CertificateDto extends CertificateForm {
 
     public void setWdId(Long wdId) {
         this.wdId = wdId;
-    }
-
-    public String getCertificateNr() {
-        return certificateNr;
-    }
-
-    public void setCertificateNr(String certificateNr) {
-        this.certificateNr = certificateNr;
     }
 
     public String getStatus() {

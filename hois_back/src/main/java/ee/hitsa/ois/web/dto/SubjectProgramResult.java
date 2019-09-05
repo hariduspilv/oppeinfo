@@ -4,9 +4,12 @@ import ee.hitsa.ois.domain.StudyPeriod;
 
 public class SubjectProgramResult extends AutocompleteResult {
     
+    private Long teacherId;
     private String teacherName;
     private AutocompleteResult studyPeriod;
     private String status;
+    
+    private Boolean publicStudent;
 
     public SubjectProgramResult() {
         super();
@@ -21,6 +24,14 @@ public class SubjectProgramResult extends AutocompleteResult {
         this.teacherName = teacherName;
         this.studyPeriod = AutocompleteResult.ofWithYear(studyPeriod);
         this.status = status;
+    }
+
+    public Long getTeacherId() {
+        return teacherId;
+    }
+
+    public void setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
     }
 
     public String getTeacherName() {
@@ -45,5 +56,13 @@ public class SubjectProgramResult extends AutocompleteResult {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Boolean getPublicStudent() {
+        return publicStudent;
+    }
+
+    public void setPublicStudent(Boolean publicStudent) {
+        this.publicStudent = publicStudent;
     }
 }

@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.dto.PracticeJournalDto;
 import ee.hitsa.ois.web.dto.PracticeJournalSearchDto;
@@ -27,7 +28,11 @@ public final class PracticeJournalUserRights {
         return isBeforeDaysAfterCanEdit(endDate);
     }
     
-    private static boolean isBeforeDaysAfterCanEdit(LocalDate endDate) {
+    public static boolean isActive(String studentStatus) {
+        return !studentStatus.equals(StudentStatus.OPPURSTAATUS_L.name()) && !studentStatus.equals(StudentStatus.OPPURSTAATUS_K.name());
+    }
+    
+    public static boolean isBeforeDaysAfterCanEdit(LocalDate endDate) {
         return LocalDate.now().isBefore(endDate.plusDays(DAYS_AFTER_END_CAN_EDIT));
     }
     

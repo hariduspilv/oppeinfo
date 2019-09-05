@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.SubjectProgramStatus;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -24,6 +26,14 @@ public class SubjectProgramUtil {
             "join subject_study_period ssp on ssp.id = sspt.subject_study_period_id " + 
             "where sp.id = ?1 and ssp.subject_id = ?2")
         .setParameter(1, program.getId()).setParameter(2, subject.getId()).getResultList().isEmpty();
+    }
+    
+    public static boolean isPublicForStudent(SubjectProgram program) {
+        if (!ClassifierUtil.equals(SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, program.getStatus())) {
+            return false;
+        }
+        return Boolean.TRUE.equals(program.getPublicAll()) || Boolean.TRUE.equals(program.getPublicHois()) || Boolean.TRUE.equals(program.getPublicStudent());
+        
     }
 
     public boolean canView(HoisUserDetails user, SubjectProgram program) {
@@ -47,7 +57,7 @@ public class SubjectProgramUtil {
                     .setParameter(1, user.getStudentId()).setParameter(2, program.getId()).getResultList().isEmpty();
             }
         }
-        if (user.isSchoolAdmin()) {
+        if (user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_AINEOPPETAJA)) {
             return !em.createNativeQuery("select sp.id " + 
                     "from subject_program sp " + 
                     "join subject_study_period_teacher sspt on sspt.id = sp.subject_study_period_teacher_id " + 
@@ -86,7 +96,7 @@ public class SubjectProgramUtil {
     }
 
     public boolean canCreate(HoisUserDetails user) {
-        if (!user.isTeacher()) {
+        if (!(user.isTeacher() || (user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_AINEOPPETAJA)))) {
             return false;
         }
         return true;
@@ -99,10 +109,13 @@ public class SubjectProgramUtil {
     }
 
     public boolean canEdit(HoisUserDetails user, SubjectProgram program) {
-        if (!user.isTeacher()) {
+        if (!(user.isTeacher() || (user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_AINEOPPETAJA)))) {
             return false;
         }
-        if (!EntityUtil.getId(program.getSubjectStudyPeriodTeacher().getTeacher()).equals(user.getTeacherId())) {
+        if (user.isTeacher() && !EntityUtil.getId(program.getSubjectStudyPeriodTeacher().getTeacher()).equals(user.getTeacherId())) {
+            return false;
+        }
+        if (user.isSchoolAdmin() && !EntityUtil.getId(program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject().getSchool()).equals(user.getSchoolId())) {
             return false;
         }
         return true;
@@ -115,10 +128,13 @@ public class SubjectProgramUtil {
     }
 
     public boolean canDelete(HoisUserDetails user, SubjectProgram program) {
-        if (!user.isTeacher()) {
+        if (!(user.isTeacher() || (user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_AINEOPPETAJA)))) {
             return false;
         }
-        if (!EntityUtil.getId(program.getSubjectStudyPeriodTeacher().getTeacher()).equals(user.getTeacherId())) {
+        if (user.isTeacher() && !EntityUtil.getId(program.getSubjectStudyPeriodTeacher().getTeacher()).equals(user.getTeacherId())) {
+            return false;
+        }
+        if (user.isSchoolAdmin() && !EntityUtil.getId(program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject().getSchool()).equals(user.getSchoolId())) {
             return false;
         }
         return true;
@@ -144,20 +160,29 @@ public class SubjectProgramUtil {
     }
 
     public boolean canConfirm(HoisUserDetails user, SubjectProgram program) {
-        if (!user.isTeacher()) {
+        if (!(user.isTeacher() || (user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_AINEOPPETAJA)))) {
             return false;
         }
+        
         StringBuilder from = new StringBuilder("from subject_program sp ");
         from.append("join subject_study_period_teacher sspt on sspt.id = sp.subject_study_period_teacher_id ");
         from.append("join subject_study_period ssp on ssp.id = sspt.subject_study_period_id ");
-        from.append("join curriculum_version_hmodule_subject cvhms on cvhms.subject_id = ssp.subject_id ");
-        from.append("join curriculum_version_hmodule cvhm on cvhm.id = cvhms.curriculum_version_hmodule_id ");
-        from.append("join curriculum_version cv on cv.id = cvhm.curriculum_version_id ");
-        from.append("join curriculum c on c.id = cv.curriculum_id ");
-        
+        if (user.isSchoolAdmin()) {
+            from.append("join subject s on s.id = ssp.subject_id");
+        } else if (user.isTeacher()) {
+            from.append("join curriculum_version_hmodule_subject cvhms on cvhms.subject_id = ssp.subject_id ");
+            from.append("join curriculum_version_hmodule cvhm on cvhm.id = cvhms.curriculum_version_hmodule_id ");
+            from.append("join curriculum_version cv on cv.id = cvhm.curriculum_version_id ");
+            from.append("join curriculum c on c.id = cv.curriculum_id ");
+        }
+
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).limit(1);
         qb.requiredCriteria("sp.id = :programId", "programId", program.getId());
-        qb.requiredCriteria("c.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+        if (user.isSchoolAdmin()) {
+            qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        } else if (user.isTeacher()) {
+            qb.requiredCriteria("c.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+        }
         qb.requiredCriteria("sp.status_code = :status", "status", SubjectProgramStatus.AINEPROGRAMM_STAATUS_V);
         
         if (qb.select("sp.id", em).getResultList().size() != 1) {
@@ -173,10 +198,11 @@ public class SubjectProgramUtil {
     }
     
     public boolean canComplete(HoisUserDetails user, SubjectProgram program) {
-        if (!user.isTeacher()) {
+        if (!(user.isTeacher() || (user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_AINEOPPETAJA)))) {
             return false;
         }
-        if (!EntityUtil.getId(program.getSubjectStudyPeriodTeacher().getTeacher()).equals(user.getTeacherId())) {
+        if ((user.isTeacher() && !EntityUtil.getId(program.getSubjectStudyPeriodTeacher().getTeacher()).equals(user.getTeacherId()))
+                || (user.isSchoolAdmin() && !EntityUtil.getId(program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject().getSchool()).equals(user.getSchoolId()))) {
             return false;
         }
         if (!ClassifierUtil.equals(SubjectProgramStatus.AINEPROGRAMM_STAATUS_I, program.getStatus())) {
@@ -192,21 +218,29 @@ public class SubjectProgramUtil {
     }
     
     public boolean canReject(HoisUserDetails user, SubjectProgram program) {
-        if (!user.isTeacher()) {
+        if (!(user.isTeacher() || (user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_AINEOPPETAJA)))) {
             return false;
         }
         StringBuilder from = new StringBuilder("from subject_program sp ");
         from.append("join subject_study_period_teacher sspt on sspt.id = sp.subject_study_period_teacher_id ");
         from.append("join subject_study_period ssp on ssp.id = sspt.subject_study_period_id ");
-        from.append("join curriculum_version_hmodule_subject cvhms on cvhms.subject_id = ssp.subject_id ");
-        from.append("join curriculum_version_hmodule cvhm on cvhm.id = cvhms.curriculum_version_hmodule_id ");
-        from.append("join curriculum_version cv on cv.id = cvhm.curriculum_version_id ");
-        from.append("join curriculum c on c.id = cv.curriculum_id ");
+        if (user.isSchoolAdmin()) {
+            from.append("join subject s on s.id = ssp.subject_id");
+        } else if (user.isTeacher()) {
+            from.append("join curriculum_version_hmodule_subject cvhms on cvhms.subject_id = ssp.subject_id ");
+            from.append("join curriculum_version_hmodule cvhm on cvhm.id = cvhms.curriculum_version_hmodule_id ");
+            from.append("join curriculum_version cv on cv.id = cvhm.curriculum_version_id ");
+            from.append("join curriculum c on c.id = cv.curriculum_id ");
+        }
         
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).limit(1);
         qb.requiredCriteria("sp.id = :programId", "programId", program.getId());
-        qb.requiredCriteria("c.teacher_id = :teacherId", "teacherId", user.getTeacherId());
-        qb.filter("(sp.status_code = 'AINEPROGRAMM_STAATUS_V' or sp.status_code = 'AINEPROGRAMM_STAATUS_K')");
+        if (user.isSchoolAdmin()) {
+            qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        } else if (user.isTeacher()) {
+            qb.requiredCriteria("c.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+        }
+        qb.requiredCriteria("sp.status_code in (:status)", "status", EnumUtil.toNameList(SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, SubjectProgramStatus.AINEPROGRAMM_STAATUS_V));
         
         if (qb.select("sp.id", em).getResultList().size() != 1) {
             return false;

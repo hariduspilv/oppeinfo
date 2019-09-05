@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,11 +26,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.ContractSupervisor;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.ContractStatus;
+import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.report.PracticeContractReport;
 import ee.hitsa.ois.service.ContractService;
+import ee.hitsa.ois.service.RtfService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.HttpUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -43,6 +51,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ContractDto;
 import ee.hitsa.ois.web.dto.ContractEkisDto;
 import ee.hitsa.ois.web.dto.ContractForEkisDto;
+import ee.hitsa.ois.web.dto.ContractNrCommand;
 import ee.hitsa.ois.web.dto.ContractSearchDto;
 import ee.hitsa.ois.web.dto.ContractStudentModuleDto;
 import ee.hitsa.ois.web.dto.ContractStudentSubjectDto;
@@ -56,6 +65,8 @@ public class ContractController {
 
     @Autowired
     private ContractService contractService;
+    @Autowired
+    private RtfService rtfService;
     
     @Autowired
     private EntityManager em;
@@ -87,14 +98,7 @@ public class ContractController {
 
     @GetMapping("/{id:\\d+}")
     public ContractDto get(HoisUserDetails user, @WithEntity Contract contract) {
-        UserUtil.assertSameSchool(user, contract.getStudent().getSchool());
-        if (user.isTeacher()) {
-            UserUtil.throwAccessDeniedIf(!EntityUtil.getId(contract.getTeacher()).equals(user.getTeacherId()));
-        } else if (user.isStudent() || user.isRepresentative()) {
-            UserUtil.throwAccessDeniedIf(!EntityUtil.getId(contract.getStudent()).equals(user.getStudentId()));
-        } else {
-            UserUtil.assertIsSchoolAdmin(user);
-        }
+        assertCanView(user, contract);
         return contractService.get(user, contract);
     }
 
@@ -182,6 +186,20 @@ public class ContractController {
         UserUtil.assertIsSchoolAdmin(user);
         contractService.sendUniqueUrlEmailToEnterpriseSupervisor(user, supervisor);
     }
+    
+    @PostMapping("/checkout/{id:\\d+}")
+    public ContractDto checkout(HoisUserDetails user, @WithEntity Contract contract) {
+        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolWithoutEkis(em.getReference(School.class, user.getSchoolId()));
+        return get(user, contractService.checkout(user, contract));
+    }
+    
+    @PostMapping("/confirm/{id:\\d+}")
+    public ContractDto confirm(HoisUserDetails user, @WithEntity Contract contract) {
+        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolWithoutEkis(em.getReference(School.class, user.getSchoolId()));
+        return get(user, contractService.confirm(contract));
+    }
 
     @PostMapping("/sendToEkis/{id:\\d+}")
     public ContractDto sendToEkis(HoisUserDetails user, @WithEntity Contract contract) {
@@ -207,5 +225,37 @@ public class ContractController {
         dto.setFailed(failed);
         dto.setSuccessful(passed);
         return dto;
+    }
+    
+    @GetMapping("/print/{id:\\d+}/contract.rtf")
+    public void printRtf(HoisUserDetails user, @WithEntity Contract contract, HttpServletResponse response, @RequestParam(required = false) Language lang) throws IOException {
+        assertCanView(user, contract);
+        HttpUtil.rtf(response, String.format("praktikaleping_%s.rtf", PersonUtil.fullname(contract.getStudent().getPerson())),
+                rtfService.generateFop(PracticeContractReport.TEMPLATE_NAME, new PracticeContractReport(contract, lang), lang));
+    }
+    
+    @PutMapping("/changeContractNr/{id:\\d+}")
+    public void changeContractNr(HoisUserDetails user, @WithEntity Contract contract, @RequestBody ContractNrCommand command) {
+        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolWithoutEkis(em.getReference(School.class, user.getSchoolId()));
+        contractService.changeContractNr(contract, command);
+    }
+
+    /**
+     * Used in {@link #get(HoisUserDetails, Contract)} and {@link #printRtf(HoisUserDetails, Contract, HttpServletResponse, Language)}
+     * 
+     * @param user
+     * @param contract
+     * @return
+     */
+    private static void assertCanView(HoisUserDetails user, Contract contract) {
+        UserUtil.assertSameSchool(user, contract.getStudent().getSchool());
+        if (user.isTeacher()) {
+            UserUtil.throwAccessDeniedIf(!EntityUtil.getId(contract.getTeacher()).equals(user.getTeacherId()));
+        } else if (user.isStudent() || user.isRepresentative()) {
+            UserUtil.throwAccessDeniedIf(!EntityUtil.getId(contract.getStudent()).equals(user.getStudentId()));
+        } else {
+            UserUtil.assertIsSchoolAdmin(user);
+        }
     }
 }

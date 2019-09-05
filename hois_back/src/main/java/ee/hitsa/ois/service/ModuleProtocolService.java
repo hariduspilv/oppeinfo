@@ -4,9 +4,12 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -23,6 +26,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
@@ -32,6 +36,7 @@ import ee.hitsa.ois.domain.protocol.ProtocolVdata;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.domain.timetable.LessonPlanModule;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.ProtocolStatus;
@@ -61,6 +66,8 @@ import ee.hitsa.ois.web.dto.ModuleProtocolOccupationalModuleDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolSearchDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolStudentSelectDto;
 import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
+import ee.hitsa.ois.web.dto.StudyPeriodDto;
+import ee.hitsa.ois.web.dto.StudyYearDto;
 
 @Transactional
 @Service
@@ -199,24 +206,32 @@ public class ModuleProtocolService extends AbstractProtocolService {
         return result.values();
     }
 
-    private void addJournalAndPracticeJournalResults(Map<Long, ModuleProtocolStudentSelectDto> result, Long occupationalModule) {
+    private void addJournalAndPracticeJournalResults(Map<Long, ModuleProtocolStudentSelectDto> result,
+            Long occupationalModuleId) {
         if (!result.isEmpty()) {
+            CurriculumVersionOccupationModule occupationalModule = em
+                    .getReference(CurriculumVersionOccupationModule.class, occupationalModuleId);
             List<?> grades = em.createNativeQuery("select js.student_id, jes.grade_code from journal_entry_student jes "
                     + "join journal_student js on js.id = jes.journal_student_id "
                     + "join journal_entry je on je.id = jes.journal_entry_id "
                     + "join journal j on je.journal_id = j.id "
                     + "where js.student_id in (:studentIds) and je.entry_type_code = :entryTypeCode "
                     + "and exists (select jot.id from journal_omodule_theme jot "
-                    + "join curriculum_version_omodule_theme t on t.id = jot.curriculum_version_omodule_theme_id "
-                    + "where jot.journal_id = js.journal_id and t.curriculum_version_omodule_id = :occupationalModule) "
+                        + "join curriculum_version_omodule_theme t on t.id = jot.curriculum_version_omodule_theme_id "
+                        + "join curriculum_version_omodule cvo on cvo.id = t.curriculum_version_omodule_id "
+                        + "join curriculum_module cm on cm.id = cvo.curriculum_module_id "
+                        + "where jot.journal_id = js.journal_id and cm.id = :curriculumModuleId) "
                     + "union all "
                     + "select pj.student_id, pj.grade_code from practice_journal pj "
-                    + "where pj.student_id in (:studentIds) and pj.grade_code is not null and exists "
-                    + "(select pjms.id from practice_journal_module_subject pjms "
-                        + "where pjms.practice_journal_id = pj.id and pjms.curriculum_version_omodule_id = :occupationalModule)")
+                    + "where pj.student_id in (:studentIds) and pj.grade_code is not null "
+                    + "and exists (select pjms.id from practice_journal_module_subject pjms "
+                        + "join curriculum_version_omodule cvo2 on cvo2.id = pjms.curriculum_version_omodule_id "
+                        + "join curriculum_module cm2 on cm2.id = cvo2.curriculum_module_id "
+                        + "where pjms.practice_journal_id = pj.id and cm2.id = :curriculumModuleId)")
             .setParameter("studentIds", result.keySet())
             .setParameter("entryTypeCode", JournalEntryType.SISSEKANNE_L.name())
-            .setParameter("occupationalModule", occupationalModule).getResultList();
+            .setParameter("curriculumModuleId", EntityUtil.getId(occupationalModule.getCurriculumModule()))
+            .getResultList();
 
             grades.stream().filter(r -> StringUtils.hasText(resultAsString(r, 1))).forEach(r -> {
                 result.get(resultAsLong(r, 0)).getJournalResults().add(resultAsString(r, 1));
@@ -461,4 +476,214 @@ public class ModuleProtocolService extends AbstractProtocolService {
         return new ModuleProtocolReport(protocol, isHigherSchool);
     }
 
+    public Page<TeacherModuleMinimumDto> availableTeacherModules(HoisUserDetails user, Long studyYear, Pageable pageable) {
+        String from = "from curriculum_version_omodule cvo "
+                + "inner join curriculum_module cm on cm.id = cvo.curriculum_module_id "
+                + "inner join classifier mcl on mcl.code = cm.module_code "
+                + "inner join curriculum_version cv on cv.id = cvo.curriculum_version_id "
+                + "inner join curriculum c on c.id = cv.curriculum_id";
+
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("cm.module_code != :module_code", "module_code", FINAL_EXAM_CODE);
+        qb.requiredCriteria(" exists(select lpm.id from lesson_plan_module lpm join lesson_plan lp on lp.id = lpm.lesson_plan_id "
+               + "where lpm.curriculum_version_omodule_id = cvo.id and lpm.teacher_id = :teacherId and lp.study_year_id = :studyYear) ", "teacherId", user.getTeacherId());
+        qb.parameter("studyYear", studyYear);
+
+        return JpaQueryUtil.pagingResult(qb, "cvo.id", em, pageable).map(r -> {
+            return TeacherModuleMinimumDto.of(em.getReference(CurriculumVersionOccupationModule.class, resultAsLong(r, 0)));
+        });
+    }
+    
+    public LessonPlanHistoryDto getModuleLessonPlanHistory(CurriculumVersionOccupationModule module) {
+        return LessonPlanHistoryDto.of(module);
+    }
+    
+    public static class TeacherModuleMinimumDto {
+        
+        private AutocompleteResult module;
+        private AutocompleteResult curriculumVersion;
+        
+        public static TeacherModuleMinimumDto of(CurriculumVersionOccupationModule module) {
+            TeacherModuleMinimumDto dto = new TeacherModuleMinimumDto();
+            dto.setModule(AutocompleteResult.of(module));
+            dto.setCurriculumVersion(AutocompleteResult.of(module.getCurriculumVersion()));
+            return dto;
+        }
+
+        public AutocompleteResult getModule() {
+            return module;
+        }
+
+        public void setModule(AutocompleteResult module) {
+            this.module = module;
+        }
+
+        public AutocompleteResult getCurriculumVersion() {
+            return curriculumVersion;
+        }
+
+        public void setCurriculumVersion(AutocompleteResult curriculumVersion) {
+            this.curriculumVersion = curriculumVersion;
+        }
+    }
+    
+    public static class LessonPlanHistoryDto {
+        
+        private AutocompleteResult module;
+        private BigDecimal credits;
+        private AutocompleteResult curriculumVersion;
+        private List<LessonPlanModuleInfo> lessonPlanModules;
+        
+        public static LessonPlanHistoryDto of(CurriculumVersionOccupationModule module) {
+            LessonPlanHistoryDto dto = new LessonPlanHistoryDto();
+            dto.setModule(new AutocompleteResult(module.getId(), module.getCurriculumModule().getNameEt(), module.getCurriculumModule().getNameEn()));
+            dto.setCredits(module.getCurriculumModule().getCredits());
+            dto.setCurriculumVersion(AutocompleteResult.of(module.getCurriculumVersion()));
+            
+            dto.setLessonPlanModules(module.getLessonPlanModules().stream()
+                    .filter(lpm -> !lpm.getJournalOccupationModuleThemes().isEmpty())
+                    .map(lpm -> LessonPlanModuleInfo.of(lpm))
+                    .sorted(new Comparator<LessonPlanModuleInfo>() {
+
+                        @Override
+                        public int compare(LessonPlanModuleInfo o1, LessonPlanModuleInfo o2) {
+                            return o1.getStudyYear().getEndDate().compareTo(o2.getStudyYear().getEndDate());
+                        }
+                    })
+                    .collect(Collectors.toList()));
+            
+
+            return dto;
+        }
+
+        public AutocompleteResult getModule() {
+            return module;
+        }
+
+        public void setModule(AutocompleteResult module) {
+            this.module = module;
+        }
+
+        public BigDecimal getCredits() {
+            return credits;
+        }
+
+        public void setCredits(BigDecimal credits) {
+            this.credits = credits;
+        }
+
+        public AutocompleteResult getCurriculumVersion() {
+            return curriculumVersion;
+        }
+
+        public void setCurriculumVersion(AutocompleteResult curriculumVersion) {
+            this.curriculumVersion = curriculumVersion;
+        }
+        
+        public List<LessonPlanModuleInfo> getLessonPlanModules() {
+            return lessonPlanModules;
+        }
+
+        public void setLessonPlanModules(List<LessonPlanModuleInfo> lessonPlanModules) {
+            this.lessonPlanModules = lessonPlanModules;
+        }
+
+        public static class LessonPlanModuleInfo {
+            
+            private StudyYearDto studyYear;
+            private AutocompleteResult representative;
+            private List<AutocompleteResult> journals;
+            private Map<Long, List<String>> journalTeachers; 
+            private List<StudyPeriodDto> periods;
+            /** Journal - Period - Hours */
+            private Map<Long, Map<Long, Integer>> mappedHours;
+            
+            @SuppressWarnings("boxing")
+            public static LessonPlanModuleInfo of(LessonPlanModule module) {
+                LessonPlanModuleInfo dto = new LessonPlanModuleInfo();
+                dto.setStudyYear(StudyYearDto.of(module.getLessonPlan().getStudyYear()));
+                dto.setRepresentative(module.getTeacher() != null ? AutocompleteResult.of(module.getTeacher()) : null);
+                
+                Set<StudyPeriod> periods = module.getLessonPlan().getStudyYear().getStudyPeriods();
+                List<AutocompleteResult> journals = new ArrayList<>();
+                Map<Long, List<String>> journalTeachers = new HashMap<>();
+                Map<Long, Map<Long, Integer>> mappedHours = new HashMap<>();
+                
+                //module.getLessonPlan().getStudentGroup(); // XXX What to do with it?
+                
+                module.getJournalOccupationModuleThemes().stream().map(r -> r.getJournal()).distinct().forEach(journal -> {
+                    journals.add(AutocompleteResult.of(journal));
+                    journalTeachers.put(journal.getId(), journal.getJournalTeachers().stream().map(r -> r.getTeacher().getPerson().getFullname()).sorted().collect(Collectors.toList()));
+
+                    HashSet<StudyPeriod> leftovers = new HashSet<>(periods);
+                    Map<Long, Integer> mappedPeriodHours = new HashMap<>();
+                    journal.getJournalCapacities().forEach(jc -> {
+                        if (!mappedPeriodHours.containsKey(jc.getStudyPeriod().getId())) {
+                            leftovers.remove(jc.getStudyPeriod());
+                            mappedPeriodHours.put(jc.getStudyPeriod().getId(), 0);
+                        }
+                        mappedPeriodHours.put(jc.getStudyPeriod().getId(), mappedPeriodHours.get(jc.getStudyPeriod().getId()) + jc.getHours());
+                    });
+                    leftovers.forEach(p -> mappedPeriodHours.put(p.getId(), 0));
+                    mappedHours.put(journal.getId(), mappedPeriodHours);
+                });
+                
+                dto.setPeriods(periods.stream().map(r -> StudyPeriodDto.of(r)).sorted(Comparator.comparing(r -> r.getEndDate())).collect(Collectors.toList()));
+                dto.setJournals(journals.stream().sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
+                dto.setJournalTeachers(journalTeachers);
+                dto.setMappedHours(mappedHours);
+                
+                return dto;
+            }
+            
+            public StudyYearDto getStudyYear() {
+                return studyYear;
+            }
+            
+            public void setStudyYear(StudyYearDto studyYear) {
+                this.studyYear = studyYear;
+            }
+
+            public AutocompleteResult getRepresentative() {
+                return representative;
+            }
+
+            public void setRepresentative(AutocompleteResult representative) {
+                this.representative = representative;
+            }
+
+            public List<AutocompleteResult> getJournals() {
+                return journals;
+            }
+
+            public void setJournals(List<AutocompleteResult> journals) {
+                this.journals = journals;
+            }
+
+            public Map<Long, List<String>> getJournalTeachers() {
+                return journalTeachers;
+            }
+
+            public void setJournalTeachers(Map<Long, List<String>> journalTeachers) {
+                this.journalTeachers = journalTeachers;
+            }
+
+            public List<StudyPeriodDto> getPeriods() {
+                return periods;
+            }
+
+            public void setPeriods(List<StudyPeriodDto> periods) {
+                this.periods = periods;
+            }
+
+            public Map<Long, Map<Long, Integer>> getMappedHours() {
+                return mappedHours;
+            }
+
+            public void setMappedHours(Map<Long, Map<Long, Integer>> mappedHours) {
+                this.mappedHours = mappedHours;
+            }
+        }
+    }
 }

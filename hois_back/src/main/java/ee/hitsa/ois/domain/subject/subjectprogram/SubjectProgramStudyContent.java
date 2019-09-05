@@ -14,7 +14,7 @@ public class SubjectProgramStudyContent extends BaseEntityWithId {
     
     @ManyToOne(optional=false, fetch=FetchType.LAZY)
     private SubjectProgram subjectProgram;
-    private Short weekNr;
+    private String weekNr;
     private LocalDate studyDt;
     @Column(nullable=false)
     private String studyInfo;
@@ -25,10 +25,10 @@ public class SubjectProgramStudyContent extends BaseEntityWithId {
     public void setSubjectProgram(SubjectProgram subjectProgram) {
         this.subjectProgram = subjectProgram;
     }
-    public Short getWeekNr() {
+    public String getWeekNr() {
         return weekNr;
     }
-    public void setWeekNr(Short weekNr) {
+    public void setWeekNr(String weekNr) {
         this.weekNr = weekNr;
     }
     public LocalDate getStudyDt() {

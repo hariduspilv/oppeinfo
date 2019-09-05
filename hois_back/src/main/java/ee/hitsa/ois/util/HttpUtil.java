@@ -27,6 +27,7 @@ public abstract class HttpUtil {
     public static final NoContentResponse NO_CONTENT_RESPONSE = new NoContentResponse();
     
     public static final String APPLICATION_PDF = "application/pdf";
+    public static final String APPLICATION_RTF = "application/rtf";
     public static final String APPLICATION_XML = "application/xml";
     public static final String APPLICATION_XLS = "application/vnd.ms-excel";
     public static final String TEXT_CSV_UTF8 = "text/csv; Charset=UTF-8";
@@ -59,6 +60,10 @@ public abstract class HttpUtil {
 
     public static void xml(HttpServletResponse response, String filename, byte[] xml) throws IOException {
         file(response, filename, APPLICATION_XML, xml);
+    }
+    
+    public static void rtf(HttpServletResponse response, String filename, byte[] rtf) throws IOException {
+        file(response, filename, APPLICATION_RTF, rtf);
     }
     
     /**

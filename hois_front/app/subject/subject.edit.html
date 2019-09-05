@@ -101,7 +101,6 @@
           md-selected-item-change="addSubject(SUBJECT_TYPE.MANDATORY_PREPEQUISITE)"></hois-autocomplete>
         <div layout="column" class="common-label" flex="95" ng-repeat="sub in subject.mandatoryPrerequisiteSubjects | orderBy: ['sub.' + currentLanguageNameField(), 'code']">
           <div layout="row" flex layout-align="start center">
-            <div flex="5">&nbsp;</div>
             <div flex="50"><a ng-href="#/subject/{{sub.id}}">{{currentLanguageNameField(sub)}}</a></div>
             <div>
               <a ng-click="deleteSubject(SUBJECT_TYPE.MANDATORY_PREPEQUISITE, sub)" class="remove">&times;</a>
@@ -114,7 +113,6 @@
           md-selected-item-change="addSubject(SUBJECT_TYPE.RECOMMENDED_PREREQUISITE)"></hois-autocomplete>
         <div layout="column" class="common-label" flex="95" ng-repeat="sub in subject.recommendedPrerequisiteSubjects | orderBy: ['sub.' + currentLanguageNameField(), 'code']">
           <div layout="row" flex layout-align="start center">
-            <div flex="5">&nbsp;</div>
             <div flex="50"><a ng-href="#/subject/{{sub.id}}">{{currentLanguageNameField(sub)}}</a></div>
             <div>
               <a ng-click="deleteSubject(SUBJECT_TYPE.RECOMMENDED_PREREQUISITE, sub)" class="remove">&times;</a>
@@ -127,7 +125,6 @@
           md-selected-item-change="addSubject(SUBJECT_TYPE.SUBSTITUTE)"></hois-autocomplete>
         <div layout="column" class="common-label" flex="95" ng-repeat="sub in subject.substituteSubjects | orderBy: ['sub.' + currentLanguageNameField(), 'code']">
           <div layout="row" flex layout-align="start center">
-            <div flex="5">&nbsp;</div>
             <div flex="50"><a ng-href="#/subject/{{sub.id}}">{{currentLanguageNameField(sub)}}</a></div>
             <div>
               <a ng-click="deleteSubject(SUBJECT_TYPE.SUBSTITUTE, sub)" class="remove">&times;</a>

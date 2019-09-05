@@ -43,8 +43,8 @@ import ee.hitsa.ois.web.dto.RoomSearchDto;
 @Service
 public class BuildingService {
     private static final String LIST_SELECT =
-            "b.id b_id, b.name b_name, b.code b_code, b.address b_address"
-            + ", r.id r_id, r.name r_name, r.code r_code, r.seats, r.is_study";
+            "b.id b_id, b.name b_name, b.code b_code, b.address b_address, " +
+            "r.id r_id, r.name r_name, r.code r_code, r.seats, r.is_study, b.is_dormitory";
     private static final String LIST_FROM =
             "from building b left join room r on r.building_id = b.id";
 
@@ -118,6 +118,7 @@ public class BuildingService {
             dto.setCode(resultAsString(r, 6));
             dto.setSeats(resultAsLong(r, 7));
             dto.setIsStudy(resultAsBoolean(r, 8));
+            dto.setIsBoardingSchool(resultAsBoolean(r, 9));
             dto.setRoomEquipment(StreamUtil.toMappedList(
                     re -> EntityUtil.bindToDto(re, new RoomEquipmentCommand()), 
                     equipment.get(resultAsLong(r, 4))));

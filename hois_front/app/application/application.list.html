@@ -14,12 +14,12 @@
           <div flex>
             <md-input-container>
               <label>{{'application.insertionDateA' | translate}}</label>
-              <md-datepicker ng-model="criteria.insertedFrom" md-max-date="criteria.insertedThru"></md-datepicker>
+              <md-datepicker ng-model="criteria.insertedFrom" md-max-date="criteria.insertedThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
             </md-input-container>
 
             <md-input-container>
               <label>{{'application.insertionDateK' | translate}}</label>
-              <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom"></md-datepicker>
+              <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
             </md-input-container>
           </div>
         </div>
@@ -28,12 +28,12 @@
           <div flex>
             <md-input-container>
               <label>{{'application.submissionDateA' | translate}}</label>
-              <md-datepicker ng-model="criteria.submittedFrom" md-max-date="criteria.submittedThru"></md-datepicker>
+              <md-datepicker ng-model="criteria.submittedFrom" md-max-date="criteria.submittedThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
             </md-input-container>
 
             <md-input-container>
               <label>{{'application.submissionDateK' | translate}}</label>
-              <md-datepicker ng-model="criteria.submittedThru" md-min-date="criteria.submittedFrom"></md-datepicker>
+              <md-datepicker ng-model="criteria.submittedThru" md-min-date="criteria.submittedFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
             </md-input-container>
           </div>
         </div>

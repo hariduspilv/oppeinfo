@@ -1,10 +1,10 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ContractEditController', function ($location, $scope, $route, dialogService, message, Classifier, DataUtils, QueryUtils, $q, ArrayUtils) {
+angular.module('hitsaOis').controller('ContractEditController', function ($location, $scope, $route, dialogService, message, Classifier, DataUtils, QueryUtils, $q, ArrayUtils, config) {
   $scope.auth = $route.current.locals.auth;
   $scope.contract = {moduleSubjects: [{}]};
   $scope.formState = {};
-  
+
   if ($route.current.params.studentGroupId) {
     $scope.studentGroup = $route.current.params.studentGroupId;
     $scope.studentGroupList = [];
@@ -92,14 +92,6 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
         }
       }
     }
-  };
-
-  $scope.sendEmailAgain = function (supervisor) {
-    var ContractEndpoint = QueryUtils.endpoint('/contracts/sendEmail');
-    var contract = new ContractEndpoint({id: supervisor});
-    contract.$update().then(function () {
-      message.updateSuccess();
-    }).catch(angular.noop);
   };
 
   var entity = $route.current.locals.entity;
@@ -409,7 +401,7 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
       var contract = new ContractEndpoint($scope.contract);
       contract.$delete().then(function () {
         message.info('main.messages.delete.success');
-        $scope.back('#/contracts');
+        $scope.back('/#/contracts');
       }).catch(angular.noop);
     });
   };
@@ -429,6 +421,27 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
         });
       });
     });
+  };
+
+  $scope.confirmWithoutEkis = function () {
+    if(!validationPassed()) {
+      return false;
+    }
+    QueryUtils.endpoint('/contracts/checkForEkis').get({id: $scope.contract.id}).$promise.then(function(check) {
+      dialogService.confirmDialog({ prompt: (check.templateExists ? 'contract.withoutEkisConfirm' : 'contract.confirmTemplateMissing'), template: check.templateName }, function () {
+        $scope.save(function () {
+          var EkisEndpoint = QueryUtils.endpoint('/contracts/checkout/' + $scope.contract.id);
+          new EkisEndpoint().$save().then(function (contract) {
+            $location.url('/contracts/' + contract.id + '/view?_noback');
+            message.info('contract.messages.contractReadyForConfirmation');
+          }).catch(angular.noop);
+        });
+      });
+    });
+  };
+
+  $scope.printUrl = function () {
+    return config.apiUrl + '/contracts/print/' + $scope.contract.id + "/contract.rtf?lang=" + $scope.currentLanguage().toUpperCase();
   };
 
   $scope.copyContract = function () {

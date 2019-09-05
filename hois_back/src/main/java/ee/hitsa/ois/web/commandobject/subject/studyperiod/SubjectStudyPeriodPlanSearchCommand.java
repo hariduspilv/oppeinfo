@@ -1,9 +1,11 @@
 package ee.hitsa.ois.web.commandobject.subject.studyperiod;
 
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
+
 public class SubjectStudyPeriodPlanSearchCommand {
     
     private Long studyPeriod;
-    private Long curriculum;
+    private EntityConnectionCommand curriculum;
     private Long subject;
 
     public Long getStudyPeriod() {
@@ -12,10 +14,10 @@ public class SubjectStudyPeriodPlanSearchCommand {
     public void setStudyPeriod(Long studyPeriod) {
         this.studyPeriod = studyPeriod;
     }
-    public Long getCurriculum() {
+    public EntityConnectionCommand getCurriculum() {
         return curriculum;
     }
-    public void setCurriculum(Long curriculum) {
+    public void setCurriculum(EntityConnectionCommand curriculum) {
         this.curriculum = curriculum;
     }
     public Long getSubject() {

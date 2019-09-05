@@ -64,7 +64,7 @@ public class SubjectStudyPeriodStudentGroupSearchService {
                 filters.add(cb.equal(root.get("id"), criteria.getStudentGroup()));
             }
             if (criteria.getCurriculum() != null) {
-                filters.add(cb.equal(root.get("curriculum").get("id"), criteria.getCurriculum()));
+                filters.add(cb.equal(root.get("curriculum").get("id"), criteria.getCurriculum().getId()));
             }
             Long department = criteria.getDepartment();
             if (department != null) {

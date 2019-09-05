@@ -5,9 +5,9 @@
         <div layout="row">
           <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
             <label>{{'ehis.student.dataType' | translate}}</label>
-            <md-select ng-model="criteria.dataType" required>
-              <md-option ng-repeat="val in dataTypes" ng-value="val">
-                {{ 'ehis.student.' + val | translate}}
+            <md-select ng-model="criteria.dataType" required ng-change="result = []">
+              <md-option ng-repeat="val in dataTypes | orderBy: 'translate'" ng-value="val.type">
+                {{ val.translate }}
               </md-option>
             </md-select>
           </md-input-container>
@@ -35,6 +35,7 @@
       </div>
     </form>
   </div>
+  <p class="md-body-2" md-colors="{color: 'warn'}" translate="ehis.messages.requestCancelledBy" translate-values="{user: cancelledBy}" ng-if="cancelledBy"></p>
 </div>
 
 <div ng-if="result.length > 0">
@@ -46,12 +47,15 @@
           <table md-table>
             <thead md-head>
               <tr md-row>
+                <th md-column >{{'main.order' | translate}}</th>
                 <th md-column >{{'ehis.student.name' | translate}}</th>
                 <th md-column >{{'ehis.student.idcode' | translate}}</th>
                 <th md-column >{{'ehis.student.curriculum' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'GRADUATION'">{{'ehis.student.docNr' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'GRADUATION'">{{'ehis.student.cumLaude' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'GRADUATION'">{{'ehis.student.academicNr' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'COURSE_CHANGE'">{{'ehis.student.newCourse' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'COURSE_CHANGE'">{{'ehis.student.changeDate' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{'ehis.student.percentage' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{'ehis.student.points' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{'ehis.student.lastPeriod' | translate}}</th>
@@ -77,6 +81,7 @@
             </thead>
             <tbody md-body>
               <tr md-row ng-repeat="row in result" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{$index + 1}}.</td>
                 <td md-cell><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.name}}</a></td>
                 <td md-cell>{{::row.idcode}}</td>
                 <td md-cell>{{::row.curriculum}}</td>
@@ -94,6 +99,8 @@
                     </span>
                   </span>
                 </td>
+                <td md-cell ng-if="criteria.dataType === 'COURSE_CHANGE'">{{::row.newCourse}}</td>
+                <td md-cell ng-if="criteria.dataType === 'COURSE_CHANGE'">{{::row.changed | hoisDate}}</td>
                 <td md-cell ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{::row.percentage}}</td>
                 <td md-cell ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{::row.points}}</td>
                 <td md-cell ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{::row.lastPeriod ? 'main.yes' : 'main.no' | translate}}</td>

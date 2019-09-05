@@ -84,7 +84,6 @@
             <h3>{{'subject.mandatoryPrerequisiteSubjects' | translate}}</h3>
             <div layout="column" class="common-label" flex="95" ng-repeat="sub in subject.mandatoryPrerequisiteSubjects | orderBy: ['sub.' + currentLanguageNameField(), 'code']">
               <div layout="row" flex layout-align="start center">
-                <div flex="5">&nbsp;</div>
                 <div flex="50"><a ng-href="#/subject{{isPublic ? '/public' : ''}}/{{sub.id}}">{{currentLanguageNameField(sub)}}</a></div>
               </div>
             </div>
@@ -94,7 +93,6 @@
             <h3>{{'subject.recommendedPrerequisiteSubjects' | translate}}</h3>
             <div layout="column" class="common-label" flex="95" ng-repeat="sub in subject.recommendedPrerequisiteSubjects | orderBy: ['sub.' + currentLanguageNameField(), 'code']">
               <div layout="row" flex layout-align="start center">
-                <div flex="5">&nbsp;</div>
                 <div flex="50"><a ng-href="#/subject{{isPublic ? '/public' : ''}}/{{sub.id}}">{{currentLanguageNameField(sub)}}</a></div>
               </div>
             </div>
@@ -104,7 +102,6 @@
             <h3>{{'subject.substituteSubjects' | translate}}</h3>
             <div layout="column" class="common-label" flex="95" ng-repeat="sub in subject.substituteSubjects | orderBy: ['sub.' + currentLanguageNameField(), 'code']">
               <div layout="row" flex layout-align="start center">
-                <div flex="5">&nbsp;</div>
                 <div flex="50"><a ng-href="#/subject{{isPublic ? '/public' : ''}}/{{sub.id}}">{{currentLanguageNameField(sub)}}</a></div>
               </div>
             </div>

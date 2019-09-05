@@ -1,8 +1,9 @@
 'use strict';
 
 
-angular.module('hitsaOis').controller('ApplicationController', function ($scope, dialogService, oisFileService, QueryUtils, message, $location,
-  $route, DataUtils, ArrayUtils, $q, Curriculum, Classifier, FormUtils, $timeout, config, $http) {
+angular.module('hitsaOis').controller('ApplicationController', function ($http, $location, $q, $route, $scope, $timeout,
+  ArrayUtils, AuthService, Classifier, Curriculum, DataUtils, FormUtils, QueryUtils, USER_ROLES, config, dialogService,
+  message, oisFileService) {
   var ApplicationsEndpoint = QueryUtils.endpoint('/applications');
 
   $scope.removeFromArray = ArrayUtils.remove;
@@ -21,16 +22,21 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       });
     }
     angular.extend($scope.application, savedApplication);
+
+    $scope.canChange = canChange($scope.application);
+    $scope.canSave = canSave($scope.application);
   }
 
   $scope.applicationEditView = false;
   $scope.application = {files: [], status: 'AVALDUS_STAATUS_KOOST'};
+  $scope.canChange = canChange($scope.application);
+  $scope.canSave = canSave($scope.application);
   
   var entity = $route.current.locals.entity;
   if (angular.isDefined(entity)) {
     entity.$promise.then(function (response) {
       if (!$scope.isView) {
-        if (!((response.status === 'AVALDUS_STAATUS_KOOST' || (response.status === 'AVALDUS_STAATUS_YLEVAAT' && $scope.auth.isAdmin())) && response.canEditStudent)) {
+        if (!canChange(response)) {
           message.error('main.messages.error.nopermission');
           $scope.back("#/");
         }
@@ -54,6 +60,38 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
         $scope.application.student = result.content[0];
       }
     });
+  }
+
+  function canChange(application) {
+    var createdApplicationPerm = false;
+    var reviewApplicationPerm = false;
+    var confirmedApplicationPerm = false;
+
+    if (application.status === 'AVALDUS_STAATUS_KOOST') {
+      createdApplicationPerm = ($scope.auth.isAdmin() && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS)) ||
+        ($scope.auth.isStudent() || (($scope.auth.isParent() || $scope.auth.isTeacher()) && application.type === 'AVALDUS_LIIK_TUGI'));
+    } else if (application.status === 'AVALDUS_STAATUS_YLEVAAT') {
+      reviewApplicationPerm = $scope.auth.isAdmin() && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS);
+    } else if (application.status === 'AVALDUS_STAATUS_KINNITATUD') {
+      confirmedApplicationPerm = application.type === 'AVALDUS_LIIK_RAKKAVA' && application.canChangeThemeReplacements;
+    }
+
+    return application.canEditStudent && (createdApplicationPerm || reviewApplicationPerm || confirmedApplicationPerm);
+  }
+
+  function canSave(application) {
+    var createdApplicationPerm = application.status === 'AVALDUS_STAATUS_KOOST';
+    var reviewApplicationPerm = false;
+    var confirmedApplicationPerm = false;
+
+    if (application.status === 'AVALDUS_STAATUS_YLEVAAT') {
+      reviewApplicationPerm = application.status === 'AVALDUS_STAATUS_YLEVAAT' && $scope.auth.isAdmin();
+    } else if (application.status === 'AVALDUS_STAATUS_KINNITATUD') {
+      confirmedApplicationPerm = application.type === 'AVALDUS_LIIK_RAKKAVA' && application.canChangeThemeReplacements;
+    }
+    
+    return (!$scope.application.id || $scope.application.canEditStudent) &&
+      (createdApplicationPerm || reviewApplicationPerm || confirmedApplicationPerm);
   }
 
   function studyPeriodDisplay(studyPeriod) {
@@ -231,11 +269,15 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
         higher: true,
         curriculumId: student.curriculum,
         hasGroup: true,
-        studyForm: student.studyForm
+        studyForm: student.studyForm,
+        checkStudentGroupStudyForm: true
       }, function(result) {
         $scope.formState.curriculumVersions = result.filter(function (r) {
           return r.id !== $scope.application.oldCurriculumVersion.id;
         });
+        if ($scope.formState.curriculumVersions.length === 0) {
+          $scope.formState.curriculumsEmpty = true;
+        }
       }),
       studentGroups: QueryUtils.endpoint("/autocomplete/studentgroups").query({valid: true, higher: true, curriculumId: student.curriculum, studyForm: student.studyForm})
     };
@@ -258,10 +300,32 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
         $scope.formState.curriculumVersions = result.filter(function (r) {
           return r.id !== $scope.application.oldCurriculumVersion.id;
         });
+        if ($scope.formState.curriculumVersions.length === 0) {
+          $scope.formState.curriculumsEmpty = true;
+        }
       }),
       studentGroups: QueryUtils.endpoint("/autocomplete/studentgroups").query({valid: true, higher: false, curriculumId: student.curriculum, studyForm: student.studyForm})
     };
     $q.all($scope.formState.curriculumVersions, $scope.formState.studentGroups).then(loadFormDeferred.resolve);
+
+    if ($scope.isView) {
+      getThemeReplacementData();
+    }
+
+    $scope.newCurriculumVersionSelected = function () {
+      getThemeReplacementData();
+    };
+
+    function getThemeReplacementData() {
+      QueryUtils.endpoint("/applications/curriculumVersionThemeReplacements/:id").search({
+        id: $scope.application.student.id,
+        applicationId: $scope.application.id,
+        curriculumVersionId: $scope.application.newCurriculumVersion.id
+      }).$promise.then(function (result) {
+        $scope.application.themeReplacement = result;
+    });
+    }
+
   }
 
   function applicationEksmat(loadFormDeferred) {
@@ -546,6 +610,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
           dialogService.confirmDialog({prompt: 'application.messages.confirmSaveAndConfirm'}, function() {  
             var application = new ApplicationsEndpoint($scope.application);
             application.$update().then(function (response) {
+              $scope.strictRequired = false;
               entityToForm(response);
               confirm();
             }).catch(angular.noop);
@@ -617,6 +682,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     $scope.strictRequired = false;
     $timeout(function () {
       FormUtils.withValidForm($scope.applicationForm, function () {
+        beforeSave();
         var application = new ApplicationsEndpoint($scope.application);
         if (angular.isDefined($scope.application.id)) {
           application.$update().then(function () {
@@ -633,6 +699,24 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       });
     });
   };
+
+  function beforeSave() {
+    if ($scope.application.type === 'AVALDUS_LIIK_RAKKAVA') {
+      var applicationOmoduleThemes = [];
+
+      $scope.application.themeReplacement.modules.forEach(function (omodule) {
+        omodule.newThemes.forEach(function (theme) {
+          if (theme.covering) {
+            applicationOmoduleThemes.push(theme);
+          }
+        });
+        omodule.oldThemes.forEach(function (theme) {
+          applicationOmoduleThemes.push(theme);
+        });
+      });
+      $scope.application.themeReplacements = applicationOmoduleThemes;
+    }
+  }
 
   $scope.delete = function () {
     dialogService.confirmDialog({ prompt: 'application.deleteconfirm' }, function () {

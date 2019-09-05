@@ -47,6 +47,7 @@ import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
 import ee.hitsa.ois.enums.CommitteeType;
 import ee.hitsa.ois.enums.HigherAssessment;
+import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.message.ApelApplicationCreated;
@@ -54,6 +55,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApelApplicationUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -73,6 +75,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.apelapplication.ApelApplicationDto;
 import ee.hitsa.ois.web.dto.apelapplication.ApelApplicationSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleResult;
 
 @Transactional
 @Service
@@ -82,6 +85,8 @@ public class ApelApplicationService {
     private EntityManager em;
     @Autowired
     private ApelSchoolService apelSchoolService;
+    @Autowired
+    private StudentResultHigherService studentResultHigherService;
     @Autowired
     private AutomaticMessageService automaticMessageService;
 
@@ -841,6 +846,30 @@ public class ApelApplicationService {
                 .setMaxResults(1).getResultList();
 
         return !modules.isEmpty() ? CurriculumVersionHigherModuleDto.of(modules.get(0)) : null;
+    }
+
+    public List<CurriculumVersionHigherModuleResult> studentModules(Student student) {
+        // final thesis and final exam modules are not allowed
+        JpaNativeQueryBuilder qb = studentResultHigherService.studentModulesQueryBuilder(student);
+        qb.requiredCriteria("cvhm.type_code not in (:typeCode)", "typeCode",
+                EnumUtil.toNameList(HigherModuleType.KORGMOODUL_F, HigherModuleType.KORGMOODUL_L));
+
+        List<?> data = qb.select("cvhm.id, cvhm.name_et, cvhm.name_en, cvhm.type_code", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            return new CurriculumVersionHigherModuleResult(resultAsLong(r, 0), resultAsString(r, 1),
+                    resultAsString(r, 2), resultAsString(r, 3));
+        }, data);
+    }
+
+    public AutocompleteResult studentFreeChoiceModule(Student student) {
+        JpaNativeQueryBuilder qb = studentResultHigherService.studentModulesQueryBuilder(student);
+        qb.requiredCriteria("cvhm.type_code = :typeCode", "typeCode", HigherModuleType.KORGMOODUL_V);
+
+        List<?> data = qb.select("cvhm.id, cvhm.name_et, cvhm.name_en", em).getResultList();
+        List<AutocompleteResult> freeChoiceModules = StreamUtil.toMappedList(
+                r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)), data);
+
+        return !freeChoiceModules.isEmpty() ? freeChoiceModules.get(0) : null;
     }
 
     public List<AutocompleteResult> committeesForSelection(HoisUserDetails user, ApelApplication application) {

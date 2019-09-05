@@ -5,4 +5,5 @@ public interface CertificateValidator {
     interface StudentIsNotSet {}
     interface ValidateLater{}
     interface ContentIsEditable{}
+    interface RequiredIfWithoutEkis{}
 }

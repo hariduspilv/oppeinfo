@@ -15,8 +15,8 @@ import ee.hitsa.ois.domain.school.School;
 @Entity
 public class GeneralMessage extends BaseEntityWithId {
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
     private School school;
     private String title;
     private String content;

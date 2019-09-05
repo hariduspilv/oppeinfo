@@ -18,6 +18,7 @@ import ee.hitsa.ois.web.commandobject.OisFileForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
+import ee.hitsa.ois.web.dto.application.ApplicationOccupationModuleThemeDto;
 import ee.hitsa.ois.web.dto.application.ApplicationPlannedSubjectDto;
 import ee.hitsa.ois.web.dto.application.ApplicationSupportServiceModuleDto;
 import ee.hitsa.ois.web.dto.application.ValidAcademicLeaveDto;
@@ -114,6 +115,7 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     private Set<ApplicationPlannedSubjectDto> plannedSubjects;
 
+    private Set<ApplicationOccupationModuleThemeDto> themeReplacements;
 
     public AutocompleteResult getStudent() {
         return student;
@@ -417,5 +419,13 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     public void setFiles(Set<OisFileForm> files) {
         this.files = files;
+    }
+
+    public Set<ApplicationOccupationModuleThemeDto> getThemeReplacements() {
+        return themeReplacements;
+    }
+
+    public void setThemeReplacements(Set<ApplicationOccupationModuleThemeDto> themeReplacements) {
+        this.themeReplacements = themeReplacements;
     }
 }

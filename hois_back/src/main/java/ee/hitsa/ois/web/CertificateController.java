@@ -1,9 +1,13 @@
 package ee.hitsa.ois.web;
 
+import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,14 +23,22 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Certificate;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.CertificateType;
+import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.report.certificate.CertificateRtfReport;
 import ee.hitsa.ois.service.CertificateContentService;
 import ee.hitsa.ois.service.CertificateService;
 import ee.hitsa.ois.service.CertificateValidationService;
+import ee.hitsa.ois.service.RtfService;
 import ee.hitsa.ois.service.ekis.EkisService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.HttpUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -51,6 +63,10 @@ public class CertificateController {
     private EkisService ekisService;
     @Autowired
     private CertificateValidationService certificateValidationService;
+    @Autowired
+    private RtfService rtfService;
+    @Autowired
+    private EntityManager em;
 
     @GetMapping
     public Page<CertificateSearchDto> search(HoisUserDetails user, @Valid CertificateSearchCommand criteria, Pageable pageable) {
@@ -131,6 +147,9 @@ public class CertificateController {
             UserUtil.assertIsSchoolAdmin(user);
         }
         Certificate certificate = certificateService.create(user, form);
+        if (Boolean.TRUE.equals(em.getReference(School.class, user.getSchoolId()).getIsWithoutEkis())) {
+            return get(user, certificate);
+        }
         return orderFromEkis(user, certificate);
     }
 
@@ -150,6 +169,17 @@ public class CertificateController {
         certificateValidationService.validate(user, form);
         certificate = certificateService.save(user, certificate, form);
         return orderFromEkis(user, certificate);
+    }
+
+    @PutMapping("/complete/{id:\\d+}")
+    public CertificateDto saveAndComplete(HoisUserDetails user, 
+            @WithVersionedEntity(versionRequestBody = true) Certificate certificate,
+            @Valid @RequestBody CertificateForm form) {
+        certificateValidationService.validate(user, form, certificate.getSchool());
+        certificateValidationService.assertCanChange(user, certificate);
+        certificate = certificateService.save(user, certificate, form);
+        certificateValidationService.assertCanComplete(user, certificate);
+        return get(user, certificateService.complete(certificate));
     }
 
     @PutMapping("/orderFromEkis/{id:\\d+}")
@@ -180,6 +210,26 @@ public class CertificateController {
     public StudentSearchDto otherStudent(HoisUserDetails user, OtherStudentCommand command) {
         UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
         return certificateService.otherStudent(user, command.getId(), command.getIdcode());
+    }
+    
+    @GetMapping("/print/{id:\\d+}/certificate.rtf")
+    public void print(HoisUserDetails user, @WithEntity Certificate certificate, HttpServletResponse response, @RequestParam(required = false) Language lang) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user, certificate.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_TOEND);
+        UserUtil.assertIsSchoolWithoutEkis(certificate.getSchool());
+        HttpUtil.rtf(response, String.format("toend%s.rtf", certificate.getStudent() != null ? "_" + PersonUtil.fullname(certificate.getStudent().getPerson()) : ""),
+                rtfService.generateFop(CertificateRtfReport.TEMPLATE_NAME, new CertificateRtfReport(certificate), lang));
+    }
+    
+    @GetMapping("/hasorderedcertificates")
+    public Map<String, Object> hasOrderedCertificates(HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolWithoutEkis(em.getReference(School.class, user.getSchoolId()));
+        Map<String, Object> result = new HashMap<>();
+        result.put("has", Boolean.FALSE);
+        if (UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_TOEND)) {
+            result.put("has", certificateService.hasOrderedCertificates(user));
+        }
+        return result;
     }
 
     public static class OtherStudentCommand {

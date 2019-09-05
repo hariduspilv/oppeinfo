@@ -27,6 +27,11 @@
       <md-div class="md-block">
         <hois-ads-adapter class="md-text" ng-model="record.addressAds" ads-oid-model="record.addressAdsOid" address-model="record.address"></hois-ads-adapter>
       </md-div>
+
+      <div>&nbsp;</div>
+      <md-input-container flex>
+        <md-checkbox ng-model="record.isDormitory" aria-label="{{'building.boardingSchool' | translate}}">{{'building.boardingSchool' | translate}}</md-checkbox>
+      </md-input-container>
     </form>
 
     <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>

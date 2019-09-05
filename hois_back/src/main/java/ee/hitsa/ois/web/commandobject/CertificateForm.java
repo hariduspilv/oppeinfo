@@ -4,6 +4,7 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.CertificateValidator.ContentIsEditable;
+import ee.hitsa.ois.validation.CertificateValidator.RequiredIfWithoutEkis;
 import ee.hitsa.ois.validation.CertificateValidator.StudentIsNotSet;
 import ee.hitsa.ois.validation.CertificateValidator.StudentIsSet;
 import ee.hitsa.ois.validation.CertificateValidator.ValidateLater;
@@ -17,6 +18,9 @@ public class CertificateForm extends VersionedCommand {
     private String headline;
     @Required(groups = {ContentIsEditable.class})
     private String content;
+    @Size(max=20)
+    @Required(groups = {RequiredIfWithoutEkis.class})
+    private String certificateNr;
     @Size(max=1000)
     private String whom;
     @Size(max=100)
@@ -68,6 +72,14 @@ public class CertificateForm extends VersionedCommand {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getCertificateNr() {
+        return certificateNr;
+    }
+
+    public void setCertificateNr(String certificateNr) {
+        this.certificateNr = certificateNr;
     }
 
     public String getWhom() {

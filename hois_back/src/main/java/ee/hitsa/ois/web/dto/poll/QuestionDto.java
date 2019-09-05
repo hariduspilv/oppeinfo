@@ -17,6 +17,7 @@ public class QuestionDto implements Comparable<QuestionDto> {
     private Long question;
     private Boolean disabled;
     private String answerTxt;
+    private Long responseSubjectId;
     private List<QuestionAnswerDto> answers = new ArrayList<>();
     private List<OisFileEditDto> files = new ArrayList<>();
     
@@ -101,6 +102,12 @@ public class QuestionDto implements Comparable<QuestionDto> {
     }
     public void setAnswerTxt(String answerTxt) {
         this.answerTxt = answerTxt;
+    }
+    public Long getResponseSubjectId() {
+        return responseSubjectId;
+    }
+    public void setResponseSubjectId(Long responseSubjectId) {
+        this.responseSubjectId = responseSubjectId;
     }
 
 }

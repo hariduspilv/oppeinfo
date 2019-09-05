@@ -104,6 +104,11 @@ angular.module('hitsaOis').factory('DataUtils',
       return {extraPrompts: prompts, rooms: rooms, teachers: teachers, studentGroups: studentGroups};
     }
 
+    function formatAddress(address, postalCode) {
+      return address && postalCode ? address.endsWith(postalCode) ? address : address + ', ' + postalCode
+        : address ? address : postalCode ? postalCode : '';
+    }
+
     /**
      * Decides if object (its `validFrom` and `validThru` ) is valid within given period.
      * 
@@ -137,6 +142,7 @@ angular.module('hitsaOis').factory('DataUtils',
       periodsOverlap: periodsOverlap,
       occupiedEventTimePrompts: occupiedEventTimePrompts,
       isValidObject: isValidObject,
+      formatAddress: formatAddress,
 
       sexFromIdcode: function (idcode) {
         if (idcode.length !== 11 || isNaN(idcode)) {
@@ -229,6 +235,30 @@ angular.module('hitsaOis').factory('DataUtils',
       isWeekend: function(date) {
         var day = date.getDay();
         return day === 6 || day === 0;
+      },
+
+      /**
+       * @callback arrayFilter
+       * @param {Object} obj - object in array
+       * @param {RegExp} regex - regex to test
+       */
+
+      /**
+       * Filters the array by given. Text controlled in UPPER case.
+       * 
+       * @param {Array<T>} array - array of given objects
+       * @param {String} text - text for filtering
+       * @param {arrayFilter} filter - filter with 2 arguments.
+       * @returns {Array<T>}
+       */
+      filterArrayByText: function(array, text, filter) {
+        if (!text) {
+          return [];
+        }
+        var regExp = new RegExp('^.*' + text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&').replace("%", ".*").toUpperCase() + '.*$');
+        return (array || []).filter(function (obj) {
+          return filter(obj, regExp);
+        });
       }
     };
   }

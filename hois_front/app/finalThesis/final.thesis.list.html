@@ -42,11 +42,11 @@
               <div layout="row" flex>
                 <md-input-container>
                   <label>{{'finalThesis.insertedFrom' | translate}}</label>
-                  <md-datepicker ng-model="criteria.insertedFrom" md-max-date="criteria.insertedThru"></md-datepicker>
+                  <md-datepicker ng-model="criteria.insertedFrom" md-max-date="criteria.insertedThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
                 </md-input-container>
                 <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'finalThesis.insertedThru' | translate}}</label>
-                  <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom"></md-datepicker>
+                  <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
                 </md-input-container>
               </div>
             </div>
@@ -57,11 +57,11 @@
               <div layout="row" flex>
                 <md-input-container>
                   <label>{{'finalThesis.confirmedFrom' | translate}}</label>
-                  <md-datepicker ng-model="criteria.confirmedFrom" md-max-date="criteria.confirmedThru"></md-datepicker>
+                  <md-datepicker ng-model="criteria.confirmedFrom" md-max-date="criteria.confirmedThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
                 </md-input-container>
                 <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'finalThesis.confirmedThru' | translate}}</label>
-                  <md-datepicker ng-model="criteria.confirmedThru" md-min-date="criteria.confirmedFrom"></md-datepicker>
+                  <md-datepicker ng-model="criteria.confirmedThru" md-min-date="criteria.confirmedFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
                 </md-input-container>
               </div>
             </div>

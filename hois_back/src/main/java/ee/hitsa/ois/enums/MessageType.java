@@ -21,6 +21,7 @@ import ee.hitsa.ois.message.SupportServiceEnding;
 import ee.hitsa.ois.message.TimetableChanged;
 import ee.hitsa.ois.message.TimetableEventCreated;
 import ee.hitsa.ois.message.ContractSupervisorMessage;
+import ee.hitsa.ois.message.PollReminderMessage;
 
 public enum MessageType {
 
@@ -45,7 +46,8 @@ public enum MessageType {
     TEATE_LIIK_TUGI_LOPP(SupportServiceEnding.class),
     TEATE_LIIK_TUNN_SYNDMUS(TimetableEventCreated.class),
     TEATE_LIIK_VOTA(ApelApplicationCreated.class),
-    TEATE_LIIK_KYSI_EV_JUHENDAJA(ContractSupervisorMessage.class);
+    TEATE_LIIK_KYSI_EV_JUHENDAJA(ContractSupervisorMessage.class),
+    TEATE_LIIK_KYSI_MEELDETULETUS(PollReminderMessage.class);
 
     private final Class<?> dataBean;
 

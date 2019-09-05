@@ -101,11 +101,6 @@
           <input ng-model="student.studyCompany" name="studyCompany" type="text" md-maxlength="1000">
         </md-input-container>
 
-        <md-input-container ng-if="student.isVocational" class="md-block">
-          <label>{{'student.boardingSchool' | translate}}</label>
-          <input ng-model="student.boardingSchool" name="boardingSchool" type="text" md-maxlength="1000">
-        </md-input-container>
-
         <md-input-container class="md-block">
           <label>{{'student.previousSchoolName' | translate}}</label>
           <input ng-model="student.previousSchoolName" name="previousSchoolName" type="text" md-maxlength="255">
@@ -116,7 +111,7 @@
           <md-datepicker class="wider-datepicker" ng-model="student.previousSchoolEndDate"></md-datepicker>
         </md-input-container>
 
-        <md-input-container ng-if="student.isVocational" class="md-block">
+        <md-input-container class="md-block">
           <label>{{'student.dormitory' | translate}}</label>
           <hois-classifier-select ng-model="student.dormitory" name="dormitory" main-classifier-code="YHISELAMU" required model-value-attr="code"></hois-classifier-select>
         </md-input-container>

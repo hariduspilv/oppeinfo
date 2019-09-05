@@ -19,7 +19,7 @@
         <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
           <div md-colors="{color: 'warn'}" layout layout-align="left center">
             <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-            <span>{{'subjectProgram.youHaveUnconfirmedPrograms' | translate}} <a ng-href="/#/subjectProgram?_menu">{{'main.button.view' | translate}}</a></span>
+            <span>{{'subjectProgram.youHaveUnconfirmedPrograms' | translate}} <a ng-href="/#/{{isAdmin ? 'subjectStudyPeriods' : 'subjectProgram'}}?_menu">{{'main.button.view' | translate}}</a></span>
           </div>
         </md-whiteframe>
       </div>
@@ -36,6 +36,14 @@
           <div md-colors="{color: 'warn'}" layout layout-align="left center">
             <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
             <span>{{'basemodule.youHaveExpiredBaseModules' | translate}} <a ng-href="/#/basemodule?_menu">{{'main.button.view' | translate}}</a></span>
+          </div>
+        </md-whiteframe>
+      </div>
+      <div ng-if="hasOrderedCertificates.has">
+        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+          <div md-colors="{color: 'warn'}" layout layout-align="left center">
+            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'certificate.youHaveOrderedCertificates' | translate}} <a ng-href="/#/certificate?_menu&ordered">{{'main.button.view' | translate}}</a></span>
           </div>
         </md-whiteframe>
       </div>
@@ -105,6 +113,17 @@
   </div>
 
   <div ng-if="!state.currentUser" class="schoolList">
+    <div ng-if="siteMessages.length > 0">
+      <md-whiteframe ng-repeat="msg in siteMessages" class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+        <div layout layout-align="left center">
+          <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons" style="margin-top: 0 !important;">info_outline</md-icon>
+          <span layout="column" layout-align="start start">
+            <p style="margin: 0; text-align: left;" md-colors="{color: 'warn'}">{{msg.title}} <a ng-click="msg.showContent = !msg.showContent">{{msg.showContent ? 'main.button.hide' : 'main.button.view' | translate}}</a></p>
+            <p style="margin: 0; text-align: left; white-space: pre-line" ng-if="msg.showContent" ng-bind-html="linkify(msg.content)"></p>
+          </span>
+        </div>
+      </md-whiteframe>
+    </div>
     <md-grid-list md-cols="1" md-cols-sm="2" md-cols-md="3" md-cols-gt-md="6" md-row-height-gt-md="1:1" md-row-height="4:3" md-gutter="24px" md-gutter-gt-sm="24px">
       <md-grid-tile ng-repeat="school in schools" md-colspan="1">
         <button class="schoolTileButton" ng-click="openSchoolCurriculumSearch(school.id)">

@@ -63,7 +63,6 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 import ee.hitsa.ois.web.commandobject.enterprise.ContractStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.enterprise.PracticeAdmissionCommand;
@@ -178,14 +177,13 @@ public class PracticeEnterpriseService {
 		enterpriseCountQuery.requiredCriteria("en.country_code = :countryCode", "countryCode",  enterpriseForm.getCountry());
         String selectCount = "en.id";
         List<?> enterprises = enterpriseCountQuery.select(selectCount, em).getResultList();
-        List<Long> resultEnterprises = enterprises.stream().map(r -> resultAsLong(r, 0)).collect(Collectors.toList());
         if(!enterprises.isEmpty()) {
         	EnterpriseRegCodeResponseDto enterpriseResponse = new EnterpriseRegCodeResponseDto();
         	enterpriseResponse.setStatus("Sama registrikoodi ja riigiga ettevõte on juba olemas.");
         	return enterpriseResponse;
         }
         try {
-    		LihtandmedResponse simpleData = ariregisterService.getSimpleData(BigInteger.valueOf(Long.valueOf(enterpriseForm.getRegCode())), user);
+    		LihtandmedResponse simpleData = ariregisterService.getSimpleData(BigInteger.valueOf(Long.valueOf(enterpriseForm.getRegCode()).longValue()), user);
     		EnterpriseRegCodeResponseDto enterpriseResponse = new EnterpriseRegCodeResponseDto();
     		LihtandmedV1Response response = simpleData.getResult();
     		if (response == null || response.getKeha() == null || response.getKeha().getEttevotjad() == null) {
@@ -372,7 +370,10 @@ public class PracticeEnterpriseService {
 		person.setLastname(practiceEnterprisePersonCommand.getLastname());
 		person.setPhone(practiceEnterprisePersonCommand.getPhone());
 		person.setEmail(practiceEnterprisePersonCommand.getEmail());
-		List<String> existingIdCodes = enterpriseSchool.getEnterpriseSchoolPersons().stream().map(p->p.getIdcode()).collect(Collectors.toList());
+		// list contains "idcode" + "idcodecountry" strigs
+		// list will be used to check enterprise related person's uniqueness
+		List<String> existingIdCodes = enterpriseSchool.getEnterpriseSchoolPersons().stream()
+		        .map(p->p.getIdcode() + (p.getIdcodeCountry() != null ? p.getIdcodeCountry().getCode() : "")).collect(Collectors.toList());
 		if (StringUtils.isNotEmpty(practiceEnterprisePersonCommand.getCountry())) {
 			person.setIdcodeCountry(em.getReference(Classifier.class, practiceEnterprisePersonCommand.getCountry()));
 		}
@@ -390,7 +391,7 @@ public class PracticeEnterpriseService {
 			person.setPosition(practiceEnterprisePersonCommand.getPosition());
 		}
 		if(StringUtils.isNotEmpty(practiceEnterprisePersonCommand.getIdcode())) {
-			if (existingIdCodes.contains(practiceEnterprisePersonCommand.getIdcode())) {
+			if (existingIdCodes.contains(practiceEnterprisePersonCommand.getIdcode() + (practiceEnterprisePersonCommand.getCountry() != null ? practiceEnterprisePersonCommand.getCountry() : ""))) {
 				throw new HoisException("Isikukoodiga " + practiceEnterprisePersonCommand.getIdcode() + " isik juba eksisteerib.");
 			}
 			person.setIdcode(practiceEnterprisePersonCommand.getIdcode());
@@ -403,9 +404,9 @@ public class PracticeEnterpriseService {
 	public void updatePerson(HoisUserDetails user, EnterpriseSchoolPerson person,
 			PracticeEnterprisePersonCommand practiceEnterprisePersonCommand) {
 		EntityUtil.bindToEntity(practiceEnterprisePersonCommand, person, "regCode", "name");
-		List<String> existingIdCodes = person.getEnterpriseSchool().getEnterpriseSchoolPersons().stream().filter(p->p.getId() != person.getId()).map(p->p.getIdcode()).collect(Collectors.toList());
+		List<String> existingIdCodes = person.getEnterpriseSchool().getEnterpriseSchoolPersons().stream().filter(p->p.getId() != person.getId()).map(p->p.getIdcode() + (p.getIdcodeCountry() != null ? p.getIdcodeCountry().getCode() : "")).collect(Collectors.toList());
 		if(StringUtils.isNotEmpty(practiceEnterprisePersonCommand.getIdcode())) {
-			if (existingIdCodes.contains(practiceEnterprisePersonCommand.getIdcode())) {
+			if (existingIdCodes.contains(practiceEnterprisePersonCommand.getIdcode() + (practiceEnterprisePersonCommand.getIdcode() != null ? practiceEnterprisePersonCommand.getIdcode() : ""))) {
 				throw new HoisException("Isikukoodiga " + practiceEnterprisePersonCommand.getIdcode() + " isik juba eksisteerib.");
 			}
 		}
@@ -695,7 +696,7 @@ public class PracticeEnterpriseService {
 			List<AutocompleteResult> studentGroups = new ArrayList<>();
 			for (PracticeAdmissionStudentGroup pasg : admission.getPracticeAdmissionStudentGroups()) {
 				StudentGroup sg = pasg.getStudentGroup();
-				AutocompleteResult sgr = StudentGroupResult.of(sg);
+				AutocompleteResult sgr = AutocompleteResult.of(sg);
 				studentGroups.add(sgr);
 			}
 			dto.setStudentGroups(studentGroups);
@@ -762,7 +763,6 @@ public class PracticeEnterpriseService {
 		List<Classifier> riikClassifiers = classifierService.findAllByMainClassCode(MainClassCode.RIIK);
 		List<String> riikClassifierCodes = riikClassifiers.stream().map(p->p.getCode()).collect(Collectors.toList());
         EnterpriseImportResultDto dto = new EnterpriseImportResultDto();
-        ClassifierCache classifiers = new ClassifierCache(classifierService);
 
         EntityUtil.setUsername(user.getUsername(), em);
 
@@ -1139,6 +1139,7 @@ public class PracticeEnterpriseService {
 			EnterpriseSchoolPerson person = null;
 			if (isPersonSaveNeeded.booleanValue()) {
 				for (EnterpriseSchoolPerson personFromSchool : school.getEnterpriseSchoolPersons()) {
+				    // person with the same name and id code will get modifier
 					if(personFromSchool.getFirstname() != null && personFromSchool.getLastname() != null 
 							&& personFromSchool.getFirstname().equalsIgnoreCase(row.getContactPersonFirstname())
 					&& personFromSchool.getLastname().equalsIgnoreCase(row.getContactPersonLastname())) {
@@ -1163,6 +1164,14 @@ public class PracticeEnterpriseService {
 					}
 				}
 				if (person == null) {
+				    if (row.getContactPersonIdCode() != null && school.getEnterpriseSchoolPersons().stream().anyMatch(p -> row.getContactPersonIdCode().equals(p.getIdcode()) &&
+				            ((p.getIdcodeCountry() == null && StringUtils.isEmpty(row.getContactPersonIdCodeCountry())) ||
+				            (p.getIdcodeCountry() != null && p.getIdcodeCountry().getCode() != null && p.getIdcodeCountry().getCode().equals("RIIK_" + row.getContactPersonIdCodeCountry()))))) {
+				        failed.add(new EnterpriseImportedRowMessageDto(rowNr, "Ettevõttega seotud isikute hulgas on juba sellise isikukoodi ja riigi kombinatsiooniga isik. "
+				                + "Isiku muutmiseks peavad nimi, isikukood ja isikukoodi riik kattuma. Isiku lisamiseks peab isikukoodi ja riigi kombinatsioon olema unikaalne."));
+				        dto.getFailed().addAll(failed);
+                        return;
+				    }
 					person = new EnterpriseSchoolPerson();
 					person.setFirstname(row.getContactPersonFirstname());
 					person.setLastname(row.getContactPersonLastname());

@@ -36,7 +36,8 @@
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-repeat="row in module.themes" 
+          <tr md-row ng-class-odd="'odd'" ng-class-even="'even'"
+            ng-repeat="row in module.themes | filter: filterReplacedThemes(module)" 
             ng-include="'student/templates/view.results.vocational.curriculumfulfillment.theme.tmpl.html'"></tr>
             <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-repeat="row in module.otherCurriculumVersionModuleThemes" 
             ng-include="'student/templates/view.results.vocational.curriculumfulfillment.theme.tmpl.html'"></tr>

@@ -14,12 +14,12 @@
           </div>
           <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
             <label>{{'practiceApplication.submitFrom' | translate}}</label>
-            <md-datepicker ng-model="criteria.submitFrom" md-max-date="criteria.submitThru"></md-datepicker>
+            <md-datepicker ng-model="criteria.submitFrom" md-max-date="criteria.submitThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
           </md-input-container>
 
           <md-input-container flex="25" flex-sm="100" flex-xs="100">
             <label>{{'practiceApplication.submitThru' | translate}}</label>
-            <md-datepicker ng-model="criteria.submitThru" md-min-date="criteria.submitFrom"></md-datepicker>
+            <md-datepicker ng-model="criteria.submitThru" md-min-date="criteria.submitFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
           </md-input-container>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">

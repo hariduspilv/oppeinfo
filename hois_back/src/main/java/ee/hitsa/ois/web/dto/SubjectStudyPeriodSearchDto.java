@@ -9,6 +9,7 @@ public class SubjectStudyPeriodSearchDto {
     private Long studentsNumber;
     private Long hours;
     private List<String> teachers;
+    private List<SubjectProgramResult> programs;
     private AutocompleteResult subject;
     private AutocompleteResult studyPeriod;
     private Set<AutocompleteResult> midtermTasks;
@@ -59,6 +60,14 @@ public class SubjectStudyPeriodSearchDto {
 
     public void setTeachers(List<String> teachers) {
         this.teachers = teachers;
+    }
+
+    public List<SubjectProgramResult> getPrograms() {
+        return programs;
+    }
+
+    public void setPrograms(List<SubjectProgramResult> programs) {
+        this.programs = programs;
     }
 
     public void setSubject(AutocompleteResult subject) {

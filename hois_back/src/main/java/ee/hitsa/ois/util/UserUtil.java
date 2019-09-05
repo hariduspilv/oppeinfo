@@ -430,6 +430,11 @@ public abstract class UserUtil {
         AssertionFailedException.throwIf(!isSchoolAdmin(user, student.getSchool()) && !UserUtil.isStudentGroupTeacher(user, student),
                 "User is not school admin or student group teacher");
     }
+    
+    public static void assertIsSchoolWithoutEkis(School school) {
+        AssertionFailedException.throwIf(school.getIsWithoutEkis() == null || !school.getIsWithoutEkis().booleanValue(), 
+                "School should not be using ekis");
+    }
 
     public static void assertCanViewStudent(HoisUserDetails user, Student student) {
         AssertionFailedException.throwIf(!canViewStudent(user, student),

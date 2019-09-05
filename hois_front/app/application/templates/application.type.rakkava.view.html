@@ -13,4 +13,54 @@
       <hois-value value="currentLanguageNameField(application.studentGroup)"></hois-value>
     </md-input-container>
   </div>
+
+  <div ng-if="application.themeReplacement.modules.length > 0">
+    <div>&nbsp;</div>
+    <fieldset flex>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'application.themeMatches' | translate}}</legend>
+      <md-table-container>
+        <table md-table class="secondary-table">
+          <thead md-head>
+            <tr md-row>
+              <th md-column>{{'application.oldCVVocational' | translate}}</th>
+              <th md-column>{{'application.newCVVocational' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body ng-repeat="module in application.themeReplacement.modules">
+            <tr md-row class="even">
+              <td md-cell colspan="2">{{currentLanguageNameField(module)}}</td>
+            </tr>
+            <tr md-row>
+              <td md-cell>
+                <div layout="column">
+                  <div ng-repeat="oldTheme in module.oldThemes | orderBy: 'theme.' + currentLanguageNameVariable()">
+                    <span>{{currentLanguageNameField(oldTheme.theme)}}</span>
+                    <span>(<b>{{oldTheme.grade}}</b> {{oldTheme.gradeInserted | hoisDate}})</span>
+                  </div>
+                </div>
+              </td>
+              <td md-cell>
+                <div layout="column">
+                  <div ng-repeat="newTheme in module.newThemes | orderBy: 'theme.' + currentLanguageNameVariable()">
+                    <md-input-container>
+                      <md-checkbox class="new-theme-checkbox" ng-model="newTheme.covering" disabled>
+                        {{currentLanguageNameField(newTheme.theme)}}</md-checkbox>
+                    </md-input-container>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </fieldset>
+    <div>&nbsp;</div>
+    <div>&nbsp;</div>
+  </div>
 </div>
+
+<style>
+  .new-theme-checkbox {
+    width: auto !important;
+  }
+</style>

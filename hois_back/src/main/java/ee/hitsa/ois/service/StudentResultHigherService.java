@@ -25,7 +25,6 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
@@ -35,8 +34,8 @@ import ee.hitsa.ois.domain.student.StudentHigherResultModule;
 import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.exception.AssertionFailedException;
-import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.student.StudentModuleListChangeForm;
@@ -50,6 +49,7 @@ import ee.hitsa.ois.web.dto.student.StudentHigherStudyPeriodResultDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherSubjectResultDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherSubjectResultGradeDto;
 import ee.hitsa.ois.web.dto.student.StudentModuleResultDto;
+import ee.hitsa.ois.web.dto.student.SubjectResultReplacedSubjectDto;
 
 @Transactional
 @Service
@@ -62,7 +62,7 @@ public class StudentResultHigherService {
         List<CurriculumVersionHigherModule> modules = getStudentModules(student);
         List<StudentHigherSubjectResultDto> moduleSubjects = getModuleSubjects(modules);
         List<StudentHigherSubjectResultDto> studentResults = getStudentResults(student, true);
-        List<StudentHigherSubjectResultDto> mergedList = mergeModuleSubjectsAndResults(moduleSubjects,
+        List<StudentHigherSubjectResultDto> mergedList = mergeModuleSubjectsAndResults(modules, moduleSubjects,
                 studentResults);
         return filterNegativeResults(mergedList);
     }
@@ -76,7 +76,7 @@ public class StudentResultHigherService {
         List<CurriculumVersionHigherModule> modules = getStudentModules(student);
         List<StudentHigherSubjectResultDto> moduleSubjects = getModuleSubjects(modules);
         List<StudentHigherSubjectResultDto> studentResults = getStudentResults(student, false);
-        List<StudentHigherSubjectResultDto> mergedList = mergeModuleSubjectsAndResults(moduleSubjects,
+        List<StudentHigherSubjectResultDto> mergedList = mergeModuleSubjectsAndResults(modules, moduleSubjects,
                 studentResults);
         calculateIsOk(mergedList);
 
@@ -92,6 +92,20 @@ public class StudentResultHigherService {
     }
 
     private List<CurriculumVersionHigherModule> getStudentModules(Student student) {
+        JpaNativeQueryBuilder qb = studentModulesQueryBuilder(student);
+        List<?> data = qb.select("cvhm.id", em).getResultList();
+
+        List<CurriculumVersionHigherModule> modules = new ArrayList<>();
+        if (!data.isEmpty()) {
+            modules = em.createQuery("select cvhm from CurriculumVersionHigherModule cvhm where cvhm.id in (?1)",
+                            CurriculumVersionHigherModule.class)
+                    .setParameter(1, StreamUtil.toMappedList(r -> resultAsLong(r, 0), data))
+                    .getResultList();
+        }
+        return modules;
+    }
+
+    public JpaNativeQueryBuilder studentModulesQueryBuilder(Student student) {
         Long curriculumVersionId = EntityUtil.getId(student.getCurriculumVersion());
         Long curriculumSpecialityId = EntityUtil.getNullableId(student.getCurriculumSpeciality());
 
@@ -108,15 +122,7 @@ public class StudentResultHigherService {
         qb.optionalCriteria("cs.id = :curriculumSpecialityId", "curriculumSpecialityId", curriculumSpecialityId);
         qb.filter("cvhm.is_minor_speciality = false");
 
-        List<?> data = qb.select("cvhm.id", em).getResultList();
-        List<CurriculumVersionHigherModule> modules = new ArrayList<>();
-        if (!data.isEmpty()) {
-            modules = em.createQuery("select cvhm from CurriculumVersionHigherModule cvhm where cvhm.id in (?1)",
-                            CurriculumVersionHigherModule.class)
-                    .setParameter(1, StreamUtil.toMappedList(r -> resultAsLong(r, 0), data))
-                    .getResultList();
-        }
-        return modules;
+        return qb;
     }
 
     private static void setExtraCurriculumSubjects(StudentHigherResultDto dto) {
@@ -154,6 +160,8 @@ public class StudentResultHigherService {
     private List<StudentHigherSubjectResultDto> getStudentResults(Student student, boolean onlyActiveResults) {
         String query = "from student_higher_result shr "
                 + "left join student_higher_result_module shrm on shr.id = shrm.student_higher_result_id "
+                + "left join curriculum_version_hmodule cvh on cvh.id = coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id) "
+                + "left join classifier cl on shr.grade_code = cl.code "
                 + "left join apel_application_record aar on shr.apel_application_record_id = aar.id "
                 + "left join apel_application aa on aar.apel_application_id = aa.id "
                 + "left join apel_school a_s on shr.apel_school_id = a_s.id";
@@ -167,11 +175,11 @@ public class StudentResultHigherService {
 
         List<?> rows = qb.select(
                 "distinct shr.id, shr.subject_id, shr.subject_name_et, shr.subject_name_en, shr.subject_code, shr.credits, "
-                + "coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id) curriculum_version_hmodule_id, "
+                + "cvh.id curriculum_version_hmodule_id, cvh.name_et cvh_name_et, cvh.name_en cvh_name_en, "
                 + "shr.apel_application_record_id, aar.is_formal_learning, a_s.id as school_id, a_s.name_et, a_s.name_en, "
                 + "shr.grade_code, shr.grade, shr.grade_date, shr.teachers, "
                 + "coalesce(shr.study_period_id, get_study_period(cast(shr.grade_date as date), cast(aa.school_id as int))) as study_period_id, "
-                + "shr.grade_mark, coalesce(shrm.is_optional, shr.is_optional) is_optional, shr.is_active",
+                + "shr.grade_mark, cl.name_et grade_name_et, coalesce(shrm.is_optional, shr.is_optional) is_optional, shr.is_active",
                 em).getResultList();
 
         List<StudentHigherSubjectResultDto> studentResults = new ArrayList<>();
@@ -188,61 +196,110 @@ public class StudentResultHigherService {
             dto.setSubject(subject);
 
             Long moduleId = resultAsLong(r, 6);
-            dto.setHigherModule(moduleId != null ? StudentHigherSubjectResultDto.getHigherModuleDto(em.getReference(CurriculumVersionHigherModule.class, moduleId)): null);
+            dto.setHigherModule(moduleId != null ? new AutocompleteResult(moduleId, resultAsString(r, 7), resultAsString(r, 8)) : null);
             dto.setIsExtraCurriculum(Boolean.TRUE);
             dto.setIsOk(Boolean.FALSE);
-            dto.setIsOptional(resultAsBoolean(r, 18));
-            dto.setIsActive(resultAsBoolean(r, 19));
+            dto.setIsOptional(resultAsBoolean(r, 21));
 
-            Long apelApplicationRecordId = resultAsLong(r, 7);
+            Long apelApplicationRecordId = resultAsLong(r, 9);
             dto.setIsApelTransfer(apelApplicationRecordId != null ? Boolean.TRUE : Boolean.FALSE);
             if (dto.getIsApelTransfer().booleanValue()) {
-                dto.setIsFormalLearning(resultAsBoolean(r, 8));
-                if (dto.getIsFormalLearning().booleanValue() && resultAsLong(r, 9) != null) {
-                    dto.getSubject().setNameEt(dto.getSubject().getNameEt() + " - " + resultAsString(r, 10));
-                    dto.getSubject().setNameEn(dto.getSubject().getNameEn() + " - " + resultAsString(r, 11));
+                dto.setIsFormalLearning(resultAsBoolean(r, 10));
+                if (dto.getIsFormalLearning().booleanValue() && resultAsLong(r, 11) != null) {
+                    dto.getSubject().setNameEt(dto.getSubject().getNameEt() + " - " + resultAsString(r, 12));
+                    dto.getSubject().setNameEn(dto.getSubject().getNameEn() + " - " + resultAsString(r, 13));
                 }
             }
-            
+
             StudentHigherSubjectResultGradeDto grade = new StudentHigherSubjectResultGradeDto();
-            grade.setGrade(resultAsString(r, 12));
-            grade.setGradeValue(resultAsString(r, 13));
-            grade.setGradeDate(resultAsLocalDate(r, 14));
-            grade.getTeachers().add(resultAsString(r, 15));
-            grade.setStudyPeriod(resultAsLong(r, 16));
-            grade.setGradeMark(resultAsShort(r, 17));
-            grade.setGradeNameEt(ClassifierUtil.getNullableNameEt(em.getReference(Classifier.class, resultAsString(r, 12))));
-            
+            grade.setId(resultAsLong(r, 0));
+            grade.setGrade(resultAsString(r, 14));
+            grade.setGradeValue(resultAsString(r, 15));
+            grade.setGradeDate(resultAsLocalDate(r, 16));
+            grade.getTeachers().add(resultAsString(r, 17));
+            grade.setStudyPeriod(resultAsLong(r, 18));
+            grade.setGradeMark(resultAsShort(r, 19));
+            grade.setGradeNameEt(resultAsString(r, 20));
+            grade.setIsActive(resultAsBoolean(r, 22));
+
             dto.getGrades().add(grade);
             studentResults.add(dto);
         }
+        setResultReplacedSubjects(studentResults);
         return studentResults;
     }
 
+    private void setResultReplacedSubjects(List<StudentHigherSubjectResultDto> studentResults) {
+        Map<Long, StudentHigherSubjectResultDto> resultMap = StreamUtil.toMap(sr -> sr.getId(), studentResults);
+        if (!resultMap.isEmpty()) {
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_higher_result shr "
+                    + "join apel_application_record aar on shr.apel_application_record_id = aar.id "
+                    + "join apel_application_formal_replaced_subject_or_module aafrs on aafrs.apel_application_record_id = aar.id "
+                    + "join subject s on s.id = aafrs.subject_id");
+            qb.requiredCriteria("shr.id in (:resultIds)", "resultIds", resultMap.keySet());
+
+            List<?> data = qb.select("shr.id, s.id s_id, s.name_et s_name_et, s.name_en s_name_en, "
+                    + "s.code, s.credits", em).getResultList();
+            Map<Long, List<SubjectResultReplacedSubjectDto>> replacedSubjects = StreamUtil.nullSafeList(data).stream()
+                    .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(
+                            r -> new SubjectResultReplacedSubjectDto(resultAsLong(r, 1), resultAsString(r, 2),
+                                    resultAsString(r, 3), resultAsString(r, 4), resultAsDecimal(r, 5)),
+                            Collectors.toList())));
+
+            for (Long resultId : replacedSubjects.keySet()) {
+                List<SubjectResultReplacedSubjectDto> subjectReplacedSubjects = replacedSubjects.get(resultId);
+                resultMap.get(resultId).getReplacedSubjects().addAll(subjectReplacedSubjects);
+            }
+        }
+    }
+
     private static List<StudentHigherSubjectResultDto> mergeModuleSubjectsAndResults(
-            List<StudentHigherSubjectResultDto> moduleSubjects, List<StudentHigherSubjectResultDto> studentResults) {
-        List<Long> addedGrades = new ArrayList<>();
+            List<CurriculumVersionHigherModule> modules, List<StudentHigherSubjectResultDto> moduleSubjects,
+            List<StudentHigherSubjectResultDto> studentResults) {
+        Set<Long> moduleIds = StreamUtil.toMappedSet(m -> m.getId(), modules);
+        addTransferedSubjects(moduleIds, moduleSubjects, studentResults);
+
         for(StudentHigherSubjectResultDto moduleSubject : moduleSubjects) {
             List<StudentHigherSubjectResultDto> subjectsResults = getStudentResultsForSubject(
                     moduleSubject.getSubject().getId(), studentResults);
+            addGrades(moduleSubject, subjectsResults);
 
             if (!subjectsResults.isEmpty()) {
                 // active student_higher_result row decides if subject is
                 // transferred, is optional and the module all subject grades belong to
                 StudentHigherSubjectResultDto activeResult = subjectsResults.get(0);
                 moduleSubject.setIsApelTransfer(activeResult.getIsApelTransfer());
+                moduleSubject.setIsFormalLearning(activeResult.getIsFormalLearning());
                 moduleSubject.setIsOptional(activeResult.getIsOptional());
                 moduleSubject.setHigherModule(activeResult.getHigherModule());
-            }
+                moduleSubject.setReplacedSubjects(activeResult.getReplacedSubjects());
 
-            addGrades(moduleSubject, subjectsResults);
-            // collect added grades so that they won't be added again
-            addedGrades.addAll(StreamUtil.toMappedList(sr -> sr.getId(), subjectsResults));
+                // if set higher module is extra curriculum module then result
+                // should be considerd as extra curriculum subject
+                if (!moduleIds.contains(activeResult.getHigherModule().getId())) {
+                    moduleSubject.setIsExtraCurriculum(Boolean.TRUE);
+                }
+            }
         }
-        // not added apel results
-        addTransferredSubjectsToModules(moduleSubjects, studentResults, addedGrades);
         addResultsForExtraCurriculumSubjects(moduleSubjects, studentResults);
         return moduleSubjects;
+    }
+
+    // subjects that don't belong to curriculum module subjects but are added there
+    // through apel application or subject module change
+    private static void addTransferedSubjects(Set<Long> moduleIds, List<StudentHigherSubjectResultDto> moduleSubjects,
+            List<StudentHigherSubjectResultDto> studentResults) {
+        Set<Long> subjectIds = StreamUtil.toMappedSet(ms -> ms.getSubject().getId(), moduleSubjects);
+        List<StudentHigherSubjectResultDto> transferredSubjects = StreamUtil.toFilteredList(
+                sr -> Boolean.TRUE.equals(sr.getGrades().get(0).getIsActive())
+                        && (sr.getHigherModule() != null && moduleIds.contains(sr.getHigherModule().getId()))
+                        && (sr.getSubject() == null || !subjectIds.contains(sr.getSubject().getId())),
+                studentResults);
+
+        for (StudentHigherSubjectResultDto subjectResult : transferredSubjects) {
+            subjectResult.setIsExtraCurriculum(Boolean.FALSE);
+            moduleSubjects.add(subjectResult);
+        }
     }
 
     private static List<StudentHigherSubjectResultDto> getStudentResultsForSubject(Long subjectId,
@@ -251,30 +308,18 @@ public class StudentResultHigherService {
         return StreamUtil.nullSafeList(studentResults).stream()
                 .filter(sr -> sr.getHigherModule() != null && sr.getSubject() != null && sr.getSubject().getId() != null
                         && sr.getSubject().getId().equals(subjectId))
-                .sorted(Comparator.comparing(sr -> sr.getIsActive(), Comparator.reverseOrder()))
+                .sorted(Comparator.comparing(sr -> sr.getGrades().get(0).getIsActive(), Comparator.reverseOrder()))
                 .collect(Collectors.toList());
     }
 
     private static void addGrades(StudentHigherSubjectResultDto moduleSubject,
             List<StudentHigherSubjectResultDto> subjectsResults) {
-        for(StudentHigherSubjectResultDto subjectResult : subjectsResults) {
-            moduleSubject.getGrades().addAll(subjectResult.getGrades());
+        for (StudentHigherSubjectResultDto subjectResult : subjectsResults) {
+            List<Long> addedGrades = StreamUtil.toMappedList(g -> g.getId(), moduleSubject.getGrades());
+            List<StudentHigherSubjectResultGradeDto> notAddedGrades = StreamUtil
+                    .toFilteredList(g -> !addedGrades.contains(g.getId()), subjectResult.getGrades());
+            moduleSubject.getGrades().addAll(notAddedGrades);
             subjectResult.setIsExtraCurriculum(Boolean.FALSE);
-        }
-    }
-
-    private static void addTransferredSubjectsToModules(List<StudentHigherSubjectResultDto> moduleSubjects,
-            List<StudentHigherSubjectResultDto> studentResults, List<Long> addedGrades) {
-        Set<Long> moduleIds = StreamUtil.toMappedSet(ms -> ms.getHigherModule().getId(), moduleSubjects);
-
-        List<StudentHigherSubjectResultDto> transferredSubjects = StreamUtil.toFilteredList(
-                sr -> Boolean.TRUE.equals(sr.getIsApelTransfer()) && sr.getHigherModule() != null
-                        && moduleIds.contains(sr.getHigherModule().getId()) && !addedGrades.contains(sr.getId()),
-                studentResults);
-
-        for (StudentHigherSubjectResultDto subject : transferredSubjects) {
-            subject.setIsExtraCurriculum(Boolean.FALSE);
-            moduleSubjects.add(subject);
         }
     }
 
@@ -454,12 +499,14 @@ public class StudentResultHigherService {
     }
 
     public List<StudentModuleResultDto> higherChangeableModules(Student student) {
-        Query q = em.createNativeQuery("select shr.id, coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id) "
-                + "curriculum_version_hmodule_id, shr.subject_name_et, shr.subject_name_en, shr.subject_code, shr.credits, shr.grade, "
-                + "shr.grade_date, coalesce(shrm.is_optional, shr.is_optional) is_optional from student_higher_result shr "
+        Query q = em.createNativeQuery("select shr.id, cvh.id curriculum_version_hmodule_id, shr.subject_name_et, shr.subject_name_en, "
+                + "shr.subject_code, shr.credits, shr.grade, shr.grade_date, coalesce(shrm.is_optional, shr.is_optional) is_optional "
+                + "from student_higher_result shr "
                 + "left join student_higher_result_module shrm on shrm.student_higher_result_id = shr.id "
-                + "where student_id = ?1 and shr.is_active = true");
+                + "join curriculum_version_hmodule cvh on cvh.id = coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id)"
+                + "where student_id = ?1 and cvh.type_code not in (?2) and shr.is_active = true");
         q.setParameter(1, EntityUtil.getId(student));
+        q.setParameter(2, EnumUtil.toNameList(HigherModuleType.KORGMOODUL_F, HigherModuleType.KORGMOODUL_L));
         List<?> data = q.getResultList();
 
         return StreamUtil.toMappedList(r -> new StudentModuleResultDto(resultAsLong(r, 0), resultAsLong(r, 1),
@@ -468,7 +515,13 @@ public class StudentResultHigherService {
     }
 
     public List<AutocompleteResult> higherCurriculumModulesForSelection(Student student) {
-        return StreamUtil.toMappedList(m -> AutocompleteResult.of(m), getStudentModules(student));
+        JpaNativeQueryBuilder qb = studentModulesQueryBuilder(student);
+        qb.optionalCriteria("cvhm.type_code not in (:finalTypes)", "finalTypes",
+                EnumUtil.toNameList(HigherModuleType.KORGMOODUL_F, HigherModuleType.KORGMOODUL_L));
+        List<?> data = qb.select("cvhm.id, cvhm.name_et, cvhm.name_en", em).getResultList();
+
+        return StreamUtil.toMappedList(
+                r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)), data);
     }
 
     public void changeHigherCurriculumVersionModules(Student student, StudentModuleListChangeForm form) {

@@ -35,17 +35,16 @@ import org.springframework.stereotype.Service;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentCurriculumCompletion;
-import ee.hitsa.ois.domain.student.StudentHigherResult;
-import ee.hitsa.ois.domain.student.StudentHigherResultModule;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
+import ee.hitsa.ois.enums.ApplicationStatus;
+import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
@@ -54,7 +53,6 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.SupportServiceType;
-import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.message.StudentAbsenceCreated;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
@@ -74,11 +72,10 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
-import ee.hitsa.ois.web.commandobject.student.StudentModuleListChangeForm;
-import ee.hitsa.ois.web.commandobject.student.StudentResultModuleChangeForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentSpecialitySearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.RoomAutocompleteResult;
 import ee.hitsa.ois.web.dto.SpecialityAutocompleteResult;
 import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
 import ee.hitsa.ois.web.dto.StudentSupportServiceDto;
@@ -89,7 +86,6 @@ import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
 import ee.hitsa.ois.web.dto.student.StudentDormitoryHistoryDto;
 import ee.hitsa.ois.web.dto.student.StudentForeignstudyDto;
-import ee.hitsa.ois.web.dto.student.StudentModuleResultDto;
 import ee.hitsa.ois.web.dto.student.StudentPracticeContractDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentSpecialitySearchDto;
@@ -597,6 +593,7 @@ public class StudentService {
             dto.setPhoto(EntityUtil.bindToDto(logo, new OisFileCommand()));
         }
         setStudentIndividualCurriculum(dto);
+        setStudentBoardingSchool(dto);
         return dto;
     }
 
@@ -644,6 +641,26 @@ public class StudentService {
             studentDto.setIndividualCurriculum(Boolean.TRUE);
             studentDto.setIndividualCurriculumStart(resultAsLocalDate(result.get(0), 0));
             studentDto.setIndividualCurriculumEnd(resultAsLocalDate(result.get(0), 1));
+        }
+    }
+
+    private void setStudentBoardingSchool(StudentViewDto studentDto) {
+        List<?> result = em.createNativeQuery("select d.id, b.code b_code, r.code r_code, d.valid_from,"
+                + " d.valid_thru, d.add_info from dormitory d"
+                + " join room r on r.id = d.room_id"
+                + " join building b on b.id = r.building_id"
+                + " where d.student_id = :studentId and d.valid_from <= :today and d.valid_thru >= :today"
+                + " order by d.valid_thru desc, d.valid_from desc")
+                .setParameter("studentId", studentDto.getId())
+                .setParameter("today", JpaQueryUtil.parameterAsTimestamp(LocalDate.now()))
+                .getResultList();
+        if (!result.isEmpty()) {
+            Object r = result.get(0);
+            studentDto.setBoardingSchool(new RoomAutocompleteResult(resultAsLong(r, 0),
+                    resultAsString(r, 1), resultAsString(r, 2)));
+            studentDto.setBoardingSchoolValidFrom(resultAsLocalDate(r, 3));
+            studentDto.setBoardingSchoolValidThru(resultAsLocalDate(r, 4));
+            studentDto.setBoardingSchoolAddInfo(resultAsString(r, 5));
         }
     }
 
@@ -819,7 +836,7 @@ public class StudentService {
         String specialityCode = student.getStudentGroup() != null && student.getStudentGroup().getSpeciality() != null
                 ? EntityUtil.getCode(student.getStudentGroup().getSpeciality())
                 : "";
-        dto.setCurriculumModules(vocationalCurriculumModules(curriculumVersionId, specialityCode));
+        dto.setCurriculumModules(vocationalCurriculumModules(student, curriculumVersionId, specialityCode));
         setExtraCurriculaModules(dto, results, curriculumVersionId, specialityCode);
         
         addOtherCurriculumVersionModuleThemes(dto.getResults(), dto.getCurriculumModules(),
@@ -1098,7 +1115,8 @@ public class StudentService {
         return result.values();
     }
 
-    private List<StudentVocationalModuleDto> vocationalCurriculumModules(Long curriculumVersionId, String specialityCode) {
+    private List<StudentVocationalModuleDto> vocationalCurriculumModules(Student student, Long curriculumVersionId,
+            String specialityCode) {
         List<?> data = em.createNativeQuery("select cvo.id from curriculum_version_omodule cvo "
                 + "left join curriculum_module_occupation cmo on cmo.curriculum_module_id = cvo.curriculum_module_id and cmo.occupation_code like ?1 "
                 + "where cvo.curriculum_version_id = ?2 and (cmo.id is null or cmo.occupation_code = ?3)")
@@ -1106,9 +1124,22 @@ public class StudentService {
                 .setParameter(2, curriculumVersionId)
                 .setParameter(3, specialityCode)
                 .getResultList();
-        
+
         Set<Long> moduleIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
-        return curriculumVersionOccupationModules(moduleIds);
+        List<StudentVocationalModuleDto> modules = curriculumVersionOccupationModules(moduleIds);
+        Map<Long, StudentVocationalModuleDto> modulesMap = StreamUtil.toMap(m -> m.getCurriculumModule().getId(),
+                modules);
+        if (!modulesMap.isEmpty()) {
+            Map<Long, Set<Long>> replacedThemes = curriculumModuleReplacedThemes(student, modulesMap.keySet());
+            for (Long curriculumModuleId : replacedThemes.keySet()) {
+                Set<Long> moduleReplacedThemes = replacedThemes.get(curriculumModuleId);
+                if (moduleReplacedThemes != null) {
+                    modulesMap.get(curriculumModuleId).getReplacedThemes().addAll(moduleReplacedThemes);
+                }
+            }
+        }
+
+        return modules;
     }
 
     private List<StudentVocationalModuleDto> curriculumVersionOccupationModules(Set<Long> moduleIds) {
@@ -1121,6 +1152,22 @@ public class StudentService {
                 .setParameter(1, moduleIds).getResultList();
 
         return StreamUtil.toMappedList(StudentVocationalModuleDto::of, modules);
+    }
+
+    private Map<Long, Set<Long>> curriculumModuleReplacedThemes(Student student, Set<Long> curriculumModuleIds) {
+        List<?> data = em.createNativeQuery("select aot.curriculum_module_id, aot.curriculum_version_omodule_theme_id "
+                + "from application_omodule_theme aot "
+                + "join application a on a.id = aot.application_id "
+                + "where a.student_id = ?1 and a.type_code = ?2 and a.status_code = ?3 "
+                + "and aot.curriculum_module_id in (?4) and aot.is_old = false")
+                .setParameter(1, EntityUtil.getId(student))
+                .setParameter(2, ApplicationType.AVALDUS_LIIK_RAKKAVA.name())
+                .setParameter(3, ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name())
+                .setParameter(4, curriculumModuleIds)
+                .getResultList();
+
+        return StreamUtil.nullSafeList(data).stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toSet())));
     }
 
     private void setExtraCurriculaModules(StudentVocationalResultDto dto,
@@ -1222,56 +1269,6 @@ public class StudentService {
             }
         }
         return dormitoryHistory;
-    }
-
-    public List<StudentModuleResultDto> higherChangeableModules(Long studentId) {
-        Query q = em.createNativeQuery("select shr.id, coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id), "
-                + "shr.subject_name_et, shr.subject_name_en, shr.credits, shr.grade, shr.grade_date from student_higher_result shr "
-                + "left join student_higher_result_module shrm on shrm.student_higher_result_id = shr.id "
-                + "where student_id = ?1");
-        q.setParameter(1, studentId);
-        List<?> data = q.getResultList();
-        
-        return StreamUtil.toMappedList(r -> new StudentModuleResultDto(resultAsLong(r, 0), resultAsLong(r, 1),
-                resultAsString(r, 2), resultAsString(r, 3), resultAsDecimal(r, 4), resultAsString(r, 5), resultAsLocalDate(r, 6)), data);
-    }
-
-    public List<AutocompleteResult> higherCurriculumModulesForSelection(Long curriculumVersionId) {
-        Query q = em.createNativeQuery("select cvh.id, cvh.name_et, cvh.name_en from curriculum_version_hmodule cvh " + 
-                "where cvh.curriculum_version_id = ?1");
-        q.setParameter(1, curriculumVersionId);
-        List<?> data = q.getResultList();
-        
-        return StreamUtil.toMappedList(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)), data);
-    }
-
-    public void changeHigherCurriculumVersionModules(Student student, StudentModuleListChangeForm form) {
-        StudentHigherResult result = em.getReference(StudentHigherResult.class, form.getModules().get(0).getId());
-        if (!student.equals(result.getStudent())) {
-            throw new AssertionFailedException("Student mismatch");
-        }
-        
-        List<Long> higherResultIds = form.getModules().stream().map(m -> m.getId()).collect(Collectors.toList());
-        List<StudentHigherResultModule> data = em.createQuery(
-                "select shrm from StudentHigherResultModule shrm where shrm.studentHigherResult.id in (?1)",
-                StudentHigherResultModule.class).setParameter(1, higherResultIds).getResultList();
-        
-        Map<Long, StudentHigherResultModule> higherResultModules = StreamUtil.toMap(d -> d.getStudentHigherResult().getId(), data);
-
-        for (StudentResultModuleChangeForm higherModule : form.getModules()) {
-            if (higherModule.getCurriculumVersionModuleId() != null && !higherModule.getCurriculumVersionModuleId().equals(higherModule.getOldCurriculumVersionModuleId())) {
-                StudentHigherResultModule module = higherResultModules.get(higherModule.getId());
-                if (module != null) {
-                    module.setCurriculumVersionHmodule(em.getReference(CurriculumVersionHigherModule.class, higherModule.getCurriculumVersionModuleId()));
-                    em.merge(module);
-                } else {
-                    module = EntityUtil.bindToEntity(form, new StudentHigherResultModule());
-                    module.setStudentHigherResult(em.getReference(StudentHigherResult.class, higherModule.getId()));
-                    module.setCurriculumVersionHmodule(em.getReference(CurriculumVersionHigherModule.class, higherModule.getCurriculumVersionModuleId()));
-                    em.persist(module);
-                }
-            }
-        }
     }
 
     public List<StudentVocationalConnectedEntity> vocationalConnectedEntities(Long studentId) {
@@ -1407,7 +1404,7 @@ public class StudentService {
         String directiveServicesQuery = qb.querySql("d.id as id, d.confirm_date as entry_date, null as title, "
                 + "string_agg( ass.support_service_code, ';' order by ass.support_service_code) as \"content\", "
                 + "case when coalesce ( ds2.start_date, ds.end_date) >= current_date then 'TUGIKEHTIV_K' else 'TUGIKEHTIV_L' end as validity_code, "
-                + "true as is_public, null as ois_file_id, sub.submitter as submitter, true as artificial, d2.id as ending_id", false);
+                + "false as is_public, null as ois_file_id, sub.submitter as submitter, true as artificial, d2.id as ending_id", false);
         parameters.putAll(qb.queryParameters());
 
         qb = new JpaNativeQueryBuilder("from (" + supportServicesQuery + " union all " + directiveServicesQuery + ") as support_services");

@@ -31,6 +31,7 @@ import ee.hitsa.ois.enums.Day;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
+import ee.hitsa.ois.web.commandobject.BuildingAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.timetable.LessonTimeBuildingGroupDto;
 import ee.hitsa.ois.web.dto.timetable.LessonTimeDto;
@@ -60,7 +61,9 @@ public class LessonTimeControllerTests {
     @Before
     public void setUp() {
         testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
-        buildings = autocompleteService.buildings(hoisUserDetailsService.loadUserByUsername(TestConfiguration.USER_ID).getSchoolId());
+        buildings = autocompleteService.buildings(
+                hoisUserDetailsService.loadUserByUsername(TestConfiguration.USER_ID).getSchoolId(),
+                new BuildingAutocompleteCommand());
     }
 
     @After

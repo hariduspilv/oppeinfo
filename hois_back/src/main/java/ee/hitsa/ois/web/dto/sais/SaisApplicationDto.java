@@ -22,6 +22,7 @@ public class SaisApplicationDto {
     private String language;
     private String email;
     private String address;
+    private String postcode;
     private String phone;
     private String status;
     private String studyForm;
@@ -131,6 +132,14 @@ public class SaisApplicationDto {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public String getPostcode() {
+        return postcode;
+    }
+
+    public void setPostcode(String postcode) {
+        this.postcode = postcode;
     }
 
     public String getPhone() {

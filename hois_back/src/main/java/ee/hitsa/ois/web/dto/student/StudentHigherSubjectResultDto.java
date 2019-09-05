@@ -2,15 +2,14 @@ package ee.hitsa.ois.web.dto.student;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
-
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 
@@ -27,7 +26,7 @@ public class StudentHigherSubjectResultDto {
     private Boolean isOk;
     private Boolean isApelTransfer;
     private Boolean isFormalLearning;
-    private Boolean isActive;
+    private List<SubjectResultReplacedSubjectDto> replacedSubjects = new ArrayList<>();
 
     public static StudentHigherSubjectResultDto ofHigherModuleSubject(CurriculumVersionHigherModuleSubject higherModuleSubject) {
         StudentHigherSubjectResultDto dto = new StudentHigherSubjectResultDto();
@@ -37,7 +36,6 @@ public class StudentHigherSubjectResultDto {
         dto.setIsOptional(higherModuleSubject.getOptional());
         dto.setElectiveModule(EntityUtil.getNullableId(higherModuleSubject.getElectiveModule()));
         dto.setHigherModule(getHigherModuleDto(higherModuleSubject.getModule()));
-        dto.setIsActive(Boolean.FALSE);
         return dto;
     }
 
@@ -54,7 +52,7 @@ public class StudentHigherSubjectResultDto {
 
     public void calculateIsOk() {
         if(grades != null && !grades.isEmpty()) {
-            Collections.sort(grades, Comparator.comparing(StudentHigherSubjectResultGradeDto::getGradeDate, Comparator.nullsFirst(Comparator.naturalOrder())));
+            Collections.sort(grades, StreamUtil.comparingWithNullsLast(StudentHigherSubjectResultGradeDto::getIsActive));
             lastGrade = calculateLastGrade();
             isOk = Boolean.valueOf(lastGrade.getGrade() != null && HigherAssessment.isPositive(lastGrade.getGrade()));
         } else {
@@ -169,12 +167,12 @@ public class StudentHigherSubjectResultDto {
         this.isFormalLearning = isFormalLearning;
     }
 
-    public Boolean getIsActive() {
-        return isActive;
+    public List<SubjectResultReplacedSubjectDto> getReplacedSubjects() {
+        return replacedSubjects;
     }
 
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
+    public void setReplacedSubjects(List<SubjectResultReplacedSubjectDto> replacedSubjects) {
+        this.replacedSubjects = replacedSubjects;
     }
 
 }

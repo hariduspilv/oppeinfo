@@ -36,7 +36,7 @@
           <md-input-container flex="50">
             <label>{{'main.country' | translate}}</label>
             <hois-classifier-select ng-change="lookupRegNr()" ng-model="enterprise.country" name="country" model-value-attr="code" only-valid
-              criteria="{higher: auth.school.higher, vocational: auth.school.vocational}" main-classifier-code="RIIK" ignore-preselected
+              criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" main-classifier-code="RIIK" ignore-preselected
               required ng-disabled="(enterprise.id && enterprise.country === 'RIIK_EST') || cameFromRegister"></hois-classifier-select>
           </md-input-container>
           <md-input-container layout="row" flex="50" layout-align="center">
@@ -142,7 +142,7 @@
         <md-input-container flex="40" flex-xs="100">
             <label>{{'enterprise.language' | translate}}</label>
             <hois-classifier-select ng-model="enterprise.language" name="language" model-value-attr="code" main-classifier-code="OPPEKEEL"  ignore-preselected
-              criteria="{higher: auth.school.higher, vocational: auth.school.vocational}" aria-label="{{'enterprise.language' | translate}}"></hois-classifier-select>
+              criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" aria-label="{{'enterprise.language' | translate}}"></hois-classifier-select>
             <div class="invalid" ng-messages="enterpriseForm.language.$error">
               <p ng-message="required">{{'main.required' | translate}}</p>
             </div>

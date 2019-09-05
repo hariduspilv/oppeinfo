@@ -6,6 +6,7 @@ import java.util.List;
 
 public class StudentHigherSubjectResultGradeDto {
 
+    private Long id;
     private String grade;
     private String gradeValue;
     private LocalDate gradeDate;
@@ -14,7 +15,16 @@ public class StudentHigherSubjectResultGradeDto {
     private Short gradeMark;
     private String gradeNameEt;
     private String assessedBy;
-    
+    private Boolean isActive;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getGradeNameEt() {
         return gradeNameEt;
     }
@@ -22,7 +32,7 @@ public class StudentHigherSubjectResultGradeDto {
     public void setGradeNameEt(String gradeNameEt) {
         this.gradeNameEt = gradeNameEt;
     }
-    
+
     public String getAssessedBy() {
         return assessedBy;
     }
@@ -46,6 +56,7 @@ public class StudentHigherSubjectResultGradeDto {
     public void setGradeValue(String gradeValue) {
         this.gradeValue = gradeValue;
     }
+
     public Long getStudyPeriod() {
         return studyPeriod;
     }
@@ -77,4 +88,13 @@ public class StudentHigherSubjectResultGradeDto {
     public void setGradeDate(LocalDate gradeDate) {
         this.gradeDate = gradeDate;
     }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
 }

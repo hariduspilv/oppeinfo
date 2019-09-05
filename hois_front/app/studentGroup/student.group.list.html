@@ -31,11 +31,11 @@
 					<div layout="row" flex="45">
 						<md-input-container>
 							<label>{{'main.validFrom' | translate}}</label>
-							<md-datepicker ng-model="criteria.validFrom" md-max-date="criteria.validThru"></md-datepicker>
+							<md-datepicker ng-model="criteria.validFrom" md-max-date="criteria.validThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
 						</md-input-container>
 						<md-input-container  flex-offset="5">
 							<label>{{'main.validThru' | translate}}</label>
-							<md-datepicker ng-model="criteria.validThru" md-min-date="criteria.validFrom"></md-datepicker>
+							<md-datepicker ng-model="criteria.validThru" md-min-date="criteria.validFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
 						</md-input-container>
 					</div>
 

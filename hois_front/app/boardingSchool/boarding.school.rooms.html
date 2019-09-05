@@ -1,0 +1,98 @@
+<div ng-include="'boardingSchool/boarding.school.navbar.tmpl.html'"></div>
+
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate ng-model-options="{ allowInvalid: true }">
+      <fieldset tabindex="1">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container class="md-block" flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'boardingSchool.building' | translate}}</label>
+            <hois-select ng-model="criteria.building" name="building" type="building" criteria="{isDormitory: true}"></hois-select>
+          </md-input-container>
+
+          <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-model="criteria.room" 
+            ha-controller="directiveControllers" method="rooms" name="room" label="{{'boardingSchool.room'}}" 
+            additional-query-params="{buildingIds: criteria.building ? [criteria.building] : [], isDormitory: true}"></hois-autocomplete>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container>
+            <label>{{'main.from' | translate}}</label>
+            <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+          </md-input-container>
+
+          <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'main.thru' | translate}}</label>
+            <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+          </md-input-container>
+        </div>
+
+        <div layout="row" flex>
+          <md-input-container class="md-block" flex="15" flex-md="30" flex-sm="100" flex-xs="100">
+            <md-checkbox ng-model="criteria.showValid" name="showValid">{{'boardingSchool.showValid' | translate}}</md-checkbox>
+          </md-input-container>
+          <md-input-container class="md-block" flex="15" flex-md="30" flex-sm="100" flex-xs="100">
+            <md-checkbox ng-model="criteria.showFreeRooms" name="showFreeRooms">{{'boardingSchool.showFreeRooms' | translate}}</md-checkbox>
+          </md-input-container>
+          <md-input-container class="md-block" flex="15" flex-md="30" flex-sm="100" flex-xs="100">
+            <md-checkbox ng-model="criteria.showResidents" name="showNeighbours">{{'boardingSchool.showResidents' | translate}}</md-checkbox>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</div>
+
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="b_name">{{'boardingSchool.building' | translate}}</th>
+            <th md-column md-order-by="b_code, r_code">{{'boardingSchool.room' | translate}}</th>
+            <th md-column md-order-by="seats">{{'boardingSchool.seats' | translate}}</th>
+            <th md-column md-order-by="free_seats">{{'boardingSchool.freeSeats' | translate}}</th>
+            <th md-column ng-if="showResidents">{{'boardingSchool.residents' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'" 
+            ng-class="{vacant: row.occupied === false, occupied: row.occupied === true}">
+            <td md-cell>{{currentLanguageNameField(row.building)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.room)}}</td>
+            <td md-cell>{{row.room.seats}}</td>
+            <td md-cell>{{row.freeSeats}}</td>
+            <td md-cell ng-if="showResidents">
+              <li ng-repeat="resident in row.residents | orderBy: ['validFrom', 'validThru']">
+                <span>{{resident.fullname}}<span ng-if="resident.idcode">, </span>{{resident.idcode}}</span>
+                <md-tooltip>{{resident.validFrom | hoisDate}} - {{resident.validThru | hoisDate}}</md-tooltip>
+              </li>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page"
+      md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+      md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
+  </div>
+</div>
+
+<style>
+  .vacant {
+    background: #a4dba7;
+  }
+
+  .occupied {
+    background: #dd9d9d;
+  }
+</style>

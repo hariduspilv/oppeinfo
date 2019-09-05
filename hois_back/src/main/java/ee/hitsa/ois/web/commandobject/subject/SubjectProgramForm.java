@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.commandobject.subject;
 import java.util.Set;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
@@ -13,6 +14,7 @@ public class SubjectProgramForm extends VersionedCommand {
 
     private Long subjectId;
     private Long subjectStudyPeriodId;
+    private Long teacherId;
     
     private String independentStudy;
     private String assessmentDescription;
@@ -30,7 +32,10 @@ public class SubjectProgramForm extends VersionedCommand {
     private String grade4Description;
     private String grade5Description;
     
+    @Size(max=4000)
     private String rejectInfo;
+    @Size(max=10000)
+    private String addInfo;
 
     @NotNull
     @ClassifierRestriction(MainClassCode.OPPETOOSISU)
@@ -38,6 +43,12 @@ public class SubjectProgramForm extends VersionedCommand {
     private String studyDescription; // if StudyContentType.OPPETOOSISU_T
     private Set<SubjectProgramStudyContentDto> studyContents;
     
+    public Long getTeacherId() {
+        return teacherId;
+    }
+    public void setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
+    }
     /**
      * @return the independentStudy
      */
@@ -193,6 +204,12 @@ public class SubjectProgramForm extends VersionedCommand {
     }
     public void setRejectInfo(String rejectInfo) {
         this.rejectInfo = rejectInfo;
+    }
+    public String getAddInfo() {
+        return addInfo;
+    }
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
     }
     /**
      * @param studyContents the studyContents to set

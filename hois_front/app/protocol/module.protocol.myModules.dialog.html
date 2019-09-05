@@ -1,0 +1,41 @@
+<md-dialog aria-label="add student dialog" flex="60" flex-sm="100" flex-xs="100" ng-cloak>
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2>{{'moduleProtocol.myModules' | translate}} - {{currentLanguageNameField(studyYear)}}</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-font-set="material-icons">close</md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <div class="md-dialog-content">
+      <div layout-padding>
+        <div flex>
+          <md-table-container>
+            <table md-table md-progress="tabledata.$promise" class="secondary-table">
+              <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+                <tr md-row flex>
+                  <th md-column><span>{{'moduleProtocol.moduleName' | translate}}</span></th>
+                  <th md-column><span>{{'moduleProtocol.addProtocol' | translate}}</span></th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell><a ng-click="loadModuleHistory(row.module.id)">{{currentLanguageNameField(row.module)}}</a></td>
+                  <td md-cell>
+                    <md-button ng-if="true" md-no-ink class="md-primary change-button" style="padding: 0 !important; margin: 0 !important; min-width: 0;"
+                     ng-click="addModuleProtocol(row)">{{'main.button.add' | translate}}</md-button></td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+          <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 20]"
+                        md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                        md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+        </div>
+      </div>
+    </div>
+  </md-dialog-content>
+</md-dialog>

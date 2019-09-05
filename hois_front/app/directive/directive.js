@@ -306,6 +306,9 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     };
 
     $scope.directiveTypeChanged = function() {
+      $scope.formState.students = [];
+      $scope.formState.selectedStudents = [];
+      
       var data = {type: $scope.record.type};
       if(data.type === 'KASKKIRI_EKSMAT') {
         data.application = true;
@@ -320,6 +323,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         }
         data.isHigher = $scope.record.isHigher;
       }
+
       var scholarship = data.type === 'KASKKIRI_STIPTOET' || data.type === 'KASKKIRI_STIPTOETL';
       if(scholarship) {
         data.scholarshipType = $scope.record.scholarshipType;
@@ -328,14 +332,12 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         if(!scholarship || data.scholarshipType) {
           QueryUtils.endpoint(baseUrl+'/findstudents').search(data, function(result) {
             $scope.formState.students = result.content;
-            $scope.formState.selectedStudents = [];
             if(!$scope.formState.students.length) {
               message.info('directive.nostudentsfound');
             }
           });
         }
       } else {
-        $scope.formState.students = [];
         if(data.type === 'KASKKIRI_IMMATV' && !$scope.formState.saisCurriculumVersions) {
           $scope.formState.saisCurriculumVersions = Curriculum.queryVersions({sais: true});
         }

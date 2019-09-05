@@ -289,7 +289,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       var result = $scope.capacityTypes.find(function (it) {
         return it.code === code;
       });
-      return result !== null ? result.value.toUpperCase() : "";
+      return result !== null && angular.isDefined(result) ? result.value.toUpperCase() : "";
     };
 
     $scope.getCapacityType = function (code) {
@@ -399,6 +399,9 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
     $scope.changeEvent = function (currentEvent) {
       var currGroupId = $scope.plan.selectedGroup;
       dialogService.showDialog('timetable/timetable.event.change.dialog.html', function (dialogScope) {
+        dialogScope.displayPeriodLessons = $scope.plan.displayPeriodLessons;
+        dialogScope.displayLeftOverLessons = $scope.plan.displayLeftOverLessons;
+
         dialogScope.occupiedTime = [];
         dialogScope.lesson = currentEvent;
         dialogScope.teachers = currentEvent.journalObject.teachers;
@@ -408,6 +411,9 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
           } else {
             it.isTeaching = true;
           }
+          it.capacity = (it.capacities || []).filter(function (c) {
+            return c.capacityType === currentEvent.capacityType;
+          })[0];
         });
         dialogScope.lessonHeader = currentEvent.journalObject.name;
         dialogScope.lessonCapacityName = $scope.getCapacityType(currentEvent.capacityType);
@@ -432,6 +438,27 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
             dialogScope.lesson.eventRoom = null;
           }
         });
+
+        dialogScope.isUnderAllocatedWeekLessons = function (capacity) {
+          if (capacity.thisPlannedLessons >= capacity.thisPlannedLessons - capacity.lessonsLeft) {
+            return true;
+          }
+          return false;
+        };
+    
+        dialogScope.isUnderAllocatedTotalLessons = function (capacity) {
+          if (capacity.totalPlannedLessons >= capacity.totalAllocatedLessons) {
+            return true;
+          }
+          return false;
+        };
+    
+        dialogScope.isUnderLeftOverTotalLessons = function (capacity) {
+          if (capacity.totalPlannedLessons + capacity.leftOverLessons >= capacity.totalAllocatedLessons) {
+            return true;
+          }
+          return false;
+        };
 
         dialogScope.$watchGroup(['lesson.eventRooms.length', 'lesson.startTime', 'lesson.endTime'], function () {
           var occupiedQuery = {

@@ -1,20 +1,16 @@
 <md-dialog aria-label="add enterprise dialog" flex="50">
-    <md-toolbar>
-        <div class="md-toolbar-tools">
-            <h2 flex>{{"timetable.exportDialog.label" | translate}}</h2>
-            <md-button class="md-icon-button" ng-click="cancel()">
-            <md-icon md-font-set="material-icons">close</md-icon>
-            </md-button>
-        </div>
-    </md-toolbar>
     <md-dialog-content>
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <div layout="row">
+          <p md-colors="{color: 'red'}" class="md-title-small" style="margin-bottom: 0px;">{{"timetable.exportDialog.error" | translate}}</p>
+        </div>
         <div ng-if="timetable.teachers !== null && timetable.teachers.length !== 0">
-          <p md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'timetable.exportDialog.missingJournalTeacherCodes' | translate}}:</p>
+          <p md-colors="{color: 'red'}" class="md-title-small">{{'timetable.exportDialog.missingJournalTeacherCodes' | translate}}:</p>
           <md-table-container style="max-height: 400px;">
               <table md-table>
                 <tbody md-body>
                   <tr md-row ng-repeat="row in timetable.teachers" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell width="10%">{{$index + 1}}.</td>
                     <td md-cell>{{row ? row : '-'}}</td>
                   </tr>
                 </tbody>
@@ -22,11 +18,12 @@
           </md-table-container>
         </div>
         <div ng-if="timetable.journals !== null && timetable.journals.length !== 0">
-          <p md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'timetable.exportDialog.missingJournalCodes' | translate}}:</p>
+          <p md-colors="{color: 'red'}" class="md-title-small">{{'timetable.exportDialog.missingJournalCodes' | translate}}:</p>
           <md-table-container style="max-height: 400px;">
               <table md-table>
                 <tbody md-body>
                   <tr md-row ng-repeat="row in timetable.journals" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell width="10%">{{$index + 1}}.</td>
                     <td md-cell>{{row ? row : '-'}}</td>
                   </tr>
                 </tbody>

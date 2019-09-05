@@ -140,7 +140,7 @@
       </thead>
       <!-- Subjects -->
       <tbody ng-repeat="subject in record.subjects">
-          <tr>
+          <tr class="bold-top-line">
               <td class="bold dividerBorder">
                   <span>{{currentLanguageNameField(subject)}}</span>
               </td>
@@ -162,14 +162,14 @@
               <td>{{sumSubjectHours(studentGroup.hours)}}</td>
           </tr>
           <!-- Total -->
-          <tr>
+          <tr class="bold">
               <td class="dividerBorder">{{'lessonplan.total' | translate}}</td>
               <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{(subject.capacityTotals[sct.studyPeriod] || {})[sct.code] || 0}}</td>
               <td>{{sumSubjectHours(subject.capacityTotals)}}</td>
           </tr>
       </tbody>
       <!-- Grand Total -->
-      <tr class="bold" md-colors="{background: 'background-200'}">
+      <tr class="bold bold-top-line" md-colors="{background: 'background-200'}">
           <td class="dividerBorder">{{'lessonplan.grandTotal' | translate | uppercase}}</td>
           <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{(record.subjectTotals[sct.studyPeriod] || {})[sct.code] || 0}}</td>
           <td>{{sumSubjectHours(record.subjectTotals)}}</td>
@@ -183,11 +183,19 @@
 </div>
 
 <style>
- .subject-study-period td {
-   min-width: 0 !important;
-   padding: 5px !important;
- }
- .subject-study-period th {
-   padding: 3px !important;
- }
+  .subject-study-period td {
+    min-width: 0 !important;
+    padding: 5px !important;
+  }
+  .subject-study-period th {
+    padding: 3px !important;
+  }
+  tr.bold-top-line,
+  tr.bold-top-line td {
+      border-top: #525252 2px solid !important;
+  }
+  .subject-study-period td,
+  .subject-study-period th {
+      border-bottom: none !important;
+  }
 </style>

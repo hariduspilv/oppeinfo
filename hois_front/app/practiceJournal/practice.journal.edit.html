@@ -8,7 +8,7 @@
 
       <div ng-if="practiceJournal.student && formState.student" class="form-readonly" layout="column">
         <div>&nbsp;</div>
-        <div layout="row" flex>
+        <div layout="row" layout-xs="column" flex>
           <md-input-container flex>
             <label>{{'student.name' | translate}}</label>
             <hois-value value="formState.student.person.firstname + ' ' + formState.student.person.lastname"></hois-value>
@@ -26,7 +26,7 @@
             <hois-value value="formState.student.course"></hois-value>
           </md-input-container>
         </div>
-        <div layout="row" flex>
+        <div layout="row" layout-xs="column" flex>
           <md-input-container flex>
             <label>{{'student.curriculum' | translate}}</label>
             <hois-value value="currentLanguageNameField(formState.student.curriculumVersion)"></hois-value>

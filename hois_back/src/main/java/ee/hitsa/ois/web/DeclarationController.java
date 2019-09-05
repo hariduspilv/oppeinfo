@@ -30,6 +30,7 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.DeclarationSearchCommand;
 import ee.hitsa.ois.web.commandobject.DeclarationSubjectForm;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.DeclarationDto;
@@ -53,6 +54,11 @@ public class DeclarationController {
     public Page<DeclarationDto> search(HoisUserDetails user, @Valid DeclarationSearchCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return declarationService.search(user, criteria, pageable);
+    }
+    
+    @GetMapping("/search-students")
+    public List<AutocompleteResult> searchStudents(HoisUserDetails user, SearchCommand lookup) {
+        return declarationService.autocompleteStudents(user, lookup);
     }
 
     @GetMapping("/hasPrevious")

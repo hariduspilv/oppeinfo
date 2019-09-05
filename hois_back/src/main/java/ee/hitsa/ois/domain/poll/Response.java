@@ -26,6 +26,9 @@ public class Response extends BaseEntityWithId {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "response_id", nullable = false, updatable = false, insertable = false)
     private List<ResponseQuestionAnswer> responseQuestionAnswers = new ArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "response_id", nullable = false, updatable = false, insertable = false)
+    private List<ResponseSubject> responseSubjects = new ArrayList<>();
     
     public Poll getPoll() {
         return poll;
@@ -50,6 +53,12 @@ public class Response extends BaseEntityWithId {
     }
     public void setResponseQuestionAnswers(List<ResponseQuestionAnswer> responseQuestionAnswers) {
         this.responseQuestionAnswers = responseQuestionAnswers;
+    }
+    public List<ResponseSubject> getResponseSubjects() {
+        return responseSubjects;
+    }
+    public void setResponseSubjects(List<ResponseSubject> responseSubjects) {
+        this.responseSubjects = responseSubjects;
     }
 }
     

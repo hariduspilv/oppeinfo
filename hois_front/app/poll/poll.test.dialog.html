@@ -10,7 +10,7 @@
     <form name="dialogForm" novalidate ng-cloak>
         <md-toolbar>
         <div class="md-toolbar-tools">
-            <h2 flex>{{"poll.questions.label" | translate}}</h2>
+            <h2 flex style="word-break: break-word;">{{criteria.nameEt}}</h2>
             <md-button class="md-icon-button" ng-click="cancel()">
             <md-icon md-font-set="material-icons">close</md-icon>
             </md-button>
@@ -19,12 +19,12 @@
         <md-dialog-content>
         <div class="md-dialog-content" flex>
             <div layout="row">
-                <p style="word-break: break-word; font-size: 15px;">{{criteria.foreword}}</p>
+                <p style="word-break: break-word; font-size: 15px;margin-top: 0px;">{{criteria.foreword}}</p>
             </div>
             <div ng-if="criteria.themes" layout="column">
                 <div ng-repeat="item in criteria.themes track by $index" class="occupation-row align-center" layout="row" flex ng-style="{'margin-top': $first ? '0px' : '16px'}">
                     <fieldset flex="100">
-                        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{item.orderNr + ' ' + item.nameEt}}</legend>
+                        <legend md-colors="{color: 'primary-800'}" style="word-break: break-word;" class="md-title-small">{{item.orderNr + ' ' + item.nameEt}}</legend>
                         <div ng-repeat="question in item.questions track by $index" layout="row" flex>
                             <div flex="100">
                                 <fieldset>
@@ -48,7 +48,7 @@
                                             </div>
                                         </div>
                                         <div layout="column" flex="{{question.pictures.length !== 0 ? '60' : '100'}}" flex-offset="{{question.pictures.length !== 0 ? '5' : '0'}}">
-                                            <p style="word-break: break-word; margin-top: 0px;font-style: italic;">{{question.addInfoEt}}</p>
+                                            <p style="word-break: break-word; margin-top: 0px;font-style: italic;font-size: 13px;">{{question.addInfoEt}}</p>
                                             <div ng-if="question.type === 'VASTUS_S'" layout="{{question.isInRow ? 'row' : 'column'}}" flex="100">
                                                 <div ng-repeat="answer in question.answers track by $index" flex>
                                                     <md-input-container flex>
@@ -98,6 +98,7 @@
                             </div>
                         </div>
                     </fieldset>
+                    <br ng-if="!$last">
                 </div>
             </div>
             <div layout="row">

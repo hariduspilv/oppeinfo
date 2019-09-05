@@ -1,6 +1,7 @@
 package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.parameterAsTimestamp;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
@@ -11,9 +12,11 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -29,28 +32,36 @@ import org.springframework.stereotype.Service;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.OisFile;
+import ee.hitsa.ois.domain.PracticeJournal;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.application.ApplicationFile;
+import ee.hitsa.ois.domain.application.ApplicationOccupationModuleTheme;
 import ee.hitsa.ois.domain.application.ApplicationPlannedSubject;
 import ee.hitsa.ois.domain.application.ApplicationPlannedSubjectEquivalent;
 import ee.hitsa.ois.domain.application.ApplicationSupportService;
 import ee.hitsa.ois.domain.application.ApplicationSupportServiceModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.enums.AcademicLeaveReason;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.message.ConfirmationNeededMessage;
 import ee.hitsa.ois.message.StudentApplicationConfirmed;
@@ -77,13 +88,15 @@ import ee.hitsa.ois.web.commandobject.application.ApplicationForm;
 import ee.hitsa.ois.web.commandobject.application.ApplicationRejectForm;
 import ee.hitsa.ois.web.commandobject.application.ApplicationSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.application.ApplicationApplicableDto;
 import ee.hitsa.ois.web.dto.application.ApplicationDto;
+import ee.hitsa.ois.web.dto.application.ApplicationOccupationModuleThemeDto;
 import ee.hitsa.ois.web.dto.application.ApplicationPlannedSubjectDto;
 import ee.hitsa.ois.web.dto.application.ApplicationPlannedSubjectEquivalentDto;
 import ee.hitsa.ois.web.dto.application.ApplicationSearchDto;
 import ee.hitsa.ois.web.dto.application.ApplicationSupportServiceModuleDto;
+import ee.hitsa.ois.web.dto.application.ApplicationThemeReplacementDto;
+import ee.hitsa.ois.web.dto.application.ApplicationThemeReplacementModuleDto;
 import ee.hitsa.ois.web.dto.application.ValidAcademicLeaveDto;
 
 @Transactional
@@ -206,7 +219,7 @@ public class ApplicationService {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.bindToEntity(applicationForm, application, classifierRepository, "student", "files", "plannedSubjects",
                 "studyPeriodStart", "studyPeriodStart", "accademicApplication", "newCurriculumVersion", "oldCurriculumVersion",
-                "submitted", "studentGroup", "committee", "supportServices", "isDecided", "selectedModules");
+                "submitted", "studentGroup", "committee", "supportServices", "isDecided", "selectedModules", "themeMatches");
 
         application.setStudyPeriodStart(EntityUtil.getOptionalOne(StudyPeriod.class, applicationForm.getStudyPeriodStart(), em));
         application.setStudyPeriodEnd(EntityUtil.getOptionalOne(StudyPeriod.class, applicationForm.getStudyPeriodEnd(), em));
@@ -248,6 +261,22 @@ public class ApplicationService {
                             oValue.setAddInfo(nValue.getAddInfo());
                         });
             }
+        }
+
+        if (ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_RAKKAVA, application.getType())) {
+            EntityUtil.bindEntityCollection(application.getThemeMatches(), ApplicationOccupationModuleTheme::getId,
+                    applicationForm.getThemeReplacements(), ApplicationOccupationModuleThemeDto::getId, form -> {
+                        ApplicationOccupationModuleTheme entity = new ApplicationOccupationModuleTheme();
+                        entity.setApplication(application);
+                        entity.setCurriculumVersionOmoduleTheme(em.getReference(
+                                CurriculumVersionOccupationModuleTheme.class, form.getCurriculumVersionOmoduleTheme()));
+                        entity.setCurriculumModule(em.getReference(CurriculumModule.class, form.getCurriculumModule()));
+                        entity.setIsOld(form.getIsOld());
+                        entity.setJournal(EntityUtil.getOptionalOne(Journal.class, form.getJournal(), em));
+                        entity.setPracticeJournal(EntityUtil.getOptionalOne(PracticeJournal.class, 
+                                form.getPracticeJournal(), em));
+                        return entity;
+                    });
         }
 
         ValidAcademicLeaveDto validAcademicLeave = applicationForm.getValidAcademicLeave();
@@ -434,10 +463,12 @@ public class ApplicationService {
                 dto.setHasBeenSeenByAdmin(Boolean.TRUE);
             }
             dto.setCanRemoveConfirmation(Boolean.valueOf(canRemoveApplicationConfirmation(user, application)));
+            dto.setCanChangeThemeReplacements(Boolean.valueOf(canChangeThemeReplacements(user, application)));
             return dto;
         }
         ApplicationDto dto = ApplicationDto.of(application);
         dto.setCanRemoveConfirmation(Boolean.valueOf(canRemoveApplicationConfirmation(user, application)));
+        dto.setCanChangeThemeReplacements(Boolean.valueOf(canChangeThemeReplacements(user, application)));
         return dto;
     }
 
@@ -482,6 +513,26 @@ public class ApplicationService {
             return qb.select("1", em).setMaxResults(1).getResultList().isEmpty();
         }
         return rolesAndRights; // a.k.a. false.
+    }
+
+    public boolean canChangeThemeReplacements(HoisUserDetails user, Application application) {
+        ApplicationType type = EnumUtil.valueOf(ApplicationType.class, application.getType());
+        Student student = application.getStudent();
+
+        if (ApplicationType.AVALDUS_LIIK_RAKKAVA.equals(type) && UserUtil.isSchoolAdmin(user, student.getSchool())) {
+            ApplicationStatus status = EnumUtil.valueOf(ApplicationStatus.class, application.getStatus());
+
+            if (ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status)
+                    || ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.equals(status)) {
+                return UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_AVALDUS);
+            } else if (ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.equals(status)) {
+                Long studentCurriculumVersion = EntityUtil.getId(student.getCurriculumVersion());
+                Long applicationCurriculumVersion = EntityUtil.getId(application.getNewCurriculumVersion());
+                return UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_AVALDUS)
+                        && studentCurriculumVersion.equals(applicationCurriculumVersion);
+            }
+        }
+        return false;
     }
 
     public DirectiveStudent findLastValidAcademicLeaveWithoutRevocation(Long studentId) {
@@ -657,6 +708,166 @@ public class ApplicationService {
                 CurriculumUtil.moduleName(moduleEn != null ? moduleEn : moduleEt, clEn != null ? clEn : clEt)));
             return dto;
         }, data);
+    }
+
+    public ApplicationThemeReplacementDto curriculumVersionThemeReplacements(Student student, Long applicationId,
+            Long curriculumVersionId) {
+        ApplicationThemeReplacementDto dto = new ApplicationThemeReplacementDto();
+
+        List<ApplicationThemeReplacementModuleDto> modules = curriculumVersionModules(curriculumVersionId);
+        Map<Long, List<ApplicationOccupationModuleThemeDto>> newModuleThemeMap = newModuleThemes(student, applicationId,
+                curriculumVersionId);
+        Map<Long, List<ApplicationOccupationModuleThemeDto>> oldModuleThemeMap = oldModuleThemes(student, applicationId,
+                curriculumVersionId);
+
+        Iterator<ApplicationThemeReplacementModuleDto> iterator = modules.iterator();
+        while (iterator.hasNext()) {
+            ApplicationThemeReplacementModuleDto module = iterator.next();
+            List<ApplicationOccupationModuleThemeDto> newModuleThemes = newModuleThemeMap.get(module.getId());
+            List<ApplicationOccupationModuleThemeDto> oldModuleThemes = oldModuleThemeMap.get(module.getId());
+
+            if (newModuleThemes != null && oldModuleThemes != null) {
+                module.getNewThemes().addAll(newModuleThemes);
+                module.getOldThemes().addAll(oldModuleThemes);
+            } else {
+                iterator.remove();
+            }
+        }
+
+        dto.getModules().addAll(modules);
+        return dto;
+    }
+
+    private List<ApplicationThemeReplacementModuleDto> curriculumVersionModules(Long curriculumVersionId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_version cv"
+                + " join curriculum c on c.id = cv.curriculum_id"
+                + " join curriculum_module cm on cm.curriculum_id = c.id");
+        qb.requiredCriteria("cv.id = :curriculumVersionId", "curriculumVersionId", curriculumVersionId);
+
+        List<?> data = qb.select("cm.id cm_id, cm.name_et, cm.name_en, cm.module_code", em).getResultList();
+
+        return StreamUtil.toMappedList(r -> new ApplicationThemeReplacementModuleDto(resultAsLong(r, 0),
+                resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3)), data);
+    }
+
+    private Map<Long, List<ApplicationOccupationModuleThemeDto>> newModuleThemes(Student student, Long applicationId,
+            Long curriculumVersionId) {
+        String from = "from curriculum_version cv"
+                + " join curriculum_version_omodule cvo on cvo.curriculum_version_id = cv.id"
+                + " join curriculum_version_omodule_theme cvot on cvot.curriculum_version_omodule_id = cvo.id";
+        if (applicationId != null) {
+            from += " left join (application_omodule_theme aot join application a on aot.application_id = a.id)"
+                    + " on aot.curriculum_version_omodule_theme_id = cvot.id and a.student_id = :studentId"
+                    + " and a.id = :applicationId";
+        }
+
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
+        qb.requiredCriteria("cv.id = :curriculumVersionId", "curriculumVersionId", curriculumVersionId);
+        if (applicationId != null) {
+            qb.parameter("studentId", EntityUtil.getId(student));
+            qb.parameter("applicationId", applicationId);
+        }
+
+        List<?> data = qb.select("cvo.curriculum_module_id, cvot.id cvot_id, cvot.name_et"
+                + (applicationId != null ? ", aot.id aot_id" : ", null aot_id"), em).getResultList();
+        return StreamUtil.nullSafeList(data).stream()
+                .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
+                    ApplicationOccupationModuleThemeDto theme = new ApplicationOccupationModuleThemeDto();
+                    theme.setCurriculumModule(resultAsLong(r, 0));
+                    theme.setCurriculumVersionOmoduleTheme(resultAsLong(r, 1));
+                    theme.setTheme(new AutocompleteResult(resultAsLong(r, 1), resultAsString(r, 2),
+                            resultAsString(r, 2)));
+                    theme.setIsOld(Boolean.FALSE);
+                    theme.setId(resultAsLong(r, 3));
+                    theme.setCovering(Boolean.valueOf(theme.getId() != null)); 
+                    return theme;
+                }, Collectors.toList())));
+    }
+
+    private Map<Long, List<ApplicationOccupationModuleThemeDto>> oldModuleThemes(Student student, Long applicationId,
+            Long newCurriculumVersionId) {
+        Application application = EntityUtil.getOptionalOne(Application.class, applicationId, em);
+
+        String journalFrom = "from journal_student js"
+                + " join journal_omodule_theme jot on jot.journal_id = js.journal_id"
+                + " join journal_entry je on je.journal_id = js.journal_id" 
+                + " join journal_entry_student jes on jes.journal_entry_id = je.id and jes.journal_student_id = js.id"
+                + " join classifier cl on cl.code = jes.grade_code"
+                + " join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id"
+                + " join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id"
+                + " join curriculum_version cv2 on cv2.id = :oldCurriculumVersionId"
+                + " join curriculum_version cv on cv.id = cvo.curriculum_version_id and cv2.curriculum_id = cv.curriculum_id"
+                + " and cv.id != :newCurriculumVersionId"
+                + " join student s on s.id = js.student_id";
+        if (applicationId != null) {
+            journalFrom += " join application_omodule_theme aot on aot.curriculum_version_omodule_theme_id = cvot.id"
+                    + " and aot.journal_id = js.journal_id";
+        }
+
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(journalFrom);
+        qb.requiredCriteria("js.student_id = :studentId", "studentId", EntityUtil.getId(student));
+        qb.requiredCriteria("je.entry_type_code = :entryType", "entryType", JournalEntryType.SISSEKANNE_L);
+        qb.requiredCriteria("jes.grade_code in (:positiveGrades)", "positiveGrades",
+                OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
+        if (applicationId != null) {
+            qb.requiredCriteria("aot.application_id = :applicationId", "applicationId", applicationId);
+            qb.parameter("oldCurriculumVersionId", EntityUtil.getId(application.getOldCurriculumVersion()));
+        } else {
+            qb.parameter("oldCurriculumVersionId", EntityUtil.getId(student.getCurriculumVersion()));
+        }
+        qb.parameter("newCurriculumVersionId", newCurriculumVersionId);
+
+        String journalResults = qb.querySql("cvo.curriculum_module_id, cvot.id, cvot.name_et, js.journal_id,"
+                + " null practice_journal_id, jes.grade_code, cl.value, jes.grade_inserted,"
+                + (applicationId != null ? " aot.id aot_id" : " null"), false);
+        Map<String, Object> parameters = new HashMap<>(qb.queryParameters());
+
+        String practiceJournalFrom = "from practice_journal pj"
+                + " join classifier cl2 on cl2.code = pj.grade_code"
+                + " join practice_journal_module_subject pjms on pjms.practice_journal_id = pj.id"
+                + " join curriculum_version_omodule_theme cvot2 on cvot2.id = pjms.curriculum_version_omodule_theme_id"
+                + " join curriculum_version_omodule cvo2 on cvo2.id = cvot2.curriculum_version_omodule_id"
+                + " join curriculum_version cv4 on cv4.id = :oldCurriculumVersionId"
+                + " join curriculum_version cv3 on cv3.id = cvo2.curriculum_version_id and cv4.curriculum_id = cv3.curriculum_id"
+                + " and cv3.id != :newCurriculumVersionId"
+                + " join student s2 on s2.id = pj.student_id";
+        if (applicationId != null) {
+            practiceJournalFrom += " join application_omodule_theme aot2 on aot2.curriculum_version_omodule_theme_id = cvot2.id"
+                    + " and aot2.practice_journal_id = pj.id";
+        }
+
+        qb = new JpaNativeQueryBuilder(practiceJournalFrom);
+        qb.requiredCriteria("pj.student_id = :studentId", "studentId", EntityUtil.getId(student));
+        qb.requiredCriteria("pj.grade_code in (:positiveGrades)", "positiveGrades",
+                OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
+        if (applicationId != null) {
+            qb.requiredCriteria("aot2.application_id = :applicationId", "applicationId", applicationId);
+        }
+
+        String practiceJournalResults = qb.querySql("cvo2.curriculum_module_id, cvot2.id, cvot2.name_et, null journal_id,"
+                + " pj.id practice_journal_id, pj.grade_code, cl2.value, pj.grade_inserted,"
+                + (applicationId != null ? " aot2.id aot_id" : " null"), false);
+        parameters.putAll(qb.queryParameters());
+
+        qb = new JpaNativeQueryBuilder("from (" + journalResults + " union all " + practiceJournalResults + ") as r");
+        List<?> data = qb.select("*", em, parameters).getResultList();
+
+        return StreamUtil.nullSafeList(data).stream()
+                .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
+                    ApplicationOccupationModuleThemeDto theme = new ApplicationOccupationModuleThemeDto();
+                    theme.setCurriculumModule(resultAsLong(r, 0));
+                    theme.setCurriculumVersionOmoduleTheme(resultAsLong(r, 1));
+                    theme.setTheme(new AutocompleteResult(resultAsLong(r, 1), resultAsString(r, 2),
+                            resultAsString(r, 2)));
+                    theme.setJournal(resultAsLong(r, 3));
+                    theme.setPracticeJournal(resultAsLong(r, 4));
+                    theme.setGradeCode(resultAsString(r, 5));
+                    theme.setGrade(resultAsString(r, 6));
+                    theme.setGradeInserted(resultAsLocalDate(r, 7));
+                    theme.setIsOld(Boolean.TRUE);
+                    theme.setId(resultAsLong(r, 8));
+                    return theme;
+                }, Collectors.toList())));
     }
 
     public void confirmConfirmation(HoisUserDetails user, Application application, ApplicationConfirmConfirmationForm form) {

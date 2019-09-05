@@ -1,0 +1,71 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <div flex>
+        <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin" ng-model-options="{allowInvalid: true}">
+        <fieldset>
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+            <div layout="column" flex>
+                <div layout="row">
+                    <div layout="column" flex="50">
+                        <md-input-container>
+                            <label class="textInput">{{'poll.name' | translate}}</label>
+                            <input ng-model="criteria.pollName" type="text" md-maxlength="255">
+                        </md-input-container>
+                        <md-input-container>
+                            <label>{{'poll.type' | translate}}</label>
+                            <hois-classifier-select ng-model="criteria.typeCode" model-value-attr="code" main-classifier-code="KYSITLUS"></hois-classifier-select>
+                        </md-input-container>
+                    </div>
+                    <div layout="column" flex="50">
+                        <div layout="row" layout-xs="column">
+                            <md-input-container flex-offset="5" flex-offset-xs="0">
+                                <label>{{'poll.answers.endDate' | translate}}</label>
+                                <md-datepicker name="thru" ng-model="criteria.validThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                            </md-input-container>
+                        </div>
+                    </div>
+                </div>
+    
+                <div layout="row" layout-xs="column">
+                    <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+                    <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+                </div>
+            </div>
+            <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+            </fieldset>
+        </form>
+    </div>
+    </div>
+    <div layout-padding>
+    <div flex>
+        <md-table-container>
+        <table md-table md-progress="tabledata.$promise">
+            <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+                <tr md-row>
+                    <th md-column md-order-by="p.name_et">{{'poll.poll' | translate}}</th>
+                    <th md-column md-order-by="p.valid_from, p.valid_thru">{{'poll.answers.pollDuration' | translate}}</th>
+                    <th md-column md-order-by="{{auth.higher ? 's.name_et' : 'j.name_et'}}">{{(auth.higher ? 'poll.response.subject' : 'poll.response.journal') | translate}}</th>
+                    <th md-column md-order-by="cl.name_et">{{auth.higher ? ('poll.answers.studyPeriod' | translate) : ('poll.answers.studyYear' | translate)}}</th>
+                    <th md-column>{{'poll.answers.amount' | translate}}</th>
+                    <th md-column></th>
+                </tr>
+            </thead>
+            <tbody md-body>
+                <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell>{{row.poll ? currentLanguageNameField(row.poll) : '-'}}</td>
+                    <td md-cell>{{(row.startDate | hoisDate) + ' - ' + (row.endDate | hoisDate)}}</td>
+                    <td md-cell>{{row.name ? currentLanguageNameField(row.name) : '-'}}</td>
+                    <td md-cell>{{row.yearCode ? currentLanguageNameField(row.yearCode) : '-'}}</td>
+                    <td md-cell>{{row.answers}}</td>
+                    <td md-cell>
+                        <md-button ng-if="canViewResult(row.endDate)" md-no-ink class="md-primary change-button" ng-click="openAnswers(row)">{{'poll.answers.viewResponse' | translate}}</md-button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        </md-table-container>
+        <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+        md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+        md-page-select></md-table-pagination>
+    </div>
+</div>
+              

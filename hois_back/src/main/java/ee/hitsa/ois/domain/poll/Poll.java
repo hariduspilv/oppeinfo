@@ -42,6 +42,7 @@ public class Poll extends BaseEntityWithId {
     private Boolean isTeacherCommentVisible;
     private Boolean isStudentVisible;
     private Boolean isThemePageable;
+    private String pollUrl;
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "poll_id", nullable = false, updatable = false, insertable = false)
     private List<PollStudentGroup> pollStudentGroups = new ArrayList<>();
@@ -245,6 +246,14 @@ public class Poll extends BaseEntityWithId {
 
     public void setPollTeacherOccupations(List<PollTeacherOccupation> pollTeacherOccupations) {
         this.pollTeacherOccupations = pollTeacherOccupations;
+    }
+
+    public String getPollUrl() {
+        return pollUrl;
+    }
+
+    public void setPollUrl(String pollUrl) {
+        this.pollUrl = pollUrl;
     }
     
 }

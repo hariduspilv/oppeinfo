@@ -16,7 +16,7 @@ angular.module('hitsaOis')
       // @since 11.01.2019: `ng-if="!option.hide || (value.code === code || value === code)"` gives an opportunity to select given value before.
       // So if we give a value to `ngModel` outside (`value` inside) then it will be visible.
       template: '<md-select ng-model-options="{ trackBy: !!modelValueAttr ? \'$value\' : \'$value.code\' }" >'+ // md-on-open="queryPromise" this causes some bugs
-      '<md-option ng-if="!isMultiple && ((!isRequired && !ngRequired) || isShowEmpty)" md-option-empty></md-option>'+
+      '<md-option ng-if="!isHideEmpty && !isMultiple && ((!isRequired && !ngRequired) || isShowEmpty)" md-option-empty></md-option>'+
       '<md-option ng-repeat="(code, option) in optionsByCode" ng-value="!!modelValueAttr ? option[modelValueAttr] : option" ng-if="!option.hide || isSelected(option)" ' +
       'aria-label="{{getLabel(option)}}">{{getLabel(option)}}</md-option></md-select>',
       restrict: 'E',
@@ -35,6 +35,7 @@ angular.module('hitsaOis')
         filterValues: '@', //model of array of classifiers (or other objects which contain classifier, then byProperty must be defined )
         ignorePreselected: '@',
         byProperty: '@',
+        hideEmpty: '@',
         showEmpty: '@',
         showOnlyValues: '@', //model of array of classifiers (if value === true, all items are shown)
         watchModel: '@',
@@ -48,6 +49,7 @@ angular.module('hitsaOis')
       link: function postLink(scope, element) {
         scope.isMultiple = angular.isDefined(scope.multiple);
         scope.isRequired = angular.isDefined(scope.required);
+        scope.isHideEmpty = angular.isDefined(scope.hideEmpty);
         scope.isShowEmpty = angular.isDefined(scope.showEmpty);
         //fix select not showing required visuals if <hois-classifier-select required> is used
         element.attr('required', scope.isRequired);

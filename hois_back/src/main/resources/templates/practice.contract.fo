@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" font-family="Times Roman" font-size="12pt">
+	<fo:layout-master-set>
+		<fo:simple-page-master master-name="A4"
+			page-width="210mm" page-height="297mm">
+			<fo:region-body   margin="2cm"/>
+			<fo:region-before extent="2cm"/>
+			<fo:region-after  extent="2cm"/>
+			<fo:region-start  extent="2cm"/>
+			<fo:region-end    extent="2cm"/>
+		</fo:simple-page-master>
+	</fo:layout-master-set>
+	<fo:page-sequence master-reference="A4">
+		<fo:flow flow-name="xsl-region-body">
+			<fo:block text-align="center" font-weight="bold" space-after="13pt">{{ "report.contract.practiceContract" | translate }}</fo:block>
+			<fo:block-container text-align="justify">
+				<fo:block space-after="13pt"><fo:leader/></fo:block>
+				<fo:block-container space-after="13pt">
+					<fo:block font-weight="bold">{{ "report.contract.enterprise" | translate }}:<fo:inline font-weight="normal">
+					{% if content.enterprise is not empty %}
+						{{ content.enterprise.name }}{% if content.enterprise.regCode is not empty %} ({{ content.enterprise.regCode }}){% endif %}
+					{% else %}
+						-
+					{% endif %}
+					</fo:inline></fo:block>
+				</fo:block-container>
+				<fo:block-container space-after="13pt">
+					<fo:block font-weight="bold">{{ "report.contract.enterpriseRepresentative" | translate }}: <fo:inline font-weight="normal">{{ content.contract.contactPersonName }}, {{ content.contract.contactPersonEmail }}{% if content.contract.contactPersonPhone is not empty %}, {{ content.contract.contactPersonPhone }}{% endif %}</fo:inline></fo:block>
+				</fo:block-container>
+				<fo:block-container space-after="13pt">
+					<fo:block font-weight="bold">{{ "report.contract.school" | translate }}: <fo:inline font-weight="normal">{{ content.school | name }}{% if content.school.ehisSchool is not empty %} ({{ content.school.ehisSchool.value2 }}){% endif %}</fo:inline></fo:block>
+				</fo:block-container>
+				<fo:block-container space-after="13pt">
+					<fo:block font-weight="bold">{{ "report.contract.student" | translate }}: <fo:inline font-weight="normal">{{ content.studentFullname }}</fo:inline></fo:block>
+				</fo:block-container>
+				<fo:block-container space-after="13pt">
+					<fo:block font-weight="bold">{{ "report.contract.curriculum" | translate }}: <fo:inline font-weight="normal">{{ content.student.curriculumVersion.code }}</fo:inline></fo:block>
+				</fo:block-container>
+			</fo:block-container>
+			{% if content.moduleSubjects is not empty %}
+				{% if content.contract.isHigher %}
+					<fo:table margin="0 0.24in 0 0.14in" table-layout="fixed" break-before="page">
+						<fo:table-column column-width="2.36in"/>
+						<fo:table-column column-width="0.93in"/>
+						<fo:table-column column-width="1.65in"/>
+						<fo:table-column column-width="1.7in"/>
+						
+						<fo:table-header>
+							<fo:table-row font-size="11pt" height="0.34in">
+								<fo:table-cell border-style="solid" margin="0 0.08in">
+									<fo:block font-weight="bold" space-after="13pt">{{ "report.contract.subject" | translate }}</fo:block>
+								</fo:table-cell>
+								<fo:table-cell border-style="solid" margin="0 0.08in">
+									<fo:block font-weight="bold" space-after="13pt">{{ "report.contract.creditsHigher" | translate }}</fo:block>
+								</fo:table-cell>
+								<fo:table-cell border-style="solid" margin="0 0.08in">
+									<fo:block font-weight="bold" space-after="13pt">{{ "report.contract.achours" | translate }}</fo:block>
+								</fo:table-cell>
+								<fo:table-cell border-style="solid" margin="0 0.08in">
+									<fo:block font-weight="bold" space-after="13pt">{{ "report.contract.ashours" | translate }}</fo:block>
+								</fo:table-cell>
+							</fo:table-row>
+						</fo:table-header>
+						<fo:table-body>
+							{% for moduleSubject in content.moduleSubjects %}
+								<fo:table-row>
+									<fo:table-cell border-style="solid" margin="0 0.08in">
+										<fo:block space-after="13pt">{{ moduleSubject.subject }}</fo:block>
+									</fo:table-cell>
+									<fo:table-cell border-style="solid" margin="0 0.08in">
+										<fo:block space-after="13pt">{{ moduleSubject.credits }}</fo:block>
+									</fo:table-cell>
+									<fo:table-cell border-style="solid" margin="0 0.08in">
+										<fo:block space-after="13pt">{{ moduleSubject.hours }}</fo:block>
+									</fo:table-cell>
+									<fo:table-cell border-style="solid" margin="0 0.08in">
+										<fo:block space-after="13pt">{{ moduleSubject.astroHours}}</fo:block>
+									</fo:table-cell>
+								</fo:table-row>
+							{% endfor %}
+						</fo:table-body>
+					</fo:table>
+					<fo:block space-after="13pt"><fo:leader/></fo:block>
+				{% else %}
+					{% for moduleSubject in content.moduleSubjects %}
+						<fo:block font-weight="bold" space-after="13pt" margin-left="0.5in" text-align="justify">{{ "report.contract.practiceModule" | translate }}: {{ moduleSubject.module }}</fo:block>
+						<fo:table margin="0 0.24in 0 0.14in" table-layout="fixed" break-before="page">
+							<fo:table-column column-width="2.24in"/>
+							<fo:table-column column-width="1.05in"/>
+							<fo:table-column column-width="1.65in"/>
+							<fo:table-column column-width="1.7in"/>
+							
+							<fo:table-header>
+								<fo:table-row font-size="11pt" height="0.34in">
+									<fo:table-cell border-style="solid" margin="0 0.08in">
+										<fo:block font-weight="bold" space-after="13pt">{{ "report.contract.theme" | translate }}</fo:block>
+									</fo:table-cell>
+									<fo:table-cell border-style="solid" margin="0 0.08in">
+										<fo:block font-weight="bold" space-after="13pt">{{ "report.contract.creditsVocational" | translate }}</fo:block>
+									</fo:table-cell>
+									<fo:table-cell border-style="solid" margin="0 0.08in">
+										<fo:block font-weight="bold" space-after="13pt">{{ "report.contract.achours" | translate }}</fo:block>
+									</fo:table-cell>
+									<fo:table-cell border-style="solid" margin="0 0.08in">
+										<fo:block font-weight="bold" space-after="13pt">{{ "report.contract.ashours" | translate }}</fo:block>
+									</fo:table-cell>
+								</fo:table-row>
+							</fo:table-header>
+							<fo:table-body>
+								<fo:table-row>
+									<fo:table-cell border-style="solid" margin="0 0.08in">
+										<fo:block space-after="13pt">{{ moduleSubject.theme }}</fo:block>
+									</fo:table-cell>
+									<fo:table-cell border-style="solid" margin="0 0.08in">
+										<fo:block space-after="13pt">{{ moduleSubject.credits }}</fo:block>
+									</fo:table-cell>
+									<fo:table-cell border-style="solid" margin="0 0.08in">
+										<fo:block space-after="13pt">{{ moduleSubject.hours }}</fo:block>
+									</fo:table-cell>
+									<fo:table-cell border-style="solid" margin="0 0.08in">
+										<fo:block space-after="13pt">{{ moduleSubject.astroHours}}</fo:block>
+									</fo:table-cell>
+								</fo:table-row>
+							</fo:table-body>
+						</fo:table>
+						<fo:block space-after="13pt"><fo:leader/></fo:block>
+					{% endfor %}
+				{% endif %}
+			{% endif %}
+			<fo:block-container text-align="justify">
+				<fo:block-container space-after="13pt">
+					<fo:block font-weight="bold">{{ "report.contract.startDate" | translate }}: <fo:inline font-weight="normal">{{ content.contract.startDate | hoisDate}}</fo:inline></fo:block>
+				</fo:block-container>
+				<fo:block-container space-after="13pt">
+					<fo:block font-weight="bold">{{ "report.contract.endDate" | translate }}: <fo:inline font-weight="normal">{{ content.contract.endDate | hoisDate}}</fo:inline></fo:block>
+				</fo:block-container>
+				<fo:block-container space-after="13pt">
+					<fo:block font-weight="bold">{{ "report.contract.practicePlace" | translate }}: <fo:inline font-weight="normal">{{ content.practicePlace }}</fo:inline></fo:block>
+				</fo:block-container>
+				<fo:block-container space-after="13pt">
+					<fo:block font-weight="bold" white-space-collapse="true" linefeed-treatment="preserve">{{ "report.contract.practicePlan" | translate }}: <fo:inline font-weight="normal">{{ content.contract.practicePlan }}</fo:inline></fo:block>
+				</fo:block-container>
+				<fo:block-container space-after="13pt">
+					<fo:block font-weight="bold">{{ "report.contract.enterpriseSupervisor" | translate }}:<fo:inline font-weight="normal">
+					{% if content.contract.supervisors is not empty %}
+					{% for supervisor in content.contract.supervisors %}
+						{{ supervisor.supervisorName }}{% if supervisor.supervisorEmail is not empty %}, {{ supervisor.supervisorEmail }}{% endif %}{% if supervisor.supervisorPhone is not empty %}, {{ supervisor.supervisorPhone }}{% endif %}{% if not loop.last %};{% endif %}
+					{% endfor %}
+					{% else %}
+					-
+					{% endif %}
+					</fo:inline></fo:block>
+				</fo:block-container>
+				<fo:block-container space-after="13pt">
+					<fo:block font-weight="bold">{{ "report.contract.teacher" | translate }}: <fo:inline font-weight="normal">{{ content.contract.teacher | name}}</fo:inline></fo:block>
+				</fo:block-container>
+			</fo:block-container>
+			<fo:block id="end"/>
+		</fo:flow>
+	</fo:page-sequence>
+</fo:root>

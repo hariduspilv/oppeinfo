@@ -12,6 +12,7 @@ public class CurriculumVersionAutocompleteCommand extends SearchCommand {
     private Long curriculumId;
     private Boolean hasGroup;
     private String studyForm;
+    private Boolean checkStudentGroupStudyForm;
 
     public Boolean getHigher() {
         return higher;
@@ -75,6 +76,14 @@ public class CurriculumVersionAutocompleteCommand extends SearchCommand {
 
     public void setStudyForm(String studyForm) {
         this.studyForm = studyForm;
+    }
+
+    public Boolean getCheckStudentGroupStudyForm() {
+        return checkStudentGroupStudyForm;
+    }
+
+    public void setCheckStudentGroupStudyForm(Boolean checkStudentGroupStudyForm) {
+        this.checkStudentGroupStudyForm = checkStudentGroupStudyForm;
     }
     
 }

@@ -33,7 +33,6 @@ public class StudentForm extends VersionedCommand {
     @ClassifierRestriction(MainClassCode.OPPEASTE)
     private String previousStudyLevel;
     private String studyCompany;
-    private String boardingSchool;
     private String previousSchoolName;
     private LocalDate previousSchoolEndDate;
     @ClassifierRestriction(MainClassCode.YHISELAMU)
@@ -110,14 +109,6 @@ public class StudentForm extends VersionedCommand {
 
     public void setStudyCompany(String studyCompany) {
         this.studyCompany = studyCompany;
-    }
-
-    public String getBoardingSchool() {
-        return boardingSchool;
-    }
-
-    public void setBoardingSchool(String boardingSchool) {
-        this.boardingSchool = boardingSchool;
     }
 
     public String getPreviousSchoolName() {

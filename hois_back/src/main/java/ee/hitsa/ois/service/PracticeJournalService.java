@@ -116,7 +116,7 @@ public class PracticeJournalService {
             + "(select max(pje.inserted) from practice_journal_entry pje where pje.practice_journal_id = pj.id) as student_last_entry_date, "
             + "cvo.id as cvo_id, cv.code as cv_code, cm.name_et as cm_name_et, mcl.name_et as mcl_name_et, cm.name_en as cm_name_en, mcl.name_en as mcl_name_en, "
             + "cvot.id as cvot_id, cvot.name_et as cvot_name_et, length(trim(coalesce(pj.supervisor_opinion, ''))) > 0 as has_supervisor_opinion, "
-            + "subject.id as subjectId, subject.name_et as subject_name_et, subject.name_en as subject_name_en";
+            + "subject.id as subjectId, subject.name_et as subject_name_et, subject.name_en as subject_name_en, student.status_code as student_status";
     
     private static final String GROUP_BY = "pj.id, pj.start_date, pj.end_date, pj.practice_place, pj.status_code, "
             + "student.id, student_person.firstname, student_person.lastname, student_group.code, "
@@ -157,8 +157,8 @@ public class PracticeJournalService {
             Boolean hasSupervisorOpinion = resultAsBoolean(r, 23);
             dto.setCanStudentAddEntries(Boolean.valueOf(PracticeJournalUserRights.canStudentAddEntries(dto.getStatus(),
                     dto.getEndDate(), hasSupervisorOpinion)));
-
-            dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate())));
+            String studentStatus = resultAsString(r, 27);
+            dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate()) && PracticeJournalUserRights.isActive(studentStatus)));
             dto.setCanConfirm(Boolean.valueOf(PracticeJournalUserRights.canConfirm(user, dto.getEndDate())));
 
             String studentName = PersonUtil.fullname(resultAsString(r, 6), resultAsString(r, 7));
@@ -173,7 +173,7 @@ public class PracticeJournalService {
 
             dto.setStudentLastEntryDate(resultAsLocalDateTime(r, 14));
             
-            dto.setCanAddEntries(Boolean.valueOf(PracticeJournalUserRights.canAddEntries(user, dto)));
+            dto.setCanAddEntries(Boolean.valueOf(PracticeJournalUserRights.canAddEntries(user, dto) && PracticeJournalUserRights.isActive(studentStatus)));
 
             dto.setModuleSubjects(moduleSubjects.get(dto.getId()));
             return dto;
@@ -258,13 +258,14 @@ public class PracticeJournalService {
                 dto.setStudentPracticeEvalCriteria(setEvalValues(StreamUtil.toMappedList(PracticeEvaluationCriteriaDto::of,practiceJournal.getPracticeEvaluation().getCriteria()), practiceJournal));
             }
         }
+        dto.setCanAddEntries(Boolean.valueOf(PracticeJournalUserRights.isActive(dto.getStudentStatus())));
         return dto;
     }
 
     public PracticeJournalDto get(HoisUserDetails user, PracticeJournal practiceJournal) {
         PracticeJournalDto dto = get(practiceJournal);
-        dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate())));
-        dto.setCanConfirm(Boolean.valueOf(PracticeJournalUserRights.canConfirm(user, dto.getEndDate())));
+        dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate()) && PracticeJournalUserRights.isActive(dto.getStudentStatus())));
+        dto.setCanConfirm(Boolean.valueOf(PracticeJournalUserRights.canConfirm(user, dto.getEndDate()) && PracticeJournalUserRights.isActive(dto.getStudentStatus())));
         //PracticeJournal deletion control
         if (practiceJournal.getContract() != null) {
             dto.setCanDelete(Boolean.valueOf(PracticeJournalUserRights.canDelete(user, dto.getEndDate()) 
@@ -274,7 +275,7 @@ public class PracticeJournalService {
         } else {
             dto.setCanDelete(Boolean.valueOf(PracticeJournalUserRights.canDelete(user, dto.getEndDate())));
         }
-        dto.setCanAddEntries(Boolean.valueOf(PracticeJournalUserRights.canAddEntries(user, dto)));
+        dto.setCanAddEntries(Boolean.valueOf(PracticeJournalUserRights.canAddEntries(user, dto) && PracticeJournalUserRights.isActive(dto.getStudentStatus())));
         return dto;
     }
 
@@ -540,7 +541,7 @@ public class PracticeJournalService {
     }
 
     public PracticeJournal findByContractId(Long contractId) {
-        List<PracticeJournal> result = em.createQuery("select pj from PracticeJournal pj where pj.contract.id = ?", PracticeJournal.class)
+        List<PracticeJournal> result = em.createQuery("select pj from PracticeJournal pj where pj.contract.id = ?1", PracticeJournal.class)
                 .setParameter(1, contractId)
                 .setMaxResults(1).getResultList();
         return result.isEmpty() ? null : result.get(0);

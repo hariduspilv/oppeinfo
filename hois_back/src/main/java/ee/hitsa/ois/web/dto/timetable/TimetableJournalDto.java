@@ -3,13 +3,11 @@ package ee.hitsa.ois.web.dto.timetable;
 import java.util.ArrayList;
 import java.util.List;
 
-import ee.hitsa.ois.web.dto.AutocompleteResult;
-
 public class TimetableJournalDto {
     private Long id;
     private String name;
     private Long room;
-    private List<AutocompleteResult> teachers = new ArrayList<>();
+    private List<TimetableJournalTeacherDto> teachers = new ArrayList<>();
 
     public TimetableJournalDto(Long id, String name) {
         this.id = id;
@@ -40,11 +38,11 @@ public class TimetableJournalDto {
         this.room = room;
     }
 
-    public List<AutocompleteResult> getTeachers() {
+    public List<TimetableJournalTeacherDto> getTeachers() {
         return teachers;
     }
 
-    public void setTeachers(List<AutocompleteResult> teachers) {
+    public void setTeachers(List<TimetableJournalTeacherDto> teachers) {
         this.teachers = teachers;
     }
 

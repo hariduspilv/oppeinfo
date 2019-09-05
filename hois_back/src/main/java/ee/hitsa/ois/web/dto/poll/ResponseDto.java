@@ -13,6 +13,7 @@ public class ResponseDto {
     private LocalDate validThru;
     private String type;
     private AutocompleteResult student;
+    private Boolean isThemePageable;
     
     public LocalDate getValidFrom() {
         return validFrom;
@@ -55,5 +56,11 @@ public class ResponseDto {
     }
     public void setStatus(String status) {
         this.status = status;
+    }
+    public Boolean getIsThemePageable() {
+        return isThemePageable;
+    }
+    public void setIsThemePageable(Boolean isThemePageable) {
+        this.isThemePageable = isThemePageable;
     }
 }

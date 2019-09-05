@@ -8,6 +8,8 @@ import java.time.temporal.ChronoUnit;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import org.apache.commons.lang3.StringUtils;
+
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
 import ee.hitsa.ois.enums.ScholarshipType;
@@ -36,6 +38,10 @@ public abstract class DateUtils {
 
     public static LocalDateTime parseDateTime(String value) {
         return LocalDateTime.parse(value, DATE_TIME_FORMATTER);
+    }
+    
+    public static LocalDate parseDate(String value) {
+        return StringUtils.isNotBlank(value) && !"-".equals(value) ? LocalDate.parse(value, DATE_FORMATTER) : null;
     }
 
     public static LocalDateTime lastMomentOfDay(LocalDate date) {

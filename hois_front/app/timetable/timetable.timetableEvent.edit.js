@@ -6,6 +6,30 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
     var baseUrl = '/timetableevents';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
+    var templateUrl = $route.current.loadedTemplateUrl;
+
+    function afterNow(time) {
+      return new Date(time) > new Date();
+    }
+
+    function allowedToEdit(event) {
+      if ($scope.auth.isAdmin()) {
+        return true;
+      }
+
+      if ($scope.auth.isTeacher()) {
+        if (!event.teachers) {
+          return false;
+        }
+
+        for (var i = 0; i < event.teachers.length; i++) {
+          if (event.teachers[i].teacher.id === $scope.auth.teacher) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
 
     function afterLoad(result) {
       result.startTime = new Date(result.startTime);
@@ -17,7 +41,8 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope',
       $scope.timetableEvent = Endpoint.get({
         id: id
       }, function(response) {
-        if (response.canEdit === false) {
+        if (!(response.canEdit && afterNow(response.startTime) && allowedToEdit(response)) && 
+          templateUrl === 'timetable/timetable.timetableEvent.edit.html') {
           message.error("main.messages.error.nopermission");
           $scope.back("#/");
         }

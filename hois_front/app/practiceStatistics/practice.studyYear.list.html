@@ -1,4 +1,5 @@
-<md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
+<md-content>
+  <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak hois-navbar-overflowed>
     <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/student/statistics" name="practice.students">
         {{'practice.student.statistics' | translate}}</md-nav-item>
     <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/contract/statistics{{::contractParam}}" name="practice.contracts">
@@ -6,6 +7,7 @@
     <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/studyYear/statistics{{::studyYearParam}}" name="practice.studyYear">
       {{'practice.studyYear.statistics' | translate}}</md-nav-item>
   </md-nav-bar>
+</md-content>  
   <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
     <div flex>
       <fieldset ng-if="auth.isAdmin()">

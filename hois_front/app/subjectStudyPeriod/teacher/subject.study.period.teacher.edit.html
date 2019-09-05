@@ -42,7 +42,7 @@
                     </tr>
                     </thead>
                     <tbody ng-repeat="subject in record.subjects">
-                        <tr>
+                        <tr class="bold-top-line">
                             <td class="bold">
                                 <span>{{currentLanguageNameField(subject)}}</span>
                             </td>
@@ -83,13 +83,13 @@
                                 <div ng-class="{'subject-study-period-period-total': ssp.capacityDiff}">{{capacitiesUtil.capacitiesSumBySsp(ssp)}}</div>
                             </td>
                         </tr>
-                        <tr>
+                        <tr class="bold">
                             <td>{{'subjectStudyPeriod.overall' | translate}}</td>
                             <td ng-repeat="type in capacityTypes">{{capacitiesUtil.capacitiesSumBySubjectAndType(subject.id, type.code, teacher.id)}}</td>
                             <td>{{capacitiesUtil.capacitiesSumBySubject(subject.id, teacher.id)}}</td>
                         </tr>
                     </tbody>
-                    <tr class="bold">
+                    <tr class="bold bold-top-line" md-colors="{background: 'background-200'}">
                         <td>{{'subjectStudyPeriod.overall' | translate | uppercase}}</td>
                         <td ng-repeat="type in capacityTypes">{{capacitiesUtil.capacitiesSumByType(type.code, teacher.id)}}</td>
                         <td>{{capacitiesUtil.capacitiesSumOverall(teacher.id)}}</td>
@@ -105,3 +105,14 @@
         </div>
     </form>
 </div>
+
+<style>
+    tr.bold-top-line,
+    tr.bold-top-line td {
+        border-top: #525252 2px solid !important;
+    }
+    .subject-study-period td,
+    .subject-study-period th {
+        border-bottom: none !important;
+    }
+</style>

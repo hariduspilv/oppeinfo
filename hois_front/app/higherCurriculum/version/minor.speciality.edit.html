@@ -32,14 +32,25 @@
         <fieldset>
           <legend md-colors="{color: 'primary-800'}" ng-class="{invalid: minorSpecialityForm.$submitted && data.subjects.length == 0}" class="md-title-small">{{'curriculum.version.subjects' | translate}}&nbsp;*</legend>
           <div layout="row">
-            <md-input-container flex>
-              <label>{{'curriculum.version.subjectsName' | translate}}</label>
-              <md-select ng-model="data.selectedSubject" ng-change="addSubject()">
-                <md-option ng-repeat="option in subjects | filter: subjectNotAdded | orderBy: 'code'" ng-value="option">
-                  {{option.code}} - {{currentLanguageNameField(option)}}
-                </md-option>
-              </md-select>
-            </md-input-container>
+            <md-autocomplete
+              name="selectedSubject"
+              md-selected-item="data.selectedSubject"
+              md-search-text="subjectSearchText"
+              md-items="subject in searchSubjects(subjectSearchText)"
+              md-item-text="currentLanguageNameField(subject)"
+              md-selected-item-change="addSubject()"
+              md-min-length="1"
+              md-floating-label="{{'curriculum.version.subjectsName' | translate}}"
+              md-no-cache
+              class="small-margin"
+              flex>
+              <md-item-template>
+                  <span md-highlight-text="subjectSearchText" md-highlight-flags="^i">{{subject.code}} - {{currentLanguageNameField(subject)}}</span>
+              </md-item-template>
+              <md-not-found>
+                  {{'main.messages.error.notFound' | translate}}
+              </md-not-found>
+            </md-autocomplete>
           </div>
           <md-table-container>
             <table md-table class="secondary-table nowrap-first" ng-show="data.subjects.length > 0">

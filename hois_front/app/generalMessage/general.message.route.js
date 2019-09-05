@@ -1,6 +1,15 @@
 'use strict';
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
+
+  function canEdit(Session, roles) {
+    return roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_YLDTEADE) || Session.roleCode === 'ROLL_P';
+  }
+
+  function canView(Session, roles) {
+    return roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_YLDTEADE) || Session.roleCode === 'ROLL_P';
+  }
+
   $routeProvider
     .when('/generalmessages', {
       templateUrl: 'generalMessage/general.message.list.html',
@@ -11,7 +20,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_YLDTEADE]
+        authorizedRoles: canView
       }
     })
     .when('/generalmessages/new', {
@@ -23,7 +32,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_YLDTEADE]
+        authorizedRoles: canEdit
       }
     })
     .when('/generalmessages/:id/edit', {
@@ -35,7 +44,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_YLDTEADE]
+        authorizedRoles: canEdit
       }
     })
     .when('/generalmessages/:id/view', {
@@ -47,7 +56,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_YLDTEADE]
+        authorizedRoles: canView
       }
     });
 }]);

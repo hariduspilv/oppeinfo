@@ -53,6 +53,12 @@ function ($scope, $route, QueryUtils, ArrayUtils, DataUtils, USER_ROLES, AuthSer
         }
     });
 
+    $scope.searchCurriculums = function (text) {
+        return DataUtils.filterArrayByText($scope.curricula, text, function (obj, regex) {
+            return $scope.filterCurriculums(obj) && regex.test(obj.display.toUpperCase());
+        });
+    };
+
     $scope.$watch('criteria.curriculum', function() {
         if ($scope.criteria.curriculum && $scope.criteria.studentGroup) {
             var studentGroup = $scope.studentGroups.find(function (it) { return it.id === $scope.criteria.studentGroup; });
@@ -62,7 +68,11 @@ function ($scope, $route, QueryUtils, ArrayUtils, DataUtils, USER_ROLES, AuthSer
         }
     });
 
-    $scope.curricula = QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/curricula').query();
+    $scope.curricula = QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/curricula').query({}, function(result) {
+        result.forEach(function (cur) {
+            cur.display = cur.code + " - " + $scope.currentLanguageNameField(cur);
+        });
+    });
 
     QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list').query(function(result) {
         $scope.studentGroups = result.map(function(el){

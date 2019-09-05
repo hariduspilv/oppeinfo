@@ -29,6 +29,7 @@ import com.mitchellbosecke.pebble.template.PebbleTemplate;
 
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.exception.HoisException;
+import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.util.TranslateUtil;
 
 @Service
@@ -76,6 +77,7 @@ public class TemplateService {
             filters.put("translate", new TranslateFilter());
             filters.put("hoisDate", new DateFilter());
             filters.put("hoisDateTime", new DateTimeFilter());
+            filters.put("name", new NameFilter());
             return filters;
         }
     }
@@ -96,6 +98,25 @@ public class TemplateService {
                 lang = (Language) language;
             }
             return TranslateUtil.translate((String)input, lang);
+        }
+    }
+    
+    static class NameFilter implements Filter {
+
+        @Override
+        public List<String> getArgumentNames() {
+            return null;
+        }
+
+        @Override
+        public Object apply(Object input, Map<String, Object> args) {
+            Language lang = Language.ET;
+            EvaluationContext context = (EvaluationContext) args.get("_context");
+            Object language = context.getScopeChain().get("lang");
+            if (language instanceof Language) {
+                lang = (Language) language;
+            }
+            return TranslateUtil.name((Translatable) input, lang);
         }
     }
 

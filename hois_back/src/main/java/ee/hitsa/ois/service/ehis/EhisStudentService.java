@@ -1,24 +1,43 @@
 package ee.hitsa.ois.service.ehis;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.lang.invoke.MethodHandles;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
@@ -34,50 +53,241 @@ import ee.hitsa.ois.domain.student.StudentCurriculumCompletion;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.DocumentStatus;
+import ee.hitsa.ois.enums.EhisStudentDataType;
 import ee.hitsa.ois.enums.FormStatus;
 import ee.hitsa.ois.enums.FormType;
+import ee.hitsa.ois.enums.FutureStatus;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.commandobject.ehis.EhisStudentForm;
 import ee.hitsa.ois.web.dto.EhisStudentReport;
+import ee.hitsa.ois.web.dto.FutureStatusResponse;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
+import ee.hois.xroad.ehis.generated.KhlKursuseMuutus;
 import ee.hois.xroad.ehis.generated.KhlMuudAndmedMuutmine;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
 import ee.hois.xroad.ehis.generated.KhlOppekavaTaitmine;
 import ee.hois.xroad.ehis.generated.KhlVOTA;
 import ee.hois.xroad.ehis.generated.KhlVOTAArr;
 
+/**
+ * 
+ *
+ *  @since 30.07.2019
+ *  
+ */
 @Transactional
 @Service
 public class EhisStudentService extends EhisService {
 
     private static final BigInteger FORMAL_LEARNING_TYPE = BigInteger.ONE;
     private static final BigInteger INFORMAL_LEARNING_TYPE = BigInteger.valueOf(2);
+    
+    /**
+     *  The first key - school id
+     *  The second key - request hash
+     *  Value - request object
+     *  
+     *  Values removed when:
+     *  - Future is done and its status checked in {@link #exportStudentsStatus(HoisUserDetails, String)}
+     */
+    private static final Map<Long, Map<String, ExportStudentsRequest>> EXPORT_STUDENTS_REQUESTS = new ConcurrentHashMap<>();
+    private static final long RESULT_EXPIRATION_MINUTES = 60;
+    
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Autowired
     private EhisDirectiveStudentService ehisDirectiveStudentService;
-
-    public List<? extends EhisStudentReport> exportStudents(Long schoolId, EhisStudentForm ehisStudentForm) {
+    
+    /**
+     * CancellationException in case if was canceled with .cancel(false)
+     * InterruptedException in case if was canceled with .cancel(true)
+     * 
+     * TODO: The last request can be not included because future's `done` true once interrupted.
+     * 
+     * @param hoisUser
+     * @param key
+     * @return
+     */
+    public FutureStatusResponse exportStudentsStatus(HoisUserDetails hoisUser, String key) {
+        FutureStatusResponse response = new FutureStatusResponse();
+        if (EXPORT_STUDENTS_REQUESTS.containsKey(hoisUser.getSchoolId()) && EXPORT_STUDENTS_REQUESTS.get(hoisUser.getSchoolId()).containsKey(key)) {
+            ExportStudentsRequest future = EXPORT_STUDENTS_REQUESTS.get(hoisUser.getSchoolId()).get(key);
+            response.setProgress(Float.valueOf(future.getProgress()));
+            if (future.isDone()) {
+                EXPORT_STUDENTS_REQUESTS.get(hoisUser.getSchoolId()).remove(key);
+                try {
+                    response.setResult(future.get());
+                    response.setHasError(Boolean.FALSE);
+                    response.setStatus(FutureStatus.DONE);
+                } catch (ExecutionException ex) {
+                    LOG.info("Error during executing: " + ex.getMessage());
+                    response.setHasError(Boolean.TRUE);
+                    response.setError(ex.getMessage());
+                    response.setStatus(FutureStatus.EXCEPTION);
+                } catch (CancellationException | InterruptedException ex) {
+                    // TODO: The last request can be not included because its `done` is true once interrupted.
+                    response.setHasError(Boolean.TRUE);
+                    response.setError(ex.getMessage());
+                    response.setCancelledBy(future.getCancelledBy());
+                    if (ex instanceof CancellationException) {
+                        response.setStatus(FutureStatus.CANCELLED);
+                    } else {
+                        response.setStatus(FutureStatus.INTERRUPTED);
+                    }
+                    response.setResult(future.getWrappedResult());
+                }
+                response.setStarted(future.getStarted());
+                response.setEnded(future.getEnded());
+            } else {
+                response.setHasError(Boolean.FALSE);
+                response.setStatus(FutureStatus.IN_PROGRESS);
+            }
+        } else {
+            response.setHasError(Boolean.TRUE);
+            response.setStatus(FutureStatus.NOT_FOUND);
+        }
+        return response;
+    }
+    
+    public ExportStudentsRequest findOverlappedActiveExportStudentsRequest(HoisUserDetails hoisUser, EhisStudentForm ehisStudentForm, ExportStudentsRequest origin) {
+        if (EXPORT_STUDENTS_REQUESTS.containsKey(hoisUser.getSchoolId())) {
+            return EXPORT_STUDENTS_REQUESTS.get(hoisUser.getSchoolId()).values().stream().filter(request -> {
+                if (request.isDone() || request.equals(origin) || !request.getType().equals(ehisStudentForm.getDataType())) {
+                    return false;
+                }
+                return ((request.getFrom() == null && ehisStudentForm.getThru() == null) || !request.getFrom().isAfter(ehisStudentForm.getThru()))
+                        && ((request.getThru() == null && ehisStudentForm.getFrom() == null ) || !request.getThru().isBefore(ehisStudentForm.getFrom()));
+            }).findAny().orElse(null);
+        }
+        
+        return null;
+    }
+    
+    public ExportStudentsRequest findOverlappedActiveExportStudentsRequest(HoisUserDetails hoisUser, EhisStudentForm ehisStudentForm) {
+        return findOverlappedActiveExportStudentsRequest(hoisUser, ehisStudentForm, null);
+    }
+    
+    private static void removeExpiredExportStudentsResults() {
+        LocalDateTime expirationLimit = LocalDateTime.now().minusMinutes(RESULT_EXPIRATION_MINUTES);
+        EXPORT_STUDENTS_REQUESTS.values().forEach(map -> {
+            map.values().removeIf(request -> {
+                if (request.isDone()) {
+                    LocalDateTime ended = request.getEnded(); // synchronized method
+                    if (ended != null) {
+                        return expirationLimit.isAfter(ended);
+                    }
+                    return false;
+                }
+                return false;
+            });
+        });
+    }
+    
+    Queue<? extends EhisStudentReport> exportStudents(Long schoolId, EhisStudentForm ehisStudentForm,
+            AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
         switch (ehisStudentForm.getDataType()) {
-        case CURRICULA_FULFILMENT: return curriculumFulfillment(schoolId);
-        case DORMITORY: return dormitoryChanges(schoolId, ehisStudentForm);
-        case FOREIGN_STUDY: return foreignStudy(schoolId, ehisStudentForm);
-        case GRADUATION: return graduation(schoolId, ehisStudentForm);
-        case VOTA: return vota(schoolId, ehisStudentForm);
+        case COURSE_CHANGE: return courseChange(schoolId, ehisStudentForm, wrapper, maxRequests);
+        case CURRICULA_FULFILMENT: return curriculumFulfillment(schoolId, wrapper, maxRequests);
+        case DORMITORY: return dormitoryChanges(schoolId, ehisStudentForm, wrapper, maxRequests);
+        case FOREIGN_STUDY: return foreignStudy(schoolId, ehisStudentForm, wrapper, maxRequests);
+        case GRADUATION: return graduation(schoolId, ehisStudentForm, wrapper, maxRequests);
+        case VOTA: return vota(schoolId, ehisStudentForm, wrapper, maxRequests);
         default: throw new AssertionFailedException("Unknown datatype");
         }
     }
 
-    private List<EhisStudentReport.Dormitory> dormitoryChanges(Long schoolId, EhisStudentForm ehisStudentForm) {
-        List<EhisStudentReport.Dormitory> dormitoryChanges = new ArrayList<>();
+    /**
+     * Asynchronous method. Runs in different thread.
+     * Has to return {@link Future}.
+     * 
+     * 1. Creates a future object.
+     * 2. Puts into map to be able to get it. Be careful, if user checks (from frontend)
+     * it right after this request (it is async, so at this moment user might receive empty answer)
+     * then it might say that no request found. So better to wait ~1 second and after check if there is a request.
+     * 3. Checks if there is any overlapped and then cancels it.
+     * 4. Runs request.
+     * 5. Removes old done requests.
+     * 
+     * @param hoisUser user
+     * @param ehisStudentForm form
+     * @param requestHash request unique hash.
+     * @return Future
+     */
+    @Async
+    public Future<Queue<? extends EhisStudentReport>> exportStudents(HoisUserDetails hoisUser, EhisStudentForm ehisStudentForm, String requestHash) {
+        Long schoolId = hoisUser.getSchoolId();
+        ExportStudentsRequest request = new ExportStudentsRequest(new WrapperCallable<Queue<? extends EhisStudentReport>>() {
+            
+            private AtomicInteger max = new AtomicInteger();
+            
+            @Override
+            public Queue<? extends EhisStudentReport> wrapperCall() {
+                return exportStudents(schoolId, ehisStudentForm, getWrapper(), max);
+            }
 
+            @Override
+            public float getProgress() {
+                if (max.get() == 0) {
+                    return 0;
+                }
+                return getWrapper().get().size() / (float) max.get();
+            }
+            
+        }, requestHash, hoisUser, ehisStudentForm.getFrom(), ehisStudentForm.getThru(), ehisStudentForm.getDataType());
+
+        if (!EXPORT_STUDENTS_REQUESTS.containsKey(schoolId)) {
+            EXPORT_STUDENTS_REQUESTS.put(schoolId, new ConcurrentHashMap<>());
+        }
+        
+        EXPORT_STUDENTS_REQUESTS.get(schoolId).put(requestHash, request);
+        
+        ExportStudentsRequest overlappedRequest = findOverlappedActiveExportStudentsRequest(hoisUser, ehisStudentForm, request);
+        
+        if (overlappedRequest != null) {
+            if (!overlappedRequest.isDone()) {
+                overlappedRequest.cancel(hoisUser, true);
+            }
+        }
+        
+        request.run();
+        
+        removeExpiredExportStudentsResults(); // Async method runs in different thread so it will not cause problems with response time.
+        return request;
+    }
+
+    private Queue<EhisStudentReport> courseChange(Long schoolId, EhisStudentForm ehisStudentForm, AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
+        ConcurrentLinkedQueue<EhisStudentReport> reports = new ConcurrentLinkedQueue<>();
+        wrapper.set(reports);
+        Map<Student, ChangedCourse> students = findStudentsWithChangedCourse(schoolId, ehisStudentForm);
+        maxRequests.set(students.size());
+        students.entrySet().stream().filter(entry -> {
+            if (!Thread.interrupted()) { // Break in case if operation has been cancelled
+                WsEhisStudentLog log = courseChange(entry.getKey(), entry.getValue().getChanged(), entry.getValue().getNewCourse());
+                reports.add(new EhisStudentReport.Course(entry.getKey(), log, entry.getValue().getNewCourse(), entry.getValue().getChanged()));
+                return false;
+            }
+            return true;
+        }).findAny();
+        return reports;
+    }
+
+    private Queue<EhisStudentReport.Dormitory> dormitoryChanges(Long schoolId, EhisStudentForm ehisStudentForm, AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
+        Queue<EhisStudentReport.Dormitory> dormitoryChanges = new ConcurrentLinkedQueue<>(); 
+        wrapper.set(dormitoryChanges);
         Map<Student, ChangedDormitory> changes = findStudentsWithChangedDormitory(schoolId, ehisStudentForm);
+        maxRequests.set(changes.size());
         for (Student student : changes.keySet()) {
+            if (Thread.interrupted()) { // Break in case if operation has been cancelled
+                break;
+            }
             ChangedDormitory studentChange = changes.get(student);
 
             WsEhisStudentLog log = dormitoryChange(student, studentChange.getCode(), studentChange.getDate());
@@ -105,9 +315,12 @@ public class EhisStudentService extends EhisService {
         }
     }
 
-    private List<EhisStudentReport.ApelApplication> vota(Long schoolId, EhisStudentForm ehisStudentForm) {
-        List<EhisStudentReport.ApelApplication> apelApplications = new ArrayList<>();
-        for(ApelApplication app : findApelApplications(schoolId, ehisStudentForm)) {
+    private Queue<EhisStudentReport.ApelApplication> vota(Long schoolId, EhisStudentForm ehisStudentForm, AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
+        Queue<EhisStudentReport.ApelApplication> apelApplications = new ConcurrentLinkedQueue<>();
+        wrapper.set(apelApplications);
+        List<ApelApplication> applications = findApelApplications(schoolId, ehisStudentForm);
+        maxRequests.set(applications.size());
+        for(ApelApplication app : applications) {
             WsEhisStudentLog log;
             Student student = app.getStudent();
             List<EhisStudentReport.ApelApplication.StudyRecord> reportRecords = new ArrayList<>();
@@ -184,8 +397,9 @@ public class EhisStudentService extends EhisService {
         return apelApplications;
     }
 
-    private List<EhisStudentReport.Graduation> graduation(Long schoolId, EhisStudentForm ehisStudentForm) {
-        List<EhisStudentReport.Graduation> graduations = new ArrayList<>();
+    private Queue<EhisStudentReport.Graduation> graduation(Long schoolId, EhisStudentForm ehisStudentForm, AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
+        Queue<EhisStudentReport.Graduation> graduations = new ConcurrentLinkedQueue<>();
+        wrapper.set(graduations);
         Query extraQuery = em.createNativeQuery("select f.full_code"
                 + " from form f"
                 + " join diploma_supplement_form dsf on dsf.form_id = f.id"
@@ -227,7 +441,11 @@ public class EhisStudentService extends EhisService {
                 .setParameter(8, Arrays.asList(FormType.LOPUBLANKETT_HIN.name(), FormType.LOPUBLANKETT_R.name()))
                 .setParameter(9, FormType.LOPUBLANKETT_DS.name())
                 .getResultList();
+        maxRequests.set(result.size());
         for (Object r : result) {
+            if (Thread.interrupted()) { // Break in case if operation has been cancelled
+                break;
+            }
             DirectiveStudent directiveStudent = em.getReference(DirectiveStudent.class, resultAsLong(r, 0));
             String docNr = resultAsString(r, 1);
             String academicNr = resultAsString(r, 2);
@@ -246,9 +464,15 @@ public class EhisStudentService extends EhisService {
         return graduations;
     }
 
-    private List<EhisStudentReport.ForeignStudy> foreignStudy(Long schoolId, EhisStudentForm ehisStudentForm) {
-        List<EhisStudentReport.ForeignStudy> foreignStudies = new ArrayList<>();
-        for (DirectiveStudent directiveStudent : findForeignStudents(schoolId, ehisStudentForm)) {
+    private Queue<EhisStudentReport.ForeignStudy> foreignStudy(Long schoolId, EhisStudentForm ehisStudentForm, AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
+        Queue<EhisStudentReport.ForeignStudy> foreignStudies = new ConcurrentLinkedQueue<>();
+        wrapper.set(foreignStudies);
+        List<DirectiveStudent> students = findForeignStudents(schoolId, ehisStudentForm);
+        maxRequests.set(students.size());
+        for (DirectiveStudent directiveStudent : students) {
+            if (Thread.interrupted()) { // Break in case if operation has been cancelled
+                break;
+            }
             BigDecimal points = BigDecimal.ZERO; // TODO get real value
             Integer nominalStudyExtension = Integer.valueOf(getNominalStudyExtension(directiveStudent));
             WsEhisStudentLog log = ehisDirectiveStudentService.foreignStudy(directiveStudent, points, nominalStudyExtension);
@@ -269,9 +493,15 @@ public class EhisStudentService extends EhisService {
         return 0;
     }
 
-    private List<EhisStudentReport.CurriculaFulfilment> curriculumFulfillment(Long schoolId) {
-        List<EhisStudentReport.CurriculaFulfilment> fulfilment = new ArrayList<>();
-        for (Student student : findStudents(schoolId)) {
+    private Queue<EhisStudentReport.CurriculaFulfilment> curriculumFulfillment(Long schoolId, AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
+        Queue<EhisStudentReport.CurriculaFulfilment> fulfilment = new ConcurrentLinkedQueue<>();
+        wrapper.set(fulfilment);
+        List<Student> students = findStudents(schoolId);
+        maxRequests.set(students.size());
+        for (Student student : students) {
+            if (Thread.interrupted()) { // Break in case if operation has been cancelled
+                break;
+            }
             StudentCurriculumCompletion completion = getStudentCurriculumCompletion(student);
             if (completion == null) {
                 continue;
@@ -322,6 +552,24 @@ public class EhisStudentService extends EhisService {
         }
     }
 
+    WsEhisStudentLog courseChange(Student student, LocalDate changed, Integer newCourse) {
+        try {
+            KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+
+            KhlKursuseMuutus khlKursuseMuutus = new KhlKursuseMuutus();
+            khlKursuseMuutus.setMuutusKp(date(changed));
+            khlKursuseMuutus.setUusKursus(BigInteger.valueOf(newCourse.intValue()));
+
+            KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+            khlKorgharidusMuuda.setKursuseMuutus(khlKursuseMuutus);
+            khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+
+            return makeRequest(student, khlOppeasutusList);
+        } catch (Exception e) {
+            return bindingException(student, e);
+        }
+    }
+    
     private WsEhisStudentLog makeRequest(Student student, KhlOppeasutusList khlOppeasutusList) {
         WsEhisStudentLog wsEhisStudentLog = new WsEhisStudentLog();
         wsEhisStudentLog.setSchool(student.getSchool());
@@ -334,6 +582,31 @@ public class EhisStudentService extends EhisService {
                 .setParameter(1, schoolId)
                 .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
                 .getResultList();
+    }
+
+    Map<Student, ChangedCourse> findStudentsWithChangedCourse(Long schoolId, EhisStudentForm ehisStudentForm) {
+        List<?> data = em.createNativeQuery("select s.id, sgyf.new_course, sgyf.changed "
+                + "from student_group_year_transfer sgyf "
+                + "join student_group sg on sg.id = sgyf.student_group_id "
+                + "join student s on s.student_group_id = sg.id "
+                + "where s.school_id = ?1 and s.status_code in ?2 and sgyf.changed >= ?3 and sgyf.changed <= ?4 "
+                + "order by sgyf.changed asc ")
+                .setParameter(1, schoolId)
+                .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
+                .setParameter(3, JpaQueryUtil.parameterAsTimestamp(DateUtils.firstMomentOfDay(ehisStudentForm.getFrom())))
+                .setParameter(4, JpaQueryUtil.parameterAsTimestamp(DateUtils.lastMomentOfDay(ehisStudentForm.getThru())))
+                .getResultList();
+        
+        Map<Long, ChangedCourse> mappedData = data.stream().collect(Collectors.toMap(
+                    r -> resultAsLong(r, 0),
+                    r -> new ChangedCourse(resultAsInteger(r, 1), resultAsLocalDate(r, 2)),
+                    (o, n) -> o));
+
+        if (!data.isEmpty()) {
+            return em.createQuery("select s from Student s where s.id in ?1", Student.class)
+                    .setParameter(1, mappedData.keySet()).getResultList().stream().collect(Collectors.toMap(s -> s, s -> mappedData.get(s.getId()), (o, n) -> o));
+        }
+        return Collections.emptyMap();
     }
     
     private Map<Student, ChangedDormitory> findStudentsWithChangedDormitory(Long schoolId, EhisStudentForm criteria) {
@@ -409,5 +682,168 @@ public class EhisStudentService extends EhisService {
             return date;
         }
 
+    }
+    
+    public static class ChangedCourse {
+        
+        private final Integer newCourse;
+        private final LocalDate changed;
+        
+        public ChangedCourse(Integer newCourse, LocalDate changed) {
+            this.newCourse = newCourse;
+            this.changed = changed;
+        }
+
+        public ChangedCourse(Integer newCourse, LocalDateTime changed) {
+            this(newCourse, changed.toLocalDate());
+        }
+
+        public Integer getNewCourse() {
+            return newCourse;
+        }
+
+        public LocalDate getChanged() {
+            return changed;
+        }
+    }
+    
+    /**
+     * Callable. Has a wrapper to be able to access in case of canceling or interrupting.
+     * Supports progress.
+     *
+     * @param <V>
+     */
+    public abstract class WrapperCallable<V> implements Callable<V> {
+        
+        private final AtomicReference<V> wrapper = new AtomicReference<>();
+        
+        public abstract V wrapperCall();
+        public abstract float getProgress();
+
+        @Override
+        public V call() throws Exception {
+            wrapper.set(wrapperCall());
+            return wrapper.get();
+        }
+
+        public AtomicReference<V> getWrapper() {
+            return wrapper;
+        }
+        
+    }
+    
+    /**
+     * Being a Future.
+     */
+    public static class ExportStudentsRequest extends FutureTask<Queue<? extends EhisStudentReport>> {
+        
+        /** Unique identificator */
+        private final String hash;
+        private final String user;
+        private final Long schoolId;
+        private final LocalDate from;
+        private final LocalDate thru;
+        private final EhisStudentDataType type;
+        
+        private LocalDateTime started;
+        private LocalDateTime ended;
+        
+        private String cancelledBy;
+        
+        /** Method reference for getting a wrapper */
+        private final Supplier<AtomicReference<Queue<? extends EhisStudentReport>>> wrapper;
+        /** Method reference for getting a progress */
+        private final Supplier<Float> progress;
+        
+        public ExportStudentsRequest(WrapperCallable<Queue<? extends EhisStudentReport>> callable, String hash,
+                HoisUserDetails user, LocalDate from, LocalDate thru, EhisStudentDataType type) {
+            super(callable);
+            wrapper = callable::getWrapper;
+            progress = callable::getProgress;
+            this.hash = hash;
+            this.user = user.getUsername();
+            this.schoolId = user.getSchoolId();
+            this.from = from;
+            this.thru = thru;
+            this.type = type;
+        }
+        
+        @Override
+        protected void done() {
+            ended = LocalDateTime.now();
+            super.done();
+        }
+
+        @Override
+        public void run() {
+            started = LocalDateTime.now();
+            super.run();
+        }
+        
+        /**
+         * Sets a name of user who interrupted thread.
+         * 
+         * @param hoisUser user who interrupted request.
+         * @param mayInterruptIfRunning
+         * @return
+         */
+        public synchronized boolean cancel(HoisUserDetails hoisUser, boolean mayInterruptIfRunning) {
+            cancelledBy = PersonUtil.stripIdcodeFromFullnameAndIdcode(hoisUser.getUsername());
+            return cancel(mayInterruptIfRunning);
+        }
+
+        public Queue<? extends EhisStudentReport> getWrappedResult() {
+            return wrapper.get().get();
+        }
+        
+        public float getProgress() {
+            return progress.get().floatValue();
+        }
+        
+        public String getRequestHash() {
+            return hash;
+        }
+
+        public String getUser() {
+            return user;
+        }
+
+        public Long getSchoolId() {
+            return schoolId;
+        }
+
+        public LocalDate getFrom() {
+            return from;
+        }
+
+        public LocalDate getThru() {
+            return thru;
+        }
+
+        public EhisStudentDataType getType() {
+            return type;
+        }
+
+        /**
+         * LocalDateTime is immutable. Thread safe
+         * 
+         * @return time when task started
+         */
+        public LocalDateTime getStarted() {
+            return started;
+        }
+
+        /**
+         * LocalDateTime is immutable. Thread safe
+         * 
+         * @return time when task ended
+         */
+        public LocalDateTime getEnded() {
+            return ended;
+        }
+
+        public synchronized String getCancelledBy() {
+            return cancelledBy;
+        }
     }
 }

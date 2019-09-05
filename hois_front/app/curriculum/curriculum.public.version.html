@@ -1,5 +1,5 @@
 <div layout-padding ng-cloak class="form-readonly">
-  <fieldset>
+  <fieldset layout="column">
     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.public.versionTitle' | translate}}</legend>
     <div layout="column">
       <div>&nbsp;</div>
@@ -52,6 +52,12 @@
         </tbody>
       </table>
     </md-table-container>
+    <div ng-if="!curriculum.higher" >&nbsp;</div>
+
+    <md-input-container flex>
+      <label>{{'public.url' | translate}}</label>
+      <hois-value value="publicUrl"></hois-value>
+    </md-input-container>
   </fieldset>
 
   <span ng-if="version.modules.length > 0">

@@ -31,6 +31,24 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
   $scope.addNewPerson = function (row) {
     dialogService.showDialog('practiceEnterprise/practice.enterprise.person.add.dialog.html', function (dialogScope) {
       dialogScope.auth = $scope.auth;
+
+      dialogScope.checkIdCode = function() {
+        var clean = true;
+        var ctrl1 = dialogScope.dialogForm.idcode;
+        var ctrl2 = dialogScope.dialogForm.country;
+        ctrl1.$setTouched();
+        ctrl2.$setTouched();
+        $scope.tabledata.content.forEach(function (person) {
+          if (person.idcode === dialogScope.enterprise.idcode && 
+            ((person.country ===  undefined  && (dialogScope.enterprise.country === undefined || dialogScope.enterprise.country === "")) ||
+            (person.country !== undefined && dialogScope.enterprise.country != undefined && person.country.code === dialogScope.enterprise.country))) {
+            clean = false;
+          }
+        });
+        ctrl1.$setValidity('idCodeDuplicate', clean);
+        ctrl2.$setValidity('idCodeDuplicate', clean);
+      };
+
       dialogScope.delete = function () {
         dialogService.confirmDialog({ prompt: 'enterprise.personsTab.deleteConfirm' }, function () {
           var PersonEndpoint = QueryUtils.endpoint('/practiceEnterprise/person/' + row.id);

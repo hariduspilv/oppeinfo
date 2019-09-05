@@ -16,6 +16,9 @@ angular.module('hitsaOis').controller('SchoolEditController', ['$scope', '$route
           $scope.school._ehisSchool = result;
         });
       }
+      if ($scope.schoolForm) {
+        $scope.schoolForm.$setPristine();
+      }
     }
 
     var baseUrl = '/school';

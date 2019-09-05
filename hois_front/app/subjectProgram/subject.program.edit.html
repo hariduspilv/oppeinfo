@@ -3,13 +3,13 @@
     <div layout="column" ng-cloak>
       <div flex class="form-readonly">
         <div flex layout="column" ng-if="subjectProgram.rejectInfo">
-          <md-input-container flex="100" flex-gt-xs="60" class="md-input-invalid">
+          <md-input-container flex="100" class="md-input-invalid">
             <label class="textInput">{{'subjectProgram.rejectInfo' | translate}}</label>
             <hois-value value="subjectProgram.rejectInfo"></hois-value>
           </md-input-container>
         </div>
         <div flex layout="column" layout-gt-xs="row">
-          <md-input-container flex="100" flex-gt-xs="60">
+          <md-input-container flex="100" flex-gt-xs="40">
             <label class="textInput">{{'subjectProgram.subjectName' | translate}}</label>
             <hois-value value="currentLanguageNameField(subject)"></hois-value>
           </md-input-container>
@@ -18,8 +18,12 @@
             <hois-value value="subject.code"></hois-value>
           </md-input-container>
           <md-input-container flex="100" flex-gt-xs="20">
-            <label class="textInput">{{'subject.credits' | translate}}</label>
-            <hois-value value="subject.credits"></hois-value>
+            <label class="textInput">{{'subjectProgram.creditsAndHours' | translate}}</label>
+            <hois-value value="subject.credits + '/' + (subject.credits * 26)"></hois-value>
+          </md-input-container>
+          <md-input-container flex="100" flex-gt-xs="20">
+            <label class="textInput">{{'subject.assessment' | translate}}</label>
+            <hois-classifier-value ng-model="subject.assessment" main-classifier-code="HINDAMISVIIS"></hois-classifier-value>
           </md-input-container>
         </div>
         <hois-collapsable class="hois-collapse2" expanded="false">
@@ -28,10 +32,6 @@
           </hois-collapsable-header>
           <div flex layout="column">
             <md-input-container flex style="margin-top: 0 !important">
-              <label class="textInput">{{'subject.assessment' | translate}}</label>
-              <hois-classifier-value ng-model="subject.assessment" main-classifier-code="HINDAMISVIIS"></hois-classifier-value>
-            </md-input-container>
-            <md-input-container flex>
               <label class="textInput">{{'subject.assessmentDescription' | translate}}</label>
               <hois-value value="subject.assessmentDescription"></hois-value>
             </md-input-container>
@@ -95,7 +95,6 @@
                   <h3>{{'subject.mandatoryPrerequisiteSubjects' | translate}}</h3>
                   <div layout="column" class="common-label" flex="95" ng-repeat="sub in subject.mandatoryPrerequisiteSubjects | orderBy: ['sub.' + currentLanguageNameField(), 'code']">
                     <div layout="row" flex layout-align="start center">
-                      <div flex="5">&nbsp;</div>
                       <div flex="50"><a ng-href="#/subject{{isPublic ? '/public' : ''}}/{{sub.id}}">{{currentLanguageNameField(sub)}}</a></div>
                     </div>
                   </div>
@@ -105,7 +104,6 @@
                   <h3>{{'subject.recommendedPrerequisiteSubjects' | translate}}</h3>
                   <div layout="column" class="common-label" flex="95" ng-repeat="sub in subject.recommendedPrerequisiteSubjects | orderBy: ['sub.' + currentLanguageNameField(), 'code']">
                     <div layout="row" flex layout-align="start center">
-                      <div flex="5">&nbsp;</div>
                       <div flex="50"><a ng-href="#/subject{{isPublic ? '/public' : ''}}/{{sub.id}}">{{currentLanguageNameField(sub)}}</a></div>
                     </div>
                   </div>
@@ -115,7 +113,6 @@
                   <h3>{{'subject.substituteSubjects' | translate}}</h3>
                   <div layout="column" class="common-label" flex="95" ng-repeat="sub in subject.substituteSubjects | orderBy: ['sub.' + currentLanguageNameField(), 'code']">
                     <div layout="row" flex layout-align="start center">
-                      <div flex="5">&nbsp;</div>
                       <div flex="50"><a ng-href="#/subject{{isPublic ? '/public' : ''}}/{{sub.id}}">{{currentLanguageNameField(sub)}}</a></div>
                     </div>
                   </div>
@@ -156,28 +153,16 @@
         </md-input-container>
         <div>&nbsp;</div>
       </div>
-      <md-input-container flex>
-        <label>{{'subjectProgram.independentStudy' | translate}}</label>
-        <textarea ng-model="subjectProgram.independentStudy" name="independentStudy" md-maxlength="20000" max-rows="10" ></textarea>
-      </md-input-container>
-      <md-input-container flex>
-        <label>{{'subjectProgram.assessmentDescription' | translate}}</label>
-        <textarea ng-model="subjectProgram.assessmentDescription" name="assessmentDescription" md-maxlength="20000" max-rows="10" ></textarea>
-      </md-input-container>
-      <md-input-container flex>
-        <label>{{'subjectProgram.studyLiterature' | translate}}</label>
-        <textarea ng-model="subjectProgram.studyLiterature" name="studyLiterature" md-maxlength="20000" max-rows="10" ></textarea>
-      </md-input-container>
-      <div>&nbsp;</div>
       <div flex class="study-content">
         <fieldset tabindex="1">
           <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subjectProgram.studyContent' | translate}}</legend>
           <div flex layout="row">
             <span flex="30" class="common-label"></span>
             <hois-classifier-radio layout="row" ng-model="subjectProgram.studyContentType" name="studyContentType" model-value-attr="code" main-classifier-code="OPPETOOSISU"
-            required class="md-primary"></hois-classifier-radio>
+            required class="md-primary" ng-change="studyContentTypeChange()"></hois-classifier-radio>
           </div>
-          <div>&nbsp;</div>
+          <p class="md-body-1" md-colors="{color: 'warn'}" ng-if="showWarningAboutType" style="margin: 0 4px;">{{'subjectProgram.messages.previousStudyContentBeingDeleted' | translate }}</p>
+          <div ng-if="!showWarningAboutType">&nbsp;</div>
           <div ng-show="subjectProgram.studyContentType === 'OPPETOOSISU_K'" layout="column">
             <md-table-container>
               <div layout="row" ng-repeat="sc in studyContentDt">
@@ -200,17 +185,25 @@
           </div>
           <div ng-show="subjectProgram.studyContentType === 'OPPETOOSISU_N'" layout="column">
             <md-table-container>
-              <div layout="row" ng-repeat="sc in studyContentWk">
-                <md-input-container flex="10">
-                  <label>{{'subjectProgram.week' | translate}}</label>
-                  <input type="number" ng-model="sc.weekNr" min="0" max="999" pattern="^\d+(\.\d{1})?$" ng-required="subjectProgram.studyContentType === 'OPPETOOSISU_N'"/>
-                </md-input-container>
-                <md-input-container flex>
-                  <label>{{'subjectProgram.description' | translate}}</label>
-                  <textarea ng-model="sc.studyInfo" md-maxlength="4000" max-rows="10" ng-required="subjectProgram.studyContentType === 'OPPETOOSISU_N'" ></textarea>
-                </md-input-container>
-                <div layout="row" layout-align="center center" style="margin-left: 10px;">
-                  <a class="remove" ng-click="removeFromArray(studyContentWk, sc)">&times;</a>
+              <div layout="column" ng-repeat="sc in studyContentWk">
+                <div layout="row">
+                  <md-input-container flex="10">
+                    <label>{{'subjectProgram.week' | translate}}</label>
+                    <input type="text" ng-model="sc.weekNr" name="week[{{$index}}]" md-maxlength="20"
+                      ng-required="subjectProgram.studyContentType === 'OPPETOOSISU_N'"/>
+                  </md-input-container>
+                  <md-input-container flex>
+                    <label>{{'subjectProgram.description' | translate}}</label>
+                    <textarea ng-model="sc.studyInfo" md-maxlength="4000" max-rows="10" ng-required="subjectProgram.studyContentType === 'OPPETOOSISU_N'" ></textarea>
+                  </md-input-container>
+                  <div layout="row" layout-align="center center" style="margin-left: 10px;">
+                    <a class="remove" ng-click="removeFromArray(studyContentWk, sc)">&times;</a>
+                  </div>
+                </div>
+                <div layout="row">
+                  <div ng-messages="subjectProgramForm['week['+$index+']'].$error">
+                    <div class="invalid md-body-1" ng-message="minmax">{{'subjectProgram.messages.weeksMinmax' | translate}}</div>
+                  </div>
                 </div>
               </div>
               <div layout="row">
@@ -225,7 +218,20 @@
             </md-input-container>
           </div>
         </fieldset>
+        <div>&nbsp;</div>
       </div>
+      <md-input-container flex>
+        <label>{{'subjectProgram.independentStudy' | translate}}</label>
+        <textarea ng-model="subjectProgram.independentStudy" name="independentStudy" md-maxlength="20000" max-rows="10" ></textarea>
+      </md-input-container>
+      <md-input-container flex>
+        <label>{{'subjectProgram.studyLiterature' | translate}}</label>
+        <textarea ng-model="subjectProgram.studyLiterature" name="studyLiterature" md-maxlength="20000" max-rows="10" ></textarea>
+      </md-input-container>
+      <md-input-container flex>
+        <label>{{'subjectProgram.assessmentDescription' | translate}}</label>
+        <textarea ng-model="subjectProgram.assessmentDescription" name="assessmentDescription" md-maxlength="20000" max-rows="10" ></textarea>
+      </md-input-container>
       <div>&nbsp;</div>
       <div flex>
         <fieldset tabindex="2">
@@ -284,6 +290,11 @@
         </fieldset>
       </div>
       <div>&nbsp;</div>
+      <md-input-container>
+        <label>{{'subjectProgram.addInfo' | translate}}</label>
+        <textarea ng-model="subjectProgram.addInfo" name="addInfo" md-maxlength="10000" max-rows="10"></textarea>
+      </md-input-container>
+      <div>&nbsp;</div>
       <div flex>
         <fieldset tabindex="3">
           <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subjectProgram.publicLevel' | translate}}</legend>
@@ -318,10 +329,11 @@
       </div>
       <br>
     </div>
-    <md-button class="md-raised md-primary" ng-click="save()">{{"main.button.save" | translate}}</md-button>
-    <md-button class="md-raised" ng-if="subjectProgram.status === 'AINEPROGRAMM_STAATUS_I'" ng-click="completeProgram()">{{"subjectProgram.operation.complete.label" | translate}}</md-button>
+    <md-button class="md-raised md-primary" ng-if="!auth.isAdmin() || isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA')" ng-click="save()">{{"main.button.save" | translate}}</md-button>
+    <md-button class="md-raised" ng-if="subjectProgram.status === 'AINEPROGRAMM_STAATUS_I'
+      && (!auth.isAdmin() || isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA'))" ng-click="completeProgram()">{{"subjectProgram.operation.complete.label" | translate}}</md-button>
     <md-button class="md-raised" ng-if="subjectProgram.id" ng-href="{{pdfUrl()}}" target="_blank">{{"main.button.print" | translate}}</md-button>
-    <md-button class="md-raised" ng-if="subjectProgram.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+    <md-button class="md-raised" ng-if="subjectProgram.id && (!auth.isAdmin() || isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA'))" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
     <md-button class="md-raised" ng-click="back(getDefaultBack(), subjectProgramForm)">{{"main.button.back" | translate}}</md-button>
   </form>
 </div>
@@ -338,7 +350,7 @@
   .study-content .md-input.md-datepicker-input {
     height: 47px !important;
   }
-  .study-content input[type="number"] {
+  .study-content input[type="text"] {
     height: 47px !important;
   }
 </style>

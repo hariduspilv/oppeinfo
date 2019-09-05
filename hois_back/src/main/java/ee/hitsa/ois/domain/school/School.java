@@ -69,6 +69,7 @@ public class School extends BaseEntityWithId implements Translatable {
     private String nameGenitiveEt;
     private Boolean isMinorStudentAbsence = Boolean.FALSE;
     private Boolean isLetterGrade = Boolean.FALSE;
+    private Boolean isWithoutEkis = Boolean.FALSE;
     private String finalSchoolType;
     @Column(name = "final_62")
     private String final62;
@@ -307,6 +308,14 @@ public class School extends BaseEntityWithId implements Translatable {
 
     public void setFinalEn62(String finalEn62) {
         this.finalEn62 = finalEn62;
+    }
+
+    public Boolean getIsWithoutEkis() {
+        return isWithoutEkis;
+    }
+
+    public void setIsWithoutEkis(Boolean isWithoutEkis) {
+        this.isWithoutEkis = isWithoutEkis;
     }
 
 }

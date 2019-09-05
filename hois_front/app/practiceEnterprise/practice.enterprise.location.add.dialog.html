@@ -40,7 +40,7 @@
                 <md-input-container flex>
                     <label class="textInput">{{'enterprise.locationsTab.language' | translate}}</label>
                     <hois-classifier-select ng-model="enterprise.language" name="language" model-value-attr="code" main-classifier-code="OPPEKEEL" required
-                      ignore-preselected only-valid criteria="{higher: auth.school.higher, vocational: auth.school.vocational}"></hois-classifier-select>
+                      ignore-preselected only-valid criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}"></hois-classifier-select>
                 </md-input-container>
             </div>
         </div>
@@ -49,7 +49,7 @@
                 <md-input-container flex>
                     <label class="textInput">{{'enterprise.locationsTab.country' | translate}}</label>
                     <hois-classifier-select ng-model="enterprise.country" name="country" model-value-attr="code" main-classifier-code="RIIK" required
-                      ignore-preselected only-valid criteria="{higher: auth.school.higher, vocational: auth.school.vocational}"></hois-classifier-select>
+                      ignore-preselected only-valid criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}"></hois-classifier-select>
                 </md-input-container>
             </div>
             <div flex="70" style="margin-left: 1%" ng-show="enterprise.country === 'RIIK_EST'">

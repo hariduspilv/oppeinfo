@@ -3,6 +3,7 @@
 angular.module('hitsaOis').controller('ReceptionSaisApplicationController', function (message, $location, $scope, $route, DataUtils, dialogService, QueryUtils) {
   $scope.auth = $route.current.locals.auth;
   $scope.saisApplication = {};
+  $scope.getAddress = DataUtils.formatAddress;
   var Endpoint = QueryUtils.endpoint('/saisApplications');
 
   function entityToForm(saisApplication) {
@@ -24,5 +25,4 @@ angular.module('hitsaOis').controller('ReceptionSaisApplicationController', func
       });
     });
   };
-
 });

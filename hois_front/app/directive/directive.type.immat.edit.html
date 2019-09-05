@@ -66,7 +66,7 @@
         </td>
         <td md-cell>
           <hois-classifier-select ng-if="!row._found && !row.idcode" ng-model="row.sex" name="students[{{$index}}].sex"
-            criteria="{vocational: formState.school.vocational, higher: formState.school.higher}" only-valid ignore-preselected
+            criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
             model-value-attr="code" main-classifier-code="SUGU" aria-label="{{'directive.student.sex' | translate}}"></hois-classifier-select>
           <hois-classifier-value ng-if="row._found || row.idcode" ng-model="row.sex" main-classifier-code="SUGU"></hois-classifier-value>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].sex'].$error">
@@ -75,7 +75,7 @@
         </td>
         <td md-cell>
           <hois-classifier-select ng-model="row.citizenship" name="students[{{$index}}].citizenship" model-value-attr="code"
-            criteria="{vocational: formState.school.vocational, higher: formState.school.higher}" only-valid ignore-preselected
+            criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
             main-classifier-code="RIIK" aria-label="{{'directive.student.citizenship' | translate}}"></hois-classifier-select>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].citizenship'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>
@@ -97,7 +97,7 @@
         </td>
         <td md-cell>
           <hois-classifier-select ng-model="row.studyForm" name="students[{{$index}}].studyForm" show-only-values="visibleStudyForms(row.curriculumVersion)"
-            criteria="{vocational: formState.school.vocational, higher: formState.school.higher}" only-valid ignore-preselected
+            criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
             model-value-attr="code" main-classifier-code="OPPEVORM" aria-label="{{'directive.student.studyForm' | translate}}"></hois-classifier-select>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].studyForm'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>
@@ -111,7 +111,7 @@
         </td>
         <td md-cell>
           <hois-classifier-select ng-model="row.fin" name="students[{{$index}}].fin" model-value-attr="code" ignore-preselected
-            criteria="{vocational: formState.school.vocational, higher: formState.school.higher}" only-valid
+            criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid
             main-classifier-code="FINALLIKAS" aria-label="{{'directive.student.fin' | translate}}"></hois-classifier-select>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].fin'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>
@@ -119,7 +119,7 @@
         </td>
         <td md-cell>
           <hois-classifier-select ng-model="row.finSpecific" name="students[{{$index}}].finSpecific" model-value-attr="code"
-            criteria="{vocational: formState.school.vocational, higher: formState.school.higher}" only-valid ignore-preselected
+            criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
             main-classifier-code="FINTAPSUSTUS" aria-label="{{'directive.student.finSpecific' | translate}}"></hois-classifier-select>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].finSpecific'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>
@@ -127,7 +127,7 @@
         </td>
         <td md-cell>
           <hois-classifier-select ng-model="row.language" name="students[{{$index}}].language" show-only-values="formState.languageMap[row.curriculumVersion]"
-            criteria="{vocational: formState.school.vocational, higher: formState.school.higher}" only-valid ignore-preselected
+            criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
             model-value-attr="code" main-classifier-code="OPPEKEEL" aria-label="{{'directive.student.language' | translate}}"></hois-classifier-select>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].language'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>
@@ -141,7 +141,7 @@
         </td>
         <td md-cell>
           <hois-classifier-select ng-model="row.previousStudyLevel" name="students[{{$index}}].previousStudyLevel"
-            criteria="{vocational: formState.school.vocational, higher: formState.school.higher}" only-valid ignore-preselected
+            criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
             model-value-attr="code" main-classifier-code="OPPEASTE" aria-label="{{'directive.student.previousStudyLevel' | translate}}"></hois-classifier-select>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].previousStudyLevel'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>

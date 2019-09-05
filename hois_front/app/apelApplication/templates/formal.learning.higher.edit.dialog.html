@@ -13,213 +13,262 @@
     <md-dialog-content>
       <div layout-padding>
         <fieldset>
-          <legend class="md-title-small">{{'apel.formalLearnings.transferableSubjectEt' | translate}}</legend>
-          <div layout="row" layout-xs="column" flex>
-            <div flex="100">
-              <div class="form-readonly" layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container>
-                  <md-radio-group layout-gt-sm="row" ng-model="formState.isMySchool">
-                    <md-radio-button ng-value="true" aria-label="iternalTransfer">
-                      {{'apel.formalLearnings.iternalTransfer' | translate}}
-                    </md-radio-button>
-                    <md-radio-button ng-value="false" aria-label="externalTransfer">
-                      {{'apel.formalLearnings.externalTransfer' | translate}}
-                    </md-radio-button>
-                  </md-radio-group>
-                </md-input-container>
-              </div>
-              <div ng-if="formState.isMySchool" layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="45" flex-sm="100" flex-xs="100">
-                  <label>{{'apel.formalLearnings.schoolNameEt' | translate}}</label>
-                  <input type="text" ng-model="record.school.nameEt" disabled required>
-                </md-input-container>
-                <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'apel.formalLearnings.schoolNameEn' | translate}}</label>
-                  <input type="text" ng-model="record.school.nameEn" disabled>
-                </md-input-container>
-              </div>
-              <div ng-if="!formState.isMySchool && !formState.isNewSchool" layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="45" flex-sm="100" flex-xs="100">
-                  <label>{{'apel.formalLearnings.schoolNameEt' | translate}}</label>
-                  <md-select ng-model="record.newTransferableSubjectOrModule.apelSchool" aria-label="apelSchool" ng-change="apelSchoolChanged(record.newTransferableSubjectOrModule.apelSchool)"
-                    ng-model-options="{trackBy: '$value.id'}" required>
-                    <md-option ng-repeat="val in apelSchools" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
-                  </md-select>
-                </md-input-container>
-                <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'apel.formalLearnings.schoolCountry' | translate}}</label>
-                  <input type="text" value="{{currentLanguageNameField(record.newTransferableSubjectOrModule.country)}}" disabled required>
-                </md-input-container>
-              </div>
+          <legend ng-class="{invalid: dialogForm.$submitted && (!record.formalSubjectsOrModules || record.formalSubjectsOrModules.length === 0)}" 
+            class="md-title-small">{{'apel.formalLearnings.transferableSubjects' | translate}}</legend>
+          <md-input-container>
+            <md-button ng-click="addNewTransferableSubjectOrModule()" class="md-raised">{{'main.button.addNewRow' | translate}}</md-button>
+          </md-input-container>
+          <div ng-if="record.newTransferableSubjectOrModule">
+            <div layout="row" layout-xs="column" flex>
+              <div flex="100">
+                <div class="form-readonly" layout="row" layout-sm="column" layout-xs="column">
+                  <md-input-container>
+                    <md-radio-group layout-gt-sm="row" ng-model="formState.isMySchool">
+                      <md-radio-button ng-value="true" aria-label="iternalTransfer">
+                        {{'apel.formalLearnings.iternalTransfer' | translate}}
+                      </md-radio-button>
+                      <md-radio-button ng-value="false" aria-label="externalTransfer">
+                        {{'apel.formalLearnings.externalTransfer' | translate}}
+                      </md-radio-button>
+                    </md-radio-group>
+                  </md-input-container>
+                </div>
+                <div ng-if="formState.isMySchool" layout="row" layout-sm="column" layout-xs="column">
+                  <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'apel.formalLearnings.schoolNameEt' | translate}}</label>
+                    <input type="text" ng-model="record.school.nameEt" disabled required>
+                  </md-input-container>
+                  <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{'apel.formalLearnings.schoolNameEn' | translate}}</label>
+                    <input type="text" ng-model="record.school.nameEn" disabled>
+                  </md-input-container>
+                </div>
+                <div ng-if="!formState.isMySchool && !formState.isNewSchool" layout="row" layout-sm="column" layout-xs="column">
+                  <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'apel.formalLearnings.schoolNameEt' | translate}}</label>
+                    <md-select ng-model="record.newTransferableSubjectOrModule.apelSchool" ng-model-options="{trackBy: '$value.id'}"
+                      ng-change="apelSchoolChanged(record.newTransferableSubjectOrModule.apelSchool)" aria-label="apelSchool" required>
+                      <md-option ng-repeat="val in apelSchools" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{'apel.formalLearnings.schoolCountry' | translate}}</label>
+                    <input type="text" value="{{currentLanguageNameField(record.newTransferableSubjectOrModule.country)}}" disabled required>
+                  </md-input-container>
+                </div>
 
-              <div ng-if="!formState.isMySchool">
-                <md-input-container ng-if="!formState.isNewSchool">
-                  <md-button ng-click="addNewSchool()" class="md-raised">{{'apel.formalLearnings.addNewSchool' | translate}}</md-button>
-                </md-input-container>
-                <fieldset ng-if="formState.isNewSchool">
-                  <legend class="md-title-small">{{'apel.formalLearnings.newSchool' | translate}}</legend>
-                  <div layout="row" layout-sm="column" layout-xs="column">
-                    <md-input-container flex="45" flex-sm="100" flex-xs="100">
-                      <label>{{'apel.formalLearnings.schoolCountry' | translate}}</label>
-                      <hois-classifier-select ng-model="record.newTransferableSubjectOrModule.newApelSchool.country" aria-label="country" model-value-attr="code"
-                        main-classifier-code="RIIK" ng-change="newSchoolCountryChanged(record.newTransferableSubjectOrModule.newApelSchool.country)"
-                        required></hois-classifier-select>
-                    </md-input-container>
-                    <md-input-container ng-if="newSchoolEst" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                      <label>{{'apel.formalLearnings.schoolEHIS' | translate}}</label>
-                      <hois-classifier-select ng-model="record.newTransferableSubjectOrModule.newApelSchool.ehisSchool" aria-label="EHIS" model-value-attr="code"
-                        main-classifier-code="EHIS_KOOL" ng-change="ehisSchoolChanged(record.newTransferableSubjectOrModule.newApelSchool.ehisSchool)"
-                        filter-values="apelSchoolsEhisCodes()" required></hois-classifier-select>
-                    </md-input-container>
-                  </div>
-                  <div layout="row" layout-sm="column" layout-xs="column">
-                    <md-input-container ng-if="record.newTransferableSubjectOrModule.newApelSchool.country" flex="45" flex-sm="100" flex-xs="100">
-                      <label>{{'apel.formalLearnings.schoolNameEt' | translate}}</label>
-                      <input type="text" ng-model="record.newTransferableSubjectOrModule.newApelSchool.nameEt" ng-disabled="formState.isMySchool" md-maxlength="100"
-                        required>
-                    </md-input-container>
-                    <md-input-container ng-if="record.newTransferableSubjectOrModule.newApelSchool.country" flex="45" flex-sm="100" flex-xs="100"
-                      flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                      <label>{{'apel.formalLearnings.schoolNameEn' | translate}}</label>
-                      <input type="text" ng-model="record.newTransferableSubjectOrModule.newApelSchool.nameEn" ng-disabled="formState.isMySchool" md-maxlength="100">
-                    </md-input-container>
-                  </div>
-                  <md-button class="md-raised" ng-click="cancelCreatingNewSchool()">{{'main.button.annul' | translate}}</md-button>
-                </fieldset>
-              </div>
+                <div ng-if="!formState.isMySchool">
+                  <md-input-container ng-if="!formState.isNewSchool">
+                    <md-button ng-click="addNewSchool()" class="md-raised">{{'apel.formalLearnings.addNewSchool' | translate}}</md-button>
+                  </md-input-container>
+                  <fieldset ng-if="formState.isNewSchool">
+                    <legend class="md-title-small">{{'apel.formalLearnings.newSchool' | translate}}</legend>
+                    <div layout="row" layout-sm="column" layout-xs="column">
+                      <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                        <label>{{'apel.formalLearnings.schoolCountry' | translate}} {{record.newTransferableSubjectOrModule.newApelSchool.country}}</label>
+                        <hois-classifier-select ng-model="record.newTransferableSubjectOrModule.newApelSchool.country" aria-label="country" model-value-attr="code"
+                          main-classifier-code="RIIK" ng-change="newSchoolCountryChanged(record.newTransferableSubjectOrModule.newApelSchool.country)"
+                          required></hois-classifier-select>
+                      </md-input-container>
+                      <md-input-container ng-if="newSchoolEst" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                        <label>{{'apel.formalLearnings.schoolEHIS' | translate}}</label>
+                        <hois-classifier-select ng-model="record.newTransferableSubjectOrModule.newApelSchool.ehisSchool" aria-label="EHIS" model-value-attr="code"
+                          main-classifier-code="EHIS_KOOL" ng-change="ehisSchoolChanged(record.newTransferableSubjectOrModule.newApelSchool.ehisSchool)"
+                          filter-values="apelSchoolsEhisCodes()" required></hois-classifier-select>
+                      </md-input-container>
+                    </div>
+                    <div layout="row" layout-sm="column" layout-xs="column">
+                      <md-input-container ng-if="record.newTransferableSubjectOrModule.newApelSchool.country" flex="45" flex-sm="100" flex-xs="100">
+                        <label>{{'apel.formalLearnings.schoolNameEt' | translate}}</label>
+                        <input type="text" ng-model="record.newTransferableSubjectOrModule.newApelSchool.nameEt" ng-disabled="formState.isMySchool" md-maxlength="100"
+                          required>
+                      </md-input-container>
+                      <md-input-container ng-if="record.newTransferableSubjectOrModule.newApelSchool.country" flex="45" flex-sm="100" flex-xs="100"
+                        flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                        <label>{{'apel.formalLearnings.schoolNameEn' | translate}}</label>
+                        <input type="text" ng-model="record.newTransferableSubjectOrModule.newApelSchool.nameEn" ng-disabled="formState.isMySchool" md-maxlength="100">
+                      </md-input-container>
+                    </div>
+                    <md-button class="md-raised" ng-click="cancelCreatingNewSchool()">{{'main.button.annul' | translate}}</md-button>
+                  </fieldset>
+                </div>
 
-              <div ng-if="formState.isMySchool" layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container>
-                  <md-radio-group layout-gt-sm="row" ng-model="record.newTransferableSubjectOrModule.type" ng-change="typeChanged(record.newTransferableSubjectOrModule.type)"
-                    required>
-                    <md-radio-button value="VOTA_AINE_LIIK_V" aria-label="passedSubject">
-                      {{'apel.formalLearnings.passedSubject' | translate}}
-                    </md-radio-button>
-                    <md-radio-button value="VOTA_AINE_LIIK_O" aria-label="curriculumSubject">
-                      {{'apel.formalLearnings.curriculumSubject' | translate}}
-                    </md-radio-button>
-                    <md-radio-button value="VOTA_AINE_LIIK_M" aria-label="otherSubject">
-                      {{'apel.formalLearnings.otherSubject' | translate}}
-                    </md-radio-button>
-                  </md-radio-group>
-                </md-input-container>
-              </div>
+                <div ng-if="formState.isMySchool" layout="row" layout-sm="column" layout-xs="column">
+                  <md-input-container>
+                    <md-radio-group layout-gt-sm="row" ng-model="record.newTransferableSubjectOrModule.type" ng-change="typeChanged(record.newTransferableSubjectOrModule.type)"
+                      required>
+                      <md-radio-button value="VOTA_AINE_LIIK_V" aria-label="passedSubject">
+                        {{'apel.formalLearnings.passedSubject' | translate}}
+                      </md-radio-button>
+                      <md-radio-button value="VOTA_AINE_LIIK_O" aria-label="curriculumSubject">
+                        {{'apel.formalLearnings.curriculumSubject' | translate}}
+                      </md-radio-button>
+                      <md-radio-button value="VOTA_AINE_LIIK_M" aria-label="otherSubject">
+                        {{'apel.formalLearnings.otherSubject' | translate}}
+                      </md-radio-button>
+                    </md-radio-group>
+                  </md-input-container>
+                </div>
 
-              <div ng-if="formState.isMySchool" layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_M'" flex="45" flex-sm="100" flex-xs="100">
-                  <label>{{'apel.formalLearnings.transferableSubjectEt' | translate}}</label>
-                  <md-select ng-model="record.subject" aria-label="subject" ng-change="subjectChanged(record.subject)" ng-model-options="{trackBy: '$value.id'}"
-                    required>
-                    <md-option ng-repeat="val in transferableSubjects" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
-                  </md-select>
-                </md-input-container>
+                <div ng-if="formState.isMySchool" layout="row" layout-sm="column" layout-xs="column">
+                  <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_M'" flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'apel.formalLearnings.transferableSubjectEt' | translate}}</label>
+                    <md-select ng-model="record.newTransferableSubjectOrModule.subject" aria-label="subject"
+                      ng-change="subjectChanged(record.newTransferableSubjectOrModule.subject)" ng-model-options="{trackBy: '$value.id'}" required>
+                      <md-option ng-repeat="val in transferableSubjects" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
+                    </md-select>
+                  </md-input-container>
 
-                <hois-autocomplete ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_M'" flex="45" flex-sm="100" flex-xs="100" 
-                  ng-model="record.subject" method="subjects" name="subject" label="apel.formalLearnings.transferableSubjectEt" 
-                  additional-query-params="{student: student.id, curriculumSubjects: false, curriculumVersion: curriculumVersionId, withCredits: false}"
-                  md-selected-item-change="subjectChanged(record.subject)" ng-model-options="{ debounce: 500 }" required>
-                </hois-autocomplete>
+                  <hois-autocomplete ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_M'" flex="45" flex-sm="100" flex-xs="100" 
+                    ng-model="record.newTransferableSubjectOrModule.subject" method="subjects" name="subject" label="apel.formalLearnings.transferableSubjectEt" 
+                    additional-query-params="{student: student.id, curriculumSubjects: false, curriculumVersion: curriculumVersionId, withCredits: false}"
+                    md-selected-item-change="subjectChanged(record.newTransferableSubjectOrModule.subject)" ng-model-options="{ debounce: 500 }" required>
+                  </hois-autocomplete>
 
-                <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'apel.formalLearnings.transferableSubjectEn' | translate}}</label>
-                  <input type="text" value="{{record.newTransferableSubjectOrModule.subject.nameEn}}" disabled required>
-                </md-input-container>
-              </div>
+                  <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{'apel.formalLearnings.transferableSubjectEn' | translate}}</label>
+                    <input type="text" value="{{record.newTransferableSubjectOrModule.subject.nameEn}}" disabled required>
+                  </md-input-container>
+                </div>
 
-              <div ng-if="!formState.isMySchool" layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="45" flex-sm="100" flex-xs="100">
-                  <label>{{'apel.formalLearnings.transferableSubjectEt' | translate}}</label>
-                  <input type="text" ng-model="record.newTransferableSubjectOrModule.nameEt" md-maxlength="255" required>
-                </md-input-container>
-                <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'apel.formalLearnings.transferableSubjectEn' | translate}}</label>
-                  <input type="text" ng-model="record.newTransferableSubjectOrModule.nameEn" md-maxlength="255" required>
-                </md-input-container>
-              </div>
+                <div ng-if="!formState.isMySchool" layout="row" layout-sm="column" layout-xs="column">
+                  <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'apel.formalLearnings.transferableSubjectEt' | translate}}</label>
+                    <input type="text" ng-model="record.newTransferableSubjectOrModule.nameEt" md-maxlength="255" required>
+                  </md-input-container>
+                  <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{'apel.formalLearnings.transferableSubjectEn' | translate}}</label>
+                    <input type="text" ng-model="record.newTransferableSubjectOrModule.nameEn" md-maxlength="255" required>
+                  </md-input-container>
+                </div>
 
-              <div ng-if="formState.isMySchool" layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="45" flex-sm="100" flex-xs="100">
-                  <label>{{'apel.formalLearnings.subjectCode' | translate}}</label>
-                  <input type="text" value="{{record.newTransferableSubjectOrModule.subjectCode}}" disabled>
-                </md-input-container>
-                <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'apel.formalLearnings.subjectCredits' | translate}} ({{'apel.formalLearnings.EAP' | translate}})</label>
-                  <input type="text" value="{{record.newTransferableSubjectOrModule.credits}}" disabled required>
-                </md-input-container>
-              </div>
+                <div ng-if="formState.isMySchool" layout="row" layout-sm="column" layout-xs="column">
+                  <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'apel.formalLearnings.subjectCode' | translate}}</label>
+                    <input type="text" value="{{record.newTransferableSubjectOrModule.subjectCode}}" disabled>
+                  </md-input-container>
+                  <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{'apel.formalLearnings.subjectCredits' | translate}} ({{'apel.formalLearnings.EAP' | translate}})</label>
+                    <input type="text" value="{{record.newTransferableSubjectOrModule.credits}}" disabled required>
+                  </md-input-container>
+                </div>
 
-              <div ng-if="!formState.isMySchool" layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="45" flex-sm="100" flex-xs="100">
-                  <label>{{'apel.formalLearnings.subjectCode' | translate}}</label>
-                  <input type="text" ng-model="record.newTransferableSubjectOrModule.subjectCode" md-maxlength="20">
-                </md-input-container>
-                <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'apel.formalLearnings.subjectCredits' | translate}} ({{'apel.formalLearnings.EAP' | translate}})</label>
-                  <input type="number" ng-model="record.newTransferableSubjectOrModule.credits" ng-min="0" ng-max="999.9" required>
-                </md-input-container>
-              </div>
+                <div ng-if="!formState.isMySchool" layout="row" layout-sm="column" layout-xs="column">
+                  <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'apel.formalLearnings.subjectCode' | translate}}</label>
+                    <input type="text" ng-model="record.newTransferableSubjectOrModule.subjectCode" md-maxlength="20">
+                  </md-input-container>
+                  <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{'apel.formalLearnings.subjectCredits' | translate}} ({{'apel.formalLearnings.EAP' | translate}})</label>
+                    <input type="number" ng-model="record.newTransferableSubjectOrModule.credits" ng-min="0" ng-max="999.9" required>
+                  </md-input-container>
+                </div>
 
-              <div layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container ng-if="formState.isMySchool" flex="45" flex-sm="100" flex-xs="100">
-                  <label>{{'apel.formalLearnings.assessmentType' | translate}}</label>
-                  <input ng-if="formState.isMySchool" value="{{currentLanguageNameField(record.assessment)}}" disabled></input>
-                </md-input-container>
-                <md-input-container ng-if="!formState.isMySchool" flex="45" flex-sm="100" flex-xs="100">
-                  <label>{{'apel.formalLearnings.assessmentType' | translate}}</label>
-                  <hois-classifier-select ng-model="record.newTransferableSubjectOrModule.assessment" aria-label="assessment" model-value-attr="code"
-                    main-classifier-code="HINDAMISVIIS" ng-change="assessmentTypeChanged(record.newTransferableSubjectOrModule.assessment)"
-                    required></hois-classifier-select>
-                </md-input-container>
-                <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'apel.formalLearnings.result' | translate}}</label>
-                  <hois-select ng-model="record.newTransferableSubjectOrModule.grade" values="grades" value-property="code" hide-values="hideInvalid"
-                    show-property="{{auth.school.letterGrades ? 'value2' : 'value'}}" aria-label="grade" required></hois-select>
-                </md-input-container>
-                <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'apel.formalLearnings.result' | translate}}</label>
-                  <input value="{{gradeValue(record.newTransferableSubjectOrModule.grade)}}" disabled></input>
-                </md-input-container>
-              </div>
+                <div layout="row" layout-sm="column" layout-xs="column">
+                  <md-input-container ng-if="formState.isMySchool" flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'apel.formalLearnings.assessmentType' | translate}}</label>
+                    <input ng-if="formState.isMySchool" value="{{currentLanguageNameField(record.assessment)}}" disabled>
+                  </md-input-container>
+                  <md-input-container ng-if="!formState.isMySchool" flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'apel.formalLearnings.assessmentType' | translate}}</label>
+                    <hois-classifier-select ng-model="record.newTransferableSubjectOrModule.assessment" aria-label="assessment" model-value-attr="code"
+                      main-classifier-code="HINDAMISVIIS" ng-change="assessmentTypeChanged(record.newTransferableSubjectOrModule.assessment)"
+                      required></hois-classifier-select>
+                  </md-input-container>
+                  <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{'apel.formalLearnings.result' | translate}}</label>
+                    <hois-select ng-model="record.newTransferableSubjectOrModule.grade" values="grades" value-property="code" hide-values="hideInvalid"
+                      show-property="{{auth.school.letterGrades ? 'value2' : 'value'}}" aria-label="grade" required></hois-select>
+                  </md-input-container>
+                  <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{'apel.formalLearnings.result' | translate}}</label>
+                    <input value="{{gradeValue(record.newTransferableSubjectOrModule.grade)}}" disabled>
+                  </md-input-container>
+                </div>
 
-              <div layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100">
-                  <label>{{'apel.formalLearnings.resultDate' | translate}}</label>
-                  <md-datepicker ng-model="record.newTransferableSubjectOrModule.gradeDate" md-max-date="currentDate" md-open-on-focus></md-datepicker>
-                </md-input-container>
-                <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100">
-                  <label>{{'apel.formalLearnings.resultDate' | translate}}</label> 
-                  <input value="{{record.newTransferableSubjectOrModule.gradeDate | hoisDate}}" disabled></input>
-                </md-input-container>
-                <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{auth.higher ? ('apel.formalLearnings.teachersHigher' | translate) : ('apel.formalLearnings.teachersVocational' | translate)}}</label>
-                  <input type="text" value="{{record.newTransferableSubjectOrModule.teachers}}" disabled>
-                </md-input-container>
-                <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{auth.higher ? ('apel.formalLearnings.teachersHigher' | translate) : ('apel.formalLearnings.teachersVocational' | translate)}}</label>
-                  <input type="text" ng-model="record.newTransferableSubjectOrModule.teachers" md-maxlength="255">
-                </md-input-container>
-              </div>
+                <div layout="row" layout-sm="column" layout-xs="column">
+                  <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'apel.formalLearnings.resultDate' | translate}}</label>
+                    <md-datepicker ng-model="record.newTransferableSubjectOrModule.gradeDate" md-max-date="currentDate" md-open-on-focus></md-datepicker>
+                  </md-input-container>
+                  <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'apel.formalLearnings.resultDate' | translate}}</label> 
+                    <input value="{{record.newTransferableSubjectOrModule.gradeDate | hoisDate}}" disabled>
+                  </md-input-container>
+                  <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{auth.higher ? ('apel.formalLearnings.teachersHigher' | translate) : ('apel.formalLearnings.teachersVocational' | translate)}}</label>
+                    <input type="text" value="{{record.newTransferableSubjectOrModule.teachers}}" disabled>
+                  </md-input-container>
+                  <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{auth.higher ? ('apel.formalLearnings.teachersHigher' | translate) : ('apel.formalLearnings.teachersVocational' | translate)}}</label>
+                    <input type="text" ng-model="record.newTransferableSubjectOrModule.teachers" md-maxlength="255">
+                  </md-input-container>
+                </div>
 
-              <div layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="45" flex-sm="100" flex-xs="100">
-                  <label>{{'apel.formalLearnings.module' | translate}}</label>
-                  <md-select ng-model="record.newTransferableSubjectOrModule.curriculumVersionHmodule" aria-label="module" ng-model-options="{trackBy: '$value.id'}"
-                    required>
-                    <md-option ng-repeat="val in curriculumModules" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
-                  </md-select>
-                </md-input-container>
-                <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <md-checkbox ng-model="record.newTransferableSubjectOrModule.isOptional" ng-true-value="false" ng-false-value="true" aria-label="required">
-                    {{'apel.formalLearnings.required' | translate}}
-                  </md-checkbox>
-                </md-input-container>
+                <div layout="row" layout-sm="column" layout-xs="column">
+                  <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'apel.formalLearnings.module' | translate}}</label>
+                    <md-select ng-model="record.newTransferableSubjectOrModule.curriculumVersionHmodule" aria-label="module" ng-model-options="{trackBy: '$value.id'}"
+                      required>
+                      <md-option ng-repeat="val in curriculumModules" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <md-checkbox ng-model="record.newTransferableSubjectOrModule.isOptional" ng-true-value="false" ng-false-value="true" aria-label="required">
+                      {{'apel.formalLearnings.required' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                </div>
               </div>
             </div>
+
+            <md-button ng-if="record.newTransferableSubjectOrModule.isNew" class="md-raised" 
+              ng-click="addTransferableSubjectOrModule()">{{'main.button.add' | translate}}</md-button>
+            <md-button ng-if="!record.newTransferableSubjectOrModule.isNew" class="md-raised" 
+              ng-click="changeTransferableSubjectOrModule()">{{'main.button.edit' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="deleteTransferableSubjectOrModule()">
+              {{'apel.formalLearnings.remove' | translate}}</md-button>
           </div>
+
+          <md-table-container>
+            <table md-table class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column>{{'apel.formalLearnings.school' | translate}}</th>
+                  <th md-column>{{'apel.formalLearnings.subjectEt' | translate}}/{{'apel.formalLearnings.subjectEn' | translate}}</th>
+                  <th md-column>{{'apel.formalLearnings.creditsEAP' | translate}}</th>
+                  <th md-column>{{'apel.formalLearnings.result' | translate}}</th>
+                  <th md-column>{{'apel.formalLearnings.resultDate' | translate}}</th>
+                  <th md-column>{{'apel.formalLearnings.teachersHigher' | translate}}</th>
+                  <th md-column>{{'apel.formalLearnings.module' | translate}} ({{'apel.formalLearnings.required' | translate}})</th>
+                  <th md-column></th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="row in record.formalSubjectsOrModules track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell ng-if="row.apelSchool">{{currentLanguageNameField(row.apelSchool)}}</td>
+                  <td md-cell ng-if="!row.apelSchool && !row.newApelSchool">{{currentLanguageNameField(record.school)}}</td>
+                  <td md-cell ng-if="row.newApelSchool && !row.apelSchool">{{currentLanguageNameField(row.newApelSchool)}}</td>
+                  <td md-cell ng-if="row.subject && !row.subject.nameEn">{{row.subject.nameEt}}</td>
+                  <td md-cell ng-if="row.subject && row.subject.nameEn">{{row.subject.nameEt}}/{{row.subject.nameEn}}</td>
+                  <td md-cell ng-if="!row.subject && !row.nameEn">{{row.nameEt}}</td>
+                  <td md-cell ng-if="!row.subject && row.nameEn">{{row.nameEt}}/{{row.nameEn}}</td>
+                  <td md-cell>{{row.credits}}</td>
+                  <td md-cell>{{auth.school.letterGrades ? row.grade.value2 : row.grade.value}}</td>
+                  <td md-cell>{{row.gradeDate | hoisDate}}</td>
+                  <td md-cell>{{row.teachers}}</td>
+                  <td md-cell>{{currentLanguageNameField(row.module)}} ({{row.isOptional ? 'main.no' : 'main.yes' | translate}})</td>
+                  <td md-cell>
+                    <md-button md-no-ink class="md-primary change-button" ng-click="editTransferableSubjectOrModule($index)">{{'main.button.change' | translate}}</md-button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
         </fieldset>
         <br>
         <fieldset>
-          <legend ng-class="{invalid: areReplacedSubjectsOrModulesValid()}"
+          <legend ng-class="{invalid: areReplacedSubjectsOrModulesInvalid()}"
             class="md-title-small">{{'apel.formalLearnings.substitutableSubjects' | translate}}</legend>
           <div flex="50">
             <md-input-container style="width: 100%">
@@ -232,10 +281,15 @@
             <md-table-container>
               <table md-table class="secondary-table">
                 <tbody md-body>
-                  <tr md-row ng-repeat="replacedSubjectOrModule in record.formalReplacedSubjectsOrModules" ng-class-odd="'odd'" ng-class-even="'even'">
-                    <td md-cell>{{currentLanguageNameField(replacedSubjectOrModule.subject)}}</td>
+                  <tr md-row ng-repeat="replacedSubject in record.formalReplacedSubjectsOrModules" ng-class-odd="'odd'" ng-class-even="'even'">
                     <td md-cell>
-                      <a class="remove nomargin" ng-click="removeSubtitutableSubject(replacedSubjectOrModule)">&times;</a>
+                      <span ng-if="replacedSubject.id">
+                        {{replacedSubject.subject.code}} - {{currentLanguageNameField(replacedSubject.subject)}} ({{replacedSubject.subject.credits}} {{'apel.formalLearnings.EAP' | translate}})
+                      </span>
+                      <span ng-if="!replacedSubject.id">{{currentLanguageNameField(replacedSubject.subject)}}</span>
+                    </td>
+                    <td md-cell>
+                      <a class="remove nomargin" ng-click="removeSubtitutableSubject(replacedSubject)">&times;</a>
                     </td>
                   </tr>
                 </tbody>

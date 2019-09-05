@@ -89,6 +89,14 @@ angular.module('hitsaOis')
             }
           },
           {
+            name: 'main.menu.study.remarks',
+            url: "/remarks?_menu",
+            icon: "warning",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
             name: 'main.menu.student.resultCard',
             url: "/studentResultCards?_menu",
             icon: "announcement",
@@ -103,6 +111,11 @@ angular.module('hitsaOis')
             studyLevel: {
               vocational: true
             }
+          },
+          {
+            name: 'main.menu.student.boardingSchool',
+            url: "/boardingSchools?_menu",
+            icon: "home"
           },
           {
             name: 'main.menu.student.rrChanges',
@@ -366,11 +379,16 @@ angular.module('hitsaOis')
             name: 'main.menu.poll.data',
             url: '/poll?_menu',
             icon:"search"
-          // },
-          // {
-          //   name: 'main.menu.poll.statistics',
-          //   url: "/poll/statistics?_menu",
-          //   icon:"blur_circular"
+          },
+          {
+            name: 'main.menu.poll.answers',
+            url: '/poll/answers?_menu',
+            icon:"reply"
+          },
+          {
+            name: 'main.menu.poll.questions',
+            url: '/poll/questions?_menu',
+            icon:"chat"
           }
         ]
       });
@@ -740,7 +758,7 @@ angular.module('hitsaOis')
       });
     }
 
-    function getTeacherSections() {
+    function getTeacherSections(authenticatedUser) {
       sections.push({
         name: 'main.menu.curriculums.label',
         url: "/curriculum?_menu",
@@ -908,6 +926,24 @@ angular.module('hitsaOis')
       });
 
       sections.push({
+        name: 'main.menu.poll.label',
+        type: 'toggle',
+        icon: "question_answer",
+        pages: [
+          {
+            name: 'main.menu.poll.answers',
+            url: '/poll/answers?_menu',
+            icon:"reply"
+          },
+          {
+            name: authenticatedUser.higher ? 'main.menu.poll.subjects' : 'main.menu.poll.journals',
+            url: '/poll/answers/subjects?_menu',
+            icon:"assignment_return"
+          }
+        ]
+      });
+
+      sections.push({
         name: 'main.menu.scholarships.grantApplications',
         url: "/scholarships/applications/grants?_menu",
         type: 'link',
@@ -1065,6 +1101,13 @@ angular.module('hitsaOis')
       });
 
       sections.push({
+        name: 'main.menu.mainData.generalMessages',
+        type: 'link',
+        url: "/generalmessages?_menu",
+        icon: "notifications_none"
+      });
+
+      sections.push({
         name: 'main.menu.timetableLink.label',
         type: 'link',
         url: '/timetables?_menu',
@@ -1176,6 +1219,13 @@ angular.module('hitsaOis')
             icon:"person"
           }
         ]
+      });
+
+      sections.push({
+        name: 'main.menu.poll.label',
+        type: 'link',
+        icon: "question_answer",
+        url: '/poll/answers?_menu'
       });
 
       sections = sections.concat(getScholarshipSectionForStudent(authenticatedUser));
@@ -1315,6 +1365,13 @@ angular.module('hitsaOis')
             icon:"timeline"
           }
         ]
+      });
+
+      sections.push({
+        name: 'main.menu.poll.label',
+        type: 'link',
+        icon: "question_answer",
+        url: '/poll/answers?_menu'
       });
 
       sections.push({

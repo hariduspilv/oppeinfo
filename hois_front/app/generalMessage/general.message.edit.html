@@ -24,8 +24,8 @@
         </div>
       </div>
 
-      <div>&nbsp;</div>
-      <fieldset tabindex="1">
+      <div ng-if="!auth.isMainAdmin()">&nbsp;</div>
+      <fieldset tabindex="1" ng-if="!auth.isMainAdmin()">
           <legend ng-class="{invalid: generalMessageForm.$submitted && (!record.targets || record.targets.length === 0)}" md-colors="{color: 'primary-800'}"
             class="md-title-small">{{'generalmessage.targets' | translate}} *</legend>
           <div layout="column" class="common-label" ng-repeat="role in roleDefs">

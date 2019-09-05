@@ -1,0 +1,70 @@
+<md-dialog aria-label="boarding school management check dialog" flex="50" flex-sm="50" flex-xs="100">
+  <form name="dialogForm" novalidate ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{'boardingSchool.error.problematicRows' | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <div layout-padding>
+        <div ng-repeat="row in content">
+          <div class="md-title-small" flex layout="row" layout-align="space-between none">
+            <div md-colors="{color: 'warn'}" layout layout-align="left center">
+              <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+              <span>&nbsp;&nbsp;</span>
+              <span>{{row.fullname}}, {{row.idcode}} - {{currentLanguageNameField(row.roomObject)}}  {{row.validFrom | hoisDate}} - {{row.validThru | hoisDate}}</span>
+            </div>
+            <div layout layout-align="right center">
+                <span ng-if="row.duplicateStudents" md-colors="{color: 'default-red'}">{{'boardingSchool.error.duplicateStudents' | translate}}</span>
+            </div>
+          </div>
+
+          <md-table-container>
+            <table md-table md-progress="tabledata.$promise" class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column>{{'student.name' | translate}}</th>
+                  <th md-column>{{'student.idcode' | translate}}</th>
+                  <th md-column>{{'main.validFrom' | translate}}</th>
+                  <th md-column>{{'main.validThru' | translate}}</th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="resident in row.residents | orderBy: ['validFrom', 'validThru']" ng-class-odd="'odd'" ng-class-even="'even'" 
+                  ng-class="{'student-row': row.student === resident.student && row.dormitory === resident.dormitory}">
+                  <td md-cell>{{resident.fullname}}</td>
+                  <td md-cell>{{resident.idcode}}</td>
+                  <td md-cell>{{resident.validFrom | hoisDate}}</td>
+                  <td md-cell>{{resident.validThru | hoisDate}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+          <div ng-if="!$last">&nbsp;</div>
+        </div>
+      </div>
+    </md-dialog-content>
+
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{'main.button.close' | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>
+
+<style>
+    .student-row {
+      color: rgb(255, 87, 34) !important;
+      font-style: italic;
+    }
+
+    .student-row td {
+      color: rgb(255, 87, 34) !important;
+    }
+  </style>

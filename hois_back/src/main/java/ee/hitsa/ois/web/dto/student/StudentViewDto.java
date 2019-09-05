@@ -54,6 +54,10 @@ public class StudentViewDto extends StudentForm {
     private Boolean individualCurriculum = Boolean.FALSE;
     private LocalDate individualCurriculumStart;
     private LocalDate individualCurriculumEnd;
+    private AutocompleteResult boardingSchool;
+    private LocalDate boardingSchoolValidFrom;
+    private LocalDate boardingSchoolValidThru;
+    private String boardingSchoolAddInfo;
     private List<StudentOccupationCertificateDto> occupationCertificates;
     private List<StudentDormitoryHistoryDto> dormitoryHistory;
 
@@ -345,6 +349,38 @@ public class StudentViewDto extends StudentForm {
         this.individualCurriculumEnd = individualCurriculumEnd;
     }
 
+    public AutocompleteResult getBoardingSchool() {
+        return boardingSchool;
+    }
+
+    public void setBoardingSchool(AutocompleteResult boardingSchool) {
+        this.boardingSchool = boardingSchool;
+    }
+
+    public LocalDate getBoardingSchoolValidFrom() {
+        return boardingSchoolValidFrom;
+    }
+
+    public void setBoardingSchoolValidFrom(LocalDate boardingSchoolValidFrom) {
+        this.boardingSchoolValidFrom = boardingSchoolValidFrom;
+    }
+
+    public LocalDate getBoardingSchoolValidThru() {
+        return boardingSchoolValidThru;
+    }
+
+    public void setBoardingSchoolValidThru(LocalDate boardingSchoolValidThru) {
+        this.boardingSchoolValidThru = boardingSchoolValidThru;
+    }
+
+    public String getBoardingSchoolAddInfo() {
+        return boardingSchoolAddInfo;
+    }
+
+    public void setBoardingSchoolAddInfo(String boardingSchoolAddInfo) {
+        this.boardingSchoolAddInfo = boardingSchoolAddInfo;
+    }
+
     public List<StudentOccupationCertificateDto> getOccupationCertificates() {
         return occupationCertificates;
     }
@@ -378,7 +414,6 @@ public class StudentViewDto extends StudentForm {
         dto.setIsVocational(Boolean.valueOf(StudentUtil.isVocational(student)));
         if (!Boolean.TRUE.equals(dto.getIsVocational())) {
             dto.setStudyCompany(null);
-            dto.setBoardingSchool(null);
             if (student.getCurriculumSpeciality() != null) {
                 dto.setCurriculumSpeciality(AutocompleteResult.of(student.getCurriculumSpeciality()));
             }

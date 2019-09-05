@@ -55,6 +55,8 @@ import ee.hitsa.ois.domain.timetable.JournalEntryStudentHistory;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudentLessonAbsence;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.enums.Absence;
+import ee.hitsa.ois.enums.ApplicationStatus;
+import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.JournalEntryType;
@@ -391,6 +393,7 @@ public class JournalService {
         return EntityUtil.save(journal, em);
     }
 
+    // TODO: rewrite using JpaNativeQueryBuilder, suitedStudents method is already rewritten
     public Page<JournalStudentDto> otherStudents(HoisUserDetails user, Long journalId, OtherStudentsSearchCommand command,
             Pageable pageable) {
         return studentRepository.findAll((root, query, cb) -> {
@@ -436,8 +439,8 @@ public class JournalService {
 
             // who has no positive result in given module
             Journal journal = journalRepository.findOne(journalId);
-            Set<Long> omodules = StreamUtil.toMappedSet(
-                    t -> EntityUtil.getId(t.getCurriculumVersionOccupationModuleTheme().getModule()),
+            Set<Long> modules = StreamUtil.toMappedSet(
+                    t -> EntityUtil.getId(t.getCurriculumVersionOccupationModuleTheme().getModule().getCurriculumModule()),
                     journal.getJournalOccupationModuleThemes());
 
             Subquery<Long> vocationalResultsQuery = query.subquery(Long.class);
@@ -445,7 +448,7 @@ public class JournalService {
                     .from(StudentVocationalResult.class);
             vocationalResultsQuery.select(vocationalResultRoot.get("student").get("id")).where(
                     vocationalResultRoot.get("grade").get("code").in(OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE),
-                    vocationalResultRoot.get("curriculumVersionOmodule").get("id").in(omodules));
+                    vocationalResultRoot.get("curriculumVersionOmodule").get("curriculumModule").get("id").in(modules));
             filters.add(cb.not(root.get("id").in(vocationalResultsQuery)));
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
@@ -453,50 +456,51 @@ public class JournalService {
     }
 
     public List<JournalStudentDto> suitedStudents(HoisUserDetails user, Long journalId) {
-        return StreamUtil.toMappedList(JournalStudentDto::of, studentRepository.findAll((root, query, cb) -> {
-            root.join("person", JoinType.INNER);
-            root.join("studentGroup", JoinType.LEFT);
-            root.join("curriculumVersion", JoinType.INNER).join("curriculum", JoinType.INNER);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s "
+                + "join person p on s.person_id = p.id "
+                + "left join student_group sg on s.student_group_id = sg.id "
+                + "join curriculum_version cv on s.curriculum_version_id = cv.id "
+                + "join curriculum c on cv.curriculum_id = c.id");
 
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
-            filters.add(cb.or(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_A.name()),
-                    cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()),
-                    cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_V.name())));
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("s.status_code in (:activeStudents)", "activeStudents",
+                StudentStatus.STUDENT_STATUS_ACTIVE);
 
-            Subquery<Long> studentGroupsQuery = query.subquery(Long.class);
-            Root<Journal> journalRoot = studentGroupsQuery.from(Journal.class);
-            Join<Object, Object> journalOmoduleThemesJoin = journalRoot.join("journalOccupationModuleThemes",
-                    JoinType.INNER);
+        qb.filter("exists (select lp.student_group_id from lesson_plan lp "
+                + "join lesson_plan_module lpm on lpm.lesson_plan_id = lp.id "
+                + "join journal_omodule_theme jot on jot.lesson_plan_module_id = lpm.id "
+                + "join journal j on j.id = jot.journal_id "
+                + "where j.id = :journalId and lp.student_group_id = s.student_group_id)");
+        qb.parameter("journalId", journalId);
 
-            studentGroupsQuery.select(
-                    journalOmoduleThemesJoin.get("lessonPlanModule").get("lessonPlan").get("studentGroup").get("id"))
-                    .where(cb
-                            .and(cb.equal(journalRoot.get("id"), journalId),
-                                    cb.equal(
-                                            journalOmoduleThemesJoin.get("lessonPlanModule").get("lessonPlan")
-                                                    .get("studentGroup").get("id"),
-                                            root.get("studentGroup").get("id")))
-                            
-                            );
-            filters.add(cb.exists(studentGroupsQuery));
+        // who has no positive result in given module
+        qb.filter("s.id not in (select svr.student_id from student_vocational_result svr "
+                + "join curriculum_version_omodule cvo on cvo.id = svr.curriculum_version_omodule_id "
+                + "join curriculum_module cm on cm.id = cvo.curriculum_module_id "
+                + "where svr.grade_code in (:positiveGrades) "
+                + "and cm.id in (select cvo2.curriculum_module_id from journal j2 "
+                    + "join journal_omodule_theme jot2 on jot2.journal_id = j2.id "
+                    + "join curriculum_version_omodule_theme cvot on cvot.id = jot2.curriculum_version_omodule_theme_id "
+                    + "join curriculum_version_omodule cvo2 on cvo2.id = cvot.curriculum_version_omodule_id "
+                    + "where j2.id = :journalId))");
+        qb.parameter("positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
 
-            // who has no positive result in given module
-            Journal journal = journalRepository.findOne(journalId);
-            Set<Long> omodules = StreamUtil.toMappedSet(
-                    t -> EntityUtil.getId(t.getCurriculumVersionOccupationModuleTheme().getModule()),
-                    journal.getJournalOccupationModuleThemes());
+        // who has not replaced theme in RAKKAVA application
+        qb.filter("s.id not in (select a.student_id from journal j3 "
+                + "join journal_omodule_theme jot3 on jot3.journal_id = j3.id "
+                + "join application_omodule_theme aot on aot.curriculum_version_omodule_theme_id = jot3.curriculum_version_omodule_theme_id "
+                + "join application a on a.id = aot.application_id "
+                + "where j3.id = :journalId and a.student_id = s.id and aot.is_old = false "
+                + "and a.type_code = :applicationType and a.status_code = :applicationStatus)");
+        qb.parameter("applicationType", ApplicationType.AVALDUS_LIIK_RAKKAVA.name());
+        qb.parameter("applicationStatus", ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name());
 
-            Subquery<Long> vocationalResultsQuery = query.subquery(Long.class);
-            Root<StudentVocationalResult> vocationalResultRoot = vocationalResultsQuery
-                    .from(StudentVocationalResult.class);
-            vocationalResultsQuery.select(vocationalResultRoot.get("student").get("id")).where(
-                    vocationalResultRoot.get("grade").get("code").in(OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE),
-                    vocationalResultRoot.get("curriculumVersionOmodule").get("id").in(omodules));
-            filters.add(cb.not(root.get("id").in(vocationalResultsQuery)));
+        List<?> data = qb.select("s.id s_id, p.firstname, p.lastname, sg.code sg_code, cv.code cv_code, "
+                + "c.name_et c_name_et, c.name_en c_name_en, s.status_code", em).getResultList();
 
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }));
+        return StreamUtil.toMappedList(r -> new JournalStudentDto(resultAsLong(r, 0), resultAsString(r, 1),
+                resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4), resultAsString(r, 5),
+                resultAsString(r, 7)), data);
     }
 
     public Journal saveEndDate(Journal journal, JournalEndDateCommand command) {
@@ -1435,7 +1439,7 @@ public class JournalService {
                         + " (select value from classifier where code = jes.grade_code),"
                         + " jes.grade_inserted, coalesce(jes.grade_inserted_by, jes.changed_by, jes.inserted_by) as grade_inserted_by,"
                         + " jes.add_info, je.homework, je.homework_duedate, jes.absence_code,"
-                        + " jes.is_remark, jes.remark_inserted, jes.remark_inserted_by from journal j"
+                        + " jes.is_remark, jes.remark_inserted, jes.remark_inserted_by, je.name_et from journal j"
                         + " join journal_entry je on j.id = je.journal_id"
                         + " join journal_student js on j.id = js.journal_id"
                         + " left join journal_entry_student jes on je.id = jes.journal_entry_id and jes.journal_student_id = js.id"
@@ -1447,7 +1451,7 @@ public class JournalService {
 
         List<StudentJournalEntryDto> entries = StreamUtil
                 .toMappedList(r -> new StudentJournalEntryDto(resultAsLong(r, 0), resultAsLong(r, 1),
-                        resultAsString(r, 2), resultAsLocalDate(r, 3), resultAsString(r, 4), resultAsString(r, 5),
+                        resultAsString(r, 2), resultAsLocalDate(r, 3), resultAsString(r, 15), resultAsString(r, 4), resultAsString(r, 5),
                         resultAsLocalDateTime(r, 6), PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 7)),
                         resultAsString(r, 8), resultAsString(r, 9), resultAsLocalDate(r, 10), resultAsString(r, 11),
                         resultAsBoolean(r, 12), resultAsLocalDateTime(r, 13),

@@ -168,12 +168,13 @@ public class JobExecutorService {
     }
     
     /**
-     * Automatic task to send email containing Poll to practiceJournal supervisors
+     * Automatic task to send email containing Poll
      */
     @Scheduled(cron = "${hois.jobs.email.supervisor}")
-    public void sendEmails() {
+    public void sendPollReminder() {
         withAuthentication(() -> {
             pollService.sendPracticeJournalSupervisorEmails();
+            pollService.sendEmails();
         }, AUTHENTICATION_MSG);
     }
     

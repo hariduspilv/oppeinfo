@@ -18,7 +18,7 @@
 <div layout="row" layout-sm="column" layout-xs="column" ng-if="application.type !== 'AVALDUS_LIIK_TUGI'">
   <md-input-container flex="100" flex-sm="100" flex-xs="100">
     <label class="textInput">{{'application.additionalInfo' | translate}}</label>
-    <textarea ng-model="application.addInfo" md-maxlength="4000" max-rows="10"></textarea>
+    <textarea ng-model="application.addInfo" md-maxlength="4000" max-rows="10" ng-disabled="application.status === 'AVALDUS_STAATUS_KINNITATUD'"></textarea>
   </md-input-container>
 </div>
 

@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').controller('CommitteeSearchController', 
-function ($scope, $route, QueryUtils, USER_ROLES, AuthService) {
+function ($scope, $route, QueryUtils, USER_ROLES, AuthService, FormUtils) {
   $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOMISJON);
 
   var baseUrl = "/committees";
@@ -14,6 +14,15 @@ function ($scope, $route, QueryUtils, USER_ROLES, AuthService) {
   $scope.clearCriteria = function() {
     _clearCriteria();
     $scope.criteria.type = $scope.committeeType;
+  };
+
+  var _loadData = $scope.loadData;
+  $scope.loadData = function() {
+    if ($scope.searchForm) {
+      FormUtils.withValidForm($scope.searchForm, _loadData);
+    } else {
+      _loadData();
+    }
   };
   $scope.loadData();
 

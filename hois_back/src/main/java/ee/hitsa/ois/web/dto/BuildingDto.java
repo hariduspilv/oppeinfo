@@ -22,6 +22,7 @@ public class BuildingDto extends BuildingForm {
         dto.setAddress(building.getAddress());
         dto.setAddressAds(building.getAddressAds());
         dto.setAddressAdsOid(building.getAddressAdsOid());
+        dto.setIsDormitory(building.getIsDormitory());
         dto.setVersion(building.getVersion());
         return dto;
     }

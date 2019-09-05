@@ -640,7 +640,6 @@
         $scope.record = result;
         updateCopyOfRecord();
         $scope.updateStudyPeriods();
-        LessonPlanTableService.generateLessonPlan($scope);
         setLessonplanContainerScroll($scope.formState.scrollPosition);
       }
 

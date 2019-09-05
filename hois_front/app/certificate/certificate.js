@@ -8,6 +8,10 @@ angular.module('hitsaOis')
     QueryUtils.createQueryForm($scope, '/certificate', {order: 'type.' + $scope.currentLanguageNameField()}, clMapper.objectmapper);
     DataUtils.convertStringToDates($scope.criteria, ['insertedFrom', 'insertedThru']);
 
+    if ($route.current.params.ordered) {
+      $scope.criteria.status = 'TOEND_STAATUS_T';
+    }
+
     if ($scope.auth.isStudent()) {
       // Do not show 'notFound' message
       $scope.afterLoadData = function (resultData) {
@@ -74,13 +78,7 @@ angular.module('hitsaOis')
       }
     };
 
-    $scope.save = function() {
-      $scope.certificateEditForm.$setSubmitted();
-      if(!$scope.certificateEditForm.$valid && !$scope.record.signatoryIdcode) {
-        message.error('main.messages.form-has-errors');
-        return;
-      }
-
+    function ekisConfirm() {
       dialogService.confirmDialog({prompt: 'certificate.ekisconfirm'}, function() {
         $scope.record.$save().then(function() {
           message.info('main.messages.create.success');
@@ -91,14 +89,31 @@ angular.module('hitsaOis')
           }
         });
       });
+    }
+
+    $scope.save = function() {
+      $scope.certificateEditForm.$setSubmitted();
+      if(!$scope.certificateEditForm.$valid && !$scope.record.signatoryIdcode) {
+        message.error('main.messages.form-has-errors');
+        return;
+      }
+
+      if (!$route.current.locals.auth.school.withoutEkis && !$scope.record.whom) {
+        dialogService.confirmDialog({prompt: 'certificate.emptyWhom'}, function() {
+          ekisConfirm();
+        });
+      } else {
+        ekisConfirm();
+      }
     };
   }
-]).controller('CertificateEditController', ['$scope', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$q', 'CertificateUtil', '$rootScope', '$timeout',
-  function ($scope, QueryUtils, $route, $location, dialogService, message, $q, CertificateUtil, $rootScope, $timeout) {
+]).controller('CertificateEditController', ['$scope', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$q', 'CertificateUtil', '$rootScope', '$timeout', 'resourceErrorHandler', 'config',
+  function ($scope, QueryUtils, $route, $location, dialogService, message, $q, CertificateUtil, $rootScope, $timeout, resourceErrorHandler, config) {
 
     var baseUrl = '/certificate';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var OrderEndpoint = QueryUtils.endpoint(baseUrl + '/order');
+    var CompleteEndpoit = QueryUtils.endpoint(baseUrl + '/complete');
     var id = $route.current.params.id;
     var changedByOtherIdCodeChange = false;
     $scope.forbiddenTypes = [];
@@ -268,21 +283,61 @@ angular.module('hitsaOis')
     }
 
     $scope.save = function() {
+      if ($scope.certificateEditForm.certificateNr) {
+        $scope.certificateEditForm.certificateNr.$setValidity("required", true);
+        delete $scope.certificateEditForm.certificateNr.$validators.required;
+      }
+
       if(!validationPassed()) {
         return;
       }
-      setSignatoryName();
-      if($scope.record.id) {
-        $scope.record.$update(afterLoad).then(message.updateSuccess).catch(angular.noop);
+      if (!$route.current.locals.auth.school.withoutEkis && !$scope.record.whom && !$scope.record.id) {
+        dialogService.confirmDialog({prompt: 'certificate.emptyWhom'}, function() {
+          setSignatoryName();
+          if($scope.record.id) {
+            $scope.record.$update(afterLoad).then(message.updateSuccess).catch(angular.noop);
+          } else {
+            $scope.record.$save().then(afterCreation).catch(angular.noop);
+          }
+        });
       } else {
-        $scope.record.$save().then(afterCreation).catch(angular.noop);
+        setSignatoryName();
+        if($scope.record.id) {
+          $scope.record.$update(afterLoad).then(message.updateSuccess).catch(angular.noop);
+        } else {
+          $scope.record.$save().then(afterCreation).catch(angular.noop);
+        }
       }
     };
 
-    $scope.saveAndOrder = function() {
-      if(!validationPassed()) {
-        return;
-      }
+    function displayFormError(response) {
+      resourceErrorHandler.responseError(response, $scope.certificateEditForm).catch(angular.noop);
+    }
+
+    $scope.changedCertificateNr = function () {
+      delete $scope.certificateEditForm.certificateNr.$validators.required;
+    };
+
+    $scope.printUrl = function () {
+      return config.apiUrl + baseUrl + '/print/' + $scope.record.id + "/certificate.rtf?lang=" + $scope.currentLanguage().toUpperCase();
+    };
+
+    function complete() {
+      $scope.certificateEditForm.$setSubmitted();
+      dialogService.confirmDialog({prompt: $scope.certificateEditForm.$dirty ? 'certificate.operation.complete.messageSave' : 'certificate.operation.complete.message'}, function() {
+        function toViewForm(record) {
+          $location.url(baseUrl +'/' + record.id + '/view?_noback');
+        }
+        var record = new CompleteEndpoit($scope.record);
+        record.$update2(toViewForm).then(function () {
+          message.info('certificate.operation.complete.success');
+        }).catch(displayFormError);
+      });
+    }
+
+    $scope.complete = complete;
+
+    function saveAndOrder() {
       dialogService.confirmDialog({prompt: 'certificate.ekisconfirm'}, function() {
         setSignatoryName();
         function toViewForm(record) {
@@ -301,13 +356,26 @@ angular.module('hitsaOis')
           });
         }
       });
+    }
+
+    $scope.saveAndOrder = function() {
+      if(!validationPassed()) {
+        return;
+      }
+      if (!$route.current.locals.auth.school.withoutEkis && !$scope.record.whom && !$scope.record.id) {
+        dialogService.confirmDialog({prompt: 'certificate.emptyWhom'}, function() {
+          saveAndOrder();
+        });
+      } else {
+        saveAndOrder();
+      }
     };
 
     $scope.delete = function() {
       dialogService.confirmDialog({prompt: 'certificate.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $rootScope.back(baseUrl + '?_noback');
+          $rootScope.back('#' + baseUrl + '?_noback');
         }).catch(angular.noop);
       });
     };
@@ -339,8 +407,8 @@ angular.module('hitsaOis')
       });
     };
   }
-]).controller('CertificateViewController', ['$location', '$route', '$scope', 'dialogService', 'ekisService', 'message', 'CertificateUtil', 'QueryUtils',
-  function ($location, $route, $scope, dialogService, ekisService, message, CertificateUtil, QueryUtils) {
+]).controller('CertificateViewController', ['$location', '$route', '$scope', 'dialogService', 'ekisService', 'message', 'CertificateUtil', 'QueryUtils', 'config',
+  function ($location, $route, $scope, dialogService, ekisService, message, CertificateUtil, QueryUtils, config) {
     var baseUrl = '/certificate';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
@@ -350,6 +418,10 @@ angular.module('hitsaOis')
 
     $scope.isOtherCertificate = function(){
       return CertificateUtil.isOtherCertificate($scope.record);
+    };
+
+    $scope.printUrl = function () {
+      return config.apiUrl + baseUrl + '/print/' + $scope.record.id + "/certificate.rtf?lang=" + $scope.currentLanguage().toUpperCase();
     };
 
     function afterLoad() {

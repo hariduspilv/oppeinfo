@@ -42,7 +42,7 @@ public class ModuleProtocolStudentDto {
         dto.setFullname(PersonUtil.fullname(protocolStudent.getStudent().getPerson()));
         dto.setIdcode(protocolStudent.getStudent().getPerson().getIdcode());
         dto.setStatus(EntityUtil.getCode(protocolStudent.getStudent().getStatus()));
-        
+
         if (protocolStudent.getStudent().getJournalStudents() != null) {
             List<JournalStudent> journalStudents = protocolStudent.getStudent().getJournalStudents();
             for (JournalStudent journalStudent : journalStudents) {
@@ -50,7 +50,8 @@ public class ModuleProtocolStudentDto {
                         .filter(jes -> JournalEntryType.SISSEKANNE_L.name()
                                 .equals(EntityUtil.getCode(jes.getJournalEntry().getEntryType())))
                         .filter(jes -> EntityUtil.getNullableCode(jes.getGrade()) != null)
-                        .filter(jes -> JournalUtil.filterJournalEntryStudentsByOccupationalModule(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule(), jes))
+                        .filter(jes -> JournalUtil.filterJournalEntryStudentsByCurriculumModule(
+                                EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule().getCurriculumModule()), jes))
                         .forEach(jes -> dto.getJournalResults()
                                 .add(new ModuleProtocolJournalResultDto(jes.getJournalEntry().getJournal().getId(),
                                         jes.getJournalEntry().getJournal().getNameEt(),
@@ -60,27 +61,28 @@ public class ModuleProtocolStudentDto {
                                                 .sum()),
                                         EntityUtil.getCode(jes.getGrade()),
                                         jes.getJournalEntry().getJournal().getAddModuleOutcomes())));
-                
+
                 journalStudent.getJournalEntryStudents().stream()
-                .filter(jes -> JournalEntryType.SISSEKANNE_O.name()
-                        .equals(EntityUtil.getCode(jes.getJournalEntry().getEntryType())))
-                .filter(jes -> EntityUtil.getNullableCode(jes.getGrade()) != null)
-                .filter(jes -> JournalUtil.filterJournalEntryStudentsByOccupationalModule(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule(), jes))
-                .forEach(jes -> dto.getOutcomeResults()
-                        .add(new ModuleProtocolOutcomeResultDto(jes.getJournalEntry().getJournal().getId(),
-                                jes.getJournalEntry().getCurriculumModuleOutcomes().getId(),
-                                EntityUtil.getCode(jes.getGrade()),
-                                jes.getGradeInserted())));
+                        .filter(jes -> JournalEntryType.SISSEKANNE_O.name()
+                                .equals(EntityUtil.getCode(jes.getJournalEntry().getEntryType())))
+                        .filter(jes -> EntityUtil.getNullableCode(jes.getGrade()) != null)
+                        .filter(jes -> JournalUtil.filterJournalEntryStudentsByCurriculumModule(
+                                EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule().getCurriculumModule()), jes))
+                        .forEach(jes -> dto.getOutcomeResults()
+                                .add(new ModuleProtocolOutcomeResultDto(jes.getJournalEntry().getJournal().getId(),
+                                        jes.getJournalEntry().getCurriculumModuleOutcomes().getId(),
+                                        EntityUtil.getCode(jes.getGrade()),
+                                        jes.getGradeInserted())));
             }
             
         }
-        
+
         if (protocolStudent.getStudent().getPracticeJournals() != null) {
             protocolStudent.getStudent().getPracticeJournals().stream()
                 .filter(pj -> EntityUtil.getNullableCode(pj.getGrade()) != null)
                 .filter(pj -> StreamUtil.nullSafeSet(pj.getModuleSubjects()).stream().filter(r -> r.getModule() != null)
-                        .map(r -> EntityUtil.getId(r.getModule())).collect(Collectors.toList())
-                        .contains(EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule())))
+                        .map(r -> EntityUtil.getId(r.getModule().getCurriculumModule())).collect(Collectors.toList())
+                        .contains(EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule().getCurriculumModule())))
                     .forEach(pj -> dto.getPracticeJournalResults()
                             .add(new ProtocolPracticeJournalResultDto(pj.getId(), EntityUtil.getCode(pj.getGrade()),
                                     pj.getGradeInserted() != null ? pj.getGradeInserted() : pj.getInserted(),

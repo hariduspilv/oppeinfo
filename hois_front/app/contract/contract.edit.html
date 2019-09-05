@@ -1,12 +1,12 @@
 <div class="ois-form-layout-padding" ng-cloak>
   <div flex>
     <form name="contractForm" ng-submit="save()" layout="column" novalidate>
-      <div ng-if="!studentGroup" flex layout="row">
+      <div ng-if="!studentGroup" flex layout="row" layout-xs="column">
         <hois-autocomplete ng-model="contract.student" method="students" name="student" label="student.label"
          ng-disabled="contract.id || contract.practiceApplication" 
          additional-query-params="{active: true, higher: formState.isHigher, showStudentGroup: true}" 
-         flex="70" required></hois-autocomplete>
-          <md-button class="md-raised" ng-if="!contract.id || contract.status.code === 'LEPING_STAATUS_S'" flex="30" ng-disabled="!contract.student" ng-click="copyContract()">
+         flex="70" flex-xs="100" required></hois-autocomplete>
+          <md-button class="md-raised" ng-if="!contract.id || contract.status.code === 'LEPING_STAATUS_S'" flex="30" flex-xs="100" ng-disabled="!contract.student" ng-click="copyContract()">
             {{'contract.useContractData' | translate}}</md-button>
       </div>
       <div ng-if="studentGroup" flex>
@@ -48,7 +48,7 @@
 
       <div ng-if="contract.student && formState.student" class="form-readonly" layout="column">
         <div>&nbsp;</div>
-        <div layout="row" flex>
+        <div layout="row" layout-xs="column" flex>
           <md-input-container flex>
             <label>{{'student.name' | translate}}</label>
             <hois-value value="formState.student.person.firstname + ' ' + formState.student.person.lastname"></hois-value>
@@ -66,7 +66,7 @@
             <hois-value value="formState.student.course"></hois-value>
           </md-input-container>
         </div>
-        <div layout="row" flex>
+        <div layout="row" layout-xs="column" flex>
           <md-input-container flex>
             <label>{{'student.curriculum' | translate}}</label>
             <hois-value value="currentLanguageNameField(formState.student.curriculumVersion)"></hois-value>
@@ -170,7 +170,7 @@
         <hois-autocomplete flex ng-model="contract.enterprise" method="activeEnterprises" name="enterprise"
           label="enterprise.label" required ng-disabled="contract.practiceApplication"></hois-autocomplete>
       </div>
-      <div layout="row" flex>
+      <div layout="row" layout-xs="column" flex>
         <md-input-container flex>
           <label class="textInput">{{'contract.contactPersonName' | translate}}</label>
           <hois-select ng-model="contract.contactPersonName" values="formState.contacts" ng-change="contactChanged(contract.contactPersonName)" value-property="contactPersonName" show-property="contactPersonName" required></hois-select>
@@ -184,8 +184,8 @@
           <input type="text" ng-model="contract.contactPersonPhone" md-maxlength="100">
         </md-input-container>
       </div>
-      <div ng-if="contract.enterprise" layout="row">
-        <md-input-container flex="33">
+      <div ng-if="contract.enterprise" layout="row" layout-xs="column">
+        <md-input-container flex="33" flex-xs="100">
           <label>{{'contract.supervisors' | translate}}</label>
           <md-select ng-model="contract.supervisor" flex ng-required="contract.supervisors === undefined || contract.supervisors.length == 0">
             <md-option ng-repeat="val in supervisors" ng-value="val">{{val.supervisorName}}</md-option>
@@ -253,17 +253,7 @@
                     </div>
                   </td>
                   <td md-cell>
-
-                  <a ng-if="contract.status.code === undefined || contract.status.code === 'LEPING_STAATUS_S'" ng-click="deleteSupervisor(contractSupervisor)" class="remove">&times;</a>
-                  <div layout="row" ng-if="(contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_K'
-                || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_T') && auth.isAdmin()">
-                    <div flex="50">
-                      <a target="_blank" ng-href="#/practiceJournals/supervisor/{{contractSupervisor.supervisorUrl}}">{{'journal.entry.open' | translate}}</a>
-                    </div>
-                    <div flex="50">
-                      <a ng-click="sendEmailAgain(contractSupervisor.id)">{{'contract.sendAgain' | translate}}</a>
-                    </div>
-                  </div>
+                    <a ng-if="contract.status.code === undefined || contract.status.code === 'LEPING_STAATUS_S'" ng-click="deleteSupervisor(contractSupervisor)" class="remove">&times;</a>
                   </td>
               </tr>
               </tbody>
@@ -306,7 +296,7 @@
       
       <hois-autocomplete ng-model="contract.teacher" method="teachers" name="techers" label="contract.schoolSupervisor" additional-query-params="{valid: true}" required></hois-autocomplete>
 
-      <div layout="row" flex>
+      <div layout="row" ng-if="!auth.school.withoutEkis" flex>
         <md-input-container flex>
           <label>{{'contract.contractCoordinator' | translate}}</label>
           <hois-select ng-model="contract.contractCoordinator" type="directivecoordinator" required></hois-select>
@@ -352,19 +342,21 @@
         </md-input-container>
       </div>
 
-      <div layout="row">
+      <div layout="row" layout-xs="column">
         <md-button ng-if="contract.status.code !== 'LEPING_STAATUS_Y'" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
         <md-button ng-if="auth.isAdmin() && contract.id && (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_S')" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+        <md-button ng-if="contract.id && (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_S' || contract.status.code === 'LEPING_STAATUS_K')" class="md-raised md-default" ng-href="{{printUrl()}}" target="_blank">{{"main.button.print" | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="back('#/contracts/', contractForm)">{{'main.button.back' | translate}}</md-button>
-        <md-button ng-if="contract.id && contract.status.code === 'LEPING_STAATUS_S'" class="md-raised md-default" ng-click="sendToEkis()">{{'main.button.sendToEkis' | translate}}</md-button>
+        <md-button ng-if="contract.id && contract.status.code === 'LEPING_STAATUS_S' && !auth.school.withoutEkis" class="md-raised md-default" ng-click="sendToEkis()">{{'main.button.sendToEkis' | translate}}</md-button>
+        <md-button ng-if="contract.id && contract.status.code === 'LEPING_STAATUS_S' && auth.school.withoutEkis" class="md-raised md-default" ng-click="confirmWithoutEkis()">{{'contract.confirmWithoutEkis' | translate}}</md-button>
       </div>
     </form>
   </div>
 </div>
 
 <style>
-td:first-child div.layout-row button.md-button {
-  min-height: 8px;
-  min-width: 8px;
-}
+  td:first-child div.layout-row button.md-button {
+    min-height: 8px;
+    min-width: 8px;
+  }
 </style>

@@ -298,4 +298,24 @@ public class EhisStudentReport {
             return changeDate;
         }
     }
+    
+    public static class Course extends EhisStudentReport {
+        private final Integer newCourse;
+        private final LocalDate changed;
+        
+        public Course(Student student, WsEhisStudentLog log, Integer newCourse, LocalDate changed) {
+            fill(student, log);
+            
+            this.newCourse = newCourse;
+            this.changed = changed;
+        }
+
+        public Integer getNewCourse() {
+            return newCourse;
+        }
+
+        public LocalDate getChanged() {
+            return changed;
+        }
+    }
 }

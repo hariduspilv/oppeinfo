@@ -2,7 +2,7 @@
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <form name="searchForm" ng-submit="loadData()" novalidate class="nomargin">
+      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
         <div layout="row">
           <md-input-container flex="100">
             <label>{{'document.student' | translate}}</label>
@@ -18,11 +18,11 @@
             <div layout="row" layout-sm="column" layout-xs="column" >
               <md-input-container flex flex-sm="100" flex-xs="100">
                 <label>{{'document.search.from' | translate}}</label>
-                <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru"></md-datepicker>
+                <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
               </md-input-container>
               <md-input-container flex flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                 <label>{{'document.search.thru' | translate}}</label>
-                <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
+                <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
               </md-input-container>
             </div>
           </div>

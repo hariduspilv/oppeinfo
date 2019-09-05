@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
+import ee.hitsa.ois.web.commandobject.BuildingAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.ClassifierAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.CommitteeAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
@@ -47,6 +48,7 @@ import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.JournalAutocompleteResult;
 import ee.hitsa.ois.web.dto.OccupiedAutocompleteResult;
 import ee.hitsa.ois.web.dto.PersonDto;
+import ee.hitsa.ois.web.dto.RoomAutocompleteResult;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithLogo;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
@@ -80,13 +82,18 @@ public class AutocompleteController {
     }
     
     @GetMapping("/buildings")
-    public List<AutocompleteResult> buildings(HoisUserDetails user) {
-        return autocompleteService.buildings(user.getSchoolId());
+    public List<AutocompleteResult> buildings(HoisUserDetails user, BuildingAutocompleteCommand lookup) {
+        return autocompleteService.buildings(user.getSchoolId(), lookup);
     }
 
     @GetMapping("/rooms")
-    public Page<OccupiedAutocompleteResult> rooms(HoisUserDetails user, RoomAutocompleteCommand lookup) {
+    public Page<RoomAutocompleteResult> rooms(HoisUserDetails user, RoomAutocompleteCommand lookup) {
         return asPage(autocompleteService.rooms(user.getSchoolId(), lookup));
+    }
+
+    @GetMapping("/roomsAsList")
+    public List<RoomAutocompleteResult> roomsAsList(HoisUserDetails user, RoomAutocompleteCommand lookup) {
+        return autocompleteService.rooms(user.getSchoolId(), lookup);
     }
 
     @GetMapping("/classifiers")

@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($scope, $route, $location, QueryUtils, DataUtils, Classifier, message, ArrayUtils) {
+angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($scope, $route, $location, QueryUtils, DataUtils, Classifier, message, ArrayUtils, sharedProperties) {
   $scope.auth = $route.current.locals.auth;
   $scope.formState = {
     selectedStudents: []
@@ -10,11 +10,25 @@ angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($
     $scope.formState.teacher = $scope.auth.teacher;
   }
 
+  var doNotOverrideModule = false;
+  if (sharedProperties.getProperties()['module.protocol.default.fields']) {
+    $scope.formState.curriculumVersionObject = sharedProperties.getProperties()['module.protocol.default.fields'].curriculumVersion;
+    // Cannot set module because of overriding it once curriculumVersionObject is set. We will use variable to set it only once
+    doNotOverrideModule = true;
+    $scope.formState.curriculumVersionOccupationModule = sharedProperties.getProperties()['module.protocol.default.fields'].module.id;
+    $scope.formState.studyYear = sharedProperties.getProperties()['module.protocol.default.fields'].studyYear;
+  }
+
   var clMapper = Classifier.valuemapper({ journalResults: 'KUTSEHINDAMINE', status: 'OPPURSTAATUS' });
 
   $scope.$watch('formState.curriculumVersionObject', function () {
     $scope.formState.curriculumVersion = $scope.formState.curriculumVersionObject ? $scope.formState.curriculumVersionObject.id : null;
-    $scope.formState.curriculumVersionOccupationModule = undefined;
+    if (doNotOverrideModule) {
+      doNotOverrideModule = false;
+      $scope.curriculumVersionOccupationModuleChange();
+    } else {
+      $scope.formState.curriculumVersionOccupationModule = undefined;
+    }
     if ($scope.formState.curriculumVersion) {
       $scope.formState.curriculumVersionOccupationModules = QueryUtils.endpoint('/moduleProtocols/occupationModules/' + $scope.formState.curriculumVersion).query();
     }

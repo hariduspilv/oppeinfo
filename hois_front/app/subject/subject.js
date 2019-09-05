@@ -30,7 +30,9 @@ angular.module('hitsaOis')
       var UnconfirmEndpoint = QueryUtils.endpoint('/subject/saveAndUnconfirm');
 
       if (id) {
-        $scope.subject = Endpoint.get({id: id});
+        $scope.subject = Endpoint.get({id: id}, function () {}, function () {
+          $scope.back("#/");
+        });
       } else {
         $scope.subject = new Endpoint({
           status: 'AINESTAATUS_S',
@@ -198,7 +200,9 @@ angular.module('hitsaOis')
       $scope.auth = $route.current.locals.auth;
 
       $scope.formState = {backUrl: backUrl ? '#/' + backUrl : ($scope.isPublic ? '#/subject/public' : '#/subject')};
-      $scope.subject = QueryUtils.endpoint($scope.isPublic ? '/public/subject/view' : '/subject').get({id: id});
+      $scope.subject = QueryUtils.endpoint($scope.isPublic ? '/public/subject/view' : '/subject').get({id: id}, function () {}, function () {
+        $scope.back("#/");
+      });
       $scope.publicUrl = config.apiUrl + '/public/subject/' + id + '?format=json';
   }])
   .controller('SubjectListController', ['$q', '$scope', '$route', 'Classifier', 'QueryUtils',

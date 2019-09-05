@@ -219,6 +219,13 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
       });
   };
 
+  // $scope.seeSubjectPrograms = function(subject) {
+  //   dialogService.showDialog('declaration/declaration.subject.programs.html', DialogController, function () {});
+  //   function DialogController(scope) {
+  //     scope.subject = subject;
+  //   }
+  // }
+
 }]).controller('DeclarationSearchController', ['$scope', '$route', '$q', '$timeout', 'Classifier', 'DataUtils', 'QueryUtils', 'message', 'dialogService', 'USER_ROLES', 'AuthService',
   function ($scope, $route, $q, $timeout, Classifier, DataUtils, QueryUtils, message, dialogService, USER_ROLES, AuthService) {
     var auth = $route.current.locals.auth;
@@ -239,6 +246,12 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
     promises.push($scope.curriculumVersions.$promise);
 
     $scope.formState = {canCreate: auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA') !== -1 };
+    
+    $scope.searchCurriculumVersions = function (text) {
+      return DataUtils.filterArrayByText($scope.curriculumVersions, text, function (obj, regex) {
+        return regex.test($scope.currentLanguageNameField(obj).toUpperCase());
+      });
+    };
 
     var loadData = $scope.loadData;
     $scope.loadData = function() {

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.PracticeJournal;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
@@ -52,12 +53,19 @@ public class PracticeJournalDto extends VersionedCommand {
     private Boolean isHigher;
     private AutocompleteResult practiceEvaluation;
     private Boolean canAddEntries;
+    private String studentStatus;
 
     public static PracticeJournalDto of(PracticeJournal practiceJournal) {
         PracticeJournalDto dto = EntityUtil.bindToDto(practiceJournal, new PracticeJournalDto(), "contract",
                 "practiceJournalEntries", "practiceJournalFiles", "moduleSubjects", "practiceEvaluation", "studentGroup");
-        if (practiceJournal.getStudent().getStudentGroup() != null) {
-            dto.setStudentGroup(AutocompleteResult.of(practiceJournal.getStudent().getStudentGroup()));
+        if (practiceJournal.getStudent() != null) {
+            Student student = practiceJournal.getStudent();
+            if (student.getStatus() != null && student.getStatus().getCode() != null) {
+                dto.setStudentStatus(student.getStatus().getCode());
+            }
+            if (student.getStudentGroup() != null) {
+                dto.setStudentGroup(AutocompleteResult.of(practiceJournal.getStudent().getStudentGroup()));
+            }
         }
         dto.setContract(ContractDto.of(practiceJournal.getContract()));
         if (practiceJournal.getPracticeEvaluation() != null) {
@@ -365,5 +373,13 @@ public class PracticeJournalDto extends VersionedCommand {
 
     public void setCanAddEntries(Boolean canAddEntries) {
         this.canAddEntries = canAddEntries;
+    }
+
+    public String getStudentStatus() {
+        return studentStatus;
+    }
+
+    public void setStudentStatus(String studentStatus) {
+        this.studentStatus = studentStatus;
     }
 }

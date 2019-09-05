@@ -3,6 +3,8 @@ package ee.hitsa.ois.web.commandobject;
 import java.time.LocalDate;
 import java.util.List;
 
+import ee.hitsa.ois.enums.CertificateStatus;
+
 public class CertificateSearchCommand {
     
     private List<String> type;
@@ -14,6 +16,7 @@ public class CertificateSearchCommand {
     private LocalDate insertedFrom;
     private LocalDate insertedThru;
     private Long student;
+    private CertificateStatus status;
 
     public List<String> getType() {
         return type;
@@ -62,5 +65,11 @@ public class CertificateSearchCommand {
     }
     public void setStudent(Long student) {
         this.student = student;
+    }
+    public CertificateStatus getStatus() {
+        return status;
+    }
+    public void setStatus(CertificateStatus status) {
+        this.status = status;
     }
 }

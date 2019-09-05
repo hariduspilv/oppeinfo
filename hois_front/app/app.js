@@ -22,7 +22,8 @@ angular
     'lfNgMdFileInput',
     'ngStorage',
     'angular-cache',
-    'color.picker'
+    'color.picker',
+    'chart.js'
   ])
   .config(function ($routeProvider) {
     $routeProvider
@@ -92,7 +93,7 @@ angular
   $httpProvider.interceptors.push(function($q, $rootScope, $timeout) {
     var postMethods = ['POST', 'PUT', 'DELETE'];
     function showHideBusy(config, busy) {
-      if(postMethods.indexOf(config.method) !== -1) {
+      if(postMethods.indexOf(config.method) !== -1 && !angular.isDefined(config.loading)) {
         function post() {
           $rootScope.$emit('backendBusy', {busy: busy});
         }
@@ -128,7 +129,11 @@ angular
   angular.extend(CacheFactoryProvider.defaults, { maxAge: 60 * 60 * 1000, deleteOnExpire: 'passive'});
 }).run(function($rootScope, busyHandler) {
   $rootScope.$on('backendBusy', function(event, data) {
-    busyHandler.handle(data);
+    if (data.value) {
+      busyHandler.handleWithProgress(data);
+    } else {
+      busyHandler.handle(data);
+    }
   });
 }).config(function($provide) {
   $provide.decorator('ColorPickerOptions', function($delegate) {

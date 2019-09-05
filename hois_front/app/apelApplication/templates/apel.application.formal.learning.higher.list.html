@@ -1,6 +1,14 @@
-<md-table-container ng-if="application.records.length > 0">
-  <table md-table md-progress="tabledata.$promise" class="secondary-table">
-    <thead md-head md-on-reorder="loadData">
+<md-table-container>
+  <table md-table class="secondary-table">
+    <thead md-head>
+      <tr md-row ng-class="!record.error ? 'apel-record-header' : 'apel-record-header-error'">
+        <th md-column ng-if="!formState.viewForm && application.canEdit">
+          <a ng-click="editFormalLearning(record.id)">{{'main.button.change' | translate}}</a>
+        </th>
+        <th md-column colspan="{{formalLearningColspan}}" style="text-align: center">{{'apel.formalLearnings.transferableSubjects' | translate}} </th>
+        <th md-column style="border-left: 1px rgba(0, 0, 0, 0.12) solid;"></th>
+        <th md-column colspan="2" style="text-align: center">{{'apel.formalLearnings.substitutableSubjects' | translate}}</th>
+      </tr>
       <tr md-row>
         <th md-column ng-if="application.status !== 'VOTA_STAATUS_K'">{{'apel.formalLearnings.transfer' | translate}}</th>
         <th md-column>{{'apel.formalLearnings.school' | translate}}</th>
@@ -11,35 +19,36 @@
         <th md-column>{{'apel.formalLearnings.resultDate' | translate}}</th>
         <th md-column>{{auth.higher ? ('apel.formalLearnings.teacherHigher' | translate) : ('apel.formalLearnings.teacherVocational' | translate)}}</th>
         <th md-column>{{'apel.formalLearnings.module' | translate}} ({{'apel.formalLearnings.required' | translate}})</th>
-        <th md-column>{{'apel.formalLearnings.substitutableSubjects' | translate}}</th>
-        <th md-column ng-if="!formState.viewForm && application.canEdit"></th>
+        <td md-cell style="border-left: 1px rgba(0, 0, 0, 0.12) solid;"></td>
+        <th md-column>{{'apel.formalLearnings.subject' | translate}} ({{'apel.formalLearnings.code' | translate}})</th>
+        <th md-column>{{'apel.formalLearnings.creditsEAP' | translate}}</th>
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in application.records | filter:{isFormalLearning: true}" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row ng-repeat="row in record.data | orderBy:'moduleId'" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell ng-if="application.status !== 'VOTA_STAATUS_K'">
-          <md-checkbox ng-if="(row.data[0].transfer === false || row.data[0].transfer === true) && canChangeTransferStatus" 
-            ng-model="row.data[0].transfer" ng-click="changeFormalTransferStatus(row.data[0])" aria-label="{{'apel.formalLearnings.transfer' | translate}}"></md-checkbox>
-          <md-checkbox ng-if="(row.data[0].transfer === false || row.data[0].transfer === true) && !canChangeTransferStatus" 
-            ng-model="row.data[0].transfer" ng-click="changeFormalTransferStatus(row.data[0])" aria-label="{{'apel.formalLearnings.transfer' | translate}}" ng-disabled="true"></md-checkbox>
+          <md-checkbox ng-if="(row.transfer === false || row.transfer === true) && canChangeTransferStatus"
+            ng-model="row.transfer" ng-click="changeFormalTransferStatus(row)" aria-label="{{'apel.formalLearnings.transfer' | translate}}"></md-checkbox>
+          <md-checkbox ng-if="(row.transfer === false || row.transfer === true) && !canChangeTransferStatus"
+            ng-model="row.transfer" ng-click="changeFormalTransferStatus(row)" aria-label="{{'apel.formalLearnings.transfer' | translate}}"
+            ng-disabled="true"></md-checkbox>
         </td>
-        <td md-cell>{{currentLanguageNameField(row.data[0].school)}}</td>
-        <td md-cell>{{currentLanguageNameField(row.data[0].subject)}} ({{row.data[0].code}})</td>
-        <td md-cell>{{row.data[0].credits}}</td>
-        <td md-cell>{{currentLanguageNameField(row.data[0].assessment)}}</td>
-        <td md-cell>{{auth.school.letterGrades ? row.data[0].grade.value2 : row.data[0].grade.value}}</td>
-        <td md-cell>{{row.data[0].gradeDate | hoisDate}}</td>
-        <td md-cell>{{row.data[0].teachers}}</td>
+        <td md-cell>{{currentLanguageNameField(row.school)}}</td>
+        <td md-cell>{{currentLanguageNameField(row.subject)}} <span ng-if="row.code">({{row.code}})</span></td>
+        <td md-cell>{{row.credits}}</td>
+        <td md-cell>{{currentLanguageNameField(row.assessment)}}</td>
+        <td md-cell>{{auth.school.letterGrades ? row.grade.value2 : row.grade.value}}</td>
+        <td md-cell>{{row.gradeDate | hoisDate}}</td>
+        <td md-cell>{{row.teachers}}</td>
         <td md-cell>
-          <span ng-if="row.data[0].isOptional === false">{{currentLanguageNameField(row.data[0].module)}} ({{'main.yes' | translate}})</span>
-          <span ng-if="row.data[0].isOptional === true">{{currentLanguageNameField(row.data[0].module)}} ({{'main.no' | translate}})</span>
+          <span ng-if="row.isOptional === false">{{currentLanguageNameField(row.module)}} ({{'main.yes' | translate}})</span>
+          <span ng-if="row.isOptional === true">{{currentLanguageNameField(row.module)}} ({{'main.no' | translate}})</span>
         </td>
+        <td md-cell style="border-left: 1px rgba(0, 0, 0, 0.12) solid;"></td>
         <td md-cell>
-          <p ng-repeat="replacedSubjectOrModule in row.data[0].formalReplacedSubjectsOrModules">{{currentLanguageNameField(replacedSubjectOrModule.subject)}}</p>
+          <span ng-if="row.replacedSubject">{{currentLanguageNameField(row.replacedSubject)}} ({{row.replacedSubject.code}})</span>
         </td>
-        <td md-cell ng-if="!formState.viewForm && application.canEdit">
-          <md-button md-no-ink class="md-primary change-button" ng-click="editFormalLearning(row.data[0].recordId)">{{'main.button.change' | translate}}</md-button>
-        </td>
+        <td md-cell>{{row.replacedCredits}}</td>
       </tr>
     </tbody>
   </table>

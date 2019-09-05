@@ -158,15 +158,24 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
           // update without id
           put:    {method: 'PUT', interceptor: resourceErrorHandler},
           put2:   {method: 'PUT'},
-          postWithoutLoad:   {method: 'PUT', loading: false, url: idPath, params: {id: '@id'}, interceptor: resourceErrorHandler},
+          putWithoutLoad:   {method: 'PUT', loading: false, url: idPath, params: {id: '@id'}, interceptor: resourceErrorHandler},
           // search functions
           search: {method: 'GET', interceptor: resourceErrorHandler},
           query:  {method: 'GET', isArray:true, interceptor: resourceErrorHandler},
       });
     };
 
-    var loadingWheel = function(scope, busy, multiple) {
-      scope.$root.$emit('backendBusy', {busy: busy, isMultiple: multiple});
+    /**
+     * 
+     * @param {Object} scope 
+     * @param {Boolean} busy 
+     * @param {Boolean} multiple 
+     * @param {String} text 
+     * @param {Boolean} value 
+     * @param {Function} onComplete 
+     */
+    var loadingWheel = function(scope, busy, multiple, text, value, onComplete) {
+      scope.$root.$emit('backendBusy', {busy: busy, isMultiple: multiple, text: text, value: value, onComplete: onComplete});
     };
 
     return {getQueryParams: getQueryParams, clearQueryParams: clearQueryParams, createQueryForm: createQueryForm,
@@ -174,33 +183,80 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
 }]).factory('busyHandler', ['$mdDialog',
   function ($mdDialog) {
     var requests = 0, busyShowing = false;
-    return {handle: function(params) {
+    // Progress should be an object to be able to pass it with 2-way-binding.
+    var progress = {value: 0};
+
+    function _notBusy() {
+      requests--;
+      if(requests === 0 && busyShowing) {
+        $mdDialog.hide();
+      }
+    }
+    
+    function setProgress(value) {
+      progress.value = value;
+    }
+
+    function _createDefaultDialogObject(params) {
+      return {
+        parent: angular.element(document.body),
+        multiple: params.isMultiple ? true : false,
+        onComplete: params.onComplete ? params.onComplete : undefined,
+        onRemoving: function() {
+          busyShowing = false;
+        }
+      };
+    }
+
+    function handle(params) {
       if(params.busy) {
         requests++;
         if(requests === 1 && !busyShowing) {
-          var parentEl = angular.element(document.body);
-          $mdDialog.show({
-            parent: parentEl,
-            multiple: params.isMultiple ? true : false,
+          var dialogObj = _createDefaultDialogObject(params);
+          angular.extend(dialogObj, {
             template:
               '<md-dialog style="background-color:transparent;box-shadow:none">' +
-              '<div layout="row" layout-sm="column" layout-align="center center" aria-label="wait" style="height:120px;">'+
-              '<md-progress-circular class="md-hue-2 loader" md-diameter="80px"></md-progress-circular>'+
+              '<div layout="row" layout-sm="column" layout-align="center center" aria-label="wait" style="height:120px;">' +
+              '<md-progress-circular class="md-hue-2 loader" md-diameter="80px"></md-progress-circular>' +
               '</div>' +
+              (params.text ? '<h3 style="text-align:center; color: white; text-shadow: -1px -1px 0 #000,' +
+              '1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">' + params.text + '</h3>' : '') +
               '</md-dialog>',
-            onRemoving: function() {
-              busyShowing = false;
-            }
           });
+          $mdDialog.show(dialogObj);
           busyShowing = true;
         }
       } else {
-        requests--;
-        if(requests === 0 && busyShowing) {
-          $mdDialog.hide();
-        }
+        _notBusy();
       }
-    }};
+    }
+
+    function handleWithProgress(params) {
+      if(params.busy) {
+        requests++;
+        if(requests === 1 && !busyShowing) {
+          progress.value = 0;
+          var dialogObj = _createDefaultDialogObject(params);
+          angular.extend(dialogObj, {
+            controller: function (scope) {
+              scope.text = params.text;
+              scope.progress = progress;
+            },
+            templateUrl: 'components/progress.wheel.dialog.html',
+          });
+          $mdDialog.show(dialogObj);
+          busyShowing = true;
+        }
+      } else {
+        _notBusy();
+      }
+    }
+
+    return {
+      handle: handle,
+      handleWithProgress: handleWithProgress,
+      setProgress: setProgress
+    };
   }
 ]);
 

@@ -13,11 +13,11 @@
                   <div layout="row">
                       <md-input-container>
                           <label>{{'main.from' | translate}}</label>
-                          <md-datepicker ng-model="criteria.validFrom" md-max-date="criteria.validThru"></md-datepicker>
+                          <md-datepicker ng-model="criteria.validFrom" md-max-date="criteria.validThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
                       </md-input-container>
                       <md-input-container>
                           <label>{{'main.thru' | translate}}</label>
-                          <md-datepicker ng-model="criteria.validThru" md-min-date="criteria.validFrom"></md-datepicker>
+                          <md-datepicker ng-model="criteria.validThru" md-min-date="criteria.validFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
                       </md-input-container>
                    </div>
                 </div>

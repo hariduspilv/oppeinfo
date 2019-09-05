@@ -1,0 +1,96 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <div flex>
+        <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin" ng-model-options="{allowInvalid: true}">
+        <fieldset>
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'poll.questions.question' | translate}}</legend>
+            <div layout="column" flex>
+                <div layout="row">
+                    <div layout="column" flex="50">
+                        <md-input-container>
+                            <label class="textInput">{{'poll.questions.name' | translate}}</label>
+                            <input ng-model="formState.question.nameEt" type="text" md-maxlength="255" name="nameEt" required>
+                            <ng-messages for="dialogForm.nameEt.$error" role="alert">
+                                <ng-message when="nameEtError">{{'poll.questions.sameNameError' | translate}}</ng-message>
+                            </ng-messages>
+                        </md-input-container>
+                    </div>
+                    <div layout="column" flex="50" flex-offset="5" class="form-readonly">
+                        <br>
+                        <md-input-container>
+                            <label>{{'poll.questions.answerType' | translate}}</label>
+                            <hois-value value="currentLanguageNameField(formState.question.type)"></hois-value>
+                        </md-input-container>
+                    </div>
+                </div>
+            </div>
+            <div ng-if="formState.question.type.code === 'VASTUS_M' || formState.question.type.code ===  'VASTUS_R' || formState.question.type.code === 'VASTUS_V' || formState.question.type.code === 'VASTUS_S'" layout="column" flex>
+                <div ng-repeat="item in formState.question.answers track by $index" class="occupation-row align-center" layout="row" flex="100">
+                    <div layout="row" layout-align="start center" flex="100">
+                        <div layout="row" flex="20">
+                            <md-input-container flex>
+                                <label class="textInput">{{'poll.questions.weight' | translate}}</label>
+                                <input ng-model="item.answerNr" name="answerNr" disabled="true" type="number" max="32767" min="0" required>
+                            </md-input-container>
+                        </div>
+                        <div layout="row" flex="80">
+                            <md-input-container flex>
+                                <label class="textInput">{{'poll.questions.answer' | translate}}</label>
+                                <input ng-model="item.nameEt" type="text" name="{{$index}}" md-maxlength="255" required ng-change="checkAnswer()">
+                                <ng-messages for="searchForm[$index].$error" role="alert" layout="row">
+                                    <ng-message when="answerEtError">{{'poll.questions.sameAnswerError' | translate}}</ng-message>
+                                </ng-messages>
+                            </md-input-container>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div layout="row" layout-xs="column">
+                <md-button ng-if="auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KYSITLUS')" class="md-raised md-primary" ng-click="saveQuestion()">{{'main.button.save' | translate}}</md-button>
+                <md-button ng-if="auth.isAdmin()" ng-click="back('#/poll/questions', searchForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+            </div>
+            <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+            </fieldset>
+        </form>
+    </div>
+</div>
+<div layout-padding>
+    <div flex>
+        <fieldset>
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'poll.questions.pollConnections' | translate}}</legend>
+            <md-table-container>
+            <table md-table md-progress="tabledata.$promise" class="secondary-table">
+                <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+                <tr md-row>
+                    <th md-column md-order-by="p.name_et">{{'poll.poll' | translate}}</th>
+                    <th md-column md-order-by="p.type_code">{{'poll.type' | translate}}</th>
+                    <th md-column md-order-by="targetcodes">{{'poll.targets' | translate}}</th>
+                    <th md-column md-order-by="p.valid_from">{{'poll.period' | translate}}</th>
+                    <th md-column md-order-by="p.status_code">{{'poll.status' | translate}}</th>
+                    <th md-column md-order-by="p.inserted_by">{{'poll.basicData.insertedBy' | translate}}</th>
+                    <th md-column md-order-by="p.changed_by">{{'poll.basicData.changedBy' | translate}}</th>
+                    <th md-column></th>
+                </tr>
+                </thead>
+                <tbody md-body>
+                <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell><a style="word-break: break-word" ng-click="test(row)">{{row.name ? row.name : '-'}}</a></td>
+                    <td md-cell>{{row.typeCode ? currentLanguageNameField(row.typeCode) : '-'}}</td>
+                    <td md-cell>{{row.targetCodes ? currentLanguageNameField(row.targetCodes) : '-'}}</td>
+                    <td md-cell>{{(row.validFrom | hoisDate)  + ' - ' + (row.validThru | hoisDate)}}</td>
+                    <td md-cell>{{row.status ? currentLanguageNameField(row.status) : '-'}}</td>
+                    <td md-cell>{{row.insertedBy ? row.insertedBy : '-'}}</td>
+                    <td md-cell>{{row.changedBy ? row.changedBy : '-'}}</td>
+                    <td ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" md-cell>
+                    <md-button md-no-ink class="md-primary change-button" 
+                        ng-click="test(row)">{{'main.button.view' | translate}}</md-button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            </md-table-container>
+            <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+            md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+            md-page-select></md-table-pagination>
+        </fieldset>
+    </div>
+</div>

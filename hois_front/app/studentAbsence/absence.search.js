@@ -82,7 +82,6 @@ angular.module('hitsaOis').controller('StudentAbsenceController',
       dialogService.showDialog(form,
         function (dialogScope) {
           dialogScope.absence = absence;
-          console.log(absence);
           function isFormValid() {
             dialogScope.dialogForm.$setSubmitted();
             if (!dialogScope.dialogForm.$valid) {

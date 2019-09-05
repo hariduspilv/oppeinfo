@@ -197,6 +197,10 @@ public class Application extends BaseEntityWithId implements Period {
     @Required(groups = {Valis.class})
     private Set<ApplicationPlannedSubject> plannedSubjects = new HashSet<>();
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "application_id", nullable = false, updatable = false)
+    private Set<ApplicationOccupationModuleTheme> themeMatches = new HashSet<>();
+
     public Student getStudent() {
         return student;
     }
@@ -562,4 +566,13 @@ public class Application extends BaseEntityWithId implements Period {
     public void setPlannedSubjects(Set<ApplicationPlannedSubject> plannedSubjects) {
         this.plannedSubjects = plannedSubjects;
     }
+
+    public Set<ApplicationOccupationModuleTheme> getThemeMatches() {
+        return themeMatches;
+    }
+
+    public void setThemeMatches(Set<ApplicationOccupationModuleTheme> themeMatches) {
+        this.themeMatches = themeMatches;
+    }
+
 }

@@ -41,7 +41,7 @@
         </td>
         <td md-cell>
           <hois-classifier-select ng-model="row.finSpecific" name="students[{{$index}}].finSpecific" model-value-attr="code"
-            criteria="{vocational: formState.school.vocational, higher: formState.school.higher}" only-valid ignore-preselected
+            criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
             main-classifier-code="FINTAPSUSTUS" aria-label="{{'directive.student.finSpecific' | translate}}"></hois-classifier-select>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].finSpecific'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>

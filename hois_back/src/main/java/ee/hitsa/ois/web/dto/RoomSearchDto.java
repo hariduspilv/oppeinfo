@@ -5,6 +5,7 @@ public class RoomSearchDto extends RoomDto {
     private String buildingName;
     private String buildingCode;
     private String buildingAddress;
+    private Boolean isBoardingSchool;
 
     public String getBuildingName() {
         return buildingName;
@@ -28,6 +29,14 @@ public class RoomSearchDto extends RoomDto {
 
     public void setBuildingAddress(String buildingAddress) {
         this.buildingAddress = buildingAddress;
+    }
+
+    public Boolean getIsBoardingSchool() {
+        return isBoardingSchool;
+    }
+
+    public void setIsBoardingSchool(Boolean isBoardingSchool) {
+        this.isBoardingSchool = isBoardingSchool;
     }
 
 }

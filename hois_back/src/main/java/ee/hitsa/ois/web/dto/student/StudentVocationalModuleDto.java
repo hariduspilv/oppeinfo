@@ -1,7 +1,9 @@
 package ee.hitsa.ois.web.dto.student;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.util.EntityUtil;
@@ -16,6 +18,8 @@ public class StudentVocationalModuleDto {
     private List<CurriculumVersionOccupationModuleThemeDto> themes = new ArrayList<>();
     // themes that belong to module that has the same curriculum module but not the same curriculum version module
     private List<CurriculumVersionOccupationModuleThemeDto> otherCurriculumVersionModuleThemes = new ArrayList<>();
+    // theme ids that have been replaced in RAKKAV application
+    private Set<Long> replacedThemes = new HashSet<>();
 
     public static StudentVocationalModuleDto of(CurriculumVersionOccupationModule module) {
         StudentVocationalModuleDto dto = new StudentVocationalModuleDto();
@@ -57,6 +61,14 @@ public class StudentVocationalModuleDto {
     public void setOtherCurriculumVersionModuleThemes(
             List<CurriculumVersionOccupationModuleThemeDto> otherCurriculumVersionModuleThemes) {
         this.otherCurriculumVersionModuleThemes = otherCurriculumVersionModuleThemes;
+    }
+
+    public Set<Long> getReplacedThemes() {
+        return replacedThemes;
+    }
+
+    public void setReplacedThemes(Set<Long> replacedThemes) {
+        this.replacedThemes = replacedThemes;
     }
 
 }

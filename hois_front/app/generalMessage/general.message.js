@@ -1,8 +1,9 @@
 'use strict';
 
-angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', 'USER_ROLES', 'AuthService', 
-function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, USER_ROLES, AuthService) {
-  $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_YLDTEADE);
+angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', 'USER_ROLES', 'AuthService', '$route',
+function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, USER_ROLES, AuthService, $route) {
+  $scope.auth = $route.current.locals.auth;
+  $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_YLDTEADE) || $scope.auth.isMainAdmin();
   $scope.roleDefs = Classifier.queryForDropdown({mainClassCode: 'ROLL'});
   $scope.fromStorage = function(key) {
     var criteria = JSON.parse($sessionStorage[key] || '{}');
@@ -12,7 +13,9 @@ function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, USER_ROLES
 
   var now = new Date();
   now.setHours(0, 0, 0, 0);
-  QueryUtils.createQueryForm($scope, '/generalmessages', {validFrom: now, order: 'validFrom'}, function(rows) {
+  QueryUtils.createQueryForm($scope, '/generalmessages' + ($scope.auth.isMainAdmin() ? '/site': ''),
+    {validFrom: $scope.auth.isMainAdmin() ? undefined : now,
+     order: $scope.auth.isMainAdmin() ? '-validFrom' : 'validFrom'}, function(rows) {
     var roleMapper = function(i) { return $scope.roleDefs[i]; };
     for(var rowNo = 0; rowNo < rows.length; rowNo++) {
       var row = rows[rowNo];
@@ -28,6 +31,7 @@ function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, USER_ROLES
   function ($location, $route, $scope, dialogService, message, Classifier, DataUtils, QueryUtils) {
     var id = $route.current.params.id;
     var baseUrl = '/generalmessages';
+    $scope.auth = $route.current.locals.auth;
 
     function afterLoad() {
       Classifier.setSelectedCodes($scope.roleDefs, $scope.record.targets || []);
@@ -63,7 +67,7 @@ function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, USER_ROLES
 
       $scope.record.targets = Classifier.getSelectedCodes($scope.roleDefs);
 
-      if (!$scope.isFormValid() || $scope.record.targets.length === 0) {
+      if (!$scope.isFormValid() || ($scope.record.targets.length === 0 && !$scope.auth.isMainAdmin())) {
         message.error('main.messages.form-has-errors');
         return;
       }
@@ -91,7 +95,8 @@ function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, USER_ROLES
 ]).controller('GeneralMessageViewController', ['$route', '$scope', 'QueryUtils', 'USER_ROLES', 'AuthService',
   function ($route, $scope, QueryUtils, USER_ROLES, AuthService) {
     var id = $route.current.params.id;
-    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_YLDTEADE);
+    $scope.auth = $route.current.locals.auth;
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_YLDTEADE) || $scope.auth.isMainAdmin();
 
     $scope.record = QueryUtils.endpoint('/generalmessages').get({id: id});
   }

@@ -85,6 +85,7 @@ public class TaraService {
             uri.queryParam(param, uriParams.get(param));
         }
         String request = uri.toUriString();
+        log.info("REQUEST: {}", request);
         insertAuthenticationRequestLog(crsfToken, request, uriParams);
         return request;
     }
@@ -109,6 +110,7 @@ public class TaraService {
                 log.info("Person authenticated");
                 return idcode;
             } catch (Exception e) {
+                log.error("Authentication failed: ", e);
                 throw new HoisException("Authentication failed", e);
             }
         }
@@ -128,6 +130,7 @@ public class TaraService {
             response = identityTokenRequest(params);
         } catch (Exception e) {
             identiyRequextException = e;
+            log.error("Could not obtain access token: ", e);
             throw new HoisException("Could not obtain access token", e);
         } finally {
             insertIdentiyTokenRequestLog(state, taraConfiguration.getAccessTokenUri(), params,
@@ -147,6 +150,7 @@ public class TaraService {
                     return claims;
                 }
             } catch (Exception e) {
+                log.error("Could not obtain user details from token: ", e);
                 throw new HoisException("Could not obtain user details from token", e);
             }
         }
@@ -163,6 +167,9 @@ public class TaraService {
         String base64ClientIdSec = Base64.encodeBase64String(
                 (taraConfiguration.getClientId() + ":" + taraConfiguration.getClientSecret()).getBytes());
         headers.add("Authorization", "Basic " + base64ClientIdSec);
+
+        log.info("REQUEST: {}", taraConfiguration.getAccessTokenUri());
+        log.info("PARAMS: {}", params);
 
         HttpEntity<LinkedMultiValueMap<String, Object>> request = new HttpEntity<>(params, headers);
         ResponseEntity<IdentityTokenResponse> response = restTemplate.postForEntity(taraConfiguration.getAccessTokenUri(),

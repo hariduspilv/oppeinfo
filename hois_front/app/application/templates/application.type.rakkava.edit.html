@@ -8,17 +8,80 @@
   <div layout="row" layout-sm="column" layout-xs="column">
     <md-input-container flex="45" flex-sm="100" flex-xs="100">
       <label>{{'application.newCVVocational' | translate}}</label>
-      <md-select ng-model="application.newCurriculumVersion" ng-model-options="{trackBy: '$value.id'}" required>
+      <md-select ng-model="application.newCurriculumVersion" ng-change="newCurriculumVersionSelected()"
+        ng-model-options="{trackBy: '$value.id'}" ng-disabled="application.id" name="curriculumVersion" required>
         <md-option ng-value="opt" ng-repeat="opt in formState.curriculumVersions">{{currentLanguageNameField(opt)}}</md-option>
       </md-select>
+      <div ng-messages="formState.curriculumsEmpty && applicationForm.curriculumVersion.$error">
+        <div ng-message="required">
+            {{'application.messages.noCurriculumVersionCurriculum' | translate}}
+        </div>
+      </div>
     </md-input-container>
     <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
       <label>{{'application.newStudentGroup' | translate}}</label>
-      <md-select ng-model="application.studentGroup" ng-model-options="{trackBy: '$value.id'}" required>
+      <md-select ng-model="application.studentGroup" ng-model-options="{trackBy: '$value.id'}"
+        ng-disabled="application.status === 'AVALDUS_STAATUS_KINNITATUD'" required>
         <md-option ng-value="opt" ng-repeat="opt in formState.studentGroups
           | filter: {curriculumVersion: (application.newCurriculumVersion.id ? application.newCurriculumVersion.id : 0)}">
           {{currentLanguageNameField(opt)}}</md-option>
       </md-select>
     </md-input-container>
   </div>
+  
+  <div ng-if="application.newCurriculumVersion">
+    <div>&nbsp;</div>
+    <fieldset flex>
+      <div ng-if="application.themeReplacement.modules.length === 0" flex="100" layout layout-align="left center">
+        <div md-colors="{color: 'accent'}" layout layout-align="left center">
+          <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
+          <span> {{'application.noMatchingThemes' | translate}}</span>
+        </div>
+      </div>
+
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'application.themeMatches' | translate}}</legend>
+      <md-table-container ng-if="application.themeReplacement.modules.length > 0">
+        <table md-table class="secondary-table">
+          <thead md-head>
+            <tr md-row>
+              <th md-column>{{'application.oldCVVocational' | translate}}</th>
+              <th md-column>{{'application.newCVVocational' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body ng-repeat="module in application.themeReplacement.modules">
+            <tr md-row class="even">
+              <td md-cell colspan="2">{{currentLanguageNameField(module)}}</td>
+            </tr>
+            <tr md-row>
+              <td md-cell>
+                <div layout="column">
+                  <div ng-repeat="oldTheme in module.oldThemes | orderBy: 'theme.' + currentLanguageNameVariable()">
+                    <span>{{currentLanguageNameField(oldTheme.theme)}}</span>
+                    <span>(<b>{{oldTheme.grade}}</b> {{oldTheme.gradeInserted | hoisDate}})</span>
+                  </div>
+                </div>
+              </td>
+              <td md-cell>
+                <div layout="column">
+                  <div ng-repeat="newTheme in module.newThemes | orderBy: 'theme.' + currentLanguageNameVariable()">
+                    <md-input-container>
+                      <md-checkbox class="new-theme-checkbox" ng-model="newTheme.covering" ng-disabled="!auth.isAdmin()">
+                        {{currentLanguageNameField(newTheme.theme)}}</md-checkbox>
+                    </md-input-container>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </fieldset>
+    <div>&nbsp;</div>
+  </div>
 </div>
+
+<style>
+  .new-theme-checkbox {
+    width: auto !important;
+  }
+</style>

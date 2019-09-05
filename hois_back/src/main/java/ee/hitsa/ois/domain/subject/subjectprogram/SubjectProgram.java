@@ -53,6 +53,7 @@ public class SubjectProgram extends BaseEntityWithId {
     private String grade5Description;
     
     private String rejectInfo;
+    private String addInfo;
     
     @OneToMany(mappedBy="subjectProgram", cascade=CascadeType.ALL, orphanRemoval=true)
     private Set<SubjectProgramStudyContent> studyContents = new HashSet<>();
@@ -182,6 +183,12 @@ public class SubjectProgram extends BaseEntityWithId {
     }
     public void setRejectInfo(String rejectInfo) {
         this.rejectInfo = rejectInfo;
+    }
+    public String getAddInfo() {
+        return addInfo;
+    }
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
     }
     /**
      * @return the contents

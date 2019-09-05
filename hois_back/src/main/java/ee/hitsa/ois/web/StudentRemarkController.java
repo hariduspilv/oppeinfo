@@ -45,19 +45,19 @@ public class StudentRemarkController {
 
     @GetMapping("/{id:\\d+}")
     public StudentRemarkDto get(HoisUserDetails user, @WithEntity StudentRemark studentRemark) {
-        studentRemarkService.assertCanView(user, EntityUtil.getId(studentRemark.getStudent()));
+        studentRemarkService.assertCanView(user, studentRemark.getStudent());
         return StudentRemarkDto.of(studentRemark);
     }
 
     @GetMapping("/journal/{id:\\d+}")
     public StudentRemarkDto getJournalRemark(HoisUserDetails user, @WithEntity JournalEntryStudent entry) {
-        studentRemarkService.assertCanView(user, EntityUtil.getId(entry.getJournalStudent().getStudent()));
+        studentRemarkService.assertCanView(user, entry.getJournalStudent().getStudent());
         return StudentRemarkDto.of(entry);
     }
 
     @PostMapping
     public StudentRemarkDto create(HoisUserDetails user, @Valid @RequestBody StudentRemarkForm studentRemarkForm) {
-        studentRemarkService.assertCanView(user, studentRemarkForm.getStudent().getId());
+        studentRemarkService.assertCanCreate(user, studentRemarkForm.getStudent().getId());
         return get(user, studentRemarkService.create(studentRemarkForm));
     }
 
@@ -65,7 +65,7 @@ public class StudentRemarkController {
     public StudentRemarkDto save(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) StudentRemark studentRemark,
             @Valid @RequestBody StudentRemarkForm studentRemarkForm) {
-        studentRemarkService.assertCanEdit(user, EntityUtil.getId(studentRemark.getStudent()));
+        studentRemarkService.assertCanEdit(user, studentRemark.getStudent());
         return get(user, studentRemarkService.save(studentRemark, studentRemarkForm));
     }
 
@@ -73,7 +73,7 @@ public class StudentRemarkController {
     public void delete(HoisUserDetails user,
             @WithVersionedEntity(versionRequestParam = "version") StudentRemark studentRemark,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        studentRemarkService.assertCanEdit(user, EntityUtil.getId(studentRemark.getStudent()));
+        studentRemarkService.assertCanEdit(user, studentRemark.getStudent());
         studentRemarkService.delete(user, studentRemark);
     }
 

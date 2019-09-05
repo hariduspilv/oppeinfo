@@ -68,14 +68,22 @@
         <fieldset>
           <legend ng-class="{invalid: dialogForm.$submitted && (!record.informalSubjectsOrModules || record.informalSubjectsOrModules.length === 0)}"
             class="md-title-small">{{'apel.informalLearnings.substitutableSubjects' | translate}}</legend>
-          <div flex="50">
-            <md-input-container style="width: 100%">
-              <label>{{'apel.informalLearnings.subject' | translate}}</label>
-              <md-select ng-model="selectedSubject" aria-label="{{'apel.informalLearnings.substitutableSubjects' | translate}}" ng-change="addSelectedSubject()">
-                <md-option ng-repeat="val in subjects" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
-              </md-select>
-            </md-input-container>
-          </div>
+            <div layout="row" layout-align="start center">
+              <md-input-container ng-if="!dialogScope.freeChoiceSubjects" flex="45">
+                <label>{{'apel.informalLearnings.subject' | translate}}</label>
+                <md-select ng-model="formState.selectedSubject" aria-label="{{'apel.informalLearnings.substitutableSubjects' | translate}}">
+                  <md-option ng-repeat="val in subjects" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
+                </md-select>
+              </md-input-container>
+              <hois-autocomplete ng-if="dialogScope.freeChoiceSubjects" flex="45" ng-model="formState.selectedSubject"
+                method="subjects" name="subject" label="{{'apel.informalLearnings.subject' | translate}}" 
+                additional-query-params="{student: student.id, curriculumSubjects: false, curriculumVersion: curriculumVersionId, withCredits: false, noFinalSubjects: true}">
+              </hois-autocomplete>
+              <md-input-container flex-offset="5">
+                <md-checkbox ng-model="dialogScope.freeChoiceSubjects" aria-label="{{'apel.informalLearnings.freeChoice' | translate}}" 
+                  style="margin-bottom: 0;">{{'apel.informalLearnings.freeChoice' | translate}}</md-checkbox>
+              </md-input-container>
+            </div>
           <md-table-container>
             <table md-table md-progress="tabledata.$promise" class="secondary-table">
               <thead md-head>
@@ -93,12 +101,12 @@
                   <ng-form name="subjectOrModuleForm">
                     <td md-cell>
                       <md-input-container>
-                        <hois-value ng-if="subjectOrModule.subject" value="currentLanguageNameField(subjectOrModule.subject)"></hois-value>
+                        <hois-value value="currentLanguageNameField(subjectOrModule.subject)"></hois-value>
                       </md-input-container>
                     </td>
                     <td md-cell>
                       <md-input-container>
-                        <hois-value ng-if="subjectOrModule.curriculumVersionHmodule" value="currentLanguageNameField(subjectOrModule.curriculumVersionHmodule)"></hois-value>
+                        <hois-value value="subjectOrModule.curriculumVersionHmodule ? currentLanguageNameField(subjectOrModule.curriculumVersionHmodule) : ('apel.informalLearnings.freeChoice' | translate)"></hois-value>
                       </md-input-container>
                     </td>
                     <td md-cell>
@@ -109,7 +117,7 @@
                     </td>
                     <td md-cell>
                       <md-input-container>
-                        <hois-value ng-if="subjectOrModule.credits" value="subjectOrModule.credits"></hois-value>
+                        <hois-value value="subjectOrModule.subject.credits"></hois-value>
                       </md-input-container>
                     </td>
                     <td md-cell>

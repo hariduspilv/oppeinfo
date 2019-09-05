@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" font-family="Times Roman" font-size="12pt">
+	<fo:layout-master-set>
+		<fo:simple-page-master master-name="A4"
+			page-width="210mm" page-height="297mm">
+			<fo:region-body   margin="2cm"/>
+			<fo:region-before extent="2cm"/>
+			<fo:region-after  extent="2cm"/>
+			<fo:region-start  extent="2cm"/>
+			<fo:region-end    extent="2cm"/>
+		</fo:simple-page-master>
+	</fo:layout-master-set>
+	<fo:page-sequence master-reference="A4">
+		<fo:flow flow-name="xsl-region-body">
+			<fo:block-container text-align="justify">
+				<fo:block><fo:leader/></fo:block>
+				<fo:block><fo:leader/></fo:block>
+				<fo:block><fo:leader/></fo:block>
+				<fo:block><fo:leader/></fo:block>
+				<fo:block><fo:leader/></fo:block>
+				<fo:block><fo:leader/></fo:block>
+				<fo:block><fo:leader/></fo:block>
+				<fo:block><fo:leader/></fo:block>
+				<fo:block>{{ content.certificate.whom }}</fo:block>
+				<fo:block><fo:leader/></fo:block>
+			</fo:block-container>
+			<fo:table>
+				<fo:table-column column-width="3.95in"/>
+				<fo:table-column column-width="2.58in"/>
+				
+				<fo:table-body>
+					<fo:table-row height="0.29in">
+						<fo:table-cell><fo:block><fo:leader/></fo:block></fo:table-cell>
+						<fo:table-cell text-align="right" margin-right="0.08in"><fo:block>{{ content.certificate.certificateNr }}</fo:block></fo:table-cell>
+					</fo:table-row>
+				</fo:table-body>
+			</fo:table>
+			<fo:block><fo:leader/></fo:block>
+			<fo:block><fo:leader/></fo:block>
+			<fo:block><fo:leader/></fo:block>
+			<fo:block><fo:leader/></fo:block>
+			<fo:block font-weight="bold">{{ content.certificate.headline }}</fo:block>
+			<fo:block><fo:leader/></fo:block>
+			<fo:block><fo:leader/></fo:block>
+			<fo:block><fo:leader/></fo:block>
+			<fo:block white-space-collapse="true" linefeed-treatment="preserve">{% if content.contentEditable %}{{ content.content }}{% else %}{{ content.content | raw}}{% endif %}</fo:block>
+			<fo:block><fo:leader/></fo:block>
+			<fo:block><fo:leader/></fo:block>
+			<fo:block><fo:leader/></fo:block>
+			<fo:block><fo:leader/></fo:block>
+			<fo:block>/{{ 'report.certificate.signedDigitally' | translate }}/</fo:block>
+			<fo:block>{{ content.certificate.signatoryName }}</fo:block>
+			<fo:block id="end"/>
+		</fo:flow>
+	</fo:page-sequence>
+</fo:root>

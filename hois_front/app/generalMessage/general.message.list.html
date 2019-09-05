@@ -8,7 +8,7 @@
             <label class="textInput">{{'generalmessage.title' | translate}}</label>
             <input ng-model="criteria.title" type="text" autofocus md-maxlength="255">
           </md-input-container>
-          <md-input-container>
+          <md-input-container ng-if="!auth.isMainAdmin()">
             <label>{{'generalmessage.targets' | translate}}</label>
             <hois-classifier-select ng-model="criteria.targets" model-value-attr="code" main-classifier-code="ROLL" multiple></hois-classifier-select>
           </md-input-container>
@@ -16,11 +16,11 @@
           <div layout="row" flex>
             <md-input-container>
               <label>{{'generalmessage.validFrom' | translate}}</label>
-              <md-datepicker ng-model="criteria.validFrom" md-max-date="criteria.validThru"></md-datepicker>
+              <md-datepicker ng-model="criteria.validFrom" md-max-date="criteria.validThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
             </md-input-container>
             <md-input-container flex-offset="5">
               <label>{{'generalmessage.validThru' | translate}}</label>
-              <md-datepicker ng-model="criteria.validThru" md-min-date="criteria.validFrom"></md-datepicker>
+              <md-datepicker ng-model="criteria.validThru" md-min-date="criteria.validFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
             </md-input-container>
           </div>
 
@@ -43,7 +43,7 @@
             <th md-column md-order-by="title">{{'generalmessage.title' | translate}}</th>
             <th md-column md-order-by="validFrom">{{'generalmessage.validFrom' | translate}}</th>
             <th md-column md-order-by="validThru">{{'generalmessage.validThru' | translate}}</th>
-            <th md-column>{{'generalmessage.targets' | translate}}</th>
+            <th md-column ng-if="!auth.isMainAdmin()">{{'generalmessage.targets' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
@@ -54,7 +54,7 @@
             </td>
             <td md-cell>{{::row.validFrom | hoisDate}}</td>
             <td md-cell>{{::row.validThru | hoisDate}}</td>
-            <td md-cell>
+            <td md-cell ng-if="!auth.isMainAdmin()">
               <table>
                 <tr ng-repeat="role in row.targets | orderBy: 'nameEt'">
                   <td>{{currentLanguageNameField(role)}}</td>

@@ -55,7 +55,7 @@
           </tbody>
         </table>
       </md-table-container>
-      <md-table-pagination ng-if="applications.totalElements > applicationsCriteria.size" md-limit="applicationsCriteria.size"
+      <md-table-pagination ng-show="applications.totalElements > applicationsCriteria.size" md-limit="applicationsCriteria.size"
         md-limit-options="[5, 10, 20, 50]" md-page="applicationsCriteria.page" md-total="{{applications.totalElements}}" md-on-paginate="loadApplications"
         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
         md-page-select></md-table-pagination>
@@ -109,7 +109,7 @@
           </tbody>
         </table>
       </md-table-container>
-      <md-table-pagination ng-if="!auth.isTeacher() && certificates.totalElements > certificatesCriteria.size" md-limit="certificatesCriteria.size" md-limit-options="[5, 10, 15]" md-page="certificatesCriteria.page"
+      <md-table-pagination ng-show="!auth.isTeacher() && certificates.totalElements > certificatesCriteria.size" md-limit="certificatesCriteria.size" md-limit-options="[5, 10, 15]" md-page="certificatesCriteria.page"
         md-total="{{certificates.totalElements}}" md-on-paginate="loadCertificates" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
         md-page-select></md-table-pagination>
       <br ng-if="auth.isStudent()">
@@ -162,7 +162,7 @@
           </tbody>
         </table>
       </md-table-container>
-      <md-table-pagination ng-if="directives.totalElements > directivesCriteria.size" md-limit="directivesCriteria.size" md-limit-options="[5, 10, 15]"
+      <md-table-pagination ng-show="directives.totalElements > directivesCriteria.size" md-limit="directivesCriteria.size" md-limit-options="[5, 10, 15]"
         md-page="directivesCriteria.page" md-total="{{directives.totalElements}}" md-on-paginate="loadDirectives" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
         md-page-select></md-table-pagination>
     </hois-collapsable>
@@ -203,7 +203,7 @@
         </table>
       </md-table-container>
       <!-- todo lehe suuruse valik katki?-->
-      <md-table-pagination ng-if="practiceContracts.totalElements > practiceContractsCriteria.size" md-limit="practiceContractsCriteria.size" md-limit-options="[5, 10, 15]"
+      <md-table-pagination ng-show="practiceContracts.totalElements > practiceContractsCriteria.size" md-limit="practiceContractsCriteria.size" md-limit-options="[5, 10, 15]"
         md-page="practiceContractsCriteria.page" md-total="{{practiceContracts.totalElements}}" md-on-paginate="loadPracticeContracts" 
         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
         md-page-select></md-table-pagination>

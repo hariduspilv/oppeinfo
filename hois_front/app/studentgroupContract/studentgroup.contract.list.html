@@ -1,17 +1,22 @@
+<style>
+  md-autocomplete {
+    min-width: 0;
+  }
+</style>
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
     <div flex>
         <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
-            <div layout="row">
-                <hois-autocomplete flex="30" ng-model="studentGroupObject" method="studentgroups" name="studentGroup"
+            <div layout="row" layout-xs="column">
+                <hois-autocomplete flex="30" flex-xs="50" ng-model="studentGroupObject" method="studentgroups" name="studentGroup"
                   label="{{'lessonplan.studentGroup'}}" additional-query-params="{valid: true}" required></hois-autocomplete>
-                <div ng-if="criteria.curriculumVersion" layout="column" class="form-readonly" flex-offset="5" flex="30">
+                <div ng-if="criteria.curriculumVersion" layout="column" class="form-readonly" flex-offset="5" flex-offset-xs="0" flex="30" flex-xs="100">
                     <br>
                     <md-input-container flex>
                         <label>{{(auth.higher ? 'student.curriculum' : 'studentGroup.curriculumVersionVocational') | translate}}</label>
                         <hois-value value="currentLanguageNameField(criteria.curriculumVersion)"></hois-value>
                     </md-input-container>
                 </div>
-                <div layout="column" layout-align="center start" flex-offset="5" flex="30">
+                <div layout="column" layout-align="center start" flex-offset="5" flex-offset-xs="0" flex="30" flex-xs="50">
                     <md-input-container>
                         <md-checkbox aria-label="active students" ng-model="criteria.active" ng-checked="true">
                             {{'studentGroup.active' | translate}}
@@ -72,15 +77,12 @@
         md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
         md-page-select></md-table-pagination>
     </div>
-    <div layout="row">
-      <div ng-if="!auth.higher && criteria.studentGroup && tabledata.content.length > 0">
-          <md-button md-no-ink class="md-raised" ng-href="#/contracts/new/{{::criteria.studentGroup}}?_menu"
-          >{{'contract.addToSeveral' | translate}}</md-button>
-      </div>
-      <div ng-if="tabledata.content">
-          <md-button md-no-ink class="md-raised" ng-click="sendToEkis()">
-            {{'contract.sendToEkis' | translate}}
-          </md-button>
-      </div>
+    <div layout="row" layout-xs="column">
+      <md-button md-no-ink class="md-raised" ng-href="#/contracts/new/{{::criteria.studentGroup}}?_menu" 
+      ng-if="!auth.higher && criteria.studentGroup && tabledata.content.length > 0"
+      >{{'contract.addToSeveral' | translate}}</md-button>
+      <md-button md-no-ink class="md-raised" ng-click="sendToEkis()" ng-if="tabledata.content">
+        {{'contract.sendToEkis' | translate}}
+      </md-button>
     </div> 
   </div>

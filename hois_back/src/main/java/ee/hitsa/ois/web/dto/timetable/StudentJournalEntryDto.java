@@ -9,6 +9,7 @@ public class StudentJournalEntryDto {
     private Long journalId;
     private String entryType;
     private LocalDate entryDate;
+    private String nameEt;
     private String content;
     private String gradeValue;
     private LocalDateTime gradeInserted;
@@ -25,7 +26,7 @@ public class StudentJournalEntryDto {
     
     public StudentJournalEntryDto() { }
 
-    public StudentJournalEntryDto(Long id, Long journalId, String entryType, LocalDate entryDate, String content,
+    public StudentJournalEntryDto(Long id, Long journalId, String entryType, LocalDate entryDate, String nameEt, String content,
             String gradeValue, LocalDateTime gradeInserted, String gradeInsertedBy, String addInfo, String homework,
             LocalDate homeworkDueDate, String absence, Boolean isRemark, LocalDateTime remarkInserted,
             String remarkInsertedBy) {
@@ -33,6 +34,7 @@ public class StudentJournalEntryDto {
         this.journalId = journalId;
         this.entryType = entryType;
         this.entryDate = entryDate;
+        this.nameEt = nameEt;
         this.content = content;
         this.gradeValue = gradeValue;
         this.gradeInserted = gradeInserted;
@@ -76,6 +78,14 @@ public class StudentJournalEntryDto {
 
     public void setEntryDate(LocalDate entryDate) {
         this.entryDate = entryDate;
+    }
+
+    public String getNameEt() {
+        return nameEt;
+    }
+
+    public void setNameEt(String nameEt) {
+        this.nameEt = nameEt;
     }
 
     public String getContent() {

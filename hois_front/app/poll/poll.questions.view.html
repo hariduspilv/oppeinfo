@@ -31,7 +31,7 @@
                 <div ng-repeat="item in criteria.themes track by $index" class="occupation-row align-center" layout="row" ng-style="{'margin-top': $first ? '0px' : '16px'}">
                     <div flex>
                         <fieldset>
-                            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{item.orderNr + ' ' + item.nameEt}}</legend>
+                            <legend md-colors="{color: 'primary-800'}" style="word-break: break-word;" class="md-title-small">{{item.orderNr + ' ' + item.nameEt}}</legend>
                             <md-input-container flex ng-if="formState.type === 'KYSITLUS_O'">
                                 <md-checkbox ng-model="item.isRepetitive" aria-label="repedetive" disabled>
                                     {{auth.higher ? ('poll.questions.isRepedetiveHigher' | translate) : ('poll.questions.isRepedetiveVocational' | translate)}}

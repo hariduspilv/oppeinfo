@@ -8,7 +8,7 @@
     <md-input-container class="md-block">
       <label class="textInput">{{'practiceEvaluation.target' | translate}}</label>
       <hois-classifier-select ng-model="record.target" name="target" model-value-attr="code" main-classifier-code="PRAKTIKA_SIHTRYHM"
-        only-valid ignore-preselected criteria="{higher: auth.school.higher, vocational: auth.school.vocational}" required></hois-classifier-select>
+        only-valid ignore-preselected criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" required></hois-classifier-select>
     </md-input-container>
 
     <md-input-container class="md-block">
@@ -38,7 +38,7 @@
         <md-input-container flex="30" flex-offset="5">
           <label>{{'practiceEvaluation.criteria.type' | translate}} *</label>
           <hois-classifier-select ng-model="criteria.type" name="type" model-value-attr="code" main-classifier-code="PRAKTIKA_KRITEERIUM"
-            only-valid ignore-preselected criteria="{higher: auth.school.higher, vocational: auth.school.vocational}" ng-disabled="criteria.disabled"></hois-classifier-select>
+            only-valid ignore-preselected criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" ng-disabled="criteria.disabled"></hois-classifier-select>
         </md-input-container>
         <md-button class="md-primary" ng-click="addCriteria()" ng-if="!isEditingCriteria">{{'main.button.add' | translate}}</md-button>
         <md-button class="md-primary" ng-click="saveCriteria()" ng-if="isEditingCriteria">{{'main.button.change' | translate}}</md-button>

@@ -78,6 +78,7 @@ import ee.hitsa.ois.web.commandobject.enterprise.PracticeEnterprisePersonCommand
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ContractDto;
 import ee.hitsa.ois.web.dto.ContractForEkisDto;
+import ee.hitsa.ois.web.dto.ContractNrCommand;
 import ee.hitsa.ois.web.dto.ContractSearchDto;
 import ee.hitsa.ois.web.dto.ContractStudentHigherModuleDto;
 import ee.hitsa.ois.web.dto.ContractStudentModuleDto;
@@ -707,4 +708,46 @@ public class ContractService {
             return dto;
         });
 	}
+	
+	/**
+     * Set contract to 'checkout'(ÜLEVAATAMISEL) without EKIS.
+     *
+     * @param user
+     * @param contract
+     * @return
+     */
+    public Contract checkout(HoisUserDetails user, Contract contract) {
+        contract.setStatus(em.getReference(Classifier.class, ContractStatus.LEPING_STAATUS_Y.name()));
+        EntityUtil.save(createPracticeJournal(contract, user.getSchoolId()), em);
+        contract = EntityUtil.save(contract, em);
+        // TODO: Send email only once
+        for (ContractSupervisor supervisor : contract.getContractSupervisors()) {
+            sendUniqueUrlEmailToEnterpriseSupervisor(user, supervisor);
+        }
+        return contract;
+    }
+    
+    /**
+     * Set contract status from ÜLEVAATAMISEL to KEHTIV
+     * 
+     * @param contract
+     * @return
+     */
+    public Contract confirm(Contract contract) {
+        contract.setStatus(em.getReference(Classifier.class, ContractStatus.LEPING_STAATUS_K.name()));
+        contract = EntityUtil.save(contract, em);
+        return contract;
+    }
+    
+    /**
+     * Used to set contract nr when contract is not confirmed by ekis
+     * 
+     * @param contract
+     * @param command
+     * @return
+     */
+    public void changeContractNr(Contract contract, ContractNrCommand command) {
+        contract.setContractNr(command.getContractNr());
+        EntityUtil.save(contract, em);
+    }
 }

@@ -37,7 +37,7 @@
           <td md-cell>{{'student.result.higher.teacher' | translate}}</td>
           <td md-cell>{{'student.result.isOk' | translate}}</td>
         </tr>
-        <tr md-row ng-repeat="subjectResult in higherResults.subjectResults | filter: filterSubjectResultsByModule(module) 
+        <tr md-row ng-repeat-start="subjectResult in higherResults.subjectResults | filter: filterSubjectResultsByModule(module) 
           | filter: {isOptional: false} | orderBy: 'subject.' + currentLanguageNameVariable()">
           <td md-cell>
             <span ng-if="subjectResult.isApelTransfer" class="apelAsterisk">*</span>
@@ -49,7 +49,7 @@
           <td md-cell>
             <table>
               <tr class="one-row">
-                <td ng-repeat="grade in subjectResult.grades | orderBy: 'gradeDate'">
+                <td ng-repeat="grade in subjectResult.grades | orderBy: ['isActive', 'gradeDate']">
                   <span ng-if="$index !== 0">/</span>
                   <span ng-class="{badResult: !gradeUtil.isPositive(grade.grade)}">{{grade.gradeValue}}</span>
                 </td>
@@ -65,6 +65,13 @@
             </table>
           </td>
           <td md-cell>{{subjectResult.isOk ? 'main.yes' : 'main.no' | translate}}</td>
+        </tr>
+        <tr md-row ng-repeat="replacedSubject in subjectResult.replacedSubjects | orderBy: currentLanguageNameField(subject)" ng-repeat-end
+          class="replaced-subject-row">
+          <td md-cell>{{currentLanguageNameField(replacedSubject.subject)}}</td>
+          <td md-cell>{{replacedSubject.subject.code}}</td>
+          <td md-cell>{{replacedSubject.subject.credits}}</td>
+          <td md-cell colspan="4"></td>
         </tr>
         <tr md-row class="secondary-table-header" ng-if="hasMandatorySubjects(module)">
           <td colspan="2">{{'student.result.totalRequired' | translate}}: {{module.compulsoryStudyCredits}}</td>
@@ -89,7 +96,7 @@
           <td md-cell>{{'student.result.higher.teacher' | translate}}</td>
           <td md-cell>{{'student.result.isOk' | translate}}</td>
         </tr>
-        <tr md-row ng-repeat="subjectResult in higherResults.subjectResults
+        <tr md-row ng-repeat-start="subjectResult in higherResults.subjectResults
           | filter: filterSubjectResultsByModule(module) | filter: {isOptional: true} | filter: {electiveModule: '!'}
           | orderBy: 'subject.' + currentLanguageNameVariable()">
           <td md-cell>
@@ -102,7 +109,7 @@
           <td md-cell>
             <table>
               <tr>
-                <td ng-repeat="grade in subjectResult.grades | orderBy: 'gradeDate'">
+                <td ng-repeat="grade in subjectResult.grades | orderBy: ['isActive', 'gradeDate']">
                   <span ng-if="$index !== 0">/</span>
                   <span ng-class="{badResult: !gradeUtil.isPositive(grade.grade)}">{{grade.gradeValue}}</span>
                 </td>
@@ -118,6 +125,13 @@
             </table>
           </td>
           <td md-cell>{{subjectResult.isOk ? 'main.yes' : 'main.no' | translate}}</td>
+        </tr>
+        <tr md-row ng-repeat="replacedSubject in subjectResult.replacedSubjects | orderBy: currentLanguageNameField(subject)" ng-repeat-end
+          class="replaced-subject-row">
+          <td md-cell>{{currentLanguageNameField(replacedSubject.subject)}}</td>
+          <td md-cell>{{replacedSubject.subject.code}}</td>
+          <td md-cell>{{replacedSubject.subject.credits}}</td>
+          <td md-cell colspan="4"></td>
         </tr>
         <tr md-row ng-if="module.electiveModulesResults.length > 0">
           <td colspan="1" class="sub-header2">
@@ -142,7 +156,7 @@
           <td md-cell>
             <table>
               <tr>
-                <td ng-repeat="grade in subjectResult.grades | orderBy: 'gradeDate'">
+                <td ng-repeat="grade in subjectResult.grades | orderBy: ['isActive', 'gradeDate']">
                   <span ng-if="$index !== 0">/</span>
                   <span ng-class="{badResult: !gradeUtil.isPositive(grade.grade)}">{{grade.gradeValue}}</span>
                 </td>

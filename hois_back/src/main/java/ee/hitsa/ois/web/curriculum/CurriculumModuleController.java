@@ -29,6 +29,7 @@ import ee.hitsa.ois.web.commandobject.curriculum.CurriculumModuleTypesCommand;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeDto;
 
 @RestController
 @RequestMapping("curriculumModule")
@@ -79,6 +80,12 @@ public class CurriculumModuleController {
         curriculumValidationService.assertCurriculumCanBeEdited(module.getCurriculum());
 
         curriculumModuleService.delete(user, module);
+    }
+
+    @GetMapping("/{id:\\d+}/outcomes")
+    public List<CurriculumModuleOutcomeDto> getOutcomes(HoisUserDetails user, @WithEntity CurriculumModule module) {
+        CurriculumUtil.assertCanView(user, schoolService.getEhisSchool(user.getSchoolId()), module.getCurriculum());
+        return curriculumModuleService.outcomes(module);
     }
 
     @GetMapping("/types")

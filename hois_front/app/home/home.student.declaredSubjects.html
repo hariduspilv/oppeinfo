@@ -14,15 +14,19 @@
             <tbody md-body>
                 <tr md-row ng-repeat="subject in declaration.subjects | orderBy: 'subject.' + currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'" ng-init="$last && pageLoadingHandler.setFinish('declaration')">
                     <td md-cell>
-                        {{currentLanguageNameField(subject.subject)}} ({{subject.subject.code}})
-                        <span ng-show="subject.isDeclaredRepeatedly">&nbsp;*</span>
+                        <a href="#/subject/{{subject.subject.id}}">
+                            {{currentLanguageNameField(subject.subject)}} ({{subject.subject.code}})
+                            <span ng-show="subject.isDeclaredRepeatedly">&nbsp;*</span>
+                        </a>
                     </td>
                     <td md-cell>
-                        <table>
-                            <tr ng-repeat="teacher in subject.teachers | orderBy">
-                                <td>{{teacher}}</td>
-                            </tr>
-                        </table>
+                      <table>
+                        <tr ng-repeat="program in subject.programs | orderBy: 'teacherName'">
+                          <td>{{program.teacherName}}
+                            <span ng-if="program.id !== -1 && program.publicStudent">(<a href="#/subjectProgram/public/{{program.id}}/view">{{'declaration.seeProgram' | translate}}</a>)</span>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                     <td md-cell><a ng-href="/#/studyMaterial/higher/{{subject.subjectStudyPeriod}}/view">{{'studyMaterial.openfolder' | translate}}</a></td>
                 </tr>

@@ -105,14 +105,6 @@ public class SubjectDto extends SubjectForm {
         return dto;
     }
 
-    public static SubjectDto forApelApplication(Subject subject) {
-        SubjectDto dto = SubjectDto.of(subject, null);
-        AutocompleteResult subjectResult = AutocompleteResult.of(subject);
-        dto.setNameEt(subjectResult.getNameEt());
-        dto.setNameEn(subjectResult.getNameEn());
-        return dto;
-    }
-
     public Set<AutocompleteResult> getPrimarySubjects() {
         return primarySubjects;
     }

@@ -17,9 +17,8 @@ public class ApelApplicationFormalReplacedSubjectOrModuleDto {
             ApelApplicationFormalReplacedSubjectOrModule replacedSubjectOrModule) {
         ApelApplicationFormalReplacedSubjectOrModuleDto dto = EntityUtil.bindToDto(replacedSubjectOrModule,
                 new ApelApplicationFormalReplacedSubjectOrModuleDto());
-        dto.setSubject(replacedSubjectOrModule.getSubject() != null
-                ? SubjectDto.forApelApplication(replacedSubjectOrModule.getSubject())
-                : null);
+        dto.setSubject(replacedSubjectOrModule.getSubject() != null ?
+                SubjectDto.of(replacedSubjectOrModule.getSubject(), null) : null);
         dto.setCurriculumVersionOmodule(
                 replacedSubjectOrModule.getCurriculumVersionOmodule() != null ? CurriculumVersionOccupationModuleDto
                         .forApelApplicationForm(replacedSubjectOrModule.getCurriculumVersionOmodule()) : null);

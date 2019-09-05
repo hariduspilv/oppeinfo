@@ -84,7 +84,7 @@
                 class="small-margin"
                 flex>
                 <md-item-template>
-                    <span md-highlight-text="subjectSearchText" md-highlight-flags="^i">{{currentLanguageNameField(subject)}}</span>
+                    <span md-highlight-text="subjectSearchText" md-highlight-flags="^i">{{subject.code}} - {{currentLanguageNameField(subject)}}</span>
                 </md-item-template>
                 <md-not-found>
                     {{'main.messages.error.notFound' | translate}}

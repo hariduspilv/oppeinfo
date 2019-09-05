@@ -5,7 +5,7 @@
         <md-input-container flex="40" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'form.type' | translate}}</label>
           <hois-classifier-select ng-model="formState.type" name="type" model-value-attr="code" main-classifier-code="LOPUBLANKETT" ignore-preselected
-            only-valid criteria="{higher: auth.school.higher, vocational: auth.school.vocational}" required></hois-classifier-select>
+            only-valid criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" required></hois-classifier-select>
         </md-input-container>
       </div>
 

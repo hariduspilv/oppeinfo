@@ -19,6 +19,8 @@ public class ResponseQuestionAnswer extends BaseEntityWithId {
     private Short answerNr;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private QuestionAnswer questionAnswer;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private ResponseSubject responseSubject;
     
     public Response getResponse() {
         return response;
@@ -49,5 +51,11 @@ public class ResponseQuestionAnswer extends BaseEntityWithId {
     }
     public void setQuestionAnswer(QuestionAnswer questionAnswer) {
         this.questionAnswer = questionAnswer;
+    }
+    public ResponseSubject getResponseSubject() {
+        return responseSubject;
+    }
+    public void setResponseSubject(ResponseSubject responseSubject) {
+        this.responseSubject = responseSubject;
     }
 }

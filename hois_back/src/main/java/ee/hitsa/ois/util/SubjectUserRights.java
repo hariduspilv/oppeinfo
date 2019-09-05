@@ -1,5 +1,7 @@
 package ee.hitsa.ois.util;
 
+import java.util.AbstractMap.SimpleEntry;
+
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
@@ -8,15 +10,15 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 
 public abstract class SubjectUserRights {
 
-    public static boolean canView(HoisUserDetails user, Subject subject) {
+    public static SimpleEntry<Boolean, String> canView(HoisUserDetails user, Subject subject) {
         if (!UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_AINE) || !UserUtil.isSameSchool(user, subject.getSchool())) {
-            return false;
+            return new SimpleEntry<>(Boolean.FALSE, "main.messages.error.nopermission");
         } else if (user.isStudent() || user.isTeacher() || user.isRepresentative()) {
-            return SubjectUtil.isActive(subject);
+            return new SimpleEntry<>(Boolean.valueOf(SubjectUtil.isActive(subject)), "subject.message.passiveSubject");
         } else if (user.isSchoolAdmin()) {
-            return true;
+            return new SimpleEntry<>(Boolean.TRUE, null);
         }
-        return false;
+        return new SimpleEntry<>(Boolean.FALSE, "main.messages.error.nopermission");
     }
 
     public static boolean canViewAllSubjects(HoisUserDetails user) {
@@ -56,8 +58,9 @@ public abstract class SubjectUserRights {
     }
 
     public static void assertCanView(HoisUserDetails user, Subject subject) {
-        if(!canView(user, subject)) {
-            throw new ValidationFailedException("main.messages.error.nopermission");
+        SimpleEntry<Boolean,String> canView = canView(user, subject);
+        if (Boolean.FALSE.equals(canView.getKey())) {
+            throw new ValidationFailedException(canView.getValue());
         }
     }
 

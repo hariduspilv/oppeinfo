@@ -4,7 +4,7 @@
       <div ng-hide="application.student" layout="row" layout-sm="column" layout-xs="column">
         <div flex="45" flex-sm="100" flex-xs="100">
           <hois-autocomplete flex ng-model="application.student" method="students" name="student" label="apel.student"
-          additional-query-params="{active: true}" ng-change="studentChanged()"></hois-autocomplete>
+            additional-query-params="{active: true}"></hois-autocomplete>
         </div>
       </div>
       <div ng-hide="!application.student">
@@ -17,11 +17,11 @@
             {{'apel.formalLearnings.label' | translate}} {{application.isVocational ? ('apel.formalLearnings.vocationalSubtitle' | translate) : ('apel.formalLearnings.higherSubtitle' | translate)}}
           </legend>
           <span ng-if="application.isVocational" ng-repeat="record in application.records | filter:{isFormalLearning: true} | orderBy:'id'">
-            <div ng-include="'apelApplication/templates/apel.application.formal.learning.vocational.list.html'"
-              style="margin-bottom: 20px"></div>
+            <div ng-include="'apelApplication/templates/apel.application.formal.learning.vocational.list.html'" style="margin-bottom: 20px"></div>
           </span>
-          <div ng-if="!application.isVocational" ng-include="'apelApplication/templates/apel.application.formal.learning.higher.list.html'"
-            style="margin-bottom: 20px"></div>
+          <span ng-if="!application.isVocational" ng-repeat="record in application.records | filter:{isFormalLearning: true} | orderBy:'id'">
+            <div ng-include="'apelApplication/templates/apel.application.formal.learning.higher.list.html'" style="margin-bottom: 20px"></div>
+          </span>
           <md-button ng-if="application.canEdit" class="md-raised md-default" ng-click="editFormalLearning()">{{'main.button.create' | translate}}</md-button>
         </fieldset>
       </div>

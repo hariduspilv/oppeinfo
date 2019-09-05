@@ -106,9 +106,9 @@ angular.module('hitsaOis')
       }
       var regExp = new RegExp('^.*' + text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&').replace("%", ".*").toUpperCase() + '.*$');
       return ($scope.subjects || []).filter(function (subject) {
-        return $scope.subjectNotAdded(subject) && regExp.test($scope.currentLanguageNameField(subject).toUpperCase());
+        return $scope.subjectNotAdded(subject) && regExp.test(subject.code + " - " + $scope.currentLanguageNameField(subject).toUpperCase());
       });
-    }
+    };
 
     $scope.$watch('data.typeObject', function (newValue) {
       if (newValue && newValue.code === 'KORGMOODUL_V') {

@@ -15,6 +15,12 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     var loadStudent = function () {
       QueryUtils.endpoint(baseUrl).get({ id: studentId }, function (result) {
         $scope.student = result;
+        if ($scope.student.person.address && $scope.student.person.postcode && $scope.student.person.address.endsWith($scope.student.person.postcode)) {
+          $scope.student.person.address = $scope.student.person.address.substring(0, $scope.student.person.address.lastIndexOf($scope.student.person.postcode));
+          if ($scope.student.person.address.endsWith(", ")) {
+            $scope.student.person.address = $scope.student.person.address.slice(0, -2);
+          }
+        }
         $scope.student.dormitoryHistory.forEach(function (history) {
           dormitoryMapper.objectmapper(history);
         });
@@ -339,6 +345,15 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       $scope.moduleBacklog = function (module) {
         return (($scope.moduleResultById[module.curriculumModule.id] ? moduleResultById[module.curriculumModule.id].totalSubmitted : 0) - module.curriculumModule.credits);
       };
+
+      // filter replaced themes that do not have a grade
+      $scope.filterReplacedThemes = function (module) {
+        return function (theme) {
+          var moduleResult = $scope.moduleResultById[module.curriculumModule.id];
+          var themeResult = moduleResult ? moduleResult.themeResultById[theme.id] : undefined;
+          return module.replacedThemes.indexOf(theme.id) === -1 || angular.isDefined(themeResult);
+        };
+      };
     }
   };
 
@@ -357,7 +372,6 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       QueryUtils.loadingWheel($scope, false);
     });
   }
-
 
   $scope.loadStudyYearResults = function () {
     if (!angular.isObject($scope.vocationalResultsStudyYear)) {
@@ -512,6 +526,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
     function setChangeableModules(changeableModules) {
       changeableModules.forEach(function (changeableModule) {
         changeableModule.oldCurriculumVersionModuleId = changeableModule.curriculumVersionModuleId;
+        changeableModule.oldIsOptional = changeableModule.isOptional;
         $scope.higherCurriculumModules.forEach(function (curriculumModule) {
           if (curriculumModule.id === changeableModule.curriculumVersionModuleId) {
             changeableModule.curriculumVersionModule = curriculumModule;
@@ -809,7 +824,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       $scope.editService = function(service) {
         dialogService.showDialog("student/templates/edit.service.dialog.html", function (dialogScope) {
           if (!service) {
-            dialogScope.service = {entryDate: new Date(), entrySubmitter: $scope.auth.fullname};
+            dialogScope.service = {entryDate: new Date(), entrySubmitter: $scope.auth.fullname, validity: 'TUGIKEHTIV_K'};
           } else {
             dialogScope.service = angular.copy(service, {});
           }

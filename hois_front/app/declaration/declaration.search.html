@@ -9,16 +9,14 @@
               <label>{{'declaration.studyPeriod' | translate}}</label>
               <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required sorted-query="true"></hois-select>
           </md-input-container>
-          <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-              <label>{{'declaration.student' | translate}}</label>
-              <input ng-model="criteria.studentsName" type="text" md-maxlength="255">
-          </md-input-container>
+          <hois-autocomplete flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5"
+            ng-model="criteria.student" ha-controller="directiveControllers" url="/declarations/search-students"
+            label="student.label" no-paging="true"></hois-autocomplete>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex="45" flex-sm="100" flex-xs="100">
-              <label>{{'declaration.curriculumVersion' | translate}}</label>
-              <hois-select ng-model="criteria.curriculumVersion" values="curriculumVersions"></hois-select>
-          </md-input-container>
+          <hois-autocomplete flex="45" flex-sm="100" flex-xs="100"
+            ng-model="criteria.curriculumVersion" ha-controller="directiveControllers" ha-search="searchCurriculumVersions"
+            label="declaration.curriculumVersion"></hois-autocomplete>
           <hois-autocomplete flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5" ng-model="criteria.studentGroups"
             ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" name="studentGroup" multiple
             label="{{'declaration.studentGroup'}}" additional-query-params="{higher: true, valid: true, curriculumId: criteria.curriculum}"></hois-autocomplete>
@@ -43,11 +41,11 @@
             <div layout="row" layout-sm="column" layout-xs="column" >
               <md-input-container flex-sm="100" flex-xs="100">
                 <label>{{'main.from' | translate}}</label>
-                <md-datepicker ng-model="criteria.insertedFrom" md-max-date="criteria.insertedThru"></md-datepicker>
+                <md-datepicker ng-model="criteria.insertedFrom" md-max-date="criteria.insertedThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
               </md-input-container>
               <md-input-container flex-sm="100" flex-xs="100">
                 <label>{{'main.thru' | translate}}</label>
-                <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom"></md-datepicker>
+                <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
               </md-input-container>
             </div>
           </div>
@@ -57,11 +55,11 @@
             <div layout="row" layout-sm="column" layout-xs="column" >
               <md-input-container flex-sm="100" flex-xs="100">
                 <label>{{'main.from' | translate}}</label>
-                <md-datepicker ng-model="criteria.confirmedFrom" md-max-date="criteria.confirmedThru"></md-datepicker>
+                <md-datepicker ng-model="criteria.confirmedFrom" md-max-date="criteria.confirmedThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
               </md-input-container>
               <md-input-container flex-sm="100" flex-xs="100">
                 <label>{{'main.thru' | translate}}</label>
-                <md-datepicker ng-model="criteria.confirmedThru" md-min-date="criteria.confirmedFrom"></md-datepicker>
+                <md-datepicker ng-model="criteria.confirmedThru" md-min-date="criteria.confirmedFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
               </md-input-container>
             </div>
           </div>

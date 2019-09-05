@@ -90,7 +90,10 @@ public class StudentRemarkService {
             StudentRemarkSearchCommand criteria) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_REMARKS_FROM);
         if (user != null) {
-            qb.requiredCriteria("sg.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+            qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+            if (user.isTeacher()) {
+                qb.requiredCriteria("sg.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+            }
         }
         qb.optionalCriteria("sg.id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
         qb.optionalCriteria("sg.id in (:studentGroupIds)", "studentGroupIds", criteria.getStudentGroups());
@@ -107,7 +110,7 @@ public class StudentRemarkService {
         String journalRemarksQuery = "";
         if (Boolean.TRUE.equals(criteria.getShowJournalRemarks())) {
             qb = new JpaNativeQueryBuilder(JOURNAL_REMARKS_FROM);
-            if (user != null) {
+            if (user != null && user.isTeacher()) {
                 qb.requiredCriteria("sg2.teacher_id = :teacherId", "teacherId", user.getTeacherId());
             }
             qb.optionalCriteria("sg2.id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
@@ -134,8 +137,11 @@ public class StudentRemarkService {
     private static Map<String, Object> studentRemarksParameters(HoisUserDetails user,
             StudentRemarkSearchCommand criteria) {
         HashMap<String, Object> parameters = new HashMap<>();
-        if (user != null && user.getTeacherId() != null) {
-            parameters.put("teacherId", user.getTeacherId());
+        if (user != null) {
+            parameters.put("schoolId", user.getSchoolId());
+            if (user.getTeacherId() != null) {
+                parameters.put("teacherId", user.getTeacherId());
+            }
         }
         if (criteria.getStudentGroup() != null) {
             parameters.put("studentGroupId", criteria.getStudentGroup());
@@ -285,25 +291,35 @@ public class StudentRemarkService {
     }
 
     private static boolean canSearch(HoisUserDetails user) {
-        return user.isTeacher() && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_MARKUS);
-    }
-
-    private boolean canView(HoisUserDetails user, Long studentId) {
-        return isStudentGroupTeacher(user, studentId)
+        return (user.isTeacher() || user.isSchoolAdmin())
                 && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_MARKUS);
     }
 
-    private boolean canEdit(HoisUserDetails user, Long studentId) {
-        return isStudentGroupTeacher(user, studentId)
+    private boolean canCreate(HoisUserDetails user, Long studentId) {
+        return ((user.isTeacher() && isStudentGroupTeacher(user, studentId))
+                || UserUtil.isSchoolAdmin(user, em.getReference(Student.class, studentId).getSchool()))
+                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_MARKUS);
+    }
+
+    private boolean canView(HoisUserDetails user, Student student) {
+        return ((user.isTeacher() && isStudentGroupTeacher(user, student.getId()))
+                || UserUtil.isSchoolAdmin(user, student.getSchool()))
+                && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_MARKUS);
+    }
+
+    private boolean canEdit(HoisUserDetails user, Student student) {
+        return ((user.isTeacher() && isStudentGroupTeacher(user, student.getId()))
+                || UserUtil.isSchoolAdmin(user, student.getSchool()))
                 && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_MARKUS);
     }
 
     private boolean isStudentGroupTeacher(HoisUserDetails user, Long studentId) {
-        List<?> data = em
-                .createNativeQuery(
-                        "select s.id from student s " + "join student_group sg on sg.id = s.student_group_id "
-                                + "where s.id = ?1 and sg.teacher_id = ?2")
-                .setParameter(1, studentId).setParameter(2, user.getTeacherId()).setMaxResults(1).getResultList();
+        List<?> data = em.createNativeQuery("select s.id from student s "
+                + "join student_group sg on sg.id = s.student_group_id "
+                + "where s.id = ?1 and sg.teacher_id = ?2")
+                .setParameter(1, studentId)
+                .setParameter(2, user.getTeacherId())
+                .setMaxResults(1).getResultList();
         return !data.isEmpty();
     }
 
@@ -313,14 +329,20 @@ public class StudentRemarkService {
         }
     }
 
-    public void assertCanView(HoisUserDetails user, Long studentId) {
-        if (!canView(user, studentId)) {
+    public void assertCanCreate(HoisUserDetails user, Long studentId) {
+        if (!canCreate(user, studentId)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }
 
-    public void assertCanEdit(HoisUserDetails user, Long studentId) {
-        if (!canEdit(user, studentId)) {
+    public void assertCanView(HoisUserDetails user, Student student) {
+        if (!canView(user, student)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public void assertCanEdit(HoisUserDetails user, Student student) {
+        if (!canEdit(user, student)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }

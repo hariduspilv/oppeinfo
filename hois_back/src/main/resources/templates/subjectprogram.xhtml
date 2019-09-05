@@ -136,7 +136,7 @@
 	  		</tr>
 	  		{% for studyContent in content.studyContents %}
 		  		<tr>
-		  			<td><b>{{content.program.studyContentType.code == "OPPETOOSISU_N" ? studyContent.weekNr + '.' : studyContent.studyDt.toString() | date(existingFormat='yyyy-MM-dd', format='dd.MM.yyyy') }}</b></td>
+		  			<td style="width: 1%; white-space: nowrap;"><b>{{content.program.studyContentType.code == "OPPETOOSISU_N" ? studyContent.weekNr : studyContent.studyDt.toString() | date(existingFormat='yyyy-MM-dd', format='dd.MM.yyyy') }}</b></td>
 		  			<td>{{ studyContent.studyInfo }}</td>
 		  		</tr>
 		  	{% endfor %}
@@ -155,6 +155,12 @@
 	  	<p>
 	  		<b>{{'report.subjectprogram.studyLiterature' | translate}}:</b><br/>
 	  		{{ content.program.studyLiterature }}
+	  	</p>
+  	{% endif %}
+  	{% if content.program.addInfo is not null %}
+	  	<p>
+	  		<b>{{'report.subjectprogram.addInfo' | translate}}:</b><br/>
+	  		{{ content.program.addInfo }}
 	  	</p>
   	{% endif %}
   </body>

@@ -1,0 +1,146 @@
+<md-dialog aria-label="add student dialog" flex="60" flex-md="80" flex-sm="100" flex-xs="100" ng-cloak>
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2 translate="moduleProtocol.moduleInfoHeader" translate-values="{ module: currentLanguageNameField(result.module),
+        credits: result.credits, curriculumVersion: currentLanguageNameField(result.curriculumVersion)}" ng-if="result"></h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-font-set="material-icons">close</md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <div class="md-dialog-content">
+      <div layout-padding>
+        <div flex>
+          <md-table-container style="padding: 1px;">
+            <table class="custom-table">
+              <thead class="secondary-table-header">
+                <th colspan="{{maxPeriods + 3}}"><span translate="moduleProtocol.moduleInfoHeader" translate-values="{ module: currentLanguageNameField(result.module),
+                  credits: result.credits, curriculumVersion: currentLanguageNameField(result.curriculumVersion)}" ng-if="result"></span></th>
+              </thead>
+              <tbody ng-repeat="module in result.lessonPlanModules">
+                <tr class="sub-header1">
+                  <td style="width: 450px;">
+                    <p translate="{{ module.representative ? 'moduleProtocol.lessonPlanModuleHeaderWithRepresentative' : 'moduleProtocol.lessonPlanModuleHeader'}}"
+                      translate-values="{ year: currentLanguageNameField(module.studyYear.year), representative: currentLanguageNameField(module.representative) }"></p>
+                  </td>
+                  <td>{{'main.OF' | translate}}</td>
+                  <td ng-repeat="period in module.periods">{{currentLanguageNameField(period)}}</td>
+                  <td colspan="{{maxPeriods - module.periods.length + 1}}"></td>
+                </tr>
+                <tr class="journal-row" ng-repeat="journal in module.journals">
+                  <td>{{currentLanguageNameField(journal)}}{{module.journalTeachers[journal.id].length &GT; 0 ? ': ' : ''}}{{module.journalTeachers[journal.id].join(', ')}}</td>
+                  <td style="font-weight: bold;">{{module.mappedHoursByJournal[journal.id] ? (module.mappedHoursByJournal[journal.id] | hoisNumber:1) : 0}}</td>
+                  <td ng-repeat="period in module.periods">{{module.mappedHours[journal.id][period.id] ? (module.mappedHours[journal.id][period.id] | hoisNumber:1) : 0}}</td>
+                  <td colspan="{{maxPeriods - module.periods.length + 1}}"></td>
+                </tr>
+                <tr class="journal-row">
+                  <td>{{'main.OF' | translate}}</td>
+                  <td>{{module.totalHours ? (module.totalHours | hoisNumber:1) : 0}}</td>
+                  <td ng-repeat="period in module.periods">{{module.mappedHoursByPeriod[period.id] ? (module.mappedHoursByPeriod[period.id] | hoisNumber:1) : 0}}</td>
+                  <td colspan="{{maxPeriods - module.periods.length + 1}}"></td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+          <!-- <md-table-container ng-repeat="module in result.lessonPlanModules">
+            <table md-table class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column style="width: 350px;">
+                    <p translate="moduleProtocol.lessonPlanModuleHeader" translate-values="{ year: currentLanguageNameField(module.studyYear.year)}"></p>
+                  </th>
+                  <th md-column style="width: 70px;">{{'main.OF' | translate}}</th>
+                  <th md-column style="width: 120px;" ng-repeat="period in module.periods">{{currentLanguageNameField(period)}}</th>
+                  <th md-column></th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="journal in module.journals" ng-class-odd="'even'" ng-class-even="'odd'">
+                  <td md-cell>{{currentLanguageNameField(journal)}}: {{module.journalTeachers[journal.id].join(', ')}}</td>
+                  <td md-cell style="font-weight: bold;">{{module.mappedHoursByJournal[journal.id] ? (module.mappedHoursByJournal[journal.id] | hoisNumber:1) : 0}}</td>
+                  <td md-cell ng-repeat="period in module.periods">{{module.mappedHours[journal.id][period.id] ? (module.mappedHours[journal.id][period.id] | hoisNumber:1) : 0}}</td>
+                  <td md-cell></td>
+                </tr>
+                <tr md-row class="{{module.journals.length % 2  === 0? 'even' : 'odd'}}" style="height: 42px; font-weight: bold;">
+                  <td md-cell>{{'main.OF' | translate}}</td>
+                  <td md-cell>{{module.totalHours ? (module.totalHours | hoisNumber:1) : 0}}</td>
+                  <td md-cell ng-repeat="period in module.periods">{{module.mappedHoursByPeriod[period.id] ? (module.mappedHoursByPeriod[period.id] | hoisNumber:1) : 0}}</td>
+                  <td md-cell></td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container> -->
+        </div>
+      </div>
+    </div>
+  </md-dialog-content>
+  <md-dialog-actions layout="row" layout-align="start center">
+    <md-button class="md-raised" ng-click="cancel()">{{"main.button.back" | translate}}</md-button>
+  </md-dialog-actions>
+</md-dialog>
+
+<style>
+  table.custom-table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  table.custom-table th:first-child,
+  table.custom-table td:first-child {
+    padding-left: 2.5em;
+  }
+  
+  table.custom-table th:last-child,
+  table.custom-table td:last-child {
+    padding-right: 1.5em;
+  }
+  
+  table.custom-table th,
+  table.custom-table td{
+    padding-right: 0.5em;
+    text-align: left;
+  }
+  
+  table.custom-table tr.occupation-header {
+    height: 38px !important;
+  }
+  
+  table.custom-table tr.occupation-header td:first-child {
+    padding-left: 0.5em !important;
+  }
+  
+  table.custom-table tr.sub-header1 {
+    height: 32px !important;
+    font-weight: bold !important;
+  }
+  
+  table.custom-table tr.sub-header1 td:first-child {
+    padding-left: 1.5em !important;
+  }
+  
+  table.custom-table tr {
+    height: 28px;
+  }
+  
+  table.custom-table td md-checkbox {
+    margin: auto;
+  }
+
+  table.custom-table tr.journal-row {
+    font-size: 13px;
+    font-weight: normal !important;
+    min-height: 31px !important;
+    border-bottom: 1px #eee solid;
+  }
+
+  table.custom-table tr:last-child {
+    font-size: 13px;
+    font-weight: bold !important;
+    min-height: 31px !important;
+    border-bottom: 1px #eee solid;
+  }
+  
+</style>

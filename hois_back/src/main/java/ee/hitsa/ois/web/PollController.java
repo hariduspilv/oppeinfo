@@ -25,21 +25,30 @@ import ee.hitsa.ois.service.PollService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
+import ee.hitsa.ois.web.commandobject.poll.GraphSearchCommand;
 import ee.hitsa.ois.web.commandobject.poll.PollCommand;
+import ee.hitsa.ois.web.commandobject.poll.PollCommentCommand;
 import ee.hitsa.ois.web.commandobject.poll.PollDatesCommand;
 import ee.hitsa.ois.web.commandobject.poll.PollForm;
 import ee.hitsa.ois.web.commandobject.poll.PollSearchCommand;
 import ee.hitsa.ois.web.commandobject.poll.QuestionCommand;
 import ee.hitsa.ois.web.commandobject.poll.QuestionOrderCommand;
+import ee.hitsa.ois.web.commandobject.poll.QuestionSearchCommand;
 import ee.hitsa.ois.web.commandobject.poll.ThemePageableCommand;
 import ee.hitsa.ois.web.commandobject.poll.ThemeRepedetiveCommand;
-import ee.hitsa.ois.web.commandobject.poll.ResponseForm;
 import ee.hitsa.ois.web.commandobject.poll.ThemeOrderCommand;
 import ee.hitsa.ois.web.commandobject.poll.ThemeCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.poll.AnswersDto;
+import ee.hitsa.ois.web.dto.poll.GraphDto;
+import ee.hitsa.ois.web.dto.poll.PollRelatedObjectsDto;
 import ee.hitsa.ois.web.dto.poll.PollSearchDto;
+import ee.hitsa.ois.web.dto.poll.PracticeThemesDto;
 import ee.hitsa.ois.web.dto.poll.QuestionDto;
+import ee.hitsa.ois.web.dto.poll.QuestionPollSearchDto;
+import ee.hitsa.ois.web.dto.poll.QuestionSearchDto;
 import ee.hitsa.ois.web.dto.poll.ResponseDto;
+import ee.hitsa.ois.web.dto.poll.SubjectAnswerDto;
 import ee.hitsa.ois.web.dto.poll.ThemesDto;
 
 @RestController
@@ -48,13 +57,60 @@ public class PollController {
     
     @Autowired
     private PollService pollService;
+    
+    /**
+     * Searches
+     */
 
     @GetMapping
-    public Page<PollSearchDto> search(HoisUserDetails user, PollSearchCommand command,
-            Pageable pageable) {
+    public Page<PollSearchDto> search(HoisUserDetails user, PollSearchCommand command, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
         return pollService.search(user, command, pageable);
     }
+    
+    @GetMapping("/answers")
+    public Page<AnswersDto> searchAnswers(HoisUserDetails user, PollSearchCommand command, Pageable pageable) {
+        return pollService.searchAnswers(user, command, pageable);
+    }
+    
+    @GetMapping("/answers/subjects")
+    public Page<SubjectAnswerDto> searchAnswersPerSubject(HoisUserDetails user, PollSearchCommand command, Pageable pageable) {
+        return pollService.searchAnswersPerSubject(user, command, pageable);
+    }
+    
+    @GetMapping("/answers/{id:\\d+}")
+    public PollRelatedObjectsDto searchAnswersPerResponse(HoisUserDetails user, @WithEntity Response response) {
+        // TODO: assert
+        return pollService.searchAnswersPerResponse(response);
+    }
+    
+    @PutMapping("/graph")
+    public GraphDto searchAnswersPerResponse(HoisUserDetails user, @RequestBody GraphSearchCommand command) {
+        // TODO: assert
+        return pollService.createGraph(user, command, true);
+    }
+    
+    @PutMapping("/graphWithoutStudentAnswer")
+    public GraphDto searchAnswersPerResponseWithoutStudent(HoisUserDetails user, @RequestBody GraphSearchCommand command) {
+        // TODO: assert
+        return pollService.createGraph(user, command, false);
+    }
+    
+    @GetMapping("/questionsList")
+    public Page<QuestionSearchDto> searchQuestions(HoisUserDetails user, QuestionSearchCommand command, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return pollService.searchQuestions(user, command, pageable);
+    }
+    
+    @GetMapping("/questionPolls/{id:\\d+}")
+    public Page<QuestionPollSearchDto> questionPolls(HoisUserDetails user, @WithEntity Question question, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return pollService.questionPolls(user, question, pageable);
+    }
+    
+    /**
+     * Manipulating poll
+     */
     
     @PostMapping
     public PollForm create(HoisUserDetails user,
@@ -83,7 +139,7 @@ public class PollController {
     }
     
     @PutMapping("/changeDates/{id:\\d+}")
-    public void updateQuestionsPageable(HoisUserDetails user, @WithEntity Poll poll, 
+    public void updatePollDates(HoisUserDetails user, @WithEntity Poll poll, 
             @Valid @RequestBody PollDatesCommand command) {
         UserUtil.assertIsSchoolAdmin(user);
         pollService.updatePollDates(user, poll, command);
@@ -93,18 +149,18 @@ public class PollController {
     public void deleteTheme(HoisUserDetails user, @WithEntity PollTheme pollTheme) {
         UserUtil.assertIsSchoolAdmin(user);
         pollService.deleteTheme(user, pollTheme);
-        pollService.updateThemeAfterDelete(user, pollTheme.getPoll());
+        pollService.updateThemeOrderAfterDelete(user, pollTheme.getPoll());
     }
     
     @DeleteMapping("/question/{id:\\d+}")
-    public void deleteTheme(HoisUserDetails user, @WithEntity PollThemeQuestion pollThemeQuestion) {
+    public void deleteQuestion(HoisUserDetails user, @WithEntity PollThemeQuestion pollThemeQuestion) {
         UserUtil.assertIsSchoolAdmin(user);
         pollService.deleteQuestion(user, pollThemeQuestion);
-        pollService.updateQuestionAfterDelete(user, pollThemeQuestion.getPollTheme());
+        pollService.updateQuestionOrderAfterDelete(user, pollThemeQuestion.getPollTheme());
     }
     
     @PutMapping("/themes/{id:\\d+}")
-    public ThemesDto updateThemes(HoisUserDetails user, @WithEntity Poll poll, 
+    public ThemesDto updateThemeOrder(HoisUserDetails user, @WithEntity Poll poll, 
             @Valid @RequestBody ThemeOrderCommand command) {
         UserUtil.assertIsSchoolAdmin(user);
         pollService.updateThemeOrder(user, command);
@@ -112,7 +168,7 @@ public class PollController {
     }
     
     @PutMapping("/questions/{id:\\d+}")
-    public ThemesDto updateQuestions(HoisUserDetails user, @WithEntity PollTheme theme, 
+    public ThemesDto updateQuestionOrder(HoisUserDetails user, @WithEntity PollTheme theme, 
             @Valid @RequestBody QuestionOrderCommand command) {
         UserUtil.assertIsSchoolAdmin(user);
         pollService.updateQuestionOrder(user, command);
@@ -120,17 +176,17 @@ public class PollController {
     }
     
     @PutMapping("/themes/pageable/{id:\\d+}")
-    public void updateThemesPageable(HoisUserDetails user, @WithEntity Poll poll, 
+    public void setThemesPageable(HoisUserDetails user, @WithEntity Poll poll, 
             @Valid @RequestBody ThemePageableCommand command) {
         UserUtil.assertIsSchoolAdmin(user);
-        pollService.updateThemesPageable(user, poll, command);
+        pollService.setThemesPageable(user, poll, command);
     }
     
     @PutMapping("/themes/repetitive/{id:\\d+}")
-    public void updateThemePageable(HoisUserDetails user, @WithEntity PollTheme pollTheme, 
+    public void setThemeRepetitive(HoisUserDetails user, @WithEntity PollTheme pollTheme, 
             @Valid @RequestBody ThemeRepedetiveCommand command) {
         UserUtil.assertIsSchoolAdmin(user);
-        pollService.updateThemeRepetitive(user, pollTheme, command);
+        pollService.setThemeRepetitive(user, pollTheme, command);
     }
     
     @PostMapping("/theme/{id:\\d+}")
@@ -149,7 +205,7 @@ public class PollController {
     }
     
     @GetMapping("/themes/{id:\\d+}")
-    public ThemesDto questions(HoisUserDetails user, @WithEntity Poll poll) {
+    public ThemesDto themes(HoisUserDetails user, @WithEntity Poll poll) {
         UserUtil.assertIsSchoolAdmin(user);
         return pollService.themes(poll);
     }
@@ -161,11 +217,24 @@ public class PollController {
         pollService.createQuestion(user, pollTheme, questionCommand);
     }
     
+    @PutMapping("/comment/{id:\\d+}")
+    public void saveComment(HoisUserDetails user, @WithEntity Poll poll,
+            @RequestBody PollCommentCommand command) {
+        UserUtil.assertIsTeacher(user);
+        pollService.saveComment(user, poll, command);
+    }
+    
     @PutMapping("/question/{id:\\d+}")
     public void updateQuestion(HoisUserDetails user, @WithEntity PollThemeQuestion pollThemeQuestion,
             @RequestBody QuestionCommand themeCommand) {
         UserUtil.assertIsSchoolAdmin(user);
         pollService.updateQuestion(user, pollThemeQuestion, themeCommand);
+    }
+    
+    @PutMapping("/updateQuestion/{id:\\d+}")
+    public QuestionDto updateQuestion(HoisUserDetails user, @WithEntity Question question, @RequestBody QuestionDto questionDto) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return pollService.updateQuestion(user, question, questionDto);
     }
     
     @PutMapping("/confirm/{id:\\d+}")
@@ -219,7 +288,50 @@ public class PollController {
     @PutMapping("/testEmailService")
     public void testEmailService() {
         pollService.sendPracticeJournalSupervisorEmails();
+        pollService.sendEmails();
     }
+    
+    /**
+     * EXPERT CONTROLLERS
+     */
+    
+    /**
+     * Outsider gets to respond to poll
+     * @param uuid random string url
+     * @return themes
+     */
+    @GetMapping("/expert/{uuid}")
+    public ThemesDto expertGet(@PathVariable String uuid) {
+        Poll poll = pollService.getPollFromUrlExpert(uuid);
+        pollService.assertCanView(poll);
+        return pollService.themesWithAnswersExpert(poll, uuid);
+    }
+    
+    /**
+     * Save expert response
+     * @param uuid
+     * @param form
+     */
+    @PutMapping("/expert/{responseId:\\d+}/saveAnswer/{id:\\d+}")
+    public void saveExpertResponse(@WithEntity PollThemeQuestion pollThemeQuestion, @WithEntity("responseId") Response response, @RequestBody QuestionDto dto) {
+        pollService.assertCanView(response.getPoll());
+        pollService.saveOtherResponse(pollThemeQuestion, response, dto);
+    }
+    
+    /**
+     * Save expert filled poll and change status to KYSITVASTUSSTAATUS_V (Vastatud).
+     * @param uuid
+     * @param form
+     */
+    @PutMapping("/expert/{id:\\d+}/saveAnswer/final")
+    public void saveExpertResponseFinal(@WithEntity Response response) {
+        pollService.assertCanView(response.getPoll());
+        pollService.setResponseFinishedExpert(response);
+    }
+    
+    /**
+     * SUPERVISOR CONTROLLERS
+     */
     
     /**
      * Contract supervisor from practice journal.
@@ -227,9 +339,9 @@ public class PollController {
      * @return themes
      */
     @GetMapping("/supervisor/{uuid}")
-    public ThemesDto supervisorGet(@PathVariable String uuid) {
-        Poll poll = pollService.getPollFromUrl(uuid);
-        pollService.assertSupervisorView(poll);
+    public PracticeThemesDto supervisorGet(@PathVariable String uuid) {
+        Poll poll = pollService.getPollFromUrlSupervisor(uuid);
+        pollService.assertCanView(poll);
         return pollService.themesWithAnswers(poll, uuid);
     }
     
@@ -238,26 +350,27 @@ public class PollController {
      * @param uuid
      * @param practiceJournalEntriesSupervisorForm
      */
-    @PutMapping("/supervisor/{uuid}/saveAnswer")
-    public void saveSupervisorResponse(@PathVariable String uuid,
-            @RequestBody ResponseForm form) {
-        Poll poll = pollService.getPollFromUrl(uuid);
-        pollService.assertSupervisorView(poll);
-        pollService.saveSupervisorResponse(poll, form, uuid, Boolean.FALSE);
+    @PutMapping("/supervisor/{responseId:\\d+}/saveAnswer/{id:\\d+}")
+    public void saveSupervisorResponse(@WithEntity("responseId") Response response, @RequestBody QuestionDto form,
+            @WithEntity PollThemeQuestion question) {
+        pollService.assertCanView(response.getPoll());
+        pollService.saveOtherResponse(question, response, form);
     }
     
     /**
-     * Save supervisor filled poll and change status to KYSITVASTUSSTAATUS_V (Vastatud).
+     * Change status to KYSITVASTUSSTAATUS_V (Vastatud).
      * @param uuid
      * @param practiceJournalEntriesSupervisorForm
      */
-    @PutMapping("/supervisor/{uuid}/saveAnswer/final")
-    public void saveSupervisorResponseFinal(@PathVariable String uuid,
-            @RequestBody ResponseForm form) {
-        Poll poll = pollService.getPollFromUrl(uuid);
-        pollService.assertSupervisorView(poll);
-        pollService.saveSupervisorResponse(poll, form, uuid, Boolean.TRUE);
+    @PutMapping("/supervisor/{id:\\d+}/saveAnswer/final")
+    public void saveSupervisorResponseFinal(@WithEntity Response response) {
+        pollService.assertCanView(response.getPoll());
+        pollService.setResponseFinishedExpert(response);
     }
+    
+    /**
+     * REGULAR POLL REQUESTS FOR ANSWERING
+     */
     
     /**
      * Find polls for everyone except head admin and supervisor
@@ -278,29 +391,68 @@ public class PollController {
      * @return poll with answers
      */
     @GetMapping("/withAnswers/{id:\\d+}")
-    public ThemesDto getPollWithAnswers(HoisUserDetails user, @WithEntity Response response) {
-        return pollService.getPollWithAnswers(response);
+    public PracticeThemesDto getPollWithAnswers(HoisUserDetails user, @WithEntity Response response) {
+        UserUtil.assertSameSchool(user, response.getPoll().getSchool());
+        return pollService.themesForPractice(response.getPoll(), response, Boolean.FALSE);
     }
     
     /**
-     * Save filled poll
-     * @param user
+     * Get poll with response and responseobject created
+     * Used in dialog window to answer poll
+     * @param user student
      * @param poll
+     * @return poll with answers
+     */
+    @GetMapping("/withAnswers/journalOrSubject/{id:\\d+}")
+    public ThemesDto getPollWithAnswersJournalOrSubject(HoisUserDetails user, @WithEntity Response response) {
+        UserUtil.assertSameSchool(user, response.getPoll().getSchool());
+        return pollService.themesWithAnswersJournalOrSubject(response.getPoll(), response, Boolean.FALSE);
+    }
+    
+    /**
+     * Get poll with response and responseobject created for viewing only
+     * @param user
+     * @param response
+     * @return poll with answers
+     */
+    @GetMapping("/withAnswersForView/{id:\\d+}")
+    public PracticeThemesDto getPollWithAnswersForView(HoisUserDetails user, @WithEntity Response response) {
+        UserUtil.assertSameSchool(user, response.getPoll().getSchool());
+        return pollService.themesForPractice(response.getPoll(), response, Boolean.TRUE);
+    }
+    
+    /**
+     * Get poll with response and responseobject created for viewing only
+     * @param user student
+     * @param response
+     * @return poll with answers
+     */
+    @GetMapping("/withAnswersForView/journalOrSubject/{id:\\d+}")
+    public ThemesDto getPollWithAnswersJournalOrSubjectForView(HoisUserDetails user, @WithEntity Response response) {
+        UserUtil.assertSameSchool(user, response.getPoll().getSchool());
+        return pollService.themesWithAnswersJournalOrSubject(response.getPoll(), response, Boolean.TRUE);
+    }
+    
+    /**
+     * Save poll question answer
+     * @param question
+     * @param response
      * @param form
      */
-    @PutMapping("/{id:\\d+}/saveAnswer")
-    public void saveResponse(@WithEntity Response response, @RequestBody ResponseForm form) {
-        pollService.saveOtherResponse(response, form, Boolean.FALSE);
+    @PutMapping("{responseId:\\d+}/saveAnswer/{id:\\d+}")
+    public void saveResponse(@WithEntity PollThemeQuestion question, @WithEntity("responseId") Response response, @RequestBody QuestionDto form) {
+        pollService.saveOtherResponse(question, response, form);
     }
     
     /**
-     * Save filled poll and change status to KYSITVASTUSSTAATUS_V (Vastatud).
+     * Change poll status to KYSITVASTUSSTAATUS_V (Vastatud).
+     * Saving the whole poll again with confirmation is not necessary.
      * @param uuid
      * @param form
      */
     @PutMapping("/{id:\\d+}/saveAnswer/final")
-    public void saveResponseFinal(@WithEntity Response response, @RequestBody ResponseForm form) {
-        pollService.saveOtherResponse(response, form, Boolean.TRUE);
+    public void saveResponseFinal(HoisUserDetails user, @WithEntity Response response) {
+        pollService.setResponseFinished(user, response);
     }
     
 }

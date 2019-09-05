@@ -1,0 +1,8 @@
+<md-nav-bar md-selected-nav-item="currentNavItem" aria-label="{{'main.nagivationBar' | translate}}">
+  <md-nav-item md-nav-href="#/boardingSchools?_menu" name="boarding.school.search"
+    aria-label="{{'student.card.search' | translate}}">{{'boardingSchool.search' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/boardingSchools/management?_menu" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPILASKODU')" 
+    name="boarding.school.management" aria-label="{{'student.card.management' | translate}}">{{'boardingSchool.management' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/boardingSchools/rooms?_menu" name="boarding.school.rooms"
+    aria-label="{{'student.card.management' | translate}}">{{'boardingSchool.rooms' | translate}}</md-nav-item>
+</md-nav-bar>

@@ -1,5 +1,8 @@
 package ee.hitsa.ois.service.curriculum;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -40,6 +43,7 @@ import ee.hitsa.ois.util.OccupationModuleCapacitiesUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleCapacityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeCapacityDto;
@@ -278,5 +282,24 @@ public class CurriculumVersionOccupationModuleService {
                 getCapacityTypes(EntityUtil.getId(theme.getModule().getCurriculumVersion().getCurriculum().getSchool())));
         OccupationModuleCapacitiesUtil.updateModuleYearCapacitiesHours(theme.getModule());
         EntityUtil.save(theme.getModule(), em);
+    }
+
+    public List<CurriculumModuleOutcomeDto> themeOutcomes(CurriculumVersionOccupationModuleTheme theme) {
+        List<?> data = em.createNativeQuery("select cvoo.curriculum_module_outcomes_id from curriculum_version_omodule_outcomes cvoo "
+                + "where cvoo.curriculum_version_omodule_theme_id = ?1")
+                .setParameter(1, EntityUtil.getId(theme))
+                .getResultList();
+
+        List<Long> outcomeIds = StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
+        List<CurriculumModuleOutcomeDto> outcomeDtos = new ArrayList<>();
+
+        if (!outcomeIds.isEmpty()) {
+            List<CurriculumModuleOutcome> outcomes = em.createQuery("select cmo from CurriculumModuleOutcome cmo "
+                    + "where cmo.id in (?1)", CurriculumModuleOutcome.class)
+                    .setParameter(1, outcomeIds)
+                    .getResultList();
+            outcomeDtos = StreamUtil.toMappedList(o -> CurriculumModuleOutcomeDto.of(o), outcomes);
+        }
+        return outcomeDtos;
     }
 }

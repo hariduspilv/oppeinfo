@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.curriculum;
 
+import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -14,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
-import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
@@ -115,9 +116,9 @@ public class CurriculumVersionOccupationModuleController {
         curriculumVersionOccupationModuleService.deleteTheme(user, theme);
     }
 
-    @GetMapping("/outcome/{id:\\d+}")
-    public CurriculumModuleOutcomeDto getTheme(@WithEntity CurriculumModuleOutcome outcome) {
-        return CurriculumModuleOutcomeDto.of(outcome);
+    @GetMapping("/theme/{id:\\d+}/outcomes")
+    public List<CurriculumModuleOutcomeDto> getThemeOutcomes(@WithEntity CurriculumVersionOccupationModuleTheme theme) {
+        return curriculumVersionOccupationModuleService.themeOutcomes(theme);
     }
 
     private void validate(HoisUserDetails user, Long curriculumVersionId) {

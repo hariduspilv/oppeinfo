@@ -19,7 +19,6 @@ public class GeneralMessageForm extends VersionedCommand {
     private String content;
     private LocalDate validFrom;
     private LocalDate validThru;
-    @Required
     private List<String> targets;
 
     public String getTitle() {

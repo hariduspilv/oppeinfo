@@ -240,8 +240,6 @@ public abstract class ApelApplicationUtil {
     public static void assertInformalSubject(ApelApplicationInformalSubjectOrModule subject) {
         if (subject.getSubject() == null) {
             throw new ValidationFailedException("apel.error.subjectIsNull");
-        } else if (subject.getCurriculumVersionHmodule() == null) {
-            throw new ValidationFailedException("apel.error.moduleIsNull");
         }
     }
 

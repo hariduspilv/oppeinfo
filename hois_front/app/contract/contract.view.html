@@ -2,14 +2,24 @@
   <div flex>
     <div layout="column">
       <form name="contractForm" ng-submit="save()" layout="column" novalidate>
-      <div class="form-readonly">
       <div layout="row" layout-sm="column" layout-xs="column" flex>
-        <md-input-container flex="35">
-          <label>{{'student.label' | translate}}</label>
-          <hois-value value="currentLanguageNameField(contract.student)"></hois-value>
-        </md-input-container>
+        <div layout="column" flex="50" flex-xs="100" class="form-readonly">
+          <br>
+          <md-input-container>
+            <label>{{'student.label' | translate}}</label>
+            <hois-value value="currentLanguageNameField(contract.student)"></hois-value>
+          </md-input-container>
+        </div>
+        <div layout="row" flex="50" flex-xs="100" ng-if="auth.isAdmin() && 
+          (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_K') && 
+          isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')">
+          <md-input-container flex="100">
+            <label>{{'contract.contractNumber' | translate}}</label>
+            <input ng-model="contract.contractNr" md-maxlength="20" ng-blur="changeContractNr()">
+          </md-input-container>
+        </div>
       </div>
-
+      <div class="form-readonly">
       <md-table-container ng-if="!formState.isHigher">
         <table md-table class="secondary-table">
           <thead md-head>
@@ -57,12 +67,12 @@
       <br>
 
       <div layout="row" layout-sm="column" layout-xs="column" flex>
-        <md-input-container flex="15">
+        <md-input-container flex="15" flex-xs="100">
           <label>{{'contract.start' | translate}}</label>
           <hois-value value="contract.startDate | hoisDate"></hois-value>
         </md-input-container>
 
-        <md-input-container flex="15" flex-offset-gt-md="5">
+        <md-input-container flex="15" flex-xs="100" flex-offset-gt-md="5">
           <label>{{'contract.end' | translate}}</label>
           <hois-value value="contract.endDate | hoisDate"></hois-value>
         </md-input-container>
@@ -103,7 +113,7 @@
             <th md-column width="25%">{{'contract.supervisorName' | translate}}</th>
             <th md-column width="25%">{{'contract.supervisorEmail' | translate}}</th>
             <th md-column width="25%">{{'contract.supervisorPhone' | translate}}</th>
-            <th md-column width="10%" ng-if="(contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_K'
+            <th md-column width="25%" ng-if="(contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_K'
             || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_T') && auth.isAdmin()"></th>
         </tr>
         </thead>
@@ -112,13 +122,15 @@
             <td md-cell>{{contractSupervisor.supervisorName}}</td>
             <td md-cell>{{contractSupervisor.supervisorEmail}}</td>
             <td md-cell>{{contractSupervisor.supervisorPhone}}</td>
-            <td layout="row" ng-if="(contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_K'
-            || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_T') && auth.isAdmin()" md-cell style="height: inherit;">
-              <div flex="50" ng-if="contract.status.code !== 'LEPING_STAATUS_T'" style="margin: auto;">
-                <a target="_blank" ng-href="#/practiceJournals/supervisor/{{contractSupervisor.supervisorUrl}}">{{'journal.entry.open' | translate}}</a>
-              </div>
-              <div flex="50" ng-if="contract.status.code !== 'LEPING_STAATUS_T'" style="margin: auto;">
-                <a ng-click="sendEmailAgain(contractSupervisor.id)">{{'contract.sendAgain' | translate}}</a>
+            <td ng-if="(contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_K'
+            || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_T') && auth.isAdmin()" md-cell>
+              <div layout="row">
+                <div flex="50" style="margin: auto;">
+                  <a target="_blank" style="word-wrap: break-word" ng-click="openInNewTab(contractSupervisor.supervisorUrl)">{{'contract.openPracticeJournal' | translate}}</a>
+                </div>
+                <div flex="50" style="margin: auto;">
+                  <a ng-click="sendEmailAgain(contractSupervisor.id, contractSupervisor.supervisorUrl)">{{'contract.sendAgain' | translate}}</a>
+                </div>
               </div>
             </td>
         </tr>
@@ -168,7 +180,7 @@
         </md-input-container>
       </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column" flex>
+      <div layout="row" ng-if="!auth.school.withoutEkis" layout-sm="column" layout-xs="column" flex>
         <md-input-container flex>
           <label class="textInput">{{'contract.contractCoordinator' | translate}}</label>
           <hois-value value="currentLanguageNameField(contract.contractCoordinator)"></hois-value>
@@ -276,12 +288,19 @@
         </fieldset>
       </div>
 
-      <div layout="row">
+      <div layout="row" layout-xs="column">
+        <md-button ng-if="auth.isAdmin() && (contract.status.code === 'LEPING_STAATUS_Y')
+          && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING') && auth.school.withoutEkis" class="md-raised" 
+          ng-click="confirm()">{{'contract.confirm' | translate}}</md-button>
+        <md-button ng-if="contract.id && (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_S'
+          || contract.status.code === 'LEPING_STAATUS_K')" class="md-raised md-default" ng-href="{{printUrl()}}" target="_blank">
+          {{"main.button.print" | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="back('#/contracts/')">{{'main.button.back' | translate}}</md-button>
         <md-button ng-if="(auth.isAdmin() && contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code=== 'LEPING_STAATUS_S')
           && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" class="md-raised" 
           ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-        <md-button ng-if="contract.wdId && (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_K')"
+        <md-button ng-if="contract.wdId && (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_K') &&
+          !auth.school.withoutEkis"
           class="md-raised md-default" ng-href="{{getEkisContractUrl(contract.wdId)}}" target="_blank">{{'contract.button.viewContractFromEkis' | translate}}</md-button>
         <md-button ng-if="auth.isAdmin() && (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_K')
         && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING') && contract.canceledBy === null" class="md-raised" 

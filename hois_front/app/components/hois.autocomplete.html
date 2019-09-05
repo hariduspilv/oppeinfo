@@ -11,7 +11,9 @@
                  ng-disabled="disabled"
                  md-floating-label="{{label | translate}}">
   <md-item-template>  
-    <span md-highlight-text="ngSearchText" ng-style="{'color': warningParam && item['{{warningParam}}'] ? 'red' : 'inherit'}">{{display ? item[display] : $root.currentLanguageNameField(item)}}</span>
+    <span md-highlight-text="ngSearchText" md-highlight-flags="i" ng-style="{'color': warningParam && item['{{warningParam}}'] ? 'red' : 'inherit'}">{{display ? item[display] : $root.currentLanguageNameField(item)}}</span>
   </md-item-template>
-  {{highlightParam}}
+  <md-not-found>
+      {{'main.messages.error.notFound' | translate}}
+  </md-not-found>
 </md-autocomplete>

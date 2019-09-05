@@ -74,6 +74,9 @@ angular.module('hitsaOis').controller('StudentCardSearchController', ['$scope', 
           $scope.loadData();
         }, function () {
           ignoreWindow = true;
+          // NB! This function copies one criteria into other.
+          // In mdPagination it trigers a watcher which changes values and then calls `changePage` function again.
+          // So manually it is prevented with `ignoreWindow` variable which is resetted after 50 ms.
           angular.copy($scope.copiedCriteria, $scope.criteria);
           $timeout(function () {
             ignoreWindow = false;

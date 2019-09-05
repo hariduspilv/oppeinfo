@@ -45,6 +45,7 @@ public class CertificateService {
 
     private static final String CERTIFICATE_FROM = "from certificate c "
             + "left outer join student s on s.id = c.student_id "
+            + "left join student_group sg on sg.id = s.student_group_id "
             + "left outer join person p on p.id = s.person_id "
             + "inner join classifier type on c.type_code = type.code "
             + "join classifier status on status.code = c.status_code ";
@@ -54,7 +55,7 @@ public class CertificateService {
             + "else c.other_name end as name, c.student_id, "
             + "case when c.student_id is not null then p.lastname || ' ' || p.firstname "
             + "else split_part(c.other_name, ' ', 2) || ' ' || split_part(c.other_name, ' ', 1) "
-            + "end as sortablename, c.status_code ";
+            + "end as sortablename, c.status_code, sg.code ";
 
     @Autowired
     private ClassifierRepository classifierRepository;
@@ -89,6 +90,7 @@ public class CertificateService {
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname", "c.other_name"), "name", criteria.getName());
         qb.optionalCriteria("c.inserted >= :insertedFrom", "insertedFrom", criteria.getInsertedFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("c.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(), DateUtils::lastMomentOfDay);
+        qb.optionalCriteria("c.status_code in (:status)", "status", criteria.getStatus());
 
         if(user.isRepresentative()) {
             qb.requiredCriteria("exists("
@@ -110,6 +112,7 @@ public class CertificateService {
             dto.setStudentFullname(resultAsString(r, 6));
             dto.setStudentId(resultAsLong(r, 7));
             dto.setStatus(resultAsString(r, 9));
+            dto.setStudentGroup(resultAsString(r, 10));
             dto.setCanBeChanged(certificateValidationService.canBeChanged(user, dto.getStatus()));
             return dto;
         });
@@ -163,6 +166,12 @@ public class CertificateService {
         if(certificateValidationService.canEditContent(user, EntityUtil.getCode(certificate.getType()))) {
             certificate.setContent(form.getContent());
         } 
+        if (Boolean.TRUE.equals(certificate.getSchool().getIsWithoutEkis())) {
+            certificate.setCertificateNr(form.getCertificateNr());
+            if (user.isSchoolAdmin()) {
+                certificate.setWhom(form.getWhom());
+            }
+        }
         return EntityUtil.save(certificate, em);
     }
 
@@ -262,5 +271,17 @@ public class CertificateService {
 
     private void setCertificateStatus(Certificate certificate, CertificateStatus status) {
         certificate.setStatus(em.getReference(Classifier.class, status.name()));
+    }
+
+    public Certificate complete(Certificate certificate) {
+        setCertificateStatus(certificate, CertificateStatus.TOEND_STAATUS_V);
+        return certificate;
+    }
+
+    public Boolean hasOrderedCertificates(HoisUserDetails user) {
+        return Boolean.valueOf(!em.createNativeQuery("select c.id from certificate c where c.school_id = ?1 and c.status_code = ?2")
+            .setParameter(1, user.getSchoolId())
+            .setParameter(2, CertificateStatus.TOEND_STAATUS_T.name())
+            .setMaxResults(1).getResultList().isEmpty());
     }
 }

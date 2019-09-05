@@ -5,7 +5,11 @@
                 <label>{{'certificate.type' | translate}}</label>
                 <hois-classifier-select ng-model="record.type" model-value-attr="code" main-classifier-code="TOEND_LIIK" required
                   ng-disabled="record.id" filter-values="forbiddenTypes" only-valid ignore-preselected
-                  criteria="{higher: auth.school.higher, vocational: auth.school.vocational}"></hois-classifier-select>
+                  criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}"></hois-classifier-select>
+            </md-input-container>
+            <md-input-container ng-if="record.id && auth.school.withoutEkis">
+                <label>{{'certificate.nr' | translate}}{{ certificateEditForm.certificateNr.$error.required ? ' *' : ''}}</label>
+                <input type="text" ng-model="record.certificateNr" md-maxlength="20" name="certificateNr" ng-change="changedCertificateNr()"/>
             </md-input-container>
 
             <div ng-show="!isOtherCertificate()">
@@ -57,7 +61,7 @@
             </md-input-container>
             <md-input-container>
                 <label>{{'certificate.whom' | translate}}</label>
-                <input type="text" ng-model="record.whom" md-maxlength="1000" ng-disabled="record.id">
+                <input type="text" ng-model="record.whom" md-maxlength="1000" ng-disabled="record.id && !auth.school.withoutEkis">
             </md-input-container>
             <md-input-container>
                 <label>{{'certificate.signatory' | translate}}</label>
@@ -85,7 +89,9 @@
         </div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-if="!record.id || record.canBeChanged" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-            <md-button class="md-raised md-default" ng-if="!record.id || record.canBeChanged" ng-click="saveAndOrder()">{{'certificate.saveAndOrder' | translate}}</md-button>
+            <md-button class="md-raised md-default" ng-if="(!record.id || record.canBeChanged) && !auth.school.withoutEkis" ng-click="saveAndOrder()">{{'certificate.saveAndOrder' | translate}}</md-button>
+            <md-button class="md-raised md-default" ng-if="record.id && record.canBeChanged && auth.school.withoutEkis && auth.isAdmin()" ng-click="complete()">{{'main.button.complete' | translate}}</md-button>
+            <md-button class="md-raised md-default" ng-if="record.id && auth.school.withoutEkis && auth.isAdmin()" ng-href="{{printUrl()}}" target="_blank">{{'main.button.print' | translate}}</md-button>
             <md-button class="md-raised md-default" ng-click="delete()" ng-if="record.id && record.canBeChanged">{{'main.button.delete' | translate}}</md-button>
             <md-button class="md-raised md-default" ng-click="back('#/certificate', certificateEditForm)">{{'main.button.back' | translate}}</md-button>
         </div>

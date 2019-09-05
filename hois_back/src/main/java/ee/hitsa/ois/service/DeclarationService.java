@@ -42,6 +42,7 @@ import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.enums.DeclarationStatus;
+import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ProtocolStudentRepository;
@@ -58,6 +59,7 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.DeclarationSearchCommand;
 import ee.hitsa.ois.web.commandobject.DeclarationSubjectForm;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.DeclarationDto;
@@ -118,6 +120,23 @@ public class DeclarationService {
             + "left join student_group sg on sg.id = s.student_group_id "
             + "left join curriculum_version cv on cv.id = s.curriculum_version_id "
             + "left join curriculum c on c.id = cv.curriculum_id ";
+    
+    public List<AutocompleteResult> autocompleteStudents(HoisUserDetails user, SearchCommand lookup) {
+
+        String from = "from declaration d join student s on s.id = d.student_id join person p on s.person_id = p.id";
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from).sort("p.lastname", "p.firstname");
+
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname", "concat(p.firstname, ' ', p.lastname, ' (', p.idcode, ')')"), "name", lookup.getName());
+        qb.optionalCriteria("s.id = :studentId", "studentId", lookup.getId());
+
+        String select = "distinct s.id, p.firstname, p.lastname, p.idcode";
+        List<?> data = qb.select(select, em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String name = PersonUtil.fullnameAndIdcode(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3));
+            return new AutocompleteResult(resultAsLong(r, 0), name, name);
+        }, data);
+    }
 
     public Page<DeclarationDto> search(HoisUserDetails user, DeclarationSearchCommand criteria, Pageable pageable) {
 
@@ -137,8 +156,8 @@ public class DeclarationService {
         qb.optionalCriteria("s.curriculum_version_id = :curriculumVersion", "curriculumVersion",
                 criteria.getCurriculumVersion());
         qb.optionalCriteria("s.student_group_id in (:studentGroups)", "studentGroups", criteria.getStudentGroups());
-        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name",
-                criteria.getStudentsName());
+        qb.optionalCriteria("s.id = :studentId", "studentId",
+                criteria.getStudent());
 
         if (Boolean.TRUE.equals(criteria.getRepeatingDeclaration())) {
             qb.filter("exists(select ds2.id " + "from declaration_subject ds2 "

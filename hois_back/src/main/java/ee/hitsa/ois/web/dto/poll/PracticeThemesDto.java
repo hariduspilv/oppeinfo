@@ -11,9 +11,13 @@ public class PracticeThemesDto extends ThemesDto {
     private String enterprise;
     private LocalDate practiceFrom;
     private LocalDate practiceThru;
+    private AutocompleteResult studentGroup;
     
     public PracticeThemesDto(ThemesDto dto) {
         super(dto.getThemes(), dto.getConfirmed(), dto.getForeword(), dto.getAfterword());
+        this.setIsThemePageable(dto.getIsThemePageable());
+        this.setType(dto.getType());
+        this.setResponseId(dto.getResponseId());
     }
 
     public AutocompleteResult getSchool() {
@@ -54,6 +58,14 @@ public class PracticeThemesDto extends ThemesDto {
 
     public void setPracticeThru(LocalDate practiceThru) {
         this.practiceThru = practiceThru;
+    }
+
+    public AutocompleteResult getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(AutocompleteResult studentGroup) {
+        this.studentGroup = studentGroup;
     }
 
 }

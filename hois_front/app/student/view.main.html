@@ -155,10 +155,6 @@
             <label>{{'student.studyCompany' | translate}}</label>
             <hois-value value="student.studyCompany"></hois-value>
           </md-input-container>
-          <md-input-container ng-if="student.isVocational" flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <label>{{'student.boardingSchool' | translate}}</label>
-            <hois-value value="student.boardingSchool"></hois-value>
-          </md-input-container>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
@@ -170,14 +166,40 @@
             <label>{{'student.previousSchoolEndDate' | translate}}</label>
             <hois-value value="student.previousSchoolEndDate | hoisYear"></hois-value>
           </md-input-container>
-          <md-input-container ng-if="student.isVocational" flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <label>{{'student.dormitory' | translate}}</label>
             <hois-classifier-value ng-model="student.dormitory" main-classifier-code="YHISELAMU"></hois-classifier-value>
             <md-tooltip ng-if="student.dormitoryHistory.length > 0" class="tooltip-multiline">
               <div ng-repeat="history in student.dormitoryHistory">{{currentLanguageNameField(history.dormitory)}} {{history.date | hoisDate}}</div>
             </md-tooltip>
           </md-input-container>
+
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.boardingSchool' | translate}}</label>
+            <hois-value value="currentLanguageNameField(student.boardingSchool)"></hois-value>
+          </md-input-container>
+
+          <md-input-container ng-if="student.boardingSchool" flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.boardingSchoolValidFrom' | translate}}</label>
+            <hois-value value="student.boardingSchoolValidFrom | hoisDate"></hois-value>
+          </md-input-container>
+
+          <md-input-container ng-if="student.boardingSchool" flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.boardingSchoolValidFrom' | translate}}</label>
+            <hois-value value="student.boardingSchoolValidThru | hoisDate"></hois-value>
+          </md-input-container>
         </div>
+
+        <div ng-if="student.boardingSchoolAddInfo" layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="95" flex-sm="100" flex-xs="100">
+            <label>{{'student.boardingSchoolAddInfo' | translate}}</label>
+            <hois-value value="student.boardingSchoolAddInfo"></hois-value>
+          </md-input-container>
+        </div>
+
       </hois-collapsable>
     </div>
 
@@ -300,7 +322,7 @@
             </tbody>
           </table>
         </md-table-container>
-        <md-table-pagination ng-if="representatives.totalElements > representativesCriteria.size" md-limit="representativesCriteria.size" md-limit-options="[10, 20, 50]"
+        <md-table-pagination ng-show="representatives.totalElements > representativesCriteria.size" md-limit="representativesCriteria.size" md-limit-options="[5, 10, 15]"
                              md-page="representativesCriteria.page" md-total="{{representatives.totalElements}}" md-on-paginate="loadRepresentatives"
                              md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
 
@@ -361,7 +383,7 @@
             </tbody>
           </table>
         </md-table-container>
-        <md-table-pagination ng-if="foreignstudies.totalElements > foreignstudiesCriteria.size" md-limit="foreignstudiesCriteria.size" md-limit-options="[10, 20, 50]"
+        <md-table-pagination ng-show="foreignstudies.totalElements > foreignstudiesCriteria.size" md-limit="foreignstudiesCriteria.size" md-limit-options="[5, 10, 15]"
                              md-page="foreignstudiesCriteria.page" md-total="{{foreignstudies.totalElements}}" md-on-paginate="loadForeignstudies"
                              md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
 

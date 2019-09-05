@@ -29,8 +29,8 @@ public class FinalVocationalProtocolStudentDto extends ModuleProtocolStudentDto 
         dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);
         dto.setCanBeDeleted(Boolean.valueOf(FinalProtocolUtil.studentCanBeDeleted(protocolStudent)));
         FinalThesis thesis = student.getFinalThesis();
-        dto.setTheme(thesis != null ? new AutocompleteResult(student.getFinalThesis().getId(),
-                student.getFinalThesis().getThemeEt(), student.getFinalThesis().getThemeEn()) : null);
+        dto.setTheme(thesis != null ? new AutocompleteResult(thesis.getId(), thesis.getThemeEt(), thesis.getThemeEn())
+                : null);
 
         if (protocolStudent.getProtocolStudentOccupations() != null) {
             protocolStudent.getProtocolStudentOccupations().forEach(oc -> {

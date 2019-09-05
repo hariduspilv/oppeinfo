@@ -8,7 +8,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,11 +52,10 @@ public class GeneralMessageService {
             // do now show general messages to users which have no school
             return new PageImpl<>(Collections.emptyList());
         }
-        List<Order> order = new LinkedList<>();
-        order.add(new Order(Direction.DESC, "show_date"));
-        order.add(new Order(Direction.ASC, "g.title"));
-        order.add(new Order(Direction.ASC, "g.id"));
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from general_message g").sort(new Sort(order));
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from general_message g").sort(new Sort(
+                new Order(Direction.DESC, "show_date"),
+                new Order(Direction.ASC, "g.title"),
+                new Order(Direction.ASC, "g.id")));
         qb.requiredCriteria("g.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("(g.valid_from is null or g.valid_from <= :now) and (g.valid_thru is null or g.valid_thru >= :now)", "now", LocalDate.now());
         qb.requiredCriteria("g.id in (select gt.general_message_id from general_message_target gt where gt.role_code = :role)", "role", user.getRole());
@@ -65,13 +63,29 @@ public class GeneralMessageService {
         Page<Object[]> messages = JpaQueryUtil.pagingResult(qb, "g.id, g.title, g.content, g.inserted, coalesce(g.valid_from, g.inserted) as show_date", em, pageable);
         return messages.map(d -> new GeneralMessageDto(resultAsLong(d, 0), resultAsString(d, 1), resultAsString(d, 2), resultAsLocalDateTime(d, 4)));
     }
+    
+    public List<GeneralMessageDto> showSiteMessages() {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from general_message g").sort(new Sort(
+                new Order(Direction.DESC, "show_date"),
+                new Order(Direction.DESC, "g.inserted"),
+                new Order(Direction.ASC, "g.title"),
+                new Order(Direction.ASC, "g.id")));
+        qb.filter("g.school_id is null");
+        qb.requiredCriteria("(g.valid_from is null or g.valid_from <= :now) and (g.valid_thru is null or g.valid_thru >= :now)", "now", LocalDate.now());
+        List<?> results = qb.select("g.id, g.title, g.content, g.inserted, coalesce(g.valid_from, g.inserted) as show_date", em).getResultList();
+        return StreamUtil.toMappedList(d -> new GeneralMessageDto(resultAsLong(d, 0), resultAsString(d, 1), resultAsString(d, 2), resultAsLocalDateTime(d, 4)), results);
+    }
 
-    public Page<GeneralMessageDto> search(Long schoolId, GeneralMessageSearchCommand criteria, Pageable pageable) {
+    public Page<GeneralMessageDto> search(HoisUserDetails user, GeneralMessageSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from general_message g").sort(pageable);
 
-        qb.requiredCriteria("g.school_id = :schoolId", "schoolId", schoolId);
+        if (user.isMainAdmin()) {
+            qb.filter("g.school_id is null");
+        } else {
+            qb.requiredCriteria("g.school_id = :schoolId", "schoolId", user.getSchoolId());
+            qb.optionalContains("g.content", "content", criteria.getContent());
+        }
         qb.optionalContains("g.title", "title", criteria.getTitle());
-        qb.optionalContains("g.content", "content", criteria.getContent());
         qb.optionalCriteria("(g.valid_thru is null or g.valid_thru >= :validFrom)", "validFrom", criteria.getValidFrom());
         qb.optionalCriteria("(g.valid_from is null or g.valid_from <= :validThru)", "validThru", criteria.getValidThru());
         qb.optionalCriteria("exists(select 1 from general_message_target gt where gt.role_code in (:targets) and gt.general_message_id = g.id)", "targets", criteria.getTargets());
@@ -100,7 +114,9 @@ public class GeneralMessageService {
 
     public GeneralMessage create(HoisUserDetails user, GeneralMessageForm form) {
         GeneralMessage generalMessage = new GeneralMessage();
-        generalMessage.setSchool(em.getReference(School.class, user.getSchoolId()));
+        if (!user.isMainAdmin()) {
+            generalMessage.setSchool(em.getReference(School.class, user.getSchoolId()));
+        }
         return save(user, generalMessage, form);
     }
 

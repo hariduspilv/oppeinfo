@@ -2,17 +2,18 @@ package ee.hitsa.ois.web.commandobject.subject.studyperiod;
 
 import java.util.List;
 
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
 
 public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     
-    private String subjectNameAndCode;
-    private String teachersFullname;
+    private EntityConnectionCommand subjectObject;
+    private EntityConnectionCommand teacherObject;
     private List<Long> studyPeriods;
     private Long studentGroup;
     private Long student;
     private Long studyPeriod;
-    private Long curriculum;
+    private EntityConnectionCommand curriculum;
     private Long department;
     private Long teacher;
     private Long subject;
@@ -36,10 +37,10 @@ public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     public void setStudyPeriod(Long studyPeriod) {
         this.studyPeriod = studyPeriod;
     }
-    public Long getCurriculum() {
+    public EntityConnectionCommand getCurriculum() {
         return curriculum;
     }
-    public void setCurriculum(Long curriculum) {
+    public void setCurriculum(EntityConnectionCommand curriculum) {
         this.curriculum = curriculum;
     }
     public Long getDepartment() {
@@ -60,17 +61,17 @@ public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     public void setStudentGroup(Long studentGroup) {
         this.studentGroup = studentGroup;
     }
-    public String getSubjectNameAndCode() {
-        return subjectNameAndCode;
+    public EntityConnectionCommand getSubjectObject() {
+        return subjectObject;
     }
-    public void setSubjectNameAndCode(String subjectNameAndCode) {
-        this.subjectNameAndCode = subjectNameAndCode;
+    public void setSubjectObject(EntityConnectionCommand subjectObject) {
+        this.subjectObject = subjectObject;
     }
-    public String getTeachersFullname() {
-        return teachersFullname;
+    public EntityConnectionCommand getTeacherObject() {
+        return teacherObject;
     }
-    public void setTeachersFullname(String teachersFullname) {
-        this.teachersFullname = teachersFullname;
+    public void setTeacherObject(EntityConnectionCommand teacherObject) {
+        this.teacherObject = teacherObject;
     }
     public List<Long> getStudyPeriods() {
         return studyPeriods;

@@ -22,11 +22,11 @@
             <div flex="33">
                 <md-input-container flex>
                     <label>{{'main.from' | translate}}</label>
-                    <md-datepicker ng-model="criteria.sentFrom" md-max-date="criteria.sentThru"></md-datepicker>
+                    <md-datepicker ng-model="criteria.sentFrom" md-max-date="criteria.sentThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
                 </md-input-container>
                 <md-input-container flex>
                     <label>{{'main.thru' | translate}}</label>
-                    <md-datepicker ng-model="criteria.sentThru" md-min-date="criteria.sentFrom"></md-datepicker>
+                    <md-datepicker ng-model="criteria.sentThru" md-min-date="criteria.sentFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
                 </md-input-container>
             </div>
         </div>

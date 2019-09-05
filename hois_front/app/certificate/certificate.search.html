@@ -3,47 +3,51 @@
         <fieldset ng-if="!auth.isStudent() && !auth.isParent()">
             <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
             <div layout="column">
-            <md-input-container>
-                <label>{{'certificate.type' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.type" model-value-attr="code" main-classifier-code="TOEND_LIIK" multiple></hois-classifier-select>
-            </md-input-container>
-            <md-input-container>
-                <label class="textInput">{{'certificate.headline' | translate}}</label>
-                <input ng-model="criteria.headline" type="text" md-maxlength="1000">
-            </md-input-container>
-            <md-input-container>
-                <label class="textInput">{{'certificate.studentName' | translate}}</label>
-                <input ng-model="criteria.name" type="text" md-maxlength="255">
-            </md-input-container>
-            <md-input-container>
-                <label class="textInput">{{'certificate.idcode' | translate}}</label>
-                <input ng-model="criteria.idcode" type="text" minlength="11" md-maxlength="11">
-            </md-input-container>
-            <div layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="20" flex-sm="100" flex-xs="100">
-                    <label>{{'certificate.inserted' | translate}}</label>
-                    <input type="hidden">
-                </md-input-container><br>
-                <div flex="33">
-                    <md-input-container flex>
-                        <label>{{'main.from' | translate}}</label>
-                        <md-datepicker ng-model="criteria.insertedFrom" md-max-date="criteria.insertedThru"></md-datepicker>
+                <div layout-gt-sm="row" layout="column">
+                    <md-input-container flex-gt-sm="45" flex="100">
+                        <label>{{'certificate.type' | translate}}</label>
+                        <hois-classifier-select ng-model="criteria.type" model-value-attr="code" main-classifier-code="TOEND_LIIK" multiple></hois-classifier-select>
                     </md-input-container>
-                    <md-input-container flex>
-                        <label>{{'main.thru' | translate}}</label>
-                        <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom"></md-datepicker>
+                    <md-input-container flex-gt-sm="50" flex-offset-gt-sm="5" flex="100" flex-offset="0">
+                        <label class="textInput">{{'certificate.headline' | translate}}</label>
+                        <input ng-model="criteria.headline" type="text" md-maxlength="1000">
                     </md-input-container>
                 </div>
-            </div>
-            <md-input-container>
-                <label class="textInput">{{'certificate.nr' | translate}}</label>
-                <input ng-model="criteria.certificateNr" type="text" md-maxlength="20">
-            </md-input-container>
-            <div layout="row">
-                <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-                <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-                <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TOEND')" ng-href="#/certificate/new">{{'certificate.add' | translate}}</md-button>
-            </div>
+                <div layout-gt-sm="row" layout="column">
+                    <md-input-container flex-gt-sm="45" flex="100">
+                        <label class="textInput">{{'certificate.studentName' | translate}}</label>
+                        <input ng-model="criteria.name" type="text" md-maxlength="255">
+                    </md-input-container>
+                    <md-input-container flex-gt-sm="50" flex-offset-gt-sm="5" flex="100" flex-offset="0">
+                        <label class="textInput">{{'certificate.idcode' | translate}}</label>
+                        <input ng-model="criteria.idcode" type="text" minlength="11" md-maxlength="11">
+                    </md-input-container>
+                </div>
+                <div layout="row">
+                    <md-input-container>
+                        <label>{{'certificate.insertedFrom' | translate}}</label>
+                        <md-datepicker ng-model="criteria.insertedFrom" md-max-date="criteria.insertedThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                    </md-input-container>
+                    <md-input-container>
+                        <label>{{'certificate.insertedThru' | translate}}</label>
+                        <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                    </md-input-container>
+                </div>
+                <div layout-gt-sm="row" layout="column">
+                    <md-input-container flex-gt-sm="45" flex="100">
+                        <label class="textInput">{{'certificate.nr' | translate}}</label>
+                        <input ng-model="criteria.certificateNr" type="text" md-maxlength="20">
+                    </md-input-container>
+                    <md-input-container flex-gt-sm="50" flex-offset-gt-sm="5" flex="100" flex-offset="0">
+                        <label>{{'certificate.status' | translate}}</label>
+                        <hois-classifier-select ng-model="criteria.status" model-value-attr="code" main-classifier-code="TOEND_STAATUS"></hois-classifier-select>
+                    </md-input-container>
+                </div>
+                <div layout="row">
+                    <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+                    <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+                    <md-button class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TOEND')" ng-href="#/certificate/new">{{'certificate.add' | translate}}</md-button>
+                </div>
             </div>
         </fieldset>
     </form>
@@ -56,6 +60,7 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column md-order-by="sortablename" ng-if="!auth.isStudent() && !auth.isParent()">{{'certificate.studentName' | translate}}</th>
+            <th md-column md-order-by="sg.code" ng-if="!auth.isStudent() && !auth.isParent()">{{'certificate.studentGroup' | translate}}</th>
             <th md-column md-order-by="c.certificateNr">{{'certificate.nr' | translate}}</th>
             <th md-column md-order-by="type.{{currentLanguageNameField()}}">{{'certificate.type' | translate}}</th>
             <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'certificate.status' | translate}}</th>
@@ -70,6 +75,7 @@
                 <a ng-if="row.studentId" ng-href="#/students/{{row.studentId}}/main" class="md-primary change-button">{{::row.studentFullname}}</a>
                 <span ng-if="!row.studentId">{{::row.studentFullname}}</span>
             </td>
+            <td md-cell ng-if="!auth.isStudent() && !auth.isParent()">{{::row.studentGroup}}</td>
             <td md-cell>{{::row.certificateNr}}</td>
             <td md-cell><a ng-href="#/certificate/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a></td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>

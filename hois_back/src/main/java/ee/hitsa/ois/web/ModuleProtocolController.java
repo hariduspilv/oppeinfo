@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.bdoc.MobileIdSession;
 import ee.hitsa.ois.bdoc.UnsignedBdocContainer;
 import ee.hitsa.ois.domain.OisFile;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.report.ModuleProtocolReport;
@@ -255,6 +256,18 @@ public class ModuleProtocolController {
             throw new ValidationFailedException("not vocational protocol");
         }
         return moduleProtocolService.calculateGrades(command);
+    }
+    
+    @GetMapping("/myModules")
+    public Page<ModuleProtocolService.TeacherModuleMinimumDto> myModules(HoisUserDetails user, @RequestParam(required = true) Long studyYear, Pageable pageable) {
+        UserUtil.assertIsTeacher(user);
+        return moduleProtocolService.availableTeacherModules(user, studyYear, pageable);
+    }
+    
+    @GetMapping("/moduleHistory/{id:\\d+}")
+    public ModuleProtocolService.LessonPlanHistoryDto getModuleLessonPlanHistory(HoisUserDetails user, @WithEntity CurriculumVersionOccupationModule module) {
+        UserUtil.assertIsTeacher(user);
+        return moduleProtocolService.getModuleLessonPlanHistory(module);
     }
 }
 

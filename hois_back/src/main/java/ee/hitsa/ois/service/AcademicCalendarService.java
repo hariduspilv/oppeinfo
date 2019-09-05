@@ -53,7 +53,10 @@ public class AcademicCalendarService {
     public AcademicCalendarDto academicCalendar(Long schoolId) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
         if (studyYear == null) {
-            return null;
+            studyYear = studyYearService.getNextStudyYear(schoolId);
+            if (studyYear == null) {
+                return null;
+            }
         }
         
         School school = em.getReference(School.class, schoolId);

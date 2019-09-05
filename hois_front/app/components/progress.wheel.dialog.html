@@ -1,0 +1,24 @@
+<md-dialog class="loading-wheel" style="background-color:transparent;box-shadow:none">
+  <div layout="row" layout-sm="column" layout-align="center center" aria-label="wait" style="height:120px;">
+    <!-- <md-progress-circular class="md-hue-2 loader" md-diameter="80px" value="{{progress.value}}"></md-progress-circular> -->
+    <md-progress-circular class="md-hue-2 loader" md-diameter="80px"></md-progress-circular>
+  </div>
+  <h3 ng-if="text">{{text}}</h3>
+  <h3 ng-if="text">{{progress.value}}%</h3>
+</md-dialog>
+
+<style>
+  md-dialog.loading-wheel {
+    background-color:transparent;
+    box-shadow:none;
+  }
+
+  md-dialog.loading-wheel h3 {
+    text-align:center;
+    color: white;
+    text-shadow: -1px -1px 0 #000,
+                 1px -1px 0 #000,
+                 -1px 1px 0 #000,
+                 1px 1px 0 #000;
+  }
+</style>

@@ -17,18 +17,20 @@
 			<div>&nbsp;</div>
 			<fieldset tabindex="2" layout="column" >
 				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.nameTitle' | translate}}</legend>
-				<md-input-container flex="100">
-					<label>{{'curriculum.nameEt' | translate}}</label>
-					<input name="nameEt" ng-model="curriculum.nameEt" type="text" required ng-readonly="formState.notEditableBasicData" md-maxlength="255">
-				</md-input-container>
-				<md-input-container flex="100">
-					<label>{{'curriculum.nameEn' | translate}}</label>
-					<input ng-model="curriculum.nameEn" type="text" required ng-readonly="formState.notEditableBasicData" md-maxlength="255">
-				</md-input-container>
-				<md-input-container flex="100">
-					<label>{{'curriculum.nameRu' | translate}}</label>
-					<input ng-model="curriculum.nameRu" type="text" ng-readonly="formState.notEditableBasicData" md-maxlength="255">
-				</md-input-container>
+				<div layout="column">
+					<md-input-container>
+						<label>{{'curriculum.nameEt' | translate}}</label>
+						<input name="nameEt" ng-model="curriculum.nameEt" type="text" required ng-readonly="formState.notEditableBasicData" md-maxlength="255">
+					</md-input-container>
+					<md-input-container>
+						<label>{{'curriculum.nameEn' | translate}}</label>
+						<input ng-model="curriculum.nameEn" type="text" required ng-readonly="formState.notEditableBasicData" md-maxlength="255">
+					</md-input-container>
+					<md-input-container>
+						<label>{{'curriculum.nameRu' | translate}}</label>
+						<input ng-model="curriculum.nameRu" type="text" ng-readonly="formState.notEditableBasicData" md-maxlength="255">
+					</md-input-container>
+				</div>
 			</fieldset>
 		</div>
 

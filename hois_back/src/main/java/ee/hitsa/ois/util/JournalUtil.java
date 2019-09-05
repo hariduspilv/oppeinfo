@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.StudyYear;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudent;
@@ -96,10 +95,11 @@ public abstract class JournalUtil {
                 confirmed(journal);
     }
 
-    public static boolean filterJournalEntryStudentsByOccupationalModule(CurriculumVersionOccupationModule curriculumVersionOccupationModule, JournalEntryStudent jes) {
-        Long omodule = EntityUtil.getId(curriculumVersionOccupationModule);
+    public static boolean filterJournalEntryStudentsByCurriculumModule(Long curriculumModuleId,
+            JournalEntryStudent jes) {
         return jes.getJournalEntry().getJournal().getJournalOccupationModuleThemes().stream()
-        .anyMatch(t -> EntityUtil.getId(t.getCurriculumVersionOccupationModuleTheme().getModule()).equals(omodule));
+                .anyMatch(t -> EntityUtil.getId(t.getCurriculumVersionOccupationModuleTheme().getModule().getCurriculumModule())
+                .equals(curriculumModuleId));
     }
 
     /**

@@ -444,6 +444,9 @@ angular.module('hitsaOis')
       dialogService.showDialog(form,
         function (dialogScope) {
 
+          // If there is no value before or after being `propotion` filled automatically hours/credits
+          // are changed then it will recalculate.
+          var oldCalculatedProportion;
           var occupationModule = $scope.occupationModule;
           dialogScope.hasBaseModule = !(angular.isUndefined($scope.occupationModule.baseModule) || $scope.occupationModule.baseModule === null);
 
@@ -465,6 +468,11 @@ angular.module('hitsaOis')
             if (angular.isNumber(dialogScope.occupationModuleTheme.credits)) {
               dialogScope.occupationModuleTheme.hours = Math.round(HOURS_PER_EKAP * dialogScope.occupationModuleTheme.credits);
               dialogScope.dialogForm.hours.$setDirty();
+              var proportion = Math.round((dialogScope.occupationModuleTheme.credits / occupationModule.credits) * 100);
+              if (!dialogScope.occupationModuleTheme.proportion || oldCalculatedProportion === dialogScope.occupationModuleTheme.proportion) {
+                oldCalculatedProportion = proportion;
+                dialogScope.occupationModuleTheme.proportion = proportion;
+              }
             }
           };
           dialogScope.studyYears = $scope.studyYears;
@@ -473,6 +481,11 @@ angular.module('hitsaOis')
           dialogScope.setDefaultCredits = function () {
             dialogScope.occupationModuleTheme.credits = Math.round((dialogScope.occupationModuleTheme.hours / HOURS_PER_EKAP) * 10) / 10;
             dialogScope.dialogForm.credits.$setDirty();
+            var proportion = Math.round((dialogScope.occupationModuleTheme.credits / occupationModule.credits) * 100);
+            if (!dialogScope.occupationModuleTheme.proportion || oldCalculatedProportion === dialogScope.occupationModuleTheme.proportion) {
+              oldCalculatedProportion = proportion;
+              dialogScope.occupationModuleTheme.proportion = proportion;
+            }
           };
 
           dialogScope.getOutcomesByIds = function (arr) {

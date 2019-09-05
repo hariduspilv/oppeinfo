@@ -73,7 +73,7 @@ public class HarIdService {
             uri.queryParam(param, uriParams.get(param));
         }
         String request = uri.toUriString();
-        log.info(request);
+        log.info("REQUEST: {}", request);
         return request;
     }
 
@@ -87,12 +87,13 @@ public class HarIdService {
                 String idcode = userInfo.getPersonalCode().substring(7);
                 String lastname = userInfo.getFamilyName();
                 String firstname = userInfo.getGivenName();
-                
+
                 try {
                     setAuthentication(idcode, lastname, firstname);
                     log.info("Person authenticated");
                     return idcode;
                 } catch (Exception e) {
+                    log.error("Authentication failed: ", e);
                     throw new HoisException("Authentication failed", e);
                 }
             }
@@ -112,6 +113,7 @@ public class HarIdService {
 
             response = identityTokenRequest(params);
         } catch (Exception e) {
+            log.error("Could not obtain access token: ", e);
             throw new HoisException("Could not obtain access token", e);
         }
 
@@ -131,7 +133,7 @@ public class HarIdService {
                     }
                 }
             } catch (Exception e) {
-                log.info(e.getMessage());
+                log.error("Could not obtain user details from token: ", e);
                 throw new HoisException("Could not obtain user details from token", e);
             }
         }
@@ -148,6 +150,9 @@ public class HarIdService {
         String base64ClientIdSec = Base64.encodeBase64String(
                 (harIdConfiguration.getClientId() + ":" + harIdConfiguration.getClientSecret()).getBytes());
         headers.add("Authorization", "Basic " + base64ClientIdSec);
+
+        log.info("REQUEST: {}", harIdConfiguration.getAccessTokenUri());
+        log.info("PARAMS: {}", params);
 
         HttpEntity<LinkedMultiValueMap<String, Object>> request = new HttpEntity<>(params, headers);
         ResponseEntity<IdentityTokenResponse> response = restTemplate.postForEntity(harIdConfiguration.getAccessTokenUri(),

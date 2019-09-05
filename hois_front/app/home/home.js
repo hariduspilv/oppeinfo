@@ -1,13 +1,38 @@
 'use strict';
 // todo this to main controller? and use this data on auth?
-angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$location',
-  function ($scope, School, $location) {
+angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$location', 'QueryUtils', 'busyHandler',
+  function ($scope, School, $location, QueryUtils, busyHandler) {
     $scope.schools = School.getSchoolsWithLogo();
+    $scope.linkify = linkify;
     
     $scope.openSchoolCurriculumSearch = function (schoolId) {
       $location.path('curriculums/' + schoolId);
     };
+    
+    $scope.siteMessages = QueryUtils.endpoint("/generalmessages/showsitemessages").query();
 
+    /**
+     * https://stackoverflow.com/a/49634926
+     * 
+     * @param {String} inputText 
+     */
+    function linkify(inputText) {
+      var replacedText, replacePattern1;//, replacePattern2, replacePattern3;
+  
+      //URLs starting with http://, https://, or ftp://
+      replacePattern1 = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
+      replacedText = inputText.replace(replacePattern1, '<a href="$1" target="_blank">$1</a>');
+  
+      // //URLs starting with "www." (without // before it, or it'd re-link the ones done above).
+      // replacePattern2 = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
+      // replacedText = replacedText.replace(replacePattern2, '$1<a href="http://$2" target="_blank">$2</a>');
+  
+      // //Change email addresses to mailto:: links.
+      // replacePattern3 = /(([a-zA-Z0-9\-\_\.])+@[a-zA-Z\_]+?(\.[a-zA-Z]{2,6})+)/gim;
+      // replacedText = replacedText.replace(replacePattern3, '<a href="mailto:$1">$1</a>');
+  
+      return replacedText;
+    }
   }
 ]).controller('AuthenticatedHomeController', ['$rootScope', '$scope', '$timeout', 'AUTH_EVENTS', 'AuthService', 'USER_ROLES', 'ArrayUtils', 'QueryUtils', '$resource', 'config', 'Session', '$filter', '$mdDialog', 'message', 'dialogService', 'oisFileService', 'FormUtils', 'Classifier', '$q',
   function ($rootScope, $scope, $timeout, AUTH_EVENTS, AuthService, USER_ROLES, ArrayUtils, QueryUtils, $resource, config, Session, $filter, $mdDialog, message, dialogService, oisFileService, FormUtils, Classifier, $q) {
@@ -153,11 +178,16 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
 
     $scope.openPoll = function() {
       if ($scope.polls.length === 1) {
-        var PollEndPoint = QueryUtils.endpoint('/poll/withAnswers');
+        var PollEndPoint;
+        if ($scope.polls[0].type.code === 'KYSITLUS_O') {
+          PollEndPoint = QueryUtils.endpoint('/poll/withAnswers/journalOrSubject');
+        } else {
+          PollEndPoint = QueryUtils.endpoint('/poll/withAnswers');
+        }
         QueryUtils.loadingWheel($scope, true);
         PollEndPoint.get({id: $scope.polls[0].id}).$promise.then(function (response) {
-          markImages(response.themes);
           QueryUtils.loadingWheel($scope, false);
+          markImages(response.themes);
           $scope.openResponse($scope.polls[0], response);
         });
       } else if ($scope.polls.length > 1) {
@@ -184,29 +214,108 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
           dialogScope.submit();
         };
       }, function(submittedDialogScope) {
-        var PollEndPoint = QueryUtils.endpoint('/poll/withAnswers');
-        QueryUtils.loadingWheel($scope, true, true);
-        PollEndPoint.get({id: submittedDialogScope.row.id}).$promise.then(function (response) {
-          markImages(response.themes);
-          QueryUtils.loadingWheel($scope, false, true);
-          $scope.openResponse(submittedDialogScope.row, response);
+        var PollEndPoint;
+        if (submittedDialogScope.row.type.code === 'KYSITLUS_O') {
+          PollEndPoint = QueryUtils.endpoint('/poll/withAnswers/journalOrSubject');
+        } else {
+          PollEndPoint = QueryUtils.endpoint('/poll/withAnswers');
+        }
+        QueryUtils.loadingWheel($scope, true, true, undefined, false, function () {
+          PollEndPoint.get({id: submittedDialogScope.row.id}).$promise.then(function (response) {
+            markImages(response.themes);
+            QueryUtils.loadingWheel($scope, false, true);
+            $scope.openResponse(submittedDialogScope.row, response);
+          });
         });
       }, null, true);
     };
 
 
     $scope.openResponse = function(row, response) {
-      dialogService.showDialog('poll/poll.response.dialog.html', function (dialogScope) {
+      dialogService.showDialog(
+        row.isThemePageable ? 'poll/poll.response.by.theme.dialog.html' : 
+        (response.type === 'KYSITLUS_O' ? 'poll/poll.response.by.subjectOrJournal.dialog.html' : 
+        'poll/poll.response.dialog.html'), function (dialogScope) {
         dialogScope.formState = {};
+        dialogScope.formState.isThemePageable = row.isThemePageable;
         dialogScope.formState.name = row.name;
+        var themesWithSubjectOrJournal = response.themes.filter(function(theme) {
+          return theme.journal !== null || theme.subject !== null;
+        });
+        dialogScope.hasSubjectOrJournal = themesWithSubjectOrJournal.length !== 0;
         dialogScope.criteria = response;
-
         dialogScope.getUrl = function(photo) {
             return oisFileService.getUrl(photo, 'pollThemeQuestionFile');
         };
 
+        // Map journals or subjects with repedetive themes
+        if (!row.isThemePageable && response.type === 'KYSITLUS_O') {
+          dialogScope.formState.themeBySubjectOrJournalId = {};
+          
+          dialogScope.criteria.themes.forEach(function (theme) {
+            if (theme.journal !== null && theme.isRepetitive) {
+              if (dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id] === undefined) {
+                dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id] = [];
+              }
+              dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id].push(theme);
+            } else if (theme.subject !== null && theme.isRepetitive) {
+              if (dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id] === undefined) {
+                dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id] = [];
+              }
+              dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id].push(theme);
+            } else if (!theme.isRepetitive) {
+              if (dialogScope.formState.themeBySubjectOrJournalId[null] === undefined) {
+                dialogScope.formState.themeBySubjectOrJournalId[null] = [];
+              }
+              dialogScope.formState.themeBySubjectOrJournalId[null].push(theme);
+            }
+          });
+          Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0].show = true;
+        } else {
+          dialogScope.criteria.themes[0].show = true;
+        }
+
+        dialogScope.previousSubjectOrJournal = function(index) {
+          Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+          Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index - 1].show = true;
+        };
+
+        dialogScope.last = function(index) {
+          return index === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1;
+        };
+
+        dialogScope.first = function(index) {
+          return index === 0;
+        };
+
+        dialogScope.nextSubjectOrJournal = function(index) {
+          Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+          Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index + 1].show = true;
+        };
+
+        dialogScope.previousTheme = function(index) {
+            dialogScope.criteria.themes[index].show = false;
+            dialogScope.criteria.themes[index - 1].show = true;
+        };
+
+        dialogScope.nextTheme = function(index) {
+            dialogScope.criteria.themes[index].show = false;
+            dialogScope.criteria.themes[index + 1].show = true;
+        };
+
+        function pushToError(errorThemes, theme) {
+          if (theme.journal !== null && !errorThemes.includes(theme.journal.nameEt + ': ' + theme.nameEt)) {
+              errorThemes.push(theme.journal.nameEt + ': ' + theme.nameEt);
+          } else if (theme.subject !== null && !errorThemes.includes(theme.subject.nameEt + ': ' + theme.nameEt)) {
+              errorThemes.push(theme.subject.nameEt + ': ' + theme.nameEt);
+          } else if (!errorThemes.includes(theme.nameEt)) {
+              errorThemes.push(theme.nameEt);
+          }
+        }
+
         dialogScope.checkErrors = function() {
           var hasErrors = false;
+          var errorThemes = [];
           dialogScope.criteria.themes.forEach(function(theme) {
             theme.questions.forEach(function (question) {
               if ((question.type === 'VASTUS_M' || question.type === 'VASTUS_S') && question.isRequired) {
@@ -219,27 +328,30 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
                 if (showError) {
                   question.requiredError = true;
                   hasErrors = true;
+                  pushToError(errorThemes, theme);
                 } else {
                   question.requiredError = false;
                 }
-              } else if (question.type === 'VASTUS_R'  && question.isRequired && (question.answerTxt === undefined || question.answerTxt === null)) {
+              } else if ((question.type === 'VASTUS_R' || question.type === 'VASTUS_T' || question.type === 'VASTUS_V' ) && question.isRequired && (question.answerTxt === undefined || question.answerTxt === null)) {
                 question.requiredError = true;
                 hasErrors = true;
+                pushToError(errorThemes, theme);
               } else {
                 question.requiredError = false;
               }
             });
           });
-          return hasErrors;
+          return [hasErrors, errorThemes];
         };
 
         dialogScope.confirm = function() {
-          var hasErrors = dialogScope.checkErrors();
+          var errorObject = dialogScope.checkErrors();
+          var hasErrors = errorObject[0];
           FormUtils.withValidForm(dialogScope.responseForm, function() {
               if (!hasErrors) {
                 dialogService.confirmDialog({ prompt: 'poll.answer.confirm' }, function () {
                   var Endpoint = QueryUtils.endpoint('/poll/' + row.id + '/saveAnswer/final');
-                  var pollEndPoint = new Endpoint(dialogScope.criteria);
+                  var pollEndPoint = new Endpoint();
                   pollEndPoint.$update().then(function () {
                       dialogService.messageDialog({ prompt: 'poll.answer.confirmed' }, function () {
                         $scope.loadPolls();
@@ -248,20 +360,24 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
                   });
                 });
               } else {
-                message.error('main.messages.form-has-errors');
+                if (dialogScope.formState.isThemePageable) {
+                  message.error('poll.messages.required', {themes: errorObject[1].join(", ")});
+                } else {
+                  message.error('main.messages.form-has-errors');
+                }
               }
           });
         };
 
-        dialogScope.save = function () {
-            var Endpoint = QueryUtils.endpoint('/poll/' + row.id + '/saveAnswer/');
-            var pollEndPoint = new Endpoint(dialogScope.criteria);
-            pollEndPoint.$postWithoutLoad();
+        dialogScope.save = function (question) {
+            var Endpoint = QueryUtils.endpoint('/poll/' + dialogScope.criteria.responseId + '/saveAnswer');
+            var pollEndPoint = new Endpoint(question);
+            pollEndPoint.$putWithoutLoad();
         };
 
         dialogScope.clearRadio = function(question) {
             question.answerTxt = null;
-            dialogScope.save();
+            dialogScope.save(question);
         };
 
         dialogScope.close = function() {
@@ -289,12 +405,14 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
 
     function afterAuthentication() {
       $scope.pageLoadingHandler.reset();
+      $scope.isAdmin = Session.roleCode === 'ROLL_A';
       $scope.loadGeneralMessages();
       $scope.loadUnreadMessages();
       $scope.loadPolls();
       checkIfCanCreateAbsence();
       checkIfCanApplyForPractice();
       checkIfHasSubjectProgramNotification();
+      checkIfHasOrderedCertificates();
       checkIfHasExpiredBaseModules();
       checkIfHasUnacceptedAbsences();
       checkIfHasTodaysAbsences();
@@ -355,14 +473,24 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
         });
       }
     }
+    
+    function checkIfHasOrderedCertificates() {
+      if (['ROLL_A'].indexOf(Session.roleCode) !== -1 && Session.school.withoutEkis) {
+        $scope.hasOrderedCertificates = QueryUtils.endpoint("/certificate/hasorderedcertificates").get();
+      } else {
+        $scope.hasOrderedCertificates = undefined;
+      }
+    }
 
     function checkIfHasSubjectProgramNotification() {
-      if (['ROLL_O'].indexOf(Session.roleCode) !== -1 && Session.higher) {
+      if (['ROLL_O', 'ROLL_A'].indexOf(Session.roleCode) !== -1 && Session.higher) {
+        if (Session.roleCode === 'ROLL_O') {
+          $scope.hasUncompletedPrograms = QueryUtils.endpoint("/subject/subjectProgram/hasuncompleted").get();
+        }
         $scope.hasUnconfirmedPrograms = QueryUtils.endpoint("/subject/subjectProgram/hasunconfirmed").get();
-        $scope.hasUncompletedPrograms = QueryUtils.endpoint("/subject/subjectProgram/hasuncompleted").get();
       } else {
-        $scope.hasUnconfirmedPrograms = undefined;
         $scope.hasUncompletedPrograms = undefined;
+        $scope.hasUnconfirmedPrograms = undefined;
       }
     }
 

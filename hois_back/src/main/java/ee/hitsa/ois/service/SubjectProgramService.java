@@ -1,16 +1,15 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 import java.util.Set;
-import java.util.AbstractMap.SimpleEntry;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -134,7 +133,7 @@ public class SubjectProgramService {
                 + "inner join subject s on s.id = ssp.subject_id "
                 + "inner join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
                 + "inner join teacher t on t.id = sspt.teacher_id").limit(1);
-        qb.requiredCriteria("t.id = :teacherId", "teacherId", user.getTeacherId());
+        qb.requiredCriteria("t.id = :teacherId", "teacherId", user.isSchoolAdmin() ? form.getTeacherId() : user.getTeacherId());
         qb.requiredCriteria("s.id = :sId", "sId", form.getSubjectId());
         qb.requiredCriteria("ssp.id = :sspId", "sspId", form.getSubjectStudyPeriodId());
         List<?> results = qb.select("sspt.id", em).getResultList();
@@ -190,7 +189,6 @@ public class SubjectProgramService {
     }
 
     public Set<AutocompleteResult> getProgramsRelatedToTeacher(HoisUserDetails user, Subject subject) {
-        subject.getSubjectStudyPeriods().stream().flatMap(ssp -> ssp.getTeachers().stream()).filter(t -> t.getId() == user.getTeacherId()).map(sspt -> sspt.getSubjectPrograms()).collect(Collectors.toList());
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_program sp "
                 + "inner join subject_study_period_teacher sspt on sspt.id = sp.subject_study_period_teacher_id "
                 + "inner join teacher t on t.id = sspt.teacher_id "
@@ -198,14 +196,17 @@ public class SubjectProgramService {
                 + "inner join study_period sper on sper.id = ssp.study_period_id "
                 + "inner join study_year sy on sy.id = sper.study_year_id "
                 + "inner join classifier cl on cl.code = sy.year_code "
-                + "inner join subject s on s.id = ssp.subject_id ");
-        qb.requiredCriteria("t.id = :teacherId", "teacherId", user.getTeacherId());
+                + "inner join subject s on s.id = ssp.subject_id "
+                + "join person p on p.id = t.person_id ");
+        if (user.isTeacher()) {
+            qb.requiredCriteria("t.id = :teacherId", "teacherId", user.getTeacherId());
+        }
         qb.requiredCriteria("s.id = :subjectId", "subjectId", subject.getId());
-        List<?> results = qb.select("sp.id, s.name_et as sEt, s.name_en as sEn, sper.name_et as spEt, sper.name_en as spEn, cl.name_et as clEt, cl.name_en as clEn", em).getResultList();
+        List<?> results = qb.select("sp.id, s.name_et as sEt, s.name_en as sEn, sper.name_et as spEt, sper.name_en as spEn, cl.name_et as clEt, cl.name_en as clEn, p.firstname || ' ' || p.lastname", em).getResultList();
         return StreamUtil.toMappedSet(r -> {
             return new AutocompleteResult(resultAsLong(r, 0),
-                    resultAsString(r, 1) + " - " + resultAsString(r, 3) + " (" + resultAsString(r, 5) + ")",
-                    resultAsString(r, 2) + " - " + resultAsString(r, 4) + " (" + resultAsString(r, 6) + ")");
+                    resultAsString(r, 1) + " - " + resultAsString(r, 3) + " (" + resultAsString(r, 5) + ")" + (user.isSchoolAdmin() ? " - " + resultAsString(r, 7) : ""),
+                    resultAsString(r, 2) + " - " + resultAsString(r, 4) + " (" + resultAsString(r, 6) + ")" + (user.isSchoolAdmin() ? " - " + resultAsString(r, 7) : ""));
         }, results);
     }
 
@@ -290,7 +291,7 @@ public class SubjectProgramService {
     }
     
     public SimpleEntry<String, Boolean> hasUnconfirmedSubjectPrograms(HoisUserDetails user) {
-        if (user.isTeacher()) {
+        if (user.isTeacher() || user.isSchoolAdmin()) {
             StringBuilder from = new StringBuilder("from curriculum c ");
             from.append("join curriculum_version cv on cv.curriculum_id = c.id ");
             from.append("join curriculum_version_hmodule cvhm on cvhm.curriculum_version_id = cv.id ");
@@ -300,8 +301,12 @@ public class SubjectProgramService {
             from.append("join subject_program spr on spr.subject_study_period_teacher_id = sspt.id ");
             from.append("join study_period sp on sp.id = ssp.study_period_id ");
             JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).limit(1);
-            qb.requiredCriteria("c.teacher_id = :teacherId", "teacherId", user.getTeacherId());
-            qb.requiredCriteria("spr.status_code = :status", "status", "AINEPROGRAMM_STAATUS_V");
+            if (user.isSchoolAdmin()) {
+                qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
+            } else {
+                qb.requiredCriteria("c.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+            }
+            qb.requiredCriteria("spr.status_code = :status", "status", SubjectProgramStatus.AINEPROGRAMM_STAATUS_V);
             qb.requiredCriteria("sp.end_date >= :now", "now", LocalDate.now());
             if (qb.select("spr.id", em).getResultList().size() == 1) {
                 return new SimpleEntry<>("has", Boolean.TRUE);
@@ -318,7 +323,7 @@ public class SubjectProgramService {
             from.append("join study_period sp on sp.id = ssp.study_period_id ");
             JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).limit(1);
             qb.requiredCriteria("sspt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
-            qb.requiredCriteria("spr.status_code = :status", "status", "AINEPROGRAMM_STAATUS_I");
+            qb.requiredCriteria("spr.status_code = :status", "status", SubjectProgramStatus.AINEPROGRAMM_STAATUS_I);
             qb.requiredCriteria("sp.end_date >= :now and sp.start_date <= :now", "now", LocalDate.now());
             if (qb.select("spr.id", em).getResultList().size() == 1) {
                 return new SimpleEntry<>("has", Boolean.TRUE);

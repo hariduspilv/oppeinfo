@@ -6,6 +6,7 @@
       "et": "Est",
       "en": "Eng"
     },
+    "copied" : "Copied",
     "timePlaceholder": "hh:mm",
     "searchlabel": "Search parameters",
     "button": {
@@ -212,7 +213,11 @@
       "poll": {
         "label": "Poll",
         "data": "Poll data",
-        "statistics": "Poll statistics"
+        "statistics": "Poll statistics",
+        "answers": "My answers",
+        "subjects": "Subject polls",
+        "journals": "Journal polls",
+        "questions": "Questions"
       },
       "practice" : {
         "label": "Internship",
@@ -2294,6 +2299,8 @@
     "deleteconfirm": "Are you sure you wish to delete application?",
     "missingRepresentativeConfirmation": "Application misses approval of parent/representative!",
     "messages": {
+      "noCurriculumVersionHigher": "Student has no confirmed curriculums with ongoing version, which is related to ongoing student group with matching study form",
+      "noCurriculumVersionCurriculum": "Student has no confirmed curriculums with ongoing version, which maches study form and is related to ongoing student group",
       "applicationAlreadyExists": "Application already exists",
       "academicLeaveApplicationNotfound": "Application for academic leave not found",
       "validAcademicLeaveApplicationExists": "Application for academic leave already exists",
@@ -2391,8 +2398,8 @@
     "chooseTarget": "Choose target",
     "targets": "Poll targets",
     "status": "Status",
-    "studentgroup": "Studentgroup",
-    "studentgroups": "Studentgroups",
+    "studentgroup": "Student group",
+    "studentgroups": "Student groups",
     "poll": "Poll",
     "period": "Poll period",
     "test": "Test",
@@ -2403,7 +2410,11 @@
       "school": "School",
       "student": "Student",
       "enterprise": "Enterprise",
-      "practiceDuration": "Internship duration"
+      "practiceDuration": "Internship duration",
+      "journal": "Journal",
+      "subject": "Subject",
+      "other": "Other questions",
+      "duration": "Poll duration"
     },
     "messages": {
       "noPollFound": "Poll wasn't found",
@@ -2413,9 +2424,12 @@
       "pollEnded": "Poll response has been recorded already",
       "noResponse": "Poll is not ready to accept answers",
       "noPoll": "Poll was not found",
-      "matchingTarget": "Matching target from poll is missing"
+      "matchingTarget": "Matching target from poll is missing",
+      "required": "Theme/themes {{themes}} consists of errors",
+      "unConfirmForbidden": "Cannot remove confirmation"
     },
     "basicData": {
+      "copy": "Copy",
       "label": "Basic data",
       "name": "Name",
       "foreWord": "Foreword",
@@ -2434,6 +2448,7 @@
       "atleastOne": "At least one poll target needs to be chosen",
       "status": "Status",
       "confirm": "Are you sure you wish to confirm the poll?",
+      "themeEmpty": "There is a theme without a question. Are you sure you wish to confirm the poll?",
       "themeError": "Poll has no questions",
       "deleteConfirm": "Are you sure you wish to delete the poll?",
       "removeConfirm": "Remove confirmation",
@@ -2448,10 +2463,13 @@
       "insertedBy": "Inserted by",
       "changedBy": "Changed by",
       "changeDates": "Change response times",
-      "target": "Target"
+      "target": "Target",
+      "outsiderUrl": "Outer person's url"
     },
     "questions": {
       "label": "Questions",
+      "pollConnection": "Related to poll",
+      "linkedPolls": "Related polls",
       "addTheme": "Add Theme",
       "theme": "Theme",
       "themes": "Themes",
@@ -2480,10 +2498,40 @@
       "orAddNew": "Or add new",
       "isThemePageable": "Make theme pageable",
       "isRepedetiveVocational": "Display per journal",
-      "isRepedetiveHigher": "Display per subject"
+      "isRepedetiveHigher": "Display per subject",
+      "nextTheme": "Next theme",
+      "previousTheme": "Previous theme",
+      "next": "Next",
+      "previous": "Previous",
+      "view": "View",
+      "name": "Title",
+      "pollConnections": "Related polls"
     },
     "answer": {
       "confirm": "Are you sure, you wish to confirm your answer? After confirmation, answering is no longer accepted."
+    },
+    "answers": {
+      "endDate": "End date",
+      "journalEndPeriod": "Journal end date period",
+      "subjectEndPeriod": "Subject end date period",
+      "amount": "Responses",
+      "viewResponse": "View responses",
+      "studyYear": "Studyyear",
+      "studyPeriod": "Studyperiod",
+      "pollDuration": "Poll duration",
+      "dialog": {
+        "journal": "Journal",
+        "subject": "Subject",
+        "Theme": "Theme",
+        "allTextFields": "All questions are text fields",
+        "journals": "Journals",
+        "subjects": "Subjects",
+        "themes": "Themes",
+        "average": "Average",
+        "myAnswer": "My answer",
+        "responseCount": "Answers",
+        "comment": "Comment (saves automatically when leaving the field)"
+      }
     },
     "results": "Tulemused"
   },
@@ -2589,6 +2637,7 @@
       }
     },
     "exportDialog": {
+      "error": "Can't export timetable",
       "label": "Timetable export result",
       "missingJournalTeacherCodes": "Teachers missing timetable codes",
       "missingJournalCodes": "Journals missing timetable codes"
@@ -3145,19 +3194,25 @@
     }
   },
   "contract": {
+    "emailSent": "Email sent",
+    "openPracticeJournal": "Open practice journal",
     "copy": "Copy data to contract",
     "select": "Copying contract data",
     "useContractData": "Use existing contract data",
     "addToSeveral": "Add practice contract to several",
     "addToSeveralHeader": "Add practice contract to several",
     "sendToEkis": "Send created contracts to EKIS",
+    "confirm": "Confirm",
+    "confirmWithoutEkis": "Confirm without EKIS",
     "studentEvaluation": "Student evaluation",
     "supervisorEvaluation": "Enterprise supervisor evaluation",
     "sendAgain": "Send again",
     "startFrom": "Starting date since",
     "startThru": "Starting date until",
     "ekisconfirm": "Are you sure you wish to send to EKIS?",
+    "withoutEkisConfirm": "Are you sure you with to confirm contract?",
     "ekisconfirmTemplateMissing": "Are you sure you wish to send to EKIS? System misses valid automatic notice template \"{{template}}\"",
+    "confirmTemplateMissing": "Are you sure you wish to send to confirm? System misses valid automatic notice template \"{{template}}\"",
     "endFrom": "End date since",
     "endThru": "End date until",
     "validity": "Validity of contract",
@@ -3218,6 +3273,8 @@
           "studentEmailMissing": "Learner does not have e-mail address at educational institution"
         }
       },
+      "confirmed": "Contract confirmed",
+      "contractReadyForConfirmation": "Contract ready to be confirmed",
       "updatingOnlyAllowedForStatusKandY": "To cancel contract, contract needs to be in status Koostamisel or Lõpetatud",
       "subjectRequired": "Subject is mandatory!",
       "moduleRequired": "Module is mandatory!"
@@ -3426,7 +3483,8 @@
       "addInfo": "Additional info",
       "supervisor": "Supervisor",
       "deleteConfirm": "Are you sure you wish to delete the related person?",
-      "number": "Must be a number"
+      "number": "Must be a number",
+      "sameIdCodeAndCountry": "Person with the same id code and country already exists" 
     },
     "iscedTab": {
       "regCode": "Enterprise registry code",

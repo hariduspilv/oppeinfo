@@ -1,7 +1,6 @@
 package ee.hitsa.ois.service;
 
 import java.time.LocalDate;
-import java.time.Month;
 import java.util.List;
 import java.util.Set;
 
@@ -182,29 +181,18 @@ public class StudyYearService {
             .setMaxResults(1).getResultList();
         return data.isEmpty() ? null : data.get(0);
     }
-
-    //TODO: hack method for JKHK, to be removed in September
+    
     /**
-     * Returns current study year
+     * Returns next study year
      * @param schoolId
-     * @return null if there is no current study year
+     * @return null if there is no next study year
      */
-    public StudyYear getTimetableCurrentStudyYear(Long schoolId) {
+    public StudyYear getNextStudyYear(Long schoolId) {
         LocalDate now = LocalDate.now();
-        List<StudyYear> data = null;
-        if (now.getMonth().equals(Month.AUGUST) && now.getDayOfMonth() >= 23) {
-            data= em.createQuery("select sy from StudyYear sy where sy.school.id = ?1 and sy.startDate <= ?2 "
-                    + "order by sy.endDate desc, sy.startDate desc", StudyYear.class)
-                .setParameter(1, schoolId)
-                .setParameter(2, LocalDate.of(2019, Month.SEPTEMBER, 15))
-                .setMaxResults(1).getResultList();
-        } else {
-            data = em.createQuery("select sy from StudyYear sy where sy.school.id = ?1 and sy.startDate <= ?2 and sy.endDate >= ?2", StudyYear.class)
-                .setParameter(1, schoolId)
-                .setParameter(2, now)
-                .setMaxResults(1).getResultList();
-            
-        }
+        List<StudyYear> data = em.createQuery("select sy from StudyYear sy where sy.school.id = ?1 and sy.startDate > ?2 order by sy.startDate asc", StudyYear.class)
+            .setParameter(1, schoolId)
+            .setParameter(2, now)
+            .setMaxResults(1).getResultList();
         return data.isEmpty() ? null : data.get(0);
     }
 

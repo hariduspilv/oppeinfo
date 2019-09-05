@@ -19,11 +19,11 @@
               <label class="common-label">{{'ehis.message.sentDatesRange' | translate}}</label>
               <md-input-container flex="100" flex-gt-md="25">
                 <label>{{'main.from' | translate}}</label>
-                <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru"></md-datepicker>
+                <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
               </md-input-container>
               <md-input-container flex flex-offset="5">
                 <label>{{'main.thru' | translate}}</label>
-                <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
+                <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
               </md-input-container>
             </div>
           </div>

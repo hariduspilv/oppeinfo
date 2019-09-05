@@ -82,6 +82,12 @@
     </md-input-container>
 
     <md-input-container class="md-block">
+      <md-checkbox ng-model="school.isWithoutEkis" name="isWithoutEkis">
+          {{'school.isWithoutEkis' | translate}}
+      </md-checkbox>
+    </md-input-container>
+
+    <md-input-container class="md-block">
       <label class="textInput">{{'school.adUrl' | translate}}</label>
       <input ng-model="school.adUrl" name="adUrl" type="text" md-maxlength="255">
     </md-input-container>

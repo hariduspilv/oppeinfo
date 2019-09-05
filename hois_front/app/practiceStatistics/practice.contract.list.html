@@ -1,4 +1,31 @@
-<md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
+<style>
+  /** Autocomplete responsive */
+  md-autocomplete {
+    min-width: 0;
+  }
+  /** Datepicker responsive */
+  .md-datepicker-input-mask-opaque {
+    width: 100% !important;
+  }
+  .md-datepicker-input-mask {
+    width: 100% !important;
+  }
+  .md-datepicker-input-container {
+    width: 100%;
+  }
+  .md-datepicker-input {
+    min-width: 0;
+    max-width: 100%;
+  }
+  /** xs breakpoint */
+  @media(max-width: 600px) {
+    .padding-top-4 {
+      padding-top: 4px;
+    }
+  }
+</style>
+<md-content>
+  <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak hois-navbar-overflowed>
     <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/student/statistics" name="practice.students">
         {{'practice.student.statistics' | translate}}</md-nav-item>
     <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/contract/statistics{{::contractParam}}" name="practice.contracts">
@@ -6,47 +33,43 @@
     <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/practice/studyYear/statistics{{::studyYearParam}}" name="practice.studyYear">
       {{'practice.studyYear.statistics' | translate}}</md-nav-item>
   </md-nav-bar>
+</md-content>
   <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
     <div flex>
       <fieldset ng-if="auth.isAdmin()">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-        <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+        <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate>
           <div layout="column" flex>
-  
-            <div layout="row">
-              <div flex="50">
+            <div layout="row" flex>
+              <div layout="column" flex="50">
                 <hois-autocomplete flex ng-model="criteria.enterprise" method="enterprises" name="enterprise" label="enterprise.label"
-                ha-attribute="id" ha-controller="directiveControllers"></hois-autocomplete>
-              </div>
-              <md-input-container flex>
-                <label class="textInput">{{'practice.contract.cancelReason' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.cancelReason" model-value-attr="code" main-classifier-code="LEPING_TYH_POHJUS"></hois-classifier-select>
-              </md-input-container>
-            </div>
-  
-            <div layout="row">
-              <div flex="50">
+                  ha-attribute="id" ha-controller="directiveControllers"></hois-autocomplete>
                 <hois-autocomplete flex ng-model="criteria.student" method="students" name="student" label="apel.student"
                   ha-attribute="id" ha-controller="directiveControllers"></hois-autocomplete>
+                <hois-autocomplete flex ng-model="criteria.studentGroup" ha-attribute="id" 
+                  ha-controller="directiveControllers" method="studentgroups" name="studentGroup"
+                  label="{{'lessonplan.studentGroup'}}"></hois-autocomplete>
               </div>
-              <div flex="25">
-                <md-input-container>
-                    <label>{{'practice.contract.startDate' | translate}}</label>
-                    <md-datepicker name="date" ng-model="criteria.startDate" md-max-date="criteria.endDate" md-open-on-focus></md-datepicker>
+              <div layout="column" flex="50">
+                <md-input-container layout="row" style="padding-bottom: 6px">
+                  <label class="textInput">{{'practice.contract.cancelReason' | translate}}</label>
+                  <hois-classifier-select ng-model="criteria.cancelReason" model-value-attr="code" main-classifier-code="LEPING_TYH_POHJUS"></hois-classifier-select>
                 </md-input-container>
+                <div layout="row" layout-xs="column">
+                  <div flex="50" flex-xs="100">
+                    <md-input-container flex class="padding-top-4" style="width: 100%">
+                        <label style="width: 90%;text-overflow: ellipsis;overflow: hidden !important; width:100% important">{{'practice.contract.startDate' | translate}}</label>
+                        <md-datepicker name="date" ng-model="criteria.startDate" md-max-date="criteria.endDate" md-open-on-focus hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                    </md-input-container>
+                  </div>
+                  <div flex="50" flex-xs="100">
+                    <md-input-container flex style="width: 100%">
+                        <label style="width: 90%;text-overflow: ellipsis;overflow: hidden !important; width:100% important">{{'practice.contract.endDate' | translate}}</label>
+                        <md-datepicker name="date" ng-model="criteria.endDate" md-min-date="criteria.startDate" md-open-on-focus hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                    </md-input-container>
+                  </div>
+                </div>
               </div>
-              <div flex="25">
-                <md-input-container>
-                    <label>{{'practice.contract.endDate' | translate}}</label>
-                    <md-datepicker name="date" ng-model="criteria.endDate" md-min-date="criteria.startDate" md-open-on-focus></md-datepicker>
-                </md-input-container>
-              </div>
-            </div>
-  
-            <div layout="row">
-              <hois-autocomplete flex="50" ng-model="criteria.studentGroup" ha-attribute="id" 
-                ha-controller="directiveControllers" method="studentgroups" name="studentGroup"
-                label="{{'lessonplan.studentGroup'}}"></hois-autocomplete>
             </div>
   
             <div layout="row" layout-xs="column">

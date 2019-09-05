@@ -22,6 +22,7 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils', 
       //var config = angular.extend({}, userConfig);
       $mdDialog.show({
         controller: function($scope, $rootScope, $mdDialog) {
+          var disableSubmitCallback = false;
           $scope.removeFromArray = ArrayUtils.remove;
           $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
 
@@ -35,6 +36,10 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils', 
             }
 
             if (valid) {
+              if (disableSubmitCallback) {
+                return;
+              }
+              disableSubmitCallback = true;
               if (angular.isFunction(submitCallback)) {
                 submitCallback($scope);
               }
@@ -71,8 +76,13 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils', 
     this.confirmDialog = function(options, submitcallback, cancelcallback) {
       $mdDialog.show({
         controller: function($scope) {
+          var disableSubmitCallback = false;
           $scope.messages = angular.extend({}, defaultConfirmDialogOptions, options);
           $scope.accept = function() {
+            if (disableSubmitCallback) {
+              return;
+            }
+            disableSubmitCallback = true;
             $mdDialog.hide();
             submitcallback();
           };

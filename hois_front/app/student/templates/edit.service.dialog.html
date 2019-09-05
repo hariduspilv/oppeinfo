@@ -24,7 +24,7 @@
           <label>{{'student.supportService.content' | translate}}</label>
           <textarea ng-model="service.content" name="content" max-rows="5" md-maxlength="4000" required></textarea>
         </md-input-container>
-        <md-input-container>
+        <md-input-container style="width: 150px;">
           <label>{{'student.supportService.validity' | translate}}</label>
           <hois-classifier-select ng-model="service.validity" model-value-attr="code" main-classifier-code="TUGIKEHTIV" required></hois-classifier-select>
         </md-input-container>

@@ -9,39 +9,58 @@
         border: 1px solid red;
         border-radius: 5px;
     }
+    .margin-bottom-0 {
+        margin-bottom: 0px !important;
+    }
+    /** xs breakpoint */
+    @media(max-width: 600px) {
+        .margin-bottom-0 {
+            margin-bottom: 18px !important;
+        }
+    }
 </style>
 <div class="ois-form-layout-padding ois-form-layout" layout="column" ng-cloak>
     <form name="responseForm" ng-submit="confirm()" ng-cloak novalidate>
         <div flex>
-            <div layout="column" class="form-readonly">
-                <div layout="row">
-                    <p style="word-break: break-word; font-size: 15px;">{{criteria.foreword}}</p>
-                </div>
-                <div layout="row">
-                    <md-input-container flex="50" ng-if="criteria.school">
-                        <label>{{'poll.response.school' | translate}}</label>
-                        <hois-value value="currentLanguageNameField(criteria.school)"></hois-value>
-                    </md-input-container>
-                    <md-input-container flex="50" ng-if="criteria.student" flex-offset="5">
-                        <label>{{'poll.response.student' | translate}}</label>
-                        <hois-value value="criteria.student"></hois-value>
-                    </md-input-container>
-                </div>
-                <div layout="row">
-                    <md-input-container flex="50" ng-if="criteria.enterprise">
-                        <label>{{'poll.response.enterprise' | translate}}</label>
-                        <hois-value value="criteria.enterprise"></hois-value>
-                    </md-input-container>
-                    <md-input-container flex="50" ng-if="criteria.practiceFrom && criteria.practiceThru" flex-offset="5">
-                        <label>{{'poll.response.practiceDuration' | translate}}</label>
-                        <hois-value value="(criteria.practiceFrom | hoisDate) + ' - ' + (criteria.practiceThru | hoisDate)"></hois-value>
-                    </md-input-container>
-                </div>
-            </div>
             <div ng-if="criteria.themes" layout="column">
-                <div ng-repeat="item in criteria.themes track by $index" class="occupation-row align-center" layout="row" flex>
+                <div ng-repeat="item in criteria.themes track by $index" layout="column" flex ng-if="!criteria.isThemePageable || item.show">
+                    <div layout="column" ng-if="$first" class="form-readonly">
+                        <div layout="row" ng-if="criteria.school !== null">
+                            <md-input-container flex="50" flex-xs="100" ng-if="criteria.school">
+                                <label>{{'poll.response.school' | translate}}</label>
+                                <hois-value value="currentLanguageNameField(criteria.school)"></hois-value>
+                            </md-input-container>
+                            <md-input-container flex="50" flex-xs="100" ng-if="criteria.startDate && criteria.endDate" flex-offset="5" flex-offset-xs="0">
+                                <label>{{'poll.response.duration' | translate}}</label>
+                                <hois-value value="(criteria.startDate | hoisDate) + ' - ' + (criteria.endDate | hoisDate)"></hois-value>
+                            </md-input-container>
+                        </div>
+                        <div layout="row" layout-xs="column" ng-if="criteria.student !== null && criteria.studentGroup !== null">
+                            <md-input-container flex="50" flex-xs="100" ng-if="criteria.student">
+                                <label>{{'poll.response.student' | translate}}</label>
+                                <hois-value value="criteria.student"></hois-value>
+                            </md-input-container>
+                            <md-input-container flex="50" flex-xs="100" ng-if="criteria.studentGroup" flex-offset="5" flex-offset-xs="0">
+                                <label>{{'poll.studentgroup' | translate}}</label>
+                                <hois-value value="currentLanguageNameField(criteria.studentGroup)"></hois-value>
+                            </md-input-container>
+                        </div>
+                        <div layout="row" layout-xs="column" ng-if="criteria.enterprise !== null || (criteria.practiceFrom !== null && criteria.practiceThru != null)">
+                            <md-input-container flex="50" flex-xs="100" class="margin-bottom-0" ng-if="criteria.enterprise">
+                                <label>{{'poll.response.enterprise' | translate}}</label>
+                                <hois-value value="criteria.enterprise"></hois-value>
+                            </md-input-container>
+                            <md-input-container flex="50" flex-xs="100" ng-if="criteria.practiceFrom && criteria.practiceThru" style="margin-bottom: 0px" flex-offset="5" flex-offset-xs="0">
+                                <label>{{'poll.response.practiceDuration' | translate}}</label>
+                                <hois-value value="(criteria.practiceFrom | hoisDate) + ' - ' + (criteria.practiceThru | hoisDate)"></hois-value>
+                            </md-input-container>
+                        </div>
+                        <div layout="row" ng-if="criteria.foreword !== null">
+                            <p style="word-break: break-word; font-size: 15px;">{{criteria.foreword}}</p>
+                        </div>
+                    </div>
                     <fieldset flex="100">
-                        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{item.orderNr + ' ' + item.nameEt}}</legend>
+                        <legend md-colors="{color: 'primary-800'}" style="word-break: break-word;" class="md-title-small">{{item.orderNr + ' ' + item.nameEt}}</legend>
                         <div ng-repeat="question in item.questions track by $index" layout="row" flex ng-style="{'margin-top': $first ? '0px' : '16px'}">
                             <div flex="100">
                                 <fieldset>
@@ -52,8 +71,8 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div layout="{{question.pictures.length !== 0 ? 'row' : 'column'}}">
-                                        <div layout="column" flex="35">
+                                    <div layout="{{question.pictures.length !== 0 ? 'row' : 'column'}}" layout-xs="column">
+                                        <div layout="column" flex="35" flex-xs="100">
                                             <div ng-repeat="file in question.files track by $index">
                                                 <img ng-if="file.ftype.indexOf('image') !== -1" flex style="display: block; margin-left: auto; margin-right: auto; max-width: 100%; max-height: 100%" ng-src="{{getUrl(file)}}">
                                                 <div ng-if="file.ftype.indexOf('image') === -1">
@@ -64,12 +83,12 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div layout="column" flex="{{question.pictures.length !== 0 ? '60' : '100'}}" flex-offset="{{question.pictures.length !== 0 ? '5' : '0'}}">
+                                        <div layout="column" flex="{{question.pictures.length !== 0 ? '60' : '100'}}" flex-xs="100" flex-offset="{{question.pictures.length !== 0 ? '5' : '0'}}">
                                             <p style="word-break: break-word; margin-top: 0px;font-style: italic;">{{question.addInfoEt}}</p>
                                             <div ng-if="question.type === 'VASTUS_S'" layout="{{question.isInRow ? 'row' : 'column'}}" flex="100" class="{{question.requiredError ? 'red-border' : ''}}">
                                                 <div ng-repeat="answer in question.answers track by $index" flex>
                                                     <md-input-container flex>
-                                                        <md-checkbox ng-model="answer.chosen" aria-label="required" ng-blur="save()" ng-change="question.requiredError && checkErrors()">
+                                                        <md-checkbox ng-model="answer.chosen" aria-label="required" ng-blur="save(question)" ng-change="question.requiredError && checkErrors()">
                                                             <span style="word-break: break-word">{{answer.nameEt}}</span>
                                                         </md-checkbox>
                                                     </md-input-container>
@@ -77,9 +96,13 @@
                                             </div>
                                             <div ng-if="question.type === 'VASTUS_R'" layout="row" class="{{question.requiredError ? 'red-border' : ''}}">
                                                 <md-input-container flex>
-                                                    <md-radio-group name="radio" ng-model="question.answerTxt" ng-required="question.isRequired" layout="{{question.isInRow ? 'row' : 'column'}}" flex="100"  ng-blur="save()" ng-change="question.requiredError && checkErrors()">
-                                                        <md-radio-button ng-value="answer.nameEt" aria-label="period" ng-repeat="answer in question.answers track by $index" flex>
-                                                            <span style="word-break: break-word">{{answer.nameEt}}</span></md-radio-button>
+                                                    <md-radio-group name="radio" ng-model="question.answerTxt" ng-required="question.isRequired" layout="{{question.isInRow ? 'row' : 'column'}}"
+                                                        layout-xs="column" flex="100"  ng-blur="save(question)" ng-change="question.requiredError && checkErrors()">
+                                                        <md-input-container>
+                                                            <md-radio-button ng-value="answer.nameEt" aria-label="period" ng-repeat="answer in question.answers track by $index" flex>
+                                                                <span style="word-break: break-word">{{answer.nameEt}}</span>
+                                                            </md-radio-button>
+                                                        </md-input-container>
                                                     </md-radio-group>
                                                     <div ng-if="responseForm.$submitted" ng-messages="pollForm.radio.$error" >
                                                         <div ng-message="required">{{'main.messages.error.inputFieldIsRequired' | translate}}</div>
@@ -90,7 +113,7 @@
                                             <div ng-if="question.type === 'VASTUS_M'" layout="{{question.isInRow ? 'row' : 'column'}}" class="{{question.requiredError ? 'red-border' : ''}}">
                                                 <div ng-repeat="answer in question.answers track by $index" flex>
                                                     <md-input-container flex>
-                                                        <md-checkbox ng-model="answer.chosen" aria-label="checkBox" name="checkBox" ng-blur="save()" ng-change="question.requiredError && checkErrors()">
+                                                        <md-checkbox ng-model="answer.chosen" aria-label="checkBox" name="checkBox" ng-blur="save(question)" ng-change="question.requiredError && checkErrors()">
                                                                 <span style="word-break: break-word">{{answer.nameEt}}</span>
                                                         </md-checkbox>
                                                     </md-input-container>
@@ -99,13 +122,13 @@
                                             <div ng-if="question.type === 'VASTUS_T'" layout="row">
                                                 <md-input-container flex>
                                                     <label>{{answer.nameEt}}</label>
-                                                    <textarea ng-model="question.answerTxt" type="text" ng-required="question.isRequired" md-maxlength="4000" max-rows="5"  ng-blur="save()"></textarea>
+                                                    <textarea ng-model="question.answerTxt" type="text" ng-required="question.isRequired" md-maxlength="4000" max-rows="5"  ng-blur="save(question)"></textarea>
                                                 </md-input-container>
                                             </div>
                                             <div ng-if="question.type === 'VASTUS_V'" layout="row">
                                                 <md-input-container flex>
                                                     <label>{{answer.nameEt}}</label>
-                                                    <hois-select ng-model="question.answerTxt" values="question.answers" ng-required="question.isRequired" sorted-query="true" order-by-property="orderNr" ng-blur="save()" aria-label="answers"></hois-select>
+                                                    <hois-select ng-model="question.answerTxt" values="question.answers" ng-required="question.isRequired" sorted-query="true" order-by-property="orderNr" value-property="nameEt" ng-blur="save(question)" aria-label="answers"></hois-select>
                                                 </md-input-container>
                                             </div>
                                         </div>
@@ -115,13 +138,36 @@
                             </div>
                         </div>
                     </fieldset>
+                    <br ng-if="!criteria.isThemePageable && !$last">
+                    <div layout="row" layout-align="space-between" ng-if="criteria.isThemePageable">
+                        <div>
+                            <md-button class="md-raised" ng-click="previousTheme($index)" ng-if="!$first">
+                                <md-icon md-font-set="material-icons">keyboard_arrow_left</md-icon>
+                                {{'poll.questions.previousTheme' | translate}}
+                            </md-button>
+                        </div>
+                        <div>
+                            <md-button class="md-raised" ng-click="nextTheme($index)" ng-if="!$last">
+                                {{'poll.questions.nextTheme' | translate}}
+                                <md-icon md-font-set="material-icons">keyboard_arrow_right</md-icon>
+                            </md-button>
+                        </div>
+                    </div>
+                    <div layout="column" ng-if="criteria.isThemePageable && $last">
+                        <div layout="row">
+                            <p style="word-break: break-word; font-size: 15px;">{{criteria.afterword}}</p>
+                        </div>
+                        <div layout="row">
+                            <md-button flex-xs="100" type="submit" class="md-raised">{{'main.button.confirm' | translate}}</md-button>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div layout="row">
+            <div layout="row" ng-if="!criteria.isThemePageable">
                 <p style="word-break: break-word; font-size: 15px;">{{criteria.afterword}}</p>
             </div>
         </div>
-        <div layout="row">
+        <div layout="row" ng-if="!criteria.isThemePageable">
             <md-button flex-xs="100" type="submit" class="md-raised">{{'main.button.confirm' | translate}}</md-button>
         </div>
     </form>

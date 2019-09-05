@@ -1,7 +1,9 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectProgramController', ['$scope', 'QueryUtils', '$route', 'ArrayUtils', 'message', 'dialogService', '$location', 'config', '$rootScope', '$timeout',
-function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $location, config, $rootScope, $timeout) {
+angular.module('hitsaOis').controller('SubjectProgramController',
+  ['$scope', 'QueryUtils', '$route', 'ArrayUtils', 'message', 'dialogService',
+   '$location', 'config', '$rootScope', '$timeout', '$mdColors',
+function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $location, config, $rootScope, $timeout, $mdColors) {
   
   var formTypes = Object.freeze({
     periods: "periods",
@@ -13,6 +15,8 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
   $scope.auth = $route.current.locals.auth;
   var subjectId = $route.current.params.subjectId;
   var subjectStudyPeriodId = $route.current.params.subjectStudyPeriodId;
+  var teacherId = $route.current.params.teacher;
+  
   var formType = formTypes[$route.current.params.form || ($route.current.locals.params ? $route.current.locals.params.form : undefined)]; // Used to understand from where did user come.
   if (angular.isUndefined(formType)) {
     message.error('main.messages.error.nopermission');
@@ -23,6 +27,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
   var baseUrl = "/subject/subjectProgram";
   var Endpoint = QueryUtils.endpoint("/" + ($scope.isPublic && !$scope.auth ? "public" : "subject") + "/subjectProgram");
   var initial = {
+    teacherId: teacherId,
     studyContentType: 'OPPETOOSISU_T',
     status: 'AINEPROGRAMM_STAATUS_L'
   };
@@ -40,7 +45,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
 
   function getAdditionalData(sId, pId) {
     $scope.subject = QueryUtils.endpoint(($scope.isPublic && !$scope.auth ? "/public/subject/view" : baseUrl + "/subject")).get({id: sId, program: pId});
-    if ($scope.auth && $scope.auth.isTeacher()) {
+    if ($scope.auth && ($scope.auth.isTeacher() || $scope.auth.isAdmin())) {
       $scope.subjectPrograms = QueryUtils.endpoint(baseUrl + "/teacher/" + sId).query();
     }
   }
@@ -92,6 +97,28 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     return true;
   }
 
+  var weekRegex = /^\d+(\-\d+)?$/;
+  function compareWeek(week1, week2) {
+    if (week1 === week2) {
+      return 0;
+    }
+    if (angular.isUndefined(week1) || angular.isUndefined(week2)) {
+      return angular.isUndefined(week1) ? 1 : -1;
+    }
+    
+    var isValid1 = weekRegex.test(week1);
+    var isValid2 = weekRegex.test(week2);
+
+    if (isValid1 && isValid2) {
+      var splittedWeek1 = week1.split("-");
+      var splittedWeek2 = week2.split("-");
+      return parseInt(splittedWeek1? splittedWeek1[0] : week1) - parseInt(splittedWeek2 ? splittedWeek2[0] : week2);
+    } else if (isValid1 || isValid2) {
+      return isValid1 ? -1 : 1;
+    }
+    return week1.localeCompare(week2);
+  }
+
   function dtoToModel(response) {
     $scope.studyContentWk = [];
     $scope.studyContentDt = [];
@@ -106,11 +133,37 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     } else if (response.studyContentType === 'OPPETOOSISU_N') {
       $scope.studyContentWk = response.studyContents;
       $scope.studyContentWk.sort(function (w1, w2) {
-        return w1.weekNr - w2.weekNr;
+        return compareWeek(w1.weekNr, w2.weekNr);
       });
     }
     $scope.isSupervisor = ArrayUtils.includes(response.supervisorIds || [], $scope.userTeacherId);
+    $scope.studyContentTypeChange();
   }
+
+  var warningColor = $mdColors.getThemeColor('warn');
+  $scope.showWarningAboutType = false;
+  $scope.studyContentTypeChange = function() {
+    var showWarning = false;
+    if ($scope.subjectProgram.studyContentType !== 'OPPETOOSISU_K' && ($scope.studyContentDt || []).length > 0) {
+      document.querySelector("md-radio-button[value='OPPETOOSISU_K']").style.color = warningColor;
+      showWarning = true;
+    } else {
+      document.querySelector("md-radio-button[value='OPPETOOSISU_K']").style.color = "";
+    }
+    if ($scope.subjectProgram.studyContentType !== 'OPPETOOSISU_N' && ($scope.studyContentWk || []).length > 0) {
+      document.querySelector("md-radio-button[value='OPPETOOSISU_N']").style.color = warningColor;
+      showWarning = true;
+    } else {
+      document.querySelector("md-radio-button[value='OPPETOOSISU_N']").style.color = "";
+    }
+    if ($scope.subjectProgram.studyContentType !== 'OPPETOOSISU_T' && $scope.subjectProgram.studyDescription) {
+      document.querySelector("md-radio-button[value='OPPETOOSISU_T']").style.color = warningColor;
+      showWarning = true;
+    } else {
+      document.querySelector("md-radio-button[value='OPPETOOSISU_T']").style.color = "";
+    }
+    $scope.showWarningAboutType = showWarning;
+  };
 
   function modelToDto() {
     if (!$scope.subjectProgram.id) {
@@ -182,6 +235,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
         $scope.subjectProgram.grade3Description = response.grade3Description;
         $scope.subjectProgram.grade4Description = response.grade4Description;
         $scope.subjectProgram.grade5Description = response.grade5Description;
+        $scope.subjectProgram.addInfo = response.addInfo;
         response.studyContents.forEach(function (sc) {
           sc.id = null;
         });
@@ -258,11 +312,22 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     if (!validationPassed()) {
       return;
     }
-    modelToDto();
-    if ($scope.subjectProgram.id) {
-      save();
+    if ($scope.showWarningAboutType) {
+      dialogService.confirmDialog({prompt: 'subjectProgram.messages.previousStudyContentBeingDeleted'}, function() {
+        modelToDto();
+        if ($scope.subjectProgram.id) {
+          save();
+        } else {
+          create();
+        }
+      });
     } else {
-      create();
+      modelToDto();
+      if ($scope.subjectProgram.id) {
+        save();
+      } else {
+        create();
+      }
     }
   };
 

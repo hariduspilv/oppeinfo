@@ -17,7 +17,7 @@
           <legend ng-class="{invalid: dialogForm.$submitted && (!record.formalSubjectsOrModules || record.formalSubjectsOrModules.length === 0)}" 
             class="md-title-small">{{'apel.formalLearnings.transferableModules' | translate}}</legend>
           <md-input-container>
-            <md-button ng-click="addNewTransferableModule()" class="md-raised">{{'main.button.addNewRow' | translate}}</md-button>
+            <md-button ng-click="addNewTransferableSubjectOrModule()" class="md-raised">{{'main.button.addNewRow' | translate}}</md-button>
           </md-input-container>
           <div ng-if="record.newTransferableSubjectOrModule">
             <div layout="row" layout-xs="column" flex>
@@ -48,7 +48,8 @@
                 <div ng-if="!formState.isMySchool && !formState.isNewSchool" layout="row" layout-sm="column" layout-xs="column">
                   <md-input-container flex="30" flex-sm="100" flex-xs="100">
                     <label>{{'apel.formalLearnings.schoolNameEt' | translate}}</label>
-                    <md-select ng-model="record.newTransferableSubjectOrModule.apelSchool" aria-label="apelSchool" ng-change="apelSchoolChanged(record.newTransferableSubjectOrModule.apelSchool)"
+                    <md-select ng-model="record.newTransferableSubjectOrModule.apelSchool" aria-label="apelSchool"
+                      ng-change="apelSchoolChanged(record.newTransferableSubjectOrModule.apelSchool)"
                       ng-model-options="{trackBy: '$value.id + $value.nameEt'}" required>
                       <md-option ng-repeat="val in apelSchools" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
                     </md-select>
@@ -196,13 +197,16 @@
                 </div>
               </div>
             </div>
-            <md-button ng-if="record.newTransferableSubjectOrModule.isNew" class="md-raised" ng-click="addTransferableModule(record.newTransferableSubjectOrModule)">{{'main.button.add' | translate}}</md-button>
-            <md-button ng-if="!record.newTransferableSubjectOrModule.isNew" class="md-raised" ng-click="changeTransferableModule(record.newTransferableSubjectOrModule)">{{'main.button.edit' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="deleteTransferableModule(record.newTransferableSubjectOrModule)">{{'apel.formalLearnings.remove' | translate}}</md-button>
+            <md-button ng-if="record.newTransferableSubjectOrModule.isNew" class="md-raised" 
+              ng-click="addTransferableSubjectOrModule()">{{'main.button.add' | translate}}</md-button>
+            <md-button ng-if="!record.newTransferableSubjectOrModule.isNew" class="md-raised" 
+              ng-click="changeTransferableSubjectOrModule()">{{'main.button.edit' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="deleteTransferableSubjectOrModule()">
+              {{'apel.formalLearnings.remove' | translate}}</md-button>
           </div>
 
           <md-table-container>
-            <table md-table md-progress="tabledata.$promise" class="secondary-table">
+            <table md-table class="secondary-table">
               <thead md-head>
                 <tr md-row>
                   <th md-column>{{'apel.formalLearnings.school' | translate}}</th>
@@ -228,7 +232,7 @@
                   <td md-cell>{{row.gradeDate | hoisDate}}</td>
                   <td md-cell>{{row.teachers}}</td>
                   <td md-cell>
-                    <md-button md-no-ink class="md-primary change-button" ng-click="editTransferableModule($index)">{{'main.button.change' | translate}}</md-button>
+                    <md-button md-no-ink class="md-primary change-button" ng-click="editTransferableSubjectOrModule($index)">{{'main.button.change' | translate}}</md-button>
                   </td>
                 </tr>
               </tbody>
@@ -237,7 +241,7 @@
         </fieldset>
         <br>
         <fieldset>
-          <legend ng-class="{invalid: areReplacedSubjectsOrModulesValid()}"
+          <legend ng-class="{invalid: areReplacedSubjectsOrModulesInvalid()}"
             class="md-title-small">{{'apel.formalLearnings.substitutableModulesThemes' | translate}}</legend>
           <div flex="50">
             <md-input-container style="width: 100%">
@@ -279,7 +283,7 @@
                   <td md-cell>
                     <md-input-container>
                       <hois-value ng-if="themeOrModule.isModule" value="themeOrModule.curriculumVersionOmodule.credits"></hois-value>
-                      <hois-value ng-if="!themeOrModule.isModule" value="themeOrModule.curriculumVersionOmoduleTheme.credits">
+                      <hois-value ng-if="!themeOrModule.isModule" value="themeOrModule.curriculumVersionOmoduleTheme.credits"></hois-value>
                     </md-input-container>
                   </td>
                   <td md-cell>

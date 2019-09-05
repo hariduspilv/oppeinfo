@@ -7,12 +7,12 @@
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">
           {{'apel.formalLearnings.label' | translate}} {{application.isVocational ? ('apel.formalLearnings.vocationalSubtitle' | translate) : ('apel.formalLearnings.higherSubtitle' | translate)}}
         </legend>
-        <span ng-if="application.isVocational" ng-repeat="record in application.records | filter:{isFormalLearning: true}">
-          <div ng-include="'apelApplication/templates/apel.application.formal.learning.vocational.list.html'"
-            style="margin-bottom: 20px"></div>
+        <span ng-if="application.isVocational" ng-repeat="record in application.records | filter:{isFormalLearning: true} | orderBy:'id'">
+          <div ng-include="'apelApplication/templates/apel.application.formal.learning.vocational.list.html'" style="margin-bottom: 20px"></div>
         </span>
-        <div ng-if="!application.isVocational" ng-include="'apelApplication/templates/apel.application.formal.learning.higher.list.html'"
-          style="margin-bottom: 20px"></div>
+        <span ng-if="!application.isVocational" ng-repeat="record in application.records | filter:{isFormalLearning: true} | orderBy:'id'">
+          <div ng-include="'apelApplication/templates/apel.application.formal.learning.higher.list.html'" style="margin-bottom: 20px"></div>
+        </span>
       </fieldset>
     </div>
     <br>

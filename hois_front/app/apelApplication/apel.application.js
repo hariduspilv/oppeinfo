@@ -5,92 +5,68 @@
     for (var i = 0; i < scope.application.records.length; i++) {
       if (scope.application.records[i].isFormalLearning) {
         scope.application.records[i].data = [];
-        var rows = 1;
-        if (scope.application.isVocational) {
-          rows = Math.max(scope.application.records[i].formalSubjectsOrModules.length, scope.application.records[i].formalReplacedSubjectsOrModules.length);
-        }
+        var rows = Math.max(scope.application.records[i].formalSubjectsOrModules.length, scope.application.records[i].formalReplacedSubjectsOrModules.length);
         for (var j = 0; j < rows; j++) {
-          var formalSubjectsOrModules = scope.application.records[i].formalSubjectsOrModules[j] ? scope.application.records[i].formalSubjectsOrModules[j] : {};
-          var formalReplacedSubjectsOrModules = {};
-          if (scope.application.isVocational) {
-            formalReplacedSubjectsOrModules = scope.application.records[i].formalReplacedSubjectsOrModules[j] ? scope.application.records[i].formalReplacedSubjectsOrModules[j] : {};
-          } else {
-            formalReplacedSubjectsOrModules = scope.application.records[i].formalReplacedSubjectsOrModules;
-          }
-          getFormalLearningTableRow(scope, i, formalSubjectsOrModules, formalReplacedSubjectsOrModules);
+          var transferableSubjectOrModule = scope.application.records[i].formalSubjectsOrModules[j] ?
+            scope.application.records[i].formalSubjectsOrModules[j] : {};
+          var replacedSubjectOrModule = scope.application.records[i].formalReplacedSubjectsOrModules[j] ?
+            scope.application.records[i].formalReplacedSubjectsOrModules[j] : {};
+          getFormalLearningTableRow(scope, i, transferableSubjectOrModule, replacedSubjectOrModule);
         }
       }
     }
   }
 
-  function getFormalLearningTableRow(scope, recordIndex, formalSubjectsOrModules, formalReplacedSubjectsOrModules) {
-    var data = [];
+  function getFormalLearningTableRow(scope, recordIndex, transferableSubjectOrModule, replacedSubjectOrModule) {
     if (scope.application.isVocational) {
-      if (formalSubjectsOrModules.curriculumVersionOmodule) {
-        getFormalLearningModuleTableRow(scope, recordIndex, formalSubjectsOrModules, formalReplacedSubjectsOrModules, formalSubjectsOrModules.curriculumVersionOmodule, null);
+      if (transferableSubjectOrModule.curriculumVersionOmodule) {
+        getFormalLearningModuleTableRow(scope, recordIndex, transferableSubjectOrModule, replacedSubjectOrModule, 
+          transferableSubjectOrModule.curriculumVersionOmodule);
       } else {
-        getFormalLearningModuleTableRow(scope, recordIndex, formalSubjectsOrModules, formalReplacedSubjectsOrModules, null, null);
+        getFormalLearningModuleTableRow(scope, recordIndex, transferableSubjectOrModule, replacedSubjectOrModule, null);
       }
     } else {
-      data = getFormalSubjectRowData(scope, formalSubjectsOrModules, formalReplacedSubjectsOrModules,  scope.application.records[recordIndex].id);
-      scope.application.records[recordIndex].data.push(data);
+      getFormalLearningSubjectTableRow(scope, recordIndex, transferableSubjectOrModule, replacedSubjectOrModule);
     }
   }
 
-  function getFormalLearningModuleTableRow(scope, recordIndex, formalSubjectsOrModules, formalReplacedSubjectsOrModules, oModule, replacedOmodule) {
-    if (!angular.equals(formalReplacedSubjectsOrModules, {})) {
-      getFormalLearningTableRowWithReplacedModules(scope, recordIndex, formalSubjectsOrModules, formalReplacedSubjectsOrModules, oModule);
+  function getFormalLearningModuleTableRow(scope, recordIndex, transferableSubjectOrModule, replacedSubjectOrModule, oModule) {
+    if (!angular.equals(replacedSubjectOrModule, {})) {
+      getFormalLearningTableRowWithReplacedModules(scope, recordIndex, transferableSubjectOrModule, replacedSubjectOrModule, oModule);
     } else {
-      var data = getFormalModuleRowData(scope, formalSubjectsOrModules, scope.application.records[recordIndex].id, oModule, replacedOmodule);
+      var data = getFormalModuleRowData(scope, transferableSubjectOrModule, scope.application.records[recordIndex].id, oModule, null);
       scope.application.records[recordIndex].data.push(data);
     }
   }
 
-  function getFormalLearningTableRowWithReplacedModules(scope, recordIndex, formalSubjectsOrModules, formalReplacedSubjectsOrModules, oModule) {
+  function getFormalLearningTableRowWithReplacedModules(scope, recordIndex, transferableSubjectOrModule, replacedSubjectOrModule, oModule) {
     var data = null;
-    var replacedTheme = formalReplacedSubjectsOrModules.curriculumVersionOmoduleTheme;
+    var replacedTheme = replacedSubjectOrModule.curriculumVersionOmoduleTheme;
     if (replacedTheme) {
-      data = getFormalModuleRowData(scope, formalSubjectsOrModules, scope.application.records[recordIndex].id, 
-        oModule, formalReplacedSubjectsOrModules.curriculumVersionOmodule, replacedTheme);
+      data = getFormalModuleRowData(scope, transferableSubjectOrModule, scope.application.records[recordIndex].id, 
+        oModule, replacedSubjectOrModule.curriculumVersionOmodule, replacedTheme);
     } else {
-      data = getFormalModuleRowData(scope, formalSubjectsOrModules, scope.application.records[recordIndex].id, oModule, 
-        formalReplacedSubjectsOrModules.curriculumVersionOmodule, null);
+      data = getFormalModuleRowData(scope, transferableSubjectOrModule, scope.application.records[recordIndex].id, oModule, 
+        replacedSubjectOrModule.curriculumVersionOmodule, null);
     }
     scope.application.records[recordIndex].data.push(data);
   }
 
-  function getFormalSubjectRowData(scope, formalSubjectsOrModules, formalReplacedSubjectsOrModules, recordId) {
-    var data = [];
-    data.recordId = recordId;
-    data.subjectOrModuleId = formalSubjectsOrModules.id;
-    data.school = formalSubjectsOrModules.apelSchool ? formalSubjectsOrModules.apelSchool : scope.school;
-    data.subject = formalSubjectsOrModules.subject ? formalSubjectsOrModules.subject : {nameEn: formalSubjectsOrModules.nameEn, nameEt: formalSubjectsOrModules.nameEt};
-    data.code = formalSubjectsOrModules.subjectCode;
-    data.assessment = scope.assessmentsMap[formalSubjectsOrModules.assessment];
-    data.grade = scope.gradesMap[formalSubjectsOrModules.grade];
-    data.gradeDate = formalSubjectsOrModules.gradeDate;
-    data.teachers = formalSubjectsOrModules.teachers;
-    data.module = formalSubjectsOrModules.curriculumVersionHmodule;
-    data.isOptional = formalSubjectsOrModules.isOptional;
-    data.credits = formalSubjectsOrModules.credits;
-    data.formalReplacedSubjectsOrModules = formalReplacedSubjectsOrModules;
-    data.transfer = formalSubjectsOrModules.transfer;
-    return data;
-  }
-
   function getFormalModuleRowData(scope, formalSubjectsOrModules, recordId, oModule, replacedOmodule, replacedTheme) {
-    var data = [];
+    var data = {};
     data.recordId = recordId;
-    data.subjectOrModuleId = formalSubjectsOrModules.id;
+
     if (formalSubjectsOrModules && !angular.equals(formalSubjectsOrModules, {})) {
+      data.subjectOrModuleId = formalSubjectsOrModules.id;
       data.school = formalSubjectsOrModules.apelSchool ? formalSubjectsOrModules.apelSchool : scope.school;
+      data.moduleId = formalSubjectsOrModules.id;
+      data.module = oModule ? oModule : {nameEt: formalSubjectsOrModules.nameEt, nameEn: formalSubjectsOrModules.nameEn};
+      data.credits = formalSubjectsOrModules.credits;
+      data.grade = scope.gradesMap[formalSubjectsOrModules.grade];
+      data.gradeDate = formalSubjectsOrModules.gradeDate;
+      data.teachers = formalSubjectsOrModules.teachers;
+      data.transfer = formalSubjectsOrModules.transfer;
     }
-    data.moduleId = formalSubjectsOrModules.id;
-    data.module = oModule ? oModule : {nameEt: formalSubjectsOrModules.nameEt, nameEn: formalSubjectsOrModules.nameEn};
-    data.credits = formalSubjectsOrModules.credits;
-    data.grade = scope.gradesMap[formalSubjectsOrModules.grade];
-    data.gradeDate = formalSubjectsOrModules.gradeDate;
-    data.teachers = formalSubjectsOrModules.teachers;
     data.replacedModule = replacedOmodule;
     data.replacedTheme = replacedTheme;
     if (replacedOmodule && !replacedTheme) {
@@ -100,9 +76,37 @@
     } else {
       data.replacedCredits = null;
     }
-    data.transfer = formalSubjectsOrModules.transfer;
     return data;
   }
+
+
+  function getFormalLearningSubjectTableRow(scope, recordIndex, transferableSubject, replacedSubject) {
+    var data = {};
+    data.recordId = scope.application.records[recordIndex].id;
+    data.subjectOrModuleId = transferableSubject.id;
+
+    if (transferableSubject && !angular.equals(transferableSubject, {})) {
+      data.school = transferableSubject.apelSchool ? transferableSubject.apelSchool : scope.school;
+      data.subject = transferableSubject.subject ? transferableSubject.subject : {nameEn: transferableSubject.nameEn, nameEt: transferableSubject.nameEt};
+      data.code = transferableSubject.subjectCode;
+      data.credits = transferableSubject.credits;
+      data.assessment = scope.assessmentsMap[transferableSubject.assessment];
+      data.grade = scope.gradesMap[transferableSubject.grade];
+      data.gradeDate = transferableSubject.gradeDate;
+      data.teachers = transferableSubject.teachers;
+      data.module = transferableSubject.curriculumVersionHmodule;
+      data.isOptional = transferableSubject.isOptional;
+      data.transfer = transferableSubject.transfer;
+    }
+
+    if (replacedSubject && !angular.equals(replacedSubject, {})) {
+      data.replacedSubject = replacedSubject.subject;
+      data.replacedCredits = replacedSubject.subject.credits;
+    }
+
+    scope.application.records[recordIndex].data.push(data);
+  }
+
 
   function getDataForInformalLearningTables(scope) {
     for (var i = 0; i < scope.application.records.length; i++) {
@@ -157,7 +161,7 @@
     data.subject = informalSubjectsOrModules.subject;
     data.code = informalSubjectsOrModules.subject.code;
     data.module = informalSubjectsOrModules.curriculumVersionHmodule;
-    data.isOptional = getSubjectIsOptional(data.subject.id, data.module);
+    data.isOptional = informalSubjectsOrModules.isOptional;
     data.credits = informalSubjectsOrModules.subject.credits;
     data.grade = scope.gradesMap[informalSubjectsOrModules.grade];
     data.skills = informalSubjectsOrModules.skills;
@@ -255,6 +259,16 @@
           colspan = application.canEdit ? 5 : 6;
         } else {
           colspan = application.canEdit ? 6 : 7;
+        }
+      }
+    } else {
+      if (isViewForm) {
+        colspan = application.status === 'VOTA_STAATUS_K' ? 8 : 9;
+      } else {
+        if (application.status === 'VOTA_STAATUS_K') {
+          colspan = application.canEdit ? 7 : 8;
+        } else {
+          colspan = application.canEdit ? 8 : 9;
         }
       }
     }
@@ -422,6 +436,7 @@
       }
 
       dialogService.showDialog(dialogTemplate, function (dialogScope) {
+        dialogScope.formState = {};
         dialogScope.student = $scope.application.student;
         dialogScope.curriculumVersionId = $scope.application.curriculumVersion.id;
         dialogScope.isVocational = $scope.application.curriculumVersion.isVocational;
@@ -435,34 +450,23 @@
               entry.isModule = entry.curriculumVersionOmoduleTheme ? false : true;
               entry.grade = dialogScope.gradesMap[entry.grade];
 
-              var acquiredOutcomeIds = getOutcomeIds(entry.outcomes);
               entry.module = entry.curriculumVersionOmodule;
               entry.hours = entry.isModule ? getHours(entry.curriculumVersionOmodule.themes) : entry.curriculumVersionOmoduleTheme.hours;
               if (entry.isModule) {
                 entry.EKAP = entry.curriculumVersionOmodule.credits;
-                getModuleOutcomeIds(entry.curriculumVersionOmodule.curriculumModule).then(function (outcomeIds) {
-                  getOutcomes(outcomeIds, acquiredOutcomeIds).then(function (allOutcomes) {
-                    entry.outcomes = allOutcomes;
-                  });
+                getModuleOutcomes(entry.curriculumVersionOmodule.curriculumModule, entry.outcomes).then(function (allOutcomes) {
+                  entry.outcomes = allOutcomes;
                 });
               } else {
                 entry.EKAP = entry.curriculumVersionOmoduleTheme.credits;
-                var outcomeIds = entry.curriculumVersionOmoduleTheme.outcomes;
-                getOutcomes(outcomeIds, acquiredOutcomeIds).then(function (allOutcomes) {
+                getThemeOutcomes(entry.curriculumVersionOmoduleTheme.id, entry.outcomes).then(function (allOutcomes) {
                   entry.outcomes = allOutcomes;
                 });
               }
             });
           }
         }
-
-        function addMissingValuesToInformalSubjects(informalSubjectsOrModules) {
-          for (var i = 0; i < informalSubjectsOrModules.length; i++) {
-            var entry = informalSubjectsOrModules[i];
-            entry.credits = informalSubjectsOrModules[i].subject.credits;
-          }
-        }
-
+        
         function addNewInformalExperienceRow() {
           dialogScope.record.informalExperiences.push({
             nameEt: null,
@@ -477,8 +481,6 @@
           dialogScope.record = angular.copy(getRecord(recordId));
           if (dialogScope.isVocational) {
             addMissingValuesToInformalModules(dialogScope.record.informalSubjectsOrModules);
-          } else {
-            addMissingValuesToInformalSubjects(dialogScope.record.informalSubjectsOrModules);
           }
         } else {
           dialogScope.record = {
@@ -486,13 +488,6 @@
             informalSubjectsOrModules: []
           };
           addNewInformalExperienceRow();
-        }
-
-        function getSubjects() {
-          QueryUtils.endpoint('/autocomplete/subjectsList').query(
-            {student: dialogScope.student.id, curriculumSubjects: true, curriculumVersion: dialogScope.curriculumVersionId, withCredits: true}).$promise.then(function (subjects) {
-            dialogScope.subjects = subjects;
-          });
         }
 
         if (dialogScope.isVocational) {
@@ -503,7 +498,21 @@
             dialogScope.modulesAndThemes = getModulesAndThemes(result);
           });
         } else {
-          getSubjects();
+          QueryUtils.endpoint('/autocomplete/subjectsList').query({
+            student: dialogScope.student.id,
+            curriculumSubjects: true,
+            curriculumVersion: dialogScope.curriculumVersionId,
+            withCredits: true,
+            noFinalSubjects: true
+          }).$promise.then(function (subjects) {
+            dialogScope.subjects = subjects;
+          });
+
+          QueryUtils.endpoint('/apelApplications/freeChoiceModule/:student').search({
+            student: dialogScope.student.id,
+          }).$promise.then(function (result) {
+            dialogScope.freeChoiceModule = result.id ? result : null;
+          });
         }
 
         dialogScope.selectedModuleOrThemeChanged = function () {
@@ -512,86 +521,75 @@
             if (selectedItem.isModule) {
               if (moduleCanBeAddedAsReplaced(ArrayUtils, dialogScope.record.informalSubjectsOrModules, selectedItem.moduleId)) {
                 QueryUtils.endpoint('/occupationModule').get({id: selectedItem.id}).$promise.then(function (oModule) {
-                  getModuleOutcomeIds(oModule.curriculumModule).then(function (outcomeIds) {
-                    getOutcomes(outcomeIds, null).then(function(outcomes) {
-                      addNewSubtitutableModuleTheme(selectedItem, getHours(oModule.themes), oModule.credits, outcomes);
-                    });
+                  getModuleOutcomes(oModule.curriculumModule, null).then(function (outcomes) {
+                    addNewSubtitutableModuleTheme(selectedItem, getHours(oModule.themes), oModule.credits, outcomes);
                   });
                 });
               } else {
                 message.error('apel.error.moduleOrItsThemeHasAlreadyBeenAdded');
-                dialogScope.selectedModuleOrTheme = null;
               }
             } else {
               if (moduleThemeCanBeAddedAsReplaced(ArrayUtils, dialogScope.record.informalSubjectsOrModules, selectedItem.themeId, selectedItem.moduleId)) {
                 QueryUtils.endpoint('/occupationModule/theme').get({id: selectedItem.id}).$promise.then(function (theme) {
-                  getOutcomes(theme.outcomes, null).then(function (outcomes) {
+                  getThemeOutcomes(selectedItem.id, null).then(function (outcomes) {
                     addNewSubtitutableModuleTheme(selectedItem, theme.hours, theme.credits, outcomes);
                   });
                 });
               } else {
                 message.error('apel.error.themeOrParentModuleHasAlreadyBeenAdded');
-                dialogScope.selectedModuleOrTheme = null;
               }
             }
+            dialogScope.selectedModuleOrTheme = null;
           }
         };
 
-        function getOutcomes(outcomeIds, acquiredOutcomeIds) {
-          var promises = [];
-          for (var i = 0; i < outcomeIds.length; i++) {
-            promises.push(QueryUtils.endpoint('/occupationModule/outcome').get({id: outcomeIds[i]}).$promise);
-          }
-          return $q.all(promises).then(function (result) {
-            var outcomes = [];
-            for (var i = 0; i < result.length; i++) {
-              if (acquiredOutcomeIds && ArrayUtils.contains(acquiredOutcomeIds, result[i].id)) {
-                outcomes.push({curriculumModuleOutcomes: result[i], acquired: true});
-              } else {
-                outcomes.push({curriculumModuleOutcomes: result[i], acquired: false});
-              }
-            }
-            return outcomes;
+        function getModuleOutcomes(curriculumModuleId, acquiredOutcomes) {
+          return QueryUtils.endpoint('/curriculumModule/' + curriculumModuleId + '/outcomes').query().$promise.then(function (result) {
+            return setOutcomeSelection(result, acquiredOutcomes);
           });
         }
 
-        function getModuleOutcomeIds(curriculumModuleId) {
-          return QueryUtils.endpoint('/curriculumModule').get({id: curriculumModuleId}).$promise.then(function (result) {
-            var outcomeIds = [];
-            for (var i = 0; i < result.outcomes.length; i++) {
-              outcomeIds.push(result.outcomes[i].id);
-            }
-            return outcomeIds;
+        function getThemeOutcomes(themeId, acquiredOutcomes) {
+          return QueryUtils.endpoint('/occupationModule/theme/' + themeId + '/outcomes').query().$promise.then(function (result) {
+            return setOutcomeSelection(result, acquiredOutcomes);
           });
         }
 
-        function getOutcomeIds(outcomes) {
-          var outcomeIds = [];
+        function setOutcomeSelection(outcomes, acquiredOutcomes) {
+          var selection = [];
           for (var i = 0; i < outcomes.length; i++) {
-            outcomeIds.push(outcomes[i].curriculumModuleOutcomes.id);
+            var curriculumModuleOutcome = outcomes[i];
+            var acquiredOutcome = acquiredOutcomes ? acquiredOutcomes.filter(function (outcome) {
+              return curriculumModuleOutcome.id === outcome.curriculumModuleOutcomes.id;
+            })[0] : undefined;
+
+            selection.push({
+              id: acquiredOutcome ? acquiredOutcome.id : null,
+              curriculumModuleOutcomes: curriculumModuleOutcome,
+              acquired: angular.isDefined(acquiredOutcome)
+            });
           }
-          return outcomeIds;
+          return selection;
         }
 
         function addNewSubtitutableModuleTheme(selectedModuleOrTheme, hours, EKAP, outcomes) {
           if (!selectedModuleOrTheme.isModule) {
-            QueryUtils.endpoint('/occupationModule/theme').get({id: dialogScope.selectedModuleOrTheme.id}, function (theme) {
-              var oModuleTheme = theme;
-              QueryUtils.endpoint('/occupationModule').get({id: oModuleTheme.module}, function (oModule) {
-                addNewSubtitutableModuleThemeRow(oModuleTheme, oModule, hours, EKAP, outcomes);
+            QueryUtils.endpoint('/occupationModule/theme').get({id: selectedModuleOrTheme.id}, function (theme) {
+              QueryUtils.endpoint('/occupationModule').get({id: theme.module}, function (oModule) {
+                addNewSubtitutableModuleThemeRow(selectedModuleOrTheme, theme, oModule, hours, EKAP, outcomes);
               });
             });
           } else {
-            QueryUtils.endpoint('/occupationModule').get({id: dialogScope.selectedModuleOrTheme.id}, function (oModule) {
-              addNewSubtitutableModuleThemeRow(null, oModule, hours, EKAP, outcomes);
+            QueryUtils.endpoint('/occupationModule').get({id: selectedModuleOrTheme.id}, function (oModule) {
+              addNewSubtitutableModuleThemeRow(selectedModuleOrTheme, null, oModule, hours, EKAP, outcomes);
             });
           }
         }
 
-        function addNewSubtitutableModuleThemeRow(oModuleTheme, oModule, hours, EKAP, outcomes) {
+        function addNewSubtitutableModuleThemeRow(selectedModuleOrTheme, oModuleTheme, oModule, hours, EKAP, outcomes) {
           var grade = dialogScope.gradesMap.KUTSEHINDAMINE_A;
           var newModuleTheme = {
-            isModule: dialogScope.selectedModuleOrTheme.isModule,
+            isModule: selectedModuleOrTheme.isModule,
             curriculumVersionOmoduleTheme: oModuleTheme,
             curriculumVersionOmodule: oModule,
             hours: hours,
@@ -603,21 +601,30 @@
           dialogScope.record.informalSubjectsOrModules.push(newModuleTheme);
         }
 
-        dialogScope.addSelectedSubject = function () {
-          if (!ArrayUtils.contains(getReplacedSubjectsIds(dialogScope.record.informalSubjectsOrModules), dialogScope.selectedSubject.id)) {
-            var subjectId = dialogScope.selectedSubject.id;
-            QueryUtils.endpoint('/subject').get({id: subjectId}).$promise.then(function (subject) {
-              var credits = subject.credits;
+        dialogScope.$watch('formState.selectedSubject', function () {
+          if (!dialogScope.formState.selectedSubject) {
+            return;
+          }
+
+          if (!ArrayUtils.contains(getReplacedSubjectsIds(dialogScope.record.informalSubjectsOrModules), dialogScope.formState.selectedSubject.id)) {
+            var subject = dialogScope.formState.selectedSubject;
+
+            if (dialogScope.subjects.indexOf(dialogScope.formState.selectedSubject) !== -1) {
               QueryUtils.endpoint('/apelApplications/subjectModule').search({
                 curriculumVersionId: dialogScope.curriculumVersionId,
                 subjectId: subject.id
               }).$promise.then(function (hModule) {
-                var isOptional = getSubjectIsOptional(subjectId, hModule);
-                addNewSubtitutableSubjectRow(subject, hModule, isOptional, credits);
+                var isOptional = getSubjectIsOptional(subject.id, hModule);
+                addNewSubtitutableSubjectRow(subject, hModule, isOptional, subject.credits);
               });
-            });
+            } else {
+              addNewSubtitutableSubjectRow(subject, dialogScope.freeChoiceModule, true, subject.credits);
+            }
+          } else {
+            message.error('apel.error.subjectHasAlreadyBeenAdded');
           }
-        };
+          dialogScope.formState.selectedSubject = null;
+        });
 
         function addNewSubtitutableSubjectRow(subject, hModule, isOptional, credits) {
           var grade = dialogScope.gradesMap.KORGHINDAMINE_A;
@@ -724,19 +731,37 @@
         dialogScope.assessmentsMap = $scope.assessmentsMap;
         dialogScope.hideInvalid = $scope.hideInvalid;
 
+        Classifier.queryForDropdown({mainClassCode: 'RIIK'}, function(result) {
+          dialogScope.countryMap = Classifier.toMap(result);
+        });
+        Classifier.queryForDropdown({mainClassCode: 'EHIS_KOOL'}, function(result) {
+          dialogScope.ehisSchoolMap = Classifier.toMap(result);
+        });
+
         if (dialogScope.isVocational) {
-          dialogScope.curriculumModules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query(
-            {student: dialogScope.student.id, curriculumVersion: dialogScope.curriculumVersionId});
           QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query({
             student: dialogScope.student.id,
             curriculumVersion: dialogScope.curriculumVersionId
           }).$promise.then(function (result) {
             dialogScope.modulesAndThemes = getModulesAndThemes(result);
           });
+          dialogScope.curriculumModules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query(
+            {student: dialogScope.student.id, curriculumVersion: dialogScope.curriculumVersionId});
         } else {
-          dialogScope.subjects = QueryUtils.endpoint('/autocomplete/subjectsList').query(
-            {student: dialogScope.student.id, curriculumSubjects: true, curriculumVersion: dialogScope.curriculumVersionId, withCredits: true});
-          dialogScope.curriculumModules = QueryUtils.endpoint('/autocomplete/curriculumversionhmodules').query({curriculumVersion: dialogScope.curriculumVersionId});
+          QueryUtils.endpoint('/autocomplete/subjectsList').query({
+            student: dialogScope.student.id,
+            curriculumSubjects: true,
+            curriculumVersion: dialogScope.curriculumVersionId,
+            withCredits: true,
+            noFinalSubjects: true
+          }).$promise.then(function (subjects) {
+            dialogScope.subjects = subjects;
+          });
+          QueryUtils.endpoint('/apelApplications/studentModules/:student').query({
+            student: dialogScope.student.id
+          }).$promise.then(function(modules) {
+            dialogScope.curriculumModules = modules;
+          });
         }
         
         function addNewEmptyFormalSubjectOrModule() {
@@ -745,24 +770,28 @@
           dialogScope.grades = null;
           dialogScope.record.assessment = null;
           dialogScope.record.curriculumVersionOmodule = null;
+          dialogScope.record.subject = null;
           dialogScope.record.newTransferableSubjectOrModule = {
             isNew: true,
             newApelSchool: null,
             type: 'VOTA_AINE_LIIK_M',
             assessment: null
           };
-          getTransferableModulesOrSubjects(dialogScope.record.newTransferableSubjectOrModule.type);
+          getTransferableSubjectsOrModules(dialogScope.record.newTransferableSubjectOrModule.type);
         }
 
-        function addMissingValuesToFormalModules(formalModules) {
-          for (var i = 0; i < formalModules.length; i++) {
+        function addMissingValuesToFormalSubjectsOrModules(formalSubjectsOrModules) {
+          for (var i = 0; i < formalSubjectsOrModules.length; i++) {
             $q(function () {
-              var entry = formalModules[i];
+              var entry = formalSubjectsOrModules[i];
               if (entry.curriculumVersionOmodule) {
                 entry.module = entry.curriculumVersionOmodule;
               }
+              if (entry.curriculumVersionHmodule) {
+                entry.module = entry.curriculumVersionHmodule;
+              }
               if (!entry.grade.code) {
-                entry.grade = dialogScope.gradesMap[formalModules[i].grade];
+                entry.grade = dialogScope.gradesMap[formalSubjectsOrModules[i].grade];
               }
             });
           }
@@ -777,16 +806,9 @@
 
         if (recordId) {
           dialogScope.record = angular.copy(getRecord(recordId));
+          addMissingValuesToFormalSubjectsOrModules(dialogScope.record.formalSubjectsOrModules);
           if (dialogScope.isVocational) {
-            addMissingValuesToFormalModules(dialogScope.record.formalSubjectsOrModules);
             addMissingValuesToFormalReplacedModules(dialogScope.record.formalReplacedSubjectsOrModules);
-          } else {
-            dialogScope.record.newTransferableSubjectOrModule = dialogScope.record.formalSubjectsOrModules[0];
-            dialogScope.record.subject = dialogScope.record.newTransferableSubjectOrModule.subject;
-            dialogScope.record.nameEt = dialogScope.record.newTransferableSubjectOrModule.nameEt;
-            dialogScope.record.nameEn = dialogScope.record.newTransferableSubjectOrModule.nameEn;
-            dialogScope.record.apelSchool = dialogScope.record.newTransferableSubjectOrModule.apelSchool;
-            dialogScope.formState.isMySchool = dialogScope.record.newTransferableSubjectOrModule.isMySchool;
           }
         } else {
           dialogScope.record = {
@@ -821,23 +843,23 @@
                 subjectCode: copy.subjectCode,
                 curriculumVersionHmodule: copy.curriculumVersionHmodule,
                 isOptional: copy.isOptional,
-                transferableModuleIndex: copy.transferableModuleIndex,
+                transferableSubjectOrModuleIndex: copy.transferableSubjectOrModuleIndex,
                 transfer: copy.transfer
               };
               getGrades(dialogScope.record.newTransferableSubjectOrModule.assessment);
               if (copy.isMySchool === true) {
                 if (copy.subject) {
                   getTransferableSubjects(copy.type);
-                  getSubjectData(copy.subject.id);
+                  setSubjectData(copy.subject);
                 } else if (dialogScope.record.subject) {
                   getTransferableSubjects(copy.type);
-                  getSubjectData(dialogScope.record.subject.id);
+                  setSubjectData(dialogScope.record.subject);
                 } else if (copy.curriculumVersionOmodule) {
                   getTransferableModules(copy.type);
-                  getModuleData(copy.curriculumVersionOmodule);
+                  setModuleData(copy.curriculumVersionOmodule);
                 } else if (dialogScope.record.curriculumVersionOmodule) {
                   getTransferableModules(copy.type);
-                  getModuleData(dialogScope.record.curriculumVersionOmodule);
+                  setModuleData(dialogScope.record.curriculumVersionOmodule);
                 }
               } else {
                 if (copy.isNewSchool) {
@@ -859,12 +881,12 @@
             } else {
               dialogScope.record.newTransferableSubjectOrModule.type = 'VOTA_AINE_LIIK_M';
             }
-            getTransferableModulesOrSubjects(dialogScope.record.newTransferableSubjectOrModule.type);
+            getTransferableSubjectsOrModules(dialogScope.record.newTransferableSubjectOrModule.type);
           }
         });
 
         dialogScope.typeChanged = function (typeCode) {
-          getTransferableModulesOrSubjects(typeCode);
+          getTransferableSubjectsOrModules(typeCode);
         };
 
         function getTransferableModules(typeCode) {
@@ -872,11 +894,13 @@
             QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query(
               {student: dialogScope.student.id, curriculumModules: true, curriculumVersion: dialogScope.curriculumVersionId}).$promise.then(function (modules) {
               setTransferableModules(typeCode, modules);
+              setCurriculumVersionOmodule();
             });
           } else if (typeCode === 'VOTA_AINE_LIIK_V') {
             QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query(
               {student: dialogScope.student.id, otherStudents: true, ignoreStatuses: true}).$promise.then(function (modules) {
               setTransferableModules(typeCode, modules);
+              setCurriculumVersionOmodule();
             });
           } else if (typeCode === 'VOTA_AINE_LIIK_M') {
             if (dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule) {
@@ -884,6 +908,7 @@
                 {id: dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule.id, student: dialogScope.student.id, 
                   curriculumModules: false, curriculumVersion: dialogScope.curriculumVersionId}).$promise.then(function (modules) {
                 setTransferableModules(typeCode, modules);
+                setCurriculumVersionOmodule();
               });
             }
           }
@@ -894,13 +919,12 @@
           if (dialogScope.record.newTransferableSubjectOrModule && dialogScope.record.newTransferableSubjectOrModule.type === typeCode) {
             dialogScope.transferableModules = modules;
           }
-          setCurriculumVersionOmodule();
         }
 
         function setCurriculumVersionOmodule() {
           var moduleInTypeModules = false;
           if (dialogScope.record.newTransferableSubjectOrModule && dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule &&
-            dialogScope.transferableModules !== null ) {
+            dialogScope.transferableModules !== null) {
             for (var i = 0; i < dialogScope.transferableModules.length; i++) {
               if (dialogScope.transferableModules[i].id === dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule.id) {
                 moduleInTypeModules = true;
@@ -914,39 +938,62 @@
 
         function getTransferableSubjects(typeCode) {
           if (typeCode === 'VOTA_AINE_LIIK_O') {
-            QueryUtils.endpoint('/autocomplete/subjectsList').query(
-              {student: dialogScope.student.id, curriculumSubjects: true, curriculumVersion: dialogScope.curriculumVersionId, withCredits: false}).$promise.then(function (subjects) {
-              dialogScope.transferableSubjects = subjects;
+            QueryUtils.endpoint('/autocomplete/subjectsList').query({
+              student: dialogScope.student.id,
+              curriculumSubjects: true,
+              curriculumVersion: dialogScope.curriculumVersionId,
+              withCredits: false,
+              noFinalSubjects: true
+            })
+            .$promise.then(function (subjects) {
+              setTransferableSubjects(typeCode, subjects);
               setSubject();
             });
           } else if (typeCode === 'VOTA_AINE_LIIK_V') {
-            QueryUtils.endpoint('/autocomplete/subjectsList').query(
-              {student: dialogScope.student.id, otherStudents: true, withCredits: false}).$promise.then(function (subjects) {
-              dialogScope.transferableSubjects = subjects;
+            QueryUtils.endpoint('/autocomplete/subjectsList').query({
+              student: dialogScope.student.id,
+              otherStudents: true,
+              withCredits: false,
+              noFinalSubjects: true
+            }).$promise.then(function (subjects) {
+              setTransferableSubjects(typeCode, subjects);
               setSubject();
             });
           } else if (typeCode === 'VOTA_AINE_LIIK_M') {
             if (dialogScope.record.newTransferableSubjectOrModule.subject) {
-              QueryUtils.endpoint('/autocomplete/subjectsList').query(
-                {student: dialogScope.student.id, curriculumSubjects: false, curriculumVersion: dialogScope.curriculumVersionId, withCredits: false}).$promise.then(function (subjects) {
-                dialogScope.transferableSubjects = subjects;
+              QueryUtils.endpoint('/autocomplete/subjectsList').query({
+                student: dialogScope.student.id,
+                curriculumSubjects: false,
+                curriculumVersion: dialogScope.curriculumVersionId,
+                withCredits: false,
+                noFinalSubjects: true
+              }).$promise.then(function (subjects) {
+                setTransferableSubjects(typeCode, subjects);
                 setSubject();
               });
             }
           }
         }
 
+        function setTransferableSubjects(typeCode, subjects) {
+          // type could be changed before query has finished therefore it needs to check if type code is still the same
+          if (dialogScope.record.newTransferableSubjectOrModule && dialogScope.record.newTransferableSubjectOrModule.type === typeCode) {
+            dialogScope.transferableSubjects = subjects;
+          }
+        }
+
         function setSubject() {
           var subjectInTypeSubjects = false;
-          if (dialogScope.record.newTransferableSubjectOrModule && dialogScope.record.subject && dialogScope.transferableSubjects !== null ) {
+          if (dialogScope.record.newTransferableSubjectOrModule && dialogScope.record.newTransferableSubjectOrModule.subject &&
+            dialogScope.transferableSubjects !== null) {
             for (var i = 0; i < dialogScope.transferableSubjects.length; i++) {
-              if (dialogScope.transferableSubjects[i].id === dialogScope.record.subject.id) {
+              if (dialogScope.transferableSubjects[i].id === dialogScope.record.newTransferableSubjectOrModule.subject.id) {
                 subjectInTypeSubjects = true;
               }
             }
           }
           if (!subjectInTypeSubjects) {
-            dialogScope.record.subject = null;
+            dialogScope.record.newTransferableSubjectOrModule.subject = null;
           }
         }
 
@@ -961,10 +1008,9 @@
         };
 
         dialogScope.ehisSchoolChanged = function (ehisCode) {
-          Classifier.get(ehisCode).$promise.then(function (ehisSchool) {
-            dialogScope.record.newTransferableSubjectOrModule.newApelSchool.nameEt = ehisSchool.nameEt;
-            dialogScope.record.newTransferableSubjectOrModule.newApelSchool.nameEn = ehisSchool.nameEn;
-          });
+          var ehisSchool = dialogScope.ehisSchoolMap[ehisCode];
+          dialogScope.record.newTransferableSubjectOrModule.newApelSchool.nameEt = ehisSchool.nameEt;
+          dialogScope.record.newTransferableSubjectOrModule.newApelSchool.nameEn = ehisSchool.nameEn;
         };
 
         dialogScope.apelSchoolChanged = function (apelSchool) {
@@ -972,32 +1018,36 @@
             // apel school is created in this formal learning block
             dialogScope.record.newTransferableSubjectOrModule.newApelSchool = apelSchool;
           }
-          Classifier.get(apelSchool.country).$promise.then(function (country) {
-            dialogScope.record.newTransferableSubjectOrModule.country = country;
-          });
+          dialogScope.record.newTransferableSubjectOrModule.country = dialogScope.countryMap[apelSchool.country];
         };
 
         dialogScope.subjectChanged = function (subject) {
           if (subject) {
-            getSubjectData(subject.id);
+            if (dialogScope.record.subject) {
+              if (subject.id !== dialogScope.record.subject.id) {
+                setSubjectData(subject);
+                setFormerSubjectResult(subject);
+              }
+            } else {
+              setSubjectData(subject);
+              setFormerSubjectResult(subject);
+            }
           }
-          setFormerSubjectResult(subject);
         };
 
-        function getSubjectData(subjectId) {
-          QueryUtils.endpoint('/subject').get({id: subjectId}, function (subject) {
-            dialogScope.record.newTransferableSubjectOrModule.subject = subject;
-            dialogScope.record.newTransferableSubjectOrModule.subjectCode = subject.code;
-            dialogScope.record.newTransferableSubjectOrModule.credits = subject.credits;
+        function setSubjectData(subject) {
+          dialogScope.record.newTransferableSubjectOrModule.subject = subject;
+          dialogScope.record.subject = subject;
+          dialogScope.record.newTransferableSubjectOrModule.subjectCode = subject.code;
+          dialogScope.record.newTransferableSubjectOrModule.credits = subject.credits;
 
-            var assessment = dialogScope.assessmentsMap[subject.assessment];
-            if (dialogScope.record.newTransferableSubjectOrModule.assessment !== assessment.code) {
-              dialogScope.record.newTransferableSubjectOrModule.assessment = assessment.code;
-              dialogScope.record.newTransferableSubjectOrModule.grade = null;
-              getGrades(assessment.code);
-            }
+          var assessment = dialogScope.assessmentsMap[subject.assessment];
+          if (dialogScope.record.newTransferableSubjectOrModule.assessment !== assessment.code) {
             dialogScope.record.assessment = assessment;
-          });
+            dialogScope.record.newTransferableSubjectOrModule.assessment = assessment.code;
+            dialogScope.record.newTransferableSubjectOrModule.grade = null;
+            getGrades(assessment.code);
+          }
         }
 
         function setFormerSubjectResult(subject) {
@@ -1009,30 +1059,31 @@
         }
 
         dialogScope.moduleChanged = function (oModule) {
-          if (oModule && dialogScope.record.curriculumVersionOmodule) {
-            if (oModule.id !== dialogScope.record.curriculumVersionOmodule.id) {
-              getModuleData(oModule);
+          if (oModule) {
+            if (dialogScope.record.curriculumVersionOmodule) {
+              if (oModule.id !== dialogScope.record.curriculumVersionOmodule.id) {
+                setModuleData(oModule);
+                setFormerModuleResult(oModule);
+              }  
+            } else {
+              setModuleData(oModule);
+              setFormerModuleResult(oModule);
             }
-          } else if (oModule) {
-            getModuleData(oModule);
           }
-          setFormerModuleResult(oModule);
         };
 
-        function getModuleData(oModule) {
+        function setModuleData(oModule) {
           dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule = oModule;
           dialogScope.record.curriculumVersionOmodule = oModule;
           dialogScope.record.newTransferableSubjectOrModule.credits = oModule.credits;
 
           var assessment = dialogScope.assessmentsMap[oModule.assessment];
-          if (dialogScope.record.newTransferableSubjectOrModule) {
-            if (dialogScope.record.newTransferableSubjectOrModule.assessment !== assessment.code) {
-              dialogScope.record.newTransferableSubjectOrModule.assessment = assessment.code;
-              dialogScope.record.newTransferableSubjectOrModule.grade = null;
-              getGrades(assessment.code);
-            }
+          if (dialogScope.record.newTransferableSubjectOrModule.assessment !== assessment.code) {
+            dialogScope.record.assessment = assessment;
+            dialogScope.record.newTransferableSubjectOrModule.assessment = assessment.code;
+            dialogScope.record.newTransferableSubjectOrModule.grade = null;
+            getGrades(assessment.code);
           }
-          dialogScope.record.assessment = assessment;
         }
 
         function setFormerModuleResult(oModule) {
@@ -1090,52 +1141,79 @@
           }
         }
 
-        dialogScope.addNewTransferableModule = function () {
+        dialogScope.addNewTransferableSubjectOrModule = function () {
+          dialogScope.dialogForm.$setPristine();
           addNewEmptyFormalSubjectOrModule();
         };
 
-        function isModuleAlreadyTransfered(transferableModule) {
+        function isModuleAlreadyTransferred(transferableModule) {
           var alreadyTransferedModules = (dialogScope.record.formalSubjectsOrModules || []).map(function (transfer) {
             if (transfer.curriculumVersionOmodule) {
               return transfer.curriculumVersionOmodule.id;
             }
           });
-          var addedModule = angular.isDefined(transferableModule.curriculumVersionOmodule) && 
-            transferableModule.curriculumVersionOmodule !== null ? transferableModule.curriculumVersionOmodule.id : null;
+          var addedModule = transferableModule.curriculumVersionOmodule !== null && angular.isDefined(transferableModule.curriculumVersionOmodule) ?
+            transferableModule.curriculumVersionOmodule.id : null;
           return alreadyTransferedModules.indexOf(addedModule) !== -1;
         }
 
-        dialogScope.addTransferableModule = function (transferableModule) {
-          if (isModuleAlreadyTransfered(transferableModule)) {
-            message.error('apel.error.moduleHasAlreadyBeenAdded');
-            return;
+        function isSubjectAlreadyTransferred(transferableSubject) {
+          var alreadyTransferedSubjects = (dialogScope.record.formalSubjectsOrModules || []).map(function (transfer) {
+            if (transfer.subject) {
+              return transfer.subject.id;
+            }
+          });
+          var addedSubject = transferableSubject.subject !== null && angular.isDefined(transferableSubject.subject) ?
+            transferableSubject.subject.id : null;
+          return alreadyTransferedSubjects.indexOf(addedSubject) !== -1;
+        }
+
+        dialogScope.addTransferableSubjectOrModule = function () {
+          var transferableSubjectOrModule = dialogScope.record.newTransferableSubjectOrModule;
+
+          if (dialogScope.isVocational) {
+            if (isModuleAlreadyTransferred(transferableSubjectOrModule)) {
+              message.error('apel.error.moduleHasAlreadyBeenAdded');
+              return;
+            }
+          } else {
+            if (isSubjectAlreadyTransferred(transferableSubjectOrModule)) {
+              message.error('apel.error.subjectHasAlreadyBeenAdded');
+              return;
+            }
           }
           dialogScope.dialogForm.$setSubmitted();
+
           if (dialogScope.dialogForm.$valid) {
             dialogScope.record.newTransferableSubjectOrModule = null;
-            transferableModule.isMySchool = dialogScope.formState.isMySchool;
-            transferableModule.isNewSchool = dialogScope.formState.isNewSchool;
-            transferableModule.isNew = false;
+            transferableSubjectOrModule.isMySchool = dialogScope.formState.isMySchool;
+            transferableSubjectOrModule.isNewSchool = dialogScope.formState.isNewSchool;
+            transferableSubjectOrModule.isNew = false;
 
-            if (!transferableModule.isMySchool) {
-              transferableModule.type = 'VOTA_AINE_LIIK_M';
-            } else {
-              transferableModule.module = transferableModule.curriculumVersionOmodule;
-            }            
-            transferableModule.grade = dialogScope.gradesMap[transferableModule.grade];
-            dialogScope.record.formalSubjectsOrModules.push(transferableModule);
+            if (!transferableSubjectOrModule.isMySchool) {
+              transferableSubjectOrModule.type = 'VOTA_AINE_LIIK_M';
+            }
+            if (transferableSubjectOrModule.curriculumVersionOmodule) {
+              transferableSubjectOrModule.module = transferableSubjectOrModule.curriculumVersionOmodule;
+            }
+            if (transferableSubjectOrModule.curriculumVersionHmodule) {
+              transferableSubjectOrModule.module = transferableSubjectOrModule.curriculumVersionHmodule;
+            }
+
+            transferableSubjectOrModule.grade = dialogScope.gradesMap[transferableSubjectOrModule.grade];
+            dialogScope.record.formalSubjectsOrModules.push(transferableSubjectOrModule);
 
             if (dialogScope.formState.isNewSchool) {
-              addNewSchoolToSelection(transferableModule);
+              addNewSchoolToSelection(transferableSubjectOrModule);
             }
           }
         };
 
-        function addNewSchoolToSelection(transferableModule) {
-          if (isNewSchoolAlreadyAdded(transferableModule.newApelSchool)) {
+        function addNewSchoolToSelection(transferableSubjectOrModule) {
+          if (isNewSchoolAlreadyAdded(transferableSubjectOrModule.newApelSchool)) {
             return;
           }
-          dialogScope.apelSchools.push(transferableModule.newApelSchool);
+          dialogScope.apelSchools.push(transferableSubjectOrModule.newApelSchool);
           dialogScope.apelSchools = dialogScope.apelSchools.sort(function (s1, s2) {
             return $rootScope.currentLanguageNameField(s1).localeCompare($rootScope.currentLanguageNameField(s2));
           });
@@ -1169,34 +1247,40 @@
         dialogScope.addSelectedSubject = function () {
           if (!ArrayUtils.contains(getReplacedSubjectsIds(dialogScope.record.formalReplacedSubjectsOrModules), dialogScope.selectedSubject.id)) {
             dialogScope.record.formalReplacedSubjectsOrModules.push({subject: dialogScope.selectedSubject});
+          } else {
+            message.error('apel.error.subjectHasAlreadyBeenAdded');
           }
+          dialogScope.selectedSubject = null;
         };
 
         dialogScope.removeSubtitutableSubject = function (subject) {
           ArrayUtils.remove(dialogScope.record.formalReplacedSubjectsOrModules, subject);
         };
 
-        dialogScope.editTransferableModule = function (transferableModuleIndex) {
-          dialogScope.record.newTransferableSubjectOrModule = angular.copy(dialogScope.record.formalSubjectsOrModules[transferableModuleIndex]);
-          dialogScope.record.newTransferableSubjectOrModule.transferableModuleIndex = transferableModuleIndex;
-          
-          dialogScope.formState.isMySchool = dialogScope.record.formalSubjectsOrModules[transferableModuleIndex].isMySchool;
-          dialogScope.formState.isNewSchool = dialogScope.record.formalSubjectsOrModules[transferableModuleIndex].isNewSchool;
-          dialogScope.record.apelSchool = dialogScope.record.formalSubjectsOrModules[transferableModuleIndex].apelSchool;
+        dialogScope.editTransferableSubjectOrModule = function (transferableSubjectOrModuleIndex) {
+          dialogScope.record.newTransferableSubjectOrModule = angular.copy(dialogScope.record.formalSubjectsOrModules[transferableSubjectOrModuleIndex]);
+          dialogScope.record.newTransferableSubjectOrModule.transferableSubjectOrModuleIndex = transferableSubjectOrModuleIndex;
+
+          dialogScope.formState.isMySchool = dialogScope.record.formalSubjectsOrModules[transferableSubjectOrModuleIndex].isMySchool;
+          dialogScope.formState.isNewSchool = dialogScope.record.formalSubjectsOrModules[transferableSubjectOrModuleIndex].isNewSchool;
+          dialogScope.record.apelSchool = dialogScope.record.formalSubjectsOrModules[transferableSubjectOrModuleIndex].apelSchool;
+          if (dialogScope.record.apelSchool) {
+            dialogScope.record.newTransferableSubjectOrModule.country = dialogScope.countryMap[dialogScope.record.apelSchool.country];
+          }
           
           dialogScope.record.assessment = dialogScope.assessmentsMap[dialogScope.record.newTransferableSubjectOrModule.assessment];
           dialogScope.record.curriculumVersionOmodule = dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule;
-          dialogScope.record.nameEt = dialogScope.record.formalSubjectsOrModules[transferableModuleIndex].nameEt;
-          dialogScope.record.nameEn = dialogScope.record.formalSubjectsOrModules[transferableModuleIndex].nameEn;
+          dialogScope.record.nameEt = dialogScope.record.formalSubjectsOrModules[transferableSubjectOrModuleIndex].nameEt;
+          dialogScope.record.nameEn = dialogScope.record.formalSubjectsOrModules[transferableSubjectOrModuleIndex].nameEn;
 
-          dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule = dialogScope.record.formalSubjectsOrModules[transferableModuleIndex].curriculumVersionOmodule;
+          dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule = dialogScope.record.formalSubjectsOrModules[transferableSubjectOrModuleIndex].curriculumVersionOmodule;
 
           dialogScope.record.newTransferableSubjectOrModule.grade = dialogScope.record.newTransferableSubjectOrModule.grade.code;
           getGrades(dialogScope.record.newTransferableSubjectOrModule.assessment);
-          getTransferableModulesOrSubjects(dialogScope.record.newTransferableSubjectOrModule.type);
+          getTransferableSubjectsOrModules(dialogScope.record.newTransferableSubjectOrModule.type);
         };
 
-        function getTransferableModulesOrSubjects(typeCode) {
+        function getTransferableSubjectsOrModules(typeCode) {
           if (dialogScope.isVocational) {
             getTransferableModules(typeCode);
           } else {
@@ -1204,23 +1288,26 @@
           }
         }
 
-        dialogScope.changeTransferableModule = function (changedTransferableModule) {
+        dialogScope.changeTransferableSubjectOrModule = function () {
+          var changedTransferableSubjectOrModule = dialogScope.record.newTransferableSubjectOrModule;
+
           dialogScope.dialogForm.$setSubmitted();
           if (dialogScope.dialogForm.$valid) {
-            dialogScope.record.formalSubjectsOrModules[changedTransferableModule.transferableModuleIndex] = changedTransferableModule;
+            dialogScope.record.formalSubjectsOrModules[changedTransferableSubjectOrModule.transferableSubjectOrModuleIndex] = changedTransferableSubjectOrModule;
             dialogScope.record.newTransferableSubjectOrModule = null;
-            addMissingValuesToFormalModules(dialogScope.record.formalSubjectsOrModules);
+            addMissingValuesToFormalSubjectsOrModules(dialogScope.record.formalSubjectsOrModules);
             
             if (dialogScope.formState.isNewSchool) {
-              addNewSchoolToSelection(changedTransferableModule);
+              addNewSchoolToSelection(changedTransferableSubjectOrModule);
             }
           }
         };
 
-        dialogScope.deleteTransferableModule = function (transferableModule) {
-          if (transferableModule) {
-            if (transferableModule.transferableModuleIndex >= 0) {
-              dialogScope.record.formalSubjectsOrModules.splice(transferableModule.transferableModuleIndex, 1);
+        dialogScope.deleteTransferableSubjectOrModule = function () {
+          var transferableSubjectOrModule = dialogScope.record.newTransferableSubjectOrModule;
+          if (transferableSubjectOrModule) {
+            if (transferableSubjectOrModule.transferableSubjectOrModuleIndex >= 0) {
+              dialogScope.record.formalSubjectsOrModules.splice(transferableSubjectOrModule.transferableSubjectOrModuleIndex, 1);
             } else {
               dialogScope.record.newTransferableSubjectOrModule = null;    
             }
@@ -1236,16 +1323,15 @@
                 addNewFormalSubtitutableModuleTheme(selectedItem);
               } else {
                 message.error('apel.error.moduleOrItsThemeHasAlreadyBeenAdded');
-                dialogScope.selectedModuleOrTheme = null;
               }
             } else {
               if (moduleThemeCanBeAddedAsReplaced(ArrayUtils, dialogScope.record.formalReplacedSubjectsOrModules, selectedItem.themeId, selectedItem.moduleId)) {
-                addNewFormalSubtitutableModuleTheme(dialogScope.selectedModuleOrTheme);
+                addNewFormalSubtitutableModuleTheme(selectedItem);
               } else {
                 message.error('apel.error.themeOrParentModuleHasAlreadyBeenAdded');
-                dialogScope.selectedModuleOrTheme = null;
               }
             }
+            dialogScope.selectedModuleOrTheme = null;
           }
         };
 
@@ -1254,19 +1340,19 @@
             QueryUtils.endpoint('/occupationModule/theme').get({id: dialogScope.selectedModuleOrTheme.id}, function (theme) {
               var oModuleTheme = theme;
               QueryUtils.endpoint('/occupationModule').get({id: oModuleTheme.module}, function (oModule) {
-                addNewFormalSubtitutableModuleThemeRow(oModuleTheme, oModule);
+                addNewFormalSubtitutableModuleThemeRow(selectedModuleOrTheme, oModuleTheme, oModule);
               });
             });
           } else {
             QueryUtils.endpoint('/occupationModule').get({id: dialogScope.selectedModuleOrTheme.id}, function (oModule) {
-              addNewFormalSubtitutableModuleThemeRow(null, oModule);
+              addNewFormalSubtitutableModuleThemeRow(selectedModuleOrTheme, null, oModule);
             });
           }
         }
 
-        function addNewFormalSubtitutableModuleThemeRow(oModuleTheme, oModule) {
+        function addNewFormalSubtitutableModuleThemeRow(selectedModuleOrTheme, oModuleTheme, oModule) {
           var newModuleTheme = {
-            isModule: dialogScope.selectedModuleOrTheme.isModule,
+            isModule: selectedModuleOrTheme.isModule,
             curriculumVersionOmoduleTheme: oModuleTheme,
             curriculumVersionOmodule: oModule
           };
@@ -1292,14 +1378,12 @@
         };
 
         function areThereMoreTransferableCreditsThanReplacedCredits(isVocational) {
-          var transferableCredits = 0;
+          var transferableCredits = getTransferableSubjectsOrModulesCredits(dialogScope.record.formalSubjectsOrModules);
           var replacedCredits = 0;
 
           if (isVocational) {
-            transferableCredits = getTransferableModulesCredits(dialogScope.record.formalSubjectsOrModules);
             replacedCredits = getReplacedModulesOrThemesCredits(dialogScope.record.formalReplacedSubjectsOrModules);
           } else {
-            transferableCredits = dialogScope.record.newTransferableSubjectOrModule.credits;
             replacedCredits = getReplacedSubjectsCredits(dialogScope.record.formalReplacedSubjectsOrModules);
           }
 
@@ -1309,7 +1393,7 @@
           return false;
         }
 
-        function getTransferableModulesCredits(transferableModules) {
+        function getTransferableSubjectsOrModulesCredits(transferableModules) {
           var credits = 0;
           for (var i = 0; i < transferableModules.length; i++) {
             credits += transferableModules[i].credits;
@@ -1337,12 +1421,12 @@
           return credits;
         }
 
-        dialogScope.areReplacedSubjectsOrModulesValid = function () {
+        dialogScope.areReplacedSubjectsOrModulesInvalid = function () {
           if (dialogScope.isVocational) {
             return dialogScope.dialogForm.$submitted && (!dialogScope.record.formalReplacedSubjectsOrModules ||
               dialogScope.record.formalReplacedSubjectsOrModules.length === 0);
           } else {
-            if (dialogScope.record.newTransferableSubjectOrModule.curriculumVersionHmodule.type !== 'KORGMOODUL_V') {
+            if (!allTransferedSubjectsInFreeChoiceModules()) {
               return dialogScope.dialogForm.$submitted && (!dialogScope.record.formalReplacedSubjectsOrModules ||
                 dialogScope.record.formalReplacedSubjectsOrModules.length === 0);
             }
@@ -1351,7 +1435,12 @@
         };
         
         dialogScope.submitHigherFormalLearning = function () {
-          if (dialogScope.record.newTransferableSubjectOrModule.curriculumVersionHmodule.type !== 'KORGMOODUL_V') {
+          if (dialogScope.record.formalSubjectsOrModules.length <= 0) {
+            message.error('apel.error.atLeastOneTransferableSubject');
+            return;
+          }
+          
+          if (!allTransferedSubjectsInFreeChoiceModules()) {
             if (dialogScope.record.formalReplacedSubjectsOrModules.length <= 0) {
               message.error('apel.error.atLeastOneSubstitutableSubject');
               return;
@@ -1362,17 +1451,19 @@
               return;
             } 
           }
-          
-          dialogScope.record.formalSubjectsOrModules[0] = dialogScope.record.newTransferableSubjectOrModule;
-          dialogScope.record.formalSubjectsOrModules[0].isMySchool = dialogScope.formState.isMySchool;
-          if (!dialogScope.record.formalSubjectsOrModules[0].isMySchool) {
-            dialogScope.record.formalSubjectsOrModules[0].type = 'VOTA_AINE_LIIK_M';
-          }
+
           formalSubjectsOrModulesToArray();
           formalSubjectOrModulesObjectsToIdentifiers(DataUtils, dialogScope.record);
           dialogScope.submit();
         };
         
+        function allTransferedSubjectsInFreeChoiceModules() {
+          var nonFreeChoiceModules = (dialogScope.record.formalSubjectsOrModules || []).filter(function (transfer) {
+            return transfer.curriculumVersionHmodule.type !== 'KORGMOODUL_V';
+          });
+          return nonFreeChoiceModules.length === 0;
+        }
+
         function formalSubjectsOrModulesToArray() {
           var array = [];
           angular.forEach(dialogScope.record.formalSubjectsOrModules, function(value) {
@@ -1549,19 +1640,28 @@
 
     $scope.sendToConfirm = function () {
       if (atLeastOneLearningTransferred()) {
-        recordsToIdentifiers(DataUtils, $scope.application.records);
-        sendToConfirm();
+        if (!$scope.application.isVocational && formalTansferredSubjectsSmallerThanSubstitutableSubjects()) {
+          dialogService.confirmDialog({
+            prompt: 'apel.error.transferredSubjectLargerThanSubstitutableSubject',
+            extraPrompts: ['apel.sendToConfirmConfirm']
+          }, function () {
+            sendToConfirm(false);
+          });
+        } else {
+          sendToConfirm(true);
+        }
       } else {
         message.error('apel.error.atLeastOneLearningMustBeTransferred');
       }
     };
 
-    function sendToConfirm() {
+    function sendToConfirm(askForConfirmation) {
       if ($scope.application.status === 'VOTA_STAATUS_V') {
         dialogService.showDialog('apelApplication/templates/reason.dialog.html', function (dialogScope) {
           dialogScope.sendToConfirm = true;
           dialogScope.committee = true;
         }, function (submittedDialogScope) {
+          recordsToIdentifiers(DataUtils, $scope.application.records);
           QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToConfirm/').put({
             student: $scope.application.student,
             isVocational: $scope.application.isVocational,
@@ -1574,20 +1674,30 @@
           });
         });
       } else {
-        dialogService.confirmDialog({
-          prompt: 'apel.sendToConfirmConfirm'
-        }, function () {
-          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToConfirm/').put({
-            student: $scope.application.student,
-            isVocational: $scope.application.isVocational,
-            committeeId: $scope.application.committeeId,
-            records:  $scope.application.records
-          }, function (response) {
-            message.info('apel.messages.sentToConfirm');
-            entityToForm(response);
+        if (askForConfirmation) {
+          dialogService.confirmDialog({
+            prompt: 'apel.sendToConfirmConfirm'
+          }, function () {
+            recordsToIdentifiers(DataUtils, $scope.application.records);
+            sendToConfirmWithoutComment();
           });
-        });
+        } else {
+          recordsToIdentifiers(DataUtils, $scope.application.records);
+          sendToConfirmWithoutComment();
+        }
       }
+    }
+
+    function sendToConfirmWithoutComment() {
+      QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToConfirm/').put({
+        student: $scope.application.student,
+        isVocational: $scope.application.isVocational,
+        committeeId: $scope.application.committeeId,
+        records:  $scope.application.records
+      }, function (response) {
+        message.info('apel.messages.sentToConfirm');
+        entityToForm(response);
+      });
     }
 
     $scope.sendToCommittee = function () {
@@ -1609,6 +1719,23 @@
 
     $scope.confirm = function () {
       if (atLeastOneLearningTransferred()) {
+        if (!$scope.application.isVocational && formalTansferredSubjectsSmallerThanSubstitutableSubjects()) {
+          dialogService.confirmDialog({
+            prompt: 'apel.error.transferredSubjectLargerThanSubstitutableSubject',
+            extraPrompts: ['apel.confirmConfirm']
+          }, function () {
+            confirm(false);
+          });
+        } else {
+          confirm(true);
+        }
+      } else {
+        message.error('apel.error.atLeastOneLearningMustBeTransferred');
+      }
+    };
+
+    function confirm(askForConfirmation) {
+      if (askForConfirmation) {
         dialogService.confirmDialog({
           prompt: 'apel.confirmConfirm'
         }, function () {
@@ -1618,9 +1745,12 @@
           });
         });
       } else {
-        message.error('apel.error.atLeastOneLearningMustBeTransferred');
+        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/confirm/').put({}, function (response) {
+          message.info('apel.messages.confirmed');
+          entityToForm(response);
+        });
       }
-    };
+    }
 
     function atLeastOneLearningTransferred() {
       for (var i = 0; i < $scope.application.records.length; i++) {
@@ -1631,7 +1761,33 @@
         }
       }
       return false;
-    }    
+    }
+
+    function formalTansferredSubjectsSmallerThanSubstitutableSubjects() {
+      var error = false;
+      $scope.application.records.forEach(function (record) {
+        if (record.isFormalLearning) {
+          var transferredCredits = 0;
+          var replacedCredits = 0;
+
+          record.formalSubjectsOrModules.forEach(function (subject) {
+            if (subject.transfer) {
+              transferredCredits += subject.credits;
+            }
+          });
+
+          record.formalReplacedSubjectsOrModules.forEach(function (subject) {
+            replacedCredits += subject.subject.credits;
+          });
+
+          record.error = transferredCredits > replacedCredits;
+          if (record.error) {
+            error = true;
+          }
+        }
+      });
+      return error;
+    }
 
     $scope.sendBack = function () {
       dialogService.confirmDialog({

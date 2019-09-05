@@ -8,7 +8,8 @@ public class RoomAutocompleteCommand extends SearchCommand {
 
     private List<Long> buildingIds;
     private Boolean isStudy;
-    
+    private Boolean isDormitory;
+
     private Boolean occupied;
     private LocalDate date;
     private LocalDateTime startTime;
@@ -31,6 +32,14 @@ public class RoomAutocompleteCommand extends SearchCommand {
 
     public void setIsStudy(Boolean isStudy) {
         this.isStudy = isStudy;
+    }
+
+    public Boolean getIsDormitory() {
+        return isDormitory;
+    }
+
+    public void setIsDormitory(Boolean isDormitory) {
+        this.isDormitory = isDormitory;
     }
 
     public Boolean getOccupied() {

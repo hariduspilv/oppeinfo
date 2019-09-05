@@ -17,6 +17,7 @@ public class BuildingForm extends VersionedCommand {
     private String addressAds;
     @Size(max = 50)
     private String addressAdsOid;
+    private Boolean isDormitory;
 
     public String getCode() {
         return code;
@@ -57,5 +58,13 @@ public class BuildingForm extends VersionedCommand {
     public void setAddressAdsOid(String addressAdsOid) {
         this.addressAdsOid = addressAdsOid;
     }
-    
+
+    public Boolean getIsDormitory() {
+        return isDormitory;
+    }
+
+    public void setIsDormitory(Boolean isDormitory) {
+        this.isDormitory = isDormitory;
+    }
+
 }

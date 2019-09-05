@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController', function ($scope, $route, dialogService, oisFileService, QueryUtils, message, DataUtils, ArrayUtils, Classifier) {
+angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController', function ($scope, $route, dialogService, oisFileService, QueryUtils, message, DataUtils, ArrayUtils, Classifier, $location) {
 
   $scope.removeFromArray = ArrayUtils.remove;
 
@@ -10,7 +10,15 @@ angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController'
   };
   $scope.formState = {};
 
+  function assertPermissionToEdit(entity) {
+    if (!entity.canAddEntries) {
+      message.error('main.messages.error.nopermission');
+      $location.path('');
+    }
+  }
+
   function entityToForm(entity) {
+    assertPermissionToEdit(entity);
     DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
     $scope.gradesClassCode = entity.isHigher ? 'KORGHINDAMINE' : 'KUTSEHINDAMINE';
     $scope.grades = Classifier.queryForDropdown({ mainClassCode: $scope.gradesClassCode });

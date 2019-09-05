@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Certificate;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.CertificateStatus;
 import ee.hitsa.ois.enums.CertificateType;
@@ -35,12 +36,23 @@ public class CertificateValidationService {
     private Validator validator;
 
     public void validate(HoisUserDetails user, CertificateForm form) {
+        validate(user, form, null);
+    }
+    
+    public void validate(HoisUserDetails user, CertificateForm form, School school) {
         if(canEditContent(user, form.getType())) {
             ValidationFailedException.throwOnError(validator
                     .validate(form, CertificateValidator.ContentIsEditable.class));
         }
         ValidationFailedException.throwOnError(validator
                 .validate(form, CertificateValidator.ValidateLater.class));
+        
+        if (school != null) {
+            if (Boolean.TRUE.equals(school.getIsWithoutEkis())) {
+                ValidationFailedException.throwOnError(validator
+                        .validate(form, CertificateValidator.RequiredIfWithoutEkis.class));
+            }
+        }
         
         if(!CertificateType.isOther(form.getType())) {
             ValidationFailedException.throwOnError(validator
@@ -84,7 +96,14 @@ public class CertificateValidationService {
     public void assertCanSendToEkis(HoisUserDetails user, Certificate certificate) {
         UserUtil.assertIsSchoolAdminOrStudent(user, certificate.getSchool());
         Student student = certificate.getStudent();
-        if ((user.isStudent() && (student == null || !UserUtil.isStudent(user, student))) || !entering(certificate)) {
+        if ((user.isStudent() && (student == null || !UserUtil.isStudent(user, student))) || !entering(certificate) || Boolean.TRUE.equals(certificate.getSchool().getIsWithoutEkis())) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+    
+    public void assertCanComplete(HoisUserDetails user, Certificate certificate) {
+        UserUtil.assertIsSchoolAdmin(user, certificate.getSchool());
+        if (!entering(certificate) || !Boolean.TRUE.equals(certificate.getSchool().getIsWithoutEkis())) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }

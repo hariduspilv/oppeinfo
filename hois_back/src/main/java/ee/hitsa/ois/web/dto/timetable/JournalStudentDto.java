@@ -4,8 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
+import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StudentUtil;
@@ -27,6 +30,21 @@ public class JournalStudentDto {
 
     private Boolean canEdit;
 
+    public JournalStudentDto() {
+    }
+
+    public JournalStudentDto(Long studentId, String firstname, String lastname, String studentGroup,
+            String curriculumVersionCode, String curriculumNameEt, String status) {
+        this.studentId = studentId;
+        this.firstname = firstname;
+        this.lastname = lastname;
+        this.fullname = PersonUtil.fullname(firstname, lastname);
+        this.studentGroup = studentGroup;
+        this.curriculum = CurriculumUtil.versionName(curriculumVersionCode, curriculumNameEt);
+        this.status = status;
+        this.canEdit = Boolean.valueOf(StudentStatus.STUDENT_STATUS_ACTIVE.contains(status));
+    }
+
     public static JournalStudentDto of(Student student) {
         JournalStudentDto dto = new JournalStudentDto();
         dto.setStudentId(student.getId());
@@ -39,6 +57,12 @@ public class JournalStudentDto {
         if (student.getStudentGroup() != null) {
             dto.setStudentGroup(student.getStudentGroup().getCode());
         }
+
+        if (student.getCurriculumVersion() != null) {
+            CurriculumVersion cv = student.getCurriculumVersion();
+            dto.setCurriculum(CurriculumUtil.versionName(cv.getCode(), cv.getCurriculum().getNameEt()));
+        }
+
         dto.setIsIndividualCurriculum(Boolean.FALSE);
         dto.setStatus(EntityUtil.getCode(student.getStatus()));
         dto.setCanEdit(Boolean.valueOf(StudentUtil.isActive(student)));

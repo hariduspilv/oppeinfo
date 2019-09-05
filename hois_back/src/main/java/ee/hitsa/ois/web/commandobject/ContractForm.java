@@ -37,7 +37,6 @@ public class ContractForm extends VersionedCommand {
     private AutocompleteResult teacher;
     @Size(max = 255)
     private String otherSupervisor;
-    @NotNull
     private Long contractCoordinator;
     @NotNull
     @Size(max = 20000)

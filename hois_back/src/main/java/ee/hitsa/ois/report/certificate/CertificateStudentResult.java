@@ -27,6 +27,7 @@ public class CertificateStudentResult {
     private List<String> teachers;
     private String assessedBy;
     private String outcomes;
+    private Boolean isActive;
 
     public static CertificateStudentResult of(StudentHigherSubjectResultDto dto) {
         CertificateStudentResult result = new CertificateStudentResult();
@@ -44,6 +45,7 @@ public class CertificateStudentResult {
         	teachers.removeAll(Collections.singleton(null));
         }
         result.setAssessedBy(String.join(", ", StreamUtil.nullSafeList(teachers)));
+        result.setIsActive(grade.getIsActive());
         return result;
     }
 
@@ -140,5 +142,13 @@ public class CertificateStudentResult {
     public void setOutcomes(String outcomes) {
         this.outcomes = outcomes;
     }
-    
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
 }

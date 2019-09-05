@@ -26,10 +26,13 @@ public class PollForm {
     private List<AutocompleteResult> journals;
     private Boolean isTeacherComment;
     private Boolean isTeacherCommentVisible;
+    private Boolean isThemePageable;
     private Boolean isStudentVisible;
     private Boolean responded;
+    private Boolean themeEmpty;
     private String type;
     private String status;
+    private String pollUrl;
     private long themes;
     
     public Long getId() {
@@ -169,6 +172,24 @@ public class PollForm {
     }
     public void setResponded(Boolean responded) {
         this.responded = responded;
+    }
+    public String getPollUrl() {
+        return pollUrl;
+    }
+    public void setPollUrl(String pollUrl) {
+        this.pollUrl = pollUrl;
+    }
+    public Boolean getIsThemePageable() {
+        return isThemePageable;
+    }
+    public void setIsThemePageable(Boolean isThemePageable) {
+        this.isThemePageable = isThemePageable;
+    }
+    public Boolean getThemeEmpty() {
+        return themeEmpty;
+    }
+    public void setThemeEmpty(Boolean themeEmpty) {
+        this.themeEmpty = themeEmpty;
     }
 
 }

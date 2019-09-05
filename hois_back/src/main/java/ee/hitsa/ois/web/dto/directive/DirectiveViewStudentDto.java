@@ -660,7 +660,7 @@ public class DirectiveViewStudentDto {
                     : null);
             break;
         case KASKKIRI_TUGI:
-            dto.setNominalStudyEnd(application != null ? application.getStudent().getNominalStudyEnd() : null);
+            dto.setNominalStudyEnd(directiveStudent.getNominalStudyEnd() != null ? directiveStudent.getNominalStudyEnd() : application != null ? application.getStudent().getNominalStudyEnd() : null);
             dto.setStudentGroupObject(directiveStudent.getStudentGroup() != null ? AutocompleteResult.of(directiveStudent.getStudentGroup()) : null);
             dto.setSupportServices(application != null ? application.getSupportServices().stream()
                     .map(service -> new AutocompleteResult(null, ClassifierDto.of(service.getSupportService())))

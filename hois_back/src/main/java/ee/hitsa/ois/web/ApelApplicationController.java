@@ -22,6 +22,7 @@ import ee.hitsa.ois.domain.apelapplication.ApelApplication;
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationComment;
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationFile;
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationRecord;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.report.apelapplication.ApelApplicationReport;
 import ee.hitsa.ois.service.ApelApplicationService;
 import ee.hitsa.ois.service.PdfService;
@@ -44,6 +45,7 @@ import ee.hitsa.ois.web.dto.apelapplication.ApelApplicationDto;
 import ee.hitsa.ois.web.dto.apelapplication.ApelApplicationFileDto;
 import ee.hitsa.ois.web.dto.apelapplication.ApelApplicationSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleResult;
 
 @RestController
 @RequestMapping("/apelApplications")
@@ -270,6 +272,18 @@ public class ApelApplicationController {
             @RequestParam Long subjectId) {
         UserUtil.assertIsSchoolAdminOrStudent(user);
         return apelApplicationService.subjectModule(curriculumVersionId, subjectId);
+    }
+
+    @GetMapping("/studentModules/{id:\\d+}")
+    public List<CurriculumVersionHigherModuleResult> studentModules(HoisUserDetails user, @WithEntity Student student) {
+        UserUtil.assertIsSchoolAdminOrStudent(user);
+        return apelApplicationService.studentModules(student);
+    }
+
+    @GetMapping("/freeChoiceModule/{id:\\d+}")
+    public AutocompleteResult studentFreeChoiceModule(HoisUserDetails user, @WithEntity Student student) {
+        UserUtil.assertIsSchoolAdminOrStudent(user);
+        return apelApplicationService.studentFreeChoiceModule(student);
     }
 
     @GetMapping("/{applicationId:\\d+}/committees")

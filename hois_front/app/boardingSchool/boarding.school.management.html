@@ -1,0 +1,151 @@
+<div ng-include="'boardingSchool/boarding.school.navbar.tmpl.html'"></div>
+
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate ng-model-options="{ allowInvalid: true }">
+      <fieldset tabindex="1">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <hois-autocomplete flex="45" flex-sm="100" flex-xs="100" ng-model="criteria.studentGroup" ha-controller="directiveControllers"
+            method="studentgroups" name="studentGroup" label="{{'student.studentGroup'}}"></hois-autocomplete>
+
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label class="textInput">{{'student.name' | translate}}</label>
+            <input ng-model="criteria.name" name="name" type="text" md-maxlength="255" autofocus>
+          </md-input-container>  
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'student.idcode' | translate}}</label>
+            <input ng-model="criteria.idcode" name="idcode" type="text" minlength="11" md-maxlength="11">
+          </md-input-container>
+        </div>
+
+        <div layout="row" flex>
+          <md-input-container class="md-block">
+            <md-checkbox ng-model="criteria.notActiveStudents" name="notActiveStudents">{{'boardingSchool.showNotActiveStudents' | translate}}</md-checkbox>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</div>
+
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <form name="boardingSchools" novalidate>
+        <table md-table md-progress="tabledata.$promise">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+            <tr md-row>
+              <th md-column md-order-by="p.lastname, p.firstname">{{'student.name' | translate}}</th>
+              <th md-column md-order-by="sg.code">{{'student.studentGroup' | translate}}</th>
+              <th md-column md-order-by="p.idcode">{{'student.idcode' | translate}}</th>
+              <th md-column>{{'boardingSchool.room' | translate}}</th>
+              <th md-column>{{'main.validFrom' | translate}}</th>
+              <th md-column>{{'main.validThru' | translate}}</th>
+              <th md-column style="min-width: 250px;">{{'boardingSchool.addInfo' | translate}}</th>
+              <th md-column></th>
+              <th md-column>{{'boardingSchool.dormitory' | translate}}</th>
+              <th md-column style="min-width: 250px;">{{'boardingSchool.previousPlaces' | translate}}</th>
+              <th md-column></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell><a ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</a></td>
+              <td md-cell>{{currentLanguageNameField(row.studentGroup)}}</td>
+              <td md-cell>{{row.idcode}}</td>
+              <td md-cell>
+                <md-input-container>
+                  <hois-select ng-model="row.latestDorm.room" values="rooms" ng-change="roomChanged(row)" 
+                    ng-disabled="!row.canEditLatest" aria-label="{{'boardingSchool.room' | translate}}"></hois-select>
+                </md-input-container>
+              </td>
+              <td md-cell>
+                <md-input-container>
+                  <md-datepicker ng-model="row.latestDorm.validFrom" md-max-date="row.latestDorm.validThru"
+                    ng-disabled="!row.canEditLatest || !row.latestDorm.room" ng-required="row.latestDorm.room"
+                    aria-label="{{'main.validFrom' | translate}}"></md-datepicker>
+                </md-input-container>
+              </td>
+              <td md-cell>
+                <md-input-container>
+                  <md-datepicker ng-model="row.latestDorm.validThru" md-min-date="row.latestDorm.validFrom"
+                    ng-disabled="!row.canEditLatest || !row.latestDorm.room" ng-required="row.latestDorm.room"
+                    aria-label="{{'main.validFrom' | translate}}"></md-datepicker>
+                </md-input-container>
+              </td>
+              <td md-cell>
+                <md-input-container style="width:100%;">
+                  <textarea ng-model="row.latestDorm.addInfo" md-maxlength="4000" max-rows="3"
+                    ng-disabled="!row.canEditLatest || !row.latestDorm.room" aria-label="{{'boardingSchool.addInfo' | translate}}"></textarea>
+                </md-input-container>
+              </td>
+              <td md-cell>
+                <md-button ng-if="row.canAddNew && row.latestDormCopy && !row.addedToPrevious" md-no-ink class="md-primary change-button" ng-click="addNew(row)">
+                  {{'boardingSchool.addNew' | translate}}</md-button>
+                <md-button ng-if="row.addedToPrevious" class="md-icon-button" ng-click="restorePreviousDorm(row)">
+                  <md-icon class="remove" md-font-set="material-icons">close</md-icon>
+                </md-button>
+              </td>
+              <td md-cell>
+                <md-input-container>
+                  <hois-classifier-select ng-model="row.dormitory" name="dormitory" hide-empty only-valid model-value-attr="code"
+                    main-classifier-code="YHISELAMU" aria-label="{{'boardingSchool.dormitory' | translate}}"
+                    ng-disabled="!row.canEditLatest"></hois-classifier-select>
+                </md-input-container>
+              </td>
+              <td md-cell>
+                <li ng-repeat="dorm in row.previousDorms">
+                  {{dorm.validFrom | hoisDate}} - {{dorm.validThru | hoisDate}} {{currentLanguageNameField(dorm.roomObject)}}
+                </li>
+              </td>
+              <td md-cell>
+                <md-button ng-if="row.canAddNew && row.previousDorms.length > 0" md-no-ink class="md-primary change-button" 
+                  ng-click="previousDormsDialog(row)">{{'boardingSchool.changePrevious' | translate}}</md-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+    </md-table-container>
+    <md-table-toolbar class="md-default">
+      <div class="md-toolbar-tools">
+        <md-button ng-click="save()" class="md-primary md-raised">{{'main.button.save' | translate}}</md-button>
+      </div>
+    </md-table-toolbar>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[20, 50, 100]" md-page="criteria.page"
+      md-total="{{tabledata.totalElements}}" md-on-paginate="changePage"
+      md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
+  </div>
+</div>
+
+<style>
+    td md-input-container input {
+      height: 24px !important;
+      padding-top: 2px !important;
+    }
+  
+    td md-input-container md-select {
+      height: 24px !important;
+      padding-top: 2px !important;
+    }
+
+    td md-input-container md-select md-select-value {
+      min-height: 20px !important;
+    }
+  
+    td md-input-container textarea {
+      min-height: 24px !important;
+      padding-top: 2px !important;
+    }
+</style>

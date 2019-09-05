@@ -13,6 +13,7 @@ public class CertificateSearchDto {
     private LocalDate inserted;
     private String studentFullname;
     private Long studentId;
+    private String studentGroup;
     private boolean canBeChanged;
 
     public boolean isCanBeChanged() {
@@ -45,6 +46,14 @@ public class CertificateSearchDto {
 
     public void setStudentId(Long studentId) {
         this.studentId = studentId;
+    }
+
+    public String getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(String studentGroup) {
+        this.studentGroup = studentGroup;
     }
 
     public Long getId() {

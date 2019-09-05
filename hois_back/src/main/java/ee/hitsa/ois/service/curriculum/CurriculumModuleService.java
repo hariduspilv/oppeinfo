@@ -119,6 +119,14 @@ public class CurriculumModuleService {
         EntityUtil.deleteEntity(module, em);
     }
 
+    public List<CurriculumModuleOutcomeDto> outcomes(CurriculumModule module) {
+        List<CurriculumModuleOutcome> outcomes = em.createQuery("select cmo from CurriculumModuleOutcome cmo "
+                + "where cmo.curriculumModule.id = ?1", CurriculumModuleOutcome.class)
+                .setParameter(1, EntityUtil.getId(module))
+                .getResultList();
+        return StreamUtil.toMappedList(o -> CurriculumModuleOutcomeDto.of(o), outcomes);
+    }
+
     public Set<String> getPossibleModuleTypes(CurriculumModuleTypesCommand command) {
         Set<String> possibleTypes = EnumUtil.toNameSet(CurriculumModuleType.values());
         if(command.getCurriculum() != null) {

@@ -12,9 +12,9 @@ import ee.hitsa.ois.validation.DateRange;
 public class DeclarationSearchCommand {
     @NotNull
     private Long studyPeriod;
-    private Long curriculumVersion;
+    private EntityConnectionCommand curriculumVersion;
     private List<Long> studentGroups;
-    private String studentsName;
+    private EntityConnectionCommand student;
     private String status;
     private Boolean repeatingDeclaration;
     private LocalDate insertedFrom;
@@ -28,10 +28,10 @@ public class DeclarationSearchCommand {
     public void setStudyPeriod(Long studyPeriod) {
         this.studyPeriod = studyPeriod;
     }
-    public Long getCurriculumVersion() {
+    public EntityConnectionCommand getCurriculumVersion() {
         return curriculumVersion;
     }
-    public void setCurriculumVersion(Long curriculumVersion) {
+    public void setCurriculumVersion(EntityConnectionCommand curriculumVersion) {
         this.curriculumVersion = curriculumVersion;
     }
     public List<Long> getStudentGroups() {
@@ -40,11 +40,11 @@ public class DeclarationSearchCommand {
     public void setStudentGroups(List<Long> studentGroups) {
         this.studentGroups = studentGroups;
     }
-    public String getStudentsName() {
-        return studentsName;
+    public EntityConnectionCommand getStudent() {
+        return student;
     }
-    public void setStudentsName(String studentsName) {
-        this.studentsName = studentsName;
+    public void setStudent(EntityConnectionCommand student) {
+        this.student = student;
     }
     public String getStatus() {
         return status;

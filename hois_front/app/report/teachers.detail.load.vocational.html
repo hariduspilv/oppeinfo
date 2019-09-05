@@ -26,12 +26,12 @@
           <md-input-container>
             <label>{{'main.from' | translate}}</label>
             <md-datepicker ng-model="criteria.from" ng-change="dateFromThruChange()"
-              md-min-date="criteria.studyYearStart" md-max-date="criteria.thru"></md-datepicker>
+              md-min-date="criteria.studyYearStart" md-max-date="criteria.thru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
           </md-input-container>
           <md-input-container flex-offset="5">
             <label>{{'main.thru' | translate}}</label>
             <md-datepicker ng-model="criteria.thru" ng-change="dateFromThruChange()"
-              md-min-date="criteria.from" md-max-date="criteria.studyYearEnd"></md-datepicker>
+              md-min-date="criteria.from" md-max-date="criteria.studyYearEnd" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
           </md-input-container>
         </div>
 

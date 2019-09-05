@@ -26,7 +26,7 @@
           <md-checkbox ng-model="subject.oldIsOptional" aria-label="old is optional" disabled></md-checkbox>
         </td>
         <td md-cell>
-          <md-select ng-model="subject.curriculumVersionModuleId" aria-label="new module select" ng-change="ngchangetest(subject)">
+          <md-select ng-model="subject.curriculumVersionModuleId" aria-label="new module select">
             <md-option ng-repeat="val in higherCurriculumModules" ng-value="val.id">{{currentLanguageNameField(val)}}</md-option>
           </md-select>
         </td>

@@ -51,24 +51,22 @@
     <div layout="column">
       <md-input-container flex>
         <label>{{'curriculum.studyOutcomes' | translate}}</label>
-        <textarea ng-if="currentLanguage() === 'en'" ng-model="curriculum.outcomesEn" class="textarea-readonly" max-rows="10" readonly></textarea>
-        <textarea ng-if="currentLanguage() !== 'en'" ng-model="curriculum.outcomesEt" class="textarea-readonly" max-rows="10" readonly></textarea>
+        <hois-value value="currentLanguage() === 'en' ? curriculum.outcomesEn : curriculum.outcomesEt"></hois-value>
       </md-input-container>
       <md-input-container flex>
         <label>{{'curriculum.admissionRequirements' | translate}}</label>
-        <textarea ng-if="currentLanguage() === 'en'" ng-model="curriculum.admissionRequirementsEn" class="textarea-readonly" max-rows="10"
-          readonly></textarea>
-        <textarea ng-if="currentLanguage() !== 'en'" ng-model="curriculum.admissionRequirementsEt" class="textarea-readonly" max-rows="10"
-          readonly></textarea>
+        <hois-value value="currentLanguage() === 'en' ? curriculum.admissionRequirementsEn : curriculum.admissionRequirementsEt"></hois-value>
       </md-input-container>
       <md-input-container flex>
         <label>{{'curriculum.graduationRequirements' | translate}}</label>
-        <textarea ng-if="currentLanguage() === 'en'" ng-model="curriculum.graduationRequirementsEn" class="textarea-readonly" max-rows="10"
-          readonly></textarea>
-        <textarea ng-if="currentLanguage() !== 'en'" ng-model="curriculum.graduationRequirementsEt" class="textarea-readonly" max-rows="10"
-          readonly></textarea>
+        <hois-value value="currentLanguage() === 'en' ? curriculum.graduationRequirementsEn : curriculum.graduationRequirementsEt"></hois-value>
       </md-input-container>
     </div>
+    
+    <md-input-container flex>
+      <label>{{'public.url' | translate}}</label>
+      <hois-value value="publicUrl"></hois-value>
+    </md-input-container>
   </fieldset>
 
   <span ng-if="curriculum.versions.length > 0">

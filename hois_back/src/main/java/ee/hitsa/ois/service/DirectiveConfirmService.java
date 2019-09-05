@@ -615,6 +615,10 @@ public class DirectiveConfirmService {
             if (Boolean.TRUE.equals(directiveStudent.getIsAbsence())) {
                 studentAbsenceService.createDirectiveAbsence(directiveStudent);
             }
+            break;
+        case KASKKIRI_TUGI:
+            student.setNominalStudyEnd(directiveStudent.getNominalStudyEnd());
+            break;
         default:
             break;
         }
@@ -693,6 +697,10 @@ public class DirectiveConfirmService {
                         if (absence != null) {
                             studentAbsenceService.reject(confirmer, absence, ABSENCE_REJECT_DIRECTIVE_CANCELED);
                         }
+                        break;
+                    case KASKKIRI_TUGI:
+                        student.setNominalStudyEnd(original.getNominalStudyEnd());
+                        break;
                     default:
                         if(canceledDirectiveType.studentStatus() != null) {
                             student.setStatus(original.getStatus());

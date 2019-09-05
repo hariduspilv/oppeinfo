@@ -9,11 +9,11 @@
               <div layout="row" flex>
                 <md-input-container>
                   <label>{{'contract.startFrom' | translate}}</label>
-                  <md-datepicker ng-model="criteria.startFrom" md-max-date="criteria.startThru"></md-datepicker>
+                  <md-datepicker ng-model="criteria.startFrom" md-max-date="criteria.startThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
                 </md-input-container>
                 <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'contract.startThru' | translate}}</label>
-                  <md-datepicker ng-model="criteria.startThru" md-min-date="criteria.startFrom"></md-datepicker>
+                  <md-datepicker ng-model="criteria.startThru" md-min-date="criteria.startFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
                 </md-input-container>
               </div>
             </div>
@@ -24,11 +24,11 @@
                 <div layout="row" flex>
                   <md-input-container>
                     <label>{{'contract.endFrom' | translate}}</label>
-                    <md-datepicker ng-model="criteria.endFrom" md-max-date="criteria.endThru"></md-datepicker>
+                    <md-datepicker ng-model="criteria.endFrom" md-max-date="criteria.endThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
                   </md-input-container>
                   <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                     <label>{{'contract.endThru' | translate}}</label>
-                    <md-datepicker ng-model="criteria.endThru" md-min-date="criteria.endFrom"></md-datepicker>
+                    <md-datepicker ng-model="criteria.endThru" md-min-date="criteria.endFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
                   </md-input-container>
                 </div>
             </div>
@@ -46,7 +46,7 @@
             </div>
           </div>
 
-          <div flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <div flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <div layout="column" flex>
                 <md-input-container>
                   <label class="textInput">{{'contract.curriculumVersion' | translate}}</label>
@@ -74,7 +74,7 @@
             </div>
           </div>
 
-          <div flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <div flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <div layout="column" flex>
                 <md-input-container>
                   <label class="textInput">{{'enterprise.supervisor' | translate}}</label>
@@ -95,7 +95,7 @@
             </div>
           </div>
 
-          <div flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <div flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <div layout="column" flex>
                 <md-input-container>
                   <label class="textInput">{{'contract.schoolSupervisor' | translate}}</label>
@@ -105,11 +105,11 @@
           </div>
         </div>
 
-        <div layout="row">
+        <div layout="row" layout-xs="column">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
           <md-button ng-if="!auth.isStudent() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" class="md-raised" ng-click="newContract()">{{'main.button.create' | translate}}</md-button>
-          <md-button ng-if="auth.isAdmin() && tabledata.content" md-no-ink class="md-raised" ng-click="sendToEkis()">{{'contract.sendToEkis' | translate}}</md-button>
+          <md-button ng-if="auth.isAdmin() && tabledata.content && !auth.school.withoutEkis" md-no-ink class="md-raised" ng-click="sendToEkis()">{{'contract.sendToEkis' | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>
@@ -150,9 +150,9 @@
                 <md-button md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
               </div>
               <div ng-if="!auth.isStudent()">
-                <md-button ng-if="row.status.code==='LEPING_STAATUS_S' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" md-no-ink class="md-primary change-button" 
+                <md-button ng-if="row.status.code === 'LEPING_STAATUS_S' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" md-no-ink class="md-primary change-button" 
                   ng-href="#/contracts/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
-                <md-button ng-if="row.status.code!=='LEPING_STAATUS_S' || !isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" md-no-ink class="md-primary change-button" 
+                <md-button ng-if="row.status.code !== 'LEPING_STAATUS_S' || !isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" md-no-ink class="md-primary change-button" 
                   ng-href="#/contracts/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
               </div>
             </td>

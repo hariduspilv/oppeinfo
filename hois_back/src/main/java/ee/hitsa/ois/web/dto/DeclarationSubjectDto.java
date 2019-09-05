@@ -2,14 +2,20 @@ package ee.hitsa.ois.web.dto;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.SubjectConnect;
+import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.enums.SubjectConnection;
+import ee.hitsa.ois.enums.SubjectProgramStatus;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.SubjectProgramUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class DeclarationSubjectDto extends VersionedCommand {
@@ -18,6 +24,7 @@ public class DeclarationSubjectDto extends VersionedCommand {
     private Long subjectStudyPeriod;
     private Long declaration;
     private List<String> teachers;
+    private List<SubjectProgramResult> programs;
     private SubjectSearchDto subject;
     private AutocompleteResult module;
     private Boolean isOptional;
@@ -38,6 +45,19 @@ public class DeclarationSubjectDto extends VersionedCommand {
             dto.setModule(AutocompleteResult.of(declarationSubject.getModule()));
         }
         dto.setTeachers(PersonUtil.sorted(declarationSubject.getSubjectStudyPeriod().getTeachers().stream().map(t -> t.getTeacher().getPerson())));
+        // In case of having not available or not created subject program it should return ID '-1' which means that there is no program available.
+        dto.setPrograms(declarationSubject.getSubjectStudyPeriod().getTeachers().stream().map(t -> {
+            Optional<SubjectProgram> optProgram = t.getSubjectPrograms().stream().findFirst(); // Only 1 study program for subjectStudyPeriodTeacher
+            SubjectProgramResult programDto = new SubjectProgramResult();
+            programDto.setTeacherName(PersonUtil.fullname(t.getTeacher().getPerson()));
+            if (optProgram.isPresent() && ClassifierUtil.equals(SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, optProgram.get().getStatus())) {
+                programDto.setId(optProgram.get().getId());
+                programDto.setPublicStudent(Boolean.valueOf(SubjectProgramUtil.isPublicForStudent(optProgram.get())));
+            } else {
+                programDto.setId(Long.valueOf(-1));
+            }
+            return programDto;
+        }).collect(Collectors.toList()));
         SubjectSearchDto subjectDto = new SubjectSearchDto();
         Subject subject = declarationSubject.getSubjectStudyPeriod().getSubject();
         subjectDto.setId(EntityUtil.getId(subject));
@@ -148,6 +168,16 @@ public class DeclarationSubjectDto extends VersionedCommand {
     public void setTeachers(List<String> teachers) {
         this.teachers = teachers;
     }
+
+    public List<SubjectProgramResult> getPrograms() {
+        return programs;
+    }
+
+
+    public void setPrograms(List<SubjectProgramResult> programs) {
+        this.programs = programs;
+    }
+
 
     public AutocompleteResult getModule() {
         return module;

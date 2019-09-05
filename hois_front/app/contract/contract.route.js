@@ -3,7 +3,7 @@
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
 
   function canViewContract(authUser, authRoles) {
-    return authRoles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LEPING) || authUser.roleCode === "ROLL_L";
+    return authRoles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LEPING) !== -1 || authUser.roleCode === "ROLL_L" || authUser.roleCode === 'ROLL_O';
   }
 
   $routeProvider

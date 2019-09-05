@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.subjectStudyPeriod;
 
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
@@ -27,9 +29,11 @@ import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodForm;
 import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.SubjectResult;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodSearchDto;
 
@@ -46,6 +50,11 @@ public class SubjectStudyPeriodController {
     public Page<SubjectStudyPeriodSearchDto> search(HoisUserDetails user, SubjectStudyPeriodSearchCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return subjectStudyPeriodSearchService.search(user, criteria, pageable);
+    }
+    
+    @GetMapping("/autocomplete-subjects")
+    public List<SubjectResult> subjects(HoisUserDetails user, SearchCommand lookup) {
+        return subjectStudyPeriodSearchService.searchSubjects(user, lookup);
     }
 
     @GetMapping("/{id:\\d+}")

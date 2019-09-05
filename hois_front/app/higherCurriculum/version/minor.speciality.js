@@ -64,6 +64,16 @@ angular.module('hitsaOis')
         $scope.subjects = response;
       });
     };
+    
+    $scope.searchSubjects = function (text) {
+      if (!text) {
+        return [];
+      }
+      var regExp = new RegExp('^.*' + text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&').replace("%", ".*").toUpperCase() + '.*$');
+      return ($scope.subjects || []).filter(function (subject) {
+        return $scope.subjectNotAdded(subject) && regExp.test(subject.code + " - " + $scope.currentLanguageNameField(subject).toUpperCase());
+      });
+    };
 
     getSubjects();
 

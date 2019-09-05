@@ -9,17 +9,19 @@ public class AuthenticatedSchool implements Serializable {
     private final boolean higher;
     private final boolean doctoral;
     private final boolean letterGrades;
+    private final boolean withoutEkis;
     private final String ehisSchool;
     private byte[] logo;
 
     public AuthenticatedSchool(Long id, boolean higher, boolean vocational, boolean doctoral, boolean letterGrades,
-            String ehisSchool) {
+            String ehisSchool, boolean withoutEkis) {
         this.id = id;
         this.higher = higher;
         this.vocational = vocational;
         this.doctoral = doctoral;
         this.letterGrades = letterGrades;
         this.ehisSchool = ehisSchool;
+        this.withoutEkis = withoutEkis;
     }
 
     public Long getId() {
@@ -51,6 +53,10 @@ public class AuthenticatedSchool implements Serializable {
     }
     public void setLogo(byte[] logo) {
         this.logo = logo;
+    }
+
+    public boolean isWithoutEkis() {
+        return withoutEkis;
     }
     
 }
