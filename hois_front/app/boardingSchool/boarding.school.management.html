@@ -21,6 +21,11 @@
             <label class="textInput">{{'student.idcode' | translate}}</label>
             <input ng-model="criteria.idcode" name="idcode" type="text" minlength="11" md-maxlength="11">
           </md-input-container>
+
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'boardingSchool.dormitory' | translate}}</label>
+            <hois-classifier-select multiple ng-model="criteria.dormitory" main-classifier-code="YHISELAMU" model-value-attr="code"></hois-classifier-select>
+          </md-input-container>
         </div>
 
         <div layout="row" flex>
@@ -40,7 +45,7 @@
 
 <div layout-padding>
   <div flex>
-    <md-table-container>
+    <md-table-container fixed-column-table fixed-columns="1" class="fixed-md-table-container">
       <form name="boardingSchools" novalidate>
         <table md-table md-progress="tabledata.$promise">
           <thead md-head md-order="criteria.order" md-on-reorder="loadData">
@@ -60,7 +65,7 @@
           </thead>
           <tbody md-body>
             <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-              <td md-cell><a ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</a></td>
+              <td md-cell class="fixed-cell"><a ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</a></td>
               <td md-cell>{{currentLanguageNameField(row.studentGroup)}}</td>
               <td md-cell>{{row.idcode}}</td>
               <td md-cell>

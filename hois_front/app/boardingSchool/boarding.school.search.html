@@ -22,10 +22,9 @@
             <input ng-model="criteria.idcode" name="idcode" type="text" minlength="11" md-maxlength="11">
           </md-input-container>
 
-          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <label class="textInput">{{'boardingSchool.buildingRoomCode' | translate}}</label>
-            <input ng-model="criteria.buildingRoomCode" name="buildingRoomCode" type="text" md-maxlength="255">
-          </md-input-container>
+          <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
+            ng-model="criteria.room" ha-controller="directiveControllers" method="rooms" name="room"
+            label="{{'boardingSchool.room'}}" additional-query-params="{isDormitory: true}"></hois-autocomplete>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">

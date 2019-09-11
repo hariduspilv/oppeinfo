@@ -35,6 +35,11 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       $scope.plan.journals.sort(function (a, b) {
         return a.id - b.id;
       });
+      $scope.plan.journals.forEach(function (journal) {
+        journal.teachersString = journal.teachers.map(function (teacher) {
+          return teacher.nameEt;
+        }).join(', ');
+      });
       Classifier.setSelectedCodes($scope.plan.studentGroups, $scope.plan.studentGroups.map(function (obj) {
         return obj.code;
       }));

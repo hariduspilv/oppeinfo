@@ -111,6 +111,12 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
       }
     }
 
+    $scope.getTeachersString = function (teachers) {
+      return teachers.map(function (teacher) {
+        return teacher.nameEt;
+      }).join(', ');
+    };
+
     $scope.getColorBySubjectStudyPeriod = function (ssp) {
       var result = $scope.plan.colorsBySubjectStudyPeriods.find(function (it) {
         return it.subjectStudyPeriod === ssp;
@@ -201,7 +207,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
         return;
       }
       var capacity = $scope.plan.studentGroupCapacities.find(function (it) {
-        return it.subjectStudyPeriod === currentEvent.subjectStudyPeriod;
+        return it.subjectStudyPeriod === currentEvent.subjectStudyPeriod && it.capacityType === currentEvent.capacityType;
       });
       dialogService.showDialog('timetable/timetable.event.change.dialog.html', function (dialogScope) {
         dialogScope.lesson = currentEvent;
@@ -258,6 +264,10 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
             dialogScope.occupiedTime = result;
           });
         });
+
+        dialogScope.isUnderAllocatedLessons = function (lessonCapacity) {
+          return $scope.isUnderAllocatedLessons(lessonCapacity);
+        };
 
         dialogScope.isRoomOccupied = function (roomId) {
           if (dialogScope.occupiedTime && dialogScope.occupiedTime.rooms) {

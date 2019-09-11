@@ -9,7 +9,7 @@ public class BoardingSchoolSearchCommand {
     private EntityConnectionCommand studentGroup;
     private String name;
     private String idcode;
-    private String buildingRoomCode;
+    private EntityConnectionCommand room;
     private LocalDate validFrom;
     private LocalDate validThru;
     private Boolean showValid;
@@ -39,12 +39,12 @@ public class BoardingSchoolSearchCommand {
         this.idcode = idcode;
     }
 
-    public String getBuildingRoomCode() {
-        return buildingRoomCode;
+    public EntityConnectionCommand getRoom() {
+        return room;
     }
 
-    public void setBuildingRoomCode(String buildingRoomCode) {
-        this.buildingRoomCode = buildingRoomCode;
+    public void setRoom(EntityConnectionCommand room) {
+        this.room = room;
     }
 
     public LocalDate getValidFrom() {

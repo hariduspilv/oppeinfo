@@ -1668,24 +1668,26 @@ div[ois-drag="true"] {
   background: #1E88E5;
 }
 
-#timetableCreation .higher tr:first-child > td{
+#timetableCreation .higher tr:first-child > td:not(:first-child) {
+  border-left: 1px #EEEEEE solid;
+}
+
+#timetableCreation .higher tr:first-child > td:not(:first-child) div {
   font-size: 11px!important;
   text-align: center;
   -webkit-transform: rotate(-75deg);
   -moz-transform: rotate(-75deg);
- /* padding-left: 5px;
-  padding-right:5px;*/
-  border-left: 1px #EEEEEE solid;
+  transform: rotate(-75deg);
 }
 
-#timetableCreation .higher tr:nth-child(2) > td{
+#timetableCreation .higher tr:nth-child(2) > td:first-child {
+  border-top: #eeeeee;
+}
+
+#timetableCreation .higher tr:nth-child(2) > td:not(:first-child){
   min-width:10px;
   max-width:10px;
   border-left: 1px #EEEEEE solid;
-}
-
-#timetableCreation .higher{
-  border-collapse:collapse;
 }
 
 #timetableCreation .higher tr:nth-child(2) > td{
@@ -1693,12 +1695,9 @@ div[ois-drag="true"] {
 }
 
 #timetableCreation .higher tr:nth-child(1n+3) > td:first-child{
- border-right: 1px #EEEEEE solid;
- border-left: 1px #EEEEEE solid;
  min-width: 60px;
  font-size:12px;
 }
-
 
 #timetable-planned td div:not(:first-child){
     display: block;
@@ -2348,6 +2347,26 @@ label.ui-btn {
 .cross {
   position: relative;
   z-index: 20!important;
+}
+
+.fixed-md-table-container th.cross {
+  background: #1669bb;
+  border-right: 1px solid #777;
+  border-top: 1px rgba(0, 0, 0, 0.12) solid;
+}
+
+.fixed-md-table-container th:not(.cross) {
+  padding-left: 10px !important;
+}
+
+.fixed-md-table-container td.fixed-cell {
+  background: #eeeeee;
+  border-right: 1px solid #777;
+  border-top: 1px rgba(0, 0, 0, 0.12) solid;
+}
+
+.fixed-md-table-container table:not(.timetableVocationalPlan):not(.higher) td:not(.fixed-cell) {
+  padding-left: 10px !important;
 }
 
 .journalTable

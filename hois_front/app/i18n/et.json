@@ -707,9 +707,8 @@
     "addInfo": "Kommentaar",
     "addNew": "Lisa uus",
     "building": "Hoone",
-    "buildingRoomCode": "Hoone/ruumi tähis",
     "changePrevious": "Muuda eelmisi",
-    "dormitory": "Ühiselamu",
+    "dormitory": "Õpilaskodu",
     "freeSeats": "Vabade kohtade arv",
     "management": "Haldamine",
     "neighbours": "Naabrid",
@@ -874,7 +873,7 @@
     "curriculumVersion": "Õppekava versioon",
     "curriculumSpeciality": "Peaeriala",
     "documents": "Dokumendid",
-    "dormitory": "Ühiselamu",
+    "dormitory": "Õpilaskodu",
     "remarks": "Märkused",
     "email": "E-posti aadress",
     "fin": "Finantseerimise allikas",
@@ -1431,6 +1430,8 @@
     "scholarshipOverlapsAcademicLeave": "Akadeemilise puhkuse periood kattub maksmise perioodiga",
     "scholarshipStudentNotActive": "Õppija pole aktiivne",
     "scholarshipNotAccepted": "Taotlus ei ole aktsepteeritud",
+    "studentHasNoSpecialNeedWithName": "Tugiteenuse määramiseks peab õppijal ({{student}}) olema vähemalt üks erivajadus",
+    "studentHasWrongNominalStudyEnd": "Ei tohi olla väiksem, kui õppija praegune nominaalaja eeldatav lõpp",
     "studentsNotValid": "Õppijad ei vasta käskkirja tingimustele. Kas kustutada õppijad ja saata käskkiri uuesti kinnitamisele?",
     "sendToConfirm": "Saada kinnitamisele",
     "sendToConfirmWithoutEkis": "Saada kinnitamisele ilma EKISeta",
@@ -1481,7 +1482,7 @@
       "directive": "Käskkiri",
       "directiveNr": "Käskkirja nr",
       "distinction": "Erisus",
-      "dormitory": "Ühiselamu",
+      "dormitory": "Õpilaskodu",
       "estonianEducationalInstitute": "Eesti õppeasutus",
       "existingIndividualCurriculum": "Olemasolev IÕK",
       "foreignEducationalInstitute": "Välismaa õppeasutus",
@@ -2913,7 +2914,7 @@
     "themeMatches": "Teemade vastavus",
     "noMatchingThemes": "Positiivsete tulemustega sooritusi ei leitud",
     "messages": {
-      "noCurriculumVersionHigher": "Õppijal ei ole kehtivat õppekava, mille versioon on kinnitatud, praegu kehtiv ja seotud kehtiva õpperühma õige õppevormiga",
+      "noCurriculumVersionHigher": "Õppijal ei ole kehtivat õppekava, mille versioon on kinnitatud ja praegu kehtiv",
       "noCurriculumVersionCurriculum": "Õppijal ei ole kehtivat õppekava, mille versioon on kinnitatud, praegu kehtiv, õige õppevormiga ja seotud kehtiva õpperühmaga",
       "applicationAlreadyExists": "Avaldus juba eksisteerib",
       "academicLeaveApplicationNotfound": "Akadeemilise puhkuse avaldust ei leitud",
@@ -2937,6 +2938,8 @@
       "studentNotActive": "Õppija ei ole aktiivne",
       "studentNotNominalStudy": "Õppija on ületanud nominaal õppeaja",
       "studentNotOnAcademicLeave": "Õppija ei ole akadeemilisel puhkusel",
+      "studentHasNoSpecialNeed": "Tugiteenuse määramiseks peab õppijal olema vähemalt üks erivajadus",
+      "studentHasNoSpecialNeedConfirm": "Õppijale ei ole määratud erivajadust. Kas soovid jätkata?",
       "noValidAcademicLeaveApplicationFound": "Õpilasel ei ole ühtegi kehtivat akadeemilise puhkuse avaldust",
       "sameCurriculumVersion": "Sama rakenduskava/õppekava versioon ei saa olla",
       "noConnectionBetweenGroupAndVersion": "Õpperühm ei ole seotud rakenduskava/õppekava versiooniga",
@@ -3130,7 +3133,8 @@
       "previous": "Tagasi",
       "view": "Vaata",
       "name": "Nimetus",
-      "pollConnections": "Seotud küsitlused"
+      "pollConnections": "Seotud küsitlused",
+      "noAnswersError": "Vähemalt 1 vastusevariant peab olema lisatud"
     },
     "answer": {
       "confirm": "Kas olete kindel, et soovite vastuse kinnitada? Peale kinnitamist enam küsimustikule vastata ei saa.",
@@ -3369,7 +3373,12 @@
       "addForOtherGroups": "Kas lisada aine-õppejõu tund ka teistesse seotud rühmadesse?",
       "displayPeriodLessons": "Kuva perioodi tunnid",
       "displayLeftOverLessons": "Kuva jääktunnid",
-      "noPeriodLessonTimes": "Perioodile vastavad tundide ajad puuduvad"
+      "noPeriodLessonTimes": "Perioodile vastavad tundide ajad puuduvad",
+      "weekPlannedLessons": "Nädalasse planeeritud tunnid",
+      "weekAllocatedLessons": "Nädalasse paigutatud tunnid",
+      "periodPlannedLessons": "Õppeperioodi planeeritud tunnid",
+      "periodAllocatedLessons": "Õppeperioodi paigutatud tunnid",
+      "previousPeriodNotAllocatedLessons": "Eelmistesse perioodidesse paigutamata jäänud tunnid"
     },
     "timetableEvent": {
       "name": "Sündmuse nimetus",
@@ -3711,7 +3720,7 @@
       "curriculum": "Õppekava",
       "dataType": "Saadetavad andmed",
       "docNr": "Lõpudokumendi number",
-      "DORMITORY": "Ühiselamu",
+      "DORMITORY": "Õpilaskodu",
       "extraNr": "lisalehed",
       "error": "Sõnumi saatmine õnnestus",
       "fromDate": "Alates",
@@ -3738,7 +3747,8 @@
       "CURRICULA_FULFILMENT": "Õppekava täitmine",
       "FOREIGN_STUDY": "Välisõppes viibimine",
       "GRADUATION": "Õppeasutuse lõpetamine",
-      "VOTA": "VÕTA"
+      "VOTA": "VÕTA",
+      "SPECIAL_NEEDS": "Erivajadused"
     },
     "teacher": {
       "radioData": "Andmete valik",
@@ -3893,7 +3903,7 @@
       "birthdate_thru": "Sünnikp. kuni",
       "credits": "Tehtud ainepunktide arv",
       "curriculum": "Õppekava",
-      "dormitory": "Ühiselamu",
+      "dormitory": "Õpilaskodu",
       "email": "E-posti aadress",
       "fin": "Finantseerimise allikas",
       "finSpecific": "Finantseerimise allika täpsustus",

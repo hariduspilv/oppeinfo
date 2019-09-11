@@ -49,20 +49,23 @@
           <table md-table class="secondary-table">
             <thead md-head>
               <tr md-row>
-                <th title="{{journal.name}}" md-column ng-repeat="journal in plan.currentJournals" ng-if="showJournalPlannedLessons(journal)">
+                <th md-column ng-repeat="journal in plan.currentJournals" ng-if="showJournalPlannedLessons(journal)">
                   <span>
-                    <span>{{journal.name.substring(0, 4)}}</span>
+                    <span title="{{journal.name}}&#10;{{journal.teachersString}}">{{journal.name.substring(0, 4)}}</span>
                     <br>
-                    <span ng-style="{'color': isUnderAllocatedWeekLessons(journal) ? 'rgba(0,0,0,0.87)' : 'red'}">
+                    <span title="{{'timetable.timetablePlan.weekPlannedLessons' | translate}} / {{'timetable.timetablePlan.weekAllocatedLessons' | translate}}"
+                      ng-style="{'color': isUnderAllocatedWeekLessons(journal) ? 'rgba(0,0,0,0.87)' : 'red'}">
                       {{getTotalsByJournal(journal, 'thisPlannedLessons')}}/{{getTotalsByJournal(journal, 'thisPlannedLessons') - getTotalsByJournal(journal, 'lessonsLeft')}}
                     </span>
                     <span ng-if="plan.displayPeriodLessons">
-                      <span ng-style="{'color': isUnderAllocatedTotalLessons(journal) ? 'rgba(0,0,0,0.87)' : 'red'}">
+                      <span title="{{'timetable.timetablePlan.periodPlannedLessons' | translate}} / {{'timetable.timetablePlan.periodAllocatedLessons' | translate}}"
+                        ng-style="{'color': isUnderAllocatedTotalLessons(journal) ? 'rgba(0,0,0,0.87)' : 'red'}">
                         ({{getTotalsByJournal(journal, 'totalPlannedLessons')}}/{{getTotalsByJournal(journal,'totalAllocatedLessons')}})
                       </span>
                     </span>
                     <span ng-if="plan.displayLeftOverLessons">
-                      <span ng-style="{'color': isUnderLeftOverTotalLessons(journal) ? 'rgba(0,0,0,0.87)' : 'red'}">
+                      <span title="{{'timetable.timetablePlan.periodPlannedLessons' | translate}} + {{'timetable.timetablePlan.previousPeriodNotAllocatedLessons' | translate}} /&#10;{{'timetable.timetablePlan.periodAllocatedLessons' | translate}}"
+                        ng-style="{'color': isUnderLeftOverTotalLessons(journal) ? 'rgba(0,0,0,0.87)' : 'red'}">
                         ({{getTotalsByJournal(journal, 'totalPlannedLessons') + getTotalsByJournal(journal, 'leftOverLessons')}}/{{getTotalsByJournal(journal,'totalAllocatedLessons')}})
                       </span>
                     </span>
@@ -75,19 +78,19 @@
                 <td md-cell ng-repeat="capacity in plan.currentCapacitiesGrouped track by $index" ng-if="showCurrentCapacitiesGrouped(capacity)" id="timetable-planned-column">
                   <div ng-repeat="current in capacity" class="timetable-planned-capacity">
                     <div ng-if="!plan.displayPeriodLessons && !plan.displayLeftOverLessons && current.lessonsLeft > 0" 
-                      title="{{getByCapacity(current, 'name')}}/{{currentLanguageNameField(getCapacityType(current.capacityType))}}"
+                      title="{{getByCapacity(current, 'name')}}/{{currentLanguageNameField(getCapacityType(current.capacityType))}}&#10;{{getByCapacity(current, 'teachersString')}}"
                       style="background-color: {{getByCapacity(current, 'color')}}" id="{{current.journal}}-{{count}}" ois-drag="true"
                       journal-id="{{current.journal}}" capacity-type="{{current.capacityType}}" class="timetable-drag">
                       <span>{{getByCapacity(current, 'name').substring(0, 4)}}/{{getCapacityTypeValue(current.capacityType)}}</span>
                     </div>
                     <div ng-if="plan.displayPeriodLessons && current.totalLessonsLeft > 0" 
-                      title="{{getByCapacity(current, 'name')}}/{{currentLanguageNameField(getCapacityType(current.capacityType))}}"
+                      title="{{getByCapacity(current, 'name')}}/{{currentLanguageNameField(getCapacityType(current.capacityType))}}&#10;{{getByCapacity(current, 'teachersString')}}"
                       style="background-color: {{getByCapacity(current, 'color')}}" id="{{current.journal}}-{{count}}" ois-drag="true"
                       journal-id="{{current.journal}}" capacity-type="{{current.capacityType}}" class="timetable-drag">
                       <span>{{getByCapacity(current, 'name').substring(0, 4)}}/{{getCapacityTypeValue(current.capacityType)}}</span>
                     </div>
                     <div ng-if="plan.displayLeftOverLessons && current.totalPlannedLessons + current.leftOverLessons > current.totalAllocatedLessons" 
-                      title="{{getByCapacity(current, 'name')}}/{{currentLanguageNameField(getCapacityType(current.capacityType))}}"
+                      title="{{getByCapacity(current, 'name')}}/{{currentLanguageNameField(getCapacityType(current.capacityType))}}&#10;{{getByCapacity(current, 'teachersString')}}"
                       style="background-color: {{getByCapacity(current, 'color')}}" id="{{current.journal}}-{{count}}" ois-drag="true"
                       journal-id="{{current.journal}}" capacity-type="{{current.capacityType}}" class="timetable-drag">
                       <span>{{getByCapacity(current, 'name').substring(0, 4)}}/{{getCapacityTypeValue(current.capacityType)}}</span>
@@ -103,25 +106,25 @@
   </div>
 
   <div id="timetableCreation">
-    <md-table-container>
+    <md-table-container fixed-column-table fixed-columns="1" class="fixed-md-table-container">
       <table md-table class="timetableVocationalPlan">
         <thead md-head>
           <tr md-row>
-            <th md-column></th>
+            <th md-column class="fixed-cell"></th>
             <th md-column ng-repeat="date in plan.datesForTimetable" colspan="{{lessonsInDay[weekday[date.getDay()]].length}}">{{'timetable.timetablePlan.' + weekday[date.getDay()] | translate}}
             </th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-class-odd="'odd'" ng-class-even="'even'">
-            <td class="dividerBorder"></td>
+            <td class="fixed-cell"></td>
             <td style="text-align: center" ng-repeat="lessonTime in currentLessonTimes track by $index"
               ng-class="{dividerBorder: lessonTime.endOfDay}">
               <span>{{lessonTime.lessonNr}}</span>
             </td>
           </tr>
           <tr md-row ng-repeat="group in plan.currentStudentGroups | orderBy: orderBySelectedGroup" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td class="dividerBorder">{{group.code}}</td>
+            <td class="fixed-cell">{{group.code}}</td>
             <td ng-repeat="lessonTime in currentLessonTimes track by $index" ng-class="{noLessonTime: lessonTime.noLessons, dividerBorder: lessonTime.endOfDay}">
               <span ng-if="!lessonTime.noLessons">
                 <div index-value="{{$parent.$index}}" drop-fn="saveEvent(data)" ng-attr-ois-drop="{{plan.selectedGroup === group.id}}" ng-repeat="currentEvent in t = angular.equals(t.id, getEventsForLesson($index, lessonTime, group).id) ? t : getEventsForLesson($index, lessonTime, group)"

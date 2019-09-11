@@ -503,8 +503,8 @@ public class StudentResultHigherService {
                 + "shr.subject_code, shr.credits, shr.grade, shr.grade_date, coalesce(shrm.is_optional, shr.is_optional) is_optional "
                 + "from student_higher_result shr "
                 + "left join student_higher_result_module shrm on shrm.student_higher_result_id = shr.id "
-                + "join curriculum_version_hmodule cvh on cvh.id = coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id)"
-                + "where student_id = ?1 and cvh.type_code not in (?2) and shr.is_active = true");
+                + "left join curriculum_version_hmodule cvh on cvh.id = coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id) "
+                + "where student_id = ?1 and (cvh.id is null or cvh.type_code not in (?2)) and shr.is_active = true");
         q.setParameter(1, EntityUtil.getId(student));
         q.setParameter(2, EnumUtil.toNameList(HigherModuleType.KORGMOODUL_F, HigherModuleType.KORGMOODUL_L));
         List<?> data = q.getResultList();

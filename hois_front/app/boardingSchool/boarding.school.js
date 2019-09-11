@@ -34,11 +34,16 @@ angular.module('hitsaOis').controller('BoardingSchoolSearchController', ['$scope
       });
     }, true);
 
+    if (!$scope.criteria.dormitory) {
+      $scope.criteria.dormitory = ['YHISELAMU_L'];
+    }
+
     $scope.copiedCriteria = {};
     var _loadData = $scope.loadData;
     $scope.loadData = function () {
       FormUtils.withValidForm($scope.searchForm, function () {
         angular.copy($scope.criteria, $scope.copiedCriteria);
+        $scope.$broadcast('refreshFixedColumns');
         _loadData();
       });
     };

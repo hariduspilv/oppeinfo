@@ -83,8 +83,7 @@ public class BoardingSchoolService {
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name",
                 criteria.getName());
         qb.optionalCriteria("p.idcode = :idcode", "idcode", criteria.getIdcode());
-        qb.optionalContains(Arrays.asList("b.code", "r.code", "b.code || '-' || r.code"), "buildingRoomCode",
-                criteria.getBuildingRoomCode());
+        qb.optionalCriteria("r.id = :roomId", "roomId", criteria.getRoom());
         qb.optionalCriteria("d.valid_from >= :from", "from", criteria.getValidFrom());
         qb.optionalCriteria("d.valid_thru <= :thru", "thru", criteria.getValidThru());
 
@@ -202,6 +201,7 @@ public class BoardingSchoolService {
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name",
                 criteria.getName());
         qb.optionalCriteria("p.idcode = :idcode", "idcode", criteria.getIdcode());
+        qb.optionalCriteria("s.dormitory_code in (:dormitoryCode)", "dormitoryCode", criteria.getDormitory());
 
         if (!Boolean.TRUE.equals(criteria.getNotActiveStudents())) {
             qb.requiredCriteria("s.status_code in (:studentStatus)", "studentStatus",
