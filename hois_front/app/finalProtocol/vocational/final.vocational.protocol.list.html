@@ -95,13 +95,12 @@
           <tr md-row>
             <th md-column md-order-by="2">{{'finalProtocol.protocolNr' | translate}}</th>
             <th md-column md-order-by="3">{{'finalProtocol.protocolType' | translate}}</th>
+            <th md-column>{{'finalProtocol.curriculumVersionModule' | translate}}</th>
+            <th md-column md-order-by="15, 16, 17">{{'finalProtocol.committeeChairman' | translate}}</th>
             <th md-column md-order-by="4">{{'finalProtocol.status' | translate}}</th>
-            <th md-column md-order-by="5">{{'finalProtocol.studyYear' | translate}}</th>
-            <th md-column md-order-by="{{currentLanguage()==='en' ? '8, 9' : '7, 9'}}">{{'finalProtocol.module' | translate}}</th>
-            <th md-column md-order-by="11, 12, 13">{{'finalProtocol.committeeChairman' | translate}}</th>
-            <th md-column md-order-by="14">{{'finalProtocol.insertedDate' | translate}}</th>
-            <th md-column md-order-by="15">{{'finalProtocol.confirmedDate' | translate}}</th>
-            <th md-column md-order-by="16">{{'finalProtocol.confirmer' | translate}}</th>
+            <th md-column md-order-by="18">{{'finalProtocol.insertedDate' | translate}}</th>
+            <th md-column md-order-by="19">{{'finalProtocol.confirmedDate' | translate}}</th>
+            <th md-column md-order-by="20">{{'finalProtocol.confirmer' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
@@ -114,12 +113,9 @@
               <span ng-if="row.isFinalThesis">{{'finalProtocol.finalThesis' | translate}}</span>
               <span ng-if="!row.isFinalThesis">{{'finalProtocol.finalExam' | translate}}</span>
             </td>
-            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
-            <td md-cell>
-              <hois-classifier-value ng-model="row.studyYear" main-classifier-code="OPPEAASTA"></hois-classifier-value>
-            </td>
-            <td md-cell>{{currentLanguageNameField(row.curriculumVersionOccupationModules)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.curriculumVersions)}}, {{currentLanguageNameField(row.curriculumVersionOccupationModules)}}</td>
             <td md-cell>{{row.committeeChairman}}</td>
+            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
             <td md-cell>{{row.inserted | hoisDate}}</td>
             <td md-cell>{{row.confirmDate | hoisDate}}</td>
             <td md-cell>{{::row.confirmer}}</td>

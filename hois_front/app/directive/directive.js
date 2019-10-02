@@ -5,6 +5,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     var id = $route.current.params.id;
     var canceledDirective = $route.current.params.canceledDirective;
     var baseUrl = '/directives';
+    var today;
+    $scope.getMinDate = maxDate;
 
     $scope.formState = {state: (id || canceledDirective ? 'EDIT' : 'CHOOSETYPE'), students: undefined, changedStudents: [],
                         selectedStudents: [], excludedTypes: ['KASKKIRI_KYLALIS'], school: Session.school || {},
@@ -73,7 +75,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     }
 
     function studentConverter(students) {
-      var result = DataUtils.convertStringToDates(students, ['startDate', 'endDate']);
+      var result = DataUtils.convertStringToDates(students, ['startDate', 'endDate', 'studentNominalStudyEnd']);
       if (angular.isArray(result)) {
         if (occupationMap) {
           result.forEach(mapStudentOccupations);
@@ -119,6 +121,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     }
 
     function afterLoad(result) {
+      today = new Date(); // After every reloading it should update `today` becuase 
       if (angular.isDefined(result) && result.canEditDirective === false) {
         message.error("main.messages.error.nopermission");
         $rootScope.back("#/directives/" + result.id + "/view");
@@ -738,6 +741,22 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         $scope.record.students[studentIndex].modules = modules;
       });
     };
+
+    /**
+     * Compares dates and return the highest.
+     * 
+     * Used for TUGI to set `mdMinDate` for `endDate`.
+     * It should be not lesser than `today` or `startDate`. If `startDate` is lesser than `today` then it should return `today`
+     * 
+     * @param {Date=} [date]
+     * @returns `date` if exists and more than `today`. Otherwise `today`
+     */
+    function maxDate(date) {
+      if (date instanceof Date && !isNaN(date)) {
+        return date > today ? date : today;
+      }
+      return today;
+    }
   }
 ]).controller('DirectiveViewController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'FormUtils', 'Session',
   function ($location, $route, $scope, dialogService, message, Classifier, QueryUtils, FormUtils, Session) {
@@ -806,12 +825,16 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       FormUtils.withValidForm($scope.directiveForm, function() {
         QueryUtils.endpoint(baseUrl + '/checkForConfirm').get({id: $scope.record.id}).$promise.then(function(check) {
           var template = (check.templateName || []).join('", "');
-          dialogService.confirmDialog({prompt: (check.templateExists ? 'directive.confirmconfirm' : 'directive.confirmconfirmTemplateMissing'), template: template}, function() {
-            QueryUtils.endpoint(baseUrl + '/confirm/' + $scope.record.id).update($scope.confirmRecord).$promise.then(function() {
-              message.info('directive.confirmed');
-              $route.reload();
-            }).catch(angular.noop);
-          });
+          if ((check.validationError || []).length > 0) {
+            message.error(check.validationError[0].code, check.validationError[0].params);
+          } else {
+            dialogService.confirmDialog({prompt: (check.templateExists ? 'directive.confirmconfirm' : 'directive.confirmconfirmTemplateMissing'), template: template}, function() {
+              QueryUtils.endpoint(baseUrl + '/confirm/' + $scope.record.id).update($scope.confirmRecord).$promise.then(function() {
+                message.info('directive.confirmed');
+                $route.reload();
+              }).catch(angular.noop);
+            });
+          }
         }).catch(angular.noop);
       });
     };

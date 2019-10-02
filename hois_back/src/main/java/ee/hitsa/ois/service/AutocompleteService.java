@@ -55,6 +55,7 @@ import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.OccupationalGrade;
+import ee.hitsa.ois.enums.ResponseStatus;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.enums.TimetableEventRepeat;
@@ -94,6 +95,8 @@ import ee.hitsa.ois.web.commandobject.curriculum.CurriculumAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleThemeAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.poll.PollAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.poll.PollQuestionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.studymaterial.StudyMaterialAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.subject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.curriculum.CurriculumVersionHigherModuleAutocompleteCommand;
@@ -121,6 +124,7 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.enterprise.EnterpriseResult;
+import ee.hitsa.ois.web.dto.poll.PollResultsQuestionDto;
 import ee.hitsa.ois.web.dto.sais.SaisClassifierSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupResult;
 
@@ -1618,6 +1622,46 @@ public class AutocompleteService {
         return StreamUtil.toMappedList(r -> {
             return new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 1));
         }, data);
+    }
+
+    public List<AutocompleteResult> polls(HoisUserDetails user, PollAutocompleteCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from poll p ");
+        qb.requiredCriteria("p.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("p.type_code = :isActive", "isActive", lookup.getType());
+        qb.requiredCriteria("p.valid_thru < :validThru", "validThru", LocalDate.now());
+        qb.filter("exists( select 1 from response r " + 
+                "join response_object ro on ro.response_id = r.id " +
+                "and (r.status_code = '" + ResponseStatus.KYSITVASTUSSTAATUS_P.name() + "' " +
+                "or r.status_code = '" + ResponseStatus.KYSITVASTUSSTAATUS_V.name() + "') " + 
+                "where r.poll_id = p.id)");
+        List<?> data = qb.select("p.id, p.name_et, p.name_en", em).getResultList();
+        return StreamUtil.toMappedList(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)), data);
+    }
+
+    public List<AutocompleteResult> questions(HoisUserDetails user, PollQuestionAutocompleteCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from (select q.id, q.name_et, q.name_en, string_agg(p.id\\:\\:character varying, ', ') as pollIds from question q "
+                + "join poll_theme_question ptq on ptq.question_id = q.id "
+                + "join poll_theme pt on ptq.poll_theme_id = pt.id "
+                + "join poll p on pt.poll_id = p.id "
+                + "where q.school_id = " + user.getSchoolId()
+                + " and p.id in :polls"
+                + " group by q.id, q.name_et, q.name_en) questions");
+        qb.parameter("polls", lookup.getPolls());
+        List<?> data = qb.select("questions.id, questions.name_et, questions.name_en, questions.pollIds", em).getResultList();
+        List<PollResultsQuestionDto> mappedQuestions = StreamUtil.toMappedList(r -> {
+            PollResultsQuestionDto dto = new PollResultsQuestionDto();
+            String pollsString = resultAsString(r, 3);
+            if (pollsString != null) {
+                List<Long> polls = Arrays.stream(pollsString.split(", ")).map(Long::parseLong).collect(Collectors.toList());
+                dto.setPolls(polls);
+            }
+            dto.setQuestion(new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)));
+            return dto;
+        }, data);
+        List<AutocompleteResult> fittingQuestions = mappedQuestions.stream()
+                .filter(p -> p.getPolls().containsAll(lookup.getPolls()))
+                .map(p -> p.getQuestion()).collect(Collectors.toList());
+        return fittingQuestions;
     }
     
 }

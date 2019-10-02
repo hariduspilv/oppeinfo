@@ -93,7 +93,7 @@
               <th md-column>{{'enterprise.schoolGrade' | translate}}</th>
               <th md-column></th>
               <th md-column>{{'enterprise.isActive' | translate}}</th>
-              <th md-column></th>
+              <th md-column ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')"></th>
             </tr>
           </thead>
           <tbody md-body>

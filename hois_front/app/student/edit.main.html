@@ -126,7 +126,9 @@
 
         <md-input-container class="md-block">
           <label>{{'student.specialNeed' | translate}}</label>
-          <hois-classifier-select ng-model="student.specialNeed" name="specialNeed" main-classifier-code="ERIVAJADUS" model-value-attr="code"></hois-classifier-select>
+          <hois-classifier-select ng-model="student.specialNeeds" name="specialNeeds"
+            main-classifier-code="ERIVAJADUS" model-value-attr="code" multiple only-valid
+            criteria="{higher: !student.isVocational ? true : undefined, vocational: student.isVocational ? true : undefined}"></hois-classifier-select>
         </md-input-container>
 
         <md-checkbox ng-model="student.isRepresentativeMandatory" name="isRepresentativeMandatory">

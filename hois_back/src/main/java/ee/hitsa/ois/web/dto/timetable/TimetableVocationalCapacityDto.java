@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.dto.timetable;
 
-public class TimetableCapacityDto {
+public class TimetableVocationalCapacityDto {
 
     private Long totalPlannedLessons= Long.valueOf(0);
     private Long thisPlannedLessons= Long.valueOf(0);

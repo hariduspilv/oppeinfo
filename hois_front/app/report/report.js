@@ -479,6 +479,7 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
 
   $scope.toggleShowAllParameters = function () {
     $scope.formState.showAllParameters = !$scope.formState.showAllParameters;
+    $scope.$broadcast('refreshFixedTableHeight');
   };
 
   $scope.search = function() {

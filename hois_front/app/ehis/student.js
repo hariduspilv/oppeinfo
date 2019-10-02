@@ -9,6 +9,7 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', 'messa
   var FOREIGN_STUDY = 'FOREIGN_STUDY';
   var GRADUATION = 'GRADUATION';
   var VOTA = 'VOTA';
+  var SPECIAL_NEEDS = 'SPECIAL_NEEDS';
 
   $scope.dataTypes = [
     {type: COURSE_CHANGE, translate: $translate.instant('ehis.student.COURSE_CHANGE')},
@@ -16,9 +17,10 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', 'messa
     {type: DORMITORY, translate: $translate.instant('ehis.student.DORMITORY')},
     {type: FOREIGN_STUDY, translate: $translate.instant('ehis.student.FOREIGN_STUDY')},
     {type: GRADUATION, translate: $translate.instant('ehis.student.GRADUATION')},
-    {type: VOTA, translate: $translate.instant('ehis.student.VOTA')}
+    {type: VOTA, translate: $translate.instant('ehis.student.VOTA')},
+    {type: SPECIAL_NEEDS, translate: $translate.instant('ehis.student.SPECIAL_NEEDS')}
   ];
-  $scope.displayDates = [COURSE_CHANGE, DORMITORY, FOREIGN_STUDY, GRADUATION, VOTA];
+  $scope.displayDates = [COURSE_CHANGE, DORMITORY, FOREIGN_STUDY, GRADUATION, VOTA, SPECIAL_NEEDS];
   $scope.criteria = {from: new Date(), thru: new Date()};
 
   function processResult(result) {
@@ -44,7 +46,7 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', 'messa
   function send() {
     QueryUtils.loadingWheel($scope, true, false, $translate.instant('ehis.messages.requestInProgress'), true);
     QueryUtils.endpoint('/students/ehisStudentExport').save2($scope.criteria).$promise.then(function(result) {
-      $timeout(function () {pollExportStatus(result.key)}, 1000); // give 1 second for initializing a thread
+      $timeout(function () {pollExportStatus(result.key);}, 1000); // give 1 second for initializing a thread
     }).catch(function () {
       QueryUtils.loadingWheel($scope, false);
     });
@@ -79,7 +81,7 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', 'messa
       }
       if (result.status === 'IN_PROGRESS') {
         busyHandler.setProgress(Math.round(result.progress * 100));
-        $timeout(function () {pollExportStatus(key)}, 5000);
+        $timeout(function () {pollExportStatus(key);}, 5000);
       } else if (result.status === 'DONE') {
         message.info(result && result.result.length > 0 ? 'ehis.messages.exportFinished' : 'ehis.messages.nostudentsfound');
         $scope.result = processResult(result.result);

@@ -86,7 +86,6 @@ import ee.hitsa.ois.web.commandobject.timetable.LessonPlanCreateForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleJournalForm;
-import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleJournalTeacherCapacitiesForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleJournalTeacherForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm.LessonPlanGroupForm;
@@ -102,6 +101,7 @@ import ee.hitsa.ois.web.dto.timetable.LessonPlanCreatedJournalDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleJournalDto;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleJournalTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.StudyPeriodDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanJournalDto;
@@ -451,18 +451,18 @@ public class LessonPlanService {
         journalCopy.setNameEt(journal.getNameEt());
         journalCopy.setStudyYear(lessonPlan.getStudyYear());
         journalCopy.setGroupProportion(journal.getGroupProportion());
-        journalCopy.setStatus(journal.getStatus());
+        journalCopy.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
         journalCopy.setAddModuleOutcomes(journal.getAddModuleOutcomes());
 
         copyPreviousLessonPlanJournalCapacities(journal, journalCopy);
         copyPreviousLessonPlanJournalTeachers(journal, journalCopy);
         copyPreviousLessonPlanJournalRooms(journal, journalCopy);
         copyPreviousLessonPlanJournalModuleThemes(journalCopy, journalThemeEquivalents, lessonPlanModuleCopy);
-        
+
         if (Boolean.TRUE.equals(form.getCopyLessons())) {
             copyPreviousLessonPlanJournalLessons(journal, journalCopy, lessonPlan);
         }
-        
+
         if (Boolean.TRUE.equals(journalCopy.getAddModuleOutcomes())) {
             List<Long> curriculumVersionOmoduleThemeIds = StreamUtil.toMappedList(
                     jt -> EntityUtil.getId(jt.getCurriculumVersionOccupationModuleTheme()),
@@ -588,6 +588,8 @@ public class LessonPlanService {
                         // module
                         assertSameSchool(journal, lessonPlan.getSchool());
                         capacityMapper.mapJournalInput(journal, formJournal.getHours());
+
+                        saveJournalTeacherCapacities(journal, formJournal);
                         EntityUtil.save(journal, em);
                     }
                 }
@@ -596,14 +598,8 @@ public class LessonPlanService {
         AssertionFailedException.throwIf(!modules.isEmpty(), "Unhandled lessonplan module");
         return EntityUtil.save(lessonPlan, em);
     }
-    
-    public void delete(HoisUserDetails user, LessonPlan lessonPlan) {
-        EntityUtil.setUsername(user.getUsername(), em);
-        EntityUtil.deleteEntity(lessonPlan, em);
-    }
 
-    public void saveJournalTeacherCapacities(LessonPlanModuleJournalTeacherCapacitiesForm form) {
-        Journal journal = em.getReference(Journal.class, form.getId());
+    public void saveJournalTeacherCapacities(Journal journal, LessonPlanModuleJournalForm form) {
         journal.setCapacityDiff(form.getCapacityDiff());
 
         if (Boolean.TRUE.equals(form.getCapacityDiff())) {
@@ -619,7 +615,11 @@ public class LessonPlanService {
                 journalTeacher.getJournalTeacherCapacities().clear();
             }
         }
-        EntityUtil.save(journal, em);
+    }
+
+    public void delete(HoisUserDetails user, LessonPlan lessonPlan) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        EntityUtil.deleteEntity(lessonPlan, em);
     }
 
     public Page<LessonPlanSearchDto> search(Long schoolId, LessonPlanSearchCommand criteria, Pageable pageable) {
@@ -1459,7 +1459,8 @@ public class LessonPlanService {
         for (LessonPlanModuleJournalDto j : dtoJournals) {
             LessonPlanXlsJournalDto journal = new LessonPlanXlsJournalDto();
             journal.setNameEt(j.getNameEt());
-            journal.setTeachers(StreamUtil.toMappedList(t -> t.getTeacher().getNameEt(), j.getTeachers()));
+            journal.setTeachers(StreamUtil.toMappedList(
+                    t -> ((LessonPlanModuleJournalTeacherDto) t).getTeacher().getNameEt(), j.getTeachers()));
             journal.setGroupProportion(j.getGroupProportion());
             journal.setHours(sortCapacities(j.getHours()));
             
@@ -1595,7 +1596,7 @@ public class LessonPlanService {
         LessonPlanXlsModuleDto totalModule = new LessonPlanXlsModuleDto();
         totalModule.setJournals(journals);
         LessonPlanXlsTotalsDto totals = lessonplanExcelTotals(Collections.singletonList(totalModule), dto.getWeekNrs(), false);
-        
+
         Map<String, Object> data = new HashMap<>();
         data.put("studyYearCode", dto.getStudyYearCode());
         data.put("teacherName", dto.getTeacherName());
@@ -1615,11 +1616,12 @@ public class LessonPlanService {
         for (LessonPlanModuleJournalDto j : dto.getJournals()) {
             LessonPlanXlsJournalDto journal = new LessonPlanXlsJournalDto();
             journal.setNameEt(j.getNameEt());
-            journal.setTeachers(StreamUtil.toMappedList(t -> t.getTeacher().getNameEt(), j.getTeachers()));
+            journal.setTeachers(StreamUtil.toMappedList(
+                    t -> ((LessonPlanModuleJournalTeacherDto) t).getTeacher().getNameEt(), j.getTeachers()));
             journal.setStudentGroups(j.getStudentGroups().stream().collect(Collectors.joining(" ")));
             journal.setGroupProportion(j.getGroupProportion());
             journal.setHours(sortCapacities(j.getHours()));
-            
+
             List<Short> totalHours = grandTotals(j.getHours(), dto.getWeekNrs());
             journal.setTotalHours(totalHours);
             journals.add(journal);

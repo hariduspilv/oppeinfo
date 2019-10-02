@@ -1,12 +1,117 @@
-<div id="scrolling_div" style="overflow: auto;">
-    <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
-        <md-nav-item ng-if="!criteria.id" md-nav-href="#/poll/new?_noback" name="poll.data">
-            {{'poll.basicData.label' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/{{::criteria.id}}/edit?_noback" name="poll.data">
-            {{'poll.basicData.label' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/questions/{{::criteria.id}}/edit?_noback" name="poll.questions">
-            {{'poll.questions.label' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/results/{{::criteria.id}}/edit?_noback" name="poll.results">
-            {{'poll.results' | translate}}</md-nav-item>
-    </md-nav-bar>
+
+<div layout="column" class="form-readonly" flex>
+    <div layout="row">
+        <md-input-container flex>
+            <label>{{'poll.answers.amount' | translate}}</label>
+            <hois-value value="formState.allResponses"></hois-value>
+        </md-input-container>
+        <md-input-container flex flex-offset="5">
+            <label>{{'poll.answers.notCompleted' | translate}}</label>
+            <hois-value value="formState.partialResponses"></hois-value>
+        </md-input-container>
+    </div>
+    <div flex ng-if="formState.type === 'KYSITLUS_O'">
+        <md-table-container>
+        <table md-table md-progress="tabledata.$promise" class="secondary-table">
+            <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+                <tr md-row>
+                    <th md-column>{{'main.order' | translate}}</th>
+                    <th md-column md-order-by="{{auth.higher ? 's.name_et' : 'j.name_et'}}">
+                        {{(auth.higher ? 'poll.response.subject' : 'poll.response.journal') | translate}}
+                    </th>
+                    <th md-column  md-order-by="teachers">{{'poll.answers.teachers' | translate}}</th>
+                    <th md-column></th>
+                    <th md-column></th>
+                </tr>
+            </thead>
+            <tbody md-body>
+                <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell>{{$index + 1}}.</td>
+                    <td md-cell><a ng-click="openAnswers(row)">{{row.name ? currentLanguageNameField(row.name) : '-'}}</a></td>
+                    <td md-cell>{{row.teachers ? row.teachers : '-'}}</td>
+                    <td md-cell>
+                        <md-button md-no-ink class="md-primary change-button" target="_blank" ng-click="subjectToExcel(row)">
+                            {{'document.button.excel' | translate}}
+                        </md-button>
+                    </td>
+                    <td md-cell>
+                        <md-button md-no-ink class="md-primary change-button" ng-click="checkAnswer(row)">
+                            {{'poll.answers.checkAnswer' | translate}}
+                        </md-button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        </md-table-container>
+        <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+        md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+        md-page-select></md-table-pagination>
+    </div>
+    <div flex ng-if="formState.type === 'KYSITLUS_P'">
+        <md-table-container ng-if="hasStudentResponse || hasTeacherResponse">
+            <table md-table md-progress="tabledata.$promise" class="secondary-table">
+                <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+                    <tr md-row>
+                        <th md-column>
+                            {{'poll.answers.target' | translate}}
+                        </th>
+                        <th md-column></th>
+                    </tr>
+                </thead>
+                <tbody md-body>
+                    <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-if="hasStudentResponse">
+                        <td md-cell><a ng-click="openStudentAnswers()">{{'poll.answers.students' | translate}}</a></td>
+                        <td md-cell>
+                            <md-button md-no-ink class="md-primary change-button" target="_blank" ng-click="studentToExcel()">
+                                {{'document.button.excel' | translate}}
+                            </md-button>
+                        </td>
+                    </tr>
+                    <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-if="hasTeacherResponse">
+                        <td md-cell><a ng-click="openTeacherAnswers()">{{'poll.answers.teachers' | translate}}</a></td>
+                        <td md-cell>
+                            <md-button md-no-ink class="md-primary change-button" target="_blank" ng-click="teacherToExcel()">
+                                {{'document.button.excel' | translate}}
+                            </md-button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </md-table-container>
+        <md-table-container>
+            <table md-table md-progress="tabledata.$promise" class="secondary-table">
+                <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+                    <tr md-row>
+                        <th md-column>{{'main.order' | translate}}</th>
+                        <th md-column md-order-by="ccss.name">
+                            {{'poll.answers.enterprise' | translate}}
+                        </th>
+                        <th md-column></th>
+                    </tr>
+                </thead>
+                <tbody md-body>
+                    <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                        <td md-cell>{{$index + 1}}.</td>
+                        <td md-cell><a ng-click="openEnterpriseAnswer(row)">{{row ? currentLanguageNameField(row) : '-'}}</a></td>
+                        <td md-cell>
+                            <md-button md-no-ink class="md-primary change-button" target="_blank" ng-click="enterpriseToExcel(row)">
+                                {{'document.button.excel' | translate}}
+                            </md-button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </md-table-container>
+        <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+        md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+        md-page-select></md-table-pagination>
+    </div>
+    <div layout="row">
+        <md-button class="md-raised" target="_blank" download ng-click="allToExcel(row)">
+            {{'document.button.excel' | translate}}
+        </md-button>
+        <md-button class="md-raised" ng-click="openAllAnswers()">
+            {{'poll.answers.graph' | translate}}
+        </md-button>
+    </div>
 </div>

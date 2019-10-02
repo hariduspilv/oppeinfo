@@ -238,7 +238,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
         'poll/poll.response.dialog.html'), function (dialogScope) {
         dialogScope.formState = {};
         dialogScope.formState.isThemePageable = row.isThemePageable;
-        dialogScope.formState.name = row.name;
+        dialogScope.formState.name = response.name;
         var themesWithSubjectOrJournal = response.themes.filter(function(theme) {
           return theme.journal !== null || theme.subject !== null;
         });

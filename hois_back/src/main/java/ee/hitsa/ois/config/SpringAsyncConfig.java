@@ -21,8 +21,9 @@ public class SpringAsyncConfig implements AsyncConfigurer {
     @Override
     public Executor getAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(5);
-        executor.setMaxPoolSize(20);
+        executor.setCorePoolSize(40);
+        executor.setMaxPoolSize(100);
+        executor.setQueueCapacity(200);
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setThreadNamePrefix("Spring-Async-");
         executor.initialize();

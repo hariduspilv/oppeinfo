@@ -126,10 +126,10 @@
   }
 
   angular.module('hitsaOis').controller('LessonplanSearchController',
-    function ($location, $mdDialog, $route, $scope, DataUtils, QueryUtils, Session, USER_ROLES, AuthService, message) {
+    function ($location, $mdDialog, $route, $scope, USER_ROLES, DataUtils, QueryUtils, Session, message) {
       $scope.auth = $route.current.locals.auth;
-      $scope.canEdit = AuthService.isAuthorized([USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
-        USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA]);
+      $scope.canView = $scope.auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1
+      $scope.canEdit = $scope.auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
 
       var school = Session.school || {};
       $scope.formState = {
@@ -286,11 +286,8 @@
       });
     }
   ).controller('LessonplanTeacherSearchController',
-    function ($route, $scope, DataUtils, QueryUtils, Session, USER_ROLES, AuthService, message) {
+    function ($route, $scope, DataUtils, QueryUtils, Session, message) {
       $scope.auth = $route.current.locals.auth;
-
-      $scope.canEdit = AuthService.isAuthorized([USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN,
-        USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA]);
 
       var school = Session.school || {};
       $scope.formState = {
@@ -325,17 +322,26 @@
 
       QueryUtils.createQueryForm($scope, baseUrl, {});
     }
-  ).controller('LessonplanEditController', ['$location', '$route', '$scope', '$timeout', '$window', 'message', 'Classifier', 'LessonPlanTableService', 'QueryUtils', 'dialogService', 'stateStorageService',
+  ).controller('LessonplanController', ['$rootScope', '$route', '$scope', '$timeout', '$window', 'USER_ROLES', 'Classifier', 'LessonPlanTableService', 'QueryUtils', 'dialogService', 'message', 'stateStorageService',
     
-  function ($location, $route, $scope, $timeout, $window ,message, Classifier, LessonPlanTableService, QueryUtils, dialogService, stateStorageService) {
+  function ($rootScope, $route, $scope, $timeout, $window , USER_ROLES, Classifier, LessonPlanTableService, QueryUtils, dialogService, message, stateStorageService) {
+      $scope.auth = $route.current.locals.auth;
+
       var id = $route.current.params.id;
-      var schoolId = $route.current.locals.auth.school.id;
+      var schoolId = $scope.auth.school.id;
       var stateKey = 'lessonplan';
       var baseUrl = '/lessonplans';
       var journalMapper = Classifier.valuemapper({groupProportion: 'PAEVIK_GRUPI_JAOTUS'});
       var LessonPlanEndpoint = QueryUtils.endpoint(baseUrl);
+      $scope.isView = $route.current.locals.isView;
+      $scope.canEdit = $scope.auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
       $scope.lessonPlanId = id;
 
+      if (!$scope.isView && !$scope.canEdit) {
+        message.error('main.messages.error.nopermission');
+        $rootScope.back('#/lessonplans/vocational/' + id + '/view');
+        return;
+      }
 
       $scope.formState = {
         showWeeks: true,
@@ -368,12 +374,12 @@
 
       $scope.showWeeksChanged = function () {
         stateStorageService.changeState(schoolId, stateKey, {showWeeks: $scope.formState.showWeeks});
-        LessonPlanTableService.generateLessonPlan($scope);
+        LessonPlanTableService.generateLessonPlan($scope, $scope.isView);
       };
 
       $scope.showTotalsChanged = function () {
         stateStorageService.changeState(schoolId, stateKey, {showTotals: $scope.formState.showTotals});
-        LessonPlanTableService.generateLessonPlan($scope);
+        LessonPlanTableService.generateLessonPlan($scope, $scope.isView);
       };
 
       $scope.updateStudyPeriods = function () {
@@ -392,7 +398,7 @@
           selectedStudyPeriods: selectedStudyPeriods
         });
         sumShownWeeks();
-        LessonPlanTableService.generateLessonPlan($scope);
+        LessonPlanTableService.generateLessonPlan($scope, $scope.isView);
       };
 
       function sumShownWeeks() {
@@ -719,12 +725,17 @@
 
       $scope.teacherCapacities = function (journal) {
         dialogService.showDialog('lessonplan/teacher.capacities.dialog.html', function (dialogScope) {
+          dialogScope.isView = $scope.isView;
           dialogScope.formState = $scope.formState;
           dialogScope.formState.teacherTotals = {};
           dialogScope.atLeastOneShownPeriod = $scope.atLeastOneShownPeriod;
           dialogScope.teachers = $scope.record.teachers;
           dialogScope.journal = journal;
           dialogScope.journalCapacities = LessonPlanTableService.getCapacityTypes(dialogScope.formState.capacityTypes, journal.hours);
+
+          $timeout(function () {
+            dialogScope.$broadcast('refreshFixedTableHeight');
+          }, 0);
 
           dialogScope.journal.teachers.forEach(function (journalTeacher) {
             dialogScope.formState.teacherTotals[journalTeacher.id] = {};
@@ -788,13 +799,8 @@
               dialogScope.formState.capacityTypes, studyPeriodIndex);
           };
 
-        }, function (submittedDialogScope) {
-          QueryUtils.endpoint(baseUrl + '/' +  id + '/teacherCapacities').save(submittedDialogScope.journal).$promise.then(function(result) {
-            initializeTotals(result);
-            updateCopyOfRecord();
-            $scope.$broadcast('refreshFixedColumns');
-            message.info('main.messages.update.success');
-          }).catch(angular.noop);
+        }, function () {
+          $scope.update();
         });
       };
 
@@ -809,26 +815,26 @@
       };
 
       $scope.back = function() {
-        if(copyOfRecord === angular.toJson($scope.record)) {
+        if (copyOfRecord === angular.toJson($scope.record)) {
           redirectBack();
         } else {
           dialogService.confirmDialog({
-            prompt: 'lessonplan.changed.save',
-            accept: 'main.yes',
-            cancel: 'main.no'
-          },
-          function () {
-            var record = new LessonPlanEndpoint($scope.record);
-            record.$update().then(message.updateSuccess).then(redirectBack);
-          },
-          function() {
-            redirectBack();
-          });
+              prompt: 'lessonplan.changed.save',
+              accept: 'main.yes',
+              cancel: 'main.no'
+            },
+            function () {
+              var record = new LessonPlanEndpoint($scope.record);
+              record.$update().then(message.updateSuccess).then(redirectBack);
+            },
+            function () {
+              redirectBack();
+            });
         }
       };
 
       function redirectBack() {
-        $location.path("/lessonplans/vocational");
+        $rootScope.back('#/lessonplans/vocational');
       }
 
     }

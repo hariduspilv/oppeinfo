@@ -1,4 +1,4 @@
-VERSIOON:  1.4.0/20190829
+VERSIOON:  1.4.1/20190924
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -10,24 +10,24 @@ README.md - tarne ja installeerimise kirjeldus
 /hois_html - rakenduse genereeritud html-id
 
 
-EELDUS: ver. 1.3.2/20190822
+EELDUS: ver. 1.4.0/20190829
 ------------------------------------------------------
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skripti on db/install20190829.sql
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20190924.sql
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
 
 Andmebaasi installeerimiseks:
-1. käivitada install20190829.sql skript, nt
+1. käivitada install20190924.sql skript, nt
    
-   psql -h devhois -f install20190829.sql 2>&1 | tee log.txt
+   psql -h devhois -f install20190924.sql 2>&1 | tee log.txt
    
    , kus
    
    -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install20190829.sql - install faili nimi
+   -f install20190924.sql - install faili nimi
    log.txt - andmebaasi installeerimise logi fail
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse

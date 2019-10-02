@@ -9,6 +9,32 @@
   </md-toolbar>
   <md-dialog-content>
     <md-tabs md-dynamic-height md-border-bottom>
+      <md-tab label="{{ 'main.login.tara.title' | translate }}">
+        <md-content class="md-padding">
+          <md-button class="md-raised md-primary" ng-href="{{taraLoginUrl}}">{{ 'main.logIn' | translate }}</md-button>
+        </md-content>
+      </md-tab>
+      <md-tab label="{{ 'main.login.idcard.title' | translate }}">
+        <md-content class="md-padding">
+          <md-button class="md-raised md-primary" ng-href="{{idCardLoginUrl}}">{{ 'main.logIn' | translate }}</md-button>
+        </md-content>
+      </md-tab>
+      <md-tab label="{{ 'main.login.mobileid.title' | translate }}">
+        <md-content class="md-padding">
+          <form name="mobileIdLoginForm">
+            <md-input-container class="md-block">
+              <label flex>{{ 'main.login.mobileid.mobilenumber' | translate }}</label>
+              <input type="text" flex class="form-control" name="mobilenumber" ng-model="mobilenumber" required/>
+            </md-input-container>
+            <md-button class="md-raised md-primary" ng-click="mIdLogin()">{{ 'main.logIn' | translate }}</md-button>
+          </form>
+        </md-content>
+      </md-tab>
+      <md-tab label="{{ 'main.login.harid.title' | translate }}">
+        <md-content class="md-padding">
+          <md-button class="md-raised md-primary" ng-href="{{haridLoginUrl}}">{{ 'main.logIn' | translate }}</md-button>
+        </md-content>
+      </md-tab>
       <md-tab label="{{ 'main.login.user.title' | translate }}">
         <md-content class="md-padding">
           <form name="userLoginForm">
@@ -28,32 +54,6 @@
             </md-input-container>
             <md-button class="md-raised md-primary" ng-click="login()">{{ 'main.logIn' | translate }}</md-button>
           </form>
-        </md-content>
-      </md-tab>
-      <md-tab label="{{ 'main.login.idcard.title' | translate }}">
-        <md-content class="md-padding">
-          <md-button class="md-raised md-primary" ng-href="{{idCardLoginUrl}}">{{ 'main.logIn' | translate }}</md-button>
-        </md-content>
-      </md-tab>
-      <md-tab label="{{ 'main.login.mobileid.title' | translate }}">
-        <md-content class="md-padding">
-          <form name="mobileIdLoginForm">
-            <md-input-container class="md-block">
-              <label flex>{{ 'main.login.mobileid.mobilenumber' | translate }}</label>
-              <input type="text" flex class="form-control" name="mobilenumber" ng-model="mobilenumber" required/>
-            </md-input-container>
-            <md-button class="md-raised md-primary" ng-click="mIdLogin()">{{ 'main.logIn' | translate }}</md-button>
-          </form>
-        </md-content>
-      </md-tab>
-      <md-tab label="{{ 'main.login.tara.title' | translate }}">
-        <md-content class="md-padding">
-          <md-button class="md-raised md-primary" ng-href="{{taraLoginUrl}}">{{ 'main.logIn' | translate }}</md-button>
-        </md-content>
-      </md-tab>
-      <md-tab label="{{ 'main.login.harid.title' | translate }}">
-        <md-content class="md-padding">
-          <md-button class="md-raised md-primary" ng-href="{{haridLoginUrl}}">{{ 'main.logIn' | translate }}</md-button>
         </md-content>
       </md-tab>
     </md-tabs>

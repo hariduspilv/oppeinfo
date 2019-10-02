@@ -81,13 +81,15 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
             + "join study_year sy on pvd.study_year_id = sy.id "
             + "join curriculum_version_omodule cvo on cvo.id = pvd.curriculum_version_omodule_id "
             + "join curriculum_module cm on cm.id = cvo.curriculum_module_id "
+            + "join curriculum_version cv on cv.id = cvo.curriculum_version_id "
+            + "join curriculum c on c.id = cv.curriculum_id "
             + "left join committee com on p.committee_id = com.id "
             + "left join committee_member cme on com.id = cme.committee_id and cme.is_chairman = true "
             + "left join teacher t on cme.teacher_id = t.id " + "left join person per on t.person_id = per.id";
     
     private static final String LIST_SELECT = "p.id as protocol_id, p.protocol_nr, p.is_final_thesis, p.status_code, sy.year_code, "
-            + "cm.id as cm_id, cm.name_et, cm.name_en, cm.credits, t.id as t_id, per.firstname, per.lastname, cme.member_name, "
-            + "p.inserted, p.confirm_date, p.confirmer";
+            + "cv.id cv_id, cv.code cv_code, c.name_et c_name_et, c.name_en c_name_en, cm.id as cm_id, cm.name_et cm_name_et, cm.name_en cm_name_en, "
+            + "cm.credits, t.id as t_id, per.firstname, per.lastname, cme.member_name, p.inserted, p.confirm_date, p.confirmer";
 
     public Page<FinalVocationalProtocolSearchDto> search(HoisUserDetails user, FinalVocationalProtocolSearchCommand cmd,
             Pageable pageable) {
@@ -134,20 +136,24 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
             dto.setIsFinalThesis(resultAsBoolean(r, 2));
             dto.setStatus(resultAsString(r, 3));
             dto.setStudyYear(resultAsString(r, 4));
-            dto.getCurriculumVersionOccupationModules().add(
+            dto.getCurriculumVersions().add(
                 new AutocompleteResult(resultAsLong(r, 5),
-                        String.format("%1$s (%2$s EKAP)", resultAsString(r, 6), resultAsLong(r, 8)),
-                        String.format("%1$s (%2$s EKAP)", resultAsString(r, 7), resultAsLong(r, 8))));
+                        CurriculumUtil.versionName(resultAsString(r, 6), resultAsString(r, 7)),
+                        CurriculumUtil.versionName(resultAsString(r, 6), resultAsString(r, 8))));
+            dto.getCurriculumVersionOccupationModules().add(
+                new AutocompleteResult(resultAsLong(r, 9),
+                        String.format("%1$s (%2$s EKAP)", resultAsString(r, 10), resultAsLong(r, 12)),
+                        String.format("%1$s (%2$s EKAP)", resultAsString(r, 11), resultAsLong(r, 12))));
 
-            if (resultAsLong(r, 9) != null) {
-                dto.setCommitteeChairman(PersonUtil.fullname(resultAsString(r, 10), resultAsString(r, 11)));
+            if (resultAsLong(r, 13) != null) {
+                dto.setCommitteeChairman(PersonUtil.fullname(resultAsString(r, 14), resultAsString(r, 15)));
             } else {
-                dto.setCommitteeChairman(resultAsString(r, 12));
+                dto.setCommitteeChairman(resultAsString(r, 16));
             }
 
-            dto.setInserted(resultAsLocalDate(r, 13));
-            dto.setConfirmDate(resultAsLocalDate(r, 14));
-            dto.setConfirmer(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 15)));
+            dto.setInserted(resultAsLocalDate(r, 17));
+            dto.setConfirmDate(resultAsLocalDate(r, 18));
+            dto.setConfirmer(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 19)));
             dto.setCanEdit(Boolean.valueOf(FinalProtocolUtil.canEdit(user, em.getReference(Protocol.class, dto.getId()))));
             return dto;
         });

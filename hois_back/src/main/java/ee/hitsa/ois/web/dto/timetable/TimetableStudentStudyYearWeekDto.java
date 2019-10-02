@@ -6,8 +6,8 @@ public class TimetableStudentStudyYearWeekDto extends TimetableStudyYearWeekDto 
 
     private Boolean connectedSubjects = Boolean.FALSE;
     
-    public TimetableStudentStudyYearWeekDto(Long weekNr, LocalDate start, LocalDate end) {
-        super(weekNr, start, end);
+    public TimetableStudentStudyYearWeekDto(Long studyYear, Long weekNr, LocalDate start, LocalDate end) {
+        super(studyYear, weekNr, start, end);
     }
 
     public Boolean getConnectedSubjects() {

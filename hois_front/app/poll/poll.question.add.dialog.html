@@ -7,7 +7,7 @@
     }
 </style>
 <md-dialog aria-label="add question dialog" flex="50">
-    <form name="dialogForm" ng-submit="submit()" novalidate ng-cloak>
+    <form name="dialogForm" ng-submit="checkAnswers() && submit()" novalidate ng-cloak>
         <md-toolbar>
         <div class="md-toolbar-tools">
             <h2 flex>{{"poll.questions.question" | translate}}</h2>

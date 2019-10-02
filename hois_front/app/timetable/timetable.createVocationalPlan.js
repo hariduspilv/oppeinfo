@@ -614,6 +614,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         return selectedCodes.indexOf(t.code) !== -1;
       });
       updateSelectAll();
+      $scope.$broadcast('refreshFixedColumns');
     };
 
     function updateSelectAll() {

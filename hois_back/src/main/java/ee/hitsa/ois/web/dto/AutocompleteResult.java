@@ -25,7 +25,9 @@ import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.enterprise.Enterprise;
 import ee.hitsa.ois.domain.enterprise.PracticeEvaluation;
+import ee.hitsa.ois.domain.poll.Poll;
 import ee.hitsa.ois.domain.poll.PollJournal;
+import ee.hitsa.ois.domain.poll.PollTheme;
 import ee.hitsa.ois.domain.sais.SaisAdmission;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
@@ -214,8 +216,12 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
     }
 
     public static AutocompleteResult of(Student student) {
+        return of(student, true);
+    }
+    
+    public static AutocompleteResult of(Student student, boolean addIdcode) {
         Person p = student.getPerson();
-        String name = PersonUtil.fullnameAndIdcode(p.getFirstname(), p.getLastname(), p.getIdcode());
+        String name = addIdcode ? PersonUtil.fullnameAndIdcode(p.getFirstname(), p.getLastname(), p.getIdcode()) : PersonUtil.fullname(p);
         return new AutocompleteResult(student.getId(), name, name);
     }
 
@@ -317,5 +323,13 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
             return new AutocompleteResult(committee.getId(), fullName, fullName);
         }
         return of(committee);
+    }
+
+    public static AutocompleteResult of(Poll poll) {
+        return new AutocompleteResult(poll.getId(), poll.getNameEt(), poll.getNameEt());
+    }
+
+    public static AutocompleteResult of(PollTheme theme) {
+        return new AutocompleteResult(theme.getId(), theme.getNameEt(), theme.getNameEt());
     }
 }

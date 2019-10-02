@@ -15,13 +15,13 @@ angular.module('hitsaOis').controller('BoardingSchoolSearchController', ['$scope
 
     $scope.loadData();
   }
-]).controller('BoardingSchoolManagementController', ['$scope', '$timeout', '$q', 'ArrayUtils', 'DataUtils', 'FormUtils', 'QueryUtils', 'dialogService', 'message',
-  function ($scope, $timeout, $q, ArrayUtils, DataUtils, FormUtils, QueryUtils, dialogService, message) {
+]).controller('BoardingSchoolManagementController', ['$scope', '$timeout', '$window', '$q', 'ArrayUtils', 'DataUtils', 'FormUtils', 'QueryUtils', 'dialogService', 'message',
+  function ($scope, $timeout, $window, $q, ArrayUtils, DataUtils, FormUtils, QueryUtils, dialogService, message) {
     $scope.currentNavItem = 'boarding.school.management';
     var baseUrl = '/boardingSchools/management';
 
     $scope.rooms = QueryUtils.endpoint('/autocomplete/roomsAsList').query({isDormitory: true});
-    QueryUtils.createQueryForm($scope, baseUrl, {order: 'p.lastname, p.firstname', size: 100}, function (resultData) {
+    QueryUtils.createQueryForm($scope, baseUrl, {order: 'p.lastname, p.firstname'}, function (resultData) {
       if (angular.isDefined($scope.boardingSchools) && $scope.boardingSchools.$dirty === true) {
         $scope.boardingSchools.$setPristine();
       }

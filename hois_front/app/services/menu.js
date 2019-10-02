@@ -16,7 +16,7 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.viewTimetable.label',
         type: 'link',
-        url: "/timetable/generalTimetableByGroup",
+        url: "/timetable/generalTimetable/group",
         icon: "access_time"
       });
 
@@ -389,6 +389,11 @@ angular.module('hitsaOis')
             name: 'main.menu.poll.questions',
             url: '/poll/questions?_menu',
             icon:"chat"
+          },
+          {
+            name: 'main.menu.poll.statistics',
+            url: '/poll/statistics?_menu',
+            icon:"blur_circular"
           }
         ]
       });
@@ -747,7 +752,10 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.settings.supportCommittees',
             url: '/committees/KOMISJON_A?_menu',
-            icon: "record_voice_over"
+            icon: "record_voice_over",
+            studyLevel: {
+              vocational: true
+            }
           },
           {
             name: 'main.menu.settings.studentGroupYearTransfer',

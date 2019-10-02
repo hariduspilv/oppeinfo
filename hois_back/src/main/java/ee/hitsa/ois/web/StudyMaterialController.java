@@ -7,6 +7,7 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -100,7 +101,7 @@ public class StudyMaterialController {
         Boolean isPublic = null;
         Boolean isVisibleToStudents = null;
         if (!((user.isSchoolAdmin() || user.isTeacher())
-                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEMATERJAL))) {
+                && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEMATERJAL))) {
             if (user.isStudent()) {
                 isVisibleToStudents = Boolean.TRUE;
             } else {
@@ -163,30 +164,29 @@ public class StudyMaterialController {
     }
 
     private static void assertCanView(HoisUserDetails user, StudyMaterial material) {
-        if (!(UserUtil.isSchoolAdmin(user, material.getSchool()) 
+        if (!((UserUtil.isSchoolAdmin(user, material.getSchool()) 
                 || (user.isTeacher() && user.getTeacherId().equals(EntityUtil.getId(material.getTeacher())))
                 || (user.isTeacher() && material.getStudyMaterialConnect().stream().flatMap(con -> con.getJournal().getJournalTeachers().stream()).filter(t -> user.getTeacherId().equals(EntityUtil.getId(t.getTeacher()))).findFirst().isPresent()))
-                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEMATERJAL)) {
-            throw new AssertionFailedException("User is not school admin or teacher who created the material or journal does not have a connection to this material or has no rights");
+                && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEMATERJAL))) {
+            throw new AccessDeniedException("User is not school admin or teacher who created the material or journal does not have a connection to this material or has no rights");
         }
     }
 
 
     private static void assertCanEdit(HoisUserDetails user, StudyMaterial material) {
-        if (!(UserUtil.isSchoolAdmin(user, material.getSchool()) 
+        if (!((UserUtil.isSchoolAdmin(user, material.getSchool()) 
                 || (user.isTeacher() && user.getTeacherId().equals(EntityUtil.getId(material.getTeacher()))))
-                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEMATERJAL)) {
-            throw new AssertionFailedException("User is not school admin or teacher who created the material or has no rights");
+                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEMATERJAL))) {
+            throw new AccessDeniedException("User is not school admin or teacher who created the material or has no rights");
         }
     }
     
-
     private static void assertAccess(HoisUserDetails user, StudyMaterialConnect materialConnect) {
-        if (!(UserUtil.isSchoolAdmin(user, materialConnect.getStudyMaterial().getSchool()) 
+        if (!((UserUtil.isSchoolAdmin(user, materialConnect.getStudyMaterial().getSchool()) 
                 || (user.isTeacher() && user.getTeacherId().equals(EntityUtil.getId(materialConnect.getStudyMaterial().getTeacher())))
                 || (user.isTeacher() && materialConnect.getJournal().getJournalTeachers().stream().filter(t -> user.getTeacherId().equals(EntityUtil.getId(t.getTeacher()))).findFirst().isPresent()))
-                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEMATERJAL)) {
-            throw new AssertionFailedException("User is not school admin or teacher who created the material or journal does not have a connection to this material or has no rights");
+                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEMATERJAL))) {
+            throw new AccessDeniedException("User is not school admin or teacher who created the material or journal does not have a connection to this material or has no rights");
         }
     }
 

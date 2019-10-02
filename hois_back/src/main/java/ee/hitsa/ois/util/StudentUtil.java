@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 
+import org.apache.commons.lang3.StringUtils;
+
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.enums.StudentStatus;
@@ -58,6 +60,16 @@ public abstract class StudentUtil {
 
     public static boolean hasRepresentatives(Student student) {
         return StreamUtil.nullSafeList(student.getRepresentatives()).stream().anyMatch(StudentRepresentative::getIsStudentVisible);
+    }
+    
+    /**
+     * Once ERIVAJADUS classifier found it should have ehis_value because it is sent to EHIS.
+     * 
+     * @param student
+     * @return has valid special need
+     */
+    public static boolean hasSpecialNeeds(Student student) {
+        return student.getSpecialNeeds().stream().filter(sn -> !StringUtils.isBlank(sn.getSpecialNeed().getEhisValue())).findAny().isPresent();
     }
 
     public static BigDecimal getCurriculumCompletion(BigDecimal credits, Student student) {

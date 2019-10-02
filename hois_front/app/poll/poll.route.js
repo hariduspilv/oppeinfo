@@ -119,8 +119,18 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KYSITLUS]
       }
     })
+    .when('/poll/results/:id/view', {
+      templateUrl: 'poll/poll.results.view.html',
+      controller: 'PollResultsController',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); } 
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KYSITLUS]
+      }
+    })
     .when('/poll/results/:id/edit', {
-      templateUrl: 'poll/poll.results.html',
+      templateUrl: 'poll/poll.results.edit.html',
       controller: 'PollResultsController',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
         auth: function (AuthResolver) { return AuthResolver.resolve(); } 
@@ -149,6 +159,13 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     .when('/poll/expert/:uuid', {
       templateUrl: 'poll/poll.response.html',
       controller: 'PollExpertController',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+      }
+    })
+    .when('/poll/statistics', {
+      templateUrl: 'poll/poll.statistics.html',
+      controller: 'PollStatisticsController',
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); },
       }

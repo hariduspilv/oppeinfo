@@ -72,6 +72,7 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     private String representativeDecisionAddInfo;
 
     private Boolean canEditStudent;
+    private Boolean hasSpecialNeed;
     
     /** TUGI application specific */
     private Boolean canRemoveConfirmation;
@@ -103,6 +104,7 @@ public class ApplicationDto extends InsertedChangedVersionDto {
                 .collect(Collectors.toSet()));
         dto.setIsAdult(Boolean.valueOf(StudentUtil.isAdultAndDoNotNeedRepresentative(application.getStudent())));
         dto.setCanEditStudent(Boolean.valueOf(StudentUtil.canBeEdited(application.getStudent())));
+        dto.setHasSpecialNeed(Boolean.valueOf(StudentUtil.hasSpecialNeeds(application.getStudent())));
         return dto;
     }
 
@@ -517,6 +519,14 @@ public class ApplicationDto extends InsertedChangedVersionDto {
 
     public void setCanChangeThemeReplacements(Boolean canChangeThemeReplacements) {
         this.canChangeThemeReplacements = canChangeThemeReplacements;
+    }
+
+    public Boolean getHasSpecialNeed() {
+        return hasSpecialNeed;
+    }
+
+    public void setHasSpecialNeed(Boolean hasSpecialNeed) {
+        this.hasSpecialNeed = hasSpecialNeed;
     }
 
 }

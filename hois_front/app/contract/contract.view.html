@@ -1,7 +1,7 @@
 <div class="ois-form-layout-padding" ng-cloak>
   <div flex>
     <div layout="column">
-      <form name="contractForm" ng-submit="save()" layout="column" novalidate>
+      <form name="contractForm" layout="column" novalidate>
       <div layout="row" layout-sm="column" layout-xs="column" flex>
         <div layout="column" flex="50" flex-xs="100" class="form-readonly">
           <br>
@@ -15,7 +15,7 @@
           isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')">
           <md-input-container flex="100">
             <label>{{'contract.contractNumber' | translate}}</label>
-            <input ng-model="contract.contractNr" md-maxlength="20" ng-blur="changeContractNr()">
+            <input ng-model="contract.contractNr" md-maxlength="20" ng-blur="changeContractNr()" ng-change="disableSave()">
           </md-input-container>
         </div>
       </div>
@@ -282,7 +282,7 @@
           </md-input-container>
           </div>
           <div layout="row">
-            <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+            <md-button class="md-raised md-primary" ng-click="save()" ng-disabled="disablesave">{{'main.button.save' | translate}}</md-button>
             <md-button class="md-raised" ng-click="showCancel()">{{'main.button.cancel' | translate}}</md-button>
           </div>
         </fieldset>
@@ -290,7 +290,7 @@
 
       <div layout="row" layout-xs="column">
         <md-button ng-if="auth.isAdmin() && (contract.status.code === 'LEPING_STAATUS_Y')
-          && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING') && auth.school.withoutEkis" class="md-raised" 
+          && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING') && auth.school.withoutEkis" ng-disabled="disablesave" class="md-raised" 
           ng-click="confirm()">{{'contract.confirm' | translate}}</md-button>
         <md-button ng-if="contract.id && (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_S'
           || contract.status.code === 'LEPING_STAATUS_K')" class="md-raised md-default" ng-href="{{printUrl()}}" target="_blank">

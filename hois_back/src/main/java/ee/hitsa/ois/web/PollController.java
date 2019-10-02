@@ -1,7 +1,9 @@
 package ee.hitsa.ois.web;
 
+import java.io.IOException;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +19,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.poll.Poll;
+import ee.hitsa.ois.domain.poll.PollResultStudentCommand;
 import ee.hitsa.ois.domain.poll.PollTheme;
 import ee.hitsa.ois.domain.poll.PollThemeQuestion;
 import ee.hitsa.ois.domain.poll.Question;
 import ee.hitsa.ois.domain.poll.Response;
 import ee.hitsa.ois.service.PollService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.poll.GraphSearchCommand;
@@ -30,6 +34,7 @@ import ee.hitsa.ois.web.commandobject.poll.PollCommand;
 import ee.hitsa.ois.web.commandobject.poll.PollCommentCommand;
 import ee.hitsa.ois.web.commandobject.poll.PollDatesCommand;
 import ee.hitsa.ois.web.commandobject.poll.PollForm;
+import ee.hitsa.ois.web.commandobject.poll.PollResultStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.poll.PollSearchCommand;
 import ee.hitsa.ois.web.commandobject.poll.QuestionCommand;
 import ee.hitsa.ois.web.commandobject.poll.QuestionOrderCommand;
@@ -42,6 +47,10 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.poll.AnswersDto;
 import ee.hitsa.ois.web.dto.poll.GraphDto;
 import ee.hitsa.ois.web.dto.poll.PollRelatedObjectsDto;
+import ee.hitsa.ois.web.dto.poll.PollResultStudentDto;
+import ee.hitsa.ois.web.dto.poll.PollResultStudentOrTeacherDto;
+import ee.hitsa.ois.web.dto.poll.PollResultsDto;
+import ee.hitsa.ois.web.dto.poll.PollResultsSubjectDto;
 import ee.hitsa.ois.web.dto.poll.PollSearchDto;
 import ee.hitsa.ois.web.dto.poll.PracticeThemesDto;
 import ee.hitsa.ois.web.dto.poll.QuestionDto;
@@ -82,6 +91,48 @@ public class PollController {
     public PollRelatedObjectsDto searchAnswersPerResponse(HoisUserDetails user, @WithEntity Response response) {
         // TODO: assert
         return pollService.searchAnswersPerResponse(response);
+    }
+    
+    @GetMapping("/results/{id:\\d+}")
+    public PollResultsDto pollResults(HoisUserDetails user, @WithEntity Poll poll) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return pollService.pollResults(poll);
+    }
+    
+    @GetMapping("/results/subjects/{id:\\d+}")
+    public Page<PollResultsSubjectDto> pollResultSubjects(HoisUserDetails user, @WithEntity Poll poll, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return pollService.pollResultSubjects(user, poll, pageable);
+    }
+    
+    @GetMapping("/results/enterprises/{id:\\d+}")
+    public Page<AutocompleteResult> pollResultEnterprises(HoisUserDetails user, @WithEntity Poll poll, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return pollService.pollResultEnterprises(poll, pageable);
+    }
+    
+    @GetMapping("/results/enterprises/studentOrTeacher/{id:\\d+}")
+    public PollResultStudentOrTeacherDto pollResultStudentOrTeacher(HoisUserDetails user, @WithEntity Poll poll) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return pollService.pollResultStudentOrTeacher(user, poll);
+    }
+    
+    @GetMapping("/results/student")
+    public Page<PollResultStudentDto> pollResultStudent(HoisUserDetails user, PollResultStudentCommand command, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return pollService.pollResultStudent(command, pageable);
+    }
+    
+    @GetMapping("/results/exportSubject.xls")
+    public void subjectIntoExcel(HoisUserDetails user, PollResultStudentCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        HttpUtil.xls(response, "pollsubjectresult.xls", pollService.searchExcel(criteria));
+    }
+    
+    @GetMapping("/statistics/pollStatistics.xlsx")
+    public void subjectIntoExcel(HoisUserDetails user, PollResultStatisticsCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        pollService.exportStatistics(user, response, criteria);
     }
     
     @PutMapping("/graph")

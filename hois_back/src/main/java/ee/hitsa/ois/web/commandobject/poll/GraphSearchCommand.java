@@ -6,6 +6,9 @@ public class GraphSearchCommand {
     private Long responseId;
     private Long journalId;
     private Long subjectId;
+    private Long enterpriseId;
+    private Boolean students;
+    private Boolean teachers;
     private Boolean themes;
     
     public Long getResponseId() {
@@ -37,6 +40,24 @@ public class GraphSearchCommand {
     }
     public void setPollId(Long pollId) {
         this.pollId = pollId;
+    }
+    public Long getEnterpriseId() {
+        return enterpriseId;
+    }
+    public void setEnterpriseId(Long enterpriseId) {
+        this.enterpriseId = enterpriseId;
+    }
+    public Boolean getStudents() {
+        return students;
+    }
+    public void setStudents(Boolean students) {
+        this.students = students;
+    }
+    public Boolean getTeachers() {
+        return teachers;
+    }
+    public void setTeachers(Boolean teachers) {
+        this.teachers = teachers;
     }
 
 }

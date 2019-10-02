@@ -22,6 +22,7 @@ import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SaisAdmissionUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm.DirectiveFormStudentModule;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -42,6 +43,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private AutocompleteResult curriculumGrade;
     private String bankAccount;
     private Boolean applicationIsPeriod;
+    private LocalDate studentNominalStudyEnd;
     private LocalDate applicationStartDate;
     private LocalDate applicationEndDate;
     private AutocompleteResult applicationStudyPeriodStart;
@@ -52,6 +54,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private Boolean isFullLoad = Boolean.FALSE;
     private Boolean isPartialLoad = Boolean.FALSE;
     private Boolean isUndefinedLoad = Boolean.FALSE;
+    private Boolean hasSpecialNeed;
     
     private List<AutocompleteResult> supportServices;
     private List<AutocompleteResult> supportModules;
@@ -152,6 +155,14 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         this.applicationIsPeriod = applicationIsPeriod;
     }
 
+    public LocalDate getStudentNominalStudyEnd() {
+        return studentNominalStudyEnd;
+    }
+
+    public void setStudentNominalStudyEnd(LocalDate studentNominalStudyEnd) {
+        this.studentNominalStudyEnd = studentNominalStudyEnd;
+    }
+
     public LocalDate getApplicationStartDate() {
         return applicationStartDate;
     }
@@ -206,6 +217,14 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
 
     public void setIsUndefinedLoad(Boolean isUndefinedLoad) {
         this.isUndefinedLoad = isUndefinedLoad;
+    }
+
+    public Boolean getHasSpecialNeed() {
+        return hasSpecialNeed;
+    }
+
+    public void setHasSpecialNeed(Boolean hasSpecialNeed) {
+        this.hasSpecialNeed = hasSpecialNeed;
     }
 
     public AutocompleteResult getStudentGroupObject() {
@@ -276,12 +295,14 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             break;
         case KASKKIRI_TUGI:
             dto.setNominalStudyEnd(application.getStudent().getNominalStudyEnd());
+            dto.setStudentNominalStudyEnd(application.getStudent().getNominalStudyEnd());
             dto.setStudentGroup(application.getStudent().getStudentGroup() != null ? application.getStudent().getStudentGroup().getId() : null);
             dto.setStudentGroupObject(application.getStudent().getStudentGroup() != null ? AutocompleteResult.of(application.getStudent().getStudentGroup()) : null);
             dto.setSupportServices(application.getSupportServices().stream().map(service -> new AutocompleteResult(null, ClassifierDto.of(service.getSupportService()))).collect(Collectors.toList()));
             dto.setSupportModules(application.getSupportServices().stream()
                     .filter(service -> ClassifierUtil.equals(SupportServiceType.TUGITEENUS_1, service.getSupportService()))
                     .flatMap(service -> service.getModules().stream()).map(module -> AutocompleteResult.of(module.getModule())).collect(Collectors.toList()));
+            dto.setHasSpecialNeed(Boolean.valueOf(StudentUtil.hasSpecialNeeds(application.getStudent())));
             break;
         case KASKKIRI_VALIS:
             dto.setIsAbroad(application.getIsAbroad());

@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.commandobject.student;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -42,6 +43,7 @@ public class StudentForm extends VersionedCommand {
     private Boolean isSpecialNeed;
     @ClassifierRestriction(MainClassCode.ERIVAJADUS)
     private String specialNeed;
+    private List<String> specialNeeds;
     private Boolean isRepresentativeMandatory;
     @Valid
     private OisFileCommand photo;
@@ -149,6 +151,14 @@ public class StudentForm extends VersionedCommand {
 
     public void setSpecialNeed(String specialNeed) {
         this.specialNeed = specialNeed;
+    }
+
+    public List<String> getSpecialNeeds() {
+        return specialNeeds;
+    }
+
+    public void setSpecialNeeds(List<String> specialNeeds) {
+        this.specialNeeds = specialNeeds;
     }
 
     public Boolean getIsRepresentativeMandatory() {

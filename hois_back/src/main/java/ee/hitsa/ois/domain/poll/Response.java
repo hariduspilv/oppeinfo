@@ -20,7 +20,7 @@ public class Response extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Poll poll;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    private Classifier Status;
+    private Classifier status;
     @OneToOne(mappedBy="response")
     private ResponseObject responseObject;
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -37,10 +37,10 @@ public class Response extends BaseEntityWithId {
         this.poll = poll;
     }
     public Classifier getStatus() {
-        return Status;
+        return status;
     }
     public void setStatus(Classifier status) {
-        Status = status;
+        this.status = status;
     }
     public ResponseObject getResponseObject() {
         return responseObject;

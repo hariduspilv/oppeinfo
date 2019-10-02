@@ -226,13 +226,9 @@ angular.module('hitsaOis')
     '/subject/public/:id',
     '/subjectProgram/public/:subjectProgramId/view',
     '/timetables',
-    '/timetable/generalTimetableByGroup/:schoolId?',
-    '/timetable/generalTimetableByTeacher/:schoolId?',
-    '/timetable/generalTimetableByRoom/:schoolId?',
-    '/timetable/searchGeneralTimetable/:schoolId?',
-    '/timetable/group/:schoolId/:groupId/:weekIndex?',
-    '/timetable/teacher/:schoolId/:teacherId/:weekIndex?',
-    '/timetable/room/:schoolId/:roomId/:weekIndex?',
+    '/timetable/:schoolId?/generalTimetable/:type',
+    '/timetable/:schoolId?/searchGeneralTimetable',
+    '/timetable/:schoolId/:type/:typeId/:studyYearId/:weekIndex?',
     '/studyMaterial/:schoolId/vocational/:journalId/view',
     '/studyMaterial/:schoolId/higher/:subjectStudyPeriodId/view',
     '/practiceJournals/supervisor/:uuid',
@@ -299,6 +295,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_V_TEEMAOIGUS_KASUTAJA: 'ROLE_OIGUS_V_TEEMAOIGUS_KASUTAJA',	//Kasutajad
     ROLE_OIGUS_V_TEEMAOIGUS_KLASSIFIKAATOR: 'ROLE_OIGUS_V_TEEMAOIGUS_KLASSIFIKAATOR',	//Klassifikaatorid
     ROLE_OIGUS_V_TEEMAOIGUS_KOMISJON: 'ROLE_OIGUS_V_TEEMAOIGUS_KOMISJON',	//Komisjonid
+    ROLE_OIGUS_V_TEEMAOIGUS_KOORM: 'ROLE_OIGUS_V_TEEMAOIGUS_KOORM',	//Koormuste haldamine
     ROLE_OIGUS_V_TEEMAOIGUS_KYSITLUS: 'ROLE_OIGUS_V_TEEMAOIGUS_KYSITLUS',	//Küsitlused
     ROLE_OIGUS_V_TEEMAOIGUS_LEPING: 'ROLE_OIGUS_V_TEEMAOIGUS_LEPING',	//Lepingud
     ROLE_OIGUS_V_TEEMAOIGUS_LOPBLANKETT: 'ROLE_OIGUS_V_TEEMAOIGUS_LOPBLANKETT',	//Blanketid
@@ -375,6 +372,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_M_TEEMAOIGUS_KASUTAJA: 'ROLE_OIGUS_M_TEEMAOIGUS_KASUTAJA',	//Kasutajad
     ROLE_OIGUS_M_TEEMAOIGUS_KLASSIFIKAATOR: 'ROLE_OIGUS_M_TEEMAOIGUS_KLASSIFIKAATOR',	//Klassifikaatorid
     ROLE_OIGUS_M_TEEMAOIGUS_KOMISJON: 'ROLE_OIGUS_M_TEEMAOIGUS_KOMISJON',	//Komisjonid
+    ROLE_OIGUS_M_TEEMAOIGUS_KOORM: 'ROLE_OIGUS_M_TEEMAOIGUS_KOORM',	//Koormuste haldamine
     ROLE_OIGUS_M_TEEMAOIGUS_KYSITLUS: 'ROLE_OIGUS_M_TEEMAOIGUS_KYSITLUS',	//Küsitlused
     ROLE_OIGUS_M_TEEMAOIGUS_LEPING: 'ROLE_OIGUS_M_TEEMAOIGUS_LEPING',	//Lepingud
     ROLE_OIGUS_M_TEEMAOIGUS_LOPBLANKETT: 'ROLE_OIGUS_M_TEEMAOIGUS_LOPBLANKETT',	//Blanketid

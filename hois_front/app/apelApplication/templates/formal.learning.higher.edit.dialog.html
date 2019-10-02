@@ -65,7 +65,7 @@
                     <legend class="md-title-small">{{'apel.formalLearnings.newSchool' | translate}}</legend>
                     <div layout="row" layout-sm="column" layout-xs="column">
                       <md-input-container flex="45" flex-sm="100" flex-xs="100">
-                        <label>{{'apel.formalLearnings.schoolCountry' | translate}} {{record.newTransferableSubjectOrModule.newApelSchool.country}}</label>
+                        <label>{{'apel.formalLearnings.schoolCountry' | translate}}</label>
                         <hois-classifier-select ng-model="record.newTransferableSubjectOrModule.newApelSchool.country" aria-label="country" model-value-attr="code"
                           main-classifier-code="RIIK" ng-change="newSchoolCountryChanged(record.newTransferableSubjectOrModule.newApelSchool.country)"
                           required></hois-classifier-select>

@@ -267,10 +267,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       curriculumVersions: QueryUtils.endpoint("/autocomplete/curriculumversions").query({
         valid: true,
         higher: true,
-        curriculumId: student.curriculum,
-        hasGroup: true,
-        studyForm: student.studyForm,
-        checkStudentGroupStudyForm: true
+        curriculumId: student.curriculum
       }, function(result) {
         $scope.formState.curriculumVersions = result.filter(function (r) {
           return r.id !== $scope.application.oldCurriculumVersion.id;
@@ -590,6 +587,16 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     return $scope.strictRequired || (angular.isDefined(additionalCheck) && !additionalCheck) ? '' : ' *';
   };
 
+  function notifyAboutSpecialNeeds(confirmCallback) {
+    if ($scope.application.type === 'AVALDUS_LIIK_TUGI' && !$scope.application.hasSpecialNeed) {
+      dialogService.confirmDialog({prompt: 'application.messages.studentHasNoSpecialNeedConfirm'}, function() {  
+        confirmCallback();
+      });
+    } else {
+      confirmCallback();
+    }
+  }
+
   function confirm() {
     QueryUtils.endpoint('/applications/' + $scope.application.id + '/confirm/').put().$promise.then(function (response) {
       message.info('application.messages.confirmed');
@@ -606,20 +613,22 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     $scope.strictRequired = true;
     $timeout(function () {
       FormUtils.withValidForm($scope.applicationForm, function () {
-        if (angular.isDefined($scope.applicationForm) && $scope.applicationForm.$dirty === true ) {
-          dialogService.confirmDialog({prompt: 'application.messages.confirmSaveAndConfirm'}, function() {  
-            var application = new ApplicationsEndpoint($scope.application);
-            application.$update().then(function (response) {
-              $scope.strictRequired = false;
-              entityToForm(response);
+        notifyAboutSpecialNeeds(function () {
+          if (angular.isDefined($scope.applicationForm) && $scope.applicationForm.$dirty === true ) {
+            dialogService.confirmDialog({prompt: 'application.messages.confirmSaveAndConfirm'}, function() {  
+              var application = new ApplicationsEndpoint($scope.application);
+              application.$update().then(function (response) {
+                $scope.strictRequired = false;
+                entityToForm(response);
+                confirm();
+              }).catch(angular.noop);
+            });
+          } else {
+            dialogService.confirmDialog({prompt: 'application.messages.confirmConfirm'}, function() {  
               confirm();
-            }).catch(angular.noop);
-          });
-        } else {
-          dialogService.confirmDialog({prompt: 'application.messages.confirmConfirm'}, function() {  
-            confirm();
-          });
-        }
+            });
+          }
+        });
       });
     });
   };

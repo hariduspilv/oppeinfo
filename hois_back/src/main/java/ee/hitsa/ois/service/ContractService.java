@@ -746,8 +746,8 @@ public class ContractService {
      * @param command
      * @return
      */
-    public void changeContractNr(Contract contract, ContractNrCommand command) {
+    public Contract changeContractNr(Contract contract, ContractNrCommand command) {
         contract.setContractNr(command.getContractNr());
-        EntityUtil.save(contract, em);
+        return EntityUtil.save(contract, em);
     }
 }

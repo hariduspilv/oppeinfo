@@ -1,0 +1,69 @@
+<div ng-include="'timetable/generalTimetable/timetable.generalTimetable.navbar.html'"></div>
+
+<div>
+  <div ng-show="studyYears">
+    <div layout="row" layout-sm="column" layout-xs="column" layout-margin>
+      <md-autocomplete ng-if="currentNavItem === 'group'" flex="45" flex-sm="100" flex-xs="100"
+        md-search-text="searchText"
+        md-min-length="1"
+        md-items="item in getStudentGroups(searchText)" 
+        md-item-text="item.groupCode"
+        md-selected-item="criteria.selectedTimetable"
+        md-selected-item-change="showTypeWeek(item.groupId)" 
+        md-floating-label="{{'timetable.search.studentGroup' | translate}}"
+        md-require-match
+        md-no-cache>
+        <md-item-template>
+          <span md-highlight-text="searchText">{{item.groupCode}}</span>
+        </md-item-template>
+      </md-autocomplete>
+
+      <md-autocomplete ng-if="currentNavItem === 'teacher'" flex="45" flex-sm="100" flex-xs="100"
+        md-search-text="searchText"
+        md-min-length="1"
+        md-items="item in getTeachers(searchText)" 
+        md-item-text="item.firstname + ' ' + item.lastname"
+        md-selected-item="criteria.selectedTimetable"
+        md-selected-item-change="showTypeWeek(item.teacherId)" 
+        md-floating-label="{{auth.higher ? ('timetable.search.teacherHigher' | translate) : ('timetable.search.teacherVocational' | translate)}}"
+        md-require-match
+        md-no-cache>
+        <md-item-template>
+          <span md-highlight-text="searchText">{{item.firstname}} {{item.lastname}}</span>
+        </md-item-template>
+      </md-autocomplete>
+
+      <md-autocomplete ng-if="currentNavItem === 'room'" flex="45" flex-sm="100" flex-xs="100"
+        md-search-text="searchText"
+        md-min-length="1"
+        md-items="item in getRooms(searchText)" 
+        md-item-text="item.code"
+        md-selected-item="criteria.selectedTimetable"
+        md-selected-item-change="showTypeWeek(item.roomId)" 
+        md-floating-label="{{'timetable.search.room' | translate}}"
+        md-require-match
+        md-no-cache>
+        <md-item-template>
+          <span md-highlight-text="searchText">{{item.code}}</span>
+        </md-item-template>
+      </md-autocomplete>
+
+      <div layout="column" class="form-readonly" flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <div>&nbsp;</div>
+        <md-input-container>
+          <label class="textInput">{{'timetable.search.studyYear' | translate}}</label>
+          <div class="md-body-1 hois-value">
+            <span ng-repeat="sy in studyYears | orderBy: 'startDate'">
+              <a ng-click="changeStudyYear(sy)" ng-style="{'font-weight': criteria.studyYearId === sy.id ? 'bold' : 'normal'}">{{currentLanguageNameField(sy)}}</a>
+              <span>&nbsp;</span>
+            </span>
+          </div>
+        </md-input-container>
+      </div>
+    </div>
+  </div>
+
+  <div ng-controller="TimetableWeekViewController">
+    <div ng-include="'timetable/generalTimetable/timetable.week.view.html'"></div>
+  </div>
+</div>

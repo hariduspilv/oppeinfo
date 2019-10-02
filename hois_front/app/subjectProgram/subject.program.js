@@ -261,13 +261,23 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     }
   };
 
-  $scope.completeProgram = function () {
+  function completeProgram() {
     dialogService.confirmDialog({prompt: 'subjectProgram.operation.complete.message'}, function() {
       QueryUtils.endpoint(baseUrl + "/complete").get({id: $scope.subjectProgram.id}).$promise.then(function () {
         message.info('subjectProgram.operation.complete.success');
         $location.url("/subjectProgram/" + formType + "/" + $scope.subjectProgram.id + "/view?_noback");
       });
     });
+  }
+
+  $scope.completeProgram = function () {
+    if ($scope.subjectProgramForm.$dirty) {
+      dialogService.confirmDialog({prompt: 'main.messages.confirmFormDataNotSaved'}, function() {
+        completeProgram();
+      });
+    } else {
+      completeProgram();
+    }
   };
 
   $scope.confirm = function () {

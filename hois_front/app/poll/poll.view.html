@@ -5,8 +5,8 @@
             {{'poll.basicData.label' | translate}}</md-nav-item>
         <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/questions/{{::criteria.id}}/view?_noback" name="enterprise.questions">
             {{'poll.questions.label' | translate}}</md-nav-item>
-        <!-- <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/results/{{::criteria.id}}/view?_noback" name="enterprise.results">
-            {{'poll.results' | translate}}</md-nav-item> -->
+        <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/results/{{::criteria.id}}/view?_noback" name="enterprise.results">
+            {{'poll.results' | translate}}</md-nav-item>
     </md-nav-bar>
 </div>
       
@@ -214,11 +214,11 @@
             </div>
         </div>
         <div layout="row" layout-xs="column">
-            <md-button flex-xs="100" ng-if="auth.isAdmin() && formState.status.code !== 'KYSITLUS_STAATUS_K'" ng-href="#/poll/{{::criteria.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
-            <md-button flex-xs="100" ng-if="auth.isAdmin() && formState.status.code === 'KYSITLUS_STAATUS_K' && formState.responded && displayDates" ng-click="saveDates()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-            <md-button flex-xs="100" ng-if="auth.isAdmin() && formState.status.code === 'KYSITLUS_STAATUS_K' && formState.responded && !displayDates" ng-click="changeDisplayDates()" class="md-raised md-primary">{{'poll.basicData.changeDates' | translate}}</md-button>
-            <md-button flex-xs="100" ng-if="auth.isAdmin() && criteria.id" ng-click="saveAndLoad()" class="md-raised">{{'poll.copy' | translate}}</md-button>
-            <md-button flex-xs="100" ng-if="auth.isAdmin() && formState.status.code === 'KYSITLUS_STAATUS_K' && !formState.responded" ng-click="removeConfirm()" class="md-raised">{{'poll.basicData.removeConfirm' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="auth.isAdmin() && formState.status.code !== 'KYSITLUS_STAATUS_K' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KYSITLUS')" ng-href="#/poll/{{::criteria.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="auth.isAdmin() && formState.status.code === 'KYSITLUS_STAATUS_K' && formState.responded && displayDates && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KYSITLUS')" ng-click="saveDates()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="auth.isAdmin() && formState.status.code === 'KYSITLUS_STAATUS_K' && formState.responded && !displayDates && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KYSITLUS')" ng-click="changeDisplayDates()" class="md-raised md-primary">{{'poll.basicData.changeDates' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="auth.isAdmin() && criteria.id  && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KYSITLUS')" ng-click="saveAndLoad()" class="md-raised">{{'poll.copy' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="auth.isAdmin() && formState.status.code === 'KYSITLUS_STAATUS_K' && !formState.responded  && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KYSITLUS')" ng-click="removeConfirm()" class="md-raised">{{'poll.basicData.removeConfirm' | translate}}</md-button>
             <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="test()" class="md-raised">{{'poll.test' | translate}}</md-button>
             <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="back('#/poll')" class="md-raised">{{'main.button.back' | translate}}</md-button>
         </div>

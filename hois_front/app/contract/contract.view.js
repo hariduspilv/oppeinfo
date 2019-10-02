@@ -65,6 +65,10 @@ angular.module('hitsaOis').controller('ContractViewController', ['$scope', '$loc
       });
     };
 
+    $scope.disableSave = function() {
+      $scope.disablesave = true;
+    };
+
     var ContractEndpoint = QueryUtils.endpoint('/contracts/cancel');
     $scope.save = function (success) {
       FormUtils.withValidForm($scope.contractForm, function() {
@@ -87,7 +91,15 @@ angular.module('hitsaOis').controller('ContractViewController', ['$scope', '$loc
       FormUtils.withValidForm($scope.contractForm, function () {
         var ContractEndpoint = QueryUtils.endpoint('/contracts/changeContractNr/' + $scope.contract.id);
         var contract = new ContractEndpoint({contractNr: $scope.contract.contractNr});
-        contract.$putWithoutLoad();
+        contract.$update().then(function (response) {
+          response.cancelReason = $scope.contract.cancelReason;
+          response.cancelDesc = $scope.contract.cancelDesc;
+          response.canceled = $scope.contract.canceled;
+          message.updateSuccess();
+          $scope.disablesave = false;
+          entityToForm(response);
+          clMapper.objectmapper($scope.contract);
+        });
       });
     };
     
@@ -96,13 +108,15 @@ angular.module('hitsaOis').controller('ContractViewController', ['$scope', '$loc
     };
 
     $scope.confirm = function () {
-      dialogService.confirmDialog({ prompt: 'contract.withoutEkisConfirm'}, function () {
-        var ConfirmEndpoint = QueryUtils.endpoint('/contracts/confirm/' + $scope.contract.id);
-        new ConfirmEndpoint().$save().then(function (contract) {
-          entityToForm(contract);
-          clMapper.objectmapper($scope.contract);
-          message.info('contract.messages.confirmed');
-        }).catch(angular.noop);
+      FormUtils.withValidForm($scope.contractForm, function() {
+        dialogService.confirmDialog({ prompt: 'contract.withoutEkisConfirm'}, function () {
+          var ConfirmEndpoint = QueryUtils.endpoint('/contracts/confirm/' + $scope.contract.id);
+          new ConfirmEndpoint().$save().then(function (contract) {
+            entityToForm(contract);
+            clMapper.objectmapper($scope.contract);
+            message.info('contract.messages.confirmed');
+          }).catch(angular.noop);
+        });
       });
     };
   }

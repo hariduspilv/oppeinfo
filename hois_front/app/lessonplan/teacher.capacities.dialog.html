@@ -12,10 +12,10 @@
 
     <div class="md-dialog-content">
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
-        <md-checkbox ng-model="journal.capacityDiff" aria-label="{{'lessonplan.journal.loadsDiffer' | translate}}">
+        <md-checkbox ng-model="journal.capacityDiff" ng-disabled="isView" aria-label="{{'lessonplan.journal.loadsDiffer' | translate}}">
           {{'lessonplan.journal.loadsDiffer' | translate}}
         </md-checkbox>
-        <div class="container" fixed-column-table fixed-columns="3" style="height: 500px">
+        <div class="container" fixed-column-table resize-table max-table-height="500" fixed-columns="3">
           <table class="lessonplan">
             <thead>
               <tr>
@@ -53,12 +53,12 @@
                 <td ng-if="formState.showWeeks && formState.weekNrs[$index].show" ng-repeat="h in ::teacher.hours[ct.code] track by $index"
                   ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">
                   <input type="number" min="0" step="1" ng-model="teacher.hours[ct.code][$index]"
-                    ng-change="updateTotals(teacher, ct.code, $index)" ng-disabled="!journal.capacityDiff">
+                    ng-change="updateTotals(teacher, ct.code, $index)" ng-disabled="isView || !journal.capacityDiff">
                 </td>
                 <td ng-if="!formState.showWeeks && sp._selected" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in ::formState.studyPeriods track by $index" 
                   class="center dividerBorder">
                   <input type="number" min="0" step="1" ng-model="teacher.spHours[ct.code][$index]" 
-                    ng-change="updateLessonCountByStudyPeriod(teacher, ct.code, $index)" ng-disabled="!journal.capacityDiff">
+                    ng-change="updateLessonCountByStudyPeriod(teacher, ct.code, $index)" ng-disabled="isView || !journal.capacityDiff">
                 </td>
               </tr>
             </tbody>
@@ -90,7 +90,7 @@
 
     <span flex></span>
     <md-dialog-actions layout="row" layout-align="start center">
-      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button ng-if="!isView" class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
       <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>

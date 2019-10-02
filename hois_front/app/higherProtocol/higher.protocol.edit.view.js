@@ -50,7 +50,8 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
       $scope.formState.canChangeConfirmedProtocolGrade = ProtocolUtils.canChangeConfirmedProtocolGrade($scope.auth, $scope.record);
       $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.record);
       $scope.formState.canCalculate = $scope.record.protocolType === 'PROTOKOLLI_LIIK_P' && $scope.formState.canEditProtocol &&
-        !$scope.record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject;
+        !$scope.record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject && 
+        $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks.length > 0;
       $scope.formState.isConfirmed = $scope.record.status === 'PROTOKOLL_STAATUS_K';
       resolveDeferredIfExists();
     }).catch(function () {

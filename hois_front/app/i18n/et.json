@@ -158,7 +158,7 @@
         "instructions": "Toimige palun telefonile ilmuvate juhiste kohaselt. Enne PIN-koodi sisestamist veenduge, et telefoni ekraanil olev kontrollkood on sama, mis allpool näidatud. Peale edukat isikutuvastust suunatakse teid automaatselt järgmisele lehele."
       },
       "tara": {
-        "title": "TARA"
+        "title": "TARA (smart-ID)"
       },
       "harid": {
         "title": "HarID"
@@ -249,11 +249,11 @@
       "poll": {
         "label": "Küsitlused",
         "data": "Küsitluste andmed",
-        "statistics": "Küsitluste statistika",
         "answers": "Minu vastused",
         "subjects": "Õppeainete küsitlused",
         "journals": "Päeviku küsitlused",
-        "questions": "Küsimused"
+        "questions": "Küsimused",
+        "statistics": "Statistika"
       },
       "practice" : {
         "label": "Praktika",
@@ -1414,6 +1414,7 @@
     "ekisconfirm": "Kas oled kindel, et soovid käskkirja kinnitamisele saata?",
     "ekisconfirmTemplateMissing": "Kas oled kindel, et soovid käskkirja kinnitamisele saata? Süsteemis on puudu kehtiv automaatse teate mall \"{{template}}\"",
     "ekisdeleteconfirm": "Kas kustutada õppijad käskkirjalt ja saata käskkiri kinnitamisele?",
+    "endDateInPast": "Tugiteenuse lõpp ei tohi olla minevikus",
     "headline": "Pealkiri",
     "inserted": "Koostamise kuupäev",
     "insertedBy": "Koostaja",
@@ -1443,6 +1444,7 @@
     "higher": "Kõrgõpe",
     "atleastOneModuleRequired": "Vähemalt üks moodul peab olema lisatud",
     "moduleAlreadyGraded": "Moodul \"{{module}}\" on juba hinnatud",
+    "moduleHasPositiveGrade": "Moodulil \"{{module}}\" on positiivne hinne",
     "moduleAlreadyInIndividualCurriculum": "Moodul \"{{module}}\" on juba ajavahemikus {{startDate}} - {{endDate}} IÕK-s",
     "notInIndividualCurriculumDateRange": "Lõpetamise kuupäev peab jääma individuaalse õppekava kuupäevade vahemikku",
     "notInSupportServiceDateRange": "Lõpetamise kuupäev peab jääma tugiteenuse ajavahemikku",
@@ -3115,7 +3117,7 @@
       "displayColumn": "Kuva tulbas",
       "files": "Failid",
       "helpText": "Abitekst",
-      "weight": "Kaal",
+      "weight": "Väärtus",
       "answer": "Vastusevariant",
       "answerType": "Vastuse tüüp",
       "pick": "Vali küsimus",
@@ -3145,10 +3147,18 @@
       "journalEndPeriod": "Päeviku lõpu kp vahemik",
       "subjectEndPeriod": "Aine lõpu kp vahemik",
       "amount": "Vastanute arv",
+      "notCompleted": "Pooleli",
       "viewResponse": "Vaata tulemusi",
       "studyYear": "Õppeaasta",
       "studyPeriod": "Õppeperiood",
       "pollDuration": "Küsitluse kestvus",
+      "teachers": "Õppejõud",
+      "toExcel": "Excelisse",
+      "checkAnswer": "Kontrolli vastamist",
+      "graph": "Graafiline vaade",
+      "enterprise": "Ettevõte",
+      "target": "Sihtrühm",
+      "students": "Õppijad",
       "dialog": {
         "journals": "Päevikud",
         "subjects": "Õppeainete õppeainekood",
@@ -3160,10 +3170,23 @@
         "myAnswer": "Minu vastus",
         "allTextFields": "Kõik küsimused on tekstiväljad",
         "responseCount": "Vastanute arv",
-        "comment": "Kommentaar (salvestatakse automaatselt väljalt lahkudes)"
+        "comment": "Kommentaar (salvestatakse automaatselt väljalt lahkudes)",
+        "student": "Õppija nimi",
+        "studentGroup": "Õpperühm",
+        "status": "Staatus",
+        "studentResponsesJournal": "Päevikule {{journal}} õppija vastamised",
+        "studentResponsesSubject": "Ainele {{subject}} õppija vastamised",
+        "pollName": "Küsitluse {{nameEt}} graafiline vaade"
       }
     },
-    "results": "Tulemused"
+    "results": "Tulemused",
+    "statistics": {
+      "pickPoll": "Vali küsitlus",
+      "pickQuestion": "Vali küsimus",
+      "allQuestions": "Kõik küsimused",
+      "duplicatePoll": "Küsimustik on juba valitud",
+      "duplicateQuestion": "Küsimus on juba valitud"
+    }
   },
   "studyYearSchedule": {
     "studyYear": "Õppeaasta",
@@ -3416,7 +3439,8 @@
       "teacherVocational": "Õpetaja",
       "studentGroup": "Õpperühm",
       "room": "Ruum",
-      "subject": "Aine/teema"
+      "subject": "Aine/teema",
+      "studyYear": "Õppeaasta"
     },
     "saveToCalendar": "Salvesta kalendrisse",
     "error": {
@@ -3425,7 +3449,8 @@
       "missingCapacities": "Mitte ühelegi õppeainele ei ole lisatud planeeritud mahtu",
       "isBeforeNow": "Mineviku sündmust ei saa muuta",
       "noDeclaredSubjects": "Valitud perioodil deklareeritud ained puuduvad",
-      "noConnectedModules": "Valitud perioodil õpitavad moodulid puuduvad"
+      "noConnectedModules": "Valitud perioodil õpitavad moodulid puuduvad",
+      "atleastOneParameterMustBeFilled": "Vähemalt üks parameeter peab olema täidetud"
     }
   },
   "journal": {
@@ -3701,6 +3726,8 @@
       "noTeachersFoundVocational": "Tingimustele ei vastanud ükski õpetaja",
       "overlappedRequest": "Toimub andmete ({{type}}) ülekanne, kasutaja {{user}}. Päringu uuesti käivitamine katkestab jooksva päringu. Kas jätkata?",
       "overlappedRequestDateRange": "Toimub andmete ({{type}}) ülekanne {{from}} - {{thru}}, kasutaja {{user}}. Päringu uuesti käivitamine katkestab jooksva päringu. Kas jätkata?",
+      "overlappedRequestTeacher": "Toimub andmete ülekanne, kasutaja {{user}}. Päringu uuesti käivitamine katkestab jooksva päringu. Kas jätkata?",
+      "overlappedRequestDateRangeTeacher": "Toimub andmete ülekanne {{from}} - {{thru}}, kasutaja {{user}}. Päringu uuesti käivitamine katkestab jooksva päringu. Kas jätkata?",
       "requestCancelledBy": "Päring katkestati: kasutaja {{user}}",
       "requestInProgress": "Andmeid saadetakse, palun oodake.",
       "taskStatus": {
@@ -4721,6 +4748,7 @@
     "curriculumVersion": "Rakenduskava",
     "subjectCode": "Õppeaine kood",
     "module": "Moodul",
+    "curriculumVersionModule": "Rakenduskava, moodul",
     "curriculum": "Õppekava",
     "subject": "Õppeaine",
     "subjectEt": "Õppeaine nimetus eesti keeles",

@@ -32,6 +32,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
@@ -42,6 +43,7 @@ import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentCurriculumCompletion;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
+import ee.hitsa.ois.domain.student.StudentSpecialNeed;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
@@ -266,13 +268,20 @@ public class StudentService {
             return student;
         }
 
-        EntityUtil.bindToEntity(form, student, classifierRepository, "person", "curriculumSpeciality");
+        EntityUtil.bindToEntity(form, student, classifierRepository, "person", "curriculumSpeciality", "specialNeeds", "specialNeed");
         student.setCurriculumSpeciality(form.getCurriculumSpeciality() != null
                 ? em.getReference(CurriculumSpeciality.class, form.getCurriculumSpeciality().getId()) : null);
         student.setEmail(form.getSchoolEmail());
         student.setLanguage(form.getStudyLanguage() != null ? 
                 classifierRepository.getOne(form.getStudyLanguage())
                 : null);
+        EntityUtil.bindEntityCollection(student.getSpecialNeeds(), specialNeed -> specialNeed.getSpecialNeed().getCode(),
+            form.getSpecialNeeds(), specialNeed -> specialNeed, formSpecialNeed -> {
+                StudentSpecialNeed specialNeed = new StudentSpecialNeed();
+                specialNeed.setStudent(student);
+                specialNeed.setSpecialNeed(em.getReference(Classifier.class, formSpecialNeed));
+                return specialNeed;
+            });
 
         LocalDate studyStart = student.getStudyStart();
         LocalDate nominalStudyEnd = student.getNominalStudyEnd();

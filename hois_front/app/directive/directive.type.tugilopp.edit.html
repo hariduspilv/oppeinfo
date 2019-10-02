@@ -19,7 +19,7 @@
         <td md-cell>{{::(currentLanguageNameField(row.studentGroupObject))}}</td>
         <td md-cell>  
           <md-input-container>
-            <md-datepicker ng-model="row.startDate" name="students[{{$index}}].startDate" md-min-date="row.directiveStudentObject.startDate"
+            <md-datepicker ng-model="row.startDate" name="students[{{$index}}].startDate" md-min-date="getMinDate(row.directiveStudentObject.startDate)"
               md-max-date="row.directiveStudentObject.endDate" aria-label="{{'main.from' | translate}}"></md-datepicker>
           </md-input-container>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].startDate'].$error">

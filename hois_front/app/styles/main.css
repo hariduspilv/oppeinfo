@@ -1745,6 +1745,12 @@ md-grid-tile {
   font-size: 12px;
 }
 
+.timetableWeekSelect {
+  height: 25px;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
 .timetableEvent div
 {
   padding:0px!important;
@@ -2349,9 +2355,14 @@ label.ui-btn {
   z-index: 20!important;
 }
 
+.fixed-md-table-container th {
+  background: #1976D2;
+  position: relative;
+  z-index: 10;
+}
+
 .fixed-md-table-container th.cross {
   background: #1669bb;
-  border-right: 1px solid #777;
   border-top: 1px rgba(0, 0, 0, 0.12) solid;
 }
 
@@ -2361,7 +2372,6 @@ label.ui-btn {
 
 .fixed-md-table-container td.fixed-cell {
   background: #eeeeee;
-  border-right: 1px solid #777;
   border-top: 1px rgba(0, 0, 0, 0.12) solid;
 }
 

@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.dto.timetable;
 
-public class TimetableStudentGroupCapacityDto extends TimetableCapacityDto {
+public class TimetableStudentGroupCapacityDto extends TimetableVocationalCapacityDto {
     private Long studentGroup;
     private Long journal;
 

@@ -57,6 +57,9 @@
               <div ng-if="canEdit">
                 <md-button md-no-ink class="md-primary change-button" ng-href="#/studyMaterial/higher/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
               </div>
+              <div ng-if="!canEdit">
+                <md-button md-no-ink class="md-primary change-button" ng-href="#/studyMaterial/higher/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
+              </div>
             </td>
           </tr>
         </tbody>

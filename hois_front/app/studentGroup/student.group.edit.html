@@ -30,7 +30,7 @@
         </md-input-container>
         <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{formState.curriculumVersionLabel | translate}}</label>
-          <hois-select ng-model="record.curriculumVersion" name="curriculumVersion" ng-disabled="formState.readonly" values="formState.curriculumVersions" ng-change="curriculumVersionChanged()" ng-required="formState.onlyvocational || formState.isVocational"></hois-select>
+          <hois-select ng-model="record.curriculumVersion" name="curriculumVersion" ng-disabled="formState.isVocational && formState.readonly" values="formState.curriculumVersions" ng-change="curriculumVersionChanged()" ng-required="formState.onlyvocational || formState.isVocational"></hois-select>
         </md-input-container>
       </div>
 

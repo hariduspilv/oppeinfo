@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.dto.student;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
@@ -398,7 +399,7 @@ public class StudentViewDto extends StudentForm {
     }
 
     public static StudentViewDto of(Student student) {
-        StudentViewDto dto = EntityUtil.bindToDto(student, new StudentViewDto());
+        StudentViewDto dto = EntityUtil.bindToDto(student, new StudentViewDto(), "specialNeeds");
 
         // header
         OisFile photo = student.getPhoto();
@@ -425,6 +426,7 @@ public class StudentViewDto extends StudentForm {
         dto.setCurriculum(EntityUtil.getId(curriculum));
         dto.setCurriculumCredits(curriculum.getCredits());
         dto.setSchoolEmail(student.getEmail());
+        dto.setSpecialNeeds(student.getSpecialNeeds().stream().map(n -> EntityUtil.getCode(n.getSpecialNeed())).collect(Collectors.toList()));
         return dto;
     }
 

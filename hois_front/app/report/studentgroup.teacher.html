@@ -126,8 +126,7 @@
     </div>
   </div>
   <div flex class="student-group-teacher-container">
-    <div class="container" fixed-column-table fixed-columns="1" 
-      ng-style="{height: windowHeight() - (formState.showAllParameters ? 500 : 300) + 'px'}">
+    <div class="container" fixed-column-table fixed-columns="1" resize-table search-criteria-height="{{formState.showAllParameters ? 550 : 350}}">
       <div ng-if="!record.showOnlyModuleGrades" ng-include="'report/studentgroup.teacher.table.html'"></div>
       <div ng-if="record.showOnlyModuleGrades" ng-include="'report/studentgroup.teacher.module.table.html'"></div>
     </div>

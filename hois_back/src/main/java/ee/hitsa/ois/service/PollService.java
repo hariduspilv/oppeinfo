@@ -3,6 +3,7 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -11,16 +12,20 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -44,6 +49,7 @@ import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.poll.Poll;
 import ee.hitsa.ois.domain.poll.PollJournal;
+import ee.hitsa.ois.domain.poll.PollResultStudentCommand;
 import ee.hitsa.ois.domain.poll.PollStudentGroup;
 import ee.hitsa.ois.domain.poll.PollTarget;
 import ee.hitsa.ois.domain.poll.PollTeacherComment;
@@ -79,6 +85,7 @@ import ee.hitsa.ois.message.PollReminderMessage;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -92,6 +99,7 @@ import ee.hitsa.ois.web.commandobject.poll.PollCommand;
 import ee.hitsa.ois.web.commandobject.poll.PollCommentCommand;
 import ee.hitsa.ois.web.commandobject.poll.PollDatesCommand;
 import ee.hitsa.ois.web.commandobject.poll.PollForm;
+import ee.hitsa.ois.web.commandobject.poll.PollResultStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.poll.PollSearchCommand;
 import ee.hitsa.ois.web.commandobject.poll.QuestionCommand;
 import ee.hitsa.ois.web.commandobject.poll.QuestionOrderCommand;
@@ -110,6 +118,10 @@ import ee.hitsa.ois.web.dto.poll.GraphOptions;
 import ee.hitsa.ois.web.dto.poll.GraphSearchDto;
 import ee.hitsa.ois.web.dto.poll.PollPracticeJournalDto;
 import ee.hitsa.ois.web.dto.poll.PollRelatedObjectsDto;
+import ee.hitsa.ois.web.dto.poll.PollResultStudentDto;
+import ee.hitsa.ois.web.dto.poll.PollResultStudentOrTeacherDto;
+import ee.hitsa.ois.web.dto.poll.PollResultsDto;
+import ee.hitsa.ois.web.dto.poll.PollResultsSubjectDto;
 import ee.hitsa.ois.web.dto.poll.PollSearchDto;
 import ee.hitsa.ois.web.dto.poll.PollTypeDto;
 import ee.hitsa.ois.web.dto.poll.PracticeThemesDto;
@@ -125,6 +137,14 @@ import ee.hitsa.ois.web.dto.poll.SubjectCommentDto;
 import ee.hitsa.ois.web.dto.poll.ThemeDto;
 import ee.hitsa.ois.web.dto.poll.ThemesDto;
 import ee.hitsa.ois.web.dto.poll.TitleOptions;
+import ee.hitsa.ois.web.dto.poll.xls.PollAnswerXlsDto;
+import ee.hitsa.ois.web.dto.poll.xls.PollAnswersXlsDto;
+import ee.hitsa.ois.web.dto.poll.xls.PollCommentXlsDto;
+import ee.hitsa.ois.web.dto.poll.xls.PollQuestionXlsDto;
+import ee.hitsa.ois.web.dto.poll.xls.PollResponseLegendXlsDto;
+import ee.hitsa.ois.web.dto.poll.xls.PollResponseXlsDto;
+import ee.hitsa.ois.web.dto.poll.xls.PollXlsDto;
+import ee.hitsa.ois.web.dto.poll.xls.QuestionAnswerXlsDto;
 
 @Transactional
 @Service
@@ -142,6 +162,9 @@ public class PollService {
     
     @Autowired
     private SchoolService schoolService;
+    
+    @Autowired
+    private XlsService xlsService;
     
     @Value("${hois.frontend.baseUrl}")
     private String frontendBaseUrl;
@@ -767,7 +790,8 @@ public class PollService {
             for (PracticeJournal journal : practiceJournals) {
                 Contract contract = journal.getContract();
                 List<Long> targetStudentGroups = poll.getPollStudentGroups().stream().map(p -> EntityUtil.getId(p.getStudentGroup())).collect(Collectors.toList());
-                if (contract != null && (isOverall || (targetStudentGroups.isEmpty() || targetStudentGroups.contains(journal.getStudent().getStudentGroup().getId())))) {
+                if (contract != null && (isOverall || (targetStudentGroups.isEmpty() || 
+                        (journal.getStudent() != null && journal.getStudent().getStudentGroup() != null &&  targetStudentGroups.contains(journal.getStudent().getStudentGroup().getId()))))) {
                     List<ContractSupervisor> supervisors = contract.getContractSupervisors().stream().filter(p -> p.getSupervisorEmail() != null).collect(Collectors.toList());
                     for (ContractSupervisor supervisor : supervisors) {
                         if (poll.getResponses().stream().noneMatch(p -> p.getResponseObject() != null &&
@@ -1339,9 +1363,8 @@ public class PollService {
         String SEARCH_SELECT = "distinct s.id";
         String SEARCH_FROM = "from declaration d "
                 + "join declaration_subject ds on d.id = ds.declaration_id "
-                + "join curriculum_version_hmodule cvh on ds.curriculum_version_hmodule_id = cvh.id "
-                + "join curriculum_version_hmodule_subject cvhs on cvhs.curriculum_version_hmodule_id = cvh.id "
-                + "join subject s on cvhs.subject_id = s.id";
+                + "join subject_study_period ssp on ssp.id = ds.subject_study_period_id "
+                + "join subject s on ssp.subject_id = s.id";
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM);
         qb.requiredCriteria("d.study_period_id = :studyPeriodId", "studyPeriodId", EntityUtil.getId(studyPeriod));
         qb.requiredCriteria("d.student_id = :studentId", "studentId", studentId);
@@ -1440,6 +1463,8 @@ public class PollService {
         dto.setResponseId(response.getId());
         dto.setStartDate(response.getPoll().getValidFrom());
         dto.setEndDate(response.getPoll().getValidThru());
+        Poll poll = response.getPoll();
+        dto.setName(new AutocompleteResult(poll.getId(), poll.getNameEt(), poll.getNameEn()));
     }
 
     public void setThemesPageable(HoisUserDetails user, Poll poll, ThemePageableCommand command) {
@@ -1986,7 +2011,13 @@ public class PollService {
                     " join response r on (rqa.response_id = r.id" +
                     (command.getJournalId() != null ? " and rs.response_id = r.id and rs.journal_id=" + command.getJournalId() : "") +
                     (command.getSubjectId() != null ? " and rs.response_id = r.id and rs.subject_id=" + command.getSubjectId() : "") +
-                    "))" + 
+                    ") join response_object ro on ro.response_id = r.id "
+                    + "join poll_target pt on ro.poll_target_id = pt.id" +
+                    (command.getStudents() != null && command.getStudents().booleanValue() ? " and pt.target_code = 'KYSITLUS_SIHT_O'" : "" ) +
+                    (command.getTeachers() != null && command.getTeachers().booleanValue() ? " and pt.target_code = 'KYSITLUS_SIHT_T'" : "" ) +
+                    (command.getEnterpriseId() != null ? (" and pt.target_code = 'KYSITLUS_SIHT_E' join contract_supervisor cs on cs.id = ro.contract_supervisor_id "
+                            + "join contract c on (cs.contract_id = c.id and c.enterprise_id = " + command.getEnterpriseId() +  ")") : "") +
+                    ")" + 
                     " T4 on (T4.question_answer_id = qa.id and T4.poll_id = pp.id)" + 
                 " left join (select min(qa1.answer_nr) as min_nr, max(qa1.answer_nr) as max_nr,qa1.question_id" + 
                     " from question_answer qa1" + 
@@ -2123,5 +2154,775 @@ public class PollService {
         comment.setAddInfo(command.getComment());
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.save(comment, em);
+    }
+
+    public PollResultsDto pollResults(Poll poll) {
+        String SEARCH_SELECT = "r.status_code";
+        String SEARCH_FROM = "from response r join response_object ro on ro.response_id = r.id";
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM);        
+        qb.requiredCriteria("r.poll_id = :pollId", "pollId", EntityUtil.getId(poll));
+        qb.filter("r.status_code != 'KYSITVASTUSSTAATUS_A'");
+        List<?> dbResponses = qb.select(SEARCH_SELECT, em).getResultList();
+        long partly = 0;
+        long all = 0;
+        for (Object r : dbResponses) {
+            String statusCode = resultAsString(r, 0);
+            if ("KYSITVASTUSSTAATUS_P".equals(statusCode)) {
+                all++;
+                partly++;
+            } else if ("KYSITVASTUSSTAATUS_V".equals(statusCode)) {
+                all++;
+            }
+        }
+        PollResultsDto dto = new PollResultsDto();
+        dto.setPoll(new AutocompleteResult(EntityUtil.getId(poll), poll.getNameEt(), poll.getNameEn()));
+        dto.setType(poll.getType().getCode());
+        dto.setAllResponses(Long.valueOf(all));
+        dto.setPartialResponses(Long.valueOf(partly));
+        return dto;
+    }
+    
+    public Page<PollResultsSubjectDto> pollResultSubjects(HoisUserDetails user, Poll poll, Pageable pageable) {
+        boolean isHigherSchool = schoolService.schoolType(user.getSchoolId()).isHigher();
+        Long pollId = EntityUtil.getId(poll);
+        String SEARCH_SELECT = (isHigherSchool ? " s.id as subjectId, s.name_et as subjectEt, s.name_en as subjectEn, s.code," : 
+                " jj.id as journalId, jj.name_et as journalEt, jj.name_et as journalEn, jj.name_et as filler,") + 
+                    " string_agg((p.firstname || ' ' || p.lastname), ', ') as teachers";
+        String SEARCH_FROM = "from " + 
+                (isHigherSchool ? 
+                "study_period sp " + 
+                "join subject_study_period ssp on (sp.id = ssp.study_period_id and " + EntityUtil.getId(poll.getStudyPeriod()) + " = sp.id) " + 
+                "join subject s on ssp.subject_id = s.id " +
+                "join subject_study_period_teacher sspt on ssp.id = sspt.subject_study_period_id " + 
+                "join teacher t on t.id = sspt.teacher_id " +
+                "join person p on t.person_id = p.id" :
+                "poll_journal pj " + 
+                "join journal jj on (pj.journal_id = jj.id and pj.poll_id = " + pollId + ") " +
+                "join journal_teacher jt on jj.id = jt.journal_id " + 
+                "join teacher t on t.id = jt.teacher_id " +
+                "join person p on t.person_id = p.id"); 
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable);
+        qb.filter("exists( select 1 " + 
+                "from response r " + 
+                "join response_object ro on ro.response_id = r.id " +
+                "and (r.status_code = '" + ResponseStatus.KYSITVASTUSSTAATUS_P.name() + "' " +
+                "or r.status_code = '" + ResponseStatus.KYSITVASTUSSTAATUS_V.name() + "') " + 
+                "join response_subject rs  on rs.response_id = r.id " + 
+                (isHigherSchool ? "join declaration dd on dd.study_period_id = sp.id and dd.student_id = ro.student_id " + 
+                        "join declaration_subject ds on dd.id = ds.declaration_id and ds.subject_study_period_id = ssp.id " : "") +
+                "where r.poll_id = " + pollId + " and " + (isHigherSchool ? "rs.subject_id = s.id" : "rs.journal_id = pj.journal_id") + ")");
+        qb.groupBy((isHigherSchool ? "s.id, s.name_et, s.name_en, s.code" : "jj.id, jj.name_et"));
+        return JpaQueryUtil.pagingResult(qb, SEARCH_SELECT, em, pageable).map(r -> {
+            PollResultsSubjectDto dto = new PollResultsSubjectDto();
+            if (isHigherSchool) {
+                dto.setName(new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1) + " (" + resultAsString(r, 3) + ")", resultAsString(r, 2) + " (" + resultAsString(r, 3) + ")"));
+            } else {
+                dto.setName(new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)));
+            }
+            dto.setTeachers(resultAsString(r, 4));
+            return dto; 
+        });
+    }
+
+    public Page<PollResultStudentDto> pollResultStudent(PollResultStudentCommand command,
+            Pageable pageable) {
+        String SEARCH_FROM = "from response r "
+                + "join response_object ro on ro.response_id = r.id "
+                + "join student s on s.id = ro.student_id "
+                + "join student_group sg on s.student_group_id = sg.id "
+                + "join person p on p.id = s.person_id "
+                + "join response_subject rs on rs.response_id = r.id";
+        String SEARCH_SELECT = "(p.firstname || ' ' || p.lastname) as studentName, sg.code, r.status_code";
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable);
+        qb.optionalContains("p.firstname || ' ' || p.lastname", "name", command.getStudentName());
+        qb.optionalCriteria("rs.journal_id = :journalId", "journalId", command.getJournalId());
+        qb.optionalCriteria("rs.subject_id = :subjectId", "subjectId", command.getSubjectId());
+        qb.requiredCriteria("r.poll_id = :pollId", "pollId", command.getPollId());
+        qb.filter("(r.status_code = 'KYSITVASTUSSTAATUS_P' or r.status_code = 'KYSITVASTUSSTAATUS_V')");
+
+        return JpaQueryUtil.pagingResult(qb, SEARCH_SELECT, em, pageable).map(r -> {
+            PollResultStudentDto dto = new PollResultStudentDto();
+            dto.setName(resultAsString(r, 0));
+            dto.setStudentGroup(resultAsString(r, 1));
+            dto.setStatus(resultAsString(r, 2));
+            return dto; 
+        });
+    }
+    
+    public void exportStatistics(HoisUserDetails user, HttpServletResponse response, PollResultStatisticsCommand criteria) throws IOException {
+        PollXlsDto pollDto = new PollXlsDto();
+        School school = em.getReference(School.class, user.getSchoolId());
+        if (school != null) {
+            pollDto.setHigher(Boolean.valueOf(schoolService.schoolType(EntityUtil.getId(school)).isHigher()));
+        }
+        List<PollTarget> pollTargets = em.createQuery("select pt as target from PollTarget pt "
+                + "where pt.poll.id in ?1 ", PollTarget.class)
+                .setParameter(1, criteria.getPollIds())
+                .getResultList();
+        if (pollTargets != null && !pollTargets.isEmpty()) {
+            setXlsDtoTargets(pollTargets, pollDto);
+        }
+        setStatisticsLegend(pollDto, criteria);
+        setStatisticsTableHeader(pollDto);
+        setStatisticsResponses(pollDto, criteria);
+        Map<String, Object> data = new HashMap<>();
+        data.put("poll", pollDto);
+        HttpUtil.xls(response, "pollstatistics.xlsx", xlsService.generate("pollstatistics.xlsx", data));
+    }
+    
+    private static void setStatisticsTableHeader(PollXlsDto dto) {
+        List<String> header = new ArrayList<>();
+        header.add("poll.code");
+        if (dto.getTargetStudent().booleanValue()) {
+            header.add("poll.student.code");
+            header.add("poll.student.studyform");
+            header.add("poll.student.curriculum");
+        }
+        if (dto.getTargetTeacher().booleanValue()) header.add("poll.teacher.code");
+        if (dto.getUsePersonCode().booleanValue()) header.add("poll.person.code");
+        header.add("poll.other.code");
+        if (dto.getTargetEnterprise().booleanValue()) header.add("poll.enterprise");
+        header.add("poll.teacher");
+        if (dto.getHigher() != null && dto.getHigher().booleanValue()) {
+            header.add("poll.subject");
+            header.add("poll.subject.code");
+        } else {
+            header.add("poll.journal");
+        }
+        List<String> headerResults = new ArrayList<>();
+        for (PollResponseLegendXlsDto legend : dto.getLegend()) {
+            for (PollQuestionXlsDto question : legend.getQuestions()) {
+                if ("VASTUS_M".equals(question.getType()) || "VASTUS_S".equals(question.getType())) {
+                    headerResults.addAll(question.getAnswers().stream().map(p -> question.getCode() + "(" + p.getOrderNr() + ")").collect(Collectors.toList()));
+                } else {
+                    headerResults.add(question.getCode());
+                }
+            }
+        }
+        dto.setTableHeader(header);
+        dto.setTableHeaderResults(headerResults);
+    }
+    
+    private void setStatisticsLegend(PollXlsDto dto, PollResultStatisticsCommand criteria) {
+        String SEARCH_SELECT = "distinct q.id as questionId, q.name_et as questionEt, q.name_en as questionEn,"
+                + " q.type_code, qa.order_nr as answerOrder, qa.name_et as answerEt, qa.name_en as answerEn, qa.id as answerId,"
+                + " qa.answer_nr as weight";
+        
+        String SEARCH_FROM = "from poll_theme pt "
+                + "join poll_theme_question ptq on ptq.poll_theme_id = pt.id "
+                + "join question q on q.id = ptq.question_id "
+                + "left join question_answer qa on qa.question_id = q.id";
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM);
+        qb.requiredCriteria("pt.poll_id in :pollIds", "pollIds", criteria.getPollIds());
+        qb.optionalCriteria("q.id in :questionIds", "questionIds", criteria.getQuestions());
+        List<?> questions = qb.sort("q.id, qa.order_nr").select(SEARCH_SELECT, em).getResultList();
+        List<PollResponseLegendXlsDto> legend = new ArrayList<>();
+        PollResponseLegendXlsDto legendTheme = new PollResponseLegendXlsDto();
+        legend.add(legendTheme);
+        for (Object r : questions) {
+            Long questionId = resultAsLong(r, 0);
+            Optional<PollQuestionXlsDto> questionOpt = legendTheme.getQuestions().stream().filter(p -> p.getName().getId().equals(questionId)).findFirst();
+            PollQuestionXlsDto question;
+            if (questionOpt.isPresent()) {
+                question = questionOpt.get();
+            } else {
+                question = new PollQuestionXlsDto();
+                question.setCode("K" + questionId);
+                question.setName(new AutocompleteResult(questionId, resultAsString(r, 1), resultAsString(r, 2)));
+                String type = resultAsString(r, 3);
+                question.setType(type);
+                if ("VASTUS_T".equals(type)) question.setHasAnswers(Boolean.FALSE);
+                legendTheme.getQuestions().add(question);
+            }
+            Long answerId = resultAsLong(r, 7);
+            if (answerId != null) {
+                AutocompleteResult answer = new AutocompleteResult(resultAsLong(r, 7), resultAsString(r, 5), resultAsString(r, 6));
+                QuestionAnswerXlsDto answerDto = new QuestionAnswerXlsDto();
+                answerDto.setName(answer);
+                answerDto.setOrderNr(resultAsLong(r, 4));
+                answerDto.setWeight(resultAsLong(r, 8));
+                question.getAnswers().add(answerDto);
+            }
+        }
+        dto.setLegend(legend);
+    }
+    
+    
+    
+    public byte[] searchExcel(PollResultStudentCommand criteria) {
+        PollXlsDto pollDto = new PollXlsDto();
+        Poll poll = em.getReference(Poll.class, criteria.getPollId());
+        pollDto.setId(criteria.getPollId());
+        pollDto.setName(AutocompleteResult.of(poll));
+        pollDto.setType(poll.getType().getCode());
+        pollDto.setValidFrom(poll.getValidFrom());
+        pollDto.setValidThru(poll.getValidThru());
+        School school = poll.getSchool();
+        if (school != null) {
+            pollDto.setHigher(Boolean.valueOf(schoolService.schoolType(EntityUtil.getId(school)).isHigher()));
+        }
+        StudyPeriod studyPeriod = poll.getStudyPeriod();
+        if (studyPeriod != null && studyPeriod.getStudyYear() != null) {
+            pollDto.setStudyPeriod(AutocompleteResult.ofWithYear(studyPeriod));
+            pollDto.setHasStudyPeriod(Boolean.TRUE);
+        } else if (studyPeriod != null) { 
+            pollDto.setStudyPeriod(AutocompleteResult.of(studyPeriod));
+            pollDto.setHasStudyPeriod(Boolean.TRUE);
+        }
+        List<PollTarget> pollTargets = poll.getPollTargets();   
+        if (pollTargets != null && !pollTargets.isEmpty()) {
+            setXlsDtoTargets(pollTargets, pollDto);
+        }
+        boolean isSubjectPoll = "KYSITLUS_O".equals(pollDto.getType());
+        setLegend(pollDto, criteria);
+        setTableHeader(pollDto);
+        setResponses(pollDto, criteria);
+        if (isSubjectPoll) setComments(pollDto, criteria);
+        Map<String, Object> data = new HashMap<>();
+        data.put("poll", pollDto);
+        return xlsService.generate(isSubjectPoll ? "pollsubjectresultcomment.xls" : "pollsubjectresult.xls", data);
+    }
+
+    private void setComments(PollXlsDto pollDto, PollResultStudentCommand criteria) {
+        String SEARCH_SELECT = "ptc.add_info, s.id as subjectId, s.name_et as subjectEt, s.name_en as subjectEn, s.code, j.id as journalId, j.name_et as journalEt, (p.firstname || ' ' || p.lastname)";
+        
+        String SEARCH_FROM = "from poll_teacher_comment ptc "
+                + "join teacher t on t.id = ptc.teacher_id "
+                + "join person p on p.id = t.person_id "
+                + "left join subject s on s.id = ptc.subject_id "
+                + "left join journal j on j.id = ptc.journal_id ";
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM);        
+        qb.requiredCriteria("ptc.poll_id = :pollId", "pollId", criteria.getPollId());
+        qb.optionalCriteria("ptc.subject_id = :subjectId", "subjectId", criteria.getSubjectId());
+        qb.optionalCriteria("ptc.journal_id = :journalId", "journalId", criteria.getJournalId());
+        List<?> dbComments = qb.select(SEARCH_SELECT, em).getResultList();
+        List<PollCommentXlsDto> comments = StreamUtil
+                .toMappedList(r-> {
+                    PollCommentXlsDto dto = new PollCommentXlsDto();
+                    dto.setPollId(criteria.getPollId());
+                    dto.setComment(resultAsString(r, 0));
+                    Long subjectId = resultAsLong(r, 1);
+                    if (subjectId != null) {
+                        dto.setName(new AutocompleteResult(subjectId, resultAsString(r, 2), resultAsString(r, 3)));
+                        dto.setSubjectCode(resultAsString(r, 4));
+                    } else {
+                        dto.setName(new AutocompleteResult(resultAsLong(r, 5), resultAsString(r, 6), resultAsString(r, 6)));
+                    }
+                    dto.setTeacher(resultAsString(r, 7));
+                    return dto;
+                }, dbComments);
+        pollDto.setComments(comments);
+    }
+    
+    private void setStatisticsResponses(PollXlsDto pollDto, PollResultStatisticsCommand criteria) {
+        boolean displaySubject = pollDto.getHigher() != null && pollDto.getHigher().booleanValue();
+        boolean displayJournal = pollDto.getHigher() == null || !pollDto.getHigher().booleanValue();
+        String SEARCH_SELECT = "r.poll_id as pollId, ro.student_id, ss.name_et as formEt, ss.name_en as formEn, ss.code as curriculumCode, "
+                + "ro.teacher_id, ro.person_id, r.id as responseId, ee.name, pt.target_code, "
+                + "string_agg(concat(qa.id, ':',rqa.question_id, ':', qa.answer_nr, ':', rqa.answer_txt), '`') as answers "
+                + ", string_agg(distinct nullif(concat(p.firstname, ' ', p.lastname), ' '), ', ') as teachers "
+                + (displaySubject ? ", s.name_et as subjectEt, s.name_en as subjectEn, s.code as subjectcode" : "")
+                + (displayJournal ? ", j.name_et as journalEt" : "");
+        String SEARCH_FROM = "from response r "
+                + "join response_object ro on ro.response_id = r.id "
+                + "join poll_target pt on pt.id = ro.poll_target_id "
+                    + "left join (select s.id, c.name_et, c.name_en, cu.code from student s "
+                    + "left join classifier c on c.code = s.study_form_code "
+                    + "left join curriculum_version cv on cv.id = s.curriculum_version_id "
+                    + "left join curriculum cu on cu.id = cv.curriculum_id) ss on ss.id = ro.student_id "
+                + "left join (select pj.id, e.name from practice_journal pj "
+                    + "join contract co on co.id = pj.contract_id "
+                    + "join enterprise e on e.id = co.enterprise_id ) ee on ro.practice_journal_id = ee.id "
+                + "left join response_subject rs on rs.response_id = r.id " 
+                + (displayJournal ? " left join journal j on j.id=rs.journal_id"
+                + " left join journal_teacher jt on jt.journal_id=rs.journal_id"
+                + " left join teacher t on (jt.teacher_id = t.id and t.is_active = true)"
+                + " left join person p on t.person_id = p.id " : "") 
+                + (displaySubject ? " left join subject s on s.id = rs.subject_id"
+                + " join subject_study_period stp on stp.subject_id = s.id"
+                + " left join subject_study_period_teacher sspt on sspt.subject_study_period_id = stp.id "
+                + " left join teacher t on (sspt.teacher_id = t.id and t.is_active = true)"
+                + " left join person p on t.person_id = p.id" : "")
+                + " join response_question_answer rqa on (rqa.response_id = r.id)"
+                    + " left join question_answer qa on qa.id = rqa.question_answer_id ";
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM);
+        qb.requiredCriteria("r.poll_id in :pollIds", "pollIds", criteria.getPollIds());
+        qb.requiredCriteria("rqa.question_id in :questionIds", "questionIds", criteria.getQuestions());
+        List<?> questions = qb.groupBy("ro.student_id, ss.name_et, ss.name_en, ss.code, ro.teacher_id, ro.person_id, r.id, ee.name, pt.target_code"
+                + (displaySubject ? ", s.name_en, s.name_et, s.code" : "")
+                + (displayJournal ? ", j.name_et" : ""))
+                .select(SEARCH_SELECT, em).getResultList();
+        List<PollAnswersXlsDto> responses = StreamUtil
+                .toMappedList(r-> {
+                    PollAnswersXlsDto dto = new PollAnswersXlsDto();
+                    dto.getBasicData().add(new AutocompleteResult(null, String.valueOf(resultAsLong(r, 0)), String.valueOf(resultAsLong(r, 0))));
+                    String target = resultAsString(r, 9);
+                    boolean targetStudent = "KYSITLUS_SIHT_O".equals(target);
+                    boolean targetTeacher = "KYSITLUS_SIHT_T".equals(target);
+                    boolean targetEnterprise = "KYSITLUS_SIHT_E".equals(target);
+                    if (pollDto.getTargetStudent().booleanValue()) {
+                        Long studentId = resultAsLong(r, 1);
+                        if (studentId != null && targetStudent) {
+                            String studentIdString = studentId + generateRandomNr();
+                            dto.getBasicData().add(new AutocompleteResult(null, studentIdString, studentIdString));
+                            dto.getBasicData().add(new AutocompleteResult(null, resultAsString(r, 2), resultAsString(r, 3)));
+                            dto.getBasicData().add(new AutocompleteResult(null, resultAsString(r, 4), resultAsString(r, 4)));
+                        } else {
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                        }
+                    }
+                    if (pollDto.getTargetTeacher().booleanValue()) {
+                        Long teacherId = resultAsLong(r, 5);
+                        if (teacherId != null && targetTeacher) {
+                            String teacherIdString = teacherId + generateRandomNr();
+                            dto.getBasicData().add(new AutocompleteResult(null, teacherIdString, teacherIdString));
+                        } else {
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                        }
+                    }
+                    if (pollDto.getUsePersonCode().booleanValue()) {
+                        Long personId = resultAsLong(r, 6);
+                        if (personId != null && !targetTeacher && !targetStudent) {
+                            String personIdString = personId + generateRandomNr();
+                            dto.getBasicData().add(new AutocompleteResult(null, personIdString, personIdString));
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                        } else if (personId == null) {
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                            String responseIdString = resultAsLong(r, 7).toString();
+                            dto.getBasicData().add(new AutocompleteResult(null, responseIdString, responseIdString));
+                        } else {
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                        }
+                    }
+                    if (pollDto.getTargetEnterprise().booleanValue()) {
+                        String enterprise = resultAsString(r, 8);
+                        if (enterprise != null && targetEnterprise) {
+                            dto.getBasicData().add(new AutocompleteResult(null, enterprise, enterprise));
+                        } else {
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                        }
+                    }
+                    String teachers = resultAsString(r, 11);
+                    if (!StringUtils.isEmpty(teachers)) {
+                        dto.getBasicData().add(new AutocompleteResult(null, teachers, teachers));
+                    } else {
+                        dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                    }
+                    if (pollDto.getHigher() != null && pollDto.getHigher().booleanValue()) {
+                        String studyPeriodEt = resultAsString(r, 12);
+                        if (!StringUtils.isEmpty(studyPeriodEt)) {
+                            dto.getBasicData().add(new AutocompleteResult(null, studyPeriodEt, resultAsString(r, 13)));
+                        } else {
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                        }
+                        String subjectCode = resultAsString(r, 14);
+                        if (!StringUtils.isEmpty(subjectCode)) {
+                            dto.getBasicData().add(new AutocompleteResult(null, subjectCode, subjectCode));
+                        } else {
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                        }
+                    } else {
+                        String journal = resultAsString(r, 12);
+                        if (!StringUtils.isEmpty(journal)) {
+                            dto.getBasicData().add(new AutocompleteResult(null, journal, journal));
+                        } else {
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                        }
+                    }
+                    String answersText = resultAsString(r, 10);
+                    List<String> answers = Arrays.asList(answersText.split("`"));
+                    List<PollAnswerXlsDto> answerDtos = new ArrayList<>();
+                    for (String answer : answers) {
+                        List<String> questionIdanswerNranswerTxt = Arrays.asList(answer.split(":", 4));
+                        PollAnswerXlsDto answerDto = new PollAnswerXlsDto();
+                        String answerIdString = questionIdanswerNranswerTxt.get(0);
+                        String weightString = questionIdanswerNranswerTxt.get(2);
+                        if (!StringUtils.isEmpty(answerIdString)) {
+                            answerDto.setAnswerId(Long.valueOf(answerIdString));
+                        }
+                        if (!StringUtils.isEmpty(weightString)) {
+                            answerDto.setWeight(Short.valueOf(weightString));
+                        }
+                        Long questionId = Long.valueOf(questionIdanswerNranswerTxt.get(1));
+                        String answerTxt = questionIdanswerNranswerTxt.get(3);
+                        answerDto.setQuestionId(questionId);
+                        answerDto.setAnswerTxt(answerTxt);
+                        answerDtos.add(answerDto);
+                    }
+                    dto.setAnswers(answerDtos);
+                    return dto;
+                }, questions);
+        mapXlsAnswers(responses, pollDto);
+    }
+
+    private void setResponses(PollXlsDto pollDto, PollResultStudentCommand criteria) {
+        boolean isResponseSubject = "KYSITLUS_O".equals(pollDto.getType());
+        boolean displaySubject = (criteria.getSubjectId() != null || (pollDto.getHigher() != null && pollDto.getHigher().booleanValue()));
+        boolean displayJournal = (criteria.getJournalId() != null || (pollDto.getHigher() == null || !pollDto.getHigher().booleanValue()));
+        String SEARCH_SELECT = "ro.student_id, ss.name_et as formEt, ss.name_en as formEn, ss.code as curriculumCode, "
+                + "ro.teacher_id, ro.person_id, r.id as responseId, ee.name, pt.target_code, "
+                + "string_agg(concat(qa.id, ':',rqa.question_id, ':', qa.answer_nr, ':', rqa.answer_txt), '`') as answers "
+                + (isResponseSubject ? ", string_agg(distinct nullif(concat(p.firstname, ' ', p.lastname), ' '), ', ') as teachers "
+                + (displaySubject ? ", s.name_et as subjectEt, s.name_en as subjectEn, s.code as subjectcode" : "")
+                + (displayJournal ? ", j.name_et as journalEt" : "") : "");
+        String SEARCH_FROM = "from response r "
+                + "join response_object ro on ro.response_id = r.id "
+                + "join poll_target pt on pt.id = ro.poll_target_id "
+                    + "left join (select s.id, c.name_et, c.name_en, cu.code from student s "
+                    + "left join classifier c on c.code = s.study_form_code "
+                    + "left join curriculum_version cv on cv.id = s.curriculum_version_id "
+                    + "left join curriculum cu on cu.id = cv.curriculum_id) ss on ss.id = ro.student_id "
+                + (criteria.getEnterpriseId() != null ? "" : "left ") + "join (select pj.id, e.name from practice_journal pj "
+                    + "join contract co on co.id = pj.contract_id "
+                    + "join enterprise e on e.id = co.enterprise_id " 
+                    + (criteria.getEnterpriseId() != null ? "and e.id = " + criteria.getEnterpriseId() : "") 
+                    + ") ee on ro.practice_journal_id = ee.id "
+                + (isResponseSubject ? "join response_subject rs on rs.response_id = r.id " 
+                + (displayJournal ? (criteria.getJournalId() != null ? "and rs.journal_id = " + criteria.getJournalId() : "")
+                + " join journal j on j.id=rs.journal_id"
+                + " left join journal_teacher jt on jt.journal_id=rs.journal_id"
+                + " left join teacher t on (jt.teacher_id = t.id and t.is_active = true)"
+                + " left join person p on t.person_id = p.id " : "") 
+                + (displaySubject ? (criteria.getSubjectId() != null ? "and rs.subject_id = " + criteria.getSubjectId() : "")
+                + " join subject s on s.id = rs.subject_id"
+                + " join subject_study_period stp on stp.subject_id = s.id"
+                + " left join subject_study_period_teacher sspt on sspt.subject_study_period_id = stp.id "
+                + " left join teacher t on (sspt.teacher_id = t.id and t.is_active = true)"
+                + " left join person p on t.person_id = p.id" : "") : "")
+                + " join response_question_answer rqa on (rqa.response_id = r.id" 
+                + (isResponseSubject ? " and rqa.response_subject_id = rs.id)" : ") ") 
+                    + " left join question_answer qa on qa.id = rqa.question_answer_id ";
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM);
+        qb.requiredCriteria("r.poll_id = :pollId", "pollId", criteria.getPollId());
+        if (criteria.getEnterpriseId() != null) qb.filter("pt.target_code = 'KYSITLUS_SIHT_E'");
+        if (criteria.getStudents() != null && criteria.getStudents().booleanValue()) qb.filter("pt.target_code = 'KYSITLUS_SIHT_O'");
+        if (criteria.getTeachers() != null && criteria.getTeachers().booleanValue()) qb.filter("pt.target_code = 'KYSITLUS_SIHT_T'");
+        List<?> questions = qb.groupBy("ro.student_id, ss.name_et, ss.name_en, ss.code, ro.teacher_id, ro.person_id, r.id, ee.name, pt.target_code"
+                + (isResponseSubject ? (displaySubject ? ", s.name_en, s.name_et, s.code" : "")
+                + (displayJournal ? ", j.name_et" : "") : ""))
+                .select(SEARCH_SELECT, em).getResultList();
+        List<PollAnswersXlsDto> responses = StreamUtil
+                .toMappedList(r-> {
+                    PollAnswersXlsDto dto = new PollAnswersXlsDto();
+                    String pollIdString = criteria.getPollId().toString();
+                    String target = resultAsString(r, 8);
+                    boolean targetStudent = "KYSITLUS_SIHT_O".equals(target);
+                    boolean targetTeacher = "KYSITLUS_SIHT_T".equals(target);
+                    boolean targetEnterprise = "KYSITLUS_SIHT_E".equals(target);
+                    dto.getBasicData().add(new AutocompleteResult(null, pollIdString, pollIdString));
+                    if (pollDto.getTargetStudent().booleanValue()) {
+                        Long studentId = resultAsLong(r, 0);
+                        if (studentId != null && targetStudent) {
+                            String studentIdString = studentId + generateRandomNr();
+                            dto.getBasicData().add(new AutocompleteResult(null, studentIdString, studentIdString));
+                            dto.getBasicData().add(new AutocompleteResult(null, resultAsString(r, 1), resultAsString(r, 2)));
+                            dto.getBasicData().add(new AutocompleteResult(null, resultAsString(r, 3), resultAsString(r, 3)));
+                        } else {
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                        }
+                    }
+                    if (pollDto.getTargetTeacher().booleanValue()) {
+                        Long teacherId = resultAsLong(r, 4);
+                        if (teacherId != null && targetTeacher) {
+                            String teacherIdString = teacherId + generateRandomNr();
+                            dto.getBasicData().add(new AutocompleteResult(null, teacherIdString, teacherIdString));
+                        } else {
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                        }
+                    }
+                    if (pollDto.getUsePersonCode().booleanValue()) {
+                        Long personId = resultAsLong(r, 5);
+                        if (personId != null && !targetTeacher && !targetStudent) {
+                            String personIdString = personId + generateRandomNr();
+                            dto.getBasicData().add(new AutocompleteResult(null, personIdString, personIdString));
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                        } else if (personId == null) {
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                            String responseIdString = resultAsLong(r, 6).toString();
+                            dto.getBasicData().add(new AutocompleteResult(null, responseIdString, responseIdString));
+                        } else {
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                        }
+                    }
+                    if (pollDto.getTargetEnterprise().booleanValue()) {
+                        String enterprise = resultAsString(r, 7);
+                        if (enterprise != null && targetEnterprise) {
+                            dto.getBasicData().add(new AutocompleteResult(null, enterprise, enterprise));
+                        } else {
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                        }
+                    }
+                    if (isResponseSubject) {
+                        String teachers = resultAsString(r, 10);
+                        if (!StringUtils.isEmpty(teachers)) {
+                            dto.getBasicData().add(new AutocompleteResult(null, teachers, teachers));
+                        } else {
+                            dto.getBasicData().add(new AutocompleteResult(null, "-", "-"));
+                        }
+                        if (pollDto.getStudyPeriod() != null) {
+                            dto.getBasicData().add(new AutocompleteResult(null, resultAsString(r, 11), resultAsString(r, 12)));
+                            dto.getBasicData().add(new AutocompleteResult(null, resultAsString(r, 13), resultAsString(r, 13)));
+                        } else {
+                            dto.getBasicData().add(new AutocompleteResult(null, resultAsString(r, 11), resultAsString(r, 11)));
+                        }
+                    }
+                    String answersText = resultAsString(r, 9);
+                    List<String> answers = Arrays.asList(answersText.split("`"));
+                    List<PollAnswerXlsDto> answerDtos = new ArrayList<>();
+                    for (String answer : answers) {
+                        List<String> questionIdanswerNranswerTxt = Arrays.asList(answer.split(":", 4));
+                        PollAnswerXlsDto answerDto = new PollAnswerXlsDto();
+                        String answerIdString = questionIdanswerNranswerTxt.get(0);
+                        String weightString = questionIdanswerNranswerTxt.get(2);
+                        if (!StringUtils.isEmpty(answerIdString)) {
+                            answerDto.setAnswerId(Long.valueOf(answerIdString));
+                        }
+                        if (!StringUtils.isEmpty(weightString)) {
+                            answerDto.setWeight(Short.valueOf(weightString));
+                        }
+                        Long questionId = Long.valueOf(questionIdanswerNranswerTxt.get(1));
+                        String answerTxt = questionIdanswerNranswerTxt.get(3);
+                        answerDto.setQuestionId(questionId);
+                        answerDto.setAnswerTxt(answerTxt);
+                        answerDtos.add(answerDto);
+                    }
+                    dto.setAnswers(answerDtos);
+                    return dto;
+                }, questions);
+        mapXlsAnswers(responses, pollDto);
+    }
+    
+    private static String generateRandomNr() {
+        //cant end with 0, needs to be between 1000 and 9999
+        Random rand = new Random();
+        String randomNr = String.valueOf(rand.nextInt((9999 - 1000) + 1) + 1000);
+        if (randomNr.endsWith("0")) {
+            randomNr = randomNr.substring(0, 3) + "1";
+        }
+        return randomNr;
+    }
+
+    private static void mapXlsAnswers(List<PollAnswersXlsDto> responses, PollXlsDto dto) {
+        for (PollAnswersXlsDto response : responses) {
+            List<PollAnswerXlsDto> answers = response.getAnswers();
+            List<Object> mapper = new ArrayList<>();
+            for (PollResponseLegendXlsDto legend : dto.getLegend()) {
+                if (dto.getId() != null) mapper.add(legend.getCode());
+                for (PollQuestionXlsDto question : legend.getQuestions()) {
+                    if ("VASTUS_M".equals(question.getType()) || "VASTUS_S".equals(question.getType())) {
+                        for (QuestionAnswerXlsDto answerDto : question.getAnswers()) {
+                            Optional<PollAnswerXlsDto> answer = Optional.empty();
+                            if (answers != null) {
+                                answer = answers.stream().filter(p -> answerDto.getName().getId().equals(p.getAnswerId())).findFirst();
+                            }
+                            if (answer.isPresent()) {
+                                mapper.add(answer.get().getWeight());
+                            } else {
+                                mapper.add("-");
+                            }
+                        }
+                    } else {
+                        Optional<PollAnswerXlsDto> answer = Optional.empty();
+                        if (answers != null) {
+                            answer = answers.stream().filter(p -> question.getName().getId().equals(p.getQuestionId())).findFirst();
+                        }
+                        if (answer.isPresent()) {
+                            if ("VASTUS_T".equals(question.getType())) {
+                                mapper.add(answer.get().getAnswerTxt());
+                            } else {
+                                if (answer.get().getWeight() == null) {
+                                    mapper.add("-");
+                                } else {
+                                    mapper.add(answer.get().getWeight());
+                                }
+                            }
+                        } else {
+                            mapper.add("-");
+                        }
+                    }
+                }
+            }
+            PollResponseXlsDto responseDto = new PollResponseXlsDto();
+            responseDto.setQuestionAnswer(mapper);
+            responseDto.setBasicData(response.getBasicData());
+            dto.getResponses().add(responseDto);
+        }
+    }
+
+    private static void setTableHeader(PollXlsDto dto) {
+        List<String> header = new ArrayList<>();
+        header.add("poll.code");
+        if (dto.getTargetStudent().booleanValue()) {
+            header.add("poll.student.code");
+            header.add("poll.student.studyform");
+            header.add("poll.student.curriculum");
+        }
+        if (dto.getTargetTeacher().booleanValue()) header.add("poll.teacher.code");
+        if (dto.getUsePersonCode().booleanValue()) header.add("poll.person.code");
+        header.add("poll.other.code");
+        if (dto.getTargetEnterprise().booleanValue()) header.add("poll.enterprise");
+        if ("KYSITLUS_O".equals(dto.getType())) {
+            header.add("poll.teacher");
+            if (dto.getStudyPeriod() != null) {
+                header.add("poll.subject");
+                header.add("poll.subject.code");
+            } else {
+                header.add("poll.journal");
+            }
+        }
+        List<String> headerResults = new ArrayList<>();
+        for (PollResponseLegendXlsDto legend : dto.getLegend()) {
+            headerResults.add("poll.theme.code");
+            for (PollQuestionXlsDto question : legend.getQuestions()) {
+                if ("VASTUS_M".equals(question.getType()) || "VASTUS_S".equals(question.getType())) {
+                    headerResults.addAll(question.getAnswers().stream().map(p -> question.getCode() + "(" + p.getOrderNr() + ")").collect(Collectors.toList()));
+                } else {
+                    headerResults.add(question.getCode());
+                }
+            }
+        }
+        dto.setTableHeader(header);
+        dto.setTableHeaderResults(headerResults);
+    }
+
+    private static void setXlsDtoTargets(List<PollTarget> pollTargets, PollXlsDto dto) {
+        for (PollTarget target : pollTargets) {
+            if (target.getTarget() != null) {
+                String targetCode = target.getTarget().getCode();
+                if ("KYSITLUS_SIHT_O".equals(targetCode)) {
+                    dto.setTargetStudent(Boolean.TRUE);
+                    dto.setUsePersonCode(Boolean.TRUE);
+                } else if ("KYSITLUS_SIHT_T".equals(targetCode)) {
+                    dto.setTargetTeacher(Boolean.TRUE);
+                    dto.setUsePersonCode(Boolean.TRUE);
+                } else if ("KYSITLUS_SIHT_E".equals(targetCode)) {
+                    dto.setTargetEnterprise(Boolean.TRUE);
+                } else if ("KYSITLUS_SIHT_A".equals(targetCode) || "KYSITLUS_SIHT_L".equals(targetCode)) {
+                    dto.setUsePersonCode(Boolean.TRUE);
+                }
+            }
+        }
+    }
+
+    private void setLegend(PollXlsDto dto, PollResultStudentCommand criteria) {
+        String SEARCH_SELECT = "pt.id as pollId, pt.name_et as pollEt, pt.name_en as pollEn, pt.order_nr as themeOrder,"
+                + " ptq.order_nr as questionOrder, q.id as questionId, q.name_et as questionEt, q.name_en as questionEn,"
+                + " q.type_code, qa.order_nr as answerOrder, qa.name_et as answerEt, qa.name_en as answerEn, qa.id as answerId,"
+                + " qa.answer_nr as weight";
+        
+        String SEARCH_FROM = "from poll_theme pt "
+                + "join poll_theme_question ptq on ptq.poll_theme_id = pt.id "
+                + "join question q on q.id = ptq.question_id "
+                + "left join question_answer qa on qa.question_id = q.id";
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM);
+        qb.requiredCriteria("pt.poll_id = :pollId", "pollId", criteria.getPollId());
+        boolean isRepetitive = "KYSITLUS_O".equals(dto.getType());
+        if (isRepetitive) {
+            qb.filter("pt.is_repetitive = true");
+        }
+        List<?> questions = qb.sort("pt.order_nr, ptq.order_nr, qa.order_nr").select(SEARCH_SELECT, em).getResultList();
+        List<PollResponseLegendXlsDto> legend = new ArrayList<>();
+        for (Object r : questions) {
+            Long themeId = resultAsLong(r, 0);
+            Optional<PollResponseLegendXlsDto> legendThemeOpt = legend.stream().filter(p -> p.getName().getId().equals(themeId)).findFirst();
+            PollResponseLegendXlsDto legendTheme;
+            if (legendThemeOpt.isPresent()) {
+                legendTheme = legendThemeOpt.get();
+            } else {
+                legendTheme = new PollResponseLegendXlsDto();
+                legendTheme.setName(new AutocompleteResult(themeId, resultAsString(r, 1), resultAsString(r, 2)));
+                legendTheme.setCode("T" + resultAsLong(r, 3));
+                legend.add(legendTheme);
+            }
+            Long questionId = resultAsLong(r, 5);
+            Optional<PollQuestionXlsDto> questionOpt = legendTheme.getQuestions().stream().filter(p -> p.getName().getId().equals(questionId)).findFirst();
+            PollQuestionXlsDto question;
+            if (questionOpt.isPresent()) {
+                question = questionOpt.get();
+            } else {
+                question = new PollQuestionXlsDto();
+                question.setCode("K" + resultAsLong(r, 3) + resultAsLong(r, 4));
+                question.setName(new AutocompleteResult(questionId, resultAsString(r, 6), resultAsString(r, 7)));
+                question.setType(resultAsString(r, 8));
+                legendTheme.getQuestions().add(question);
+            }
+            AutocompleteResult answer = new AutocompleteResult(resultAsLong(r, 12), resultAsString(r, 10), resultAsString(r, 11));
+            QuestionAnswerXlsDto answerDto = new QuestionAnswerXlsDto();
+            answerDto.setName(answer);
+            answerDto.setOrderNr(resultAsLong(r, 9));
+            answerDto.setWeight(resultAsLong(r, 13));
+            question.getAnswers().add(answerDto);
+        }
+        dto.setLegend(legend);
+    }
+
+    public Page<AutocompleteResult> pollResultEnterprises(Poll poll, Pageable pageable) {
+        Long pollId = EntityUtil.getId(poll);
+        
+        String SEARCH_SELECT = "distinct ccss.enterpriseId, ccss.name";
+        String SEARCH_FROM = "from response r "
+                + "join response_object ro on r.id = ro.response_id "
+                + "join poll_target pt on pt.id = ro.poll_target_id "
+                + "join (select e.id as enterpriseId, cs.id as supervisorId, e.name "
+                    + "from contract_supervisor cs "
+                    + "join contract c on c.id = cs.contract_id "
+                    + "join enterprise e on c.enterprise_id = e.id) ccss on ccss.supervisorId = ro.contract_supervisor_id";
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable);
+        qb.requiredCriteria("r.poll_id = :pollId", "pollId", pollId);
+        qb.filter("pt.target_code = '" + PollTargets.KYSITLUS_SIHT_E.name() + "'");
+        qb.filter("(r.status_code = '" + ResponseStatus.KYSITVASTUSSTAATUS_P.name() + "' or r.status_code = '" + ResponseStatus.KYSITVASTUSSTAATUS_V.name() + "')");
+        return JpaQueryUtil.pagingResult(qb, SEARCH_SELECT, em, pageable).map(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 1))); 
+    }
+
+    @SuppressWarnings("unused")
+    public PollResultStudentOrTeacherDto pollResultStudentOrTeacher(HoisUserDetails user, Poll poll) {
+        Long pollId = EntityUtil.getId(poll);
+        Response studentResponse = null;
+        try {
+            studentResponse = em.createQuery("select r from Response r "
+                + "where r.responseObject.pollTarget.target.code = ?1 and "
+                + "r.poll.id = ?2 and "
+                + "r.responseObject.student is not null and "
+                + "r.status.code in ?3", Response.class)
+                .setParameter(1, PollTargets.KYSITLUS_SIHT_O.name())
+                .setParameter(2, pollId)
+                .setParameter(3, Arrays.asList(ResponseStatus.KYSITVASTUSSTAATUS_P.name(), ResponseStatus.KYSITVASTUSSTAATUS_V.name()))
+                .setMaxResults(1)
+                .getSingleResult();
+        } catch(NoResultException e) {}
+        
+        Response teacherResponse = null;
+        try {
+            teacherResponse = em.createQuery("select r from Response r "
+                + "where r.responseObject.pollTarget.target.code = ?1 and "
+                + "r.poll.id = ?2 and "
+                + "r.responseObject.teacher is not null and "
+                + "r.status.code in ?3", Response.class)
+                .setParameter(1, PollTargets.KYSITLUS_SIHT_T.name())
+                .setParameter(2, pollId)
+                .setParameter(3, Arrays.asList(ResponseStatus.KYSITVASTUSSTAATUS_P.name(), ResponseStatus.KYSITVASTUSSTAATUS_V.name()))
+                .setMaxResults(1)
+                .getSingleResult();
+        } catch(NoResultException e) {}
+        
+        Response studentResponseFinal = studentResponse;
+        Response teacherResponseFinal = teacherResponse;
+        PollResultStudentOrTeacherDto dto = new PollResultStudentOrTeacherDto();
+        if (studentResponseFinal != null) dto.setHasStudentResponse(Boolean.TRUE);
+        if (teacherResponseFinal != null) dto.setHasTeacherResponse(Boolean.TRUE);
+        return dto;
     }
 }

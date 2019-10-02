@@ -29,8 +29,6 @@ public class StudentBase extends BaseEntityWithId {
     private String email;
     private Boolean isSpecialNeed;
     private Boolean isRepresentativeMandatory;
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Classifier specialNeed;
     private String studentCard;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier previousStudyLevel;
@@ -117,14 +115,6 @@ public class StudentBase extends BaseEntityWithId {
 
     public void setIsRepresentativeMandatory(Boolean isRepresentativeMandatory) {
         this.isRepresentativeMandatory = isRepresentativeMandatory;
-    }
-
-    public Classifier getSpecialNeed() {
-        return specialNeed;
-    }
-
-    public void setSpecialNeed(Classifier specialNeed) {
-        this.specialNeed = specialNeed;
     }
 
     public String getStudentCard() {

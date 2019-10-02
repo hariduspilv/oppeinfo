@@ -35,9 +35,6 @@
                     <div flex>
                         <div ng-if="formState.themeBySubjectOrJournalId" layout="column">
                             <div ng-repeat="(key, themeList) in formState.themeBySubjectOrJournalId track by $index" layout="column" flex ng-style="{'margin-top': $first ? '0px' : '16px'}" ng-if="themeList.show">
-                                <div layout="row" ng-if="criteria.foreword !== null && first($index)">
-                                    <p style="word-break: break-word; font-size: 15px;">{{criteria.foreword}}</p>
-                                </div>
                                 <div ng-repeat="item in themeList" layout="column" flex>
                                     <div layout="column" ng-if="first($index)">
                                         <div layout="row" ng-if="item.journal === null && item.subject === null && criteria.type === 'KYSITLUS_O' && hasSubjectOrJournal" class="form-readonly">
@@ -54,6 +51,9 @@
                                                 <label>{{'poll.response.subject' | translate}}</label>
                                                 <hois-value value="currentLanguageNameField(item.subject)"></hois-value>
                                             </md-input-container>
+                                        </div>
+                                        <div layout="row" ng-if="criteria.foreword !== null && firstPage(themeList)">
+                                            <p style="word-break: break-word; font-size: 15px;">{{criteria.foreword}}</p>
                                         </div>
                                     </div>
                                     <fieldset>

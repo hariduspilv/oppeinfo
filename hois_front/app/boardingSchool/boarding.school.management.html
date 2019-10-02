@@ -45,7 +45,7 @@
 
 <div layout-padding>
   <div flex>
-    <md-table-container fixed-column-table fixed-columns="1" class="fixed-md-table-container">
+    <md-table-container fixed-column-table fixed-columns="2" resize-table search-criteria-height="550" class="fixed-md-table-container">
       <form name="boardingSchools" novalidate>
         <table md-table md-progress="tabledata.$promise">
           <thead md-head md-order="criteria.order" md-on-reorder="loadData">
@@ -66,7 +66,7 @@
           <tbody md-body>
             <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
               <td md-cell class="fixed-cell"><a ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</a></td>
-              <td md-cell>{{currentLanguageNameField(row.studentGroup)}}</td>
+              <td md-cell class="fixed-cell">{{currentLanguageNameField(row.studentGroup)}}</td>
               <td md-cell>{{row.idcode}}</td>
               <td md-cell>
                 <md-input-container>

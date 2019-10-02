@@ -152,7 +152,7 @@
             </td>
           </tr>
           <tr md-row ng-repeat="group in plan.currentStudentGroups | orderBy: orderBySelectedGroup" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td class="dividerBorder">{{group.code}}</td>
+            <td>{{group.code}}</td>
             <td ng-if="lessonsInDay[date] > 0" ng-repeat="date in plan.datesForTimetable" colspan="{{lessonsInDay[date]}}" class="dividerBorder">
               <div ng-repeat="lessonTime in group.currentLessons[date.getDate() + date.getMonth() + date.getFullYear()]" old-event-id="{{lessonTime.id}}"
                 ng-class="{'timetable-higher-drop' : (plan.selectedGroup === group.dropdownValue && plan.repeatCode && plan.lessonAmount), 'timetable-higher-drag' : lessonTime.id ? true : false, 'timetable-higher' : true}"

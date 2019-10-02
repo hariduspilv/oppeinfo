@@ -1,0 +1,13 @@
+<div id="scrolling_div" style="overflow: auto;">
+    <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
+        <md-nav-item ng-if="!id" md-nav-href="#/poll/new?_noback" name="poll.data">
+            {{'poll.basicData.label' | translate}}</md-nav-item>
+        <md-nav-item ng-if="auth.isAdmin() && id" md-nav-href="#/poll/{{::id}}/view?_noback" name="poll.data">
+            {{'poll.basicData.label' | translate}}</md-nav-item>
+        <md-nav-item ng-if="auth.isAdmin() && id" md-nav-href="#/poll/questions/{{::id}}/view?_noback" name="poll.questions">
+            {{'poll.questions.label' | translate}}</md-nav-item>
+        <md-nav-item ng-if="auth.isAdmin() && id" md-nav-href="#/poll/results/{{::id}}/view?_noback" name="poll.results">
+            {{'poll.results' | translate}}</md-nav-item>
+    </md-nav-bar>
+</div>
+<div class="ois-form-layout-padding ois-form-layout" layout="column" ng-include="'poll/poll.results.html'" ng-cloak></div>

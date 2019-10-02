@@ -1,6 +1,10 @@
 package ee.hitsa.ois.web;
 
+import static ee.hitsa.ois.util.UserUtil.assertIsSchoolAdmin;
+
+import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
+import java.util.UUID;
 
 import javax.validation.Valid;
 
@@ -27,16 +31,17 @@ import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.TeacherOccupationService;
 import ee.hitsa.ois.service.TeacherService;
 import ee.hitsa.ois.service.ehis.EhisTeacherExportService;
+import ee.hitsa.ois.service.ehis.EhisTeacherExportService.ExportTeacherRequest;
 import ee.hitsa.ois.service.rtip.RtipService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.HttpUtil.NoContentResponse;
 import ee.hitsa.ois.util.TeacherUserRights;
-import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.util.TeacherUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationSearchCommand;
 import ee.hitsa.ois.web.commandobject.ehis.EhisTeacherExportForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherContinuingEducationFormWrapper;
@@ -45,7 +50,8 @@ import ee.hitsa.ois.web.commandobject.teacher.TeacherMobilityFormWrapper;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherQualificationFromWrapper;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.EhisTeacherExportResultDto;
+import ee.hitsa.ois.web.dto.EhisTeacherRequestDto;
+import ee.hitsa.ois.web.dto.FutureStatusResponse;
 import ee.hitsa.ois.web.dto.TeacherAbsenceDto;
 import ee.hitsa.ois.web.dto.TeacherDto;
 import ee.hitsa.ois.web.dto.TeacherSearchDto;
@@ -178,14 +184,31 @@ public class TeacherController {
     }
 
     @PostMapping("/exportToEhis/higher")
-    public List<EhisTeacherExportResultDto> exportToEhisHigher(@Valid @RequestBody EhisTeacherExportForm form, HoisUserDetails user) {
+    public SimpleEntry<String, String> exportToEhisHigher(@Valid @RequestBody EhisTeacherExportForm form, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EHIS);
-        return ehisTeacherExportService.exportToEhis(user.getSchoolId(), true, form);
+        String key = UUID.randomUUID().toString();
+        ehisTeacherExportService.exportTeachers(user, true, form, key);
+        return new SimpleEntry<>("key", key);
     }
 
     @PostMapping("/exportToEhis/vocational")
-    public List<EhisTeacherExportResultDto> exportToEhisVocational(@Valid @RequestBody EhisTeacherExportForm form, HoisUserDetails user) {
+    public SimpleEntry<String, String> exportToEhisVocational(@Valid @RequestBody EhisTeacherExportForm form, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EHIS);
-        return ehisTeacherExportService.exportToEhis(user.getSchoolId(), false, form);
+        String key = UUID.randomUUID().toString();
+        ehisTeacherExportService.exportTeachers(user, false, form, key);
+        return new SimpleEntry<>("key", key);
+    }
+    
+    @GetMapping("/ehisTeacherExportCheck")
+    public EhisTeacherRequestDto ehisStudentExportCheck(HoisUserDetails user, @Valid EhisTeacherExportForm form) {
+        assertIsSchoolAdmin(user);
+        ExportTeacherRequest overlappedRequest = ehisTeacherExportService.findOverlappedActiveExportTeacherRequest(user, form);
+        return overlappedRequest != null && !overlappedRequest.isDone() ? EhisTeacherRequestDto.of(overlappedRequest) : null;
+    }
+
+    @GetMapping("/ehisTeacherExportStatus")
+    public FutureStatusResponse ehisStudentExportStatus(HoisUserDetails user, @RequestParam(required = true) String key) {
+        assertIsSchoolAdmin(user);
+        return ehisTeacherExportService.exporTeacherStatus(user, key);
     }
 }

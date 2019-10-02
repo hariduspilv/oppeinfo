@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.dto.timetable;
 
-public class TimetableJournalTeacherCapacityDto extends TimetableCapacityDto {
+public class TimetableJournalTeacherCapacityDto extends TimetableVocationalCapacityDto {
     private Long journalTeacher;
 
     public TimetableJournalTeacherCapacityDto(Long journalTeacher, String capacityType) {

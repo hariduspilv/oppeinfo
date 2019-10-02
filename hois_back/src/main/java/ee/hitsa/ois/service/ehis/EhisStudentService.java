@@ -4,6 +4,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsStringList;
 
 import java.lang.invoke.MethodHandles;
 import java.math.BigDecimal;
@@ -18,16 +19,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.persistence.Query;
@@ -40,6 +38,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.concurrent.EhisFutureTask;
+import ee.hitsa.ois.concurrent.WrapperCallable;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.WsEhisStudentLog;
 import ee.hitsa.ois.domain.apelapplication.ApelApplication;
@@ -63,12 +63,12 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
-import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.commandobject.ehis.EhisStudentForm;
 import ee.hitsa.ois.web.dto.EhisStudentReport;
 import ee.hitsa.ois.web.dto.FutureStatusResponse;
+import ee.hois.xroad.ehis.generated.KhlErivajadusedArr;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
 import ee.hois.xroad.ehis.generated.KhlKursuseMuutus;
 import ee.hois.xroad.ehis.generated.KhlMuudAndmedMuutmine;
@@ -200,6 +200,7 @@ public class EhisStudentService extends EhisService {
         case FOREIGN_STUDY: return foreignStudy(schoolId, ehisStudentForm, wrapper, maxRequests);
         case GRADUATION: return graduation(schoolId, ehisStudentForm, wrapper, maxRequests);
         case VOTA: return vota(schoolId, ehisStudentForm, wrapper, maxRequests);
+        case SPECIAL_NEEDS: return specialNeeds(schoolId, ehisStudentForm, wrapper, maxRequests);
         default: throw new AssertionFailedException("Unknown datatype");
         }
     }
@@ -261,6 +262,23 @@ public class EhisStudentService extends EhisService {
         
         removeExpiredExportStudentsResults(); // Async method runs in different thread so it will not cause problems with response time.
         return request;
+    }
+
+    private Queue<? extends EhisStudentReport> specialNeeds(Long schoolId, EhisStudentForm ehisStudentForm,
+            AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
+        ConcurrentLinkedQueue<EhisStudentReport> reports = new ConcurrentLinkedQueue<>();
+        wrapper.set(reports);
+        Map<Student, ChangedSpecialNeeds> students = findStudentsWithChangedSpecialNeeds(schoolId, ehisStudentForm);
+        maxRequests.set(students.size());
+        students.entrySet().stream().filter(entry -> {
+            if (!Thread.interrupted()) {
+                WsEhisStudentLog log = specialNeedChange(entry.getKey(), entry.getValue());
+                reports.add(new EhisStudentReport.SpecialNeeds(entry.getKey(), log));
+                return false;
+            }
+            return true;
+        }).findAny();
+        return reports;
     }
 
     private Queue<EhisStudentReport> courseChange(Long schoolId, EhisStudentForm ehisStudentForm, AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
@@ -551,6 +569,24 @@ public class EhisStudentService extends EhisService {
             return bindingException(student, e);
         }
     }
+    
+    private WsEhisStudentLog specialNeedChange(Student student, ChangedSpecialNeeds specialNeeds) {
+        try {
+            KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+
+            KhlErivajadusedArr khlErivajadusedArr = new KhlErivajadusedArr();
+            khlErivajadusedArr.setMuutusKp(date(LocalDate.now()));
+            khlErivajadusedArr.getKlErivajadus().addAll(StreamUtil.nullSafeList(specialNeeds.getNeeds())); // List with ehis values. #findStudentsWithChangedSpecialNeeds
+            khlErivajadusedArr.getKlTugiteenus().addAll(StreamUtil.nullSafeList(specialNeeds.getServices())); // List with ehis values. #findStudentsWithChangedSpecialNeeds
+
+            KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+            khlKorgharidusMuuda.setErivajadused(khlErivajadusedArr);
+            khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+            return makeRequest(student, khlOppeasutusList);
+        } catch (Exception e) {
+            return bindingException(student, e);
+        }
+    }
 
     WsEhisStudentLog courseChange(Student student, LocalDate changed, Integer newCourse) {
         try {
@@ -582,6 +618,46 @@ public class EhisStudentService extends EhisService {
                 .setParameter(1, schoolId)
                 .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
                 .getResultList();
+    }
+
+    private Map<Student, ChangedSpecialNeeds> findStudentsWithChangedSpecialNeeds(Long schoolId, EhisStudentForm ehisStudentForm) {
+        List<?> data = em.createNativeQuery("select s.id, string_agg(distinct ssn_cl.ehis_value, ';') as ssn_values, string_agg(distinct ass_cl.ehis_value, ';') as ass_values "
+                + "from student s "
+                + "join student_special_need ssn on ssn.student_id = s.id "
+                + "join classifier ssn_cl on ssn_cl.code = ssn.special_need_code "
+                + "left join directive_student ds on ds.student_id = s.id "
+                + "left join directive d on d.id = ds.directive_id "
+                + "left join application a on a.id = ds.application_id "
+                + "left join application_support_service ass on ass.application_id = a.id "
+                + "left join directive_student ds2 on ds.id = ds2.directive_student_id and ds2.canceled = false "
+                + "left join directive d2 on d2.id = ds2.directive_id and d2.type_code = ?3 and d2.status_code = ?4 "
+                + "left join classifier ass_cl on ass_cl.code = ass.support_service_code and d.type_code = ?2 "
+                + "and d.status_code = ?4 and ds.canceled = false and ds.start_date <= ?6 "
+                + "and coalesce ( ds2.start_date, ds.end_date ) >= ?5 "
+                + "where s.school_id = ?1 and s.status_code in ?7 "
+                + "and exists (select 1 from student_special_need ssn2 where ssn2.student_id = s.id and coalesce(ssn2.changed, ssn2.inserted) >= ?5 and coalesce(ssn2.changed, ssn2.inserted) <= ?6) "
+                + "and ssn_cl.ehis_value is not null "
+                + "group by s.id")
+        .setParameter(1, schoolId)
+        .setParameter(2, DirectiveType.KASKKIRI_TUGI.name())
+        .setParameter(3, DirectiveType.KASKKIRI_TUGILOPP.name())
+        .setParameter(4, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+        .setParameter(5, JpaQueryUtil.parameterAsTimestamp(DateUtils.firstMomentOfDay(ehisStudentForm.getFrom())))
+        .setParameter(6, JpaQueryUtil.parameterAsTimestamp(DateUtils.lastMomentOfDay(ehisStudentForm.getThru())))
+        .setParameter(7, StudentStatus.STUDENT_STATUS_ACTIVE)
+        .getResultList();
+
+        Map<Long, ChangedSpecialNeeds> mappedData = data.stream().collect(Collectors.toMap(
+                    r -> resultAsLong(r, 0),
+                    r -> new ChangedSpecialNeeds(resultAsStringList(r, 1, ";"), resultAsStringList(r, 2, ";")),
+                    (o, n) -> o));
+        
+        if (!mappedData.isEmpty()) {
+            return em.createQuery("select s from Student s where s.id in ?1", Student.class)
+                    .setParameter(1, mappedData.keySet()).getResultList().stream().collect(Collectors.toMap(s -> s, s -> mappedData.get(s.getId()), (o, n) -> o));
+        }
+        
+        return Collections.emptyMap();
     }
 
     Map<Student, ChangedCourse> findStudentsWithChangedCourse(Long schoolId, EhisStudentForm ehisStudentForm) {
@@ -707,111 +783,44 @@ public class EhisStudentService extends EhisService {
         }
     }
     
-    /**
-     * Callable. Has a wrapper to be able to access in case of canceling or interrupting.
-     * Supports progress.
-     *
-     * @param <V>
-     */
-    public abstract class WrapperCallable<V> implements Callable<V> {
+    public static class ChangedSpecialNeeds {
         
-        private final AtomicReference<V> wrapper = new AtomicReference<>();
+        // EHIS value
+        private final List<String> needs;
+        // EHIS value
+        private final List<String> services;
         
-        public abstract V wrapperCall();
-        public abstract float getProgress();
-
-        @Override
-        public V call() throws Exception {
-            wrapper.set(wrapperCall());
-            return wrapper.get();
-        }
-
-        public AtomicReference<V> getWrapper() {
-            return wrapper;
+        public ChangedSpecialNeeds(List<String> needs, List<String> services) {
+            this.needs = needs;
+            this.services = services;
         }
         
+        public List<String> getNeeds() {
+            return needs;
+        }
+        
+        public List<String> getServices() {
+            return services;
+        }
     }
     
     /**
      * Being a Future.
      */
-    public static class ExportStudentsRequest extends FutureTask<Queue<? extends EhisStudentReport>> {
+    public static class ExportStudentsRequest extends EhisFutureTask<Queue<? extends EhisStudentReport>> {
         
-        /** Unique identificator */
-        private final String hash;
-        private final String user;
-        private final Long schoolId;
         private final LocalDate from;
         private final LocalDate thru;
         private final EhisStudentDataType type;
         
-        private LocalDateTime started;
-        private LocalDateTime ended;
-        
-        private String cancelledBy;
-        
-        /** Method reference for getting a wrapper */
-        private final Supplier<AtomicReference<Queue<? extends EhisStudentReport>>> wrapper;
-        /** Method reference for getting a progress */
-        private final Supplier<Float> progress;
-        
         public ExportStudentsRequest(WrapperCallable<Queue<? extends EhisStudentReport>> callable, String hash,
                 HoisUserDetails user, LocalDate from, LocalDate thru, EhisStudentDataType type) {
-            super(callable);
-            wrapper = callable::getWrapper;
-            progress = callable::getProgress;
-            this.hash = hash;
-            this.user = user.getUsername();
-            this.schoolId = user.getSchoolId();
+            super(callable, hash, user);
             this.from = from;
             this.thru = thru;
             this.type = type;
         }
         
-        @Override
-        protected void done() {
-            ended = LocalDateTime.now();
-            super.done();
-        }
-
-        @Override
-        public void run() {
-            started = LocalDateTime.now();
-            super.run();
-        }
-        
-        /**
-         * Sets a name of user who interrupted thread.
-         * 
-         * @param hoisUser user who interrupted request.
-         * @param mayInterruptIfRunning
-         * @return
-         */
-        public synchronized boolean cancel(HoisUserDetails hoisUser, boolean mayInterruptIfRunning) {
-            cancelledBy = PersonUtil.stripIdcodeFromFullnameAndIdcode(hoisUser.getUsername());
-            return cancel(mayInterruptIfRunning);
-        }
-
-        public Queue<? extends EhisStudentReport> getWrappedResult() {
-            return wrapper.get().get();
-        }
-        
-        public float getProgress() {
-            return progress.get().floatValue();
-        }
-        
-        public String getRequestHash() {
-            return hash;
-        }
-
-        public String getUser() {
-            return user;
-        }
-
-        public Long getSchoolId() {
-            return schoolId;
-        }
-
         public LocalDate getFrom() {
             return from;
         }
@@ -822,28 +831,6 @@ public class EhisStudentService extends EhisService {
 
         public EhisStudentDataType getType() {
             return type;
-        }
-
-        /**
-         * LocalDateTime is immutable. Thread safe
-         * 
-         * @return time when task started
-         */
-        public LocalDateTime getStarted() {
-            return started;
-        }
-
-        /**
-         * LocalDateTime is immutable. Thread safe
-         * 
-         * @return time when task ended
-         */
-        public LocalDateTime getEnded() {
-            return ended;
-        }
-
-        public synchronized String getCancelledBy() {
-            return cancelledBy;
         }
     }
 }

@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.stream.Collectors;
 
@@ -244,9 +245,17 @@ public class XlsService {
         public String translate(String key) {
             return TranslateUtil.translate(key, lang);
         }
+        
+        public String optionalTranslate(String key) {
+            return TranslateUtil.optionalTranslate(key, lang);
+        }
 
         public String name(Translatable data) {
             return TranslateUtil.name(data, lang);
+        }
+        
+        public Object nameAsObject(Translatable data) {
+            return nameAsObject(data, lang);
         }
 
         public String join(List<String> elements) {
@@ -283,6 +292,45 @@ public class XlsService {
                 return null;
             }
             return Long.valueOf(value);
+        }
+        
+        /**
+         * Get name of object in given language
+         *
+         * @param object
+         * @param lang
+         * @return
+         * @throws NullPointerException if lang is null
+         * @throws IllegalArgumentException if language is not supported
+         */
+        @SuppressWarnings("unused")
+        public static Object nameAsObject(Translatable object, Language lang) {
+            if(object == null) {
+                return null;
+            }
+
+            switch(Objects.requireNonNull(lang)) {
+            case ET:
+                try {
+                    return Long.valueOf(object.getNameEt());
+                } catch (NumberFormatException e) {
+                    return object.getNameEt();
+                }
+            case EN:
+                try {
+                    return Long.valueOf(object.getNameEn());
+                } catch (NumberFormatException e) {
+                    return object.getNameEn();
+                }
+            case RU:
+                try {
+                    return Long.valueOf(object.getNameRu());
+                } catch (NumberFormatException e) {
+                    return object.getNameRu();
+                }
+            default:
+                throw new IllegalArgumentException("Unsupported language");
+            }
         }
     }
     

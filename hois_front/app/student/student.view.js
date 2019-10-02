@@ -639,12 +639,44 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
         });
       }
     });
-  }]).controller('StudentViewTimetableController', ['$scope', '$route', 'QueryUtils', function ($scope, $route, QueryUtils) {
+  }]).controller('StudentViewTimetableController', ['$route', '$scope', 'GeneralTimetableUtils', 'QueryUtils', function ($route, $scope, GeneralTimetableUtils, QueryUtils) {
+    $scope.auth = $route.current.locals.auth;
+    $scope.generalTimetableUtils = new GeneralTimetableUtils();
     $scope.studentId = ($route.current.locals.auth.isStudent() ? $route.current.locals.auth.student : $route.current.params.id);
     $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
     $scope.typeId = $scope.studentId;
     $scope.currentNavItem = 'student.timetable';
-    $scope.auth = $route.current.locals.auth;
+    $scope.schoolId = $scope.auth.school.id;
+    $scope.criteria = {studentId: $scope.studentId};
+
+    QueryUtils.endpoint('/timetables/timetableStudyYears/:schoolId').query({schoolId: $scope.schoolId}).$promise.then(function (result) {
+      $scope.studyYears = result;
+      $scope.criteria.studyYearId = $scope.generalTimetableUtils.getStudyYearId($scope.schoolId, result);
+    });
+
+    $scope.schoolId = $scope.auth.school.id;
+    QueryUtils.endpoint('/timetables/timetableStudyYears/:schoolId').query({schoolId: $scope.schoolId}).$promise.then(function (result) {
+      $scope.studyYears = result;
+      $scope.criteria.studyYearId = $scope.generalTimetableUtils.getStudyYearId($scope.schoolId, result);
+    });
+
+    $scope.$watch('criteria.studyYearId', function () {
+      if (angular.isDefined($scope.criteria.studyYearId) && $scope.criteria.studyYearId !== null) {
+        $scope.showStudentWeek();
+      }
+    });
+
+    $scope.changeStudyYear = function (studyYear) {
+      $scope.generalTimetableUtils.changeState({ studyYearId: studyYear.id }, $scope.schoolId);
+      $scope.criteria.studyYearId = studyYear.id;
+    };  
+
+    $scope.showStudentWeek = function () {
+      var newState = {};
+      newState.studentId = $scope.criteria.studentId;
+      $scope.generalTimetableUtils.changeState(newState, $scope.schoolId);
+      $scope.$broadcast("updateWeekTimetable", { criteria: $scope.criteria });
+    };
 
   }]).controller('StudentEditController', ['$location', '$route', '$scope', 'message', 'oisFileService', 'QueryUtils', 'DataUtils', 'dialogService', 'hoisDateFilter', '$rootScope',
     function ($location, $route, $scope, message, oisFileService, QueryUtils, DataUtils, dialogService, hoisDateFilter, $rootScope) {

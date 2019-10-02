@@ -213,7 +213,7 @@
       "poll": {
         "label": "Poll",
         "data": "Poll data",
-        "statistics": "Poll statistics",
+        "statistics": "Statistics",
         "answers": "My answers",
         "subjects": "Subject polls",
         "journals": "Journal polls",
@@ -2299,8 +2299,8 @@
     "deleteconfirm": "Are you sure you wish to delete application?",
     "missingRepresentativeConfirmation": "Application misses approval of parent/representative!",
     "messages": {
-      "noCurriculumVersionHigher": "Student has no confirmed curriculums with ongoing version, which is related to ongoing student group with matching study form",
-      "noCurriculumVersionCurriculum": "Student has no confirmed curriculums with ongoing version, which maches study form and is related to ongoing student group",
+      "noCurriculumVersionHigher": "Student has no confirmed curriculums with ongoing version",
+      "noCurriculumVersionCurriculum": "Student has no confirmed curriculums with ongoing version, which matches study form and is related to ongoing student group",
       "applicationAlreadyExists": "Application already exists",
       "academicLeaveApplicationNotfound": "Application for academic leave not found",
       "validAcademicLeaveApplicationExists": "Application for academic leave already exists",
@@ -2505,7 +2505,8 @@
       "previous": "Previous",
       "view": "View",
       "name": "Title",
-      "pollConnections": "Related polls"
+      "pollConnections": "Related polls",
+      "noAnswersError": "At least 1 answer should be added"
     },
     "answer": {
       "confirm": "Are you sure, you wish to confirm your answer? After confirmation, answering is no longer accepted."
@@ -2515,10 +2516,18 @@
       "journalEndPeriod": "Journal end date period",
       "subjectEndPeriod": "Subject end date period",
       "amount": "Responses",
+      "notCompleted": "Partially answered",
       "viewResponse": "View responses",
       "studyYear": "Studyyear",
       "studyPeriod": "Studyperiod",
+      "teachers": "Teachers",
+      "toExcel": "Into Excel",
       "pollDuration": "Poll duration",
+      "checkAnswer": "Check answer",
+      "graph": "Open chart",
+      "enterprise": "Enterprise",
+      "target": "Target",
+      "students": "Students",
       "dialog": {
         "journal": "Journal",
         "subject": "Subject",
@@ -2530,10 +2539,21 @@
         "average": "Average",
         "myAnswer": "My answer",
         "responseCount": "Answers",
-        "comment": "Comment (saves automatically when leaving the field)"
+        "comment": "Comment (saves automatically when leaving the field)",
+        "student": "Student",
+        "studentResponsesJournal": "Student responses to journal {{journal}}",
+        "studentResponsesSubject": "Student responses to subject {{subject}}",
+        "pollName": "Poll {{nameEn}} graph"
       }
     },
-    "results": "Tulemused"
+    "results": "Tulemused",
+    "statistics": {
+      "pickPoll": "Pick poll",
+      "pickQuestion": "Pick question",
+      "allQuestions": "All questions",
+      "duplicatePoll": "Duplaicate poll",
+      "duplicateQuestion": "Duplicate question"
+    }
   },
   "studyYearSchedule": {
     "studyYear": "School year",

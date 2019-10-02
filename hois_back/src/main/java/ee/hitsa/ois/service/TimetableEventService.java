@@ -37,7 +37,6 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.StudyPeriod;
-import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
@@ -79,6 +78,7 @@ import ee.hitsa.ois.web.commandobject.timetable.TimetableSingleEventForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableTimeOccupiedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.timetable.GeneralTimetableCurriculumDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableByDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableByGroupDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableByRoomDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableByStudentDto;
@@ -108,8 +108,6 @@ public class TimetableEventService {
     private EntityManager em;
     @Autowired
     private AutomaticMessageService automaticMessageService;
-    @Autowired
-    private StudyYearService studyYearService;
 
     public Map<String, ?> searchFormData(Long schoolId) {
         Map<String, Object> data = new HashMap<>();
@@ -434,11 +432,11 @@ public class TimetableEventService {
         
         HoisUserDetails user = TimetableService.userFromPrincipal();
         if(user != null) {
-            if (!user.isSchoolAdmin() && !user.isTeacher() && !user.isStudent()) {
+            if (!user.isSchoolAdmin() && !user.isTeacher() && !user.isStudent() && !user.isRepresentative()) {
                 filteredEvents = hideSingleEventsData(events);
             } else if (user.isTeacher()) {
                 filteredEvents = hideOtherTeachersSingleEventsData(events, user.getTeacherId());
-            } else if (user.isStudent()) {
+            } else if (user.isStudent() || user.isRepresentative()) {
                 filteredEvents = hideStudentSingleEventsData(events, user.getStudentId());
             }
         } else {
@@ -720,13 +718,14 @@ public class TimetableEventService {
      * @param criteria
      * @return list of timetable events
      */
-    public List<TimetableEventSearchDto> searchTimetable(TimetableEventSearchCommand criteria, Long schoolId) {
+    public TimetableByDto searchTimetable(TimetableEventSearchCommand criteria, Long schoolId) {
         JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(criteria, schoolId);
         List<TimetableEventSearchDto> eventResultList = getTimetableEventsList(qb);
         setRoomsTeachersAndGroupsForSearchDto(eventResultList, Boolean.FALSE);
         setShowStudyMaterials(eventResultList);
         filterTimetableSingleEvents(eventResultList);
-        return eventResultList;
+
+        return new TimetableByDto(null, eventResultList);
     }
 
     private Map<Long, List<ResultObject>> getTeachersByTimetableEventTime(List<Long> tetIds, Boolean showOnlySubstitutes) {
@@ -898,36 +897,31 @@ public class TimetableEventService {
      * @return calendar filename and iCalendar format calendar as a string
      */
     public TimetableCalendarDto getSearchCalendar(TimetableEventSearchCommand command, String language, Long schoolId) {
-        List<TimetableEventSearchDto> searchResult = searchTimetable(command, schoolId);
-        return timetableGenerationService.getICal(searchResult, getLanguage(language));
+        TimetableByDto searchResult = searchTimetable(command, schoolId);
+        return timetableGenerationService.getICal(searchResult.getTimetableEvents(), getLanguage(language));
     }
-    
-    public Map<String, ?> searchTimetableFormData(Long schoolId) {
-        StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
-        if (studyYear == null) {
-            return null;
-        }
-        
+
+    public Map<String, ?> searchTimetableFormData(Long schoolId, Long studyYearId) {
         Map<String, Object> data = new HashMap<>();
-        
+
         StudentGroupAutocompleteCommand studentGroupLookup = new StudentGroupAutocompleteCommand();
         studentGroupLookup.setValid(Boolean.TRUE);
-        data.put("studentGroups", autocompleteService.studentGroups(schoolId, studentGroupLookup))
-        ;
+        data.put("studentGroups", autocompleteService.studentGroups(schoolId, studentGroupLookup));
+
         TeacherAutocompleteCommand teacherLookup = new TeacherAutocompleteCommand();
         teacherLookup.setValid(Boolean.TRUE);
         data.put("teachers", autocompleteService.teachers(schoolId, teacherLookup, false));
-        
+
         RoomAutocompleteCommand roomLookup = new RoomAutocompleteCommand();
         data.put("rooms", autocompleteService.rooms(schoolId, roomLookup));
-        
+
         JournalAndSubjectAutocompleteCommand journalSubjectLookup = new JournalAndSubjectAutocompleteCommand();
-        journalSubjectLookup.setStudyYear(EntityUtil.getId(studyYear));
+        journalSubjectLookup.setStudyYear(studyYearId);
         data.put("subjects", autocompleteService.journalsAndSubjects(schoolId, journalSubjectLookup));
-        
+
         return data;
     }
-    
+
     private static Language getLanguage(String language) {
         return "et".equals(language) ? Language.ET : Language.EN;
     }

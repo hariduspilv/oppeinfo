@@ -33,7 +33,6 @@ import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanCreateForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
-import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleJournalTeacherCapacitiesForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchTeacherCommand;
@@ -95,14 +94,6 @@ public class LessonPlanController {
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, lessonPlan.getSchool());
         lessonPlanService.delete(user, lessonPlan);
-    }
-
-    @PostMapping("/{id:\\d+}/teacherCapacities")
-    public LessonPlanDto saveJournalTeacherCapacities(HoisUserDetails user, @WithEntity("id") LessonPlan lessonPlan,
-            @Valid @RequestBody LessonPlanModuleJournalTeacherCapacitiesForm form) {
-        UserUtil.assertIsSchoolAdmin(user, lessonPlan.getSchool());
-        lessonPlanService.saveJournalTeacherCapacities(form);
-        return get(user, lessonPlan);
     }
 
     @GetMapping("/searchFormData")

@@ -75,7 +75,7 @@
     </div>
     <div layout="row" layout-xs="column">
       <div ng-if="tabledata.content">
-          <md-button md-no-ink class="md-raised"
+          <md-button md-no-ink class="md-raised" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')"
           ng-click="sendToEkis()">{{'contract.sendToEkis' | translate}}</md-button>
       </div>
       <md-button class="md-raised md-default" ng-click="back('#/contracts')">{{'main.button.back' | translate}}</md-button>

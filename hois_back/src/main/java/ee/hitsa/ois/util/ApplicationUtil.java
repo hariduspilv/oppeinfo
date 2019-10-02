@@ -145,7 +145,11 @@ public abstract class ApplicationUtil {
 
     public static void assertKavaConstraints(Application application) {
         ValidationFailedException.throwIf(application.getNewCurriculumVersion().equals(application.getOldCurriculumVersion()), "application.messages.sameCurriculumVersion");
-        ValidationFailedException.throwIf(!application.getStudentGroup().getCurriculumVersion().equals(application.getNewCurriculumVersion()), "application.messages.noConnectionBetweenGroupAndVersion");
+        if (Boolean.TRUE.equals(application.getNewCurriculumVersion().getCurriculum().getHigher())) {
+            ValidationFailedException.throwIf(!application.getStudentGroup().getCurriculum().equals(application.getNewCurriculumVersion().getCurriculum()), "application.messages.noConnectionBetweenGroupAndVersion");
+        } else {
+            ValidationFailedException.throwIf(!application.getStudentGroup().getCurriculumVersion().equals(application.getNewCurriculumVersion()), "application.messages.noConnectionBetweenGroupAndVersion");   
+        }
     }
 
     public static DirectiveStudent getDirectiveStudent(Application application) {

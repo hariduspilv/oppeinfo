@@ -124,7 +124,7 @@
             </td>
           </tr>
           <tr md-row ng-repeat="group in plan.currentStudentGroups | orderBy: orderBySelectedGroup" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td class="fixed-cell">{{group.code}}</td>
+            <td class="fixed-cell" style="min-width: 100px">{{group.code}}</td>
             <td ng-repeat="lessonTime in currentLessonTimes track by $index" ng-class="{noLessonTime: lessonTime.noLessons, dividerBorder: lessonTime.endOfDay}">
               <span ng-if="!lessonTime.noLessons">
                 <div index-value="{{$parent.$index}}" drop-fn="saveEvent(data)" ng-attr-ois-drop="{{plan.selectedGroup === group.id}}" ng-repeat="currentEvent in t = angular.equals(t.id, getEventsForLesson($index, lessonTime, group).id) ? t : getEventsForLesson($index, lessonTime, group)"

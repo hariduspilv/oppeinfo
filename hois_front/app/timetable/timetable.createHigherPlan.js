@@ -455,10 +455,12 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
 
     $scope.updateGroups = function () {
       updateSelectedTimetables();
+      $scope.$broadcast('refreshFixedColumns');
     };
 
     $scope.updatePairs = function () {
       updateSelectedTimetables();
+      $scope.$broadcast('refreshFixedColumns');
     };
 
     function updateSelectedTimetables() {

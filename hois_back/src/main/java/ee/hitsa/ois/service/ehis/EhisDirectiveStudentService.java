@@ -1,15 +1,26 @@
 package ee.hitsa.ois.service.ehis;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsStringList;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
@@ -20,10 +31,16 @@ import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentHistory;
+import ee.hitsa.ois.domain.student.StudentSpecialNeed;
+import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.StudyLoad;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hois.xroad.ehis.generated.KhlAkadPuhkusAlgus;
 import ee.hois.xroad.ehis.generated.KhlEnnistamine;
 import ee.hois.xroad.ehis.generated.KhlErivajadusedArr;
@@ -90,6 +107,17 @@ public class EhisDirectiveStudentService extends EhisService {
                     break;
                 case KASKKIRI_TUGI:
                     setSpecialNeeds(directiveStudent);
+                    break;
+                case KASKKIRI_TYHIST:
+                    // ONLY FOR TUGI
+                    if (ClassifierUtil.oneOf(directive.getCanceledDirective().getType(), DirectiveType.KASKKIRI_TUGI)) {
+                        Optional<DirectiveStudent> dsOpt = StreamUtil.nullSafeList(directive.getCanceledDirective().getStudents()).stream()
+                                .filter(ds -> Boolean.TRUE.equals(ds.getCanceled()) && EntityUtil.getId(ds.getStudent()).equals(EntityUtil.getId(directiveStudent.getStudent())))
+                                .findAny();
+                        if (dsOpt.isPresent()) {
+                            setSpecialNeeds(directiveStudent);
+                        }
+                    }
                     break;
                 default:
                     break;
@@ -414,7 +442,36 @@ public class EhisDirectiveStudentService extends EhisService {
             return bindingException(directiveStudent.getDirective(), e);
         }
     }
+
+    private void setSpecialNeeds(Student student, Collection<String> supportServices) {
+        KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+        
+        KhlErivajadusedArr erivajadusedArr = new KhlErivajadusedArr();
+        erivajadusedArr.setMuutusKp(date(LocalDate.now()));
+        erivajadusedArr.getKlTugiteenus().addAll(new HashSet<>(supportServices));
+        
+        erivajadusedArr.getKlErivajadus().addAll(student.getSpecialNeeds().stream()
+            .map(StudentSpecialNeed::getSpecialNeed)
+            .filter(cl -> StringUtils.isNotBlank(cl.getEhisValue()))
+            .map(Classifier::getEhisValue)
+            .collect(Collectors.toList()));
+        
+        if (erivajadusedArr.getKlErivajadus().isEmpty()) {
+            return; // In case if we do not have any ERIVAJADUS then we should not send it.
+        }
+        
+        KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+        khlKorgharidusMuuda.setErivajadused(erivajadusedArr);
+        khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+        makeRequest(student, khlOppeasutusList);
+    }
     
+    /**
+     * TUGI - application services + active services
+     * TYHIST - only active services are sent
+     * 
+     * @param directiveStudent
+     */
     private void setSpecialNeeds(DirectiveStudent directiveStudent) {
         Student student = directiveStudent.getStudent();
         Directive directive = directiveStudent.getDirective();
@@ -423,15 +480,145 @@ public class EhisDirectiveStudentService extends EhisService {
         
         KhlErivajadusedArr erivajadusedArr = new KhlErivajadusedArr();
         erivajadusedArr.setMuutusKp(date(directive.getConfirmDate()));
-        List<String> erivajadused = erivajadusedArr.getKlErivajadus();
-        
-        erivajadused.addAll(directiveStudent.getApplication().getSupportServices().stream()
-            .map(service -> ehisValue(service.getSupportService())).collect(Collectors.toList()));
 
+        // `Set` to exclude duplicates
+        Set<String> supportServices = new HashSet<>();
+        if (ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_TUGI)) {
+            supportServices.addAll(directiveStudent.getApplication().getSupportServices().stream()
+                .map(service -> ehisValue(service.getSupportService()))
+                .collect(Collectors.toSet()));
+        }
+        
+        List<String> studentActiveSupportServices = getStudentsWithActiveSupportServiceDirectives(Collections.singleton(student.getId())).get(student);
+        //log.info("[Special Needs] Directive special needs: " + supportServices.size());
+        //log.info("[Special Needs] Active special needs: " + (studentActiveSupportServices != null ? studentActiveSupportServices.size() : 0));
+        if (studentActiveSupportServices != null) {
+            supportServices.addAll(studentActiveSupportServices);
+        }
+        
+        //log.info("[Special Needs] Directive special needs + active: " + supportServices.size());
+        
+        erivajadusedArr.getKlTugiteenus().addAll(supportServices);
+        
+        erivajadusedArr.getKlErivajadus().addAll(student.getSpecialNeeds().stream()
+            .map(StudentSpecialNeed::getSpecialNeed)
+            .filter(cl -> StringUtils.isNotBlank(cl.getEhisValue()))
+            .map(Classifier::getEhisValue)
+            .collect(Collectors.toList()));
+        
+        if (erivajadusedArr.getKlErivajadus().isEmpty()) {
+            return; // In case if we do not have any ERIVAJADUS then we should not send it.
+        }
+        
         KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
         khlKorgharidusMuuda.setErivajadused(erivajadusedArr);
         khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
         makeRequest(directive, khlOppeasutusList);
+        // Additional check for TYHIST directive. It should not send nominaalseOppeagaPikendamine.
+        if (Boolean.FALSE.equals(directiveStudent.getCanceled())) {
+            reportNominalStudyDateChange(directiveStudent);
+        }
+    }
+    
+    private void reportNominalStudyDateChange(DirectiveStudent directiveStudent) {
+        Student student = directiveStudent.getStudent();
+        StudentHistory history = getStudentHistory(student);
+        Directive directive = directiveStudent.getDirective();
+
+        if (history.getNominalStudyEnd() != null && student.getNominalStudyEnd().isAfter(history.getNominalStudyEnd())) {
+            KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+            
+            KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+            if (student.getNominalStudyEnd().minusMonths(6).isAfter(history.getNominalStudyEnd())) {
+                khlKorgharidusMuuda.setNominaalseOppeajaPikendamine60EKAP(date(directive.getConfirmDate()));
+            } else {
+                khlKorgharidusMuuda.setNominaalseOppeajaPikendamine30EKAP(date(directive.getConfirmDate()));
+            }
+            khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+            makeRequest(directive, khlOppeasutusList);
+        }
+    }
+    
+    /**
+     * Special needs are set per student because it can be several directives in one day, but only 1 student.
+     */
+    public void sendEndedSupportServices() {
+        LocalDate date = LocalDate.now().minusDays(1);
+        List<?> data = em.createNativeQuery("select s.id "
+                + "from student s "
+                + "join student_special_need ssn on ssn.student_id = s.id "
+                + "join directive_student ds on ds.student_id = s.id "
+                + "join directive d on d.id = ds.directive_id "
+                + "join application a on a.id = ds.application_id "
+                + "join application_support_service ass on ass.application_id = a.id "
+                + "left join directive_student ds2 on ds.id = ds2.directive_student_id and ds2.canceled = false "
+                + "left join directive d2 on d2.id = ds2.directive_id and d2.type_code = ?3 and d2.status_code = ?4 "
+                + "join classifier ass_cl on ass_cl.code = ass.support_service_code "
+                + "where s.status_code in ?1 and d.type_code = ?2 and d.status_code = ?4 "
+                + "and ds.canceled = false and coalesce ( ds2.start_date, ds.end_date ) = ?5 "
+                + "group by s.id")
+        .setParameter(1, StudentStatus.STUDENT_STATUS_ACTIVE)
+        .setParameter(2, DirectiveType.KASKKIRI_TUGI.name())
+        .setParameter(3, DirectiveType.KASKKIRI_TUGILOPP.name())
+        .setParameter(4, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+        .setParameter(5, JpaQueryUtil.parameterAsTimestamp(date))
+        .getResultList();
+
+        List<Long> studentIds = data.stream().map(r -> resultAsLong(r, 0)).collect(Collectors.toList());
+        Map<Student, List<String>> mappedStudents = getStudentsWithActiveSupportServiceDirectives(studentIds);
+        mappedStudents.forEach((student, services) -> {
+            if (studentIds.contains(student.getId())) {
+                studentIds.remove(student.getId());
+            }
+        });
+        if (!studentIds.isEmpty()) {
+            mappedStudents.putAll(em.createQuery("select s from Student s where s.id in ?1", Student.class)
+                    .setParameter(1, studentIds).getResultList().stream().collect(Collectors.toMap(s -> s, s -> Collections.emptyList(), (o, n) -> o)));
+        }
+        mappedStudents.forEach(this::setSpecialNeeds);
+    }
+
+    private Map<Student, List<String>> getStudentsWithActiveSupportServiceDirectives(Collection<Long> studentIds) {
+        return getStudentsWithSupportServiceDirectives(studentIds, LocalDate.now());
+    }
+
+    private Map<Student, List<String>> getStudentsWithSupportServiceDirectives(Collection<Long> studentIds, LocalDate date) {
+        Query q = em.createNativeQuery("select s.id, string_agg(distinct ass_cl.ehis_value, ';') as ass_values "
+                + "from student s "
+                + "join directive_student ds on ds.student_id = s.id "
+                + "join directive d on d.id = ds.directive_id "
+                + "join application a on a.id = ds.application_id "
+                + "join application_support_service ass on ass.application_id = a.id "
+                + "left join directive_student ds2 on ds.id = ds2.directive_student_id and ds2.canceled = false "
+                + "left join directive d2 on d2.id = ds2.directive_id and d2.type_code = ?3 and d2.status_code = ?4 "
+                + "join classifier ass_cl on ass_cl.code = ass.support_service_code "
+                + "where s.status_code in ?1 and d.type_code = ?2 and d.status_code = ?4 and ass_cl.ehis_value is not null " // TUGITEENUS should have ehis_value to be sent.
+                + "and ds.canceled = false and ds.start_date <= ?6 and coalesce ( ds2.start_date, ds.end_date ) >= ?5 "
+                + (studentIds != null && !studentIds.isEmpty() ? "and s.id in ?7 " : "")
+                + "group by s.id")
+        .setParameter(1, StudentStatus.STUDENT_STATUS_ACTIVE)
+        .setParameter(2, DirectiveType.KASKKIRI_TUGI.name())
+        .setParameter(3, DirectiveType.KASKKIRI_TUGILOPP.name())
+        .setParameter(4, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+        .setParameter(5, JpaQueryUtil.parameterAsTimestamp(DateUtils.firstMomentOfDay(date)))
+        .setParameter(6, JpaQueryUtil.parameterAsTimestamp(DateUtils.lastMomentOfDay(date)));
+        
+        if (studentIds != null && !studentIds.isEmpty()) {
+            q.setParameter(7, studentIds);
+        }
+        
+        List<?> data = q.getResultList();
+
+        Map<Long, List<String>> mappedData = data.stream().collect(Collectors.toMap(
+                    r -> resultAsLong(r, 0),
+                    r -> resultAsStringList(r, 1, ";"),
+                    (o, n) -> o));
+        Map<Student, List<String>> mappedStudents = new HashMap<>();
+        if (!mappedData.isEmpty()) {
+            mappedStudents.putAll(em.createQuery("select s from Student s where s.id in ?1", Student.class)
+                    .setParameter(1, mappedData.keySet()).getResultList().stream().collect(Collectors.toMap(s -> s, s -> mappedData.get(s.getId()), (o, n) -> o)));
+        }
+        return mappedStudents;
     }
     
     private StudentHistory getStudentHistory(Student student) {
@@ -440,6 +627,13 @@ public class EhisDirectiveStudentService extends EhisService {
                 .setParameter(1, student)
                 .setParameter(2, EntityUtil.getId(student.getStudentHistory()))
                 .getResultList().get(0);
+    }
+
+    private WsEhisStudentLog makeRequest(Student student, KhlOppeasutusList khlOppeasutusList) {
+        WsEhisStudentLog wsEhisStudentLog = new WsEhisStudentLog();
+        wsEhisStudentLog.setSchool(student.getSchool());
+
+        return laeKorgharidused(khlOppeasutusList, wsEhisStudentLog);
     }
 
     private WsEhisStudentLog makeRequest(Directive directive, KhlOppeasutusList khlOppeasutusList) {

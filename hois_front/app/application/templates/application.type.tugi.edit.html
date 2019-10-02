@@ -97,14 +97,18 @@
       </div>
       <div layout="column" ng-if="application.committee">
         <div layout="column">
-          <md-input-container style="max-width: 160px">
-            <label>{{'application.supportService.isDecided' | translate}}{{getStar()}}</label>
-            <md-select ng-model="application.isDecided" ng-required="strictRequired">
-              <md-option md-option-empty ng-if="!strictRequired"></md-option>
-              <md-option ng-value="false">{{'main.no' | translate}}</md-option>
-              <md-option ng-value="true">{{'main.yes' | translate}}</md-option>
-            </md-select>
-          </md-input-container>
+          <div layout="row" layout-xs="column">
+            <md-input-container style="max-width: 160px; margin-right: 8px;" flex>
+              <label>{{'application.supportService.isDecided' | translate}}{{getStar()}}</label>
+              <md-select ng-model="application.isDecided" ng-required="strictRequired">
+                <md-option md-option-empty ng-if="!strictRequired"></md-option>
+                <md-option ng-value="false">{{'main.no' | translate}}</md-option>
+                <md-option ng-value="true">{{'main.yes' | translate}}</md-option>
+              </md-select>
+            </md-input-container>
+            <p class="md-body-1" md-colors="{color: 'warn'}" style="margin: auto 4px;"
+              ng-if="application.isDecided && !application.hasSpecialNeed">{{'application.messages.studentHasNoSpecialNeed' | translate}}</p>
+          </div>
           <md-input-container>
             <label>{{'application.supportService.decision' | translate}}{{getStar()}}</label>
             <textarea ng-model="application.decision" md-maxlength="4000" max-rows="10" ng-required="strictRequired"></textarea>

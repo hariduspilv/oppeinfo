@@ -20,7 +20,15 @@
     <tbody md-body>
       <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
-        <td md-cell>{{::(row.idcode || row.foreignIdcode)}}</td>
+        <td md-cell>
+          <hois-value value="::(row.idcode || row.foreignIdcode)"></hois-value>
+          <input type="hidden" ng-model="row.dummyHiddenInputIdcode" name="students[{{$index}}].idcode"/>
+          <div class="invalid idcode" ng-messages="directiveForm['students['+$index+'].idcode'].$error">
+            <p ng-message="serverside">
+              <p ng-repeat="err in directiveForm['students['+$index+'].idcode'].$serverError">{{'main.messages.error.' + err.code | translate}}</p>
+            </p>
+          </div>
+        </td>
         <td md-cell>{{::row.firstname}}</td>
         <td md-cell>{{::row.lastname}}</td>
         <td md-cell>{{currentLanguageNameField(formState.curriculumVersionMap[row.curriculumVersion])}}</td>
@@ -65,3 +73,9 @@
     </tbody>
   </table>
 </md-table-container>
+
+<style>
+div.invalid.idcode[ng-messages] > p:last-child {
+  margin: 0;
+}
+</style>

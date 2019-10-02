@@ -70,6 +70,7 @@
             <td md-cell>{{::row.curriculumVersion}}</td>
             <td md-cell>{{::row.plannedHours | hoisNumber:1}}</td>
             <td md-cell>
+              <md-button md-no-ink ng-if="canView && !canEdit" class="md-primary change-button" ng-href="#/lessonplans/vocational/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
               <md-button md-no-ink ng-if="canEdit" class="md-primary change-button" ng-href="#/lessonplans/vocational/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>

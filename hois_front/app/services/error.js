@@ -31,6 +31,9 @@ angular.module('hitsaOis').factory('resourceErrorHandler', function ($q, message
             }
           }
           popupshown = true;
+          if (err.field && err.field.replace) {
+            err.field = err.field.replace(/(\[)(\d+)(\])/, function(_, g1, g2, g3) { return g1 + (parseInt(g2) + 1) + g3;})
+          }
           message.error(err.code + (err.field ? ' ' + err.field : ''), err.params);
         });
         if(!popupshown) {

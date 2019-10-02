@@ -87,6 +87,7 @@ public class JobExecutorService {
 
     /**
      * Handler for student status change jobs caused by directives
+     * Sends support services for ended directives.
      */
     @Scheduled(cron = "${hois.jobs.directive.cron}")
     public void directiveJob() {
@@ -100,6 +101,10 @@ public class JobExecutorService {
         handleJobs(job -> {
             directiveConfirmService.sendAcademicLeaveEndingMessage(job);
         }, AUTHENTICATION_MSG, JobType.JOB_AKAD_LOPP_TEADE);
+
+        withAuthentication(() -> {
+            ehisDirectiveStudentService.sendEndedSupportServices();
+        }, AUTHENTICATION_MSG);
     }
 
     /**
@@ -187,6 +192,7 @@ public class JobExecutorService {
             directiveService.sendSupportServiceMessages(supportServiceMessageDays);
         }, AUTHENTICATION_MSG);
     }
+    
     /**
      * Job execution wrapper.
      * If actual handler returns without exception, job is marked as done, otherwise failed (and exception is logged).

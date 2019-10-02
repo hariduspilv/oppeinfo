@@ -1,0 +1,85 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <div flex>
+        <div layout="column">
+            <div layout="row">
+                <md-input-container flex="100">
+                    <label>{{'poll.type' | translate}}</label>
+                    <hois-classifier-select ng-model="criteria.typeCode" ng-change="loadPolls()" required model-value-attr="code" main-classifier-code="KYSITLUS"></hois-classifier-select>
+                </md-input-container>
+            </div>
+            <div layout="column" ng-if="criteria.typeCode">
+                <div layout="row">
+                    <md-input-container flex="100">
+                        <label>{{'poll.statistics.pickPoll' | translate}}</label>
+                        <md-select ng-model="criteria.poll" ng-model-options="{trackBy: '$value.id'}"
+                            ng-change="pollChanged()" aria-label="polls">
+                            <md-option ng-repeat="val in polls" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
+                        </md-select>
+                    </md-input-container>
+                </div>
+                <div ng-if="criteria.polls.length > 0" layout="row">
+                    <md-table-container flex="100" style="max-height: 200px">
+                        <table md-table class="secondary-table">
+                            <thead md-head ng-hide="true">
+                                <tr md-row>
+                                    <th md-column width="90%"></th>
+                                    <th md-column width="10%"></th>
+                                </tr>
+                            </thead>
+                            <tbody md-body>
+                            <tr md-row ng-repeat="poll in criteria.polls" ng-class-odd="'odd'" ng-class-even="'even'">
+                                <td md-cell>{{currentLanguageNameField(poll)}}</td>
+                                <td md-cell>
+                                    <a ng-click="removeElement(criteria.polls, poll, true)" class="remove">&times;</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </md-table-container>
+                </div>
+            </div>
+            <div layout="row" ng-if="criteria.polls.length > 0">
+                <md-input-container flex="70">
+                    <label>{{'poll.statistics.pickQuestion' | translate}}</label>
+                    <md-select ng-model="criteria.question" ng-model-options="{trackBy: '$value.id'}"
+                        ng-change="questionChanged()" aria-label="questions">
+                        <md-option ng-repeat="val in questions" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
+                    </md-select>
+                </md-input-container>
+                <div layout="row" flex="30" layout-align="center center">
+                    <md-input-container>
+                        <md-checkbox ng-model="criteria.allQuestions" ng-change="pickAllQuestions(criteria.allQuestions)" aria-label="all questions" style="margin-bottom: 0px;">
+                            {{'poll.statistics.allQuestions' | translate}}
+                        </md-checkbox>
+                    </md-input-container>
+                </div>
+            </div>
+            <div ng-if="criteria.questions.length > 0" layout="row">
+                <md-table-container flex="100" style="max-height: 200px">
+                    <table md-table class="secondary-table">
+                        <thead md-head ng-hide="true">
+                            <tr md-row>
+                                <th md-column width="90%"></th>
+                                <th md-column width="10%"></th>
+                            </tr>
+                        </thead>
+                        <tbody md-body>
+                        <tr md-row ng-repeat="question in criteria.questions" ng-class-odd="'odd'" ng-class-even="'even'">
+                            <td md-cell>{{currentLanguageNameField(question)}}</td>
+                            <td md-cell>
+                                <a ng-click="removeElement(criteria.questions, question)" class="remove">&times;</a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </md-table-container>
+            </div>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+        <md-button ng-if="criteria.polls !== undefined && criteria.polls.length !== 0 && criteria.questions !== undefined && criteria.questions.length !== 0" 
+            class="md-raised" target="_blank" download ng-click="allToExcel()">
+            {{'document.button.excel' | translate}}
+        </md-button>
+    </div>
+</div>
+                  

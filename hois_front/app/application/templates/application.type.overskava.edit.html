@@ -20,8 +20,7 @@
     <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
       <label>{{'application.newStudentGroup' | translate}}</label>
       <md-select ng-model="application.studentGroup" ng-model-options="{trackBy: '$value.id'}" required>
-        <md-option ng-value="opt" ng-repeat="opt in formState.studentGroups
-          | filter: {curriculumVersion: (application.newCurriculumVersion.id ? application.newCurriculumVersion.id : 0)}">
+        <md-option ng-value="opt" ng-repeat="opt in formState.studentGroups">
           {{currentLanguageNameField(opt)}}</md-option>
       </md-select>
     </md-input-container>

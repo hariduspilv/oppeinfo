@@ -98,8 +98,8 @@
                                                 <md-input-container flex>
                                                     <md-radio-group name="radio" ng-model="question.answerTxt" ng-required="question.isRequired" layout="{{question.isInRow ? 'row' : 'column'}}"
                                                         layout-xs="column" flex="100"  ng-blur="save(question)" ng-change="question.requiredError && checkErrors()">
-                                                        <md-input-container>
-                                                            <md-radio-button ng-value="answer.nameEt" aria-label="period" ng-repeat="answer in question.answers track by $index" flex>
+                                                        <md-input-container ng-repeat="answer in question.answers track by $index">
+                                                            <md-radio-button ng-value="answer.nameEt" aria-label="period" flex>
                                                                 <span style="word-break: break-word">{{answer.nameEt}}</span>
                                                             </md-radio-button>
                                                         </md-input-container>

@@ -40,7 +40,7 @@
             <div layout="row" layout-xs="column">
                 <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
                 <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-                <md-button class="md-raised" ng-click="testEmail()">{{'main.button.test' | translate}}</md-button>
+                <!--<md-button class="md-raised" ng-click="testEmail()">{{'main.button.test' | translate}}</md-button>-->
                 <md-button ng-href="#/poll/new" class="md-raised">{{'main.button.create' | translate}}</md-button>
             </div>
         </div>
@@ -62,7 +62,7 @@
             <th md-column md-order-by="p.status_code">{{'poll.status' | translate}}</th>
             <th md-column md-order-by="p.inserted_by">{{'poll.basicData.insertedBy' | translate}}</th>
             <th md-column md-order-by="p.changed_by">{{'poll.basicData.changedBy' | translate}}</th>
-            <th md-column></th>
+            <th md-column ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KYSITLUS')"></th>
         </tr>
         </thead>
         <tbody md-body>
@@ -74,7 +74,7 @@
             <td md-cell>{{row.status ? currentLanguageNameField(row.status) : '-'}}</td>
             <td md-cell>{{row.insertedBy ? row.insertedBy : '-'}}</td>
             <td md-cell>{{row.changedBy ? row.changedBy : '-'}}</td>
-            <td ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" md-cell>
+            <td ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KYSITLUS')" md-cell>
             <md-button ng-if="row.status.code !== 'KYSITLUS_STAATUS_K'" md-no-ink class="md-primary change-button" 
                 ng-href="#/poll/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>

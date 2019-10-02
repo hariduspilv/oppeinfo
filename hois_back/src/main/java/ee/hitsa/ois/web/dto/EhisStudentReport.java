@@ -318,4 +318,11 @@ public class EhisStudentReport {
             return changed;
         }
     }
+    
+    public static class SpecialNeeds extends EhisStudentReport {
+        
+        public SpecialNeeds(Student student, WsEhisStudentLog log) {
+            fill(student, log);
+        }
+    }
 }

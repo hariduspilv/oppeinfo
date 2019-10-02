@@ -86,30 +86,9 @@ public class LessonPlanForm extends VersionedCommand {
         @NotNull
         private Long id;
         // {capabilityType: [weekNrs from all studyPeriods ordered by studyPeriod.startDate]}
-        private Map<String, List<Short>> hours;
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public Map<String, List<Short>> getHours() {
-            return hours;
-        }
-
-        public void setHours(Map<String, List<Short>> hours) {
-            this.hours = hours;
-        }
-    }
-
-    public static class LessonPlanModuleJournalTeacherCapacitiesForm {
-        @NotNull
-        private Long id;
         private Boolean capacityDiff;
-        private List<LessonPlanModuleJournalTeacherForm> teachers;
+        private Map<String, List<Short>> hours;
+        private List<? extends LessonPlanModuleJournalTeacherForm> teachers;
 
         public Long getId() {
             return id;
@@ -123,18 +102,25 @@ public class LessonPlanForm extends VersionedCommand {
             return capacityDiff;
         }
 
-        public void setIsCapacityDiff(Boolean capacityDiff) {
+        public void setCapacityDiff(Boolean capacityDiff) {
             this.capacityDiff = capacityDiff;
         }
 
-        public List<LessonPlanModuleJournalTeacherForm> getTeachers() {
+        public Map<String, List<Short>> getHours() {
+            return hours;
+        }
+
+        public void setHours(Map<String, List<Short>> hours) {
+            this.hours = hours;
+        }
+
+        public List<? extends LessonPlanModuleJournalTeacherForm> getTeachers() {
             return teachers;
         }
 
-        public void setTeachers(List<LessonPlanModuleJournalTeacherForm> teachers) {
+        public void setTeachers(List<? extends LessonPlanModuleJournalTeacherForm> teachers) {
             this.teachers = teachers;
         }
-
     }
 
     public static class LessonPlanModuleJournalTeacherForm {

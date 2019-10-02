@@ -1,15 +1,54 @@
+<style>
+    canvas{
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+    }
+    #chartjs-tooltip {
+        opacity: 1;
+        position: absolute;
+        background: rgba(0, 0, 0, .8);
+        color: white;
+        border-radius: 3px;
+        -webkit-transition: all .1s ease;
+        transition: all .1s ease;
+        pointer-events: none;
+        -webkit-transform: translate(-50%, 0);
+        transform: translate(-50%, 0);
+        z-index: 1;
+        border-color: rgba(0, 0, 0, 0);
+        text-align: left;
+        table-layout: fixed;
+        max-width: 70%;
+    }
+    .chartjs-tooltip-key {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin-right: 10px;
+    }
+    @media screen and (max-width: 599px) {
+        .hideOnFlexXs {
+            display: none !important;
+        }
+    }
+</style>
 <md-dialog aria-label="add question dialog" flex="50">
     <form name="dialogForm" ng-submit="submit()" novalidate ng-cloak>
         <md-toolbar>
-        <div class="md-toolbar-tools">
-            <h2 flex>{{showGraph && graphName && !overall ? 
-                (journal ? ('poll.answers.dialog.journal' | translate) + ' ' + currentLanguageNameField(graphName) :
-                 ('poll.answers.dialog.subject' | translate) + ' ' + currentLanguageNameField(graphName)) 
-                : (overall ? ('poll.answers.dialog.themes' | translate) : currentLanguageNameField(formState.name))}}</h2>
-            <md-button class="md-icon-button" ng-click="cancel()">
-            <md-icon md-font-set="material-icons">close</md-icon>
-            </md-button>
-        </div>
+            <div class="md-toolbar-tools">
+                <h2 flex ng-if="!enterprise && !teacher && !student && !poll">{{showGraph && graphName && !overall ? 
+                    (journal ? ('poll.answers.dialog.journal' | translate) + ' ' + currentLanguageNameField(graphName) :
+                    ('poll.answers.dialog.subject' | translate) + ' ' + currentLanguageNameField(graphName)) 
+                    : (overall ? ('poll.answers.dialog.themes' | translate) : currentLanguageNameField(formState.name))}}</h2>
+                <h2 flex ng-if="enterprise">{{('poll.answers.enterprise' | translate) + ' ' + currentLanguageNameField(graphName)}}</h2>
+                <h2 flex ng-if="teacher">{{'poll.answers.teachers' | translate}}</h2>
+                <h2 flex ng-if="student">{{'poll.answers.students' | translate}}</h2>
+                <h2 flex ng-if="poll">{{'poll.answers.dialog.pollName' | translate:poll}}</h2>
+                <md-button class="md-icon-button" ng-click="cancel()">
+                <md-icon md-font-set="material-icons">close</md-icon>
+                </md-button>
+            </div>
         </md-toolbar>
         <md-dialog-content>
         <div class="md-dialog-content" flex>
@@ -23,9 +62,18 @@
             </div>
             <div ng-if="showGraph" layout="column">
                 <div layout="row" ng-repeat="chart in graph.graphByTheme track by $index">
-                    <canvas class="chart-horizontal-bar" chart-options="chart.options" 
-                        chart-data="chart.data" chart-labels="chart.labels" chart-dataset-override="chart.labelOverride">
-                    </canvas>
+                    <div flex="40" class="hideOnFlexXs" layout="column" layout-align="space-between">
+                        <br>
+                        <div layout="row" ng-repeat="label in chart.labels" style="word-break: break-word">
+                            {{label}}
+                        </div>
+                        <br>
+                    </div>
+                    <div flex="60" flex-xs="100" layout="column">
+                        <canvas id="canvas" class="chart-horizontal-bar" chart-options="chart.options" width="100%"
+                            chart-data="chart.data" chart-labels="chart.labels" chart-dataset-override="chart.labelOverride">
+                        </canvas>
+                    </div>
                 </div>
                 <div layout="row" ng-if="teacherViewing">
                     <md-input-container flex="100">
@@ -33,7 +81,7 @@
                         <textarea ng-disabled="graph.commentDisabled" ng-model="criteria.addInfo" md-maxlength="10000" ng-blur="saveComment(criteria.addInfo)"></textarea>
                     </md-input-container>
                 </div>
-                <div layout="row" ng-if="!teacherViewing" ng-repeat="comment in comments">
+                <div layout="row" ng-if="!teacherViewing || adminViewing" ng-repeat="comment in comments">
                     <md-input-container flex="100">
                         <label>{{currentLanguageNameField(comment.teacher)}}</label>
                         <textarea disabled ng-model="comment.addInfo"></textarea>
@@ -44,7 +92,7 @@
         </md-dialog-content>
     
         <md-dialog-actions layout="row" layout-xs="column" layout-align="start start" layout-align-xs="none none">
-            <md-button class="md-raised" ng-if="showGraph && !teacherViewing" ng-click="hideGraph()">{{'main.button.back' | translate}}</md-button>
+            <md-button class="md-raised" ng-if="showGraph && !teacherViewing && !adminViewing" ng-click="hideGraph()">{{'main.button.back' | translate}}</md-button>
             <md-button flex-xs="100" class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
         </md-dialog-actions>
 

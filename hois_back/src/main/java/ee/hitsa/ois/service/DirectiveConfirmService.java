@@ -334,6 +334,21 @@ public class DirectiveConfirmService {
                     allErrors.add(new ErrorForField("directive.notValid", propertyPath(rowNum, "directiveStudent")));
                 }
             } else if (DirectiveType.KASKKIRI_TUGI.equals(directiveType)) {
+                if (!StudentUtil.hasSpecialNeeds(ds.getStudent())) {
+                    Map<Object, Object> obj = new HashMap<>();
+                    obj.put("student", AutocompleteResult.of(ds.getStudent(), false));
+                    allErrors.add(new Error("directive.studentHasNoSpecialNeedWithName", obj));
+                }
+                
+                // NominalStudyEnd should be after the current one
+                if (ds.getStudent().getNominalStudyEnd() != null && ds.getStudent().getNominalStudyEnd().isAfter(ds.getNominalStudyEnd())) {
+                    allErrors.add(new ErrorForField("directive.studentHasWrongNominalStudyEnd", propertyPath(rowNum, "nominalStudyEnd")));
+                }
+
+                if (ds.getEndDate() != null && ds.getEndDate().isBefore(LocalDate.now())) {
+                    allErrors.add(new ErrorForField("directive.endDateInPast", propertyPath(rowNum, "endDate")));
+                }
+                
                 Optional<ApplicationSupportService> assOpt = StreamUtil.nullSafeSet(ds.getApplication().getSupportServices()).stream()
                         .filter(s -> ClassifierUtil.equals(SupportServiceType.TUGITEENUS_1, s.getSupportService()))
                         .findFirst();
@@ -347,7 +362,10 @@ public class DirectiveConfirmService {
                             IndividualCurriculumModuleDto suitableModule = studentSuitableModules
                                     .get(EntityUtil.getId(module.getModule()));
 
-                            if (suitableModule.getExistingModules() != null) {
+                            if (suitableModule == null) {
+                                allErrors.add(new ErrorForField("directive.moduleHasPositiveGrade", propertyPath(rowNum, "modules"),
+                                        AutocompleteResult.of(module.getModule(), false)));
+                            } else if (suitableModule.getExistingModules() != null) {
                                 for (ExistingIndividualCurriculumModuleDto existingModule : suitableModule
                                         .getExistingModules()) {
                                     if (DateUtils.periodsOverlap(ds.getStartDate(), ds.getEndDate(),
@@ -369,6 +387,8 @@ public class DirectiveConfirmService {
                                 || ds.getStartDate().isAfter(otherDirectiveStudent.getEndDate())) {
                             allErrors.add(new ErrorForField("directive.notInSupportServiceDateRange",
                                     propertyPath(rowNum, "startDate")));
+                        } else if (ds.getStartDate().isBefore(LocalDate.now())) {
+                            allErrors.add(new ErrorForField("directive.endDateInPast", propertyPath(rowNum, "startDate")));
                         }
                     } else {
                         allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "startDate")));
@@ -465,10 +485,25 @@ public class DirectiveConfirmService {
                 messageTemplateService.requireValidTemplate(MessageType.TEATE_LIIK_AP_LOPP, school, errors);
             }
         }
+        
+        List<Error> validationErrors = new ArrayList<>();
+        switch (EnumUtil.valueOf(DirectiveType.class, directive.getType())) {
+            case KASKKIRI_TUGI:
+                Optional<DirectiveStudent> dsOpt = directive.getStudents().stream().filter(ds -> !StudentUtil.hasSpecialNeeds(ds.getStudent())).findAny();
+                if (dsOpt.isPresent()) {
+                    Map<Object, Object> obj = new HashMap<>();
+                    obj.put("student", AutocompleteResult.of(dsOpt.get().getStudent(), false));
+                    validationErrors.add(new Error("directive.studentHasNoSpecialNeedWithName", obj));
+                }
+                break;
+            default:
+                break;
+        }
 
         Map<String, Object> status = new HashMap<>();
         status.put("templateExists", Boolean.valueOf(errors.isEmpty()));
         status.put("templateName", StreamUtil.toMappedList(r -> r.getParams().values().iterator().next(), errors));
+        status.put("validationError", validationErrors);
         return status;
     }
 
@@ -489,6 +524,8 @@ public class DirectiveConfirmService {
 
     public Directive confirm(String confirmer, Directive directive, LocalDate confirmDate) {
         AssertionFailedException.throwIf(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL, directive.getStatus()), "Invalid directive status");
+        AssertionFailedException.throwIf(ClassifierUtil.equals(DirectiveType.KASKKIRI_TUGI, directive.getType())
+                && directive.getStudents().stream().filter(ds -> !StudentUtil.hasSpecialNeeds(ds.getStudent())).findAny().isPresent(), "Student without special needs");
 
         // update directive fields
         setDirectiveStatus(directive, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);

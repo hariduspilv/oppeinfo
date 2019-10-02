@@ -235,10 +235,11 @@ public class ContractController {
     }
     
     @PutMapping("/changeContractNr/{id:\\d+}")
-    public void changeContractNr(HoisUserDetails user, @WithEntity Contract contract, @RequestBody ContractNrCommand command) {
+    public ContractDto changeContractNr(HoisUserDetails user, @WithEntity Contract contract, @RequestBody ContractNrCommand command) {
         UserUtil.assertIsSchoolAdmin(user);
         UserUtil.assertIsSchoolWithoutEkis(em.getReference(School.class, user.getSchoolId()));
-        contractService.changeContractNr(contract, command);
+        return get(user, contractService.changeContractNr(contract, command));
+        
     }
 
     /**

@@ -237,12 +237,13 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
         if(requests === 1 && !busyShowing) {
           progress.value = 0;
           var dialogObj = _createDefaultDialogObject(params);
+          // $scope is needed for minification as it will not find a provider.
           angular.extend(dialogObj, {
-            controller: function (scope) {
+            controller: ["$scope", function (scope) {
               scope.text = params.text;
               scope.progress = progress;
-            },
-            templateUrl: 'components/progress.wheel.dialog.html',
+            }],
+            templateUrl: 'components/progress.wheel.dialog.html'
           });
           $mdDialog.show(dialogObj);
           busyShowing = true;

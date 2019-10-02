@@ -39,14 +39,15 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
         ctrl1.$setTouched();
         ctrl2.$setTouched();
         $scope.tabledata.content.forEach(function (person) {
-          if (person.idcode === dialogScope.enterprise.idcode && 
+          if (person.id !== dialogScope.enterprise.id && 
+            dialogScope.enterprise.idcode === person.idcode &&
+            (dialogScope.enterprise.idcode !== undefined || dialogScope.enterprise.county !== undefined) &&
             ((person.country ===  undefined  && (dialogScope.enterprise.country === undefined || dialogScope.enterprise.country === "")) ||
             (person.country !== undefined && dialogScope.enterprise.country != undefined && person.country.code === dialogScope.enterprise.country))) {
             clean = false;
           }
         });
         ctrl1.$setValidity('idCodeDuplicate', clean);
-        ctrl2.$setValidity('idCodeDuplicate', clean);
       };
 
       dialogScope.delete = function () {
@@ -74,21 +75,21 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
       }
     }, function (submittedDialogScope) {
       FormUtils.withValidForm(submittedDialogScope.dialogForm, function() {
-      if (row) {
-        var PersonEndpoint = QueryUtils.endpoint('/practiceEnterprise/person/' + row.id);
-        var personEndpoint = new PersonEndpoint(submittedDialogScope.enterprise);
-        personEndpoint.$save().then(function () {
-          message.info('main.messages.create.success');
-          refresh();
-        }).catch(angular.noop);
-      } else {
-        var enterpriseEndPoint = new EnterpriseEndpoint(submittedDialogScope.enterprise);
-        enterpriseEndPoint.$save().then(function () {
-          message.info('main.messages.create.success');
-          refresh();
-        }).catch(angular.noop);
-      }
-    });
+        if (row) {
+          var PersonEndpoint = QueryUtils.endpoint('/practiceEnterprise/person/' + row.id);
+          var personEndpoint = new PersonEndpoint(submittedDialogScope.enterprise);
+          personEndpoint.$save().then(function () {
+            message.info('main.messages.create.success');
+            refresh();
+          }).catch(angular.noop);
+        } else {
+          var enterpriseEndPoint = new EnterpriseEndpoint(submittedDialogScope.enterprise);
+          enterpriseEndPoint.$save().then(function () {
+            message.info('main.messages.create.success');
+            refresh();
+          }).catch(angular.noop);
+        }
+      });
     });
   };
 

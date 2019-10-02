@@ -6,8 +6,8 @@
             {{'poll.basicData.label' | translate}}</md-nav-item>
         <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/questions/{{::criteria.id}}/view?_noback" name="poll.questions">
             {{'poll.questions.label' | translate}}</md-nav-item>
-        <!-- <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/results/{{::criteria.id}}/view?_noback" name="poll.results">
-            {{'poll.results' | translate}}</md-nav-item> -->
+        <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/results/{{::criteria.id}}/view?_noback" name="poll.results">
+            {{'poll.results' | translate}}</md-nav-item>
     </md-nav-bar>
 </div>
 

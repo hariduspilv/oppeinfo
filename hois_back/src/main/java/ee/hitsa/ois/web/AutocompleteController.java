@@ -12,6 +12,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,6 +41,8 @@ import ee.hitsa.ois.web.commandobject.curriculum.CurriculumAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleThemeAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.poll.PollAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.poll.PollQuestionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.studymaterial.StudyMaterialAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.subject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.curriculum.CurriculumVersionHigherModuleAutocompleteCommand;
@@ -325,6 +329,16 @@ public class AutocompleteController {
     @GetMapping("/practiceEvaluation")
     public List<AutocompleteResult> practiceEvaluation(HoisUserDetails user, PracticeEvaluationAutocompleteCommand lookup) {
         return autocompleteService.practiceEvaluation(user, lookup);
+    }
+    
+    @GetMapping("/polls")
+    public List<AutocompleteResult> polls(HoisUserDetails user, PollAutocompleteCommand lookup) {
+        return autocompleteService.polls(user, lookup);
+    }
+    
+    @GetMapping("/polls/questions")
+    public List<AutocompleteResult> questions(HoisUserDetails user, PollQuestionAutocompleteCommand lookup) {
+        return autocompleteService.questions(user, lookup);
     }
     
     @GetMapping("/supervisors")

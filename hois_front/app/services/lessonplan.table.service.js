@@ -41,24 +41,25 @@ angular.module('hitsaOis')
     var TEACHER_CAPACITIES = 'material-icons pointer';
     var TOTAL_ROW = 'lessonplan-total-row';
 
-    lessonPlanTableService.generateLessonPlan = function (scope) {
-      var table = document.getElementById("lessonplan-table-body");
+    lessonPlanTableService.generateLessonPlan = function (scope, isView) {
+      var table = document.getElementById('lessonplan-table');
       table.innerHTML = '';
 
-      //table.appendChild(tableHeader(scope));
+      table.appendChild(tableHeader(scope));
 
+      var body = document.createElement('tbody');
       var journalDialogFunctions = [];
       for (var moduleIndex = 0; moduleIndex < scope.record.modules.length; moduleIndex++) {
         var module = scope.record.modules[moduleIndex];
-        table.appendChild(moduleRow(scope, module, moduleIndex));
-        table.appendChild(moduleHoursRow(scope, module));
+        body.appendChild(moduleRow(scope, module, moduleIndex, isView));
+        body.appendChild(moduleHoursRow(scope, module));
 
         for (var journalIndex = 0; journalIndex < module.journals.length; journalIndex++) {
           var journal = module.journals[journalIndex];
-          table.appendChild(journalRow(scope, journal));
+          body.appendChild(journalRow(scope, journal));
 
           if (journal.teachers.length === 1) {
-            table.appendChild(teachersStudyLoadRow(scope, journal.teachers[0].teacher.id));
+            body.appendChild(teachersStudyLoadRow(scope, journal.teachers[0].teacher.id));
           }
 
           var capacityTypes = getCapacityTypes(scope.formState.capacityTypes, journal.hours);
@@ -130,11 +131,13 @@ angular.module('hitsaOis')
                 journalButtonsDiv.appendChild(journalTeacherCapacitySpan);
               }
 
-              var editJournalLink = document.createElement('a');
-              editJournalLink.className = BUTTON;
-              editJournalLink.innerHTML = $translate.instant('main.button.change');
-              editJournalLink.href = editJournalUrl(journal);
-              journalButtonsDiv.appendChild(editJournalLink);
+              if (!isView) {
+                var editJournalLink = document.createElement('a');
+                editJournalLink.className = BUTTON;
+                editJournalLink.innerHTML = $translate.instant('main.button.change');
+                editJournalLink.href = editJournalUrl(journal);
+                journalButtonsDiv.appendChild(editJournalLink);
+              }
 
               journalInfoColumnDiv.appendChild(journalButtonsDiv);
               journalInfoColumn.appendChild(journalInfoColumnDiv);
@@ -165,13 +168,18 @@ angular.module('hitsaOis')
                     ctHourColumn.classList.add(DIVIDER);
                   }
 
-                  var ctHourInput = document.createElement('input');
-                  ctHourInput.setAttribute('type', 'number');
-                  ctHourInput.setAttribute('name', WEEK_HOUR_INPUT + SEPARATOR + moduleIndex + SEPARATOR +
-                    journalIndex + SEPARATOR + capacityType.code + SEPARATOR + weekIndex);
-                  ctHourInput.setAttribute('value', journal.hours[capacityType.code][weekIndex]);
-                  setWeekHourInputListener(scope, ctHourInput);
-
+                  var ctHourInput = null;
+                  if (isView) {
+                    ctHourInput = document.createElement('div');
+                    ctHourInput.innerHTML = journal.hours[capacityType.code][weekIndex];
+                  } else {
+                    ctHourInput = document.createElement('input');
+                    ctHourInput.setAttribute('type', 'number');
+                    ctHourInput.setAttribute('name', WEEK_HOUR_INPUT + SEPARATOR + moduleIndex + SEPARATOR +
+                      journalIndex + SEPARATOR + capacityType.code + SEPARATOR + weekIndex);
+                    ctHourInput.setAttribute('value', journal.hours[capacityType.code][weekIndex]);
+                    setWeekHourInputListener(scope, ctHourInput);
+                  }
                   ctHourColumn.appendChild(ctHourInput);
 
                   ctRow.appendChild(ctHourColumn);
@@ -186,12 +194,18 @@ angular.module('hitsaOis')
                   spHourColumn.classList.add(CENTER);
                   spHourColumn.classList.add(DIVIDER);
 
-                  var spHourInput = document.createElement('input');
-                  spHourInput.setAttribute('type', 'number');
-                  spHourInput.setAttribute('name', PERIOD_HOUR + SEPARATOR + moduleIndex + SEPARATOR +
-                    journalIndex + SEPARATOR + capacityType.code + SEPARATOR + spIndex);
-                  spHourInput.setAttribute('value', journal.spHours[capacityType.code][spIndex]);
-                  setStudyPeriodHourInputListener(scope, spHourInput);
+                  var spHourInput = null;
+                  if (isView) {
+                    spHourInput = document.createElement('div');
+                    spHourInput.innerHTML = journal.spHours[capacityType.code][spIndex];
+                  } else {
+                    spHourInput = document.createElement('input');
+                    spHourInput.setAttribute('type', 'number');
+                    spHourInput.setAttribute('name', PERIOD_HOUR + SEPARATOR + moduleIndex + SEPARATOR +
+                      journalIndex + SEPARATOR + capacityType.code + SEPARATOR + spIndex);
+                    spHourInput.setAttribute('value', journal.spHours[capacityType.code][spIndex]);
+                    setStudyPeriodHourInputListener(scope, spHourInput);
+                  }
                   spHourColumn.appendChild(spHourInput);
 
                   ctRow.appendChild(spHourColumn);
@@ -199,18 +213,20 @@ angular.module('hitsaOis')
               }
             }
 
-            table.appendChild(ctRow);
+            body.appendChild(ctRow);
           }
-          table.appendChild(journalTotalRow(scope, journal));
+          body.appendChild(journalTotalRow(scope, journal));
         }
 
         // module total rows
         if (scope.formState.showTotals) {
-          addModuleTotalRows(scope, table, module, moduleIndex);
+          addModuleTotalRows(scope, body, module, moduleIndex);
         }
       }
 
-      addTotalRows(scope, table);
+      addTotalRows(scope, body);
+      table.appendChild(body);
+
       table = $compile(table)(scope);
       scope.$broadcast('refreshFixedColumns');
     };
@@ -330,7 +346,6 @@ angular.module('hitsaOis')
     }
 
     /* TABLE GENERATION FUNCTIONS */
-    //only updates when scrolling, when study periods are changed, it disappears and reappears when table is scrolled
     function tableHeader(scope) {
       var header = document.createElement("thead");
       var studyPeriodsRow = document.createElement("tr");
@@ -365,7 +380,7 @@ angular.module('hitsaOis')
           var week = scope.formState.weekNrs[weekIndex];
           if (week.show) {
             var weekColumn = document.createElement("th");
-            weekColumn.title = scope.formState.weekBeginningDates[weekIndex];
+            weekColumn.title = $filter('hoisDate')(scope.formState.weekBeginningDates[weekIndex]);
             weekColumn.innerHTML = week.nr;
             weekColumn.classList.add(CENTER);
             if (week.endOfPeriod) {
@@ -374,7 +389,7 @@ angular.module('hitsaOis')
 
             var legend = getLegendByWeek(scope, week.nr);
             if (legend) {
-              weekColumn.style = legend;
+              weekColumn.style.backgroundColor = legend;
             }
             weeksRow.appendChild(weekColumn);
           }
@@ -384,7 +399,7 @@ angular.module('hitsaOis')
       return header;
     }
 
-    function moduleRow(scope, module, moduleIndex) {
+    function moduleRow(scope, module, moduleIndex, isView) {
       var row = document.createElement("tr");
 
       var moduleNameTd = document.createElement("td");
@@ -400,10 +415,12 @@ angular.module('hitsaOis')
       }
       moduleNameTd.appendChild(moduleSpan);
 
-      var addModuleLink = document.createElement("a");
-      addModuleLink.innerHTML = $translate.instant('lessonplan.addjournal');
-      addModuleLink.href = newJournalUrl(scope.lessonPlanId, module);
-      moduleNameTd.appendChild(addModuleLink);
+      if (!isView) {
+        var addJournalLink = document.createElement("a");
+        addJournalLink.innerHTML = $translate.instant('lessonplan.addjournal');
+        addJournalLink.href = newJournalUrl(scope.lessonPlanId, module);
+        moduleNameTd.appendChild(addJournalLink);
+      }
       row.appendChild(moduleNameTd);
 
       var responsibleTeacherTd = document.createElement("td");
@@ -420,21 +437,47 @@ angular.module('hitsaOis')
 
       var responsibleTeacherDiv = document.createElement("div");
       responsibleTeacherDiv.className = 'flex-70';
-
-      var responsibleTeacherAutocomplete = document.createElement("hois-autocomplete");
-      responsibleTeacherAutocomplete.setAttribute('label', $translate.instant('lessonplan.responsibleformodule'));
-      responsibleTeacherAutocomplete.setAttribute('ng-model', 'record.modules[' + moduleIndex + '].teacher');
-      responsibleTeacherAutocomplete.setAttribute('method', 'teachers');
-      var additionalQueryParams = 
-        '{valid: true' + (scope.record.modules[moduleIndex].teacher ? ', selectedTeacherId:' + scope.record.modules[moduleIndex].teacher.id : '') + '}';
-      responsibleTeacherAutocomplete.setAttribute('additional-query-params', additionalQueryParams);
-      responsibleTeacherDiv.appendChild(responsibleTeacherAutocomplete);
+      responsibleTeacherDiv.appendChild(responsibleTeacherField(scope, moduleIndex, isView));
 
       emptyDiv1.appendChild(responsibleTeacherDiv);
       responsibleTeacherTd.appendChild(emptyDiv1);
       row.appendChild(responsibleTeacherTd);
 
       return row;
+    }
+
+    function responsibleTeacherField(scope, moduleIndex, isView) {
+      var responsibleTeacher = null;
+      if (isView) {
+        responsibleTeacher = document.createElement('div');
+        responsibleTeacher.classList.add('form-readonly');
+
+        var responsibleTeacherContainer = document.createElement('md-input-container');
+        responsibleTeacherContainer.style='width: 100%;';
+
+        var responsibleTeacherLabel = document.createElement('label');
+        responsibleTeacherLabel.innerHTML = $translate.instant('lessonplan.responsibleformodule');
+        responsibleTeacherContainer.appendChild(responsibleTeacherLabel);
+
+        var responsibleTeacherValue = document.createElement('hois-value');
+        responsibleTeacherValue.setAttribute('value', 'currentLanguageNameField(record.modules[' + moduleIndex + '].teacher)');
+        responsibleTeacherContainer.appendChild(responsibleTeacherValue);
+
+        var emptyDiv = document.createElement('div');
+        emptyDiv.innerHTML = '&nbsp;';
+
+        responsibleTeacher.appendChild(emptyDiv);
+        responsibleTeacher.appendChild(responsibleTeacherContainer);
+      } else {
+        responsibleTeacher = document.createElement('hois-autocomplete');
+        responsibleTeacher.setAttribute('label', $translate.instant('lessonplan.responsibleformodule'));
+        responsibleTeacher.setAttribute('ng-model', 'record.modules[' + moduleIndex + '].teacher');
+        responsibleTeacher.setAttribute('method', 'teachers');
+        var additionalQueryParams = 
+        '{valid: true' + (scope.record.modules[moduleIndex].teacher ? ', selectedTeacherId:' + scope.record.modules[moduleIndex].teacher.id : '') + '}';
+        responsibleTeacher.setAttribute('additional-query-params', additionalQueryParams);
+      }
+      return responsibleTeacher;
     }
 
     function moduleHoursRow(scope, module) {

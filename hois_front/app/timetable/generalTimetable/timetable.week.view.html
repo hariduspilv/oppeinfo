@@ -1,4 +1,5 @@
-<div layout-padding ng-if="shownWeek && (typeId || searchResultEvents)">
+
+<div layout-padding ng-if="shownWeek && timetableEvents">
     <div layout="row" flex>
         <div layout="row" layout-align="end end" layout-sm="column" layout-xs="column" flex="90" style="margin-left: auto; margin-right: auto;">
             <div ng-repeat="c in capacityTypes" flex-offset="5" class="capacity-type-legend" md-colors="{background: c.color}">
@@ -14,37 +15,40 @@
     </div>
 </div>
 
-<div layout-padding ng-if="shownWeek && (typeId || searchResultEvents)">
+<div layout-padding ng-if="shownWeek && timetableEvents">
     <div layout="row" layout-align="center" style="padding: 0px">
-        <a ng-if="shownTimetableCurriculum || shownTeacher || shownRoom" ng-href="#/timetable/{{timetableType}}/{{::schoolId}}/{{typeId}}/{{weekIndex}}">
+        <a ng-if="shownTimetableCurriculum || shownTeacher || shownRoom" ng-href="#/timetable/{{::schoolId}}/{{timetableType}}/{{typeId}}/{{studyYearId}}/{{weekIndex}}">
             <span ng-if="shownTimetableCurriculum">{{shownTimetableCurriculum.studentGroupCode}}, {{currentLanguageNameField(shownTimetableCurriculum)}}</span>
             <span ng-if="shownTeacher">{{shownTeacher.lastname}}, {{shownTeacher.firstname}}</span>
             <span ng-if="shownRoom">{{shownRoom.buildingCode}}, {{shownRoom.roomCode}}</span>
         </a>
     </div>
     <div layout="row" layout-align="center" style="padding: 0px">
-        <md-button ng-if="previousWeekIndex !== undefined && directRoute" class="md-icon-button md-primary" ng-href="#/timetable/{{timetableType}}/{{::schoolId}}/{{typeId}}/{{previousWeekIndex}}">
+        <md-button ng-if="previousWeekIndex !== undefined && directRoute" class="md-icon-button md-primary" ng-href="#/timetable/{{::schoolId}}/{{timetableType}}/{{typeId}}/{{studyYearId}}/{{previousWeekIndex}}">
             <md-icon>arrow_back</md-icon>
         </md-button>
-        <md-button ng-if="previousWeekIndex !== undefined && !directRoute" class="md-icon-button md-primary" ng-click="previousWeek(typeId, previousWeekIndex)">
+        <md-button ng-if="previousWeekIndex !== undefined && !directRoute" class="md-icon-button md-primary" ng-click="previousWeek(previousWeekIndex)">
             <md-icon>arrow_back</md-icon>
         </md-button>
-        <h2 ng-if="shownStudyPeriods" style="display:inline-block">{{shownStudyPeriods}}. {{shownWeek.start | hoisDate}} - {{shownWeek.end | hoisDate}}</h2>
-        <h2 ng-if="!shownStudyPeriods" style="display:inline-block">{{shownWeek.start | hoisDate}} - {{shownWeek.end | hoisDate}}</h2>
-        <md-button ng-if="nextWeekIndex && directRoute" class="md-icon-button md-primary" ng-href="#/timetable/{{timetableType}}/{{::schoolId}}/{{typeId}}/{{nextWeekIndex}}">
+
+        <h2 ng-if="shownStudyPeriods" style="display:inline-block">{{shownStudyPeriods}}.&nbsp;</h2>
+        <select class="timetableWeekSelect" ng-model="shownWeek" ng-change="weekSelectChange(shownWeek)" required
+          ng-options="((week.start | hoisDate) + ' - ' + (week.end | hoisDate)) for week in weeks"></select>
+
+        <md-button ng-if="nextWeekIndex && directRoute" class="md-icon-button md-primary" ng-href="#/timetable/{{::schoolId}}/{{timetableType}}/{{typeId}}/{{studyYearId}}/{{nextWeekIndex}}">
             <md-icon>arrow_forward</md-icon>
         </md-button>
-        <md-button ng-if="nextWeekIndex && !directRoute" class="md-icon-button md-primary" ng-click="nextWeek(typeId, nextWeekIndex)">
+        <md-button ng-if="nextWeekIndex && !directRoute" class="md-icon-button md-primary" ng-click="nextWeek(nextWeekIndex)">
             <md-icon>arrow_forward</md-icon>
         </md-button>
     </div>
 
     <div ng-if="!timetableSearch" layout="column" layout-align="center center">
-        <span ng-if="timetableEvents && !(timetableEvents.length > 0)">{{'timetable.error.noWeekTimetable' | translate}}</span>
+        <span ng-if="!(timetableEvents.length > 0)">{{'timetable.error.noWeekTimetable' | translate}}</span>
         <span ng-if="shownStudent.isHigher && shownWeek.connectedSubjects === false">{{'timetable.error.noDeclaredSubjects' | translate}}</span>
         <span ng-if="!shownStudent.isHigher && shownWeek.connectedSubjects === false">{{'timetable.error.noConnectedModules' | translate}}</span>
     </div>
-    <div ng-if="timetableSearch && (timetableEvents && !(timetableEvents.length > 0))" layout="row" layout-align="center">{{'timetable.error.noSearchResults' | translate}}</div>
+    <div ng-if="timetableSearch && !(timetableEvents.length > 0)" layout="row" layout-align="center">{{'timetable.error.noSearchResults' | translate}}</div>
 
     <div hide-xs ng-if="timetableEvents && timetableEvents.length > 0" layout="column" flex="90" style="border: 1px solid #ccc; margin-left: auto; margin-right: auto;" id="vTimetable">
         <div layout="row" style="position:relative">
@@ -60,7 +64,7 @@
                 </div>
             </div>
             <div ng-repeat="day in weekColumns" flex="20" layout="column" style="position:relative; border-left: 1px solid #ccc;border-collapse: collapse">
-                <div style="height:32px;text-align:center" md-colors="day.today ?  {background: 'accent-400'}:{}">{{'timetable.timetablePlan.' + day.name | translate}}<br>{{day.date | hoisDate}}</div>
+                <div style="height:32px;text-align:center" md-colors="day.today ? {background: 'accent-400'}:{}">{{'timetable.timetablePlan.' + day.name | translate}}<br>{{day.date | hoisDate}}</div>
                 <div layout="row">
                     <div flex ng-repeat="event in day.events track by $index" ng-style="{'height': event.rowHeight + 'px', 'top': event.top + 'px', 'z-index': $index, 'left': event.left+'%','width': 'calc('+event.width +'% - 2px)'}"
                         md-colors="event.public ? {background: getEventColor(event.capacityType)} : {background: 'accent-100-0.8'}"
@@ -102,21 +106,21 @@
                         </div>
                         <div>
                             <span ng-repeat="teacher in event.teachers track by $index">
-                                <a ng-if="teacher.id" ng-href="/#/timetable/teacher/{{::schoolId}}/{{teacher.id}}/{{weekIndex}}">{{teacher.name}}</a>
+                                <a ng-if="teacher.id" ng-href="/#/timetable/{{::schoolId}}/teacher/{{teacher.id}}/{{studyYearId}}/{{weekIndex}}">{{teacher.name}}</a>
                                 <span ng-if="!teacher.id">{{teacher.name}}</span>
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>
                         <div>
                             <span ng-repeat="room in event.rooms track by $index">
-                                <a ng-if="room.id" ng-href="/#/timetable/room/{{::schoolId}}/{{room.id}}/{{weekIndex}}">{{room.buildingCode}}-{{room.roomCode}}</a>
+                                <a ng-if="room.id" ng-href="/#/timetable/{{::schoolId}}/room/{{room.id}}/{{studyYearId}}/{{weekIndex}}">{{room.buildingCode}}-{{room.roomCode}}</a>
                                 <span ng-if="!room.id">{{room.roomCode}}</span>
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>
                         <div>
                             <span ng-repeat="studentGroup in event.studentGroups track by $index">
-                                <a ng-href="/#/timetable/group/{{::schoolId}}/{{studentGroup.id}}/{{weekIndex}}">{{studentGroup.code}}</a>
+                                <a ng-href="/#/timetable/{{::schoolId}}/group/{{studentGroup.id}}/{{studyYearId}}/{{weekIndex}}">{{studentGroup.code}}</a>
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>
@@ -143,7 +147,7 @@
                         <div>
                             {{event.teachers.length &gt; 0 ? (auth.higher ? ('student.result.teacherHigher' | translate) : ('student.result.teacherVocational' | translate)) : ""}}
                             <span ng-repeat="teacher in event.teachers track by $index">
-                                <a ng-if="teacher.id" ng-href="/#/timetable/teacher/{{::schoolId}}/{{teacher.id}}">{{teacher.name}}</a>
+                                <a ng-if="teacher.id" ng-href="/#/timetable/{{::schoolId}}/teacher/{{teacher.id}}/{{studyYearId}}/{{weekIndex}}">{{teacher.name}}</a>
                                 <span ng-if="!teacher.id">{{teacher.name}}</span>
                                 {{$last ? '' : ', '}}
                             </span>
@@ -151,7 +155,7 @@
                         <div>
                             {{event.rooms.length &gt; 0 ? ('lessonplan.event.room' | translate) : ""}}
                             <span ng-repeat="room in event.rooms track by $index">
-                                <a ng-if="room.id" ng-href="/#/timetable/room/{{::schoolId}}/{{room.id}}">{{room.buildingCode}}-{{room.roomCode}}</a>
+                                <a ng-if="room.id" ng-href="/#/timetable/{{::schoolId}}/room/{{room.id}}/{{studyYearId}}/{{weekIndex}}">{{room.buildingCode}}-{{room.roomCode}}</a>
                                 <span ng-if="!room.id">{{room.roomCode}}</span>
                                 {{$last ? '' : ', '}}
                             </span>
@@ -159,7 +163,7 @@
                         <div>
                             {{event.studentGroups.length &gt; 0 ? ('directive.student.studentGroup' | translate) : ""}}
                             <span ng-repeat="studentGroup in event.studentGroups track by $index">
-                                <a ng-href="/#/timetable/group/{{::schoolId}}/{{studentGroup.id}}">{{studentGroup.code}}</a>
+                                <a ng-href="/#/timetable/{{::schoolId}}/group/{{studentGroup.id}}/{{studyYearId}}/{{weekIndex}}">{{studentGroup.code}}</a>
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>
@@ -172,12 +176,12 @@
 
     <div>
         <md-button class="md-icon-button timetableIconButton" ng-click="generateCalendar()">
-            <md-tooltip md-direction="bottom">{{'timetable.saveToCalendar' | translate}}</md-tooltip>
+            <md-tooltip md-direction="top">{{'timetable.saveToCalendar' | translate}}</md-tooltip>
             <md-icon md-font-set="material-icons md-primary md-48">event</md-icon>
         </md-button>
 
-        <md-button ng-if="directRoute && auth != null" ng-click="back('#/timetable/generalTimetableByGroup'); emptyParentVariable()" class="md-raised">{{'main.button.back' | translate}}</md-button>
-        <md-button ng-if="directRoute && auth == null" ng-click="back('#/timetable/generalTimetableByGroup/' + schoolId)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="directRoute && auth != null" ng-click="back('#/timetable/generalTimetableByGroup');" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="directRoute && auth == null" ng-click="back('#/timetable/' + schoolId + 'generalTimetableByGroup/')" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>
 </div>
 

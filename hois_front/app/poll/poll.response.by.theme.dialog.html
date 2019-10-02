@@ -66,6 +66,7 @@
                                             <label>{{'poll.response.school' | translate}}</label>
                                             <hois-value value="currentLanguageNameField(criteria.school)"></hois-value>
                                         </md-input-container>
+                                        <div flex="50" flex-xs="0" ng-if="criteria.school" flex-offset="5" flex-offset-xs="0"></div>
                                     </div>
                                     <div layout="row" layout-xs="column" ng-if="criteria.student !== null && criteria.studentGroup !== null">
                                         <md-input-container flex="50" flex-xs="100" ng-if="criteria.student">
@@ -76,6 +77,7 @@
                                             <label>{{'poll.studentgroup' | translate}}</label>
                                             <hois-value value="currentLanguageNameField(criteria.studentGroup)"></hois-value>
                                         </md-input-container>
+                                        <div flex="50" flex-xs="0" ng-if="!criteria.student" flex-offset="5" flex-offset-xs="0"></div>
                                     </div>
                                     <div layout="row" layout-xs="column" ng-if="criteria.enterprise !== null || (criteria.practiceFrom !== null && criteria.practiceThru != null)">
                                         <md-input-container flex="50" flex-xs="100" class="margin-bottom-0" ng-if="criteria.enterprise">
@@ -86,6 +88,7 @@
                                             <label>{{'poll.response.practiceDuration' | translate}}</label>
                                             <hois-value value="(criteria.practiceFrom | hoisDate) + ' - ' + (criteria.practiceThru | hoisDate)"></hois-value>
                                         </md-input-container>
+                                        <div flex="50" flex-xs="0" ng-if="!criteria.enterprise" flex-offset="5" flex-offset-xs="0"></div>
                                     </div>
                                     <div layout="row" ng-if="criteria.foreword !== null">
                                         <p style="word-break: break-word; font-size: 15px;">{{criteria.foreword}}</p>

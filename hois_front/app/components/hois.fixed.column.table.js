@@ -1,15 +1,51 @@
 'use strict';
 
 //based on https://technology.cap-hpi.com/blog/fixing-column-headers-using-angular/
-angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout) {
+angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout, $window) {
   return {
     restrict: 'A',
     scope: {
-      fixedColumns: "@"
+      fixedColumns: '@',
+      resizeTable: '@',
+      maxTableHeight: '@',
+      searchCriteriaHeight: '@'
     },
     link: function (scope, element) {
-
       var container = element[0];
+
+      if (angular.isDefined(scope.resizeTable)) {
+        var observer = new MutationObserver(function () {
+          resizeTableHeight();
+        });
+        observer.observe(container, {
+          childList: true,
+          subtree: true
+        });
+
+        var resizeTimer;
+        angular.element($window).on('resize', function() {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(resizeTableHeight, 500);
+        });
+      }
+
+      function resizeTableHeight() {
+        var searchCriteriaHeight = angular.isDefined(scope.searchCriteriaHeight) ? scope.searchCriteriaHeight : 0;
+
+        var tableMaxHeight = 0;
+        if (scope.maxTableHeight) {
+          tableMaxHeight = scope.maxTableHeight - searchCriteriaHeight;
+        } else {
+          tableMaxHeight = $window.innerHeight - searchCriteriaHeight;
+        }
+
+        var table = container.querySelectorAll('table');
+        var currentTableHeight = table[0].offsetHeight;
+
+        var newTableHeight = currentTableHeight > 0 && currentTableHeight < tableMaxHeight ? currentTableHeight : tableMaxHeight;
+        newTableHeight += 17; // scrollbar width
+        element.css('height', newTableHeight + 'px');
+      }
 
       function applyClasses(selector, newClass, cell) {
         var arrayItems = [].concat.apply([], container.querySelectorAll(selector));
@@ -24,7 +60,7 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout) {
             currentElement = angular.element(row).find(cell)[j];
             if (currentElement !== undefined && (!rowElement.hasClass("fix") || rowElement.hasClass("fix") && currentElement.classList.contains("fix"))) {
               currentElement.classList.add(newClass);
-              
+
               if (currentElement.hasAttribute('colspan')) {
                 colspan = currentElement.getAttribute('colspan');
                 numFixedColumns -= (parseInt(colspan) - 1);
@@ -83,6 +119,13 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout) {
           container.scrollLeft = 0;
         }, 0);
       });
+
+      scope.$on('refreshFixedTableHeight', function () {
+        $timeout(function () {
+          resizeTableHeight();
+        }, 0);
+      });
+
     }
   };
 

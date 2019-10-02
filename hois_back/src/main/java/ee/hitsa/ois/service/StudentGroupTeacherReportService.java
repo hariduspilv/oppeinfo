@@ -757,10 +757,8 @@ public class StudentGroupTeacherReportService {
             studentJournals = studentJournals(studentIds, journalIds);
             studentJournalResults = journalResults(criteria, studentIds, journalIds);
         }
-        if (!studentJournalResults.isEmpty()) {
-            setStudentJournalSpecifics(criteria, students, studentResultColumns, studentJournals,
-                    studentJournalResults);
-        }
+        setStudentJournalSpecifics(criteria, students, studentResultColumns, studentJournals,
+                studentJournalResults);
     }
 
     private Map<Long, List<Long>> studentJournals(List<Long> studentIds, List<Long> journalIds) {
@@ -845,7 +843,9 @@ public class StudentGroupTeacherReportService {
             Long studentId = student.getId();
             List<Long> journals = studentJournals.containsKey(studentId) ? studentJournals.get(studentId)
                     : new ArrayList<>();
-            List<StudentJournalEntryResultDto> results = journalResults.get(studentId);
+            List<StudentJournalEntryResultDto> results = journalResults.containsKey(studentId)
+                    ? journalResults.get(studentId)
+                    : new ArrayList<>();
 
             List<StudentResultColumnDto> journalColumns = StreamUtil.toFilteredList(r -> r.getJournalResult() != null,
                     resultColumns.get(studentId));
@@ -1023,11 +1023,7 @@ public class StudentGroupTeacherReportService {
                     StudentModuleResultDto moduleResult = column.getModuleResult();
                     List<StudentResultDto> results = StreamUtil.toFilteredList(
                             r -> moduleResult.getId().equals(r.getModuleId()), studentModuleResults.get(studentId));
-                    
-                    if (moduleResult.getId().equals(Long.valueOf(6145))) {
-                        System.out.println("test");
-                    }
-                    
+
                     if (!results.isEmpty()) {
                         // if multiple grades, show latest
                         StudentResultDto result = results.get(0);

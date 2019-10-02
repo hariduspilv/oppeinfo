@@ -14,10 +14,10 @@
             <hois-select ng-model="criteria.studyPeriod" values="formState.studyPeriods" required sorted-query="true"></hois-select>
           </md-input-container>
 
-          <md-input-container required ng-show="higher && vocational" flex="45" flex-sm="100" flex-xs="100" flex-offset="5">
+          <md-input-container required ng-if="higher && vocational" flex="45" flex-sm="100" flex-xs="100" flex-offset="5">
             <label>{{'timetable.management.type' | translate}}</label>
             <hois-classifier-select ng-model="criteria.type" model-value-attr="code" default-value="TUNNIPLAAN_LIIK_V"
-                                    filter-values show-only-values="true"
+                                    filter-values hide-empty show-only-values="true"
                                     watch-model connect-main-classifier-code="TUNNIPLAAN_LIIK"
                                     main-classifier-code="TUNNIPLAAN_LIIK"></hois-classifier-select>
           </md-input-container>

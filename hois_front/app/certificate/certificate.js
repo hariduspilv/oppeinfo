@@ -5,7 +5,7 @@ angular.module('hitsaOis')
   function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, $q, $route, CertificateType, CertificateUtil) {
     $scope.auth = $route.current.locals.auth;
     var clMapper = Classifier.valuemapper({type: 'TOEND_LIIK', status: 'TOEND_STAATUS'});
-    QueryUtils.createQueryForm($scope, '/certificate', {order: 'type.' + $scope.currentLanguageNameField()}, clMapper.objectmapper);
+    QueryUtils.createQueryForm($scope, '/certificate', {order: '-c.inserted'}, clMapper.objectmapper);
     DataUtils.convertStringToDates($scope.criteria, ['insertedFrom', 'insertedThru']);
 
     if ($route.current.params.ordered) {

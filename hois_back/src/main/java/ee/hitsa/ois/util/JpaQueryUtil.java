@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -192,6 +193,19 @@ public abstract class JpaQueryUtil {
 
     public static String resultAsString(Object row, int index) {
         return (String)(getValue(row, index));
+    }
+    
+    /**
+     * For cases when "string_agg" is used to generated string object.
+     * 
+     * @param row
+     * @param index
+     * @param delimeter
+     * @return
+     */
+    public static List<String> resultAsStringList(Object row, int index, String delimeter) {
+        String value = (String)(getValue(row, index));
+        return value == null ? Collections.emptyList() : Arrays.asList(value.split(delimeter));
     }
 
     private static Object getValue(Object row, int index) {

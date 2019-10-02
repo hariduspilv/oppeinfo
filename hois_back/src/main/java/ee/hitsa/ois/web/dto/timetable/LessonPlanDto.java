@@ -273,9 +273,7 @@ public class LessonPlanDto extends LessonPlanForm {
         private String nameEt;
         private String groupProportion;
         private List<LessonPlanModuleJournalThemeDto> themes;
-        private List<LessonPlanModuleJournalTeacherDto> teachers;
         private List<String> studentGroups;
-        private Boolean capacityDiff;
 
         public static LessonPlanModuleJournalDto of(LessonPlan lessonPlan, Journal journal, LessonPlanCapacityMapper capacityMapper) {
             LessonPlanModuleJournalDto dto = new LessonPlanModuleJournalDto();
@@ -330,28 +328,12 @@ public class LessonPlanDto extends LessonPlanForm {
             this.themes = themes;
         }
 
-        public List<LessonPlanModuleJournalTeacherDto> getTeachers() {
-            return teachers;
-        }
-
-        public void setTeachers(List<LessonPlanModuleJournalTeacherDto> teachers) {
-            this.teachers = teachers;
-        }
-
         public List<String> getStudentGroups() {
             return studentGroups;
         }
 
         public void setStudentGroups(List<String> studentGroups) {
             this.studentGroups = studentGroups;
-        }
-
-        public Boolean getCapacityDiff() {
-            return capacityDiff;
-        }
-
-        public void setCapacityDiff(Boolean capacityDiff) {
-            this.capacityDiff = capacityDiff;
         }
     }
 

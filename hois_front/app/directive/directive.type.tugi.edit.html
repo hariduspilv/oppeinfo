@@ -15,7 +15,7 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row ng-repeat-start="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
@@ -42,9 +42,14 @@
         </td>
         <td md-cell>
           <md-datepicker ng-model="row.nominalStudyEnd" name="students[{{$index}}].nominalStudyEnd"
-            aria-label="{{'directive.student.nominalStudyEnd' | translate}}"></md-datepicker>
+            aria-label="{{'directive.student.nominalStudyEnd' | translate}}" md-min-date="row.studentNominalStudyEnd"></md-datepicker>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].nominalStudyEnd'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>
+            <p ng-message="serverside">
+              <p ng-repeat="err in directiveForm['students['+$index+'].nominalStudyEnd'].$serverError">
+                {{ err.code | translate}}
+              </p>
+            </p>
           </div>
         </td>
         <td md-cell>
@@ -55,14 +60,26 @@
           </div>
         </td>
         <td md-cell>
-          <md-datepicker ng-model="row.endDate" md-min-date="row.startDate" name="students[{{$index}}].endDate"
+          <md-datepicker ng-model="row.endDate" md-min-date="getMinDate(row.startDate)" name="students[{{$index}}].endDate"
             aria-label="{{'directive.student.supportServiceEndDate' | translate}}"></md-datepicker>
           <div class="invalid" ng-messages="directiveForm['students['+$index+'].endDate'].$error">
             <p ng-message="required">{{'main.required' | translate}}</p>
+            <p ng-message="serverside">
+              <p ng-repeat="err in directiveForm['students['+$index+'].endDate'].$serverError">
+                {{ err.code | translate}}
+              </p>
+            </p>
           </div>
         </td>
         <td md-cell>
           <a ng-click="deleteStudent(row)" md-no-ink class="remove">&times;</a>
+        </td>
+      </tr>
+      <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-repeat-end style="height: auto;">
+        <td></td>
+        <td colspan="9">
+          <p class="md-body-1" md-colors="{color: 'warn'}" ng-if="!row.hasSpecialNeed" style="margin: 0;">
+            {{'application.messages.studentHasNoSpecialNeed' | translate}}</p>
         </td>
       </tr>
     </tbody>

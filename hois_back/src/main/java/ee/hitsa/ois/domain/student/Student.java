@@ -1,6 +1,7 @@
 package ee.hitsa.ois.domain.student;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -42,6 +43,8 @@ public class Student extends StudentBase {
     private List<PracticeJournal> practiceJournals;
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Dormitory> boardingSchools;
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StudentSpecialNeed> specialNeeds;
 
     public Person getPerson() {
         return person;
@@ -129,5 +132,14 @@ public class Student extends StudentBase {
 
     public void setBoardingSchools(List<Dormitory> boardingSchools) {
         this.boardingSchools = boardingSchools;
+    }
+
+    public List<StudentSpecialNeed> getSpecialNeeds() {
+        return specialNeeds != null ? specialNeeds : (specialNeeds = new ArrayList<>());
+    }
+
+    public void setSpecialNeeds(List<StudentSpecialNeed> specialNeeds) {
+        getSpecialNeeds().clear();
+        getSpecialNeeds().addAll(specialNeeds);
     }
 }

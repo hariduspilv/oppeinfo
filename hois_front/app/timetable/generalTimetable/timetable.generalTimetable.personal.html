@@ -1,18 +1,28 @@
 <div ng-include="'timetable/generalTimetable/timetable.generalTimetable.navbar.html'"></div>
 
-<div ng-if="auth.isStudent() || auth.isParent()" ng-controller="StudentTimetableViewController">
-  <div ng-include="'timetable/timetable.week.view.html'"></div>
-</div>
-
-<div ng-if="auth.isTeacher()" ng-controller="TeacherTimetableViewController">
-  <div ng-include="'timetable/timetable.week.view.html'"></div>
-</div>
-
-<div layout-padding>
-  <div flex>
-    <div ng-repeat="row in timetables track by $index">
-      <a ng-class="{shownTimetable: $index === shownTimetableIndex}" ng-click="showTimetable(row.id, row.studyPeriodId, $index)">
-        {{currentLanguageNameField(row)}} {{row.startDate | hoisDate}}-{{row.endDate | hoisDate}}</a>
+<div>
+  <div layout="row" layout-sm="column" layout-xs="column" layout-margin>
+    <div layout="column" class="form-readonly" flex="50" flex-sm="100" flex-offset="50" flex-offset-xs="0"
+      flex-offset-sm="0">
+      <div>&nbsp;</div>
+      <md-input-container>
+        <label class="textInput">{{'timetable.search.studyYear' | translate}}</label>
+        <div class="md-body-1 hois-value">
+          <span ng-repeat="sy in studyYears | orderBy: 'startDate'">
+            <a ng-click="changeStudyYear(sy)" ng-style="{'font-weight': criteria.studyYearId === sy.id ? 'bold' : 'normal'}">
+              {{currentLanguageNameField(sy)}}</a>
+            <span>&nbsp;</span>
+          </span>
+        </div>
+      </md-input-container>
     </div>
+  </div>
+
+  <div ng-if="auth.isStudent() || auth.isParent()" ng-controller="TimetableWeekViewController">
+    <div ng-include="'timetable/generalTimetable/timetable.week.view.html'"></div>
+  </div>
+
+  <div ng-if="auth.isTeacher()" ng-controller="TimetableWeekViewController">
+    <div ng-include="'timetable/generalTimetable/timetable.week.view.html'"></div>
   </div>
 </div>

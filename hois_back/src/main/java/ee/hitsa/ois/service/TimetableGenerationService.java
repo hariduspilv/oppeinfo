@@ -35,6 +35,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.timetable.LessonTimeDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableByDto;
@@ -136,7 +137,7 @@ public class TimetableGenerationService {
         String uid = "UID:" + getEventUID(event.getId()) + "\r\n";
         String dtStart = "DTSTART:" + getEventTime(event.getDate(), event.getTimeStart()) + "\r\n";
         String dtEnd = "DTEND:" + getEventTime(event.getDate(), event.getTimeEnd()) + "\r\n";
-        String eventName = Language.ET.equals(lang) ? event.getNameEt() : event.getNameEn();
+        String eventName = getEventName(event, lang);
         String summary = "SUMMARY:" + eventName + "\r\n";
         String description = "DESCRIPTION:" + getEventTeachers(event.getTeachers(), lang)
                 + getEventStudentGroups(event.getStudentGroups(), lang) + "\r\n";
@@ -157,14 +158,18 @@ public class TimetableGenerationService {
         return eventTime.format(FORMATTER);
     }
 
+    private static String getEventName(TimetableEventSearchDto event, Language lang) {
+        if (Boolean.TRUE.equals(event.getPublicEvent())) {
+            return Language.ET.equals(lang) ? event.getNameEt() : event.getNameEn();
+        }
+        return TranslateUtil.translate("timetable.occupied", lang);
+    }
+
     private static String getEventTeachers(List<TimetableEventSearchTeacherDto> teachers, Language lang) {
         String eventTeachers = "";
         if (teachers != null) {
-            eventTeachers = Language.ET.equals(lang) ? "Õpetajad: " : "Teachers: ";
-            // TODO use Collectors.joining(" ")
-            for (TimetableEventSearchTeacherDto teacher : teachers) {
-                eventTeachers += teacher.getName() + " ";
-            }
+            eventTeachers = TranslateUtil.translate("timetable.teachers", lang) + ": ";
+            eventTeachers += teachers.stream().map(t -> t.getName()).collect(Collectors.joining(" "));
         }
         return eventTeachers;
     }
@@ -172,11 +177,8 @@ public class TimetableGenerationService {
     private static String getEventStudentGroups(List<TimetableEventSearchGroupDto> groups, Language lang) {
         String eventGroups = "";
         if (groups != null) {
-            eventGroups = Language.ET.equals(lang) ? "\\nRühmad: " : "\\nGroups: ";
-            // TODO use Collectors.joining(" ")
-            for (TimetableEventSearchGroupDto group : groups) {
-                eventGroups += group.getCode() + " ";
-            }
+            eventGroups = "\\n" + TranslateUtil.translate("timetable.groups", lang) + ": ";
+            eventGroups += groups.stream().map(g -> g.getCode()).collect(Collectors.joining(" "));
         }
         return eventGroups;
     }
@@ -184,11 +186,9 @@ public class TimetableGenerationService {
     private static String getEventLocation(List<TimetableEventSearchRoomDto> rooms, Language lang) {
         String eventRooms = "";
         if (rooms != null) {
-            eventRooms = Language.ET.equals(lang) ? "Ruumid: " : "Rooms: ";
-            // TODO use Collectors.joining(" ")
-            for (TimetableEventSearchRoomDto room : rooms) {
-                eventRooms += room.getBuildingCode() + "-" + room.getRoomCode() + " ";
-            }
+            eventRooms = TranslateUtil.translate("timetable.rooms", lang) + ": ";
+            eventRooms += rooms.stream().map(r -> r.getBuildingCode() + "-" + r.getRoomCode())
+                    .collect(Collectors.joining(" "));
         }
         return eventRooms;
     }

@@ -72,6 +72,25 @@ public abstract class TranslateUtil {
             throw new BadConfigurationException(String.format("Bundle \"%s\" not found", bundleName), e);
         }
     }
+    
+    /**
+     * Translates string
+     * @param key
+     * @param lang
+     * @return
+     * @throws NullPointerException if key or lang are null
+     */
+    public static String optionalTranslate(String key, Language lang) {
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(lang);
+
+        ResourceBundle bundle = BUNDLE_CACHE.computeIfAbsent(lang, l -> loadBundle(l));
+        try {
+            return bundle.getString(key);
+        } catch(@SuppressWarnings("unused") MissingResourceException e) {
+            return key;
+        }
+    }
 
     private static final ConcurrentMap<Language, ResourceBundle> BUNDLE_CACHE = new ConcurrentHashMap<>();
 }

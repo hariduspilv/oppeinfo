@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.timetable.Timetable;
 import ee.hitsa.ois.exception.HoisException;
@@ -38,6 +39,7 @@ import ee.hitsa.ois.web.commandobject.timetable.TimetableEditForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventHigherForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventVocationalForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableManagementSearchCommand;
+import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.TimetableImportErrorDto;
 import ee.hitsa.ois.web.dto.timetable.GroupTimetableDto;
 import ee.hitsa.ois.web.dto.timetable.HigherTimetablePlanDto;
@@ -67,27 +69,25 @@ public class TimetableController {
 
     @GetMapping("/{id:\\d+}")
     public TimetableDto edit(HoisUserDetails user, @WithEntity Timetable timetable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, timetable.getSchool());
         return timetableService.get(user, timetable);
     }
 
     @GetMapping("/{id:\\d+}/view")
     public TimetableDto get(HoisUserDetails user, @WithEntity Timetable timetable) {
-        //UserUtil.assertIsSchoolAdmin(user);
-        UserUtil.assertSameSchool(user, timetable.getSchool()); //HITSAOIS-462
-        /* IKE TODO */
+        UserUtil.assertSameSchool(user, timetable.getSchool());
         return timetableService.getForView(timetable);
     }
  
     @GetMapping("/{id:\\d+}/createVocationalPlan")
     public VocationalTimetablePlanDto createVocationalPlan(HoisUserDetails user, @WithEntity Timetable timetable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, timetable.getSchool());
         return timetableService.getVocationalPlan(timetable);
     }
     
     @GetMapping("/{id:\\d+}/createHigherPlan")
     public HigherTimetablePlanDto createHigherPlan(HoisUserDetails user, @WithEntity Timetable timetable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, timetable.getSchool());
         return timetableService.getHigherPlan(timetable);
     }
 
@@ -178,67 +178,82 @@ public class TimetableController {
     @PutMapping("/{id:\\d+}")
     public TimetableDto save(HoisUserDetails user, @Valid @RequestBody TimetableEditForm form,
             @WithEntity Timetable timetable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, timetable.getSchool());
         return get(user, timetableService.save(user, form, timetable));
     }
-    
+
     @PutMapping("/{id:\\d+}/confirm")
     public TimetableDto confirm(HoisUserDetails user, @WithEntity Timetable timetable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, timetable.getSchool());
         return get(user, timetableService.confirm(timetable));
     }
-    
+
     @PutMapping("/{id:\\d+}/publicize")
     public TimetableDto publicize(HoisUserDetails user, @WithEntity Timetable timetable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, timetable.getSchool());
         return get(user, timetableService.publicize(timetable));
     }
-    
-    @GetMapping("/timetableStudyYearWeeks/{school:\\d+}")
-    public List<TimetableStudyYearWeekDto> timetableStudyYearWeeks(@PathVariable("school") Long schoolId) {
-        return timetableService.timetableStudyYearWeeks(schoolId);
-    }
-    
-    @GetMapping("/timetableStudyYearWeeks/student/{id:\\d+}")
-    public List<TimetableStudentStudyYearWeekDto> timetableStudyYearWeeksStudent(@WithEntity Student student) {
-        return timetableService.timetableStudyYearWeeksStudent(student);
-    }
-    
-    @GetMapping("/group/{school:\\d+}")
-    public List<GroupTimetableDto> groupTimetables(@PathVariable("school") Long schoolId) {
-        return timetableService.groupTimetables(schoolId);
+
+    @GetMapping("/timetableStudyYears/{school:\\d+}")
+    public List<StudyYearSearchDto> timetableStudyYears(@PathVariable("school") Long schoolId) {
+        return timetableService.timetableStudyYears(schoolId);
     }
 
-    @GetMapping("/teacher/{school:\\d+}")
-    public List<TeacherTimetableDto> teacherTimetables(@PathVariable("school") Long schoolId) {
-        return timetableService.teacherTimetables(schoolId);
+    @GetMapping("/timetableStudyYearWeeks/{studyYear:\\d+}")
+    public List<TimetableStudyYearWeekDto> timetableStudyYearWeeks(@WithEntity("studyYear") StudyYear studyYear) {
+        return timetableService.timetableStudyYearWeeks(studyYear);
     }
-    
-    @GetMapping("/room/{school:\\d+}")
-    public List<RoomTimetableDto> roomTimetables(@PathVariable("school") Long schoolId) {
-        return timetableService.roomTimetables(schoolId);
+
+    @GetMapping("/timetableStudyYearWeeks/{studyYear:\\d+}/student/{id:\\d+}")
+    public List<TimetableStudentStudyYearWeekDto> timetableStudyYearWeeksStudent(
+            @WithEntity("studyYear") StudyYear studyYear, @WithEntity Student student) {
+        return timetableService.timetableStudyYearWeeksStudent(studyYear, student);
     }
-    
+
+    @GetMapping("/group/{school:\\d+}/{studyYear:\\d+}")
+    public List<GroupTimetableDto> groupTimetables(@PathVariable("school") Long schoolId,
+            @PathVariable("studyYear") Long studyYearId) {
+        return timetableService.groupTimetables(schoolId, studyYearId);
+    }
+
+    @GetMapping("/teacher/{school:\\d+}/{studyYear:\\d+}")
+    public List<TeacherTimetableDto> teacherTimetables(@PathVariable("school") Long schoolId,
+            @PathVariable("studyYear") Long studyYearId) {
+        return timetableService.teacherTimetables(schoolId, studyYearId);
+    }
+
+    @GetMapping("/room/{school:\\d+}/{studyYear:\\d+}")
+    public List<RoomTimetableDto> roomTimetables(@PathVariable("school") Long schoolId,
+            @PathVariable("studyYear") Long studyYearId) {
+        return timetableService.roomTimetables(schoolId, studyYearId);
+    }
+
     @GetMapping("/timetableDifference.xls")
-    public void timetableDifferenceExcel(HoisUserDetails user, @RequestParam("id") Long id, HttpServletResponse response) throws IOException {
+    public void timetableDifferenceExcel(HoisUserDetails user, @RequestParam("id") Long id,
+            HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user);
         HttpUtil.xls(response, "timetableDifference.xls", timetableGenerationService.timetableDifferenceExcel(id));
     }
-    
+
     @GetMapping("/timetablePlan.xlsx")
-    public void timetablePlan(HoisUserDetails user, @RequestParam("id") Long id, HttpServletResponse response) throws IOException {
+    public void timetablePlan(HoisUserDetails user, @RequestParam("id") Long id, HttpServletResponse response)
+            throws IOException {
         UserUtil.assertIsSchoolAdmin(user);
         HttpUtil.xls(response, "timetablePlan.xlsx", timetableGenerationService.timetablePlanExcel(id));
     }
-    
+
     @GetMapping("/exportTimetable")
-    public void exportTimetable(HoisUserDetails user, @RequestParam("startDate") LocalDate startDate, @RequestParam("endDate") LocalDate endDate, @RequestParam("studyPeriod") @WithEntity("studyPeriod") StudyPeriod studyPeriod, HttpServletResponse response) throws IOException {
+    public void exportTimetable(HoisUserDetails user, @RequestParam("startDate") LocalDate startDate,
+            @RequestParam("endDate") LocalDate endDate,
+            @RequestParam("studyPeriod") @WithEntity("studyPeriod") StudyPeriod studyPeriod,
+            HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user);
-        Document document = timetableService.getExportedWeek(startDate, endDate, studyPeriod,user);
+        Document document = timetableService.getExportedWeek(startDate, endDate, studyPeriod, user);
         try {
-        	HttpUtil.xml(response, startDate.toString() + "-" + endDate.toString() + ".xml", xmlService.generateFromObject(document));
+            HttpUtil.xml(response, startDate.toString() + "-" + endDate.toString() + ".xml",
+                    xmlService.generateFromObject(document));
         } catch (JAXBException e) {
-        	throw new HoisException(e);
+            throw new HoisException(e);
         }
     }
     

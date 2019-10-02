@@ -92,6 +92,9 @@ public class JobService {
                 cancelJobs(AKADK_JOB_TYPES, directive);
             } else if(DirectiveType.KASKKIRI_VALIS.equals(canceledType)) {
                 cancelJobs(VALIS_JOB_TYPES, directive);
+            } else if (DirectiveType.KASKKIRI_TUGI.equals(canceledType)) {
+                // HITSAOIS-622 TYHIST should send data about TUGI once more.
+                submitEhisSend(directive, null);
             }
             break;
         case KASKKIRI_AKAD:
@@ -123,7 +126,7 @@ public class JobService {
      */
     public List<Job> findExecutableJobs(JobType... types) {
         List<String> typeNames = EnumUtil.toNameList(types);
-        return em.createQuery("select j from Job j where j.status.code = ?1 and j.type.code in ?2 and j.jobTime <= ?3", Job.class)
+        return em.createQuery("select j from Job j where j.status.code = ?1 and j.type.code in ?2 and j.jobTime <= ?3 order by j.inserted", Job.class)
             .setParameter(1, JobStatus.JOB_STATUS_VALMIS.name())
             .setParameter(2, typeNames)
             .setParameter(3, LocalDateTime.now())
