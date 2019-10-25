@@ -963,17 +963,12 @@ public class StudentService {
                 + "grade_code, grade_inserted, teacher_id, teacher_firstname, teacher_lastname, sy_year_code, sy_start_date, "
                 + "is_apel_transfer, is_formal, curriculum_version_result";
 
-        // first value and partition is used to get the most suitable module's themes
-        // if journal has a module that is in student's curriculum version then that module's themes results are taken
         String journalCurriculumResults = " select * from (select distinct on (cvot.id, teacher_id) cvo.id cvo_id, cm.id cm_id, "
                 + "cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits, "
                 + "jes.grade_code grade_code, jes.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
                 + "tp.lastname teacher_lastname, cvot.id cvot_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, "
                 + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, "
-                + "false is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result,"
-                + "first_value(jot.lesson_plan_module_id) over(partition by jot.journal_id order by case when "
-                + "cvo.curriculum_version_id = :curriculumVersionId then 1 else 0 end desc, "
-                + "case when cm.curriculum_id = :curriculumId then 1 else 0 end desc, cvo.curriculum_version_id) as lp_id, jot.lesson_plan_module_id "
+                + "false is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result "
                 + "from journal_student js "
                 + "join journal_omodule_theme jot on jot.journal_id = js.journal_id "
                 + "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id "
@@ -991,15 +986,14 @@ public class StudentService {
                 + "left join person tp on tp.id = t.person_id "
                 + "where js.student_id = :studentId and je.entry_type_code = :entryTypeCode and jes.grade_code is not null "
                     + "and cm.id in (select cmo.curriculum_module_id from curriculum_version cv "
-                    + "join curriculum_version_omodule cmo on cv.id = cmo.curriculum_version_id where cv.id = :curriculumVersionId)) "
-                + "x where lesson_plan_module_id = lp_id";
+                    + "join curriculum_version_omodule cmo on cv.id = cmo.curriculum_version_id where cv.id = :curriculumVersionId)) x";
         
         String journalExtraCurriculumResults = " select distinct on (cvot.id, teacher_id) cvo.id cvo_id, cm.id cm_id, "
                 + "cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits, "
                 + "jes.grade_code grade_code, jes.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
                 + "tp.lastname teacher_lastname, cvot.id cvot_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, "
                 + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, "
-                + "false is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result, null, null "
+                + "false is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result "
                 + "from journal_student js "
                 + "join journal_omodule_theme jot on jot.journal_id = js.journal_id "
                 + "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id "
@@ -1029,7 +1023,7 @@ public class StudentService {
                 + "cvot.credits cvot_credits, pj.grade_code grade_code, pj.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
                 + "tp.lastname teacher_lastname, cvot.id cvot_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, " 
                 + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, "
-                + "false is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result, null, null "
+                + "false is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result "
                 + "from practice_journal pj "
                 + "join practice_journal_module_subject pjms on pj.id = pjms.practice_journal_id "
                 + "join curriculum_version_omodule_theme cvot on cvot.id = pjms.curriculum_version_omodule_theme_id "
