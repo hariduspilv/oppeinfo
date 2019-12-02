@@ -3,8 +3,8 @@
     <!-- <md-progress-circular class="md-hue-2 loader" md-diameter="80px" value="{{progress.value}}"></md-progress-circular> -->
     <md-progress-circular class="md-hue-2 loader" md-diameter="80px"></md-progress-circular>
   </div>
-  <h3 ng-if="text">{{text}}</h3>
-  <h3 ng-if="text">{{progress.value}}%</h3>
+  <h3 ng-if="progress.text">{{progress.text}}</h3>
+  <h3 ng-if="progress.value !== undefined">{{progress.value}}%</h3>
 </md-dialog>
 
 <style>

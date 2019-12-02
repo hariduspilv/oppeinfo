@@ -4,9 +4,11 @@
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
       <form name="studentGroupTeacherReportForm" novalidate>
         <div layout="row" layout-sm="column" layout-xs="column">
-          <hois-autocomplete ng-if="auth.isAdmin()" flex="45" flex-sm="100" flex-xs="100" ng-model="formState.studentGroup"
-            ha-controller="directiveControllers" md-selected-item-change="studentGroupChanged()" method="studentgroups" name="studentGroup"
-            label="{{'report.studentGroupTeacher.studentGroup'}}" additional-query-params="{valid: true, higher: false, studentGroupTeacherId: teacherId}" required></hois-autocomplete>
+          <hois-autocomplete ng-if="auth.isAdmin() || auth.isLeadingTeacher()" flex="45" flex-sm="100" flex-xs="100"
+            ng-model="formState.studentGroup" ha-controller="directiveControllers" md-selected-item-change="studentGroupChanged()" 
+            method="studentgroups" name="studentGroup" label="{{'report.studentGroupTeacher.studentGroup'}}"
+            additional-query-params="{valid: true, higher: false, studentGroupTeacherId: teacherId, userId: auth.isLeadingTeacher() ? auth.user : null}" required>
+          </hois-autocomplete>
           
           <md-input-container ng-if="auth.isTeacher()" flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'report.studentGroupTeacher.studentGroup' | translate}}</label>
@@ -103,7 +105,7 @@
           <md-button ng-href="{{excel(formState.negativeResultsXlsUrl, criteria)}}" class="md-button md-raised" 
             ng-disabled="!criteria.studentGroup || (!criteria.studyYear && !criteria.from)">{{'report.studentGroupTeacher.printNegativeResultsXls' | translate}}</md-button>
           <a ng-click="toggleShowAllParameters()" style="margin-top: 20px">
-            {{formState.showAllParameters ? ('report.studentGroupTeacher.lessParameters' | translate) : ('report.studentGroupTeacher.moreParameters' | translate)}}
+            {{formState.showAllParameters ? ('main.button.lessParameters' | translate) : ('main.button.moreParameters' | translate)}}
           </a>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>

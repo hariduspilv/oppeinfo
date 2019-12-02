@@ -14,10 +14,8 @@
                     </md-input-container>
                 </div>
                 <div layout-gt-sm="row" layout="column">
-                    <md-input-container flex-gt-sm="45" flex="100">
-                        <label class="textInput">{{'certificate.studentName' | translate}}</label>
-                        <input ng-model="criteria.name" type="text" md-maxlength="255">
-                    </md-input-container>
+                    <hois-autocomplete flex-gt-sm="45" flex="100" ng-model="criteria.student" method="students" name="student" label="certificate.student" ha-attribute="id"
+                        additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}" ></hois-autocomplete>
                     <md-input-container flex-gt-sm="50" flex-offset-gt-sm="5" flex="100" flex-offset="0">
                         <label class="textInput">{{'certificate.idcode' | translate}}</label>
                         <input ng-model="criteria.idcode" type="text" minlength="11" md-maxlength="11">
@@ -59,7 +57,7 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="sortablename" ng-if="!auth.isStudent() && !auth.isParent()">{{'certificate.studentName' | translate}}</th>
+            <th md-column md-order-by="sortablename" ng-if="!auth.isStudent() && !auth.isParent()">{{'certificate.student' | translate}}</th>
             <th md-column md-order-by="sg.code" ng-if="!auth.isStudent() && !auth.isParent()">{{'certificate.studentGroup' | translate}}</th>
             <th md-column md-order-by="c.certificateNr">{{'certificate.nr' | translate}}</th>
             <th md-column md-order-by="type.{{currentLanguageNameField()}}">{{'certificate.type' | translate}}</th>

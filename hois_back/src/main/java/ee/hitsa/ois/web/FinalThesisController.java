@@ -25,7 +25,6 @@ import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.FinalThesisUtil;
 import ee.hitsa.ois.util.HttpUtil;
-import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.FinalThesisForm;
@@ -39,29 +38,30 @@ import ee.hitsa.ois.web.dto.TeacherDto;
 @RestController
 @RequestMapping("/finalThesis")
 public class FinalThesisController {
-   
+
     @Autowired
     private FinalThesisService finalThesisService;
     @Autowired
     private PdfService pdfService;
-    
+
     @GetMapping
-    public Page<FinalThesisSearchDto> search(HoisUserDetails user, @Valid FinalThesisSearchCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+    public Page<FinalThesisSearchDto> search(HoisUserDetails user, @Valid FinalThesisSearchCommand command,
+            Pageable pageable) {
+        FinalThesisUtil.assertCanSearch(user);
         return finalThesisService.search(user, command, pageable);
     }
-    
+
     @GetMapping("/{id:\\d+}")
     public FinalThesisDto get(HoisUserDetails user, @WithEntity FinalThesis finalThesis) {
         FinalThesisUtil.assertCanView(user, finalThesis);
         return finalThesisService.get(user, finalThesis);
     }
-    
+
     @GetMapping("/studentFinalThesis")
     public Map<String, Object> studentFinalThesis(HoisUserDetails user) {
         return finalThesisService.studentFinalThesis(user);
     }
-    
+
     @PostMapping
     public FinalThesisDto create(HoisUserDetails user, @Valid @RequestBody FinalThesisForm form) {
         FinalThesisUtil.assertCanCreate(user);
@@ -69,28 +69,30 @@ public class FinalThesisController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public FinalThesisDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) FinalThesis finalThesis,
+    public FinalThesisDto save(HoisUserDetails user,
+            @WithVersionedEntity(versionRequestBody = true) FinalThesis finalThesis,
             @Valid @RequestBody FinalThesisForm form) {
         FinalThesisUtil.assertCanEdit(user, finalThesis);
         return get(user, finalThesisService.save(finalThesis, form));
     }
-    
+
     @GetMapping("/students")
     public Page<AutocompleteResult> students(HoisUserDetails user, SearchCommand lookup) {
         return new PageImpl<>(finalThesisService.students(user, lookup));
     }
-    
+
     @GetMapping("/teacher")
     public TeacherDto teacher(@RequestParam(value = "teacherId") Long teacherId) {
         return finalThesisService.teacher(teacherId);
     }
-    
+
     @PutMapping("/{id:\\d+}/confirm")
-    public FinalThesisDto confirm(HoisUserDetails user, @WithEntity FinalThesis finalThesis, @Valid @RequestBody FinalThesisForm form) {
+    public FinalThesisDto confirm(HoisUserDetails user, @WithEntity FinalThesis finalThesis,
+            @Valid @RequestBody FinalThesisForm form) {
         FinalThesisUtil.assertCanConfirm(user, finalThesis);
         return get(user, finalThesisService.confirm(user, finalThesis, form));
     }
-    
+
     @GetMapping("/print/{id:\\d+}/finalThesis.pdf")
     public void print(HoisUserDetails user, @WithEntity FinalThesis finalThesis, HttpServletResponse response)
             throws IOException {
@@ -99,5 +101,5 @@ public class FinalThesisController {
         HttpUtil.pdf(response, "final.thesis.pdf",
                 pdfService.generate(FinalThesisReport.TEMPLATE_NAME, new FinalThesisReport(finalThesis)));
     }
-    
+
 }

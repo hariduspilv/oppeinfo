@@ -115,6 +115,7 @@ public class PdfService {
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
+            @SuppressWarnings("static-access")
             Fop fop = fopFactory.newFop(MimeConstants.MIME_PDF, out);
             
             TransformerFactory factory = TransformerFactory.newInstance();

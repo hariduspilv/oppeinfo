@@ -50,7 +50,7 @@
               <td md-cell>{{student.student.nameEt}}</td>
               <td md-cell ng-show="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject">
                 <span ng-repeat="journalResult in student.practiceJournalResults | orderBy: 'inserted'">
-                  <span ng-class="{badResult: !gradeUtil.isPositive(journalResult.grade)}">{{gradeValue(journalResult.grade)}}</span>
+                  <span ng-class="{badResult: !gradeUtil.isPositive(journalResult.grade.code)}">{{journalResult.grade | hoisHigherGrade: letterGrades}}</span>
                   <span ng-if="!$last">/</span>
                 </span>
               </td>
@@ -59,7 +59,7 @@
                 <span ng-if="result.isText">{{result.pointsTxt}}</span>
               </td>
               <td md-cell>
-                <span ng-class="{badResult: !gradeUtil.isPositiveValue(student.gradeValue, auth.school.letterGrades)}">{{gradeValue(student.grade)}}</span>
+                <span ng-class="{badResult: !gradeUtil.isPositive(student.grade.code)}">{{student.grade | hoisHigherGrade: letterGrades}}</span>
               </td>
               <td md-cell ng-if="record.status.code === 'PROTOKOLL_STAATUS_K'">{{student.addInfo}}</td>
             </ng-form>

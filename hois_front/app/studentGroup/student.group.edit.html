@@ -3,6 +3,9 @@
     <form name="studentGroupForm">
 
     <div layout="column">
+      <md-input-container class="md-block">
+        <md-checkbox ng-model="record.isGuest" name="isValid" ng-change="clearModels()" ng-disabled="formState.readonly">{{'studentGroup.isGuestStudent' | translate}}</md-checkbox>
+      </md-input-container>
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label>{{'studentGroup.code' | translate}}</label>
@@ -11,44 +14,48 @@
 
         <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'studentGroup.course' | translate}}</label>
-          <input ng-model="record.course" name="course" type="number" required min="1" ng-max="formState.studyPeriodInYears">
+          <input ng-model="record.course" name="course" type="number" ng-required="!record.isGuest" min="1" ng-max="formState.studyPeriodInYears">
         </md-input-container>
 
-        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!record.isGuest">
           <label class="textInput">{{'studentGroup.places' | translate}}</label>
           <input ng-model="record.places" name="places" ng-readonly="formState.readonly" type="number" min="0">
         </md-input-container>
       </div>
 
       <div layout="row" layout-sm="column" layout-xs="column">
-        <div flex="45" flex-sm="100" flex-xs="100" ng-if="!formState.readonly">
-          <hois-autocomplete ng-model="record.curriculum" method="curriculums" name="curriculum" label="studentGroup.curriculumRequired" md-selected-item-change="curriculumChanged()" required></hois-autocomplete>
+        <div flex="45" flex-sm="100" flex-xs="100" ng-if="!formState.readonly && !record.isGuest">
+          <hois-autocomplete ng-model="record.curriculum" method="curriculums" name="curriculum" label="studentGroup.curriculumRequired" 
+          md-selected-item-change="curriculumChanged()" required></hois-autocomplete>
         </div>
-        <md-input-container  ng-if="formState.readonly" flex="45" flex-sm="100" flex-xs="100" class="readonly top-margin">
+        <md-input-container  ng-if="formState.readonly && !record.isGuest" flex="45" flex-sm="100" flex-xs="100" class="readonly top-margin">
           <label ng-if="record.id" class="textInput">{{'studentGroup.curriculumRequired' | translate}}</label>
           <hois-value value="currentLanguageNameField(record.curriculum)"></hois-value>
         </md-input-container>
-        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!record.isGuest">
           <label class="textInput">{{formState.curriculumVersionLabel | translate}}</label>
-          <hois-select ng-model="record.curriculumVersion" name="curriculumVersion" ng-disabled="formState.isVocational && formState.readonly" values="formState.curriculumVersions" ng-change="curriculumVersionChanged()" ng-required="formState.onlyvocational || formState.isVocational"></hois-select>
+          <hois-select ng-model="record.curriculumVersion" name="curriculumVersion" ng-disabled="formState.isVocational && formState.readonly" 
+          values="formState.curriculumVersions" ng-change="curriculumVersionChanged()" ng-required="formState.onlyvocational || formState.isVocational"></hois-select>
         </md-input-container>
       </div>
 
       <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="!record.isGuest">
           <label class="textInput">{{'studentGroup.studyForm' | translate}}</label>
-          <hois-classifier-select ng-model="record.studyForm" name="studyForm" ng-disabled="formState.readonly" main-classifier-code="OPPEVORM" show-only-values="formState.studyForms" model-value-attr="code" required></hois-classifier-select>
+          <hois-classifier-select ng-model="record.studyForm" name="studyForm" ng-disabled="formState.readonly" main-classifier-code="OPPEVORM" 
+          show-only-values="formState.studyForms" model-value-attr="code" required></hois-classifier-select>
         </md-input-container>
 
-        <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="{{record.isGuest ? '0' : '5'}}" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'studentGroup.language' | translate}}</label>
-          <hois-classifier-select ng-model="record.language" name="language" ng-disabled="formState.readonly" main-classifier-code="OPPEKEEL" show-only-values="formState.languages" model-value-attr="code" required></hois-classifier-select>
+          <hois-classifier-select ng-model="record.language" name="language" ng-disabled="formState.readonly" main-classifier-code="OPPEKEEL" 
+          show-only-values="record.isGuest ? true : formState.languages" model-value-attr="code" ng-required="!record.isGuest"></hois-classifier-select>
         </md-input-container>
 
 		
-        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" class="readonly top-margin">
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!record.isGuest" class="readonly top-margin">
           <label>{{'student.studyLevel' | translate}}</label>
-		  <hois-classifier-value ng-model="formState.origStudyLevel" main-classifier-code="OPPEASTE"></hois-classifier-value>
+		      <hois-classifier-value ng-model="formState.origStudyLevel" main-classifier-code="OPPEASTE"></hois-classifier-value>
         </md-input-container>
       </div>
 
@@ -57,7 +64,7 @@
           <hois-autocomplete ng-model="record.teacher" method="teachers" name="teacher" label="studentGroup.teacher"></hois-autocomplete>
         </div>
 
-        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!record.isGuest">
           <label class="textInput">{{'studentGroup.speciality' | translate}}</label>
           <!-- <hois-classifier-select ng-model="record.speciality" name="speciality" main-classifier-code="SPETSKUTSE" show-only-values="formState.specialities" model-value-attr="code"></hois-classifier-select> -->
           <md-select ng-model="record.speciality">

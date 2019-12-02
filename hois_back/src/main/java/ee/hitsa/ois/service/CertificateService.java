@@ -23,8 +23,11 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.CertificateStatus;
 import ee.hitsa.ois.enums.CertificateType;
+import ee.hitsa.ois.enums.StudentType;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
+import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
@@ -33,6 +36,7 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.CertificateController.OtherStudentCommand;
 import ee.hitsa.ois.web.commandobject.CertificateForm;
 import ee.hitsa.ois.web.commandobject.CertificateSearchCommand;
 import ee.hitsa.ois.web.dto.CertificateSearchDto;
@@ -55,7 +59,7 @@ public class CertificateService {
             + "else c.other_name end as name, c.student_id, "
             + "case when c.student_id is not null then p.lastname || ' ' || p.firstname "
             + "else split_part(c.other_name, ' ', 2) || ' ' || split_part(c.other_name, ' ', 1) "
-            + "end as sortablename, c.status_code, sg.code ";
+            + "end as sortablename, c.status_code, sg.code, case when c.student_id is not null then s.type_code else null end as studentType";
 
     @Autowired
     private ClassifierRepository classifierRepository;
@@ -92,6 +96,13 @@ public class CertificateService {
         qb.optionalCriteria("c.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(), DateUtils::lastMomentOfDay);
         qb.optionalCriteria("c.status_code in (:status)", "status", criteria.getStatus());
 
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria(
+                    "exists (select cur.id from curriculum_version cv join curriculum cur on cur.id = cv.curriculum_id"
+                            + " where s.curriculum_version_id = cv.id and cur.id in (:userCurriculumIds))",
+                    "userCurriculumIds", user.getCurriculumIds());
+        }
+
         if(user.isRepresentative()) {
             qb.requiredCriteria("exists("
                     + "select * from student_representative sr "
@@ -109,7 +120,7 @@ public class CertificateService {
             dto.setHeadline(resultAsString(r, 3));
             dto.setWhom(resultAsString(r, 4));
             dto.setInserted(JpaQueryUtil.resultAsLocalDateTime(r, 5).toLocalDate());
-            dto.setStudentFullname(resultAsString(r, 6));
+            dto.setStudentFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 6), resultAsString(r, 11)));
             dto.setStudentId(resultAsLong(r, 7));
             dto.setStatus(resultAsString(r, 9));
             dto.setStudentGroup(resultAsString(r, 10));
@@ -143,10 +154,12 @@ public class CertificateService {
             certificate.setOtherIdcode(form.getOtherIdcode());
         }
         if(!certificateValidationService.canEditContent(user, EntityUtil.getCode(certificate.getType()))) {
-            boolean isHigherSchool = schoolService.schoolType(user.getSchoolId()).isHigher();
+            SchoolType schoolType = schoolService.schoolType(user.getSchoolId());
+            boolean isHigherSchool = schoolType.isHigher();
+            boolean isOnlyHigherSchool = schoolType.isHigher() && !schoolType.isVocational();
             certificate.setContent(certificateContentService.generate(certificate.getStudent(),
                     CertificateType.valueOf(form.getType()), Boolean.TRUE.equals(form.getAddOutcomes()),
-                    isHigherSchool));
+                    isHigherSchool, Boolean.TRUE.equals(form.getShowUncompleted()), form.getEstonian(), isOnlyHigherSchool));
         }
         return save(user, certificate, form);
     }
@@ -195,27 +208,25 @@ public class CertificateService {
      * @return null if idcode is null or person with given idcode is not found
      * @throws EntityNotFoundException when id is not null and student is not found
      */
-    public StudentSearchDto otherStudent(HoisUserDetails user, Long id, String idcode) {
-        if(user.isStudent()) {
-            id = user.getStudentId();
-        }
+    public StudentSearchDto otherStudent(HoisUserDetails user, OtherStudentCommand command) throws HoisException {
+        
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s join person p on s.person_id = p.id");
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         if(user.isRepresentative()) {
             // check it has rights to see given student
             qb.requiredCriteria("s.id in (select sr.student_id from student_representative sr where sr.person_id = :personId and sr.is_student_visible = true)", "personId", user.getPersonId());
         }
-        if(id != null) {
-            qb.requiredCriteria("s.id = :id", "id", id);
+        if(command.getId() != null) {
+            qb.requiredCriteria("s.id = :id", "id", command.getId());
         } else {
-            if(!StringUtils.hasText(idcode)) {
+            if(!StringUtils.hasText(command.getIdcode())) {
                 return null;
             }
 
-            qb.requiredCriteria("p.idcode = :idcode", "idcode", idcode);
+            qb.requiredCriteria("p.idcode = :idcode", "idcode", command.getIdcode());
         }
 
-        List<?> students = qb.select("s.id, p.idcode, p.firstname, p.lastname, s.status_code", em).setMaxResults(1).getResultList();
+        List<?> students = qb.select("s.id, p.idcode, p.firstname, p.lastname, s.status_code, s.type_code", em).setMaxResults(1).getResultList();
         if(!students.isEmpty()) {
             Object student = students.get(0);
             StudentSearchDto dto = new StudentSearchDto();
@@ -223,18 +234,20 @@ public class CertificateService {
             dto.setIdcode(resultAsString(student, 1));
             dto.setFullname(PersonUtil.fullname(resultAsString(student, 2), resultAsString(student, 3)));
             dto.setStatus(resultAsString(student, 4));
+            dto.setType(resultAsString(student, 5));
+            if (Boolean.TRUE.equals(command.getHideGuestStudents()) && StudentType.OPPUR_K.name().equals(dto.getType())) throw new HoisException("student.error.cannotBeGuestStudent");
             return dto;
-        } else if(id != null) {
+        } else if(command.getId() != null) {
             throw new EntityNotFoundException();
         }
 
-        Person person = personRepository.findByIdcode(idcode);
+        Person person = personRepository.findByIdcode(command.getIdcode());
         if(person == null) {
             return null;
         }
 
         StudentSearchDto dto = new StudentSearchDto();
-        dto.setIdcode(idcode);
+        dto.setIdcode(command.getIdcode());
         dto.setFullname(person.getFullname());
         return dto;
     }

@@ -21,10 +21,12 @@ import javax.persistence.Query;
 import javax.transaction.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Job;
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.WsEhisStudentLog;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.directive.Directive;
@@ -36,6 +38,7 @@ import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.StudyLoad;
+import ee.hitsa.ois.service.StudentResultHigherService;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
@@ -46,6 +49,9 @@ import ee.hois.xroad.ehis.generated.KhlEnnistamine;
 import ee.hois.xroad.ehis.generated.KhlErivajadusedArr;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusLisa;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
+import ee.hois.xroad.ehis.generated.KhlLyhiAjaValisOppur;
+import ee.hois.xroad.ehis.generated.KhlLyhiAjaValisOppurKustutamine;
+import ee.hois.xroad.ehis.generated.KhlLyhiAjaValisOppurSalvestamine;
 import ee.hois.xroad.ehis.generated.KhlLyhiajaliseltValismaal;
 import ee.hois.xroad.ehis.generated.KhlOiendType;
 import ee.hois.xroad.ehis.generated.KhlOppeasutus;
@@ -59,6 +65,9 @@ import ee.hois.xroad.ehis.generated.KhlOppur;
 @Transactional
 @Service
 public class EhisDirectiveStudentService extends EhisService {
+    
+    @Autowired 
+    private StudentResultHigherService studentResultHigherService;
 
     public void updateStudents(Job job) {
         Directive directive = em.getReference(Directive.class, EntityUtil.getId(job.getDirective()));
@@ -126,6 +135,52 @@ public class EhisDirectiveStudentService extends EhisService {
                 bindingException(directive, e);
             }
         }
+    }
+    
+    WsEhisStudentLog sendGuestStudent(DirectiveStudent directiveStudent) {
+        Student student = directiveStudent.getStudent();
+        Person person = student.getPerson();
+        KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusListGuestStudent(student);
+        KhlLyhiAjaValisOppur oppur = new KhlLyhiAjaValisOppur();
+        KhlLyhiAjaValisOppurSalvestamine salvestamine = new KhlLyhiAjaValisOppurSalvestamine();
+        
+        salvestamine.setOppeasutuseKirjeId(String.valueOf(EntityUtil.getId(student)));
+        if (person != null) {
+            salvestamine.setIsikukood(person.getIdcode());
+            salvestamine.setSynniKp(date(person.getBirthdate()));
+            if (person.getSex() != null) salvestamine.setKlSugu(person.getSex().getEhisValue());
+            if (person.getCitizenship() != null) salvestamine.setKlKodakondsus(person.getCitizenship().getValue());            
+        }
+        if (directiveStudent.getApelSchool() != null) salvestamine.setKoduOppeasutus(directiveStudent.getApelSchool().getNameEt());
+        if (directiveStudent.getCountry() != null) salvestamine.setKlKoduoppeasutuseRiik(directiveStudent.getCountry().getValue2());
+        if (directiveStudent.getPreviousStudyLevel() != null) salvestamine.setKlKoduOppeaste(directiveStudent.getPreviousStudyLevel().getEhisValue());
+        if (directiveStudent.getAbroadProgramme() != null) salvestamine.setKlProgramm(directiveStudent.getAbroadProgramme().getEhisValue());
+        if (directiveStudent.getAbroadPurpose() != null) salvestamine.setKlEesmark(directiveStudent.getAbroadPurpose().getEhisValue());
+        salvestamine.setPerioodAlates(date(directiveStudent.getStartDate()));
+        salvestamine.setPerioodKuni(date(directiveStudent.getEndDate()));
+        Long totalCredits = studentResultHigherService.getTotalPositiveGradeCredits(student);
+        salvestamine.setAinepunkte(String.valueOf(totalCredits));
+        
+        oppur.setSalvestamine(salvestamine);
+        khlOppeasutusList.getOppeasutus().get(0).getLyhiajaValisoppur().add(oppur);
+        return makeRequest(student, khlOppeasutusList);
+    }
+    
+    WsEhisStudentLog deleteGuestStudent(DirectiveStudent directiveStudent) {
+        Student student = directiveStudent.getStudent();
+        Person person = student.getPerson();
+        KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusListGuestStudent(student);
+        KhlLyhiAjaValisOppur oppur = new KhlLyhiAjaValisOppur();
+        KhlLyhiAjaValisOppurKustutamine kustutamine = new KhlLyhiAjaValisOppurKustutamine();
+        
+        kustutamine.setOppeasutuseKirjeId(String.valueOf(EntityUtil.getId(student)));
+        if (person != null)  kustutamine.setSynniKp(date(person.getBirthdate()));
+        if (directiveStudent.getCountry() != null) kustutamine.setKlKoduoppeasutuseRiik(directiveStudent.getCountry().getValue2());
+        kustutamine.setPerioodAlates(date(directiveStudent.getStartDate()));
+        
+        oppur.setKustutamine(kustutamine);
+        khlOppeasutusList.getOppeasutus().get(0).getLyhiajaValisoppur().add(oppur);
+        return makeRequest(student, khlOppeasutusList);
     }
 
     private void changeStudyLoad(DirectiveStudent directiveStudent) {

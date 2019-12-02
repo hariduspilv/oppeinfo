@@ -3,9 +3,12 @@ package ee.hitsa.ois.web.dto.curriculum;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import ee.hitsa.ois.domain.UserCurriculum;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.util.CurriculumUtil;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumAddressForm;
@@ -29,7 +32,7 @@ public class CurriculumDto extends CurriculumForm {
     private Boolean canDelete;
     private AutocompleteResult stateCurriculum;
     private Boolean canHaveOccupations;
-    
+    private Set<AutocompleteResult> leadingTeachers;
     /*
      * Two sets below actually bring the same info
      */
@@ -93,7 +96,7 @@ public class CurriculumDto extends CurriculumForm {
         CurriculumDto dto = EntityUtil.bindToDto
                 (curriculum, new CurriculumDto(), 
                  "versions", "studyLanguages", "studyForms", "addresses", "schoolDepartments", "files", 
-                 "jointPartners", "specialities", "modules", "occupations", "grades", "stateCurriculum", "teacher");
+                 "jointPartners", "specialities", "modules", "occupations", "grades", "stateCurriculum", "teacher", "userCurriculums");
                 
         dto.setStudyLanguages(StreamUtil.toMappedSet(lang -> EntityUtil.getNullableCode(lang.getStudyLang()), curriculum.getStudyLanguages()));
         dto.setStudyForms(StreamUtil.toMappedSet(f -> EntityUtil.getNullableCode(f.getStudyForm()), curriculum.getStudyForms()));
@@ -105,12 +108,21 @@ public class CurriculumDto extends CurriculumForm {
         dto.setModules(StreamUtil.toMappedSet(CurriculumModuleDto::of, curriculum.getModules()));
         dto.setGrades(StreamUtil.toMappedSet(CurriculumGradeDto::of, curriculum.getGrades()));
         dto.setFiles(StreamUtil.toMappedSet(CurriculumFileUpdateDto::of, curriculum.getFiles()));
+
         if (curriculum.getTeacher() != null) {
             dto.setTeacher(AutocompleteResult.of(curriculum.getTeacher()));
         }
-        dto.setStateCurrClass(getStateCurrClass(curriculum));        
+        dto.setStateCurrClass(getStateCurrClass(curriculum));
         dto.setEhisSchool(EntityUtil.getCode(curriculum.getSchool().getEhisSchool()));
-        
+
+        Set<AutocompleteResult> leadingTeachers = curriculum.getUserCurriculums().stream()
+                .map(UserCurriculum::getUser)
+                .filter(u -> DateUtils.isValid(u.getValidFrom(), u.getValidThru()))
+                .map(AutocompleteResult::of)
+                .collect(Collectors.toSet());
+        if (!leadingTeachers.isEmpty()) {
+            dto.setLeadingTeachers(leadingTeachers);
+        }
         dto.setOccupations(StreamUtil.toMappedSet(CurriculumOccupationDto::of, curriculum.getOccupations()));
         dto.setCurriculumOccupations(StreamUtil.toMappedSet(CurriculumOccupationViewDto::of, curriculum.getOccupations()));
 
@@ -246,6 +258,14 @@ public class CurriculumDto extends CurriculumForm {
         this.ehisSchool = ehisSchool;
     }
 
+    public Set<AutocompleteResult> getLeadingTeachers() {
+        return leadingTeachers;
+    }
+
+    public void setLeadingTeachers(Set<AutocompleteResult> leadingTeachers) {
+        this.leadingTeachers = leadingTeachers;
+    }
+
     public Set<CurriculumOccupationDto> getOccupations() {
         return occupations != null ? occupations : (occupations = new HashSet<>());
     }
@@ -277,4 +297,5 @@ public class CurriculumDto extends CurriculumForm {
     public void setCanHaveOccupations(Boolean canHaveOccupations) {
         this.canHaveOccupations = canHaveOccupations;
     }
+
 }

@@ -11,21 +11,23 @@
           
           <hois-autocomplete flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" 
            ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups"
-           label="{{'journal.studentGroup'}}" additional-query-params="{higher: false}"></hois-autocomplete>
+           label="{{'journal.studentGroup'}}" additional-query-params="{higher: false, userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
         </div>
 
-        <div layout="row" layout-sm="column" layout-xs="column" ng-if="auth.isAdmin()">
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="auth.isAdmin() || auth.isLeadingTeacher()">
           <div flex="45" flex-sm="100" flex-xs="100">
             <hois-autocomplete label="{{auth.higher ? 'teacher.labelHigher' : 'teacher.labelVocational'}}" ha-attribute="id" ha-controller="directiveControllers" ng-model="criteria.teacherObject" method="teachers"></hois-autocomplete>
           </div>
           <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <hois-autocomplete label="module.label" ha-controller="directiveControllers" ng-model="criteria.moduleObject" method="vocationaloccupationmodules"></hois-autocomplete>
+            <hois-autocomplete label="module.label" ha-controller="directiveControllers" ng-model="criteria.moduleObject" method="vocationaloccupationmodules"
+              additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
           </div>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column" ng-if="auth.isTeacher()">
           <div flex="45" flex-sm="100">
-            <hois-autocomplete label="module.label" ha-controller="directiveControllers" ng-model="criteria.moduleObject" method="vocationaloccupationmodules"></hois-autocomplete>
+            <hois-autocomplete label="module.label" ha-controller="directiveControllers" ng-model="criteria.moduleObject" method="vocationaloccupationmodules"
+              additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
           </div>
         </div>
 

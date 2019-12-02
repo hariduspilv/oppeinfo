@@ -23,17 +23,30 @@ public class ScholarshipUtil {
             UserUtil.throwAccessDeniedIf(
                     !user.getSchoolId().equals(EntityUtil.getId(application.getScholarshipTerm().getSchool())),
                     "User school does not match application scholarship term school");
+        } else if (user.isLeadingTeacher()) {
+            Committee committee = application.getScholarshipTerm().getCommittee();
+            Long applicationCurriculumId = EntityUtil.getId(application.getCurriculumVersion().getCurriculum());
+            UserUtil.throwAccessDeniedIf(
+                    !(UserUtil.isLeadingTeacher(user, applicationCurriculumId) || isInCommitte(user, committee)),
+                    "Student is not in leading teacher's curriculum or part of committee");
         } else if (user.isTeacher()) {
             Committee committee = application.getScholarshipTerm().getCommittee();
-            UserUtil.throwAccessDeniedIf(
-                    !user.getTeacherId().equals(EntityUtil.getNullableId(application.getStudentGroup().getTeacher()))
-                            && (committee == null || !committee.getMembers().stream()
-                                    .anyMatch(m -> user.getPersonId().equals(EntityUtil.getId(m.getPerson())))),
+            UserUtil.throwAccessDeniedIf(!(isStudentGroupTeacher(user, application) || isInCommitte(user, committee)),
                     "User teacher does not match application student group teacher or is not part of committee");
         } else {
             throw new AccessDeniedException(
                     "User is not application student or school admin or application student group teacher or part of committee");
         }
+    }
+
+    private static boolean isStudentGroupTeacher(HoisUserDetails user, ScholarshipApplication application) {
+        return user.getTeacherId() != null
+                && user.getTeacherId().equals(EntityUtil.getNullableId(application.getStudentGroup().getTeacher()));
+    }
+
+    private static boolean isInCommitte(HoisUserDetails user, Committee committee) {
+        return committee != null && committee.getMembers().stream()
+                .anyMatch(m -> user.getPersonId().equals(EntityUtil.getId(m.getPerson())));
     }
 
     public static void assertCanAnnulApplication(HoisUserDetails user) {

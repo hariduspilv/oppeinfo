@@ -1,10 +1,12 @@
 package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,18 +26,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.protocol.ProtocolHdata;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodExamStudent;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.enums.DeclarationStatus;
 import ee.hitsa.ois.enums.ExamType;
 import ee.hitsa.ois.enums.HigherAssessment;
+import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.ProtocolType;
 import ee.hitsa.ois.report.HigherProtocolReport;
@@ -47,6 +50,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HigherProtocolGradeUtil;
 import ee.hitsa.ois.util.HigherProtocolUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
@@ -56,6 +60,7 @@ import ee.hitsa.ois.web.commandobject.HigherProtocolSaveForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSearchCommand;
 import ee.hitsa.ois.web.commandobject.HigherProtocolStudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.HigherProtocolDto;
 import ee.hitsa.ois.web.dto.HigherProtocolSearchDto;
@@ -76,8 +81,9 @@ public class HigherProtocolService extends AbstractProtocolService {
             + "join student_group sg on sg.id = s.student_group_id "
             + "join curriculum_version cv on cv.id = s.curriculum_version_id "
             + "join curriculum c on c.id = cv.curriculum_id "
-            + "left join declaration d on d.student_id = s.id "
-            + "left join declaration_subject ds on d.id = ds.declaration_id";
+            + "join declaration d on d.student_id = s.id "
+            + "join declaration_subject ds on d.id = ds.declaration_id "
+            + "left join curriculum_version_hmodule cvh on cvh.id = ds.curriculum_version_hmodule_id";
 
     @Autowired
     private ProtocolRepository protocolRepository;
@@ -88,13 +94,22 @@ public class HigherProtocolService extends AbstractProtocolService {
 
     public Page<HigherProtocolSearchDto> search(HoisUserDetails user, HigherProtocolSearchCommand criteria,
             Pageable pageable) {
-
         Page<Protocol> protocols = protocolRepository.findAll((root, query, cb) -> {
 
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("isFinal"), Boolean.FALSE));
             filters.add(cb.equal(root.get("isVocational"), Boolean.FALSE));
             filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
+
+            if (user.isLeadingTeacher()) {
+                Subquery<Long> targetQuery = query.subquery(Long.class);
+                Root<CurriculumVersionHigherModuleSubject> targetRoot = targetQuery
+                        .from(CurriculumVersionHigherModuleSubject.class);
+                targetQuery = targetQuery.select(targetRoot.get("subject").get("id"))
+                        .where(targetRoot.get("module").get("curriculumVersion").get("curriculum").get("id")
+                                .in(user.getCurriculumIds()));
+                filters.add(root.get("protocolHdata").get("subjectStudyPeriod").get("subject").get("id").in(targetQuery));
+            }
 
             filters.add(cb.equal(root.get("protocolHdata").get("subjectStudyPeriod")
                     .get("studyPeriod").get("id"), criteria.getStudyPeriod()));
@@ -200,6 +215,7 @@ public class HigherProtocolService extends AbstractProtocolService {
 
     private void updateProtocolStudents(Protocol protocol, HigherProtocolSaveForm form) {
         Boolean isLetterGrade = protocol.getSchool().getIsLetterGrade();
+        Map<Long, LocalDate> protocolStudentExamDates = protocolStudentExamDates(protocol);
         EntityUtil.bindEntityCollection(protocol.getProtocolStudents(), ProtocolStudent::getId,
                 // no protocol students created here
                 form.getProtocolStudents(), HigherProtocolStudentDto::getId, null, (dto, ps) -> {
@@ -207,8 +223,12 @@ public class HigherProtocolService extends AbstractProtocolService {
                         HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
                         Classifier grade = em.getReference(Classifier.class, dto.getGrade());
+                        Long psId = EntityUtil.getId(ps);
                         Short mark = HigherAssessment.getGradeMark(dto.getGrade());
-                        gradeStudent(ps, grade, mark, isLetterGrade);
+                        LocalDate gradeDate = protocolStudentExamDates.containsKey(psId)
+                                ? protocolStudentExamDates.get(psId)
+                                : LocalDate.now();
+                        gradeStudent(ps, grade, mark, isLetterGrade, gradeDate);
                     } else if (gradeRemoved(dto, ps)) {
                         HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
@@ -216,6 +236,17 @@ public class HigherProtocolService extends AbstractProtocolService {
                     }
                     ps.setAddInfo(dto.getAddInfo());
                 });
+    }
+
+    private Map<Long, LocalDate> protocolStudentExamDates(Protocol protocol) {
+        List<?> data = em.createNativeQuery("select ps.id, te.start from protocol_student ps "
+                + "join subject_study_period_exam_student sspes on sspes.id = ps.subject_study_period_exam_student_id "
+                + "join subject_study_period_exam sspe on sspe.id = sspes.subject_study_period_exam_id "
+                + "join timetable_event te on te.id = sspe.timetable_event_id "
+                + "where ps.protocol_id in (:protocolId)")
+                .setParameter("protocolId", protocol.getId())
+                .getResultList();
+        return StreamUtil.toMap(r -> resultAsLong(r, 0), r -> resultAsLocalDate(r, 1), data);
     }
 
     public Protocol confirm(HoisUserDetails user, Protocol protocol, HigherProtocolSaveForm form) {
@@ -235,33 +266,27 @@ public class HigherProtocolService extends AbstractProtocolService {
         return protocol;
     }
 
-    public List<AutocompleteResult> getSubjectStudyPeriods(Long schoolId) {
+    public List<AutocompleteResult> getSubjectStudyPeriods(Long schoolId, SearchCommand lookup) {
         Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
         if(studyPeriodId == null) {
             return Collections.emptyList();
         }
-
-        List<SubjectStudyPeriod> ssps = em.createQuery("select ssp from SubjectStudyPeriod ssp where ssp.studyPeriod.id = ?1", SubjectStudyPeriod.class)
-                .setParameter(1, studyPeriodId).getResultList();
-        Map<Long, List<String>> allTeachers = new HashMap<>();
-        Set<Long> sspIds = StreamUtil.toMappedSet(SubjectStudyPeriod::getId, ssps);
-        if(!sspIds.isEmpty()) {
-            List<?> data = em.createNativeQuery("select sspt.subject_study_period_id, p.firstname, p.lastname from subject_study_period_teacher sspt "
-                    + "join teacher t on sspt.teacher_id = t.id "
-                    + "join person p on t.person_id = p.id where sspt.subject_study_period_id in (?1) order by p.lastname, p.firstname")
-                .setParameter(1, sspIds)
-                .getResultList();
-            data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), () -> allTeachers,
-                    Collectors.mapping(r -> PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)), Collectors.toList())));
-        }
-        return StreamUtil.toMappedList(ssp -> {
-            Subject s = ssp.getSubject();
-            List<String> teachers = allTeachers.get(ssp.getId());
-            String teacherNames = teachers != null ? (" - " + String.join(", ", teachers)) : "";
-            String nameEt = SubjectUtil.subjectName(s.getCode(), s.getNameEt(), s.getCredits()) + teacherNames;
-            String nameEn = SubjectUtil.subjectName(s.getCode(), s.getNameEn(), s.getCredits()) + teacherNames;
-            return new AutocompleteResult(ssp.getId(), nameEt, nameEn);
-        }, ssps);
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period ssp "
+                + "join subject s on s.id = ssp.subject_id "
+                + "left join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
+                + "left join teacher t on t.id = sspt.teacher_id "
+                + "left join person p on p.id = t.person_id");
+        qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriodId);
+        qb.optionalContains("s.name_et", "name", lookup.getName());
+        
+        List<?> data = qb.groupBy("ssp.id, s.code, s.name_et, s.name_en, s.credits").select("ssp.id, s.code, s.name_et, s.name_en, s.credits, string_agg(distinct p.firstname || ' ' || p.lastname, ', ') as teachers", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String teacherNames = resultAsString(r, 5) != null ? " - " + resultAsString(r, 5) : "";
+            String nameEt = SubjectUtil.subjectName(resultAsString(r, 1), resultAsString(r, 2), JpaQueryUtil.resultAsDecimal(r, 4)) + teacherNames;
+            String nameEn = SubjectUtil.subjectName(resultAsString(r, 1), resultAsString(r, 3), JpaQueryUtil.resultAsDecimal(r, 4)) + teacherNames;
+            return new AutocompleteResult(resultAsLong(r, 0), nameEt, nameEn);
+        }, data);
     }
 
     public List<StudentSearchDto> getStudents(Long schoolId, HigherProtocolStudentSearchCommand criteria) {
@@ -271,6 +296,8 @@ public class HigherProtocolService extends AbstractProtocolService {
         qb.requiredCriteria("d.status_code = :status", "status", DeclarationStatus.OPINGUKAVA_STAATUS_K);
         qb.requiredCriteria("ds.subject_study_period_id = :subjectStudyPeriodId",
                 "subjectStudyPeriodId", criteria.getSubjectStudyPeriod());
+        qb.requiredCriteria("(cvh.id is null or cvh.type_code not in (:finalModuleTypes))", "finalModuleTypes",
+                HigherModuleType.FINAL_MODULES);
 
         boolean repeating = ProtocolType.PROTOKOLLI_LIIK_K.name().equals(criteria.getProtocolType());
         if(repeating) {
@@ -321,6 +348,8 @@ public class HigherProtocolService extends AbstractProtocolService {
     public HigherProtocolDto get(HoisUserDetails user, Protocol protocol) {
         HigherProtocolDto dto = HigherProtocolDto.ofWithUserRights(user, protocol);
 
+        List<Long> notEditableStudents = studentsWithNewerProtocols(protocol);
+        Map<Long, List<ProtocolPracticeJournalResultDto>> practiceResults = new HashMap<>();
         if(Boolean.TRUE.equals(dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getIsPracticeSubject())) {
             Set<Long> students = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
             JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from practice_journal pj "
@@ -333,20 +362,36 @@ public class HigherProtocolService extends AbstractProtocolService {
 
             List<?> data = qb.select("pj.student_id, pj.id, pj.grade_code, pj.grade_inserted", em).getResultList();
 
-            Map<Long, List<ProtocolPracticeJournalResultDto>> practiceResults = StreamUtil.nullSafeList(data).stream()
-                    .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r ->
-                    new ProtocolPracticeJournalResultDto(resultAsLong(r, 1), resultAsString(r, 2),
+            practiceResults = StreamUtil.nullSafeList(data).stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), 
+                    Collectors.mapping(r -> new ProtocolPracticeJournalResultDto(resultAsLong(r, 1), resultAsString(r, 2),
                             resultAsLocalDateTime(r, 3), null), Collectors.toList())));
+        }
 
-            for(HigherProtocolStudentDto protocolStudent : dto.getProtocolStudents()) {
-                Long studentId = protocolStudent.getStudent().getId();
-                List<ProtocolPracticeJournalResultDto> studentResults = practiceResults.get(studentId);
-                if (studentResults != null) {
-                    protocolStudent.setPracticeJournalResults(studentResults);
-                }
+        for (HigherProtocolStudentDto protocolStudent : dto.getProtocolStudents()) {
+            Long studentId = protocolStudent.getStudent().getId();
+            protocolStudent.setCanEdit(Boolean.valueOf(!notEditableStudents.contains(studentId)));
+            List<ProtocolPracticeJournalResultDto> studentResults = practiceResults.get(studentId);
+            if (studentResults != null) {
+                protocolStudent.setPracticeJournalResults(studentResults);
             }
         }
         return dto;
+    }
+
+    private List<Long> studentsWithNewerProtocols(Protocol protocol) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from protocol p "
+                + "join protocol_student ps on ps.protocol_id = p.id "
+                + "join protocol_hdata hdata on p.id = hdata.protocol_id");
+        qb.requiredCriteria("p.id = :protocolId", "protocolId", EntityUtil.getId(protocol));
+
+        qb.filter("exists (select 1 from protocol p2 "
+                + "join protocol_student ps2 on ps2.protocol_id = p2.id "
+                + "join protocol_hdata hdata2 on p2.id = hdata2.protocol_id "
+                + "where p.id < p2.id and hdata.subject_study_period_id = hdata2.subject_study_period_id "
+                + "and ps.student_id = ps2.student_id)");
+
+        List<?> data = qb.select("ps.student_id", em).getResultList();
+        return StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
     }
 
     public HigherProtocolReport higherProtocolReport(Protocol protocol) {
@@ -354,4 +399,5 @@ public class HigherProtocolService extends AbstractProtocolService {
         Boolean isHigherSchool = Boolean.valueOf(schoolService.schoolType(EntityUtil.getId(school)).isHigher());
         return new HigherProtocolReport(protocol, isHigherSchool, school.getIsLetterGrade());
     }
+
 }

@@ -88,6 +88,11 @@ public class EkisService {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     // we want to send always dot as decimal separator
     private static final DecimalFormatSymbols MONEY_FORMAT_SYMBOLS = DecimalFormatSymbols.getInstance(Locale.ROOT);
+    
+    private static final String GUEST_STUDENT = "Külalisõppija";
+    
+    private static final String GUEST_STUDENT_COURSE = "1";
+    
     static {
         MONEY_FORMAT_SYMBOLS.setDecimalSeparator('.');
     }
@@ -227,6 +232,9 @@ public class EkisService {
         Student student = contract.getStudent();
         Person person = student.getPerson();
         String idcode = null;
+        boolean higher = StudentUtil.isHigher(student);
+        boolean guestStudent = StudentUtil.isGuestStudent(student);
+        
         if(StringUtils.hasText(person.getIdcode())) {
             idcode = person.getIdcode();
         } else if(person.getBirthdate() != null) {
@@ -240,13 +248,29 @@ public class EkisService {
             throw new ValidationFailedException("contract.messages.sendToEkis.error.studentEmailMissing");
         }
         request.setStEmail(studentEmail);
-        request.setStCurricula(student.getCurriculumVersion().getCurriculum().getNameEt());
-        request.setStForm(student.getStudyForm() != null ? student.getStudyForm().getNameEt() : null);
+        
+        CurriculumVersion curriculumVersion = student.getCurriculumVersion();
+        if (curriculumVersion != null) {
+            request.setStCurricula(curriculumVersion.getCurriculum().getNameEt());
+        } else if (guestStudent) {
+            request.setStCurricula(GUEST_STUDENT);
+        }
+        
+        Classifier studyForm = student.getStudyForm();
+        if (studyForm != null) {
+            request.setStForm(studyForm.getNameEt());
+        } else if (higher && guestStudent) {
+            request.setStForm(em.getReference(Classifier.class, "OPPEVORM_P").getNameEt());
+        } else if (!higher && guestStudent) {
+            request.setStForm(em.getReference(Classifier.class, "OPPEVORM_Z").getNameEt());
+        }
 
         StudentGroup sg = student.getStudentGroup();
         String course = sg != null ? sg.getCourse().toString() : null;
-        if (course == null) {
+        if (course == null && !guestStudent) {
             throw new ValidationFailedException("contract.messages.sendToEkis.error.studentGroupCourseMissing");
+        } else if (course == null && guestStudent) {
+            course = GUEST_STUDENT_COURSE;
         }
         request.setStCourse(course);
         
@@ -255,8 +279,6 @@ public class EkisService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add).toString());
         request.setStHours(Integer.toString(moduleSubjects.stream().map(ContractModuleSubject::getHours)
                 .mapToInt(Short::intValue).sum()));
-
-        boolean higher = StudentUtil.isHigher(student);
         Stream<String> moduleStream = null;
         Stream<String> aimStream = null;
         Stream<String> outcomesStream = null;

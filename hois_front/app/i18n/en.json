@@ -105,6 +105,7 @@
         "mobileIdSignFailed": "Signing failed",
         "max": "Maximal value {{max}}",
         "maxlength": "Text too long",
+        "Size": "Text too long",
         "min": "Minimal value {{min}}",
         "time": "Incorrect time",
         "InvalidEstonianIdCode": "Personal identification code does not correspond to standard",
@@ -337,6 +338,7 @@
         "label": "Requests",
         "students": "Learners",
         "studentstatistics": "Learners’ statistics",
+        "gueststudentstatistics": "Guest learners’ statistics",
         "studentstatisticsbyperiod": "In stationary period of learners",
         "teachersloadhigher": "Teacher’s work load (higher)",
         "teachersloadvocational": "Teacher’s work load (professional)",
@@ -668,6 +670,7 @@
     "results": "Learning outcomes",
     "address": "Postal address",
     "bankaccount": "Bank account",
+    "birthDate": "Birth date",
     "boardingSchool": "Location of boarding school",
     "citizenship": "Citizenship",
     "contact": "Contact data",
@@ -720,9 +723,12 @@
     "studyStart": "Beginning of studies",
     "studyEnd": "End of studies",
     "studyLevel": "Level of studies",
+    "showAll": "Show all",
+    "showGuestStudents": "Show guest students",
     "error": {
       "checkRequired": "Atleast one student needs to be chosen",
-      "addressRequired": "Address is mandatory"
+      "addressRequired": "Address is mandatory",
+      "cannotBeGuestStudent": "Cannot create certificate of this type to guest student"
     },
     "absence": {
       "cause": "Reason of absence",
@@ -1109,6 +1115,9 @@
       "akadStartDate": "Beginning of academic leave",
       "alreadyexist": "Learner is already on directive",
       "amountPaid": "Sum",
+      "apelSchool": "School of origin",
+      "apelSchoolCountry": "Country of origin",
+      "apelSchoolStudyLevel": "School of origin's study level",
       "applicationAkadEndDate": "End on application",
       "applicationAkadStartDate": "Beginning on application",
       "bankAccount": "Number of bank account",
@@ -1119,6 +1128,7 @@
       "curriculumGrade": "Degree awarded",
       "curriculumVersion": "Curriculum",
       "estonianEducationalInstitute": "Estonian educational institution",
+      "exchangeProgramme": "Exchange program",
       "foreignEducationalInstitute": "Foreign educational institution",
       "fin": "Source of financing",
       "firstname": "First name of learner",
@@ -1139,6 +1149,7 @@
       "newStudyForm": "New form of study",
       "newStudyLoad": "Direction of change of study work load",
       "nominalStudyEnd": "Expected end of normal period",
+      "notes": "Notes",
       "occupations": "Professions/Partial professions",
       "oldCurriculumVersion": "Valid curriculum",
       "oldStudyForm": "Valid form of study",
@@ -1156,7 +1167,12 @@
       "studyLoadOPPEKOORMUS_OSA": "full > partial",
       "studyLoadOPPEKOORMUS_TAIS": "partial > full",
       "valisEndDate": "End of studies abroad",
-      "valisStartDate": "Beginning of studies abroad"
+      "valisStartDate": "Beginning of studies abroad",
+      "guest": {
+        "curriculumVersion": "Curriculum version",
+        "endDate": "Study start",
+        "startDate": "Study end"
+      }
     }
   },
   "generalmessage": {
@@ -1280,6 +1296,8 @@
     "validThru": "Expiry date"
   },
   "certificate": {
+    "showUncompletedSubjects": "Show uncompleted subjects",
+    "showUncompletedJournals": "Show uncompleted journals",
     "certificates": "Certificates",
     "ekisconfirm": "Are you sure you wish to order certificate?",
     "type": "Kind of certificate",
@@ -2219,7 +2237,8 @@
     "studyForm": "Form of study",
     "studyLevel": "Level of studies",
     "teacher": "Group leader",
-    "isValid": "Currently valid"
+    "isValid": "Currently valid",
+    "isGuestStudent": "Guest student group"
   },
   "studentGroupYearTransfer": {
     "studyYear": "School year",
@@ -2322,7 +2341,8 @@
       "studentNotActive": "Learner is not active",
       "studentNotNominalStudy": "Learner has exceeded normal period",
       "studentNotOnAcademicLeave": "Learner is not on academic leave",
-      "noValidAcademicLeaveApplicationFound": "Learner does not have any valid academic leave application"
+      "noValidAcademicLeaveApplicationFound": "Learner does not have any valid academic leave application",
+      "guestStudent": "Guest student can not apply"
     }
   },
   "reception": {
@@ -2389,6 +2409,8 @@
     }
   },
   "poll": {
+    "from": "Valid from",
+    "thru": "Valid thru",
     "respond": "Respond to Poll",
     "name": "Poll name",
     "type": "Poll type",
@@ -2426,9 +2448,12 @@
       "noPoll": "Poll was not found",
       "matchingTarget": "Matching target from poll is missing",
       "required": "Theme/themes {{themes}} consists of errors",
-      "unConfirmForbidden": "Cannot remove confirmation"
+      "unConfirmForbidden": "Cannot remove confirmation",
+      "confirmedOrFinished": "Poll is confirmed or finished",
+      "studentCouncilAnswersError": "Student council question should have only one answer"
     },
     "basicData": {
+      "journals": "Journals *",
       "copy": "Copy",
       "label": "Basic data",
       "name": "Name",
@@ -2520,7 +2545,10 @@
       "viewResponse": "View responses",
       "studyYear": "Studyyear",
       "studyPeriod": "Studyperiod",
-      "teachers": "Teachers",
+      "teachers": {
+        "higher": "Teachers",
+        "vocational": "Teachers"
+      },
       "toExcel": "Into Excel",
       "pollDuration": "Poll duration",
       "checkAnswer": "Check answer",
@@ -2528,6 +2556,8 @@
       "enterprise": "Enterprise",
       "target": "Target",
       "students": "Students",
+      "targetCount": "People in target group",
+      "answerPercentage": "Answer %",
       "dialog": {
         "journal": "Journal",
         "subject": "Subject",
@@ -2539,6 +2569,7 @@
         "average": "Average",
         "myAnswer": "My answer",
         "responseCount": "Answers",
+        "responded": "Picked",
         "comment": "Comment (saves automatically when leaving the field)",
         "student": "Student",
         "studentResponsesJournal": "Student responses to journal {{journal}}",
@@ -2552,7 +2583,12 @@
       "pickQuestion": "Pick question",
       "allQuestions": "All questions",
       "duplicatePoll": "Duplaicate poll",
-      "duplicateQuestion": "Duplicate question"
+      "duplicateQuestion": "Duplicate question",
+      "pollTargetMessage": "Searching poll targets",
+      "settingLegend": "Setting poll legend",
+      "settingHeader": "Setting poll header",
+      "settingData": "Searching poll responses",
+      "generatingFile": "Generating file"
     }
   },
   "studyYearSchedule": {
@@ -2914,7 +2950,8 @@
       "invalidMoodleCourse": "Wrong Moodle course ID",
       "noStudentsToEnroll": "No-one to register",
       "noMissingGrades": "No missing grades",
-      "valid_academician_missing": "Teacher is not teacher of Moodle course"
+      "valid_academician_missing": "Teacher is not teacher of Moodle course",
+      "connect": "Connecting to Moodle failed"
     },
     "enroll": {
       "enrolled": "Registration successful",
@@ -3010,7 +3047,9 @@
       "CURRICULA_FULFILMENT": "Implementation of curriculum",
       "FOREIGN_STUDY": "Studying abroad",
       "GRADUATION": "Graduation from educational institution",
-      "VOTA": "VÕTA"
+      "VOTA": "VÕTA",
+      "SPECIAL_NEEDS": "Special needs",
+      "GUEST_STUDENT": "Guest students"
     },
     "teacher": {
       "radioData": "Selection of data",
@@ -3083,10 +3122,11 @@
     "removeConfirmation": "Remove confirmation",
     "addingCurriculumSubject": "Adding curricular subject",
     "addingExtraCurriculumSubject": "Adding extracurricular subject",
+    "addSubject": "Adding subject",
     "eap": "EAP",
     "assessment": "Assessment method",
     "isRequired": "Mandatory",
-    "addSubject": "Add subject to declaration",
+    "addSubjectToDeclaration": "Add subject to declaration",
     "noSuitableCurriculumSubjects": "No suitable subjects of study plan found",
     "noCurrentDeclaration": "Declaration of current study period not yet added",
     "notDeclarationPeriod": "Period of declaration compilation has not yet begun",
@@ -3120,8 +3160,8 @@
     "excel": "Into Excel",
     "student": {
       "birthdate": "Birth date",
-	  "birthdate_from": "Birth date since",
-	  "birthdate_thru": "Birth date until",
+	    "birthdate_from": "Birth date since",
+	    "birthdate_thru": "Birth date until",
       "credits": "Number of completed credit points",
       "curriculum": "Curriculum",
       "fin": "Source of financing",
@@ -3136,8 +3176,31 @@
       "studyLevel": "Level of studies",
       "studyLoad": "Work load of study",
       "studyStart": "Beginning date of studies",
-	  "studyStart_from": "Beginning date of studies since",
-	  "studyStart_thru": "Beginning date of studies until"
+	    "studyStart_from": "Beginning date of studies since",
+	    "studyStart_thru": "Beginning date of studies until"
+    },
+    "gueststudent": {
+      "studyYear": "Study year",
+      "name": "Guest student",
+      "startDates": "Starting dates",
+      "endDates": "Leaving dates",
+      "curriculum": "Curriculum",
+      "curriculumVersion": "Curriculum version",
+      "structuralUnit": "Structural unit",
+      "educationLevel": "Education level",
+      "homeSchool": "Home school",
+      "homeCountry": "Home country",
+      "programme": "Programme",
+      "table": {
+        "guestStudentName": "Guest student name",
+        "curriculumVersion": "Curriculum version",
+        "studentGroup": "Student group",
+        "startDate": "Starting date",
+        "endDate": "Leaving date",
+        "duration": "Duration",
+        "results": "Results",
+        "eap": "Number of completed credit points"
+      }
     },
     "curriculumscompletion": {
       "curriculum": "Curriculum",
@@ -3209,7 +3272,8 @@
       "withReasonAbsences": "Excusable absences",
       "beingLate": "Being late",
       "error": {
-        "studyYearOrEntriesFromRequired": "At least one of fields “School year” or “Entries since” must be filled in"
+        "studyYearOrEntriesFromRequired": "At least one of fields “School year” or “Entries since” must be filled in",
+        "atLeastOneEntryTypeRequired": "At least one type of entry required"
       }
     }
   },
@@ -3488,6 +3552,8 @@
     "lastEnterpriseUpdate": "Last updated",
     "requests": "Requests",
     "schoolGrade": "Grade",
+    "changePeriod": "Application period editing",
+    "viewPeriod": "Application period viewing",
     "personsTab": {
       "name": "Name",
       "phone": "Contact nr",
@@ -3632,6 +3698,9 @@
     "threshold": "Threshold",
     "thresholdPercentage": "Threshold’s %"
   },
+  "practiceAdmission": {
+    "studentGroup": "Student group *"
+  },
   "practiceApplication": {
     "tabLabel": "Internship applications",
     "canApplyForPractice": "Saab praktikale kandideerida",
@@ -3666,7 +3735,8 @@
       "applicationSubmitted": "Application submitted",
       "applicationAnnulled": "Application annulled",
       "applicationRejected": "Application rejected",
-      "applicationAccepted": "Application accepted"
+      "applicationAccepted": "Application accepted",
+      "atLeastOneStudentGroup": "At least 1 student group needs to be chosen"
     },
     "prompt": {
       "applyConfirm": "Are you sure, you wish to apply for intenship?",

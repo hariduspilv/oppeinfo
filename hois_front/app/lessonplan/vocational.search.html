@@ -30,9 +30,9 @@
             <hois-select ng-model="criteria.curriculumVersion" values="formState.curriculumVersions"></hois-select>
           </md-input-container>
 
-          <hois-autocomplete flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" 
-            ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" name="studentGroup"
-            label="{{'lessonplan.studentGroup'}}" additional-query-params="{higher: false}"></hois-autocomplete>
+          <hois-autocomplete flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-model="criteria.studentGroup"
+            ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" name="studentGroup" label="{{'lessonplan.studentGroup'}}"
+            additional-query-params="{higher: false, userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">

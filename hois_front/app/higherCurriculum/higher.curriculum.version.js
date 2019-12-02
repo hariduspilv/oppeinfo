@@ -438,9 +438,10 @@ angular.module('hitsaOis')
       $location.path(url);
     }
 
-    $scope.showPrintButton = function() {
-      return angular.isDefined($scope.version.id) && ($scope.auth.isAdmin() || ($scope.curriculum.status === $scope.STATUS.VERIFIED &&
-        $scope.version.status === $scope.VERSION_STATUS.K));
+    $scope.showPrintButton = function () {
+      return angular.isDefined($scope.version.id) && (($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher()) ||
+        ($scope.curriculum.status === $scope.STATUS.VERIFIED &&
+          $scope.version.status === $scope.VERSION_STATUS.K));
     };
 
   });

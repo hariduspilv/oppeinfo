@@ -107,7 +107,7 @@
                                                         <div ng-if="question.type === 'VASTUS_S'" layout="{{question.isInRow ? 'row' : 'column'}}" flex="100" class="{{question.requiredError ? 'red-border' : ''}}">
                                                             <div ng-repeat="answer in question.answers track by $index" flex>
                                                                 <md-input-container flex>
-                                                                    <md-checkbox ng-model="answer.chosen" ng-disabled="formState.viewOnly" aria-label="required" ng-change="question.requiredError && checkErrors()" ng-blur="save(question)">
+                                                                    <md-checkbox ng-model="answer.chosen" ng-disabled="formState.viewOnly" aria-label="required" ng-change="deselectOther(question, item) && question.requiredError && checkErrors()">
                                                                         <span style="word-break: break-word">{{answer.nameEt}}</span>
                                                                     </md-checkbox>
                                                                 </md-input-container>
@@ -170,4 +170,7 @@
             </div>
         </div>
     </md-dialog-content>
+    <md-dialog-actions layout="row" layout-xs="column" layout-align="start start" layout-align-xs="none none">
+        <md-button flex-xs="100" class="md-raised" ng-click="close()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
 </md-dialog>

@@ -9,11 +9,11 @@ public class StudentHigherSubjectResultGradeDto {
     private Long id;
     private String grade;
     private String gradeValue;
+    private String gradeNameEt;
+    private String gradeNameEn;
     private LocalDate gradeDate;
     private List<String> teachers = new ArrayList<>();
     private Long studyPeriod;
-    private Short gradeMark;
-    private String gradeNameEt;
     private String assessedBy;
     private Boolean isActive;
 
@@ -25,28 +25,12 @@ public class StudentHigherSubjectResultGradeDto {
         this.id = id;
     }
 
-    public String getGradeNameEt() {
-        return gradeNameEt;
+    public String getGrade() {
+        return grade;
     }
 
-    public void setGradeNameEt(String gradeNameEt) {
-        this.gradeNameEt = gradeNameEt;
-    }
-
-    public String getAssessedBy() {
-        return assessedBy;
-    }
-
-    public void setAssessedBy(String assessedBy) {
-        this.assessedBy = assessedBy;
-    }
-
-    public Short getGradeMark() {
-        return gradeMark;
-    }
-
-    public void setGradeMark(Short gradeMark) {
-        this.gradeMark = gradeMark;
+    public void setGrade(String grade) {
+        this.grade = grade;
     }
 
     public String getGradeValue() {
@@ -57,28 +41,12 @@ public class StudentHigherSubjectResultGradeDto {
         this.gradeValue = gradeValue;
     }
 
-    public Long getStudyPeriod() {
-        return studyPeriod;
+    public String getGradeNameEt() {
+        return gradeNameEt;
     }
 
-    public void setStudyPeriod(Long studyPeriod) {
-        this.studyPeriod = studyPeriod;
-    }
-
-    public List<String> getTeachers() {
-        return teachers;
-    }
-
-    public void setTeachers(List<String> teachers) {
-        this.teachers = teachers;
-    }
-
-    public String getGrade() {
-        return grade;
-    }
-
-    public void setGrade(String grade) {
-        this.grade = grade;
+    public void setGradeNameEt(String gradeNameEt) {
+        this.gradeNameEt = gradeNameEt;
     }
 
     public LocalDate getGradeDate() {
@@ -89,12 +57,44 @@ public class StudentHigherSubjectResultGradeDto {
         this.gradeDate = gradeDate;
     }
 
+    public List<String> getTeachers() {
+        return teachers;
+    }
+
+    public void setTeachers(List<String> teachers) {
+        this.teachers = teachers;
+    }
+
+    public Long getStudyPeriod() {
+        return studyPeriod;
+    }
+
+    public void setStudyPeriod(Long studyPeriod) {
+        this.studyPeriod = studyPeriod;
+    }
+
+    public String getAssessedBy() {
+        return assessedBy;
+    }
+
+    public void setAssessedBy(String assessedBy) {
+        this.assessedBy = assessedBy;
+    }
+
     public Boolean getIsActive() {
         return isActive;
     }
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public String getGradeNameEn() {
+        return gradeNameEn;
+    }
+
+    public void setGradeNameEn(String gradeNameEn) {
+        this.gradeNameEn = gradeNameEn;
     }
 
 }

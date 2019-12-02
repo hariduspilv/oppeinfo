@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
@@ -277,10 +278,24 @@ public class XlsService {
          * For cases when date is shown with other data in the same cell
          */
         public String dateAsString(LocalDate localDate) {
-            if(localDate == null) {
+            if (localDate == null) {
                 return null;
             }
             return DateUtils.date(localDate);
+        }
+
+        public String dayOfWeek(LocalDate localDate) {
+            if (localDate == null) {
+                return null;
+            }
+            return translate("day." + localDate.getDayOfWeek().getValue());
+        }
+
+        public String dayOfWeek(LocalDateTime localDateTime) {
+            if (localDateTime == null) {
+                return null;
+            }
+            return dayOfWeek(localDateTime.toLocalDate());
         }
 
         public List<?> colspanArray(int colspan) {

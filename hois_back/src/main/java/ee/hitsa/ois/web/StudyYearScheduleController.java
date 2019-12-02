@@ -59,7 +59,7 @@ public class StudyYearScheduleController {
      */
     @GetMapping("/studentGroups")
     public List<StudentGroupSearchDto> getStudentGroups(HoisUserDetails user, Boolean showMine) {
-        return studyYearScheduleService.getStudentGroups(user.getSchoolId(), Boolean.TRUE.equals(showMine) ? user.getStudentId() : null);
+        return studyYearScheduleService.getStudentGroups(user, showMine);
     }
 
     @GetMapping("/studyYears")

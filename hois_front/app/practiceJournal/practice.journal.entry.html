@@ -384,7 +384,7 @@
         <md-input-container>
           <label class="textInput">{{'practiceJournal.grade' | translate}}</label>
           <hois-select ng-model="practiceJournal.grade" values="grades" value-property="code" hide-values="hideInvalid"
-            show-property="{{practiceJournal.isHigher && auth.school.letterGrades ? 'value2' : 'value'}}"></hois-select>
+            sorted-query="true" show-property="{{practiceJournal.isHigher ? 'shownValue' : 'value'}}"></hois-select>
         </md-input-container>
       </div>
 
@@ -425,7 +425,7 @@
                 <label class="responsiveLabel">{{eval.addInfo}}</label>
                 <md-input-container flex="100">
                   <hois-select aria-label="{{eval.nameEt}}" ng-model="eval.valueClf" values="grades" value-property="code"
-                        show-property="{{auth.school.letterGrades && practiceJournal.isHigher ? 'value2' : 'value'}}"></hois-select>
+                    sorted-query="true" show-property="{{practiceJournal.isHigher ? 'shownValue' : 'value'}}"></hois-select>
                 </md-input-container>
               </div>
             </div>
@@ -457,7 +457,8 @@
               <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="column">
                 <label class="responsiveLabel">{{eval.addInfo}}</label>
                 <md-input-container flex="100">
-                  <hois-value value="practiceJournal.isHigher && auth.school.letterGrades ? getGrade(eval.valueClf).value2 : getGrade(eval.valueClf).value"></hois-value>
+                  <hois-value ng-if="practiceJournal.isHigher" value="gradesMap[eval.valueClf] | hoisHigherGrade: letterGrades"></hois-value>
+                  <hois-value ng-if="!practiceJournal.isHigher" value="gradesMap[eval.valueClf].value"></hois-value>
                 </md-input-container>
               </div>
     
@@ -493,7 +494,8 @@
                 <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="column">
                   <label class="responsiveLabel">{{eval.addInfo}}</label>
                   <md-input-container flex="100">
-                    <hois-value value="practiceJournal.isHigher && auth.school.letterGrades ? getGrade(eval.valueClf).value2 : getGrade(eval.valueClf).value"></hois-value>
+                    <hois-value ng-if="practiceJournal.isHigher" value="gradesMap[eval.valueClf] | hoisHigherGrade: letterGrades"></hois-value>
+                    <hois-value ng-if="!practiceJournal.isHigher" value="gradesMap[eval.valueClf].value"></hois-value>
                   </md-input-container>
                 </div>
     
@@ -507,7 +509,7 @@
       <div layout="row">
         <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
         <md-button ng-if="practiceJournal.canConfirm && practiceJournal.status !== 'PAEVIK_STAATUS_K'" class="md-raised md-primary" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
-        <md-button ng-if="practiceJournal.canConfirm && practiceJournal.status === 'PAEVIK_STAATUS_K' && auth.isAdmin()" class="md-raised md-primary" ng-click="open()">{{'practiceJournal.open' | translate}}</md-button>
+        <md-button ng-if="practiceJournal.canConfirm && practiceJournal.status === 'PAEVIK_STAATUS_K'" class="md-raised md-primary" ng-click="open()">{{'practiceJournal.open' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="back('#/practiceJournals/', practiceJournalEntryForm)">{{'main.button.back' | translate}}</md-button>
       </div>
     

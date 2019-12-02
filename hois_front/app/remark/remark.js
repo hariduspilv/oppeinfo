@@ -23,6 +23,7 @@ angular.module('hitsaOis').controller('RemarkListController', ['$scope', '$route
       }
       if ($scope.criteria.studyYear) {
         $q.all(promises).then(function () {
+          $scope.setStudyYearStartAndEnd();
           $scope.loadData();
         });
       }
@@ -38,14 +39,14 @@ angular.module('hitsaOis').controller('RemarkListController', ['$scope', '$route
       }
     });
 
-    $scope.$watch('criteria.studyYear', function() {
+    $scope.setStudyYearStartAndEnd = function() {
       var studyYear = null;
       if ($scope.criteria.studyYear) {
         studyYear = $scope.formState.studyYears.filter(function (sy) { return sy.id === $scope.criteria.studyYear; })[0];
       }
       $scope.criteria.studyYearStart = studyYear ? studyYear.startDate : null;
       $scope.criteria.studyYearEnd = studyYear ? studyYear.endDate : null;
-    });
+    };
 
     $scope.studentGroupChanged = function () {
       $scope.criteria.studentObject = null;

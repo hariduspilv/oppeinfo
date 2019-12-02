@@ -102,7 +102,7 @@
 
       <div ng-if="(application.status !== 'VOTA_STAATUS_K' && auth.isAdmin()) || application.committee || application.decision">
         <fieldset>
-          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'apel.committee ' | translate}}</legend>
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'apel.committee' | translate}}</legend>
           <div ng-if="application.status === 'VOTA_STAATUS_E' && application.canEdit" flex="45" flex-sm="100" flex-xs="100">
             <md-input-container style="width: 100%">
               <label>{{'apel.committee' | translate}}</label>

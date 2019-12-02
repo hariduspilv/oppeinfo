@@ -60,10 +60,10 @@ public class BoardingSchoolService {
 
     private static final String SEARCH_SELCT = "d.id d_id, s.id s_id, p.firstname, p.lastname, p.idcode, "
             + "sg.id sg_id, sg.code sg_code, d.valid_from, d.valid_thru, r.id r_id, b.code b_code, "
-            + "r.code r_code";
+            + "r.code r_code, s.type_code typeCode";
 
     private static final String MANAGEMENT_SEARCH_SELCT = "s.id s_id, p.firstname, p.lastname, p.idcode, "
-            + "sg.id sg_id, sg.code sg_code, s.dormitory_code, s.status_code";
+            + "sg.id sg_id, sg.code sg_code, s.dormitory_code, s.status_code, s.type_code typeCode";
 
     private static final String ROOM_SELECT = "b.id b_id, b.name b_name, r.id r_id, b.code b_code, "
             + "r.code r_code, r.seats";
@@ -78,6 +78,13 @@ public class BoardingSchoolService {
                 + "join building b on b.id = r.building_id").sort(pageable);
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("exists(select c.id from curriculum_version cv "
+                    + "join curriculum c on c.id = cv.curriculum_id "
+                    + "where s.curriculum_version_id = cv.id and c.id in (:userCurriculumIds))",
+                    "userCurriculumIds", user.getCurriculumIds());
+        }
+
         qb.optionalCriteria("sg.id = :groupId", "groupId",
                 criteria.getStudentGroup() != null ? criteria.getStudentGroup().getId() : null);
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name",
@@ -95,7 +102,7 @@ public class BoardingSchoolService {
             BoardingSchoolSearchDto dto = new BoardingSchoolSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setStudent(resultAsLong(r, 1));
-            dto.setFullname(PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)));
+            dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 12)));
             dto.setIdcode(resultAsString(r, 4));
             dto.setStudentGroup(new AutocompleteResult(resultAsLong(r, 5), resultAsString(r, 6), resultAsString(r, 6)));
             dto.setValidFrom(resultAsLocalDate(r, 7));
@@ -212,7 +219,7 @@ public class BoardingSchoolService {
                 .map(r -> {
                     BoardingSchoolManagementDto dto = new BoardingSchoolManagementDto();
                     dto.setStudent(resultAsLong(r, 0));
-                    dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+                    dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 8)));
                     dto.setIdcode(resultAsString(r, 3));
                     dto.setStudentGroup(
                             new AutocompleteResult(resultAsLong(r, 4), resultAsString(r, 5), resultAsString(r, 5)));

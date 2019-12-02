@@ -1,3 +1,5 @@
+<div ng-cloak ng-include="'persons/persons.navbar.html'"></div>
+
 <div class="ois-form-layout-padding" layout="column" ng-cloak>
   <form name="userForm">
     <div layout="column" flex>
@@ -13,12 +15,38 @@
       </div>
       <md-input-container flex>
         <label>{{'school.label' | translate}}</label>
-        <hois-select ng-disabled="noSchool.indexOf(user.role) !== -1 || !auth.isMainAdmin()" ng-model="user.school.id" ng-required="noSchool.indexOf(user.role) === -1" type="school"></hois-select>
+        <hois-select ng-disabled="noSchool.indexOf(user.role) !== -1 || !auth.isMainAdmin()" ng-model="user.school.id"
+          ng-required="noSchool.indexOf(user.role) === -1" type="school" ng-change="schoolChanged()"></hois-select>
       </md-input-container>
       <md-input-container flex>
         <label>{{'user.role' | translate}}</label>
-        <hois-classifier-select ng-model="user.role" filter-values="filterValues" ng-change="roleChanged()" main-classifier-code="ROLL" model-value-attr="code" required></hois-classifier-select>
+        <hois-classifier-select ng-model="user.role" filter-values="filterValues" ng-change="roleChanged()"
+          main-classifier-code="ROLL" model-value-attr="code" required ng-disabled="user.role === 'ROLL_O'"></hois-classifier-select>
       </md-input-container>
+      <md-input-container flex ng-if="user.role === 'ROLL_A' && auth.isAdmin()">
+        <label>{{'userRole.label' | translate}}</label>
+        <md-select ng-model="user.userRole" ng-model-options="{trackBy: '$value.id'}" ng-change="userRoleChanged(user.userRole, '{{user.userRole.id}}')">
+          <md-option ng-value="undefined"></md-option>
+          <md-option ng-repeat="val in userRoles | orderBy: currentLanguageNameField()" ng-value="val">
+            {{currentLanguageNameField(val)}}
+          </md-option>
+        </md-select>
+      </md-input-container>
+      <md-input-container flex ng-if="(user.role === 'ROLL_A' && auth.isMainAdmin()) || user.role === 'ROLL_O'" class="readonly">
+        <label>{{user.role === 'ROLL_O' ? 'userRole.occupation' : 'userRole.label' | translate}}</label>
+        <hois-value value="currentLanguageNameField(user.userRole)"></hois-value>
+      </md-input-container>
+      <hois-autocomplete flex ng-show="user.role === 'ROLL_J'" ng-model="autoCurriculum" url="/users/curriculums" name="curriculum"
+        label="{{'user.curriculums'}}" additional-query-params="{}" no-paging="true" ng-required="user.role === 'ROLL_J' && user.curriculums.length &lt; 1"></hois-autocomplete>
+      <div ng-show="user.role === 'ROLL_J'" layout="column" class="common-label" flex="95" ng-repeat="curriculum in user.curriculums | orderBy: [currentLanguageNameField(), 'code']">
+        <div layout="row" flex layout-align="start center">
+          <div flex="5">&nbsp;</div>
+          <div flex="50" flex-sm="70" flex-xs="85">{{currentLanguageNameField(curriculum)}}</div>
+          <div>
+            <a ng-click="deleteCurriculum(curriculum)" class="remove">&times;</a>
+          </div>
+        </div>
+      </div>
       <div layout="row">
         <md-input-container flex="15">
           <label>{{'user.validFrom' | translate}}</label>
@@ -59,3 +87,10 @@
     <md-button ng-click="back('#/persons/' + user.person.id + '/edit')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </form>
 </div>
+
+<style>
+  .readonly {
+    margin-bottom: 0px !important;
+    margin-top: 18px !important;
+  }
+</style>

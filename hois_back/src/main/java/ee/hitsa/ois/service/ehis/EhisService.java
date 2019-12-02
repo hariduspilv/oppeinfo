@@ -42,7 +42,7 @@ public abstract class EhisService {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final String ERROR_MARKER_RESULT = "Viga!";
+    private static final String ERROR_MARKER_RESULT = "Viga";
     private static final String ERROR_MARKER_MSG = "VIGA";
     static final String LAE_KORGHARIDUS_SERVICE_CODE = "laeKorgharidus";
     public static final String LAE_KORGHARIDUS_SERVICE = "ehis."+ LAE_KORGHARIDUS_SERVICE_CODE;
@@ -94,13 +94,14 @@ public abstract class EhisService {
         EhisLaeKorgharidusedResponse response = ehisClient.laeKorgharidused(xRoadHeaderV4, khlOppeasutusList);
 
         LogContext queryLog = response.getLog();
-        wsEhisStudentLog.setHasOtherErrors(Boolean.FALSE);
         wsEhisStudentLog.setHasXteeErrors(Boolean.valueOf(queryLog.getError() != null));
 
         if(!response.hasError()) {
-            wsEhisStudentLog.setHasXteeErrors(Boolean.valueOf(resultHasError(response.getResult())));
+            boolean error = messageHasError(response.getTeade()) || resultHasError(response.getResult());
+            wsEhisStudentLog.setHasOtherErrors(Boolean.valueOf(error));
             wsEhisStudentLog.setLogTxt(String.join(";", StreamUtil.nullSafeList(response.getResult())));
         } else {
+            wsEhisStudentLog.setHasXteeErrors(Boolean.TRUE);
             wsEhisStudentLog.setLogTxt(ExceptionUtil.getRootCause(queryLog.getError()).toString());
         }
         return ehisLogService.insert(queryLog, wsEhisStudentLog);
@@ -115,6 +116,17 @@ public abstract class EhisService {
         khlOppeasutus.setKoolId(koolId != null ? new BigInteger(koolId) : null);
 
         khlOppeasutus.getOppur().add(getKhlOppurMuutmine(student, true));
+        khlOppeasutusList.getOppeasutus().add(khlOppeasutus);
+        return khlOppeasutusList;
+    }
+    
+    protected static KhlOppeasutusList getKhlOppeasutusListGuestStudent(Student student) {
+        KhlOppeasutusList khlOppeasutusList = new KhlOppeasutusList();
+        KhlOppeasutus khlOppeasutus = new KhlOppeasutus();
+
+        String koolId = ehisValue(student.getSchool().getEhisSchool());
+        // EHIS_KOOL classifiers should only have school Id's in ehis_value field
+        khlOppeasutus.setKoolId(koolId != null ? new BigInteger(koolId) : null);
         khlOppeasutusList.getOppeasutus().add(khlOppeasutus);
         return khlOppeasutusList;
     }
@@ -275,14 +287,14 @@ public abstract class EhisService {
     protected abstract String getServiceCode();
 
     /**
-     * errors are reported as success. If any of item has magic string Viga! then consider result as error
+     * errors are reported as success. If any of item has magic string Viga then consider result as error
      * @param result
      * @return
      */
     protected boolean resultHasError(List<String> result) {
         return StreamUtil.nullSafeList(result).stream().anyMatch(r -> r != null && r.contains(ERROR_MARKER_RESULT));
     }
-    
+
     protected boolean messageHasError(String msg) {
         return msg == null || msg.contains(ERROR_MARKER_MSG);
     }

@@ -1411,7 +1411,8 @@ angular.module('hitsaOis')
     // }
 
     $scope.showPrintButton = function () {
-      return angular.isDefined($scope.curriculum.id) && ($scope.auth.isAdmin() || $scope.curriculum.status === $scope.STATUS.VERIFIED);
+      return angular.isDefined($scope.curriculum.id) && ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher() ||
+        $scope.curriculum.status === $scope.STATUS.VERIFIED);
     };
 
     $scope.searchTeacher = function (searchText) {

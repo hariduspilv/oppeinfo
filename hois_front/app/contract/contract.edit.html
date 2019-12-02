@@ -4,7 +4,7 @@
       <div ng-if="!studentGroup" flex layout="row" layout-xs="column">
         <hois-autocomplete ng-model="contract.student" method="students" name="student" label="student.label"
          ng-disabled="contract.id || contract.practiceApplication" 
-         additional-query-params="{active: true, higher: formState.isHigher, showStudentGroup: true}" 
+         additional-query-params="{showGuestStudent: true, active: true, higher: formState.isHigher, showStudentGroup: true, userId: auth.isLeadingTeacher() ? auth.user : null}" 
          flex="70" flex-xs="100" required></hois-autocomplete>
           <md-button class="md-raised" ng-if="!contract.id || contract.status.code === 'LEPING_STAATUS_S'" flex="30" flex-xs="100" ng-disabled="!contract.student" ng-click="copyContract()">
             {{'contract.useContractData' | translate}}</md-button>
@@ -344,11 +344,15 @@
 
       <div layout="row" layout-xs="column">
         <md-button ng-if="contract.status.code !== 'LEPING_STAATUS_Y'" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
-        <md-button ng-if="auth.isAdmin() && contract.id && (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_S')" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-        <md-button ng-if="contract.id && (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_S' || contract.status.code === 'LEPING_STAATUS_K')" class="md-raised md-default" ng-href="{{printUrl()}}" target="_blank">{{"main.button.print" | translate}}</md-button>
+        <md-button ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && contract.id && (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_S')"
+          class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+        <md-button ng-if="contract.id && (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_S' || contract.status.code === 'LEPING_STAATUS_K')"
+          class="md-raised md-default" ng-href="{{printUrl()}}" target="_blank">{{"main.button.print" | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="back('#/contracts/', contractForm)">{{'main.button.back' | translate}}</md-button>
-        <md-button ng-if="contract.id && contract.status.code === 'LEPING_STAATUS_S' && !auth.school.withoutEkis" class="md-raised md-default" ng-click="sendToEkis()">{{'main.button.sendToEkis' | translate}}</md-button>
-        <md-button ng-if="contract.id && contract.status.code === 'LEPING_STAATUS_S' && auth.school.withoutEkis" class="md-raised md-default" ng-click="confirmWithoutEkis()">{{'contract.confirmWithoutEkis' | translate}}</md-button>
+        <md-button ng-if="contract.id && contract.status.code === 'LEPING_STAATUS_S' && !auth.school.withoutEkis" class="md-raised md-default"
+          ng-click="sendToEkis()">{{'main.button.sendToEkis' | translate}}</md-button>
+        <md-button ng-if="contract.id && contract.status.code === 'LEPING_STAATUS_S' && auth.school.withoutEkis" class="md-raised md-default"
+          ng-click="confirmWithoutEkis()">{{'contract.confirmWithoutEkis' | translate}}</md-button>
       </div>
     </form>
   </div>

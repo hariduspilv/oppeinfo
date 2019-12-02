@@ -2,12 +2,13 @@
 
 angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController', 
   function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier, USER_ROLES, AuthService) {
-    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINE);
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM);
 
     var allCapacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT', higher: true});
     var schoolCapacityTypes = QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({ isHigher: true });
 
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriodPlans', {order: 'id'}, function (results) {
+        $scope.periodId = $scope.criteria.studyPeriod;
         var showCapacities = {};
         results.forEach(function (result) {
             result.plans.forEach(function (plan) {
@@ -55,10 +56,10 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
 
     $scope.load = function() {
         if (!$scope.searchForm.$valid) {
-          message.error('main.messages.form-has-errors');
-          return false;
+            message.error('main.messages.form-has-errors');
+            return false;
         } else {
-          $scope.loadData();
+            $scope.loadData();
         }
       };
 

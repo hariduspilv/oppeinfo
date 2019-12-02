@@ -125,7 +125,10 @@ public class SaisApplicationService {
             MainClassCode.SAIS_AVALDUSESTAATUS, MainClassCode.OPPEASTE, MainClassCode.OPPEKEEL, MainClassCode.OPPEKOORMUS, MainClassCode.OPPEVORM);
 
     private static final String SAIS_APPLICATION_FROM = "from (select a.id, a.application_nr, a.idcode, a.firstname, a.lastname, a.status_code,"+
-            "sais_admission.code as sais_admission_code, sais_admission.is_archived as is_archived, (exists (select id from directive_student where directive_student.sais_application_id = a.id and canceled = false)) as added_to_directive, curriculum.school_id as school_id from sais_application a "+
+            "sais_admission.code as sais_admission_code, sais_admission.is_archived as is_archived, "+
+            "(exists (select id from directive_student where directive_student.sais_application_id = a.id and canceled = false)) "+
+            "as added_to_directive, curriculum.school_id as school_id "+
+            "from sais_application a "+
             "inner join sais_admission on sais_admission.id = a.sais_admission_id "+
             "inner join classifier status on a.status_code = status.code "+
             "left join curriculum_version on curriculum_version.id = sais_admission.curriculum_version_id "+
@@ -304,8 +307,8 @@ public class SaisApplicationService {
         SaisAdmission saisAdmission = null;
         if (existingSaisAdmission != null) {
         	saisAdmission = existingSaisAdmission;
-        } else if (listSaisAdmission != null && !listSaisAdmission.stream().filter(p->p.getArchived() == null || p.getArchived() == false).collect(Collectors.toList()).isEmpty()) {
-        	saisAdmission = listSaisAdmission.stream().filter(p->p.getArchived() == null || p.getArchived() == false).findFirst().get();
+        } else if (listSaisAdmission != null && !listSaisAdmission.stream().filter(p->p.getArchived() == null || !p.getArchived().booleanValue()).collect(Collectors.toList()).isEmpty()) {
+        	saisAdmission = listSaisAdmission.stream().filter(p->p.getArchived() == null || !p.getArchived().booleanValue()).findFirst().get();
         	existingSaisAdmission = saisAdmission;
         } else {
         	saisAdmission = new SaisAdmission();
@@ -578,7 +581,7 @@ public class SaisApplicationService {
                         String error = String.format("Avaldusega nr %s on seotud käskkiri - seda ei uuendata.", application.getApplicationNumber());
                         failed.add(new SaisApplicationImportedRowDto(application.getApplicationNumber(), error));
                     } else {
-                        SaisApplicationImportedRowDto importedRow = processApplication(application, prevApp, classifiers, admissionMap, idCodeValidator);
+                        SaisApplicationImportedRowDto importedRow = processApplication(schoolId, application, prevApp, classifiers, admissionMap, idCodeValidator);
                         if(importedRow.getMessage() == null || importedRow.getMessage().isEmpty()) {
                             successful.add(importedRow);
                         } else {
@@ -624,12 +627,13 @@ public class SaisApplicationService {
         return fetchedCount;
     }
 
-    private SaisApplicationImportedRowDto processApplication(Application application, SaisApplication prevApp, ClassifierCache classifiers,
+    private SaisApplicationImportedRowDto processApplication(Long schoolId, Application application, SaisApplication prevApp, ClassifierCache classifiers,
             Map<String, SaisAdmission> admissionMap,
             EstonianIdCodeValidator idCodeValidator) {
         SaisApplication saisApplication;
         SaisAdmission saisAdmission = null;
         if(prevApp != null && applicationForSamePerson(application, prevApp)) {
+            // Overwriting old application here
             saisApplication = prevApp;
         } else {
             saisApplication = new SaisApplication();
@@ -637,8 +641,8 @@ public class SaisApplicationService {
 
         saisApplication.setApplicationNr(application.getApplicationNumber());
         if(admissionMap.get(application.getAdmissionCode()) == null) {
-            List<SaisAdmission> admissions = saisAdmissionRepository.findByCode(application.getAdmissionCode());
-            Optional<SaisAdmission> admissionOptional = admissions.stream().filter(p->p.getArchived() == null || !p.getArchived()).findFirst();
+            List<SaisAdmission> admissions = saisAdmissionRepository.findByCodeAndCurriculumVersionCurriculumSchoolId(application.getAdmissionCode(), schoolId);
+            Optional<SaisAdmission> admissionOptional = admissions.stream().filter(p->p.getArchived() == null || !p.getArchived().booleanValue()).findFirst();
             SaisAdmission admission = null;
             if (admissionOptional.isPresent()) {
             	admission = admissionOptional.get();
@@ -912,7 +916,7 @@ public class SaisApplicationService {
         }
         if(form.getAdmissionCode() != null) {
         	List<SaisAdmission> admissions = saisAdmissionRepository.findByCode(form.getAdmissionCode());
-        	Optional<SaisAdmission> admissionOptional = admissions.stream().filter(p->p.getArchived() == null || !p.getArchived()).findFirst();
+        	Optional<SaisAdmission> admissionOptional = admissions.stream().filter(p->p.getArchived() == null || !p.getArchived().booleanValue()).findFirst();
         	SaisAdmission saisAdmission = null;
         	if (admissionOptional.isPresent()) {
         		saisAdmission = admissionOptional.get();
@@ -948,9 +952,9 @@ public class SaisApplicationService {
 				.setParameter(1, saisApplication.getId())
                 .getResultList();
 		if (admissions.isEmpty()) {
-			saisApplicationDto.setRelatedToDirective(false);
+			saisApplicationDto.setRelatedToDirective(Boolean.FALSE);
 		} else {
-			saisApplicationDto.setRelatedToDirective(true);
+			saisApplicationDto.setRelatedToDirective(Boolean.TRUE);
 		}
 		return saisApplicationDto;
 	}

@@ -1,6 +1,9 @@
 <div layout="column" class="ois-form-layout-padding form-readonly">
   <div>
     <div layout="column">
+      <md-input-container class="md-block">
+        <md-checkbox ng-model="record.isGuest" disabled>{{'studentGroup.isGuestStudent' | translate}}</md-checkbox>
+      </md-input-container>
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label>{{'studentGroup.code' | translate}}</label>
@@ -12,13 +15,13 @@
           <hois-value value="record.course.toString()"></hois-value>
         </md-input-container>
 
-        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!record.isGuest">
           <label class="textInput">{{'studentGroup.places' | translate}}</label>
           <hois-value value="record.places.toString()"></hois-value>
         </md-input-container>
       </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column">
+      <div layout="row" layout-sm="column" layout-xs="column" ng-if="!record.isGuest">
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'studentGroup.curriculum' | translate}}</label>
           <hois-value value="currentLanguageNameField(record.curriculum)"></hois-value>
@@ -31,17 +34,17 @@
       </div>
 
       <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="!record.isGuest">
           <label class="textInput">{{'studentGroup.studyForm' | translate}}</label>
           <hois-classifier-value ng-model="record.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
         </md-input-container>
 
-        <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="{!record.isGuest ? '0': '5'}" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'studentGroup.language' | translate}}</label>
           <hois-classifier-value ng-model="record.language" main-classifier-code="OPPEKEEL"></hois-classifier-value>
         </md-input-container>
 
-        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!record.isGuest">
           <label>{{'student.studyLevel' | translate}}</label>
           <hois-classifier-value ng-model="formState.origStudyLevel" main-classifier-code="OPPEASTE"></hois-classifier-value>
         </md-input-container>

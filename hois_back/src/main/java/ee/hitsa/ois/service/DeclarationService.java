@@ -13,9 +13,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -42,11 +44,12 @@ import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.enums.DeclarationStatus;
-import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.StudyPeriodEventType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ProtocolStudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.DeclarationUtil;
 import ee.hitsa.ois.util.EntityUtil;
@@ -89,7 +92,7 @@ public class DeclarationService {
     private static final String DECLARATION_FROM = "from declaration d "
             + "join student s on s.id = d.student_id "
             + "join person p on p.id = s.person_id "
-            + "join curriculum_version cv on cv.id = s.curriculum_version_id "
+            + "left join curriculum_version cv on cv.id = s.curriculum_version_id "
             + "join classifier status on status.code = d.status_code "
             + "join study_period sp on sp.id = d.study_period_id "
             + "left join student_group sg on sg.id = s.student_group_id ";
@@ -130,10 +133,10 @@ public class DeclarationService {
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname", "concat(p.firstname, ' ', p.lastname, ' (', p.idcode, ')')"), "name", lookup.getName());
         qb.optionalCriteria("s.id = :studentId", "studentId", lookup.getId());
 
-        String select = "distinct s.id, p.firstname, p.lastname, p.idcode";
+        String select = "distinct s.id, p.firstname, p.lastname, p.idcode, s.type_code";
         List<?> data = qb.select(select, em).getResultList();
         return StreamUtil.toMappedList(r -> {
-            String name = PersonUtil.fullnameAndIdcode(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3));
+            String name = PersonUtil.fullnameAndIdcodeOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4));
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
         }, data);
     }
@@ -255,10 +258,6 @@ public class DeclarationService {
         if(!user.isStudent() && !user.isSchoolAdmin()) {
             return false;
         }
-        if(getCurrent(user.getSchoolId(), studentId) != null) {
-            // declaration already created
-            return false;
-        }
         Student student = em.getReference(Student.class, studentId);
         if(!StudentUtil.isHigher(student)) {
             return false;
@@ -267,6 +266,22 @@ public class DeclarationService {
             return UserUtil.isStudent(user, student) && StudentUtil.isStudying(student);
         }
         return UserUtil.isSchoolAdmin(user, student.getSchool());
+    }
+    
+    public boolean canCreateCurrent(HoisUserDetails user, Long studentId) {
+        if (getCurrent(user.getSchoolId(), studentId) != null) {
+            // declaration already created
+            return false;
+        }
+        return canCreate(user, studentId);
+    }
+    
+    public boolean canCreateNext(HoisUserDetails user, Long studentId) {
+        if (getNext(user.getSchoolId(), studentId) != null) {
+            // declaration already created
+            return false;
+        }
+        return canCreate(user, studentId);
     }
 
     public boolean studentHasPreviousDeclarations(Long studentId) {
@@ -329,13 +344,21 @@ public class DeclarationService {
         return dto;
     }
 
-    public Declaration create(HoisUserDetails user, Long studentId) {
-        AssertionFailedException.throwIf(!canCreate(user, studentId), "You cannot create declaration!");
+    public Declaration create(HoisUserDetails user, Long studentId, boolean nextPeriod) {
+        AssertionFailedException.throwIf(nextPeriod ? !canCreateNext(user, studentId) : !canCreateCurrent(user, studentId), "You cannot create declaration!");
 
         Student student = em.getReference(Student.class, studentId);
-        Long studyPeriodId = studyYearService.getCurrentStudyPeriod(user.getSchoolId());
-        if(studyPeriodId == null) {
-            throw new ValidationFailedException("studyYear.studyPeriod.missingCurrent");
+        Long studyPeriodId;
+        if (nextPeriod) {
+            studyPeriodId = studyYearService.getNextStudyPeriod(user.getSchoolId());
+            if(studyPeriodId == null) {
+                throw new ValidationFailedException("studyYear.studyPeriod.missingCurrent");
+            }   
+        } else {
+            studyPeriodId = studyYearService.getCurrentStudyPeriod(user.getSchoolId());
+            if(studyPeriodId == null) {
+                throw new ValidationFailedException("studyYear.studyPeriod.missingCurrent");
+            }
         }
         StudyPeriod studyPeriod = em.getReference(StudyPeriod.class, studyPeriodId);
 
@@ -351,6 +374,19 @@ public class DeclarationService {
 
     public Declaration getCurrent(Long schoolId, Long studentId) {
         Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
+        if (studyPeriodId == null) {
+            return null;
+        }
+
+        List<Declaration> result = em.createQuery("select d from Declaration d where d.student.id = ?1 and d.studyPeriod.id = ?2", Declaration.class)
+                .setParameter(1, studentId)
+                .setParameter(2, studyPeriodId)
+                .setMaxResults(1).getResultList();
+        return result.isEmpty() ? null : result.get(0);
+    }
+
+    public Declaration getNext(Long schoolId, Long studentId) {
+        Long studyPeriodId = studyYearService.getNextStudyPeriod(schoolId);
         if (studyPeriodId == null) {
             return null;
         }
@@ -428,14 +464,14 @@ public class DeclarationService {
 
     public List<DeclarationSubjectDto> getExtraCurriculumSubjectsOptions(Declaration declaration) {
         Long studyPeriod = EntityUtil.getId(declaration.getStudyPeriod());
-        Long curriculumVersion = EntityUtil.getId(declaration.getStudent().getCurriculumVersion());
+        Long curriculumVersion = EntityUtil.getNullableId(declaration.getStudent().getCurriculumVersion());
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SUBJECT_FROM);
         
         qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriod);
 
         // do not select student's curriculum version's subjects
-        qb.requiredCriteria(" ssp.subject_id not in "
+        qb.optionalCriteria(" ssp.subject_id not in "
                 + "(select cs.subject_id "
                 + "from curriculum_version_hmodule_subject cs "
                 + "join curriculum_version_hmodule m on m.id = cs.curriculum_version_hmodule_id "
@@ -482,33 +518,62 @@ public class DeclarationService {
         Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
         return studyPeriodId != null ? AutocompleteResult.ofWithYear(em.getReference(StudyPeriod.class, studyPeriodId)) : null;
     }
-
-    private StudyPeriodEventDto getCurrentStudyPeriodDeclarationPeriod(Long schoolId) {
-        Long currentStudyPeriod = studyYearService.getCurrentStudyPeriod(schoolId);
-        if (currentStudyPeriod == null) {
+    
+    public AutocompleteResult getNextStudyPeriodIfOpenDeclarationPeriod(Long schoolId) {
+        Long studyPeriodId = studyYearService.getNextStudyPeriod(schoolId);
+        if (studyPeriodId == null) {
             return null;
         }
-
+        StudyPeriodEventDto declaration = getDeclarationPeriodByStudyPeriod(studyPeriodId);
+        if (declaration == null) {
+            return null;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        if (declaration.getStart() != null && !declaration.getStart().isAfter(now)
+                && declaration.getEnd() != null && !declaration.getEnd().isBefore(now)) {
+            return AutocompleteResult.ofWithYear(em.getReference(StudyPeriod.class, studyPeriodId));
+        }
+        return null;
+    }
+    
+    private StudyPeriodEventDto getDeclarationPeriodByStudyPeriod(Long studyPeriodId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from study_period_event spe join study_period sp on sp.id = spe.study_period_id");
-        qb.requiredCriteria("sp.id = :studyPeriodId", "studyPeriodId", currentStudyPeriod);
+        qb.requiredCriteria("sp.id = :studyPeriodId", "studyPeriodId", studyPeriodId);
         qb.requiredCriteria("spe.event_type_code = :eventTypeCode", "eventTypeCode", DECLARATION_PERIOD_EVENT_TYPE);
 
         List<?> result = qb.select("spe.id", em).setMaxResults(1).getResultList();
         if (result.isEmpty()) {
             return null;
         }
+        
         return StudyPeriodEventDto.of(em.getReference(StudyPeriodEvent.class,  resultAsLong(result.get(0), 0)));
     }
+
+    private StudyPeriodEventDto getCurrentStudyPeriodDeclarationPeriod(Long schoolId) {
+        Long currentStudyPeriod = studyYearService.getCurrentStudyPeriod(schoolId);
+        if (currentStudyPeriod == null) {
+            return null;
+        }
+        return getDeclarationPeriodByStudyPeriod(currentStudyPeriod);
+    }
     
-    public Map<String, ?> isDeclarationPeriod(HoisUserDetails user) {
-        StudyPeriodEventDto declarationPeriod = getCurrentStudyPeriodDeclarationPeriod(user.getSchoolId());
+    private StudyPeriodEventDto getNextStudyPeriodDeclarationPeriod(Long schoolId) {
+        Long nextStudyPeriod = studyYearService.getNextStudyPeriod(schoolId);
+        if (nextStudyPeriod == null) {
+            return null;
+        }
         
+        return getDeclarationPeriodByStudyPeriod(nextStudyPeriod);
+    }
+    
+    private Map<String, ?> declarationPeriodData(StudyPeriodEventDto period) {
         Boolean isDeclarationPeriod = Boolean.FALSE;
         Map<String, Object> data = new HashMap<>();
-        if (declarationPeriod != null) {
+        if (period != null) {
+            data.put("period", AutocompleteResult.ofWithYear(em.getReference(StudyPeriod.class, period.getStudyPeriod().getId())));
             LocalDateTime now = LocalDateTime.now();
-            LocalDateTime periodStart = declarationPeriod.getStart();
-            LocalDateTime periodEnd = declarationPeriod.getEnd() != null ? declarationPeriod.getEnd() : null;
+            LocalDateTime periodStart = period.getStart();
+            LocalDateTime periodEnd = period.getEnd() != null ? period.getEnd() : null;
             
             if (now.isAfter(periodStart) && periodEnd == null) {
                 isDeclarationPeriod = Boolean.TRUE;
@@ -516,14 +581,57 @@ public class DeclarationService {
                 isDeclarationPeriod = Boolean.TRUE;
             }
             
-            if (periodStart != null && now.isBefore(periodStart)) {
+            if (periodStart != null) {
                 data.put("declarationPeriodStart", periodStart);
-            } else if (periodEnd != null && now.isAfter(periodEnd)) {
+            }
+            if (periodEnd != null) {
                 data.put("declarationPeriodEnd", periodEnd);
             }
         }
         data.put("isDeclarationPeriod", isDeclarationPeriod);
         return data;
+    }
+
+    public Map<String, ?> declarationPeriod(Declaration declaration) {
+        Optional<StudyPeriodEvent> optDeclarationPeriod = declaration.getStudyPeriod().getEvents().stream()
+                .filter(e -> ClassifierUtil.equals(StudyPeriodEventType.SYNDMUS_DEKP, e.getEventType())).findAny();
+        if (!optDeclarationPeriod.isPresent()) {
+            return Collections.emptyMap();
+        }
+        
+        Boolean isDeclarationPeriod = Boolean.FALSE;
+        Map<String, Object> data = new HashMap<>();
+        StudyPeriodEvent declarationPeriod = optDeclarationPeriod.get();
+        
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime periodStart = declarationPeriod.getStart();
+        LocalDateTime periodEnd = declarationPeriod.getEnd();
+        
+        if (now.isAfter(periodStart) && periodEnd == null) {
+            isDeclarationPeriod = Boolean.TRUE;
+        } else if (now.isAfter(periodStart) && periodEnd != null && now.isBefore(periodEnd)) {
+            isDeclarationPeriod = Boolean.TRUE;
+        }
+        
+        if (periodStart != null) {
+            data.put("declarationPeriodStart", periodStart);
+        }
+        if (periodEnd != null) {
+            data.put("declarationPeriodEnd", periodEnd);
+        }
+        data.put("isDeclarationPeriod", isDeclarationPeriod);
+        
+        return data;
+    }
+    
+    public Map<String, ?> isDeclarationPeriod(HoisUserDetails user) {
+        StudyPeriodEventDto declarationPeriod = getCurrentStudyPeriodDeclarationPeriod(user.getSchoolId());
+        return declarationPeriodData(declarationPeriod);
+    }
+    
+    public Map<String, ?> isNextDeclarationPeriod(HoisUserDetails user) {
+        StudyPeriodEventDto declarationPeriod = getNextStudyPeriodDeclarationPeriod(user.getSchoolId());
+        return declarationPeriodData(declarationPeriod);
     }
 
     private void setAreSubjectsDeclaredRepeatedy(Collection<DeclarationSubjectDto> subjects, Long declarationId) {
@@ -594,7 +702,9 @@ public class DeclarationService {
     }
 
     public Page<StudentSearchDto> searchStudentsWithoutDeclaration(UsersSearchCommand command, Long schoolId, Pageable pageable) {
-        Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
+        Long studyPeriodId = Boolean.TRUE.equals(command.getNextPeriod())
+                ? studyYearService.getNextStudyPeriod(schoolId)
+                : studyYearService.getCurrentStudyPeriod(schoolId);
         if(studyPeriodId == null) {
             return new PageImpl<>(Arrays.asList());
         }
@@ -602,11 +712,11 @@ public class DeclarationService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(WITHOUT_DECLARATION_FROM).sort(pageable);
 
         qb.requiredCriteria("s.school_id = :schoolId ", "schoolId", schoolId);
-        qb.requiredCriteria(" s.status_code in :active ", "active", StudentStatus.STUDENT_STATUS_ACTIVE);
-        qb.filter(" c.is_higher = true ");
+        qb.requiredCriteria("s.status_code in :active ", "active", StudentStatus.STUDENT_STATUS_ACTIVE);
+        qb.filter("(case when c.id is not null then c.is_higher = true else true end)");
 
-        qb.requiredCriteria(" not exists("
-                + "select d.id from declaration d where d.student_id = s.id and d.study_period_id = :currentStudyPeriod) ", 
+        qb.requiredCriteria("not exists("
+                + "select d.id from declaration d where d.student_id = s.id and d.study_period_id = :currentStudyPeriod)", 
                 "currentStudyPeriod", studyPeriodId);
 
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name",

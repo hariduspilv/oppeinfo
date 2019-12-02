@@ -29,6 +29,7 @@ import ee.hitsa.ois.enums.CertificateType;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.report.certificate.CertificateRtfReport;
 import ee.hitsa.ois.service.CertificateContentService;
 import ee.hitsa.ois.service.CertificateService;
@@ -70,7 +71,7 @@ public class CertificateController {
 
     @GetMapping
     public Page<CertificateSearchDto> search(HoisUserDetails user, @Valid CertificateSearchCommand criteria, Pageable pageable) {
-        UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrStudentOrRepresentative(user);
         return certificateService.search(user, criteria, pageable);
     }
 
@@ -207,9 +208,9 @@ public class CertificateController {
     }
 
     @GetMapping("/otherStudent")
-    public StudentSearchDto otherStudent(HoisUserDetails user, OtherStudentCommand command) {
-        UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
-        return certificateService.otherStudent(user, command.getId(), command.getIdcode());
+    public StudentSearchDto otherStudent(HoisUserDetails user, OtherStudentCommand command) throws HoisException {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrStudentOrRepresentative(user);
+        return certificateService.otherStudent(user, command);
     }
     
     @GetMapping("/print/{id:\\d+}/certificate.rtf")
@@ -233,7 +234,8 @@ public class CertificateController {
     }
 
     public static class OtherStudentCommand {
-
+        
+        private Boolean hideGuestStudents;
         private String idcode;
         private Long id;
 
@@ -251,6 +253,14 @@ public class CertificateController {
 
         public void setId(Long id) {
             this.id = id;
+        }
+        
+        public Boolean getHideGuestStudents() {
+            return hideGuestStudents;
+        }
+
+        public void setHideGuestStudents(Boolean hideGuestStudents) {
+            this.hideGuestStudents = hideGuestStudents;
         }
     }
 }

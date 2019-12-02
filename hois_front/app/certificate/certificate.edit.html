@@ -14,15 +14,16 @@
 
             <div ng-show="!isOtherCertificate()">
                 <md-autocomplete
-                    md-input-minlength="2"
+                    md-input-minlength="1"
                     name="student"
                     md-selected-item="student"
                     md-search-text="queryText"
                     md-items="item in querySearch(queryText)"
                     md-item-text="currentLanguageNameField(item)"
                     md-floating-label="{{'certificate.student' | translate}}"
-                    ng-model="queryText"
+                    ng-model="student"
                     md-no-cache
+                    md-require-match
                     class="small-margin"
                     md-selected-item-change="studentChanged()"
                     ng-required="!isOtherCertificate()"
@@ -72,9 +73,26 @@
                  </md-option>
                 </md-select>
             </md-input-container>
-            <md-input-container ng-if="record.type === 'TOEND_LIIK_SOOR' && !record.id">
-                <md-checkbox ng-model="record.addOutcomes" ng-change="addOutcomesChanged()">{{'certificate.addOutcomes' | translate}}</md-checkbox>
-            </md-input-container>
+            <div layout="row" ng-if="record.type === 'TOEND_LIIK_SOOR'">
+                <md-input-container ng-if="!record.id">
+                    <md-checkbox ng-model="record.addOutcomes" ng-change="addOutcomesChanged()">{{'certificate.addOutcomes' | translate}}</md-checkbox>
+                </md-input-container>
+                <md-input-container ng-if="!record.id && studentType === 'OPPUR_K'">
+                    <md-checkbox ng-model="record.showUncompleted" ng-change="addOutcomesChanged()">
+                        {{auth.higher ? ('certificate.showUncompletedSubjects' | translate) : ('certificate.showUncompletedJournals' | translate)}}
+                    </md-checkbox>
+                </md-input-container>
+            </div>
+            <div layout="row" ng-if="!record.id && record.type === 'TOEND_LIIK_SOOR' && studentType === 'OPPUR_K'">
+                <md-radio-group layout-gt-sm="row" ng-model="record.estonian" ng-change="addOutcomesChanged()">
+                    <md-radio-button ng-value="true" aria-label="estonian">
+                        {{'document.estonian' | translate}}
+                    </md-radio-button>
+                    <md-radio-button ng-value="false" aria-label="english">
+                        {{'document.english' | translate}}
+                    </md-radio-button>
+                </md-radio-group>
+            </div>
             <md-input-container ng-if="contentEditable()">
                 <label>{{'certificate.content' | translate}}</label>
                 <textarea ng-model="record.content" required md-maxlength="2000" max-rows="2"></textarea>

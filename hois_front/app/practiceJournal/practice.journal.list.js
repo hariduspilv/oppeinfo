@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeJournalListController', function ($scope, $route, $location, $q, QueryUtils, dialogService, ArrayUtils, USER_ROLES, Classifier, message) {
+angular.module('hitsaOis').controller('PracticeJournalListController', function ($scope, $route, $location, $q, QueryUtils, dialogService, AuthService, USER_ROLES, Classifier, message) {
   $scope.auth = $route.current.locals.auth;
   var clMapper = Classifier.valuemapper({status: 'PAEVIK_STAATUS'});
   QueryUtils.createQueryForm($scope, '/practiceJournals', {order: 'student_person.lastname,student_person.firstname'}, clMapper.objectmapper);
@@ -30,12 +30,9 @@ angular.module('hitsaOis').controller('PracticeJournalListController', function 
     }
   };
 
-  function canCreate() {
-    return $scope.auth.isAdmin() && ArrayUtils.includes($scope.auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK);
-  }
-
   $scope.formState = {
-    canCreate: canCreate()
+    canCreate: $scope.auth.isAdmin() && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK),
+    canSendToEkis: AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LEPING)
   };
 
   $scope.newPracticeJournal = function () {

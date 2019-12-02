@@ -5,9 +5,9 @@
       name="student.results">{{'student.results' | translate}}</md-nav-item>
     <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/documents?_noback"
       name="student.documents">{{'student.documents' | translate}}</md-nav-item>
-    <md-nav-item ng-if="auth.isAdmin() && student.status && student.status !== 'OPPURSTAATUS_L' && student.status !== 'OPPURSTAATUS_K'" 
+    <md-nav-item ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && student.status && student.status !== 'OPPURSTAATUS_L' && student.status !== 'OPPURSTAATUS_K'" 
       md-nav-href="#/students/{{::studentId}}/timetable?_noback" name="student.timetable">{{'student.studentTimetable' | translate}}</md-nav-item>
-    <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/rr?_noback"
+    <md-nav-item ng-if="student.userCanViewStudentSpecificData && student.person.idcode != null" md-nav-href="#/students/{{::studentId}}/rr?_noback"
       name="student.rr">{{'rr.student.tabLabel' | translate}}</md-nav-item>
   </md-nav-bar>
 </md-content>
@@ -20,7 +20,7 @@
     ng-class="{'md-accent': currentNavItem === 'student.results'}" name="student.results">{{'student.results' | translate}}</md-button>
   <md-button class="md-raised" ng-if="student.userCanViewStudentSpecificData" ng-href="#/students/{{::studentId}}/documents?_noback"
     ng-class="{'md-accent': currentNavItem === 'student.documents'}" name="student.documents">{{'student.documents' | translate}}</md-button>
-  <md-button class="md-raised" ng-if="auth.isAdmin() && student.status !== 'OPPURSTAATUS_L' && student.status !== 'OPPURSTAATUS_K'"
+  <md-button class="md-raised" ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && student.status !== 'OPPURSTAATUS_L' && student.status !== 'OPPURSTAATUS_K'"
     ng-class="{'md-accent': currentNavItem === 'student.timetable'}" ng-href="#/students/{{::studentId}}/timetable?_noback"
     name="student.timetable">{{'student.studentTimetable' | translate}}</md-button>
   <md-button class="md-raised" ng-if="student.userCanViewStudentSpecificData" ng-class="{'md-accent': currentNavItem === 'student.rr'}"

@@ -11,7 +11,7 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
   $scope.addCurriculumSubjectForm = false;
   $scope.addExtraCurriculumSubjectFrom = false;
 
-  if($scope.auth.isStudent() && !angular.isDefined(id)) {
+  if($scope.auth.isStudent()) {
     QueryUtils.endpoint('/declarations/hasPrevious').search().$promise.then(function(response){
       $scope.currentNavItem = 'current';
       $scope.formState.showNavBar = response.hasPrevious;
@@ -19,16 +19,41 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
   }
 
   if(id) {
-    $scope.declaration = QueryUtils.endpoint('/declarations').get({id: id});
+    $scope.declaration = QueryUtils.endpoint('/declarations').get({id: id}, function(response){
+      $scope.isGuestStudent = response.student.type === 'OPPUR_K';
+      $scope.hasCurriculum = response.student.curriculumVersion !== null;
+      // We need declaration period to show
+      QueryUtils.endpoint('/declarations/declarationPeriod').get({id: response.id}).$promise.then(function(response){
+        $scope.formState.isDeclarationPeriod = response.isDeclarationPeriod;
+        if (response.declarationPeriodStart) {
+          $scope.formState.declarationPeriodStart = new Date(response.declarationPeriodStart);
+        }
+        if (response.declarationPeriodEnd) {
+          $scope.formState.declarationPeriodEnd = new Date(response.declarationPeriodEnd);
+        }
+      });
+    });
   } else {
-    $scope.declaration = QueryUtils.endpoint('/declarations/current').get();
+    $scope.declaration = QueryUtils.endpoint('/declarations/current').get({}, function(response){
+      $scope.isGuestStudent = response.student.type === 'OPPUR_K';
+      // We need declaration period to show
+      QueryUtils.endpoint('/declarations/isDeclarationPeriod').search().$promise.then(function(response){
+        $scope.formState.isDeclarationPeriod = response.isDeclarationPeriod;
+        if (response.declarationPeriodStart) {
+          $scope.formState.declarationPeriodStart = new Date(response.declarationPeriodStart);
+        }
+        if (response.declarationPeriodEnd) {
+          $scope.formState.declarationPeriodEnd = new Date(response.declarationPeriodEnd);
+        }
+      });
+    });
   }
 
   $scope.confirm = function() {
     dialogService.confirmDialog({prompt: 'declaration.prompt.confirm'}, function() {
       new ConfirmEndPoint($scope.declaration).$update().then(function(response){
         message.info('declaration.message.confirmed');
-        $location.path("/declarations/" + response.id + "/view");
+        $location.path("/declarations/" + response.id + "/view?_noback");
       });
     });
   };
@@ -140,67 +165,106 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
   $scope.auth = $route.current.locals.auth;
   var ConfirmEndPoint = QueryUtils.endpoint('/declarations/confirm');
 
+  var currentWrapper = new DeclarationWrapper(undefined, {isNextPeriod: false});
+  var nextWrapper = new DeclarationWrapper(undefined, {isNextPeriod: true});
+  $scope.declarations = [currentWrapper, nextWrapper];
   $scope.formState = {};
-  if($scope.auth.isStudent() && !angular.isDefined(id)) {
+  $scope.DECLARATION_PERIOD_TYPE = Object.freeze({
+    BEFORE: 0,
+    CURRENT: 1,
+    AFTER: 2
+  });
+
+  if($scope.auth.isStudent()) {
     QueryUtils.endpoint('/declarations/hasPrevious').search().$promise.then(function(response){
-      $scope.currentNavItem = 'current';
       $scope.formState.showNavBar = response.hasPrevious;
     });
   }
 
-  if(id) {
-      $scope.declaration = QueryUtils.endpoint('/declarations').get({id: id}, function(){
-      $scope.formState.declaration = true;
-    });
-  } else {
-    QueryUtils.endpoint('/declarations/current').get().$promise.then(function(response){
+  /**
+   * Sets declaration and formState
+   * 
+   * @param {DeclarationWrapper} wrapper
+   * @param {boolean} next if true then looks for next period declaration.
+   */
+  function getDeclarationDataWithoutId(wrapper, next) {
+    QueryUtils.endpoint('/declarations/' + (next ? 'next' : 'current')).get().$promise.then(function(response){
       if(!response.id) {
-        $scope.formState.noDeclaration = true;
-
-        QueryUtils.endpoint('/declarations/isDeclarationPeriod').search().$promise.then(function(response){
-          $scope.formState.isDeclarationPeriod = response.isDeclarationPeriod;
-          if (response.declarationPeriodStart) {
-            $scope.formState.declarationPeriodStart = response.declarationPeriodStart;
-          } else if (response.declarationPeriodEnd) {
-            $scope.formState.declarationPeriodEnd = response.declarationPeriodEnd;
-          }
-
-          if ($scope.formState.isDeclarationPeriod) {
-            QueryUtils.endpoint('/declarations/canCreate').search().$promise.then(function(response){
-              $scope.formState.canCreateDeclaration = response.canCreate;
-            });
-          }
-        });
-
+        wrapper.formState.noDeclaration = true;
       } else {
-        $scope.declaration = response;
-        $scope.formState.declaration = true;
+        wrapper.declaration = response;
+        wrapper.formState.declaration = true;
       }
+      
+      // We need declaration period to show
+      QueryUtils.endpoint('/declarations/isDeclarationPeriod?next=' + !!next).search().$promise.then(function(response){
+        wrapper.formState.type = response.isDeclarationPeriod ? $scope.DECLARATION_PERIOD_TYPE.CURRENT : undefined;
+        var currentTime = new Date();
+        if (response.declarationPeriodStart) {
+          wrapper.formState.declarationPeriodStart = new Date(response.declarationPeriodStart);
+          if (currentTime < wrapper.formState.declarationPeriodStart) {
+            wrapper.formState.type = $scope.DECLARATION_PERIOD_TYPE.BEFORE;
+          }
+        }
+        if (response.declarationPeriodEnd) {
+          wrapper.formState.declarationPeriodEnd = new Date(response.declarationPeriodEnd);
+          if (currentTime > wrapper.formState.declarationPeriodEnd) {
+            wrapper.formState.type = $scope.DECLARATION_PERIOD_TYPE.AFTER;
+          }
+        }
+
+        if (wrapper.formState.type === $scope.DECLARATION_PERIOD_TYPE.CURRENT && !response.id) {
+          QueryUtils.endpoint('/declarations/canCreate?next=' + !!next).search().$promise.then(function(response){
+            wrapper.formState.canCreateDeclaration = response.canCreate;
+          });
+        }
+
+        if (response.period && !wrapper.declaration.studyPeriod) {
+          wrapper.declaration.studyPeriod = response.period;
+        }
+      });
+
+      $scope.isGuestStudent = response.student !== undefined && response.student.type === 'OPPUR_K';
     });
   }
 
-  $scope.addDeclaration = function() {
-    var Endpoint = QueryUtils.endpoint('/declarations/create');
+  if(id) {
+    currentWrapper.declaration = QueryUtils.endpoint('/declarations').get({id: id}, function(response){
+      currentWrapper.formState.declaration = true;
+      $scope.isGuestStudent = response.student.type === 'OPPUR_K';
+      $scope.currentNavItem = response.isPrevious ? 'previous' : 'current';
+    });
+    nextWrapper.hide = true;
+  } else {
+    $scope.currentNavItem = 'current';
+    getDeclarationDataWithoutId(currentWrapper);
+    getDeclarationDataWithoutId(nextWrapper, true);
+  }
+
+  $scope.addDeclaration = function(next) {
+    var Endpoint = QueryUtils.endpoint('/declarations/create?next=' + !!next);
     new Endpoint().$save().then(function(response){
       $location.path("/declarations/" + response.id + "/edit");
     });
   };
 
-  $scope.confirm = function() {
+  $scope.confirm = function(next) {
+    var wrapper = next ? nextWrapper : currentWrapper;
     dialogService.confirmDialog({prompt: 'declaration.prompt.confirm'}, function() {
-      new ConfirmEndPoint($scope.declaration).$update().then(function(response){
+      new ConfirmEndPoint(wrapper.declaration).$update().then(function(response){
         message.info('declaration.message.confirmed');
-        $scope.declaration = response;
+        wrapper.declaration = response;
       });
     });
   };
 
-  $scope.removeConfirmation = function() {
+  $scope.removeConfirmation = function(next) {
+    var wrapper = next ? nextWrapper : currentWrapper;
     dialogService.confirmDialog({prompt: 'declaration.prompt.removeConfirmation'}, function() {
       var EndPoint = QueryUtils.endpoint('/declarations/removeConfirm');
-      new EndPoint($scope.declaration).$update().then(function(response){
+      new EndPoint(wrapper.declaration).$update().then(function(response){
         message.info('declaration.message.confirmationRemoved');
-        $scope.declaration = response;
+        wrapper.declaration = response;
       });
     });
   };
@@ -219,12 +283,15 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
       });
   };
 
-  // $scope.seeSubjectPrograms = function(subject) {
-  //   dialogService.showDialog('declaration/declaration.subject.programs.html', DialogController, function () {});
-  //   function DialogController(scope) {
-  //     scope.subject = subject;
-  //   }
-  // }
+  /**
+   * Holds declaration and formState for this declaration.
+   * Needed for repeating the same form.
+   */
+  function DeclarationWrapper(declaration, formState) {
+    this.declaration = (declaration || {});
+    this.formState = (formState || {});
+    this.hide = false;
+  }
 
 }]).controller('DeclarationSearchController', ['$scope', '$route', '$q', '$timeout', 'Classifier', 'DataUtils', 'QueryUtils', 'message', 'dialogService', 'USER_ROLES', 'AuthService',
   function ($scope, $route, $q, $timeout, Classifier, DataUtils, QueryUtils, message, dialogService, USER_ROLES, AuthService) {
@@ -309,23 +376,43 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
 ]).controller('DeclarationNewController', ['$scope', '$location', 'FormUtils', 'QueryUtils', 'message',
   function ($scope, $location, FormUtils, QueryUtils, message) {
 
-    function validStudyPeriod() {
-      var valid = !!$scope.studyPeriod.id;
+    $scope.periods = [];
+
+    function validStudyPeriod(period) {
+      var valid = !!period.id;
       if(!valid) {
         message.error('studyYear.studyPeriod.missingCurrent');
       }
       return valid;
     }
+
     $scope.studyPeriod = QueryUtils.endpoint('/declarations/currentStudyPeriod').search();
-    $scope.studyPeriod.$promise.then(validStudyPeriod);
+    $scope.studyPeriod.$promise.then(function () {
+      if (!validStudyPeriod($scope.studyPeriod)) {
+        return;
+      }
+      $scope.periods.unshift($scope.studyPeriod)
+      $scope.controller.period = $scope.studyPeriod.id;
+    });
+
+    $scope.nextPeriod = QueryUtils.endpoint('/declarations/nextStudyPeriod').search();
+    $scope.nextPeriod.$promise.then(function () {
+      if (!$scope.nextPeriod.id) {
+        return;
+      }
+      $scope.periods.push($scope.nextPeriod);
+    });
 
     $scope.save = function() {
       FormUtils.withValidForm($scope.declarationNewForm, function() {
-        if(!validStudyPeriod()) {
+         // It is fine to check only the current period
+         // If there is no current period then there should not be next period.
+        if(!validStudyPeriod($scope.studyPeriod)) {
           return;
         }
-        var Endpoint = QueryUtils.endpoint('/declarations/create/' + $scope.student.id);
-        new Endpoint().$save().then(function(response){
+        var isNextPeriod = !!$scope.nextPeriod.id && $scope.nextPeriod.id === $scope.controller.period;
+        var Endpoint = QueryUtils.endpoint('/declarations/create/' + $scope.controller.student.id + "?next=" + isNextPeriod);
+        new Endpoint().$save().then(function(response) {
           message.info('main.messages.create.success');
           $location.url("/declarations/" + response.id + "/edit?_noback");
         }).catch(angular.noop);

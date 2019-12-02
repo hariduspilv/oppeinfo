@@ -52,7 +52,7 @@ public class StudentAbsenceService {
     private StudyYearService studyYearService;
 
     private static final String SELECT = "sa.id as absenceId, s.id as studentId, p.firstname, p.lastname, sg.code, sa.valid_from, "
-            + "sa.valid_thru, sa.is_accepted, sa.is_rejected, sa.cause, sa.inserted_by, sa.accepted_by, sa.changed_by, sa.is_lesson_absence, sa.reject_reason ";
+            + "sa.valid_thru, sa.is_accepted, sa.is_rejected, sa.cause, sa.inserted_by, sa.accepted_by, sa.changed_by, sa.is_lesson_absence, sa.reject_reason, s.type_code studentType ";
     private static final String FROM =
               "from student_absence sa "
             + "join student s on s.id = sa.student_id "
@@ -85,6 +85,11 @@ public class StudentAbsenceService {
             + "and sy.start_date <= sa.valid_from "
             + "and (case when sa.valid_thru is null then sa.valid_from >= sy.start_date and sa.valid_from <= sy.end_date else sy.start_date <= sa.valid_thru and sy.end_date >= sa.valid_from end)) ";
 
+    private static final String FILTER_BY_LEADING_TEACHER_CURRICULUMS = " exists("
+            + "select c.id from curriculum_version cv "
+            + "join curriculum c on c.id = cv.curriculum_id "
+            + "where s.curriculum_version_id = cv.id and c.id in (:userCurriculumIds))";
+
     private static final String PRACTICE_JOURNAL_CAUSE = "Praktikal (leping)";
     private static final String DIRECTIVE_CAUSE = "Õppetegevus (käskiri)";
 
@@ -92,13 +97,16 @@ public class StudentAbsenceService {
             Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(FROM).sort(pageable);
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
-        
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria(FILTER_BY_LEADING_TEACHER_CURRICULUMS, "userCurriculumIds", user.getCurriculumIds());
+        }
+
         qb.optionalCriteria("s.curriculum_version_id in :curriculumVersions", "curriculumVersions", criteria.getCurriculumVersions());
         qb.optionalContains("sg.code", "studentGroupCode", criteria.getStudentGroupCode());
         qb.optionalCriteria("sg.id = :groupId", "groupId", criteria.getStudentGroupId());
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getStudentName());
         qb.optionalCriteria("sa.is_accepted = :isAccepted", "isAccepted", criteria.getIsAccepted());
-        
+
         if (Boolean.TRUE.equals(criteria.getIsRejected())) {
             qb.optionalCriteria("(sa.is_rejected = :isRejected or (sa.is_rejected is null and sa.is_accepted != :isRejected))", "isRejected", Boolean.TRUE);
         } else if (Boolean.FALSE.equals(criteria.getIsRejected())){
@@ -106,7 +114,7 @@ public class StudentAbsenceService {
         }
         qb.optionalCriteria(FILTER_BY_STUDY_PERIOD, "studyPeriod", criteria.getStudyPeriod());
         qb.requiredCriteria(FILTER_BY_STUDY_YEAR, "studyYear", criteria.getStudyYear());
-        
+
         if(user.isTeacher()) {
             qb.requiredCriteria("sg.teacher_id = :teacherId", "teacherId", user.getTeacherId());
         }
@@ -115,11 +123,11 @@ public class StudentAbsenceService {
         boolean hasPermissionToChangeStatus = StudentAbsenceUtil.hasPermissionToChangeStatus(user);
         return results.map(r -> rowToDto(hasPermissionToChangeStatus, r));
     }
-    
+
     private static StudentAbsenceDto rowToDto(boolean hasPermissionToChangeStatus,  Object[] row) {
         StudentAbsenceDto dto = new StudentAbsenceDto();
         dto.setId(resultAsLong(row, 0));
-        String fullname = PersonUtil.fullname(resultAsString(row, 2), resultAsString(row, 3));
+        String fullname = PersonUtil.fullnameOptionalGuest(resultAsString(row, 2), resultAsString(row, 3), resultAsString(row, 15));
         dto.setStudent(new AutocompleteResult(resultAsLong(row, 1), fullname, fullname));
         dto.setStudentGroup(resultAsString(row, 4));
         dto.setValidFrom(resultAsLocalDate(row, 5));
@@ -140,6 +148,13 @@ public class StudentAbsenceService {
                 && (dto.getIsRejected() != null ? Boolean.FALSE.equals(dto.getIsRejected()) : true)));
         dto.setIsLessonAbsence(resultAsBoolean(row, 13));
         dto.setRejectReason(resultAsString(row, 14));
+        return dto;
+    }
+
+    public StudentAbsenceDto get(HoisUserDetails user, StudentAbsence studentAbsence) {
+        StudentAbsenceDto dto = StudentAbsenceDto.of(studentAbsence);
+        dto.setCanAccept(Boolean.valueOf(StudentAbsenceUtil.canAccept(user, studentAbsence)));
+        dto.setCanReject(Boolean.valueOf(StudentAbsenceUtil.canReject(user, studentAbsence)));
         return dto;
     }
 

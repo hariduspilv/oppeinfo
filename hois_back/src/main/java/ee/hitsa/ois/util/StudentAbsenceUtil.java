@@ -44,8 +44,8 @@ public abstract class StudentAbsenceUtil {
     }
 
     public static boolean hasPermissionToSearch(HoisUserDetails user) {
-        return (user.isSchoolAdmin() || user.isTeacher()) &&
-              UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PUUDUMINE);
+        return (user.isSchoolAdmin() || user.isLeadingTeacher() || user.isTeacher())
+                && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PUUDUMINE);
     }
 
     public static boolean canAccept(HoisUserDetails user, StudentAbsence absence) {

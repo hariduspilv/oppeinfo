@@ -15,8 +15,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
-            return (Session.roleCode === 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS) !== -1) || 
-                    (Session.committees.indexOf('KOMISJON_T') !== -1 && ['ROLL_A', 'ROLL_O'].indexOf(Session.roleCode) !== -1) ||
+            return (['ROLL_A', 'ROLL_J'].indexOf(Session.roleCode) !== -1 && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS) !== -1) || 
+                    (Session.committees.indexOf('KOMISJON_T') !== -1 && ['ROLL_A', 'ROLL_J', 'ROLL_O'].indexOf(Session.roleCode) !== -1) ||
                     ((Session.teacherGroupIds || []).length > 0 && Session.roleCode === 'ROLL_O' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS) !== -1);
           }
         }
@@ -55,7 +55,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
-            return (Session.committees.indexOf('KOMISJON_T') !== -1 && ['ROLL_A', 'ROLL_O'].indexOf(Session.roleCode) !== -1) ||
+            return (Session.committees.indexOf('KOMISJON_T') !== -1 && ['ROLL_A', 'ROLL_J', 'ROLL_O'].indexOf(Session.roleCode) !== -1) ||
                     roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS) !== -1;
           }
         }

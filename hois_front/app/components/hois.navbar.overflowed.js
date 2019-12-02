@@ -8,6 +8,8 @@
  * Used to fix a bug with overflowed navbar.
  * Created issue about it in github:
  * https://github.com/angular/material/issues/11747
+ * 
+ * @deprecated after angular-material 1.1.21 version this has been fixed.
  */
 angular.module('hitsaOis').directive('hoisNavbarOverflowed', function () {
   return {

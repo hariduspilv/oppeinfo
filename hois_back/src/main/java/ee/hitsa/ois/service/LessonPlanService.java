@@ -622,12 +622,17 @@ public class LessonPlanService {
         EntityUtil.deleteEntity(lessonPlan, em);
     }
 
-    public Page<LessonPlanSearchDto> search(Long schoolId, LessonPlanSearchCommand criteria, Pageable pageable) {
+    public Page<LessonPlanSearchDto> search(HoisUserDetails user, LessonPlanSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from lesson_plan lp inner join student_group sg on lp.student_group_id = sg.id " +
                 "inner join curriculum_version cv on lp.curriculum_version_id = cv.id").sort(pageable);
 
-        qb.requiredCriteria("lp.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("lp.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("cv.curriculum_id in (:userCurriculumIds)", "userCurriculumIds",
+                    user.getCurriculumIds());
+        }
+
         qb.requiredCriteria("lp.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
         qb.optionalCriteria("cv.school_department_id = :schoolDepartmentId", "schoolDepartmentId", criteria.getSchoolDepartment());
         qb.optionalCriteria("lp.curriculum_version_id = :curriculumVersionId", "curriculumVersionId", criteria.getCurriculumVersion());
@@ -895,17 +900,21 @@ public class LessonPlanService {
         return result;
     }
 
-    public Map<String, ?> searchFormData(Long schoolId) {
+    public Map<String, ?> searchFormData(HoisUserDetails user) {
         Map<String, Object> data = new HashMap<>();
+        Long schoolId = user.getSchoolId();
         data.put("studyYears", autocompleteService.studyYears(schoolId));
         StudentGroupAutocompleteCommand studentGroupLookup = new StudentGroupAutocompleteCommand();
         studentGroupLookup.setHigher(Boolean.FALSE);
-        data.put("studentGroups", autocompleteService.studentGroups(schoolId, studentGroupLookup));
+        data.put("studentGroups", autocompleteService.studentGroups(schoolId, studentGroupLookup, false));
         data.put("studentGroupMapping", studentgroupsWithLessonPlans(schoolId));
         data.put("curriculumLessonPlans", curriculumLessonPlans(schoolId));
         CurriculumVersionAutocompleteCommand curriculumVersionLookup = new CurriculumVersionAutocompleteCommand();
         curriculumVersionLookup.setHigher(Boolean.FALSE);
         curriculumVersionLookup.setValid(Boolean.TRUE);
+        if (user.isLeadingTeacher()) {
+            curriculumVersionLookup.setUserId(user.getUserId());
+        }
         data.put("curriculumVersions", autocompleteService.curriculumVersions(schoolId, curriculumVersionLookup));
         return data;
     }

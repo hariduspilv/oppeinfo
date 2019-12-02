@@ -1,0 +1,72 @@
+{{ content.schoolEn }} proves, that 
+<b>{{ content.student.firstname }} {{ content.student.lastname }} 
+{{ content.student.idcode != null ? "(personal identity code " + content.student.idcode : "(birth date " + content.student.birthDate }})
+</b>
+ {{ content.student.isGuestStudent ? "was a guest student" : "studied" }}
+{{ content.abroadProgramme != null ? " (" + content.abroadProgramme.nameEn + ")" : ""}}
+ {{ content.student.studyStart != null ? content.student.studyStart : "unassigned"}} 
+- {{ content.student.studyEnd != null ? content.student.studyEnd : "unassigned"}}
+{{ content.student.curriculum != null ? " on curriculum " + content.student.curriculum.nameEn + "(code " + content.student.curriculum.code + ")" : "" }}
+{% if content.student.results != null and content.student.results.isEmpty() == false %}
+ and his/her results were graded as such:
+
+<table class="widerTable">
+	<thead>
+		<tr>
+			<th>{{ "report.certificate.nr" | translate }}</th>
+			<th>{{ "report.certificate.subject" | translate }}</th>
+			<th>{{ "report.certificate.subject.code" | translate }}</th>
+			<th>{{ "report.certificate.credits.higher" | translate }}</th>
+			<th colspan="2">{{ "report.certificate.grade" | translate }}</th>
+			<th>{{ "report.certificate.date" | translate }}</th>
+			<th>
+				{% if content.isHigherSchool %}
+					{{ "report.certificate.teacherHigher" | translate }}
+				{% else %}
+					{{ "report.certificate.teacherVocational" | translate }}
+				{% endif %}
+			</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for result in content.student.results %}
+		<tr>
+			<td>{{ loop.index + 1 }}</td>
+			<td>{{ result.subjectEn }}</td>
+			<td>{{ result.subjectCode }}</td>
+			<td>{{ result.hours }}</td>
+			<td>{{ result.gradeValue }}</td>
+			<td>{{ result.gradeNameEn }}</td>
+			<td>{{ result.date }}</td>
+			<td>{{ result.assessedBy }}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+
+</table>
+{% endif %}
+
+{% if content.student.results != null and content.student.results.isEmpty() == false and content.student.isGuestStudent and content.gradeSystem != null %}
+{{ "report.certificate.gradeSystem" | translate }}:
+<br>
+{{content.gradeSystem}}
+{% endif %}
+
+{% if content.addOutcomes %}
+<br>
+{% for result in content.student.results %}
+<b>{{ result.subjectEn }}</b><br>
+{{ result.outcomesEn }}<br>
+{% endfor %}
+{% endif %}
+
+{% if content.student.hasQuit %}
+<p>Student has quit studying</p>
+{% endif %}
+
+
+<style>
+  .widerTable {
+    border-spacing: 50px 10px;
+  }
+</style>

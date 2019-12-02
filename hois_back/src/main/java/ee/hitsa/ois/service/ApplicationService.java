@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -109,7 +110,7 @@ public class ApplicationService {
             "inner join person person on student.person_id = person.id inner join classifier type on a.type_code = type.code "+
             "inner join classifier status on a.status_code = status.code";
     private static final String APPLICATION_SELECT = "a.id, a.type_code, a.status_code, a.inserted, "+
-            "a.submitted, a.student_id, person.firstname, person.lastname, a.reject_reason";
+            "a.submitted, a.student_id, person.firstname, person.lastname, a.reject_reason, student.type_code as studentType";
 
     @Autowired
     private AutomaticMessageService automaticMessageService;
@@ -136,6 +137,15 @@ public class ApplicationService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(APPLICATION_FROM).sort(pageable);
 
         qb.requiredCriteria("student.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("(exists (select c.id from curriculum c "
+                    + "join curriculum_version cv on cv.curriculum_id = c.id join user_curriculum uc on uc.curriculum_id = c.id "
+                    + "where cv.id = student.curriculum_version_id and uc.user_id = :userId) "
+                    + "or exists(select 1 from committee_member cm where cm.committee_id = a.committee_id "
+                    + "and cm.person_id = :personId))", "userId", user.getUserId());
+            qb.parameter("personId", user.getPersonId());
+        }
+
         qb.optionalCriteria("a.type_code in (:type)", "type", criteria.getType());
         qb.optionalCriteria("a.inserted >= :insertedFrom", "insertedFrom", criteria.getInsertedFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("a.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(), DateUtils::lastMomentOfDay);
@@ -161,9 +171,8 @@ public class ApplicationService {
                 qb.parameter("teacherId", user.getTeacherId());
             }
         }
-        
 
-        return JpaQueryUtil.pagingResult(qb, APPLICATION_SELECT, em, pageable).map(r -> {
+        Page<ApplicationSearchDto> applications = JpaQueryUtil.pagingResult(qb, APPLICATION_SELECT, em, pageable).map(r -> {
             ApplicationSearchDto dto = new ApplicationSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setType(resultAsString(r, 1));
@@ -171,12 +180,55 @@ public class ApplicationService {
             dto.setInserted(resultAsLocalDateTime(r, 3));
             dto.setSubmitted(resultAsLocalDateTime(r, 4));
             Long studentId = resultAsLong(r, 5);
-            String name = PersonUtil.fullname(resultAsString(r, 6), resultAsString(r, 7));
-            dto.setStudent(new AutocompleteResult(resultAsLong(r, 5), name, name));
+            String name = PersonUtil.fullnameOptionalGuest(resultAsString(r, 6), resultAsString(r, 7), resultAsString(r, 9));
+            dto.setStudent(new AutocompleteResult(studentId, name, name));
             dto.setRejectReason(resultAsString(r, 8));
-            dto.setCanEditStudent(Boolean.valueOf(StudentUtil.canBeEdited(em.getReference(Student.class, studentId))));
             return dto;
         });
+        setApplicationSearchDtoRights(user, applications.getContent());
+        return applications;
+    }
+
+    private void setApplicationSearchDtoRights(HoisUserDetails user, List<ApplicationSearchDto> applications) {
+        Map<Long, List<ApplicationSearchDto>> applicationsByStudent = StreamUtil.nullSafeList(applications).stream()
+                .collect(Collectors.groupingBy(a -> a.getStudent().getId(),
+                        Collectors.mapping(a -> a, Collectors.toList())));
+        if (!applicationsByStudent.isEmpty()) {
+            List<Student> students = em.createQuery("select s from Student s where s.id in (:studentIds)", Student.class)
+                    .setParameter("studentIds", applicationsByStudent.keySet())
+                    .getResultList();
+
+            for (Student student : students) {
+                List<ApplicationSearchDto> studentApplications = applicationsByStudent.get(student.getId());
+                Boolean canEditStudent = Boolean.valueOf(StudentUtil.canBeEdited(student));
+                for (ApplicationSearchDto dto : studentApplications) {
+                    dto.setCanViewStudent(Boolean.TRUE);
+                    dto.setCanEditStudent(canEditStudent);
+                }
+            }
+            if (user.isLeadingTeacher()) {
+                setCanViewStudent(user, applicationsByStudent);
+            }
+        }
+    }
+
+    // leading teacher can see only his/her curriculum student group students
+    private void setCanViewStudent(HoisUserDetails user, Map<Long, List<ApplicationSearchDto>> applicationsByStudent) {
+        List<?> data = em.createNativeQuery("select s.id from student s"
+                + " join curriculum_version cv on cv.id = s.curriculum_version_id"
+                + " where cv.curriculum_id in (?1) and s.id in (?2)")
+                .setParameter(1, user.getCurriculumIds())
+                .setParameter(2, applicationsByStudent.keySet())
+                .getResultList();
+        Set<Long> studentIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
+
+        for (Long studentId : applicationsByStudent.keySet()) {
+            if (!studentIds.contains(studentId)) {
+                for (ApplicationSearchDto dto : applicationsByStudent.get(studentId)) {
+                    dto.setCanViewStudent(Boolean.FALSE);
+                }
+            }
+        }
     }
 
     /**
@@ -462,14 +514,18 @@ public class ApplicationService {
             if (oldStatus != null && oldStatus.equals(ApplicationStatus.AVALDUS_STAATUS_ESIT) && !oldStatus.equals(EnumUtil.valueOf(ApplicationStatus.class, application.getStatus()))) {
                 dto.setHasBeenSeenByAdmin(Boolean.TRUE);
             }
-            dto.setCanRemoveConfirmation(Boolean.valueOf(canRemoveApplicationConfirmation(user, application)));
-            dto.setCanChangeThemeReplacements(Boolean.valueOf(canChangeThemeReplacements(user, application)));
+            setUserRights(user, application, dto);
             return dto;
         }
         ApplicationDto dto = ApplicationDto.of(application);
+        setUserRights(user, application, dto);
+        return dto;
+    }
+
+    private void setUserRights(HoisUserDetails user, Application application, ApplicationDto dto) {
+        dto.setCanViewStudent(Boolean.valueOf(UserUtil.canViewStudent(user, application.getStudent())));
         dto.setCanRemoveConfirmation(Boolean.valueOf(canRemoveApplicationConfirmation(user, application)));
         dto.setCanChangeThemeReplacements(Boolean.valueOf(canChangeThemeReplacements(user, application)));
-        return dto;
     }
 
     /**

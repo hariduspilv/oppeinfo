@@ -11,23 +11,31 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row hois-table-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
-        <td md-cell>
-          <hois-classifier-value ng-model="row.fin" name="students[{{$index}}].fin" main-classifier-code="FINALLIKAS"></hois-classifier-value>
-          <div class="invalid" ng-show="directiveForm['students['+$index+'].fin'].$error.required">
-            {{'main.required' | translate}}
-          </div>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <hois-classifier-value ng-model="row.fin" name="students[{{$index}}].fin" main-classifier-code="FINALLIKAS"></hois-classifier-value>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-show="directiveForm['students['+$index+'].fin'].$error.required">
+              {{'main.required' | translate}}
+            </div>
+          </hois-table-data-detail>
         </td>
-        <td md-cell>
-          <hois-classifier-select ng-model="row.finSpecific" name="students[{{$index}}].finSpecific" model-value-attr="code"
-            criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
-            filter-values="[row.oldFinSpecific]" main-classifier-code="FINTAPSUSTUS" aria-label="{{'directive.student.finSpecific' | translate}}"></hois-classifier-select>
-          <div class="invalid" ng-show="directiveForm['students['+$index+'].finSpecific'].$error.required">
-            {{'main.required' | translate}}
-          </div>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <hois-classifier-select ng-model="row.finSpecific" name="students[{{$index}}].finSpecific" model-value-attr="code"
+              criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
+              filter-values="[row.oldFinSpecific]" main-classifier-code="FINTAPSUSTUS" aria-label="{{'directive.student.finSpecific' | translate}}"></hois-classifier-select>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-show="directiveForm['students['+$index+'].finSpecific'].$error.required">
+              {{'main.required' | translate}}
+            </div>
+          </hois-table-data-detail>
         </td>
         <td md-cell>
           <a ng-click="deleteStudent(row)" md-no-ink  class="remove">&times;</a>

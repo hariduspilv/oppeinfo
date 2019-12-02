@@ -19,7 +19,7 @@
         <td md-cell>{{currentLanguageNameField(subject)}}</td>
         <td md-cell>{{subject.subjectCode}}</td>
         <td md-cell>{{subject.credits}}</td>
-        <td md-cell>{{subject.grade}}</td>
+        <td md-cell>{{subject.grade | hoisHigherGrade: auth.school.letterGrades}}</td>
         <td md-cell>{{subject.gradeDate | hoisDate}}</td>
         <td md-cell>{{currentLanguageNameField(subject.curriculumVersionModule)}}</td>
         <td md-cell>

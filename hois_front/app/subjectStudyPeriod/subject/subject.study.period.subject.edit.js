@@ -38,14 +38,6 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectEditController',
         $scope.formState = {xlsUrl: 'subjectStudyPeriods/subjects/subjectstudyperiodsubject.xls'};
     }
 
-    function loadSubjects() {
-      if($scope.record.studyPeriod) {
-        $scope.subjects = QueryUtils.endpoint('/subjectStudyPeriods/subjects/list/limited/' + $scope.record.studyPeriod).query();
-      }
-    }
-
-    $scope.$watch('record.studyPeriod', loadSubjects);
-
     function isValid() {
       $scope.subjectStudyPeriodSubjectEditForm.$setSubmitted();
       if(!$scope.subjectStudyPeriodSubjectEditForm.$valid) {

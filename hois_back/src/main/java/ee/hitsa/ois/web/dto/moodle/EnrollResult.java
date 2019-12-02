@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.moodle;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class EnrollResult {
@@ -7,7 +8,7 @@ public class EnrollResult {
     private Integer enrolled;
     private List<String> failed;
     private List<String> missingUser;
-    private List<String> missingIdcode;
+    private List<String> missingIdcode = new ArrayList<>();
     
     public Integer getEnrolled() {
         return enrolled;

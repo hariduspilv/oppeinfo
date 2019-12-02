@@ -91,9 +91,10 @@ public class AbstractProtocolService {
         ps.setGradeValue(null);
     }
 
-    protected static void gradeStudent(ProtocolStudent ps, Classifier grade, Short gradeMark, Boolean isLetterGrade) {
+    protected static void gradeStudent(ProtocolStudent ps, Classifier grade, Short gradeMark, Boolean isLetterGrade,
+            LocalDate gradeDate) {
         ps.setGrade(grade);
-        ps.setGradeDate(LocalDate.now());
+        ps.setGradeDate(gradeDate);
         ps.setGradeMark(gradeMark);
         ps.setGradeValue(Boolean.TRUE.equals(isLetterGrade) ? grade.getValue2() : grade.getValue());
     }

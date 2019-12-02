@@ -174,6 +174,10 @@
           <label>{{'curriculum.supervisor' | translate}}</label>
           <input ng-value="currentLanguageNameField(curriculum.teacher)" readonly>
         </md-input-container>
+        <md-input-container flex ng-if="curriculum.leadingTeachers">
+          <label>{{'curriculum.leadingTeachers' | translate}}</label>
+          <input ng-value="currentLanguageNameField(curriculum.leadingTeachers, ', ')" readonly>
+        </md-input-container>
         <md-input-container flex ng-if="curriculum.status === STATUS.VERIFIED">
           <label>{{'public.url' | translate}}</label>
           <input ng-model="publicUrl" type="text" readonly>
@@ -226,44 +230,44 @@
 			<div layout="column">
 				<md-input-container flex>
 					<label>{{'curriculum.final31' | translate}}</label>
-					<input ng-model="curriculum.final31" type="text" readonly>
+          <textarea ng-model="curriculum.final31" max-rows="10" readonly></textarea>
 				</md-input-container>
 				<md-input-container flex>
 					<label>{{'curriculum.final33' | translate}}</label>
-					<input ng-model="curriculum.final33" type="text" readonly>
+          <textarea ng-model="curriculum.final33" max-rows="10" readonly></textarea>
 				</md-input-container>
 				<md-input-container flex>
 					<label>{{'curriculum.final51' | translate}}</label>
-					<input ng-model="curriculum.final51" type="text" readonly>
+          <textarea ng-model="curriculum.final51" max-rows="10" readonly></textarea>
 				</md-input-container>
 				<md-input-container flex>
 					<label>{{'curriculum.final52' | translate}}</label>
-					<input ng-model="curriculum.final52" type="text" readonly>
+          <textarea ng-model="curriculum.final52" max-rows="10" readonly></textarea>
 				</md-input-container>
 				<md-input-container flex>
 					<label>{{'curriculum.final61' | translate}}</label>
-					<input ng-model="curriculum.final61" type="text" readonly>
+          <textarea ng-model="curriculum.final61" max-rows="10" readonly></textarea>
 				</md-input-container>
 				<br>
 				<md-input-container flex>
 					<label>{{'curriculum.finalEn31' | translate}}</label>
-					<input ng-model="curriculum.finalEn31" type="text" readonly>
+          <textarea ng-model="curriculum.finalEn31" max-rows="10" readonly></textarea>
 				</md-input-container>
 				<md-input-container flex>
 					<label>{{'curriculum.finalEn33' | translate}}</label>
-					<input ng-model="curriculum.finalEn33" type="text" readonly>
+          <textarea ng-model="curriculum.finalEn33" max-rows="10" readonly></textarea>
 				</md-input-container>
 				<md-input-container flex>
 					<label>{{'curriculum.finalEn51' | translate}}</label>
-					<input ng-model="curriculum.finalEn51" type="text" readonly>
+          <textarea ng-model="curriculum.finalEn51" max-rows="10" readonly></textarea>
 				</md-input-container>
 				<md-input-container flex>
 					<label>{{'curriculum.finalEn52' | translate}}</label>
-					<input ng-model="curriculum.finalEn52" type="text" readonly>
+          <textarea ng-model="curriculum.finalEn52" max-rows="10" readonly></textarea>
 				</md-input-container>
 				<md-input-container flex>
 					<label>{{'curriculum.finalEn61' | translate}}</label>
-					<input ng-model="curriculum.finalEn61" type="text" readonly>
+          <textarea ng-model="curriculum.finalEn61" max-rows="10" readonly></textarea>
 				</md-input-container>
 			</div>
 		</fieldset>
@@ -467,7 +471,7 @@
           <md-button class="md-raised md-default" ng-click="changeStatusUnderRevision()" ng-if="curriculum.canSetUnderRevision">{{'curriculum.button.changeStatusUnderRevision' | translate}}</md-button>
           <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
         </span>
-        <a ng-show="curriculum.id && (auth.isAdmin() || curriculum.status === STATUS.VERIFIED)"
+        <a ng-show="curriculum.id && (auth.isAdmin() || auth.isLeadingTeacher() || curriculum.status === STATUS.VERIFIED)"
           href="{{formState.curriculumXmlUrl}}" target="_blank" class="md-button md-raised">XML</a>
         <md-button class="md-raised md-default" ng-click="back('#/curriculum')">{{'main.button.back' | translate}}</md-button>
       </div>

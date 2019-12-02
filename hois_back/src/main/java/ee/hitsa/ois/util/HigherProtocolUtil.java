@@ -14,18 +14,20 @@ import ee.hitsa.ois.web.dto.HigherProtocolStudentDto;
 
 public abstract class HigherProtocolUtil {
 
-    public static boolean hasPermissionToView(HoisUserDetails user) {
-        if(!UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PROTOKOLL)) {
+    private static boolean canSearch(HoisUserDetails user) {
+        return (user.isSchoolAdmin() || user.isLeadingTeacher() || user.isTeacher())
+                && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PROTOKOLL);
+    }
+
+    private static boolean canView(HoisUserDetails user, Protocol protocol) {
+        if (!UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PROTOKOLL)) {
             return false;
         }
-        return user.isSchoolAdmin() || user.isTeacher();
+        return UserUtil.isSchoolAdmin(user, protocol.getSchool()) || UserUtil.isTeacher(user, protocol.getSchool())
+                || UserUtil.isLeadingTeacher(user, protocol.getProtocolHdata().getSubjectStudyPeriod().getSubject());
     }
 
-    public static boolean canView(HoisUserDetails user, Protocol protocol) {
-        return hasPermissionToView(user) && UserUtil.isSameSchool(user, protocol.getSchool());
-    }
-
-    public static boolean canCreate(HoisUserDetails user) {
+    private static boolean canCreate(HoisUserDetails user) {
         if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PROTOKOLL)) {
             return false;
         }
@@ -60,7 +62,7 @@ public abstract class HigherProtocolUtil {
     }
 
     public static void assertCanSearch(HoisUserDetails user) {
-        if(!hasPermissionToView(user)) {
+        if(!canSearch(user)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }

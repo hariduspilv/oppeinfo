@@ -6,12 +6,13 @@ public class SubjectAutocompleteCommand extends SearchCommand {
 
     private Boolean practice;
     private Boolean withCredits = Boolean.TRUE;
-    private Boolean closedCurriculumVersionSubjects;
+    private Boolean ignoreCurriculumVersionStatus;
     private Boolean curriculumSubjects;
     private Long student;
     private Boolean otherStudents;
     // no final thesis and final exam subjects
     private Boolean noFinalSubjects;
+    private Long userId;
 
     public Boolean getPractice() {
         return practice;
@@ -25,16 +26,16 @@ public class SubjectAutocompleteCommand extends SearchCommand {
         return withCredits;
     }
 
+    public Boolean getIgnoreCurriculumVersionStatus() {
+        return ignoreCurriculumVersionStatus;
+    }
+
+    public void setIgnoreCurriculumVersionStatus(Boolean ignoreCurriculumVersionStatus) {
+        this.ignoreCurriculumVersionStatus = ignoreCurriculumVersionStatus;
+    }
+
     public void setWithCredits(Boolean withCredits) {
         this.withCredits = withCredits;
-    }
-
-    public Boolean getClosedCurriculumVersionSubjects() {
-        return closedCurriculumVersionSubjects;
-    }
-
-    public void setClosedCurriculumVersionSubjects(Boolean closedCurriculumVersionSubjects) {
-        this.closedCurriculumVersionSubjects = closedCurriculumVersionSubjects;
     }
 
     public Boolean getCurriculumSubjects() {
@@ -67,6 +68,14 @@ public class SubjectAutocompleteCommand extends SearchCommand {
 
     public void setNoFinalSubjects(Boolean noFinalSubjects) {
         this.noFinalSubjects = noFinalSubjects;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
 }

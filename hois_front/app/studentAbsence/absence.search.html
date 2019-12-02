@@ -22,11 +22,12 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'absence.curriculumVersion' | translate}}</label>
-            <hois-select ng-model="criteria.curriculumVersions" type="curriculumversion" multiple></hois-select>
+            <hois-select ng-model="criteria.curriculumVersions" type="curriculumversion"
+              criteria="{userId: auth.isLeadingTeacher() ? auth.user : null}" multiple></hois-select>
           </md-input-container>
           <hois-autocomplete flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
             ng-model="criteria.studentGroupId" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" name="studentGroup"
-            label="{{'absence.studentGroup'}}"></hois-autocomplete>
+            additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}" label="{{'absence.studentGroup'}}"></hois-autocomplete>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">

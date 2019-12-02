@@ -1,62 +1,83 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TimetableEventEditController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', 'dialogService',
-  function ($scope, message, QueryUtils, DataUtils, $route, $location, dialogService) {
+angular.module('hitsaOis').controller('TimetableEventEditController', ['$location', '$route', '$scope', 'USER_ROLES', 'AuthService' , 'DataUtils', 'QueryUtils', 'dialogService', 'message',
+  function ($location, $route, $scope, USER_ROLES, AuthService, DataUtils, QueryUtils, dialogService, message) {
     $scope.auth = $route.current.locals.auth;
     var baseUrl = '/timetableevents';
     var Endpoint = QueryUtils.endpoint(baseUrl);
-    var id = $route.current.params.id;
-    var templateUrl = $route.current.loadedTemplateUrl;
+    var params = $route.current.params;
+    var id = params.id;
+    $scope.eventsPerm = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_SYNDMUS);
+    $scope.canCreatePersonalEvents = ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher()) && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PERSYNDMUS);
 
-    function afterNow(time) {
-      return new Date(time) > new Date();
-    }
+    var autofill = {
+      roomId: params.room,
+      date: params.date ? new Date(params.date) : undefined,
+      start: params.startTime ? params.startTime : undefined,
+      end: params.endTime ? params.endTime : undefined
+    };
 
-    function allowedToEdit(event) {
-      if ($scope.auth.isAdmin()) {
-        return true;
-      }
-
-      if ($scope.auth.isTeacher()) {
-        if (!event.teachers) {
-          return false;
-        }
-
-        for (var i = 0; i < event.teachers.length; i++) {
-          if (event.teachers[i].teacher.id === $scope.auth.teacher) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
+    $scope.directiveControllers = [];
 
     function afterLoad(result) {
+      if (!result.canEdit && !$route.current.locals.isView) {
+        // if editing permission is lost after saving don't show nopermission message and just redirect
+        if (angular.equals({}, $scope.timetableEvent)) {
+          message.error("main.messages.error.nopermission");
+        }
+        $scope.back("#/");
+      }
       result.startTime = new Date(result.startTime);
       result.endTime = new Date(result.endTime);
       $scope.timetableEvent = result;
     }
 
     if (id) {
-      $scope.timetableEvent = Endpoint.get({
-        id: id
-      }, function(response) {
-        if (!(response.canEdit && afterNow(response.startTime) && allowedToEdit(response)) && 
-          templateUrl === 'timetable/timetable.timetableEvent.edit.html') {
-          message.error("main.messages.error.nopermission");
-          $scope.back("#/");
-        }
-      });
-      $scope.timetableEvent.$promise.then(afterLoad);
+      $scope.timetableEvent = {};
+      Endpoint.get({ id: id }, afterLoad);
     } else {
       $scope.timetableEvent = new Endpoint();
       $scope.timetableEvent.isSingleEvent = true;
+      if (!$scope.eventsPerm) {
+        $scope.timetableEvent.isPersonal = true;
+      }
+
+      $scope.timetableEvent.date = autofill.date;
+      $scope.timetableEvent.startTime = autofill.start;
+      $scope.timetableEvent.endTime = autofill.end;
+      
+      if (autofill.roomId) {
+        // Same parameters as for autocomplete directive in edit.html. Only added `id`.
+        QueryUtils.endpoint('/autocomplete/rooms').search({
+          id: autofill.roomId,
+          isStudy: true,
+          occupied: true,
+          date: $scope.timetableEvent ? $scope.timetableEvent.date : undefined,
+          startTime: $scope.timetableEvent ? $scope.timetableEvent.startTime : undefined,
+          endTime: $scope.timetableEvent ? $scope.timetableEvent.endTime : undefined,
+          repeatCode: $scope.timetableEvent ? $scope.timetableEvent.repeatCode : undefined,
+          weekAmount: $scope.timetableEvent ? $scope.timetableEvent.weekAmount : undefined
+        }, function (result) {
+          var foundRoom = result.content[0];
+          if (foundRoom) {
+            $scope.timetableEvent.room = foundRoom;
+          }
+        });
+      }
       
       if ($scope.auth.isTeacher()) {
         $scope.timetableEvent.teachers = [];
         $scope.timetableEvent.teachers.push({teacher: {id:$scope.auth.teacher, nameEt: $scope.auth.fullname, nameEn: $scope.auth.fullname, nameRu: $scope.auth.fullname}});
       }
     }
+
+    $scope.personalEventChanged = function () {
+      if ($scope.timetableEvent.isPersonal) {
+        $scope.directiveControllers.forEach(function (c) {
+          c.clear();
+        });
+      }
+    };
 
     $scope.save = function () {
       $scope.eventForm.$setSubmitted();

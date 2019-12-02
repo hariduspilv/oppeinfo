@@ -4,13 +4,15 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupSearchContr
 function ($scope, $route, QueryUtils, ArrayUtils, DataUtils, USER_ROLES, AuthService, message) {
     $scope.schoolId = $route.current.locals.auth.school.id;
 
-    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN);
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM);
 
     $scope.currentNavItem = 'studentGroups';
 
     $scope.formState = {xlsUrl: 'subjectStudyPeriods/studentGroups/searchByStudentGroup.xls'};
 
-    QueryUtils.createQueryForm($scope, '/subjectStudyPeriods/studentGroups', {order: 'id'});
+    QueryUtils.createQueryForm($scope, '/subjectStudyPeriods/studentGroups', {order: 'id'}, function () {
+        $scope.periodId = $scope.criteria.studyPeriod;
+    });
 
     function setCurrentStudyPeriod() {
         if($scope.criteria && !$scope.criteria.studyPeriod) {

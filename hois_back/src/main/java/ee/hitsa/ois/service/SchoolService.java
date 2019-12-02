@@ -91,7 +91,9 @@ public class SchoolService {
         school = EntityUtil.save(school, em);
         em.flush();
 
-        return SchoolDto.ofWithLogo(school);
+        SchoolDto dto = SchoolDto.ofWithLogo(school);
+        dto.setType(schoolType(school.getId()));
+        return dto;
     }
 
     public Page<SchoolDto> search(SchoolSearchCommand searchCommand, Pageable pageable) {

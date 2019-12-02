@@ -23,7 +23,11 @@
             <label>{{'student.idcode' | translate}}</label>
             <hois-value value="student.person.idcode"></hois-value>
           </md-input-container>
-          <md-input-container flex="60" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.birthDate' | translate}}</label>
+            <hois-value value="student.person.birthdate | hoisDate"></hois-value>
+          </md-input-container>
+          <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.sex' | translate}}</label>
             <hois-classifier-value ng-model="student.person.sex" main-classifier-code="SUGU"></hois-classifier-value>
           </md-input-container>
@@ -45,7 +49,8 @@
         </div>
       </div>
       <div flex="30">
-        <img ng-if="student.photo" flex="60" style="display: block; margin-left: auto; margin-right: auto;" ng-src="{{student.imageUrl}}">
+        <img ng-if="student.photo" flex="60" style="display: block; margin-left: auto; margin-right: auto; padding-bottom: 13px;" 
+        ng-src="{{student.imageUrl}}">
       </div>
     </div>
 
@@ -81,9 +86,9 @@
           <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <label>{{'student.studentGroup' | translate}}</label>
             <hois-value value="currentLanguageNameField(student.studentGroup)"
-                        href-value="auth.isAdmin() || auth.isStudent() ? '#/studentgroups/' + student.studentGroup.id + '/view' : undefined"></hois-value>
+              href-value="auth.isAdmin() || auth.isLeadingTeacher() || auth.isStudent() ? '#/studentgroups/' + student.studentGroup.id + '/view' : undefined"></hois-value>
           </md-input-container>
-          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container ng-if="!student.isGuestStudent" flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.course' | translate}}</label>
             <hois-value value="student.course"></hois-value>
           </md-input-container>
@@ -97,7 +102,7 @@
           </md-input-container>
         </div>
 
-        <div layout="row" layout-sm="column" layout-xs="column">
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="!student.isGuestStudent">
           <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <label>{{'student.studyForm' | translate}}</label>
             <hois-classifier-value ng-model="student.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
@@ -116,7 +121,7 @@
           </md-input-container>
         </div>
 
-        <div layout="row" layout-sm="column" layout-xs="column">
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="!student.isGuestStudent">
           <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <label>{{'student.studentCard' | translate}}</label>
             <hois-value value="student.studentCard"></hois-value>
@@ -131,7 +136,7 @@
           </md-input-container>
         </div>
 
-        <div layout="row" layout-sm="column" layout-xs="column">
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="!student.isGuestStudent">
           <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <label>{{'student.card.givenDate' | translate}}</label>
             <hois-value value="student.studentCardGivenDt | hoisDate"></hois-value>
@@ -146,7 +151,7 @@
           </md-input-container>
         </div>
 
-        <div layout="row" layout-sm="column" layout-xs="column">
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="!student.isGuestStudent">
           <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <label>{{'student.previousStudyLevel' | translate}}</label>
             <hois-classifier-value ng-model="student.previousStudyLevel" main-classifier-code="OPPEASTE"></hois-classifier-value>
@@ -157,7 +162,7 @@
           </md-input-container>
         </div>
 
-        <div layout="row" layout-sm="column" layout-xs="column">
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="!student.isGuestStudent">
           <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <label>{{'student.previousSchoolName' | translate}}</label>
             <hois-value value="student.previousSchoolName"></hois-value>
@@ -188,7 +193,7 @@
           </md-input-container>
 
           <md-input-container ng-if="student.boardingSchool" flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <label>{{'student.boardingSchoolValidFrom' | translate}}</label>
+            <label>{{'student.boardingSchoolValidThru' | translate}}</label>
             <hois-value value="student.boardingSchoolValidThru | hoisDate"></hois-value>
           </md-input-container>
         </div>
@@ -330,7 +335,7 @@
     </div>
 
     <div class="top-margin">
-      <hois-collapsable label="('student.specialNeeds' | translate)" ng-if="student.userIsSchoolAdmin || student.userIsStudentGroupTeacher">
+      <hois-collapsable label="('student.specialNeeds' | translate)" ng-if="(student.userIsSchoolAdmin || student.userIsStudentGroupTeacher) && !student.isGuestStudent">
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="35" flex-sm="100" flex-xs="100">
@@ -350,7 +355,7 @@
       </hois-collapsable>
     </div>
 
-    <div ng-if="student.isVocational===false">
+    <div ng-if="student.isVocational===false && !student.isGuestStudent">
       <hois-collapsable label="('student.foreignStudy' | translate)">
 
         <md-table-container>

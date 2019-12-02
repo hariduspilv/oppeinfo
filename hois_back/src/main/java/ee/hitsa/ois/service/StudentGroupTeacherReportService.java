@@ -429,7 +429,7 @@ public class StudentGroupTeacherReportService {
         qb.optionalCriteria("s.id = :studentId", "studentId", criteria.getStudent());
 
         qb.sort("p.lastname, p.firstname");
-        List<?> data = qb.select("s.id, p.firstname, p.lastname, s.status_code", em).getResultList();
+        List<?> data = qb.select("s.id, p.firstname, p.lastname, s.status_code, s.type_code as studentType", em).getResultList();
 
         List<Long> studentIndividualCurriculums = studentIndividualCurriculums(criteria,
                 StreamUtil.toMappedList(r -> resultAsLong(r, 0), data));
@@ -437,7 +437,7 @@ public class StudentGroupTeacherReportService {
             StudentDto student = new StudentDto();
             Long studentId = resultAsLong(r, 0);
             student.setId(studentId);
-            student.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+            student.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 4)));
             student.setStatus(resultAsString(r, 3));
             student.setIsIndividualCurriculum(Boolean.valueOf(studentIndividualCurriculums.contains(studentId)));
             return student;

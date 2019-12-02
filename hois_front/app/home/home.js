@@ -1,41 +1,21 @@
 'use strict';
 // todo this to main controller? and use this data on auth?
-angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$location', 'QueryUtils', 'busyHandler',
-  function ($scope, School, $location, QueryUtils, busyHandler) {
+angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$location', 'QueryUtils', 'DataUtils',
+  function ($scope, School, $location, QueryUtils, DataUtils) {
     $scope.schools = School.getSchoolsWithLogo();
-    $scope.linkify = linkify;
+    $scope.linkify = DataUtils.linkifyText;
     
     $scope.openSchoolCurriculumSearch = function (schoolId) {
       $location.path('curriculums/' + schoolId);
     };
     
     $scope.siteMessages = QueryUtils.endpoint("/generalmessages/showsitemessages").query();
-
-    /**
-     * https://stackoverflow.com/a/49634926
-     * 
-     * @param {String} inputText 
-     */
-    function linkify(inputText) {
-      var replacedText, replacePattern1;//, replacePattern2, replacePattern3;
-  
-      //URLs starting with http://, https://, or ftp://
-      replacePattern1 = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
-      replacedText = inputText.replace(replacePattern1, '<a href="$1" target="_blank">$1</a>');
-  
-      // //URLs starting with "www." (without // before it, or it'd re-link the ones done above).
-      // replacePattern2 = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
-      // replacedText = replacedText.replace(replacePattern2, '$1<a href="http://$2" target="_blank">$2</a>');
-  
-      // //Change email addresses to mailto:: links.
-      // replacePattern3 = /(([a-zA-Z0-9\-\_\.])+@[a-zA-Z\_]+?(\.[a-zA-Z]{2,6})+)/gim;
-      // replacedText = replacedText.replace(replacePattern3, '<a href="mailto:$1">$1</a>');
-  
-      return replacedText;
-    }
   }
-]).controller('AuthenticatedHomeController', ['$rootScope', '$scope', '$timeout', 'AUTH_EVENTS', 'AuthService', 'USER_ROLES', 'ArrayUtils', 'QueryUtils', '$resource', 'config', 'Session', '$filter', '$mdDialog', 'message', 'dialogService', 'oisFileService', 'FormUtils', 'Classifier', '$q',
-  function ($rootScope, $scope, $timeout, AUTH_EVENTS, AuthService, USER_ROLES, ArrayUtils, QueryUtils, $resource, config, Session, $filter, $mdDialog, message, dialogService, oisFileService, FormUtils, Classifier, $q) {
+]).controller('AuthenticatedHomeController', ['$rootScope', '$scope', '$timeout', 'AUTH_EVENTS', 'AuthService', 'USER_ROLES',
+                                              'ArrayUtils', 'QueryUtils', '$resource', 'config', 'Session', '$filter', '$mdDialog',
+                                              'message', 'dialogService', 'oisFileService', 'FormUtils', 'Classifier', '$q', 'DataUtils',
+  function ($rootScope, $scope, $timeout, AUTH_EVENTS, AuthService, USER_ROLES, ArrayUtils, QueryUtils, $resource,
+      config, Session, $filter, $mdDialog, message, dialogService, oisFileService, FormUtils, Classifier, $q, DataUtils) {
     /**
      * Still under question if we need to add a delay for timeout.
      */
@@ -140,7 +120,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     $scope.unreadMessages = {};
 
     $scope.loadUnreadMessages = function() {
-      var acceptedRoles = ['ROLL_P', 'ROLL_L', 'ROLL_O', 'ROLL_T', 'ROLL_A'];
+      var acceptedRoles = ['ROLL_P', 'ROLL_L', 'ROLL_O', 'ROLL_T', 'ROLL_A', 'ROLL_J'];
       $scope.showUnreadMessages = acceptedRoles.indexOf(Session.roleCode) !== -1;
       if(!$scope.showUnreadMessages) {
           return;
@@ -158,8 +138,8 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
 
     $scope.loadPolls = function() {
       var clMapper = Classifier.valuemapper({status: 'KYSITVASTUSSTAATUS', type: 'KYSITLUS'});
-      /** Väline ekspert, Lapsevanem, Õpetaja, Õppija, Admin töötaja */
-      var acceptedRoles = ['ROLL_V', 'ROLL_L', 'ROLL_O', 'ROLL_T', 'ROLL_A'];
+      /** Student representative, Teacher, Student, Admin */
+      var acceptedRoles = ['ROLL_L', 'ROLL_O', 'ROLL_T', 'ROLL_A'];
       $scope.displayPoll = false;
       $scope.canAnswerPoll = acceptedRoles.indexOf(Session.roleCode) !== -1;
       if(!$scope.canAnswerPoll) {
@@ -317,8 +297,19 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
           var hasErrors = false;
           var errorThemes = [];
           dialogScope.criteria.themes.forEach(function(theme) {
+            var studentCouncilAtleastOne = false;
+            var studentCouncilOneRequired = false;
             theme.questions.forEach(function (question) {
-              if ((question.type === 'VASTUS_M' || question.type === 'VASTUS_S') && question.isRequired) {
+              if (question.type === 'VASTUS_S') {
+                // student council type should have 1 answer
+                // check if theme has 1 question answered
+                if (question.answers[0].chosen === true) {
+                  studentCouncilAtleastOne = true;
+                }
+                if (question.isRequired) {
+                  studentCouncilOneRequired = true;
+                }
+              } else if (question.type === 'VASTUS_M' && question.isRequired) {
                 var showError = true;
                 question.answers.forEach(function(answer) {
                   if (answer.chosen === true) {
@@ -340,6 +331,10 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
                 question.requiredError = false;
               }
             });
+            if (!studentCouncilAtleastOne && studentCouncilOneRequired) {
+              hasErrors = true;
+              pushToError(errorThemes, theme);
+            }
           });
           return [hasErrors, errorThemes];
         };
@@ -360,7 +355,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
                   });
                 });
               } else {
-                if (dialogScope.formState.isThemePageable) {
+                if (dialogScope.formState.isThemePageable || dialogScope.criteria.type === "KYSITLUS_V") {
                   message.error('poll.messages.required', {themes: errorObject[1].join(", ")});
                 } else {
                   message.error('main.messages.form-has-errors');
@@ -373,6 +368,21 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
             var Endpoint = QueryUtils.endpoint('/poll/' + dialogScope.criteria.responseId + '/saveAnswer');
             var pollEndPoint = new Endpoint(question);
             pollEndPoint.$putWithoutLoad();
+        };
+
+        dialogScope.deselectOther = function(question, theme) {
+          dialogScope.save(question);
+          if (response.type === 'KYSITLUS_V') {
+            if (question.answers[0].chosen) {
+              theme.questions.forEach(function (themeQuestion) {
+                if (themeQuestion !== question && themeQuestion.type === 'VASTUS_S' && themeQuestion.answers[0].chosen === true) {
+                  themeQuestion.answers[0].chosen = false;
+                  $q.all().then(function() {dialogScope.save(themeQuestion);});
+                }
+              });
+            }
+          }
+          return true;
         };
 
         dialogScope.clearRadio = function(question) {
@@ -406,6 +416,9 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     function afterAuthentication() {
       $scope.pageLoadingHandler.reset();
       $scope.isAdmin = Session.roleCode === 'ROLL_A';
+      if (Session.mustAgreeWithToS) {
+        return;
+      }
       $scope.loadGeneralMessages();
       $scope.loadUnreadMessages();
       $scope.loadPolls();
@@ -418,6 +431,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
       checkIfHasTodaysAbsences();
       checkUnconfirmedJournals();
       checkIfHasRecentRRChanges();
+      checkIfOpenDeclarationPeriod();
       expiringOccupationStandards();
       studentGroupRemarks();
       studentAfterAuthentication();
@@ -445,10 +459,19 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     $scope.$on(AUTH_EVENTS.userChanged, afterAuthentication);
 
     function checkIfHasRecentRRChanges() {
-      if ('ROLL_A' === Session.roleCode && ArrayUtils.includes(Session.authorizedRoles, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_RR)) {
+      if (['ROLL_A', 'ROLL_J'].indexOf(Session.roleCode) !== -1 && ArrayUtils.includes(Session.authorizedRoles, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_RR)) {
         QueryUtils.endpoint("/logs/rr/hasrecentchangelogs").get({}, function (response) {
-          $scope.rrHasRecentChangeLogs = response.hasRecentChangeLogs;
+          $scope.rrHasRecentChangeLogs = response.hasRecentChangeLogs; // TODO maybe should be emptined?
         });
+      }
+    }
+    
+    function checkIfOpenDeclarationPeriod() {
+      $scope.currentDeclaration = undefined;
+      $scope.nextDeclaration = undefined;
+      if (['ROLL_T'].indexOf(Session.roleCode) !== -1) {
+        $scope.currentDeclaration = QueryUtils.endpoint('/declarations/isDeclarationPeriod').search();
+        $scope.nextDeclaration = QueryUtils.endpoint('/declarations/isDeclarationPeriod?next=true').search();
       }
     }
 

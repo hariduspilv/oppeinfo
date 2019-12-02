@@ -5,8 +5,8 @@
         <form name="searchForm" ng-submit="loadData()" novalidate>
             <div layout="column">
               <hois-autocomplete flex="100" ng-model="criteria.curriculum" ha-attribute="id" ha-controller="autocompletes"
-                method="curriculumsauto" no-paging="true" additional-query-params="{higher: true, closed: false, minSpecialities:2}"
-                label="student.curriculum" required></hois-autocomplete>
+                method="curriculumsauto" no-paging="true" label="student.curriculum" 
+                additional-query-params="{higher: true, closed: false, minSpecialities:2, userId: auth.isLeadingTeacher() ? auth.user : null}" required></hois-autocomplete>
               <md-input-container flex="100" ng-show="filteredVersions.length > 0">
                 <label>{{'student.curriculumVersion' | translate}}</label>
                 <md-select ng-model="criteria.curriculumVersion" required>

@@ -56,6 +56,10 @@ public class CurriculumSearchService {
 
             List<Predicate> filters = new ArrayList<>();
 
+            if (user.isLeadingTeacher()) {
+                filters.add(root.get("id").in(user.getCurriculumIds()));
+            }
+
             String nameField = Language.EN.equals(criteria.getLang()) ? "nameEn" : "nameEt";
             propertyContains(() -> root.get(nameField), cb, criteria.getName(), filters::add);
             if(criteria.getValidFrom() != null) {

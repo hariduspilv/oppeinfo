@@ -34,9 +34,6 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
       $scope.termCompliance = result.termCompliance;
 
       $scope.templateName = templateMap[result.stipend.type];
-      if (result.stipend.type === 'STIPTOETUS_ERI') {
-        calculateSumsForFamilyBlock($scope.application.family);
-      }
       if(!result.application.compensationFrequency) {
         result.application.compensationFrequency = 'STIPTOETUS_HYVITAMINE_1';
       }
@@ -87,6 +84,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
         DataUtils.convertStringToDates($scope.stipend, ['paymentStart', 'paymentEnd']);
         DataUtils.convertStringToDates($scope.application, ['scholarshipFrom', 'scholarshipThru']);
         $scope.updateScholarshipDateValidation();
+        calculateSumsForFamilyBlock($scope.application.family);
       }
     }
 

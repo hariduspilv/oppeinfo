@@ -2,19 +2,19 @@ package ee.hitsa.ois.web.dto.poll;
 
 public class PollResultStudentOrTeacherDto {
     
-    private Boolean hasStudentResponse = Boolean.FALSE;
-    private Boolean hasTeacherResponse = Boolean.FALSE;
+    private PollResultTargetDto studentResponse;
+    private PollResultTargetDto teacherResponse;
     
-    public Boolean getHasStudentResponse() {
-        return hasStudentResponse;
+    public PollResultTargetDto getStudentResponse() {
+        return studentResponse;
     }
-    public void setHasStudentResponse(Boolean hasStudentResponse) {
-        this.hasStudentResponse = hasStudentResponse;
+    public void setStudentResponse(PollResultTargetDto studentResponse) {
+        this.studentResponse = studentResponse;
     }
-    public Boolean getHasTeacherResponse() {
-        return hasTeacherResponse;
+    public PollResultTargetDto getTeacherResponse() {
+        return teacherResponse;
     }
-    public void setHasTeacherResponse(Boolean hasTeacherResponse) {
-        this.hasTeacherResponse = hasTeacherResponse;
+    public void setTeacherResponse(PollResultTargetDto teacherResponse) {
+        this.teacherResponse = teacherResponse;
     }
 }

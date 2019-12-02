@@ -332,7 +332,8 @@
               <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="column">
                 <label class="responsiveLabel">{{eval.addInfo}}</label>
                 <md-input-container flex="100">
-                  <hois-value value="practiceJournal.isHigher && auth.school.letterGrades ? getGrade(eval.valueClf).value2 : getGrade(eval.valueClf).value"></hois-value>
+                  <hois-value ng-if="practiceJournal.isHigher" value="gradesMap[eval.valueClf] | hoisHigherGrade: practiceJournal.letterGrades"></hois-value>
+                  <hois-value ng-if="!practiceJournal.isHigher" value="gradesMap[eval.valueClf].value"></hois-value>
                 </md-input-container>
               </div>
             </div>
@@ -373,8 +374,8 @@
                 <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="column">
                   <label class="responsiveLabel">{{eval.addInfo}}</label>
                   <md-input-container flex="100">
-                    <hois-select aria-label="{{eval.nameEt}}" ng-model="eval.valueClf" values="grades" value-property="code"
-                      hide-values="hideInvalid" show-property="{{auth.school.letterGrades && practiceJournal.isHigher ? 'value2' : 'value'}}"></hois-select>
+                    <hois-select aria-label="{{eval.nameEt}}" ng-model="eval.valueClf" values="grades" value-property="code" sorted-query="true"
+                      hide-values="hideInvalid" show-property="{{practiceJournal.isHigher ? 'shownValue' : 'value'}}"></hois-select>
                   </md-input-container>
                 </div>
               </div>

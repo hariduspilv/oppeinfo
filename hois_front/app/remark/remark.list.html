@@ -7,7 +7,7 @@
           <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="45" flex-sm="100" flex-xs="100">
               <label class="textInput">{{'remark.studyYear' | translate}}</label>
-              <hois-select ng-model="criteria.studyYear" values="formState.studyYears" required autofocus></hois-select>
+              <hois-select ng-model="criteria.studyYear" values="formState.studyYears" required autofocus ng-change="setStudyYearStartAndEnd()"></hois-select>
             </md-input-container>
 
             <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -32,12 +32,17 @@
             <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0"
               flex-offset-sm="0" ng-model="criteria.studentObject" method="students" name="student"
               label="{{'remark.student'}}"
-              additional-query-params="{studentGroup: criteria.studentGroup ? [criteria.studentGroup] : [], studentGroupTeacher: teacherId}">
+              additional-query-params="{studentGroup: criteria.studentGroup ? [criteria.studentGroup] : [], studentGroupTeacher: teacherId, showGuestStudent: true}">
             </hois-autocomplete>
           </div>
 
-          <div layout="row" flex>
-            <md-input-container class="md-block">
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="45" flex-sm="100" flex-xs="100">
+              <label>{{'remark.reason' | translate}}</label>
+              <hois-classifier-select multiple ng-model="criteria.reasons" main-classifier-code="MARKUS" model-value-attr="code"></hois-classifier-select>
+            </md-input-container>
+
+            <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0">
               <md-checkbox ng-model="criteria.showJournalRemarks" name="showJournalRemarks">
                 {{'remark.showJournalRemarks' | translate}}</md-checkbox>
             </md-input-container>

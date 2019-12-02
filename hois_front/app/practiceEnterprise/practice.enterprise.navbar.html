@@ -1,0 +1,18 @@
+<md-content ng-if="auth.isAdmin() || auth.isLeadingTeacher()">
+    <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak hois-navbar-overflowed>
+        <md-nav-item ng-if="enterprise.id" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/view?_noback" name="enterprise.data">
+            {{'enterprise.data' | translate}}</md-nav-item>
+        <md-nav-item ng-if="enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/persons/view?_noback" name="enterprise.persons">
+            {{'enterprise.persons' | translate}}</md-nav-item>
+        <md-nav-item ng-if="enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/locations/view?_noback" name="enterprise.locations">
+            {{'enterprise.locations' | translate}}</md-nav-item>
+        <md-nav-item ng-if="enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/studentGroups/view?_noback" name="enterprise.studentGroups">
+            {{'enterprise.studentGroups' | translate}}</md-nav-item>
+        <md-nav-item ng-if="enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/contracts/view?_noback" name="enterprise.contracts">
+            {{'enterprise.contracts' | translate}}</md-nav-item>
+        <md-nav-item ng-if="enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/grades/view?_noback" name="enterprise.grades">
+            {{'enterprise.grades' | translate}}</md-nav-item>
+        <md-nav-item ng-if="enterprise.enterpriseSchoolId && enterprise.application" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/admission/view?_noback" name="enterprise.admission">
+            {{'enterprise.requests' | translate}}</md-nav-item>
+    </md-nav-bar>
+</md-content>

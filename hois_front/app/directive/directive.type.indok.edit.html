@@ -15,44 +15,55 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row hois-table-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>{{currentLanguageNameField(row.curriculumVersionObject)}}</td>
         <td md-cell>{{currentLanguageNameField(row.studentGroupObject)}}</td>
-        <td md-cell>  
-          <md-input-container>
-            <md-datepicker ng-model="row.startDate" md-max-date="row.endDate" name="students[{{$index}}].startDate"
-              aria-label="{{'main.from' | translate}}"></md-datepicker>
-          </md-input-container>
-          <div class="invalid" ng-messages="directiveForm['students['+$index+'].startDate'].$error">
-            <p ng-message="required">{{'main.required' | translate}}</p>
-          </div>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <md-input-container>
+              <md-datepicker ng-model="row.startDate" md-max-date="row.endDate" name="students[{{$index}}].startDate"
+                aria-label="{{'main.from' | translate}}"></md-datepicker>
+            </md-input-container>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-messages="directiveForm['students['+$index+'].startDate'].$error">
+              <p ng-message="required">{{'main.required' | translate}}</p>
+            </div>
+          </hois-table-data-detail>
         </td>
-        <td md-cell>
-          <md-input-container>
-            <md-datepicker ng-model="row.endDate" md-min-date="row.startDate" name="students[{{$index}}].endDate"
-              aria-label="{{'main.thru' | translate}}"></md-datepicker>
-          </md-input-container>
-          <div class="invalid" ng-messages="directiveForm['students['+$index+'].endDate'].$error">
-            <p ng-message="required">{{'main.required' | translate}}</p>
-          </div>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <md-input-container>
+              <md-datepicker ng-model="row.endDate" md-min-date="row.startDate" name="students[{{$index}}].endDate"
+                aria-label="{{'main.thru' | translate}}"></md-datepicker>
+            </md-input-container>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-messages="directiveForm['students['+$index+'].endDate'].$error">
+              <p ng-message="required">{{'main.required' | translate}}</p>
+            </div>
+          </hois-table-data-detail>
         </td>
-        <td md-cell>
-          <div ng-repeat="module in row.modules | orderBy: 'module.' + currentLanguageNameVariable() track by $index">
-            {{$index + 1}}. {{currentLanguageNameField(module.module)}}</div>
-
-          <!-- hidden input to show "required" error if necessary -->
-          <input ng-show="false" ng-model="row.modules" name="students[{{$index}}].modules">
-          <div class="invalid" ng-messages="directiveForm['students['+$index+'].modules'].$error">
-            <p ng-message="required">{{'directive.atleastOneModuleRequired' | translate}}</p>
-            <p ng-message="serverside">
-              <p ng-repeat="err in directiveForm['students['+$index+'].modules'].$serverError">
-                {{ err.code | translate : {module: currentLanguageNameField(err.object), startDate : (err.startDate | hoisDate), endDate : (err.endDate | hoisDate) } }}
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <div ng-repeat="module in row.modules | orderBy: 'module.' + currentLanguageNameVariable() track by $index">
+              {{$index + 1}}. {{currentLanguageNameField(module.module)}}</div>
+            <!-- hidden input to show "required" error if necessary -->
+            <input type="hidden" ng-model="row.modules" name="students[{{$index}}].modules">
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-messages="directiveForm['students['+$index+'].modules'].$error">
+              <p ng-message="required">{{'directive.atleastOneModuleRequired' | translate}}</p>
+              <p ng-message="serverside">
+                <p ng-repeat="err in directiveForm['students['+$index+'].modules'].$serverError">
+                  {{ err.code | translate : {module: currentLanguageNameField(err.object), startDate : (err.startDate | hoisDate), endDate : (err.endDate | hoisDate) } }}
+                </p>
               </p>
-            </p>
-          </div>
+            </div>
+          </hois-table-data-detail>
         </td>
         <td md-cell>
           <md-button md-no-ink class="md-primary change-button" ng-click="individualCurriculumModules(row, $index)">

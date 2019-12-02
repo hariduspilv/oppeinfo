@@ -6,18 +6,27 @@ import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.access.expression.SecurityExpressionRoot;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
+import org.springframework.security.authentication.AuthenticationTrustResolverImpl;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.FilterInvocation;
+import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
+import org.springframework.security.web.access.expression.WebSecurityExpressionRoot;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
+import org.springframework.stereotype.Component;
 
 import ee.hitsa.ois.auth.EstonianIdCardAuthenticationProvider;
 import ee.hitsa.ois.filter.EstonianIdCardAuthenticationFilter;
 import ee.hitsa.ois.filter.JwtAuthorizationFilter;
+import ee.hitsa.ois.filter.StudentToSExpressionRoot;
 import ee.hitsa.ois.service.BdocService;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
 
@@ -32,6 +41,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     private HoisJwtProperties hoisJwtProperties;
     @Value("${hois.frontend.baseUrl}")
     private String frontendBaseUrl;
+    @Autowired
+    private CustomWebSecurityExpressionHandler handler;
 
     @Autowired
     public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
@@ -70,10 +81,12 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET, "/timetableevents/timetableByGroup/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/timetableevents/timetableByTeacher/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/timetableevents/timetableByRoom/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/timetableevents/timetableByPerson/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/timetableevents/timetableSearch/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/oisfile/get/studymaterial/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/oisfile/get/pollThemeQuestionFile/**").permitAll()
-                .anyRequest().authenticated()
+                .antMatchers("/changeUser", "/message/received/new", "/userContract", "/logout").authenticated()
+                .anyRequest().access("isAuthenticated() and !hasToConfirmToS()").expressionHandler(handler)
                 .and()
             .addFilter(new JwtAuthorizationFilter(authenticationManager(), userDetailsService, hoisJwtProperties))
             .csrf()
@@ -89,6 +102,21 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         CookieCsrfTokenRepository cookieCsrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
         cookieCsrfTokenRepository.setCookiePath("/");
         return cookieCsrfTokenRepository;
+    }
+}
+
+@Component
+class CustomWebSecurityExpressionHandler extends DefaultWebSecurityExpressionHandler {
+
+    @Autowired
+    private HoisUserDetailsService userDetailsService;
+
+    @Override
+    protected SecurityExpressionRoot createSecurityExpressionRoot(Authentication authentication, FilterInvocation fi) {
+        WebSecurityExpressionRoot expressionRoot = new StudentToSExpressionRoot(authentication, fi, userDetailsService);
+        expressionRoot.setTrustResolver(new AuthenticationTrustResolverImpl());
+        expressionRoot.setRoleHierarchy(new RoleHierarchyImpl());
+        return expressionRoot;
     }
 }
 

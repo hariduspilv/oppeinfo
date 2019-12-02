@@ -24,11 +24,15 @@
               <hois-school-department-select ng-model="criteria.schoolDepartment"></hois-school-department-select>
             </md-input-container>
         </div>
-        <div layout="row">
-          <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="showSchool">
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="showSchool">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'school.label' | translate}}</label>
             <hois-select ng-model="criteria.school" type="school"></hois-select>
           </md-input-container>
+          <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" 
+            ng-model="criteria.studentGroup" ha-controller="directiveControllers" ha-attribute="id"
+            method="expert/studentgroups" name="studentGroup" label="{{'student.studentGroup'}}"
+            additional-query-params="{valid: true, schoolId: criteria.school}"></hois-autocomplete>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column" class="top-margin" ng-if="!showSchool">
           <md-checkbox

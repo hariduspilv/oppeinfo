@@ -1,9 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController', function ($scope, $route, dialogService, oisFileService, QueryUtils, message, DataUtils, ArrayUtils, Classifier, $location) {
-
+angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController', function ($filter, $route, $location, $scope, ArrayUtils, Classifier, DataUtils, HigherGradeUtil, QueryUtils, dialogService, message, oisFileService) {
   $scope.removeFromArray = ArrayUtils.remove;
-
   $scope.practiceJournal = {
     practiceJournalEntries: [],
     practiceJournalFiles: []
@@ -20,8 +18,19 @@ angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController'
   function entityToForm(entity) {
     assertPermissionToEdit(entity);
     DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
-    $scope.gradesClassCode = entity.isHigher ? 'KORGHINDAMINE' : 'KUTSEHINDAMINE';
-    $scope.grades = Classifier.queryForDropdown({ mainClassCode: $scope.gradesClassCode });
+
+    var gradesClassCode = entity.isHigher ? 'KORGHINDAMINE' : 'KUTSEHINDAMINE';
+    $scope.grades = Classifier.queryForDropdown({ mainClassCode: gradesClassCode });
+    $scope.grades.$promise.then(function () {
+      if (entity.isHigher) {
+        $scope.grades.forEach(function (grade) {
+          grade.shownValue = $filter('hoisHigherGrade')(grade, entity.letterGrades);
+        });
+        $scope.grades = HigherGradeUtil.orderedGrades($scope.grades);
+      } 
+      $scope.gradesMap = Classifier.toMap($scope.grades);
+    });
+
     entity.practiceJournalEntries.forEach(function (entry) {
       entry.astroHours = DataUtils.getAcademicHoursFromDouble(entry.hours);
       entry.acadHours = DataUtils.getAcademicHours(entry.hours);

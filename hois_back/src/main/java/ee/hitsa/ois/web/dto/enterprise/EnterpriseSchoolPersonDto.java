@@ -2,7 +2,6 @@ package ee.hitsa.ois.web.dto.enterprise;
 
 import ee.hitsa.ois.domain.enterprise.EnterpriseSchoolPerson;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class EnterpriseSchoolPersonDto {
 	private Long id;

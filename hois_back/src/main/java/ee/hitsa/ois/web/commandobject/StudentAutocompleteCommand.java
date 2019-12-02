@@ -12,9 +12,13 @@ public class StudentAutocompleteCommand extends SearchCommand {
     private Boolean nominalStudy;
     private Boolean higher;
     private Boolean showStudentGroup;
+    private Boolean showGuestStudent;
+    private Boolean hideGuestStudents;
+    private Boolean onlyStudyingOrFinishedGuestStudent;
     private List<Long> curriculumVersion;
     private List<Long> studentGroup;
     private Long studentGroupTeacher;
+    private Long userId;
 
     public Boolean getActive() {
         return active;
@@ -102,6 +106,38 @@ public class StudentAutocompleteCommand extends SearchCommand {
 
     public void setStudentGroupTeacher(Long studentGroupTeacher) {
         this.studentGroupTeacher = studentGroupTeacher;
+    }
+
+    public Boolean getShowGuestStudent() {
+        return showGuestStudent;
+    }
+
+    public void setShowGuestStudent(Boolean showGuestStudent) {
+        this.showGuestStudent = showGuestStudent;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public Boolean getHideGuestStudents() {
+        return hideGuestStudents;
+    }
+
+    public void setHideGuestStudents(Boolean hideGuestStudents) {
+        this.hideGuestStudents = hideGuestStudents;
+    }
+
+    public Boolean getOnlyStudyingOrFinishedGuestStudent() {
+        return onlyStudyingOrFinishedGuestStudent;
+    }
+
+    public void setOnlyStudyingOrFinishedGuestStudent(Boolean onlyStudyingOrFinishedGuestStudent) {
+        this.onlyStudyingOrFinishedGuestStudent = onlyStudyingOrFinishedGuestStudent;
     }
 
 }

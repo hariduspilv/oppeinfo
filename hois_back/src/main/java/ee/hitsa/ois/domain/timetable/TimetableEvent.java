@@ -14,6 +14,7 @@ import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.School;
 
 @Entity
@@ -40,6 +41,10 @@ public class TimetableEvent extends BaseEntityWithId {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private TimetableObject timetableObject;
+
+    private Boolean isPersonal;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Person person;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "timetable_event_id", nullable = false, updatable = false)
@@ -131,6 +136,22 @@ public class TimetableEvent extends BaseEntityWithId {
 
     public void setTimetableObject(TimetableObject timetableObject) {
         this.timetableObject = timetableObject;
+    }
+
+    public Boolean getIsPersonal() {
+        return isPersonal;
+    }
+
+    public void setIsPersonal(Boolean isPersonal) {
+        this.isPersonal = isPersonal;
+    }
+
+    public Person getPerson() {
+        return person;
+    }
+
+    public void setPerson(Person person) {
+        this.person = person;
     }
 
     public List<TimetableEventTime> getTimetableEventTimes() {

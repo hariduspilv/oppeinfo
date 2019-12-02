@@ -1,12 +1,13 @@
 'use strict';
 
 angular.module('hitsaOis').controller('StudentAbsenceController',
-  ['$scope', '$route', '$timeout', 'QueryUtils', 'DataUtils', 'ArrayUtils', 'dialogService', 'message', function ($scope, $route, $timeout, QueryUtils, DataUtils, ArrayUtils, dialogService, message) {
+  ['$route', '$scope', '$timeout', 'ArrayUtils', 'DataUtils', 'QueryUtils', 'dialogService', 'message', function ($route, $scope, $timeout, ArrayUtils, DataUtils, QueryUtils, dialogService, message) {
     // same constant that is in journal.edit.js
     var LESSONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
 
     QueryUtils.createQueryForm($scope, '/absences', {order: '-sa.inserted', isAccepted: false});
     DataUtils.convertStringToDates($scope.criteria, ['validFrom', 'validThru']);
+    $scope.auth = $route.current.locals.auth;
     $scope.criteria.status = 'isNotAccepted';
     $scope.criteria.isAccepted = false;
     $scope.criteria.isRejected = false;

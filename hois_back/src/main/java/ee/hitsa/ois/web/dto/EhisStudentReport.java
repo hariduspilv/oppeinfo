@@ -325,4 +325,15 @@ public class EhisStudentReport {
             fill(student, log);
         }
     }
+    
+    public static class GuestStudents extends EhisStudentReport {
+            
+        public GuestStudents(Student student, WsEhisStudentLog log) {
+            setStudentId(student.getId());
+            setName(student.getPerson().getFullname());
+            setIdcode(student.getPerson().getIdcode());
+            setError(Boolean.valueOf(Boolean.TRUE.equals(log.getHasOtherErrors()) || Boolean.TRUE.equals(log.getHasXteeErrors())));
+            setMessage(log.getLogTxt());
+        }
+    }
 }

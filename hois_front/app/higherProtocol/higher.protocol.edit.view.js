@@ -4,11 +4,20 @@ angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$sco
 function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskUtil, Classifier, ProtocolUtils, oisFileService, HigherGradeUtil) {
   $scope.auth = $route.current.locals.auth;
   $scope.gradeUtil = HigherGradeUtil;
+  $scope.letterGrades = $scope.auth.school.letterGrades;
   var baseUrl = "/higherProtocols";
   var Endpoint = QueryUtils.endpoint(baseUrl);
   var midtermTaskUtil = new MidtermTaskUtil();
   var clMapper = Classifier.valuemapper({ status: 'PROTOKOLL_STAATUS', grade: 'KORGHINDAMINE' });
   var deferredEntityToDto;
+
+  $scope.grades = Classifier.queryForDropdown({ mainClassCode: 'KORGHINDAMINE' });
+  $scope.grades.$promise.then(function () {
+    $scope.grades.forEach(function (grade) {
+      grade.shownValue = $filter('hoisHigherGrade')(grade, $scope.letterGrades);
+    });
+    $scope.grades = HigherGradeUtil.orderedGrades($scope.grades);
+  });
 
   function getEmptyStudentResult(student, midtermTask) {
     return {
@@ -35,6 +44,15 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
     $q.all(clMapper.promises).then(function () {
       $scope.higherProtocolForm.$setPristine();
       $scope.record = clMapper.objectmapper(entity);
+      $scope.record.protocolStudents.forEach(function (student) {
+        if ($route.current.locals.isView) {
+          student = clMapper.objectmapper(student);
+        }
+        student.practiceJournalResults.forEach(function (result) {
+          result = clMapper.objectmapper(result);
+        });
+      });
+      
       $scope.savedStudents = angular.copy($scope.record.protocolStudents);
   
       $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks = midtermTaskUtil.getSortedMidtermTasks($scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks);
@@ -76,11 +94,6 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
       }
     }
     $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.record);
-  };
-
-  $scope.gradeValue = function (code) {
-    var grade = clMapper.objectmapper({ grade: code }).grade;
-    return grade ? ($scope.auth.school.letterGrades ? grade.value2 : grade.value) : undefined;
   };
 
   $scope.addInfoChanged = function () {
@@ -144,15 +157,15 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
     var student = $scope.record.protocolStudents.find(function(s){
       return s.id === calculatedGrade.protocolStudent;
     });
-    student.grade = calculatedGrade.grade;
-    $scope.gradeChanged(student);
+    if (angular.isDefined(student) && student.canEdit) {
+      student.grade = calculatedGrade.grade;
+      $scope.gradeChanged(student); 
+    }
   }
 
   function setCalculatedGrades(listOfResults) {
     listOfResults.forEach(setCalculatedGrade);
   }
-
-  $scope.grades = Classifier.queryForDropdown({ mainClassCode: 'KORGHINDAMINE' });
   
   $scope.hideInvalid = function (cl) {
     return !Classifier.isValid(cl);

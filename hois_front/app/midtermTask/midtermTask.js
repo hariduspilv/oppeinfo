@@ -73,6 +73,7 @@ function ($scope, QueryUtils, $route, message, MidtermTaskUtil, ArrayUtils, dial
       message.updateSuccess();
       $scope.record = response;
       afterload();
+      $scope.midtermTaskResultForm.$setPristine();
     });
   };
 
@@ -161,6 +162,7 @@ function ($scope, QueryUtils, $route, message, MidtermTaskUtil, ArrayUtils, dial
       message.updateSuccess();
       $scope.record = response;
       afterload();
+      $scope.midtermTaskForm.$setPristine();
     });
   };
 

@@ -16,6 +16,7 @@ public class AuthenticatedUser implements Serializable {
 
     private final String name;
     private final Long user;
+    private final Long person;
     private final Long student;
     private final Long teacher;
     // rights?
@@ -26,6 +27,7 @@ public class AuthenticatedUser implements Serializable {
     private Boolean higher;
     private Boolean doctoral;
     private String fullname;
+    private String type;
     private Collection<GrantedAuthority> authorizedRoles;
     private List<UserProjection> users;
     private LoginMethod loginMethod;
@@ -33,9 +35,15 @@ public class AuthenticatedUser implements Serializable {
     private List<Long> teacherGroupIds;
     private Boolean isCurriculumTeacher;
     private List<String> committees;
+    private List<Long> curriculums;
+    private Boolean hasSchoolRole;
+    
+    private Boolean mustAgreeWithToS;
 
-    public AuthenticatedUser(String name, Long user, String roleCode, Long student, Long teacher, Integer sessionTimeoutInSeconds) {
+    public AuthenticatedUser(String name, Long person, Long user, String roleCode, Long student, Long teacher,
+            Integer sessionTimeoutInSeconds) {
         this.name = name;
+        this.person = person;
         this.user = user;
         this.roleCode = roleCode;
         this.student = student;
@@ -44,9 +52,13 @@ public class AuthenticatedUser implements Serializable {
     }
 
     public AuthenticatedUser(User user, Integer sessionTimeoutInSeconds) {
-        this(user.getPerson().getIdcode(), user.getId(), EntityUtil.getCode(user.getRole()),
+        this(user.getPerson().getIdcode(), user.getPerson().getId(), user.getId(), EntityUtil.getCode(user.getRole()),
                 EntityUtil.getNullableId(user.getStudent()), EntityUtil.getNullableId(user.getTeacher()),
                 sessionTimeoutInSeconds);
+    }
+
+    public Long getPerson() {
+        return person;
     }
 
     public Long getUser() {
@@ -168,4 +180,37 @@ public class AuthenticatedUser implements Serializable {
     public void setCommittees(List<String> committees) {
         this.committees = committees;
     }
+
+    public List<Long> getCurriculums() {
+        return curriculums;
+    }
+
+    public void setCurriculums(List<Long> curriculums) {
+        this.curriculums = curriculums;
+    }
+
+    public String getType() {
+        return type;
+    }
+    
+    public void setType(String type) {
+        this.type = type;
+    }
+    
+    public Boolean getHasSchoolRole() {
+        return hasSchoolRole;
+    }
+
+    public void setHasSchoolRole(Boolean hasSchoolRole) {
+        this.hasSchoolRole = hasSchoolRole;
+    }
+
+    public Boolean getMustAgreeWithToS() {
+        return mustAgreeWithToS;
+    }
+
+    public void setMustAgreeWithToS(Boolean mustAgreeWithToS) {
+        this.mustAgreeWithToS = mustAgreeWithToS;
+    }
+
 }

@@ -21,13 +21,13 @@ public class HigherProtocolStudentDto extends VersionedCommand implements Protoc
     private Long id;
     @ClassifierRestriction(MainClassCode.KORGHINDAMINE)
     private String grade;
-    private String gradeValue;
     private List<ProtocolPracticeJournalResultDto> practiceJournalResults = new ArrayList<>();
     private Long studentId;
     private AutocompleteResult student;
     @Size(max = 255)
     private String addInfo;
-    
+    private Boolean canEdit;
+
     public static HigherProtocolStudentDto of(ProtocolStudent protocolStudent) {
         HigherProtocolStudentDto s = new HigherProtocolStudentDto();
         EntityUtil.bindToDto(protocolStudent, s, "student");
@@ -43,14 +43,6 @@ public class HigherProtocolStudentDto extends VersionedCommand implements Protoc
 
     public void setPracticeJournalResults(List<ProtocolPracticeJournalResultDto> practiceJournalResults) {
         this.practiceJournalResults = practiceJournalResults;
-    }
-
-    public String getGradeValue() {
-        return gradeValue;
-    }
-
-    public void setGradeValue(String gradeValue) {
-        this.gradeValue = gradeValue;
     }
 
     public Long getId() {
@@ -93,4 +85,13 @@ public class HigherProtocolStudentDto extends VersionedCommand implements Protoc
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
     }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
+    }
+
 }

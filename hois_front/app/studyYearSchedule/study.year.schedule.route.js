@@ -12,7 +12,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
-            return Session.roleCode === 'ROLL_A' && Session.vocational && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPETOOGRAAFIK);
+            return ['ROLL_A', 'ROLL_J'].indexOf(Session.roleCode) !== -1 && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPETOOGRAAFIK) !== -1;
           }
         }
       }).when('/studyYearSchedule', {
@@ -24,8 +24,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: function(Session) {
-            return Session.vocational;
+          authorizedRoles: function(Session, roles) {
+            return !Session.hasSchoolRole || roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPETOOGRAAFIK) !== -1;
           }
         }
       });

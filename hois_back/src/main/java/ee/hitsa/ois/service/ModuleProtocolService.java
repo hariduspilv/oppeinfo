@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -86,6 +87,14 @@ public class ModuleProtocolService extends AbstractProtocolService {
         qb.filter("p.is_final = false");
         qb.filter("p.is_vocational = true");
         qb.requiredCriteria("p.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria(
+                    "exists (select cv.curriculum_id from protocol_vdata pvd "
+                            + "join curriculum_version cv on cv.id = pvd.curriculum_version_id "
+                            + "where pvd.protocol_id = p.id and cv.curriculum_id in (:userCurriculumIds))",
+                    "userCurriculumIds", user.getCurriculumIds());
+        }
+
         qb.optionalCriteria(
                 "exists (select protocol_id from protocol_vdata pvd where pvd.protocol_id = p.id and pvd.study_year_id = :studyYearId)",
                 "studyYearId", cmd.getStudyYear());
@@ -323,7 +332,7 @@ public class ModuleProtocolService extends AbstractProtocolService {
                         addHistory(ps);
                         Classifier grade = em.getReference(Classifier.class, dto.getGrade());
                         Short mark = getMark(EntityUtil.getCode(grade));
-                        gradeStudent(ps, grade, mark, Boolean.FALSE);
+                        gradeStudent(ps, grade, mark, Boolean.FALSE, LocalDate.now());
                         ps.setAddInfo(dto.getAddInfo());
                     } else if (gradeRemoved(dto, ps)) {
                         addHistory(ps);
@@ -381,11 +390,11 @@ public class ModuleProtocolService extends AbstractProtocolService {
         qb.requiredCriteria(NOT_ADDED_TO_PROTOCOL, "protocolId", EntityUtil.getId(protocol));
 
         return JpaQueryUtil
-            .pagingResult(qb, "s.id s_id, p.firstname, p.lastname, p.idcode, sg.code sg_code, cv.id cv_id, cv.code cv_code, c.name_et, c.name_en", em, pageable)
+            .pagingResult(qb, "s.id s_id, p.firstname, p.lastname, p.idcode, sg.code sg_code, cv.id cv_id, cv.code cv_code, c.name_et, c.name_en, s.type_code", em, pageable)
             .map(r -> {
                 ModuleProtocolStudentSelectDto dto = new ModuleProtocolStudentSelectDto();
                 dto.setStudentId(resultAsLong(r, 0));
-                dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+                dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 9)));
                 dto.setIdcode(resultAsString(r, 3));
                 dto.setStudentGroup(resultAsString(r, 4));
                 dto.setCurriculum(new AutocompleteResult(resultAsLong(r, 5),

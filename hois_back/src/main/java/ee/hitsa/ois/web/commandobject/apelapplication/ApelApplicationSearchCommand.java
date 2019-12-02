@@ -4,10 +4,11 @@ import java.time.LocalDate;
 import java.util.List;
 
 import ee.hitsa.ois.validation.DateRange;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 
 @DateRange(from = "insertedFrom", thru = "insertedThru")
 @DateRange(from = "confirmedFrom", thru = "confirmedThru")
-public class ApelApplicationSearchCommand {
+public class ApelApplicationSearchCommand extends SearchCommand {
 
     private Long student;
     private List<String> status;

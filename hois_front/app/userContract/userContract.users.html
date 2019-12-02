@@ -1,0 +1,69 @@
+<div ng-cloak ng-include="'userContract/userContract.navbar.html'"></div>
+
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="searchForm" ng-submit="searchForm.$valid && loadData()" layout="column" ng-model-options="{allowInvalid: true}">
+        <div layout-gt-sm="row" layout="column">
+          <md-input-container flex-gt-sm="45" flex="100">
+            <label class="textInput">{{'userContract.search.student' | translate}}</label>
+            <input ng-model="criteria.studentName" type="text" md-maxlength="255">
+          </md-input-container>
+          <md-input-container flex-gt-sm="50" flex="100" flex-offset-gt-sm="5" flex-offset="0">
+            <label class="textInput">{{'userContract.search.group' | translate}}</label>
+            <input ng-model="criteria.groupName" type="text" md-maxlength="255">
+          </md-input-container>
+        </div>
+        <div layout-gt-xs="row" layout="column">
+          <md-input-container>
+            <label>{{'userContract.search.agreedFrom' | translate}}</label>
+            <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+          </md-input-container>
+          <md-input-container>
+            <label>{{'userContract.search.agreedThru' | translate}}</label>
+            <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+          </md-input-container>
+        </div>
+        <div layout-gt-xs="row" layout="column">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+
+<div layout-padding>
+	<div flex>
+		<md-table-container>
+			<table md-table md-progress="tabledata.$promise">
+				<thead md-head md-order="criteria.order" md-on-reorder="loadData">
+					<tr md-row>
+						<th md-column md-order-by='"name"'>{{'userContract.search.student' | translate}}</th>
+						<th md-column md-order-by='"group"'>{{'userContract.search.group' | translate}}</th>
+						<th md-column md-order-by="idcode">{{'userContract.search.idcode' | translate}}</th>
+						<th md-column md-order-by="agreed">{{'userContract.search.agreed' | translate}}</th>
+						<th md-column>{{'userContract.search.contract' | translate}}</th>
+					</tr>
+				</thead>
+				<tbody md-body>
+					<tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+						<td md-cell><a ng-href="#/students/{{::row.id}}/main">{{::row.name}}</a></td>
+						<td md-cell>{{::row.group}}</td>
+						<td md-cell>{{::row.idcode}}</td>
+						<td md-cell>{{::row.agreed | hoisDateTime}}</td>
+						<td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-click="openContract(row)"
+                style="min-width: auto; padding-left: 0; margin-left: 0;">{{'main.button.view' | translate}}</md-button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</md-table-container>
+		<md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+	</div>
+</div>

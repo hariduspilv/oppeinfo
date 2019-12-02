@@ -317,20 +317,19 @@
       $scope.application.committeeId = $scope.application.committee ? $scope.application.committee.id : null;
       $scope.canChangeTransferStatus = entity.canChangeTransferStatus;
 
-      setStudentInfo();
       setGradesAndAssessments($q, $scope, Classifier, entity).then(function () {
         getDataForInformalLearningTables($scope);
         getDataForFormalLearningTables($scope);
-      });
-      setColspans($scope);
-    }
 
-    function setStudentInfo() {
-      return QueryUtils.endpoint('/students/' + $scope.application.student.id).search(function (result) {
-        $scope.application.person = result.person;
-        $scope.application.curriculumVersion = result.curriculumVersion;
-        $scope.application.isVocational = result.curriculumVersion.isVocational;
+        if (!entity.isVocational) {
+          $scope.grades.forEach(function (grade) {
+            grade.shownValue = $filter('hoisHigherGrade')(grade, $scope.auth.school.letterGrades);
+          });
+          $scope.grades = HigherGradeUtil.orderedGrades($scope.grades);
+        }
       });
+
+      setColspans($scope);
     }
 
     var entity = $route.current.locals.entity;
@@ -356,13 +355,11 @@
     });
 
     function createNewApplication() {
-      setStudentInfo().$promise.then(function () {
-        var application = new ApelApplicationEndpoint($scope.application);
-        application.$save().then(function () {
-          message.info('main.messages.create.success');
-          $location.path('/apelApplication/' + application.id + '/edit');
-        }).catch(angular.noop);
-      });
+      var application = new ApelApplicationEndpoint($scope.application);
+      application.$save().then(function () {
+        message.info('main.messages.create.success');
+        $location.path('/apelApplication/' + application.id + '/edit');
+      }).catch(angular.noop);
     }
 
     function getRecord(recordId) {
@@ -965,6 +962,7 @@
                 student: dialogScope.student.id,
                 curriculumSubjects: false,
                 curriculumVersion: dialogScope.curriculumVersionId,
+                ignoreCurriculumVersionStatus: true,
                 withCredits: false,
                 noFinalSubjects: true
               }).$promise.then(function (subjects) {
@@ -1845,14 +1843,9 @@
 
     function entityToForm(entity) {
       $scope.application = entity;
+      $scope.application.committeeId = entity.committee ? entity.committee.id : null;
       $scope.school = entity.school;
 
-      QueryUtils.endpoint('/students/' + $scope.application.student.id).search(function (result) {
-        $scope.application.person = result.person;
-        $scope.application.curriculumVersion = result.curriculumVersion;
-        $scope.application.isVocational = result.curriculumVersion.isVocational;
-        $scope.application.committeeId = $scope.application.committee ? $scope.application.committee.id : null;
-      });
       setGradesAndAssessments($q, $scope, Classifier, entity).then(function () {
         getDataForInformalLearningTables($scope);
         getDataForFormalLearningTables($scope);

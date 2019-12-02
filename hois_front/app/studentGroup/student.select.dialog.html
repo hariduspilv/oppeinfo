@@ -16,7 +16,7 @@
               <tr md-row md-select="row" md-select-id="id" md-auto-select ng-repeat="row in formState.students | orderBy: formState.order" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{::row.fullname}}</td>
                 <td md-cell>{{::row.idcode}}</td>
-                <td md-cell>{{$root.currentLanguageNameField(row.curriculumVersion)}}</td>
+                <td md-cell>{{row.curriculumVersion ? $root.currentLanguageNameField(row.curriculumVersion) : '-'}}</td>
                 <td md-cell>{{$root.currentLanguageNameField(row.status)}}</td>
               </tr>
             </tbody>

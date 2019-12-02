@@ -2,8 +2,6 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.time.LocalDate;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 
 public class PracticeJournalEntryStudentForm {

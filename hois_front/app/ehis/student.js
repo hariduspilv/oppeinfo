@@ -1,7 +1,9 @@
 'use strict';
 
-angular.module('hitsaOis').controller('StudentEhisController', ['$scope', 'message', 'QueryUtils', '$timeout', 'dialogService', '$filter', '$translate', 'busyHandler',
-  function ($scope, message, QueryUtils, $timeout, dialogService, $filter, $translate, busyHandler) {
+angular.module('hitsaOis').controller('StudentEhisController', ['$scope', '$route', 'message', 'QueryUtils', '$timeout', 'dialogService', '$filter', '$translate', 'busyHandler',
+  function ($scope, $route, message, QueryUtils, $timeout, dialogService, $filter, $translate, busyHandler) {
+
+  $scope.auth = $route.current.locals.auth;
 
   var COURSE_CHANGE = 'COURSE_CHANGE';
   var CURRICULA_FULFILMENT = 'CURRICULA_FULFILMENT';
@@ -10,6 +12,7 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', 'messa
   var GRADUATION = 'GRADUATION';
   var VOTA = 'VOTA';
   var SPECIAL_NEEDS = 'SPECIAL_NEEDS';
+  var GUEST_STUDENTS = 'GUEST_STUDENTS';
 
   $scope.dataTypes = [
     {type: COURSE_CHANGE, translate: $translate.instant('ehis.student.COURSE_CHANGE')},
@@ -18,10 +21,16 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', 'messa
     {type: FOREIGN_STUDY, translate: $translate.instant('ehis.student.FOREIGN_STUDY')},
     {type: GRADUATION, translate: $translate.instant('ehis.student.GRADUATION')},
     {type: VOTA, translate: $translate.instant('ehis.student.VOTA')},
-    {type: SPECIAL_NEEDS, translate: $translate.instant('ehis.student.SPECIAL_NEEDS')}
+    {type: SPECIAL_NEEDS, translate: $translate.instant('ehis.student.SPECIAL_NEEDS')},
   ];
-  $scope.displayDates = [COURSE_CHANGE, DORMITORY, FOREIGN_STUDY, GRADUATION, VOTA, SPECIAL_NEEDS];
+
+  if ($scope.auth.higher) {
+    $scope.dataTypes.push({type: GUEST_STUDENTS, translate: $translate.instant('ehis.student.GUEST_STUDENTS')});
+  }
+
+  $scope.displayDates = [COURSE_CHANGE, DORMITORY, FOREIGN_STUDY, GRADUATION, VOTA, SPECIAL_NEEDS, GUEST_STUDENTS];
   $scope.criteria = {from: new Date(), thru: new Date()};
+  $scope.minDate = new Date(2013, 8, 1);
 
   function processResult(result) {
     if ($scope.criteria.dataType === 'VOTA') {

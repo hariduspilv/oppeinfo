@@ -493,9 +493,12 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
       if(angular.isDefined($scope.studentGroup)) {
         dialogScope.studentGroup = $scope.studentGroup;
         dialogScope.setStudentGroup($scope.studentGroup);
-      } else if (angular.isDefined($scope.formState.student)) {
+      } else if (!!$scope.formState.student.studentGroup) {
         dialogScope.studentGroup = $scope.formState.student.studentGroup;
         dialogScope.setStudentGroup($scope.formState.student.studentGroup);
+      } else {
+        dialogScope.studentGroup = undefined;
+        dialogScope.criteria.studentGroup = undefined;
       }
 
       dialogScope.checkChecked = function() {
@@ -545,6 +548,9 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
         entity.moduleSubjects.forEach(function (it) {
           it.id = undefined;
           DataUtils.convertObjectToIdentifier(it, ['module', 'theme', 'subject']);
+        });
+        entity.supervisors.forEach(function(supervisor) {
+          supervisor.id = null;
         });
         $scope.formState.isHigher = entity.isHigher;
         DataUtils.convertObjectToIdentifier(entity, ['contractCoordinator', 'practiceEvaluation', 'studentPracticeEvaluation']);

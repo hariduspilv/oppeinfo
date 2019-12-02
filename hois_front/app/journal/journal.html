@@ -21,12 +21,14 @@
           </md-input-container>
         </div>
 
-        <div ng-if="journal.canBeConfirmed" flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <div ng-if="journal.canBeConfirmed" flex="100" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <md-input-container style="margin-top:-1em;">
             <label>{{'journal.endDate' | translate}}</label>
             <md-datepicker ng-model="journal.endDate" md-min-date="journal.studyYearStartDate"></md-datepicker>
           </md-input-container>
-          <a href="" class="md-button md-raised" style="margin-top:-1em;" ng-click="saveEndDate()">{{'journal.saveEndDate' | translate}}</a>
+          <md-input-container style="margin-top:-1em;margin-bottom: 5px">
+            <md-button class="md-raised" style="margin-left: 0px" ng-click="saveEndDate()">{{'journal.saveEndDate' | translate}}</md-button>
+          </md-input-container>
         </div>
 
         <div ng-if="!journal.canBeConfirmed" class="form-readonly" flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -96,7 +98,7 @@
         </div>
       </div>
 
-      <fieldset ng-if="journal.hasJournalStudents">
+      <fieldset ng-if="journal.canViewReview && journal.hasJournalStudents">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'journal.review' | translate}}</legend>
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container  flex="45" flex-sm="100" flex-xs="100">

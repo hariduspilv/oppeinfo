@@ -21,6 +21,7 @@ public interface DirectiveValidation {
     interface Stiptoet extends DirectiveValidation { }
     interface Stiptoetl extends DirectiveValidation { }
     interface Kiitus extends DirectiveValidation { }
+    interface Kylalis extends DirectiveValidation { }
     interface Noomi extends DirectiveValidation { }
     interface Praktik extends DirectiveValidation { }
     interface Otegevus extends DirectiveValidation { }

@@ -53,6 +53,19 @@ angular.module('hitsaOis')
       }, 3000);
       return deferred.promise;
     };
+
+    var counter = 0;
+    function createRandRow () {
+      var uId = counter++;
+      return {
+        id: uId,
+        name: "TEST" + uId
+      };
+    }
+
+    $scope.testRows = [
+      createRandRow(), createRandRow(), createRandRow(), createRandRow()
+    ];
   })
 
 

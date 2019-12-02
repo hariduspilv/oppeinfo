@@ -31,11 +31,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.SchoolService.SchoolType;
@@ -50,6 +54,7 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumCompletionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumSubjectsCommand;
+import ee.hitsa.ois.web.commandobject.report.GuestStudentStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.IndividualCurriculumStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.ScholarshipStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentSearchCommand;
@@ -61,6 +66,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
 import ee.hitsa.ois.web.dto.report.CurriculumCompletionDto;
 import ee.hitsa.ois.web.dto.report.CurriculumSubjectsDto;
+import ee.hitsa.ois.web.dto.report.GuestStudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.IndividualCurriculumSatisticsDto;
 import ee.hitsa.ois.web.dto.report.ScholarshipReportDto;
 import ee.hitsa.ois.web.dto.report.StudentSearchDto;
@@ -78,6 +84,8 @@ public class ReportService {
     private XlsService xlsService;
     @Autowired
     private SchoolService schoolService;
+    @Autowired
+    private StudyYearService studyYearService;
 
     private static final String DATA_TRANSFER_ROWS = "DATA_TRANSFER_PROCESS";
 
@@ -89,14 +97,18 @@ public class ReportService {
      * @param pageable
      * @return
      */
-    public Page<StudentSearchDto> students(Long schoolId, StudentSearchCommand criteria, Pageable pageable) {
+    public Page<StudentSearchDto> students(HoisUserDetails user, StudentSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s inner join person p on s.person_id = p.id " +
                 "inner join curriculum_version cv on s.curriculum_version_id = cv.id " +
                 "inner join curriculum c on cv.curriculum_id = c.id "+
                 "left join student_group sg on s.student_group_id = sg.id "+
                 "left join student_curriculum_completion scc on scc.student_id = s.id").sort(pageable);
 
-        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("c.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
+        }
+
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
         qb.optionalCriteria("coalesce(p.idcode, p.foreign_idcode) = :idcode", "idcode", criteria.getIdcode());
         qb.optionalCriteria("p.birthdate >= :birthdateFrom", "birthdateFrom", criteria.getBirthdateFrom());
@@ -116,7 +128,7 @@ public class ReportService {
 
         Page<StudentSearchDto> result = JpaQueryUtil.pagingResult(qb, "s.id, p.firstname, p.lastname, coalesce(p.idcode, p.foreign_idcode) as idcode, s.study_start, c.orig_study_level_code, " +
                 "cv.code, c.name_et, c.name_en, c.mer_code, sg.code as student_group_code, s.study_load_code, s.study_form_code, s.status_code, " +
-                "s.fin_code, s.fin_specific_code, s.language_code, s.email, scc.credits, s.dormitory_code"
+                "s.fin_code, s.fin_specific_code, s.language_code, s.email, scc.credits, s.dormitory_code, s.type_code as studentType"
         , em, pageable).map(r -> new StudentSearchDto(r));
 
         Set<Long> studentIds = result.getContent().stream().map(StudentSearchDto::getId).collect(Collectors.toSet());
@@ -144,16 +156,17 @@ public class ReportService {
      * @param criteria
      * @return
      */
-    public byte[] studentsAsExcel(Long schoolId, StudentSearchCommand criteria) {
-        List<StudentSearchDto> students = students(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
+    public byte[] studentsAsExcel(HoisUserDetails user, StudentSearchCommand criteria) {
+        List<StudentSearchDto> students = students(user, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
         Map<String, Object> data = new HashMap<>();
         data.put("criteria", criteria);
         data.put("students", students);
         return xlsService.generate("students.xls", data);
     }
 
-    public Page<StudentStatisticsDto> studentStatistics(Long schoolId, StudentStatisticsCommand criteria, Pageable pageable) {
-        Page<StudentStatisticsDto> result = loadCurriculums(schoolId, criteria.getCurriculum(), pageable);
+    public Page<StudentStatisticsDto> studentStatistics(HoisUserDetails user, StudentStatisticsCommand criteria,
+            Pageable pageable) {
+        Page<StudentStatisticsDto> result = loadCurriculums(user, criteria.getCurriculum(), pageable);
 
         // load grouped by value counts of given classifier
         if(!result.getContent().isEmpty()) {
@@ -177,7 +190,12 @@ public class ReportService {
                     + "or x.history_count = 0 and (ss.curriculum_version_id = cv.id and ss.status_code in (:status))) x")
                     .groupBy(grouping);
             qb.requiredCriteria("x.status_code in (:status)", "status", StudentStatus.STUDENT_STATUS_ACTIVE);
-            qb.parameter("school", schoolId);
+            qb.parameter("school", user.getSchoolId());
+            if (user.isLeadingTeacher()) {
+                qb.requiredCriteria("x.curriculum_id in (:userCurriculumIds)", "userCurriculumIds",
+                        user.getCurriculumIds());
+            }
+
             qb.parameter("curriculum", curriculums.keySet());
             qb.parameter("dataTransfer", DATA_TRANSFER_ROWS);
 
@@ -226,8 +244,8 @@ public class ReportService {
         return select;
     }
 
-    public byte[] studentStatisticsAsExcel(Long schoolId, StudentStatisticsCommand criteria) {
-        List<StudentStatisticsDto> students = studentStatistics(schoolId, criteria,
+    public byte[] studentStatisticsAsExcel(HoisUserDetails user, StudentStatisticsCommand criteria) {
+        List<StudentStatisticsDto> students = studentStatistics(user, criteria,
                 new PageRequest(0, Integer.MAX_VALUE, new Sort("c.name_et"))).getContent();
         Map<String, Object> data = new HashMap<>();
         data.put("criteria", criteria);
@@ -235,8 +253,9 @@ public class ReportService {
         return xlsService.generate("studentstatistics.xls", data);
     }
 
-    public Page<StudentStatisticsDto> studentStatisticsByPeriod(Long schoolId, StudentStatisticsByPeriodCommand criteria, Pageable pageable) {
-        Page<StudentStatisticsDto> result = loadCurriculums(schoolId, criteria.getCurriculum(), pageable);
+    public Page<StudentStatisticsDto> studentStatisticsByPeriod(HoisUserDetails user,
+            StudentStatisticsByPeriodCommand criteria, Pageable pageable) {
+        Page<StudentStatisticsDto> result = loadCurriculums(user, criteria.getCurriculum(), pageable);
 
         // load grouped by value counts of given classifier
         if(!result.getContent().isEmpty()) {
@@ -279,7 +298,12 @@ public class ReportService {
 
             qb.requiredCriteria("cv.curriculum_id in (:curriculum)", "curriculum", cs.keySet());
 
-            qb.requiredCriteria("d.school_id = :schoolId", "schoolId", schoolId);
+            qb.requiredCriteria("d.school_id = :schoolId", "schoolId", user.getSchoolId());
+            if (user.isLeadingTeacher()) {
+                qb.requiredCriteria("cv.curriculum_id in (:userCurriculumIds)", "userCurriculumIds",
+                        user.getCurriculumIds());
+            }
+
             qb.requiredCriteria("d.type_code in(:directiveType)", "directiveType", directiveTypes);
             qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus",
                     DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
@@ -301,8 +325,8 @@ public class ReportService {
         return result;
     }
 
-    public byte[] studentStatisticsByPeriodAsExcel(Long schoolId, StudentStatisticsByPeriodCommand criteria) {
-        List<StudentStatisticsDto> students = studentStatisticsByPeriod(schoolId, criteria,
+    public byte[] studentStatisticsByPeriodAsExcel(HoisUserDetails user, StudentStatisticsByPeriodCommand criteria) {
+        List<StudentStatisticsDto> students = studentStatisticsByPeriod(user, criteria,
                 new PageRequest(0, Integer.MAX_VALUE, new Sort("c.name_et"))).getContent();
         Map<String, Object> data = new HashMap<>();
         data.put("criteria", criteria);
@@ -310,14 +334,19 @@ public class ReportService {
         return xlsService.generate("studentstatisticsbyperiod.xls", data);
     }
 
-    public Page<CurriculumCompletionDto> curriculumCompletion(Long schoolId, CurriculumCompletionCommand criteria, Pageable pageable) {
+    public Page<CurriculumCompletionDto> curriculumCompletion(HoisUserDetails user,
+            CurriculumCompletionCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s inner join person p on s.person_id = p.id " +
                 "inner join curriculum_version cv on s.curriculum_version_id = cv.id " +
                 "inner join curriculum c on cv.curriculum_id = c.id "+
                 "left join student_group sg on s.student_group_id = sg.id "+
                 "left join student_curriculum_completion scc on scc.student_id = s.id").sort(pageable);
 
-        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("c.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
+        }
+
         qb.requiredCriteria("s.status_code in (:status)", "status", StudentStatus.STUDENT_STATUS_ACTIVE);
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
         qb.optionalCriteria("cv.id = :curriculumVersion", "curriculumVersion", criteria.getCurriculumVersion());
@@ -325,18 +354,64 @@ public class ReportService {
         qb.optionalCriteria("s.study_form_code = :studyForm", "studyForm", criteria.getStudyForm());
         qb.optionalCriteria("s.student_group_id = :studentGroup", "studentGroup", criteria.getStudentGroup());
 
-        return JpaQueryUtil.pagingResult(qb, "s.id, p.firstname, p.lastname, " +
+        Page<CurriculumCompletionDto> page = JpaQueryUtil.pagingResult(qb, "s.id, p.firstname, p.lastname, " +
                 "cv.code, c.name_et, c.name_en, sg.code as student_group_code, s.study_load_code, s.study_form_code, s.status_code, " +
-                "scc.credits_last_study_period, scc.credits, round(scc.credits * 100 / c.credits), " +
+                "scc.credits, round((c.credits + scc.study_backlog) * 100 / c.credits), " +
                 "(select count(*) from study_period sp join study_year sy on sy.id = sp.study_year_id"+
                 " where sy.school_id = s.school_id and sp.end_date < now() and s.study_start < sp.end_date) as period_count, " +
                 "(select count(*) from study_year sy"+
-                " where sy.school_id = s.school_id and sy.end_date < now() and s.study_start < sy.end_date) as year_count"
+                " where sy.school_id = s.school_id and sy.end_date < now() and s.study_start < sy.end_date) as year_count, " +
+                "s.type_code as studentType"
         , em, pageable).map(r -> new CurriculumCompletionDto(r));
+        if (!page.getContent().isEmpty()) {
+            setLastStudyPeriodCredits(user.getSchoolId(), page.getContent());
+        }
+        return page;
     }
 
-    public byte[] curriculumCompletionAsExcel(Long schoolId, CurriculumCompletionCommand criteria) {
-        List<CurriculumCompletionDto> students = curriculumCompletion(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
+    private void setLastStudyPeriodCredits(Long schoolId, List<CurriculumCompletionDto> curriculumCompletionDtos) {
+        Long lastStudyPeridodId = studyYearService.getPreviousStudyPeriod(schoolId);
+        if (lastStudyPeridodId != null) {
+            StudyPeriod sp = em.getReference(StudyPeriod.class, lastStudyPeridodId);
+            Map<Long, CurriculumCompletionDto> dtosByStudent = StreamUtil.toMap(c -> c.getId(),
+                    curriculumCompletionDtos);
+
+            List<?> data = em.createNativeQuery(
+                    "select s.id, (select spCredits.sum from (" +
+                        "select * from (select sum(credits) from (select distinct on (svr.curriculum_version_omodule_id) first_value(svr.credits) " +
+                        "over (partition by svr.curriculum_version_omodule_id order by coalesce(svr.changed, svr.inserted) desc) credits " +
+                        "from student_vocational_result svr " +
+                        "where svr.student_id = s.id and c.is_higher = false and svr.grade_code in (:vocationalPositiveGrades) " +
+                        "and svr.grade_date >= :studyPeriodStart and svr.grade_date <= :studyPeriodEnd " +
+                        ") as distinct_module_credits) credits_sum where sum is not null " +
+                        "union all " +
+                        "select sum(shr.credits) from student_higher_result shr " +
+                        "where shr.student_id = s.id and c.is_higher = true and shr.grade_code in (:higherPositiveGrades) " +
+                        "and shr.is_active = true and shr.grade_date >= :studyPeriodStart and shr.grade_date <= :studyPeriodEnd " +
+                        "group by shr.student_id) spCredits) " +
+                    "from student s " +
+                    "join curriculum_version cv on cv.id = s.curriculum_version_id " +
+                    "join curriculum c on c.id = cv.curriculum_id " +
+                    "where s.id in (:studentIds)")
+                    .setParameter("studentIds", dtosByStudent.keySet())
+                    .setParameter("studyPeriodStart", JpaQueryUtil.parameterAsTimestamp(sp.getStartDate()))
+                    .setParameter("studyPeriodEnd", JpaQueryUtil.parameterAsTimestamp(sp.getEndDate()))
+                    .setParameter("vocationalPositiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE)
+                    .setParameter("higherPositiveGrades", HigherAssessment.GRADE_POSITIVE)
+                    .getResultList();
+
+            Map<Long, BigDecimal> lastSpCreditsByStudent = StreamUtil.nullSafeList(data).stream()
+                    .filter(r -> resultAsDecimal(r, 1) != null)
+                    .collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> resultAsDecimal(r, 1)));
+            for (Long studentId : lastSpCreditsByStudent.keySet()) {
+                dtosByStudent.get(studentId).setCreditsLastStudyPeriod(lastSpCreditsByStudent.get(studentId));
+            }
+        }
+    }
+
+    public byte[] curriculumCompletionAsExcel(HoisUserDetails user, CurriculumCompletionCommand criteria) {
+        List<CurriculumCompletionDto> students = curriculumCompletion(user, criteria,
+                new PageRequest(0, Integer.MAX_VALUE)).getContent();
         Map<String, Object> data = new HashMap<>();
         data.put("criteria", criteria);
         data.put("students", students);
@@ -375,20 +450,24 @@ public class ReportService {
         return xlsService.generate("teachersload" + (higher ? "higher" : "vocational") + ".xls", data);
     }
 
-    public Page<VotaDto> vota(Long schoolId, VotaCommand criteria, Pageable pageable) {
+    public Page<VotaDto> vota(HoisUserDetails user, VotaCommand criteria, Pageable pageable) {
         // curriculum versions for given study year/period
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_version cv " +
                 "join curriculum c on cv.curriculum_id = c.id " +
                 "join study_period sp on (cv.valid_from is null or cv.valid_from <= sp.end_date) and (cv.valid_thru is null or cv.valid_thru >= sp.start_date) " +
                 "join study_year sy on sp.study_year_id = sy.id " +
                 "join classifier syc on sy.year_code = syc.code").sort("sp.start_date", "sp.id", "cv.code");
-        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
-        qb.requiredCriteria("sy.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("sy.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("c.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
+        }
+
         qb.requiredCriteria("sp.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
         qb.optionalCriteria("sp.id = :studyPeriodId", "studyPeriodId", criteria.getStudyPeriod());
 
         Set<Long> cvIds = new HashSet<>();
-        Set<StudyPeriod> studyPeriods = new HashSet<>();
+        Set<StudyPeriodHolder> studyPeriods = new HashSet<>();
         Map<Long, Map<Long, VotaDto>> dtosByPeriodAndCurriculum = new HashMap<>();
         Page<VotaDto> result = JpaQueryUtil.pagingResult(qb, "syc.name_et, syc.name_en, sp.id as sp_id, sp.name_et as sp_name_et, sp.name_en as sp_name_en, cv.id, cv.code, c.name_et as c_name_et, c.name_en as c_name_en, sp.start_date, sp.end_date", em, pageable)
                 .map(r -> {
@@ -401,16 +480,16 @@ public class ReportService {
                     Long cvId = resultAsLong(r, 5);
                     dtosByPeriodAndCurriculum.computeIfAbsent(studyPeriodId, id -> new HashMap<>()).put(cvId, dto);
                     cvIds.add(cvId);
-                    studyPeriods.add(new StudyPeriod(studyPeriodId, resultAsLocalDate(r, 9), resultAsLocalDate(r, 10)));
+                    studyPeriods.add(new StudyPeriodHolder(studyPeriodId, resultAsLocalDate(r, 9), resultAsLocalDate(r, 10)));
                     return dto;
                 });
 
         List<VotaDto> dtos = result.getContent();
         if(!dtos.isEmpty()) {
             Map<VotaDto, VotaStatistics> allStats = new IdentityHashMap<>();
-            List<StudyPeriod> sortedStudyPeriods = studyPeriods.stream().sorted(Comparator.comparing(StudyPeriod::getStart)).collect(Collectors.toList());
-            LocalDateTime start = DateUtils.firstMomentOfDay(studyPeriods.stream().map(StudyPeriod::getStart).min(Comparator.naturalOrder()).get());
-            LocalDateTime end = DateUtils.lastMomentOfDay(studyPeriods.stream().map(StudyPeriod::getEnd).max(Comparator.naturalOrder()).get());
+            List<StudyPeriodHolder> sortedStudyPeriods = studyPeriods.stream().sorted(Comparator.comparing(StudyPeriodHolder::getStart)).collect(Collectors.toList());
+            LocalDateTime start = DateUtils.firstMomentOfDay(studyPeriods.stream().map(StudyPeriodHolder::getStart).min(Comparator.naturalOrder()).get());
+            LocalDateTime end = DateUtils.lastMomentOfDay(studyPeriods.stream().map(StudyPeriodHolder::getEnd).max(Comparator.naturalOrder()).get());
             // formal learnings for given curriculum versions and date period
             qb = new JpaNativeQueryBuilder("from apel_application_formal_subject_or_module aafsm " +
                     "join apel_application_record aar on aafsm.apel_application_record_id = aar.id " +
@@ -651,10 +730,15 @@ public class ReportService {
         });
     }
 
-    private Page<StudentStatisticsDto> loadCurriculums(Long schoolId, List<EntityConnectionCommand> curriculumIds, Pageable pageable) {
+    private Page<StudentStatisticsDto> loadCurriculums(HoisUserDetails user,
+            List<EntityConnectionCommand> curriculumIds, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum c").sort(pageable);
 
-        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("c.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
+        }
+
         qb.optionalCriteria("c.id in (:curriculum)", "curriculum", StreamUtil.toMappedList(r -> r.getId(), curriculumIds));
 
         return JpaQueryUtil.pagingResult(qb, "c.id, c.name_et, c.name_en, c.mer_code", em, pageable).map(r -> new StudentStatisticsDto(r));
@@ -679,10 +763,10 @@ public class ReportService {
         }
     }
 
-    private static VotaDto findVota(LocalDate inserted, Long cvId, List<StudyPeriod> studyPeriods, Map<Long, Map<Long, VotaDto>> dtosByPeriodAndCurriculum) {
+    private static VotaDto findVota(LocalDate inserted, Long cvId, List<StudyPeriodHolder> studyPeriods, Map<Long, Map<Long, VotaDto>> dtosByPeriodAndCurriculum) {
         // study period by inserted date
         // first study period which is not ended
-        StudyPeriod sp = studyPeriods.stream().filter(r -> !r.getEnd().isBefore(inserted)).findFirst().orElse(null);
+        StudyPeriodHolder sp = studyPeriods.stream().filter(r -> !r.getEnd().isBefore(inserted)).findFirst().orElse(null);
         if(sp == null) {
             return null;
         }
@@ -704,7 +788,13 @@ public class ReportService {
         select.append("coalesce(ds.start_date, sa.scholarship_from, st.payment_start) as date_from, ");
         select.append("coalesce(ds.end_date, sa.scholarship_thru, st.payment_end) as date_thru ");
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString());
+
         qb.requiredCriteria("d.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("sg.curriculum_id in (:userCurriculumIds)", "userCurriculumIds",
+                    user.getCurriculumIds());
+        }
+
         qb.requiredCriteria("d.type_code = :type", "type", DirectiveType.KASKKIRI_STIPTOET);
         qb.requiredCriteria("d.status_code = :status", "status", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
         qb.filter("(d.confirm_date >= :from and d.confirm_date <= :thru)");
@@ -734,13 +824,13 @@ public class ReportService {
         return xlsService.generate("scholarships.xlsx", context);
     }
 
-    private static class StudyPeriod {
+    private static class StudyPeriodHolder {
 
         private final Long id;
         private final LocalDate start;
         private final LocalDate end;
 
-        public StudyPeriod(Long id, LocalDate start, LocalDate end) {
+        public StudyPeriodHolder(Long id, LocalDate start, LocalDate end) {
             this.id = id;
             this.start = start;
             this.end = end;
@@ -760,7 +850,7 @@ public class ReportService {
 
         @Override
         public boolean equals(Object o) {
-            return (o instanceof StudyPeriod) && id.equals(((StudyPeriod)o).getId());
+            return (o instanceof StudyPeriodHolder) && id.equals(((StudyPeriodHolder)o).getId());
         }
 
         @Override
@@ -842,26 +932,27 @@ public class ReportService {
         JpaNativeQueryBuilder qb = indokIndividualCurriculums(user, criteria);
         String indokQuery = qb.querySql("s.id student_id, p.firstname, p.lastname, sg.id group_id, sg.code group_code, "
                 + "cm.id curriculum_id, cm.name_et cm_name_et, cm.name_en cm_name_en, dsm.add_info, "
-                + "ds.start_date, coalesce(ds_lop.start_date, ds.end_date) end_date", false);
+                + "ds.start_date, coalesce(ds_lop.start_date, ds.end_date) end_date, s.type_code as studentType", false);
         Map<String, Object> parameters = new HashMap<>(qb.queryParameters());
 
         qb = tugiIndividualCurriculums(user, criteria); 
         String tugiQuery = qb.querySql("s2.id student_id, p2.firstname, p2.lastname, sg2.id group_id, "
                 + "sg2.code group_code, cm2.id curriculum_id, cm2.name_et cm_name_et, cm2.name_en cm_name_en, "
-                + "assm.add_info, ds2.start_date, coalesce(ds_lop2.start_date, ds2.end_date)", false);
+                + "assm.add_info, ds2.start_date, coalesce(ds_lop2.start_date, ds2.end_date), s2.type_code as studentType", false);
        parameters.putAll(qb.queryParameters());
 
         qb = new JpaNativeQueryBuilder("from (" + indokQuery + " union all " + tugiQuery + ") as individual_curriculums")
                 .sort(pageable);
         
         return JpaQueryUtil.pagingResult(qb, "student_id, firstname, lastname, group_id, group_code, "
-                + "curriculum_id, cm_name_et, cm_name_en, add_info, start_date, end_date", parameters, em, pageable)
+                + "curriculum_id, cm_name_et, cm_name_en, add_info, start_date, end_date, studentType", parameters, em, pageable)
                 .map(r -> new IndividualCurriculumSatisticsDto(r));
     }
 
     private static JpaNativeQueryBuilder indokIndividualCurriculums(HoisUserDetails user,
             IndividualCurriculumStatisticsCommand criteria) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s " +
+                "join curriculum_version cv on cv.id = s.curriculum_version_id " +
                 "join person p on p.id = s.person_id " +
                 "left join student_group sg on sg.id = s.student_group_id "+
                 "join directive_student ds on ds.student_id = s.id "+
@@ -873,6 +964,11 @@ public class ReportService {
                 "and d_lop.status_code = :directiveStatus) on ds_lop.directive_student_id = ds.id and ds_lop.canceled = false");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("cv.curriculum_id in (:userCurriculumIds)", "userCurriculumIds",
+                    user.getCurriculumIds());
+        }
+
         qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_INDOK);
         qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus",
                 DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
@@ -896,6 +992,7 @@ public class ReportService {
     private static JpaNativeQueryBuilder tugiIndividualCurriculums(HoisUserDetails user,
             IndividualCurriculumStatisticsCommand criteria) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s2 " +
+                "join curriculum_version cv2 on cv2.id = s2.curriculum_version_id " +
                 "join person p2 on p2.id = s2.person_id " +
                 "left join student_group sg2 on sg2.id = s2.student_group_id " +
                 "join directive_student ds2 on ds2.student_id = s2.id " +
@@ -909,6 +1006,11 @@ public class ReportService {
                 "and d_lop2.status_code = :directiveStatus) on ds_lop2.directive_student_id = ds2.id and ds_lop2.canceled = false");
 
         qb.requiredCriteria("s2.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("cv2.curriculum_id in (:userCurriculumIds)", "userCurriculumIds",
+                    user.getCurriculumIds());
+        }
+
         qb.requiredCriteria("d2.type_code = :directiveType2", "directiveType2", DirectiveType.KASKKIRI_TUGI);
         qb.requiredCriteria("d2.status_code = :directiveStatus", "directiveStatus",
                 DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
@@ -938,5 +1040,60 @@ public class ReportService {
         data.put("criteria", criteria);
         data.put("rows", rows);
         return xlsService.generate("individualcurriculumstatistics.xls", data);
+    }
+
+    public Page<GuestStudentStatisticsDto> guestStudentStatistics(HoisUserDetails user, GuestStudentStatisticsCommand criteria, Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s "
+                + "join directive_student ds on ds.student_id = s.id "
+                + "join directive d on ds.directive_id = d.id "
+                + "join person p on s.person_id = p.id "
+                + "left join apel_school aps on ds.apel_school_id = aps.id "
+                + "left join classifier ehis_cl on ehis_cl.code = ds.ehis_school_code "
+                + "left join classifier aps_cl on aps_cl.code = aps.country_code "
+                + "left join classifier ds_cl on ds_cl.code = ds.abroad_programme_code "
+                + "left join student_group sg on s.student_group_id = sg.id "
+                + "left join curriculum_version cv on s.curriculum_version_id = cv.id "
+                + "left join curriculum c on c.id = cv.curriculum_id "
+                + "left join classifier_connect cc on cc.classifier_code = c.orig_study_level_code "
+                + "left join curriculum_department cd on cd.curriculum_id = c.id "
+                + "left join school_department sd on cd.school_department_id = sd.id "
+                + "left join study_year sy on (s.study_start >= sy.start_date and s.study_end <= sy.end_date and sy.school_id = s.school_id) "
+                + "left join student_curriculum_completion scc on scc.student_id = s.id").sort(pageable)
+                .groupBy("s.id, p.firstname, p.lastname, "
+                + "cv.code, c.name_et, c.name_en, sg.code, s.study_start, s.study_end, "
+                + "aps.id, aps.name_et, aps.name_en, aps.country_code, "
+                + "ds.abroad_programme_code, scc.credits, aps_cl.name_et, ds_cl.name_et");
+
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("s.type_code = :studentType", "studentType", StudentType.OPPUR_K.name());
+        qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_KYLALIS.name());
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getStudent());
+        qb.optionalContains(Arrays.asList("aps.name_et", "ds.abroad_school", "ehis_cl.name_et"), "prevSchool", criteria.getHomeSchool());
+        qb.optionalCriteria("c.id = :curriculumId", "curriculumId", criteria.getCurriculum());
+        qb.optionalCriteria("cv.id = :curriculumVersion", "curriculumVersion", criteria.getCurriculumVersion());
+        qb.optionalCriteria("sy.id = :studyYear", "studyYear", criteria.getStudyYear());
+        qb.optionalCriteria("s.study_start >= :startFrom", "startFrom", criteria.getStartFrom());
+        qb.optionalCriteria("s.study_start <= :startThru", "startThru", criteria.getStartThru());
+        qb.optionalCriteria("s.study_end >= :endFrom", "endFrom", criteria.getEndFrom());
+        qb.optionalCriteria("s.study_end <= :endThru", "endThru", criteria.getEndThru());
+        qb.optionalCriteria("sd.id = :departmentId", "departmentId", criteria.getDepartment());
+        qb.optionalCriteria("cc.connect_classifier_code = :educationLevel", "educationLevel", criteria.getEducationLevel());
+        qb.optionalCriteria("aps.country_code = :homeCountry", "homeCountry", criteria.getHomeCountry());
+        qb.optionalCriteria("ds.abroad_programme_code = :programmeCode", "programmeCode", criteria.getProgramme());
+
+        return JpaQueryUtil.pagingResult(qb, "s.id, p.firstname, p.lastname, "
+                + "cv.code, c.name_et, c.name_en, sg.code as student_group_code, s.study_start, s.study_end, "
+                + "aps.id as homeSchoolId, aps.name_et as homeSchoolEt, aps.name_en as homeSchoolEn, aps.country_code as homeCountry, "
+                + "ds.abroad_programme_code, scc.credits as totalEap, aps_cl.name_et as homeCountryName, ds_cl.name_et as abroadEt"
+        , em, pageable).map(r -> new GuestStudentStatisticsDto(r));
+    }
+
+    public byte[] guestStudentStatisticsAsExcel(HoisUserDetails user, GuestStudentStatisticsCommand criteria) {
+        List<GuestStudentStatisticsDto> students = guestStudentStatistics(user, criteria,
+                new PageRequest(0, Integer.MAX_VALUE, new Sort("p.lastname, p.firstname"))).getContent();
+        Map<String, Object> data = new HashMap<>();
+        data.put("criteria", criteria);
+        data.put("students", students);
+        return xlsService.generate("gueststudentstatistics.xls", data);
     }
 }

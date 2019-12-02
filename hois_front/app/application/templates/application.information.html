@@ -7,7 +7,8 @@
 <div ng-if="!(auth.isStudent() || auth.isParent())" layout="row" layout-sm="column" layout-xs="column">
     <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
       <label>{{'student.label' | translate}}</label>
-      <hois-value value="application.student.nameEt" href-value="'#/students/' + application.student.id + '/main'"></hois-value>
+      <hois-value ng-if="application.canViewStudent" value="application.student.nameEt" href-value="'#/students/' + application.student.id + '/main'"></hois-value>
+      <hois-value ng-if="!application.canViewStudent" value="application.student.nameEt"></hois-value>
     </md-input-container>
 </div>
 <div layout="row" layout-sm="column" layout-xs="column">

@@ -150,8 +150,8 @@ angular.module('hitsaOis')
         }
         $scope.record.$save(afterSend);
     };
-}]).controller('messageNewController', ['$scope', 'QueryUtils', '$route', 'message', '$location', 'ArrayUtils', '$resource', 'config', '$rootScope', '$q', '$translate', 
-function ($scope, QueryUtils, $route, message, $location, ArrayUtils, $resource, config, $rootScope, $q, $translate) {
+}]).controller('messageNewController', ['$scope', 'QueryUtils', '$route', 'message', 'ArrayUtils', '$resource', 'config', '$rootScope', '$q', '$translate', 
+function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $rootScope, $q, $translate) {
 
     var baseUrl = '/message';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -161,6 +161,8 @@ function ($scope, QueryUtils, $route, message, $location, ArrayUtils, $resource,
 
     if ($scope.auth.isAdmin()) {
         $scope.targetGroups = ['ROLL_O', 'ROLL_T', 'ROLL_L', 'ROLL_P'];
+    } else if ($scope.auth.isLeadingTeacher()) {
+        $scope.targetGroups = ['ROLL_T', 'ROLL_L'];
     } else if ($scope.auth.isTeacher()) {
         $scope.targetGroups = ['ROLL_T', 'ROLL_L'];
         $scope.groupSearchTypes = [{

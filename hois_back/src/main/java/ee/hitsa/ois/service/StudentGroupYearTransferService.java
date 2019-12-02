@@ -94,7 +94,7 @@ public class StudentGroupYearTransferService {
     private List<StudentGroupDto> searchGroups(Long schoolId, SearchCommand criteria, StudyYear studyYear) {
         List<?> result = em.createNativeQuery("select sg.id as group_id, sg.code as group_code, sg.course, sg.valid_thru"
                 + ", cv.code, c.name_" + (Language.EN.equals(criteria.getLang()) ? "en" : "et")
-                + ", (select count(*) from student where student_group_id = sg.id) as students"
+                + ", (select count(*) from student where student_group_id = sg.id) as students, sg.is_guest"
                 + " from student_group sg"
                 + " join curriculum c on c.id = sg.curriculum_id"
                 + " left join curriculum_version cv on cv.id = sg.curriculum_version_id"
@@ -119,6 +119,8 @@ public class StudentGroupYearTransferService {
             String curriculumVersionCode = resultAsString(r, 4);
             dto.setCurriculumName(curriculumVersionCode != null ? curriculumVersionCode : resultAsString(r, 5));
             dto.setRelatedStudents(resultAsLong(r, 6));
+            Boolean isGuest = JpaQueryUtil.resultAsBoolean(r, 7);
+            if (Boolean.TRUE.equals(isGuest)) dto.setTransfered(Boolean.TRUE);
             return dto;
         }, result);
     }

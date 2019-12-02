@@ -5,6 +5,7 @@ public class AnswersDto extends ResponseDto {
     private Boolean isTeacherComment;
     private Boolean isTeacherCommentVisible;
     private Boolean isStudentVisible;
+    private Boolean allTextFields = Boolean.FALSE;
     
     public Boolean getIsTeacherComment() {
         return isTeacherComment;
@@ -23,5 +24,11 @@ public class AnswersDto extends ResponseDto {
     }
     public void setIsStudentVisible(Boolean isStudentVisible) {
         this.isStudentVisible = isStudentVisible;
+    }
+    public Boolean getAllTextFields() {
+        return allTextFields;
+    }
+    public void setAllTextFields(Boolean allTextFields) {
+        this.allTextFields = allTextFields;
     }
 }

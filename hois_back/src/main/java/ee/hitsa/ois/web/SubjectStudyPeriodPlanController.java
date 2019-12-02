@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.SubjectStudyPeriodPlanService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -45,12 +47,14 @@ public class SubjectStudyPeriodPlanController {
 
     @GetMapping
     public Page<SubjectStudyPeriodPlanSearchDtoContainer> search(HoisUserDetails user, SubjectStudyPeriodPlanSearchCommand criteria, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KOORM);
         return subjectStudyPeriodPlanService.search(user.getSchoolId(), criteria, pageable);
     }
 
     @GetMapping("/{id:\\d+}")
     public SubjectStudyPeriodPlanDto get(HoisUserDetails user, @WithEntity SubjectStudyPeriodPlan plan) {
         UserUtil.assertSameSchool(user, plan.getSubject().getSchool());
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KOORM);
         return SubjectStudyPeriodPlanDto.of(plan);
     }
 
@@ -58,6 +62,7 @@ public class SubjectStudyPeriodPlanController {
     public SubjectStudyPeriodPlanDto create(HoisUserDetails user, @Valid @RequestBody SubjectStudyPeriodPlanDto form) {
         AssertionFailedException.throwIf(!user.isSchoolAdmin(),
                 "Only school administrator can save subjectStudyPeriodPlan");  
+        UserUtil.assertHasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KOORM);
         return get(user, subjectStudyPeriodPlanService.create(user.getSchoolId(), form));
     }
 
@@ -67,6 +72,7 @@ public class SubjectStudyPeriodPlanController {
             @Valid @RequestBody SubjectStudyPeriodPlanDto form) {
         AssertionFailedException.throwIf(!user.isSchoolAdmin(),
                 "Only school administrator can update subjectStudyPeriodPlan");  
+        UserUtil.assertHasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KOORM);
         return get(user, subjectStudyPeriodPlanService.save(user.getSchoolId(), subjectStudyPeriod, form));
     }
 
@@ -74,6 +80,7 @@ public class SubjectStudyPeriodPlanController {
     public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") SubjectStudyPeriodPlan plan, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         AssertionFailedException.throwIf(!user.isSchoolAdmin(),
                 "Only school administrator can delete subjectStudyPeriodPlan");  
+        UserUtil.assertHasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KOORM);
         subjectStudyPeriodPlanService.delete(user, plan);
     }
 

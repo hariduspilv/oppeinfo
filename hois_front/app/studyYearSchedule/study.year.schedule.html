@@ -21,8 +21,6 @@
   </table>
 </md-table-container>
 
-
-<!--FIXME: this form is slow in IE-->
 <div layout="column" layout-padding>
   <form name="studyYearScheduleForm">
     <div layout="column">
@@ -72,24 +70,17 @@
           </thead>
           <tbody ng-repeat="department in schoolDepartments | filter: filterSchoolDepartments">
             <tr>
-              <td colspan="3" colspan="{{weeks.length + 1}}" class="hois-collapse-header fixed-cell dividerBorder">{{currentLanguageNameField(department)}}</td>
+              <td colspan="3" class="hois-collapse-header fixed-cell dividerBorder">{{currentLanguageNameField(department)}}</td>
               <td colspan="53" class="dividerBorder" style="border-right: 1px solid #ccc !important;"></td>
             </tr>
             <tr class="dividerBorder" ng-repeat="sg in studentGroups | filter: filterStudentGroups(department)" ng-init="refreshHeight()">
-              <td colspan="3" class="schedule fixed-cell dividerBorder">{{sg.code}}</td>
-              <!--
-                                style="background: { getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color}"
-                                Was not used insted of ng-style as VS code marked curly braces as error(css property expected),
-                                though it did not cause an error on "grunt build" on local machine
-
-                                ng-if="!isPastStudyYear" was used, because in case of past study year, it should not become bold when clicked
-                            -->
-              <td ng-if="!isPastStudyYear" ng-repeat="week in weeks" ng-click="openAddScheduleDialog(sg, week, getSchedule(sg.id, week.weekNr))"
-                ng-style="{ background: true ? getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color : 'white', color: getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).brightText ? 'white' : 'black' }" title="{{getSchedule(sg.id, week.weekNr).addInfo}}">
+              <td colspan="3" class="schedule fixed-cell dividerBorder" ng-style="{ background: !sg.canEdit ? '#eee' : 'white' }">{{sg.code}}</td>
+              <td ng-if="!isPastStudyYear && sg.canEdit" ng-repeat="week in weeks" ng-click="openAddScheduleDialog(sg, week, getSchedule(sg.id, week.weekNr))"
+                ng-style="{ background: (sysl = getLegendById((schedule = getSchedule(sg.id, week.weekNr)).studyYearScheduleLegend)).color ? sysl.color : 'white', color: sysl.brightText ? 'white' : 'black' }" title="{{schedule.addInfo}}">
                 {{getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).code}}
               </td>
-              <td ng-if="isPastStudyYear" ng-repeat="week in weeks"
-                ng-style="{ background: true ? getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color : 'white', color: getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).brightText ? 'white' : 'black' }" title="{{getSchedule(sg.id, week.weekNr).addInfo}}">
+              <td ng-if="isPastStudyYear || !sg.canEdit" ng-repeat="week in weeks"
+                ng-style="{ background: (sysl = getLegendById((schedule = getSchedule(sg.id, week.weekNr)).studyYearScheduleLegend)).color ? sysl.color : '#eee', color: sysl.brightText ? 'white' : 'black' }" title="{{schedule.addInfo}}">
                 {{getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).code}}
               </td>
             </tr>

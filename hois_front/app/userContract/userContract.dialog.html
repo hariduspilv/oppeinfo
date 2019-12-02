@@ -1,0 +1,65 @@
+<md-dialog class="dialog-tos" aria-label="terms" ng-cloak>
+  <md-toolbar class="custom-toolbar">
+    <div class="md-toolbar-tools">
+      <div class="login" layout-align="end center" md-is-locked-open="$mdMedia('gt-xs')" layout="row" flex>
+        <div layout="column" layout-align="center center" class="user-section maxWidth-200">
+          <span ng-show="$root.state.currentUser">{{ $root.state.currentUser.fullname }}</span>
+          <md-select ng-show="$root.state.currentUser" ng-model="$root.state.userWorkplace" ng-change="changeUser();" aria-label="change user">
+            <md-option ng-repeat="user in $root.state.currentUser.users" value="{{user.id}}" style="font-size: medium;">
+              {{$root.currentLanguageNameField(user)}}
+            </md-option>
+          </md-select>
+        </div>
+        <div>
+          <md-button class="md-fab md-mini" ng-show="$root.state.currentUser" ng-click="logout()" aria-label="log out" md-colors="{background: 'primary-800'}">
+            <md-tooltip>
+              {{ 'main.logOut' | translate }}
+            </md-tooltip>
+            <md-icon md-colors="{color: 'grey-50'}">exit_to_app</md-icon>
+          </md-button>
+        </div>
+      </div>
+    </div>
+  </md-toolbar>
+  <md-dialog-content ng-cloak>
+    <div class="md-dialog-content">
+      <div>
+        <p style="margin: 0; text-align: left; white-space: pre-wrap; font-size: 14px;" ng-bind-html="contract.data | linky: '_blank'"></p>
+      </div>
+    </div>
+  </md-dialog-content>
+  <md-dialog-actions layout="column" layout-align="end start" style="min-height: 82px;">
+    <md-checkbox ng-model="agree" style="margin: 8px 0 0 8px; font-weight: 700;">{{'userContract.readAndAgree' | translate}}</md-checkbox>
+    <div layout="row" layout-align="start center">
+      <md-button ng-click="confirm()" class="md-primary md-raised">{{'main.button.confirm' | translate}}</md-button>
+      <md-button ng-click="cancel()" class="md-raised">{{'userContract.cancel' | translate}}</md-button>
+    </div>
+  </md-dialog-actions>
+</md-dialog>
+
+<style>
+  md-dialog.dialog-tos {
+    max-width: 100%;
+    max-height: 100%;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+
+  md-toolbar.custom-toolbar {
+    background: rgb(255, 255, 255);
+    fill: rgb(0, 0, 0);
+  }
+  
+  md-toolbar.custom-toolbar .md-toolbar-tools {
+    color: #151515 !important;
+  }
+
+  md-toolbar.custom-toolbar .md-toolbar-tools .title {
+    font-weight: 800;
+  }
+
+  md-toolbar.custom-toolbar .md-toolbar-tools .login {
+    font-size: small !important;
+  }
+</style>

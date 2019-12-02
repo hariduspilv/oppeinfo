@@ -11,10 +11,12 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 
@@ -40,6 +42,8 @@ public class Teacher extends BaseEntityWithId {
     private String untisCode;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier nativeLanguage;
+    @OneToOne(mappedBy = "teacher", fetch = FetchType.LAZY)
+    private User user;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private TeacherOccupation teacherOccupation;
@@ -150,6 +154,14 @@ public class Teacher extends BaseEntityWithId {
 
     public void setNativeLanguage(Classifier nativeLanguage) {
         this.nativeLanguage = nativeLanguage;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public TeacherOccupation getTeacherOccupation() {

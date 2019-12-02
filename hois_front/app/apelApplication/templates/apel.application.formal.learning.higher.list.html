@@ -37,7 +37,7 @@
         <td md-cell>{{currentLanguageNameField(row.subject)}} <span ng-if="row.code">({{row.code}})</span></td>
         <td md-cell>{{row.credits}}</td>
         <td md-cell>{{currentLanguageNameField(row.assessment)}}</td>
-        <td md-cell>{{auth.school.letterGrades ? row.grade.value2 : row.grade.value}}</td>
+        <td md-cell>{{row.grade | hoisHigherGrade: auth.school.letterGrades}}</td>
         <td md-cell>{{row.gradeDate | hoisDate}}</td>
         <td md-cell>{{row.teachers}}</td>
         <td md-cell>

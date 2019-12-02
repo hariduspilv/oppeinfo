@@ -47,14 +47,14 @@ public class StudentGroupController {
     @GetMapping
     public Page<StudentGroupSearchDto> search(HoisUserDetails user, @Valid StudentGroupSearchCommand criteria, Pageable pageable) {
         // school admin or teacher
-        if(user.isTeacher()) {
+        if (user.isTeacher()) {
             // TODO change frontend, make message compose form to use endpoint /autocomplete/studentgroups
             // message receivers
             criteria.setTeacher(new EntityConnectionCommand(user.getTeacherId()));
-        } else if(!user.isSchoolAdmin()) {
+        } else if(!user.isSchoolAdmin() && !user.isLeadingTeacher()) {
             throw new AssertionFailedException("User cannot search student groups");
         }
-        return studentGroupService.search(user.getSchoolId(), criteria, pageable);
+        return studentGroupService.search(user, criteria, pageable);
     }
 
     @GetMapping("/{id:\\d+}")
@@ -98,11 +98,13 @@ public class StudentGroupController {
     @GetMapping("/findstudents")
     public List<StudentGroupStudentDto> searchStudents(HoisUserDetails user, @Valid StudentGroupSearchStudentsCommand criteria) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPERYHM);
-        return studentGroupService.searchStudents(user.getSchoolId(), criteria);
+        return criteria.getIsGuest() != null && criteria.getIsGuest().booleanValue() ? studentGroupService.searchGuestStudents(user.getSchoolId(), criteria) : 
+            studentGroupService.searchStudents(user.getSchoolId(), criteria);
     }
     
     private static boolean canView(HoisUserDetails user, StudentGroup group) {
-        if (UserUtil.isSchoolAdmin(user, group.getSchool())) {
+        if (UserUtil.isSchoolAdmin(user, group.getSchool())
+                || UserUtil.isLeadingTeacher(user, group.getCurriculum())) {
             return true;
         }
         if (user.isStudent()) {

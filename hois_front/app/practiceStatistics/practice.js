@@ -1,8 +1,10 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeStudentListController', function ($scope, $route, QueryUtils, Classifier, $q, $localStorage) {
-    $scope.currentNavItem = 'practice.students';    
+angular.module('hitsaOis').controller('PracticeStudentListController', function ($localStorage, $route, $scope, $q, USER_ROLES, AuthService, Classifier, QueryUtils) {
+    $scope.currentNavItem = 'practice.students';
     $scope.auth = $route.current.locals.auth;
+    $scope.canView = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LEPING);
+
     var clMapper = Classifier.valuemapper({
         status: 'LEPING_STAATUS'
     });
@@ -20,9 +22,11 @@ angular.module('hitsaOis').controller('PracticeStudentListController', function 
     QueryUtils.createQueryForm($scope, '/practiceEnterprise/studentStatistics', {}, clMapper.objectmapper);
     $q.all(clMapper.promises).then($scope.loadData);
 
-}).controller('PracticeContractListController', function ($scope, $route, QueryUtils, Classifier, $q, $localStorage) {
-    $scope.currentNavItem = 'practice.contracts';    
+}).controller('PracticeContractListController', function ($localStorage, $route, $scope, $q, USER_ROLES, AuthService, Classifier, QueryUtils) {
+    $scope.currentNavItem = 'practice.contracts';
     $scope.auth = $route.current.locals.auth;
+    $scope.canView = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_LEPING);
+
     var clMapper = Classifier.valuemapper({
         cancelCode: 'LEPING_TYH_POHJUS'
     });
@@ -34,8 +38,8 @@ angular.module('hitsaOis').controller('PracticeStudentListController', function 
     QueryUtils.createQueryForm($scope, '/practiceEnterprise/contractStatistics', {}, clMapper.objectmapper);
     $q.all(clMapper.promises).then($scope.loadData);
 
-}).controller('PracticeStudyYearListController', function ($scope, $route, QueryUtils, Classifier, $q, $localStorage) {
-    $scope.currentNavItem = 'practice.studyYear';    
+}).controller('PracticeStudyYearListController', function ($localStorage, $route, $scope, $q, Classifier, QueryUtils) {
+    $scope.currentNavItem = 'practice.studyYear';
     $scope.auth = $route.current.locals.auth;
     var clMapper = Classifier.valuemapper({
         status: 'LEPING_STAATUS'

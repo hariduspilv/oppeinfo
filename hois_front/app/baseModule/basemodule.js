@@ -11,7 +11,7 @@ function ($scope, QueryUtils, $route, USER_ROLES, AuthService) {
     var autocompleteCurriculumVersion = QueryUtils.endpoint("/autocomplete/curriculumversions");
 
     $scope.formState = {
-        canCreate: $scope.auth.isAdmin() && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_BAASMOODUL)
+        canCreate: ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher()) && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_BAASMOODUL)
     };
 
     $scope.clearFields = function() {

@@ -87,26 +87,28 @@ public class MoodleService {
         List<Person> students = StreamUtil.toMappedList(js -> js.getStudent().getPerson(), 
                 journal.getJournalStudents().stream()
                     .filter(js -> !Boolean.TRUE.equals(js.getIsMoodleRegistered())));
-        Map<String, JournalStudent> studentMap = getMoodleMappedStudents(journal);
+        EnrollResult result = new EnrollResult();
+        Map<String, JournalStudent> studentMap = getMoodleMappedStudents(journal, result);
         return moodleEnrollStudents(context, students, journal.getMoodleCourseId(), 
                 getTeachersIdcodes(journal), 
                 enrolled -> enrolled.forEach(idcode -> studentMap.get(idcode).setIsMoodleRegistered(Boolean.TRUE)), 
-                idcode -> studentMap.get(idcode).getStudent().getPerson());
+                idcode -> studentMap.get(idcode).getStudent().getPerson(), result);
     }
 
     public EnrollResult moodleEnrollStudents(MoodleContext context, SubjectStudyPeriod subjectStudyPeriod) {
         List<Person> students = StreamUtil.toMappedList(ds -> ds.getDeclaration().getStudent().getPerson(), 
                 subjectStudyPeriod.getDeclarationSubjects().stream()
                     .filter(ds -> !Boolean.TRUE.equals(ds.getIsMoodleRegistered())));
-        Map<String, DeclarationSubject> studentMap = getMoodleMappedStudents(subjectStudyPeriod);
+        EnrollResult result = new EnrollResult();
+        Map<String, DeclarationSubject> studentMap = getMoodleMappedStudents(subjectStudyPeriod, result);
         return moodleEnrollStudents(context, students, subjectStudyPeriod.getMoodleCourseId(), 
                 getTeachersIdcodes(subjectStudyPeriod), 
                 enrolled -> enrolled.forEach(idcode -> studentMap.get(idcode).setIsMoodleRegistered(Boolean.TRUE)), 
-                idcode -> studentMap.get(idcode).getDeclaration().getStudent().getPerson());
+                idcode -> studentMap.get(idcode).getDeclaration().getStudent().getPerson(), result);
     }
 
     private EnrollResult moodleEnrollStudents(MoodleContext context, List<Person> students, Long courseId, 
-            List<String> academicianIds, Consumer<Stream<String>> registered, Function<String, Person> idcodeToPerson) {
+            List<String> academicianIds, Consumer<Stream<String>> registered, Function<String, Person> idcodeToPerson, EnrollResult result) {
         List<String> studentIds = StreamUtil.toMappedList(p -> p.getIdcode(), 
                 students.stream()
                     .filter(p -> p.getIdcode() != null));
@@ -118,7 +120,6 @@ public class MoodleService {
                     courseId, academicianIds, studentIds);
             EntityUtil.setUsername(context.getUser().getUsername(), em);
             registered.accept(Stream.concat(response.getEnrolled().stream(), response.getExists().stream()));
-            EnrollResult result = new EnrollResult();
             result.setEnrolled(Integer.valueOf(response.getEnrolled().size()));
             result.setFailed(StreamUtil.toMappedList(
                     u -> PersonUtil.fullname(idcodeToPerson.apply(u)), 
@@ -126,9 +127,6 @@ public class MoodleService {
             result.setMissingUser(StreamUtil.toMappedList(
                     u -> PersonUtil.fullname(idcodeToPerson.apply(u)), 
                     response.getMissingUser()));
-            result.setMissingIdcode(StreamUtil.toMappedList(p -> PersonUtil.fullname(p), 
-                    students.stream()
-                        .filter(p -> p.getIdcode() == null)));
             return result;
         });
     }
@@ -233,7 +231,7 @@ public class MoodleService {
         }
         List<String> academicianIds = getTeachersIdcodes(journal);
         Map<Long, JournalEntry> entryMap = getMoodleMappedEntries(journal);
-        Map<String, JournalStudent> studentMap = getMoodleMappedStudents(journal);
+        Map<String, JournalStudent> studentMap = getMoodleMappedStudents(journal, new EnrollResult());
         Map<Long, Map<String, JournalEntryStudent>> entryStudentMap = getMoodleMappedEntriesStudents(journal);
         withResponse(context, () -> {
             Map<Long, List<Grade>> grades = client.getGradesByItemId(properties, context.getLog(), getIdcode(context), 
@@ -300,7 +298,7 @@ public class MoodleService {
         withResponse(context, () -> {
             List<String> academicianIds = getTeachersIdcodes(subjectStudyPeriod);
             Map<Long, MidtermTask> taskMap = getMoodleMappedTasks(subjectStudyPeriod);
-            Map<String, DeclarationSubject> studentMap = getMoodleMappedStudents(subjectStudyPeriod);
+            Map<String, DeclarationSubject> studentMap = getMoodleMappedStudents(subjectStudyPeriod, new EnrollResult());
             Map<Long, Map<String, MidtermTaskStudentResult>> entryStudentMap = getMoodleMappedEntriesStudents(subjectStudyPeriod);
             Map<Long, List<Grade>> grades = client.getGradesByItemId(properties, context.getLog(), 
                     getIdcode(context), subjectStudyPeriod.getMoodleCourseId(), academicianIds,
@@ -367,15 +365,33 @@ public class MoodleService {
                 subjectStudyPeriod.getMidtermTasks().stream().filter(mt -> mt.getMoodleGradeItemId() != null));
     }
 
-    private static Map<String, JournalStudent> getMoodleMappedStudents(Journal journal) {
+    /**
+     * Should only get and send Persons with existing id codes
+     * @param subjectStudyPeriod
+     * @return
+     */
+    private static Map<String, JournalStudent> getMoodleMappedStudents(Journal journal, EnrollResult result) {
         return StreamUtil.toMap(js -> js.getStudent().getPerson().getIdcode(), 
                 journal.getJournalStudents().stream()
-                    .filter(js -> js.getStudent().getPerson().getIdcode() != null));
+                    .filter(js -> {
+                        boolean hasIdCode = js.getStudent().getPerson().getIdcode() != null;
+                        if (!hasIdCode) result.getMissingIdcode().add(PersonUtil.fullname(js.getStudent().getPerson()));
+                        return hasIdCode;
+                    }));
     }
-
-    private static Map<String, DeclarationSubject> getMoodleMappedStudents(SubjectStudyPeriod subjectStudyPeriod) {
+    
+    /**
+     * Should only get and send Persons with existing id codes
+     * @param subjectStudyPeriod
+     * @return
+     */
+    private static Map<String, DeclarationSubject> getMoodleMappedStudents(SubjectStudyPeriod subjectStudyPeriod, EnrollResult result) {
         return StreamUtil.toMap(js -> js.getDeclaration().getStudent().getPerson().getIdcode(), 
-                subjectStudyPeriod.getDeclarationSubjects());
+                subjectStudyPeriod.getDeclarationSubjects().stream().filter(js-> {
+                    boolean hasIdCode = js.getDeclaration().getStudent().getPerson().getIdcode() != null;
+                    if (!hasIdCode) result.getMissingIdcode().add(PersonUtil.fullname(js.getDeclaration().getStudent().getPerson()));
+                    return hasIdCode;
+                }));
     }
 
     private static Map<Long, Map<String, JournalEntryStudent>> getMoodleMappedEntriesStudents(Journal journal) {

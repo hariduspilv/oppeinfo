@@ -2,22 +2,26 @@ package ee.hitsa.ois.util;
 
 import java.time.LocalDate;
 import java.util.EnumMap;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.application.Application;
-import ee.hitsa.ois.domain.basemodule.BaseModule;
+import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.domain.student.StudentSupportService;
+import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.DirectiveStatus;
@@ -25,9 +29,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.Role;
-import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.validation.ValidationFailedException;
 
 public abstract class UserUtil {
 
@@ -107,21 +109,29 @@ public abstract class UserUtil {
 
     public static boolean canViewStudent(HoisUserDetails user, Student student) {
         return isSchoolAdmin(user, student.getSchool()) || isStudent(user, student)
-                || isActiveStudentRepresentative(user, student) || isTeacher(user, student.getSchool());
+                || isActiveStudentRepresentative(user, student) || isTeacher(user, student.getSchool())
+                || isLeadingTeacher(user, student);
     }
 
     public static boolean canViewStudentSpecificData(HoisUserDetails user, Student student) {
         return isSchoolAdmin(user, student.getSchool()) || isStudent(user, student)
-                || isActiveStudentRepresentative(user, student) || isStudentGroupTeacher(user, student);
+                || isActiveStudentRepresentative(user, student) || isStudentGroupTeacher(user, student)
+                || isLeadingTeacher(user, student);
     }
 
     public static boolean canEditStudent(HoisUserDetails user, Student student) {
-        return ((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
-                || (isStudentGroupTeacher(user, student) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
-                || isAdultStudent(user, student) || isActiveStudentRepresentative(user, student))
-                && StudentUtil.canBeEdited(student);
+        if (StudentUtil.canBeEdited(student)) {
+            if (isAdultStudent(user, student) || isActiveStudentRepresentative(user, student)) {
+                return true;
+            }
+            if (isSchoolAdmin(user, student.getSchool()) || isStudentGroupTeacher(user, student)
+                    || isLeadingTeacher(user, student)) {
+                return hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR);
+            }
+        }
+        return false;
     }
-    
+
     public static boolean canUpdateStudentRR(HoisUserDetails user, Student student) {
         return StudentUtil.isActive(student) && (
                 (isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_RR)) ||
@@ -159,7 +169,9 @@ public abstract class UserUtil {
 
 
     public static boolean canEditStudentSupportServices(HoisUserDetails user, Student student) {
-        return UserUtil.isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_TUGITEENUS) && StudentUtil.canBeEdited(student);
+        return isSchoolAdmin(user, student.getSchool())
+                && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_TUGITEENUS)
+                && StudentUtil.canBeEdited(student);
     }
 
     /**
@@ -170,10 +182,16 @@ public abstract class UserUtil {
      * @return
      */
     public static boolean canAddStudentRepresentative(HoisUserDetails user, Student student) {
-        return ((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
-                || (isStudentGroupTeacher(user, student) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
-                || isAdultStudent(user, student))
-                && StudentUtil.canBeEdited(student);
+        if (StudentUtil.canBeEdited(student)) {
+            if (isAdultStudent(user, student)) {
+                return true;
+            }
+            if (isSchoolAdmin(user, student.getSchool()) || isStudentGroupTeacher(user, student)
+                    || isLeadingTeacher(user, student)) {
+                return hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR);
+            }
+        }
+        return false;
     }
 
     /**
@@ -185,11 +203,14 @@ public abstract class UserUtil {
      */
     public static boolean canEditStudentRepresentative(HoisUserDetails user, StudentRepresentative representative) {
         Student student = representative.getStudent();
-        if (((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
-                || (isStudentGroupTeacher(user, student) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
-                || isAdultStudent(user, student))
-                && StudentUtil.canBeEdited(student)) {
-            return true;
+        if (StudentUtil.canBeEdited(student)) {
+            if (isAdultStudent(user, student)) {
+                return true;
+            }
+            if (isSchoolAdmin(user, student.getSchool()) || isStudentGroupTeacher(user, student)
+                    || isLeadingTeacher(user, student)) {
+                return hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR);
+            }
         }
         // representative can edit it's own record even if student's data is not visible to him/her
         return user.isRepresentative() && EntityUtil.getId(representative.getPerson()).equals(user.getPersonId());
@@ -204,30 +225,30 @@ public abstract class UserUtil {
      */
     public static boolean canDeleteStudentRepresentative(HoisUserDetails user, StudentRepresentative representative) {
         Student student = representative.getStudent();
-        if (((isSchoolAdmin(user, student.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
-                || (isStudentGroupTeacher(user, student) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR))
-                || isAdultStudent(user, student))
-                && StudentUtil.canBeEdited(student)) {
-            return true;
+        if (StudentUtil.canBeEdited(student)) {
+            if (isAdultStudent(user, student)) {
+                return true;
+            }
+            if (isSchoolAdmin(user, student.getSchool()) || isStudentGroupTeacher(user, student)
+                    || isLeadingTeacher(user, student)) {
+                return hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR);
+            }
         }
         return false;
     }
 
-    public static boolean canViewBaseModule(HoisUserDetails user) {
-        return hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_BAASMOODUL);
+    /**
+     * Can given user change given student modules?
+     *
+     * @param user
+     * @param student
+     * @return
+     */
+    public static boolean canChangeStudentModules(HoisUserDetails user, Student student) {
+        return StudentUtil.isActive(student) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)
+                && (isSchoolAdmin(user, student.getSchool())
+                        || isLeadingTeacher(user, student));
     }
-    
-    public static boolean canEditBaseModule(HoisUserDetails user) {
-        return hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_BAASMOODUL);
-    }
-    
-    public static boolean canDeleteBaseModule(HoisUserDetails user, BaseModule module) {
-        if (hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_BAASMOODUL) && module.getCurriculumModules().isEmpty()) {
-            return true;
-        }
-        return false;
-    }
-    
 
     /**
      * Is given user admin of given school?
@@ -238,6 +259,15 @@ public abstract class UserUtil {
      */
     public static boolean isSchoolAdmin(HoisUserDetails user, School school) {
         return user.isSchoolAdmin() && EntityUtil.getId(school).equals(user.getSchoolId());
+    }
+
+    public static boolean isSchoolAdminOrLeadingTeacher(HoisUserDetails user, School school) {
+        return isSchoolAdmin(user, school) || isLeadingTeacher(user, school);
+    }
+
+    public static boolean isSchoolAdminOrLeadingTeacher(HoisUserDetails user, StudentGroup studentGroup) {
+        return isSchoolAdmin(user, studentGroup.getSchool())
+                || isLeadingTeacher(user, studentGroup.getCurriculum());
     }
 
     public static boolean isStudent(HoisUserDetails user, School school) {
@@ -319,6 +349,44 @@ public abstract class UserUtil {
         return user.isTeacher() && EntityUtil.getId(school).equals(user.getSchoolId());
     }
 
+    public static boolean isLeadingTeacher(HoisUserDetails user, School school) {
+        return user.isLeadingTeacher() && EntityUtil.getId(school).equals(user.getSchoolId());
+    }
+
+    public static boolean isLeadingTeacher(HoisUserDetails user, Student student) {
+        if (student.getCurriculumVersion() == null) return false;
+        return isLeadingTeacher(user, EntityUtil.getId(student.getCurriculumVersion().getCurriculum()));
+    }
+
+    public static boolean isLeadingTeacher(HoisUserDetails user, Subject subject) {
+        Set<Long> subjectCurriculumIds = subject.getCurriculumVersionHigherModuleSubjects().stream()
+                .map(s -> EntityUtil.getId(s.getModule().getCurriculumVersion().getCurriculum()))
+                .collect(Collectors.toSet());
+        return isLeadingTeacher(user, subjectCurriculumIds);
+    }
+
+    public static boolean isLeadingTeacher(HoisUserDetails user, Journal journal) {
+        Set<Long> journalCurriculumIds = journal
+                .getJournalOccupationModuleThemes().stream().map(jot -> EntityUtil.getId(jot
+                        .getCurriculumVersionOccupationModuleTheme().getModule().getCurriculumModule().getCurriculum()))
+                .collect(Collectors.toSet());
+        return UserUtil.isLeadingTeacher(user, journalCurriculumIds);
+    }
+
+    public static boolean isLeadingTeacher(HoisUserDetails user, Long curriculumId) {
+        return user.isLeadingTeacher() && user.getCurriculumIds().stream().anyMatch(c -> c.equals(curriculumId));
+    }
+    
+    public static boolean isLeadingTeacher(HoisUserDetails user, Curriculum curriculum) {
+        if (curriculum == null) return false;
+        return isLeadingTeacher(user, EntityUtil.getId(curriculum));
+    }
+
+
+    public static boolean isLeadingTeacher(HoisUserDetails user, Set<Long> curriculumIds) {
+        return user.isLeadingTeacher() && user.getCurriculumIds().stream().anyMatch(c -> curriculumIds.contains(c));
+    }
+
     public static boolean isSchoolAdminOrStudent(HoisUserDetails user, School school) {
         return isSchoolAdmin(user, school) || isStudent(user, school);
     }
@@ -335,49 +403,123 @@ public abstract class UserUtil {
 
     public static void assertSameSchool(HoisUserDetails user, School school) {
         Long schoolId = user.getSchoolId();
-        AssertionFailedException.throwIf(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(school)), "School mismatch");
+        throwAccessDeniedIf(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(school)), "School mismatch");
     }
-    
+
     public static void assertSameSchoolOrIsMainAdminOrExternalExpert(HoisUserDetails user, School school) {
         Long schoolId = user.getSchoolId();
-        AssertionFailedException.throwIf(!isMainAdminOrExternalExpert(user)
+        throwAccessDeniedIf(!isMainAdminOrExternalExpert(user)
                 && (schoolId == null || !schoolId.equals(EntityUtil.getNullableId(school))), "School mismatch");
     }
 
     public static void assertIsMainAdminOrSchoolAdmin(HoisUserDetails user) {
-        AssertionFailedException.throwIf(!user.isMainAdmin() && !user.isSchoolAdmin(), "User is not admin");
+        throwAccessDeniedIf(!user.isMainAdmin() && !user.isSchoolAdmin(), "User is not admin");
+    }
+
+    public static void assertIsMainAdminOrSchoolAdminOrLeadingTeacher(HoisUserDetails user) {
+        throwAccessDeniedIf(!user.isMainAdmin() && !user.isSchoolAdmin() && !user.isLeadingTeacher(),
+                "User is not admin or leading teacher");
     }
 
     public static void assertIsSchoolAdmin(HoisUserDetails user) {
-        AssertionFailedException.throwIf(!user.isSchoolAdmin(), "User is not school admin");
+        throwAccessDeniedIf(!user.isSchoolAdmin(), "User is not school admin");
     }
 
     public static void assertIsSchoolAdmin(HoisUserDetails user, Permission permission, PermissionObject object) {
         throwAccessDeniedIf(!user.isSchoolAdmin() || !hasPermission(user, permission, object), "User is not school admin or has no rights");
     }
 
+    public static void assertIsSchoolAdmin(HoisUserDetails user, School school, Permission permission, PermissionObject object) {
+        throwAccessDeniedIf(!isSchoolAdmin(user, school) || !hasPermission(user, permission, object), "User is not school admin in given school or has no rights");
+    }
+
     public static void assertIsMainAdmin(HoisUserDetails user) {
-        AssertionFailedException.throwIf(!user.isMainAdmin(), "User is not main admin");
+        throwAccessDeniedIf(!user.isMainAdmin(), "User is not main admin");
     }
 
     public static void assertIsSchoolAdmin(HoisUserDetails user, School school) {
-        AssertionFailedException.throwIf(!isSchoolAdmin(user, school), "User is not school admin in given school");
+        throwAccessDeniedIf(!isSchoolAdmin(user, school), "User is not school admin in given school");
     }
 
     public static void assertHasPermission(HoisUserDetails user, Permission permission, PermissionObject object) {
         throwAccessDeniedIf(!hasPermission(user, permission, object), "User has no rights");
     }
 
-    public static void assertIsSchoolAdmin(HoisUserDetails user, School school, Permission permission, PermissionObject object) {
-        throwAccessDeniedIf(!isSchoolAdmin(user, school) || !hasPermission(user, permission, object), "User is not school admin in given school or has no rights");
+    public static void assertIsSchoolAdminOrLeadingTeacher(HoisUserDetails user) {
+        throwAccessDeniedIf(!user.isSchoolAdmin() && !user.isLeadingTeacher(),
+                "User is not school admin or leading teacher");
+    }
+
+    public static void assertIsSchoolAdminOrLeadingTeacher(HoisUserDetails user, School school) {
+        throwAccessDeniedIf(!isSchoolAdminOrLeadingTeacher(user, school),
+                "User is not school admin in given school or student's curriculum leading teacher");
+    }
+
+    public static void assertIsSchoolAdminOrLeadingTeacher(HoisUserDetails user, StudentGroup studentGroup) {
+        throwAccessDeniedIf(!isSchoolAdminOrLeadingTeacher(user, studentGroup),
+                "User is not school admin in given school or student's curriculum leading teacher");
+    }
+
+    public static void assertIsSchoolAdminOrLeadingTeacher(HoisUserDetails user, Permission permission, PermissionObject object) {
+        throwAccessDeniedIf(!(user.isSchoolAdmin() || user.isLeadingTeacher()) || !hasPermission(user, permission, object),
+                "User is not school admin or leading teacher or has no rights");
+    }
+
+    public static void assertIsSchoolAdminOrLeadingTeacherOrTeacher(HoisUserDetails user) {
+        throwAccessDeniedIf(!user.isSchoolAdmin() && !user.isLeadingTeacher() && !user.isTeacher(),
+                "User is not school admin or leading teacher or teacher");
+    }
+
+    public static void assertIsSchoolAdminOrLeadingTeacherOrTeacher(HoisUserDetails user, Student student) {
+        throwAccessDeniedIf(!isSchoolAdmin(user, student.getSchool())
+                && !isLeadingTeacher(user, student)
+                && !isTeacher(user, student.getSchool()),
+                "User is not school admin in given school or student's curriculum leading teacher or teacher");
+    }
+
+    public static void assertIsSchoolAdminOrLeadingTeacherOrTeacher(HoisUserDetails user, Curriculum curriculum) {
+        throwAccessDeniedIf(!isSchoolAdmin(user, curriculum.getSchool())
+                && !isLeadingTeacher(user, EntityUtil.getId(curriculum))
+                && !isTeacher(user, curriculum.getSchool()),
+                "User is not school admin in given school or student's curriculum leading teacher or teacher");
+    }
+
+    public static void assertIsSchoolAdminOrLeadingTeacher(HoisUserDetails user, School school, Permission permission,
+            PermissionObject object) {
+        throwAccessDeniedIf(!(isSchoolAdmin(user, school) || isLeadingTeacher(user, school)) || !hasPermission(user, permission, object),
+                "User is not school admin in given school or has no rights");
+    }
+
+    public static void assertIsSchoolAdminOrLeadingTeacher(HoisUserDetails user, Student student, Permission permission,
+            PermissionObject object) {
+        throwAccessDeniedIf(!(isSchoolAdmin(user, student.getSchool())
+                        || isLeadingTeacher(user, student))
+                        || !hasPermission(user, permission, object),
+                "User is not school admin in given school or student's curriculum leading teacher or has no rights");
+    }
+
+    public static void assertIsSchoolAdminOrLeadingTeacherOrStudentOrRepresentative(HoisUserDetails user) {
+        throwAccessDeniedIf(!user.isSchoolAdmin() && !user.isLeadingTeacher() && !user.isStudent() && !user.isRepresentative(),
+                "User is not school admin, leading teacher, student, or student representative");
+    }
+
+    public static void assertIsSchoolAdminOrLeadingTeacherOrStudentGroupTeacher(HoisUserDetails user, Student student) {
+        throwAccessDeniedIf(!isSchoolAdmin(user, student.getSchool()) 
+                && !isLeadingTeacher(user, student)
+                && !isStudentGroupTeacher(user, student),
+                "User is not school admin or student's curriculum leading teacher or student group teacher");
     }
 
     public static void assertIsSchoolAdminOrTeacher(HoisUserDetails user) {
-        AssertionFailedException.throwIf(!user.isSchoolAdmin() && !user.isTeacher(), "User is not school admin or teacher");
+        throwAccessDeniedIf(!user.isSchoolAdmin() && !user.isTeacher(), "User is not school admin or teacher");
     }
 
     public static void assertIsSchoolAdminOrTeacher(HoisUserDetails user, School school) {
-        AssertionFailedException.throwIf(!isSchoolAdmin(user, school) && !isTeacher(user, school), "User is not school admin or teacher in given school");
+        throwAccessDeniedIf(!isSchoolAdmin(user, school) && !isTeacher(user, school), "User is not school admin or teacher in given school");
+    }
+
+    public static void assertIsLeadingTeacher(HoisUserDetails user, School school) {
+        throwAccessDeniedIf(!isLeadingTeacher(user, school), "User is not school admin");
     }
 
     public static void assertIsTeacher(HoisUserDetails user) {
@@ -389,80 +531,82 @@ public abstract class UserUtil {
     }
 
     public static void assertCanUpdateUser(String role) {
-        AssertionFailedException.throwIf(role.equals(Role.ROLL_T.name()) || role.equals(Role.ROLL_L.name()),"Invalid role");
+        throwAccessDeniedIf(role.equals(Role.ROLL_T.name()) || role.equals(Role.ROLL_L.name()),"Invalid role");
     }
 
     public static void assertUserBelongsToPerson(User user, Person person) {
-        AssertionFailedException.throwIf(!EntityUtil.getId(person).equals(EntityUtil.getId(user.getPerson())), "Person and user don't match");
+        throwAccessDeniedIf(!EntityUtil.getId(person).equals(EntityUtil.getId(user.getPerson())), "Person and user don't match");
     }
 
     public static void assertIsPerson(HoisUserDetails user, Person person) {
-        AssertionFailedException.throwIf(!user.getPersonId().equals(EntityUtil.getNullableId(person)), "Person and user don't match");
+        throwAccessDeniedIf(!user.getPersonId().equals(EntityUtil.getNullableId(person)), "Person and user don't match");
     }
 
     public static void assertIsStudent(HoisUserDetails user) {
-        AssertionFailedException.throwIf(!user.isStudent(), "User is not school student");
+        throwAccessDeniedIf(!user.isStudent(), "User is not school student");
     }
     
     public static void assertIsStudent(HoisUserDetails user, Student student) {
-        AssertionFailedException.throwIf(!isStudent(user, student), "main.messages.error.nopermission");
+        throwAccessDeniedIf(!isStudent(user, student), "main.messages.error.nopermission");
     }
 
     public static void assertIsSchoolAdminOrStudent(HoisUserDetails user, School school) {
-        AssertionFailedException.throwIf(!isSchoolAdminOrStudent(user, school), "User is not school admin or student in given school");
+        throwAccessDeniedIf(!isSchoolAdminOrStudent(user, school), "User is not school admin or student in given school");
     }
 
     public static void assertIsSchoolAdminOrStudent(HoisUserDetails user) {
-        AssertionFailedException.throwIf(!user.isSchoolAdmin() && !user.isStudent(), "User is not school admin or student");
+        throwAccessDeniedIf(!user.isSchoolAdmin() && !user.isStudent(), "User is not school admin or student");
     }
 
     public static void assertIsSchoolAdminOrStudentOrRepresentative(HoisUserDetails user) {
-        AssertionFailedException.throwIf(!user.isSchoolAdmin() && !user.isStudent() && !user.isRepresentative(),
+        throwAccessDeniedIf(!user.isSchoolAdmin() && !user.isStudent() && !user.isRepresentative(),
                 "User is not school admin, student, or student representative");
     }
 
     public static void assertIsSchoolAdminOrStudentGroupTeacher(HoisUserDetails user, StudentGroup studentGroup) {
-        AssertionFailedException.throwIf(!isSchoolAdmin(user, studentGroup.getSchool()) && !isStudentGroupTeacher(user, studentGroup),
+        throwAccessDeniedIf(!isSchoolAdmin(user, studentGroup.getSchool()) && !isStudentGroupTeacher(user, studentGroup),
                 "User is not school admin or student group teacher");
     }
 
     public static void assertIsSchoolAdminOrStudentGroupTeacher(HoisUserDetails user, Student student) {
-        AssertionFailedException.throwIf(!isSchoolAdmin(user, student.getSchool()) && !UserUtil.isStudentGroupTeacher(user, student),
+        throwAccessDeniedIf(!isSchoolAdmin(user, student.getSchool()) && !isStudentGroupTeacher(user, student),
                 "User is not school admin or student group teacher");
     }
-    
+
     public static void assertIsSchoolWithoutEkis(School school) {
-        AssertionFailedException.throwIf(school.getIsWithoutEkis() == null || !school.getIsWithoutEkis().booleanValue(), 
+        throwAccessDeniedIf(school.getIsWithoutEkis() == null || !school.getIsWithoutEkis().booleanValue(), 
                 "School should not be using ekis");
     }
 
     public static void assertCanViewStudent(HoisUserDetails user, Student student) {
-        AssertionFailedException.throwIf(!canViewStudent(user, student),
+        throwAccessDeniedIf(!canViewStudent(user, student),
                 "User is not allowed to see student's information");
     }
 
     public static void assertCanViewStudentSpecificData(HoisUserDetails user, Student student) {
-        AssertionFailedException.throwIf(!canViewStudentSpecificData(user, student),
+        throwAccessDeniedIf(!canViewStudentSpecificData(user, student),
                 "User is not allowed to see student's specific information");
     }
-    
+
     public static void assertCanUpdateStudentRR(HoisUserDetails user, Student student) {
-        ValidationFailedException.throwIf(!canUpdateStudentRR(user, student), "main.messages.error.nopermission");
+        throwAccessDeniedIf(!canUpdateStudentRR(user, student), "main.messages.error.nopermission");
     }
 
     public static void assertCanViewStudentSupportServices(HoisUserDetails user, Student student) {
-        ValidationFailedException.throwIf(!canViewStudentSupportServices(user, student), "main.messages.error.nopermission");
-    }
-    
-    public static void assertCanViewPrivateStudentSupportServices(HoisUserDetails user, Student student) {
-        ValidationFailedException.throwIf(!canViewPrivateStudentSupportServices(user, student), "main.messages.error.nopermission");
+        throwAccessDeniedIf(!canViewStudentSupportServices(user, student), "main.messages.error.nopermission");
     }
 
-    public static void assertCanViewStudentSupportServices(HoisUserDetails user, Student student, StudentSupportService service) {
-        ValidationFailedException.throwIf(!canViewStudentSupportServices(user, student, service), "main.messages.error.nopermission");
+    public static void assertCanViewPrivateStudentSupportServices(HoisUserDetails user, Student student) {
+        throwAccessDeniedIf(!canViewPrivateStudentSupportServices(user, student), "main.messages.error.nopermission");
     }
+
+    public static void assertCanViewStudentSupportServices(HoisUserDetails user, Student student,
+            StudentSupportService service) {
+        throwAccessDeniedIf(!canViewStudentSupportServices(user, student, service), "main.messages.error.nopermission");
+    }
+
     public static void assertCanEditStudentSupportServices(HoisUserDetails user, Student student) {
-        ValidationFailedException.throwIf(!canEditStudentSupportServices(user, student), "main.messages.error.nopermission");
+        throwAccessDeniedIf(!canEditStudentSupportServices(user, student), "main.messages.error.nopermission");
     }
 
     private static String roleName(Permission permission, PermissionObject object) {

@@ -35,6 +35,7 @@
         rooms: event.rooms,
         id: event.id,
         maxEl: 1,
+        person: event.person,
         teachers: event.teachers,
         studentGroups: event.studentGroups,
         public: event.publicEvent,
@@ -208,12 +209,20 @@
     function ($location, $route, $scope, $q, Classifier, GeneralTimetableUtils, QueryUtils) {
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.auth = $route.current.locals.auth;
-      $scope.schoolId = $route.current.params.schoolId ? parseInt($route.current.params.schoolId, 10) : $scope.auth.school.id;
+
+      if ($route.current.params.schoolId) {
+        $scope.schoolId = parseInt($route.current.params.schoolId, 10);
+      } else if ($scope.auth) {
+        $scope.schoolId = $scope.auth.school.id;
+      }
       var capacityTypesPromise = getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
         $scope.capacityTypes = capacityTypes;
       });
 
-      if ($route.current.params.type) {
+      $scope.encodedPerson = $route.current.params.encodedPerson;
+      if ($scope.encodedPerson) {
+        $scope.timetableType = 'person';
+      } else if ($route.current.params.type) {
         $scope.timetableType = $route.current.params.type;
       } else {
         if ($scope.$parent.currentNavItem === 'personal') {
@@ -233,11 +242,10 @@
       $scope.timetableSearch = $scope.timetableType === 'search';
       var baseUrl = $scope.timetableSearch ? '/timetableevents/timetableSearch/' :
         '/timetableevents/timetableBy' + $scope.timetableType.charAt(0).toUpperCase() + $scope.timetableType.slice(1) + '/';
-      var timetableEventsEndpoint = baseUrl + $scope.schoolId;
-      var timetableEventsCalendarEndpoint = baseUrl + 'calendar/' + $scope.schoolId;
+      var timetableEventsEndpoint = baseUrl + ($scope.encodedPerson ? $scope.encodedPerson : $scope.schoolId);
+      var timetableEventsCalendarEndpoint = timetableEventsEndpoint + '/calendar';
 
-      // typeId existing means it's current route is /#/timetable/:schoolId/:type/:typeId/:studyYearId/:week
-      if ($route.current.params.typeId) {
+      if ($route.current.locals.isDirectRoute) {
         $scope.directRoute = true;
         $scope.studyYearId = parseInt($route.current.params.studyYearId, 10);
         if ($route.current.params.weekIndex) {
@@ -245,10 +253,12 @@
         }
 
         $scope.criteria = {studyYearId: $scope.studyYearId};
-        $scope.criteria[$scope.typeParam] = $route.current.params.typeId;
-        $scope.typeId = $route.current.params.typeId;
+        if (!$scope.encodedPerson) {
+          $scope.criteria[$scope.typeParam] = $route.current.params.typeId;
+          $scope.typeId = $route.current.params.typeId;
+        }
 
-        updateWeekTimetable($scope.criteria)
+        updateWeekTimetable($scope.criteria);
       } else {
         var state = $scope.generalTimetableUtils.loadState($scope.schoolId);
         $scope.studyYearId = state.studyYearId;
@@ -274,29 +284,32 @@
         }
 
         $scope.weeks = null;
-        if ($scope.timetableType === 'student') {
-          $scope.weeksPromise = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/:studyYearId/student/:studentId').query({
-            studyYearId: $scope.studyYearId,
-            studentId: $scope.criteria[$scope.typeParam]
-          });
-        } else {
-          $scope.weeksPromise = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/:studyYearId').query({
-            studyYearId: $scope.studyYearId
+        if ($scope.studyYearId) {
+          if ($scope.timetableType === 'person') {
+            $scope.weeksPromise = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/:studyYearId/person').query({
+              studyYearId: $scope.studyYearId,
+              encodedPerson: $scope.encodedPerson
+            });
+          } else {
+            $scope.weeksPromise = QueryUtils.endpoint('/timetables/timetableStudyYearWeeks/:studyYearId').query({
+              studyYearId: $scope.studyYearId,
+              student: $scope.timetableType === 'student' ? $scope.criteria[$scope.typeParam] : null
+            });
+          }
+
+          $q.all([capacityTypesPromise, $scope.weeksPromise.$promise]).then(function (result) {
+            $scope.weeks = result[1];
+
+            // get weekIndex when it doesn't exist, the week doesn't exists or the week is not of the year
+            if (angular.isUndefined($scope.weekIndex) || angular.isUndefined($scope.weeks[$scope.weekIndex]) ||
+              (angular.isDefined($scope.weeks[$scope.weekIndex]) && $scope.weeks[$scope.weekIndex].studyYear !== previousStudyYearId)) {
+              $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
+            }
+            $scope.shownWeek = $scope.weeks[$scope.weekIndex];
+            getPreviousAndNextWeek($scope);
+            showWeekTimetable();
           });
         }
-
-        $q.all([capacityTypesPromise, $scope.weeksPromise.$promise]).then(function (result) {
-          $scope.weeks = result[1];
-
-          // get weekIndex when it doesn't exist, the week doesn't exists or the week is not of the year
-          if (angular.isUndefined($scope.weekIndex) || angular.isUndefined($scope.weeks[$scope.weekIndex]) ||
-            (angular.isDefined($scope.weeks[$scope.weekIndex]) && $scope.weeks[$scope.weekIndex].studyYear !== previousStudyYearId)) {
-            $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
-          }
-          $scope.shownWeek = $scope.weeks[$scope.weekIndex];
-          getPreviousAndNextWeek($scope);
-          showWeekTimetable();
-        });
       }
 
       $scope.previousWeek = function (previousWeekIndex) {
@@ -314,8 +327,12 @@
       $scope.weekSelectChange = function (selectedWeek) {
         if (angular.isDefined(selectedWeek)) {
           if ($scope.directRoute) {
-            $location.url('/timetable/' + $scope.schoolId + '/' + $scope.timetableType + '/' +
+            if ($scope.encodedPerson) {
+              $location.url('/timetable/person/' + $scope.encodedPerson + '/' + $scope.studyYearId + '/' + selectedWeek.weekNr);
+            } else {
+              $location.url('/timetable/' + $scope.schoolId + '/' + $scope.timetableType + '/' +
               $scope.typeId + '/' + $scope.studyYearId + '/' + selectedWeek.weekNr);
+            }
           } else {
             changeTimetableParameters($scope, selectedWeek.weekNr);
             getPreviousAndNextWeek($scope);
@@ -330,26 +347,43 @@
 
       function showWeekTimetable() {
         $scope.timetableEvents = null;
-        if ($scope.shownWeek && ($scope.timetableSearch || (!$scope.timetableSearch && $scope.criteria[$scope.typeParam]))) {
+        if ($scope.shownWeek && ($scope.encodedPerson || $scope.timetableSearch || (!$scope.timetableSearch && $scope.criteria[$scope.typeParam]))) {
           QueryUtils.loadingWheel($scope, true);
           QueryUtils.endpoint(timetableEventsEndpoint).search(timetableCriteria(true))
             .$promise.then(function (result) {
               QueryUtils.loadingWheel($scope, false);
+              $scope.$parent.personalUrl = result.personalUrl;
               $scope.shownStudyPeriods = result.studyPeriods;
               $scope.shownTimetableCurriculum = result.generalTimetableCurriculum;
 
-              if ($scope.timetableType === 'teacher') {
-                $scope.shownTeacher = {firstname: result.firstname, lastname: result.lastname};
-              }
-              if ($scope.timetableType === 'room') {
-                $scope.shownRoom = {roomCode: result.roomCode, buildingCode: result.buildingCode};
-              }
-              if ($scope.timetableType === 'student') {
-                $scope.shownStudent = {
-                  firstname: result.firstname,
-                  lastname: result.lastname,
-                  isHigher: result.isHigher
-                };
+              switch ($scope.timetableType) {
+                case 'person':
+                  $scope.shownPerson = {
+                    firstname: result.firstname,
+                    lastname: result.lastname,
+                    isHigher: result.isHigher
+                  };
+                  $scope.schoolId = result.schoolId;
+                  break;
+                case 'student':
+                  $scope.shownStudent = {
+                    firstname: result.firstname,
+                    lastname: result.lastname,
+                    isHigher: result.isHigher
+                  };
+                  break;
+                case 'teacher':
+                  $scope.shownTeacher = {
+                    firstname: result.firstname,
+                    lastname: result.lastname
+                  };
+                  break;
+                case 'room':
+                  $scope.shownRoom = {
+                    roomCode: result.roomCode,
+                    buildingCode: result.buildingCode
+                  };
+                  break;
               }
 
               fillTimetable($scope, result.timetableEvents);

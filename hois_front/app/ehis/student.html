@@ -13,14 +13,14 @@
           </md-input-container>
         </div>
         <div layout="row">
-          <md-input-container flex="20" flex-sm="100" flex-xs="100" ng-if="displayDates.indexOf(criteria.dataType) !== -1">
+          <md-input-container flex="30" flex-md="40" flex-sm="50" flex-xs="60" ng-if="displayDates.indexOf(criteria.dataType) !== -1">
             <label>{{'ehis.student.sentDatesRange' | translate}}</label>
             <input type="hidden">
           </md-input-container>
           <div flex="33" ng-if="displayDates.indexOf(criteria.dataType) !== -1">
             <md-input-container flex>
               <label>{{'main.from' | translate}}</label>
-              <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" required></md-datepicker>
+              <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" md-min-date="criteria.dataType === 'GUEST_STUDENTS' ? minDate : undefined" required></md-datepicker>
             </md-input-container>
             <md-input-container flex>
               <label>{{'main.thru' | translate}}</label>

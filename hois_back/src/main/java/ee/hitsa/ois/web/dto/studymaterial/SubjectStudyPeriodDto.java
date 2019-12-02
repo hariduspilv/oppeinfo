@@ -13,11 +13,13 @@ public class SubjectStudyPeriodDto {
     private AutocompleteResult subject;
     private AutocompleteResult studyPeriod;
     private List<AutocompleteResult> teachers;
-    
+    private Boolean canConnectStudyMaterials;
+
     public static SubjectStudyPeriodDto of(SubjectStudyPeriod subjectStudyPeriod) {
-        SubjectStudyPeriodDto dto = EntityUtil.bindToDto(subjectStudyPeriod, new SubjectStudyPeriodDto(), "teachers", "studyPeriod");
+        SubjectStudyPeriodDto dto = EntityUtil.bindToDto(subjectStudyPeriod, new SubjectStudyPeriodDto(), "teachers",
+                "studyPeriod");
         dto.setStudyPeriod(AutocompleteResult.ofWithYear(subjectStudyPeriod.getStudyPeriod()));
-        dto.setTeachers(StreamUtil.toMappedList(sspt -> AutocompleteResult.of(sspt.getTeacher()), 
+        dto.setTeachers(StreamUtil.toMappedList(sspt -> AutocompleteResult.of(sspt.getTeacher()),
                 subjectStudyPeriod.getTeachers()));
         return dto;
     }
@@ -25,6 +27,7 @@ public class SubjectStudyPeriodDto {
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -32,6 +35,7 @@ public class SubjectStudyPeriodDto {
     public AutocompleteResult getSubject() {
         return subject;
     }
+
     public void setSubject(AutocompleteResult subject) {
         this.subject = subject;
     }
@@ -39,6 +43,7 @@ public class SubjectStudyPeriodDto {
     public AutocompleteResult getStudyPeriod() {
         return studyPeriod;
     }
+
     public void setStudyPeriod(AutocompleteResult studyPeriod) {
         this.studyPeriod = studyPeriod;
     }
@@ -46,8 +51,17 @@ public class SubjectStudyPeriodDto {
     public List<AutocompleteResult> getTeachers() {
         return teachers;
     }
+
     public void setTeachers(List<AutocompleteResult> teachers) {
         this.teachers = teachers;
+    }
+
+    public Boolean getCanConnectStudyMaterials() {
+        return canConnectStudyMaterials;
+    }
+
+    public void setCanConnectStudyMaterials(Boolean canConnectStudyMaterials) {
+        this.canConnectStudyMaterials = canConnectStudyMaterials;
     }
 
 }

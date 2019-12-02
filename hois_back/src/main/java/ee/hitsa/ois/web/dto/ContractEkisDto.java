@@ -1,6 +1,5 @@
 package ee.hitsa.ois.web.dto;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ContractEkisDto {

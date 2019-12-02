@@ -3,7 +3,7 @@
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
       <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin" ng-model-options="{allowInvalid: true}">
-        <div ng-if="auth.isAdmin()" layout="row" layout-sm="column" layout-xs="column">
+        <div ng-if="auth.isAdmin() || auth.isLeadingTeacher()" layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="50" flex-sm="100" flex-xs="100">
               <label>{{'finalThesis.student' | translate}}</label>
               <input ng-model="criteria.studentName" type="text" md-maxlength="255">
@@ -13,7 +13,7 @@
           </md-input-container>
         </div>
 
-        <div ng-if="auth.isAdmin()" layout="row" layout-sm="column" layout-xs="column">
+        <div ng-if="auth.isAdmin() || auth.isLeadingTeacher()" layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="50" flex-sm="100" flex-xs="100">
             <label>{{'finalProtocol.protocolType' | translate}}</label>
             <md-select ng-model="criteria.isFinalThesis" aria-label="{{'finalProtocol.protocolType' | translate}}">
@@ -103,7 +103,7 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column md-order-by="2">{{'finalProtocol.protocolNr' | translate}}</th>
-            <th md-column ng-if="auth.isAdmin()" md-order-by="3">{{'finalProtocol.protocolType' | translate}}</th>
+            <th md-column ng-if="auth.isAdmin() || auth.isLeadingTeacher()" md-order-by="3">{{'finalProtocol.protocolType' | translate}}</th>
             <th md-column md-order-by="4">{{'finalProtocol.status' | translate}}</th>
             <th md-column md-order-by="{{currentLanguage()==='en' ? '6, 8, 9' : '6, 7, 9'}}">{{'finalProtocol.subject' | translate}}</th>
             <th md-column md-order-by="11, 12, 13">{{'finalProtocol.committeeChairman' | translate}}</th>
@@ -118,7 +118,7 @@
             <td md-cell>
               <a ng-href="#/finalHigherProtocols/{{::row.id}}/view">{{::row.protocolNr}}</a>
             </td>
-            <td md-cell ng-if="auth.isAdmin()">
+            <td md-cell ng-if="auth.isAdmin() || auth.isLeadingTeacher()">
               <span ng-if="row.isFinalThesis">{{'finalProtocol.finalThesis' | translate}}</span>
               <span ng-if="!row.isFinalThesis">{{'finalProtocol.finalExam' | translate}}</span>
             </td>

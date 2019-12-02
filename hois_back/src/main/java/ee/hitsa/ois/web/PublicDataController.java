@@ -21,12 +21,13 @@ import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.report.SubjectProgramReport;
 import ee.hitsa.ois.service.AutocompleteService;
+import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.PublicDataService;
 import ee.hitsa.ois.service.StateCurriculumService;
 import ee.hitsa.ois.service.StudyMaterialService;
 import ee.hitsa.ois.service.SubjectService;
-import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.SubjectProgramUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -63,6 +64,8 @@ public class PublicDataController {
     private PdfService pdfService;
     @Autowired
     private SubjectProgramUtil subjectProgramUtil;
+    @Autowired
+    private ClassifierService classifierService;
 
     @GetMapping("/curriculum/{id:\\d+}")
     public Object curriculum(@PathVariable("id") Long id) {
@@ -88,7 +91,8 @@ public class PublicDataController {
     @GetMapping("/print/subjectProgram/{id:\\d+}/program.pdf")
     public void print(@WithEntity SubjectProgram program, HttpServletResponse response) throws IOException {
         subjectProgramUtil.assertCanView(null, program);
-        HttpUtil.pdf(response, "subject_program_" + program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject().getCode() + ".pdf", pdfService.generate(SubjectProgramReport.TEMPLATE_NAME, new SubjectProgramReport(program)));
+        HttpUtil.pdf(response, "subject_program_" + program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject().getCode() + ".pdf",
+                pdfService.generate(SubjectProgramReport.TEMPLATE_NAME, new SubjectProgramReport(program, new ClassifierUtil.ClassifierCache(classifierService))));
     }
 
     @GetMapping("/curriculumsearch")
@@ -133,22 +137,22 @@ public class PublicDataController {
     
     @GetMapping("/studyMaterial/journal/{id:\\d+}")
     public JournalDto journal(@WithEntity Journal journal) {
-        return studyMaterialService.getJournal(journal);
+        return studyMaterialService.getJournal(null, journal);
     }
 
     @GetMapping("/studyMaterial/journal/{id:\\d+}/materials")
     public List<StudyMaterialSearchDto> journalMaterials(@WithEntity Journal journal) {
-        return studyMaterialService.materials(null, EntityUtil.getId(journal), Boolean.TRUE, null);
+        return studyMaterialService.materials(null, journal, null);
     }
 
     @GetMapping("/studyMaterial/subjectStudyPeriod/{id:\\d+}")
     public SubjectStudyPeriodDto subjectStudyPeriod(@WithEntity SubjectStudyPeriod subjectStudyPeriod) {
-        return studyMaterialService.getSubjectStudyPeriod(subjectStudyPeriod);
+        return studyMaterialService.getSubjectStudyPeriod(null, subjectStudyPeriod);
     }
 
     @GetMapping("/studyMaterial/subjectStudyPeriod/{id:\\d+}/materials")
     public List<StudyMaterialSearchDto> subjectStudyPeriodMaterials(@WithEntity SubjectStudyPeriod subjectStudyPeriod) {
-        return studyMaterialService.materials(EntityUtil.getId(subjectStudyPeriod), null, Boolean.TRUE, null);
+        return studyMaterialService.materials(null, null, subjectStudyPeriod);
     }
 
 }

@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('HigherProtocolNewController', function ($scope, $route, $location, QueryUtils, DataUtils, Classifier, message, ArrayUtils) {
+angular.module('hitsaOis').controller('HigherProtocolNewController', function ($route, $location, $scope, ArrayUtils, QueryUtils, message) {
   $scope.auth = $route.current.locals.auth;
   var baseUrl = "/higherProtocols";
 
@@ -8,8 +8,6 @@ angular.module('hitsaOis').controller('HigherProtocolNewController', function ($
     protocolType: 'PROTOKOLLI_LIIK_P',
     students: []
   };
-
-  $scope.subjectStudyPeriods = QueryUtils.endpoint(baseUrl + "/subjectStudyPeriods").query();
 
   function getStudents() {
     if ($scope.record.protocolType && $scope.record.subjectStudyPeriod) {

@@ -1,19 +1,22 @@
 package ee.hitsa.ois.web.dto.studymaterial;
 
 import ee.hitsa.ois.web.commandobject.OisFileViewDto;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class StudyMaterialSearchDto {
 
     private Long id;
     private String nameEt;
     private String typeCode;
+    private AutocompleteResult teacher;
     private Boolean isPublic;
     private Boolean isVisibleToStudents;
     private String url;
     private OisFileViewDto oisFile;
     private Long journalCount;
     private StudyMaterialConnectDto connect;
-    
+    private Boolean canEdit;
+
     public Long getId() {
         return id;
     }
@@ -36,6 +39,14 @@ public class StudyMaterialSearchDto {
 
     public void setTypeCode(String typeCode) {
         this.typeCode = typeCode;
+    }
+
+    public AutocompleteResult getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(AutocompleteResult teacher) {
+        this.teacher = teacher;
     }
 
     public Boolean getIsPublic() {
@@ -84,6 +95,14 @@ public class StudyMaterialSearchDto {
 
     public void setConnect(StudyMaterialConnectDto connect) {
         this.connect = connect;
+    }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
     }
 
 }

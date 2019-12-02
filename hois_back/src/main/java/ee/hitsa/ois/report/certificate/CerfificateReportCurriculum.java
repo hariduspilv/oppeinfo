@@ -7,6 +7,7 @@ public class CerfificateReportCurriculum {
     private static final int MONTHS_IN_YEAR = 12;
 
     private final String name;
+    private final String nameEn;
     private final String code;
     private final String studyLevel;
     private final int nominalStudyYears;
@@ -14,6 +15,7 @@ public class CerfificateReportCurriculum {
 
     public CerfificateReportCurriculum(Curriculum curriculum) {
         name = curriculum.getNameEt();
+        nameEn = curriculum.getNameEn();
         code = curriculum.getCode();
         nominalStudyYears = curriculum.getStudyPeriod().intValue() / MONTHS_IN_YEAR;
         nominalStudyMonths = curriculum.getStudyPeriod().intValue() % MONTHS_IN_YEAR;
@@ -38,5 +40,9 @@ public class CerfificateReportCurriculum {
 
     public String getCode() {
         return code;
+    }
+
+    public String getNameEn() {
+        return nameEn;
     }
 }

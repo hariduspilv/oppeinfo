@@ -7,6 +7,10 @@ public class SchoolWithoutLogo {
     private final String nameEt;
     private final String nameEn;
     private final String email;
+    
+    private Boolean higher;
+    private Boolean vocational;
+    private Boolean doctoral;
 
     public SchoolWithoutLogo(Long id, String code, String nameEt, String nameEn, String email) {
         this.id = id;
@@ -34,5 +38,29 @@ public class SchoolWithoutLogo {
 
     public String getEmail() {
         return email;
+    }
+
+    public Boolean getHigher() {
+        return higher;
+    }
+
+    public void setHigher(Boolean higher) {
+        this.higher = higher;
+    }
+
+    public Boolean getVocational() {
+        return vocational;
+    }
+
+    public void setVocational(Boolean vocational) {
+        this.vocational = vocational;
+    }
+
+    public Boolean getDoctoral() {
+        return doctoral;
+    }
+
+    public void setDoctoral(Boolean doctoral) {
+        this.doctoral = doctoral;
     }
 }

@@ -25,6 +25,7 @@ public class DeclarationDto {
     private Boolean canBeChanged;
     private Boolean canBeSetUnconfirmed;
     private Boolean canBeSetConfirmed;
+    private Boolean isPrevious;
 
     public static DeclarationDto of(Declaration declaration) {
         DeclarationDto dto = new DeclarationDto();
@@ -36,9 +37,9 @@ public class DeclarationDto {
         student.setFullname(declaration.getStudent().getPerson().getFullname());
         student.setIdcode(declaration.getStudent().getPerson().getIdcode());
         student.setStatus(EntityUtil.getNullableCode(declaration.getStudent().getStatus()));
-        
+        student.setType(EntityUtil.getNullableCode(declaration.getStudent().getType()));
         CurriculumVersion cv = declaration.getStudent().getCurriculumVersion();
-        student.setCurriculumVersion(new AutocompleteResult(cv.getId(), cv.getCode(), cv.getCode()));
+        if (cv != null) student.setCurriculumVersion(new AutocompleteResult(cv.getId(), cv.getCode(), cv.getCode()));
         
         StudentGroup sg = declaration.getStudent().getStudentGroup();
         if(sg != null) {
@@ -46,6 +47,7 @@ public class DeclarationDto {
             student.setStudentGroup(AutocompleteResult.of(sg));
         }
         dto.setStudent(student);
+        dto.setIsPrevious(Boolean.valueOf(declaration.getStudyPeriod().getEndDate().isBefore(LocalDate.now())));
         return dto;
     }
 
@@ -143,5 +145,13 @@ public class DeclarationDto {
 
     public void setSubjects(Set<DeclarationSubjectDto> subjects) {
         this.subjects = subjects;
+    }
+
+    public Boolean getIsPrevious() {
+        return isPrevious;
+    }
+
+    public void setIsPrevious(Boolean isPrevious) {
+        this.isPrevious = isPrevious;
     }
 }

@@ -13,6 +13,8 @@ public enum Role {
     ROLL_V, 
     /** Teacher */
     ROLL_O,
+    /** Leading teacher */
+    ROLL_J,
     /** Identified person without any other role */
     ROLL_X
 }

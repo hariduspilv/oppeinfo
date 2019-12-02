@@ -9,11 +9,13 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.Conditional;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
+@Conditional(selected = "isGuestStudent", values = {"false", "null"}, required = {"previousStudyLevel"})
 public class StudentForm extends VersionedCommand {
 
     // contact data
@@ -30,7 +32,6 @@ public class StudentForm extends VersionedCommand {
     private String finSpecific;
     @Size(max = 255)
     private String schoolEmail;
-    @Required
     @ClassifierRestriction(MainClassCode.OPPEASTE)
     private String previousStudyLevel;
     private String studyCompany;
@@ -38,7 +39,7 @@ public class StudentForm extends VersionedCommand {
     private LocalDate previousSchoolEndDate;
     @ClassifierRestriction(MainClassCode.YHISELAMU)
     private String dormitory;
-
+    private Boolean isGuestStudent;
     // special needs
     private Boolean isSpecialNeed;
     @ClassifierRestriction(MainClassCode.ERIVAJADUS)
@@ -293,5 +294,15 @@ public class StudentForm extends VersionedCommand {
             this.addressAdsOid = addressAdsOid;
         }
         
+    }
+
+
+
+    public Boolean getIsGuestStudent() {
+        return isGuestStudent;
+    }
+
+    public void setIsGuestStudent(Boolean isGuestStudent) {
+        this.isGuestStudent = isGuestStudent;
     }
 }

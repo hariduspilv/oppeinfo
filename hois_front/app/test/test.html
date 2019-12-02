@@ -130,3 +130,41 @@
     <hois-button class="md-primary md-raised" hb-click="testClick()" hb-loading hb-label="Test"></hois-button>
     <hois-button class="md-primary md-raised" hb-click="testClickPromise()" hb-promise hb-loading hb-label="Test with Promise"></hois-button>
 </div>
+
+<h2>HoisTableRow and HoisTableData</h2>
+<md-table-container>
+  <p ng-click="turnOn = !turnOn">TURN ON</p>
+  <table md-table class="secondary-table">
+    <thead md-head>
+      <tr md-row>
+        <th md-column>{{'directive.student.order' | translate}}</th>
+        <th md-column>{{'directive.student.fullname' | translate}}</th>
+        <th md-column ng-if="turnOn">{{'directive.student.idcode' | translate}}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody md-body>
+      <!-- <tr md-row ng-repeat="row in testRows" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>{{row.id}}</td>
+        <td md-cell>{{row.id}}</td>
+        <td md-cell>{{row.id}}</td>
+      </tr> -->
+      <tr md-row hois-table-row ng-repeat="row in testRows" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>{{row.id}}</td>
+        <td md-cell hois-table-data ng-if="row.showMe">
+          <hois-table-data-master><span ng-click="row.showMe = !row.showMe">ShowMe</span></hois-table-data-master>
+          <hois-table-data-between>ShowMe</hois-table-data-between>
+          <hois-table-data-detail>ShowMe</hois-table-data-detail>
+        </td>
+        <td md-cell hois-table-data ng-if="!row.showMe">
+          <hois-table-data-master><span ng-click="row.showMe = !row.showMe">{{row}}</span></hois-table-data-master>
+          <hois-table-data-detail>{{row}}</hois-table-data-detail>
+        </td>
+        <td md-cell hois-table-data ng-if="turnOn">
+          <hois-table-data-master>{{$index}}</hois-table-data-master>
+          <hois-table-data-detail>{{$index}}</hois-table-data-detail>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</md-table-container>

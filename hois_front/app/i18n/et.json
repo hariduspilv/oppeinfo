@@ -31,6 +31,7 @@
       "delete": "Kustuta",
       "finish": "Lõpeta",
       "ok": "Ok",
+      "open": "Ava",
       "print": "Trüki",
       "printPdf": "Trüki pdf",
       "printXls": "Excelisse",
@@ -44,6 +45,8 @@
       "sendToEhis": "Saada EHISesse",
       "sendToEkis": "Saada EKISesse",
       "send": "Saada",
+      "showLess": "Näita vähem",
+      "showMore": "Näita rohkem",
       "update": "Uuenda",
       "uploadFile": "Lae fail",
       "updateFromEhis": "Uuenda staatust EHISest",
@@ -66,6 +69,8 @@
       "checkComplies": "Kontrolli andmeid",
       "committeeDecision": "Komisjoni otsus",
       "decide": "Otsusta",
+      "moreParameters": "Veel valikuid +",
+      "lessParameters": "Vähem valikuid -",
       "status": {
         "approving": "Menetle",
         "close": "Muuda õppekava kehtetuks",
@@ -116,6 +121,7 @@
         "readingIdCardFailed": "Allkirjastamine ebaõnnestus",
         "max": "Maksimaalne väärtus {{max}}",
         "maxlength": "Tekst liiga pikk",
+        "Size": "Tekst liiga pikk",
         "min": "Minimaalne väärtus {{min}}",
         "studentExists": "Õppija juba eksisteerib",
         "time": "Vigane kellaaeg",
@@ -334,6 +340,7 @@
         "capacityTypes": "Õppetöö liigid",
         "classifiers": "Klassifikaatorid",
         "users": "Kasutajad",
+        "userContract": "Kasutustingimused",
         "saisClassifiers": "Klassifikaatorid SAISist",
         "apelSchools": "VÕTA koolid",
         "apelCommittees": "VÕTA komisjonid",
@@ -391,6 +398,7 @@
         "label": "Päringud",
         "students": "Õppijad",
         "studentstatistics": "Õppijate statistika",
+        "gueststudentstatistics": "Külalisõp. statistika",
         "studentstatisticsbyperiod": "Õppijate stat. perioodis",
         "teachersLoadHigher": "Õppejõu koormus (kõrg)",
         "teachersLoadVocationalHigher": "Õppejõu koormus (kutse)",
@@ -543,6 +551,7 @@
         "label": "Minu andmed"
       },
       "myStudyInformation": {
+        "midtermResult": "Vahesooritused",
         "label": "Minu õppeinfo",
         "journal": "Päevik",
         "practiceApplications": "Praktikale kandideerimised",
@@ -862,6 +871,7 @@
     "results": "Õpitulemused",
     "address": "Postiaadress",
     "bankaccount": "Arveldusarve",
+    "birthDate": "Sünnikuupäev",
     "boardingSchool": "Õpilaskodu koht",
     "boardingSchoolValidFrom": "Õpilaskodu kehtivuse algus",
     "boardingSchoolValidThru": "Õpilaskodu kehtivuse lõpp",
@@ -887,6 +897,7 @@
     "language": "Suhtluskeel",
     "lastname": "Perekonnanimi",
     "main": "Põhiandmed",
+    "myStudentGroups": "Minu õpperühmad",
     "name": "Õppija nimi",
     "nominalStudyEnd": "Eeldatav nominaalaja lõpp",
     "phone": "Kontakttelefon",
@@ -919,6 +930,8 @@
     "studyStart": "Õpingute algus",
     "studyEnd": "Õpingute lõpp",
     "studyLevel": "Õppetase",
+    "showAll": "Kuva kõik",
+    "showGuestStudents": "Kuva külalisõpilased",
     "supportService": {
       "label": "Tugiteenused",
       "ehis": "Tugimeetmed EHISest",
@@ -954,7 +967,8 @@
     "error": {
       "checkRequired": "Vähemalt üks õppija peab valitud olema",
       "addressRequired": "Aadress on kohustuslik",
-      "cannotBeBeforeStudyStart": "Ei saa olla varasem õpingute alustamise kuupäevast: {{studyStart}}"
+      "cannotBeBeforeStudyStart": "Ei saa olla varasem õpingute alustamise kuupäevast: {{studyStart}}",
+      "cannotBeGuestStudent": "Muu tõendi koostamine külalisõpilasele pole lubatud"
     },
     "absence": {
       "cause": "Puudumise põhjus",
@@ -1316,6 +1330,7 @@
     "isMinorStudentAbsence": "Alla 18-aastane esitab puudumistõendi",
     "isLetterGrade": "Täheline hindamine",
     "isWithoutEkis": "Ei kasuta EKISt",
+    "isStudentTerms": "Õppija peab nõustuma Tahvli kasutustingimustega",
     "using": "Kasutab",
     "notUsing": "Ei kasuta",
     "adUrl": "AD serveri url",
@@ -1347,7 +1362,8 @@
       "validFalse": "Kehtetu",
       "validFrom": "Kehtivuse algus",
       "validThru": "Kehtivuse lõpp"
-    }
+    },
+    "studentPhotoAdd": "Õppija foto lisamine/muutmine"
   },
   "classifier": {
     "id": "ID",
@@ -1471,6 +1487,9 @@
       "akadStartDate": "Akad. puhkuse algus",
       "alreadyexist": "Õppija on juba käskkirjal",
       "amountPaid": "Summa",
+      "apelSchool": "Koduõppeasutus",
+      "apelSchoolCountry": "Koduõppeasutuse riik",
+      "apelSchoolStudyLevel": "Koduõppeasutuses omandatav õppeaste",
       "application": "Avaldus",
       "applicationAkadEndDate": "Lõpp avaldusel",
       "applicationAkadStartDate": "Algus avaldusel",
@@ -1487,6 +1506,7 @@
       "dormitory": "Õpilaskodu",
       "estonianEducationalInstitute": "Eesti õppeasutus",
       "existingIndividualCurriculum": "Olemasolev IÕK",
+      "exchangeProgramme": "Vahetusprogramm",
       "foreignEducationalInstitute": "Välismaa õppeasutus",
       "fin": "Finantseerimise allikas",
       "name": "Õppija nimi",
@@ -1510,6 +1530,7 @@
       "nominalStudyEnd": "Nominaalaja eeldatav lõpp",
       "module": "Moodul",
       "modules": "Moodul(id)",
+      "notes": "Märkused",
       "occupations": "Kutsed/Osakutsed",
       "oldCurriculumVersion": "Kehtiv õppekava",
       "oldStudyForm": "Kehtiv õppevorm",
@@ -1538,7 +1559,12 @@
       "supportServiceEndDate": "Tugiteenuse lõpp",
       "validEnd": "Kehtivuse lõpp",
       "valisEndDate": "Välisõppe lõpp",
-      "valisStartDate": "Välisõppe algus"
+      "valisStartDate": "Välisõppe algus",
+      "guest": {
+        "curriculumVersion": "Õppekava versioon",
+        "endDate": "Õpingute lõpp",
+        "startDate": "Õpingute algus"
+      }
     }
   },
   "generalmessage": {
@@ -1632,9 +1658,29 @@
       "rooms": "Ruumid",
       "otherRoom": "Muu ruum",
       "singleEvent": "Üksiksündmus",
+      "personalEvent": "Personaalne sündmus",
       "showOnlySubstitutes": "Kuva ainult asendajad",
       "date": "Kuupäev",
+      "tab": "Sündmused",
       "time": "Aeg"
+    },
+    "rooms": {
+      "addEvent": "Lisa sündmus",
+      "building": "Hoone",
+      "checkRoomBusy": "Ruum hõivatud",
+      "checkRoomFree": "Ruum vaba",
+      "checkRoomPartlyBusy": "Kuva osaliselt hõivatud",
+      "date": "Kuupäev",
+      "dateRange": "Kuupäev",
+      "isDormitoryRoom": "Õpilaskodu\nruum",
+      "isUsedInStudy": "Kasutatakse\nõppetöös",
+      "places": "Kohtade\narv",
+      "room": "Ruum",
+      "equipment": "Seadmed",
+      "tab": "Vabad ruumid",
+      "time": "Hõivatud\nkellaaeg",
+      "timeError": "\"Kellaaeg Kuni\" peab olema hilisem kui \"Kellaaeg Alates\"",
+      "timeRange": "Kellaaeg"
     },
     "changed": {
       "save": "Tunnijaotusplaan on muutunud, kas soovid seda salvestada?"
@@ -1693,16 +1739,17 @@
     "validThru": "Kehtivuse lõppkuupäev"
   },
   "certificate": {
+    "showUncompletedSubjects": "Kuva ka sooritamata ained",
+    "showUncompletedJournals": "Kuva ka sooritamata päevikud",
     "certificates": "Tõendid",
     "ekisconfirm": "Kas oled kindel, et soovid tõendit tellida?",
     "emptyWhom": "\"Kellele\" väli on täitmata, kas soovid jätkata?",
     "type": "Tõendi liik",
     "headline": "Pealkiri",
-    "studentName": "Õppija nimi",
     "idcode": "Isikukood",
     "inserted": "Koostamise kuupäev",
     "nr": "Tõendi number",
-    "addOutcomes": "lisa õpiväljundid",
+    "addOutcomes": "Lisa õpiväljundid",
     "add": "Koosta tõend",
     "order": "Telli tõend",
     "orderAgain": "Telli uuesti",
@@ -1914,6 +1961,7 @@
     "optionalStudyDescription": "Valikuvõimalused õppekava läbimiseks",
     "addInfo": "Täiendav informatsioon",
     "supervisor": "Õppekava juht",
+    "leadingTeachers": "Juhtivõpetaja(d)",
     "languageDescription": "Õppekeele lisainfo",
     "structuralUnitResponsible": "Vastutav struktuuriüksus",
     "basesOfDraft": "Õppekava koostamise alus",
@@ -2372,17 +2420,85 @@
     }
   },
   "user": {
-    "role": "Kasutajaroll",
+    "curriculums": "Õppekavad",
+    "role": "Põhiroll",
     "validFrom": "Kehtib alates",
     "validThru": "Kehtib kuni",
     "deleteconfirm": "Kas oled kindel, et soovid kasutajarolli kustutada?",
     "roleNoRights": "Kasutajarollil puudub õigus",
+    "duplicateCurriculum": "Õppekava on juba olemas",
     "rights": {
       "right": "Kasutajaõigused",
       "insertModify": "Sisestamine / Muutmine",
       "confirmation": "Kinnitamine",
       "searchOpen": "Vaatamine / Otsing"
+    },
+    "dialog": {
+      "userRoleChangeConfirm": {
+        "message": "Kas soovid kõik eelnevalt antud õigused üle kirjutada?",
+        "no": "Ei, lisan puuduvad õigused",
+        "cancel": "Loobu"
+      }
+    },
+    "shouldBeUniqueAdmin": "Kasutajal saab olla ainult üks kooli administraator."
+  },
+  "userContract": {
+    "isStudentTerms": "Õppija peab nõustuma Tahvli kasutustingimustega",
+    "label": "Õppetegevuse tingimused",
+    "tabAgreed": "Nõusolekud",
+    "tabDescription": "Kasutustingimuste seadistamine ja nõusolekud",
+    "tabSettings": "Seadistamine",
+    "cancel": "Loobu",
+    "confirmed": "kinnitatud",
+    "confirmedTxt": "{{name}} kinnitanud {{date}}",
+    "haveToAgree": "Peate nõustuma kasutustingimustega!",
+    "readAndAgree": "Olen lugenud ja nõustun tingimustega",
+    "search": {
+      "agreed": "Kinnitamise kuupäev",
+      "agreedFrom": "Kinnitamise kp alates",
+      "agreedThru": "Kinnitamise kp kuni",
+      "contract": "Õppetingimused",
+      "group": "Õpperühm",
+      "idcode": "Õppija isikukood",
+      "student": "Õppija nimi"
     }
+  },
+  "userRole": {
+    "connectedUsers": "Seotud kasutajad",
+    "deleteConfirm": "Kas oled kindel, et soovid kasutajarolli kustutada?",
+    "dialog": {
+      "admin": {
+        "changeConfirm": {
+          "cancel": "Loobu",
+          "message": "Kasutajaroll on seotud vähemalt ühe kasutajaga. Kas soovid muuta kasutajate kasutajaõigused?"
+        },
+        "deleteConfirm": {
+          "cancel": "Loobu",
+          "message": "Kasutajaroll on seotud vähemalt ühe kasutajaga. Kas soovid kasutajarolliga seotud õigused eemaldada?"
+        }
+      },
+      "teacher": {
+        "changeConfirm": {
+          "cancel": "Loobu",
+          "message": "Ametikoht on seotud vähemalt ühe õpetaja/õppejõuga. Kas soovid muuta kasutajate kasutajaõigused?"
+        },
+        "deleteConfirm": {
+          "cancel": "Loobu",
+          "message": "Ametikoht on seotud vähemalt ühe õpetaja/õppejõuga. Kas soovid ametikohaga seotud õigused eemaldada?"
+        }
+      }
+    },
+    "label": "Kasutajaroll",
+    "nameEn": "Kasutajaroll i.k.",
+    "nameEt": "Kasutajaroll e.k.",
+    "occupation": "Ametikoht",
+    "roleExists": "Sama nimetusega roll juba eksisteerib",
+    "tabAdmin": "Admin. kasutajarollid",
+    "tabDescription": "Kasutajad, admin. ja õpetaja kasutajarollid",
+    "tabHigherTeacher": "Õppejõu kasutajarollid",
+    "tabUsers": "Kasutajad",
+    "tabVocationalTeacher": "Õpetaja kasutajarollid",
+    "user": "Kasutaja"
   },
   "person": {
     "name": "Nimi",
@@ -2392,6 +2508,7 @@
     "sex": "Sugu",
     "phone": "Isiklik kontakttelefon",
     "email": "Isiklik e-posti aadress",
+    "roles": "Rollid",
     "exists": "Isik juba eksisteerib",
     "deleteconfirm": "Kas oled kindel, et soovid kasutajat kustutada?",
     "back": "Isik ei ole leitav kasutajana kui tal ei ole kasutajarolli, kas soovid jätkata?"
@@ -2527,6 +2644,8 @@
     "descriptionHigher": "Kirjeldus õppejõu jaoks",
     "descriptionVocational": "Kirjeldus õpetaja jaoks",
     "fileorlink": "Fail/Link",
+    "teacherHigher": "Õppejõud",
+    "teacherVocational": "Õpetaja",
     "link": "Link",
     "journalCount": "Seotud päevikud",
     "isVisibleToStudents": "Nähtav õppijatele",
@@ -2566,7 +2685,8 @@
         "notInsideStudyYear": "Õppeaastasse sisestatud õppeperiood peab olema õppeaasta sees",
         "overlapWithOtherStudyPeriod": "Õppeaastasse sisestatud õppeperioodi kuupäevad ei tohi kattuda teiste õppeperioodidega",
         "startDateLaterThanEndDate": "Lõppkuupäev ja kellaaeg peab olema hilisem kui alguskuupäev ja kellaaeg",
-        "outsideStudyPeriod": "Kalendri-sündmus peab kuuluma õppeperioodi sisesele ajale"
+        "outsideStudyPeriod": "Kalendri-sündmus peab kuuluma õppeperioodi sisesele ajale",
+        "endBeforeStudyPeriodEnd": "Lõppkuupäev peab olema varasem õppeperioodi lõppkuupäevast"
       }
     },
     "studyPeriodEvent": {
@@ -2611,14 +2731,7 @@
     "week": "Nädal",
     "description": "Kirjeldus",
     "assessmentCriteria": "Hindamiskriteeriumid",
-    "passDescription": "\"A\" saamise tingimus",
-    "npassDescription": "\"MA\" saamise tingimus",
-    "grade0Description": "\"0\" saamise tingimus",
-    "grade1Description": "\"1\" saamise tingimus",
-    "grade2Description": "\"2\" saamise tingimus",
-    "grade3Description": "\"3\" saamise tingimus",
-    "grade4Description": "\"4\" saamise tingimus",
-    "grade5Description": "\"5\" saamise tingimus",
+    "gradeNDescription": "\"{{N}}\" saamise tingimus",
     "publicLevel": "Avalikustamise tase",
     "publicAll": "Avalik kõigile",
     "publicHois": "Avalik Tahvli kasutajatele",
@@ -2797,7 +2910,8 @@
     "studyForm": "Õppevorm",
     "studyLevel": "Õppetase",
     "teacher": "Rühmajuhataja",
-    "isValid": "Hetkel kehtiv"
+    "isValid": "Hetkel kehtiv",
+    "isGuestStudent": "Külalisõpilase õpperühm"
   },
   "studentGroupYearTransfer": {
     "studyYear": "Õppeaasta",
@@ -2952,7 +3066,8 @@
       "confirmSubmit": "Kas oled kindel, et soovid esitada?",
       "confirmSaveAndSubmit": "Kas oled kindel, et soovid vormil olevad andmed salvestada ja esitada?",
       "confirmConfirm": "Kas oled kindel, et soovid kinnitada?",
-      "confirmSaveAndConfirm": "Kas oled kindel, et soovid vormil olevad andmed salvestada ja kinnitada?"
+      "confirmSaveAndConfirm": "Kas oled kindel, et soovid vormil olevad andmed salvestada ja kinnitada?",
+      "guestStudent": "Külalisõpilane ei saa taodelda"
     }
   },
   "reception": {
@@ -3019,6 +3134,8 @@
     }
   },
   "poll": {
+    "from": "Kehtiv alates",
+    "thru": "Kehtiv kuni",
     "respond": "Vasta küsitlusele",
     "name": "Küsitluse nimetus",
     "type": "Küsitluse tüüp",
@@ -3056,9 +3173,12 @@
       "noPoll": "Küsimustikku ei leitud",
       "matchingTarget": "Küsimustiku vastav sihtgrupp puudub",
       "required": "Teema(de)s {{themes}} on vigu",
-      "unConfirmForbidden": "Kinnitust ei saa enam eemaldada"
+      "unConfirmForbidden": "Kinnitust ei saa enam eemaldada",
+      "confirmedOrFinished": "Küsitlus on kinnitatud või lõppenud",
+      "studentCouncilAnswersError": "Õpilasesinduse valikul peab olema ainult üks vastusevariant"
     },
     "basicData": {
+      "journals": "Päevikud *",
       "copy": "Kopeeri",
       "label": "Põhiandmed",
       "name": "Nimetus",
@@ -3073,7 +3193,7 @@
       "duplicateJournal": "Päevik on juba valitud",
       "reminderError": "Peab langema vahemikku Kehtiv alates – Kehtiv kuni",
       "teacherCanComment": "Õpetaja saab kommenteerida",
-      "teacherCommentVisible": "Õpetaja kommentaar on õpilastele nähtav",
+      "teacherCommentVisible": "Õpetaja kommentaar on õppijatele nähtav",
       "atleastOneJournal": "Vähemalt üks päevik peab olema valitud",
       "atleastOne": "Vähemalt üks sihtrühm peab olema valitud",
       "status": "Staatus",
@@ -3147,18 +3267,23 @@
       "journalEndPeriod": "Päeviku lõpu kp vahemik",
       "subjectEndPeriod": "Aine lõpu kp vahemik",
       "amount": "Vastanute arv",
-      "notCompleted": "Pooleli",
+      "notCompleted": "Sh pooleli",
       "viewResponse": "Vaata tulemusi",
       "studyYear": "Õppeaasta",
       "studyPeriod": "Õppeperiood",
       "pollDuration": "Küsitluse kestvus",
-      "teachers": "Õppejõud",
+      "teachers": {
+        "higher": "Õppejõud",
+        "vocational": "Õpetaja"
+      },
       "toExcel": "Excelisse",
       "checkAnswer": "Kontrolli vastamist",
       "graph": "Graafiline vaade",
       "enterprise": "Ettevõte",
       "target": "Sihtrühm",
       "students": "Õppijad",
+      "targetCount": "Sihtgrupi arv",
+      "answerPercentage": "Vastamise %",
       "dialog": {
         "journals": "Päevikud",
         "subjects": "Õppeainete õppeainekood",
@@ -3170,6 +3295,7 @@
         "myAnswer": "Minu vastus",
         "allTextFields": "Kõik küsimused on tekstiväljad",
         "responseCount": "Vastanute arv",
+        "responded": "Valitud",
         "comment": "Kommentaar (salvestatakse automaatselt väljalt lahkudes)",
         "student": "Õppija nimi",
         "studentGroup": "Õpperühm",
@@ -3185,7 +3311,12 @@
       "pickQuestion": "Vali küsimus",
       "allQuestions": "Kõik küsimused",
       "duplicatePoll": "Küsimustik on juba valitud",
-      "duplicateQuestion": "Küsimus on juba valitud"
+      "duplicateQuestion": "Küsimus on juba valitud",
+      "pollTargetMessage": "Küsitluse sihtrühmade kindlaks tegemine",
+      "settingLegend": "Küsitluse legendi sättimine",
+      "settingHeader": "Küsitluse päise sättimine",
+      "settingData": "Küsitluse vastuste otsimine",
+      "generatingFile": "Faili loomine"
     }
   },
   "studyYearSchedule": {
@@ -3345,6 +3476,7 @@
       "oneRowRequired": "Igal blokil peab olema defineeritud vähemalt üks tunni aeg",
       "endIsEarlierThanStart": "Lõppkellaaeg ei tohi olla varasem algkellaajast",
       "outOfTimeRange": "Tunni lõpp ja algus peavad jääma ajavahemikku 7-23",
+      "buildingsWithoutNewTimes": "Hoone {{buildings}} juurde määratud tundide ajad kehtivad kuni kuupäevani {{date}}. Kas oled kindel, et soovid salvestada?",
       "deleteConfirm": "Kas oled kindel, et soovid tundide aegu kustutada?"
     },
     "management": {
@@ -3409,6 +3541,8 @@
       "isRepeat": "Korduvsündmus",
       "weekAmount": "Nädalate arv",
       "repetition": "Kordus",
+      "person": "Seotud isik",
+      "personalEvent": "Personaalne sündmus",
       "teacherHigher": "Õppejõud",
       "teacherVocational": "Õpetaja",
       "teachersVocational": "Õpetajad",
@@ -3429,7 +3563,8 @@
         "duplicateTeacherVocational": "Õpetaja on juba olemas",
         "duplicateStudentGroup": "Õpperühm on juba olemas",
         "duplicateSupervisor": "Juhendaja on juba olemas",
-        "endIsEarlierThanStart": "Lõppkellaaeg ei tohi olla varasem algkellaajast"
+        "endIsEarlierThanStart": "Lõppkellaaeg ei tohi olla varasem algkellaajast",
+        "teachersAndStudentGroupsNotSaveForPersonalEvent": "Personaalsel sündmusel ei salvestata õppejõudusid ning õpperühmasid"
       }
     },
     "subjectTeacherPairs": "Aine-õppejõu paarid",
@@ -3440,7 +3575,8 @@
       "studentGroup": "Õpperühm",
       "room": "Ruum",
       "subject": "Aine/teema",
-      "studyYear": "Õppeaasta"
+      "studyYear": "Õppeaasta",
+      "personalUrl": "Personaalne url"
     },
     "saveToCalendar": "Salvesta kalendrisse",
     "error": {
@@ -3450,7 +3586,8 @@
       "isBeforeNow": "Mineviku sündmust ei saa muuta",
       "noDeclaredSubjects": "Valitud perioodil deklareeritud ained puuduvad",
       "noConnectedModules": "Valitud perioodil õpitavad moodulid puuduvad",
-      "atleastOneParameterMustBeFilled": "Vähemalt üks parameeter peab olema täidetud"
+      "atleastOneParameterMustBeFilled": "Vähemalt üks parameeter peab olema täidetud",
+      "noPerson": "Personaalsel sündmusel pole isikut"
     }
   },
   "journal": {
@@ -3654,7 +3791,8 @@
       "invalidMoodleCourse": "Vale Moodle kursuse ID",
       "noStudentsToEnroll": "Pole kedagi registreerida",
       "noMissingGrades": "Puuduvaid hindeid ei ole",
-      "valid_academician_missing": "Õpetaja pole Moodle kursuse õpetaja"
+      "valid_academician_missing": "Õpetaja pole Moodle kursuse õpetaja",
+      "connect": "Moodlega ühenduse loomine ebaõnnestus"
     },
     "enroll": {
       "enrolled": "Registreerimine õnnestus",
@@ -3775,7 +3913,8 @@
       "FOREIGN_STUDY": "Välisõppes viibimine",
       "GRADUATION": "Õppeasutuse lõpetamine",
       "VOTA": "VÕTA",
-      "SPECIAL_NEEDS": "Erivajadused"
+      "SPECIAL_NEEDS": "Erivajadused",
+      "GUEST_STUDENTS": "Külalisõpilased"
     },
     "teacher": {
       "radioData": "Andmete valik",
@@ -3848,6 +3987,7 @@
   },
   "declaration": {
     "myDeclaration": "Minu õpingukava",
+    "declarationPeriod": "Deklareerimisperiood: {{from}} - {{thru}}",
     "previousDeclarations": "Varasemad õpingukavad",
     "studyPeriod": "Õppeperiood",
     "student": "Õppija",
@@ -3861,6 +4001,7 @@
     "status": "Õpingukava staatus",
     "addCurriculumSubject": "Lisa õppekava aine",
     "addExtraCurriculumSubject": "Lisa õppekava väline aine",
+    "addSubject": "Lisa õppeaine",
     "subject": "Õppeaine",
     "subjectProgram": "Aineprogrammid",
     "teacher": "Õppejõud",
@@ -3875,7 +4016,7 @@
     "eap": "EAP",
     "assessment": "Hindamisviis",
     "isRequired": "Kohustuslik",
-    "addSubject": "Lisa aine õpingukavasse",
+    "addSubjectToDeclaration": "Lisa aine õpingukavasse",
     "noSuitableCurriculumSubjects": "Sobivaid õppekava aineid ei leitud",
     "noCurrentDeclaration": "Käesoleva õppeperioodi õpingukava pole veel lisatud",
     "notDeclarationPeriod": "Õpingukava koostamise periood ei ole veel kätte jõudnud",
@@ -3905,6 +4046,9 @@
       "confirm": "Kas oled kindel, et soovid õpingukava kinnitada?",
       "confirmAll": "Kas oled kindel, et soovid kõik käesoleva õppeperioodi õpingukavad kinnitada?",
       "removeConfirmation": "Kas oled kindel, et soovid õpingukava kinnitamise maha võtta?"
+    },
+    "home": {
+      "openDeclaration": "Deklareerimiseperiood ({{period}}) on avatud: {{from}} - {{thru}}."
     }
   },
   "remark": {
@@ -3947,6 +4091,29 @@
       "studyStart": "Õpingute alguse kuupäev",
       "studyStart_from": "Õpingute alg. kp. alates",
       "studyStart_thru": "Õpingute alg. kp. kuni"
+    },
+    "guestStudent": {
+      "studyYear": "Õppeaasta",
+      "name": "Külalisõpilane",
+      "startDates": "Tuleku ajavahemik",
+      "endDates": "Lahkumise ajavahemik",
+      "curriculum": "Õppekava",
+      "curriculumVersion": "Õppekava versioon",
+      "structuralUnit": "Struktuuriüksus",
+      "educationLevel": "Haridustase",
+      "homeSchool": "Kodukool",
+      "homeCountry": "Koduriik",
+      "programme": "Programm",
+      "table": {
+        "guestStudentName": "Külalisõpilase nimi",
+        "curriculumVersion": "Õppekava versioon/rakenduskava",
+        "studentGroup": "Õpperühm",
+        "startDate": "Tuleku kuupäev",
+        "endDate": "Lahkumise kuupäev",
+        "duration": "Päevade arv",
+        "results": "Õpitulemused",
+        "eap": "Tehtud ainepunktide arv"
+      }
     },
     "curriculumscompletion": {
       "curriculum": "Õppekava",
@@ -4045,10 +4212,9 @@
       "withoutReasonAbsences": "Põhjuseta puudumisi",
       "withReasonAbsences": "Vabandatavaid puudumisi",
       "beingLate": "Hilinemisi",
-      "moreParameters": "Veel valikuid +",
-      "lessParameters": "Vähem valikuid -",
       "error": {
-        "studyYearOrEntriesFromRequired": "Täidetud peab olema vähemalt üks väljadest \"Õppeaasta\" või \"Sissekanded alates\""
+        "studyYearOrEntriesFromRequired": "Täidetud peab olema vähemalt üks väljadest \"Õppeaasta\" või \"Sissekanded alates\"",
+        "atLeastOneEntryTypeRequired": "Valitud peab olema vähemalt üks sissekande liik"
       }
     },
     "teachersDetailLoad": {
@@ -4344,7 +4510,6 @@
       "formalLearningRemoved": "Formaalne õpe on avaldusest kustutatud"
     },
     "error": {
-      "nopermission": "Vajalikud õigused puuduvad",
       "notAllowedWithStatus": "Avaldusel on tulenevalt staatusest antud käsk keelatud",
       "atLeastOneFormalOrInformalLearning": "Vähemalt üks formaalne või informaalne õpe peab olema lisatud",
       "atLeastOneOtherInformalLearning": "Vähemalt üks töökogemus/täiendkoolitus/muu õppeaine peab olema lisatud",
@@ -4411,6 +4576,7 @@
     "requests": "Taotluste seaded",
     "schoolGrade": "Hinnang",
     "changePeriod": "Perioodi muutmine",
+    "viewPeriod": "Taotluse periood",
     "personsTab": {
       "name": "Nimi",
       "phone": "Kontakttelefon",
@@ -4533,6 +4699,20 @@
       "enterprises": "Praktikaettevõtted, kus praktika toimus"
     }
   },
+  "midtermResult": {
+    "studyPeriod": "Õppeperiood",
+    "subject": "Õppeaine nimetus",
+    "subjectCode": "Õppeaine kood",
+    "teachers": "Õppejõud",
+    "results": {
+      "date": "Vahesoorituse kp",
+      "maxPoints": "Max punktid",
+      "nameAndDescription": "Vahesoorituse nimetus ja kirjeldus",
+      "percentage": "Osakaal lõpphindes",
+      "points": "Minu punktid",
+      "thresholdPercentage":"Lävend"
+    }
+  },
   "midtermTask": {
     "add": "Lisa/muuda vahesooritused",
     "assessment": "Hindamisviis",
@@ -4569,6 +4749,9 @@
     "threshold": "Lävend",
     "thresholdPercentage": "Lävendi %"
   },
+  "practiceAdmission": {
+    "studentGroup": "Õpperühm *"
+  },
   "practiceApplication": {
     "tabLabel": "Taotlused",
     "canApplyForPractice": "Saab praktikale kandideerida",
@@ -4603,7 +4786,8 @@
       "applicationSubmitted": "Taotlus on esitatud",
       "applicationAnnulled": "Taotlus on tühistatud",
       "applicationRejected": "Taotlus on tagasi lükatud",
-      "applicationAccepted": "Taotlus on aktsepteeritud"
+      "applicationAccepted": "Taotlus on aktsepteeritud",
+      "atLeastOneStudentGroup": "Vähemalt 1 õpperühm peab olema valitud"
     },
     "prompt": {
       "applyConfirm": "Kas oled kindel, et soovid praktikakohale kandideerida?",
@@ -4866,7 +5050,7 @@
       "add": "Lisa juhendaja"
     },
     "error": {
-      "noPermissionToView": "Õiguse lõputöö teema vaatamiseks puuduvad",
+      "noPermissionToView": "Õigused lõputöö teema vaatamiseks puuduvad",
       "noPermissionToCreate": "Õigused lõputöö teema loomiseks puuduvad",
       "noPermissionToEdit": "Õigused lõputöö teema muutmiseks puuduvad",
       "noPermissionToConfirm": "Õigused lõputöö teema kinnitamiseks puuduvad",

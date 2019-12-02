@@ -30,14 +30,52 @@ angular.module('hitsaOis')
       setLoggedInVisuals(null);
     };
 
+    function checkToS(authenticatedUser) {
+      if (authenticatedUser && authenticatedUser.mustAgreeWithToS) {
+        $location.path("/");
+        $mdDialog.show({
+          controller: ['$scope', '$window', function (dialogScope, $window) {
+            dialogScope.contract = QueryUtils.endpoint('/userContract').get();
+
+            dialogScope.changeUser = $scope.changeUser;
+            dialogScope.logout = $scope.logout;
+
+            dialogScope.confirm = confirm;
+            dialogScope.cancel = cancel;
+            function confirm() {
+              if (!dialogScope.agree) {
+                message.error('userContract.haveToAgree');
+                return;
+              }
+              QueryUtils.endpoint('/userContract').post2().$promise.then(function () {
+                $mdDialog.hide();
+                $location.path("/");
+                $window.location.reload();
+              });
+            }
+
+            function cancel() {
+              $mdDialog.hide();
+              dialogScope.logout();
+            }
+          }],
+          templateUrl: 'userContract/userContract.dialog.html',
+          parent: angular.element(document.body),
+          clickOutsideToClose: false,
+          escapeToClose : false
+        });
+      }
+    }
+
     function successfulAuthentication(authenticatedUser) {
       if ($scope.hideDialog) {
         $mdDialog.hide();
       }
       if (authenticatedUser) {
-        $rootScope.$broadcast(AUTH_EVENTS.loginSuccess);
+        checkToS(authenticatedUser);
         $rootScope.setCurrentUser(authenticatedUser);
         setLoggedInVisuals(authenticatedUser);
+        $rootScope.$broadcast(AUTH_EVENTS.loginSuccess);
       } else {
         $rootScope.setCurrentUser(null);
         setLoggedInVisuals(null);
@@ -124,6 +162,7 @@ angular.module('hitsaOis')
     $scope.changeUser = function () {
       AuthService.changeUser($rootScope.state.userWorkplace).then(function (authenticatedUser) {
         if (angular.isObject(authenticatedUser)) {
+          checkToS(authenticatedUser);
           setLoggedInVisuals(authenticatedUser);
           $rootScope.setCurrentUser(authenticatedUser);
           $location.path("/");

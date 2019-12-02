@@ -2,8 +2,8 @@
 
 angular.module('hitsaOis').controller('SubjectProgramController',
   ['$scope', 'QueryUtils', '$route', 'ArrayUtils', 'message', 'dialogService',
-   '$location', 'config', '$rootScope', '$timeout', '$mdColors',
-function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $location, config, $rootScope, $timeout, $mdColors) {
+   '$location', 'config', '$rootScope', '$timeout', '$mdColors', 'Classifier', '$filter',
+function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $location, config, $rootScope, $timeout, $mdColors, Classifier, $filter) {
   
   var formTypes = Object.freeze({
     periods: "periods",
@@ -31,6 +31,21 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     studyContentType: 'OPPETOOSISU_T',
     status: 'AINEPROGRAMM_STAATUS_L'
   };
+  
+  var mappedGrades = {};
+  var grades = Classifier.queryForDropdown({ mainClassCode: 'KORGHINDAMINE' });
+  grades.$promise.then(function () {
+    grades.forEach(function (grade) {
+      mappedGrades[grade.code] = grade;
+    });
+  });
+
+  $scope.getGradeName = function (code) {
+    if (!mappedGrades[code]) {
+      return "";
+    }
+    return $filter('hoisHigherGrade')(mappedGrades[code], $scope.auth.school.letterGrades);
+  }
 
   $rootScope.removeLastUrlFromHistory(function(url){
     return url && url.indexOf("new") !== -1;
@@ -378,10 +393,7 @@ function ($scope, QueryUtils, $route, DataUtils, Classifier, message, $q) {
       });
     });
   } else {
-    QueryUtils.endpoint(baseUrl + ($scope.myData ? "/program" : "/curriculum") + "/subjects").query({}, function (response) {
-      $scope.subjects = response;
-      deferred.resolve(response);
-    });
+    $scope.subjectAutocompleteUrl = baseUrl + ($scope.myData ? "/program" : "/curriculum") + "/subjects";
   }
 
   function preselectCurrentStudyYearOrPeriod() {

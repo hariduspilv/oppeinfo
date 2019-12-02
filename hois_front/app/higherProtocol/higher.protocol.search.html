@@ -16,9 +16,8 @@
             <label class="textInput">{{'higherProtocol.subject' | translate}}</label>
             <input type="text" ng-model="criteria.subject">
             <!-- <hois-select ng-model="criteria.subject" type="subject" criteria="{higher: true}"></hois-select> -->
-
           </md-input-container>
-          <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5" ng-show="auth.isAdmin()">
+          <md-input-container ng-show="auth.isAdmin() || auth.isLeadingTeacher()" flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
             <label class="textInput">{{'higherProtocol.teacher' | translate}}</label>
             <hois-select ng-model="criteria.teacher" type="teacher" criteria="{higher: true}"></hois-select>
           </md-input-container>

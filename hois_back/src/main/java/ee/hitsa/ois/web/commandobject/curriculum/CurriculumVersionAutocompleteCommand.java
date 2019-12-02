@@ -5,6 +5,7 @@ import ee.hitsa.ois.web.commandobject.SearchCommand;
 public class CurriculumVersionAutocompleteCommand extends SearchCommand {
 
     private Boolean higher;
+    private Boolean vocational;
     private Boolean sais;
     private Boolean valid;
     private Boolean closed;
@@ -13,6 +14,7 @@ public class CurriculumVersionAutocompleteCommand extends SearchCommand {
     private Boolean hasGroup;
     private String studyForm;
     private Boolean checkStudentGroupStudyForm;
+    private Long userId;
 
     public Boolean getHigher() {
         return higher;
@@ -85,5 +87,21 @@ public class CurriculumVersionAutocompleteCommand extends SearchCommand {
     public void setCheckStudentGroupStudyForm(Boolean checkStudentGroupStudyForm) {
         this.checkStudentGroupStudyForm = checkStudentGroupStudyForm;
     }
-    
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public Boolean getVocational() {
+        return vocational;
+    }
+
+    public void setVocational(Boolean vocational) {
+        this.vocational = vocational;
+    }
+
 }

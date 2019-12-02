@@ -10,12 +10,15 @@
         </md-input-container>
       </div>
 
-      <div flex ng-if="record.type === 'KASKKIRI_LOPET' && formState.school.higher && formState.school.vocational">
+      <div flex ng-if="(record.type === 'KASKKIRI_LOPET' || record.type === 'KASKKIRI_KYLALIS') && formState.school.higher && formState.school.vocational">
         <md-input-container class="md-block">
-          <md-radio-group layout-gt-sm="row" ng-model="record.isHigher" ng-change="directiveTypeChanged()" required ng-disabled="formState.state !== 'CHOOSETYPE'">
+          <md-radio-group layout-gt-sm="row" ng-model="record.isHigher" ng-change="directiveTypeChanged()" required name="isHigher" ng-disabled="formState.state !== 'CHOOSETYPE'">
             <md-radio-button ng-value="false">{{'directive.vocational' | translate}}</md-radio-button>
             <md-radio-button ng-value="true">{{'directive.higher' | translate}}</md-radio-button>
           </md-radio-group>
+          <div ng-messages="directiveForm.isHigher.$error" ng-if="directiveForm.$submitted">
+            <div class="invalid" ng-message="required">{{'main.required' | translate}}</div>
+          </div>
         </md-input-container>
       </div>
 
@@ -123,7 +126,9 @@
 
         <md-input-container class="md-block" ng-if="record.type === 'KASKKIRI_TYHIST'">
           <label class="textInput">{{'directive.cancelType' | translate}}</label>
-          <hois-classifier-select ng-model="record.cancelType" ng-change="cancelTypeChanged()" filter-values="[formState.changedStudents.length > 0 ? 'KASKKIRI_TYHISTAMISE_VIIS_T' : undefined]" ng-required="record.type === 'KASKKIRI_TYHIST'" main-classifier-code="KASKKIRI_TYHISTAMISE_VIIS" model-value-attr="code"></hois-classifier-select>
+          <hois-classifier-select required name="cancelType" ng-model="record.cancelType" ng-change="cancelTypeChanged()" 
+          filter-values="[formState.changedStudents.length > 0 ? 'KASKKIRI_TYHISTAMISE_VIIS_T' : (record.students.length == 1 ? 'KASKKIRI_TYHISTAMISE_VIIS_O' : undefined)]" 
+          main-classifier-code="KASKKIRI_TYHISTAMISE_VIIS" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
   
         <div>&nbsp;</div>
@@ -131,7 +136,7 @@
           <fieldset>
             <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'directive.studentList' | translate}}</legend>
             <md-button class="md-raised" ng-click="addStudents()" ng-if="record.type !== 'KASKKIRI_TYHIST' && record.type !== 'KASKKIRI_IMMATV'">{{'directive.addStudents' | translate}}</md-button>
-            <div ng-include="formState.templateUrl" flex></div>
+            <div class="template" ng-include="formState.templateUrl" flex></div>
           </fieldset>
         </md-table-container>
 
@@ -146,3 +151,16 @@
     </form>
   </div>
 </div>
+
+<style>
+  /* Overrides default user-agent style for error message */
+  div.template div.invalid p {
+    margin-block-start: 0.25em;
+    margin-block-end: 0.25em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+  }
+  div.template tr.hois-table-row-detail {
+    height: auto !important;
+  }
+</style>

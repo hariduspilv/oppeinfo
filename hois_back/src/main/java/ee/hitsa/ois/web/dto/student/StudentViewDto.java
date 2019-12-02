@@ -7,7 +7,9 @@ import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
@@ -42,11 +44,13 @@ public class StudentViewDto extends StudentForm {
     private Boolean userCanEditStudent;
     private Boolean userCanAddRepresentative;
     private Boolean userIsSchoolAdmin;
+    private Boolean userIsLeadingTeacher;
     private Boolean userIsStudentGroupTeacher;
     private Boolean userCanViewStudentSpecificData;
     private Boolean userCanUpdateRR;
     private Boolean userCanViewStudentSupportServices;
     private Boolean userCanViewPrivateStudentSupportServices;
+    private Boolean studentCanAddPhoto;
     private BigDecimal curriculumCredits;
     private BigDecimal credits;
     private BigDecimal kkh;
@@ -59,6 +63,7 @@ public class StudentViewDto extends StudentForm {
     private LocalDate boardingSchoolValidFrom;
     private LocalDate boardingSchoolValidThru;
     private String boardingSchoolAddInfo;
+    private String type;
     private List<StudentOccupationCertificateDto> occupationCertificates;
     private List<StudentDormitoryHistoryDto> dormitoryHistory;
 
@@ -246,6 +251,14 @@ public class StudentViewDto extends StudentForm {
         this.userIsSchoolAdmin = userIsSchoolAdmin;
     }
 
+    public Boolean getUserIsLeadingTeacher() {
+        return userIsLeadingTeacher;
+    }
+
+    public void setUserIsLeadingTeacher(Boolean userIsLeadingTeacher) {
+        this.userIsLeadingTeacher = userIsLeadingTeacher;
+    }
+
     public Boolean getUserIsStudentGroupTeacher() {
         return userIsStudentGroupTeacher;
     }
@@ -284,6 +297,14 @@ public class StudentViewDto extends StudentForm {
 
     public void setUserCanViewPrivateStudentSupportServices(Boolean userCanViewPrivateStudentSupportServices) {
         this.userCanViewPrivateStudentSupportServices = userCanViewPrivateStudentSupportServices;
+    }
+
+    public Boolean getStudentCanAddPhoto() {
+        return studentCanAddPhoto;
+    }
+
+    public void setStudentCanAddPhoto(Boolean studentCanAddPhoto) {
+        this.studentCanAddPhoto = studentCanAddPhoto;
     }
 
     public BigDecimal getCurriculumCredits() {
@@ -411,20 +432,17 @@ public class StudentViewDto extends StudentForm {
         // study
         dto.setStudyLanguage(EntityUtil.getNullableCode(student.getLanguage()));
         dto.setCourse(student.getStudentGroup() != null ? student.getStudentGroup().getCourse() : null);
-        Curriculum curriculum = student.getCurriculumVersion().getCurriculum();
-        dto.setIsVocational(Boolean.valueOf(StudentUtil.isVocational(student)));
-        if (!Boolean.TRUE.equals(dto.getIsVocational())) {
-            dto.setStudyCompany(null);
-            if (student.getCurriculumSpeciality() != null) {
-                dto.setCurriculumSpeciality(AutocompleteResult.of(student.getCurriculumSpeciality()));
-            }
-        } else {
-            if (student.getStudentGroup() != null && student.getStudentGroup().getSpeciality() != null) {
-                dto.setSpeciality(student.getStudentGroup().getSpeciality().getCode());   
+        CurriculumVersion curriculumVersion = student.getCurriculumVersion();
+        if (curriculumVersion != null) {
+            Curriculum curriculum = student.getCurriculumVersion().getCurriculum();
+            if (curriculum != null) {
+                dto.setCurriculum(EntityUtil.getId(curriculum));
+                dto.setCurriculumCredits(curriculum.getCredits());
+                dto.setIsVocational(Boolean.valueOf(StudentUtil.isVocational(student)));
             }
         }
-        dto.setCurriculum(EntityUtil.getId(curriculum));
-        dto.setCurriculumCredits(curriculum.getCredits());
+        dto.setType(EntityUtil.getNullableCode(student.getType()));
+        dto.setIsGuestStudent(Boolean.valueOf(StudentType.OPPUR_K.name().equals(dto.getType())));
         dto.setSchoolEmail(student.getEmail());
         dto.setSpecialNeeds(student.getSpecialNeeds().stream().map(n -> EntityUtil.getCode(n.getSpecialNeed())).collect(Collectors.toList()));
         return dto;
@@ -436,6 +454,7 @@ public class StudentViewDto extends StudentForm {
         private String fullname;
         private String idcode;
         private String sex;
+        private LocalDate birthdate;
 
         public String getFirstname() {
             return firstname;
@@ -476,5 +495,21 @@ public class StudentViewDto extends StudentForm {
         public void setSex(String sex) {
             this.sex = sex;
         }
+
+        public LocalDate getBirthdate() {
+            return birthdate;
+        }
+
+        public void setBirthdate(LocalDate birthdate) {
+            this.birthdate = birthdate;
+        }
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.exception.HoisException;
+import ee.hitsa.ois.util.CryptoUtil;
 import ee.hitsa.ois.util.HttpUtil;
 
 @Service
@@ -43,31 +45,26 @@ public class OisFileService {
 
     @Autowired
     private EntityManager em;
-    
+
     // 128 bit key(16 letters)
     private static String key;
-    
-    public static String getKey() {
-    	return key;
-    }
-    
+
     @Value("${file.cypher.key}")
     public void setKey(String keyFromProps) {
         key = keyFromProps;
     }
-    
-    public static Long getId(String id) {
-        if (id == null) return null;
-        byte[] deCoded = Base64.decodeBase64(id);
+
+    public static Long getId(String encodedId) {
+        return encodedId != null ? Long.valueOf(CryptoUtil.decrypt(key, Base64.decodeBase64(encodedId))) : null;
+    }
+
+    public static String encryptAndDecodeId(Long id) {
+        byte[] encryptedId = CryptoUtil.encrypt(key, id);
         try {
-            Key aesKey = new SecretKeySpec(key.getBytes(), "AES");
-            Cipher cipher = Cipher.getInstance("AES");
-            cipher.init(Cipher.DECRYPT_MODE, aesKey);
-            id = new String(cipher.doFinal(deCoded));
-        } catch(@SuppressWarnings("unused") Exception e) {
-            return null;
+            return Base64.encodeBase64URLSafeString(encryptedId);
+        } catch (Exception e) {
+            throw new HoisException(e);
         }
-        return Long.valueOf(id);
     }
 
     public void get(String type, String id, HttpServletResponse response) throws IOException {

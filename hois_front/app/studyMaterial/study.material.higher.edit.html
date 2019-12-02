@@ -13,9 +13,12 @@
   </div>
   <div flex>
     <form name="studyMaterialForm" ng-submit="save()" novalidate layout="column">
-      <div flex>
-        <hois-autocomplete ng-if="auth.isAdmin()" flex ng-model="$parent.teacher" method="teachers" name="teacher" label="teacher.labelHigher"
-          required ng-disabled="material.id && !material.canEdit"></hois-autocomplete>
+      <div ng-if="auth.isAdmin() || auth.isLeadingTeacher() || material.teacher" layout="row">
+        <md-input-container flex>
+          <label>{{'studyMaterial.teacherHigher' | translate}}</label>
+          <hois-select ng-model="material.teacher" name="teacher" values="teachers"
+            ng-disabled="auth.isTeacher() || (material.id && !material.canEdit)" required></hois-select>
+        </md-input-container>
       </div>
       <md-input-container flex>
         <label class="textInput">{{'studyMaterial.type' | translate}}</label>

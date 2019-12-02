@@ -19,7 +19,7 @@ public class UntisCodeUtil {
 
 	public String generateTeacherCode(TeacherPersonForm teacher, List<Teacher> teachers) {
 		int subStringIndex = 1;
-		Boolean brokeCycle = false;
+		boolean brokeCycle = false;
 		
 		//Last name could be under 4 letters
 		if (teacher.getLastname().length() < 4) {

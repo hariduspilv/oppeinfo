@@ -1,6 +1,6 @@
 <fieldset>
   <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'studyMaterial.label' | translate}}</legend>
-  <div layout="row" style="overflow: auto" layout-xs="column">
+  <div ng-show="journal.canConnectStudyMaterials" layout="row" style="overflow: auto" layout-xs="column">
     <md-button class="md-button md-raised" ng-href="/#/studyMaterial/vocational/{{journal.id}}/new">{{'main.button.create' | translate}}</md-button>
     <div class="middle-text">{{'studyMaterial.orChooseExisting' | translate}}</div>
     <hois-autocomplete flex ng-model="$parent.$parent.existingMaterial" method="studyMaterials" ha-controller="hAutocomplete" name="existingMaterial" label="studyMaterial.name"
@@ -14,11 +14,12 @@
           <th md-column>{{'studyMaterial.type' | translate}}</th>
           <th md-column>{{'studyMaterial.name' | translate}}</th>
           <th md-column>{{'studyMaterial.fileorlink' | translate}}</th>
+          <th md-column>{{auth.higher ? ('studyMaterial.teacherHigher' | translate) : ('studyMaterial.teacherVocational' | translate)}}</th>
           <th md-column>{{'studyMaterial.isVisibleToStudents' | translate}}</th>
           <th md-column>{{'studyMaterial.isPublic' | translate}}</th>
           <th md-column>{{'studyMaterial.journalCount' | translate}}</th>
-          <th md-column></th>
-          <th md-column ng-if="(auth.isAdmin() || auth.isTeacher()) && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPPEMATERJAL')"></th>
+          <th md-column ng-if="journal.canConnectStudyMaterials"></th>
+          <th md-column ng-if="journal.canConnectStudyMaterials"></th>
         </tr>
       </thead>
       <tbody md-body>
@@ -40,6 +41,7 @@
           <td md-cell ng-if="material.typeCode.code === 'OPPEMATERJAL_L'">
             <a ng-href="{{material.url | hoisUrl}}" target="_blank" rel="noopener noreferrer">{{material.url}}</a>
           </td>
+          <td md-cell>{{currentLanguageNameField(material.teacher)}}</td>
           <td md-cell>
             <md-checkbox ng-model="material.isVisibleToStudents" aria-label="isVisibleToStudents" disabled></md-checkbox>
           </td>
@@ -47,11 +49,11 @@
             <md-checkbox ng-model="material.isPublic" aria-label="isVisibleToStudents" disabled></md-checkbox>
           </td>
           <td md-cell>{{material.journalCount}}</td>
-          <td md-cell>
-            <a class="remove nomargin" ng-click="deleteConnection(material.connect, material.journalCount)">&times;</a>
+          <td md-cell ng-if="journal.canConnectStudyMaterials">
+            <a ng-if="material.canEdit" class="remove nomargin" ng-click="deleteConnection(material.connect, material.journalCount)">&times;</a>
           </td>
-          <td md-cell ng-if="(auth.isAdmin() || auth.isTeacher()) && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPPEMATERJAL')" style="white-space: nowrap;">
-            <a ng-href="https://e-koolikott.ee/" target="_blank">{{'studyMaterial.addESchoolBag' | translate}}</a>
+          <td md-cell ng-if="journal.canConnectStudyMaterials" style="white-space: nowrap;">
+            <a ng-if="material.canEdit" ng-href="https://e-koolikott.ee/" target="_blank">{{'studyMaterial.addESchoolBag' | translate}}</a>
           </td>
         </tr>
       </tbody>

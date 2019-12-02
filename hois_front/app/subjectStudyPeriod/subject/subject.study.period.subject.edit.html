@@ -10,10 +10,10 @@
                     <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
                     <hois-value value="currentLanguageNameField(studyPeriod)"></hois-value>
                 </md-input-container>
-                <md-input-container ng-if="isNew" flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-                    <label>{{'subjectStudyPeriod.subject' | translate}}</label>
-                    <hois-select ng-model="record.subject" values="subjects" required></hois-select>
-                </md-input-container>
+                <hois-autocomplete ng-if="isNew && record.studyPeriod" flex="25" flex-sm="100" flex-xs="100" ng-model="record.subject" url="/subjectStudyPeriods/subjects/list/limited"
+                    label="subjectStudyPeriod.subject" required no-paging="true" ha-attribute="id" additional-query-params="{id: record.studyPeriod}"
+                    flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+                </hois-autocomplete>
                  <md-input-container ng-if="!isNew" flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                     <label>{{'subjectStudyPeriod.subject' | translate}}</label>
                     <hois-value value="subject.nameEt"></hois-value>

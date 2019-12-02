@@ -10,12 +10,14 @@
           </md-input-container>
 
           <div flex="50" flex-offset="5">
-            <hois-autocomplete ha-controller="directiveControllers" ng-model="criteria.curriculumVersion" method="curriculumversions" label="report.curriculumscompletion.curriculum"></hois-autocomplete>
+            <hois-autocomplete ha-controller="directiveControllers" ng-model="criteria.curriculumVersion" method="curriculumversions"
+              label="report.curriculumscompletion.curriculum" additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
           </div>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
-          <hois-autocomplete flex="45" ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" label="{{'report.curriculumscompletion.studentgroup'}}"></hois-autocomplete>
+          <hois-autocomplete flex="45" ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups"
+            label="{{'report.curriculumscompletion.studentgroup'}}" additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
           <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
             <label>{{'report.curriculumscompletion.studyForm' | translate}}</label>
             <hois-classifier-select ng-model="criteria.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM"></hois-classifier-select>

@@ -36,7 +36,7 @@
             <span ng-if="row.subject">{{currentLanguageNameField(row.subject)}} ({{row.code}})</span>
         </td>
         <td md-cell>{{row.credits}}</td>
-        <td md-cell>{{auth.school.letterGrades ? row.grade.value2 : row.grade.value}}</td>
+        <td md-cell>{{row.grade | hoisHigherGrade: auth.school.letterGrades}}</td>
         <td md-cell>
           <span ng-if="row.isOptional === false">
             {{row.module ? currentLanguageNameField(row.module) : ('apel.informalLearnings.freeChoice' | translate)}} ({{'main.yes' | translate}})

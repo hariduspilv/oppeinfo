@@ -42,7 +42,7 @@
                     ('poll.answers.dialog.subject' | translate) + ' ' + currentLanguageNameField(graphName)) 
                     : (overall ? ('poll.answers.dialog.themes' | translate) : currentLanguageNameField(formState.name))}}</h2>
                 <h2 flex ng-if="enterprise">{{('poll.answers.enterprise' | translate) + ' ' + currentLanguageNameField(graphName)}}</h2>
-                <h2 flex ng-if="teacher">{{'poll.answers.teachers' | translate}}</h2>
+                <h2 flex ng-if="teacher">{{(auth.higher ? 'poll.answers.teachers.higher' : 'poll.answers.teachers.vocational') | translate}}</h2>
                 <h2 flex ng-if="student">{{'poll.answers.students' | translate}}</h2>
                 <h2 flex ng-if="poll">{{'poll.answers.dialog.pollName' | translate:poll}}</h2>
                 <md-button class="md-icon-button" ng-click="cancel()">
@@ -92,7 +92,8 @@
         </md-dialog-content>
     
         <md-dialog-actions layout="row" layout-xs="column" layout-align="start start" layout-align-xs="none none">
-            <md-button class="md-raised" ng-if="showGraph && !teacherViewing && !adminViewing" ng-click="hideGraph()">{{'main.button.back' | translate}}</md-button>
+            <md-button class="md-raised" ng-if="showGraph && !teacherViewing && !adminViewing && !studentCouncil" 
+            ng-click="hideGraph()">{{'main.button.back' | translate}}</md-button>
             <md-button flex-xs="100" class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
         </md-dialog-actions>
 

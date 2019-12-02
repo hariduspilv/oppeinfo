@@ -1,0 +1,6 @@
+<md-nav-bar md-selected-nav-item="currentNavItem" aria-label="{{'userRole.tabDescription' | translate}}" ng-if="!auth.isMainAdmin()">
+  <md-nav-item md-nav-href="#/persons?_menu" name="users">{{'userRole.tabUsers' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/persons/admin-roles?_menu" name="adminRoles">{{'userRole.tabAdmin' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/persons/teacher-roles?_menu" name="teacherRoles">
+    {{auth.higher ? 'userRole.tabHigherTeacher' : 'userRole.tabVocationalTeacher' | translate}}</md-nav-item>
+</md-nav-bar>

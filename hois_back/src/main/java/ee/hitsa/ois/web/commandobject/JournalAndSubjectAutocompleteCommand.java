@@ -20,4 +20,5 @@ public class JournalAndSubjectAutocompleteCommand extends SearchCommand {
     public void setPractice(Boolean practice) {
         this.practice = practice;
     }
+
 }

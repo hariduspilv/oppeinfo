@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.toContains;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,8 +30,10 @@ public class JpaNativeQueryBuilder {
     private Sort sort;
     private final Map<String, Object> parameters = new HashMap<>();
     private final StringBuilder where = new StringBuilder();
+    private final StringBuilder having = new StringBuilder();
     private String groupBy;
     private long limit;
+    private String beforeSelect;
 
     public JpaNativeQueryBuilder(String from) {
         this.from = Objects.requireNonNull(from);
@@ -60,6 +63,11 @@ public class JpaNativeQueryBuilder {
     
     public JpaNativeQueryBuilder limit(long limitValue) {
         this.limit = limitValue;
+        return this;
+    }
+    
+    public JpaNativeQueryBuilder beforeSelect(String sql) {
+        this.beforeSelect = sql;
         return this;
     }
 
@@ -110,6 +118,12 @@ public class JpaNativeQueryBuilder {
             filter(criteria, name, adjuster.apply(value));
         }
     }
+    
+    public void optionalCriteria(String criteria, String name, LocalTime value) {
+        if (value != null) {
+            filter(criteria, name, value.toString());
+        }
+    }
 
     public void optionalCriteria(String criteria, String name, LocalDateTime value) {
         if(value != null) {
@@ -122,7 +136,7 @@ public class JpaNativeQueryBuilder {
             filter(criteria, name, value);
         }
     }
-
+    
     public void optionalContains(List<String> fields, String name, String value) {
         if(value != null && !value.isEmpty()) {
             StringBuilder sb = new StringBuilder(fields.size() > 1 ? "(" : "");
@@ -192,6 +206,18 @@ public class JpaNativeQueryBuilder {
         where.append(Objects.requireNonNull(filter));
     }
 
+    public void having(String criteria, String name, Object value) {
+        parameter(name, value);
+        having(criteria);
+    }
+    
+    public void having(String filter) {
+        if(having.length() > 0) {
+            having.append(" and ");
+        }
+        having.append(Objects.requireNonNull(filter));
+    }
+
     public Query select(String projection, EntityManager em) {
         return select(projection, em, null);
     }
@@ -221,9 +247,13 @@ public class JpaNativeQueryBuilder {
     }
     
     public Number count(String expression, EntityManager em, Map<String, Object> additionalParameters) {
+        return count(expression, null, em, additionalParameters);
+    }
+
+    public Number count(String expression, String selectExpression, EntityManager em, Map<String, Object> additionalParameters) {
         String querySql;
         if(StringUtils.hasText(groupBy)) {
-            querySql = "select " + Objects.requireNonNull(expression) +" from (" + querySql("1", false) + ") wrapped_count_query";
+            querySql = "select " + Objects.requireNonNull(expression) +" from (" + querySql(selectExpression != null ? selectExpression : "1", false) + ") wrapped_count_query";
         } else {
             querySql = querySql(expression, false);
         }
@@ -235,7 +265,11 @@ public class JpaNativeQueryBuilder {
     }
 
     public String querySql(String projection, boolean ordered, boolean distinct) {
-        StringBuilder sql = new StringBuilder("select ");
+        StringBuilder sql = new StringBuilder();
+        if (beforeSelect != null) {
+            sql.append(beforeSelect);
+        }
+        sql.append(sql.length() > 0 ? " select " : "select ");
         if (distinct) {
             sql.append("distinct ");
         }
@@ -250,6 +284,11 @@ public class JpaNativeQueryBuilder {
         if(StringUtils.hasText(groupBy)) {
             sql.append(" group by ");
             sql.append(groupBy);
+        }
+        
+        if(StringUtils.hasText(having)) {
+            sql.append(" having ");
+            sql.append(having);
         }
 
         if(sort != null && ordered) {

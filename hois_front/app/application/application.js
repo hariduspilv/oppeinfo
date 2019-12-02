@@ -487,16 +487,22 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
         break;
       case 'AVALDUS_LIIK_VALIS':
       case 'AVALDUS_LIIK_OVORM':
+      case 'AVALDUS_LIIK_MUU':
+        $scope.studentSearchCriteria = { studying: true, showGuestStudent: true };
+        break;
       case 'AVALDUS_LIIK_OVERSKAVA':
         $scope.studentSearchCriteria = { studying: true, higher: true };
         break;
       case 'AVALDUS_LIIK_RAKKAVA':
       case 'AVALDUS_LIIK_TUGI':
-        $scope.studentSearchCriteria = { studying: true, higher: false };
+        $scope.studentSearchCriteria = {studying: true, higher: false };
         break;
       default:
         $scope.studentSearchCriteria = { studying: true };
         break;
+    }
+    if ($scope.application.type !== 'AVALDUS_LIIK_MUU') {
+      angular.extend($scope.studentSearchCriteria, {hideGuestStudents: true});
     }
     if ($scope.auth.isTeacher()) {
       angular.extend($scope.studentSearchCriteria, {studentGroup: $scope.auth.teacherGroupIds});

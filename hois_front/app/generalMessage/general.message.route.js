@@ -3,11 +3,11 @@
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
 
   function canEdit(Session, roles) {
-    return roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_YLDTEADE) || Session.roleCode === 'ROLL_P';
+    return roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_YLDTEADE) !== -1 || Session.roleCode === 'ROLL_P';
   }
 
   function canView(Session, roles) {
-    return roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_YLDTEADE) || Session.roleCode === 'ROLL_P';
+    return roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_YLDTEADE) !== -1 || Session.roleCode === 'ROLL_P';
   }
 
   $routeProvider

@@ -16,32 +16,52 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
 public abstract class ApelApplicationUtil {
-    
+
     public static boolean canSearch(HoisUserDetails user) {
-        return user.isSchoolAdmin() || user.isStudent() || (user.isTeacher()
-                && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_VOTAKOM));
-    }
-    
-    public static boolean canView(HoisUserDetails user, ApelApplication application) {
-        if (UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_VOTA)) {
-            return UserUtil.isSchoolAdmin(user, application.getSchool())
-                    || UserUtil.isStudent(user, application.getStudent());
-        } else if (UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTAKOM)) {
-            return UserUtil.isSchoolAdmin(user, application.getSchool())
-                    || (UserUtil.isTeacher(user, application.getSchool()) && isCommitteeMember(user, application)); 
+        if (user.isSchoolAdmin() || user.isLeadingTeacher()) {
+            return UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_VOTA)
+                    || UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_VOTAKOM);
+        } else if (user.isTeacher()) {
+            return UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_VOTAKOM);
+        } else if (user.isStudent()) {
+            return true;
         }
         return false;
     }
 
+    public static boolean canView(HoisUserDetails user, ApelApplication application) {
+        School school = application.getSchool();
+        if (UserUtil.isSchoolAdmin(user, school)) {
+            return UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_VOTA)
+                    || (UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_VOTAKOM)
+                            && isCommitteeMember(user, application));
+        } else if (UserUtil.isLeadingTeacher(user, school)) {
+            return (UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_VOTA)
+                    && UserUtil.isLeadingTeacher(user, application.getStudent()))
+                    || (UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_VOTAKOM)
+                            && isCommitteeMember(user, application));
+        } else if (UserUtil.isTeacher(user, school)) {
+            return UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_VOTAKOM)
+                    && isCommitteeMember(user, application);
+        } else if (UserUtil.isStudent(user, application.getStudent())) {
+            return UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_VOTA);
+        }
+        return false;
+    }
+
+    public static boolean canCreate(HoisUserDetails user) {
+        return user.isStudent() || (user.isSchoolAdmin()
+                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA));
+    }
+
     public static boolean canEdit(HoisUserDetails user, ApelApplication application) {
         String status = EntityUtil.getCode(application.getStatus());
-        Student student = application.getStudent();
-        if (user.isStudent()) {
-            return ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status) && UserUtil.isStudent(user, student);
-        } else if (UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA)) {
-            return (ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status)
-                    || ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status))
-                    && UserUtil.isSchoolAdmin(user, application.getSchool());
+        if (UserUtil.isStudent(user, application.getStudent())) {
+            return ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status);
+        } else if (UserUtil.isSchoolAdmin(user, application.getSchool())) {
+            return UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA)
+                    && (ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status)
+                            || ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status));
         }
         return false;
     }
@@ -50,9 +70,9 @@ public abstract class ApelApplicationUtil {
         if (user.isStudent()) {
             return ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status);
         } else if (user.isSchoolAdmin()) {
-            return (ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status)
-                    || ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status))
-                    && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA);
+            return UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA)
+                    && (ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status)
+                            || ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status));
         }
         return false;
     }
@@ -60,21 +80,22 @@ public abstract class ApelApplicationUtil {
     public static boolean canReview(HoisUserDetails user, ApelApplication application) {
         if (ApelApplicationStatus.VOTA_STAATUS_V.name().equals(EntityUtil.getCode(application.getStatus()))
                 && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTAKOM)) {
-            if (user.isSchoolAdmin()) {
+            if (UserUtil.isSchoolAdmin(user, application.getSchool())) {
                 return true;
-            } else if (user.isTeacher()) {
+            } else if (UserUtil.isTeacher(user, application.getSchool())
+                    || UserUtil.isLeadingTeacher(user, application.getSchool())) {
                 return isCommitteeMember(user, application);
             }
         }
         return false;
     }
-    
+
     public static boolean canReview(HoisUserDetails user, String status, List<Long> committeeMembers) {
         if (ApelApplicationStatus.VOTA_STAATUS_V.name().equals(status)
                 && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTAKOM)) {
             if (user.isSchoolAdmin()) {
                 return true;
-            } else if (user.isTeacher()) {
+            } else if (user.isTeacher() || user.isLeadingTeacher()) {
                 return committeeMembers.contains(user.getPersonId());
             }
         }
@@ -82,21 +103,22 @@ public abstract class ApelApplicationUtil {
     }
 
     public static boolean canCanChangeTransferStatus(HoisUserDetails user, ApelApplication application) {
-        if (ApelApplicationStatus.VOTA_STAATUS_E.name().equals(EntityUtil.getCode(application.getStatus()))) {
-            return UserUtil.isSchoolAdmin(user, application.getSchool());
-        } else if (ApelApplicationStatus.VOTA_STAATUS_V.name().equals(EntityUtil.getCode(application.getStatus()))) {
-            return UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTAKOM)
-                    && (UserUtil.isSchoolAdmin(user, application.getSchool())
-                            || isCommitteeMember(user, application));
+        String status = EntityUtil.getCode(application.getStatus());
+        if (ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status)) {
+            return UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA)
+                    && UserUtil.isSchoolAdmin(user, application.getSchool());
         }
-        return false;
+        return canReview(user, application);
     }
 
     public static boolean canSubmit(HoisUserDetails user, ApelApplication application) {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
         if (ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status)) {
-            return UserUtil.isSchoolAdmin(user, student.getSchool()) || UserUtil.isStudent(user, student);
+            if (UserUtil.isSchoolAdmin(user, student.getSchool())) {
+                return UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA);
+            }
+            return UserUtil.isStudent(user, student);
         }
         return false;
     }
@@ -105,20 +127,18 @@ public abstract class ApelApplicationUtil {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
         if (ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status)) {
-            return UserUtil.isSchoolAdmin(user, student.getSchool());
-        } else if (ApelApplicationStatus.VOTA_STAATUS_V.name().equals(status)) {
-            return (UserUtil.isSchoolAdmin(user, student.getSchool())
-                    || UserUtil.isTeacher(user, student.getSchool()) && isCommitteeMember(user, application))
-                    && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTAKOM);
+            return UserUtil.isSchoolAdmin(user, student.getSchool())
+                    && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA);
         }
-        return false;
+        return canReview(user, application);
     }
-    
+
     public static boolean canSendToCommittee(HoisUserDetails user, ApelApplication application) {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
         if (ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status)) {
-            return UserUtil.isSchoolAdmin(user, student.getSchool());
+            return UserUtil.isSchoolAdmin(user, student.getSchool())
+                    && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA);
         }
         return false;
     }
@@ -127,20 +147,18 @@ public abstract class ApelApplicationUtil {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
         if (ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status)) {
-            return UserUtil.isSchoolAdmin(user, student.getSchool());
-        } else if (ApelApplicationStatus.VOTA_STAATUS_V.name().equals(status)) {
-            return (UserUtil.isSchoolAdmin(user, student.getSchool())
-                    || UserUtil.isTeacher(user, student.getSchool()) && isCommitteeMember(user, application))
-                    && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTAKOM);
+            return UserUtil.isSchoolAdmin(user, student.getSchool())
+                    && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA);
         }
-        return false;
+        return canReview(user, application);
     }
 
     public static boolean canConfirm(HoisUserDetails user, ApelApplication application) {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
         if (ApelApplicationStatus.VOTA_STAATUS_Y.name().equals(status)) {
-            return isAdminAndHasConfirmationPermission(user, student.getSchool());
+            return UserUtil.isSchoolAdmin(user, student.getSchool())
+                    && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_VOTA);
         }
         return false;
     }
@@ -149,21 +167,18 @@ public abstract class ApelApplicationUtil {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
         if (ApelApplicationStatus.VOTA_STAATUS_C.name().equals(status)) {
-            return isAdminAndHasConfirmationPermission(user, student.getSchool());
+            return UserUtil.isSchoolAdmin(user, student.getSchool())
+                    && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_VOTA);
         }
         return false;
-    }
-    
-    private static boolean isAdminAndHasConfirmationPermission(HoisUserDetails user, School school) {
-        return Boolean.TRUE.equals(Boolean.valueOf(UserUtil.isSchoolAdmin(user, school)
-                && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_VOTA)));
     }
 
     public static boolean canSendBack(HoisUserDetails user, ApelApplication application) {
         String status = EntityUtil.getCode(application.getStatus());
         Student student = application.getStudent();
         if (ApelApplicationStatus.VOTA_STAATUS_Y.name().equals(status)) {
-            return UserUtil.isSchoolAdmin(user, student.getSchool());
+            return UserUtil.isSchoolAdmin(user, student.getSchool())
+                    && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA);
         }
         return false;
     }
@@ -174,22 +189,8 @@ public abstract class ApelApplicationUtil {
         if (ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status)
                 || ApelApplicationStatus.VOTA_STAATUS_Y.name().equals(status)) {
             return UserUtil.isSchoolAdmin(user, student.getSchool());
-        } else if (ApelApplicationStatus.VOTA_STAATUS_V.name().equals(status)) {
-            return (UserUtil.isSchoolAdmin(user, student.getSchool())
-                    || UserUtil.isTeacher(user, student.getSchool()) && isCommitteeMember(user, application))
-                    && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTAKOM);
         }
-        return false;
-    }
-
-    public static boolean canUpdateInformalSubjectOrModuleTransferStatus(HoisUserDetails user, ApelApplication application) {
-        String status = EntityUtil.getCode(application.getStatus());
-        Student student = application.getStudent();
-        if (!(ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status))) {
-            return Boolean.TRUE.equals(Boolean.valueOf(UserUtil.isSchoolAdmin(user, student.getSchool())
-                    && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_VOTA)));
-        }
-        return false;
+        return canReview(user, application);
     }
 
     public static boolean isCommitteeMember(HoisUserDetails user, ApelApplication application) {

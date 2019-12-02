@@ -121,8 +121,9 @@
 
                   <hois-autocomplete ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_M'" flex="45" flex-sm="100" flex-xs="100" 
                     ng-model="record.newTransferableSubjectOrModule.subject" method="subjects" name="subject" label="apel.formalLearnings.transferableSubjectEt" 
-                    additional-query-params="{student: student.id, curriculumSubjects: false, curriculumVersion: curriculumVersionId, withCredits: false}"
-                    md-selected-item-change="subjectChanged(record.newTransferableSubjectOrModule.subject)" ng-model-options="{ debounce: 500 }" required>
+                    additional-query-params="{student: student.id, curriculumSubjects: false, curriculumVersion: curriculumVersionId,
+                      ignoreCurriculumVersionStatus: true, withCredits: false, noFinalSubjects: true}"
+                      md-selected-item-change="subjectChanged(record.newTransferableSubjectOrModule.subject)" ng-model-options="{ debounce: 500 }" required>
                   </hois-autocomplete>
 
                   <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -178,7 +179,7 @@
                   <md-input-container ng-if="record.newTransferableSubjectOrModule.type !== 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                     <label>{{'apel.formalLearnings.result' | translate}}</label>
                     <hois-select ng-model="record.newTransferableSubjectOrModule.grade" values="grades" value-property="code" hide-values="hideInvalid"
-                      show-property="{{auth.school.letterGrades ? 'value2' : 'value'}}" aria-label="grade" required></hois-select>
+                      sorted-query="true" show-property="{{auth.school.letterGrades ? 'shownValue' : 'value'}}" aria-label="grade" required></hois-select>
                   </md-input-container>
                   <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                     <label>{{'apel.formalLearnings.result' | translate}}</label>
@@ -254,7 +255,7 @@
                   <td md-cell ng-if="!row.subject && !row.nameEn">{{row.nameEt}}</td>
                   <td md-cell ng-if="!row.subject && row.nameEn">{{row.nameEt}}/{{row.nameEn}}</td>
                   <td md-cell>{{row.credits}}</td>
-                  <td md-cell>{{auth.school.letterGrades ? row.grade.value2 : row.grade.value}}</td>
+                  <td md-cell>{{row.grade | hoisHigherGrade: auth.school.letterGrades}}</td>
                   <td md-cell>{{row.gradeDate | hoisDate}}</td>
                   <td md-cell>{{row.teachers}}</td>
                   <td md-cell>{{currentLanguageNameField(row.module)}} ({{row.isOptional ? 'main.no' : 'main.yes' | translate}})</td>

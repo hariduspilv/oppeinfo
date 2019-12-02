@@ -1,155 +1,31 @@
-<md-nav-bar md-selected-nav-item="currentNavItem" aria-label="{{'subjectStudyPeriod.label.options' | translate}}" ng-show="formState.showNavBar">
-  <md-nav-item md-nav-href="#/declaration/current/view" name="current">{{'declaration.myDeclaration' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/declarations/previous?_menu" name="previous">{{'declaration.previousDeclarations' | translate}}</md-nav-item>
-</md-nav-bar>
-
-<div class="ois-form-layout-padding form-readonly" layout="column" ng-show="formState.declaration">
-  <div layout="row" layout-sm="column" layout-xs="column" ng-show="auth.isAdmin()">
-    <md-input-container flex="25" flex-sm="100" flex-xs="100">
-        <label>{{'declaration.student' | translate}}</label>
-        <hois-value value="declaration.student.fullname"></hois-value>
-    </md-input-container>
-  </div>
-  <div layout="row" layout-sm="column" layout-xs="column">
-    <md-input-container flex="25" flex-sm="100" flex-xs="100">
-        <label>{{'declaration.studyPeriod' | translate}}</label>
-        <hois-value value="currentLanguageNameField(declaration.studyPeriod)"></hois-value>
-    </md-input-container>
-    <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-        <label>{{'declaration.curriculumVersion' | translate}}</label>
-        <hois-value value="currentLanguageNameField(declaration.student.curriculumVersion)"></hois-value>
-    </md-input-container>
-    <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-        <label>{{'declaration.course' | translate}}</label>
-        <hois-value value="declaration.course.toString()"></hois-value>
-    </md-input-container>
-    <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-        <label>{{'declaration.studentGroup' | translate}}</label>
-        <hois-value value="currentLanguageNameField(declaration.student.studentGroup)"></hois-value>
-    </md-input-container>
-  </div>
-  <div layout="row" layout-sm="column" layout-xs="column">
-    <md-input-container flex="25" flex-sm="100" flex-xs="100">
-        <label>{{'declaration.status' | translate}}</label>
-        <hois-classifier-value ng-model="declaration.status" main-classifier-code="OPINGUKAVA_STAATUS"></hois-classifier-value>
-    </md-input-container>
-    <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-        <label>{{'declaration.inserted' | translate}}</label>
-        <hois-value value="declaration.inserted | hoisDateTime"></hois-value>
-    </md-input-container>
-    <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-        <label>{{'declaration.confirmDate' | translate}}</label>
-        <hois-value value="declaration.confirmDate | hoisDate"></hois-value>
-    </md-input-container>
-    <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-        <label>{{'declaration.confirmer' | translate}}</label>
-        <hois-value value="declaration.confirmer"></hois-value>
-    </md-input-container>
-  </div>
-  <br>
-  <md-table-container>
-    <table md-table>
-      <thead md-head>
-        <tr md-row>
-          <th md-column>{{'declaration.subject' | translate}}</th>
-          <th md-column>{{'declaration.teacher' | translate}}</th>
-          <th md-column>{{'declaration.eap_assessment' | translate}}</th>
-          <th md-column>{{'declaration.module_isRequired' | translate}}</th>
-          <th md-column>{{'declaration.prerequisites' | translate}}</th>
-          <th md-column>{{'studyMaterial.label' | translate}}</th>
-        </tr>
-      </thead>
-      <tbody md-body>
-        <tr md-row ng-repeat="subject in declaration.subjects | orderBy: 'subject.' + currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
-          <td md-cell>
-            <a href="#/subject/{{subject.subject.id}}">
-              {{currentLanguageNameField(subject.subject)}} ({{subject.subject.code}})
-              <span ng-show="subject.isDeclaredRepeatedly">&nbsp;*</span>
-            </a>
-          </td>
-          <td md-cell>
-            <table>
-              <tr ng-repeat="program in subject.programs | orderBy: 'teacherName'">
-                <td>{{program.teacherName}}
-                  <span ng-if="auth.isStudent() && program.id !== -1 && program.publicStudent">
-                    (<a href="#/subjectProgram/public/{{program.id}}/view" hide-xs>{{'declaration.seeProgram' | translate}}</a><a href="#/subjectProgram/public/{{program.id}}/view" hide-gt-xs>{{'declaration.seeProgramMobile' | translate}}</a>)
-                  </span>
-                </td>
-              </tr>
-            </table>
-          </td>
-          <td md-cell>{{subject.subject.credits}} / {{subject.subject.assessment}}</td>
-          <td md-cell>{{subject.module != null ? currentLanguageNameField(subject.module) : ' - '}} / {{subject.isOptional ? 'main.no' : 'main.yes' | translate}}</td>
-          <td md-cell>
-            <span ng-show="!hasPrerequisites(subject)"> - </span>
-            <span ng-show="hasPrerequisites(subject)"><a href="" ng-click="seePrerequisites(subject)">
-              {{'declaration.seePrerequisites' | translate}}</a>
-            </span>
-          </td>
-          <td md-cell><a ng-href="/#/studyMaterial/higher/{{subject.subjectStudyPeriod}}/view">{{'studyMaterial.openfolder' | translate}}</a></td>
-        </tr>
-      </tbody>
-    </table>
-  </md-table-container>
-  <br>
-  <div layout="row">
-    <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" ng-show="declaration.canBeChanged" class="md-raised md-primary" 
-      ng-href="#/declarations/{{declaration.id}}/edit">{{'main.button.change' | translate}}</md-button>
-    <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" ng-show="declaration.canBeSetConfirmed" class="md-raised" 
-      ng-click="confirm()">{{'declaration.confirm' | translate}}</md-button>
-    <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" ng-show="declaration.canBeSetUnconfirmed" class="md-raised" 
-      ng-click="removeConfirmation()">{{'declaration.removeConfirmation' | translate}}</md-button>
-    <md-button ng-if="!auth.isStudent()" class="md-raised md-default" ng-click="back('#/declarations')">{{'main.button.back' | translate}}</md-button>
-    <md-button ng-if="auth.isStudent() && !currentDeclarationPage" class="md-raised md-default" ng-click="back('#/declaration/current/view')">{{'main.button.back' | translate}}</md-button>
-  </div>
-</div>
+<div ng-cloak ng-include="'declaration/declaration.navbar.html'"></div>
 
 <div layout-padding>
-  <div ng-show="formState.noDeclaration && formState.isDeclarationPeriod">
-    <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-      <div md-colors="{color: 'warn'}">
-        <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-        <span>{{'declaration.noCurrentDeclaration' | translate}}</span>
-      </div>
-    </md-whiteframe>
-    <div ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" layout="row">
-      <md-button ng-show="formState.canCreateDeclaration" class="md-raised" 
-      ng-click="addDeclaration()">{{'main.button.add' | translate}}</md-button>
-    </div>
+  <div ng-include="'declaration/declaration.view.template.html'" ng-repeat="wrapper in declarations | filter: {hide: false}" style="padding-bottom: 16px;"></div>
+  <div layout="row">
+    <md-button ng-if="!auth.isStudent()" class="md-raised md-default" ng-click="back('#/declarations')" style="margin-top: 0;">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-if="auth.isStudent() && !currentDeclarationPage" class="md-raised md-default" ng-click="back('#/declaration/current/view')" style="margin-top: 0;">{{'main.button.back' | translate}}</md-button>
   </div>
-
-  <div ng-show="formState.noDeclaration && !formState.isDeclarationPeriod && !formState.declarationPeriodStart && !formState.declarationPeriodEnd">
-    <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-      <div md-colors="{color: 'accent'}">
-        <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
-        <span>{{'declaration.notDeclarationPeriod' | translate}}</span>
-      </div>
-    </md-whiteframe>
-  </div>
-
-  <div ng-show="formState.noDeclaration && !formState.isDeclarationPeriod && formState.declarationPeriodEnd">
-    <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-      <div md-colors="{color: 'accent'}">
-        <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
-        <span>{{'declaration.declarationPeriodHasEnded' | translate}} {{formState.declarationPeriodEnd | hoisDate}}</span>
-      </div>
-    </md-whiteframe>
-  </div>
-
-  <div ng-show="formState.noDeclaration && !formState.isDeclarationPeriod && formState.declarationPeriodStart">
-    <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-      <div md-colors="{color: 'accent'}">
-        <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
-        <span>{{'declaration.declarationPeriodHasNotStarted' | translate}} {{formState.declarationPeriodStart | hoisDate}}</span>
-      </div>
-    </md-whiteframe>
-  </div>
-
 </div>
 
 <style>
   table.md-table:not(.md-row-select) td.md-cell:nth-child(n+2):nth-last-child(n+2),
   table.md-table:not(.md-row-select) th.md-column:nth-child(n+2):nth-last-child(n+2) {
     padding-right: 28px !important;
+  }
+  
+  legend.period > span {
+    color: rgb(25, 169, 25);
+    font-size: 10pt;
+  }
+
+  @media screen and (max-width: 959px) {
+    legend.period {
+      margin-bottom: 10pt;
+    }
+
+    legend.period > span {
+      position: absolute;
+    }
   }
 </style>

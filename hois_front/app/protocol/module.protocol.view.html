@@ -72,5 +72,14 @@
         </div>
       </form>
     </div>
+    <div>&nbsp;</div>
+    <div flex>
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'moduleProtocol.studyOutcomes' | translate}}</legend>
+        <div ng-repeat="outcome in protocol.protocolVdata.outcomes | orderBy: 'orderNr'" flex class="md-body-1">
+          <div>{{currentLanguageNameField(outcome)}}</div>
+        </div>
+      </fieldset>
+    </div>
   </div>
 </div>

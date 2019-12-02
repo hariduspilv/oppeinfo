@@ -14,7 +14,7 @@
             <md-input-container flex>
               <label class="textInput">{{'stipend.curriculums' | translate}}</label>
               <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum" 
-                criteria="{higher: true, closed: false}" sorted-query="true" multiple></hois-select>
+                criteria="{higher: true, closed: false, studyLevel: 'HARIDUSTASE_D', userId: auth.isLeadingTeacher() ? auth.user : null}" sorted-query="true" multiple></hois-select>
             </md-input-container>
           </div>
           <md-input-container flex="20" flex-offset="5">

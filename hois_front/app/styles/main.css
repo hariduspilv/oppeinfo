@@ -1079,6 +1079,12 @@ table.nowrap-first td:first-child {
   font-size:13px;
 }
 
+.occupation-module-row {
+  height: 30px;
+  min-height: 30px;
+  padding-left: 5px;
+}
+
 .scrollable {
   white-space: pre-wrap;
   overflow-y: auto;
@@ -1375,7 +1381,7 @@ th.bordered[md-column] {
 
 .protocolGradeSelect {
   margin: 0px;
-  width: 5em;
+  width: 10em;
 }
 
 th.required::after {
@@ -1891,6 +1897,18 @@ tr.scholarship-bottom-border td {
 
 .small-link {
   font-size: 14px;
+}
+
+.timetable-capacities {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 600px) {
+  .timetable-capacities {
+    margin-left: unset;
+    margin-right: unset;
+  }
 }
 
 .capacity-type-legend {
@@ -2720,4 +2738,8 @@ md-input-container label:not(.md-no-float):not(.md-container-ignore), md-input-c
 
 .apel-record-header-error th {
   background: rgb(255, 87, 34) !important;
+}
+
+.log-entry-pre {
+  line-height: 20px;
 }

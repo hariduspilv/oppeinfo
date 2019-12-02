@@ -19,24 +19,8 @@
     animation: 1s disappear;
 }
 </style>
-<md-content>
-    <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak hois-navbar-overflowed>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.id" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/edit?_noback" name="enterprise.data">
-            {{'enterprise.data' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/persons/edit?_noback" name="enterprise.persons">
-            {{'enterprise.persons' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/locations/edit?_noback" name="enterprise.locations">
-            {{'enterprise.locations' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/studentGroups/edit?_noback" name="enterprise.studentGroups">
-            {{'enterprise.studentGroups' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/contracts/edit?_noback" name="enterprise.contracts">
-            {{'enterprise.contracts' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/grades/edit?_noback" name="enterprise.grades">
-            {{'enterprise.grades' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId && enterprise.application" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/admission/edit?_noback" name="enterprise.admission">
-            {{'enterprise.requests' | translate}}</md-nav-item>
-    </md-nav-bar>
-</md-content>
+<div ng-include="'practiceEnterprise/practice.enterprise.navbar.html'"></div>
+
 <div layout-padding>
     <fieldset>
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'enterprise.gradesTab.schoolGrade' | translate}}</legend>
@@ -67,10 +51,10 @@
                     </md-input-container>
                     </div>
                 </div>
-                <div layout="row" layout-xs="column">
-                    <md-button ng-if="auth.isAdmin()" class="md-raised md-primary" ng-click="saveGrade()">{{'main.button.save' | translate}}</md-button>
-                    <md-button ng-if="auth.isAdmin()" class="md-raised" ng-click="back('#/practice/enterprise')">{{'main.button.back' | translate}}</md-button>
-                    <md-button ng-if="auth.isAdmin() && grade.id" class="md-raised" ng-click="deleteGrade()">{{'enterprise.gradesTab.delete' | translate}}</md-button>
+                <div ng-if="auth.isAdmin() || auth.isLeadingTeacher()" layout="row" layout-xs="column">
+                    <md-button class="md-raised md-primary" ng-click="saveGrade()">{{'main.button.save' | translate}}</md-button>
+                    <md-button class="md-raised" ng-click="back('#/practice/enterprise')">{{'main.button.back' | translate}}</md-button>
+                    <md-button ng-if="grade.id" class="md-raised" ng-click="deleteGrade()">{{'enterprise.gradesTab.delete' | translate}}</md-button>
                 </div>
             </div>
         </form>

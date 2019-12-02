@@ -1,15 +1,15 @@
 <div layout="column" layout-padding>
-    <form name="subjectStudyPeriodEditForm">
+    <form name="subjectStudyPeriodEditForm" ng-cloak>
         <div layout="column">
             <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="45" flex-sm="100" flex-xs="100">
                     <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
                     <hois-select ng-model="record.studyPeriod" values="studyPeriods" disabled required></hois-select>
                 </md-input-container>
-                <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                    <label>{{'subjectStudyPeriod.nameCode' | translate}}</label>
-                    <hois-select ng-model="record.subject" values="subjects" ng-disabled="disableSubject" required></hois-select>
-                </md-input-container>
+                <hois-autocomplete flex="50" flex-sm="100" ng-model="record.subject" method="subjectsList"
+                    label="subjectStudyPeriod.nameCode" required no-paging="true" ha-attribute="id"
+                    flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-disabled="disableSubject">
+                </hois-autocomplete>
             </div>
 
             <!--

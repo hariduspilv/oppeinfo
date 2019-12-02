@@ -54,6 +54,8 @@ public class PracticeJournalDto extends VersionedCommand {
     private AutocompleteResult practiceEvaluation;
     private Boolean canAddEntries;
     private String studentStatus;
+    // supervisor has no auth object
+    private Boolean letterGrades;
 
     public static PracticeJournalDto of(PracticeJournal practiceJournal) {
         PracticeJournalDto dto = EntityUtil.bindToDto(practiceJournal, new PracticeJournalDto(), "contract",
@@ -82,7 +84,7 @@ public class PracticeJournalDto extends VersionedCommand {
         dto.getModuleSubjects().sort(Comparator.comparing(ms -> ms.getModule() != null ? ms.getModule().getNameEt() : ms.getSubject().getNameEt(), 
                 String.CASE_INSENSITIVE_ORDER));
         dto.setStudentCurriculumVersion(AutocompleteResult.of(practiceJournal.getStudent().getCurriculumVersion()));
-        dto.setStudentStudyForm(EntityUtil.getCode(practiceJournal.getStudent().getStudyForm()));
+        dto.setStudentStudyForm(EntityUtil.getNullableCode(practiceJournal.getStudent().getStudyForm()));
         dto.setIsHigher(Boolean.valueOf(StudentUtil.isHigher(practiceJournal.getStudent())));
         return dto;
     }
@@ -382,4 +384,13 @@ public class PracticeJournalDto extends VersionedCommand {
     public void setStudentStatus(String studentStatus) {
         this.studentStatus = studentStatus;
     }
+
+    public Boolean getLetterGrades() {
+        return letterGrades;
+    }
+
+    public void setLetterGrades(Boolean letterGrades) {
+        this.letterGrades = letterGrades;
+    }
+
 }

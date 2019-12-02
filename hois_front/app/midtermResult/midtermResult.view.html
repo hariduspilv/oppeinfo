@@ -1,0 +1,60 @@
+<div class="ois-form-layout-padding form-readonly" layout="column">
+  <div layout="column" layout-gt-sm="row">
+    <div layout="column" layout-gt-xs="row" flex>
+      <md-input-container flex>
+        <label>{{'midtermResult.subject' | translate}}</label>
+        <hois-value value="currentLanguageNameField(declarationSubject.subject)"></hois-value>
+      </md-input-container>
+      <md-input-container flex>
+        <label>{{'midtermResult.subjectCode' | translate}}</label>
+        <hois-value value="declarationSubject.subjectCode"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="column" layout-gt-xs="row" flex>
+      <md-input-container flex>
+        <label>{{'midtermResult.teachers' | translate}}</label>
+        <hois-value value="(declarationSubject.teachers | orderBy).join(', ')"></hois-value>
+      </md-input-container>
+      <md-input-container flex>
+        <label>{{'midtermResult.studyPeriod' | translate}}</label>
+        <hois-value value="currentLanguageNameField(declarationSubject.studyPeriod)"></hois-value>
+      </md-input-container>
+    </div>
+  </div>
+  <div>
+    <md-table-container>
+      <table md-table>
+        <thead md-head md-order="order">
+          <tr md-row>
+            <th md-column md-order-by="{{currentLanguage() === 'en' ? 'name.nameEn' : 'name.nameEt'}}" style="min-width: 250px;">{{'midtermResult.results.nameAndDescription' | translate}}</th>
+            <th md-column>{{'midtermResult.results.points' | translate}}</th>
+            <th md-column md-order-by="midtermDate">{{'midtermResult.results.date' | translate}}</th>
+            <th md-column>{{'midtermResult.results.maxPoints' | translate}}</th>
+            <th md-column>{{'midtermResult.results.percentage' | translate}}</th>
+            <th md-column>{{'midtermResult.results.thresholdPercentage' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in declarationSubject.results | orderBy: order" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <span style="font-weight: 700;">{{currentLanguageNameField(row.name)}}</span>
+              <span style="display: block;">
+                {{currentLanguageNameField(row.description) | hoisLimitTo: 100:!row.showDescription}}
+              </span>
+              <span class="custom-tooltip" ng-if="!row.showDescription && currentLanguageNameField(row.description).length > 100" ng-click="row.showDescription = true">{{'main.button.showMore' | translate}}</span>
+              <span class="custom-tooltip" ng-if="row.showDescription" ng-click="row.showDescription = false">{{'main.button.showLess' | translate}}</span>
+            </td>
+            <td md-cell style="font-weight: 700;">{{row.isTxt ? row.pointsTxt : row.points}}</td>
+            <td md-cell>{{row.midtermDate | hoisDate}}</td>
+            <td md-cell>{{row.maxPoints}}</td>
+            <td md-cell>{{row.percentage}}</td>
+            <td md-cell>{{row.thresholdPercentage}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </div>
+  <div layout="row" style="margin-top: 16px;">
+    <md-button class="md-raised" ng-click="back('#/midtermResult')">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

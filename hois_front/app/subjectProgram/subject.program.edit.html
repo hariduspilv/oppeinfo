@@ -239,51 +239,51 @@
           <div>&nbsp;</div>
           <div ng-show="subject.assessment === 'HINDAMISVIIS_A'" layout="column">
             <md-input-container flex>
-              <label>{{'subjectProgram.passDescription' | translate}}</label>
+              <label>{{'subjectProgram.gradeNDescription' | translate: {N: getGradeName("KORGHINDAMINE_A")} }}</label>
               <textarea ng-model="subjectProgram.passDescription" name="passDescription" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_A'"></textarea>
             </md-input-container>
             <md-input-container flex>
-              <label>{{'subjectProgram.npassDescription' | translate}}</label>
+              <label>{{'subjectProgram.gradeNDescription' | translate: {N: getGradeName("KORGHINDAMINE_M")} }}</label>
               <textarea ng-model="subjectProgram.npassDescription" name="npassDescription" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_A'"></textarea>
             </md-input-container>
           </div>
           <div ng-show="subject.assessment === 'HINDAMISVIIS_E'" layout="column" flex>
             <md-input-container flex>
-              <label>{{'subjectProgram.grade0Description' | translate}}</label>
+              <label>{{'subjectProgram.gradeNDescription' | translate: {N: getGradeName("KORGHINDAMINE_0")} }}</label>
               <textarea ng-model="subjectProgram.grade0Description" name="grade0Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_E'"></textarea>
             </md-input-container>
             <md-input-container flex>
-              <label>{{'subjectProgram.grade1Description' | translate}}</label>
+              <label>{{'subjectProgram.gradeNDescription' | translate: {N: getGradeName("KORGHINDAMINE_1")} }}</label>
               <textarea ng-model="subjectProgram.grade1Description" name="grade1Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_E'"></textarea>
             </md-input-container>
             <md-input-container flex>
-              <label>{{'subjectProgram.grade2Description' | translate}}</label>
+              <label>{{'subjectProgram.gradeNDescription' | translate: {N: getGradeName("KORGHINDAMINE_2")} }}</label>
               <textarea ng-model="subjectProgram.grade2Description" name="grade2Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_E'"></textarea>
             </md-input-container>
             <md-input-container flex>
-              <label>{{'subjectProgram.grade3Description' | translate}}</label>
+              <label>{{'subjectProgram.gradeNDescription' | translate: {N: getGradeName("KORGHINDAMINE_3")} }}</label>
               <textarea ng-model="subjectProgram.grade3Description" name="grade3Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_E'"></textarea>
             </md-input-container>
             <md-input-container flex>
-              <label>{{'subjectProgram.grade4Description' | translate}}</label>
+              <label>{{'subjectProgram.gradeNDescription' | translate: {N: getGradeName("KORGHINDAMINE_4")} }}</label>
               <textarea ng-model="subjectProgram.grade4Description" name="grade4Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_E'"></textarea>
             </md-input-container>
             <md-input-container flex>
-              <label>{{'subjectProgram.grade5Description' | translate}}</label>
+              <label>{{'subjectProgram.gradeNDescription' | translate: {N: getGradeName("KORGHINDAMINE_5")} }}</label>
               <textarea ng-model="subjectProgram.grade5Description" name="grade5Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_E'"></textarea>
             </md-input-container>
           </div>
           <div ng-show="subject.assessment === 'HINDAMISVIIS_H'" layout="column" flex>
             <md-input-container flex>
-              <label>{{'subjectProgram.grade3Description' | translate}}</label>
+              <label>{{'subjectProgram.gradeNDescription' | translate: {N: getGradeName("KORGHINDAMINE_3")} }}</label>
               <textarea ng-model="subjectProgram.grade3Description" name="grade3Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_H'"></textarea>
             </md-input-container>
             <md-input-container flex>
-              <label>{{'subjectProgram.grade4Description' | translate}}</label>
+              <label>{{'subjectProgram.gradeNDescription' | translate: {N: getGradeName("KORGHINDAMINE_4")} }}</label>
               <textarea ng-model="subjectProgram.grade4Description" name="grade4Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_H'"></textarea>
             </md-input-container>
             <md-input-container flex>
-              <label>{{'subjectProgram.grade5Description' | translate}}</label>
+              <label>{{'subjectProgram.gradeNDescription' | translate: {N: getGradeName("KORGHINDAMINE_5")} }}</label>
               <textarea ng-model="subjectProgram.grade5Description" name="grade5Description" md-maxlength="20000" max-rows="10" ng-required="subject.assessment === 'HINDAMISVIIS_H'"></textarea>
             </md-input-container>
           </div>

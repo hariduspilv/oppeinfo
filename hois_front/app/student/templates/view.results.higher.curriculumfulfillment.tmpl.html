@@ -49,9 +49,9 @@
           <td md-cell>
             <table>
               <tr class="one-row">
-                <td ng-repeat="grade in subjectResult.grades | orderBy: ['isActive', 'gradeDate']">
+                <td ng-repeat="result in subjectResult.grades | orderBy: ['isActive', 'gradeDate']">
                   <span ng-if="$index !== 0">/</span>
-                  <span ng-class="{badResult: !gradeUtil.isPositive(grade.grade)}">{{grade.gradeValue}}</span>
+                  <span ng-class="{badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade | hoisHigherGrade: auth.school.letterGrades}}</span>
                 </td>
               </tr>
             </table>
@@ -109,9 +109,9 @@
           <td md-cell>
             <table>
               <tr>
-                <td ng-repeat="grade in subjectResult.grades | orderBy: ['isActive', 'gradeDate']">
+                <td ng-repeat="result in subjectResult.grades | orderBy: ['isActive', 'gradeDate']">
                   <span ng-if="$index !== 0">/</span>
-                  <span ng-class="{badResult: !gradeUtil.isPositive(grade.grade)}">{{grade.gradeValue}}</span>
+                  <span ng-class="{badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade | hoisHigherGrade: auth.school.letterGrades}}</span>
                 </td>
               </tr>
             </table>
@@ -156,9 +156,9 @@
           <td md-cell>
             <table>
               <tr>
-                <td ng-repeat="grade in subjectResult.grades | orderBy: ['isActive', 'gradeDate']">
+                <td ng-repeat="result in subjectResult.grades | orderBy: ['isActive', 'gradeDate']">
                   <span ng-if="$index !== 0">/</span>
-                  <span ng-class="{badResult: !gradeUtil.isPositive(grade.grade)}">{{grade.gradeValue}}</span>
+                  <span ng-class="{badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade | hoisHigherGrade: auth.school.letterGrades}}</span>
                 </td>
               </tr>
             </table>

@@ -12,8 +12,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
-            return (Session.roleCode === 'ROLL_A' || Session.roleCode === 'ROLL_O') && Session.vocational &&
-              roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK);
+            return ['ROLL_A', 'ROLL_J', 'ROLL_O'].indexOf(Session.roleCode) !== -1 && Session.vocational &&
+              roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK) !== -1;
           }
         }
       })

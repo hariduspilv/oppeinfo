@@ -8,7 +8,8 @@
         <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
             <div layout="row" layout-xs="column">
                 <hois-autocomplete flex="30" flex-xs="50" ng-model="studentGroupObject" method="studentgroups" name="studentGroup"
-                  label="{{'lessonplan.studentGroup'}}" additional-query-params="{valid: true}" required></hois-autocomplete>
+                  label="{{'lessonplan.studentGroup'}}" additional-query-params="{valid: true, userId: auth.isLeadingTeacher() ? auth.user : null}"
+                  required></hois-autocomplete>
                 <div ng-if="criteria.curriculumVersion" layout="column" class="form-readonly" flex-offset="5" flex-offset-xs="0" flex="30" flex-xs="100">
                     <br>
                     <md-input-container flex>
@@ -34,7 +35,7 @@
         <table md-table md-progress="tabledata.$promise">
           <thead md-head md-order="criteria.order" md-on-reorder="loadContracts">
             <tr md-row>
-              <th ng-if="auth.isAdmin()" md-column md-order-by="student_person.lastname,student_person.firstname">{{'student.label' | translate}}</th>
+              <th ng-if="auth.isAdmin() || auth.isLeadingTeacher()" md-column md-order-by="student_person.lastname,student_person.firstname">{{'student.label' | translate}}</th>
               <th md-column>{{'student.practiceContracts.contractNumber' | translate}}</th>
               <th md-column>{{'contract.validity' | translate}}</th>
               <th md-column>{{'contract.supervisors' | translate}}</th>
@@ -46,7 +47,7 @@
           </thead>
           <tbody md-body>
             <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td ng-if="auth.isAdmin()" md-cell>{{currentLanguageNameField(row.student)}}</td>
+                <td ng-if="auth.isAdmin() || auth.isLeadingTeacher()" md-cell>{{currentLanguageNameField(row.student)}}</td>
                 <td md-cell ng-if="!row.id" style="font-style: italic;" colspan="5">{{'contract.missing' | translate}}</td>
                 <td md-cell ng-if="!row.contractNr && row.id">{{'-'}}</td>
                 <td md-cell ng-if="row.contractNr && row.id"><a ng-href="#/contracts/{{::row.id}}/view">{{row.contractNr}}</a></td>
@@ -81,7 +82,7 @@
       <md-button md-no-ink class="md-raised" ng-href="#/contracts/new/{{::criteria.studentGroup}}?_menu" 
       ng-if="!auth.higher && criteria.studentGroup && tabledata.content.length > 0"
       >{{'contract.addToSeveral' | translate}}</md-button>
-      <md-button md-no-ink class="md-raised" ng-click="sendToEkis()" ng-if="tabledata.content">
+      <md-button md-no-ink class="md-raised" ng-click="sendToEkis()" ng-if="tabledata.content && !auth.school.withoutEkis">
         {{'contract.sendToEkis' | translate}}
       </md-button>
     </div> 

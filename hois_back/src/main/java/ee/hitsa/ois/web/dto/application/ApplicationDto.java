@@ -71,6 +71,7 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     private Boolean isRepresentativeConfirmed;
     private String representativeDecisionAddInfo;
 
+    private Boolean canViewStudent;
     private Boolean canEditStudent;
     private Boolean hasSpecialNeed;
     
@@ -383,6 +384,14 @@ public class ApplicationDto extends InsertedChangedVersionDto {
 
     public void setFiles(Set<ApplicationFileDto> files) {
         this.files = files;
+    }
+
+    public Boolean getCanViewStudent() {
+        return canViewStudent;
+    }
+
+    public void setCanViewStudent(Boolean canViewStudent) {
+        this.canViewStudent = canViewStudent;
     }
 
     public Boolean getCanEditStudent() {

@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -9,7 +10,7 @@ import org.hibernate.validator.constraints.Email;
 
 @Entity
 public class ContractSupervisor extends BaseEntityWithId {
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(cascade = CascadeType.PERSIST, optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private Contract contract;
     private String supervisorName;

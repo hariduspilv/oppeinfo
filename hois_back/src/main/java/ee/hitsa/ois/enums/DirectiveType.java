@@ -28,9 +28,8 @@ public enum DirectiveType {
     KASKKIRI_PRAKTIK(null, DirectiveValidation.Praktik.class),
     KASKKIRI_OTEGEVUS(null, DirectiveValidation.Otegevus.class),
     KASKKIRI_TUGI(null, DirectiveValidation.Tugi.class),
-    KASKKIRI_TUGILOPP(null, DirectiveValidation.Tugilopp.class);
-    // TODO not yet implemented
-    // KASKKIRI_KYLALIS(null, null, "nominalStudyEnd");
+    KASKKIRI_TUGILOPP(null, DirectiveValidation.Tugilopp.class),
+    KASKKIRI_KYLALIS(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Kylalis.class, "curriculumVersion", "studentGroup", "previousStudyLevel");
 
     private final StudentStatus studentStatus;
     private final Class<? extends DirectiveValidation> validationGroup;

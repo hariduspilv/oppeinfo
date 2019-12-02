@@ -3,17 +3,25 @@ package ee.hitsa.ois.util;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 
+import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
+import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.PhotoAdd;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.StudentType;
 
 public abstract class StudentUtil {
 
     public static boolean isActive(Student student) {
-        String status = EntityUtil.getNullableCode(student.getStatus());
+        return isActive(EntityUtil.getNullableCode(student.getStatus()));
+    }
+
+    public static boolean isActive(String status) {
         return status != null && StudentStatus.STUDENT_STATUS_ACTIVE.contains(status);
     }
 
@@ -30,10 +38,12 @@ public abstract class StudentUtil {
     }
 
     public static boolean isHigher(Student student) {
+        if (student.getCurriculumVersion() == null) return getIsDirectiveHigher(student);
         return CurriculumUtil.isHigher(student.getCurriculumVersion().getCurriculum());
     }
 
     public static boolean isVocational(Student student) {
+        if (student.getCurriculumVersion() == null) return !getIsDirectiveHigher(student);
         return CurriculumUtil.isVocational(student.getCurriculumVersion().getCurriculum());
     }
 
@@ -76,6 +86,36 @@ public abstract class StudentUtil {
         BigDecimal curriculumCredits = student.getCurriculumVersion().getCurriculum().getCredits();
         return credits.multiply(BigDecimal.valueOf(100))
                 .divide(curriculumCredits, 0, RoundingMode.HALF_UP);
+    }
+    
+    public static boolean canStudentEditPhoto(Student student) {
+        PhotoAdd permissionLevel = EnumUtil.valueOf(PhotoAdd.class, student.getSchool().getStudentPhotoAdd());
+        switch (permissionLevel) {
+        case FOTOLISA_TAIS:
+            return isAdultAndDoNotNeedRepresentative(student);
+        case FOTOLISA_KOIK:
+            return true;
+        case FOTOLISA_EI:
+            // fallthrough
+        default:
+            return false;
+        }
+    }
+    public static boolean getIsDirectiveHigher(Student student) {
+        // should be only one directive per student
+        Optional<Directive> directive = student.getDirectiveStudents().stream()
+                .filter(p -> p.getDirective() != null && p.getDirective().getType() != null && DirectiveType.KASKKIRI_KYLALIS.name().equals(EntityUtil.getNullableCode(p.getDirective().getType())))
+                .map(p -> p.getDirective()).findFirst();
+        if (directive.isPresent()) {
+            Boolean higher = directive.get().getIsHigher();
+            if (higher == null) return false;
+            return higher.booleanValue();
+        }
+        return false;
+    }
+
+    public static boolean isGuestStudent(Student student) {
+        return StudentType.OPPUR_K.name().equals(EntityUtil.getNullableCode(student.getType()));
     }
     
 }

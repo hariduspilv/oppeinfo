@@ -11,7 +11,7 @@ public class FutureStatusResponse {
     private Object result;
     private Boolean hasError;
     private String error;
-    
+    private String message;
     private String cancelledBy; 
     private LocalDateTime started;
     private LocalDateTime ended;
@@ -78,5 +78,13 @@ public class FutureStatusResponse {
 
     public void setEnded(LocalDateTime ended) {
         this.ended = ended;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

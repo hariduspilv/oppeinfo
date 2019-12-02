@@ -24,7 +24,6 @@ import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
-import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.LessonPlanService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
@@ -53,13 +52,13 @@ public class LessonPlanController {
     @GetMapping
     public Page<LessonPlanSearchDto> search(HoisUserDetails user, @Valid LessonPlanSearchCommand criteria, Pageable pageable) {
         // default search by student group
-        UserUtil.assertIsSchoolAdmin(user);
-        return lessonPlanService.search(user.getSchoolId(), criteria, pageable);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user);
+        return lessonPlanService.search(user, criteria, pageable);
     }
 
     @GetMapping("/byteacher")
     public Page<LessonPlanSearchTeacherDto> search(HoisUserDetails user, @Valid LessonPlanSearchTeacherCommand criteria, Pageable pageable) {
-        AssertionFailedException.throwIf(!user.isSchoolAdmin() && !user.isTeacher(), "User has no rights");
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
         return lessonPlanService.search(user, criteria, pageable);
     }
 
@@ -71,13 +70,13 @@ public class LessonPlanController {
 
     @GetMapping("/{id:\\d+}")
     public LessonPlanDto get(HoisUserDetails user, @WithEntity LessonPlan lessonPlan) {
-        UserUtil.assertIsSchoolAdmin(user, lessonPlan.getSchool());
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, lessonPlan.getStudentGroup());
         return lessonPlanService.get(lessonPlan);
     }
 
     @GetMapping("/byteacher/{id:\\d+}/{sy:\\d+}")
     public LessonPlanByTeacherDto get(HoisUserDetails user, @WithEntity Teacher teacher, @WithEntity("sy") StudyYear studyYear) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
         UserUtil.assertSameSchool(user, teacher.getSchool());
         UserUtil.assertSameSchool(user, studyYear.getSchool());
         return lessonPlanService.getByTeacher(user, teacher, studyYear);
@@ -98,8 +97,8 @@ public class LessonPlanController {
 
     @GetMapping("/searchFormData")
     public Map<String, ?> searchFormData(HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return lessonPlanService.searchFormData(user.getSchoolId());
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user);
+        return lessonPlanService.searchFormData(user);
     }
 
     @GetMapping("/journals/new")
@@ -141,14 +140,14 @@ public class LessonPlanController {
     @GetMapping("/{id:\\d+}/lessonplan.xls")
     public void lessonplanAsExcel(HoisUserDetails user, @WithEntity LessonPlan lessonPlan, HttpServletResponse response)
             throws IOException {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.isSchoolAdminOrLeadingTeacher(user, lessonPlan.getStudentGroup());
         HttpUtil.xls(response, "lessonplan.xls", lessonPlanService.lessonplanAsExcel(lessonPlan));
     }
 
     @GetMapping("/byteacher/{id:\\d+}/{sy:\\d+}/lessonplanbyteacher.xls")
     public void lessonplanByTeacherAsExcel(HoisUserDetails user, @WithEntity Teacher teacher, 
             @WithEntity("sy") StudyYear studyYear, HttpServletResponse response) throws IOException {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
         UserUtil.assertSameSchool(user, teacher.getSchool());
         UserUtil.assertSameSchool(user, studyYear.getSchool());
         HttpUtil.xls(response, "lessonplanbyteacher.xls", lessonPlanService.lessonplanByTeacherAsExcel(user, teacher, studyYear));

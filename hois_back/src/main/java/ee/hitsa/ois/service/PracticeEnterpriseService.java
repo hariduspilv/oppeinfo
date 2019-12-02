@@ -62,6 +62,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 import ee.hitsa.ois.web.commandobject.enterprise.ContractStatisticsCommand;
@@ -156,8 +157,7 @@ public class PracticeEnterpriseService {
         });
     }
     
-    public EnterpriseRegCodeResponseDto sameCountryAndCode(HoisUserDetails user,
-            EnterpriseRegCodeCheckDto enterpriseForm) {
+    public EnterpriseRegCodeResponseDto sameCountryAndCode(EnterpriseRegCodeCheckDto enterpriseForm) {
         JpaNativeQueryBuilder enterpriseCountQuery = new JpaNativeQueryBuilder("from enterprise en ");
         enterpriseCountQuery.requiredCriteria("en.reg_code = :regCode", "regCode",  enterpriseForm.getRegCode());
         enterpriseCountQuery.requiredCriteria("en.country_code = :countryCode", "countryCode",  enterpriseForm.getCountry());
@@ -221,7 +221,7 @@ public class PracticeEnterpriseService {
             
         	enterpriseResponse.setName(aadress.getEvnimi());
         	return enterpriseResponse;
-    	} catch (NumberFormatException n) {
+    	} catch (@SuppressWarnings("unused") NumberFormatException n) {
     		EnterpriseRegCodeResponseDto enterpriseResponse = new EnterpriseRegCodeResponseDto();
     		enterpriseResponse.setStatus("Registri number pole õiges formaadis.");
         	return enterpriseResponse;
@@ -234,7 +234,7 @@ public class PracticeEnterpriseService {
 		if (practiceEnterpriseForm.getId() != null) {
 			try {
 				enterprise = em.getReference(Enterprise.class, practiceEnterpriseForm.getId());
-			} catch (EntityNotFoundException e) {
+			} catch (@SuppressWarnings("unused") EntityNotFoundException e) {
 				enterprise = new Enterprise();
 			}
 		} else {
@@ -244,7 +244,7 @@ public class PracticeEnterpriseService {
 		if (practiceEnterpriseForm.getEnterpriseSchoolId() != null) {
 			try {
 				enterpriseSchool = em.getReference(EnterpriseSchool.class, practiceEnterpriseForm.getEnterpriseSchoolId());
-			} catch (EntityNotFoundException e) {
+			} catch (@SuppressWarnings("unused") EntityNotFoundException e) {
 				enterpriseSchool = new EnterpriseSchool();
 			}
 		} else {
@@ -294,13 +294,12 @@ public class PracticeEnterpriseService {
 	}
     
     public PracticeEnterpriseForm get(Enterprise enterprise, HoisUserDetails user) {
-        EnterpriseRegCodeCheckDto dto = new EnterpriseRegCodeCheckDto();
         return PracticeEnterpriseForm.of(enterprise, user);
     }
 
 	public EnterpriseRegCodeResponseDto regCodeWithoutCheck(HoisUserDetails user, EnterpriseRegCodeCheckDto enterpriseForm) {
 		try {
-    		LihtandmedResponse simpleData = ariregisterService.getSimpleData(BigInteger.valueOf(Long.valueOf(enterpriseForm.getRegCode())), user);
+    		LihtandmedResponse simpleData = ariregisterService.getSimpleData(BigInteger.valueOf(Long.valueOf(enterpriseForm.getRegCode()).longValue()), user);
     		EnterpriseRegCodeResponseDto enterpriseResponse = new EnterpriseRegCodeResponseDto();
     		LihtandmedV1Response response = simpleData.getResult();
     		if (response == null) {
@@ -338,7 +337,7 @@ public class PracticeEnterpriseService {
             
         	enterpriseResponse.setName(aadress.getEvnimi());
         	return enterpriseResponse;
-    	} catch (NumberFormatException n) {
+    	} catch (@SuppressWarnings("unused") NumberFormatException n) {
     		EnterpriseRegCodeResponseDto enterpriseResponse = new EnterpriseRegCodeResponseDto();
     		enterpriseResponse.setStatus("Registri number pole õiges formaadis.");
         	return enterpriseResponse;
@@ -358,7 +357,7 @@ public class PracticeEnterpriseService {
 		enterpriseSchool.getEnterprise().setEbusinessUpdated(LocalDateTime.now());
 		EntityUtil.setUsername(user.getUsername(), em);
 		EntityUtil.save(enterpriseSchool, em);
-		PracticeEnterpriseForm practiceEnterpriseForm = PracticeEnterpriseForm.of(enterpriseSchool, user);
+		PracticeEnterpriseForm practiceEnterpriseForm = PracticeEnterpriseForm.of(enterpriseSchool);
 		practiceEnterpriseForm.setAddressRegister(regCodeResponse.getAddress());
 		return practiceEnterpriseForm;
 	}
@@ -530,7 +529,18 @@ public class PracticeEnterpriseService {
             dto.setSchoolName(new AutocompleteResult(resultAsLong(r, 3), resultAsString(r, 4), resultAsString(r, 5)));
             return dto;
         });
-	}
+    }
+
+    public EnterpriseGradeDto getGrade(EnterpriseSchool enterpriseSchool) {
+        EnterpriseGradeDto gradeDto = new EnterpriseGradeDto();
+        if (enterpriseSchool.getRating() != null) {
+            gradeDto.setRatingCode(enterpriseSchool.getRating().getCode());
+            gradeDto.setId(enterpriseSchool.getId());
+        }
+        gradeDto.setRatingInfo(enterpriseSchool.getRatingInfo());
+        gradeDto.setRatingThru(enterpriseSchool.getRatingThru());
+        return gradeDto;
+    }
 
 	public void setGrades(HoisUserDetails user, EnterpriseSchool enterpriseSchool, PracticeEnterpriseGradeCommand grades) {
 		enterpriseSchool.setRating(em.getReference(Classifier.class, grades.getRatingCode()));
@@ -704,28 +714,35 @@ public class PracticeEnterpriseService {
 		return dto;
 	}
 
-	public Page<StudentPracticeStatisticsDto> getStudentStatistics(HoisUserDetails user,
-			StudentPracticeStatisticsSearchCommand command, Pageable pageable) {
-		String searchString = "from contract c  "
-				+ "join student stu on stu.id = c.student_id "
-				+ "join person p on stu.person_id = p.id "
-				+ "join school sch on sch.id = stu.school_id "
-				+ "join enterprise e on e.id = c.enterprise_id "
-				+ "join student_group sg on stu.student_group_id = sg.id ";
-		JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(searchString).sort(pageable);
-		qb.requiredCriteria("sch.id = :schoolId", "schoolId", user.getSchoolId());
-		qb.optionalCriteria("e.id = :enterpriseId", "enterpriseId", command.getEnterprise());
-		qb.optionalCriteria("stu.id = :studentId", "studentId", command.getStudent());
-		qb.optionalCriteria("stu.student_group_id = :studentGroupId", "studentGroupId", command.getStudentGroup());
-		qb.optionalCriteria("c.start_date >= :startDate", "startDate", command.getStartDate());
-	    qb.optionalCriteria("c.end_date <= :endDate", "endDate", command.getEndDate());
-	    qb.optionalCriteria("c.status_code = :status", "status", command.getStatus());
-		String selectString = "c.id, c.contract_nr, concat(p.firstname, ' ', p.lastname), sg.code, c.start_date, c.end_date, e.name, c.status_code";
+    public Page<StudentPracticeStatisticsDto> getStudentStatistics(HoisUserDetails user,
+            StudentPracticeStatisticsSearchCommand command, Pageable pageable) {
+        String searchString = "from contract c "
+                + "join student stu on stu.id = c.student_id "
+                + "join person p on stu.person_id = p.id "
+                + "join school sch on sch.id = stu.school_id "
+                + "join enterprise e on e.id = c.enterprise_id "
+                + "join student_group sg on stu.student_group_id = sg.id ";
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(searchString).sort(pageable);
+        qb.requiredCriteria("sch.id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria(
+                    "exists (select c.id from curriculum_version cv join curriculum c on c.id = cv.curriculum_id"
+                            + " where stu.curriculum_version_id = cv.id and c.id in (:userCurriculumIds))",
+                    "userCurriculumIds", user.getCurriculumIds());
+        }
+
+        qb.optionalCriteria("e.id = :enterpriseId", "enterpriseId", command.getEnterprise());
+        qb.optionalCriteria("stu.id = :studentId", "studentId", command.getStudent());
+        qb.optionalCriteria("stu.student_group_id = :studentGroupId", "studentGroupId", command.getStudentGroup());
+        qb.optionalCriteria("c.start_date >= :startDate", "startDate", command.getStartDate());
+        qb.optionalCriteria("c.end_date <= :endDate", "endDate", command.getEndDate());
+        qb.optionalCriteria("c.status_code = :status", "status", command.getStatus());
+        String selectString = "c.id, c.contract_nr, concat(p.firstname, ' ', p.lastname), sg.code, c.start_date, c.end_date, e.name, c.status_code, stu.type_code as studentType";
         return JpaQueryUtil.pagingResult(qb, selectString, em, pageable).map(r -> {
-        	StudentPracticeStatisticsDto dto = new StudentPracticeStatisticsDto();
+            StudentPracticeStatisticsDto dto = new StudentPracticeStatisticsDto();
             dto.setId(resultAsLong(r, 0));
             dto.setContractNr(resultAsString(r, 1));
-            dto.setStudent(resultAsString(r, 2));
+            dto.setStudent(PersonUtil.fullnameOptionalGuest(resultAsString(r, 2), resultAsString(r, 8)));
             dto.setStudentGroup(resultAsString(r, 3));
             dto.setStartDate(JpaQueryUtil.resultAsLocalDate(r, 4));
             dto.setEndDate(JpaQueryUtil.resultAsLocalDate(r, 5));
@@ -733,35 +750,35 @@ public class PracticeEnterpriseService {
             dto.setStatus(resultAsString(r, 7));
             return dto;
         });
-	}
-	
-	public byte[] searchExcel(HoisUserDetails user, ContractStatisticsCommand criteria) {
+    }
+
+    public byte[] searchExcel(HoisUserDetails user, ContractStatisticsCommand criteria) {
         Map<String, Object> data = new HashMap<>();
         data.put("criteria", criteria);
         data.put("documents", getContractStatistics(user, criteria, new PageRequest(0, Integer.MAX_VALUE)));
         return xlsService.generate("practicecontractstatistics.xls", data);
     }
-	
-	public byte[] searchExcel(HoisUserDetails user, StudentPracticeStatisticsSearchCommand criteria) {
-		Map<String, Object> data = new HashMap<>();
+
+    public byte[] searchExcel(HoisUserDetails user, StudentPracticeStatisticsSearchCommand criteria) {
+        Map<String, Object> data = new HashMap<>();
         data.put("criteria", criteria);
         data.put("documents", getStudentStatistics(user, criteria, new PageRequest(0, Integer.MAX_VALUE)));
         return xlsService.generate("practicestudentstatistics.xls", data);
-	}
-	
-	public byte[] searchExcel(HoisUserDetails user, StudyYearStatisticsCommand criteria) {
+    }
+
+    public byte[] searchExcel(HoisUserDetails user, StudyYearStatisticsCommand criteria) {
         Map<String, Object> data = new HashMap<>();
         data.put("criteria", criteria);
         data.put("documents", getStudyYearStatistics(user, criteria, new PageRequest(0, Integer.MAX_VALUE)));
         return xlsService.generate("practicestudyyearstatistics.xls", data);
     }
-	
-	public EnterpriseImportResultDto importCsv(byte[] fileData, HoisUserDetails user) {
+
+    public EnterpriseImportResultDto importCsv(byte[] fileData, HoisUserDetails user) {
         CsvSchema schema = csvMapper.schemaFor(PracticeEnterpriseCsvRow.class).withHeader().withColumnSeparator(';');
         List<Classifier> oppeClassifiers = classifierService.findAllByMainClassCode(MainClassCode.OPPEKEEL);
-		List<String> oppeClassifierCodes = oppeClassifiers.stream().map(p->p.getCode()).collect(Collectors.toList());
-		List<Classifier> riikClassifiers = classifierService.findAllByMainClassCode(MainClassCode.RIIK);
-		List<String> riikClassifierCodes = riikClassifiers.stream().map(p->p.getCode()).collect(Collectors.toList());
+        List<String> oppeClassifierCodes = oppeClassifiers.stream().map(p -> p.getCode()).collect(Collectors.toList());
+        List<Classifier> riikClassifiers = classifierService.findAllByMainClassCode(MainClassCode.RIIK);
+        List<String> riikClassifierCodes = riikClassifiers.stream().map(p -> p.getCode()).collect(Collectors.toList());
         EnterpriseImportResultDto dto = new EnterpriseImportResultDto();
 
         EntityUtil.setUsername(user.getUsername(), em);
@@ -769,9 +786,10 @@ public class PracticeEnterpriseService {
         String fileContent = getContent(fileData);
 
         int rowNr = 1;
-        try (MappingIterator<PracticeEnterpriseCsvRow> csvValues = csvMapper.readerFor(PracticeEnterpriseCsvRow.class).with(schema).readValues(fileContent)) {
+        try (MappingIterator<PracticeEnterpriseCsvRow> csvValues = csvMapper.readerFor(PracticeEnterpriseCsvRow.class)
+                .with(schema).readValues(fileContent)) {
             while (csvValues.hasNext()) {
-            	PracticeEnterpriseCsvRow row = csvValues.next();
+                PracticeEnterpriseCsvRow row = csvValues.next();
                 try {
                       proccessRow(row, rowNr, dto, user, riikClassifierCodes, oppeClassifierCodes);
                   } catch (Exception e) {
@@ -795,7 +813,7 @@ public class PracticeEnterpriseService {
         CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder();
         try {
             decoder.decode(ByteBuffer.wrap(fileData));
-        } catch (CharacterCodingException e) {
+        } catch (@SuppressWarnings("unused") CharacterCodingException e) {
             return new String(fileData, StandardCharsets.ISO_8859_1);
         }
         return new String(fileData, StandardCharsets.UTF_8);
@@ -1070,7 +1088,7 @@ public class PracticeEnterpriseService {
                             return;
                         }
                         school.setPlaces(places);
-                    } catch(NumberFormatException e) {
+                    } catch(@SuppressWarnings("unused") NumberFormatException e) {
                         failed.add(new EnterpriseImportedRowMessageDto(rowNr, incorrectMessage("PraktikakohtadeArv")));
                         dto.getFailed().addAll(failed);
                         return;
@@ -1118,7 +1136,7 @@ public class PracticeEnterpriseService {
                             return;
                         }
                         school.setPlaces(places);
-                    } catch(NumberFormatException e) {
+                    } catch(@SuppressWarnings("unused") NumberFormatException e) {
                         failed.add(new EnterpriseImportedRowMessageDto(rowNr, incorrectMessage("PraktikakohtadeArv")));
                         dto.getFailed().addAll(failed);
                         return;
@@ -1210,29 +1228,37 @@ public class PracticeEnterpriseService {
 
     }
 
-	public Page<ContractStatisticsDto> getContractStatistics(HoisUserDetails user,
-			ContractStatisticsCommand command, Pageable pageable) {
-		String searchString = "from contract c  "
-				+ "join student stu on stu.id = c.student_id "
-				+ "join person p on stu.person_id = p.id "
-				+ "join school sch on sch.id = stu.school_id "
-				+ "join enterprise e on e.id = c.enterprise_id "
-				+ "join student_group sg on stu.student_group_id = sg.id ";
-		JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(searchString).sort(pageable);
-		qb.requiredCriteria("sch.id = :schoolId", "schoolId", user.getSchoolId());
-		qb.optionalCriteria("e.id = :enterpriseId", "enterpriseId", command.getEnterprise());
-		qb.optionalCriteria("stu.id = :studentId", "studentId", command.getStudent());
-		qb.optionalCriteria("stu.student_group_id = :studentGroupId", "studentGroupId", command.getStudentGroup());
-		qb.optionalCriteria("c.canceled >= :startDate", "startDate", command.getStartDate());
-	    qb.optionalCriteria("c.canceled <= :endDate", "endDate", command.getEndDate());
-	    qb.optionalCriteria("c.cancel_reason_code = :cancelReason", "cancelReason", command.getCancelReason());
-	    qb.filter("c.status_code = 'LEPING_STAATUS_T'");
-		String selectString = "c.id, c.contract_nr, concat(p.firstname, ' ', p.lastname), sg.code, c.start_date, c.end_date, e.name, c.canceled, c.cancel_reason_code, c.cancel_desc";
+    public Page<ContractStatisticsDto> getContractStatistics(HoisUserDetails user,
+            ContractStatisticsCommand command, Pageable pageable) {
+        String searchString = "from contract c  "
+                + "join student stu on stu.id = c.student_id "
+                + "join person p on stu.person_id = p.id "
+                + "join school sch on sch.id = stu.school_id "
+                + "join enterprise e on e.id = c.enterprise_id "
+                + "join student_group sg on stu.student_group_id = sg.id ";
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(searchString).sort(pageable);
+        qb.requiredCriteria("sch.id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria(
+                    "exists (select c.id from curriculum_version cv join curriculum c on c.id = cv.curriculum_id"
+                            + " where stu.curriculum_version_id = cv.id and c.id in (:userCurriculumIds))",
+                    "userCurriculumIds", user.getCurriculumIds());
+        }
+        
+        qb.optionalCriteria("e.id = :enterpriseId", "enterpriseId", command.getEnterprise());
+        qb.optionalCriteria("stu.id = :studentId", "studentId", command.getStudent());
+        qb.optionalCriteria("stu.student_group_id = :studentGroupId", "studentGroupId", command.getStudentGroup());
+        qb.optionalCriteria("c.canceled >= :startDate", "startDate", command.getStartDate());
+        qb.optionalCriteria("c.canceled <= :endDate", "endDate", command.getEndDate());
+        qb.optionalCriteria("c.cancel_reason_code = :cancelReason", "cancelReason", command.getCancelReason());
+        qb.filter("c.status_code = 'LEPING_STAATUS_T'");
+        String selectString = "c.id, c.contract_nr, concat(p.firstname, ' ', p.lastname), sg.code, c.start_date, c.end_date, e.name, "
+                + "c.canceled, c.cancel_reason_code, c.cancel_desc, stu.type_code as studentType";
         return JpaQueryUtil.pagingResult(qb, selectString, em, pageable).map(r -> {
-        	ContractStatisticsDto dto = new ContractStatisticsDto();
+            ContractStatisticsDto dto = new ContractStatisticsDto();
             dto.setId(resultAsLong(r, 0));
             dto.setContractNr(resultAsString(r, 1));
-            dto.setStudent(resultAsString(r, 2));
+            dto.setStudent(PersonUtil.fullnameOptionalGuest(resultAsString(r, 2), resultAsString(r, 10)));
             dto.setStudentGroup(resultAsString(r, 3));
             dto.setStartDate(JpaQueryUtil.resultAsLocalDate(r, 4));
             dto.setEndDate(JpaQueryUtil.resultAsLocalDate(r, 5));
@@ -1242,77 +1268,79 @@ public class PracticeEnterpriseService {
             dto.setCancelReason(resultAsString(r, 9));
             return dto;
         });
-	}
+    }
 
-	public Page<StudyYearStatisticsDto> getStudyYearStatistics(HoisUserDetails user, StudyYearStatisticsCommand command,
-			Pageable pageable) {
-	    String groupByFields = "sg.code, cu.name_et, cu.name_en, cu.code, cl.name_et, cl.name_en, sg.course";
-	    JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from practice_journal pj "
-	            + "join student stu on stu.id = pj.student_id "
-	            + "join study_year sy on sy.id = pj.study_year_id "
-	            + "join student_group sg on stu.student_group_id = sg.id "
-	            + "join person pe on pe.id = stu.person_id "
-	            + "join curriculum_version cv on cv.id = stu.curriculum_version_id "
-	            + "join curriculum cu on cu.id = cv.curriculum_id "
-	            + "join classifier cl on cl.code = cu.isced_class_code "
-	            + "left join contract co on co.id = pj.contract_id "
-	            + "left join enterprise e on e.id = co.enterprise_id").sort(pageable).groupBy(groupByFields);
-	    qb.optionalCriteria("sy.year_code = :yearCode" , "yearCode", command.getStudyYear());
-	    qb.requiredCriteria("sy.school_id = :schoolId" , "schoolId", user.getSchoolId());
-	    String select = "sg.code, cu.name_et as curriculumNameEt, cu.name_en as curriculumNameEn, cu.code as curriculumCode, cl.name_et, cl.name_en, sg.course,"
+    public Page<StudyYearStatisticsDto> getStudyYearStatistics(HoisUserDetails user, StudyYearStatisticsCommand command,
+            Pageable pageable) {
+        String groupByFields = "sg.code, cu.name_et, cu.name_en, cu.code, cl.name_et, cl.name_en, sg.course";
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from practice_journal pj "
+                + "join student stu on stu.id = pj.student_id "
+                + "join study_year sy on sy.id = pj.study_year_id "
+                + "join student_group sg on stu.student_group_id = sg.id "
+                + "join person pe on pe.id = stu.person_id "
+                + "join curriculum_version cv on cv.id = stu.curriculum_version_id "
+                + "join curriculum cu on cu.id = cv.curriculum_id "
+                + "join classifier cl on cl.code = cu.isced_class_code "
+                + "left join contract co on co.id = pj.contract_id "
+                + "left join enterprise e on e.id = co.enterprise_id").sort(pageable).groupBy(groupByFields);
+        qb.optionalCriteria("sy.year_code = :yearCode" , "yearCode", command.getStudyYear());
+        qb.requiredCriteria("sy.school_id = :schoolId" , "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("cu.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
+        }
+
+        String select = "sg.code, cu.name_et as curriculumNameEt, cu.name_en as curriculumNameEn, cu.code as curriculumCode, cl.name_et, cl.name_en, sg.course,"
                 + " string_agg(concat(pe.firstname, ' ', pe.lastname, '(', pj.teacher_opinion, ')'), '; ') as personNames,"
                 + " string_agg(pj.grade_code, ';') as gradeCodes, string_agg(distinct e.name, '; ') as enterpriseNames";
-	    return JpaQueryUtil.pagingResult(qb, select, em, pageable).map(r -> {
-	        StudyYearStatisticsDto dto = new StudyYearStatisticsDto();
-	        String nameString = resultAsString(r, 7);
-	        List<String> nameArray = Arrays.asList(nameString.split("; "));
-	        String gradeString = resultAsString(r, 8);
-	        double totalGrade = 0;
-	        int passedStudents = 0;
-	        if (gradeString != null) {
-    	        List<String> gradeArray = Arrays.asList(gradeString.split(";"));
-    	        // Kutsehindamine 
-    	        List<String> positiveGrades = OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE;
-    	        // Kõrghindamine
-    	        positiveGrades.addAll(HigherAssessment.GRADE_POSITIVE);
-    	        for (String grade : gradeArray) {
-                    if (positiveGrades.contains(grade)) {
-    	                passedStudents ++;
-    	            }
-                    if (OccupationalGrade.KUTSEHINDAMINE_5.name().equals(grade) || HigherAssessment.KORGHINDAMINE_5.name().equals(grade)) {
-                        totalGrade += HigherAssessment.KORGHINDAMINE_5.getMark();
-                    } else if (OccupationalGrade.KUTSEHINDAMINE_4.name().equals(grade) || HigherAssessment.KORGHINDAMINE_4.name().equals(grade)) {
-                        totalGrade += HigherAssessment.KORGHINDAMINE_4.getMark();
-                    } else if (OccupationalGrade.KUTSEHINDAMINE_3.name().equals(grade) || HigherAssessment.KORGHINDAMINE_3.name().equals(grade)) {
-                        totalGrade += HigherAssessment.KORGHINDAMINE_3.getMark();
-                    } else if (HigherAssessment.KORGHINDAMINE_2.name().equals(grade)) {
-                        totalGrade += HigherAssessment.KORGHINDAMINE_2.getMark();
-                    } else if (HigherAssessment.KORGHINDAMINE_1.name().equals(grade)) {
-                        totalGrade += HigherAssessment.KORGHINDAMINE_1.getMark();
+        return JpaQueryUtil.pagingResult(qb, select, em, pageable).map(r -> {
+            StudyYearStatisticsDto dto = new StudyYearStatisticsDto();
+            String nameString = resultAsString(r, 7);
+            List<String> nameArray = Arrays.asList(nameString.split("; "));
+            String gradeString = resultAsString(r, 8);
+            double totalGrade = 0;
+            int passedStudents = 0;
+            if (gradeString != null) {
+                List<String> gradeArray = Arrays.asList(gradeString.split(";"));
+
+                for (String grade : gradeArray) {
+                    if (OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE.contains(grade) || HigherAssessment.GRADE_POSITIVE.contains(grade)) {
+                        passedStudents++;
                     }
-    	        }
-    	        dto.setTotalFailed(nameArray.size() - passedStudents);
-    	        if (totalGrade != 0.00) {
-    	            dto.setGrade(new BigDecimal(totalGrade / passedStudents).setScale(2, RoundingMode.HALF_UP).doubleValue());
-    	        }
-	        } else {
-	            dto.setTotalFailed(nameArray.size());
-	        }
-	        dto.setTotalCompleted(passedStudents);
-	        dto.setStudentGroup(resultAsString(r, 0));
-	        dto.setTotalWent(nameArray.size());
-	        dto.setCurriculumName(new AutocompleteResult(null, resultAsString(r, 1), resultAsString(r, 2)));
-	        dto.setCurriculumCode(resultAsString(r, 3));
-	        dto.setCurriculumGroup(new AutocompleteResult(null, resultAsString(r, 4), resultAsString(r, 5)));
-	        dto.setCourse(resultAsLong(r, 6));
-	        Set<String> nameSet = new HashSet<>(nameArray.stream()
-	                .map(name -> name.endsWith("()") ? name.substring(0, name.length() - 2) : name)
-	                .collect(Collectors.toList())); 
-	        dto.setNameAndReason(String.join("; ", nameSet));
-	        dto.setEnterprises(resultAsString(r, 9)); 
+                    if (OccupationalGrade.KUTSEHINDAMINE_5.name().equals(grade) || HigherAssessment.KORGHINDAMINE_5.name().equals(grade)) {
+                        totalGrade += HigherAssessment.KORGHINDAMINE_5.getMark().doubleValue();
+                    } else if (OccupationalGrade.KUTSEHINDAMINE_4.name().equals(grade) || HigherAssessment.KORGHINDAMINE_4.name().equals(grade)) {
+                        totalGrade += HigherAssessment.KORGHINDAMINE_4.getMark().doubleValue();
+                    } else if (OccupationalGrade.KUTSEHINDAMINE_3.name().equals(grade) || HigherAssessment.KORGHINDAMINE_3.name().equals(grade)) {
+                        totalGrade += HigherAssessment.KORGHINDAMINE_3.getMark().doubleValue();
+                    } else if (HigherAssessment.KORGHINDAMINE_2.name().equals(grade)) {
+                        totalGrade += HigherAssessment.KORGHINDAMINE_2.getMark().doubleValue();
+                    } else if (HigherAssessment.KORGHINDAMINE_1.name().equals(grade)) {
+                        totalGrade += HigherAssessment.KORGHINDAMINE_1.getMark().doubleValue();
+                    }
+                }
+                dto.setTotalFailed(nameArray.size() - passedStudents);
+                if (totalGrade != 0.00) {
+                    dto.setGrade(new BigDecimal(totalGrade / passedStudents).setScale(2, RoundingMode.HALF_UP)
+                            .doubleValue());
+                }
+            } else {
+                dto.setTotalFailed(nameArray.size());
+            }
+            dto.setTotalCompleted(passedStudents);
+            dto.setStudentGroup(resultAsString(r, 0));
+            dto.setTotalWent(nameArray.size());
+            dto.setCurriculumName(new AutocompleteResult(null, resultAsString(r, 1), resultAsString(r, 2)));
+            dto.setCurriculumCode(resultAsString(r, 3));
+            dto.setCurriculumGroup(new AutocompleteResult(null, resultAsString(r, 4), resultAsString(r, 5)));
+            dto.setCourse(resultAsLong(r, 6));
+            Set<String> nameSet = new HashSet<>(
+                    nameArray.stream().map(name -> name.endsWith("()") ? name.substring(0, name.length() - 2) : name)
+                            .collect(Collectors.toList()));
+            dto.setNameAndReason(String.join("; ", nameSet));
+            dto.setEnterprises(resultAsString(r, 9));
             return dto;
         });
-	}
+    }
 
     public void delete(HoisUserDetails user, EnterpriseSchool enterpriseSchool) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from enterprise_school es join enterprise e on e.id = es.enterprise_id "

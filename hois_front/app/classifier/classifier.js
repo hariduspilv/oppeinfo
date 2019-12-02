@@ -68,6 +68,9 @@ angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', '
         if(order) {
           result.sort(function(a, b) {
             var aProp = a[order], bProp = b[order];
+            // "Admin" > "Admin"
+            if (typeof aProp === 'string') { aProp = aProp.toUpperCase(); }
+            if (typeof bProp === 'string') { bProp = bProp.toUpperCase(); }
             if (aProp < bProp) {
               return -1;
             }

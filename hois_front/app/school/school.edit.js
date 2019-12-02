@@ -5,6 +5,13 @@ angular.module('hitsaOis').controller('SchoolEditController', ['$scope', '$route
   function ($scope, $route, School, $location, dialogService, message, QueryUtils, oisFileService, Classifier, classifierAutocomplete) {
     var id = $route.current.params.id;
 
+    Classifier.queryForDropdown({mainClassCode: 'FOTOLISA'}, function (result) {
+      $scope.clPhoto = (result || []).reduce(function (obj, r) {
+        obj[r.code] = r;
+        return obj;
+      }, {});
+    });
+
     function afterLoad() {
       if($scope.school.logo) {
         $scope.school.imageUrl = oisFileService.getUrl($scope.school.logo, 'school');
@@ -27,7 +34,7 @@ angular.module('hitsaOis').controller('SchoolEditController', ['$scope', '$route
       $scope.school = Endpoint.get({id: id});
       $scope.school.$promise.then(afterLoad);
     }else{
-      $scope.school = new Endpoint();
+      $scope.school = new Endpoint({studentPhotoAdd: 'FOTOLISA_EI'});
       afterLoad();
     }
 

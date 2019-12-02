@@ -37,7 +37,24 @@ public abstract class CurriculumUtil {
     }
     
     public static String curriculumName(String curriculumCode, String curriculumName) {
-        return curriculumCode+" - "+curriculumName;
+        return curriculumCode + " - " + curriculumName;
+    }
+    
+    public static String curriculumName(String merCode, String code, String name) {
+        StringBuilder result = new StringBuilder();
+        if (merCode != null) {
+            result.append(merCode).append(" - ");
+        }
+        result.append(name).append(" (").append(code).append(")");
+        return result.toString();
+    }
+
+    public static String curriculumNameWithMerCode(String curriculumCode, String curriculumName, String merCode) {
+        String name = "";
+        if (merCode != null) {
+            name += merCode + " - ";
+        }
+        return name + curriculumName + " (" + curriculumCode + ")";
     }
 
     public static String moduleName(String moduleName, String moduleClassifierName) {
@@ -45,11 +62,16 @@ public abstract class CurriculumUtil {
     }
 
     public static String moduleName(String moduleName, String moduleClassifierName, String curriculumCode) {
-        return moduleName + " - " + moduleClassifierName + " (" + curriculumCode + ")";
+        String name = moduleName(moduleName, moduleClassifierName);
+        if (curriculumCode != null) {
+            name += " (" + curriculumCode + ")";
+        }
+        return name;
     }
 
     public static String versionName(String versionCode, String curriculumName) {
-        return versionCode+" "+curriculumName;
+        if (versionCode == null && curriculumName == null) return null;
+        return versionCode + " " + curriculumName;
     }
 
     public static int studyYears(Curriculum c) {
@@ -142,22 +164,25 @@ public abstract class CurriculumUtil {
      * Note, that user school is already considered in search method.
      */
     public static boolean canView(HoisUserDetails user) {
-        return user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEKAVA);
+        return (user.isSchoolAdmin() || user.isLeadingTeacher())
+                && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEKAVA);
     }
 
     /**
      * Checks user rights when opening curriculum or curriculum module form
      */
     public static boolean canView(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
-        return ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, curriculum.getStatus()) || 
-                user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEKAVA)
-                && sameOrJointSchool(user, userEhisShool, curriculum);
+        return ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, curriculum.getStatus())
+                || (user.isSchoolAdmin() || UserUtil.isLeadingTeacher(user, curriculum.getId()))
+                        && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEKAVA)
+                        && sameOrJointSchool(user, userEhisShool, curriculum);
     }
 
     public static boolean canView(HoisUserDetails user, String userEhisShool, CurriculumVersion version) {
-        return isCurriculumVersionConfirmed(version) ||
-                user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEKAVA)
-                && sameOrJointSchool(user, userEhisShool, version.getCurriculum());
+        return isCurriculumVersionConfirmed(version)
+                || (user.isSchoolAdmin() || UserUtil.isLeadingTeacher(user, EntityUtil.getId(version.getCurriculum())))
+                        && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEKAVA)
+                        && sameOrJointSchool(user, userEhisShool, version.getCurriculum());
     }
 
     public static boolean canCreate(HoisUserDetails user) {
@@ -172,12 +197,14 @@ public abstract class CurriculumUtil {
         if(ClassifierUtil.oneOf(curriculum.getStatus(), CurriculumStatus.OPPEKAVA_STAATUS_M, CurriculumStatus.OPPEKAVA_STAATUS_K)) {
             permission = Permission.OIGUS_K;
         }
-        return user.isSchoolAdmin() && UserUtil.hasPermission(user, permission, PermissionObject.TEEMAOIGUS_OPPEKAVA)
+        return (user.isSchoolAdmin() || UserUtil.isLeadingTeacher(user, EntityUtil.getId(curriculum)))
+                && UserUtil.hasPermission(user, permission, PermissionObject.TEEMAOIGUS_OPPEKAVA)
                 && sameOrJointSchool(user, userEhisShool, curriculum);
     }
 
     public static boolean canConfirm(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
-        return user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_OPPEKAVA)
+        return (user.isSchoolAdmin() || UserUtil.isLeadingTeacher(user, EntityUtil.getId(curriculum)))
+                && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_OPPEKAVA)
                 && sameOrJointSchool(user, userEhisShool, curriculum);
     }
 
@@ -192,10 +219,11 @@ public abstract class CurriculumUtil {
     /**
      * Method is intended to be used on curriculum search form. 
      * No need to check whether user is from the same or partner school, 
+     * or that it is leading teacher's curriculum,
      * as only correspondent curricula appear in search results.
      */
     public static boolean canBeEdited(HoisUserDetails user, String status, String ehisStatus) {
-        return user.isSchoolAdmin() &&
+        return (user.isSchoolAdmin() || user.isLeadingTeacher()) &&
                 (CurriculumStatus.OPPEKAVA_STAATUS_S.name().equals(status) &&
                   UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEKAVA)) || 
                 (CurriculumStatus.OPPEKAVA_STAATUS_M.name().equals(status) &&
@@ -205,12 +233,16 @@ public abstract class CurriculumUtil {
     }
 
     public static boolean canSetUnderRevision(HoisUserDetails user, Curriculum curriculum) {
-        return UserUtil.isSchoolAdmin(user, curriculum.getSchool()) && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_OPPEKAVA)
-                && (ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, curriculum.getStatus()) || ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_M, curriculum.getStatus()));
+        return (UserUtil.isSchoolAdmin(user, curriculum.getSchool()) || UserUtil.isLeadingTeacher(user, EntityUtil.getId(curriculum)))
+                && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_OPPEKAVA)
+                && (ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, curriculum.getStatus())
+                        || ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_M, curriculum.getStatus()));
     }
 
     public static boolean canSetUnderRevision(HoisUserDetails user, CurriculumVersion version) {
-        return UserUtil.isSchoolAdmin(user, version.getCurriculum().getSchool()) && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_OPPEKAVA)
+        return (UserUtil.isSchoolAdmin(user, version.getCurriculum().getSchool())
+                || UserUtil.isLeadingTeacher(user, EntityUtil.getId(version.getCurriculum())))
+                && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_OPPEKAVA)
                 && ClassifierUtil.equals(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K, version.getStatus());
     }
 

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Declaration;
@@ -78,11 +79,21 @@ public class DeclarationController {
     @GetMapping("/current")
     public DeclarationDto getStudentsCurrentDeclaration(HoisUserDetails user) {
         UserUtil.assertIsStudent(user);
-        Declaration currentDeclaration = declarationService.getCurrent(user.getSchoolId(), user.getStudentId());
-        if(currentDeclaration == null) {
+        Declaration declaration = declarationService.getCurrent(user.getSchoolId(), user.getStudentId());
+        if(declaration == null) {
             return null;
         }
-        return get(user, currentDeclaration);
+        return get(user, declaration);
+    }
+
+    @GetMapping("/next")
+    public DeclarationDto getStudentsNextDeclaration(HoisUserDetails user) {
+        UserUtil.assertIsStudent(user);
+        Declaration declaration = declarationService.getNext(user.getSchoolId(), user.getStudentId());
+        if(declaration == null) {
+            return null;
+        }
+        return get(user, declaration);
     }
 
     @GetMapping("/subjects/{id:\\d+}")
@@ -96,10 +107,16 @@ public class DeclarationController {
         UserUtil.assertSameSchool(user, declaration.getStudent().getSchool());
         return declarationService.getExtraCurriculumSubjectsOptions(declaration);
     }
-    
+
     @GetMapping("/isDeclarationPeriod")
-    public Map<String, ?> isDeclarationPeriod(HoisUserDetails user) {
-        return declarationService.isDeclarationPeriod(user);
+    public Map<String, ?> isDeclarationPeriod(HoisUserDetails user, @RequestParam(name="next", defaultValue="false") boolean isNextDeclaration) {
+        return isNextDeclaration ? declarationService.isNextDeclarationPeriod(user) : declarationService.isDeclarationPeriod(user);
+    }
+    
+    @GetMapping("/declarationPeriod/{id:\\d+}")
+    public Map<String, ?> declarationPeriod(HoisUserDetails user, @WithEntity Declaration declaration) {
+        UserUtil.assertIsSchoolAdminOrStudent(user, declaration.getStudent().getSchool());
+        return declarationService.declarationPeriod(declaration);
     }
 
     /**
@@ -107,20 +124,22 @@ public class DeclarationController {
      * from declaration/current/view page
      */
     @GetMapping("/canCreate")
-    public Map<String, ?> canCreate(HoisUserDetails user) {
-        return Collections.singletonMap("canCreate", Boolean.valueOf(user.isStudent() ? declarationService.canCreate(user, user.getStudentId()) : false));
+    public Map<String, ?> canCreate(HoisUserDetails user, @RequestParam(name="next", defaultValue="false") boolean isNextDeclaration) {
+        return Collections.singletonMap("canCreate", Boolean.valueOf(user.isStudent()
+                ? (isNextDeclaration ? declarationService.canCreateNext(user, user.getStudentId()) : declarationService.canCreateCurrent(user, user.getStudentId()))
+                : false));
     }
 
     @PostMapping("/create")
-    public DeclarationDto createForStudent(HoisUserDetails user) {
+    public DeclarationDto createForStudent(HoisUserDetails user, @RequestParam(name="next", defaultValue="false") boolean isNextDeclaration) {
         UserUtil.assertIsStudent(user);
-        return get(user, declarationService.create(user, user.getStudentId()));
+        return get(user, declarationService.create(user, user.getStudentId(), isNextDeclaration));
     }
 
     @PostMapping("/create/{id:\\d+}")
-    public DeclarationDto createForSchoolAdmin(HoisUserDetails user, @WithEntity Student student) {
+    public DeclarationDto createForSchoolAdmin(HoisUserDetails user, @WithEntity Student student, @RequestParam(name="next", defaultValue="false") boolean isNextDeclaration) {
         UserUtil.assertIsSchoolAdmin(user, student.getSchool());
-        return get(user, declarationService.create(user, student.getId()));
+        return get(user, declarationService.create(user, student.getId(), isNextDeclaration));
     }
 
     @PutMapping("/confirm/{id:\\d+}")
@@ -174,5 +193,14 @@ public class DeclarationController {
     @GetMapping("/currentStudyPeriod")
     public AutocompleteResult getCurrentStudyPeriod(HoisUserDetails user) {
         return declarationService.getCurrentStudyPeriod(user.getSchoolId());
+    }
+    
+    /**
+     * @param user
+     * @return next study period in case if declaration period is open.
+     */
+    @GetMapping("/nextStudyPeriod")
+    public AutocompleteResult getNextStudyPeriodIfOpenDeclarationPeriod(HoisUserDetails user) {
+        return declarationService.getNextStudyPeriodIfOpenDeclarationPeriod(user.getSchoolId());
     }
 }

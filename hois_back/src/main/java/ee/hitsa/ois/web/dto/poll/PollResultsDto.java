@@ -8,6 +8,8 @@ public class PollResultsDto {
     private AutocompleteResult poll;
     private Long allResponses;
     private Long partialResponses;
+    private Long targetCount;
+    private String status;
     
     public String getType() {
         return type;
@@ -32,6 +34,18 @@ public class PollResultsDto {
     }
     public void setPoll(AutocompleteResult poll) {
         this.poll = poll;
+    }
+    public Long getTargetCount() {
+        return targetCount;
+    }
+    public void setTargetCount(Long targetCount) {
+        this.targetCount = targetCount;
+    }
+    public String getStatus() {
+        return status;
+    }
+    public void setStatus(String status) {
+        this.status = status;
     }
 
 }

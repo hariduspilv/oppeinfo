@@ -17,10 +17,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.GeneralMessage;
-import ee.hitsa.ois.enums.Permission;
-import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.GeneralMessageService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.GeneralMessageUserRights;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -48,10 +47,10 @@ public class GeneralMessageController {
 
     @GetMapping
     public Page<GeneralMessageDto> search(HoisUserDetails user, @Valid GeneralMessageSearchCommand criteria, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_YLDTEADE);
+        GeneralMessageUserRights.assertCanSearch(user);
         return generalMessageService.search(user, criteria, pageable);
     }
-    
+
     @GetMapping("/site")
     public Page<GeneralMessageDto> searchSiteMessages(HoisUserDetails user, @Valid GeneralMessageSearchCommand criteria, Pageable pageable) {
         UserUtil.assertIsMainAdmin(user);
@@ -60,40 +59,27 @@ public class GeneralMessageController {
 
     @GetMapping("/{id:\\d+}")
     public GeneralMessageDto get(HoisUserDetails user, @WithEntity GeneralMessage generalMessage) {
-        if (!user.isMainAdmin() && generalMessage.getSchool() != null) {
-            UserUtil.assertIsSchoolAdmin(user, generalMessage.getSchool());
-        }
+        GeneralMessageUserRights.assertCanView(user, generalMessage);
         return GeneralMessageDto.of(generalMessage);
     }
 
     @PostMapping
     public HttpUtil.CreatedResponse create(HoisUserDetails user, @Valid @RequestBody GeneralMessageForm form) {
-        if (!user.isMainAdmin()) {
-            UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_YLDTEADE);
-            // To use GeneralMessageForm for Main Admin @Required should be removed from targets.
-            // It should be checked manually
-            UserUtil.throwAccessDeniedIf(form.getTargets() == null || form.getTargets().isEmpty(), "required targets");
-        }
+        GeneralMessageUserRights.assertCanCreate(user, form);
         return HttpUtil.created(generalMessageService.create(user, form));
     }
 
     @PutMapping("/{id:\\d+}")
-    public GeneralMessageDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) GeneralMessage generalMessage, @Valid @RequestBody GeneralMessageForm form) {
-        if (!user.isMainAdmin() && generalMessage.getSchool() != null) {
-            UserUtil.assertIsSchoolAdmin(user, generalMessage.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_YLDTEADE);
-            // To use GeneralMessageForm for Main Admin @Required should be removed from targets.
-            // It should be checked manually
-            UserUtil.throwAccessDeniedIf(form.getTargets() == null || form.getTargets().isEmpty(), "required targets");
-        }
+    public GeneralMessageDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) GeneralMessage generalMessage,
+            @Valid @RequestBody GeneralMessageForm form) {
+        GeneralMessageUserRights.assertCanEdit(user, generalMessage, form);
         return get(user, generalMessageService.save(user, generalMessage, form));
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") GeneralMessage generalMessage,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        if (!user.isMainAdmin() && generalMessage.getSchool() != null) {
-            UserUtil.assertIsSchoolAdmin(user, generalMessage.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_YLDTEADE);
-        }
+        GeneralMessageUserRights.assertCanDelete(user, generalMessage);
         generalMessageService.delete(user, generalMessage);
     }
 }

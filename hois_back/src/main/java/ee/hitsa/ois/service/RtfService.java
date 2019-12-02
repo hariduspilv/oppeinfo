@@ -60,6 +60,7 @@ public class RtfService {
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
+            @SuppressWarnings("static-access")
             Fop fop = fopFactory.newFop(MimeConstants.MIME_RTF, out);
             
             TransformerFactory factory = TransformerFactory.newInstance();

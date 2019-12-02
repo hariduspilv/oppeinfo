@@ -40,14 +40,14 @@ public class BoardingSchoolController {
     @GetMapping
     public Page<BoardingSchoolSearchDto> search(HoisUserDetails user, @NotNull BoardingSchoolSearchCommand criteria,
             Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPILASKODU);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPILASKODU);
         return boardingSchoolService.search(user, criteria, pageable);
     }
 
     @GetMapping("/search.xlsx")
     public void excel(HoisUserDetails user, @NotNull BoardingSchoolSearchCommand criteria, HttpServletResponse response)
             throws IOException {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPILASKODU);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPILASKODU);
         HttpUtil.xls(response, "boarding.schools.xlsx",
                 boardingSchoolService.boardingSchoolResidetnsAsExcel(user, criteria));
     }
@@ -55,7 +55,7 @@ public class BoardingSchoolController {
     @GetMapping("/management")
     public Page<BoardingSchoolManagementDto> managementSearch(HoisUserDetails user,
             @NotNull BoardingSchoolManagementSearchCommand criteria, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPILASKODU);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPILASKODU);
         return boardingSchoolService.managementSearch(user, criteria, pageable);
     }
 
@@ -76,7 +76,7 @@ public class BoardingSchoolController {
     @GetMapping("/rooms")
     public Page<BoardingSchoolRoomDto> rooms(HoisUserDetails user, @NotNull BoardingSchoolRoomCommand criteria,
             Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPILASKODU);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPILASKODU);
         return boardingSchoolService.rooms(user, criteria, pageable);
     }
 }

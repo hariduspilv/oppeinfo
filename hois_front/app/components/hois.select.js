@@ -100,6 +100,9 @@ angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curricu
             case 'curriculum':
               endpointUrl = endpointUrl || '/autocomplete/curriculumsauto';
               /* falls through */
+            case 'curriculumDepartments':
+              endpointUrl = endpointUrl || '/autocomplete/curriculumdepartments';
+              /* falls through */
             case 'directivecoordinator':
               endpointUrl = endpointUrl || '/autocomplete/directivecoordinators';
               /* falls through */

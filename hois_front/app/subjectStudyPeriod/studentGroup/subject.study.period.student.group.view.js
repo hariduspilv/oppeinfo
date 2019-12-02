@@ -3,7 +3,7 @@
 angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupViewController', 
   function ($scope, QueryUtils, Classifier, $route, SspCapacities, USER_ROLES, AuthService) {
     $scope.auth = $route.current.locals.auth;
-    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN);
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM);
 
     var studyPeriodId = parseInt($route.current.params.studyPeriodId, 10);
     var studentGroup = parseInt($route.current.params.studentGroupId, 10);

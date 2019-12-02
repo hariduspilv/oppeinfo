@@ -36,36 +36,36 @@ public class PracticeEvaluationController {
 
     @GetMapping("/{id:\\d+}")
     public PracticeEvaluationDto get(HoisUserDetails user, @WithEntity PracticeEvaluation practiceEvaluation) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PRHINDAMISVORM);
-        UserUtil.assertSameSchool(user, practiceEvaluation.getSchool());
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, practiceEvaluation.getSchool(), Permission.OIGUS_V,
+                PermissionObject.TEEMAOIGUS_PRHINDAMISVORM);
         return practiceEvaluationService.get(practiceEvaluation);
     }
 
     @GetMapping
     public Page<PracticeEvaluationSearchDto> search(@Valid PracticeEvaluationSearchCommand command, Pageable pageable, HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PRHINDAMISVORM);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PRHINDAMISVORM);
         return practiceEvaluationService.search(user, command, pageable);
     }
 
     @PostMapping
     public PracticeEvaluationDto create(@Valid @RequestBody PracticeEvaluationForm form, HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PRHINDAMISVORM);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PRHINDAMISVORM);
         return get(user, practiceEvaluationService.create(user, form));
     }
 
     @PutMapping("/{id:\\d+}")
     public PracticeEvaluationDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) PracticeEvaluation practiceEvaluation, 
             @Valid @RequestBody PracticeEvaluationForm form) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PRHINDAMISVORM);
-        UserUtil.assertSameSchool(user, practiceEvaluation.getSchool());
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, practiceEvaluation.getSchool(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_PRHINDAMISVORM);
         return get(user, practiceEvaluationService.save(user, practiceEvaluation, form));
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") PracticeEvaluation practiceEvaluation, 
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PRHINDAMISVORM);
-        UserUtil.assertSameSchool(user, practiceEvaluation.getSchool());
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, practiceEvaluation.getSchool(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_PRHINDAMISVORM);
         practiceEvaluationService.delete(user, practiceEvaluation);
     }
 

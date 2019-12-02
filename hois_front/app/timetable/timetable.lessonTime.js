@@ -1,48 +1,22 @@
 'use strict';
 
 angular.module('hitsaOis').controller('TimetableLessonTimeController',
-function ($scope, $rootScope, $q, QueryUtils, Classifier, DataUtils, ArrayUtils, $route, message, $timeout, $location, dialogService) {
+function ($filter, $location, $rootScope, $route, $scope, ArrayUtils, DataUtils, QueryUtils, dialogService, message) {
   var INITIAL_BLOCK_COUNT = 10;
   $rootScope.replaceLastUrl("#/timetable/lessonTime/search");
   $scope.buildings = QueryUtils.endpoint('/autocomplete/buildings').query();
   $scope.blocks = [];
   $scope.usedBuildings = {};
 
+  $scope.biggerThanZero = function(number) {
+    return number > 0;
+  };
 
-  function setMinValidFrom(val) {
-    var buildings = [];
-    for (var p in val) {
-      if (val.hasOwnProperty(p) && angular.isDefined(val[p])) {
-        buildings.push(p);
-      }
-    }
-    if (buildings.length > 0) {
-      QueryUtils.endpoint('/lessontimes/minValidFrom').get({buildings: buildings.join(), lessonTimeId: $route.current.params.id}, function(result) {
-        if (result.minValidFrom === null) {
-          $scope.minValidFrom = undefined;
-        } else {
-          DataUtils.convertStringToDates(result, ["minValidFrom"]);
-          $scope.minValidFrom = result.minValidFrom;
-          if ($scope.validFrom < $scope.minValidFrom + 1) {
-            $scope.validFrom = undefined;
-          }
-        }
-      });
-    } else {
-      $scope.minValidFrom = undefined;
-    }
-  }
-
-  var usedBuildingsTimeout;
-  $scope.$watchCollection('usedBuildings', function(val) {
-    if (angular.isDefined(usedBuildingsTimeout) && !usedBuildingsTimeout.resolved) {
-      $timeout.cancel(usedBuildingsTimeout);
-    }
-    usedBuildingsTimeout = $timeout(function() {
-      setMinValidFrom(val);
-    }, 500);
+  QueryUtils.endpoint('/lessontimes/validFromRange').get({lessonTimeId: $route.current.params.id}).$promise.then(function(result) {
+    DataUtils.convertStringToDates(result, ["minValidFrom", "maxValidFrom"]);
+    $scope.minValidFrom = result.minValidFrom ? result.minValidFrom : undefined;
+    $scope.maxValidFrom = result.maxValidFrom ? result.maxValidFrom : undefined;
   });
-
 
   function selectBuilding(building, block, selected) {
     if (selected === false && angular.isDefined($scope.usedBuildings[building.id])) {
@@ -193,8 +167,9 @@ function ($scope, $rootScope, $q, QueryUtils, Classifier, DataUtils, ArrayUtils,
 
   $scope.buildingChanged = function(building, block) {
     selectBuilding(building, block, block.selectedBuildings[building.id]);
-    $scope.blocks.$setDirty();
+    $scope.lessonTimeForm.$setDirty();
   };
+
   $scope.isBuildingDisabled = function(building, block) {
     if (angular.isDefined($scope.usedBuildings[building.id])) {
       return !angular.equals(block, $scope.usedBuildings[building.id]);
@@ -250,40 +225,86 @@ function ($scope, $rootScope, $q, QueryUtils, Classifier, DataUtils, ArrayUtils,
 
   $scope.save = function() {
     $scope.lessonTimeForm.$setSubmitted();
-    if($scope.lessonTimeForm.$valid && eachBlockHasValidRows()) {
-      var LessonTimeEndpoint;
-      if($scope.isEdit()) {
-        LessonTimeEndpoint = QueryUtils.endpoint('/lessontimes/');
-        var updatedEntity = dtoToEntity($scope);
-        if (!updatedEntity.lessonTimeBuildingGroups || (angular.isArray(updatedEntity.lessonTimeBuildingGroups) && updatedEntity.lessonTimeBuildingGroups.length === 0)) {
-          dialogService.confirmDialog({prompt: 'timetable.lessonTime.deleteConfirm'}, function() {
-            new LessonTimeEndpoint(updatedEntity).$update().then(function() {
-              message.info('main.messages.delete.success');
-              $scope.back('#/timetable/lessonTime/search');
+    if ($scope.lessonTimeForm.$valid) {
+      if (eachBlockHasValidRows()) {
+        var LessonTimeEndpoint;
+        if ($scope.isEdit()) {
+          LessonTimeEndpoint = QueryUtils.endpoint('/lessontimes/');
+          var updatedEntity = dtoToEntity($scope);
+          if (!updatedEntity.lessonTimeBuildingGroups || (angular.isArray(updatedEntity.lessonTimeBuildingGroups) && updatedEntity.lessonTimeBuildingGroups.length === 0)) {
+            dialogService.confirmDialog({prompt: 'timetable.lessonTime.deleteConfirm'}, function() {
+              new LessonTimeEndpoint(updatedEntity).$update().then(function() {
+                message.info('main.messages.delete.success');
+                $scope.back('#/timetable/lessonTime/search');
+              });
             });
-          });
+          } else {
+            new LessonTimeEndpoint(updatedEntity).$update().then(function(result) {
+              message.info('main.messages.create.success');
+              $scope.lessonTimeForm.$setPristine();
+              entityToForm(result);
+            });
+          }
         } else {
-          new LessonTimeEndpoint(updatedEntity).$update().then(function(result) {
-            message.info('main.messages.create.success');
-            $scope.lessonTimeForm.$setPristine();
-            entityToForm(result);
-          });
+          create();
         }
-      } else {
-        LessonTimeEndpoint = QueryUtils.endpoint('/lessontimes');
-        var newEntity = dtoToEntity($scope);
-        new LessonTimeEndpoint(newEntity).$save().then(function(result) {
-          message.info('main.messages.create.success');
-          $scope.lessonTimeForm.$setPristine();
-          if (angular.isArray(result.lessonTimeBuildingGroups)) {
-            result.lessonTimeBuildingGroups.forEach(function(lessonTimeBuildingGroup) {
-              if (angular.isArray(lessonTimeBuildingGroup.lessonTimes) && lessonTimeBuildingGroup.lessonTimes.length > 0) {
-                $location.path('/timetable/lessonTime/'+lessonTimeBuildingGroup.lessonTimes[0].id+'/edit');
-              }
-            });
+      }
+    } else {
+      message.error('main.messages.form-has-errors');
+    }
+  };
+
+  function create() {
+    var withoutNewTimes = buildingsWithoutNewTimes();
+    if (withoutNewTimes.length > 0) {
+      var buildings = withoutNewTimes.map(function (building) {
+        return $rootScope.currentLanguageNameField(building);
+      }).join(', ');
+
+      dialogService.confirmDialog({
+        prompt: 'timetable.lessonTime.buildingsWithoutNewTimes',
+        buildings: buildings,
+        date: $filter('hoisDate')($scope.validFrom)
+      }, function () {
+        createLessonTimes();
+      });
+    } else {
+      createLessonTimes();
+    }
+  }
+
+  function createLessonTimes() {
+    var LessonTimeEndpoint = QueryUtils.endpoint('/lessontimes');
+    var newEntity = dtoToEntity($scope);
+    new LessonTimeEndpoint(newEntity).$save().then(function(result) {
+      message.info('main.messages.create.success');
+      $scope.lessonTimeForm.$setPristine();
+      if (angular.isArray(result.lessonTimeBuildingGroups)) {
+        result.lessonTimeBuildingGroups.forEach(function(lessonTimeBuildingGroup) {
+          if (angular.isArray(lessonTimeBuildingGroup.lessonTimes) && lessonTimeBuildingGroup.lessonTimes.length > 0) {
+            $location.path('/timetable/lessonTime/'+lessonTimeBuildingGroup.lessonTimes[0].id+'/edit');
           }
         });
       }
-    }
-  };
+    });
+  }
+
+  function buildingsWithoutNewTimes() {
+    var selectedBuildings = [];
+    $scope.blocks.forEach(function (block) {
+      angular.forEach(block.selectedBuildings, function (isSelected, buildingId) {
+        if (isSelected) {
+          selectedBuildings.push(parseInt(buildingId));
+        }
+      });
+    });
+
+    var withoutNewTimes = [];
+    $scope.buildings.forEach(function (building) {
+      if (selectedBuildings.indexOf(building.id) === -1) {
+        withoutNewTimes.push(building);
+      }
+    });
+    return withoutNewTimes;
+  }
 });

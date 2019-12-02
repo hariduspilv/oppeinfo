@@ -13,6 +13,8 @@ public class CertificateContentCommand {
     @ClassifierRestriction(MainClassCode.TOEND_LIIK)
     private String type;
     private Boolean addOutcomes;
+    private Boolean estonian;
+    private Boolean showUncompleted;
 
     public Long getStudent() {
         return student;
@@ -52,6 +54,22 @@ public class CertificateContentCommand {
 
     public void setAddOutcomes(Boolean addOutcomes) {
         this.addOutcomes = addOutcomes;
+    }
+
+    public Boolean getEstonian() {
+        return estonian;
+    }
+
+    public void setEstonian(Boolean estonian) {
+        this.estonian = estonian;
+    }
+
+    public Boolean getShowUncompleted() {
+        return showUncompleted;
+    }
+
+    public void setShowUncompleted(Boolean showUncompleted) {
+        this.showUncompleted = showUncompleted;
     }
     
 }

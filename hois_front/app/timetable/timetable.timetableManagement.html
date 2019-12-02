@@ -65,7 +65,7 @@
             </md-button>
             <md-button ng-if="row.id && !row.isHigher" ng-href="{{excel(formState.xlsDiffUrl, {id: row.id})}}" target="_blank" class="md-primary change-button">{{'timetable.management.difference' | translate}}
             </md-button>
-            <md-button ng-if="row.id && !row.isHigher" ng-href="{{excel(formState.xlsPlanUrl, {id: row.id})}}" target="_blank" class="md-primary change-button">{{'timetable.management.plan' | translate}}
+            <md-button ng-if="row.id" ng-href="{{excel(formState.xlsPlanUrl, {id: row.id})}}" target="_blank" class="md-primary change-button">{{'timetable.management.plan' | translate}}
             </md-button>
             <md-button ng-if="row.start" ng-click="exportTimetable('timetables/exportTimetable',{startDate: row.start, endDate: row.end, studyPeriod: row.studyPeriod})" target="_blank" class="md-primary change-button">{{'timetable.management.xmlExport' | translate}}
             </md-button>

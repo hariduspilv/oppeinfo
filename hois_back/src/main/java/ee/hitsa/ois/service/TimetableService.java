@@ -42,8 +42,10 @@ import javax.transaction.Transactional;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -76,6 +78,7 @@ import ee.hitsa.ois.domain.timetable.TimetableObject;
 import ee.hitsa.ois.domain.timetable.TimetableObjectStudentGroup;
 import ee.hitsa.ois.enums.DeclarationStatus;
 import ee.hitsa.ois.enums.MessageType;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.TimetableEventRepeat;
 import ee.hitsa.ois.enums.TimetableStatus;
 import ee.hitsa.ois.enums.TimetableType;
@@ -85,6 +88,7 @@ import ee.hitsa.ois.repository.TimetableObjectRepository;
 import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.CryptoUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
@@ -127,7 +131,6 @@ import ee.hitsa.ois.web.dto.timetable.TimetableJournalTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableManagementSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudentGroupCapacityDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudentGroupDto;
-import ee.hitsa.ois.web.dto.timetable.TimetableStudentStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableSubjectTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.UntisCodeError;
@@ -165,10 +168,19 @@ public class TimetableService {
     @Autowired
     private TimetableObjectRepository timetableObjectRepository;
 
+    @Value("${hois.frontend.baseUrl}")
+    private String frontendBaseUrl;
+    private static String encryptionKey;
+
+    @Value("${file.cypher.key}")
+    public void setEncryptionKey(String keyFromProps) {
+        encryptionKey = keyFromProps;
+    }
+
     private static final List<String> PUBLIC_TIMETABLES = EnumUtil.toNameList(TimetableStatus.TUNNIPLAAN_STAATUS_P);
     private static final List<String> TEACHER_TIMETABLES = EnumUtil
             .toNameList(TimetableStatus.TUNNIPLAAN_STAATUS_P, TimetableStatus.TUNNIPLAAN_STAATUS_K);
-    private static final List<String> ADMIN_TIMETABLES = EnumUtil.toNameList(TimetableStatus.TUNNIPLAAN_STAATUS_P,
+    private static final List<String> ALL_TIMETABLES = EnumUtil.toNameList(TimetableStatus.TUNNIPLAAN_STAATUS_P,
             TimetableStatus.TUNNIPLAAN_STAATUS_K, TimetableStatus.TUNNIPLAAN_STAATUS_A,
             TimetableStatus.TUNNIPLAAN_STAATUS_S);
     private DateTimeFormatter documentDateFormatHois = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -1417,10 +1429,10 @@ public class TimetableService {
                         PersonUtil.fullname(resultAsString(r, 3), resultAsString(r, 4)),
                         resultAsLong(r, 0), resultAsLong(r, 1)),
                 data);
-        setJournalTeacherCapacities(journalTeachers, timetable);
 
         Map<Long, List<TimetableJournalTeacherDto>> teachersByJournals = new HashMap<>();
         if (!journalTeachers.isEmpty()) {
+            setJournalTeacherCapacities(journalTeachers, timetable);
             teachersByJournals = journalTeachers.values().stream().collect(
                     Collectors.groupingBy(t -> t.getJournalId(), Collectors.mapping(t -> t, Collectors.toList())));
         }
@@ -1784,13 +1796,13 @@ public class TimetableService {
         List<?> data = q.getResultList();
         return StreamUtil.toMappedList(r -> new RoomTimetableDto((Object[])r), data);
     }
-    
+
     List<String> shownStatusCodes() {
         HoisUserDetails user = userFromPrincipal();
-        if (user != null && (user.isMainAdmin() || user.isSchoolAdmin() || user.isTeacher())) {
-            if (user.isMainAdmin() || user.isSchoolAdmin()) {
-                return ADMIN_TIMETABLES;
-            } else if ( user.isTeacher()) {
+        if (user != null && (user.isMainAdmin() || user.isSchoolAdmin() || user.isLeadingTeacher())) {
+            if (user.isMainAdmin() || user.isSchoolAdmin() || user.isLeadingTeacher()) {
+                return ALL_TIMETABLES;
+            } else if (user.isTeacher()) {
                 return TEACHER_TIMETABLES;
             }
         }
@@ -1812,7 +1824,30 @@ public class TimetableService {
         return StreamUtil.toMappedList(r -> new StudyYearSearchDto((Object[])r), data);
     }
 
-    public List<TimetableStudyYearWeekDto> timetableStudyYearWeeks(StudyYear studyYear) {
+    public List<StudyYearSearchDto> personTimetableStudyYears(String encodedPerson) {
+        TimetablePersonHolder person = getPerson(encodedPerson);
+        if (person != null) {
+            if (Role.ROLL_O.name().equals(person.getRole())) {
+                Teacher teacher = em.getReference(Teacher.class, person.getRoleId());
+                return timetableStudyYears(EntityUtil.getId(teacher.getSchool()));
+            } else if (Role.ROLL_T.name().equals(person.getRole())) {
+                Student student = em.getReference(Student.class, person.getRoleId());
+                return timetableStudyYears(EntityUtil.getId(student.getSchool()));
+            }
+        }
+        return null;
+    }
+
+    public List<TimetableStudyYearWeekDto> personTimetableStudyYearWeeks(StudyYear studyYear, String encodedPerson) {
+        Student student = null;
+        TimetablePersonHolder person = getPerson(encodedPerson);
+        if (person != null && Role.ROLL_T.name().equals(person.getRole())) {
+            student = em.getReference(Student.class, person.getRoleId());
+        }
+        return timetableStudyYearWeeks(studyYear, student);
+    }
+
+    public List<TimetableStudyYearWeekDto> timetableStudyYearWeeks(StudyYear studyYear, Student student) {
         Long studyYearId = studyYear.getId();
         LocalDate start = studyYear.getStartDate();
         LocalDate end = studyYear.getEndDate();
@@ -1828,33 +1863,29 @@ public class TimetableService {
             weekNr++;
             start = weekEnd.plusDays(1);
         }
+        if (student != null) {
+            setConnectedSubjects(studyYear, student, weeks);
+        }
         return weeks;
     }
 
-    public List<TimetableStudentStudyYearWeekDto> timetableStudyYearWeeksStudent(StudyYear studyYear, Student student) {
-        boolean isHigher = student.getCurriculumVersion().getCurriculum().getHigher().booleanValue();
+    private void setConnectedSubjects(StudyYear studyYear, Student student, List<TimetableStudyYearWeekDto> weeks) {
+        boolean isHigher = StudentUtil.isHigher(student);
 
         Set<DateRangeDto> periodsWithConnectedSubjects = isHigher
                 ? higherPeriodsWithConnectedSubjects(EntityUtil.getId(student), EntityUtil.getId(studyYear))
                 : vocationalPeriodsWithConnectedSubjects(EntityUtil.getId(student), EntityUtil.getId(studyYear));
 
-        List<TimetableStudyYearWeekDto> weeks = timetableStudyYearWeeks(studyYear);
-        List<TimetableStudentStudyYearWeekDto> studentWeeks = new ArrayList<>();
-
         for (TimetableStudyYearWeekDto week : weeks) {
-            TimetableStudentStudyYearWeekDto studentWeek = new TimetableStudentStudyYearWeekDto(week.getStudyYear(),
-                    week.getWeekNr(), week.getStart(), week.getEnd());
+            week.setConnectedSubjects(Boolean.FALSE);
             for (DateRangeDto period : periodsWithConnectedSubjects) {
-                if (Boolean.TRUE.equals(studentWeek.getConnectedSubjects())) {
+                if (Boolean.TRUE.equals(week.getConnectedSubjects())) {
                     break;
                 }
-                studentWeek.setConnectedSubjects(Boolean.valueOf(
+                week.setConnectedSubjects(Boolean.valueOf(
                         !week.getStart().isAfter(period.getEnd()) && !period.getStart().isAfter(week.getEnd())));
             }
-            studentWeeks.add(studentWeek);
         }
-
-        return studentWeeks;
     }
 
     private Set<DateRangeDto> higherPeriodsWithConnectedSubjects(Long studentId, Long studyYearId) {
@@ -2006,6 +2037,7 @@ public class TimetableService {
             return totalAllocated;
         }
 
+        @SuppressWarnings("unused")
         public String getCapacityType() {
             return capacityType;
         }
@@ -2039,22 +2071,27 @@ public class TimetableService {
             return outsidePeriodAllocated;
         }
 
+        @SuppressWarnings("unused")
         public Long getPeriodAllocated() {
             return periodAllocated;
         }
 
+        @SuppressWarnings("unused")
         public Long getCurrentWeekAllocated() {
             return currentWeekAllocated;
         }
 
+        @SuppressWarnings("unused")
         public Long getStudentGroup() {
             return studentGroup;
         }
 
+        @SuppressWarnings("unused")
         public Long getJournal() {
             return journal;
         }
 
+        @SuppressWarnings("unused")
         public String getCapacityType() {
             return capacityType;
         }
@@ -2399,9 +2436,11 @@ public class TimetableService {
         return extendedLessons;
 	}
 	
-	public UntisCodeError checkUntiscodes(LocalDate startDate, LocalDate endDate, StudyPeriod studyPeriod, HoisUserDetails user) {
+	public UntisCodeError checkUntiscodes(LocalDate startDate, StudyPeriod studyPeriod, HoisUserDetails user) {
         Long schoolId = user.getSchoolId();
-        Integer weekNr = studyPeriod.getWeekNrForDate(startDate);
+        Integer weekNrInt = studyPeriod.getWeekNrForDate(startDate);
+        Long weekNr = null;
+        if (weekNrInt != null) weekNr = Long.valueOf(weekNrInt.longValue());
         if (weekNr == null) {
             throw new HoisException("timetable.management.exportError");
         }
@@ -2418,7 +2457,7 @@ public class TimetableService {
                 "left join teacher t2 on t2.id = jt.teacher_id " +
                 "left join person p2 on p2.id = t2.person_id");
         journalQuery.requiredCriteria("j.school_id = :schoolId", "schoolId", schoolId);
-        journalQuery.requiredCriteria("jc.week_nr = :weekNr", "weekNr",  weekNr.longValue());
+        journalQuery.requiredCriteria("jc.week_nr = :weekNr", "weekNr",  weekNr);
         journalQuery.requiredCriteria("jc.study_period_id = :studyPeriod", "studyPeriod",  studyPeriod.getId());
         journalQuery.filter("(lp.is_usable = true and jc.hours != 0)");
         journalQuery.groupBy("j.untis_code, j.name_et, sg.code, j.id, c.name_et, t.untis_code, t.id, p.firstname, p.lastname, t2.id, p2.firstname, p2.lastname");
@@ -2445,7 +2484,7 @@ public class TimetableService {
                 "join teacher t on t.id = jt.teacher_id " + 
                 "join person p on p.id = t.person_id" );
         teacherCapacityQuery.requiredCriteria("j.school_id = :schoolId", "schoolId", schoolId);
-        teacherCapacityQuery.requiredCriteria("jtc.week_nr = :weekNr", "weekNr",  weekNr.longValue());
+        teacherCapacityQuery.requiredCriteria("jtc.week_nr = :weekNr", "weekNr",  weekNr);
         teacherCapacityQuery.requiredCriteria("jtc.study_period_id = :studyPeriod", "studyPeriod",  studyPeriod.getId());
         teacherCapacityQuery.groupBy("j.untis_code, j.name_et, j.id, t.untis_code, p.firstname, p.lastname");
         String teacherCapacitySelect = "j.untis_code as journalCode," + 
@@ -2511,15 +2550,13 @@ public class TimetableService {
 
 	public Set<NameAndCode> importXml(HoisUserDetails user, TimetableImportDto dto) {
 	    Set<NameAndCode> returnValue = new HashSet<>();
-	    StudyPeriod studyPeriod = em.getReference(StudyPeriod.class, dto.getStudyPeriod());
 		org.w3c.dom.Document document = null;
 		 try {
 			document = byteArrayToDocument(dto.getOisFile().getFdata());
-		} catch (Exception e) {
+		} catch (@SuppressWarnings("unused") Exception e) {
 			throw new HoisException( "Fail pole XML formaadis.");
 		}
 		if (document != null) {
-			Integer weekNr = studyPeriod.getWeekNrForDate(dto.getStartDate());
 			Long schoolId = user.getSchoolId();
 			Timetable timetable;
 	        try {
@@ -2535,7 +2572,7 @@ public class TimetableService {
 		        		.setParameter(4, dto.getEndDate())
 		        		.setParameter(5, dto.getIsHigher())
 		        		.getSingleResult();
-	        } catch (NoResultException nre) {
+	        } catch (@SuppressWarnings("unused") NoResultException nre) {
 	        	timetable = createTimetable(user, dto);
 	        }
 	        
@@ -2547,7 +2584,7 @@ public class TimetableService {
 	        	Iterator<TimetableEvent> timetableEventIterator = timetableObject.getTimetableEvents().iterator();
 	        	while (timetableEventIterator.hasNext()) {
 	        		TimetableEvent timetableEvent = timetableEventIterator.next();
-	        		if (timetableEvent.getIsImported() != null && timetableEvent.getIsImported()) {
+	        		if (timetableEvent.getIsImported() != null && timetableEvent.getIsImported().booleanValue()) {
 	    	        	EntityUtil.deleteEntity(timetableEvent, em);
 	    	        	timetableEventIterator.remove();
 	        		}
@@ -2571,7 +2608,7 @@ public class TimetableService {
 	            try {
 	                journal = em.getReference(Journal.class, Long.valueOf(journalId.substring(3, journalId.length() - 4)));
 	                usedIds.add(journalId.substring(0, journalId.length() - 2));
-	            } catch(Exception e) {
+	            } catch(@SuppressWarnings("unused") Exception e) {
 	                continue;
 	            }
 				// Update timetable object
@@ -2579,7 +2616,7 @@ public class TimetableService {
 	            if (journal != null) {
 	            	try {
 	            		timetableObject = timetableObjectRepository.findByJournalAndTimetable(journal, timetable);
-	            	} catch(EntityNotFoundException e) {
+	            	} catch(@SuppressWarnings("unused") EntityNotFoundException e) {
 	            		returnValue.add(new NameAndCode(journal.getNameEt(), "timetable.importDialog.errors.relationToTimetable"));
 	            		continue;
 	            	}
@@ -2599,7 +2636,7 @@ public class TimetableService {
 					}
 				}
 				if (lessontimesNodeList == null) {
-				    returnValue.add(new NameAndCode(journal.getNameEt(), "timetable.importDialog.errors.documentFormat"));
+				    returnValue.add(new NameAndCode(journal != null ? journal.getNameEt() : "", "timetable.importDialog.errors.documentFormat"));
 					continue;
 				}
 				for (int lessontimesNodeChild = 0; lessontimesNodeChild < lessontimesNodeList.getLength(); lessontimesNodeChild++) {
@@ -2628,11 +2665,11 @@ public class TimetableService {
 				            		buildingRoomCodes = new ArrayList<>(Arrays.asList(lessonTimeNode.getAttributes().item(0).getTextContent().split(" ")));
 				            	}
 				            }
-			            } catch (NumberFormatException nfe) {
+			            } catch (@SuppressWarnings("unused") NumberFormatException nfe) {
 			            	throw new HoisException("timetable.importDialog.errors.nrFormat");
 			            }
 			            if (day == null || period == null || startTime == null || endTime == null) {
-			                returnValue.add(new NameAndCode(journal.getNameEt(), "timetable.importDialog.errors.hourData"));
+			                returnValue.add(new NameAndCode(journal != null ? journal.getNameEt() : "", "timetable.importDialog.errors.hourData"));
 			            	continue;
 			            }
 			            
@@ -2651,10 +2688,10 @@ public class TimetableService {
 			            }
 			            
 			            if (studentGroupCodes == null) {
-			                returnValue.add(new NameAndCode(journal.getNameEt(), "timetable.importDialog.errors.studentgroups"));
+			                returnValue.add(new NameAndCode(journal != null ? journal.getNameEt() : "", "timetable.importDialog.errors.studentgroups"));
 			            	continue;
 			            } else if (buildingRoomCodes == null) {
-			                returnValue.add(new NameAndCode(journal.getNameEt(), "timetable.importDialog.errors.rooms"));
+			                returnValue.add(new NameAndCode(journal != null ? journal.getNameEt() : "", "timetable.importDialog.errors.rooms"));
 			            }
 			            
 			            // Remove CL_ and RM_ from the start of string
@@ -2688,8 +2725,8 @@ public class TimetableService {
 			            TimetableEvent timetableEvent = new TimetableEvent();
 			            LocalTime startHourMinutes = LocalTime.parse(startTime, documentTimeFormatShort);
 			            LocalTime endHourMinutes = LocalTime.parse(endTime, documentTimeFormatShort);
-			            timetableEvent.setStart(dto.getStartDate().plusDays(day-1).atTime(startHourMinutes.getHour(), startHourMinutes.getMinute()));
-			            timetableEvent.setEnd(dto.getStartDate().plusDays(day-1).atTime(endHourMinutes.getHour(), endHourMinutes.getMinute()));
+		                timetableEvent.setStart(dto.getStartDate().plusDays(day.intValue() - 1).atTime(startHourMinutes.getHour(), startHourMinutes.getMinute()));
+                        timetableEvent.setEnd(dto.getStartDate().plusDays(day.intValue() - 1).atTime(endHourMinutes.getHour(), endHourMinutes.getMinute()));
 			            timetableEvent.setLessonNr(period);
 			            timetableEvent.setTimetableObject(timetableObject);
 			            timetableEvent.setSchool(em.getReference(School.class, user.getSchoolId()));
@@ -2734,7 +2771,7 @@ public class TimetableService {
 			                String differentJournalId = null;
 			                try {
 			                    differentJournalId =  lessonNode.getAttributes().item(0).getTextContent().substring(0, journalId.length() - 2);
-			                } catch(Exception e) {
+			                } catch(@SuppressWarnings("unused") Exception e) {
 			                    continue;
 			                }
 			                if (ourJournalId.equals(differentJournalId)) {
@@ -2750,7 +2787,7 @@ public class TimetableService {
 			                }
 			            }
 			            if (teacherUntisCodes.isEmpty()) {
-                            returnValue.add(new NameAndCode(journal.getNameEt(), "timetable.importDialog.errors.teachers"));
+                            returnValue.add(new NameAndCode(journal != null ? journal.getNameEt() : "", "timetable.importDialog.errors.teachers"));
                             continue;
                         }
 			            // Create timetable event teacher
@@ -2821,4 +2858,49 @@ public class TimetableService {
 	    DocumentBuilder builder = factory.newDocumentBuilder();
 	    return builder.parse(new ByteArrayInputStream(bytes), "document");
 	}
+
+    public TimetablePersonHolder getPerson(String encodedPerson) {
+        try {
+            String decrypted = CryptoUtil.decrypt(encryptionKey, Base64.decodeBase64(encodedPerson));
+            String[] parts = decrypted.split(";");
+            String role = parts[0];
+            Long roleId = Long.valueOf(parts[1]);
+            return new TimetablePersonHolder(role, roleId);
+        } catch (Exception e) {
+            throw new HoisException("main.messages.error.nopermission", e);
+        }
+    }
+
+    public String getPersonalUrl(Role role, Long id) {
+        String param = getPersonalUrlParam(role, id);
+        return frontendBaseUrl + "timetable/personalGeneralTimetable/" + param;
+    }
+
+    private static String getPersonalUrlParam(Role role, Long id) {
+        byte[] encryptedId = CryptoUtil.encrypt(encryptionKey, role.name() + ";" + id);
+        try {
+            return Base64.encodeBase64URLSafeString(encryptedId);
+        } catch (Exception e) {
+            throw new HoisException(e);
+        }
+    }
+
+    public static class TimetablePersonHolder {
+        private final String role;
+        private final Long roleId;
+
+        public TimetablePersonHolder(String role, Long roleId) {
+            this.role = role;
+            this.roleId = roleId;
+        }
+
+        public String getRole() {
+            return role;
+        }
+
+        public Long getRoleId() {
+            return roleId;
+        }
+
+    }
 }

@@ -13,7 +13,8 @@
           <a ng-if="entity.type === 'journal'" ng-href="#/journal/{{entity.entityId}}/view">{{currentLanguageNameField(entity)}}</a>
           <a ng-if="entity.type === 'practice'" ng-href="#/practiceJournals/{{entity.entityId}}/view">{{currentLanguageNameField(entity)}}</a>
           <a ng-if="entity.type === 'protocol'" ng-href="#/moduleProtocols/{{entity.entityId}}/view"><b>{{currentLanguageNameField(entity)}}</b></a>
-          <a ng-if="entity.type === 'apel' && auth.isAdmin()" ng-href="#/apelApplication/{{entity.entityId}}/view">{{currentLanguageNameField(entity)}}</a>
+          <a ng-if="entity.type === 'apel' && (auth.isAdmin() || auth.isLeadingTeacher())"
+            ng-href="#/apelApplication/{{entity.entityId}}/view">{{currentLanguageNameField(entity)}}</a>
           <span ng-if="entity.type === 'apel' && auth.isTeacher()">{{currentLanguageNameField(entity)}}</span>
         </td>
         <td md-cell>

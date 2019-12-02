@@ -3,10 +3,9 @@
     <form ng-submit="submit()" novalidate layout="column" name="higherProtocolNewForm">
       <div>
         <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex flex-sm="100">
-            <label class="textInput">{{'higherProtocol.subject' | translate}}</label>
-            <hois-select ng-model="record.subjectStudyPeriod" values="subjectStudyPeriods" required></hois-select>
-          </md-input-container>
+          <hois-autocomplete flex flex-sm="100" ng-model="record.subjectStudyPeriod" url="/higherProtocols/subjectStudyPeriods"
+            label="higherProtocol.subject" required no-paging="true" ha-attribute="id">
+          </hois-autocomplete>
         </div>
         <br>
         <div layout="row">

@@ -298,7 +298,8 @@
     <div class="form-readonly" layout="row">
       <md-input-container flex>
         <label class="textInput">{{'practiceJournal.grade' | translate}}</label>
-        <hois-value value="practiceJournal.isHigher && auth.school.letterGrades ? getGrade(practiceJournal.grade).value2 : getGrade(practiceJournal.grade).value"></hois-value>
+        <hois-value ng-if="practiceJournal.isHigher" value="gradesMap[practiceJournal.grade] | hoisHigherGrade: letterGrades"></hois-value>
+        <hois-value ng-if="!practiceJournal.isHigher" value="gradesMap[practiceJournal.grade].value"></hois-value>
       </md-input-container>
     </div>
 
@@ -329,7 +330,8 @@
               <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="column">
                 <label class="responsiveLabel">{{eval.addInfo}}</label>
                 <md-input-container flex="100">
-                  <hois-value value="practiceJournal.isHigher && auth.school.letterGrades ? getGrade(eval.valueClf).value2 : getGrade(eval.valueClf).value"></hois-value>
+                  <hois-value ng-if="practiceJournal.isHigher" value="gradesMap[eval.valueClf] | hoisHigherGrade: letterGrades"></hois-value>
+                  <hois-value ng-if="!practiceJournal.isHigher" value="gradesMap[eval.valueClf].value"></hois-value>
                 </md-input-container>
               </div>
     
@@ -365,7 +367,8 @@
                 <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="column">
                   <label class="responsiveLabel">{{eval.addInfo}}</label>
                   <md-input-container flex="100">
-                    <hois-value value="practiceJournal.isHigher && auth.school.letterGrades ? getGrade(eval.valueClf).value2 : getGrade(eval.valueClf).value"></hois-value>
+                    <hois-value ng-if="practiceJournal.isHigher" value="gradesMap[eval.valueClf] | hoisHigherGrade: letterGrades"></hois-value>
+                    <hois-value ng-if="!practiceJournal.isHigher" value="gradesMap[eval.valueClf].value"></hois-value>
                   </md-input-container>
                 </div>
               </div>

@@ -1,0 +1,236 @@
+<md-table-container>
+    <table md-table class="secondary-table">
+      <thead md-head>
+        <tr md-row>
+          <th md-column>{{'directive.student.order' | translate}}</th>
+          <th md-column>{{'directive.student.foreign' | translate}}</th>
+          <th md-column class="required">{{'directive.student.idcode' | translate}}</th>
+          <th md-column class="required">{{'directive.student.firstname' | translate}}</th>
+          <th md-column class="required">{{'directive.student.lastname' | translate}}</th>
+          <th md-column class="required">{{'directive.student.birthdate' | translate}}</th>
+          <th md-column class="required">{{'directive.student.sex' | translate}}</th>
+          <th md-column class="required">{{'directive.student.citizenship' | translate}}</th>
+          <th md-column class="required">{{'directive.student.apelSchool' | translate}}</th>
+          <th md-column class="required">{{'directive.student.apelSchoolCountry' | translate}}</th>
+          <th md-column ng-class="{required: !formState.school.vocational || record.isHigher}">{{'directive.student.apelSchoolStudyLevel' | translate}}</th>
+          <th md-column class="required">{{'directive.student.abroadPurpose' | translate}}</th>
+          <th md-column class="required">{{'directive.student.guest.startDate' | translate}}</th>
+          <th md-column class="required">{{'directive.student.guest.endDate' | translate}}</th>
+          <th md-column>{{'directive.student.guest.curriculumVersion' | translate}}</th>
+          <th md-column>{{'directive.student.studentGroup' | translate}}</th>
+          <th md-column ng-class="{required: !formState.school.vocational || record.isHigher}">{{'directive.student.exchangeProgramme' | translate}}</th>
+          <th md-column style="min-width:400px;">{{'directive.student.notes' | translate}}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody md-body>
+        <tr md-row hois-table-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell>{{$index + 1}}.</td>
+          <td md-cell>
+            <md-checkbox ng-model="row._foreign" ng-change="foreignChanged(row)" aria-label="{{'directive.student.foreign' | translate}}"></md-checkbox>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <input type="text" ng-if="!row._foreign" ng-blur="lookupStudent(row)" ng-model="row.idcode" name="students[{{$index}}].idcode">
+              <input type="text" ng-if="row._foreign" ng-blur="lookupStudent(row)" ng-model="row.foreignIdcode" name="students[{{$index}}].idcode">
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div class="invalid" ng-messages="directiveForm['students['+$index+'].idcode'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+                <p ng-message="serverside">
+                  <p ng-repeat="err in directiveForm['students['+$index+'].idcode'].$serverError">{{'main.messages.error.' + err.code | translate}}</p>
+                </p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <input type="text" ng-readonly="row._found" ng-model="row.firstname" name="students[{{$index}}].firstname">
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div class="invalid" ng-messages="directiveForm['students['+$index+'].firstname'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+                <p ng-message="serverside">
+                  <p ng-repeat="err in directiveForm['students['+$index+'].firstname'].$serverError">{{'main.messages.error.' + err.code | translate}}</p>
+                </p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <input type="text" ng-readonly="row._found" ng-model="row.lastname" name="students[{{$index}}].lastname">
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div class="invalid" ng-messages="directiveForm['students['+$index+'].lastname'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+                <p ng-message="serverside">
+                  <p ng-repeat="err in directiveForm['students['+$index+'].lastname'].$serverError">{{'main.messages.error.' + err.code | translate}}</p>
+                </p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <md-datepicker ng-if="!row._found && !row.idcode" ng-model="row.birthdate" name="students[{{$index}}].birthdate"></md-datepicker>
+              <md-datepicker ng-if="row._found || row.idcode" ng-model="row.birthdate" name="students[{{$index}}].birthdate" disabled></md-datepicker>
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div class="invalid" ng-messages="directiveForm['students['+$index+'].birthdate'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <hois-classifier-select ng-if="!row._found && !row.idcode" ng-model="row.sex" name="students[{{$index}}].sex"
+                criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
+                model-value-attr="code" main-classifier-code="SUGU" aria-label="{{'directive.student.sex' | translate}}"></hois-classifier-select>
+              <hois-classifier-value ng-if="row._found || row.idcode" ng-model="row.sex" main-classifier-code="SUGU" name="students[{{$index}}].sex"></hois-classifier-value>
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div class="invalid" ng-messages="directiveForm['students['+$index+'].sex'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <hois-classifier-select ng-model="row.citizenship" name="students[{{$index}}].citizenship" model-value-attr="code"
+                criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
+                main-classifier-code="RIIK" aria-label="{{'directive.student.citizenship' | translate}}"></hois-classifier-select>
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div class="invalid" ng-messages="directiveForm['students['+$index+'].citizenship'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <hois-select ng-model="row.apelSchoolId" name="students[{{$index}}].apelSchool" values="formState.apelSchools" 
+                aria-label="{{'directive.student.apelSchool' | translate}}" ng-change="setApelSchoolCountry(row)"></hois-select>
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div class="invalid" ng-messages="directiveForm['students['+$index+'].apelSchool'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <hois-classifier-select ng-model="row.country" name="students[{{$index}}].country" model-value-attr="code"
+                criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
+                main-classifier-code="RIIK" aria-label="{{'directive.student.apelSchoolCountry' | translate}}"></hois-classifier-select>
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div class="invalid" ng-messages="directiveForm['students['+$index+'].country'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <hois-select ng-model="row.previousStudyLevel" name="students[{{$index}}].previousStudyLevel" value-property="code" sorted-query="true"
+                values="formState.apelSchoolStudyLevels" aria-label="{{'directive.student.apelSchoolStudyLevel' | translate}}"></hois-select>
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div class="invalid" ng-messages="directiveForm['students['+$index+'].previousStudyLevel'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <hois-classifier-select ng-model="row.abroadPurpose" name="students[{{$index}}].abroadPurpose" model-value-attr="code"
+                criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" 
+                only-valid ignore-preselected main-classifier-code="VALISOPE_EESMARK" 
+                aria-label="{{'directive.student.abroadPurpose' | translate}}"></hois-classifier-select>
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div class="invalid" ng-messages="directiveForm['students['+$index+'].abroadPurpose'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <md-datepicker ng-model="row.startDate" name="students[{{$index}}].startDate" md-max-date="row.endDate"></md-datepicker>
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div ng-if="!row.isPeriod" class="invalid" ng-messages="directiveForm['students['+$index+'].startDate'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <md-datepicker ng-model="row.endDate" name="students[{{$index}}].endDate" md-min-date="row.startDate"></md-datepicker>
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div class="invalid" ng-messages="directiveForm['students['+$index+'].endDate'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <hois-select ng-model="row.curriculumVersion" name="students[{{$index}}].curriculumVersion" 
+                values="formState.curriculumVersions" ng-change="curriculumVersionChanged(row)" 
+                aria-label="{{'directive.student.curriculumVersion' | translate}}"></hois-select>
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div class="invalid" ng-messages="directiveForm['students['+$index+'].curriculumVersion'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <hois-select ng-model="row.studentGroup" name="students[{{$index}}].studentGroup" 
+                values="formState.studentGroupMap[row.curriculumVersion]" 
+                aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div class="invalid" ng-messages="directiveForm['students['+$index+'].studentGroup'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <hois-classifier-select ng-model="row.abroadProgramme" name="students[{{$index}}].abroadProgramme" model-value-attr="code"
+                criteria="{vocational: (record.isHigher !== undefined ? (!record.isHigher ? true : undefined) : (formState.school.vocational ? true : undefined))
+                  , higher: (record.isHigher !== undefined ? (record.isHigher ? true : undefined) : (formState.school.higher ? true : undefined))}"
+                only-valid ignore-preselected
+                main-classifier-code="VALISKOOL_PROGRAMM" aria-label="{{'directive.student.abroadProgramme' | translate}}"></hois-classifier-select>
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div class="invalid" ng-messages="directiveForm['students['+$index+'].abroadProgramme'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell hois-table-data>
+            <hois-table-data-master>
+              <md-input-container style="width:100%;">
+                <textarea name="students[{{$index}}].addInfo" ng-model="row.addInfo" md-maxlength="4000" max-rows="5"  
+                aria-label="{{'directive.student.notes' | translate}}" ng-model-options="{allowInvalid: true}"></textarea>
+              </md-input-container>
+            </hois-table-data-master>
+            <hois-table-data-detail>
+              <div class="invalid" ng-messages="directiveForm['students['+$index+'].addInfo'].$error">
+                <p ng-message="required">{{'main.required' | translate}}</p>
+                <p ng-message="serverside">
+                  <p ng-repeat="err in directiveForm['students['+$index+'].addInfo'].$serverError">{{'main.messages.error.' + err.code | translate}}</p>
+                </p>
+              </div>
+            </hois-table-data-detail>
+          </td>
+          <td md-cell>
+            <a ng-click="deleteStudent(row)" md-no-ink  class="remove">&times;</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </md-table-container>
+  

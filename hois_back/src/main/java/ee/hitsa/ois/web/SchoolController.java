@@ -212,44 +212,51 @@ public class SchoolController {
 
     @GetMapping("/studyYears")
     public List<StudyYearSearchDto> getStudyYears(HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEPERIOOD);
         return studyYearService.getStudyYears(user.getSchoolId());
     }
 
     @GetMapping("/studyYears/{id:\\d+}")
-    public StudyYearDto getStudyYear(@WithEntity StudyYear studyYear) {
+    public StudyYearDto getStudyYear(HoisUserDetails user, @WithEntity StudyYear studyYear) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEPERIOOD);
         return StudyYearDto.of(studyYear);
     }
 
     @PostMapping("/studyYears")
     public StudyYearDto createStudyYear(HoisUserDetails user, @Valid @RequestBody StudyYearForm studyYearForm) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return getStudyYear(studyYearService.create(user, studyYearForm));
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEPERIOOD);
+        return getStudyYear(user, studyYearService.create(user, studyYearForm));
     }
 
     @PutMapping("/studyYears/{id:\\d+}")
-    public StudyYearDto saveStudyYear(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) StudyYear studyYear, @Valid @RequestBody StudyYearForm request) {
-        UserUtil.assertIsSchoolAdmin(user, studyYear.getSchool());
-        return getStudyYear(studyYearService.save(studyYear, request));
+    public StudyYearDto saveStudyYear(HoisUserDetails user,
+            @WithVersionedEntity(versionRequestBody = true) StudyYear studyYear,
+            @Valid @RequestBody StudyYearForm request) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEPERIOOD);
+        return getStudyYear(user, studyYearService.save(studyYear, request));
     }
 
     @PostMapping("/studyYears/{id:\\d+}/studyPeriods")
-    public StudyPeriodDto createStudyPeriod(HoisUserDetails user, @WithEntity StudyYear studyYear, 
+    public StudyPeriodDto createStudyPeriod(HoisUserDetails user, @WithEntity StudyYear studyYear,
             @Valid @RequestBody StudyPeriodForm request) {
-        UserUtil.assertIsSchoolAdmin(user, studyYear.getSchool());
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, studyYear.getSchool(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_OPPEPERIOOD);
         return get(studyYearService.createStudyPeriod(studyYear, request));
     }
 
     @PutMapping("/studyYears/{year:\\d+}/studyPeriods/{id:\\d+}")
-    public StudyPeriodDto saveStudyPeriod(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, 
-            @WithVersionedEntity(versionRequestBody = true) StudyPeriod studyPeriod, 
+    public StudyPeriodDto saveStudyPeriod(HoisUserDetails user, @WithEntity("year") StudyYear studyYear,
+            @WithVersionedEntity(versionRequestBody = true) StudyPeriod studyPeriod,
             @Valid @RequestBody StudyPeriodForm request) {
-        UserUtil.assertIsSchoolAdmin(user, studyYear.getSchool());
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, studyYear.getSchool(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_OPPEPERIOOD);
         return get(studyYearService.saveStudyPeriod(studyYear, studyPeriod, request));
     }
 
     @DeleteMapping("/studyYears/{year:\\d+}/studyPeriods/{id:\\d+}")
     public void deleteStudyPeriod(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, @WithEntity StudyPeriod studyPeriod) {
-        UserUtil.assertIsSchoolAdmin(user, studyYear.getSchool());
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, studyYear.getSchool(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_OPPEPERIOOD);
         if (!EntityUtil.getId(studyYear).equals(EntityUtil.getId(studyPeriod.getStudyYear()))) {
             throw new AssertionFailedException("Study year mismatch");
         }
@@ -257,20 +264,26 @@ public class SchoolController {
     }
 
     @PostMapping("/studyYears/{id:\\d+}/studyPeriodEvents")
-    public StudyPeriodEventDto createStudyPeriodEvent(HoisUserDetails user, @WithEntity StudyYear studyYear, @Valid @RequestBody StudyPeriodEventForm request) {
-        UserUtil.assertSameSchool(user, studyYear.getSchool());
+    public StudyPeriodEventDto createStudyPeriodEvent(HoisUserDetails user, @WithEntity StudyYear studyYear,
+            @Valid @RequestBody StudyPeriodEventForm request) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, studyYear.getSchool(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_OPPEPERIOOD);
         return get(studyYearService.create(studyYear, request));
     }
 
     @PutMapping("/studyYears/{year:\\d+}/studyPeriodEvents/{id:\\d+}")
-    public StudyPeriodEventDto saveStudyPeriodEvent(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, @WithVersionedEntity(versionRequestBody = true) StudyPeriodEvent studyPeriodEvent, @Valid @RequestBody StudyPeriodEventForm request) {
-        UserUtil.assertSameSchool(user, studyYear.getSchool());
+    public StudyPeriodEventDto saveStudyPeriodEvent(HoisUserDetails user, @WithEntity("year") StudyYear studyYear,
+            @WithVersionedEntity(versionRequestBody = true) StudyPeriodEvent studyPeriodEvent,
+            @Valid @RequestBody StudyPeriodEventForm request) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, studyYear.getSchool(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_OPPEPERIOOD);
         return get(studyYearService.save(studyYear, studyPeriodEvent, request));
     }
 
     @DeleteMapping("/studyYears/{year:\\d+}/studyPeriodEvents/{id:\\d+}")
     public void deleteStudyPeriodEvent(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, @WithEntity StudyPeriodEvent studyPeriodEvent) {
-        UserUtil.assertSameSchool(user, studyYear.getSchool());
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, studyYear.getSchool(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_OPPEPERIOOD);
         if (!EntityUtil.getId(studyYear).equals(EntityUtil.getId(studyPeriodEvent.getStudyYear()))) {
             throw new AssertionFailedException("Study year mismatch");
         }
@@ -286,8 +299,10 @@ public class SchoolController {
     }
 
     @PutMapping("/studyYearScheduleLegends")
-    public Map<String, ?> updateLegends(HoisUserDetails user, @Valid @RequestBody SchoolUpdateStudyYearScheduleLegendsCommand legendsCmd) {
-        UserUtil.assertIsSchoolAdmin(user);
+    public Map<String, ?> updateLegends(HoisUserDetails user,
+            @Valid @RequestBody SchoolUpdateStudyYearScheduleLegendsCommand legendsCmd) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user);
+        UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPETOOGRAAFIK);
         School school = getSchool(user);
         schoolService.updateLegends(user, school, legendsCmd);
         return studyYearScheduleLegends(user);

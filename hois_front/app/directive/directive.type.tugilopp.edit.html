@@ -12,38 +12,46 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row hois-table-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>{{::(currentLanguageNameField(row.studentGroupObject))}}</td>
-        <td md-cell>  
-          <md-input-container>
-            <md-datepicker ng-model="row.startDate" name="students[{{$index}}].startDate" md-min-date="getMinDate(row.directiveStudentObject.startDate)"
-              md-max-date="row.directiveStudentObject.endDate" aria-label="{{'main.from' | translate}}"></md-datepicker>
-          </md-input-container>
-          <div class="invalid" ng-messages="directiveForm['students['+$index+'].startDate'].$error">
-            <p ng-message="required">{{'main.required' | translate}}</p>
-            <p ng-message="serverside">
-              <span ng-repeat="err in directiveForm['students['+$index+'].startDate'].$serverError">{{err.code | translate}}</span>  
-            </p>
-          </div>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <md-input-container>
+              <md-datepicker ng-model="row.startDate" name="students[{{$index}}].startDate" md-min-date="getMinDate(row.directiveStudentObject.startDate)"
+                md-max-date="row.directiveStudentObject.endDate" aria-label="{{'main.from' | translate}}"></md-datepicker>
+            </md-input-container>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-messages="directiveForm['students['+$index+'].startDate'].$error">
+              <p ng-message="required">{{'main.required' | translate}}</p>
+              <p ng-message="serverside">
+                <span ng-repeat="err in directiveForm['students['+$index+'].startDate'].$serverError">{{err.code | translate}}</span>  
+              </p>
+            </div>
+          </hois-table-data-detail>
         </td>
-        <td md-cell>
-          <md-input-container style="width: 250px">
-            <md-select ng-model="row.directiveStudent" name="students[{{$index}}].directiveStudent" ng-change="mapStudentDirective(row)"
-              ng-disabled="row.directiveStudent && row.existingDirectiveStudents.length === 1">
-              <md-option ng-value="existingDirective.id" ng-repeat="existingDirective in row.existingDirectiveStudents">
-                {{existingDirective.directiveNr}} ({{existingDirective.startDate | hoisDate}} - {{existingDirective.endDate | hoisDate}})
-              </md-option>
-            </md-select>
-          </md-input-container>
-          <div class="invalid" ng-messages="directiveForm['students['+$index+'].directiveStudent'].$error">
-            <p ng-message="required">{{'main.required' | translate}}</p>
-            <p ng-message="serverside">
-              <span ng-repeat="err in directiveForm['students['+$index+'].directiveStudent'].$serverError">{{err.code | translate}}</span>
-            </p>
-          </div>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <md-input-container style="width: 250px">
+              <md-select ng-model="row.directiveStudent" name="students[{{$index}}].directiveStudent" ng-change="mapStudentDirective(row)"
+                ng-disabled="row.directiveStudent && row.existingDirectiveStudents.length === 1">
+                <md-option ng-value="existingDirective.id" ng-repeat="existingDirective in row.existingDirectiveStudents">
+                  {{existingDirective.directiveNr}} ({{existingDirective.startDate | hoisDate}} - {{existingDirective.endDate | hoisDate}})
+                </md-option>
+              </md-select>
+            </md-input-container>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-messages="directiveForm['students['+$index+'].directiveStudent'].$error">
+              <p ng-message="required">{{'main.required' | translate}}</p>
+              <p ng-message="serverside">
+                <span ng-repeat="err in directiveForm['students['+$index+'].directiveStudent'].$serverError">{{err.code | translate}}</span>
+              </p>
+            </div>
+          </hois-table-data-detail>
         </td>
         <td md-cell>
           <a ng-click="deleteStudent(row)" md-no-ink class="remove">&times;</a>

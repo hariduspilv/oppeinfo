@@ -8,7 +8,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       data: {
         authorizedRoles: function (Session, roles) {
-          return Session.roleCode === 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPILASKODU) !== -1;
+          return ['ROLL_A', 'ROLL_J'].indexOf(Session.roleCode) !== -1 && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPILASKODU) !== -1;
         }
       },
       resolve: {
@@ -36,7 +36,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       data: {
         authorizedRoles: function (Session, roles) {
-          return Session.roleCode === 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPILASKODU) !== -1;
+          return ['ROLL_A', 'ROLL_J'].indexOf(Session.roleCode) !== -1 && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPILASKODU) !== -1;
         }
       },
       resolve: {

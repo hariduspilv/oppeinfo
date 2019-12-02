@@ -203,7 +203,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         var currentCapacities = $scope.plan.currentCapacities.map(function (obj) {
           return obj.journal;
         });
-        $scope.plan.currentCapacitiesGrouped = groupBy($scope.plan.currentCapacities, "journal");
+        $scope.plan.currentCapacitiesGrouped = groupCapacitiesByJournal($scope.plan.currentCapacities);
         if (angular.isDefined($scope.plan.journals)) {
           $scope.plan.journals.forEach(function (item, index) {
             item.color = $scope.journalColors[index % 19];
@@ -218,6 +218,18 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       }
     }
 
+    function groupCapacitiesByJournal(capacities) {
+      var result = {};
+      for (var i = 0; i < capacities.length; i++) {
+        var capacity = capacities[i];
+        if (!result[capacity.journal]) {
+          result[capacity.journal] = [];
+        }
+        result[capacity.journal].push(capacity);
+      }
+      return result;
+    }
+
     $scope.getTotalsByJournal = function (journal, param) {
       var allCapacities = $scope.plan.currentCapacities.filter(function (it) {
         return it.journal === journal.id;
@@ -230,14 +242,8 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
     };
 
     $scope.showJournalPlannedLessons = function (journal) {
-      if (!($scope.plan.displayPeriodLessons || $scope.plan.displayLeftOverLessons)) {
-        return $scope.getTotalsByJournal(journal, 'thisPlannedLessons') > 0;
-      } else if ($scope.plan.displayPeriodLessons) {
-        return $scope.getTotalsByJournal(journal, 'totalPlannedLessons') > 0;
-      } else if ($scope.plan.displayLeftOverLessons) {
-        return $scope.getTotalsByJournal(journal, 'totalPlannedLessons') > 0 || $scope.getTotalsByJournal(journal, 'leftOverLessons') > 0;
-      }
-      return false;
+      var journalCapacities = $scope.plan.currentCapacitiesGrouped[journal.id];
+      return journalCapacities && $scope.showCurrentCapacitiesGrouped(journalCapacities);
     };
 
     $scope.showCurrentCapacitiesGrouped = function (capacities) {
@@ -579,13 +585,21 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
           dialogService.confirmDialog(DataUtils.occupiedEventTimePrompts($scope, $scope.auth.higher, result), function () {
             saveVocationalEvent(query, currGroupId);
           }, function () {
-            bsave = false;
             QueryUtils.loadingWheel($scope, true);
             QueryUtils.endpoint(baseUrl + '/:id/createVocationalPlan').search({
               id: $scope.timetableId
             }).$promise.then(function (result) {
               initializeData(result, currGroupId, $scope.plan.currentStudentGroups);
               QueryUtils.loadingWheel($scope, false);
+
+              // HACK: When choosing not to add an event ,that has warnings about being occupied, to lesson time,
+              // that has no other lessons, the event div remains while no actual event is added and div can't
+              // be interacted with. Therefore, we need to remove it manually.
+              var draggedCapacity = document.getElementById(currGroupId + '-' + params.index);
+              if (draggedCapacity) {
+                draggedCapacity.innerHTML = null;
+                draggedCapacity.classList.remove('highlight-drop-area');
+              }
             });
           });
         } else {
@@ -647,22 +661,6 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
           });
         });
       }
-    }
-
-    function groupBy(collection, property) {
-      var value, index, values = [],
-        result = [];
-      for (var i = 0; i < collection.length; i++) {
-        value = collection[i][property];
-        index = values.indexOf(value);
-        if (index > -1) {
-          result[index].push(collection[i]);
-        } else {
-          values.push(value);
-          result.push([collection[i]]);
-        }
-      }
-      return result;
     }
   }
 ]);

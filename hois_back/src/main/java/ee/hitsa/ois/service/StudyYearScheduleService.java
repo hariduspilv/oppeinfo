@@ -2,7 +2,6 @@ package ee.hitsa.ois.service;
 
 import java.awt.Color;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -150,15 +149,21 @@ public class StudyYearScheduleService {
         return schedule;
     }
 
-    public List<StudentGroupSearchDto> getStudentGroups(Long schoolId, Long studentId) {
-        return getStudentGroups(schoolId, studentId, null, null);
+    public List<StudentGroupSearchDto> getStudentGroups(HoisUserDetails user, Boolean showMine) {
+        return getStudentGroups(user, showMine, null, null);
     }
-    
-    public List<StudentGroupSearchDto> getStudentGroups(Long schoolId, Long studentId, LocalDate from, LocalDate thru) {
+
+    public List<StudentGroupSearchDto> getStudentGroups(HoisUserDetails user, Boolean showMine, LocalDate from,
+            LocalDate thru) {
+        Long schoolId = user.getSchoolId();
         List<StudentGroup> data;
-        if (studentId != null) {
+
+        if (Boolean.TRUE.equals(showMine) && (user.isStudent() || user.isRepresentative())) {
             data = em.createQuery("select s.studentGroup from Student s where s.id = ?1", StudentGroup.class)
-                .setParameter(1, studentId).getResultList();
+                    .setParameter(1, user.getStudentId()).getResultList();
+        } else if (Boolean.TRUE.equals(showMine) && user.isLeadingTeacher()) {
+            data = em.createQuery("select sg from StudentGroup sg where sg.curriculum.id in (?1)",
+                    StudentGroup.class).setParameter(1, user.getCurriculumIds()).getResultList();
         } else if (from != null && thru != null) {
             data = em.createQuery("select sg from StudentGroup sg where sg.school.id = ?1"
                     + " and (sg.validFrom is null or sg.validFrom <= ?3)"
@@ -174,9 +179,11 @@ public class StudyYearScheduleService {
             dto.setCode(sg.getCode());
             dto.setValidFrom(sg.getValidFrom());
             dto.setValidThru(sg.getValidThru());
-            dto.setSchoolDepartments(StreamUtil.toMappedList(d -> EntityUtil.getId(d.getSchoolDepartment()), sg.getCurriculum().getDepartments()));
+            dto.setSchoolDepartments(StreamUtil.toMappedList(d -> EntityUtil.getId(d.getSchoolDepartment()),
+                    sg.getCurriculum().getDepartments()));
+            dto.setCanEdit(Boolean.valueOf(UserUtil.isSchoolAdminOrLeadingTeacher(user, sg)));
             return dto;
-        }, data.stream().filter(sg -> !sg.getCurriculum().getDepartments().isEmpty()));
+        }, data.stream().filter(sg -> sg.getCurriculum() != null && !sg.getCurriculum().getDepartments().isEmpty()));
     }
 
     public List<StudyYearDto> getStudyYearsWithStudyPeriods(Long schoolId) {
@@ -233,8 +240,8 @@ public class StudyYearScheduleService {
         table.setWeeks(weeks);
         List<SchoolDepartmentResult> departmentList = StreamUtil.toFilteredList(d -> schedulesCmd.getSchoolDepartments().contains(d.getId()), 
                 autocompleteService.schoolDepartments(user.getSchoolId()));
-        List<StudentGroupSearchDto> studentGroups = getStudentGroups(user.getSchoolId(), 
-                Boolean.TRUE.equals(schedulesCmd.getShowMine()) ? user.getStudentId() : null, studyYear.getStartDate(), studyYear.getEndDate());
+        List<StudentGroupSearchDto> studentGroups = getStudentGroups(user, schedulesCmd.getShowMine(),
+                studyYear.getStartDate(), studyYear.getEndDate());
         StudyYearScheduleDtoContainer schedulesContainer = new StudyYearScheduleDtoContainer();
         schedulesContainer.setStudyPeriods(StreamUtil.toMappedSet(sp -> sp.getPeriod().getId(), studyPeriods));
         schedulesContainer.setStudentGroups(StreamUtil.toMappedSet(StudentGroupSearchDto::getId, studentGroups));

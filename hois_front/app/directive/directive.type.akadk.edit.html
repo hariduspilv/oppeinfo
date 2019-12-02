@@ -10,19 +10,23 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row hois-table-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
-        <td md-cell>
-          <md-datepicker ng-model="row.startDate" name="students[{{$index}}].startDate"></md-datepicker>
-          <div class="invalid" ng-show="directiveForm['students['+$index+'].startDate'].$error.required">
-            {{'main.required' | translate}}
-          </div>
-          <div class="invalid" ng-show="directiveForm['students['+$index+'].startDate'].$error.serverside">
-            <span ng-repeat="err in directiveForm['students['+$index+'].startDate'].$serverError">{{err.code | translate}}</span>
-            <br ng-if="!$last">
-          </div>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <md-datepicker ng-model="row.startDate" name="students[{{$index}}].startDate"></md-datepicker>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-show="directiveForm['students['+$index+'].startDate'].$error.required">
+              {{'main.required' | translate}}
+            </div>
+            <div class="invalid" ng-show="directiveForm['students['+$index+'].startDate'].$error.serverside">
+              <span ng-repeat="err in directiveForm['students['+$index+'].startDate'].$serverError">{{err.code | translate}}</span>
+              <br ng-if="!$last">
+            </div>
+          </hois-table-data-detail>
         </td>
         <td md-cell>
           <a ng-click="deleteStudent(row)" md-no-ink  class="remove">&times;</a>

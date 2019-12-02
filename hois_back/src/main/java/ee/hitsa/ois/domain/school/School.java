@@ -70,6 +70,11 @@ public class School extends BaseEntityWithId implements Translatable {
     private Boolean isMinorStudentAbsence = Boolean.FALSE;
     private Boolean isLetterGrade = Boolean.FALSE;
     private Boolean isWithoutEkis = Boolean.FALSE;
+    private Boolean isStudentTerms = Boolean.FALSE;
+    private String contractText;
+    @JsonIgnore
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private Classifier studentPhotoAdd;
     private String finalSchoolType;
     @Column(name = "final_62")
     private String final62;
@@ -316,6 +321,30 @@ public class School extends BaseEntityWithId implements Translatable {
 
     public void setIsWithoutEkis(Boolean isWithoutEkis) {
         this.isWithoutEkis = isWithoutEkis;
+    }
+
+    public Boolean getIsStudentTerms() {
+        return isStudentTerms;
+    }
+
+    public void setIsStudentTerms(Boolean isStudentTerms) {
+        this.isStudentTerms = isStudentTerms;
+    }
+
+    public String getContractText() {
+        return contractText;
+    }
+
+    public void setContractText(String contractText) {
+        this.contractText = contractText;
+    }
+
+    public Classifier getStudentPhotoAdd() {
+        return studentPhotoAdd;
+    }
+
+    public void setStudentPhotoAdd(Classifier studentPhotoAdd) {
+        this.studentPhotoAdd = studentPhotoAdd;
     }
 
 }

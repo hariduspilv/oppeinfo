@@ -12,8 +12,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,6 +39,7 @@ import ee.hitsa.ois.web.commandobject.curriculum.CurriculumAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionOccupationModuleThemeAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.curriculum.VocationalModuleCommand;
 import ee.hitsa.ois.web.commandobject.poll.PollAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.poll.PollQuestionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.studymaterial.StudyMaterialAutocompleteCommand;
@@ -183,6 +182,11 @@ public class AutocompleteController {
         return autocompleteService.schools(lookup);
     }
     
+    @GetMapping("/schoolsWithType")
+    public List<SchoolWithoutLogo> schoolsWithType(SearchCommand lookup) {
+        return autocompleteService.schoolsWithType(lookup);
+    }
+    
     @GetMapping("/schoolsWithLogo")
     public List<SchoolWithLogo> schoolsWithLogo(SearchCommand lookup) {
         return autocompleteService.schoolsWithLogo(lookup);
@@ -202,10 +206,23 @@ public class AutocompleteController {
     public List<SchoolDepartmentResult> schoolDepartments(HoisUserDetails user) {
         return autocompleteService.schoolDepartments(user.getSchoolId());
     }
+    
+    @GetMapping("/curriculumdepartments")
+    public List<SchoolDepartmentResult> curriculumDepartments(HoisUserDetails user, SearchCommand lookup) {
+        return autocompleteService.curriculumDepartments(user.getSchoolId(), lookup);
+    }
 
     @GetMapping("/studentgroups")
     public List<StudentGroupResult> studentGroups(HoisUserDetails user, StudentGroupAutocompleteCommand lookup) {
-        return autocompleteService.studentGroups(user.getSchoolId(), lookup);
+        return autocompleteService.studentGroups(user.getSchoolId(), lookup, false);
+    }
+    
+    @GetMapping("/expert/studentgroups")
+    public List<StudentGroupResult> expertStudentGroups(HoisUserDetails user, StudentGroupAutocompleteCommand lookup) {
+        if (lookup.getSchoolId() != null) {
+            return autocompleteService.studentGroups(lookup.getSchoolId(), lookup, false);
+        }
+        return autocompleteService.studentGroups(user.getSchoolId(), lookup, true);
     }
 
     @GetMapping("/subjects")
@@ -281,12 +298,12 @@ public class AutocompleteController {
     }
 
     @GetMapping("/vocationalmodules")
-    public Page<AutocompleteResult> vocationalModules(HoisUserDetails user, SearchCommand lookup) {
+    public Page<AutocompleteResult> vocationalModules(HoisUserDetails user, VocationalModuleCommand lookup) {
         return autocompleteService.vocationalModules(user.getSchoolId(), lookup);
     }
-    
+
     @GetMapping("/vocationaloccupationmodules")
-    public Page<AutocompleteResult> vocationalOccupationModules(HoisUserDetails user, SearchCommand lookup) {
+    public Page<AutocompleteResult> vocationalOccupationModules(HoisUserDetails user, VocationalModuleCommand lookup) {
         return autocompleteService.vocationalOccupationModules(user.getSchoolId(), lookup);
     }
 

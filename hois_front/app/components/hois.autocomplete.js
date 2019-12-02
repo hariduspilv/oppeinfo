@@ -61,9 +61,6 @@ angular.module('hitsaOis')
             var lookup = QueryUtils.endpoint(url);
           }
           var controller = {};
-          if (angular.isDefined(scope.haIgnored) && scope.haIgnored === "true") {
-            scope.haSearch = [];
-          }
           if (angular.isUndefined(scope.haSearch)) {
             scope.haSearch = function (text) {
               var deferred = $q.defer();
@@ -79,7 +76,15 @@ angular.module('hitsaOis')
                 lookup.query(query, function (data) {
                   deferred.resolve(data);
                 });
+              } else if(url === '/autocomplete/curriculumsauto') {
+                lookup.query(query, function (data) {
+                  deferred.resolve(data);
+                });
               } else if(url === '/autocomplete/studentgroups') {
+                lookup.query(query, function (data) {
+                  deferred.resolve(data);
+                });
+              } else if(url === '/autocomplete/expert/studentgroups') {
                 lookup.query(query, function (data) {
                   deferred.resolve(data);
                 });
@@ -149,7 +154,7 @@ angular.module('hitsaOis')
            * We need to cache some results to be able to put some value in ngHolder instead of attribute which is given.
            * Might be neccessary to put into watchers as well for ngModel value.
            */
-          if (angular.isDefined(scope.haAttribute)) {
+          if (angular.isDefined(scope.haAttribute) && !(angular.isDefined(scope.haIgnored) && scope.haIgnored === "true")) {
             var cached = scope.haSearch();
             if (angular.isObject(scope.ngModel) && scope.ngModel.hasOwnProperty(scope.haAttribute)) {
               scope.ngHolder = scope.ngModel;

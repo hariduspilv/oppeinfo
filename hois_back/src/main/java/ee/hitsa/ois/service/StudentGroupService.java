@@ -34,6 +34,7 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -63,8 +64,8 @@ public class StudentGroupService {
             "(select count(*) from student s where s.student_group_id=sg.id and s.status_code in (:studentStatus)), p.firstname, p.lastname";
     private static final String STUDENT_GROUP_LIST_FROM =
             "from student_group sg " +
-            "join curriculum curriculum on sg.curriculum_id=curriculum.id "+
-            "join classifier study_form on sg.study_form_code=study_form.code " +
+            "left join curriculum curriculum on sg.curriculum_id=curriculum.id "+
+            "left join classifier study_form on sg.study_form_code=study_form.code " +
             "left join teacher t on sg.teacher_id=t.id " +
             "left join person p on t.person_id=p.id";
 
@@ -85,10 +86,13 @@ public class StudentGroupService {
      * @param pageable
      * @return
      */
-    public Page<StudentGroupSearchDto> search(Long schoolId, StudentGroupSearchCommand criteria, Pageable pageable) {
+    public Page<StudentGroupSearchDto> search(HoisUserDetails user, StudentGroupSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_GROUP_LIST_FROM).sort(pageable);
 
-        qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.optionalCriteria("curriculum.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
+        }
 
         qb.optionalContains("sg.code", "code", criteria.getName());
         qb.optionalCriteria("curriculum.id = :curriculum", "curriculum", criteria.getCurriculum());
@@ -185,17 +189,22 @@ public class StudentGroupService {
     private StudentGroup saveInternal(HoisUserDetails user, StudentGroup studentGroup, StudentGroupForm form) {
         EntityUtil.bindToEntity(form, studentGroup, classifierRepository, "students");
 
-        // curriculum is required and must be from same school
-        Long curriculumId = form.getCurriculum().getId();
-        Curriculum curriculum = em.getReference(Curriculum.class, curriculumId);
-        UserUtil.assertSameSchool(user, curriculum.getSchool());
-        studentGroup.setCurriculum(curriculum);
-
-        // curriculum version is optional but must be from same curriculum
+        // curriculum is required and must be from same school for non guest student group
+        Long curriculumId = form.getCurriculum() != null ? form.getCurriculum().getId() : null;
+        if (curriculumId != null) {
+            Curriculum curriculum = em.getReference(Curriculum.class, curriculumId);
+            UserUtil.assertSameSchool(user, curriculum.getSchool());
+            studentGroup.setCurriculum(curriculum);
+        } else {
+            studentGroup.setCurriculum(null);
+        }
+        
+        // curriculum version is optional but must be from same curriculum, version is missing for guest student
         CurriculumVersion curriculumVersion = EntityUtil.getOptionalOne(CurriculumVersion.class, form.getCurriculumVersion(), em);
-        if(curriculumVersion != null && !curriculumId.equals(EntityUtil.getId(curriculumVersion.getCurriculum()))) {
+        if(curriculumVersion != null && curriculumId != null && !curriculumId.equals(EntityUtil.getId(curriculumVersion.getCurriculum()))) {
             throw new AssertionFailedException("Curriculum mismatch");
         }
+
         if (studentGroup.getCurriculumVersion() != null
                 && !studentGroup.getCurriculumVersion().equals(curriculumVersion)) {
             List<LessonPlan> pendingLessonPlans = pendingLessonPlans(studentGroup, form.getCurriculumVersion());
@@ -280,7 +289,10 @@ public class StudentGroupService {
      * @return
      */
     public List<StudentGroupStudentDto> searchStudents(Long schoolId, StudentGroupSearchStudentsCommand criteria) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s join curriculum_version cv on s.curriculum_version_id = cv.id join curriculum c on cv.curriculum_id = c.id join person p on s.person_id = p.id").sort("p.lastname", "p.firstname");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s "
+                + "join curriculum_version cv on s.curriculum_version_id = cv.id "
+                + "join curriculum c on cv.curriculum_id = c.id "
+                + "join person p on s.person_id = p.id").sort("p.lastname", "p.firstname");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.requiredCriteria("s.status_code in :activeStatuses", "activeStatuses", StudentStatus.STUDENT_STATUS_ACTIVE);
@@ -290,11 +302,11 @@ public class StudentGroupService {
         qb.optionalCriteria("s.language_code = :language", "language", criteria.getLanguage());
         qb.optionalCriteria("s.study_form_code = :studyForm", "studyForm", criteria.getStudyForm());
 
-        List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode, cv.id as cv_id, cv.code, c.name_et, c.name_en, s.status_code", em).getResultList();
+        List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode, cv.id as cv_id, cv.code, c.name_et, c.name_en, s.status_code, s.type_code as studentType", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             StudentGroupStudentDto dto = new StudentGroupStudentDto();
             dto.setId(resultAsLong(r, 0));
-            dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+            dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 9)));
             dto.setIdcode(resultAsString(r, 3));
             String cvCode = resultAsString(r, 5);
             dto.setCurriculumVersion(new AutocompleteResult(resultAsLong(r, 4),
@@ -343,5 +355,35 @@ public class StudentGroupService {
             map.put("valid", Boolean.valueOf((from == null || from.compareTo(now) <= 0) && (thru == null || thru.compareTo(now) >= 0)));
             return map;
         }).collect(Collectors.toList());
+    }
+
+    public List<StudentGroupStudentDto> searchGuestStudents(Long schoolId, StudentGroupSearchStudentsCommand criteria) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s "
+                + "join person p on s.person_id = p.id "
+                + "left join curriculum_version cv on s.curriculum_version_id = cv.id "
+                + "left join curriculum c on cv.curriculum_id = c.id").sort("p.lastname", "p.firstname");
+
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("s.type_code = :studentType", "studentType", StudentType.OPPUR_K.name());
+        qb.requiredCriteria("s.status_code in :activeStatuses", "activeStatuses", StudentStatus.STUDENT_STATUS_ACTIVE);
+        qb.optionalCriteria("cv.curriculum_id = :curriculum", "curriculum", criteria.getCurriculum());
+        qb.optionalCriteria("s.curriculum_version_id = :curriculumVersion", "curriculumVersion", criteria.getCurriculumVersion());
+        qb.optionalCriteria("(s.student_group_id is null or s.student_group_id != :studentGroup)", "studentGroup", criteria.getId());
+        qb.optionalCriteria("s.study_form_code = :studyForm", "studyForm", criteria.getStudyForm());
+
+        List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode, cv.id as cv_id, cv.code, c.name_et, c.name_en, s.status_code, s.type_code as studentType", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            StudentGroupStudentDto dto = new StudentGroupStudentDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 9)));
+            dto.setIdcode(resultAsString(r, 3));
+            String cvCode = resultAsString(r, 5);
+            if (resultAsLong(r, 4) != null) {
+                dto.setCurriculumVersion(new AutocompleteResult(resultAsLong(r, 4),
+                        CurriculumUtil.versionName(cvCode, resultAsString(r, 6)), CurriculumUtil.versionName(cvCode, resultAsString(r, 7))));
+            }
+            dto.setStatus(resultAsString(r, 8));
+            return dto;
+        }, data);
     }
 }

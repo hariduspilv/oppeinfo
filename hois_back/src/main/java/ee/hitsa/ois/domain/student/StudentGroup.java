@@ -44,6 +44,7 @@ public class StudentGroup extends BaseEntityWithId {
     private List<Student> students;
     private LocalDate validFrom;
     private LocalDate validThru;
+    private Boolean isGuest;
     @OneToMany(mappedBy = "studentGroup", fetch = FetchType.LAZY)
     private List<SubjectStudyPeriodStudentGroup> subjectStudyPeriods;
 
@@ -157,5 +158,13 @@ public class StudentGroup extends BaseEntityWithId {
 
     public void setStudents(List<Student> students) {
         this.students = students;
+    }
+
+    public Boolean getIsGuest() {
+        return isGuest;
+    }
+
+    public void setIsGuest(Boolean isGuest) {
+        this.isGuest = isGuest;
     }
 }

@@ -191,6 +191,9 @@ public class TeacherService {
             qb.requiredCriteria("t.id in (select tpe.teacher_id from teacher_position_ehis tpe where tpe.is_contract_ended = false and (tpe.contract_end is null or tpe.contract_end >= :now) and tpe.school_department_id = :schoolDepartment)", "schoolDepartment", criteria.getSchoolDepartment());
             qb.parameter("now", now);
         }
+        if (criteria.getStudentGroup() != null) {
+            qb.requiredCriteria("t.id = (select sg.teacher_id from student_group sg where sg.id = :studentGroupId)", "studentGroupId", criteria.getStudentGroup());
+        }
         qb.optionalCriteria("t.teacher_occupation_id = :teacherOccupation", "teacherOccupation", criteria.getTeacherOccupation());
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
 

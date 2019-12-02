@@ -43,6 +43,8 @@ import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.enums.DeclarationStatus;
 import ee.hitsa.ois.enums.ExamType;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.ProtocolType;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.TimetableEventRepeat;
@@ -167,6 +169,14 @@ public class ExamService {
                 "join classifier tp on sspe.type_code = tp.code").sort(pageable);
 
         qb.requiredCriteria("s.school_id = :school", "school", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("exists (select cv.curriculum_id from curriculum_version_hmodule_subject cvhs "
+                    + "join curriculum_version_hmodule cvh on cvh.id = cvhs.curriculum_version_hmodule_id "
+                    + "join curriculum_version cv on cv.id = cvh.curriculum_version_id "
+                    + "join user_curriculum uc on uc.curriculum_id = cv.curriculum_id "
+                    + "where cvhs.subject_id = s.id and uc.user_id = :userId)", "userId", user.getUserId());
+        }
+
         qb.optionalCriteria("ssp.study_period_id = :studyPeriod", "studyPeriod", criteria.getStudyPeriod());
         qb.optionalCriteria("s.id = :subject", "subject", criteria.getSubject());
         qb.optionalCriteria("te.start >= :from", "from", criteria.getFrom(), DateUtils::firstMomentOfDay);
@@ -581,7 +591,8 @@ public class ExamService {
         List<AutocompleteResult> rooms = roomsForExams(Collections.singleton(examId)).get(examId);
         Long subjectStudyPeriodId = EntityUtil.getId(exam.getSubjectStudyPeriod());
         List<String> teachers = teachersForSubjectStudyPeriods(Collections.singleton(subjectStudyPeriodId)).get(subjectStudyPeriodId);
-        return new ExamDto(exam, rooms.isEmpty() ? null : rooms.get(0), teachers, registrations(user, exam), examIsEditable(exam.getTimetableEvent().getStart()));
+        return new ExamDto(exam, rooms.isEmpty() ? null : rooms.get(0), teachers, registrations(user, exam),
+                examIsEditable(user, exam.getTimetableEvent().getStart()));
     }
 
     private DeclarationSubject findDeclarationSubject(SubjectStudyPeriodExam exam, Long studentId) {
@@ -730,6 +741,12 @@ public class ExamService {
 
     private static boolean isBeforeDeadline(LocalDateTime deadline, LocalDateTime start) {
         return LocalDateTime.now().isBefore(deadline != null ? deadline : start);
+    }
+
+    private static boolean examIsEditable(HoisUserDetails user, LocalDateTime start) {
+        return (user.isSchoolAdmin() || user.isTeacher())
+                && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_EKSAM)
+                && examIsEditable(start);
     }
 
     private static boolean examIsEditable(LocalDateTime start) {

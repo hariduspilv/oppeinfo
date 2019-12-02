@@ -12,7 +12,7 @@
     </div>
     <div layout="row" layout-sm="column" layout-xs="column">
       <md-input-container flex="25" flex-sm="100" flex-xs="100">
-        <label class="textInput">{{auth.higher ? ('journal.teachersHigher' | translate) : ('journal.teachersVocational' | translate)}}</label>
+        <label class="textInput">{{auth.higher ? ('studyMaterial.teacherHigher' | translate) : ('studyMaterial.teacherVocational' | translate)}}</label>
         <hois-value value="teachers"></hois-value>
       </md-input-container>
       <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -25,10 +25,7 @@
     <div ng-include="'studyMaterial/templates/journal.material.view.tmpl.html'"></div>
     <br/>
     <div layout="row">
-      <md-button ng-if="auth && !auth.isExternalExpert() && !auth.isMainAdmin()" class="md-raised md-default" 
-        ng-click="back('/#/students/journals')">{{'main.button.back' | translate}}</md-button>
-      <md-button ng-if="!auth || auth.isExternalExpert() || auth.isMainAdmin()" class="md-raised md-default" 
-        ng-click="back('/#/timetables')">{{'main.button.back' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-click="back(getDefaultBack())">{{'main.button.back' | translate}}</md-button>
     </div>
   </div>
 </div>

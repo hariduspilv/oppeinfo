@@ -1,0 +1,148 @@
+<fieldset ng-cloak ng-if="(!wrapper.formState.isNextPeriod || wrapper.declaration.id) || wrapper.formState.type === DECLARATION_PERIOD_TYPE.CURRENT">
+  <legend md-colors="{color: 'primary-800'}" class="md-title-small period" ng-if="wrapper.declaration.studyPeriod">
+    {{currentLanguageNameField(wrapper.declaration.studyPeriod)}}
+    <span ng-if="wrapper.formState.type === DECLARATION_PERIOD_TYPE.CURRENT && wrapper.formState.declarationPeriodStart && wrapper.formState.declarationPeriodEnd">
+      ({{'declaration.declarationPeriod' | translate: {from: (wrapper.formState.declarationPeriodStart | hoisDateTime),
+         thru: (wrapper.formState.declarationPeriodEnd | hoisDateTime)} }})
+    </span>
+  </legend>
+  <br hide-gt-xs ng-if="wrapper.formState.type === DECLARATION_PERIOD_TYPE.CURRENT && wrapper.formState.declarationPeriodStart && wrapper.formState.declarationPeriodEnd">
+  <div class="ois-form-layout-padding form-readonly" layout="column" ng-show="wrapper.formState.declaration">
+    <div layout="row" layout-sm="column" layout-xs="column" ng-show="auth.isAdmin()">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label>{{'declaration.student' | translate}}</label>
+          <hois-value value="wrapper.declaration.student.fullname"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label>{{'declaration.studyPeriod' | translate}}</label>
+          <hois-value value="currentLanguageNameField(wrapper.declaration.studyPeriod)"></hois-value>
+      </md-input-container>
+      <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5" ng-if="!isGuestStudent">
+          <label>{{'declaration.curriculumVersion' | translate}}</label>
+          <hois-value value="currentLanguageNameField(wrapper.declaration.student.curriculumVersion)"></hois-value>
+      </md-input-container>
+      <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5" ng-if="!isGuestStudent">
+          <label>{{'declaration.course' | translate}}</label>
+          <hois-value value="wrapper.declaration.course.toString()"></hois-value>
+      </md-input-container>
+      <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+          <label>{{'declaration.studentGroup' | translate}}</label>
+          <hois-value value="currentLanguageNameField(wrapper.declaration.student.studentGroup)"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label>{{'declaration.status' | translate}}</label>
+          <hois-classifier-value ng-model="wrapper.declaration.status" main-classifier-code="OPINGUKAVA_STAATUS"></hois-classifier-value>
+      </md-input-container>
+      <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+          <label>{{'declaration.inserted' | translate}}</label>
+          <hois-value value="wrapper.declaration.inserted | hoisDateTime"></hois-value>
+      </md-input-container>
+      <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+          <label>{{'declaration.confirmDate' | translate}}</label>
+          <hois-value value="wrapper.declaration.confirmDate | hoisDate"></hois-value>
+      </md-input-container>
+      <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+          <label>{{'declaration.confirmer' | translate}}</label>
+          <hois-value value="wrapper.declaration.confirmer"></hois-value>
+      </md-input-container>
+    </div>
+    <br>
+    <md-table-container>
+      <table md-table>
+        <thead md-head>
+          <tr md-row>
+            <th md-column>{{'declaration.subject' | translate}}</th>
+            <th md-column>{{'declaration.teacher' | translate}}</th>
+            <th md-column>{{'declaration.eap_assessment' | translate}}</th>
+            <th md-column ng-if="!isGuestStudent">{{'declaration.module_isRequired' | translate}}</th>
+            <th md-column>{{'declaration.prerequisites' | translate}}</th>
+            <th md-column>{{'studyMaterial.label' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="subject in wrapper.declaration.subjects | orderBy: 'subject.' + currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <a href="#/subject/{{subject.subject.id}}">
+                {{currentLanguageNameField(subject.subject)}} ({{subject.subject.code}})
+                <span ng-show="subject.isDeclaredRepeatedly">&nbsp;*</span>
+              </a>
+            </td>
+            <td md-cell>
+              <table>
+                <tr ng-repeat="program in subject.programs | orderBy: 'teacherName'">
+                  <td>{{program.teacherName}}
+                    <span ng-if="auth.isStudent() && program.id !== -1 && program.publicStudent">
+                      (<a href="#/subjectProgram/public/{{program.id}}/view" hide-xs>{{'declaration.seeProgram' | translate}}</a><a href="#/subjectProgram/public/{{program.id}}/view" hide-gt-xs>{{'declaration.seeProgramMobile' | translate}}</a>)
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+            <td md-cell>{{subject.subject.credits}} / {{subject.subject.assessment}}</td>
+            <td md-cell ng-if="!isGuestStudent">{{subject.module != null ? currentLanguageNameField(subject.module) : ' - '}} / {{subject.isOptional ? 'main.no' : 'main.yes' | translate}}</td>
+            <td md-cell>
+              <span ng-show="!hasPrerequisites(subject)"> - </span>
+              <span ng-show="hasPrerequisites(subject)"><a href="" ng-click="seePrerequisites(subject)">
+                {{'declaration.seePrerequisites' | translate}}</a>
+              </span>
+            </td>
+            <td md-cell><a ng-href="/#/declaration/studyMaterial/higher/{{subject.subjectStudyPeriod}}/view">{{'studyMaterial.openfolder' | translate}}</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <br ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')"
+      ng-show="wrapper.declaration.canBeChanged || wrapper.declaration.canBeSetConfirmed || wrapper.declaration.canBeSetUnconfirmed">
+    <div layout="row">
+      <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" ng-show="wrapper.declaration.canBeChanged" class="md-raised md-primary" 
+        ng-href="#/declarations/{{wrapper.declaration.id}}/edit">{{'main.button.change' | translate}}</md-button>
+      <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" ng-show="wrapper.declaration.canBeSetConfirmed" class="md-raised" 
+        ng-click="confirm(wrapper.formState.isNextPeriod)">{{'declaration.confirm' | translate}}</md-button>
+      <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" ng-show="wrapper.declaration.canBeSetUnconfirmed" class="md-raised" 
+        ng-click="removeConfirmation(wrapper.formState.isNextPeriod)">{{'declaration.removeConfirmation' | translate}}</md-button>
+    </div>
+  </div>
+  
+  <div layout-padding>
+    <div ng-show="wrapper.formState.noDeclaration && wrapper.formState.type === DECLARATION_PERIOD_TYPE.CURRENT">
+      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+        <div md-colors="{color: 'warn'}">
+          <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+          <span>{{'declaration.noCurrentDeclaration' | translate}}</span>
+        </div>
+      </md-whiteframe>
+      <div ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" layout="row">
+        <md-button ng-show="wrapper.formState.canCreateDeclaration" class="md-raised" 
+        ng-click="addDeclaration(wrapper.formState.isNextPeriod)">{{'main.button.add' | translate}}</md-button>
+      </div>
+    </div>
+    <div ng-show="wrapper.formState.noDeclaration && wrapper.formState.type !== DECLARATION_PERIOD_TYPE.CURRENT && !wrapper.formState.declarationPeriodStart && !wrapper.formState.declarationPeriodEnd">
+      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+        <div md-colors="{color: 'accent'}">
+          <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
+          <span>{{'declaration.notDeclarationPeriod' | translate}}</span>
+        </div>
+      </md-whiteframe>
+    </div>
+    <div ng-show="wrapper.formState.noDeclaration && wrapper.formState.type === DECLARATION_PERIOD_TYPE.AFTER && wrapper.formState.declarationPeriodEnd">
+      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+        <div md-colors="{color: 'accent'}">
+          <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
+          <span>{{'declaration.declarationPeriodHasEnded' | translate}} {{wrapper.formState.declarationPeriodEnd | hoisDate}}</span>
+        </div>
+      </md-whiteframe>
+    </div>
+    <div ng-show="wrapper.formState.noDeclaration && wrapper.formState.type === DECLARATION_PERIOD_TYPE.BEFORE && wrapper.formState.declarationPeriodStart">
+      <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+        <div md-colors="{color: 'accent'}">
+          <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
+          <span>{{'declaration.declarationPeriodHasNotStarted' | translate}} {{wrapper.formState.declarationPeriodStart | hoisDate}}</span>
+        </div>
+      </md-whiteframe>
+    </div>
+  </div>
+</fieldset>

@@ -23,8 +23,8 @@
     <md-toolbar style="min-height: max-content">
         <div class="md-toolbar-tools">
             <h2 flex style="word-break: break-word;">{{currentLanguageNameField(formState.name) + ' (' + (criteria.startDate | hoisDate)  + ' - ' + (criteria.endDate | hoisDate) + ')'}}</h2>
-            <md-button class="md-icon-button" ng-click="cancel()">
-            <md-icon md-font-set="material-icons">close</md-icon>
+            <md-button class="md-icon-button" ng-click="close()">
+                <md-icon md-font-set="material-icons">close</md-icon>
             </md-button>
         </div>
     </md-toolbar>
@@ -165,4 +165,7 @@
             </div>
         </div>
     </md-dialog-content>
+    <md-dialog-actions layout="row" layout-xs="column" layout-align="start start" layout-align-xs="none none">
+        <md-button flex-xs="100" class="md-raised" ng-click="close()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
 </md-dialog>

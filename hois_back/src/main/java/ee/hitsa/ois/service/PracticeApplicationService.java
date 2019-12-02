@@ -80,8 +80,8 @@ public class PracticeApplicationService {
                 + " left join practice_application papp on papp.practice_admission_id = padm.id and papp.student_id = ?2"
                 + " left join contract c on c.practice_application_id = papp.id"
                 + " where es.school_id = ?1 and "
-                + (passed ? "not(now() between padm.valid_from and padm.valid_thru) and papp.id is not null" : 
-                    " (now() between padm.valid_from and padm.valid_thru"
+                + (passed ? "(cast(now() as date) not between padm.valid_from and padm.valid_thru) and papp.id is not null" : 
+                    " (cast(now() as date) between padm.valid_from and padm.valid_thru"
                         + " and exists(select id from practice_admission_student_group where practice_admission_id = padm.id"
                         + " and student_group_id in (select student_group_id from student where id = ?2)))")
                 + " order by e.name, padm.valid_from, padm.valid_thru")
@@ -176,7 +176,11 @@ public class PracticeApplicationService {
                         + " left join contract c on c.practice_application_id = papp.id").sort(pageable);
 
         qb.requiredCriteria("es.school_id = :schoolId", "schoolId", user.getSchoolId());
-        
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("sg.curriculum_id in (:userCurriculumIds)", "userCurriculumIds",
+                    user.getCurriculumIds());
+        }
+
         qb.optionalCriteria("sg.id = :studentGroup", "studentGroup", command.getStudentGroup());
         qb.optionalContains("p.firstname || ' ' || p.lastname", "studentName", command.getStudentName());
         qb.optionalCriteria("papp.submitted >= :submitFrom", "submitFrom", command.getSubmitFrom());
@@ -186,11 +190,11 @@ public class PracticeApplicationService {
         
         return JpaQueryUtil.pagingResult(qb, "papp.id as application_id, s.id as student_id, p.firstname, p.lastname"
                 + ", sg.code as student_group_code, papp.status_code, papp.submitted, papp.add_info, e.id, e.name"
-                + ", padm.valid_from, padm.valid_thru, papp.reject_reason, c.id as contract_id", em, pageable).map(r -> {
+                + ", padm.valid_from, padm.valid_thru, papp.reject_reason, c.id as contract_id, s.type_code as studentType", em, pageable).map(r -> {
             PracticeApplicationSearchDto dto = new PracticeApplicationSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setStudentId(resultAsLong(r, 1));
-            dto.setStudentName(PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)));
+            dto.setStudentName(PersonUtil.fullnameOptionalGuest(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 14)));
             dto.setStudentGroup(resultAsString(r, 4));
             dto.setStatus(resultAsString(r, 5));
             dto.setSubmitDate(resultAsLocalDate(r, 6));

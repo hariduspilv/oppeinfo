@@ -20,6 +20,7 @@ public class PollTarget extends BaseEntityWithId {
     private Poll poll;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier target;
+    private Integer targetCount;
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "poll_target_id", nullable = false, updatable = false, insertable = false)
     private List<ResponseObject> responseObjects = new ArrayList<>();
@@ -41,6 +42,12 @@ public class PollTarget extends BaseEntityWithId {
     }
     public void setResponseObjects(List<ResponseObject> responseObjects) {
         this.responseObjects = responseObjects;
+    }
+    public Integer getTargetCount() {
+        return targetCount;
+    }
+    public void setTargetCount(Integer targetCount) {
+        this.targetCount = targetCount;
     }
 
 }

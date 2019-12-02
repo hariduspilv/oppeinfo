@@ -1,8 +1,8 @@
 package ee.hitsa.ois.web.subject.subjectprogram;
 
 import java.io.IOException;
-import java.util.Set;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletResponse;
@@ -25,14 +25,17 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.report.SubjectProgramReport;
+import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.SubjectProgramService;
 import ee.hitsa.ois.service.SubjectService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.SubjectProgramUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.subject.SubjectProgramForm;
 import ee.hitsa.ois.web.commandobject.subject.SubjectProgramSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -54,6 +57,8 @@ public class SubjectProgramController {
     private SubjectService subjectService;
     @Autowired
     private PdfService pdfService;
+    @Autowired
+    private ClassifierService classifierService;
     
     @GetMapping("/myPrograms")
     public Page<SubjectProgramSearchDto> searchMyPrograms(HoisUserDetails user, SubjectProgramSearchCommand cmd, Pageable pageable) {
@@ -111,15 +116,15 @@ public class SubjectProgramController {
     }
     
     @GetMapping("/program/subjects")
-    public Set<AutocompleteResult> getSubjectsViaPrograms(HoisUserDetails user, @RequestParam(value="teacher", required=false) Long teacherId) {
+    public Set<AutocompleteResult> getSubjectsViaPrograms(HoisUserDetails user, @RequestParam(value="teacher", required=false) Long teacherId, SearchCommand lookup) {
         util.assertCanSearch(user);
-        return service.getSubjectsViaPrograms(user, teacherId);
+        return service.getSubjectsViaPrograms(user, teacherId, lookup);
     }
     
     @GetMapping("/curriculum/subjects")
-    public Set<AutocompleteResult> getSubjectsViaCurriculums(HoisUserDetails user) {
+    public Set<AutocompleteResult> getSubjectsViaCurriculums(HoisUserDetails user, SearchCommand lookup) {
         util.assertCanSearch(user);
-        return service.getSubjectsViaCurriculums(user);
+        return service.getSubjectsViaCurriculums(user, lookup);
     }
     
     @GetMapping("/complete/{id:\\d+}")
@@ -143,7 +148,8 @@ public class SubjectProgramController {
     @GetMapping("/print/{id:\\d+}/program.pdf")
     public void print(HoisUserDetails user, @WithEntity SubjectProgram program, HttpServletResponse response) throws IOException {
         util.assertCanView(user, program);
-        HttpUtil.pdf(response, "subject_program_" + program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject().getCode() + ".pdf", pdfService.generate(SubjectProgramReport.TEMPLATE_NAME, new SubjectProgramReport(program)));
+        HttpUtil.pdf(response, "subject_program_" + program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject().getCode() + ".pdf",
+                pdfService.generate(SubjectProgramReport.TEMPLATE_NAME, new SubjectProgramReport(program, new ClassifierUtil.ClassifierCache(classifierService))));
     }
     
     @GetMapping("/hasunconfirmed")

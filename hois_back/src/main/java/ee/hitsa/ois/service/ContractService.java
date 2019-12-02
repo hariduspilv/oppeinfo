@@ -55,6 +55,7 @@ import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.message.PracticeJournalUniqueUrlMessage;
 import ee.hitsa.ois.service.ekis.EkisService;
@@ -65,6 +66,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ContractValidation;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -126,11 +128,11 @@ public class ContractService {
             + "s.id, student_person.firstname as student_person_firstname, student_person.lastname as student_person_lastname, "
             + "string_agg(cs.supervisor_name, ', '), "
             + "t.id as teacherId, teacher_person.firstname as teacher_person_firstname, teacher_person.lastname as teacher_person_lastname, sg.code, s.status_code as student_status_code, "
-            + "c.start_date, c.end_date";
+            + "c.start_date, c.end_date, s.type_code as studentType";
     
     private static final String STUDENTGROUP_CONTRACT_GROUP_BY = "c.id, c.contract_nr, c.status_code, c.confirm_date, "
             + "s.id, student_person.firstname, student_person.lastname, "
-            + "t.id, teacher_person.firstname, teacher_person.lastname, sg.code, s.status_code, c.start_date, c.end_date";
+            + "t.id, teacher_person.firstname, teacher_person.lastname, sg.code, s.status_code, c.start_date, c.end_date, s.type_code";
 
     private static final String SEARCH_FROM = "from contract "
             + "inner join student on contract.student_id = student.id "
@@ -145,7 +147,7 @@ public class ContractService {
     private static final String SEARCH_SELECT = "contract.id as contractId, contract.contract_nr, contract.status_code, contract.start_date, contract.end_date, contract.confirm_date, "
             + "student.id, student_person.firstname as student_person_firstname, student_person.lastname as student_person_lastname, "
             + "enterprise.name, string_agg(cs.supervisor_name, ', '), "
-            + "teacher.id as teacherId, teacher_person.firstname as teacher_person_firstname, teacher_person.lastname as teacher_person_lastname, sg.code";
+            + "teacher.id as teacherId, teacher_person.firstname as teacher_person_firstname, teacher_person.lastname as teacher_person_lastname, sg.code, student.type_code as studentType";
     
     private static final String GROUP_BY = "contract.id, contract.contract_nr, contract.status_code, contract.start_date, contract.end_date, contract.confirm_date, "
             + "student.id, student_person.firstname, student_person.lastname, "
@@ -164,17 +166,6 @@ public class ContractService {
             + "cm.name_en as cm_name_en, mcl.name_en as mcl_name_en, cm.credits as cm_credits, cvo.assessment_methods_et, "
             + "cvot.id as cvot_id, cvot.name_et as cvot_name_et, cvot.credits as cvot_credits, cvot.subthemes";
 
-    private static final String SUBJECTS_FROM = "from student s "
-            + "inner join curriculum_version cv on cv.id = s.curriculum_version_id "
-            + "inner join curriculum c on c.id = cv.curriculum_id "
-            + "inner join curriculum_version_hmodule cvh on cvh.curriculum_version_id = s.curriculum_version_id "
-            + "left join curriculum_version_hmodule_subject cvht on cvht.curriculum_version_hmodule_id = cvh.id "
-            + "inner join subject subject on subject.id = cvht.subject_id";
-    private static final String SUBJECTS_SELECT = "cvh.id as cvh_id, cvh.name_et as cvh_name_et, cvh.name_en as cvh_name_en, "
-            + "subject.id, subject.name_et as subject_name_et, subject.name_en as subject_name_en, "
-            + "subject.outcomes_et as subject_outcomes_et, subject.outcomes_en as subject_outcomes_en, "
-            + "subject.credits as subject_credits";
-
     private static final String ABSENCE_REJECT_CONTRACT_DELETED = "Leping kustutatud";
     private static final String ABSENCE_REJECT_CONTRACT_CANCELED = "Leping tühistatud";
     private static final String ABSENCE_REJECT_CONTRACT_ENDED = "Leping lõpetatud";
@@ -190,6 +181,12 @@ public class ContractService {
     public Page<ContractSearchDto> search(HoisUserDetails user, ContractSearchCommand command, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable).groupBy(GROUP_BY);
         qb.requiredCriteria("student.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria(
+                    "exists (select cur.id from curriculum_version cv join curriculum cur on cur.id = cv.curriculum_id"
+                            + " where student.curriculum_version_id = cv.id and cur.id in (:userCurriculumIds))",
+                    "userCurriculumIds", user.getCurriculumIds());
+        }
 
         qb.optionalCriteria("contract.start_date >= :startFrom", "startFrom", command.getStartFrom());
         qb.optionalCriteria("contract.start_date <= :startThru", "startThru", command.getStartThru());
@@ -203,7 +200,12 @@ public class ContractService {
         qb.optionalContains("cs.supervisor_name", "enterpriseContactPersonName", command.getEnterpriseContactPersonName());
         qb.optionalCriteria("contract.teacher_id = :teacherId", "teacherId", command.getTeacher());
         qb.optionalCriteria("contract.status_code in (:status)", "status", command.getStatus());
-        qb.optionalCriteria("contract.student_id = :studentId", "studentId", command.getStudent());
+
+        if (user.isStudent()) {
+            qb.optionalCriteria("contract.student_id = :studentId", "studentId", user.getStudentId()); 
+        } else {
+            qb.optionalCriteria("contract.student_id = :studentId", "studentId", command.getStudent());
+        }
 
         return JpaQueryUtil.pagingResult(qb, SEARCH_SELECT, em, pageable).map(r -> {
             ContractSearchDto dto = new ContractSearchDto();
@@ -214,7 +216,7 @@ public class ContractService {
             dto.setEndDate(resultAsLocalDate(r, 4));
             dto.setConfirmDate(resultAsLocalDate(r, 5));
 
-            String studentName = PersonUtil.fullname(resultAsString(r, 7), resultAsString(r, 8));
+            String studentName = PersonUtil.fullnameOptionalGuest(resultAsString(r, 7), resultAsString(r, 8), resultAsString(r, 15));
             dto.setStudent(new AutocompleteResult(resultAsLong(r, 6), studentName, studentName));
 
             dto.setEnterpriseName(resultAsString(r, 9));
@@ -238,6 +240,13 @@ public class ContractService {
     public Page<ContractSearchDto> searchAll(HoisUserDetails user, ContractAllCommand command, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable).groupBy(GROUP_BY);
         qb.requiredCriteria("student.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria(
+                    "exists (select cur.id from curriculum_version cv join curriculum cur on cur.id = cv.curriculum_id"
+                            + " where student.curriculum_version_id = cv.id and cur.id in (:userCurriculumIds))",
+                    "userCurriculumIds", user.getCurriculumIds());
+        }
+
         qb.optionalCriteria("student.student_group_id = :studentGroupId", "studentGroupId", command.getStudentGroup());
         qb.optionalCriteria("contract.student_id = :studentId", "studentId", command.getStudent());
 
@@ -262,8 +271,7 @@ public class ContractService {
         qb.requiredCriteria("s.id = :studentId", "studentId", studentId);
         qb.filter("cm.is_practice = true");
 
-        //kellel puudub vastavas moodulis positiivne tulemus.
-        //who has no positive 
+        //who has no positive grade in corresponding module
         qb.requiredCriteria(
                 "s.id not in (select ps.student_id from protocol_student ps "
                         + "inner join protocol p on p.id = ps.protocol_id "
@@ -300,9 +308,34 @@ public class ContractService {
     }
 
     public Collection<ContractStudentHigherModuleDto> studentPracticeHigherModules(HoisUserDetails user, Long studentId) {
+        Student student = em.getReference(Student.class, studentId);
+        boolean useDeclaration = StudentUtil.isHigher(student) && StudentUtil.isGuestStudent(student);
+        String SUBJECTS_FROM = "from student s " 
+                + "inner join curriculum_version cv on cv.id = s.curriculum_version_id "
+                + "inner join curriculum c on c.id = cv.curriculum_id "
+                + "inner join curriculum_version_hmodule cvh on cvh.curriculum_version_id = s.curriculum_version_id "
+                + "left join curriculum_version_hmodule_subject cvht on cvht.curriculum_version_hmodule_id = cvh.id "
+                + "inner join subject subject on subject.id = cvht.subject_id";
+        String SUBJECTS_SELECT = "cvh.id as cvh_id, cvh.name_et as cvh_name_et, cvh.name_en as cvh_name_en, "
+                + "subject.id, subject.name_et as subject_name_et, subject.name_en as subject_name_en, "
+                + "subject.outcomes_et as subject_outcomes_et, subject.outcomes_en as subject_outcomes_en, "
+                + "subject.credits as subject_credits";
+        if (useDeclaration) {
+            SUBJECTS_FROM = "from subject subject";
+            
+            SUBJECTS_SELECT = "null as cvh_id, null as cvh_name_et, null as cvh_name_en, "
+                    + "subject.id, subject.name_et as subject_name_et, subject.name_en as subject_name_en, "
+                    + "subject.outcomes_et as subject_outcomes_et, subject.outcomes_en as subject_outcomes_en, "
+                    + "subject.credits as subject_credits";
+        }
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SUBJECTS_FROM);
-        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
-        qb.requiredCriteria("s.id = :studentId", "studentId", studentId);
+        if (!useDeclaration) {
+            qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+            qb.requiredCriteria("s.id = :studentId", "studentId", studentId);
+        } else {
+            qb.requiredCriteria("subject.school_id = :subjectSchool", "subjectSchool", user.getSchoolId());
+            qb.requiredCriteria("subject.status_code = :subjectStatus", "subjectStatus", SubjectStatus.AINESTAATUS_K.name());
+        }
         qb.filter("subject.is_practice = true");
 
         List<?> data = qb.select(SUBJECTS_SELECT, em).getResultList();
@@ -338,8 +371,10 @@ public class ContractService {
      */
     public ContractDto get(HoisUserDetails user, Contract contract) {
         ContractDto dto = ContractDto.of(contract);
-        dto.setCanEdit(Boolean.valueOf(UserUtil.isSchoolAdmin(user, contract.getStudent().getSchool()) &&
-                ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_S, contract.getStatus())));
+        boolean userWithRights = UserUtil.isSchoolAdmin(user, contract.getStudent().getSchool())
+                || UserUtil.isLeadingTeacher(user, contract.getStudent());
+        dto.setCanEdit(Boolean.valueOf(
+                userWithRights && ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_S, contract.getStatus())));
         return dto;
     }
 
@@ -381,39 +416,23 @@ public class ContractService {
         changedContract.setTeacher(EntityUtil.getOptionalOne(Teacher.class, contractForm.getTeacher(), em));
         changedContract.setContractCoordinator(EntityUtil.getOptionalOne(DirectiveCoordinator.class, contractForm.getContractCoordinator(), em));
         changedContract.setPracticeApplication(EntityUtil.getOptionalOne(PracticeApplication.class, contractForm.getPracticeApplication(), em));
+        
         EntityUtil.bindEntityCollection(changedContract.getModuleSubjects(), moduleSubject -> EntityUtil.getId(moduleSubject),
                 contractForm.getModuleSubjects(), ContractModuleSubjectForm::getId, dto -> {
                     ContractModuleSubject moduleSubject = new ContractModuleSubject();
                     moduleSubject.setContract(changedContract);
                     return updateModuleSubject(dto, moduleSubject);
                 }, this::updateModuleSubject);
+        
         List<ContractSupervisor> updatedSupervisors = new ArrayList<>();
         if (contractForm.getSupervisors() != null) {
             for (ContractSupervisorDto supervisor : contractForm.getSupervisors()) {
                 if (supervisor.getId() == null) {
-                    ContractSupervisor newSupervisor = new ContractSupervisor();
-                    EntityUtil.bindToEntity(supervisor, newSupervisor);
-                    if (StringUtils.isBlank(newSupervisor.getSupervisorName()) && changedContract.getEnterprise() != null && supervisor.getSupervisorFirstname() != null && supervisor.getSupervisorLastname() != null) {
-                        newSupervisor.setSupervisorName(String.format("%s %s", supervisor.getSupervisorFirstname(), supervisor.getSupervisorLastname()));
-                        Optional<EnterpriseSchool> enterpriseSchool = changedContract.getEnterprise().getEnterpriseSchools().stream().filter(p->p.getSchool().getId().equals(user.getSchoolId())).findFirst();
-                        if (enterpriseSchool.isPresent()) {
-                            PracticeEnterprisePersonCommand cmd = new PracticeEnterprisePersonCommand();
-                            cmd.setFirstname(supervisor.getSupervisorFirstname());
-                            cmd.setLastname(supervisor.getSupervisorLastname());
-                            cmd.setEmail(supervisor.getSupervisorEmail());
-                            cmd.setPhone(supervisor.getSupervisorPhone());
-                            cmd.setSupervisor(Boolean.TRUE);
-                            enterpriseService.createPerson(user, enterpriseSchool.get(), cmd);
-                        }
-                    }
-                    newSupervisor.setContract(changedContract);
-                    newSupervisor.setSupervisorUrl(generateUniqueUrl());
+                    ContractSupervisor newSupervisor = createContractSupervisor(supervisor, changedContract, user);
                     updatedSupervisors.add(newSupervisor);
                 } else {
                     ContractSupervisor oldSupervisor = em.getReference(ContractSupervisor.class, supervisor.getId());
-                    EntityUtil.bindToEntity(supervisor, oldSupervisor);
-                    oldSupervisor.setContract(changedContract);
-                    oldSupervisor.setSupervisorUrl(generateUniqueUrl());
+                    oldSupervisor = updateContractSupervisor(supervisor, oldSupervisor, changedContract);
                     updatedSupervisors.add(oldSupervisor);
                 }
             }
@@ -421,6 +440,34 @@ public class ContractService {
             changedContract.getContractSupervisors().addAll(updatedSupervisors);
         }
         return EntityUtil.save(changedContract, em);
+    }
+    
+    private ContractSupervisor createContractSupervisor(ContractSupervisorDto supervisor, Contract changedContract, HoisUserDetails user) {
+        ContractSupervisor newSupervisor = new ContractSupervisor();
+        EntityUtil.bindToEntity(supervisor, newSupervisor);
+        if (StringUtils.isBlank(newSupervisor.getSupervisorName()) && changedContract.getEnterprise() != null && supervisor.getSupervisorFirstname() != null && supervisor.getSupervisorLastname() != null) {
+            newSupervisor.setSupervisorName(String.format("%s %s", supervisor.getSupervisorFirstname(), supervisor.getSupervisorLastname()));
+            Optional<EnterpriseSchool> enterpriseSchool = changedContract.getEnterprise().getEnterpriseSchools().stream().filter(p->p.getSchool().getId().equals(user.getSchoolId())).findFirst();
+            if (enterpriseSchool.isPresent()) {
+                PracticeEnterprisePersonCommand cmd = new PracticeEnterprisePersonCommand();
+                cmd.setFirstname(supervisor.getSupervisorFirstname());
+                cmd.setLastname(supervisor.getSupervisorLastname());
+                cmd.setEmail(supervisor.getSupervisorEmail());
+                cmd.setPhone(supervisor.getSupervisorPhone());
+                cmd.setSupervisor(Boolean.TRUE);
+                enterpriseService.createPerson(user, enterpriseSchool.get(), cmd);
+            }
+        }
+        newSupervisor.setContract(changedContract);
+        newSupervisor.setSupervisorUrl(generateUniqueUrl());
+        return newSupervisor;
+    }
+    
+    private static ContractSupervisor updateContractSupervisor(ContractSupervisorDto supervisor, ContractSupervisor oldSupervisor, Contract changedContract) {
+        EntityUtil.bindToEntity(supervisor, oldSupervisor);
+        oldSupervisor.setContract(changedContract);
+        oldSupervisor.setSupervisorUrl(generateUniqueUrl());
+        return oldSupervisor;
     }
     
     private ContractModuleSubject updateModuleSubject(ContractModuleSubjectForm form, ContractModuleSubject moduleSubject) {
@@ -645,7 +692,15 @@ public class ContractService {
             StudentGroupContractSearchCommand command, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENTGROUP_CONTRACT_SEARCH_FROM).sort(pageable).groupBy(STUDENTGROUP_CONTRACT_GROUP_BY);
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria(
+                    "exists (select cur.id from curriculum_version cv join curriculum cur on cur.id = cv.curriculum_id"
+                            + " where s.curriculum_version_id = cv.id and cur.id in (:userCurriculumIds))",
+                    "userCurriculumIds", user.getCurriculumIds());
+        }
+
         qb.optionalCriteria("s.student_group_id = :studentGroupId", "studentGroupId", command.getStudentGroup());
+        qb.filter("s.curriculum_version_id is not null");
         if (command.getActive() != null && command.getActive().booleanValue()) {
             qb.filter("s.status_code in (:studentStatus)");
             qb.parameter("studentStatus", StudentStatus.STUDENT_STATUS_ACTIVE);
@@ -656,7 +711,7 @@ public class ContractService {
             dto.setContractNr(resultAsString(r, 1));
             dto.setStatus(resultAsString(r, 2));
             dto.setConfirmDate(resultAsLocalDate(r, 3));
-            String studentName = PersonUtil.fullname(resultAsString(r, 5), resultAsString(r, 6));
+            String studentName = PersonUtil.fullnameOptionalGuest(resultAsString(r, 5), resultAsString(r, 6), resultAsString(r, 15));
             dto.setStudent(new AutocompleteResult(resultAsLong(r, 4), studentName, studentName));
             dto.setEnterpriseContactPersonName(resultAsString(r, 7));
             String teacherName = PersonUtil.fullname(resultAsString(r, 9), resultAsString(r, 10));
@@ -668,11 +723,19 @@ public class ContractService {
             return dto;
         });
 	}
-	
-	public Page<ContractForEkisDto> searchContractForEkis(HoisUserDetails user, ContractForEkisSearchCommand command,Pageable pageable) {
-	    JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable).groupBy(GROUP_BY);
-	    
+
+    public Page<ContractForEkisDto> searchContractForEkis(HoisUserDetails user, ContractForEkisSearchCommand command,
+            Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable).groupBy(GROUP_BY);
+
         qb.requiredCriteria("student.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria(
+                    "exists (select cur.id from curriculum_version cv join curriculum cur on cur.id = cv.curriculum_id"
+                            + " where student.curriculum_version_id = cv.id and cur.id in (:userCurriculumIds))",
+                    "userCurriculumIds", user.getCurriculumIds());
+        }
+
         qb.optionalContains(Arrays.asList("student_person.firstname", "student_person.lastname",
                 "student_person.firstname || ' ' || student_person.lastname"), "name", command.getStudentName());
         qb.optionalCriteria("student.student_group_id = :studentGroupId", "studentGroupId", command.getStudentGroup());

@@ -28,6 +28,7 @@ public class JournalStudentDto {
     private List<JournalStudentApelResultDto> apelResults;
     private List<JournalStudentRemarkDto> remarks;
 
+    private Boolean canView;
     private Boolean canEdit;
 
     public JournalStudentDto() {
@@ -42,6 +43,7 @@ public class JournalStudentDto {
         this.studentGroup = studentGroup;
         this.curriculum = CurriculumUtil.versionName(curriculumVersionCode, curriculumNameEt);
         this.status = status;
+        this.canView = Boolean.TRUE;
         this.canEdit = Boolean.valueOf(StudentStatus.STUDENT_STATUS_ACTIVE.contains(status));
     }
 
@@ -52,7 +54,7 @@ public class JournalStudentDto {
         Person person = student.getPerson();
         dto.setFirstname(person.getFirstname());
         dto.setLastname(person.getLastname());
-        dto.setFullname(PersonUtil.fullname(person));
+        dto.setFullname(PersonUtil.fullname(student));
 
         if (student.getStudentGroup() != null) {
             dto.setStudentGroup(student.getStudentGroup().getCode());
@@ -65,6 +67,7 @@ public class JournalStudentDto {
 
         dto.setIsIndividualCurriculum(Boolean.FALSE);
         dto.setStatus(EntityUtil.getCode(student.getStatus()));
+        dto.setCanView(Boolean.TRUE);
         dto.setCanEdit(Boolean.valueOf(StudentUtil.isActive(student)));
         return dto;
     }
@@ -170,6 +173,14 @@ public class JournalStudentDto {
 
     public void setRemarks(List<JournalStudentRemarkDto> remarks) {
         this.remarks = remarks;
+    }
+
+    public Boolean getCanView() {
+        return canView;
+    }
+
+    public void setCanView(Boolean canView) {
+        this.canView = canView;
     }
 
     public Boolean getCanEdit() {

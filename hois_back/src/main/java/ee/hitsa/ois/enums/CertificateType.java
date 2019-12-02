@@ -23,11 +23,15 @@ public enum CertificateType {
         this.vocationalCertificate = vocationalCertificate;
     }
 
-    public String getHigherCertificate() {
+    public String getHigherCertificate(Boolean estonian) {
+        if (estonian != null && !estonian.booleanValue()) return "EN_" + higherCertificate;
+        if (estonian != null && estonian.booleanValue()) return "ET_" + higherCertificate;
         return higherCertificate;
     }
 
-    public String getVocationalCertificate() {
+    public String getVocationalCertificate(Boolean estonian) {
+        if (estonian != null && !estonian.booleanValue()) return "EN_" + vocationalCertificate;
+        if (estonian != null && estonian.booleanValue()) return "ET_" + vocationalCertificate;
         return vocationalCertificate;
     }
 

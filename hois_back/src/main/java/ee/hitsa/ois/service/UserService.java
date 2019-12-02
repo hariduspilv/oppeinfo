@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,14 +30,23 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.enums.CurriculumStatus;
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.repository.PersonRepository;
+import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.UserProjection;
 import ee.hitsa.ois.web.dto.UserRolesDto;
 
@@ -48,6 +58,8 @@ public class UserService {
     private EntityManager em;
     @Autowired
     private PersonRepository personRepository;
+    @Autowired
+    private SchoolService schoolService;
 
     /**
      * Create user for logged in user without any roles in ois
@@ -167,19 +179,64 @@ public class UserService {
         from.append("left join student st on st.id = u.student_id "); // Student or Representative
         from.append("left join person p on p.id = st.person_id "); // Student person
         from.append("left join student_group sg on sg.id = st.student_group_id "); // Student group
+        from.append("left join user_school_role usr on usr.id = u.user_school_role_id "); // User school role
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort("c.name_et", "s.code");
 
         qb.requiredCriteria("u.person_id = :personId", "personId", personId);
         qb.requiredCriteria("(u.role_code = :guestRole or exists(select 1 from user_rights r where u.id = r.user_id))", "guestRole", Role.ROLL_X);
         qb.validNowCriteria("u.valid_from", "u.valid_thru");
+        // Should not shown roles for representative and student if student is not active.
+        qb.requiredCriteria("case when st.id is not null then st.status_code in (:studentActive) else true end", "studentActive", StudentStatus.STUDENT_STATUS_ACTIVE);
 
-        List<?> resultList = qb.select("u.id, s.code, u.role_code, c.name_et, c.extraval1, c.name_en, c.extraval2, p.firstname, sg.code as sgCode", em).getResultList();
+        Map<Long, SchoolType> schoolTypes = new HashMap<>();
+        
+        List<?> resultList = qb.select("u.id, s.code, u.role_code, c.name_et, c.extraval1, c.name_en, c.extraval2, "
+                + "p.firstname, sg.code as sg_code, s.id as s_id, usr.name_et as usr_et, usr.name_en as usr_en, st.type_code", em).getResultList();
         List<UserProjection> users = StreamUtil.toMappedList(r -> {
+            String code = resultAsString(r, 2);
+            
+            String nameEt = null;
+            String nameEn = null;
+            
+            if (code.equals(Role.ROLL_O.name())) {
+                // Teacher in Estonian should be "Opetaja" for vocational schools and "Oppejoud" for high schools.
+                Long schoolId = resultAsLong(r, 9);
+                if (schoolId != null && !schoolTypes.containsKey(schoolId)) {
+                    schoolTypes.put(schoolId, schoolService.schoolType(schoolId));
+                }
+                if (schoolId != null && schoolTypes.get(schoolId).isHigher()) {
+                    String translatedEt = TranslateUtil.optionalTranslate("teacherHigher", Language.ET);
+                    if (!translatedEt.equals("teacherHigher")) {
+                        nameEt = translatedEt;
+                    }
+                }
+            } else if (code.equals(Role.ROLL_A.name())) {
+                String userRoleEt = resultAsString(r, 10);
+                String userRoleEn = resultAsString(r, 11);
+                if (userRoleEt != null) {
+                    nameEt = userRoleEt;
+                }
+                if (userRoleEn != null) {
+                    nameEn = userRoleEn;
+                }
+            }
+            
+            // Extra value is taken if exists as name
             String ext1 = resultAsString(r, 4);
             String ext2 = resultAsString(r, 6);
-            return new UserProjection(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2),
-                    ext1 != null ? ext1 : resultAsString(r, 3), ext2 != null ? ext2 : resultAsString(r, 5),
-                    resultAsString(r, 7), resultAsString(r, 8));
+            if (nameEt == null) {
+                nameEt = ext1 != null ? ext1 : resultAsString(r, 3);
+            }
+            if (nameEn == null) {
+                nameEn = ext2 != null ? ext2 : resultAsString(r, 5);
+            }
+            
+            if (StudentType.OPPUR_K.name().equals(resultAsString(r, 12))) {
+                nameEt += " (KY)";
+                nameEn += " (KY)";
+            }
+            
+            return new UserProjection(resultAsLong(r, 0), resultAsString(r, 1), code, nameEt, nameEn, resultAsString(r, 7),  resultAsString(r, 8));
         }, resultList);
 
         // return ROLE_X only if it's single role person does have
@@ -240,7 +297,7 @@ public class UserService {
         }
     }
 
-    private static User userFor(Person person, Long id, Role role) {
+    static User userFor(Person person, Long id, Role role) {
         Set<User> users = person.getUsers();
         if(users == null || users.isEmpty()) {
             return null;
@@ -288,4 +345,28 @@ public class UserService {
     private static final String ACTIVE_FROM = "from user_ u " +
             "inner join classifier c on u.role_code = c.code " +
             "left outer join school s on u.school_id = s.id";
+
+    public List<AutocompleteResult> getCurriculums(Long schoolId, SearchCommand term) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum c "
+                + "left join curriculum_speciality cs on cs.curriculum_id = c.id "
+                + "left join classifier_connect clc on clc.classifier_code = c.orig_study_level_code")
+                .groupBy("c.id");
+
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalCriteria("c.id = :curriculumId", "curriculumId", term.getId());
+        qb.optionalContains(Language.EN.equals(term.getLang()) ? "concat(c.mer_code, ' - ', c.name_en, ' (', c.code, ')')"
+                : "concat(c.mer_code, ' - ', c.name_et, ' (', c.code, ')')", "name", term.getName());
+        qb.requiredCriteria("c.status_code != :status", "status", CurriculumStatus.OPPEKAVA_STAATUS_C);
+        
+        qb.sort(Language.EN.equals(term.getLang()) ? "c.name_en, c.code" : "c.name_et, c.code");
+        List<?> data = qb.select("c.id, c.mer_code, c.name_et, c.name_en, c.code", em)
+                .setMaxResults(20).getResultList();
+        return data.stream().map(r -> {
+            String merCode = resultAsString(r, 1);
+            String code = resultAsString(r, 4);
+            return new AutocompleteResult(resultAsLong(r, 0),
+                    CurriculumUtil.curriculumName(merCode, code, resultAsString(r, 2)),
+                    CurriculumUtil.curriculumName(merCode, code, resultAsString(r, 3)));
+        }).collect(Collectors.toList());
+    }
 }

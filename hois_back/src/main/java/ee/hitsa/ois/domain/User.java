@@ -2,7 +2,9 @@ package ee.hitsa.ois.domain;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -10,6 +12,7 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import ee.hitsa.ois.domain.school.School;
@@ -23,9 +26,6 @@ public class User extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier role;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval=true)
-    private List<UserRights> userRights;
-
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)
     private Person person;
@@ -35,11 +35,19 @@ public class User extends BaseEntityWithId {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Student student;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     private Teacher teacher;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private UserSchoolRole userSchoolRole;
 
     private LocalDate validFrom;
     private LocalDate validThru;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserRights> userRights;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserCurriculum> userCurriculums;
 
     public Classifier getRole() {
         return role;
@@ -47,14 +55,6 @@ public class User extends BaseEntityWithId {
 
     public void setRole(Classifier role) {
         this.role = role;
-    }
-
-    public List<UserRights> getUserRights() {
-        return userRights == null ? (userRights = new ArrayList<>()) : userRights;
-    }
-
-    public void setUserRights(List<UserRights> userRights) {
-        this.userRights = userRights;
     }
 
     public Person getPerson() {
@@ -89,6 +89,14 @@ public class User extends BaseEntityWithId {
         this.teacher = teacher;
     }
 
+    public UserSchoolRole getUserSchoolRole() {
+        return userSchoolRole;
+    }
+
+    public void setUserSchoolRole(UserSchoolRole userSchoolRole) {
+        this.userSchoolRole = userSchoolRole;
+    }
+
     public LocalDate getValidThru() {
         return validThru;
     }
@@ -103,5 +111,22 @@ public class User extends BaseEntityWithId {
 
     public void setValidFrom(LocalDate validFrom) {
         this.validFrom = validFrom;
+    }
+
+    public List<UserRights> getUserRights() {
+        return userRights == null ? (userRights = new ArrayList<>()) : userRights;
+    }
+
+    public void setUserRights(List<UserRights> userRights) {
+        this.userRights = userRights;
+    }
+
+    public Set<UserCurriculum> getUserCurriculums() {
+        return userCurriculums == null ? (userCurriculums = new HashSet<>()) : userCurriculums;
+    }
+
+    public void setUserCurriculums(Set<UserCurriculum> userCurriculums) {
+        getUserCurriculums().clear();
+        getUserCurriculums().addAll(userCurriculums);
     }
 }

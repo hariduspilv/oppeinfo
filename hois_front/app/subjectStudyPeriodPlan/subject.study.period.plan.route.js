@@ -12,7 +12,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
-            return Session.roleCode === 'ROLL_A' && Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINE) !== -1;
+            return Session.roleCode === 'ROLL_A' && Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KOORM) !== -1;
           }
         }
       })
@@ -26,7 +26,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
-            return Session.roleCode === 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINE) !== -1;
+            return Session.roleCode === 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM) !== -1;
           }
         }
       }).when('/subjectStudyPeriodPlans/:id/edit', {
@@ -38,7 +38,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINE]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM]
         }
       });
 }]);

@@ -806,6 +806,7 @@ public class DocumentService {
             if (Boolean.TRUE.equals(isApelFormal)) {
                 String apelSchoolNameEt = resultAsString(r, 11);
                 String apelSchoolNameEn = resultAsString(r, 12);
+                // school name should be in the original language, in its absences in English
                 if (ClassifierUtil.COUNTRY_ESTONIA.equals(resultAsString(r, 13))) {
                     studyResult.setApelSchoolNameEt(apelSchoolNameEt);
                     studyResult.setApelSchoolNameEn(apelSchoolNameEt);
@@ -1194,7 +1195,7 @@ public class DocumentService {
             apelItem.setIsFormal(isFormal);
             resultReport.getApels().add(apelItem);
         }
-        resultItem.setName(Language.EN.equals(lang) ? studyResult.getNameEn() : studyResult.getNameEt() + " *" + number);
+        resultItem.setName((Language.EN.equals(lang) ? studyResult.getNameEn() : studyResult.getNameEt()) + " *" + number);
     }
 
     private List<Form> getFreeForms(HoisUserDetails user, FormType formType, Long start, int max) {

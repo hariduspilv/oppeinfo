@@ -869,7 +869,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   };
 
   $scope.getFileUrl = oisFileService.getUrl;
-  var ConnectEndpoint = QueryUtils.endpoint('/studyMaterial/connect');
+  var ConnectEndpoint = QueryUtils.endpoint('/studyMaterial/journal/' + $scope.journal.id + '/connect');
   var clMapper = Classifier.valuemapper({
     typeCode: 'OPPEMATERJAL'
   });
@@ -899,9 +899,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       return;
     }
     var connection = new ConnectEndpoint();
-    connection.studyMaterial = $scope.existingMaterial.id;
-    connection.journal = $scope.journal.id;
-    connection.$save().then(function () {
+    connection.$save({studyMaterial: $scope.existingMaterial.id}).then(function () {
       $scope.existingMaterial = undefined;
       loadMaterials();
     });

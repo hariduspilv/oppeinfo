@@ -132,6 +132,18 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
       $translate.use(languageCode);
     };
 
+    // HACK: without rendering md-select doesn't translate until value changes
+    // https://github.com/angular/material/issues/11747
+    $rootScope.$on('$translateChangeSuccess', function () {
+      $timeout(function () {
+        var mdSelectElements = document.querySelectorAll('md-select');
+        mdSelectElements.forEach(function (select) {
+          var selectNgModel = angular.element(select).controller('ngModel');
+          selectNgModel.$render();
+        });
+      });
+    });
+
     $rootScope.currentLanguage = function() {
       return $scope.currentLanguage();  
     };
@@ -158,15 +170,22 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
        return angular.isObject(item) ? (item[nameField] || item.nameEt) : undefined;
      };
 
-    $scope.currentLanguageNameField = function(item) {
+    /**
+     * @param {object|array|undefined} item
+     * @param {string|undefined} separator
+     */
+    $scope.currentLanguageNameField = function(item, separator) {
       var nameField = $scope.currentLanguageNameVariable();
       if(arguments.length === 0) {
         return nameField;
       }
       if (angular.isArray(item)) {
+        if (!angular.isString(separator)) {
+          separator = "; ";
+        }
         return item.map(function (it) {
           return _currentLanguageNameField(nameField, it);
-        }).join('; ');
+        }).join(separator);
       }
       return _currentLanguageNameField(nameField, item);
     };

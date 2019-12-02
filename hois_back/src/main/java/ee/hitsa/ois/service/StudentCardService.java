@@ -67,7 +67,7 @@ public class StudentCardService {
             + "sg.code sg_code, case when s.ois_file_id is not null then true else false end picture_exists, "
             + "s.status_code, s.student_card, s.student_card_status_code, s.student_card_valid_thru, "
             + "s.student_card_given_dt, s.student_card_returned_dt, s.is_student_card_repetitive, "
-            + "s.is_student_card_given, s.is_student_card_returned";
+            + "s.is_student_card_given, s.is_student_card_returned, s.type_code as studentType";
 
     private List<StudentCardData> searchStudentCardData(HoisUserDetails user, StudentCardSearchCommand criteria) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s "
@@ -121,7 +121,7 @@ public class StudentCardService {
     
     private static StudentCardSearchDto mapStudentCardSearchDto(Object row, StudentCardSearchDto dto, ClassifierCache cache) {
         dto.setStudentId(resultAsLong(row, 0));
-        dto.setFullname(PersonUtil.fullname(resultAsString(row, 1), resultAsString(row, 2)));
+        dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(row, 1), resultAsString(row, 2), resultAsString(row, 15)));
         String studentGroupCode = resultAsString(row, 4);
         dto.setStudentGroup(new AutocompleteResult(resultAsLong(row, 3), studentGroupCode, studentGroupCode));
         dto.setPictureExists(resultAsBoolean(row, 5));
@@ -152,6 +152,13 @@ public class StudentCardService {
      */
     private static void setSearchCriteria(JpaNativeQueryBuilder qb, HoisUserDetails user, StudentCardSearchCommand criteria) {
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("exists(select c.id from curriculum_version cv "
+                    + "join curriculum c on c.id = cv.curriculum_id "
+                    + "where s.curriculum_version_id = cv.id and c.id in (:userCurriculumIds))",
+                    "userCurriculumIds", user.getCurriculumIds());
+        }
+
         qb.optionalCriteria("sg.id = :groupId", "groupId", criteria.getStudentGroup() != null ? criteria.getStudentGroup().getId() : null);
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", 
                 "p.firstname || ' ' || p.lastname"), "name", criteria.getName());

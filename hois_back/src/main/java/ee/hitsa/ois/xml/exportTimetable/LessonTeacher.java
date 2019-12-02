@@ -22,7 +22,7 @@ public class LessonTeacher {
 		return this.id;
 	}
 
-	public void addId(String id) {
+	public void addId(@SuppressWarnings("hiding") String id) {
 		if (StringUtils.isEmpty(id)) {
 			this.id = id;
 		} else {

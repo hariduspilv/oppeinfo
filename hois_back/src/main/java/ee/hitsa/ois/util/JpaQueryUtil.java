@@ -94,7 +94,7 @@ public abstract class JpaQueryUtil {
         }
         return new PageImpl<>(content, pageable, total);
     }
-
+    
     public static Long countQuery(Class<?> entityClass, EntityManager em, Predicate... filter) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Long> cq = cb.createQuery(Long.class);
@@ -205,7 +205,7 @@ public abstract class JpaQueryUtil {
      */
     public static List<String> resultAsStringList(Object row, int index, String delimeter) {
         String value = (String)(getValue(row, index));
-        return value == null ? Collections.emptyList() : Arrays.asList(value.split(delimeter));
+        return value == null || StringUtils.isEmpty(value) ? Collections.emptyList() : Arrays.asList(value.split(delimeter));
     }
 
     private static Object getValue(Object row, int index) {

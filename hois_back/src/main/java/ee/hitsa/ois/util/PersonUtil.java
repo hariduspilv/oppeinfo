@@ -12,6 +12,8 @@ import java.util.stream.Stream;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 
 /**
@@ -40,9 +42,35 @@ public abstract class PersonUtil {
     public static String fullname(Person person) {
         return fullname(person.getFirstname(), person.getLastname());
     }
+    
+    public static String fullname(Student student) {
+        if (student.getPerson() == null) return null;
+        if (!StudentType.OPPUR_K.name().equals(EntityUtil.getNullableCode(student.getType()))) {
+            return fullname(student.getPerson());
+        }
+        return fullname(student.getPerson()) + " (KY)";
+    }
 
     public static String fullnameAndIdcode(String firstname, String lastname, String idcode) {
         return fullnameAndIdcode(fullname(firstname, lastname), idcode);
+    }
+    
+    public static String fullnameAndIdcodeOptionalGuest(String firstname, String lastname, String idcode, String type) {
+        return fullnameAndIdcodeOptionalGuest(fullname(firstname, lastname), idcode, type);
+    }
+    
+    public static String fullnameOptionalGuest(String firstname, String lastname, String type) {
+        if (!StudentType.OPPUR_K.name().equals(type)) {
+            return fullname(firstname, lastname);
+        }
+        return fullname(firstname, lastname) + " (KY)";
+    }
+    
+    public static String fullnameOptionalGuest(String fullname, String type) {
+        if (!StudentType.OPPUR_K.name().equals(type)) {
+            return fullname;
+        }
+        return fullname + " (KY)";
     }
 
     public static String fullnameAndIdcode(String fullname, String idcode) {
@@ -51,6 +79,17 @@ public abstract class PersonUtil {
         }
         // if format of this string is changed, adjust also IDCODE_PATTERN in this file
         return fullname + " (" + idcode + ")";
+    }
+    
+    public static String fullnameAndIdcodeOptionalGuest(String fullname, String idcode, String type) {
+        if(StringUtils.hasText(idcode) && StudentType.OPPUR_K.name().equals(type)) {
+            return fullname + " (" + idcode + " KY)";
+        } else if (StringUtils.hasText(idcode)) {
+            return  fullname + " (" + idcode + ")";
+        } else if (StudentType.OPPUR_K.name().equals(type)) {
+            return  fullname + " (KY)";
+        }
+        return fullname;
     }
 
     public static String fullnameAndIdcode(Person person) {

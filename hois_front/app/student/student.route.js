@@ -88,7 +88,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       }
     }).when('/students', {
       templateUrl: 'student/list.html',
-      controller: 'SimpleListController',
+      controller: 'StudentSearchController',
       controllerAs: 'controller',
       data: {
         authorizedRoles: function(Session) {
@@ -98,7 +98,6 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); },
         clMapping: function() { return {studyForm: 'OPPEVORM', status: 'OPPURSTAATUS'}; },
-        params: function() { return {order: 'person.lastname,person.firstname'}; },
         url: function() { return '/students'; },
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       }
@@ -185,8 +184,9 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: function(Session, roles) {
-          return Session.school.higher === true && Session.roleCode === 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPUR) !== -1;
+        authorizedRoles: function (Session, roles) {
+          return Session.school.higher === true && ['ROLL_A', 'ROLL_J'].indexOf(Session.roleCode) !== -1 &&
+            roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPUR) !== -1;
         }
       }
     });

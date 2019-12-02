@@ -67,11 +67,11 @@ public abstract class DateUtils {
     }
 
     public static LocalDate periodStart(Period p) {
-        return Boolean.TRUE.equals(p.getIsPeriod()) ? p.getStudyPeriodStart().getStartDate() : p.getStartDate();
+        return Boolean.TRUE.equals(p.getIsPeriod()) ? (p.getStudyPeriodStart() != null ? p.getStudyPeriodStart().getStartDate() : null) : p.getStartDate();
     }
 
     public static LocalDate periodEnd(Period p) {
-        return Boolean.TRUE.equals(p.getIsPeriod()) ? p.getStudyPeriodEnd().getEndDate() : p.getEndDate();
+        return Boolean.TRUE.equals(p.getIsPeriod()) ? (p.getStudyPeriodEnd() != null ? p.getStudyPeriodEnd().getEndDate() : null) : p.getEndDate();
     }
 
     public static LocalDate startDate(ScholarshipApplication application) {
@@ -96,5 +96,10 @@ public abstract class DateUtils {
             LocalDate secondPeriodStart, LocalDate secondPeriodEnd) {
         return (firstPeriodStart.isEqual(secondPeriodEnd) || firstPeriodStart.isBefore(secondPeriodEnd))
                 && (firstPeriodEnd.isEqual(secondPeriodStart) || firstPeriodEnd.isAfter(secondPeriodStart));
+    }
+
+    public static boolean isValid(LocalDate from, LocalDate thru) {
+        LocalDate now = LocalDate.now();
+        return (from == null || !from.isAfter(now)) && (thru == null || !thru.isBefore(now));
     }
 }

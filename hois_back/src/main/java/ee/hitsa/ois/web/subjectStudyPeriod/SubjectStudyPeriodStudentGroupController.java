@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodCapacitiesService;
@@ -49,6 +51,7 @@ public class SubjectStudyPeriodStudentGroupController {
     @GetMapping
     public Page<SubjectStudyPeriodStudentGroupSearchDto> searchByStudentGroup(HoisUserDetails user,
             SubjectStudyPeriodSearchCommand criteria, Pageable pageable) {
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KOORM);
         return subjectStudyPeriodStudentGroupSearchService.searchByStudentGroup(user.getSchoolId(), criteria, pageable);
     }
 
@@ -56,6 +59,7 @@ public class SubjectStudyPeriodStudentGroupController {
     public SubjectStudyPeriodDtoContainer getStudentGroupsSspContainer(HoisUserDetails user, @Valid SubjectStudyPeriodDtoContainer container) {
         AssertionFailedException.throwIf(container.getStudentGroup() == null,
                 "StudentGroup must be specified");
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KOORM);
         subjectStudyPeriodStudentGroupService.setSubjectStudyPeriodsToStudentGroupsContainer(user.getSchoolId(), container);
         subjectStudyPeriodCapacitiesService.setSubjects(container);
         subjectStudyPeriodStudentGroupService.setSubjectStudyPeriodPlansToStudentGroupContainer(container);
@@ -68,6 +72,7 @@ public class SubjectStudyPeriodStudentGroupController {
         UserUtil.assertIsSchoolAdmin(user);
         AssertionFailedException.throwIf(container.getStudentGroup() == null,
                 "StudentGroup must be specified");
+        UserUtil.assertHasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KOORM);
         subjectStudyPeriodCapacitiesService.updateSspCapacities(user.getSchoolId(), container);
         return getStudentGroupsSspContainer(user, container);
     }
@@ -102,12 +107,14 @@ public class SubjectStudyPeriodStudentGroupController {
     @GetMapping("/searchByStudentGroup.xls")
     public void searchByStudentGroupAsExcel(HoisUserDetails user, @Valid SubjectStudyPeriodSearchCommand criteria, HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KOORM);
         HttpUtil.xls(response, "searchByStudentGroup.xls", subjectStudyPeriodStudentGroupSearchService.searchByStudentGroupAsExcel(user.getSchoolId(), criteria));
     }
 
     @GetMapping("/subjectstudyperiodstudentgroup.xls")
     public void subjectStudyPeriodAsExcel(HoisUserDetails user, @Valid SubjectStudyPeriodDtoContainer container, HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KOORM);
         HttpUtil.xls(response, "subjectstudyperiodstudentgroup.xls", subjectStudyPeriodStudentGroupService.subjectStudyPeriodStudentGroupAsExcel(user.getSchoolId(), container));
     }
 }

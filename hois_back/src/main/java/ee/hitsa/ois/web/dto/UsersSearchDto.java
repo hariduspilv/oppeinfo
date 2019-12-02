@@ -12,6 +12,7 @@ public class UsersSearchDto {
     private AutocompleteResult studentGroup;
     
     private List<String> role;
+    private List<AutocompleteResult> userRole;
 
     public AutocompleteResult getCurriculum() {
         return curriculum;
@@ -35,6 +36,14 @@ public class UsersSearchDto {
 
     public void setRole(List<String> role) {
         this.role = role;
+    }
+
+    public List<AutocompleteResult> getUserRole() {
+        return userRole;
+    }
+
+    public void setUserRole(List<AutocompleteResult> userRole) {
+        this.userRole = userRole;
     }
 
     public String getName() {

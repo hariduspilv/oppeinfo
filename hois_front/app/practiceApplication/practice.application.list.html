@@ -10,7 +10,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <div flex="45" flex-sm="100" flex-xs="100">
             <hois-autocomplete flex ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" 
-            label="{{'practiceApplication.studentGroup'}}"></hois-autocomplete>
+              label="{{'practiceApplication.studentGroup'}}" additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
           </div>
           <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
             <label>{{'practiceApplication.submitFrom' | translate}}</label>
@@ -80,18 +80,18 @@
             <td md-cell>{{::application.enterpriseName}}</td>
             <td md-cell>{{application.validFrom | hoisDate}} - {{application.validThru | hoisDate}}</td>
             <td md-cell>
-              <span ng-if="['PR_TAOTLUS_E', 'PR_TAOTLUS_T'].indexOf(application.status.code) !== -1">
+              <span ng-if="['PR_TAOTLUS_E', 'PR_TAOTLUS_T'].indexOf(application.status.code) !== -1 && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAAVALDUS')">
                 <md-button md-no-ink class="md-primary change-button" ng-click="accept(application)">{{'main.button.accept' | translate}}</md-button>
               </span>
-              <span ng-if="'PR_TAOTLUS_A' === application.status.code && !application.contractId">
+              <span ng-if="'PR_TAOTLUS_A' === application.status.code && !application.contractId && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')">
                 <md-button md-no-ink class="md-primary change-button" ng-href="#/contracts/new?practiceApplication={{::application.id}}">{{'practiceApplication.addContract' | translate}}</md-button>
               </span>
-              <span ng-if="'PR_TAOTLUS_A' === application.status.code && application.contractId">
+              <span ng-if="'PR_TAOTLUS_A' === application.status.code && application.contractId && isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_LEPING')">
                 <md-button md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::application.contractId}}/view">{{'practiceApplication.viewContract' | translate}}</md-button>
               </span>
             </td>
             <td md-cell>
-              <span ng-if="'PR_TAOTLUS_E' === application.status.code || ('PR_TAOTLUS_A' === application.status.code && !application.contractId)">
+              <span ng-if="('PR_TAOTLUS_E' === application.status.code || ('PR_TAOTLUS_A' === application.status.code && !application.contractId)) && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAAVALDUS')">
                 <md-button md-no-ink class="md-primary change-button" ng-click="reject(application)">{{'main.button.reject' | translate}}</md-button>
               </span>
             </td>

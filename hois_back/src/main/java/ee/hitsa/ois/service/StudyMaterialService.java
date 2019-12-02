@@ -33,7 +33,9 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudyMaterialUserRights;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
@@ -76,9 +78,12 @@ public class StudyMaterialService {
 
     private static final String MATERIAL_FROM = "from study_material m"
             + " left join ois_file f on f.id = m.ois_file_id"
-            + " inner join study_material_connect mc on mc.study_material_id = m.id";
+            + " join study_material_connect mc on mc.study_material_id = m.id"
+            + " join teacher t on t.id = m.teacher_id"
+            + " join person p on p.id = t.person_id";
     private static final String MATERIAL_SELECT = "m.id as material_id, m.name_et as material_name"
-            + ", m.type_code, m.is_public, m.is_visible_to_students, f.id as file_id, f.fname, f.ftype, m.url"
+            + ", m.type_code, t.id, p.firstname, p.lastname"
+            + ", m.is_public, m.is_visible_to_students, f.id as file_id, f.fname, f.ftype, m.url"
             + ", mc.id as connect_id, mc.version as connect_version"
             + ", (select count(*) from study_material_connect where study_material_id = m.id) as journal_count";
     
@@ -92,7 +97,14 @@ public class StudyMaterialService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SUBJECT_STUDY_PERIOD_FROM).sort(pageable).groupBy("ssp.id, s.id, sp.id");
         
         qb.requiredCriteria("s.school_id = :school_id", "school_id", user.getSchoolId());
-        
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("exists (select cv.curriculum_id from curriculum_version_hmodule_subject cvhs "
+                    + "join curriculum_version_hmodule cvh on cvh.id = cvhs.curriculum_version_hmodule_id "
+                    + "join curriculum_version cv on cv.id = cvh.curriculum_version_id "
+                    + "join user_curriculum uc on uc.curriculum_id = cv.curriculum_id "
+                    + "where cvhs.subject_id = s.id and uc.user_id = :userId)", "userId", user.getUserId());
+        }
+
         qb.optionalCriteria("ssp.subject_id = :subject_id", "subject_id", command.getSubject());
         qb.optionalCriteria("ssp.study_period_id = :study_period_id", "study_period_id", command.getStudyPeriod());
         qb.optionalCriteria("ssp.id in (select subject_study_period_id from subject_study_period_teacher where teacher_id = :teacher_id)", 
@@ -119,20 +131,30 @@ public class StudyMaterialService {
         });
     }
 
-    public SubjectStudyPeriodSearchDto getSubjectStudyPeriod(SubjectStudyPeriod subjectStudyPeriod) {
-        return SubjectStudyPeriodSearchDto.of(subjectStudyPeriod);
+    public SubjectStudyPeriodSearchDto getSubjectStudyPeriod(HoisUserDetails user,
+            SubjectStudyPeriod subjectStudyPeriod) {
+        SubjectStudyPeriodSearchDto dto = SubjectStudyPeriodSearchDto.of(subjectStudyPeriod);
+        dto.setCanConnectStudyMaterials(
+                Boolean.valueOf(StudyMaterialUserRights.canEditSubjectStudyPeriod(user, subjectStudyPeriod)));
+        return dto;
     }
-    
-    public Page<JournalSearchDto> searchJournals(HoisUserDetails user, JournalSearchCommand command, Pageable pageable) {
+
+    public Page<JournalSearchDto> searchJournals(HoisUserDetails user, JournalSearchCommand command,
+            Pageable pageable) {
         StringBuilder from = new StringBuilder(JOURNAL_FROM).append(" ");
         from.append("left join journal_omodule_theme jot on j.id=jot.journal_id ");
         from.append("left join lesson_plan_module lpm on jot.lesson_plan_module_id=lpm.id ");
         from.append("left join lesson_plan lp on lpm.lesson_plan_id=lp.id ");
         from.append("left join student_group sg on lp.student_group_id=sg.id ");
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort(pageable).groupBy("j.id, c.name_et, c.name_en");
-        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort(pageable)
+                .groupBy("j.id, c.name_et, c.name_en");
+
         qb.requiredCriteria("j.school_id = :school_id", "school_id", user.getSchoolId());
-        
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("sg.curriculum_id in (:userCurriculumIds)", "userCurriculumIds",
+                    user.getCurriculumIds());
+        }
+
         qb.optionalCriteria("j.id = :journal_id", "journal_id", command.getJournal());
         qb.optionalCriteria("j.study_year_id = :study_year_id", "study_year_id", command.getStudyYear());
         qb.optionalCriteria("sg.id = :sgId", "sgId", command.getStudentGroup());
@@ -157,65 +179,123 @@ public class StudyMaterialService {
         });
     }
 
-    public JournalDto getJournal(Journal journal) {
-        return JournalDto.of(journal);
+    public JournalDto getJournal(HoisUserDetails user, Journal journal) {
+        JournalDto dto = JournalDto.of(journal);
+        dto.setCanConnectStudyMaterials(Boolean.valueOf(StudyMaterialUserRights.canEditJournal(user, journal)));
+        return dto;
     }
-    
-    public List<StudyMaterialSearchDto> materials(Long subjectStudyPeriodId, Long journalId, 
-            Boolean isPublic, Boolean isVisibleToStudents) {
+
+    public List<StudyMaterialSearchDto> materials(HoisUserDetails user, Journal journal,
+            SubjectStudyPeriod subjectStudyPeriod) {
+        Boolean isPublic = null;
+        Boolean isVisibleToStudents = null;
+
+        if (user != null) {
+            if (!((user.isSchoolAdmin() || user.isLeadingTeacher() || user.isTeacher())
+                    && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEMATERJAL))) {
+                if (user.isStudent()) {
+                    isVisibleToStudents = Boolean.TRUE;
+                } else {
+                    isPublic = Boolean.TRUE;
+                }
+            }
+        } else {
+            isPublic = Boolean.TRUE;
+        }
+
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(MATERIAL_FROM).sort("m.name_et");
-        
-        qb.optionalCriteria("mc.subject_study_period_id = :subject_study_period_id", "subject_study_period_id", 
-                subjectStudyPeriodId);
-        qb.optionalCriteria("mc.journal_id = :journal_id", "journal_id", journalId);
+        qb.optionalCriteria("mc.subject_study_period_id = :subject_study_period_id", "subject_study_period_id",
+                EntityUtil.getNullableId(subjectStudyPeriod));
+        qb.optionalCriteria("mc.journal_id = :journal_id", "journal_id", EntityUtil.getNullableId(journal));
         qb.optionalCriteria("m.is_public = :is_public", "is_public", isPublic);
-        qb.optionalCriteria("m.is_visible_to_students = :is_visible_to_students", "is_visible_to_students", 
+        qb.optionalCriteria("m.is_visible_to_students = :is_visible_to_students", "is_visible_to_students",
                 isVisibleToStudents);
-        
+
         List<?> data = qb.select(MATERIAL_SELECT, em).getResultList();
         return StreamUtil.toMappedList(r -> {
             StudyMaterialSearchDto dto = new StudyMaterialSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setNameEt(resultAsString(r, 1));
             dto.setTypeCode(resultAsString(r, 2));
-            dto.setIsPublic(resultAsBoolean(r, 3));
-            dto.setIsVisibleToStudents(resultAsBoolean(r, 4));
-            
+            String teacherName = PersonUtil.fullname(resultAsString(r, 4), resultAsString(r, 5));
+            dto.setTeacher(new AutocompleteResult(resultAsLong(r, 3), teacherName, teacherName));
+            dto.setIsPublic(resultAsBoolean(r, 6));
+            dto.setIsVisibleToStudents(resultAsBoolean(r, 7));
+
             OisFileViewDto oisFileDto = new OisFileViewDto();
-            oisFileDto.setLongId(resultAsLong(r, 5));
-            oisFileDto.setFname(resultAsString(r, 6));
-            oisFileDto.setFtype(resultAsString(r, 7));
+            oisFileDto.setId(OisFileService.encryptAndDecodeId(resultAsLong(r, 8)));
+            oisFileDto.setFname(resultAsString(r, 9));
+            oisFileDto.setFtype(resultAsString(r, 10));
             dto.setOisFile(oisFileDto);
-            
-            dto.setUrl(resultAsString(r, 8));
-            
+
+            dto.setUrl(resultAsString(r, 11));
+
             StudyMaterialConnectDto connectDto = new StudyMaterialConnectDto();
-            connectDto.setId(resultAsLong(r, 9));
-            connectDto.setVersion(resultAsLong(r, 10));
+            connectDto.setId(resultAsLong(r, 12));
+            connectDto.setVersion(resultAsLong(r, 13));
             dto.setConnect(connectDto);
-            
-            dto.setJournalCount(resultAsLong(r, 11));
+
+            dto.setJournalCount(resultAsLong(r, 14));
+            dto.setCanEdit(Boolean.valueOf(user != null && (user.isSchoolAdmin() || user.isLeadingTeacher()
+                    || (user.isTeacher() && user.getTeacherId().equals(dto.getTeacher().getId())))));
             return dto;
         }, data);
     }
-    
+
     public StudyMaterialDto get(HoisUserDetails user, StudyMaterial material) {
         StudyMaterialDto dto = StudyMaterialDto.of(material);
-        dto.setCanEdit(Boolean.valueOf((UserUtil.isSchoolAdmin(user, material.getSchool())
-                || (user.isTeacher() && user.getTeacherId().equals(EntityUtil.getId(material.getTeacher()))))
-                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEMATERJAL)));
+        dto.setCanEdit(Boolean.valueOf(StudyMaterialUserRights.canEdit(user, material)));
         return dto;
     }
 
-    public StudyMaterial createSubjectStudyPeriodMaterial(HoisUserDetails user, StudyMaterialForm materialForm) {
+    public List<AutocompleteResult> subjectStudyPeriodTeachers(SubjectStudyPeriod subjectStudyPeriod,
+            Long studyMaterialId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from teacher t join person p on p.id = t.person_id");
+
+        String filter = "t.id in (select sspt.teacher_id from subject_study_period_teacher sspt"
+                + " where sspt.subject_study_period_id = :subjectStudyPeriod)";
+        qb.parameter("subjectStudyPeriod", EntityUtil.getId(subjectStudyPeriod));
+        if (studyMaterialId != null) {
+            filter += " or t.id in (select sm.teacher_id from study_material sm where sm.id = :studyMaterialId)";
+            qb.parameter("studyMaterialId", studyMaterialId);
+        }
+        qb.filter(filter);
+
+        List<?> data = qb.select("t.id t_id, p.firstname, p.lastname", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String fullname = PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2));
+            return new AutocompleteResult(resultAsLong(r, 0), fullname, fullname);
+        }, data);
+    }
+
+    public List<AutocompleteResult> journalMaterialTeachers(Journal journal, Long studyMaterialId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from teacher t join person p on p.id = t.person_id");
+
+        String filter = "t.id in (select jt.teacher_id from journal_teacher jt where jt.journal_id = :journalId)";
+        qb.parameter("journalId", EntityUtil.getId(journal));
+        if (studyMaterialId != null) {
+            filter += " or t.id in (select sm.teacher_id from study_material sm where sm.id = :studyMaterialId)";
+            qb.parameter("studyMaterialId", studyMaterialId);
+        }
+        qb.filter(filter);
+
+        List<?> data = qb.select("t.id t_id, p.firstname, p.lastname", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String fullname = PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2));
+            return new AutocompleteResult(resultAsLong(r, 0), fullname, fullname);
+        }, data);
+    }
+
+    public StudyMaterial createSubjectStudyPeriodMaterial(HoisUserDetails user, StudyMaterialForm materialForm,
+            SubjectStudyPeriod subjectStudyPeriod) {
         StudyMaterial material = create(user, materialForm);
-        connect(user, material.getId(), materialForm.getSubjectStudyPeriod(), null);
+        connectSubjectStudyPeriod(user, subjectStudyPeriod, material.getId());
         return material;
     }
 
-    public StudyMaterial createJournalMaterial(HoisUserDetails user, StudyMaterialForm materialForm) {
+    public StudyMaterial createJournalMaterial(HoisUserDetails user, StudyMaterialForm materialForm, Journal journal) {
         StudyMaterial material = create(user, materialForm);
-        connect(user, material.getId(), null, materialForm.getJournal());
+        connectJournal(user, journal, material.getId());
         return material;
     }
 
@@ -242,17 +322,21 @@ public class StudyMaterialService {
         EntityUtil.bindToEntity(fileForm, oisFile);
         return EntityUtil.save(oisFile, em);
     }
-    
-    public StudyMaterialConnect connect(HoisUserDetails user, Long materialId, Long subjectStudyPeriodId, Long journalId) {
+
+    public StudyMaterialConnect connectSubjectStudyPeriod(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod,
+            Long materialId) {
         EntityUtil.setUsername(user.getUsername(), em);
         StudyMaterialConnect materialConnect = new StudyMaterialConnect();
         materialConnect.setStudyMaterial(em.getReference(StudyMaterial.class, materialId));
-        if (subjectStudyPeriodId != null) {
-            materialConnect.setSubjectStudyPeriod(em.getReference(SubjectStudyPeriod.class, subjectStudyPeriodId));
-        }
-        if (journalId != null) {
-            materialConnect.setJournal(em.getReference(Journal.class, journalId));
-        }
+        materialConnect.setSubjectStudyPeriod(subjectStudyPeriod);
+        return EntityUtil.save(materialConnect, em);
+    }
+
+    public StudyMaterialConnect connectJournal(HoisUserDetails user, Journal journal, Long materialId) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        StudyMaterialConnect materialConnect = new StudyMaterialConnect();
+        materialConnect.setStudyMaterial(em.getReference(StudyMaterial.class, materialId));
+        materialConnect.setJournal(journal);
         return EntityUtil.save(materialConnect, em);
     }
 

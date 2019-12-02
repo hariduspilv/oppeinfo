@@ -22,6 +22,7 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.JobType;
 import ee.hitsa.ois.service.ehis.EhisDirectiveStudentService;
 import ee.hitsa.ois.service.kutseregister.KutseregisterService;
+import ee.hitsa.ois.service.poll.PollService;
 import ee.hitsa.ois.service.rr.PopulationRegisterService;
 import ee.hitsa.ois.service.rtip.RtipService;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -64,6 +65,8 @@ public class JobExecutorService {
     private DirectiveService directiveService;
     @Autowired
     private PollService pollService;
+    @Autowired
+    private StudentService studentService;
     
     @Value("${hois.jobs.supportService.message.days}")
     private Integer supportServiceMessageDays;
@@ -180,6 +183,29 @@ public class JobExecutorService {
         withAuthentication(() -> {
             pollService.sendPracticeJournalSupervisorEmails();
             pollService.sendEmails();
+        }, AUTHENTICATION_MSG);
+    }
+    
+    /**
+     * Automatic task to change poll status to finished
+     * A poll is finished, when its valid thru is in the past
+     */
+    @Scheduled(cron = "${hois.jobs.poll.end.cron}")
+    public void checkPollValidThru() {
+        withAuthentication(() -> {
+            pollService.checkPollValidThru();
+        }, AUTHENTICATION_MSG);
+    }
+    
+    /**
+     * Automatic task to change guest student status to ended
+     * Guest student is ended when its directive student end_date or
+     * student study_end is in the past
+     */
+    @Scheduled(cron = "${hois.jobs.guest.student.end.cron}")
+    public void endGuestStudent() {
+        withAuthentication(() -> {
+            studentService.endGuestStudent();
         }, AUTHENTICATION_MSG);
     }
     

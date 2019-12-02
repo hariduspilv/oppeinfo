@@ -17,6 +17,7 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.apelapplication.ApelSchool;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
@@ -45,6 +46,7 @@ import ee.hitsa.ois.validation.DirectiveValidation.Stiptoetl;
 import ee.hitsa.ois.validation.DirectiveValidation.Tugi;
 import ee.hitsa.ois.validation.DirectiveValidation.Tugilopp;
 import ee.hitsa.ois.validation.DirectiveValidation.Valis;
+import ee.hitsa.ois.validation.DirectiveValidation.Kylalis;
 import ee.hitsa.ois.validation.PeriodRange;
 import ee.hitsa.ois.validation.Required;
 
@@ -59,9 +61,12 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @Required(groups = {Akad.class, Akadk.class, Eksmat.class, Ennist.class, Finm.class, Lopet.class, Okava.class, Okoorm.class, Ovorm.class, Valis.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Student student;
-    @Required(groups = {Akadk.class, Indok.class, Indoklop.class, Stiptoet.class, Tugi.class, Tugilopp.class})
+    @Required(groups = Kylalis.class)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ApelSchool apelSchool;
+    @Required(groups = {Akadk.class, Indok.class, Indoklop.class, Stiptoet.class, Tugi.class, Tugilopp.class, Kylalis.class})
     private LocalDate startDate;
-    @Required(groups = {Indok.class, Stiptoet.class, Tugi.class})
+    @Required(groups = {Indok.class, Stiptoet.class, Tugi.class, Kylalis.class})
     private LocalDate endDate;
     @Required(groups = {Akad.class, Eksmat.class, Stiptoetl.class})
     @ManyToOne(fetch = FetchType.LAZY)
@@ -102,20 +107,20 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private Boolean isAbroad;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier ehisSchool;
-    @Required(groups = Valis.class)
+    @Required(groups = {Valis.class, Kylalis.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier country;
-    @Required(groups = Valis.class)
+    @Required(groups = {Valis.class, Kylalis.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier abroadPurpose;
     @Required(groups = Valis.class)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Classifier abroadProgramme;
+    private Classifier abroadProgramme; // Kylalis is checked by hand (only higher)
     private String abroadSchool;
     private String email;
     @Required(groups = Immat.class)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Classifier previousStudyLevel;
+    private Classifier previousStudyLevel; // Kylalis is checked by hand (only higher)
     @Required(groups = Lopet.class)
     private Boolean isCumLaude;
     private Boolean isOccupationExamPassed;
@@ -501,6 +506,14 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
 
     public void setDormitory(Classifier dormitory) {
         this.dormitory = dormitory;
+    }
+
+    public ApelSchool getApelSchool() {
+        return apelSchool;
+    }
+
+    public void setApelSchool(ApelSchool apelSchool) {
+        this.apelSchool = apelSchool;
     }
 
 }

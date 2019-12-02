@@ -8,7 +8,8 @@
   <div ng-if="!(auth.isStudent())" layout="column">
       <md-input-container class="label-only">
         <label>{{'student.label' | translate}}</label>
-        <hois-value value="application.student.nameEt" href-value="'#/students/' + application.student.id + '/main'"></hois-value>
+        <hois-value ng-if="application.canViewStudent" value="application.student.nameEt" href-value="'#/students/' + application.student.id + '/main'"></hois-value>
+        <hois-value ng-if="!application.canViewStudent" value="application.student.nameEt"></hois-value>
       </md-input-container>
   </div>
   <div layout="column">
@@ -31,9 +32,7 @@
   </div>
   <div>&nbsp;</div>
   <fieldset>
-    <legend class="md-title-small">
-      <span md-colors="{color: 'primary-800'}" style="margin-right: 16px;">{{'application.label' | translate}}</span>
-    </legend>
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'application.label' | translate}}</legend>
     <div layout="column">
       <div ng-if="!application.isAdult" layout="column">
         <md-input-container class="label-only">
@@ -60,9 +59,7 @@
   <div ng-if="application.committee">&nbsp;</div>
   <div ng-if="application.committee">
     <fieldset>
-      <legend class="md-title-small">
-        <span md-colors="{color: 'primary-800'}" style="margin-right: 16px;">{{'application.committee' | translate}}</span>
-      </legend>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'application.committee' | translate}}</legend>
       <div layout="column" ng-if="application.committeeAdded">
         <md-input-container class="label-only">
           <label>{{'application.committeeAdded' | translate}}</label>
@@ -139,8 +136,7 @@
     </fieldset>
     <div ng-if="(application.status === 'AVALDUS_STAATUS_TAGASI' || application.status === 'AVALDUS_STAATUS_KINNITATUD') && application.representativeConfirmed">&nbsp;</div>
     <fieldset ng-if="(application.status === 'AVALDUS_STAATUS_TAGASI' || application.status === 'AVALDUS_STAATUS_KINNITATUD') && application.representativeConfirmed">
-      <legend class="md-title-small">
-        <span md-colors="{color: 'primary-800'}" style="margin-right: 16px;">{{'application.representativeOrStudentDecision' | translate}}</span>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'application.representativeOrStudentDecision' | translate}}
       </legend>
       <div layout="column">
         <div ng-if="(application.status === 'AVALDUS_STAATUS_TAGASI' || application.status === 'AVALDUS_STAATUS_KINNITATUD') && application.representativeConfirmed" layout="column">

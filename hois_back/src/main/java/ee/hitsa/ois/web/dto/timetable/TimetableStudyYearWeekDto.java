@@ -8,6 +8,7 @@ public class TimetableStudyYearWeekDto {
     private Long weekNr;
     private LocalDate start;
     private LocalDate end;
+    private Boolean connectedSubjects;
 
     public TimetableStudyYearWeekDto(Long studyYear, Long weekNr, LocalDate start, LocalDate end) {
         super();
@@ -47,6 +48,14 @@ public class TimetableStudyYearWeekDto {
 
     public void setEnd(LocalDate end) {
         this.end = end;
+    }
+
+    public Boolean getConnectedSubjects() {
+        return connectedSubjects;
+    }
+
+    public void setConnectedSubjects(Boolean connectedSubjects) {
+        this.connectedSubjects = connectedSubjects;
     }
 
 }

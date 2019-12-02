@@ -40,7 +40,7 @@
 
           <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <hois-autocomplete label="finalProtocol.module" ng-model="criteria.moduleObject" ha-controller="directiveControllers"
-            method="vocationalmodules"></hois-autocomplete>
+              method="vocationalmodules" additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
           </div>
         </div>
 

@@ -15,6 +15,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.DirectiveValidation.Immat;
+import ee.hitsa.ois.validation.DirectiveValidation.Kylalis;
 import ee.hitsa.ois.validation.EstonianIdCode;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.StudyPeriodRange;
@@ -128,21 +129,22 @@ public class DirectiveForm extends VersionedCommand {
     @StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd")
     public static class DirectiveFormStudent {
         private Long id;
-        @EstonianIdCode(groups = Immat.class)
+        @EstonianIdCode(groups = {Immat.class, Kylalis.class})
         private String idcode;
         private String foreignIdcode;
-        @Required(groups = Immat.class)
-        @Size(max = 100, groups = Immat.class, message = "maxlength")
+        @Required(groups = {Immat.class, Kylalis.class})
+        @Size(max = 100, groups = {Immat.class, Kylalis.class}, message = "maxlength")
         private String firstname;
-        @Required(groups = Immat.class)
-        @Size(max = 100, groups = Immat.class, message = "maxlength")
+        @Required(groups = {Immat.class, Kylalis.class})
+        @Size(max = 100, groups = {Immat.class, Kylalis.class}, message = "maxlength")
         private String lastname;
-        @Required(groups = Immat.class)
+        @Required(groups = {Immat.class, Kylalis.class})
         private LocalDate birthdate;
         @ClassifierRestriction(MainClassCode.SUGU)
         private String sex;
         @ClassifierRestriction(MainClassCode.RIIK)
         private String citizenship;
+        private Long apelSchoolId;
         private LocalDate startDate;
         private LocalDate endDate;
         @ClassifierRestriction({MainClassCode.AKADPUHKUS_POHJUS, MainClassCode.EKSMAT_POHJUS, MainClassCode.KASKKIRI_STIPTOETL_POHJUS})
@@ -159,7 +161,7 @@ public class DirectiveForm extends VersionedCommand {
         private String finSpecific;
         @ClassifierRestriction(MainClassCode.OPPEKEEL)
         private String language;
-        @ClassifierRestriction(MainClassCode.OPPEASTE)
+        @ClassifierRestriction({MainClassCode.OPPEASTE, MainClassCode.EHIS_KODU_OPPEASTE})
         private String previousStudyLevel;
         private String email;
         private Boolean isPeriod;
@@ -182,7 +184,7 @@ public class DirectiveForm extends VersionedCommand {
         private Long student;
         private Long saisApplication;
         private Long scholarshipApplication;
-        @Size(max=4000, message="maxlength")
+        @Size(max = 4000, message="maxlength")
         private String addInfo;
         private Boolean isAbsence;
         private List<String> occupations;
@@ -544,6 +546,14 @@ public class DirectiveForm extends VersionedCommand {
 
         public void setDormitory(String dormitory) {
             this.dormitory = dormitory;
+        }
+
+        public Long getApelSchoolId() {
+            return apelSchoolId;
+        }
+
+        public void setApelSchoolId(Long apelSchoolId) {
+            this.apelSchoolId = apelSchoolId;
         }
 
     }

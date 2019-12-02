@@ -6,8 +6,10 @@ angular.module('hitsaOis').controller('ExamSearchController', ['$q', '$route', '
     $scope.auth = $route.current.locals.auth;
     var clMapper = Classifier.valuemapper({type: 'SOORITUS'});
     QueryUtils.createQueryForm($scope, '/exams', {order: 'te.start'}, clMapper.objectmapper);
-    $scope.formState = {studyPeriods: QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query(),
-                        canAdd: $scope.auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_EKSAM) !== -1};
+    $scope.formState = {
+      studyPeriods: QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query(),
+      canEdit: ($scope.auth.isAdmin() || $scope.auth.isTeacher()) && $scope.auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_EKSAM) !== -1
+    };
     var promises = clMapper.promises;
     promises.push($scope.formState.studyPeriods.$promise);
 

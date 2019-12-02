@@ -1,13 +1,21 @@
 
 <div layout="column" class="form-readonly" flex>
     <div layout="row">
-        <md-input-container flex>
+        <md-input-container flex ng-if="formState.targetCount !== null">
+            <label>{{'poll.answers.targetCount' | translate}}</label>
+            <hois-value value="formState.targetCount"></hois-value>
+        </md-input-container>
+        <md-input-container flex flex-offset="{{formState.targetCount ? '5' : '0'}}">
             <label>{{'poll.answers.amount' | translate}}</label>
             <hois-value value="formState.allResponses"></hois-value>
         </md-input-container>
         <md-input-container flex flex-offset="5">
             <label>{{'poll.answers.notCompleted' | translate}}</label>
             <hois-value value="formState.partialResponses"></hois-value>
+        </md-input-container>
+        <md-input-container flex flex-offset="5" ng-if="formState.targetCount !== null">
+            <label>{{'poll.answers.answerPercentage' | translate}}</label>
+            <hois-value value="calculate(formState.allResponses, formState.targetCount)"></hois-value>
         </md-input-container>
     </div>
     <div flex ng-if="formState.type === 'KYSITLUS_O'">
@@ -19,7 +27,7 @@
                     <th md-column md-order-by="{{auth.higher ? 's.name_et' : 'j.name_et'}}">
                         {{(auth.higher ? 'poll.response.subject' : 'poll.response.journal') | translate}}
                     </th>
-                    <th md-column  md-order-by="teachers">{{'poll.answers.teachers' | translate}}</th>
+                    <th md-column md-order-by="teachers">{{(auth.higher ? 'poll.answers.teachers.higher' : 'poll.answers.teachers.vocational') | translate}}</th>
                     <th md-column></th>
                     <th md-column></th>
                 </tr>
@@ -48,27 +56,42 @@
         md-page-select></md-table-pagination>
     </div>
     <div flex ng-if="formState.type === 'KYSITLUS_P'">
-        <md-table-container ng-if="hasStudentResponse || hasTeacherResponse">
+        <md-table-container ng-if="studentResponse || teacherResponse">
             <table md-table md-progress="tabledata.$promise" class="secondary-table">
                 <thead md-head md-order="criteria.order" md-on-reorder="loadData">
                     <tr md-row>
                         <th md-column>
                             {{'poll.answers.target' | translate}}
                         </th>
+                        <th md-column>
+                            {{'poll.answers.targetCount' | translate}}
+                        </th>
+                        <th md-column>
+                            {{'poll.answers.amount' | translate}}
+                        </th>
+                        <th md-column>
+                            {{'poll.answers.answerPercentage' | translate}}
+                        </th>
                         <th md-column></th>
                     </tr>
                 </thead>
                 <tbody md-body>
-                    <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-if="hasStudentResponse">
+                    <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-if="studentResponse">
                         <td md-cell><a ng-click="openStudentAnswers()">{{'poll.answers.students' | translate}}</a></td>
+                        <td md-cell>{{studentResponse.maxResponses ? studentResponse.maxResponses : '-'}}</td>
+                        <td md-cell>{{studentResponse.currentResponses ? studentResponse.currentResponses : '-'}}</td>
+                        <td md-cell>{{calculate(studentResponse.currentResponses, studentResponse.maxResponses)}}</td>
                         <td md-cell>
                             <md-button md-no-ink class="md-primary change-button" target="_blank" ng-click="studentToExcel()">
                                 {{'document.button.excel' | translate}}
                             </md-button>
                         </td>
                     </tr>
-                    <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-if="hasTeacherResponse">
-                        <td md-cell><a ng-click="openTeacherAnswers()">{{'poll.answers.teachers' | translate}}</a></td>
+                    <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-if="teacherResponse">
+                        <td md-cell><a ng-click="openTeacherAnswers()">{{(auth.higher ? 'poll.answers.teachers.higher' : 'poll.answers.teachers.vocational') | translate}}</a></td>
+                        <td md-cell>{{teacherResponse.maxResponses ? teacherResponse.maxResponses : '-'}}</td>
+                        <td md-cell>{{teacherResponse.currentResponses ? teacherResponse.currentResponses : '-'}}</td>
+                        <td md-cell>{{calculate(teacherResponse.currentResponses, teacherResponse.maxResponses)}}</td>
                         <td md-cell>
                             <md-button md-no-ink class="md-primary change-button" target="_blank" ng-click="teacherToExcel()">
                                 {{'document.button.excel' | translate}}

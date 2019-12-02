@@ -31,7 +31,6 @@ public class ApelApplicationControllerTests {
     private static final String ENDPOINT = "/apelApplications";
     
     private static final Long STUDENT_ID = Long.valueOf(189);
-    private static final Boolean IS_VOCATIONAL = Boolean.TRUE;
     
     @Autowired
     private TestRestTemplate restTemplate;
@@ -73,7 +72,6 @@ public class ApelApplicationControllerTests {
         
         AutocompleteResult studentAutocomplete = new AutocompleteResult(STUDENT_ID, "nameEt", "nameEn");
         form.setStudent(studentAutocomplete);
-        form.setIsVocational(IS_VOCATIONAL);
         
         ResponseEntity<ApelApplicationDto> responseEntity = restTemplate.postForEntity(uriBuilder.toUriString(), form, ApelApplicationDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -88,7 +86,6 @@ public class ApelApplicationControllerTests {
         
         //update
         form.setVersion(responseEntity.getBody().getVersion());
-        form.setIsVocational(Boolean.FALSE);
         uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(applicationId.toString());
         responseEntity = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.PUT, new HttpEntity<>(form), ApelApplicationDto.class);
         Assert.assertNotNull(responseEntity);

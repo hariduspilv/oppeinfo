@@ -76,19 +76,21 @@ public class ApplicationController {
         if (UserUtil.canViewStudentSpecificData(user, application.getStudent())) {
             return applicationService.get(user, application, true);
         }
-        if (UserUtil.isTeacher(user, application.getStudent().getSchool()) || UserUtil.isSchoolAdmin(user, application.getStudent().getSchool())) {
-
+        if (UserUtil.isTeacher(user, application.getStudent().getSchool())
+                || UserUtil.isLeadingTeacher(user, application.getStudent().getSchool())) {
             Query isCommitteeMemberQuery = em.createNativeQuery("select c.id from application a "
                     + "join committee c on a.committee_id = c.id "
                     + "join committee_member cm on cm.committee_id = c.id "
                     + "where a.id = ?0 and c.school_id = ?1 and (cm.person_id = ?2 "
                     + (user.getTeacherId() != null ? "or cm.teacher_id = ?3)" : ")")
                     + " limit 1")
-                    .setParameter(0, application.getId()).setParameter(1, user.getSchoolId()).setParameter(2, user.getPersonId());
+                    .setParameter(0, application.getId())
+                    .setParameter(1, user.getSchoolId())
+                    .setParameter(2, user.getPersonId());
             if (user.getTeacherId() != null) {
                 isCommitteeMemberQuery.setParameter(3, user.getTeacherId());
             }
-            
+
             if (!isCommitteeMemberQuery.getResultList().isEmpty()) {
                 return applicationService.get(user, application, false);
             }
@@ -98,7 +100,7 @@ public class ApplicationController {
 
     @GetMapping
     public Page<ApplicationSearchDto> search(@Valid ApplicationSearchCommand command, Pageable pageable, HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
         if (user.getTeacherId() != null || !UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_AVALDUS)) {
             command.setConnectedByCommittee(Boolean.TRUE);
         }

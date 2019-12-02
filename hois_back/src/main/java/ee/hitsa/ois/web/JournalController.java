@@ -180,7 +180,7 @@ public class JournalController {
     @GetMapping("/{id:\\d+}/journalStudents")
     public List<JournalStudentDto> journalStudents(HoisUserDetails user, @WithEntity Journal journal, @RequestParam(required = false) Boolean allStudents) {
         JournalUtil.assertCanView(user, journal);
-        return journalService.journalStudents(journal, allStudents);
+        return journalService.journalStudents(user, journal, allStudents);
     }
 
     @GetMapping("/{id:\\d+}/journalEntriesByDate")

@@ -88,7 +88,8 @@
                     <md-checkbox ng-checked="supervisor.isExternal" ng-disabled="true" aria-label="{{'finalThesis.externalSupervisor' | translate}}"></md-checkbox>
                   </td>
                   <td md-cell>
-                    <md-button md-no-ink class="md-primary change-button" ng-click="openAddSupervisorDialog($index)">{{'main.button.change' | translate}}</md-button>
+                    <md-button ng-if="!supervisor.id || supervisor.canEdit" md-no-ink class="md-primary change-button"
+                      ng-click="openAddSupervisorDialog($index)">{{'main.button.change' | translate}}</md-button>
                   </td>
                 </tr>
               </tbody>

@@ -15,7 +15,7 @@ public class CurriculumVersionOccupationModuleResult extends AutocompleteResult 
 
     public CurriculumVersionOccupationModuleResult(Long id, String nameEt, String nameEn, BigDecimal credits, String assessment,
             String gradeCode, LocalDate gradeDate, String teachers) {
-        super(id, nameEt, nameEn);
+        super(id, nameEt, nameEn != null ? nameEn : nameEt);
         this.credits = credits;
         this.assessment = assessment;
         this.gradeCode = gradeCode;

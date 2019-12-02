@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'resourceErrorHandler', 'Classifier', 'Curriculum', 'DataUtils', 'FormUtils', 'QueryUtils', 'Session', '$rootScope',
-  function ($location, $mdDialog, $q, $route, $scope, dialogService, message, resourceErrorHandler, Classifier, Curriculum, DataUtils, FormUtils, QueryUtils, Session, $rootScope) {
+angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'resourceErrorHandler', 'Classifier', 'Curriculum', 'DataUtils', 'FormUtils', 'QueryUtils', 'Session', '$rootScope', 'ArrayUtils', '$timeout',
+  function ($location, $mdDialog, $q, $route, $scope, dialogService, message, resourceErrorHandler, Classifier, Curriculum, DataUtils, FormUtils, QueryUtils, Session, $rootScope, ArrayUtils, $timeout) {
     var id = $route.current.params.id;
     var canceledDirective = $route.current.params.canceledDirective;
     var baseUrl = '/directives';
@@ -9,13 +9,13 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     $scope.getMinDate = maxDate;
 
     $scope.formState = {state: (id || canceledDirective ? 'EDIT' : 'CHOOSETYPE'), students: undefined, changedStudents: [],
-                        selectedStudents: [], excludedTypes: ['KASKKIRI_KYLALIS'], school: Session.school || {},
+                        selectedStudents: [], excludedTypes: [], school: Session.school || {},
                         higherStudyForms: Classifier.queryForDropdown({mainClassCode: 'OPPEVORM', higher: true}),
                         scholarshipEditable: false};
 
     $scope.withoutInitialSelection = [
       'KASKKIRI_IMMAT', 'KASKKIRI_IMMATV', 'KASKKIRI_KIITUS', 'KASKKIRI_NOOMI', 'KASKKIRI_OTEGEVUS', 
-      'KASKKIRI_PRAKTIK', 'KASKKIRI_INDOK'
+      'KASKKIRI_PRAKTIK', 'KASKKIRI_INDOK', 'KASKKIRI_KYLALIS'
     ];
 
     if(!canceledDirective) {
@@ -140,33 +140,45 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         delete result.changedStudents;
         delete result.canceledStudents;
         delete result.selectedStudents;
-
+        mapForeign(result);
         $scope.cancelTypeChanged();
       } else {
         setTemplateUrl();
         setScholarshipEditable();
         $scope.record.students = studentConverter($scope.record.students);
-        if(result && result.type === 'KASKKIRI_IMMAT') {
-          for(var i = 0, cnt = $scope.record.students.length; i < cnt; i++) {
-            $scope.record.students[i]._found = true;
-            $scope.record.students[i]._idcode = $scope.record.students[i].idcode;
-            $scope.record.students[i]._foreign = !$scope.record.students[i].idcode;
-          }
+        mapForeign(result);
+      }
+    }
+
+    function mapForeign(result) {
+      if(result && (result.type === 'KASKKIRI_IMMAT' || result.type === 'KASKKIRI_KYLALIS' || result.type === 'KASKKIRI_TYHIST')) {
+        for(var i = 0, cnt = $scope.record.students.length; i < cnt; i++) {
+          $scope.record.students[i]._found = true;
+          $scope.record.students[i]._idcode = $scope.record.students[i].idcode;
+          $scope.record.students[i]._foreign = !$scope.record.students[i].idcode;
         }
       }
     }
 
     // load curriculums
-    $scope.formState.curriculumVersionMap = {};
-    $scope.formState.languageMap = {};
-    $scope.formState.curriculumVersions = Curriculum.queryVersions({languages: true});
-    $scope.formState.curriculumVersions.$promise.then(function(result) {
-      $scope.formState.curriculumVersionMap = result.reduce(function(acc, item) { acc[item.id] = item; return acc; }, {});
-      for(var i = 0; i < result.length; i++) {
-        var cv = result[i];
-        $scope.formState.languageMap[cv.id] = cv.studyLang || [];
+    function loadCurriculums() {
+      $scope.formState.curriculumVersionMap = {};
+      $scope.formState.languageMap = {};
+      var params = {languages: true, valid: true};
+      if ($scope.record !== undefined && $scope.record.isHigher !== undefined) {
+        params.higher = $scope.record.isHigher;
       }
-    });
+      $scope.formState.curriculumVersions = Curriculum.queryVersions(params);
+      $scope.formState.curriculumVersions.$promise.then(function(result) {
+        $scope.formState.curriculumVersionMap = result.reduce(function(acc, item) { acc[item.id] = item; return acc; }, {});
+        for(var i = 0; i < result.length; i++) {
+          var cv = result[i];
+          $scope.formState.languageMap[cv.id] = cv.studyLang || [];
+        }
+      });
+    }
+
+    loadCurriculums();
 
     $scope.$watchCollection('formState.selectedStudents', function (newValue) {
       $scope.formState.selectedStudentIds = (newValue || []).reduce(function (map, object) {
@@ -175,9 +187,18 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       }, {});
     });
 
+    $scope.setApelSchoolCountry = function(row) {
+      var apelSchool = $scope.formState.apelSchools.filter(function (apelSchool) {
+        return apelSchool.id === row.apelSchoolId;
+      })[0];
+      if (apelSchool !== undefined) {
+        row.country = apelSchool.country;
+      }
+    };
+
     function loadFormData() {
       var type = $scope.record.type;
-      if(['KASKKIRI_ENNIST', 'KASKKIRI_IMMAT', 'KASKKIRI_IMMATV', 'KASKKIRI_OKAVA', 'KASKKIRI_OVORM'].indexOf(type) !== -1) {
+      if(['KASKKIRI_ENNIST', 'KASKKIRI_IMMAT', 'KASKKIRI_IMMATV', 'KASKKIRI_OKAVA', 'KASKKIRI_OVORM', 'KASKKIRI_KYLALIS'].indexOf(type) !== -1) {
         $scope.formState.studentGroups = QueryUtils.endpoint('/autocomplete/studentgroups').query({valid: true});
         if($scope.formState.curriculumVersions) {
           // create mapping curriculumversion -> all possible student groups
@@ -207,8 +228,17 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
             }
           });
         }
+        if (type === 'KASKKIRI_KYLALIS') {
+          $scope.formState.apelSchools = QueryUtils.endpoint('/autocomplete/apelschools').query();
+          $scope.formState.apelSchoolStudyLevels = Classifier.queryForDropdown({
+            mainClassCode: 'EHIS_KODU_OPPEASTE', 
+            order: 'code',
+            vocational: $scope.formState.school.vocational ? true : undefined, 
+            higher: $scope.formState.school.higher ? true : undefined
+          });
+        }
       }
-      if(type === 'KASKKIRI_AKAD' || type === 'KASKKIRI_VALIS') {
+      if(type === 'KASKKIRI_AKAD' || type === 'KASKKIRI_VALIS'  ) {
         $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
       }
     }
@@ -261,7 +291,10 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
 
     function displayFormErrors(response) {
       // failure, required fields are not filled
-      resourceErrorHandler.responseError(response, $scope.directiveForm).catch(angular.noop);
+      // wait for elements to render
+      $timeout(function () {
+        resourceErrorHandler.responseError(response, $scope.directiveForm).catch(angular.noop);
+      });
     }
 
     function beforeSave() {
@@ -315,7 +348,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       var data = {type: $scope.record.type};
       if(data.type === 'KASKKIRI_EKSMAT') {
         data.application = true;
-      } else if(data.type === 'KASKKIRI_LOPET') {
+      } else if(data.type === 'KASKKIRI_LOPET' || data.type === 'KASKKIRI_KYLALIS') {
         if (!angular.isDefined($scope.record.isHigher)) {
           var school = $scope.formState.school;
           if (school.higher && school.vocational) {
@@ -325,6 +358,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
           }
         }
         data.isHigher = $scope.record.isHigher;
+        loadCurriculums();
       }
 
       var scholarship = data.type === 'KASKKIRI_STIPTOET' || data.type === 'KASKKIRI_STIPTOETL';
@@ -355,8 +389,25 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       }
     };
 
+    $scope.$watchCollection('formState.selectedStudents', function (newValues) {
+      if ($scope.record !== undefined && $scope.record.type === 'KASKKIRI_TYHIST') {
+        // If all students are selected, pick KASKKIRI_TYHISTAMISE_VIIS_T, else pick KASKKIRI_TYHISTAMISE_VIIS_O
+        var allSelected = true;
+        $scope.record.students.forEach(function(student) {
+          if (!ArrayUtils.contains(newValues, student)) {
+            allSelected = false;
+          }
+        });
+        if (allSelected && $scope.formState.changedStudents.length === 0) {
+          $scope.record.cancelType = 'KASKKIRI_TYHISTAMISE_VIIS_T';
+        } else if (!allSelected && $scope.record.students.length !== 1){
+          $scope.record.cancelType = 'KASKKIRI_TYHISTAMISE_VIIS_O';
+        }
+      }
+    });
+
     $scope.addDirective = function() {
-      if ($scope.record.type === 'KASKKIRI_TUGI') {
+      if ($scope.record.type === 'KASKKIRI_TUGI' || $scope.record.type === 'KASKKIRI_KYLALIS') {
         $scope.directiveForm.$setSubmitted();
         if(!$scope.directiveForm.$valid) {
           message.error('main.messages.form-has-errors');
@@ -397,7 +448,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     $scope.addStudents = function() {
       var directiveType = $scope.record.type;
       var students = $scope.record.students;
-      if(directiveType === 'KASKKIRI_IMMAT') {
+      if(directiveType === 'KASKKIRI_IMMAT' || directiveType === 'KASKKIRI_KYLALIS') {
         students.push({startDate: null});
         return;
       }
@@ -453,12 +504,16 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       if(row._foreign) {
         row.foreignIdcode = row.idcode;
         row.idcode = undefined;
+        row._idcode = undefined;
       } else {
         row.idcode = row.foreignIdcode;
+        row._idcode = undefined;
         row.foreignIdcode = undefined;
       }
-      row._idcode = undefined;
-      $scope.lookupStudent(row);
+      row._found = false;
+      $timeout(function() {
+        $scope.lookupStudent(row);
+      });
     };
 
     $scope.lookupStudent = function(row) {
@@ -484,20 +539,15 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
             ctrl.$serverError = ctrl.$serverError || [];
             ctrl.$serverError.push({code: 'InvalidEstonianIdCode'});
             ctrl.$setValidity('serverside', false);
+            displayFormErrors(response);
           } else {
             displayFormErrors(response);
           }
           row._found = false;
-          row.firstname = undefined;
-          row.lastname = undefined;
           if(!row._foreign && response.status === 404) {
             row.birthdate = DataUtils.birthdayFromIdcode(idcode);
             row.sex = DataUtils.sexFromIdcode(idcode);
             row.citizenship = 'RIIK_EST';
-          } else {
-            row.birthdate = undefined;
-            row.sex = undefined;
-            row.citizenship = undefined;
           }
         });
       } else if(idcode !== row._idcode) {
@@ -554,6 +604,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         });
         $scope.formState.selectedStudents = selected;
       } else if($scope.record.cancelType === 'KASKKIRI_TYHISTAMISE_VIIS_O') {
+        $scope.formState.selectedStudents = [];
         $scope.record.students.forEach(function(it) {
           it.selectable = ($scope.formState.changedStudents.indexOf(it.student) === -1);
         });
@@ -563,6 +614,9 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     $scope.sendToConfirm = function(ekis) {
       clearErrors();
       $scope.directiveForm.directiveCoordinator.$setValidity('required', !!$scope.record.directiveCoordinator);
+      if ($scope.record.type === 'KASKKIRI_TYHIST') {
+        $scope.directiveForm.cancelType.$setValidity('required', !!$scope.record.cancelType);
+      }
       FormUtils.withValidForm($scope.directiveForm, function() {
         var deletedInvalid = false;
         function sendToConfirm() {
@@ -868,7 +922,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
 ]).controller('DirectiveListController', ['$q', '$scope', 'Classifier', 'QueryUtils', 'Session',
   function ($q, $scope, Classifier, QueryUtils, Session) {
 
-    $scope.formState = {excludedTypes: ['KASKKIRI_KYLALIS'], school: Session.school || {}};
+    $scope.formState = {excludedTypes: [], school: Session.school || {}};
     if(!$scope.formState.school.higher) {
       $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
       $scope.formState.excludedTypes.push('KASKKIRI_OVORM');

@@ -70,38 +70,44 @@ public class LogsController {
 
     @GetMapping("/ehis")
     public Page<EhisLogDto> ehisSearch(HoisUserDetails user, @Valid EhisLogCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EHIS);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V,
+                PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EHIS);
         return ehisLogService.search(user.getSchoolId(), command, pageable);
     }
 
     @GetMapping("/ehis/{id:\\d+}")
-    public EhisLogDto ehisGet(HoisUserDetails user, @PathVariable("id") Long id, @NotNull @RequestParam("messageType") String messageType) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EHIS);
+    public EhisLogDto ehisGet(HoisUserDetails user, @PathVariable("id") Long id,
+            @NotNull @RequestParam("messageType") String messageType) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V,
+                PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EHIS);
         return ehisLogService.get(user, id, messageType);
     }
 
     @GetMapping("/ekis")
     public Page<EkisLogDto> ekisSearch(HoisUserDetails user, @Valid EhisLogCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EKIS);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V,
+                PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EKIS);
         return ekisLogService.search(user.getSchoolId(), command, pageable);
     }
 
     @GetMapping("/ekis/{id:\\d+}")
-    public EkisLogDto ekisGet(HoisUserDetails user, @PathVariable("id") Long id, @NotNull @RequestParam("messageType") String messageType) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EKIS);
+    public EkisLogDto ekisGet(HoisUserDetails user, @PathVariable("id") Long id,
+            @NotNull @RequestParam("messageType") String messageType) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V,
+                PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EKIS);
         return ekisLogService.get(user, id, messageType);
     }
 
     @GetMapping("/kutseregister")
     public Page<QfLogDto> kutseregisterSearch(HoisUserDetails user, @Valid EhisLogCommand command, Pageable pageable) {
-        UserUtil.assertIsMainAdminOrSchoolAdmin(user);
+        UserUtil.assertIsMainAdminOrSchoolAdminOrLeadingTeacher(user);
         UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_KUTSEREGISTER);
         return kutseregisterLogService.search(user, command, pageable);
     }
 
     @GetMapping("/kutseregister/{id:\\d+}")
     public QfLogDto kutseregisterGet(HoisUserDetails user, @PathVariable("id") Long id, @NotNull @RequestParam("messageType") String messageType) {
-        UserUtil.assertIsMainAdminOrSchoolAdmin(user);
+        UserUtil.assertIsMainAdminOrSchoolAdminOrLeadingTeacher(user);
         UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_KUTSEREGISTER);
         return kutseregisterLogService.get(user, id, messageType);
     }
@@ -156,27 +162,28 @@ public class LogsController {
         if (cmd.getStudent() != null) {
             UserUtil.assertCanViewStudentSpecificData(user, em.getReference(Student.class, cmd.getStudent().getId()));
         } else {
-            UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_RR);
+            UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_RR);
         }
         return rrLogService.searchChanges(user, cmd, pageable);
     }
-    
+
     @GetMapping("/rr")
     public Page<WsRrLogDto> rrSearch(HoisUserDetails user, PopulationRegisterSearchDto cmd, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_RR);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_RR);
         return rrLogService.search(user, cmd, pageable);
     }
-    
+
     @GetMapping("/rr/{id:\\d+}")
     public WsRrLogDto rrGet(HoisUserDetails user, @PathVariable("id") Long id) {
         WsRrLogSchool logSchool = em.getReference(WsRrLogSchool.class, id);
-        UserUtil.assertIsSchoolAdmin(user, logSchool.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_RR);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, logSchool.getSchool(), Permission.OIGUS_V,
+                PermissionObject.TEEMAOIGUS_RR);
         return rrLogService.get(logSchool);
     }
-    
+
     @GetMapping("/rr/hasrecentchangelogs")
     public SimpleEntry<String, Boolean> hasRecentChangeLogs(HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_RR);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_RR);
         return new SimpleEntry<>("hasRecentChangeLogs", rrLogService.hasRecentChangeLogs(user));
     }
 }

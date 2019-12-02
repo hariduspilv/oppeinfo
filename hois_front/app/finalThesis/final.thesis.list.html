@@ -1,4 +1,4 @@
-<div ng-if="auth.isAdmin() || auth.isTeacher()" class="ois-form-layout-padding ois-form-layout" ng-cloak>
+<div ng-if="auth.isAdmin() || auth.isLeadingTeacher() || auth.isTeacher()" class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
@@ -17,11 +17,13 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'finalThesis.curriculum' | translate}}</label>
-            <hois-select ng-model="criteria.curriculumVersion" name="curriculumVersion" type="curriculumversion"></hois-select>
+            <hois-select ng-model="criteria.curriculumVersion" name="curriculumVersion" type="curriculumversion"
+              criteria="{userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-select>
           </md-input-container>
           <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <hois-autocomplete flex ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers"
-              method="studentgroups" name="studentGroup" label="finalThesis.studentGroup"></hois-autocomplete>
+              method="studentgroups" name="studentGroup" label="finalThesis.studentGroup"
+              additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
           </div>
         </div>
 
@@ -30,7 +32,7 @@
             <label>{{'finalThesis.status' | translate}}</label>
             <hois-classifier-select ng-model="criteria.status" main-classifier-code="LOPUTOO_STAATUS" model-value-attr="code"></hois-classifier-select>
           </md-input-container>
-          <md-input-container ng-if="auth.isAdmin()" flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container ng-if="auth.isAdmin() || auth.isLeadingTeacher()" flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'finalThesis.supervisor.label' | translate}}</label>
             <input ng-model="criteria.supervisor" name="supervisor" type="text" md-maxlength="255">
           </md-input-container>
@@ -79,7 +81,7 @@
   </div>
 </div>
 
-<div ng-if="auth.isAdmin() || auth.isTeacher()" layout-padding>
+<div ng-if="auth.isAdmin() || auth.isLeadingTeacher() || auth.isTeacher()" layout-padding>
   <div flex>
     <md-table-container>
       <table md-table md-progress="tabledata.$promise">

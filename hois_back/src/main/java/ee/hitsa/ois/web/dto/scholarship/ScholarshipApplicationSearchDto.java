@@ -23,6 +23,7 @@ public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseD
     private Long decisionId;
     private LocalDate decisionDecided;
     private Boolean hasDirective;
+    private Boolean canViewStudent = Boolean.TRUE;
 
     private String compensationReason;
     private String compensationFrequency;
@@ -163,7 +164,7 @@ public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseD
         this.rejectComment = rejectComment;
     }
     
-    public void setNeedsConfirm(boolean needsConfirm) {
+    public void setNeedsConfirm(Boolean needsConfirm) {
     	this.needsConfirm = needsConfirm;
     }
     
@@ -193,6 +194,14 @@ public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseD
 
     public void setHasDirective(Boolean hasDirective) {
         this.hasDirective = hasDirective;
+    }
+
+    public Boolean getCanViewStudent() {
+        return canViewStudent;
+    }
+
+    public void setCanViewStudent(Boolean canViewStudent) {
+        this.canViewStudent = canViewStudent;
     }
 
 }

@@ -47,13 +47,13 @@
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row ng-repeat="student in record.protocolStudents | orderBy: 'student.nameEt'" ng-class-odd="'odd'" ng-class-even="'even'"
+          <tr md-row ng-repeat="student in record.protocolStudents | orderBy: 'student.nameEt'" ng-disabled="!student.canEdit" ng-class-odd="'odd'" ng-class-even="'even'"
           md-select="student.id" md-select-id="student.id">
             <ng-form name="higherProtocolStudentForm">
               <td md-cell>{{student.student.nameEt}}</td>
               <td md-cell ng-show="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject">
                 <span ng-repeat="journalResult in student.practiceJournalResults | orderBy: 'inserted'">
-                  <span ng-class="{badResult: !gradeUtil.isPositive(journalResult.grade)}">{{gradeValue(journalResult.grade)}}</span>
+                  <span ng-class="{badResult: !gradeUtil.isPositive(journalResult.grade.code)}">{{journalResult.grade | hoisHigherGrade: letterGrades}}</span>
                   <span ng-if="!$last">/</span>
                 </span>
               </td>
@@ -62,8 +62,9 @@
                 <span ng-if="result.isText">{{result.pointsTxt}}</span>
               </td>
               <td md-cell>
-                <hois-select class="protocolGradeSelect" ng-model="student.grade" values="grades" value-property="code" show-property="{{auth.school.letterGrades ? 'value2' : 'value'}}"
-                  hide-values="hideInvalid" ng-disabled="!formState.canEditProtocol" aria-label="{{'higherProtocol.finalGrade' | translate}}" ng-change="gradeChanged(student)"></hois-select>
+                <hois-select class="protocolGradeSelect" ng-model="student.grade" ng-change="gradeChanged(student)" values="grades"
+                  value-property="code" show-property="shownValue" hide-values="hideInvalid" sorted-query="true"
+                  aria-label="{{'higherProtocol.finalGrade' | translate}}" ng-disabled="!formState.canEditProtocol || !student.canEdit"></hois-select>
               </td>
               <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
                 <md-input-container ng-if="student.gradeHasChanged">

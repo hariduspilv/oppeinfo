@@ -10,9 +10,10 @@
               ng-disabled="criteria.todaysAbsences" ng-required="!criteria.todaysAbsences"></hois-select>
           </md-input-container>
 
-          <div ng-if="auth.isAdmin()" flex="50" flex-offset="5" flex-sm="100" flex-xs="100">
+          <div ng-if="auth.isAdmin() || auth.isLeadingTeacher()" flex="50" flex-offset="5" flex-sm="100" flex-xs="100">
             <hois-autocomplete flex ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" name="studentGroup"
-              label="{{'groupAbsence.studentGroup'}}" additional-query-params="{higher: false}" ng-required="!criteria.todaysAbsences"></hois-autocomplete>
+              label="{{'groupAbsence.studentGroup'}}" additional-query-params="{higher: false, userId: auth.isLeadingTeacher() ? auth.user : null}"
+              ng-required="!criteria.todaysAbsences"></hois-autocomplete>
           </div>
 
           <md-input-container ng-if="auth.isTeacher()" flex="50" flex-offset="5" flex-sm="100" flex-xs="100">
@@ -87,8 +88,8 @@
                   <div ng-if="absence.length === 1 && !absence[0].lessonNr">
                     <md-input-container>
                       <hois-select ng-model="absence[0].absence" values="formState.absenceOptions" aria-label="absence"
-                        model-value-attr="code" show-property="value" value-property="code" 
-                        ng-change="absenceChanged(absence[0])" required></hois-select>
+                        model-value-attr="code" show-property="value" value-property="code" ng-change="absenceChanged(absence[0])"
+                        ng-disabled="!(auth.isAdmin() || auth.isTeacher())" required></hois-select>
                     </md-input-container>
                   </div>
 
@@ -98,8 +99,8 @@
                         <div style="line-height: 48px;">{{lessonAbsence.lessonNr}}</div>
                         <md-input-container>
                           <hois-select ng-model="lessonAbsence.absence" values="formState.absenceOptions" aria-label="absence"
-                            model-value-attr="code" show-property="value" value-property="code" 
-                            ng-change="lessonAbsenceChanged(lessonAbsence)" required></hois-select>
+                            model-value-attr="code" show-property="value" value-property="code" ng-change="lessonAbsenceChanged(lessonAbsence)"
+                            ng-disabled="!(auth.isAdmin() || auth.isTeacher())" required></hois-select>
                         </md-input-container>
                       </div>
                     </div>

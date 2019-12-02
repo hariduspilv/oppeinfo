@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentRepresentativeApplication;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationForm;
 
 public class StudentRepresentativeApplicationDto extends StudentRepresentativeApplicationForm {
@@ -117,7 +118,7 @@ public class StudentRepresentativeApplicationDto extends StudentRepresentativeAp
         EntityUtil.bindToDto(application, dto);
         Student student = application.getStudent();
         dto.setStudentId(student.getId());
-        dto.setStudentFullname(student.getPerson().getFullname());
+        dto.setStudentFullname(PersonUtil.fullnameOptionalGuest(student.getPerson().getFullname(), EntityUtil.getNullableCode(student.getType())));
         dto.setStudentIdcode(student.getPerson().getIdcode());
         if(AVALDUS_ESINDAJA_STAATUS_K.name().equals(dto.getStatus())) {
             dto.setConfirmDate(application.getChanged());

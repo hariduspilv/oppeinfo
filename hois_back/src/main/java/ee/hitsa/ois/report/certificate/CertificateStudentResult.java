@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.util.StringUtils;
+
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.StreamUtil;
@@ -18,15 +20,20 @@ import ee.hitsa.ois.web.dto.student.StudentVocationalResultModuleThemeDto;
 public class CertificateStudentResult {
 
     private String subject;
+    private String subjectEn;
+    private String subjectCode;
     private String module;
+    private String moduleEn;
     private String theme;
     private BigDecimal hours;
     private String gradeValue;
     private String gradeName;
+    private String gradeNameEn;
     private String date;
     private List<String> teachers;
     private String assessedBy;
     private String outcomes;
+    private String outcomesEn;
     private Boolean isActive;
 
     public static CertificateStudentResult of(StudentHigherSubjectResultDto dto) {
@@ -34,18 +41,25 @@ public class CertificateStudentResult {
 
         SubjectSearchDto subject = dto.getSubject();
         result.setSubject(subject.getNameEt());
+        result.setSubjectEn(subject.getNameEn());
         result.setHours(subject.getCredits());
+        result.setSubjectCode(subject.getCode());
 
         StudentHigherSubjectResultGradeDto grade = dto.getLastGrade();
-        result.setGradeName(grade.getGradeNameEt());
-        result.setGradeValue(grade.getGradeValue());
-        result.setDate(DateUtils.date(grade.getGradeDate()));
-        List<String> teachers = grade.getTeachers();
-        if (teachers.contains(null)) {
-        	teachers.removeAll(Collections.singleton(null));
+        if (grade != null) {
+            result.setGradeName(grade.getGradeNameEt());
+            result.setGradeNameEn(grade.getGradeNameEn());
+            result.setGradeValue(grade.getGradeValue());
+            result.setDate(DateUtils.date(grade.getGradeDate()));
+            result.setIsActive(grade.getIsActive());
+            List<String> teachers = grade.getTeachers();
+            if (teachers.contains(null)) {
+                teachers.removeAll(Collections.singleton(null));
+            }
+            result.setAssessedBy(String.join(", ", StreamUtil.nullSafeList(teachers)));
+        } else {
+            result.setAssessedBy(dto.getAllTeachers());
         }
-        result.setAssessedBy(String.join(", ", StreamUtil.nullSafeList(teachers)));
-        result.setIsActive(grade.getIsActive());
         return result;
     }
 
@@ -54,13 +68,16 @@ public class CertificateStudentResult {
 
         result.setTheme(dto.getTheme() != null ? dto.getTheme().getNameEt() : null);
         result.setModule(dto.getModule() != null ? dto.getModule().getNameEt() : null);
+        result.setModuleEn(dto.getModule() != null ? dto.getModule().getNameEn() : null);
         result.setHours(dto.getCredits());
 
         Classifier grade = vocationalGrades.get(dto.getGrade());
         result.setGradeName(grade != null ? grade.getNameEt() : null);
+        result.setGradeNameEn(grade != null ? grade.getNameEn() : null);
         result.setGradeValue(grade != null ? grade.getValue() : null);
         result.setDate(DateUtils.date(dto.getDate()));
         result.setAssessedBy(String.join(", ", StreamUtil.toMappedList(AutocompleteResult::getNameEt, dto.getTeachers().stream().filter(p->p.getNameEn()!=null).collect(Collectors.toList()))));
+        if (StringUtils.isEmpty(result.getAssessedBy())) result.setAssessedBy(dto.getTeachersAsString());
         return result;
     }
 
@@ -149,6 +166,46 @@ public class CertificateStudentResult {
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public String getSubjectCode() {
+        return subjectCode;
+    }
+
+    public void setSubjectCode(String subjectCode) {
+        this.subjectCode = subjectCode;
+    }
+
+    public String getGradeNameEn() {
+        return gradeNameEn;
+    }
+
+    public void setGradeNameEn(String gradeNameEn) {
+        this.gradeNameEn = gradeNameEn;
+    }
+
+    public String getSubjectEn() {
+        return subjectEn;
+    }
+
+    public void setSubjectEn(String subjectEn) {
+        this.subjectEn = subjectEn;
+    }
+
+    public String getOutcomesEn() {
+        return outcomesEn;
+    }
+
+    public void setOutcomesEn(String outcomesEn) {
+        this.outcomesEn = outcomesEn;
+    }
+
+    public String getModuleEn() {
+        return moduleEn;
+    }
+
+    public void setModuleEn(String moduleEn) {
+        this.moduleEn = moduleEn;
     }
 
 }

@@ -80,7 +80,7 @@ public class EhisLogService {
         }
 
         BaseLog logentry = em.getReference(logentryClass, id);
-        UserUtil.assertIsSchoolAdmin(user, logentry.getSchool());
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, logentry.getSchool());
 
         EhisLogDto dto = new EhisLogDto(null, messageType, null, null, null, null, null);
         dto.setRequest(logentry.getRequest());

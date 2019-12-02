@@ -21,7 +21,7 @@ public class IndividualCurriculumSatisticsDto {
 
     public IndividualCurriculumSatisticsDto(Object record) {
         studentId = resultAsLong(record, 0);
-        fullname = PersonUtil.fullname(resultAsString(record, 1), resultAsString(record, 2));
+        fullname = PersonUtil.fullnameOptionalGuest(resultAsString(record, 1), resultAsString(record, 2), resultAsString(record, 11));
         studentGroup = new AutocompleteResult(resultAsLong(record, 3), resultAsString(record, 4),
                 resultAsString(record, 4));
         curriculumModule = new AutocompleteResult(resultAsLong(record, 5), resultAsString(record, 6),

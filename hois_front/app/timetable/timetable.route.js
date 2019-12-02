@@ -1,6 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
+  var $route = $routeProvider.$get[$routeProvider.$get.length-1]({$on:function(){}}); // regex
   $routeProvider
     .when('/timetable/lessonTime/search', {
       templateUrl: 'timetable/timetable.lessonTime.list.html',
@@ -99,6 +100,19 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
+      }
+    })
+    .when('/timetable/personalGeneralTimetable/:encodedPerson', {
+      templateUrl: 'timetable/generalTimetable/timetable.generalTimetable.personal.html',
+      controller: 'PersonalGeneralTimetableController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        },
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        }
       }
     })
     .when('/timetable/:schoolId?/searchGeneralTimetable', {
@@ -235,20 +249,26 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       resolve: {
         auth: function (AuthResolver) {
           return AuthResolver.resolve();
+        },
+        isDirectRoute: function () {
+          return true;
         }
       },
     })
-    .when('/timetable/:schoolId/student/:studyYearId/:studentId', {
+    .when('/timetable/person/:encodedPerson/:studyYearId/:weekIndex?', {
       templateUrl: 'timetable/generalTimetable/timetable.week.view.html',
-      controller: 'StudentTimetableViewController',
+      controller: 'TimetableWeekViewController',
       controllerAs: 'controller',
       resolve: {
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        },
         auth: function (AuthResolver) {
           return AuthResolver.resolve();
+        },
+        isDirectRoute: function () {
+          return true;
         }
-      },
-      data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
       }
     })
     .when('/timetables', {
@@ -274,7 +294,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       },
       data: {
         authorizedRoles: function (Session, roles, ArrayUtils) {
-          return (Session.roleCode === 'ROLL_A' || Session.roleCode === 'ROLL_O') && ArrayUtils.intersect(roles, [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIPLAAN, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_SYNDMUS]);
+          return ['ROLL_A', 'ROLL_J', 'ROLL_O'].indexOf(Session.roleCode) !== -1 &&
+            ArrayUtils.intersect(roles, [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_SYNDMUS, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PERSYNDMUS]);
         }
       }
     })
@@ -290,11 +311,17 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           return AuthResolver.resolve();
         },
         isCreate: function () {
-          return true;
+          return false;
+        },
+        isView: function () {
+          return false;
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIPLAAN, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_SYNDMUS]
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_SYNDMUS,
+          USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PERSYNDMUS
+        ]
       }
     })
     .when('/timetable/timetableEvent/:id/view', {
@@ -307,10 +334,20 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         auth: function (AuthResolver) {
           return AuthResolver.resolve();
+        },
+        isView: function () {
+          return true;
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_SYNDMUS]
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_SYNDMUS,
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PERSYNDMUS
+        ]
       }
     });
+
+    // Regex for paths  
+    $route.routes['/timetable/:schoolId/:type/:typeId/:studyYearId/:weekIndex?'].regexp = /^\/(?:timetable\/(\d+)\/(group|teacher|room)\/(\d+)\/(\d+)\/?(\d+)?)\/?$/;
+    $route.routes['/timetable/person/:encodedPerson/:studyYearId/:weekIndex?'].regexp = /^\/(?:timetable\/person\/(\w+)\/(\d+)\/?(\d+)?)\/?$/;
 }]);

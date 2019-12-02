@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
@@ -54,6 +55,7 @@ import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.message.StudentAbsenceCreated;
 import ee.hitsa.ois.repository.ClassifierRepository;
@@ -105,10 +107,10 @@ public class StudentService {
 
     private static final String STUDENT_LIST_SELECT = "s.id, person.firstname, person.lastname, person.idcode, "+
             "curriculum_version.id curriculum_version_id, curriculum_version.code curriculum_version_code, curriculum.id curriculum_id, curriculum.name_et, curriculum.name_en, " +
-            "student_group.id student_group_id, student_group.code student_group_code, s.study_form_code, s.status_code, s.person_id";
+            "student_group.id student_group_id, student_group.code student_group_code, s.study_form_code, s.status_code, s.person_id, s.type_code";
     private static final String STUDENT_LIST_FROM = "from student s inner join person person on s.person_id=person.id "+
-            "inner join curriculum_version curriculum_version on s.curriculum_version_id=curriculum_version.id "+
-            "inner join curriculum curriculum on curriculum_version.curriculum_id=curriculum.id "+
+            "left join curriculum_version curriculum_version on s.curriculum_version_id=curriculum_version.id "+
+            "left join curriculum curriculum on curriculum_version.curriculum_id=curriculum.id "+
             "inner join classifier status on s.status_code=status.code "+
             "left outer join student_group student_group on s.student_group_id=student_group.id "+
             "left outer join classifier study_form on s.study_form_code=study_form.code ";
@@ -154,9 +156,8 @@ public class StudentService {
         }
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort(pageable);
 
-        if (user.isStudent()) {
-            // student can search active students only
-            qb.requiredCriteria("s.status_code in (:activeStudents)", "activeStudents", StudentStatus.STUDENT_STATUS_ACTIVE);
+        if (user.isLeadingTeacher()) {
+            qb.optionalCriteria("curriculum.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
         }
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
@@ -181,11 +182,17 @@ public class StudentService {
         if (Boolean.FALSE.equals(criteria.getHigher())) {
             qb.filter("curriculum.is_higher = false");
         }
+        if (Boolean.TRUE.equals(criteria.getShowGuestStudents())) {
+            qb.requiredCriteria("s.type_code = :typeCode", "typeCode", StudentType.OPPUR_K.name());
+        }
+        if (user.isTeacher() && Boolean.TRUE.equals(criteria.getShowMyStudentGroups())) {
+            qb.requiredCriteria("student_group.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+        }
 
         return JpaQueryUtil.pagingResult(qb, select.toString(), em, pageable).map(r -> {
             StudentSearchDto dto = new StudentSearchDto();
             dto.setId(resultAsLong(r, 0));
-            dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+            dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 14)));
             dto.setIdcode(user.isStudent() ? null : resultAsString(r, 3));
             String curriculumVersionCode = resultAsString(r, 5);
             dto.setCurriculumVersion(new AutocompleteResult(resultAsLong(r, 4),
@@ -197,12 +204,12 @@ public class StudentService {
             dto.setStatus(resultAsString(r, 12));
             dto.setPersonId(user.isStudent() ? null : resultAsLong(r, 13));
             if (isJournalUsed) {
-                dto.setJournal(new AutocompleteResult(resultAsLong(r, 14), resultAsString(r, 15), resultAsString(r, 15)));
+                dto.setJournal(new AutocompleteResult(resultAsLong(r, 15), resultAsString(r, 16), resultAsString(r, 16)));
                 if (isSubjectUsed) {
-                    dto.setSubject(new AutocompleteResult(resultAsLong(r, 16), resultAsString(r, 17), resultAsString(r, 18)));
+                    dto.setSubject(new AutocompleteResult(resultAsLong(r, 17), resultAsString(r, 18), resultAsString(r, 19)));
                 }
             } else if (isSubjectUsed) {
-                dto.setSubject(new AutocompleteResult(resultAsLong(r, 14), resultAsString(r, 15), resultAsString(r, 16)));
+                dto.setSubject(new AutocompleteResult(resultAsLong(r, 15), resultAsString(r, 16), resultAsString(r, 17)));
             }
             return dto;
         });
@@ -226,9 +233,14 @@ public class StudentService {
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("s.status_code in (:activeStudents)", "activeStudents", StudentStatus.STUDENT_STATUS_ACTIVE);
         qb.optionalCriteria("cv.id = :cvId", "cvId", criteria.getCurriculumVersion());
+
+        if (user.isLeadingTeacher()) {
+            qb.optionalCriteria("cv.curriculum_id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
+        }
         if (Boolean.TRUE.equals(criteria.getWoSpeciality())) {
             qb.filter("cs.id is null");
         }
+
         return JpaQueryUtil.pagingResult(qb, "s.id as student, p.firstname || ' ' || p.lastname as fullname, p.idcode,"
                 + " cv.id as cv, cs.id as spec, cs.name_et, cs.name_en,"
                 + " sg.id as sg, sg.code",
@@ -248,23 +260,25 @@ public class StudentService {
         PersonUtil.conditionalClean(p);
         EntityUtil.save(p, em);
         
-        OisFile photo = student.getPhoto();
-        if (Boolean.TRUE.equals(form.getDeleteCurrentPhoto())) {
-            if (photo != null) {
-                removePhotoFromStudentHistory(student, photo);
-                student.setPhoto(null);
-                em.remove(photo);
+        if (!user.isStudent() || StudentUtil.canStudentEditPhoto(student)) {
+            OisFile photo = student.getPhoto();
+            if (Boolean.TRUE.equals(form.getDeleteCurrentPhoto())) {
+                if (photo != null) {
+                    removePhotoFromStudentHistory(student, photo);
+                    student.setPhoto(null);
+                    em.remove(photo);
+                }
+            } else if (form.getPhoto() != null) {
+                if (photo == null) {
+                    photo = new OisFile();
+                }
+                EntityUtil.bindToEntity(form.getPhoto(), photo);
+                photo = EntityUtil.save(photo, em);
+                student.setPhoto(photo);
             }
-        } else if (form.getPhoto() != null) {
-            if (photo == null) {
-                photo = new OisFile();
-            }
-            EntityUtil.bindToEntity(form.getPhoto(), photo);
-            photo = EntityUtil.save(photo, em);
-            student.setPhoto(photo);
         }
 
-        if (!UserUtil.isSchoolAdmin(user, student.getSchool())) {
+        if (!(UserUtil.isSchoolAdmin(user, student.getSchool()) || UserUtil.isLeadingTeacher(user, student))) {
             return student;
         }
 
@@ -566,20 +580,29 @@ public class StudentService {
      */
     public StudentViewDto getStudentView(HoisUserDetails user, Student student) {
         StudentViewDto dto = StudentViewDto.of(student);
+        if (dto.getIsVocational() == null) {
+            boolean higher = StudentUtil.isHigher(student);
+            if (higher) {
+                dto.setIsVocational(Boolean.FALSE);
+            } else {
+                dto.setIsVocational(Boolean.TRUE);
+            }
+        }
         // rights for editing student data, adding representative and displaying sensitive fields
         dto.setUserCanEditStudent(Boolean.valueOf(UserUtil.canEditStudent(user, student)));
         dto.setUserCanAddRepresentative(Boolean.valueOf(UserUtil.canAddStudentRepresentative(user, student)));
         dto.setUserIsSchoolAdmin(Boolean.valueOf(UserUtil.isSchoolAdmin(user, student.getSchool())));
         dto.setUserIsStudentGroupTeacher(Boolean.valueOf(UserUtil.isStudentGroupTeacher(user, student)));
+        dto.setUserIsLeadingTeacher(Boolean.valueOf(UserUtil.isLeadingTeacher(user, student)));
         dto.setUserCanViewStudentSpecificData(Boolean.valueOf(UserUtil.canViewStudentSpecificData(user, student)));
         dto.setUserCanUpdateRR(Boolean.valueOf(UserUtil.canUpdateStudentRR(user, student)));
         dto.setUserCanViewStudentSupportServices(Boolean.valueOf(UserUtil.canViewStudentSupportServices(user, student)));
         dto.setUserCanViewPrivateStudentSupportServices(Boolean.valueOf(UserUtil.canViewPrivateStudentSupportServices(user, student)));
+        dto.setStudentCanAddPhoto(Boolean.valueOf(StudentUtil.canStudentEditPhoto(student)));
         if(!(Boolean.TRUE.equals(dto.getUserIsSchoolAdmin()) || UserUtil.isStudent(user, student) || UserUtil.isStudentRepresentative(user, student))) {
             dto.setSpecialNeed(null);
             dto.setIsRepresentativeMandatory(null);
         }
-
         if (Boolean.TRUE.equals(dto.getIsVocational())) {
             StudentCurriculumCompletion completion = getStudentCurriculumCompletion(student);
             if (completion != null) {
@@ -591,8 +614,15 @@ public class StudentService {
                 dto.setKkh(BigDecimal.ZERO);
                 dto.setIsCurriculumFulfilled(Boolean.FALSE);
             }
-
             dto.setHasRemarksPastSevenDays(studentRemarkService.studentHasRemarksPastSevenDays(student));
+            if (student.getStudentGroup() != null && student.getStudentGroup().getSpeciality() != null) {
+                dto.setSpeciality(student.getStudentGroup().getSpeciality().getCode());   
+            }
+        } else {
+            dto.setStudyCompany(null);
+            if (student.getCurriculumSpeciality() != null) {
+                dto.setCurriculumSpeciality(AutocompleteResult.of(student.getCurriculumSpeciality()));
+            }
         }
         dto.setOccupationCertificates(occupationCertificates(student));
         dto.setDormitoryHistory(dormitoryHistory(student));
@@ -838,7 +868,7 @@ public class StudentService {
 
     public StudentVocationalResultDto vocationalResults(Student student) {
         StudentVocationalResultDto dto = new StudentVocationalResultDto();
-        List<StudentVocationalResultModuleThemeDto> results = studentVocationalResults(student);
+        List<StudentVocationalResultModuleThemeDto> results = studentVocationalResults(student, false);
         dto.setResults(results);
         
         Long curriculumVersionId = EntityUtil.getId(student.getCurriculumVersion());
@@ -853,15 +883,65 @@ public class StudentService {
         return dto;
     }
 
-    public List<StudentVocationalResultModuleThemeDto> studentVocationalResults(Student student) {
+    public List<StudentVocationalResultModuleThemeDto> studentVocationalResults(Student student, boolean showUncompleted) {
         List<StudentVocationalResultModuleThemeDto> result = new ArrayList<>();
-        result.addAll(vocationalResultsThemeResults(student));
-        result.addAll(vocationalResultsModuleResults(student));
-        result.addAll(formalLearningReplacedModuleResults(student));
-
+        if (student.getCurriculumVersion() != null) {
+            result.addAll(vocationalResultsThemeResults(student));
+            result.addAll(vocationalResultsModuleResults(student));
+            result.addAll(formalLearningReplacedModuleResults(student));
+        }
+        if (showUncompleted) addExtraModulesAndThemes(student, result);
         return result;
     }
     
+    private void addExtraModulesAndThemes(Student student, List<StudentVocationalResultModuleThemeDto> result) {
+        List<Long> addedThemes = result.stream().filter(p -> p.getTheme() != null).map(p -> p.getTheme().getId()).collect(Collectors.toList());
+        List<Long> addedModules = result.stream().map(p -> p.getModule().getId()).collect(Collectors.toList());
+        // Should have only one declaration
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j "
+                + "join journal_teacher jt on j.id = jt.journal_id "
+                + "join journal_student js on js.journal_id = j.id "
+                + "join journal_omodule_theme jot on jot.journal_id = j.id "
+                + "join curriculum_version_omodule_theme cvot on jot.curriculum_version_omodule_theme_id = cvot.id "
+                + "join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id "
+                + "join curriculum_version cv on cv.id = cvo.curriculum_version_id "
+                + "join curriculum_module cm on cm.id = cvo.curriculum_module_id "
+                + "join classifier mcl on mcl.code = cm.module_code "
+                + "join teacher t on jt.teacher_id = t.id "
+                + "join person p on t.person_id = p.id");
+        String checkForThemes = "cvot.id not in (:themeIds)";
+        String checkForModules = "cm.id not in (:moduleIds)";
+        if (addedThemes != null && !addedThemes.isEmpty() && addedModules != null && !addedModules.isEmpty()) {
+            qb.optionalCriteria("(" + checkForThemes +" or " + checkForModules + ")", "themeIds", addedThemes);
+            qb.parameter("moduleIds", addedModules);
+        } else if (addedThemes != null && !addedThemes.isEmpty()) {
+            qb.optionalCriteria(checkForThemes, "themeIds", addedThemes);
+        } else if (addedModules != null && !addedModules.isEmpty()) {
+            qb.optionalCriteria(checkForModules, "moduleIds", addedModules);
+        }
+        qb.requiredCriteria("js.student_id = :studentId", "studentId", EntityUtil.getId(student));
+        qb.groupBy("themeId, themeEt, moduleId, moduleEt, moduleEn, "
+                + "codeEt, codeEn, cm.credits, cv.code");
+        List<?> data = qb.select("cvot.id themeId, cvot.name_et themeEt, cm.id moduleId, cm.name_et moduleEt, cm.name_en moduleEn, "
+                + "mcl.name_et as codeEt, mcl.name_en as codeEn, cm.credits, cv.code, string_agg(p.firstname||' '||p.lastname,', ') as teachers", em).getResultList();
+        for (Object r : data) {
+            StudentVocationalResultModuleThemeDto dto = new StudentVocationalResultModuleThemeDto();
+            dto.setTheme(new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 1)));
+            String moduleEn = resultAsString(r, 4);
+            String versionEn = resultAsString(r, 6);
+            dto.setModule(new AutocompleteResult(resultAsLong(r, 2), 
+                    // module name, module code name, curriculum version code
+                    CurriculumUtil.moduleName(resultAsString(r, 3), resultAsString(r, 5), resultAsString(r, 8)), 
+                    CurriculumUtil.moduleName(
+                            StringUtils.isEmpty(moduleEn) ? resultAsString(r, 3) : moduleEn, 
+                            StringUtils.isEmpty(versionEn) ? resultAsString(r, 5) : versionEn, resultAsString(r, 8))));
+            dto.setCredits(JpaQueryUtil.resultAsDecimal(r, 7));
+            dto.setTeachersAsString(resultAsString(r, 9));
+            result.add(dto);
+        }
+    }
+
+
     // protocol results and apel informal learning results
     private List<StudentVocationalResultModuleThemeDto> vocationalResultsModuleResults(Student student) {
         List<StudentVocationalResultModuleThemeDto> result = new ArrayList<>();
@@ -889,9 +969,13 @@ public class StudentService {
             StudentVocationalResultModuleThemeDto dto = new StudentVocationalResultModuleThemeDto();
             
             dto.setCurriculumVersionModuleId(resultAsLong(r, 0));
+            String moduleEn = resultAsString(r, 5);
+            String versionEn = resultAsString(r, 6);
             dto.setModule(new AutocompleteResult(resultAsLong(r, 1),
                     CurriculumUtil.moduleName(resultAsString(r, 3), resultAsString(r, 4), resultAsString(r, 2)),
-                    CurriculumUtil.moduleName(resultAsString(r, 5), resultAsString(r, 6), resultAsString(r, 2))));
+                    CurriculumUtil.moduleName(
+                            StringUtils.isEmpty(moduleEn) ? resultAsString(r, 3) : moduleEn, 
+                            StringUtils.isEmpty(versionEn) ? resultAsString(r, 4) : versionEn, resultAsString(r, 2))));
             dto.setCredits(resultAsDecimal(r, 7));
             
             Long apelApplicationRecordId = resultAsLong(r, 8);
@@ -929,9 +1013,13 @@ public class StudentService {
         for (Object r : rows) {
             StudentVocationalResultModuleThemeDto dto = new StudentVocationalResultModuleThemeDto();
             dto.setCurriculumVersionModuleId(null);
+            String svrEn = resultAsString(r, 1);
+            String moduleEn = resultAsString(r, 3);
             dto.setModule(new AutocompleteResult(null, 
                     formalLearningResultModuleName(resultAsString(r, 0), resultAsString(r, 2), resultAsString(r, 6)),
-                    formalLearningResultModuleName(resultAsString(r, 1), resultAsString(r, 3), resultAsString(r, 7))));
+                    formalLearningResultModuleName(
+                            StringUtils.isEmpty(svrEn) ? resultAsString(r, 0) : svrEn, 
+                            StringUtils.isEmpty(moduleEn) ? resultAsString(r, 2) : moduleEn, resultAsString(r, 7))));
             dto.setCredits(resultAsDecimal(r, 4));
             dto.setGrade(resultAsString(r, 8));
             dto.setIsApelTransfer(Boolean.TRUE);
@@ -968,7 +1056,9 @@ public class StudentService {
                 + "jes.grade_code grade_code, jes.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
                 + "tp.lastname teacher_lastname, cvot.id cvot_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, "
                 + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, "
-                + "false is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result "
+                + "false is_apel_transfer, false is_formal, first_value(cv.id) over (partition by jot.journal_id order by case when "
+                + "cvo.curriculum_version_id = :curriculumVersionId then 1 else 0 end desc, case when cm.curriculum_id = :curriculumId then 1 else 0 end desc, "
+                + "cvo.curriculum_version_id) = :curriculumVersionId curriculum_version_result "
                 + "from journal_student js "
                 + "join journal_omodule_theme jot on jot.journal_id = js.journal_id "
                 + "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id "
@@ -993,7 +1083,7 @@ public class StudentService {
                 + "jes.grade_code grade_code, jes.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
                 + "tp.lastname teacher_lastname, cvot.id cvot_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, "
                 + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, "
-                + "false is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result "
+                + "false is_apel_transfer, false is_formal, false curriculum_version_result "
                 + "from journal_student js "
                 + "join journal_omodule_theme jot on jot.journal_id = js.journal_id "
                 + "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id "
@@ -1097,9 +1187,13 @@ public class StudentService {
             } else {
                 dto = new StudentVocationalResultModuleThemeDto();
                 dto.setCurriculumVersionModuleId(resultAsLong(r, 0));
+                String moduleEn = resultAsString(r, 5);
+                String versionEn = resultAsString(r, 6);
                 dto.setModule(new AutocompleteResult(resultAsLong(r, 1),
                         CurriculumUtil.moduleName(resultAsString(r, 3), resultAsString(r, 4), resultAsString(r, 2)),
-                        CurriculumUtil.moduleName(resultAsString(r, 5), resultAsString(r, 6), resultAsString(r, 2))));
+                        CurriculumUtil.moduleName(
+                                StringUtils.isEmpty(moduleEn) ? resultAsString(r, 3) : moduleEn, 
+                                StringUtils.isEmpty(versionEn) ? resultAsString(r, 4) : versionEn, resultAsString(r, 2))));
 
                 dto.setTheme(new AutocompleteResult(themeId, resultAsString(r, 8), resultAsString(r, 8)));
                 dto.setCredits(resultAsDecimal(r, 9));
@@ -1304,6 +1398,7 @@ public class StudentService {
     }
 
     public List<AutocompleteResult> specialities(Student student) {
+        if (student.getCurriculumVersion() == null) return null;
         return StreamUtil.toMappedList(spec -> AutocompleteResult.of(spec.getCurriculumSpeciality()),
                 student.getCurriculumVersion().getSpecialities());
     }
@@ -1418,6 +1513,40 @@ public class StudentService {
             qb.filter("is_public is true");
         }
         return qb;
+    }
+
+    /**
+     * Used as a job to set guest student status to finished
+     * when student study_end is in the past
+     */
+    public void endGuestStudent() {
+        List<Student> students = em.createQuery("select s from Student s "
+                + "where s.type.code = ?1 "
+                + "and s.studyEnd < ?2", Student.class)
+                // Guest
+                .setParameter(1, StudentType.OPPUR_K.name())
+                .setParameter(2, LocalDate.now())
+                .getResultList();
+        for (Student student : students) {
+            student.setStatus(EntityUtil.getOptionalOne(StudentStatus.OPPURSTAATUS_L.name(), em));
+            EntityUtil.save(student, em);
+        }
+    }
+    
+    /**
+     * Students should have directives
+     * Use only Kylalis type students to find directive with this method
+     * @param student
+     * @return
+     */
+    public Boolean directiveStudyLevel(Student student) {
+        List<?> directiveStudyLevels = em.createNativeQuery("select d.is_higher from directive d "
+                + "join directive_student ds on ds.directive_id = d.id and ds.student_id = ?1 "
+                + "where d.type_code = ?2")
+            .setParameter(1, EntityUtil.getId(student))
+            .setParameter(2, DirectiveType.KASKKIRI_KYLALIS.name())
+            .setMaxResults(1).getResultList();
+        return JpaQueryUtil.resultAsBoolean(directiveStudyLevels.get(0), 0);
     }
 
 }

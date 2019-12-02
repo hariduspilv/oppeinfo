@@ -19,6 +19,8 @@ public class StudentSearchCommand {
     private List<String> studyForm;
     private List<String> status;
     private Boolean higher;
+    private Boolean showMyStudentGroups;
+    private Boolean showGuestStudents;
 
     public List<Long> getStudentGroupId() {
         return studentGroupId;
@@ -106,6 +108,22 @@ public class StudentSearchCommand {
 
     public void setHigher(Boolean higher) {
         this.higher = higher;
+    }
+
+    public Boolean getShowMyStudentGroups() {
+        return showMyStudentGroups;
+    }
+
+    public void setShowMyStudentGroups(Boolean showMyStudentGroups) {
+        this.showMyStudentGroups = showMyStudentGroups;
+    }
+
+    public Boolean getShowGuestStudents() {
+        return showGuestStudents;
+    }
+
+    public void setShowGuestStudents(Boolean showGuestStudents) {
+        this.showGuestStudents = showGuestStudents;
     }
 
 }

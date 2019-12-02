@@ -9,6 +9,7 @@ public class TeacherSearchCommand {
     private Long schoolDepartment;
     private Long teacherOccupation;
     private Long school;
+    private Long studentGroup;
 
     public String getName() {
         return name;
@@ -64,5 +65,13 @@ public class TeacherSearchCommand {
 
     public void setTeacherOccupation(Long teacherOccupation) {
         this.teacherOccupation = teacherOccupation;
+    }
+
+    public Long getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(Long studentGroup) {
+        this.studentGroup = studentGroup;
     }
 }

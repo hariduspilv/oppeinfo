@@ -15,8 +15,12 @@
           <label>{{'student.idcode' | translate}}</label>
           <hois-value value="student.person.idcode"></hois-value>
         </md-input-container>
+        <md-input-container flex>
+          <label>{{'student.birthDate' | translate}}</label>
+          <hois-value value="student.person.birthdate | hoisDate"></hois-value>
+        </md-input-container>
       </div>
-      <div layout="row" layout-sm="column" layout-xs="column" flex>
+      <div layout="row" layout-sm="column" layout-xs="column" flex ng-if="!student.isGuestStudent">
         <md-input-container flex>
           <label>{{'student.studyForm' | translate}}</label>
           <hois-classifier-value ng-model="student.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
@@ -48,8 +52,8 @@
               <td md-cell>{{currentLanguageNameField(row.status)}}</td>
               <td md-cell>{{::row.confirmDate | hoisDate}}</td>
               <td md-cell>
-                <a ng-if="student.userCanEditStudent && ((row.status.code === 'AVALDUS_STAATUS_KOOST') || (row.status.code === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin()))"
-                  md-no-ink class="md-button md-primary change-button" ng-href="#/applications/{{::row.id}}/edit">{{'main.button.change' | translate}}</a>
+                <a ng-if="canChangeApplication(row)" md-no-ink class="md-button md-primary change-button"
+                  ng-href="#/applications/{{::row.id}}/edit">{{'main.button.change' | translate}}</a>
               </td>
             </tr>
           </tbody>
@@ -172,7 +176,6 @@
         <table md-table md-progress="practiceContracts.$promise" class="secondary-table">
           <thead md-head md-order="practiceContractsCriteria.order" md-on-reorder="loadPracticeContracts">
             <tr md-row>
-              <!--todo order byd-->
               <th md-column md-order-by="contractNr">{{'student.practiceContracts.contractNumber' | translate}}</th>
               <th md-column md-order-by="startDate, endDate">{{'student.practiceContracts.validity' | translate}}</th>
               <th md-column md-order-by="e.name">{{'student.practiceContracts.enterprise' | translate}}</th>
@@ -193,16 +196,15 @@
               <td md-cell>{{::row.contractDate | hoisDate}}</td>
               <td md-cell>{{currentLanguageNameField(row.status)}}</td>
               <td md-cell>
-                <md-button ng-if="student.userCanEditStudent && (auth.isAdmin() && row.status.code === 'LEPING_STAATUS_S')" 
-                  md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::row.id}}/edit">{{'main.button.edit' | translate}}</md-button>
-                <md-button ng-if="!auth.isAdmin() || (auth.isAdmin() && row.status.code !== 'LEPING_STAATUS_S')"
-                  md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
+                <md-button ng-if="canEditContract(row)" md-no-ink class="md-primary change-button"
+                  ng-href="#/contracts/{{::row.id}}/edit">{{'main.button.edit' | translate}}</md-button>
+                <md-button ng-if="!canEditContract(row) && canViewContract(row)" md-no-ink class="md-primary change-button"
+                  ng-href="#/contracts/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
               </td>
             </tr>
           </tbody>
         </table>
       </md-table-container>
-      <!-- todo lehe suuruse valik katki?-->
       <md-table-pagination ng-show="practiceContracts.totalElements > practiceContractsCriteria.size" md-limit="practiceContractsCriteria.size" md-limit-options="[5, 10, 15]"
         md-page="practiceContractsCriteria.page" md-total="{{practiceContracts.totalElements}}" md-on-paginate="loadPracticeContracts" 
         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"

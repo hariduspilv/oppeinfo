@@ -115,27 +115,27 @@ public class CurriculumForm extends VersionedCommand {
     private LocalDate accreditationValidDate;
     @Size(max = 1000)
     private String accreditationNr;
-    @Size(max = 255)
+    @Size(max = 4000)
     private String final21;
-    @Size(max = 255)
+    @Size(max = 4000)
     private String final31;
-    @Size(max = 255)
+    @Size(max = 4000)
     private String final33;
-    @Size(max = 255)
+    @Size(max = 4000)
     private String final51;
-    @Size(max = 255)
+    @Size(max = 4000)
     private String final52;
-    @Size(max = 255)
+    @Size(max = 4000)
     private String final61;
-    @Size(max = 255)
+    @Size(max = 4000)
     private String finalEn31;
-    @Size(max = 255)
+    @Size(max = 4000)
     private String finalEn33;
-    @Size(max = 255)
+    @Size(max = 4000)
     private String finalEn51;
-    @Size(max = 255)
+    @Size(max = 4000)
     private String finalEn52;
-    @Size(max = 255)
+    @Size(max = 4000)
     private String finalEn61;
     private Boolean occupation = Boolean.FALSE;
     @NotNull

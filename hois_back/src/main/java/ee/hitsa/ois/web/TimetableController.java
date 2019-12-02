@@ -50,7 +50,6 @@ import ee.hitsa.ois.web.dto.timetable.TimetableDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableImportDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableManagementSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetablePlanDto;
-import ee.hitsa.ois.web.dto.timetable.TimetableStudentStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.UntisCodeError;
 import ee.hitsa.ois.web.dto.timetable.VocationalTimetablePlanDto;
@@ -199,15 +198,21 @@ public class TimetableController {
         return timetableService.timetableStudyYears(schoolId);
     }
 
-    @GetMapping("/timetableStudyYearWeeks/{studyYear:\\d+}")
-    public List<TimetableStudyYearWeekDto> timetableStudyYearWeeks(@WithEntity("studyYear") StudyYear studyYear) {
-        return timetableService.timetableStudyYearWeeks(studyYear);
+    @GetMapping("/timetableStudyYears/person")
+    public List<StudyYearSearchDto> personTimetableStudyYears(@RequestParam("encodedPerson") String encodedPerson) {
+        return timetableService.personTimetableStudyYears(encodedPerson);
     }
 
-    @GetMapping("/timetableStudyYearWeeks/{studyYear:\\d+}/student/{id:\\d+}")
-    public List<TimetableStudentStudyYearWeekDto> timetableStudyYearWeeksStudent(
-            @WithEntity("studyYear") StudyYear studyYear, @WithEntity Student student) {
-        return timetableService.timetableStudyYearWeeksStudent(studyYear, student);
+    @GetMapping("/timetableStudyYearWeeks/{studyYear:\\d+}")
+    public List<TimetableStudyYearWeekDto> timetableStudyYearWeeks(@WithEntity("studyYear") StudyYear studyYear,
+            @RequestParam(required = false) @WithEntity("student") Student student) {
+        return timetableService.timetableStudyYearWeeks(studyYear, student);
+    }
+
+    @GetMapping("/timetableStudyYearWeeks/{studyYear:\\d+}/person")
+    public List<TimetableStudyYearWeekDto> personTimetableStudyYearWeeks(@WithEntity("studyYear") StudyYear studyYear,
+            @RequestParam("encodedPerson") String encodedPerson) {
+        return timetableService.personTimetableStudyYearWeeks(studyYear, encodedPerson);
     }
 
     @GetMapping("/group/{school:\\d+}/{studyYear:\\d+}")
@@ -258,13 +263,13 @@ public class TimetableController {
     }
     
     @GetMapping("/exportTimetableCheck")
-    public UntisCodeError exportTimetableCheck(HoisUserDetails user, @RequestParam("startDate") LocalDate startDate, @RequestParam("endDate") LocalDate endDate, @RequestParam("studyPeriod") @WithEntity("studyPeriod") StudyPeriod studyPeriod) {
+    public UntisCodeError exportTimetableCheck(HoisUserDetails user, @RequestParam("startDate") LocalDate startDate, @RequestParam("studyPeriod") @WithEntity("studyPeriod") StudyPeriod studyPeriod) {
     	UserUtil.assertIsSchoolAdmin(user);
-    	return timetableService.checkUntiscodes(startDate, endDate, studyPeriod, user);
+    	return timetableService.checkUntiscodes(startDate, studyPeriod, user);
     }
     
     @PostMapping("/importXml")
-    public TimetableImportErrorDto importXml(HoisUserDetails user,@Valid @RequestBody TimetableImportDto dto) {
+    public TimetableImportErrorDto importXml(HoisUserDetails user, @Valid @RequestBody TimetableImportDto dto) {
     	UserUtil.assertIsSchoolAdmin(user);
     	TimetableImportErrorDto errorDto = new TimetableImportErrorDto();
     	errorDto.setErrors(timetableService.importXml(user, dto));

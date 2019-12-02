@@ -63,7 +63,7 @@
                   <td md-cell>{{row.idcode}}</td>
                   <td md-cell>{{row.studentGroup}}</td>
                   <td md-cell>
-                    <span ng-class="{badResult: !gradeUtil.isPositive(row.grade, auth.school.letterGrades)}">{{gradeValue(row.grade)}}</span>
+                    <span ng-class="{badResult: !gradeUtil.isPositive(row.grade.code)}">{{row.grade | hoisHigherGrade: letterGrades}}</span>
                   </td>
                   <td md-cell ng-if="protocol.status.code === 'PROTOKOLL_STAATUS_K'">{{row.addInfo}}</td>
                   <td md-cell>{{currentLanguageNameField(row.curriculumGrade)}}</td>

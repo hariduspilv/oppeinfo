@@ -65,7 +65,7 @@ public class DirectiveController {
 
     @GetMapping
     public Page<DirectiveSearchDto> search(HoisUserDetails user, @Valid DirectiveSearchCommand criteria, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KASKKIRI);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KASKKIRI);
         return directiveService.search(user.getSchoolId(), criteria, pageable);
     }
 
@@ -82,7 +82,7 @@ public class DirectiveController {
 
     @GetMapping("/{id:\\d+}")
     public DirectiveDto get(HoisUserDetails user, @WithEntity Directive directive) {
-        UserUtil.assertIsSchoolAdmin(user, directive.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KASKKIRI);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, directive.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KASKKIRI);
         return directiveService.get(user, directive);
     }
 
@@ -176,7 +176,7 @@ public class DirectiveController {
     @GetMapping("/studentIndividualCurriculumModules/{id:\\d+}")
     public List<IndividualCurriculumModuleDto> individualCurriculumModules(HoisUserDetails user, @WithEntity Student student,
             @RequestParam(value = "directiveId", required = false) Long directiveId) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KASKKIRI);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KASKKIRI);
         return directiveService.individualCurriculumModules(student, directiveId);
     }
 

@@ -80,8 +80,13 @@ public class StudentGroupAbsenceService {
 
     private List<StudentGroupAbsenceDto> studentAbsences(HoisUserDetails user, StudentGroupAbsenceCommand criteria) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_GROUP_ABSENCE_FROM);
-        if (user.isTeacher()) {
-            qb.optionalCriteria("sg.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("exists(select c.id from curriculum_version cv "
+                    + "join curriculum c on c.id = cv.curriculum_id "
+                    + "where s.curriculum_version_id = cv.id and c.id in (:userCurriculumIds))",
+                    "userCurriculumIds", user.getCurriculumIds());
+        } else if (user.isTeacher()) {
+            qb.requiredCriteria("sg.teacher_id = :teacherId", "teacherId", user.getTeacherId());
         }
 
         LocalDate from = Boolean.TRUE.equals(criteria.getTodaysAbsences()) ? LocalDate.now()
@@ -170,10 +175,10 @@ public class StudentGroupAbsenceService {
                 StudentStatus.STUDENT_STATUS_ACTIVE);
 
         qb.sort("p.lastname, p.firstname");
-        List<?> data = qb.select("s.id, p.firstname, p.lastname", em).getResultList();
+        List<?> data = qb.select("s.id, p.firstname, p.lastname, s.type_code as studentType", em).getResultList();
         return StreamUtil.toMappedList(s -> new AutocompleteResult(resultAsLong(s, 0),
-                PersonUtil.fullname(resultAsString(s, 1), resultAsString(s, 2)),
-                PersonUtil.fullname(resultAsString(s, 1), resultAsString(s, 2))), data);
+                PersonUtil.fullnameOptionalGuest(resultAsString(s, 1), resultAsString(s, 2), resultAsString(s, 3)),
+                PersonUtil.fullnameOptionalGuest(resultAsString(s, 1), resultAsString(s, 2), resultAsString(s, 3))), data);
     }
 
     public List<StudyWeekDto> studyYearWeeks(Long studyYearId) {

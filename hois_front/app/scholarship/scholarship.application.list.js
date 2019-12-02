@@ -13,7 +13,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['$loc
     $scope.isStudentGroupTeacher = $scope.auth.isTeacher() && $scope.auth.teacherGroupIds.length > 0;
 
     $scope.applicationsTable = {
-      showSelect: true
+      showSelect: !$scope.auth.isLeadingTeacher()
     };
     $scope.selected = {};
 

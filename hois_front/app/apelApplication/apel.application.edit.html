@@ -4,7 +4,7 @@
       <div ng-hide="application.student" layout="row" layout-sm="column" layout-xs="column">
         <div flex="45" flex-sm="100" flex-xs="100">
           <hois-autocomplete flex ng-model="application.student" method="students" name="student" label="apel.student"
-            additional-query-params="{active: true}"></hois-autocomplete>
+            additional-query-params="{active: true, hideGuestStudents: true}"></hois-autocomplete>
         </div>
       </div>
       <div ng-hide="!application.student">
@@ -24,8 +24,8 @@
           </span>
           <md-button ng-if="application.canEdit" class="md-raised md-default" ng-click="editFormalLearning()">{{'main.button.create' | translate}}</md-button>
         </fieldset>
+        <div>&nbsp;</div>
       </div>
-      <div>&nbsp;</div>
 
       <div ng-hide="!application.student">
         <fieldset>
@@ -40,8 +40,8 @@
             </span>
           <md-button ng-if="application.canEdit" class="md-raised md-default" ng-click="editInformalLearning()">{{'main.button.create' | translate}}</md-button>
         </fieldset>
+        <div>&nbsp;</div>
       </div>
-      <div>&nbsp;</div>
 
       <div ng-hide="!application.student" layout="column" flex>
         <fieldset>
@@ -68,8 +68,8 @@
             </table>
           </md-table-container>
         </fieldset>
+        <div>&nbsp;</div>
       </div>
-      <div>&nbsp;</div>
 
       <div ng-hide="!application.student" layout="column" flex>
         <fieldset>
@@ -117,8 +117,8 @@
             </table>
           </md-table-container>
         </fieldset>
+        <div>&nbsp;</div>
       </div>
-      <div>&nbsp;</div>
 
       <div ng-if="(application.status !== 'VOTA_STAATUS_K' && auth.isAdmin()) || application.committee || application.decision">
         <fieldset>
@@ -144,8 +144,8 @@
             </md-input-container>
           </div>
         </fieldset>
+        <div>&nbsp;</div>
       </div>
-      <div>&nbsp;</div>
 
       <div ng-if="application.student" layout="row" layout-xs="column">
         <md-button class="md-raised md-primary" ng-if="canChangeTransferStatus" type="submit">{{'main.button.save' | translate}}</md-button>

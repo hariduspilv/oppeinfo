@@ -33,13 +33,13 @@ public class StudentGroupAbsenceController {
 
     @GetMapping
     public StudentGroupAbsenceDtoContainer get(HoisUserDetails user, @Valid StudentGroupAbsenceCommand criteria) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
         return studentGroupAbsenceService.get(user, criteria);
     }
 
     @GetMapping("/studyYearWeeks/{id:\\d+}")
     public List<StudyWeekDto> studyYearWeeks(HoisUserDetails user, @PathVariable("id") Long studyYearId) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
         return studentGroupAbsenceService.studyYearWeeks(studyYearId);
     }
 

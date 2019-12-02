@@ -17,7 +17,8 @@ public class JournalDto {
     private AutocompleteResult studyYear;
     private Set<String> studentGroups;
     private List<AutocompleteResult> teachers;
-    
+    private Boolean canConnectStudyMaterials;
+
     public static JournalDto of(Journal journal) {
         JournalDto dto = EntityUtil.bindToDto(journal, new JournalDto());
         dto.setTeachers(StreamUtil.toMappedList(jt -> AutocompleteResult.of(jt.getTeacher()), 
@@ -59,6 +60,7 @@ public class JournalDto {
     public List<AutocompleteResult> getTeachers() {
         return teachers;
     }
+
     public void setTeachers(List<AutocompleteResult> teachers) {
         this.teachers = teachers;
     }
@@ -69,6 +71,14 @@ public class JournalDto {
 
     public void setNameEn(String nameEn) {
         this.nameEn = nameEn;
+    }
+
+    public Boolean getCanConnectStudyMaterials() {
+        return canConnectStudyMaterials;
+    }
+
+    public void setCanConnectStudyMaterials(Boolean canConnectStudyMaterials) {
+        this.canConnectStudyMaterials = canConnectStudyMaterials;
     }
 
 }

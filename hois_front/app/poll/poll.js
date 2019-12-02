@@ -179,7 +179,7 @@
         for (var i = 0, o = 0; i < numChunks; ++i, o += size) {
             chunks.push(str.substr(o, size));
         }
-        return chunks
+        return chunks;
     }
 
     function markImages(themes) {
@@ -249,6 +249,18 @@
                 });
                 return itemById;
             }
+
+            dialogScope.deselectOther = function(question, theme) {
+                if (formState.type === 'KYSITLUS_V') {
+                    if (question.answers[0].chosen) {
+                        theme.questions.forEach(function (themeQuestion) {
+                            if (themeQuestion !== question && themeQuestion.type === 'VASTUS_S') {
+                                themeQuestion.answers[0].chosen = false;
+                            }
+                        });
+                    }
+                }
+            };
 
             dialogScope.refresh = function() {
                 QueryUtils.loadingWheel(dialogScope, true, true);
@@ -383,11 +395,27 @@
             targetCodes: 'KYSITLUS_SIHT'
         });
 
-        $scope.testEmail = function () {
+        $scope.testEmail = function() {
             QueryUtils.endpoint('/poll/testEmailService').put({}, function () {
                 message.info('email saadetud');
             });
         };
+        $scope.testStatus = function() {
+            QueryUtils.endpoint('/poll/testPollStatusJob').put({}, function () {
+                message.info('staatused vahetatud');
+            });
+        };
+
+        $scope.testGuestStudent = function () {
+            QueryUtils.endpoint('/students/testGuestJob').put({}, function () {
+                message.info('külalisõpilaste staatused vahetatud');
+            });
+        };
+
+        $scope.pollNotEnded = function(row) {
+            return row.status.code !== 'KYSITLUS_STAATUS_K' && row.status.code !== 'KYSITLUS_STAATUS_L';
+        };
+
         QueryUtils.createQueryForm($scope, '/poll', {order: 'p.validFrom desc, p.inserted desc'}, clMapper.objectmapper);
         $q.all(clMapper.promises).then($scope.loadData);
     }).controller('PollQuestionEditController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, oisFileService, message, FormUtils) {
@@ -480,8 +508,12 @@
         });
         QueryUtils.createQueryForm($scope, '/poll/questionsList', {}, clMapper.objectmapper);
         $q.all(clMapper.promises).then($scope.loadData);
-    }).controller('PollSubjectsController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, oisFileService, $translate) {
+    }).controller('PollSubjectsController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, oisFileService, $translate, FormUtils, message, $location) {
         $scope.auth = $route.current.locals.auth;
+        if (!$scope.auth.isTeacher()) {
+            message.error('main.messages.error.nopermission');
+            return $location.path('');
+        }
         $scope.now = new Date();
 
         $scope.canViewResult = function(endDate) {
@@ -529,7 +561,7 @@
                     dialogScope.criteria = {};
 
                     dialogScope.graph = response;
-                    if (response.comments != undefined && response.comments.length === 1 && dialogScope.teacherViewing) {
+                    if (response.comments !== undefined && response.comments.length === 1 && dialogScope.teacherViewing) {
                         dialogScope.criteria.addInfo = response.comments[0].addInfo;
                         dialogScope.commentRef = response.comments[0].commentRef;
                     }
@@ -557,12 +589,12 @@
                             graphTheme.labelOverride.forEach(function (labelOverride) {
                                 var completeString = "";
                                 labelOverride.pointBorderColor.forEach(function (pointBorderColor){
-                                    completeString += $scope.currentLanguageNameField(pointBorderColor.answer) 
-                                    + "(" + pointBorderColor.answerNr + ")" + 
+                                    completeString += $scope.currentLanguageNameField(pointBorderColor.answer) + 
+                                    "(" + pointBorderColor.answerNr + ")" + 
                                     ": " + pointBorderColor.answers + "\n";
                                 });
                                 completeString += translatedVal + ": " + labelOverride.sum;
-                                translatedLabelOverride.push(completeString)
+                                translatedLabelOverride.push(completeString);
                             });
                             graphTheme.labelOverride.forEach(function (labelOverride) {
                                 labelOverride.pointBorderColor = translatedLabelOverride;
@@ -584,19 +616,28 @@
                         dialogScope.graph.graphByTheme.forEach(function (theme) {
                             theme.labelOverride[1] = {
                                 label: translatedVal
-                            }
+                            };
                         });
                     });
 
                     dialogScope.saveComment = function(addInfo) {
-                        var GraphEndpoint = QueryUtils.endpoint('/poll/comment/' + dialogScope.pollId);
-                        if (dialogScope.journal) {
-                            GraphEndpoint = new GraphEndpoint({journalId: dialogScope.graphName.id, comment: addInfo, commentRef: dialogScope.commentRef});
-                            GraphEndpoint.$putWithoutLoad();
-                        } else {
-                            GraphEndpoint = new GraphEndpoint({subjectId: dialogScope.graphName.id, comment: addInfo, commentRef: dialogScope.commentRef});
-                            GraphEndpoint.$putWithoutLoad();
-                        }
+                        FormUtils.withValidForm(dialogScope.dialogForm, function() {
+                            var GraphEndpoint = QueryUtils.endpoint('/poll/comment/' + dialogScope.pollId);
+                            if (dialogScope.journal) {
+                                GraphEndpoint = new GraphEndpoint({journalId: dialogScope.graphName.id, comment: addInfo, commentRef: dialogScope.commentRef});
+                            } else {
+                                GraphEndpoint = new GraphEndpoint({subjectId: dialogScope.graphName.id, comment: addInfo, commentRef: dialogScope.commentRef});
+                            }
+                            GraphEndpoint.$putWithoutLoad().then(function (response) {
+                                if (response.commentRef === undefined || response.commentRef === null)  {
+                                    // comment was deleted
+                                    dialogScope.commentRef = undefined;
+                                } else {
+                                    // comment was saved
+                                    dialogScope.commentRef = response.commentRef;
+                                }
+                            });
+                        });
                     };
                     
                 }, null, null);
@@ -629,8 +670,21 @@
           });
         };
 
-    }).controller('PollAnswersController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, oisFileService, $translate, message, $window) {
+    }).controller('PollAnswersController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, oisFileService, $translate, message, $location) {
         $scope.auth = $route.current.locals.auth;
+        if ($scope.auth.isLeadingTeacher() || $scope.auth.isMainAdmin()) {
+            message.error('main.messages.error.nopermission');
+            return $location.path('');
+        }
+
+        $scope.canViewResult = function(row) {
+            if ($scope.auth.isStudent() && ((((row.isTeacherComment && row.isTeacherCommentVisible) || 
+            row.isStudentVisible) && row.type.code === 'KYSITLUS_O') || row.type.code === 'KYSITLUS_V') && 
+            $scope.isInThePast(row.validThru) && !row.allTextFields) {
+                return true;
+            }
+            return false;
+        };
 
         $scope.isInThePast = function(validThru) {
             var validThruDate = new Date(validThru);
@@ -641,7 +695,7 @@
                 return true;
             }
             return false;
-        }
+        };
 
         var clMapper = Classifier.valuemapper({
             type: 'KYSITLUS',
@@ -659,7 +713,7 @@
             QueryUtils.loadingWheel($scope, true);
             QueryUtils.endpoint('/poll/answers').get({id: row.id}).$promise.then(function (response) {
                 QueryUtils.loadingWheel($scope, false);
-                if (response.journals.length === 0 && response.subjects.length === 0 && response.themes === false) {
+                if (response.journals.length === 0 && response.subjects.length === 0 && response.themes === false && row.type.code !== 'KYSITLUS_V') {
                     message.info("poll.answers.dialog.allTextFields");
                     return;
                 }
@@ -675,7 +729,7 @@
                         });
                         endPoint.$putWithoutLoad().then(function (response) {
                             dialogScope.graph = response;
-                            if (response.comments != undefined) {
+                            if (response.comments !== undefined) {
                                 dialogScope.comments = response.comments;
                             }
                             dialogScope.showGraph = true;
@@ -701,13 +755,23 @@
                                 var translatedLabelOverride = [];
                                 graphTheme.labelOverride.forEach(function (labelOverride) {
                                     var completeString = "";
-                                    labelOverride.pointBorderColor.forEach(function (pointBorderColor){
-                                        completeString += $scope.currentLanguageNameField(pointBorderColor.answer) 
-                                        + "(" + pointBorderColor.answerNr + ")" + 
-                                        ": " + pointBorderColor.answers + "\n";
-                                    });
-                                    completeString += dialogScope.responseCount + ": " + labelOverride.sum;
-                                    translatedLabelOverride.push(completeString)
+                                    if (dialogScope.formState.type.code !== 'KYSITLUS_V') {
+                                        labelOverride.pointBorderColor.forEach(function (pointBorderColor){
+                                            completeString += $scope.currentLanguageNameField(pointBorderColor.answer) + 
+                                            "(" + pointBorderColor.answerNr + ")" + 
+                                            ": " + pointBorderColor.answers + "\n";
+                                        });
+                                        completeString += dialogScope.responseCount + ": " + labelOverride.sum;
+                                        translatedLabelOverride.push(completeString);
+                                    } else {
+                                        var overrideIndex = graphTheme.labelOverride.indexOf(labelOverride);
+                                        if (graphTheme.data[1][overrideIndex] === 1) {
+                                            $translate('poll.answers.dialog.responded').then(function (translatedVal) {
+                                                completeString += translatedVal;
+                                                translatedLabelOverride.push(completeString);
+                                            });
+                                        }
+                                    }
                                 });
                                 graphTheme.labelOverride.forEach(function (labelOverride) {
                                     labelOverride.pointBorderColor = translatedLabelOverride;
@@ -718,19 +782,34 @@
                                 graphTheme.options.tooltips = tooltips;
                             });
 
-                            $translate('poll.answers.dialog.average').then(function (translatedVal) {
-                                dialogScope.graph.graphByTheme.forEach(function (theme) {
-                                    theme.labelOverride[0].label = translatedVal;
+                            if (dialogScope.formState.type.code === 'KYSITLUS_V') {
+                                $translate('poll.answers.dialog.responseCount').then(function (translatedVal) {
+                                    dialogScope.graph.graphByTheme.forEach(function (theme) {
+                                        theme.labelOverride[0].label = translatedVal;
+                                    });
                                 });
-                            });
-                            
-                            $translate('poll.answers.dialog.myAnswer').then(function (translatedVal) {
-                                dialogScope.graph.graphByTheme.forEach(function (theme) {
-                                    theme.labelOverride[1] = {
-                                        label: translatedVal
-                                    }
+                                $translate('poll.answers.dialog.myAnswer').then(function (translatedVal) {
+                                    dialogScope.graph.graphByTheme.forEach(function (theme) {
+                                        theme.labelOverride[1] = {
+                                            hidden: true,
+                                            label: translatedVal
+                                        };
+                                    });
                                 });
-                            });
+                            } else {
+                                $translate('poll.answers.dialog.average').then(function (translatedVal) {
+                                    dialogScope.graph.graphByTheme.forEach(function (theme) {
+                                        theme.labelOverride[0].label = translatedVal;
+                                    });
+                                });
+                                $translate('poll.answers.dialog.myAnswer').then(function (translatedVal) {
+                                    dialogScope.graph.graphByTheme.forEach(function (theme) {
+                                        theme.labelOverride[1] = {
+                                            label: translatedVal
+                                        };
+                                    });
+                                });
+                            }
                         });
                     }
 
@@ -757,13 +836,24 @@
                         loadEndpoint(GraphEndpoint, dialogScope);
                     };
 
+                    dialogScope.showStudentCouncil = function(responseId, isThemePageable) {
+                        dialogScope.studentCouncil = true;
+                        var GraphEndpoint = QueryUtils.endpoint('/poll/graph');
+                        GraphEndpoint = new GraphEndpoint({responseId: responseId, themes: !isThemePageable});
+                        loadEndpoint(GraphEndpoint, dialogScope);
+                    };
+
+                    if (row.type.code === 'KYSITLUS_V') {
+                        dialogScope.showStudentCouncil(row.id, row.isThemePageable);
+                    }
+
                     dialogScope.hideGraph = function() {
                         dialogScope.overall = false;
                         dialogScope.showGraph = false;
                     };
                 }, null, null);
             });
-        };
+        }
 
         $scope.openResponse = function(row) {
             var PollEndPoint;
@@ -810,11 +900,16 @@
             }).catch(angular.noop);
         };
 
+        $scope.confirmedOrEnded = function() {
+            return $scope.formState.status === 'KYSITLUS_STAATUS_K' || $scope.formState.status === 'KYSITLUS_STAATUS_L';
+        };
+
         $scope.refresh = function() {
             QueryUtils.loadingWheel($scope, true, true);
             QueryUtils.endpoint("/poll/themes").get({id: $scope.criteria.id}).$promise.then(function (data) {
-                if (data.confirmed && $scope.formState.edit) {
-                    message.error("main.messages.error.nopermission");
+                $scope.formState.status = data.status;
+                if ($scope.confirmedOrEnded() && $scope.formState.edit) {
+                    message.error("poll.messages.confirmedOrFinished");
                     $rootScope.back("#/poll/questions/" + $scope.criteria.id + "/view");
                 } else {
                     $scope.formState.type = data.type;
@@ -890,6 +985,29 @@
         $scope.addQuestion = function (row, question) {
             dialogService.showDialog('poll/poll.question.add.dialog.html', function (dialogScope) {
                 dialogScope.criteria = {};
+
+                dialogScope.addAnswer = function() {
+                    var answer = {};
+                    if (dialogScope.criteria.answers === undefined) {
+                        dialogScope.criteria.answers = [];
+                    }
+                    dialogScope.criteria.answers.push(answer);
+                };
+
+                dialogScope.typeKysitlusV = function() {
+                    dialogScope.criteria.type = 'VASTUS_S';
+                    dialogScope.pickingAnswerTypeDisabled = true;
+                    dialogScope.addAnswer();
+                    dialogScope.criteria.answers[0].answerNr = 1;
+                    dialogScope.answerAddingDisabled = true;
+                };
+
+                if ($scope.formState.type !== 'KYSITLUS_V') {
+                    dialogScope.answerTypeFilter = ['VASTUS_S'];
+                } else {
+                    dialogScope.typeKysitlusV();
+                }
+
                 dialogScope.themes = $scope.criteria.themes;
                 dialogScope.data = {};
                 dialogScope.data.files = [];
@@ -899,7 +1017,6 @@
                 if (dialogScope.criteria.files === undefined) {
                     dialogScope.criteria.files = [];
                 }
-
                 if (question) {
                     angular.extend(dialogScope.criteria, angular.copy(question));
                 } else {
@@ -908,7 +1025,7 @@
                     dialogScope.new = true;
                 }
 
-                QueryUtils.endpoint('/poll/questions').query(function(response) {
+                QueryUtils.endpoint('/poll/questions').query({type: $scope.formState.type},function(response) {
                     dialogScope.questions = response.filter(function(item) {
                         var notSameId = true;
                         $scope.criteria.themes.forEach(function(theme) {
@@ -932,6 +1049,12 @@
                     if (questionId !== undefined && questionId !== "") {
                         var PollEndPoint = QueryUtils.endpoint('/poll/question');
                         PollEndPoint.get({id: questionId}, function (result) {
+                            // Student council should only have 1 answer
+                            // Older student council questions might have over 1 answer
+                            if (result.answers !== undefined && result.answers.length > 1 && result.type === "VASTUS_S") {
+                                message.error("poll.messages.studentCouncilAnswersError");
+                                return;
+                            }
                             result.theme = dialogScope.criteria.theme;
                             result.question = dialogScope.criteria.question;
                             result.isRequired = dialogScope.criteria.isRequired;
@@ -1031,14 +1154,6 @@
                         });
                     }, null, true);
                 };
-
-                dialogScope.addAnswer = function() {
-                    var answer = {};
-                    if (dialogScope.criteria.answers === undefined) {
-                        dialogScope.criteria.answers = [];
-                    }
-                    dialogScope.criteria.answers.push(answer);
-                };
                 
                 dialogScope.deleteFile = function(file) {
                     dialogService.confirmDialog({prompt: 'apel.deleteFileConfirm'}, function() {
@@ -1065,13 +1180,22 @@
                     $scope.deleteQuestion(dialogScope.criteria.id);
                 };
 
+                dialogScope.filterAnswerType = function () {
+                    return dialogScope.apelSchools.filter(function (it) { return it.ehisSchool; }).map(function(it) {
+                      if (dialogScope.record.newTransferableSubjectOrModule.newApelSchool.ehisSchool !== it.ehisSchool) {
+                        return it.ehisSchool;
+                      }
+                    });
+                  };
+
                 dialogScope.checkAnswers = function() {
-                    if (dialogScope.criteria.isRequired && dialogScope.criteria.type !== 'VASTUS_T' && (dialogScope.criteria.answers === undefined || dialogScope.criteria.answers.length === 0)) {
+                    if (dialogScope.criteria.isRequired && dialogScope.criteria.type !== 'VASTUS_T' && 
+                    (dialogScope.criteria.answers === undefined || dialogScope.criteria.answers.length === 0)) {
                         message.error('poll.questions.noAnswersError');
                         return false;
                     }
                     return true;
-                }
+                };
 
             }, function (submittedDialogScope) {
                 FormUtils.withValidForm(submittedDialogScope.dialogForm, function() {
@@ -1114,24 +1238,24 @@
             }
             dialogService.confirmDialog({ prompt: 'poll.questions.deleteTheme' }, function () {
                 var PollThemeEndpoint = QueryUtils.endpoint('/poll/theme/' + id);
-                var pollThemeEndpointForDelete = new PollThemeEndpoint();
-                    pollThemeEndpointForDelete.$delete().then(function () {
-                    message.info('main.messages.delete.success');
-                    $scope.refresh();
-                }).catch(angular.noop);
+                deleteEntity(PollThemeEndpoint);
             });
         };
 
         $scope.deleteQuestion = function(id) {
             dialogService.confirmDialog({ prompt: 'poll.questions.deleteQuestion' }, function () {
                 var PollQuestionEndpoint = QueryUtils.endpoint('/poll/question/' + id);
-                var PollQuestionEndpointForDelete = new PollQuestionEndpoint();
-                    PollQuestionEndpointForDelete.$delete().then(function () {
-                    message.info('main.messages.delete.success');
-                    $scope.refresh();
-                }).catch(angular.noop);
+                deleteEntity(PollQuestionEndpoint);
             });
         };
+
+        function deleteEntity(Endpoint) {
+            var PollQuestionEndpointForDelete = new Endpoint();
+            PollQuestionEndpointForDelete.$delete().then(function () {
+                message.info('main.messages.delete.success');
+                $scope.refresh();
+            }).catch(angular.noop);
+        }
 
         $scope.test = function () {
             $scope.criteria.higher = $scope.auth.higher;
@@ -1150,7 +1274,6 @@
             if ($scope.criteria.id) {
                 pollEndPoint.$update().then(function () {
                     message.info('main.messages.create.success');
-                    //refresh();
                 }).catch(angular.noop);
             }
         };
@@ -1166,11 +1289,10 @@
             var pollEndPoint = new PollEndPoint(theme);
             pollEndPoint.$update().then(function () {
                 message.info('main.messages.create.success');
-                //refresh();
             }).catch(angular.noop);
         };
 
-    }).controller('PollResultsController', function ($scope, $route, QueryUtils, $translate, dialogService, $q, Classifier, $window, $rootScope) {
+    }).controller('PollResultsController', function ($scope, $route, QueryUtils, $translate, dialogService, $q, Classifier, $window, $rootScope, message) {
         $scope.auth = $route.current.locals.auth;
         $scope.currentNavItem = 'poll.results';
         $scope.formState = {};
@@ -1179,10 +1301,24 @@
             $scope.id = $route.current.params.id;
         }
 
+        $scope.calculate = function(allResponses, targetCount) {
+            if (targetCount == null || targetCount === undefined || targetCount == 0) return 0;
+            var percentage = allResponses / targetCount * 100;
+            return percentage.toFixed(1);
+        };
+
+        $scope.confirmedOrEnded = function() {
+            return $scope.formState.status === 'KYSITLUS_STAATUS_K' || $scope.formState.status === 'KYSITLUS_STAATUS_L';
+        };
+
         $scope.refresh = function() {
             QueryUtils.loadingWheel($scope, true);
             QueryUtils.endpoint("/poll/results").get({id: $scope.id}).$promise.then(function (response) {
                 $scope.formState = response;
+                if (!$scope.confirmedOrEnded()) {
+                    message.error("main.messages.error.nopermission");
+                    $rootScope.back("#/poll/" + $scope.id + "/view");
+                }
                 QueryUtils.loadingWheel($scope, false);
                 if ($scope.formState.type === 'KYSITLUS_O') {
                     QueryUtils.createQueryForm($scope, '/poll/results/subjects/' + $scope.id, {});
@@ -1191,9 +1327,9 @@
                     QueryUtils.createQueryForm($scope, '/poll/results/enterprises/' + $scope.id, {});
                     $scope.loadData();
                     var PollEndPoint = QueryUtils.endpoint('/poll/results/enterprises/studentOrTeacher');
-                    PollEndPoint.get({id: $scope.id}, function (result) {
-                        $scope.hasStudentResponse = result.hasStudentResponse;
-                        $scope.hasTeacherResponse = result.hasTeacherResponse;
+                    PollEndPoint.get({id: $scope.id}).$promise.then(function (result) {
+                        $scope.studentResponse = result.studentResponse;
+                        $scope.teacherResponse = result.teacherResponse;
                     });
                 }
             });
@@ -1213,33 +1349,21 @@
         };
 
         $scope.enterpriseToExcel = function(params) {
-            var data = {
-                pollId: $scope.id,
-                enterpriseId: params.id
-            }
-            $window.location.href = $rootScope.excel('poll/results/exportSubject.xls', data);
+            $window.location.href = $rootScope.excel('poll/results/exportSubject.xls', {pollId: $scope.id, enterpriseId: params.id});
         };
 
         $scope.studentToExcel = function() {
-            var data = {
-                pollId: $scope.id,
-                students: true
-            }
-            $window.location.href = $rootScope.excel('poll/results/exportSubject.xls', data);
+            $window.location.href = $rootScope.excel('poll/results/exportSubject.xls', {pollId: $scope.id, students: true});
         };
 
         $scope.teacherToExcel = function() {
-            var data = {
-                pollId: $scope.id,
-                teachers: true
-            }
-            $window.location.href = $rootScope.excel('poll/results/exportSubject.xls', data);
+            $window.location.href = $rootScope.excel('poll/results/exportSubject.xls', {pollId: $scope.id, teachers: true});
         };
 
         $scope.subjectToExcel = function(params) {
             var data = {
                 pollId: $scope.id
-            }
+            };
             if ($scope.auth.higher) {
                 data.subjectId = params.name.id;
             } else {
@@ -1321,17 +1445,21 @@
                     dialogScope.criteria.journal = $scope.currentLanguageNameField(row.name);
                     dialogScope.criteria.subjectId = undefined;
                 }
+
                 dialogScope.search = function() {
                     $q.all(clMapper.promises).then(dialogScope.loadData);
-                }   
+                };
+
+                dialogScope.search();
             });
-        }
+        };
 
         function loadEndpoint(endPoint, newScope) {
             QueryUtils.loadingWheel($scope, true);
             endPoint.$putWithoutLoad().then(function (response) {
                 QueryUtils.loadingWheel($scope, false);
                 dialogService.showDialog('poll/poll.answers.dialog.html', function (dialogScope) {
+                    dialogScope.auth = $scope.auth;
                     dialogScope.graphName = newScope.graphName;
                     dialogScope.journal = newScope.journal;
                     dialogScope.adminViewing = newScope.adminViewing;
@@ -1345,7 +1473,7 @@
                     dialogScope.criteria = {};
 
                     dialogScope.graph = response;
-                    if (response.comments != undefined) {
+                    if (response.comments !== undefined) {
                         dialogScope.comments = response.comments;
                     }
                     $translate('poll.answers.dialog.responseCount').then(function (translatedVal) {
@@ -1369,16 +1497,18 @@
                                 translatedLabels.push($scope.currentLanguageNameField(label));
                             });
                             var translatedLabelOverride = [];
-                            graphTheme.labelOverride.forEach(function (labelOverride) {
-                                var completeString = "";
-                                labelOverride.pointBorderColor.forEach(function (pointBorderColor){
-                                    completeString += $scope.currentLanguageNameField(pointBorderColor.answer) 
-                                    + "(" + pointBorderColor.answerNr + ")" + 
-                                    ": " + pointBorderColor.answers + "\n";
+                            if ($scope.formState.type !== 'KYSITLUS_V') {
+                                graphTheme.labelOverride.forEach(function (labelOverride) {
+                                    var completeString = "";
+                                    labelOverride.pointBorderColor.forEach(function (pointBorderColor){
+                                        completeString += $scope.currentLanguageNameField(pointBorderColor.answer) + 
+                                        "(" + pointBorderColor.answerNr + ")" + 
+                                        ": " + pointBorderColor.answers + "\n";
+                                    });
+                                    completeString += translatedVal + ": " + labelOverride.sum;
+                                    translatedLabelOverride.push(completeString);
                                 });
-                                completeString += translatedVal + ": " + labelOverride.sum;
-                                translatedLabelOverride.push(completeString)
-                            });
+                            }
                             graphTheme.labelOverride.forEach(function (labelOverride) {
                                 labelOverride.pointBorderColor = translatedLabelOverride;
                             });
@@ -1389,31 +1519,27 @@
                         });
                     });
 
-                    $translate('poll.answers.dialog.average').then(function (translatedVal) {
-                        dialogScope.graph.graphByTheme.forEach(function (theme) {
-                            theme.labelOverride[0].label = translatedVal;
+                    if ($scope.formState.type === 'KYSITLUS_V') {
+                        $translate('poll.answers.dialog.responseCount').then(function (translatedVal) {
+                            dialogScope.graph.graphByTheme.forEach(function (theme) {
+                                theme.labelOverride[0].label = translatedVal;
+                            });
                         });
-                    });
+                    } else {
+                        $translate('poll.answers.dialog.average').then(function (translatedVal) {
+                            dialogScope.graph.graphByTheme.forEach(function (theme) {
+                                theme.labelOverride[0].label = translatedVal;
+                            });
+                        });
+                    }
                     
                     $translate('poll.answers.dialog.myAnswer').then(function (translatedVal) {
                         dialogScope.graph.graphByTheme.forEach(function (theme) {
                             theme.labelOverride[1] = {
                                 label: translatedVal
-                            }
+                            };
                         });
                     });
-
-                    dialogScope.saveComment = function(addInfo) {
-                        var GraphEndpoint = QueryUtils.endpoint('/poll/comment/' + dialogScope.pollId);
-                        if (dialogScope.journal) {
-                            GraphEndpoint = new GraphEndpoint({journalId: dialogScope.graphName.id, comment: addInfo, commentRef: dialogScope.commentRef});
-                            GraphEndpoint.$putWithoutLoad();
-                        } else {
-                            GraphEndpoint = new GraphEndpoint({subjectId: dialogScope.graphName.id, comment: addInfo, commentRef: dialogScope.commentRef});
-                            GraphEndpoint.$putWithoutLoad();
-                        }
-                    };
-                    
                 });
             });
         }
@@ -1474,8 +1600,8 @@
                 questions: $scope.criteria.questions.map(function (question) {
                     return question.id;
                 })
-            }
-            ExcelUtils.get($rootScope.excel('poll/statistics/pollStatistics.xlsx', data), $scope, 'pollStatistics.xlsx');
+            };
+            ExcelUtils.send($scope, data, 'pollStatistics.xlsx');
         };
 
         $scope.addList = function(list, element, error, pollMode) {
@@ -1489,13 +1615,21 @@
                 return;
             }
             list.push(angular.copy(element));
-            if (pollMode) loadQuestions();
+            if (pollMode) {
+                loadQuestions();
+            }
             element = undefined;
         };
 
         $scope.removeElement = function(list, element, pollMode) {
             ArrayUtils.remove(list, element);
-            if (pollMode) loadQuestions();
+            if (pollMode) {
+                loadQuestions();
+            } else {
+                if ($scope.criteria.allQuestions) {
+                    $scope.criteria.allQuestions = false;
+                }
+            }
         };
 
         $scope.pickAllQuestions = function(checked) {
@@ -1515,6 +1649,14 @@
         $scope.studentGroupAllowed = false;
         $scope.showOccupations = false;
         $scope.formState.names = QueryUtils.endpoint('/poll/pollNames').query();
+        if ($route.current.templateUrl === "poll/poll.edit.html") {
+            $scope.formState.edit = true;
+        }
+
+        $scope.confirmedOrEnded = function() {
+            return $scope.formState.status !== undefined && $scope.formState.status.code !== undefined && 
+            ($scope.formState.status.code === 'KYSITLUS_STAATUS_K' || $scope.formState.status.code === 'KYSITLUS_STAATUS_L');
+        };
 
         var PollEndPoint = QueryUtils.endpoint('/poll');
         var clMapper = Classifier.valuemapper({
@@ -1588,10 +1730,7 @@
 
         $scope.refresh = function() {
             PollEndPoint.get({id: $scope.criteria.id}, function (result) {
-                if (result.status.code === 'KYSITLUS_STAATUS_K' && $scope.formState.edit) {
-                    message.error("main.messages.error.nopermission");
-                    $rootScope.back("#/poll/" + $scope.criteria.id + "/view");
-                }
+                $scope.formState.type = result.type;
                 $scope.formState.targetCodes = result.targetCodes;
                 $scope.formState.studentGroups = result.studentGroups;
                 $scope.formState.status = result.status;
@@ -1614,6 +1753,10 @@
                 $scope.pollForm.$setPristine();
                 $q.all(clMapper.promises).then(function () {
                     clMapper.objectmapper($scope.formState);
+                    if ($scope.confirmedOrEnded() && $scope.formState.edit) {
+                        message.error("poll.messages.confirmedOrFinished");
+                        $rootScope.back("#/poll/" + $scope.criteria.id + "/view");
+                    }
                 });
             });
         };
@@ -1647,7 +1790,7 @@
 
         $scope.test = function() {
             $scope.criteria.higher = $scope.auth.higher;
-            test(dialogService, $scope.criteria, QueryUtils, oisFileService);
+            test(dialogService, $scope.criteria, QueryUtils, oisFileService, $scope.formState);
         };
 
         $scope.checkReminder = function () {
@@ -1663,22 +1806,30 @@
         };
 
         $scope.earlierDate = function(dateOne, dateTwo) {
-            if (dateOne === undefined) return dateTwo;
-            if (dateTwo === undefined) return dateOne;
+            if (dateOne === undefined) {
+                return dateTwo;
+            }
+            if (dateTwo === undefined) {
+                return dateOne;
+            }
             if (new Date(dateOne) < new Date(dateTwo)) {
                 return dateOne;
             }
             return dateTwo;
-        }
+        };
 
         $scope.laterDate = function(dateOne, dateTwo) {
-            if (dateOne === undefined) return dateTwo;
-            if (dateTwo === undefined) return dateOne;
+            if (dateOne === undefined) {
+                return dateTwo;
+            }
+            if (dateTwo === undefined) {
+                return dateOne;
+            }
             if (new Date(dateOne) < new Date(dateTwo)) {
                 return dateTwo;
             }
             return dateOne;
-        }
+        };
 
         $scope.targetCodeFilter = function (value) {
             switch($scope.criteria.type) {
@@ -1785,10 +1936,13 @@
             if (angular.isArray($scope.formState.studentGroups)) {
                 $scope.criteria.studentGroups = $scope.formState.studentGroups.map(function(it) { return it.id;});
             }
-            if(confirm) {
-                $scope.criteria.status = 'KYSITLUS_STAATUS_K';
+            var pollEndPoint;
+            if (confirm) {
+                var EndPoint = QueryUtils.endpoint('/poll/confirm');
+                pollEndPoint = new EndPoint($scope.criteria);
+            } else {
+                pollEndPoint = new PollEndPoint($scope.criteria);
             }
-            var pollEndPoint = new PollEndPoint($scope.criteria);
             FormUtils.withValidForm($scope.pollForm, function() {
                 if ($scope.criteria.id) {
                     pollEndPoint.$update().then(function (result) {
@@ -1940,7 +2094,7 @@
             $scope.criteria.themes[0].show = true;
             markImages($scope.criteria.themes);
             Endpoint = QueryUtils.endpoint('/poll/supervisor/' + $scope.criteria.responseId + '/saveAnswer');
-        }).catch(function (error) {
+        }).catch(function () {
             $location.url('/');
         });
 
@@ -2000,7 +2154,7 @@
             $scope.criteria.themes[0].show = true;
             markImages($scope.criteria.themes);
             Endpoint = QueryUtils.endpoint('/poll/expert/' + response.responseId + '/saveAnswer');
-        }).catch(function (error) {
+        }).catch(function () {
             $location.url('/');
         });
 

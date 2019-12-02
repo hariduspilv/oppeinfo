@@ -20,6 +20,7 @@ public class StudentGroupSearchDto {
     private Long hours;
     private LocalDate validFrom;
     private LocalDate validThru;
+    private Boolean canEdit;
 
     public Long getId() {
         return id;
@@ -116,4 +117,13 @@ public class StudentGroupSearchDto {
     public void setValidThru(LocalDate validThru) {
         this.validThru = validThru;
     }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
+    }
+
 }

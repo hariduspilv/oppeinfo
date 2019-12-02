@@ -10,17 +10,18 @@
           </md-input-container>
           <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <hois-autocomplete label="journal.label" ng-model="criteria.journalObject" ha-controller="directiveControllers" method="journals" 
-              additional-query-params="{studyYear: criteria.studyYear}"></hois-autocomplete>
+              additional-query-params="{studyYear: criteria.studyYear, userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
           </div>
         </div>
 
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <div flex="45" flex-sm="100" flex-xs="100">
-            <hois-autocomplete flex ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" name="studentGroup" 
-              label="{{'studyMaterial.studentGroup'}}" additional-query-params="{higher: false}"></hois-autocomplete>
+            <hois-autocomplete flex ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers"
+              method="studentgroups" name="studentGroup" label="{{'studyMaterial.studentGroup'}}"
+              additional-query-params="{higher: false, userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
           </div>
-          <div ng-if="auth.isAdmin()" flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <div ng-if="auth.isAdmin() || auth.isLeadingTeacher()" flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <hois-autocomplete flex ng-model="criteria.teacher" ha-attribute="id" ha-controller="directiveControllers" method="teachers" name="teacher" 
               label="{{auth.higher ? 'teacher.labelHigher' : 'teacher.labelVocational'}}"></hois-autocomplete>
           </div>

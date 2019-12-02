@@ -55,9 +55,9 @@
                     <td md-cell>{{(row.validFrom | hoisDate)  + ' - ' + (row.validThru | hoisDate)}}</td>
                     <td md-cell>{{row.status ? currentLanguageNameField(row.status) : '-'}}</td>
                     <td md-cell>
-                        <md-button ng-if="auth.isStudent() && ((row.isTeacherComment && row.isTeacherCommentVisible) || row.isStudentVisible) &&
-                         isInThePast(row.validThru) && row.type.code === 'KYSITLUS_O'"
-                        md-no-ink class="md-primary change-button" ng-click="openAnswers(row)">{{'poll.answers.viewResponse' | translate}}</md-button>
+                        <md-button ng-if="canViewResult(row)" md-no-ink class="md-primary change-button" ng-click="openAnswers(row)">
+                            {{'poll.answers.viewResponse' | translate}}
+                        </md-button>
                     </td>
                 </tr>
             </tbody>

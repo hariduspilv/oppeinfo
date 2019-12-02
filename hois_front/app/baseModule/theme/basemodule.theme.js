@@ -2,9 +2,10 @@
 
 angular.module('hitsaOis')
 .controller('baseModuleThemeEditController',
-['$scope', 'QueryUtils', '$route', 'message', 'Classifier', '$location', '$rootScope', 'dialogService', '$q', '$timeout',
-function ($scope, QueryUtils, $route, message, Classifier, $location, $rootScope, dialogService, $q, $timeout) {
+['$location', '$rootScope', '$route', '$scope', '$timeout', '$q', 'USER_ROLES', 'AuthService', 'Classifier', 'QueryUtils', 'dialogService', 'message',
+function ($location, $rootScope, $route, $scope, $timeout, $q, USER_ROLES, AuthService, Classifier, QueryUtils, dialogService, message) {
     $scope.auth = $route.current.locals.auth;
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_BAASMOODUL);
     $scope.baseModuleId = $route.current.params.baseModuleId;
     $scope.themeId = $route.current.params.baseModuleThemeId;
 

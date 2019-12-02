@@ -2,6 +2,7 @@
 
 angular.module('hitsaOis').controller('PersonsEditController', ['$location', '$route', '$scope', '$rootScope', 'dialogService', 'DataUtils', 'message', 'PersonService', 'QueryUtils',
   function ($location, $route, $scope, $rootScope, dialogService, DataUtils, message, PersonService, QueryUtils) {
+    $scope.currentNavItem = "users";
     var id = $route.current.params.id;
     var baseUrl = '/persons';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -92,6 +93,7 @@ angular.module('hitsaOis').controller('PersonsEditController', ['$location', '$r
     $scope.delete = PersonService.deletePerson;
   }
 ]).controller('PersonsViewController', ['$scope', '$route', 'PersonService','QueryUtils', function ($scope, $route, PersonService, QueryUtils) {
+    $scope.currentNavItem = "users";
     var id = $route.current.params.id;
     var Endpoint = QueryUtils.endpoint('/persons');
     $scope.auth = $route.current.locals.auth;
@@ -109,21 +111,66 @@ angular.module('hitsaOis').controller('PersonsEditController', ['$location', '$r
 
     $scope.delete = PersonService.deletePerson;
   }])
-  .factory('PersonService', ['$location', 'Classifier', 'DataUtils', 'dialogService', 'message', function ($location, Classifier, DataUtils, dialogService, message) {
+  .controller('PersonSearchController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils',
+    function ($q, $route, $scope, Classifier, QueryUtils) {
+      $scope.currentNavItem = "users";
+      $scope.auth = $route.current.locals.auth;
+      // Endpoint only for school admin.
+      $scope.userRoles = $scope.auth.isAdmin() ? QueryUtils.endpoint("/users/userSchoolRoles").query() : {};
+      $scope.filterValues = [];
+      if (!$scope.auth.isMainAdmin()) {
+        $scope.filterValues.push('ROLL_X');
+      }
+
+      var clMapping = $route.current.locals.clMapping;
+      var clMapper = clMapping ? Classifier.valuemapper(clMapping) : undefined;
+      QueryUtils.createQueryForm($scope, $route.current.locals.url, $route.current.locals.params, clMapper ? clMapper.objectmapper : undefined);
+
+      var _loadData = $scope.loadData;
+      $scope.loadData = function () {
+        if ($scope.criteria.userRole) {
+          var occupation = ($scope.userRoles || []).find(function (r) {
+            return r.id === $scope.criteria.userRole && !r.created;
+          });
+          $scope.criteria.occupation = occupation ? occupation.id : undefined;
+        } else {
+          $scope.criteria.occupation = undefined; // Reset in case if it was set before
+        }
+        _loadData();
+      };
+
+      if(clMapper) {
+        $q.all(clMapper.promises, $scope.userRoles.$promise).then($scope.loadData);
+      } else {
+        $scope.loadData();
+      }
+
+      $scope.directiveControllers = [];
+      var clearCriteria = $scope.clearCriteria;
+      $scope.clearCriteria = function () {
+        clearCriteria();
+        $scope.directiveControllers.forEach(function (c) {
+          c.clear();
+        });
+      };
+    }
+  ])
+  .factory('PersonService', ['$rootScope', '$location', 'Classifier', 'DataUtils', 'dialogService', 'message',
+  function ($rootScope, $location, Classifier, DataUtils, dialogService, message) {
     var clMapper = Classifier.valuemapper({role: "ROLL"});
 
     var baseUrl = '/persons';
 
-    var deletePerson = function (person) {
+    function deletePerson(person) {
       dialogService.confirmDialog({prompt: 'person.deleteconfirm'}, function () {
         person.$delete().then(function () {
           message.info('main.messages.delete.success');
           $location.url(baseUrl + '?_noback');
         });
       });
-    };
+    }
 
-    var usersAfterLoad = function(users) {
+    function usersAfterLoad(users) {
       if (users) {
         clMapper.objectmapper(users);
       }
@@ -134,7 +181,7 @@ angular.module('hitsaOis').controller('PersonsEditController', ['$location', '$r
         var row = users[i];
         row.valid = (!row.validFrom || moment(row.validFrom).isSameOrBefore(now, 'day')) && (!row.validThru || moment(row.validThru).isSameOrAfter(now, 'day'));
       }
-    };
+    }
 
     return {usersAfterLoad: usersAfterLoad, deletePerson: deletePerson};
   }

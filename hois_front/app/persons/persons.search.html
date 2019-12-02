@@ -1,3 +1,5 @@
+<div ng-cloak ng-include="'persons/persons.navbar.html'"></div>
+
 <div class="ois-form-layout-padding">
   <div flex>
     <fieldset>
@@ -18,7 +20,11 @@
           </md-input-container>
           <md-input-container flex>
             <label>{{'user.role' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.role" main-classifier-code="ROLL" model-value-attr="code"></hois-classifier-select>
+            <hois-classifier-select ng-model="criteria.role" main-classifier-code="ROLL" model-value-attr="code" filter-values="filterValues"></hois-classifier-select>
+          </md-input-container>
+          <md-input-container flex ng-if="auth.isAdmin()">
+            <label>{{'userRole.label' | translate}}</label>
+            <hois-select ng-model="criteria.userRole" values="userRoles"></hois-select>
           </md-input-container>
         </div>
         <div layout="row">
@@ -40,6 +46,7 @@
           <th md-column md-order-by="p.idcode">{{'person.idcode' | translate}}</th>
           <th md-column ng-if="auth.isMainAdmin()">{{'school.label' | translate}}</th>
           <th md-column>{{'user.role' | translate}}</th>
+          <th md-column ng-if="auth.isAdmin()">{{'userRole.label' | translate}}</th>
           <th md-column></th>
         </tr>
         </thead>
@@ -49,6 +56,7 @@
           <td md-cell>{{::row.idcode}}</td>
           <td md-cell ng-if="auth.isMainAdmin()">{{currentLanguageNameField(row.school)}}</td>
           <td md-cell>{{currentLanguageNameField(row.role)}}</td>
+          <td md-cell ng-if="auth.isAdmin()">{{currentLanguageNameField(row.userRole)}}</td>
           <td md-cell><md-button md-no-ink class="md-primary change-button" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASUTAJA')" ng-href="#/persons/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
         </tr>
         </tbody>

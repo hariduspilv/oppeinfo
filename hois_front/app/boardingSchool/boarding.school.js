@@ -1,7 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('BoardingSchoolSearchController', ['$scope', 'QueryUtils',
-  function ($scope, QueryUtils) {
+angular.module('hitsaOis').controller('BoardingSchoolSearchController', ['$route', '$scope', 'QueryUtils',
+  function ($route, $scope, QueryUtils) {
+    $scope.auth = $route.current.locals.auth;
     $scope.currentNavItem = 'boarding.school.search';
     var baseUrl = '/boardingSchools';
 
@@ -15,12 +16,16 @@ angular.module('hitsaOis').controller('BoardingSchoolSearchController', ['$scope
 
     $scope.loadData();
   }
-]).controller('BoardingSchoolManagementController', ['$scope', '$timeout', '$window', '$q', 'ArrayUtils', 'DataUtils', 'FormUtils', 'QueryUtils', 'dialogService', 'message',
-  function ($scope, $timeout, $window, $q, ArrayUtils, DataUtils, FormUtils, QueryUtils, dialogService, message) {
+]).controller('BoardingSchoolManagementController', ['$scope', '$timeout', '$q', 'ArrayUtils', 'DataUtils', 'FormUtils', 'QueryUtils', 'dialogService', 'message',
+  function ($scope, $timeout, $q, ArrayUtils, DataUtils, FormUtils, QueryUtils, dialogService, message) {
     $scope.currentNavItem = 'boarding.school.management';
     var baseUrl = '/boardingSchools/management';
 
-    $scope.rooms = QueryUtils.endpoint('/autocomplete/roomsAsList').query({isDormitory: true});
+    $scope.formState = {
+      showAllParameters: false,
+      rooms: QueryUtils.endpoint('/autocomplete/roomsAsList').query({isDormitory: true})
+    };
+
     QueryUtils.createQueryForm($scope, baseUrl, {order: 'p.lastname, p.firstname'}, function (resultData) {
       if (angular.isDefined($scope.boardingSchools) && $scope.boardingSchools.$dirty === true) {
         $scope.boardingSchools.$setPristine();
@@ -38,14 +43,26 @@ angular.module('hitsaOis').controller('BoardingSchoolSearchController', ['$scope
       $scope.criteria.dormitory = ['YHISELAMU_L'];
     }
 
+    $scope.toggleShowAllParameters = function () {
+      $scope.formState.showAllParameters = !$scope.formState.showAllParameters;
+      $scope.$broadcast('refreshFixedTableHeight');
+    };
+
     $scope.copiedCriteria = {};
     var _loadData = $scope.loadData;
     $scope.loadData = function () {
       FormUtils.withValidForm($scope.searchForm, function () {
         angular.copy($scope.criteria, $scope.copiedCriteria);
+        $scope.formState.showAllParameters = false;
         $scope.$broadcast('refreshFixedColumns');
         _loadData();
       });
+    };
+
+    var _clearCriteria = $scope.clearCriteria;
+    $scope.clearCriteria = function() {
+      $scope.formState.showAllParameters = true;
+      _clearCriteria();
     };
 
     $q.all().then($scope.loadData);

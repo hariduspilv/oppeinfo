@@ -3,8 +3,8 @@
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
 
   function checkRightsToEdit(message, $location, ArrayUtils, AuthResolver, USER_ROLES) {
-    AuthResolver.resolve().then(function(auth){
-      if(!auth.isAdmin() ||!ArrayUtils.includes(auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEKAVA)) {
+    AuthResolver.resolve().then(function (auth) {
+      if (!(auth.isAdmin() || (auth.isLeadingTeacher())) || !ArrayUtils.includes(auth.authorizedRoles, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEKAVA)) {
         message.error('main.messages.error.nopermission');
         $location.path('');
       }

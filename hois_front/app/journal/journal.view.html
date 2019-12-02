@@ -74,7 +74,7 @@
   </div>
 </div>
 
-<div class="ois-form-layout-padding">
+<div ng-if="journal.canViewReview" class="ois-form-layout-padding">
   <fieldset>
     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'journal.review' | translate}}</legend>
     <div class="form-readonly">
@@ -170,7 +170,8 @@
                       <span>{{'student.statuses.individualCurriculumShort' | translate}}</span>
                     </span>
                   </i>
-                  <a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}
+                  <a ng-if="row.canView" ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>
+                  <span ng-if="!row.canView">{{::row.fullname}}</span>, {{row.studentGroup}}
                   <span ng-if="row.apelResults.length > 0"><a ng-click="openApelResultsDialog(row)">{{'journal.apel' | translate}}</a></span>
                   <span ng-if="row.remarks.length > 0" ng-click="openRemarkDialog(row)"><md-icon md-font-set="material-icons">message</md-icon></span>
                   <span ng-if="row.isMoodleRegistered"><md-icon md-font-set="material-icons">school</md-icon></span>

@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeEvaluationSearchController', ['$q', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils',
-  function ($q, $scope, dialogService, message, Classifier, QueryUtils) {
+angular.module('hitsaOis').controller('PracticeEvaluationSearchController', ['$q', '$scope', 'Classifier', 'QueryUtils',
+  function ($q, $scope, Classifier, QueryUtils) {
     var baseUrl = '/practiceEvaluation';
 
     $scope.criteria = { isActive: true };

@@ -1,0 +1,27 @@
+<md-dialog aria-label="terms" flex="80" flex-xs="100" ng-cloak>
+  <md-toolbar class="custom-toolbar">
+    <div class="md-toolbar-tools">
+      <h2>{{user.name}} ({{'userContract.confirmed' | translate}} {{user.agreed | hoisDateTime}})</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-font-set="material-icons">close</md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <div class="md-dialog-content">
+      <div>
+        <p style="margin: 0; text-align: left; white-space: pre-wrap; font-size: 14px;" ng-bind-html="contract.data | linky: '_blank'"></p>
+      </div>
+    </div>
+  </md-dialog-content>
+
+  <md-dialog-actions layout="column" layout-align="end start" style="min-height: 82px;">
+    <md-checkbox ng-checked="true" style="margin: 8px 0 0 8px; font-weight: 700;" disabled>
+      {{'userContract.readAndAgree' | translate}} <span style="font-style: italic;">({{'userContract.confirmedTxt' | translate: {name: user.name, date: (user.agreed | hoisDateTime)} }})</span></md-checkbox>
+    <div layout="row" layout-align="start center">
+      <md-button ng-click="cancel()" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    </div>
+  </md-dialog-actions>
+</md-dialog>

@@ -2,7 +2,6 @@ package ee.hitsa.ois.web.commandobject;
 
 import javax.validation.constraints.Size;
 
-import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.validation.Required;
 
 public class EnterpriseForm extends VersionedCommand {

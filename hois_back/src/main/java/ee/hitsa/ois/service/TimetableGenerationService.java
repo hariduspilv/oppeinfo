@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
@@ -15,6 +16,7 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,6 +37,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.timetable.LessonTimeDto;
@@ -47,6 +50,7 @@ import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchGroupDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchRoomDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.TimetablePlanExcelCell;
+import ee.hitsa.ois.web.dto.timetable.TimetablePlanExcelEventDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableStudentGroupDto;
 
 @Transactional
@@ -104,7 +108,7 @@ public class TimetableGenerationService {
      */
     public TimetableCalendarDto getICal(TimetableByDto timetable, Language lang) {
         String fileName = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss"));
-        String iCalContent = getICalContent(timetable.getTimetableEvents(), lang);
+        String iCalContent = timetable != null ? getICalContent(timetable.getTimetableEvents(), lang) : null;
         return new TimetableCalendarDto(fileName, iCalContent);
     }
 
@@ -139,8 +143,7 @@ public class TimetableGenerationService {
         String dtEnd = "DTEND:" + getEventTime(event.getDate(), event.getTimeEnd()) + "\r\n";
         String eventName = getEventName(event, lang);
         String summary = "SUMMARY:" + eventName + "\r\n";
-        String description = "DESCRIPTION:" + getEventTeachers(event.getTeachers(), lang)
-                + getEventStudentGroups(event.getStudentGroups(), lang) + "\r\n";
+        String description = "DESCRIPTION:" + getEventDescription(event, lang) + "\r\n";
         String location = "LOCATION:" + getEventLocation(event.getRooms(), lang) + "\r\n";
 
         return EVENT_START + uid + dtStart + dtEnd + summary + description + location + EVENT_END;
@@ -165,9 +168,27 @@ public class TimetableGenerationService {
         return TranslateUtil.translate("timetable.occupied", lang);
     }
 
+    private static String getEventDescription(TimetableEventSearchDto event, Language lang) {
+        List<String> descriptionParts = new ArrayList<>();
+        descriptionParts.add(getPersonalEventPerson(event.getPerson(), lang));
+        descriptionParts.add(getEventTeachers(event.getTeachers(), lang));
+        descriptionParts.add(getEventStudentGroups(event.getStudentGroups(), lang));
+
+        return descriptionParts.stream().filter(p -> p != null).collect(Collectors.joining("\\n"));
+    }
+
+    private static String getPersonalEventPerson(AutocompleteResult person, Language lang) {
+        String personalEventPerson = null;
+        if (person != null) {
+            personalEventPerson = TranslateUtil.translate("timetable.person", lang) + ": ";
+            personalEventPerson += person.getNameEt();
+        }
+        return personalEventPerson;
+    }
+
     private static String getEventTeachers(List<TimetableEventSearchTeacherDto> teachers, Language lang) {
-        String eventTeachers = "";
-        if (teachers != null) {
+        String eventTeachers = null;
+        if (teachers != null && teachers.size() > 0) {
             eventTeachers = TranslateUtil.translate("timetable.teachers", lang) + ": ";
             eventTeachers += teachers.stream().map(t -> t.getName()).collect(Collectors.joining(" "));
         }
@@ -175,9 +196,9 @@ public class TimetableGenerationService {
     }
     
     private static String getEventStudentGroups(List<TimetableEventSearchGroupDto> groups, Language lang) {
-        String eventGroups = "";
-        if (groups != null) {
-            eventGroups = "\\n" + TranslateUtil.translate("timetable.groups", lang) + ": ";
+        String eventGroups = null;
+        if (groups != null && groups.size() > 0) {
+            eventGroups = TranslateUtil.translate("timetable.groups", lang) + ": ";
             eventGroups += groups.stream().map(g -> g.getCode()).collect(Collectors.joining(" "));
         }
         return eventGroups;
@@ -185,7 +206,7 @@ public class TimetableGenerationService {
 
     private static String getEventLocation(List<TimetableEventSearchRoomDto> rooms, Language lang) {
         String eventRooms = "";
-        if (rooms != null) {
+        if (rooms != null && rooms.size() > 0) {
             eventRooms = TranslateUtil.translate("timetable.rooms", lang) + ": ";
             eventRooms += rooms.stream().map(r -> r.getBuildingCode() + "-" + r.getRoomCode())
                     .collect(Collectors.joining(" "));
@@ -199,8 +220,75 @@ public class TimetableGenerationService {
     public byte[] timetablePlanExcel(Long timetableId) {
         Map<String, Object> data = new HashMap<>();
         Timetable timetable = em.getReference(Timetable.class, timetableId);
+
+        if (Boolean.TRUE.equals(timetable.getIsHigher())) {
+            data.putAll(getSheetDataHigher(timetable));
+            return xlsService.generate("timetableplanhigher.xlsx", data);
+        }
         data.putAll(getSheetData(timetable));
         return xlsService.generate("timetableplan.xlsx", data);
+    }
+
+    public Map<String, Object> getSheetDataHigher(Timetable timetable) {
+        List<TimetablePlanExcelEventDto> timetablePlanEvents = timetablePlanEvents(timetable);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("timetableStart", timetable.getStartDate());
+        data.put("timetableEnd", timetable.getEndDate());
+
+        Map<LocalDate, List<TimetablePlanExcelEventDto>> eventsByDate = new LinkedHashMap<>();
+
+        LocalDate date = timetable.getStartDate();
+        while (!date.isAfter(timetable.getEndDate())) {
+            LocalDate day = date;
+            List<TimetablePlanExcelEventDto> dayEvents = StreamUtil
+                    .toFilteredList(e -> day.equals(e.getStart().toLocalDate()), timetablePlanEvents);
+            if (!dayEvents.isEmpty()) {
+                timetablePlanEvents.removeAll(dayEvents);
+                eventsByDate.put(day, dayEvents);
+            }
+            date = date.plusDays(1);
+        }
+        data.put("days", eventsByDate);
+
+        return data;
+    }
+
+    private List<TimetablePlanExcelEventDto> timetablePlanEvents(Timetable timetable) {
+        List<?> data = em.createNativeQuery("select tet.start, tet.end, s.code, s.name_et, s.name_en, "
+                + "string_agg(distinct sg.code, ', ' order by sg.code) student_groups, "
+                + "string_agg(b.code || '-' || r.code, ', ' order by b.code, r.code) rooms, "
+                + "string_agg(p.firstname || ' ' || p.lastname, ', ' order by p.lastname, p.firstname) teachers, "
+                + "te.capacity_type_code from timetable t "
+                + "join timetable_object tobj on tobj.timetable_id = t.id "
+                + "join timetable_event te on te.timetable_object_id = tobj.id "
+                + "join timetable_event_time tet on tet.timetable_event_id = te.id "
+                + "join subject_study_period ssp on ssp.id = tobj.subject_study_period_id "
+                + "join subject s on s.id = ssp.subject_id "
+                + "left join timetable_object_student_group tosg on tosg.timetable_object_id = tobj.id "
+                + "left join student_group sg on sg.id = tosg.student_group_id "
+                + "left join timetable_event_room ter on ter.timetable_event_time_id = tet.id "
+                + "left join room r on r.id = ter.room_id left join building b on b.id = r.building_id "
+                + "left join timetable_event_teacher tete on tete.timetable_event_time_id = tet.id "
+                + "left join teacher tea on tea.id = tete.teacher_id left join person p on p.id = tea.person_id "
+                + "where t.id = :timetableId group by s.id, te.id, tet.id order by tet.start, tet.end")
+                .setParameter("timetableId", timetable.getId())
+                .getResultList();
+        return StreamUtil.toMappedList(r -> {
+            TimetablePlanExcelEventDto dto = new TimetablePlanExcelEventDto();
+            dto.setStart(resultAsLocalDateTime(r, 0));
+            dto.setEnd(resultAsLocalDateTime(r, 1));
+
+            String subjectCode = resultAsString(r, 2);
+            dto.setName(new AutocompleteResult(null, SubjectUtil.subjectName(subjectCode, resultAsString(r, 3)),
+                    SubjectUtil.subjectName(subjectCode, resultAsString(r, 4))));
+
+            dto.setStudentGroups(resultAsString(r, 5));
+            dto.setRooms(resultAsString(r, 6));
+            dto.setTeachers(resultAsString(r, 7));
+            dto.setCapacityType(resultAsString(r, 8));
+            return dto;
+        }, data);
     }
 
     public byte[] timetableDifferenceExcel(Long timetableId) {

@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.UserUtil.assertIsSchoolAdmin;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +36,6 @@ import ee.hitsa.ois.domain.student.StudentSupportService;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
-import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.report.SupportServicesReport;
 import ee.hitsa.ois.service.ApplicationService;
@@ -107,11 +107,12 @@ public class StudentController {
     private EntityManager em;
 
     @GetMapping
-    public Page<StudentSearchDto> search(HoisUserDetails user, @Valid StudentSearchCommand criteria, Pageable pageable) {
+    public Page<StudentSearchDto> search(HoisUserDetails user, @Valid StudentSearchCommand criteria,
+            Pageable pageable) {
         UserUtil.throwAccessDeniedIf(user.isStudent(), "Students cannot search other students");
         return studentService.search(user, criteria, pageable);
     }
-    
+
     /**
      * 
      * @param user
@@ -121,7 +122,7 @@ public class StudentController {
      */
     @GetMapping("/highspecialities")
     public Page<StudentSpecialitySearchDto> search(HoisUserDetails user, @Valid StudentSpecialitySearchCommand criteria, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user);
         return studentService.search(user, criteria, pageable);
     }
 
@@ -334,41 +335,42 @@ public class StudentController {
 
     @GetMapping("/{id:\\d+}/vocationalConnectedEntities")
     public List<StudentVocationalConnectedEntity> vocationalConnectedEntities(HoisUserDetails user, @WithEntity Student student) {
-        UserUtil.assertIsSchoolAdminOrStudentGroupTeacher(user, student);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrStudentGroupTeacher(user, student);
         return studentService.vocationalConnectedEntities(student.getId());
     }
 
     @GetMapping("/{id:\\d+}/higherChangeableModules")
     public List<StudentModuleResultDto> higherChangeableModules(HoisUserDetails user, @WithEntity Student student) {
-        assertIsSchoolAdmin(user, student.getSchool());
+        UserUtil.canChangeStudentModules(user, student);
         return studentResultHigherService.higherChangeableModules(student);
     }
 
     @GetMapping("/{id:\\d+}/higherCurriculumModules")
-    public List<AutocompleteResult> higherCurriculumModulesForSelection(HoisUserDetails user, @WithEntity Student student) {
-        assertIsSchoolAdmin(user, student.getSchool());
+    public List<AutocompleteResult> higherCurriculumModulesForSelection(HoisUserDetails user,
+            @WithEntity Student student) {
+        UserUtil.canChangeStudentModules(user, student);
         return studentResultHigherService.higherCurriculumModulesForSelection(student);
     }
 
     @PostMapping("/{id:\\d+}/changeHigherCurriculumModules")
-    public List<StudentModuleResultDto> changeHigherCurriculumModules(HoisUserDetails user, @WithEntity Student student, @Valid @RequestBody StudentModuleListChangeForm form) {
-        if(!StudentUtil.isActive(student) || !UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)) {
-            throw new AssertionFailedException("User cannot edit student data");
-        }
+    public List<StudentModuleResultDto> changeHigherCurriculumModules(HoisUserDetails user, @WithEntity Student student,
+            @Valid @RequestBody StudentModuleListChangeForm form) {
+        UserUtil.canChangeStudentModules(user, student);
         studentResultHigherService.changeHigherCurriculumVersionModules(student, form);
         return higherChangeableModules(user, student);
     }
 
     @PostMapping("/highspecialities")
     public List<StudentSpecialitySearchDto> saveSpecialities(HoisUserDetails user, @RequestBody List<StudentSpecialitySearchDto> form) {
-        assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user);
         return studentService.saveSpecialities(user, form);
     }
 
     @GetMapping("/{id:\\d+}/studentResultCard")
     public StudentResultCardDto studentResultCard(HoisUserDetails user, @WithEntity Student student) {
-        assertIsSchoolAdmin(user, student.getSchool());
-        return studentResultCardService.studentResultCard(EntityUtil.getId(student));
+        Long studentId = EntityUtil.getId(student);
+        studentResultCardService.assertIsAllowedToSeeStudentResultCard(user, Arrays.asList(studentId));
+        return studentResultCardService.studentResultCard(studentId);
     }
 
     @GetMapping("/studentResultCards.pdf")
@@ -378,7 +380,7 @@ public class StudentController {
         HttpUtil.pdf(response, "student_result_card.pdf",
                 studentResultCardService.studentResultCardsPrint(user.getSchoolId(), form));
     }
-    
+
     @GetMapping("/{id:\\d+}/populationRegister")
     public void updateStudentPersonalData(HoisUserDetails user, @WithEntity Student student) {
         UserUtil.assertCanUpdateStudentRR(user, student);
@@ -386,5 +388,13 @@ public class StudentController {
         if (error != null) {
             throw new HoisException(error.getMessage(), error);
         }
+    }
+    
+    /**
+     * Used for testing mail service
+     */
+    @PutMapping("/testGuestJob")
+    public void testGuestJob() {
+        studentService.endGuestStudent();
     }
 }

@@ -103,7 +103,7 @@ public class ExamController {
     }
 
     private static void assertCanView(HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
         UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_EKSAM);
     }
 

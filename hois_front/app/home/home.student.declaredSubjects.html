@@ -1,6 +1,6 @@
 <hois-collapsable class="hois-collapse2" expanded="true" ng-if="declaration.status">
     <hois-collapsable-header>
-        <span>{{'home.student.declaredSubjects' | translate}}</span>
+        <span>{{'home.student.declaredSubjects' | translate}} ({{currentLanguageNameField(declaration.studyPeriod)}})</span>
     </hois-collapsable-header>
     <md-table-container>
         <table md-table>
@@ -28,7 +28,7 @@
                         </tr>
                       </table>
                     </td>
-                    <td md-cell><a ng-href="/#/studyMaterial/higher/{{subject.subjectStudyPeriod}}/view">{{'studyMaterial.openfolder' | translate}}</a></td>
+                    <td md-cell><a ng-href="/#/declaration/studyMaterial/higher/{{subject.subjectStudyPeriod}}/view">{{'studyMaterial.openfolder' | translate}}</a></td>
                 </tr>
             </tbody>
         </table>

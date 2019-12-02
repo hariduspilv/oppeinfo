@@ -33,9 +33,15 @@ public class SupportServicesReport {
         idcode = student.getPerson().getIdcode();
         firstName = student.getPerson().getFirstname();
         lastName = student.getPerson().getLastname();
-        curriculum = student.getCurriculumVersion().getCurriculum().getNameEt();
-        curriculumCode = student.getCurriculumVersion().getCurriculum().getCode();
-        curriculumVersion = student.getCurriculumVersion().getCode();
+        if (student.getCurriculumVersion() != null) {
+            curriculum = student.getCurriculumVersion().getCurriculum().getNameEt();
+            curriculumCode = student.getCurriculumVersion().getCurriculum().getCode();
+            curriculumVersion = student.getCurriculumVersion().getCode();
+        } else {
+            curriculum = null;
+            curriculumCode = null;
+            curriculumVersion = null;
+        }
         this.from = from;
         this.thru = thru;
         

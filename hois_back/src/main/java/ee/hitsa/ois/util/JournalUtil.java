@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.StudyYear;
-import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudent;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
@@ -28,15 +27,22 @@ public abstract class JournalUtil {
     }
 
     public static boolean hasPermissionToView(HoisUserDetails user) {
-        return (user.isSchoolAdmin() || user.isTeacher()) &&
-                UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PAEVIK);
+        return (user.isSchoolAdmin() || user.isLeadingTeacher() || user.isTeacher())
+                && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PAEVIK);
     }
 
-    public static boolean hasPermissionToView(HoisUserDetails user, School school) {
-        return hasPermissionToView(user) && UserUtil.isSameSchool(user, school);
+    public static boolean hasPermissionToView(HoisUserDetails user, Journal journal) {
+        if (user.isSchoolAdmin() || user.isTeacher()) {
+            UserUtil.assertSameSchool(user, journal.getSchool());
+        } else if (user.isLeadingTeacher()) {
+            UserUtil.throwAccessDeniedIf(!UserUtil.isLeadingTeacher(user, journal));
+        } else {
+            return false;
+        }
+        return hasPermissionToView(user);
     }
-    
-    public static boolean teacherIsJournalFiller(HoisUserDetails user, Journal journal) {
+
+    private static boolean teacherIsJournalFiller(HoisUserDetails user, Journal journal) {
         Map<Long, JournalTeacher> teachers = StreamUtil.toMap(jt -> EntityUtil.getId(jt.getTeacher()), journal.getJournalTeachers());
         
         if (teachers != null) {
@@ -47,8 +53,8 @@ public abstract class JournalUtil {
         }
         return false;
     }
-    
-    public static boolean teacherIsJournalConfirmer(HoisUserDetails user, Journal journal) {
+
+    private static boolean teacherIsJournalConfirmer(HoisUserDetails user, Journal journal) {
         Map<Long, JournalTeacher> teachers = StreamUtil.toMap(jt -> EntityUtil.getId(jt.getTeacher()), journal.getJournalTeachers());
         
         if (teachers != null) {
@@ -64,6 +70,11 @@ public abstract class JournalUtil {
         return (UserUtil.isSchoolAdmin(user, journal.getSchool()) || 
                 UserUtil.isTeacher(user, journal.getSchool()) && !confirmed(journal) && teacherIsJournalFiller(user, journal)) &&
                 UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PAEVIK);
+    }
+
+    public static boolean hasPermissionToViewReview(HoisUserDetails user, Journal journal) {
+        return (UserUtil.isSchoolAdmin(user, journal.getSchool()) || (UserUtil.isLeadingTeacher(user, journal)))
+                && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PAEVIKYLE);
     }
 
     public static boolean hasPermissionToReview(HoisUserDetails user, Journal journal) {
@@ -155,7 +166,7 @@ public abstract class JournalUtil {
     }
 
     public static void assertCanView(HoisUserDetails user, Journal journal) {
-        if(!hasPermissionToView(user, journal.getSchool())) {
+        if(!hasPermissionToView(user, journal)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }

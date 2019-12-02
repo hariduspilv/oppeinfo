@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').controller('ModuleProtocolListController',
-  function ($scope, $route, QueryUtils, DataUtils, Classifier, $q, message, dialogService, sharedProperties, $location) {
+  function ($scope, $route, QueryUtils, Classifier, $q, message, dialogService, sharedProperties, $location) {
   $scope.auth = $route.current.locals.auth;
   $scope.search = {};
   $scope.criteria = {};
@@ -9,7 +9,7 @@ angular.module('hitsaOis').controller('ModuleProtocolListController',
   $scope.myModules = myModulesDialog;
 
   function canCreateProtocol() {
-    return ($scope.auth.isTeacher() || $scope.auth.isAdmin()) && $scope.auth.authorizedRoles.indexOf("ROLE_OIGUS_K_TEEMAOIGUS_MOODULPROTOKOLL") !== -1;
+    return ($scope.auth.isTeacher() || $scope.auth.isAdmin()) && $scope.auth.authorizedRoles.indexOf("ROLE_OIGUS_M_TEEMAOIGUS_MOODULPROTOKOLL") !== -1;
   }
 
   $scope.load = function() {
@@ -80,7 +80,7 @@ angular.module('hitsaOis').controller('ModuleProtocolListController',
           studyYear: studyYearId,
           curriculumVersion: row.curriculumVersion,
           module: row.module
-        }
+        };
         sharedProperties.getProperties()['module.protocol.default.fields'] = defaultFields;
         dialogScope.cancel();
         $location.url('/moduleProtocols/new');
@@ -110,12 +110,12 @@ angular.module('hitsaOis').controller('ModuleProtocolListController',
               periodCounter++;
               if (row.mappedHours[jId][pId]) {
                 row.mappedHours[jId][pId] = Math.round((row.mappedHours[jId][pId] / HOURS_PER_EKAP) * 10) / 10;
-                row.mappedHoursByPeriod[pId] = row.mappedHoursByPeriod[pId]
-                  ? row.mappedHoursByPeriod[pId] + row.mappedHours[jId][pId]
-                  : row.mappedHours[jId][pId];
-                row.mappedHoursByJournal[jId] = row.mappedHoursByJournal[jId]
-                  ? row.mappedHoursByJournal[jId] + row.mappedHours[jId][pId]
-                  : row.mappedHours[jId][pId];
+                row.mappedHoursByPeriod[pId] = row.mappedHoursByPeriod[pId] ?
+                  row.mappedHoursByPeriod[pId] + row.mappedHours[jId][pId] :
+                  row.mappedHours[jId][pId];
+                row.mappedHoursByJournal[jId] = row.mappedHoursByJournal[jId] ?
+                  row.mappedHoursByJournal[jId] + row.mappedHours[jId][pId] :
+                  row.mappedHours[jId][pId];
                 row.totalHours += row.mappedHours[jId][pId];
               }
             }

@@ -7,5 +7,6 @@ public enum EhisStudentDataType {
     FOREIGN_STUDY,
     GRADUATION,
     VOTA,
-    SPECIAL_NEEDS
+    SPECIAL_NEEDS,
+    GUEST_STUDENTS
 }

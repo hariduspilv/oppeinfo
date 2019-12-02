@@ -42,6 +42,7 @@ import ee.hitsa.ois.web.commandobject.HigherProtocolSearchCommand;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSignForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolStudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.EntityMobileSignDto;
@@ -104,15 +105,15 @@ public class HigherProtocolController {
     }
 
     @GetMapping("/subjectStudyPeriods")
-    public List<AutocompleteResult> getSubjectStudyPeriods(HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return higherProtocolService.getSubjectStudyPeriods(user.getSchoolId());
+    public List<AutocompleteResult> getSubjectStudyPeriods(HoisUserDetails user, SearchCommand lookup) {
+        HigherProtocolUtil.assertCanCreate(user);
+        return higherProtocolService.getSubjectStudyPeriods(user.getSchoolId(), lookup);
     }
 
     @GetMapping("/students")
     public List<StudentSearchDto> getStudents(HoisUserDetails user,
             @Valid HigherProtocolStudentSearchCommand criteria) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        HigherProtocolUtil.assertCanCreate(user);
         return higherProtocolService.getStudents(user.getSchoolId(), criteria);
     }
     
@@ -140,7 +141,6 @@ public class HigherProtocolController {
     @PostMapping("/{id:\\d+}/signToConfirmFinalize")
     public HigherProtocolDto signToConfirmFinalize(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody SignatureCommand signatureCommand, HttpSession httpSession) {
-
         UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
 
         DataToSign dataToSign = (DataToSign) httpSession.getAttribute(BDOC_TO_SIGN);
@@ -205,7 +205,7 @@ public class HigherProtocolController {
     @GetMapping("/{id:\\d+}/calculate")
     public List<ProtocolStudentResultDto> calculateGrades(HoisUserDetails user,
             @NotNull @Valid ProtocolCalculateCommand command, @WithEntity Protocol protocol) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
+        HigherProtocolUtil.assertCanChange(user, protocol);
         return higherProtocolService.calculateGrades(command);
     }
 }

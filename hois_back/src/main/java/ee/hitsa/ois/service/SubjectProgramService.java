@@ -37,6 +37,7 @@ import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.subject.SubjectProgramForm;
 import ee.hitsa.ois.web.commandobject.subject.SubjectProgramSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -243,18 +244,19 @@ public class SubjectProgramService {
         return EntityUtil.bindToEntity(dto, entity);
     }
     
-    public Set<AutocompleteResult> getSubjectsViaPrograms(HoisUserDetails user, Long teacherId) {
+    public Set<AutocompleteResult> getSubjectsViaPrograms(HoisUserDetails user, Long teacherId, SearchCommand lookup) {
         StringBuilder from = new StringBuilder("from subject_program sp "); 
         from.append("join subject_study_period_teacher sspt on sspt.id = sp.subject_study_period_teacher_id "); 
         from.append("join subject_study_period ssp on ssp.id = sspt.subject_study_period_id "); 
         from.append("join subject s on s.id = ssp.subject_id");
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).groupBy("s.id");
         qb.requiredCriteria("sspt.teacher_id = :teacherId", "teacherId", user.isTeacher() ? user.getTeacherId() : teacherId);
+        qb.optionalContains("s.name_et", "nameEt", lookup.getName());
         List<?> results = qb.select("s.id, s.name_et, s.name_en, s.code, s.credits", em, true).getResultList();
         return getSubjects(results);
     }
 
-    public Set<AutocompleteResult> getSubjectsViaCurriculums(HoisUserDetails user) {
+    public Set<AutocompleteResult> getSubjectsViaCurriculums(HoisUserDetails user, SearchCommand lookup) {
         StringBuilder from = new StringBuilder("from curriculum c "); 
         from.append("join curriculum_version cv on c.id = cv.curriculum_id "); 
         from.append("left join curriculum_version_hmodule cvhm on cvhm.curriculum_version_id = cv.id "); 
@@ -263,6 +265,7 @@ public class SubjectProgramService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString());
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("c.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+        qb.optionalContains("s.name_et", "nameEt", lookup.getName());
         List<?> results = qb.select("s.id, s.name_et, s.name_en, s.code, s.credits", em, true).getResultList();
         return getSubjects(results);
     }

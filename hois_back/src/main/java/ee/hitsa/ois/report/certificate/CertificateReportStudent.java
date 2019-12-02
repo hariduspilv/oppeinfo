@@ -1,10 +1,13 @@
 package ee.hitsa.ois.report.certificate;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.StudentType;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.StudentUtil;
 
@@ -17,6 +20,7 @@ public class CertificateReportStudent {
      */
     private String fullname;
     private String idCode;
+    private String birthDate;
     private String studyForm;
     private String studyLoad;
     private String nominalStudyEnd;
@@ -25,10 +29,14 @@ public class CertificateReportStudent {
     private CerfificateReportCurriculum curriculum;
     private List<CertificateStudentResult> results;
     private boolean hasQuit;
+    private boolean isGuestStudent;
+    private boolean higher = false;
     private String diplomaNr;
     private String occupationText;
     private String partoccupationText;
     private String curriculumGradeNameEt;
+    
+    private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     public static CertificateReportStudent of(Student student) {
         CertificateReportStudent reportStudent = of(student.getPerson());
@@ -43,9 +51,11 @@ public class CertificateReportStudent {
         reportStudent.setStudyStart(DateUtils.nullableDate(student.getStudyStart()));
         reportStudent.setStudyEnd(DateUtils.nullableDate(
                 StudentUtil.isStudying(student) ? LocalDate.now() : student.getStudyEnd()));
-
-        reportStudent.setCurriculum(new CerfificateReportCurriculum(student.getCurriculumVersion().getCurriculum()));
+        if (student.getCurriculumVersion() != null) {
+            reportStudent.setCurriculum(new CerfificateReportCurriculum(student.getCurriculumVersion().getCurriculum()));
+        }
         reportStudent.setHasQuit(StudentUtil.hasQuit(student));
+        reportStudent.setGuestStudent(ClassifierUtil.equals(StudentType.OPPUR_K, student.getType()));
         return reportStudent;
     }
 
@@ -54,6 +64,9 @@ public class CertificateReportStudent {
         reportStudent.setFirstname(person.getFirstname());
         reportStudent.setLastname(person.getLastname());
         reportStudent.setIdCode(person.getIdcode());
+        if (person.getBirthdate() != null) {
+            reportStudent.setBirthDate(person.getBirthdate().format(formatter));
+        }
         return reportStudent;
     }
 
@@ -190,5 +203,29 @@ public class CertificateReportStudent {
 
     public void setFullname(String fullname) {
         this.fullname = fullname;
+    }
+
+    public String getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(String birthDate) {
+        this.birthDate = birthDate;
+    }
+
+    public boolean isGuestStudent() {
+        return isGuestStudent;
+    }
+
+    public void setGuestStudent(boolean isGuestStudent) {
+        this.isGuestStudent = isGuestStudent;
+    }
+
+    public boolean isHigher() {
+        return higher;
+    }
+
+    public void setHigher(boolean higher) {
+        this.higher = higher;
     }
 }

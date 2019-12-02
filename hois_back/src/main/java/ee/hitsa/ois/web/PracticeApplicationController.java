@@ -70,34 +70,41 @@ public class PracticeApplicationController {
     }
 
     @GetMapping("/applications")
-    public Page<PracticeApplicationSearchDto> applications(HoisUserDetails user, PracticeApplicationSearchCommand command, 
-            Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PRAKTIKAAVALDUS);
+    public Page<PracticeApplicationSearchDto> applications(HoisUserDetails user,
+            PracticeApplicationSearchCommand command, Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V,
+                PermissionObject.TEEMAOIGUS_PRAKTIKAAVALDUS);
         return practiceApplicationService.applications(user, command, pageable);
     }
-    
+
     @GetMapping("/applicationPeriods")
-    public Page<PracticeApplicationPeriodSearchDto> applicationPeriods(HoisUserDetails user, PracticeApplicationPeriodsSearchCommand cmd, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PRAKTIKAAVALDUS);
+    public Page<PracticeApplicationPeriodSearchDto> applicationPeriods(HoisUserDetails user,
+            PracticeApplicationPeriodsSearchCommand cmd, Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V,
+                PermissionObject.TEEMAOIGUS_PRAKTIKAAVALDUS);
         return practiceApplicationService.applicationPeriods(user, cmd, pageable);
     }
 
     @PostMapping("/reject/{id:\\d+}")
     public void reject(HoisUserDetails user, @WithEntity PracticeApplication application,
             @Valid @RequestBody PracticeApplicationRejectForm form) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PRAKTIKAAVALDUS);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, application.getStudent(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_PRAKTIKAAVALDUS);
         practiceApplicationService.reject(user, application, form);
     }
 
     @PostMapping("/accept/{id:\\d+}")
     public void accept(HoisUserDetails user, @WithEntity PracticeApplication application) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PRAKTIKAAVALDUS);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, application.getStudent(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_PRAKTIKAAVALDUS);
         practiceApplicationService.accept(user, application);
     }
 
     @GetMapping("/contractData/{id:\\d+}")
-    public PracticeApplicationContractDto contractData(HoisUserDetails user, @WithEntity PracticeApplication application) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PRAKTIKAAVALDUS);
+    public PracticeApplicationContractDto contractData(HoisUserDetails user,
+            @WithEntity PracticeApplication application) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, application.getStudent().getSchool(), Permission.OIGUS_V,
+                PermissionObject.TEEMAOIGUS_PRAKTIKAAVALDUS);
         return practiceApplicationService.contractData(user, application);
     }
 

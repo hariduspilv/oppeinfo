@@ -39,9 +39,10 @@
         <td md-cell>{{application.curriculumCode ? application.curriculumCode : '-'}}</td>
         <td md-cell class="one-row">
           <div layout="row" layout-align="start center" flex>
-            <a href="#/students/{{application.studentId}}/main" ng-style="application.nonCompliant ? {color: 'red'} : {}">
-              {{application.studentName ? application.studentName : '-'}}
-            </a>
+            <span ng-style="application.nonCompliant ? {color: 'red'} : {}">
+              <a ng-if="application.canViewStudent" href="#/students/{{application.studentId}}/main">{{application.studentName ? application.studentName : '-'}}</a>
+              <span ng-if="!application.canViewStudent">{{application.studentName ? application.studentName : '-'}}</span>
+            </span>
             <md-button ng-if="application.nonCompliant && !application.hasDirective" flex class="md-icon-button" ng-click="scholarshipTermCompliances(application)">
               <md-icon md-colors="{color: 'default-warn'}" md-font-set="material-icons">warning</md-icon>
             </md-button>

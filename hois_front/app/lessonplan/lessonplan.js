@@ -98,7 +98,7 @@
     totals.__ = rowSum(totals._._);
   }
 
-  function updateLessonCountByStudyPeriod(scope, journalObject, capacityType, spIndex, updateTotals) {
+  function updateLessonCountByStudyPeriod(scope, journalObject, capacityType, spIndex) {
     var studyPeriod = scope.formState.studyPeriods[spIndex];
     var newTotalHours = journalObject.spHours[capacityType][spIndex];
     var lessonsByWeek = newTotalHours / studyPeriod.weekNrs.length;
@@ -111,9 +111,7 @@
       journalObject.hours[capacityType][weekIndex] = lessonsByWeek;
       lessonsAdded += lessonsByWeek;
 
-      if (updateTotals) {
-        scope.updateTotals(journalObject, capacityType, weekIndex);
-      }
+      scope.updateTotals(journalObject, capacityType, weekIndex);
 
       if (lessonsAdded === Number(newTotalHours)) {
         lessonsByWeek = 0;
@@ -128,7 +126,7 @@
   angular.module('hitsaOis').controller('LessonplanSearchController',
     function ($location, $mdDialog, $route, $scope, USER_ROLES, DataUtils, QueryUtils, Session, message) {
       $scope.auth = $route.current.locals.auth;
-      $scope.canView = $scope.auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1
+      $scope.canView = $scope.auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
       $scope.canEdit = $scope.auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
 
       var school = Session.school || {};
@@ -209,7 +207,7 @@
               }
               var regExp = new RegExp('^.*' + text.replace("%", ".*").toUpperCase() + '.*$');
               return $scope.formState.studentGroups.filter(function (group) {
-                return regExp.test($scope.$parent.currentLanguageNameField(group).toUpperCase());
+                return regExp.test($scope.$parent.currentLanguageNameField(group).toUpperCase()) && group.curriculumVersion !== null;
               }).filter(function (group) {
                 return angular.isDefined($scope.formState.studentGroupMap[$scope.record.studyYear].find(function (it) {
                   return it.id === group.id;
@@ -541,6 +539,7 @@
         $scope.formState.capacityTypes = result.lessonPlanCapacities;
 
         $scope.formState.teachers = result.teachers;
+        $scope.formState.teacherTotals = {};
         result.modules.forEach(function (module) {
           $scope.formState.moduleMap[module.id] = module;
           $scope.formState.spModuleTotals[module.id] = {
@@ -594,6 +593,24 @@
                 }
                 journal.requiredLessons[key] += theme.hours[key];
               }
+            });
+
+            journal.teachers.forEach(function (journalTeacher) {
+              $scope.formState.teacherTotals[journalTeacher.id] = {};
+              journalTeacher.spHours = {};
+              $scope.formState.capacityTypes.forEach(function (ct) {
+                var capacityType = ct.code;
+                journalTeacher.spHours[capacityType] = {};
+                var hours = journalTeacher.hours[capacityType];
+                if (hours !== undefined) {
+                  $scope.formState.studyPeriods.forEach(function (sp) {
+                    journalTeacher.spHours[capacityType][sp.arrayIndex] = rowSum(hours.slice(sp.weekIndex[0], sp.weekIndex[1]));
+                  });
+
+                  var sum = rowSum(hours);
+                  $scope.formState.teacherTotals[journalTeacher.id][capacityType] = sum;
+                }
+              });
             });
           });
 
@@ -683,7 +700,7 @@
       };
 
       $scope.updateLessonCountByStudyPeriod = function (journal, capacityType, spIndex) {
-        updateLessonCountByStudyPeriod($scope, journal, capacityType, spIndex, true);
+        updateLessonCountByStudyPeriod($scope, journal, capacityType, spIndex);
       };
 
       $scope.updateSpGrandTotals = function (capacityType, index) {
@@ -727,7 +744,6 @@
         dialogService.showDialog('lessonplan/teacher.capacities.dialog.html', function (dialogScope) {
           dialogScope.isView = $scope.isView;
           dialogScope.formState = $scope.formState;
-          dialogScope.formState.teacherTotals = {};
           dialogScope.atLeastOneShownPeriod = $scope.atLeastOneShownPeriod;
           dialogScope.teachers = $scope.record.teachers;
           dialogScope.journal = journal;
@@ -736,24 +752,6 @@
           $timeout(function () {
             dialogScope.$broadcast('refreshFixedTableHeight');
           }, 0);
-
-          dialogScope.journal.teachers.forEach(function (journalTeacher) {
-            dialogScope.formState.teacherTotals[journalTeacher.id] = {};
-            journalTeacher.spHours = {};
-            dialogScope.journalCapacities.forEach(function (ct) {
-              var capacityType = ct.code;
-              journalTeacher.spHours[capacityType] = {};
-              var hours = journalTeacher.hours[capacityType];
-              if (hours !== undefined) {
-                dialogScope.formState.studyPeriods.forEach(function (sp) {
-                  journalTeacher.spHours[capacityType][sp.arrayIndex] = rowSum(hours.slice(sp.weekIndex[0], sp.weekIndex[1]));
-                });
-              }
-
-              var sum = rowSum(hours);
-              dialogScope.formState.teacherTotals[journalTeacher.id][capacityType] = sum;
-            });
-          });
 
           dialogScope.updateTotals = function (teacher, capacityType, index) {
             var hours = teacher.hours[capacityType];
@@ -773,7 +771,7 @@
           };
 
           dialogScope.updateLessonCountByStudyPeriod = function (journalTeacher, capacityType, spIndex) {
-            updateLessonCountByStudyPeriod(dialogScope, journalTeacher, capacityType, spIndex, false);
+            updateLessonCountByStudyPeriod(dialogScope, journalTeacher, capacityType, spIndex);
           };
 
           dialogScope.getTeacherStudyLoad = function (teacherId) {

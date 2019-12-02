@@ -120,8 +120,9 @@ public class StudyPeriod extends BaseEntityWithId implements Translatable {
         //search for another study period in the first week of this study period
         //if such a study period exists, add a week
         Set<StudyPeriod> periods = studyYear.getStudyPeriods();
+
         for (StudyPeriod period : periods) {
-            if (period.getStartDate().isBefore(spStart) && period.getEndDate().isAfter(spStart) && period != this) {
+            if (period.getStartDate().isBefore(spStart) && period.getEndDate().isAfter(spStart) && !period.equals(this)) {
                 spStart = spStart.plusDays(7);
                 weekNr++;
             }
@@ -161,7 +162,12 @@ public class StudyPeriod extends BaseEntityWithId implements Translatable {
     }
 
     public Integer getWeekNrForDate(LocalDate date) {
-        if((date.isAfter(startDate) || date.isEqual(startDate)) && (date.isBefore(endDate) || endDate.isEqual(date))) {
+        LocalDate firstWeekMonday = startDate;
+        if (firstWeekMonday.getDayOfWeek() != DayOfWeek.MONDAY) {
+            firstWeekMonday = firstWeekMonday.with(TemporalAdjusters.previous(DayOfWeek.MONDAY));
+        }
+
+        if((date.isAfter(firstWeekMonday) || date.isEqual(firstWeekMonday)) && (date.isBefore(endDate) || endDate.isEqual(date))) {
             int weekNr = firstWeekNr();
             while ((spStart.isBefore(date) || spStart.isEqual(date)) && (endDate.isAfter(date) || endDate.isEqual(date))) {
                 if(spStart.get(ChronoField.ALIGNED_WEEK_OF_YEAR) == date.get(ChronoField.ALIGNED_WEEK_OF_YEAR)) {

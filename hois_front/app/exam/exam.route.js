@@ -11,7 +11,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     },
     data: {
       authorizedRoles: function(Session, roles) {
-        return (Session.roleCode === 'ROLL_A' || Session.roleCode === 'ROLL_O') && Session.higher &&
+        return ['ROLL_A', 'ROLL_J', 'ROLL_O'].indexOf(Session.roleCode) !== -1 && Session.higher &&
           roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_EKSAM) !== -1;
       }
     }
@@ -38,7 +38,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     },
     data: {
       authorizedRoles: function (Session, roles) {
-        return (Session.roleCode === 'ROLL_A' || Session.roleCode === 'ROLL_O') && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_EKSAM) !== -1;
+        return ['ROLL_A', 'ROLL_O'].indexOf(Session.roleCode) !== -1 && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_EKSAM) !== -1;
       }
     }
   })
@@ -51,7 +51,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       auth: function (AuthResolver) { return AuthResolver.resolve(); }
     },
     data: {
-      authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_EKSAM]
+      authorizedRoles: function (Session, roles) {
+        return ['ROLL_A', 'ROLL_O'].indexOf(Session.roleCode) !== -1 && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_EKSAM) !== -1;
+      }
     }
   })
   .when('/exams/:id/view', {

@@ -79,11 +79,11 @@ public class SaisApplicationSearchDto {
         this.id = id;
     }
     
-    public boolean getArchived() {
+    public Boolean getArchived() {
     	return this.is_archived;
     }
     
-    public void setArchived(boolean archived) {
+    public void setArchived(Boolean archived) {
     	this.is_archived = archived;
     }
 

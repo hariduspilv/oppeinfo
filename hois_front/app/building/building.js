@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('BuildingEditController', ['$route', '$scope', 'FormUtils', 'QueryUtils',
-  function ($route, $scope, FormUtils, QueryUtils) {
+angular.module('hitsaOis').controller('BuildingEditController', ['$location', '$route', '$scope', 'FormUtils', 'QueryUtils', 'message',
+  function ($location, $route, $scope, FormUtils, QueryUtils, message) {
     var id = $route.current.params.id;
     var baseUrl = '/buildings';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -15,8 +15,17 @@ angular.module('hitsaOis').controller('BuildingEditController', ['$route', '$sco
     $scope.buildingUniqueQuery = {url: baseUrl + '/unique',  id: id};
 
     $scope.update = function() {
-      FormUtils.saveRecord($scope.buildingForm, $scope.record, baseUrl);
-      $scope.buildingForm.$setPristine();
+      FormUtils.withValidForm($scope.buildingForm, function () {
+        if ($scope.record.id) {
+          $scope.record.$update().then(message.updateSuccess).catch(angular.noop);
+          $scope.buildingForm.$setPristine();
+        } else {
+          $scope.record.$save().then(function () {
+            message.info('main.messages.create.success');
+            $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback');
+          }).catch(angular.noop);
+        }
+      });
     };
 
     $scope.delete = function() {

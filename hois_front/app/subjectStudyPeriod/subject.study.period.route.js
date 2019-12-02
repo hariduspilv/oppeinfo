@@ -21,7 +21,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
-          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+          record: function(QueryUtils, $route) {
+            return QueryUtils.endpoint('/subjectStudyPeriods').get({id: $route.current.params.id}).$promise;
+          }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK]
@@ -32,7 +35,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
-          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+          record: function(QueryUtils, $route) {
+            return QueryUtils.endpoint('/subjectStudyPeriods').get({id: $route.current.params.id}).$promise;
+          }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK]
@@ -61,7 +67,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
-            return Session.roleCode === 'ROLL_A' && Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
+            return Session.roleCode === 'ROLL_A' && Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KOORM) !== -1;
           }
         }
       }).when('/subjectStudyPeriods/studentGroups/new', {
@@ -74,7 +80,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
-            return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
+            return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM) !== -1;
           }
         }
       }).when('/subjectStudyPeriods/studentGroups/:studentGroupId/:studyPeriodId/edit', {
@@ -86,7 +92,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM]
         }
       }).when('/subjectStudyPeriods/studentGroups/:studentGroupId/:studyPeriodId/view', {
         templateUrl: 'subjectStudyPeriod/studentGroup/subject.study.period.student.group.view.html',
@@ -97,7 +103,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KOORM]
         }
       }).when('/subjectStudyPeriods/teachers', {
         templateUrl: 'subjectStudyPeriod/teacher/subject.study.period.teacher.search.html',
@@ -109,7 +115,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
-            return Session.roleCode === 'ROLL_A' && Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
+            return Session.roleCode === 'ROLL_A' && Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KOORM) !== -1;
           }
         }
       }).when('/subjectStudyPeriods/teachers/new', {
@@ -122,7 +128,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
-            return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
+            return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM) !== -1;
           }
         }
       }).when('/subjectStudyPeriods/teachers/:teacherId/:studyPeriodId/edit', {
@@ -134,7 +140,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM]
         }
       })
       .when('/subjectStudyPeriods/teachers/:teacherId/:studyPeriodId/view', {
@@ -146,7 +152,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KOORM]
         }
       })
       .when('/subjectStudyPeriods/subjects', {
@@ -159,7 +165,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
-            return Session.roleCode === 'ROLL_A' && Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
+            return Session.roleCode === 'ROLL_A' && Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KOORM) !== -1;
           }
         }
       }).when('/subjectStudyPeriods/subjects/new', {
@@ -172,7 +178,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
-            return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN) !== -1;
+            return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM) !== -1;
           }
         }
       }).when('/subjectStudyPeriods/subjects/:subjectId/:studyPeriodId/edit', {
@@ -184,7 +190,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM]
         }
       }).when('/subjectStudyPeriods/subjects/:subjectId/:studyPeriodId/view', {
         templateUrl: 'subjectStudyPeriod/subject/subject.study.period.subject.view.html',
@@ -195,7 +201,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KOORM]
         }
       });
 }]);

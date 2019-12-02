@@ -27,7 +27,6 @@ import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.StudentStatus;
-import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.report.diploma.DiplomaSupplementResultReport;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -219,10 +218,7 @@ public class StudentResultCardService {
                 .setParameter("studentIds", studentIds)
                 .getResultList();
         for (Student s : students) {
-            AssertionFailedException.throwIf(
-                    !UserUtil.isSchoolAdmin(user, s.getSchool())
-                            || !user.getSchoolId().equals(EntityUtil.getId(s.getSchool())),
-                    "main.messages.error.nopermission");
+            UserUtil.assertCanViewStudent(user, s);
         }
     }
 }

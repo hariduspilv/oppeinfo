@@ -1,7 +1,7 @@
 package ee.hitsa.ois.enums;
 
 public enum SubjectStatus {
-    AINESTAATUS_S,
-    AINESTAATUS_K,
-    AINESTAATUS_P
+    AINESTAATUS_S,  // Sisestamisel
+    AINESTAATUS_K,  // Kehtiv
+    AINESTAATUS_P   // Passiivne
 }

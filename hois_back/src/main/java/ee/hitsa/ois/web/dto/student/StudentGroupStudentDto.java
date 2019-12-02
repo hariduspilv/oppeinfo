@@ -4,6 +4,7 @@ import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class StudentGroupStudentDto {
@@ -57,7 +58,7 @@ public class StudentGroupStudentDto {
     public static StudentGroupStudentDto of(HoisUserDetails user, Student student) {
         StudentGroupStudentDto dto = new StudentGroupStudentDto();
         Person p = student.getPerson();
-        dto.setFullname(p.getFullname());
+        dto.setFullname(PersonUtil.fullnameOptionalGuest(p.getFullname(), EntityUtil.getNullableCode(student.getType())));
         if (user.isSchoolAdmin() || user.isTeacher()) {
             dto.setId(student.getId());
             dto.setIdcode(p.getIdcode());

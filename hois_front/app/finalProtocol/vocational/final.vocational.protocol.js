@@ -35,7 +35,7 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
       $scope.protocol = clMapper.objectmapper(entity);
       $scope.savedStudents = angular.copy($scope.protocol.protocolStudents);
 
-      if ($scope.protocol.finalDate) {
+      if (!$route.current.locals.isView && $scope.protocol.finalDate) {
         $scope.committees = QueryUtils.endpoint(endpoint + '/committees').query({ finalDate: $scope.protocol.finalDate });
       }
       if ($scope.protocol.committee) {

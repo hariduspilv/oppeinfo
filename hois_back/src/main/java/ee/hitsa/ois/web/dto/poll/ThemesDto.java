@@ -21,6 +21,7 @@ public class ThemesDto {
     private LocalDate startDate;
     private LocalDate endDate;
     private AutocompleteResult name;
+    private String status;
     
     public ThemesDto(List<ThemeDto> themes, Boolean confirmed, String foreword, String afterword) {
         this.themes = themes;
@@ -133,5 +134,13 @@ public class ThemesDto {
 
     public void setName(AutocompleteResult name) {
         this.name = name;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

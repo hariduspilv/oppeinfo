@@ -1,13 +1,11 @@
 <p>
 {{ content.school }} tõendab, et <b>{{ content.student.firstname }} {{ content.student.lastname }} 
-(ik {{ content.student.idcode }})</b> õpib {{ content.studyYear }} õppeaastal meie õppeasutuses 
-õppekaval {{ content.student.curriculum.name }}
- (kood {{ content.student.curriculum.code }}). 
- <br>
+(ik {{ content.student.idcode }})</b> õpib {{ content.studyYear }} õppeaastal meie õppeasutuses{{content.student.curriculum != null ? " õppekaval " + content.student.curriculum.name + " (kood " + content.student.curriculum.code + ")." : "."}} 
+<br>
 Õppevorm on {{ content.student.studyForm != null ? content.student.studyForm : "määramata"}}, 
 õppekoormus on {{ content.student.studyLoad != null ? content.student.studyLoad : "määramata"}}. 
  
- 
+ {% if content.student.curriculum != null %} 
 Õppekava nominaalaeg on 
 	{% if content.student.curriculum.nominalStudyYears != 0 and content.student.curriculum.nominalStudyMonths == 0%}
 		{{ content.student.curriculum.nominalStudyYears}} aastat.
@@ -17,6 +15,7 @@
 	{% elseif content.student.curriculum.nominalStudyYears == 0 and content.student.curriculum.nominalStudyMonths != 0 %}
 	 	{{ content.student.curriculum.nominalStudyMonths}} kuud.
 	{% endif %}
+{% endif %}
 
  Õpingute eeldatav lõppkuupäev on {{ content.student.nominalStudyEnd != null ? content.student.nominalStudyEnd : "määramata"}}.
 </p>

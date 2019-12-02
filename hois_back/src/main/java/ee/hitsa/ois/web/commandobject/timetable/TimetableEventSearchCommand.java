@@ -3,6 +3,8 @@ package ee.hitsa.ois.web.commandobject.timetable;
 import java.time.LocalDate;
 import java.util.List;
 
+import ee.hitsa.ois.service.TimetableService.TimetablePersonHolder;
+
 public class TimetableEventSearchCommand {
 
     private String name;
@@ -21,6 +23,10 @@ public class TimetableEventSearchCommand {
     private Boolean vocational;
     private Long journalOrSubjectId;
     private Boolean showOnlySubstitutes;
+    private Boolean personalEvent;
+    private Long user;
+    private Boolean leadingTeacherEvents;
+    private TimetablePersonHolder person;
 
     public String getName() {
         return name;
@@ -109,7 +115,7 @@ public class TimetableEventSearchCommand {
     public void setTimetables(List<Long> timetables) {
         this.timetables = timetables;
     }
-    
+
     public Long getStudent() {
         return student;
     }
@@ -148,6 +154,38 @@ public class TimetableEventSearchCommand {
 
     public void setShowOnlySubstitutes(Boolean showOnlySubstitutes) {
         this.showOnlySubstitutes = showOnlySubstitutes;
+    }
+
+    public Boolean getPersonalEvent() {
+        return personalEvent;
+    }
+
+    public void setPersonalEvent(Boolean personalEvent) {
+        this.personalEvent = personalEvent;
+    }
+
+    public Long getUser() {
+        return user;
+    }
+
+    public void setUser(Long user) {
+        this.user = user;
+    }
+
+    public Boolean getLeadingTeacherEvents() {
+        return leadingTeacherEvents;
+    }
+
+    public void setLeadingTeacherEvents(Boolean leadingTeacherEvents) {
+        this.leadingTeacherEvents = leadingTeacherEvents;
+    }
+
+    public TimetablePersonHolder getPerson() {
+        return person;
+    }
+
+    public void setPerson(TimetablePersonHolder person) {
+        this.person = person;
     }
 
 }

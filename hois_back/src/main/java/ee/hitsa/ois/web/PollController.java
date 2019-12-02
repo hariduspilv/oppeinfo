@@ -1,6 +1,9 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.poll.Poll;
@@ -24,7 +28,9 @@ import ee.hitsa.ois.domain.poll.PollTheme;
 import ee.hitsa.ois.domain.poll.PollThemeQuestion;
 import ee.hitsa.ois.domain.poll.Question;
 import ee.hitsa.ois.domain.poll.Response;
-import ee.hitsa.ois.service.PollService;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.service.poll.PollAsyncService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
@@ -44,9 +50,11 @@ import ee.hitsa.ois.web.commandobject.poll.ThemeRepedetiveCommand;
 import ee.hitsa.ois.web.commandobject.poll.ThemeOrderCommand;
 import ee.hitsa.ois.web.commandobject.poll.ThemeCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.FutureStatusResponse;
 import ee.hitsa.ois.web.dto.poll.AnswersDto;
 import ee.hitsa.ois.web.dto.poll.GraphDto;
 import ee.hitsa.ois.web.dto.poll.PollRelatedObjectsDto;
+import ee.hitsa.ois.web.dto.poll.PollResultStatisticsDto;
 import ee.hitsa.ois.web.dto.poll.PollResultStudentDto;
 import ee.hitsa.ois.web.dto.poll.PollResultStudentOrTeacherDto;
 import ee.hitsa.ois.web.dto.poll.PollResultsDto;
@@ -58,6 +66,7 @@ import ee.hitsa.ois.web.dto.poll.QuestionPollSearchDto;
 import ee.hitsa.ois.web.dto.poll.QuestionSearchDto;
 import ee.hitsa.ois.web.dto.poll.ResponseDto;
 import ee.hitsa.ois.web.dto.poll.SubjectAnswerDto;
+import ee.hitsa.ois.web.dto.poll.SubjectCommentDto;
 import ee.hitsa.ois.web.dto.poll.ThemesDto;
 
 @RestController
@@ -65,7 +74,7 @@ import ee.hitsa.ois.web.dto.poll.ThemesDto;
 public class PollController {
     
     @Autowired
-    private PollService pollService;
+    private PollAsyncService pollService;
     
     /**
      * Searches
@@ -73,7 +82,7 @@ public class PollController {
 
     @GetMapping
     public Page<PollSearchDto> search(HoisUserDetails user, PollSearchCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
         return pollService.search(user, command, pageable);
     }
     
@@ -89,50 +98,44 @@ public class PollController {
     
     @GetMapping("/answers/{id:\\d+}")
     public PollRelatedObjectsDto searchAnswersPerResponse(HoisUserDetails user, @WithEntity Response response) {
-        // TODO: assert
+        UserUtil.assertSameSchool(user, response.getPoll().getSchool());
         return pollService.searchAnswersPerResponse(response);
     }
     
     @GetMapping("/results/{id:\\d+}")
     public PollResultsDto pollResults(HoisUserDetails user, @WithEntity Poll poll) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, poll.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
         return pollService.pollResults(poll);
     }
     
     @GetMapping("/results/subjects/{id:\\d+}")
     public Page<PollResultsSubjectDto> pollResultSubjects(HoisUserDetails user, @WithEntity Poll poll, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, poll.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
         return pollService.pollResultSubjects(user, poll, pageable);
     }
     
     @GetMapping("/results/enterprises/{id:\\d+}")
     public Page<AutocompleteResult> pollResultEnterprises(HoisUserDetails user, @WithEntity Poll poll, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, poll.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
         return pollService.pollResultEnterprises(poll, pageable);
     }
     
     @GetMapping("/results/enterprises/studentOrTeacher/{id:\\d+}")
     public PollResultStudentOrTeacherDto pollResultStudentOrTeacher(HoisUserDetails user, @WithEntity Poll poll) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, poll.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
         return pollService.pollResultStudentOrTeacher(user, poll);
     }
     
     @GetMapping("/results/student")
     public Page<PollResultStudentDto> pollResultStudent(HoisUserDetails user, PollResultStudentCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
         return pollService.pollResultStudent(command, pageable);
     }
     
     @GetMapping("/results/exportSubject.xls")
     public void subjectIntoExcel(HoisUserDetails user, PollResultStudentCommand criteria, HttpServletResponse response) throws IOException {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
         HttpUtil.xls(response, "pollsubjectresult.xls", pollService.searchExcel(criteria));
-    }
-    
-    @GetMapping("/statistics/pollStatistics.xlsx")
-    public void subjectIntoExcel(HoisUserDetails user, PollResultStatisticsCommand criteria, HttpServletResponse response) throws IOException {
-        UserUtil.assertIsSchoolAdmin(user);
-        pollService.exportStatistics(user, response, criteria);
     }
     
     @PutMapping("/graph")
@@ -149,14 +152,44 @@ public class PollController {
     
     @GetMapping("/questionsList")
     public Page<QuestionSearchDto> searchQuestions(HoisUserDetails user, QuestionSearchCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
         return pollService.searchQuestions(user, command, pageable);
     }
     
     @GetMapping("/questionPolls/{id:\\d+}")
     public Page<QuestionPollSearchDto> questionPolls(HoisUserDetails user, @WithEntity Question question, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, question.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
         return pollService.questionPolls(user, question, pageable);
+    }
+    
+    @GetMapping("/{id:\\d+}")
+    public PollForm get(HoisUserDetails user, @WithEntity Poll poll) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, poll.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
+        return pollService.get(poll);
+    }
+    
+    @GetMapping("/themes/{id:\\d+}")
+    public ThemesDto themes(HoisUserDetails user, @WithEntity Poll poll) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, poll.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
+        return pollService.themes(poll);
+    }
+    
+    @GetMapping("/pollNames")
+    public Set<AutocompleteResult> pollNames(HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
+        return pollService.pollNames(user);
+    }
+    
+    @GetMapping("/questions")
+    public Set<AutocompleteResult> questions(HoisUserDetails user, @RequestParam(name = "type") String pollType) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
+        return pollService.questions(user, pollType);
+    }
+    
+    @GetMapping("/question/{id:\\d+}")
+    public QuestionDto question(HoisUserDetails user, @WithEntity Question question) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, question.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
+        return pollService.question(question);
     }
     
     /**
@@ -166,46 +199,47 @@ public class PollController {
     @PostMapping
     public PollForm create(HoisUserDetails user,
             @Valid @RequestBody PollCommand practiceEnterpriseForm) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         return pollService.create(user, practiceEnterpriseForm);
     }
     
     @PutMapping("/{id:\\d+}")
     public PollForm update(HoisUserDetails user, @WithEntity Poll poll, 
             @Valid @RequestBody PollCommand command) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, poll.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         return pollService.save(user, poll, command);
-    }
-    
-    @GetMapping("/{id:\\d+}")
-    public PollForm get(HoisUserDetails user, @WithEntity Poll poll) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return pollService.get(poll);
     }
     
     @DeleteMapping("/{id:\\d+}")
     public void deletePoll(HoisUserDetails user, @WithEntity Poll poll) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, poll.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         pollService.deletePoll(user, poll);
     }
     
+    /**
+     * Changes poll valid from, valid thru or reminder date
+     * User for polls that are confirmed and have tables for answering created
+     * @param user
+     * @param poll
+     * @param command
+     */
     @PutMapping("/changeDates/{id:\\d+}")
     public void updatePollDates(HoisUserDetails user, @WithEntity Poll poll, 
             @Valid @RequestBody PollDatesCommand command) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, poll.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         pollService.updatePollDates(user, poll, command);
     }
     
     @DeleteMapping("/theme/{id:\\d+}")
     public void deleteTheme(HoisUserDetails user, @WithEntity PollTheme pollTheme) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, pollTheme.getPoll().getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         pollService.deleteTheme(user, pollTheme);
         pollService.updateThemeOrderAfterDelete(user, pollTheme.getPoll());
     }
     
     @DeleteMapping("/question/{id:\\d+}")
     public void deleteQuestion(HoisUserDetails user, @WithEntity PollThemeQuestion pollThemeQuestion) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, pollThemeQuestion.getPollTheme().getPoll().getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         pollService.deleteQuestion(user, pollThemeQuestion);
         pollService.updateQuestionOrderAfterDelete(user, pollThemeQuestion.getPollTheme());
     }
@@ -213,7 +247,7 @@ public class PollController {
     @PutMapping("/themes/{id:\\d+}")
     public ThemesDto updateThemeOrder(HoisUserDetails user, @WithEntity Poll poll, 
             @Valid @RequestBody ThemeOrderCommand command) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, poll.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         pollService.updateThemeOrder(user, command);
         return pollService.themes(poll);
     }
@@ -221,125 +255,177 @@ public class PollController {
     @PutMapping("/questions/{id:\\d+}")
     public ThemesDto updateQuestionOrder(HoisUserDetails user, @WithEntity PollTheme theme, 
             @Valid @RequestBody QuestionOrderCommand command) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, theme.getPoll().getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         pollService.updateQuestionOrder(user, command);
         return pollService.themes(theme.getPoll());
     }
     
+    /**
+     * Used to display themes in separate pages
+     * By default themes are not pageable
+     * @param user
+     * @param poll
+     * @param command
+     */
     @PutMapping("/themes/pageable/{id:\\d+}")
     public void setThemesPageable(HoisUserDetails user, @WithEntity Poll poll, 
             @Valid @RequestBody ThemePageableCommand command) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, poll.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         pollService.setThemesPageable(user, poll, command);
     }
     
+    /**
+     * Change the is_repetitive field for theme
+     * By default is_repetitive is true
+     * Used for journal/subject type polls
+     * @param user
+     * @param pollTheme
+     * @param command
+     */
     @PutMapping("/themes/repetitive/{id:\\d+}")
     public void setThemeRepetitive(HoisUserDetails user, @WithEntity PollTheme pollTheme, 
             @Valid @RequestBody ThemeRepedetiveCommand command) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, pollTheme.getPoll().getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         pollService.setThemeRepetitive(user, pollTheme, command);
     }
     
+    /**
+     * Create theme
+     * @param user
+     * @param poll
+     * @param themeCommand
+     */
     @PostMapping("/theme/{id:\\d+}")
     public void createTheme(HoisUserDetails user, @WithEntity Poll poll,
             @RequestBody ThemeCommand themeCommand) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, poll.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         pollService.createTheme(user, poll, themeCommand);
     }
     
-    
+    /**
+     * Change theme
+     * @param user
+     * @param pollTheme
+     * @param themeCommand
+     */
     @PutMapping("/theme/{id:\\d+}")
     public void updateTheme(HoisUserDetails user, @WithEntity PollTheme pollTheme,
             @RequestBody ThemeCommand themeCommand) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, pollTheme.getPoll().getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         pollService.updateTheme(user, pollTheme, themeCommand);
     }
     
-    @GetMapping("/themes/{id:\\d+}")
-    public ThemesDto themes(HoisUserDetails user, @WithEntity Poll poll) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return pollService.themes(poll);
-    }
-    
+    /**
+     * Create question and link it to theme.
+     * @param user
+     * @param pollTheme
+     * @param questionCommand
+     */
     @PostMapping("/question/{id:\\d+}")
     public void createQuestion(HoisUserDetails user, @WithEntity PollTheme pollTheme,
             @RequestBody QuestionCommand questionCommand) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, pollTheme.getPoll().getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         pollService.createQuestion(user, pollTheme, questionCommand);
     }
     
+    /**
+     * Save teacher comment to poll answers.
+     * @param user
+     * @param poll
+     * @param command
+     * @return 
+     */
     @PutMapping("/comment/{id:\\d+}")
-    public void saveComment(HoisUserDetails user, @WithEntity Poll poll,
+    public SubjectCommentDto saveComment(HoisUserDetails user, @WithEntity Poll poll,
             @RequestBody PollCommentCommand command) {
-        UserUtil.assertIsTeacher(user);
-        pollService.saveComment(user, poll, command);
+        UserUtil.isTeacher(user, poll.getSchool());
+        return pollService.saveComment(user, poll, command);
     }
     
+    /**
+     * Used to change question and its answers
+     * @param user
+     * @param question
+     * @param questionDto
+     * @return
+     */
     @PutMapping("/question/{id:\\d+}")
     public void updateQuestion(HoisUserDetails user, @WithEntity PollThemeQuestion pollThemeQuestion,
             @RequestBody QuestionCommand themeCommand) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, pollThemeQuestion.getPollTheme().getPoll().getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         pollService.updateQuestion(user, pollThemeQuestion, themeCommand);
     }
     
+    /**
+     * Used to change question and its answers
+     * @param user
+     * @param question
+     * @param questionDto
+     * @return
+     */
     @PutMapping("/updateQuestion/{id:\\d+}")
     public QuestionDto updateQuestion(HoisUserDetails user, @WithEntity Question question, @RequestBody QuestionDto questionDto) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, question.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         return pollService.updateQuestion(user, question, questionDto);
     }
     
+    /**
+     * Save and then confirm poll data
+     * @param user
+     * @param poll
+     * @param command
+     */
     @PutMapping("/confirm/{id:\\d+}")
-    public void confirm(HoisUserDetails user, @WithEntity Poll poll) {
-        UserUtil.assertIsSchoolAdmin(user);
+    public void confirm(HoisUserDetails user, @WithEntity Poll poll, @Valid @RequestBody PollCommand command) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, poll.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
+        pollService.save(user, poll, command);
         pollService.confirm(user, poll);
     }
     
+    /**
+     * Remove confirmation from poll
+     * Can only be done, when tables for responding haven't been created
+     * Tabled are created when emails for supervisor are sent out or 
+     * someone navigates to front page to see list of polls
+     * @param user
+     * @param poll
+     */
     @PutMapping("/unConfirm/{id:\\d+}")
     public void unConfirm(HoisUserDetails user, @WithEntity Poll poll) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, poll.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         pollService.unConfirm(user, poll);
-    }
-    
-    @GetMapping("/pollNames")
-    public Set<AutocompleteResult> pollNames(HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return pollService.pollNames(user);
-    }
-    
-    @GetMapping("/questions")
-    public Set<AutocompleteResult> questions(HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return pollService.questions(user);
-    }
-    
-    @GetMapping("/question/{id:\\d+}")
-    public QuestionDto question(HoisUserDetails user, @WithEntity Question question) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return pollService.question(question);
     }
     
     /**
      * Create new Poll with PollThemes, PollThemeQuestions,
      * Questions, QuestionAnswers, PollThemeQuestionFiles from existing poll
-     * and replace name with 'copy' at the end.
+     * and replace name with 'copy' at the end
      * @param user
      * @param poll
      * @return Poll id
      */
     @PostMapping("/copy/{id:\\d+}")
     public AutocompleteResult copyPoll(HoisUserDetails user, @WithEntity Poll poll) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, poll.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         Poll newPoll = pollService.createCopyOfPoll(user, poll);
         return new AutocompleteResult(newPoll.getId(), null, null);
     }
     
     /**
-     * Used for testing mail service.
+     * Used for testing mail service
      */
     @PutMapping("/testEmailService")
     public void testEmailService() {
         pollService.sendPracticeJournalSupervisorEmails();
         pollService.sendEmails();
+    }
+    
+    /**
+     * Used for testing poll status switching to finished job
+     */
+    @PutMapping("/testPollStatusJob")
+    public void testPollStatusJob() {
+        pollService.checkPollValidThru();
     }
     
     /**
@@ -370,7 +456,7 @@ public class PollController {
     }
     
     /**
-     * Save expert filled poll and change status to KYSITVASTUSSTAATUS_V (Vastatud).
+     * Save expert filled poll and change status to KYSITVASTUSSTAATUS_V (Vastatud)
      * @param uuid
      * @param form
      */
@@ -385,7 +471,7 @@ public class PollController {
      */
     
     /**
-     * Contract supervisor from practice journal.
+     * Contract supervisor from practice journal
      * @param uuid random string url
      * @return themes
      */
@@ -397,7 +483,7 @@ public class PollController {
     }
     
     /**
-     * Save supervisor filled poll.
+     * Save supervisor filled poll
      * @param uuid
      * @param practiceJournalEntriesSupervisorForm
      */
@@ -409,7 +495,7 @@ public class PollController {
     }
     
     /**
-     * Change status to KYSITVASTUSSTAATUS_V (Vastatud).
+     * Change status to KYSITVASTUSSTAATUS_V (Vastatud)
      * @param uuid
      * @param practiceJournalEntriesSupervisorForm
      */
@@ -491,19 +577,67 @@ public class PollController {
      * @param form
      */
     @PutMapping("{responseId:\\d+}/saveAnswer/{id:\\d+}")
-    public void saveResponse(@WithEntity PollThemeQuestion question, @WithEntity("responseId") Response response, @RequestBody QuestionDto form) {
+    public void saveResponse(HoisUserDetails user, @WithEntity PollThemeQuestion question, @WithEntity("responseId") Response response, @RequestBody QuestionDto form) {
+        UserUtil.assertSameSchool(user, question.getPollTheme().getPoll().getSchool());
         pollService.saveOtherResponse(question, response, form);
     }
     
     /**
-     * Change poll status to KYSITVASTUSSTAATUS_V (Vastatud).
-     * Saving the whole poll again with confirmation is not necessary.
+     * Change poll status to KYSITVASTUSSTAATUS_V (Answered)
+     * Saving the whole poll again with confirmation is not necessary
      * @param uuid
      * @param form
      */
     @PutMapping("/{id:\\d+}/saveAnswer/final")
     public void saveResponseFinal(HoisUserDetails user, @WithEntity Response response) {
+        UserUtil.assertSameSchool(user, response.getPoll().getSchool());
         pollService.setResponseFinished(user, response);
+    }
+    
+    /**
+     * Create excel file from key and byte array contained in service
+     * @param user
+     * @param key
+     * @param response
+     * @throws IOException
+     */
+    @GetMapping("/statistics/pollStatistics")
+    public void statisticsIntoExcel(HoisUserDetails user, @RequestParam(required = true) String key, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
+        HttpUtil.xls(response, "pollstatistics.xls", ((PollResultStatisticsDto)pollService.exportExcelStatus(user, key).getResult()).getFile());
+        pollService.deleteKey(user, key);
+    }
+    
+    /**
+     * Create hash for async polling or excel statistics and start the async function
+     * User keeps polling for status with this hash
+     * @param user
+     * @param command
+     * @return
+     */
+    @PostMapping("/statistics/excelExport")
+    public Map<String, Object> excelExport(HoisUserDetails user, @Valid @RequestBody PollResultStatisticsCommand command) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
+        String requestHash = String.format("%d-%d-%d-%d", Integer.valueOf(user.getUsername().hashCode()),
+                command.getPollIds() != null ? Integer.valueOf(command.getPollIds().hashCode()) : Integer.valueOf(0),
+                command.getQuestions() != null ? Integer.valueOf(command.getQuestions().hashCode()) : Integer.valueOf(0),
+                Integer.valueOf(LocalDateTime.now().hashCode()));
+        pollService.exportExcel(user, command, requestHash);
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("key", requestHash);
+        return map;
+    }
+
+    /**
+     * Used for polling export file status with the key that was provided when function started
+     * @param user
+     * @param key
+     * @return
+     */
+    @GetMapping("/statistics/excelExportStatus")
+    public FutureStatusResponse excelExportStatus(HoisUserDetails user, @RequestParam(required = true) String key) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
+        return pollService.exportExcelStatus(user, key);
     }
     
 }

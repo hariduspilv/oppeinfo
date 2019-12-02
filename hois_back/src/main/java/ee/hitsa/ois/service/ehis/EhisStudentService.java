@@ -58,6 +58,7 @@ import ee.hitsa.ois.enums.FormStatus;
 import ee.hitsa.ois.enums.FormType;
 import ee.hitsa.ois.enums.FutureStatus;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
@@ -201,6 +202,7 @@ public class EhisStudentService extends EhisService {
         case GRADUATION: return graduation(schoolId, ehisStudentForm, wrapper, maxRequests);
         case VOTA: return vota(schoolId, ehisStudentForm, wrapper, maxRequests);
         case SPECIAL_NEEDS: return specialNeeds(schoolId, ehisStudentForm, wrapper, maxRequests);
+        case GUEST_STUDENTS: return guestStudents(schoolId, ehisStudentForm, wrapper, maxRequests);
         default: throw new AssertionFailedException("Unknown datatype");
         }
     }
@@ -263,6 +265,26 @@ public class EhisStudentService extends EhisService {
         removeExpiredExportStudentsResults(); // Async method runs in different thread so it will not cause problems with response time.
         return request;
     }
+    
+    private Queue<? extends EhisStudentReport> guestStudents(Long schoolId, EhisStudentForm ehisStudentForm,
+            AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
+        ConcurrentLinkedQueue<EhisStudentReport> reports = new ConcurrentLinkedQueue<>();
+        wrapper.set(reports);
+        List<DirectiveStudent> directiveStudents = findGuestStudents(schoolId, ehisStudentForm);
+        maxRequests.set(directiveStudents.size());
+        for(DirectiveStudent directiveStudent : directiveStudents) {
+            if (!Thread.interrupted()) {
+                WsEhisStudentLog log;
+                if (directiveStudent.getCanceled() != null && directiveStudent.getCanceled().booleanValue()) {
+                    log = ehisDirectiveStudentService.deleteGuestStudent(directiveStudent);
+                } else {
+                    log = ehisDirectiveStudentService.sendGuestStudent(directiveStudent);
+                }
+                reports.add(new EhisStudentReport.GuestStudents(directiveStudent.getStudent(), log));
+            }
+        }
+        return reports;
+    }
 
     private Queue<? extends EhisStudentReport> specialNeeds(Long schoolId, EhisStudentForm ehisStudentForm,
             AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
@@ -281,7 +303,8 @@ public class EhisStudentService extends EhisService {
         return reports;
     }
 
-    private Queue<EhisStudentReport> courseChange(Long schoolId, EhisStudentForm ehisStudentForm, AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
+    private Queue<EhisStudentReport> courseChange(Long schoolId, EhisStudentForm ehisStudentForm, 
+            AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
         ConcurrentLinkedQueue<EhisStudentReport> reports = new ConcurrentLinkedQueue<>();
         wrapper.set(reports);
         Map<Student, ChangedCourse> students = findStudentsWithChangedCourse(schoolId, ehisStudentForm);
@@ -297,7 +320,8 @@ public class EhisStudentService extends EhisService {
         return reports;
     }
 
-    private Queue<EhisStudentReport.Dormitory> dormitoryChanges(Long schoolId, EhisStudentForm ehisStudentForm, AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
+    private Queue<EhisStudentReport.Dormitory> dormitoryChanges(Long schoolId, EhisStudentForm ehisStudentForm, 
+            AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
         Queue<EhisStudentReport.Dormitory> dormitoryChanges = new ConcurrentLinkedQueue<>(); 
         wrapper.set(dormitoryChanges);
         Map<Student, ChangedDormitory> changes = findStudentsWithChangedDormitory(schoolId, ehisStudentForm);
@@ -333,7 +357,8 @@ public class EhisStudentService extends EhisService {
         }
     }
 
-    private Queue<EhisStudentReport.ApelApplication> vota(Long schoolId, EhisStudentForm ehisStudentForm, AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
+    private Queue<EhisStudentReport.ApelApplication> vota(Long schoolId, EhisStudentForm ehisStudentForm, 
+            AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
         Queue<EhisStudentReport.ApelApplication> apelApplications = new ConcurrentLinkedQueue<>();
         wrapper.set(apelApplications);
         List<ApelApplication> applications = findApelApplications(schoolId, ehisStudentForm);
@@ -415,7 +440,8 @@ public class EhisStudentService extends EhisService {
         return apelApplications;
     }
 
-    private Queue<EhisStudentReport.Graduation> graduation(Long schoolId, EhisStudentForm ehisStudentForm, AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
+    private Queue<EhisStudentReport.Graduation> graduation(Long schoolId, EhisStudentForm ehisStudentForm, 
+            AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
         Queue<EhisStudentReport.Graduation> graduations = new ConcurrentLinkedQueue<>();
         wrapper.set(graduations);
         Query extraQuery = em.createNativeQuery("select f.full_code"
@@ -438,6 +464,7 @@ public class EhisStudentService extends EhisService {
                 + " where dsf_en.diploma_supplement_id = sup.id and dsf_en.is_english"
                 + " and sup_f_en.status_code = ?7 and sup_f_en.type_code = ?9 ) as sup_en_code"
                 + " from directive_student ds"
+                + " join student s on s.id = ds.student_id"
                 + " join directive d on d.id = ds.directive_id"
                 + " join diploma dip on dip.directive_id = ds.directive_id and dip.student_id = ds.student_id"
                 + " join form dip_f on dip_f.id = dip.form_id"
@@ -448,7 +475,8 @@ public class EhisStudentService extends EhisService {
                 + " and d.type_code = ?2 and d.status_code = ?3"
                 + " and d.confirm_date >= ?4 and d.confirm_date <= ?5"
                 + " and dip.status_code != ?6 and dip_f.status_code = ?7"
-                + " and sup.status_code != ?6 and sup_f.status_code = ?7 and sup_f.type_code in (?8)")
+                + " and sup.status_code != ?6 and sup_f.status_code = ?7"
+                + " and sup_f.type_code in (?8) and s.type_code != ?10")
                 .setParameter(1, schoolId)
                 .setParameter(2, DirectiveType.KASKKIRI_LOPET.name())
                 .setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
@@ -458,6 +486,7 @@ public class EhisStudentService extends EhisService {
                 .setParameter(7, FormStatus.LOPUBLANKETT_STAATUS_T.name())
                 .setParameter(8, Arrays.asList(FormType.LOPUBLANKETT_HIN.name(), FormType.LOPUBLANKETT_R.name()))
                 .setParameter(9, FormType.LOPUBLANKETT_DS.name())
+                .setParameter(10, StudentType.OPPUR_K.name())
                 .getResultList();
         maxRequests.set(result.size());
         for (Object r : result) {
@@ -482,7 +511,8 @@ public class EhisStudentService extends EhisService {
         return graduations;
     }
 
-    private Queue<EhisStudentReport.ForeignStudy> foreignStudy(Long schoolId, EhisStudentForm ehisStudentForm, AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
+    private Queue<EhisStudentReport.ForeignStudy> foreignStudy(Long schoolId, EhisStudentForm ehisStudentForm, 
+            AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
         Queue<EhisStudentReport.ForeignStudy> foreignStudies = new ConcurrentLinkedQueue<>();
         wrapper.set(foreignStudies);
         List<DirectiveStudent> students = findForeignStudents(schoolId, ehisStudentForm);
@@ -511,7 +541,8 @@ public class EhisStudentService extends EhisService {
         return 0;
     }
 
-    private Queue<EhisStudentReport.CurriculaFulfilment> curriculumFulfillment(Long schoolId, AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
+    private Queue<EhisStudentReport.CurriculaFulfilment> curriculumFulfillment(Long schoolId, 
+            AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
         Queue<EhisStudentReport.CurriculaFulfilment> fulfilment = new ConcurrentLinkedQueue<>();
         wrapper.set(fulfilment);
         List<Student> students = findStudents(schoolId);
@@ -614,9 +645,10 @@ public class EhisStudentService extends EhisService {
     }
 
     private List<Student> findStudents(Long schoolId) {
-        return em.createQuery("select s from Student s where s.school.id = ?1 and s.status.code in ?2", Student.class)
+        return em.createQuery("select s from Student s where s.school.id = ?1 and s.status.code in ?2 and s.type.code != ?3", Student.class)
                 .setParameter(1, schoolId)
                 .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
+                .setParameter(3, StudentType.OPPUR_K.name())
                 .getResultList();
     }
 
@@ -636,7 +668,7 @@ public class EhisStudentService extends EhisService {
                 + "and coalesce ( ds2.start_date, ds.end_date ) >= ?5 "
                 + "where s.school_id = ?1 and s.status_code in ?7 "
                 + "and exists (select 1 from student_special_need ssn2 where ssn2.student_id = s.id and coalesce(ssn2.changed, ssn2.inserted) >= ?5 and coalesce(ssn2.changed, ssn2.inserted) <= ?6) "
-                + "and ssn_cl.ehis_value is not null "
+                + "and ssn_cl.ehis_value is not null and s.type_code != ?8 "
                 + "group by s.id")
         .setParameter(1, schoolId)
         .setParameter(2, DirectiveType.KASKKIRI_TUGI.name())
@@ -645,6 +677,7 @@ public class EhisStudentService extends EhisService {
         .setParameter(5, JpaQueryUtil.parameterAsTimestamp(DateUtils.firstMomentOfDay(ehisStudentForm.getFrom())))
         .setParameter(6, JpaQueryUtil.parameterAsTimestamp(DateUtils.lastMomentOfDay(ehisStudentForm.getThru())))
         .setParameter(7, StudentStatus.STUDENT_STATUS_ACTIVE)
+        .setParameter(8, StudentType.OPPUR_K.name())
         .getResultList();
 
         Map<Long, ChangedSpecialNeeds> mappedData = data.stream().collect(Collectors.toMap(
@@ -666,11 +699,13 @@ public class EhisStudentService extends EhisService {
                 + "join student_group sg on sg.id = sgyf.student_group_id "
                 + "join student s on s.student_group_id = sg.id "
                 + "where s.school_id = ?1 and s.status_code in ?2 and sgyf.changed >= ?3 and sgyf.changed <= ?4 "
+                + "and s.type_code != ?5 "
                 + "order by sgyf.changed asc ")
                 .setParameter(1, schoolId)
                 .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
                 .setParameter(3, JpaQueryUtil.parameterAsTimestamp(DateUtils.firstMomentOfDay(ehisStudentForm.getFrom())))
                 .setParameter(4, JpaQueryUtil.parameterAsTimestamp(DateUtils.lastMomentOfDay(ehisStudentForm.getThru())))
+                .setParameter(5, StudentType.OPPUR_K.name())
                 .getResultList();
         
         Map<Long, ChangedCourse> mappedData = data.stream().collect(Collectors.toMap(
@@ -696,11 +731,12 @@ public class EhisStudentService extends EhisService {
                 + " join student s on sh.student_id = s.id"
                 + " left join student_history sh2 on sh.student_id = sh2.student_id and sh2.inserted <= ?3"
                 + " where s.school_id = ?1 and s.status_code in ?2 and coalesce(sh.dormitory_code, 'x') != 'x'"
-                + " and sh.inserted >= ?3 and sh.inserted <= ?4) x where x.first_dormitory_code != x.last_dormitory_code")
+                + " and sh.inserted >= ?3 and sh.inserted <= ?4 and s.type_code != ?5) x where x.first_dormitory_code != x.last_dormitory_code")
                 .setParameter(1, schoolId)
                 .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
                 .setParameter(3, JpaQueryUtil.parameterAsTimestamp(DateUtils.firstMomentOfDay(criteria.getFrom())))
                 .setParameter(4, JpaQueryUtil.parameterAsTimestamp(DateUtils.lastMomentOfDay(criteria.getThru())))
+                .setParameter(5, StudentType.OPPUR_K.name())
                 .getResultList();
 
         Map<Long, ChangedDormitory> changedDormitories = StreamUtil.toMap(r -> resultAsLong(r, 0),
@@ -717,7 +753,11 @@ public class EhisStudentService extends EhisService {
 
     private List<DirectiveStudent> findForeignStudents(Long schoolId, EhisStudentForm criteria) {
         return em.createQuery(
-                "select ds from DirectiveStudent ds left join ds.studyPeriodEnd where ds.canceled = false and ds.directive.school.id = ?1 and ds.directive.type.code = ?2 and ds.directive.status.code = ?3 and ((ds.isPeriod = false and ds.endDate >= ?4 and ds.endDate <= ?5) or (ds.isPeriod = true and ds.studyPeriodEnd.endDate >= ?6 and ds.studyPeriodEnd.endDate <= ?7))", DirectiveStudent.class)
+                "select ds from DirectiveStudent ds left join ds.studyPeriodEnd where ds.canceled = false and ds.directive.school.id = ?1 "
+                + "and ds.directive.type.code = ?2 and ds.directive.status.code = ?3 "
+                + "and ((ds.isPeriod = false and ds.endDate >= ?4 and ds.endDate <= ?5) "
+                + "or (ds.isPeriod = true and ds.studyPeriodEnd.endDate >= ?6 and ds.studyPeriodEnd.endDate <= ?7)) "
+                + "and ds.student.type.code != ?8", DirectiveStudent.class)
                 .setParameter(1, schoolId)
                 .setParameter(2, DirectiveType.KASKKIRI_VALIS.name())
                 .setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
@@ -725,14 +765,34 @@ public class EhisStudentService extends EhisService {
                 .setParameter(5, criteria.getThru())
                 .setParameter(6, criteria.getFrom())
                 .setParameter(7, criteria.getThru())
+                .setParameter(8, StudentType.OPPUR_K.name())
+                .getResultList();
+    }
+    
+    private List<DirectiveStudent> findGuestStudents(Long schoolId, EhisStudentForm criteria) {
+        return em.createQuery(
+                "select ds from DirectiveStudent ds where ds.directive.school.id = ?1 "
+                + "and ds.country.code != ?2 "
+                + "and ds.directive.type.code = ?3 "
+                + "and (ds.directive.status.code = ?4 or ds.directive.status.code = ?5 ) "
+                + "and ds.endDate >= ?6 and ds.endDate <= ?7 "
+                + "and ds.curriculumVersion.curriculum.higher = true", DirectiveStudent.class)
+                .setParameter(1, schoolId)
+                .setParameter(2, "RIIK_EST")
+                .setParameter(3, DirectiveType.KASKKIRI_KYLALIS.name())
+                .setParameter(4, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+                .setParameter(5, DirectiveStatus.KASKKIRI_STAATUS_TYHISTATUD.name())
+                .setParameter(6, criteria.getFrom())
+                .setParameter(7, criteria.getThru())
                 .getResultList();
     }
 
     private List<ApelApplication> findApelApplications(Long schoolId, EhisStudentForm criteria) {
-        return em.createQuery("select a from ApelApplication a where a.school.id = ?1 and a.confirmed >= ?2 and a.confirmed <= ?3", ApelApplication.class)
+        return em.createQuery("select a from ApelApplication a where a.school.id = ?1 and a.confirmed >= ?2 and a.confirmed <= ?3 and a.student.type.code != ?4", ApelApplication.class)
                 .setParameter(1, schoolId)
                 .setParameter(2, DateUtils.firstMomentOfDay(criteria.getFrom()))
                 .setParameter(3, DateUtils.lastMomentOfDay(criteria.getThru()))
+                .setParameter(4, StudentType.OPPUR_K.name())
                 .getResultList();
     }
 

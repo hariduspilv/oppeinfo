@@ -21,15 +21,18 @@ function ($scope, $route, QueryUtils, DataUtils, Classifier, $q, dialogService, 
   }
 
   $scope.formState = {
-    canCreateProtocol: canCreateProtocol()
+    canCreateProtocol: canCreateProtocol(),
+    status: 'PROTOKOLL_STAATUS_S'
   };
 
   var clMapper = Classifier.valuemapper({ status: 'PROTOKOLL_STAATUS' });
-  QueryUtils.createQueryForm($scope, endpoint, {order: '14 desc'}, clMapper.objectmapper);
+  QueryUtils.createQueryForm($scope, endpoint, {order: '14 desc', status: $scope.formState.status}, clMapper.objectmapper);
 
-  if (!angular.isDefined($scope.criteria.status)) {
-    $scope.criteria.status = 'PROTOKOLL_STAATUS_S';
-  }
+  var _loadData = $scope.loadData;
+  $scope.loadData = function () {
+    _loadData();
+    $scope.formState.status = $scope.criteria.status;
+  };
 
   var unbindStudyYearWatch = $scope.$watch('criteria.studyYear', function(value) {
     if (angular.isNumber(value)) {

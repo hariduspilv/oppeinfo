@@ -44,13 +44,13 @@ public class StudentRepresentativeController {
 
     @GetMapping("/{studentId:\\d+}")
     public Page<StudentRepresentativeDto> getRepresentatives(HoisUserDetails user, @WithEntity("studentId") Student student, Pageable pageable) {
-        assertCanView(user, student);
+        UserUtil.assertCanViewStudent(user, student);
         return studentRepresentativeService.search(user, EntityUtil.getId(student), pageable);
     }
 
     @GetMapping("/{studentId:\\d+}/{id:\\d+}")
     public StudentRepresentativeDto get(HoisUserDetails user, @WithEntity StudentRepresentative studentRepresentative) {
-        assertCanView(user, studentRepresentative.getStudent());
+        UserUtil.assertCanViewStudent(user, studentRepresentative.getStudent());
         return StudentRepresentativeDto.of(studentRepresentative, user);
     }
 
@@ -94,23 +94,14 @@ public class StudentRepresentativeController {
 
     @PutMapping("/applications/accept/{id:\\d+}")
     public void acceptApplication(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) StudentRepresentativeApplication application, @SuppressWarnings("unused") @RequestBody VersionedCommand form) {
-        assertCanEdit(user, application);
+        UserUtil.assertIsSchoolAdmin(user, application.getStudent().getSchool());
         studentRepresentativeService.acceptApplication(application);
     }
 
     @PutMapping("/applications/decline/{id:\\d+}")
     public void declineApplication(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) StudentRepresentativeApplication application, @Valid @RequestBody StudentRepresentativeApplicationDeclineForm form) {
-        assertCanEdit(user, application);
+        UserUtil.assertIsSchoolAdmin(user, application.getStudent().getSchool());
         studentRepresentativeService.declineApplication(application, form);
     }
 
-    private static void assertCanView(HoisUserDetails user, Student student) {
-        if(!UserUtil.canViewStudent(user, student)) {
-            throw new AssertionFailedException("User cannot view student data");
-        }
-    }
-
-    private static void assertCanEdit(HoisUserDetails user, StudentRepresentativeApplication application) {
-        UserUtil.assertIsSchoolAdmin(user, application.getStudent().getSchool());
-    }
 }

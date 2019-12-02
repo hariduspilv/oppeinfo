@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -87,9 +88,10 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
             + "left join committee_member cme on com.id = cme.committee_id and cme.is_chairman = true "
             + "left join teacher t on cme.teacher_id = t.id " + "left join person per on t.person_id = per.id";
     
-    private static final String LIST_SELECT = "p.id as protocol_id, p.protocol_nr, p.is_final_thesis, p.status_code, sy.year_code, "
-            + "cv.id cv_id, cv.code cv_code, c.name_et c_name_et, c.name_en c_name_en, cm.id as cm_id, cm.name_et cm_name_et, cm.name_en cm_name_en, "
-            + "cm.credits, t.id as t_id, per.firstname, per.lastname, cme.member_name, p.inserted, p.confirm_date, p.confirmer";
+    private static final String LIST_SELECT = "p.id as protocol_id, p.protocol_nr, p.is_final_thesis, p.status_code, "
+            + "sy.year_code, cv.id cv_id, cv.code cv_code, c.name_et c_name_et, c.name_en c_name_en, "
+            + "cm.id as cm_id, cm.name_et cm_name_et, cm.name_en cm_name_en, cm.credits, "
+            + "t.id as t_id, per.firstname, per.lastname, cme.member_name, p.inserted, p.confirm_date, p.confirmer, pvd.teacher_id";
 
     public Page<FinalVocationalProtocolSearchDto> search(HoisUserDetails user, FinalVocationalProtocolSearchCommand cmd,
             Pageable pageable) {
@@ -98,10 +100,13 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
         qb.filter("p.is_final = true");
         qb.filter("p.is_vocational = true");
         qb.requiredCriteria("p.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("c.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
+        }
+
         qb.optionalCriteria(
                 "exists (select protocol_id from protocol_vdata pvd where pvd.protocol_id = p.id and pvd.study_year_id = :studyYearId)",
                 "studyYearId", cmd.getStudyYear());
-        
         qb.optionalCriteria(
                 "exists (select protocol_id " + "from protocol_vdata pvd "
                         + "join curriculum_version_omodule omodule on pvd.curriculum_version_omodule_id = omodule.id "
@@ -154,7 +159,10 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
             dto.setInserted(resultAsLocalDate(r, 17));
             dto.setConfirmDate(resultAsLocalDate(r, 18));
             dto.setConfirmer(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 19)));
-            dto.setCanEdit(Boolean.valueOf(FinalProtocolUtil.canEdit(user, em.getReference(Protocol.class, dto.getId()))));
+
+            Long teacherId = resultAsLong(r, 20);
+            dto.setCanEdit(Boolean.valueOf(FinalProtocolUtil.canEditVocational(user, dto.getStatus(),
+                    teacherId != null ? Arrays.asList(teacherId) : null)));
             return dto;
         });
         return result;
@@ -251,7 +259,7 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
                         addHistory(ps);
                         Classifier grade = em.getReference(Classifier.class, dto.getGrade());
                         Short mark = getMark(EntityUtil.getCode(grade));
-                        gradeStudent(ps, grade, mark, Boolean.FALSE);
+                        gradeStudent(ps, grade, mark, Boolean.FALSE, LocalDate.now());
                         ps.setAddInfo(dto.getAddInfo());
                     } else if (gradeRemoved(dto, ps)) {
                         addHistory(ps);

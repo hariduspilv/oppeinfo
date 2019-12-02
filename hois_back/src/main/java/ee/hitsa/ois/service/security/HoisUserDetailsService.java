@@ -7,8 +7,10 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -19,6 +21,7 @@ import javax.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
@@ -32,9 +35,13 @@ import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.UserSessions;
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.GuestStudentRightsFilter;
+import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.UserService;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.UserProjection;
@@ -100,11 +107,13 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
                 authenticatedSchool.setLogo(logo.getFdata());
             }
             if (user.getStudent() != null) {
-                List<?> result = em.createNativeQuery("select c.is_higher, level.value "
+                List<?> result = em.createNativeQuery("select case when c.is_higher is not null then c.is_higher else d.is_higher end, level.value "
                         + "from student s "
-                        + "join curriculum_version cv on s.curriculum_version_id = cv.id "
-                        + "join curriculum c on c.id = cv.curriculum_id "
-                        + "join classifier level on level.code = c.orig_study_level_code "
+                        + "left join curriculum_version cv on s.curriculum_version_id = cv.id "
+                        + "left join curriculum c on c.id = cv.curriculum_id "
+                        + "left join classifier level on level.code = c.orig_study_level_code "
+                        + "left join directive_student ds on ds.student_id = s.id "
+                        + "left join directive d on (d.id = ds.directive_id and d.type_code = 'KASKKIRI_KYLALIS') "
                         + "where s.id = ?1"
                         + "").setParameter(1, user.getStudent()).setMaxResults(1).getResultList();
                 Object row = result.get(0);
@@ -112,9 +121,13 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
                 String studyLevel = resultAsString(row, 1);
                 authenticatedUser.setVocational(Boolean.valueOf(Boolean.FALSE.equals(higher)));
                 authenticatedUser.setHigher(Boolean.valueOf(Boolean.TRUE.equals(higher)));
-                authenticatedUser.setDoctoral(Boolean.valueOf(studyLevel.startsWith("7")));
-                
+                if (studyLevel != null) {
+                    authenticatedUser.setDoctoral(Boolean.valueOf(studyLevel.startsWith("7")));
+                } else {
+                    authenticatedUser.setDoctoral(Boolean.FALSE);
+                }
                 authenticatedUser.setCommittees(Collections.emptyList());
+                authenticatedUser.setType(EntityUtil.getNullableCode(user.getStudent().getType()));
             } else {
                 // take values from school
                 authenticatedUser.setVocational(Boolean.valueOf(type.isVocational()));
@@ -132,7 +145,7 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
                 authenticatedUser.setCommittees(StreamUtil.toMappedList(r -> resultAsString(r, 0), committeeList));
             }
         }
-        
+
         if (teacherId != null) {
             List<?> result = em.createNativeQuery("select sg.id from student_group sg where sg.teacher_id = ?1")
                 .setParameter(1, teacherId)
@@ -146,10 +159,18 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
             }
         }
         authenticatedUser.setSchool(authenticatedSchool);
-        authenticatedUser.setAuthorizedRoles(userDetails.getAuthorities());
+        setAuthorizedRoles(authenticatedUser, userDetails);
         authenticatedUser.setFullname(user.getPerson().getFullname());
         authenticatedUser.setUsers(userService.findAllActiveUsers(user.getPerson().getId()));
         authenticatedUser.setLoginMethod(userDetails.getLoginMethod());
+        // Admin school role only!
+        authenticatedUser.setHasSchoolRole(Boolean.valueOf(user.getUserSchoolRole() != null));
+
+        if (userDetails.isLeadingTeacher()) {
+            authenticatedUser.setCurriculums(userDetails.getCurriculumIds());
+        }
+        
+        authenticatedUser.setMustAgreeWithToS(Boolean.valueOf(checkIfContractAgreementNeeds(userDetails)));
 
         // log login information
         UserSessions login = new UserSessions();
@@ -170,6 +191,20 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
         return authenticatedUser;
     }
 
+    private void setAuthorizedRoles(AuthenticatedUser authenticatedUser, HoisUserDetails user) {
+        Collection<GrantedAuthority> authorizedRoles = user.getAuthorities();
+        if (user.getStudentId() != null && user.isStudent()) {
+            Student student = em.getReference(Student.class, user.getStudentId());
+            Classifier studentType = student.getType();
+            // Filter only guest students
+            if (studentType != null && ClassifierUtil.equals(StudentType.OPPUR_K, studentType)) {
+                List<String> filter = GuestStudentRightsFilter.FILTER;
+                authorizedRoles = authorizedRoles.stream().filter(p -> !filter.contains(p.getAuthority())).collect(Collectors.toList());
+            }
+        }
+        authenticatedUser.setAuthorizedRoles(authorizedRoles);
+    }
+
     @Override
     public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         HttpSession session = request.getSession(false);
@@ -180,5 +215,17 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
                 .setParameter(2, session.getId())
                 .executeUpdate();
         }
+    }
+    
+    public boolean checkIfContractAgreementNeeds(HoisUserDetails user) {
+        if (!user.isStudent()) {
+            return false;
+        }
+        School school = em.getReference(School.class, user.getSchoolId());
+        if (Boolean.TRUE.equals(school.getIsStudentTerms())) {
+            Student student = em.getReference(Student.class, user.getStudentId());
+            return !Boolean.TRUE.equals(student.getIsContractAgreed());
+        }
+        return false;
     }
 }

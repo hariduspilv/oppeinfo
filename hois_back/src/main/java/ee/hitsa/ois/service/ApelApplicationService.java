@@ -7,6 +7,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,16 +51,19 @@ import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.message.ApelApplicationCreated;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApelApplicationUtil;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.OisFileForm;
 import ee.hitsa.ois.web.commandobject.apelapplication.ApelApplicationCommentForm;
@@ -92,10 +96,10 @@ public class ApelApplicationService {
 
     private static final String RPM_FROM = "from apel_application aa"
             + " join student s on aa.student_id = s.id"
-            + " join person p on s.person_id=p.id"
-            + " join curriculum_version curv on s.curriculum_version_id=curv.id"
-            + " join curriculum cur on curv.curriculum_id=cur.id"
-            + " join classifier c on aa.status_code=c.code";
+            + " join person p on s.person_id = p.id"
+            + " join curriculum_version curv on s.curriculum_version_id = curv.id"
+            + " join curriculum cur on curv.curriculum_id = cur.id"
+            + " join classifier c on aa.status_code = c.code";
     private static final String RPM_SELECT = "aa.id as application_id, aa.status_code as application_status, s.id as student_id,"
             + " p.firstname as student_firstname, p.lastname as student_lastname, cur.id as curriculum_id, cur.name_et as curriculum_name_et,"
             + " cur.name_en as curriculum_name_en, aa.inserted, aa.confirmed";
@@ -108,38 +112,62 @@ public class ApelApplicationService {
      * @param pageable
      * @return
      */
-    public Page<ApelApplicationSearchDto> search(HoisUserDetails user,
-            ApelApplicationSearchCommand criteria, Pageable pageable) {
+    public Page<ApelApplicationSearchDto> search(HoisUserDetails user, ApelApplicationSearchCommand criteria,
+            Pageable pageable) {
+        boolean hasApelViewPerm = UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_VOTA);
+        boolean hasApelCommitteeViewPerm = UserUtil.hasPermission(user, Permission.OIGUS_V,
+                PermissionObject.TEEMAOIGUS_VOTAKOM);
+
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(RPM_FROM);
-        
         qb.requiredCriteria("aa.school_id = :schoolId", "schoolId", user.getSchoolId());
-        
-        qb.optionalCriteria("aa.student_id = :studentId", "studentId", criteria.getStudent());
+
         if (user.isStudent()) {
             qb.requiredCriteria("aa.student_id = :studentId", "studentId", user.getStudentId());
-        }
-        
-        qb.optionalCriteria("aa.status_code in (:status)", "status", criteria.getStatus());
-        if (user.isTeacher()) {
-            qb.optionalCriteria("aa.status_code = :status", "status", ApelApplicationStatus.VOTA_STAATUS_V);
-            qb.filter("aa.id in (select aa2.id from apel_application aa2"
-                    + " join committee co on aa2.committee_id = co.id"
-                    + " join committee_member cm on co.id = cm.committee_id"
-                    + " where cm.person_id = " + user.getPersonId() + ")");
-        }
-        
-        qb.optionalCriteria("aa.inserted >= :insertedFrom", "insertedFrom", criteria.getInsertedFrom(), DateUtils::firstMomentOfDay);
-        qb.optionalCriteria("aa.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(), DateUtils::lastMomentOfDay);
+        } else {
+            String allowedApplications = "";
+            if (hasApelViewPerm && user.isLeadingTeacher()) {
+                allowedApplications += "cur.id in (:userCurriculumIds)";
+                qb.parameter("userCurriculumIds", user.getCurriculumIds());
+                if (hasApelCommitteeViewPerm) {
+                    allowedApplications += " or ";
+                }
+            }
+            if (hasApelCommitteeViewPerm && (!user.isSchoolAdmin() || !hasApelViewPerm)) {
+                allowedApplications += "exists (select 1 from committee co"
+                        + " join committee_member cm on co.id = cm.committee_id"
+                        + " where co.id = aa.committee_id and cm.person_id = :personId)";
+                qb.parameter("personId", user.getPersonId());
+            }
+            if (!allowedApplications.isEmpty()) {
+                qb.filter("(" + allowedApplications + ")");
+            }
 
-        qb.optionalCriteria("aa.confirmed >= :confirmedFrom", "confirmedFrom", criteria.getConfirmedFrom(), DateUtils::firstMomentOfDay);
-        qb.optionalCriteria("aa.confirmed <= :confirmedThru", "confirmedThru", criteria.getConfirmedThru(), DateUtils::lastMomentOfDay);
-        
+            if (!hasApelViewPerm) {
+                qb.requiredCriteria("aa.status_code = :status", "status", ApelApplicationStatus.VOTA_STAATUS_V);
+            }
+        }
+
+        qb.optionalCriteria("aa.student_id = :studentId", "studentId", criteria.getStudent());
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname",
+                "concat(p.firstname, ' ', p.lastname, ' (', p.idcode, ')')"), "name", criteria.getName());
+        qb.optionalCriteria("aa.status_code in (:status)", "status", criteria.getStatus());
+
+        qb.optionalCriteria("aa.inserted >= :insertedFrom", "insertedFrom", criteria.getInsertedFrom(),
+                DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("aa.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(),
+                DateUtils::lastMomentOfDay);
+
+        qb.optionalCriteria("aa.confirmed >= :confirmedFrom", "confirmedFrom", criteria.getConfirmedFrom(),
+                DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("aa.confirmed <= :confirmedThru", "confirmedThru", criteria.getConfirmedThru(),
+                DateUtils::lastMomentOfDay);
+
         qb.optionalCriteria("aa.committee_id = :committeeId", "committeeId", criteria.getCommittee());
-        
+
         List<?> data = qb.select("aa.id", em).getResultList();
         List<Long> applicationIds = StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
         Map<Long, List<Long>> committeeMembers = applicationCommitteeMembers(applicationIds);
-        
+
         qb.sort(pageable);
         return JpaQueryUtil.pagingResult(qb, RPM_SELECT, em, pageable).map(r -> {
             ApelApplicationSearchDto dto = new ApelApplicationSearchDto();
@@ -204,16 +232,19 @@ public class ApelApplicationService {
     public ApelApplication create(HoisUserDetails user, ApelApplicationForm applicationForm) {
         ApelApplication application = new ApelApplication();
         EntityUtil.bindToEntity(applicationForm, application, "student", "school", "status", "records", "files");
-        
-        application.setStudent(EntityUtil.getOptionalOne(Student.class, applicationForm.getStudent(), em));
+
+        Student student = em.getReference(Student.class, applicationForm.getStudent().getId());
+        application.setStudent(student);
+        application.setIsVocational(
+                Boolean.valueOf(CurriculumUtil.isVocational(student.getCurriculumVersion().getCurriculum())));
         application.setSchool(em.getReference(School.class, user.getSchoolId()));
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_K);
-        
+
         return save(user, application, applicationForm);
     }
 
     /**
-     * Store student APEL application
+     * Saves which subjects/modules are transferred and application committee
      * 
      * @param user
      * @param application
@@ -221,11 +252,21 @@ public class ApelApplicationService {
      * @return
      */
     public ApelApplication save(HoisUserDetails user, ApelApplication application, ApelApplicationForm applicationForm) {
-        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.bindToEntity(applicationForm, application, "records", "files", "committee", "decision");
-        updateRecords(user, application, applicationForm);
-        application.setCommittee(applicationForm.getCommitteeId() != null
-                ? em.getReference(Committee.class, applicationForm.getCommitteeId()) : null);
+        for (ApelApplicationRecordForm recordForm : applicationForm.getRecords()) {
+            for (ApelApplicationFormalSubjectOrModuleForm formalForm : recordForm.getFormalSubjectsOrModules()) {
+                ApelApplicationFormalSubjectOrModule subjectOrModule = EntityUtil
+                        .getOptionalOne(ApelApplicationFormalSubjectOrModule.class, formalForm.getId(), em);
+                subjectOrModule.setTransfer(formalForm.getTransfer());
+            }
+            for (ApelApplicationInformalSubjectOrModuleForm informalForm : recordForm.getInformalSubjectsOrModules()) {
+                ApelApplicationInformalSubjectOrModule subjectOrModule = EntityUtil
+                        .getOptionalOne(ApelApplicationInformalSubjectOrModule.class, informalForm.getId(), em);
+                subjectOrModule.setTransfer(informalForm.getTransfer());
+            }
+        }
+
+        application.setCommittee(EntityUtil.getOptionalOne(Committee.class, applicationForm.getCommitteeId(), em));
         return EntityUtil.save(application, em);
     }
 
@@ -265,7 +306,10 @@ public class ApelApplicationService {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(file, em);
     }
-    
+
+    // TODO: not needed because all records are saved one by one
+    // kept because it might be useful for combined formal and informal learning
+    /*
     private void updateRecords(HoisUserDetails user, ApelApplication application, ApelApplicationForm applicationForm) {
         EntityUtil.bindEntityCollection(application.getRecords(), ApelApplicationRecord::getId,
                 applicationForm.getRecords(), ApelApplicationRecordForm::getId, recordForm -> {
@@ -285,6 +329,7 @@ public class ApelApplicationService {
             updateFormalReplacedSubjectsOrModules(recordForm, updatedRecord);
         });
     }
+    */
 
     /**
      * Create new APEL application's record
@@ -851,8 +896,7 @@ public class ApelApplicationService {
     public List<CurriculumVersionHigherModuleResult> studentModules(Student student) {
         // final thesis and final exam modules are not allowed
         JpaNativeQueryBuilder qb = studentResultHigherService.studentModulesQueryBuilder(student);
-        qb.requiredCriteria("cvhm.type_code not in (:typeCode)", "typeCode",
-                EnumUtil.toNameList(HigherModuleType.KORGMOODUL_F, HigherModuleType.KORGMOODUL_L));
+        qb.requiredCriteria("cvhm.type_code not in (:typeCode)", "typeCode", HigherModuleType.FINAL_MODULES);
 
         List<?> data = qb.select("cvhm.id, cvhm.name_et, cvhm.name_en, cvhm.type_code", em).getResultList();
         return StreamUtil.toMappedList(r -> {

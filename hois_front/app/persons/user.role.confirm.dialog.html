@@ -1,0 +1,14 @@
+<md-dialog aria-label="grade add dialog" flex="30" flex-xs="100" ng-cloak>
+  <md-dialog-content>
+    <div class="md-dialog-content">
+      <p translate="{{messages.prompt}}" translate-values="{{messages}}"></p>
+      <p ng-repeat="prompt in messages.extraPrompts" translate="{{prompt}}" translate-values="{{messages}}"></p>
+    </div>
+  </md-dialog-content>
+
+  <md-dialog-actions layout="row" layout-align="start center">
+    <md-button ng-click="yes()" class="md-raised md-primary">{{messages.yes | translate}}</md-button>
+    <md-button ng-click="no()" class="md-raised md-primary">{{messages.no | translate}}</md-button>
+    <md-button ng-click="cancel()" class="md-raised">{{messages.cancel | translate}}</md-button>
+  </md-dialog-actions>
+</md-dialog>

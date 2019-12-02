@@ -37,7 +37,7 @@
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row ng-repeat="student in record.students | orderBy: 'name'" ng-class-odd="'odd'" ng-class-even="'even'">
+          <tr md-row ng-repeat="student in record.students | orderBy: ['lastname', 'firstname']" ng-class-odd="'odd'" ng-class-even="'even'">
             <ng-form name="midtermTaskUnitForm">
               <td md-cell>
                 {{student.name}}
@@ -99,7 +99,7 @@
 
   <div layout="row">
       <md-button class="md-raised md-primary" ng-click="save()" ng-hide="record.subjectStudyPeriod.isPracticeSubject || record.students.length === 0">{{'main.button.save' | translate}}</md-button>
-      <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods')">{{'main.button.back' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods', midtermTaskResultForm)">{{'main.button.back' | translate}}</md-button>
       <md-button class="md-raised" ng-href="#/subjectStudyPeriods/{{subjectStudyPeriodId}}/midtermTasks"
       ng-hide="record.subjectStudyPeriod.isPracticeSubject">{{'midtermTask.add' | translate}}</md-button>
   </div>

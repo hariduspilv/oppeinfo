@@ -83,9 +83,9 @@
         <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
           <div flex="5" flex-xs="0">&nbsp;</div>
           <div flex="15" style="word-wrap: break-word">{{currentLanguageNameField(type)}} ({{getTotalCredits(modules | filter: filterEmptyModulesByType(type.code))}} EKAP)</div>
-          <div layout="column" flex="75">
-            <div flex="100" ng-repeat="module in modules | filter: filterEmptyModulesByType(type.code) | orderBy: 'nameEt'" layout="row"
-              class="align-center">
+          <div layout="column" flex="80">
+            <div flex="100" ng-repeat="module in modules | filter: filterEmptyModulesByType(type.code) | orderBy: 'nameEt'"
+              layout="row" class="align-center occupation-module-row" ng-class-odd="'odd'" ng-class-even="'even'">
               <a flex="50" flex-xs="45" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{occupationModuleHasBaseModule(module) ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
               <span flex="15"  style="word-wrap: break-word">{{module.credits}}&nbsp; EKAP</span>
               <div flex="30">
@@ -113,9 +113,9 @@
           <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
             <div flex="5" flex-xs="0">&nbsp;</div>
             <div flex="15" style="word-wrap: break-word">{{currentLanguageNameField(type)}} ({{getTotalCredits(modules | filter: filterModulesByType(type.code, occupation.occupation.code))}} EKAP)</div>
-            <div layout="column" flex="75">
+            <div layout="column" flex="80">
               <div flex="100" ng-repeat="module in modules | filter: filterModulesByType(type.code, occupation.occupation.code) | orderBy: 'nameEt'"
-                layout="row" class="align-center">
+                layout="row" class="align-center occupation-module-row" ng-class-odd="'odd'" ng-class-even="'even'">
                 <a flex="40" flex-xs="45" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{occupationModuleHasBaseModule(module) ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                 <span flex="15" style="word-wrap: break-word">{{module.credits}}&nbsp; EKAP</span>
                 <div flex="30">
@@ -140,9 +140,9 @@
             <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
               <div flex="5" flex-xs="0">&nbsp;</div>
               <div flex="15" style="word-wrap: break-word">{{currentLanguageNameField(type)}} ({{getTotalCredits(modules | filter: filterModulesByType(type.code, partOccupation))}} EKAP)</div>
-              <div layout="column" flex="75">
+              <div layout="column" flex="80">
                 <div flex="100" ng-repeat="module in modules | filter: filterModulesByType(type.code, partOccupation) | orderBy: 'nameEt'"
-                  layout="row" class="align-center">
+                  layout="row" class="align-center occupation-module-row" ng-class-odd="'odd'" ng-class-even="'even'">
                   <a flex="50" flex-xs="45" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{occupationModuleHasBaseModule(module) ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                   <span flex="15"  style="word-wrap: break-word">{{module.credits}}&nbsp; EKAP</span>
                   <div flex="30">
@@ -168,9 +168,9 @@
             <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
               <div flex="5" flex-xs="0">&nbsp;</div>
               <div flex="15" style="word-wrap: break-word">{{currentLanguageNameField(type)}} ({{getTotalCredits(modules | filter: filterModulesByType(type.code, speciality))}} EKAP)</div>
-              <div layout="column" flex="75">
+              <div layout="column" flex="80">
                 <div flex="100" ng-repeat="module in modules | filter: filterModulesByType(type.code, speciality) | orderBy: 'nameEt'" layout="row"
-                  class="align-center">
+                  layout="row" class="align-center occupation-module-row" ng-class-odd="'odd'" ng-class-even="'even'">
                   <a flex="50" flex-xs="45" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{occupationModuleHasBaseModule(module) ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
                   <span flex="15">{{module.credits}}&nbsp; EKAP</span>
                   <div flex="30">

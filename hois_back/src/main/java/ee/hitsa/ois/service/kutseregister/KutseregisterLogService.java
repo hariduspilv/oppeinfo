@@ -64,7 +64,7 @@ public class KutseregisterLogService {
     public Page<QfLogDto> search(HoisUserDetails user, EhisLogCommand command, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from ws_qf_log l").sort(pageable);
 
-        if(user.isSchoolAdmin()) {
+        if(user.isSchoolAdmin() || user.isLeadingTeacher()) {
             qb.requiredCriteria("l.school_id = :schoolId", "schoolId", user.getSchoolId());
         } else {
             // main admin
@@ -98,7 +98,7 @@ public class KutseregisterLogService {
         if(school == null) {
             UserUtil.assertIsMainAdmin(user);
         } else {
-            UserUtil.assertIsSchoolAdmin(user, school);
+            UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, school);
         }
         QfLogDto dto = new QfLogDto(null, messageType, null, null, null, null);
         dto.setRequest(logentry.getRequest());

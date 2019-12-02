@@ -14,6 +14,7 @@ import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StreamUtil;
 
 /**
  * DISCLAIMER: "undefined" is a placeholder before proper authentication is
@@ -30,6 +31,7 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
     private Long teacherId;
     private LoginMethod loginMethod;
     private String mobileNumber;
+    private List<Long> curriculumIds;
 
     HoisUserDetails(User user, List<String> roles) {
         super(PersonUtil.fullnameAndIdcode(user.getPerson()), "undefined", getAuthorities(roles));
@@ -39,6 +41,8 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
         this.schoolId = EntityUtil.getNullableId(user.getSchool());
         this.studentId = EntityUtil.getNullableId(user.getStudent());
         this.teacherId = EntityUtil.getNullableId(user.getTeacher());
+        this.curriculumIds = StreamUtil.toMappedList(uc -> EntityUtil.getId(uc.getCurriculum()),
+                user.getUserCurriculums());
     }
 
     private static Collection<? extends GrantedAuthority> getAuthorities(List<String> roles) {
@@ -67,6 +71,10 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
 
     public boolean isTeacher() {
         return Role.ROLL_O.name().equals(role) && teacherId != null;
+    }
+
+    public boolean isLeadingTeacher() {
+        return schoolId != null && Role.ROLL_J.name().equals(role);
     }
 
     public Long getUserId() {
@@ -107,6 +115,10 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
 
     public Long getTeacherId() {
         return teacherId;
+    }
+
+    public List<Long> getCurriculumIds() {
+        return curriculumIds;
     }
 
     public static HoisUserDetails fromPrincipal(Principal principal) {

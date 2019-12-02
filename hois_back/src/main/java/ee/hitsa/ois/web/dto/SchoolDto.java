@@ -29,7 +29,7 @@ public class SchoolDto extends SchoolForm {
     }
 
     public static SchoolDto of(School school) {
-        return EntityUtil.bindToDto(school, new SchoolDto());
+        return EntityUtil.bindToDto(school, new SchoolDto(), "contractText");
     }
 
     public static SchoolDto ofWithLogo(School school) {

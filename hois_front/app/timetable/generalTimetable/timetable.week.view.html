@@ -1,20 +1,3 @@
-
-<div layout-padding ng-if="shownWeek && timetableEvents">
-    <div layout="row" flex>
-        <div layout="row" layout-align="end end" layout-sm="column" layout-xs="column" flex="90" style="margin-left: auto; margin-right: auto;">
-            <div ng-repeat="c in capacityTypes" flex-offset="5" class="capacity-type-legend" md-colors="{background: c.color}">
-                <span>{{currentLanguageNameField(c)}}</span>
-            </div>
-            <div flex-offset="5" class="capacity-type-legend" md-colors="{background: 'primary-100-0.8'}">
-                <span>{{'timetable.timetableEvent.singleEvent' | translate}}</span>
-            </div>
-            <div flex-offset="5" class="capacity-type-legend" md-colors="{background: 'accent-100-0.8'}">
-                <span>{{'timetable.timetableEvent.occupied' | translate}}</span>
-            </div>
-        </div>  
-    </div>
-</div>
-
 <div layout-padding ng-if="shownWeek && timetableEvents">
     <div layout="row" layout-align="center" style="padding: 0px">
         <a ng-if="shownTimetableCurriculum || shownTeacher || shownRoom" ng-href="#/timetable/{{::schoolId}}/{{timetableType}}/{{typeId}}/{{studyYearId}}/{{weekIndex}}">
@@ -22,9 +5,15 @@
             <span ng-if="shownTeacher">{{shownTeacher.lastname}}, {{shownTeacher.firstname}}</span>
             <span ng-if="shownRoom">{{shownRoom.buildingCode}}, {{shownRoom.roomCode}}</span>
         </a>
+        <a ng-if="shownPerson" ng-href="#/timetable/person/{{encodedPerson}}/{{studyYearId}}/{{weekIndex}}">
+            <span>{{shownPerson.lastname}}, {{shownPerson.firstname}}</span>
+        </a>
     </div>
     <div layout="row" layout-align="center" style="padding: 0px">
-        <md-button ng-if="previousWeekIndex !== undefined && directRoute" class="md-icon-button md-primary" ng-href="#/timetable/{{::schoolId}}/{{timetableType}}/{{typeId}}/{{studyYearId}}/{{previousWeekIndex}}">
+        <md-button ng-if="previousWeekIndex !== undefined && directRoute && !encodedPerson" class="md-icon-button md-primary" ng-href="#/timetable/{{::schoolId}}/{{timetableType}}/{{typeId}}/{{studyYearId}}/{{previousWeekIndex}}">
+            <md-icon>arrow_back</md-icon>
+        </md-button>
+        <md-button ng-if="previousWeekIndex !== undefined && directRoute && encodedPerson" class="md-icon-button md-primary" ng-href="#/timetable/person/{{encodedPerson}}/{{studyYearId}}/{{previousWeekIndex}}">
             <md-icon>arrow_back</md-icon>
         </md-button>
         <md-button ng-if="previousWeekIndex !== undefined && !directRoute" class="md-icon-button md-primary" ng-click="previousWeek(previousWeekIndex)">
@@ -35,7 +24,10 @@
         <select class="timetableWeekSelect" ng-model="shownWeek" ng-change="weekSelectChange(shownWeek)" required
           ng-options="((week.start | hoisDate) + ' - ' + (week.end | hoisDate)) for week in weeks"></select>
 
-        <md-button ng-if="nextWeekIndex && directRoute" class="md-icon-button md-primary" ng-href="#/timetable/{{::schoolId}}/{{timetableType}}/{{typeId}}/{{studyYearId}}/{{nextWeekIndex}}">
+        <md-button ng-if="nextWeekIndex && directRoute && !encodedPerson" class="md-icon-button md-primary" ng-href="#/timetable/{{::schoolId}}/{{timetableType}}/{{typeId}}/{{studyYearId}}/{{nextWeekIndex}}">
+            <md-icon>arrow_forward</md-icon>
+        </md-button>
+        <md-button ng-if="nextWeekIndex && directRoute && encodedPerson" class="md-icon-button md-primary" ng-href="#/timetable/person/{{encodedPerson}}/{{studyYearId}}/{{nextWeekIndex}}">
             <md-icon>arrow_forward</md-icon>
         </md-button>
         <md-button ng-if="nextWeekIndex && !directRoute" class="md-icon-button md-primary" ng-click="nextWeek(nextWeekIndex)">
@@ -87,23 +79,16 @@
                                 <span ng-if="event.public">{{currentLanguageNameField(event)}}</span>
                                 <span ng-if="!event.public">{{'timetable.timetableEvent.occupied' | translate}}</span>
                             </div>
-                            <md-button ng-if="auth != null && event.showStudyMaterials && event.public && event.journalId" ng-href="/#/studyMaterial/vocational/{{event.journalId}}/view"
-                                class="studyMaterialsIcon md-icon-button" aria-label="materials">
+                            <md-button ng-if="event.showStudyMaterials && event.public && event.journalId" class="studyMaterialsIcon md-icon-button" aria-label="materials"
+                                ng-href="/#/timetable/studyMaterial/{{::schoolId}}/vocational/{{event.journalId}}/view">
                                 <md-icon md-font-set="material-icons">folder</md-icon>
                             </md-button>
-                            <md-button ng-if="auth != null && event.showStudyMaterials && event.public && event.subjectStudyPeriodId" ng-href="/#/studyMaterial/higher/{{event.subjectStudyPeriodId}}/view"
-                                class="studyMaterialsIcon md-icon-button" aria-label="materials">
-                                <md-icon md-font-set="material-icons">folder</md-icon>
-                            </md-button>
-                            <md-button ng-if="auth == null && event.showStudyMaterials && event.public && event.journalId" ng-href="/#/studyMaterial/{{::schoolId}}/vocational/{{event.journalId}}/view"
-                                class="studyMaterialsIcon md-icon-button" aria-label="materials">
-                                <md-icon md-font-set="material-icons">folder</md-icon>
-                            </md-button>
-                            <md-button ng-if="auth == null && event.showStudyMaterials && event.public && event.subjectStudyPeriodId" ng-href="/#/studyMaterial/{{::schoolId}}/higher/{{event.subjectStudyPeriodId}}/view"
-                                class="studyMaterialsIcon md-icon-button" aria-label="materials">
+                            <md-button ng-if="event.showStudyMaterials && event.public && event.subjectStudyPeriodId" class="studyMaterialsIcon md-icon-button" aria-label="materials"
+                                ng-href="/#/timetable/studyMaterial/{{::schoolId}}/higher/{{event.subjectStudyPeriodId}}/view">
                                 <md-icon md-font-set="material-icons">folder</md-icon>
                             </md-button>
                         </div>
+                        <div ng-if="event.person">{{'timetable.timetableEvent.person' | translate}}: {{currentLanguageNameField(event.person)}}</div>
                         <div>
                             <span ng-repeat="teacher in event.teachers track by $index">
                                 <a ng-if="teacher.id" ng-href="/#/timetable/{{::schoolId}}/teacher/{{teacher.id}}/{{studyYearId}}/{{weekIndex}}">{{teacher.name}}</a>
@@ -138,10 +123,21 @@
             </hois-collapsable-header>
             <div layout="column">
                 <div flex ng-repeat="event in day.events track by $index">
-                    <div md-colors="event.public ? {background: getEventColor(event.capacityType)} : {background: 'accent-100-0.8'}" style="border: 1px solid rgba(0,0,0, 0.3); min-height: 80px;">
+                    <div md-colors="event.public ? {background: getEventColor(event.capacityType)} : {background: 'accent-100-0.8'}"
+                        style="position:relative; border: 1px solid rgba(0,0,0, 0.3); min-height: 80px;">
                         <div>
                             <span style="font-weight: bold">{{event.timeStart}}-{{event.timeEnd}}</span>
-                            <span ng-if="!event.public">{{currentLanguageNameField(event)}}</span>
+                            <md-button ng-if="event.showStudyMaterials && event.public && event.journalId" class="studyMaterialsIcon md-icon-button" aria-label="materials"
+                                ng-href="/#/timetable/studyMaterial/{{::schoolId}}/vocational/{{event.journalId}}/view">
+                                <md-icon md-font-set="material-icons">folder</md-icon>
+                            </md-button>
+                            <md-button ng-if="event.showStudyMaterials && event.public && event.subjectStudyPeriodId" class="studyMaterialsIcon md-icon-button" aria-label="materials"
+                                ng-href="/#/timetable/studyMaterial/{{::schoolId}}/higher/{{event.subjectStudyPeriodId}}/view">
+                                <md-icon md-font-set="material-icons">folder</md-icon>
+                            </md-button>
+                        </div>
+                        <div>
+                            <span ng-if="event.public">{{currentLanguageNameField(event)}}</span>
                             <span ng-if="!event.public">{{'timetable.timetableEvent.occupied' | translate}}</span>
                         </div>
                         <div>
@@ -172,6 +168,21 @@
             </div>
         </hois-collapsable>
         </span>
+    </div>
+
+    <div ng-if="timetableEvents && timetableEvents.length > 0" layout="row" flex>
+        <div layout="row" layout-align="end end" layout-align-sm="start start" layout-align-xs="start start"
+            layout-sm="column" layout-xs="column" flex="90" class="timetable-capacities">
+            <div ng-repeat="c in capacityTypes" flex-offset="5" class="capacity-type-legend" md-colors="{background: c.color}">
+                <span>{{currentLanguageNameField(c)}}</span>
+            </div>
+            <div flex-offset="5" class="capacity-type-legend" md-colors="{background: 'primary-100-0.8'}">
+                <span>{{'timetable.timetableEvent.singleEvent' | translate}}</span>
+            </div>
+            <div flex-offset="5" class="capacity-type-legend" md-colors="{background: 'accent-100-0.8'}">
+                <span>{{'timetable.timetableEvent.occupied' | translate}}</span>
+            </div>
+        </div>
     </div>
 
     <div>

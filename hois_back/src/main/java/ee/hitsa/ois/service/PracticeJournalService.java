@@ -57,6 +57,7 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.PracticeJournalUserRights;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.validation.PracticeJournalValidation;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.OisFileForm;
@@ -116,7 +117,7 @@ public class PracticeJournalService {
             + "(select max(pje.inserted) from practice_journal_entry pje where pje.practice_journal_id = pj.id) as student_last_entry_date, "
             + "cvo.id as cvo_id, cv.code as cv_code, cm.name_et as cm_name_et, mcl.name_et as mcl_name_et, cm.name_en as cm_name_en, mcl.name_en as mcl_name_en, "
             + "cvot.id as cvot_id, cvot.name_et as cvot_name_et, length(trim(coalesce(pj.supervisor_opinion, ''))) > 0 as has_supervisor_opinion, "
-            + "subject.id as subjectId, subject.name_et as subject_name_et, subject.name_en as subject_name_en, student.status_code as student_status";
+            + "subject.id as subjectId, subject.name_et as subject_name_et, subject.name_en as subject_name_en, student.status_code as student_status, student.type_code as studentType";
     
     private static final String GROUP_BY = "pj.id, pj.start_date, pj.end_date, pj.practice_place, pj.status_code, "
             + "student.id, student_person.firstname, student_person.lastname, student_group.code, "
@@ -124,12 +125,24 @@ public class PracticeJournalService {
             + "enterprise.name, "
             + "cvo.id, cv.code, cm.name_et, mcl.name_et, cm.name_en, mcl.name_en, "
             + "cvot.id, cvot.name_et, "
-            + "subject.id, subject.name_et, subject.name_en";
+            + "subject.id, subject.name_et, subject.name_en, student.type_code";
 
     public Page<PracticeJournalSearchDto> search(HoisUserDetails user, PracticeJournalSearchCommand command,
             Pageable pageable) {
+        if (user.isStudent() || user.isRepresentative()) {
+            command.setStudent(user.getStudentId());
+        } else if (user.isTeacher()) {
+            command.setTeacher(user.getTeacherId());
+        }
+
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable).groupBy(GROUP_BY);
         qb.requiredCriteria("pj.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria(
+                    "exists (select cur.id from curriculum_version cv2 join curriculum cur on cur.id = cv2.curriculum_id"
+                            + " where student.curriculum_version_id = cv2.id and cur.id in (:userCurriculumIds))",
+                    "userCurriculumIds", user.getCurriculumIds());
+        }
 
         qb.optionalCriteria("pj.study_year_id = :studyYearId", "studyYearId", command.getStudyYear());
         qb.optionalCriteria("student.student_group_id = :studentGroupId", "studentGroupId", command.getStudentGroup());
@@ -158,10 +171,11 @@ public class PracticeJournalService {
             dto.setCanStudentAddEntries(Boolean.valueOf(PracticeJournalUserRights.canStudentAddEntries(dto.getStatus(),
                     dto.getEndDate(), hasSupervisorOpinion)));
             String studentStatus = resultAsString(r, 27);
-            dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate()) && PracticeJournalUserRights.isActive(studentStatus)));
-            dto.setCanConfirm(Boolean.valueOf(PracticeJournalUserRights.canConfirm(user, dto.getEndDate())));
-
-            String studentName = PersonUtil.fullname(resultAsString(r, 6), resultAsString(r, 7));
+            dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate(), studentStatus)));
+            dto.setCanConfirm(
+                    Boolean.valueOf(PracticeJournalUserRights.canConfirm(user, dto.getEndDate(), studentStatus)));
+            
+            String studentName = PersonUtil.fullnameOptionalGuest(resultAsString(r, 6), resultAsString(r, 7), resultAsString(r, 28));
             dto.setStudent(new AutocompleteResult(resultAsLong(r, 5), studentName, studentName));
             dto.setStudentGroup(resultAsString(r, 8));
 
@@ -172,8 +186,9 @@ public class PracticeJournalService {
             dto.setEnterpriseSupervisors(resultAsString(r, 13));
 
             dto.setStudentLastEntryDate(resultAsLocalDateTime(r, 14));
-            
-            dto.setCanAddEntries(Boolean.valueOf(PracticeJournalUserRights.canAddEntries(user, dto) && PracticeJournalUserRights.isActive(studentStatus)));
+
+            dto.setCanAddEntries(Boolean.valueOf(
+                    PracticeJournalUserRights.canAddEntries(user, dto.getCanStudentAddEntries(), studentStatus)));
 
             dto.setModuleSubjects(moduleSubjects.get(dto.getId()));
             return dto;
@@ -258,24 +273,17 @@ public class PracticeJournalService {
                 dto.setStudentPracticeEvalCriteria(setEvalValues(StreamUtil.toMappedList(PracticeEvaluationCriteriaDto::of,practiceJournal.getPracticeEvaluation().getCriteria()), practiceJournal));
             }
         }
-        dto.setCanAddEntries(Boolean.valueOf(PracticeJournalUserRights.isActive(dto.getStudentStatus())));
+        dto.setCanAddEntries(Boolean.valueOf(StudentUtil.isActive(dto.getStudentStatus())));
+        dto.setLetterGrades(practiceJournal.getSchool().getIsLetterGrade());
         return dto;
     }
 
     public PracticeJournalDto get(HoisUserDetails user, PracticeJournal practiceJournal) {
         PracticeJournalDto dto = get(practiceJournal);
-        dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate()) && PracticeJournalUserRights.isActive(dto.getStudentStatus())));
-        dto.setCanConfirm(Boolean.valueOf(PracticeJournalUserRights.canConfirm(user, dto.getEndDate()) && PracticeJournalUserRights.isActive(dto.getStudentStatus())));
-        //PracticeJournal deletion control
-        if (practiceJournal.getContract() != null) {
-            dto.setCanDelete(Boolean.valueOf(PracticeJournalUserRights.canDelete(user, dto.getEndDate()) 
-                    && "LEPING_STAATUS_T".equals(practiceJournal.getContract().getStatus().getCode())
-                    && practiceJournal.getPracticeJournalEntries().isEmpty()
-                    && practiceJournal.getPracticeJournalEvaluations().isEmpty()));
-        } else {
-            dto.setCanDelete(Boolean.valueOf(PracticeJournalUserRights.canDelete(user, dto.getEndDate())));
-        }
-        dto.setCanAddEntries(Boolean.valueOf(PracticeJournalUserRights.canAddEntries(user, dto) && PracticeJournalUserRights.isActive(dto.getStudentStatus())));
+        dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, practiceJournal)));
+        dto.setCanConfirm(Boolean.valueOf(PracticeJournalUserRights.canConfirm(user, practiceJournal)));
+        dto.setCanDelete(Boolean.valueOf(PracticeJournalUserRights.canDelete(user, practiceJournal)));
+        dto.setCanAddEntries(Boolean.valueOf(PracticeJournalUserRights.canAddEntries(user, dto)));
         return dto;
     }
 
@@ -356,18 +364,8 @@ public class PracticeJournalService {
     }
 
     public void delete(HoisUserDetails user, PracticeJournal practiceJournal) {
-        // If contract is not null, check user rights, end date, 'Tühistatud' status, missing entries and evaluations
-        // If contract is null, check user rights and end date
-        if ((practiceJournal.getContract() != null 
-                && PracticeJournalUserRights.canDelete(user, practiceJournal.getEndDate()) 
-                && "LEPING_STAATUS_T".equals(practiceJournal.getContract().getStatus().getCode())
-                && practiceJournal.getPracticeJournalEntries().isEmpty()
-                && practiceJournal.getPracticeJournalEvaluations().isEmpty()) 
-                || (practiceJournal.getContract() == null 
-                && PracticeJournalUserRights.canDelete(user, practiceJournal.getEndDate()))) {
-            EntityUtil.setUsername(user.getUsername(), em);
-            EntityUtil.deleteEntity(practiceJournal, em);
-        }
+        EntityUtil.setUsername(user.getUsername(), em);
+        EntityUtil.deleteEntity(practiceJournal, em);
     }
 
     public PracticeJournal saveEntriesStudent(PracticeJournal practiceJournal,

@@ -1,11 +1,15 @@
-<div ng-include="'timetable/generalTimetable/timetable.generalTimetable.navbar.html'"></div>
+<div ng-if="auth !== undefined" ng-include="'timetable/generalTimetable/timetable.generalTimetable.navbar.html'"></div>
 
 <div>
-  <div layout="row" layout-sm="column" layout-xs="column" layout-margin>
-    <div layout="column" class="form-readonly" flex="50" flex-sm="100" flex-offset="50" flex-offset-xs="0"
-      flex-offset-sm="0">
-      <div>&nbsp;</div>
-      <md-input-container>
+  <div ng-show="studyYears">
+    <div>&nbsp;</div>
+    <div class="form-readonly" layout="row" layout-sm="column" layout-xs="column" layout-margin>
+      <md-input-container ng-if="personalUrl" flex="45" flex-sm="100" flex-xs="100">
+        <label>{{'timetable.search.personalUrl' | translate}}</label>
+        <hois-value value="personalUrl" href-value="personalUrl"></hois-value>
+      </md-input-container>
+
+      <md-input-container flex="50" flex-sm="100" flex-offset="{{personalUrl ? 5 : 50}}" flex-offset-xs="0" flex-offset-sm="0">
         <label class="textInput">{{'timetable.search.studyYear' | translate}}</label>
         <div class="md-body-1 hois-value">
           <span ng-repeat="sy in studyYears | orderBy: 'startDate'">
@@ -18,11 +22,7 @@
     </div>
   </div>
 
-  <div ng-if="auth.isStudent() || auth.isParent()" ng-controller="TimetableWeekViewController">
-    <div ng-include="'timetable/generalTimetable/timetable.week.view.html'"></div>
-  </div>
-
-  <div ng-if="auth.isTeacher()" ng-controller="TimetableWeekViewController">
+  <div ng-controller="TimetableWeekViewController">
     <div ng-include="'timetable/generalTimetable/timetable.week.view.html'"></div>
   </div>
 </div>

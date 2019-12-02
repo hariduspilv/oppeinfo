@@ -4,8 +4,8 @@ angular.module('hitsaOis').controller('StudentCardSearchController', ['$scope', 
   function ($scope, $q, QueryUtils, config, $httpParamSerializer, $route, dialogService, message, FormUtils) {
     $scope.currentNavItem = 'student.card.search';
 
-    var auth = $route.current.locals.auth;
-    $scope.canEdit = auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_PILET') !== -1;
+    $scope.auth = $route.current.locals.auth;
+    $scope.canEdit = $scope.auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_PILET') !== -1;
 
     QueryUtils.createQueryForm($scope, '/studentCards', {order: 'p.lastname, p.firstname'});
 
@@ -43,8 +43,8 @@ angular.module('hitsaOis').controller('StudentCardSearchController', ['$scope', 
   function ($scope, $q, QueryUtils, dialogService, message, $route, FormUtils, $timeout) {
     $scope.currentNavItem = 'student.card.management';
 
-    var auth = $route.current.locals.auth;
-    $scope.canEdit = auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_PILET') !== -1;
+    $scope.auth = $route.current.locals.auth;
+    $scope.canEdit = $scope.auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_PILET') !== -1;
 
     QueryUtils.createQueryForm($scope, '/studentCards', {order: 'p.lastname, p.firstname'}, function () {
       if (angular.isDefined($scope.cards) && $scope.cards.$dirty === true ) {

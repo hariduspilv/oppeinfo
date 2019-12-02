@@ -1,7 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('StudyMaterialHigherListController', ['$scope', '$route', '$timeout', 'QueryUtils', 'message',
-  'USER_ROLES', 'AuthService', 'DataUtils',
+angular.module('hitsaOis').controller('StudyMaterialHigherListController', ['$scope', '$route', '$timeout', 'QueryUtils', 'message', 'USER_ROLES', 'AuthService', 'DataUtils',
   function ($scope, $route, $timeout, QueryUtils, message, USER_ROLES, AuthService, DataUtils) {
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEMATERJAL);
     $scope.auth = $route.current.locals.auth;
@@ -40,8 +39,7 @@ angular.module('hitsaOis').controller('StudyMaterialHigherListController', ['$sc
       }
       $timeout($scope.loadData);
     });
-  }]).controller('StudyMaterialVocationalListController', ['$scope', '$route', '$timeout', 'QueryUtils', 'message',
-    'USER_ROLES', 'AuthService', 'DataUtils',
+  }]).controller('StudyMaterialVocationalListController', ['$scope', '$route', '$timeout', 'QueryUtils', 'message', 'USER_ROLES', 'AuthService', 'DataUtils',
     function ($scope, $route, $timeout, QueryUtils, message, USER_ROLES, AuthService, DataUtils) {
       $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEMATERJAL);
       $scope.auth = $route.current.locals.auth;

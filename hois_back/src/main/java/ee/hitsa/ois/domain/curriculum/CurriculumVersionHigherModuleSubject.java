@@ -22,6 +22,7 @@ public class CurriculumVersionHigherModuleSubject extends BaseEntityWithId {
     private Boolean optional;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false, nullable = false)
     private Subject subject;
     
     @ManyToOne(fetch = FetchType.LAZY)

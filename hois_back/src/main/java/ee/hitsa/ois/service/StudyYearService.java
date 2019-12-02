@@ -168,6 +168,36 @@ public class StudyYearService {
         return Long.valueOf(((Number) result.get(0)).longValue());
     }
 
+
+    /**
+     * Get next study period id
+     * @param schoolId
+     * @return null if there is no next study period
+     */
+    public Long getNextStudyPeriod(Long schoolId) {
+        String from = "from study_period ss inner join study_year yy on ss.study_year_id = yy.id";
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
+        Long currentPeriodId = getCurrentStudyPeriod(schoolId);
+        
+        if (currentPeriodId == null) {
+            return null;
+        }
+
+        qb.requiredCriteria("yy.school_id = :school_id", "school_id", schoolId);
+        qb.requiredCriteria(
+                "ss.start_date = (select min(ss2.start_date) from study_period ss2 join study_year yy2"
+                        + " on ss2.study_year_id = yy2.id and yy2.school_id = :school_id where ss2.start_date > current_date "
+                        + "and ss2.id != :periodId) ",
+                "school_id", schoolId);
+        qb.parameter("periodId", currentPeriodId);
+        
+        List<?> result = qb.select("ss.id", em).setMaxResults(1).getResultList();
+        if (result.isEmpty()) {
+            return null;
+        }
+        return Long.valueOf(((Number) result.get(0)).longValue());
+    }
+
     /**
      * Returns current study year
      * @param schoolId

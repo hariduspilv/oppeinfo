@@ -9,13 +9,14 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 
 public class ApelApplicationDto extends InsertedChangedVersionDto {
 
     private Long id;
     private AutocompleteResult school;
     private AutocompleteResult student;
-    private AutocompleteResult curriculum;
+    private CurriculumVersionResult curriculumVersion;
     private String status;
     private String confirmedBy;
     private LocalDateTime confirmed;
@@ -40,7 +41,11 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
         if (application == null) {
             return null;
         }
-        ApelApplicationDto dto = EntityUtil.bindToDto(application, new ApelApplicationDto(), "record", "files", "confirmedBy");
+        ApelApplicationDto dto = EntityUtil.bindToDto(application, new ApelApplicationDto(), "student", "record",
+                "files", "confirmedBy");
+        dto.setStudent(AutocompleteResult.of(application.getStudent(), false));
+        dto.setCurriculumVersion(AutocompleteResult.of(application.getStudent().getCurriculumVersion()));
+        dto.setIsVocational(dto.getCurriculumVersion().getIsVocational());
         dto.setRecords(StreamUtil.toMappedList(ApelApplicationRecordDto::of, application.getRecords()));
         dto.setComments(StreamUtil.toMappedList(ApelApplicationCommentDto::of, application.getComments()));
         dto.setFiles(StreamUtil.toMappedList(ApelApplicationFileDto::of, application.getFiles()));
@@ -72,12 +77,13 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
         this.student = student;
     }
 
-    public AutocompleteResult getCurriculum() {
-        return curriculum;
+    
+    public CurriculumVersionResult getCurriculumVersion() {
+        return curriculumVersion;
     }
 
-    public void setCurriculum(AutocompleteResult curriculum) {
-        this.curriculum = curriculum;
+    public void setCurriculumVersion(CurriculumVersionResult curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
     }
 
     public String getStatus() {

@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+import ee.hitsa.ois.web.dto.AutocompleteResult;
+
 public class TimetableEventSearchDto {
 
     private Long id;
@@ -23,9 +25,12 @@ public class TimetableEventSearchDto {
     private Long timetableId;
     private Boolean showStudyMaterials;
     private String capacityType;
+    private Boolean isPersonal;
+    private AutocompleteResult person;
 
-    public TimetableEventSearchDto(Long id, Long journalId, Long subjectStudyPeriodId,String nameEt, String nameEn, LocalDate date, 
-            LocalTime timeStart, LocalTime timeEnd, Boolean considerBreak, Boolean singleEvent, Long timetableId, String capacityType) {
+    public TimetableEventSearchDto(Long id, Long journalId, Long subjectStudyPeriodId, String nameEt, String nameEn,
+            LocalDate date, LocalTime timeStart, LocalTime timeEnd, Boolean considerBreak, Boolean singleEvent,
+            Long timetableId, String capacityType, Boolean isPersonal) {
         this.id = id;
         this.journalId = journalId;
         this.subjectStudyPeriodId = subjectStudyPeriodId;
@@ -38,7 +43,8 @@ public class TimetableEventSearchDto {
         this.singleEvent = singleEvent;
         this.publicEvent = Boolean.TRUE;
         this.timetableId = timetableId;
-        this.capacityType = capacityType; 
+        this.capacityType = capacityType;
+        this.isPersonal = isPersonal;
     }
 
     public Long getId() {
@@ -176,5 +182,21 @@ public class TimetableEventSearchDto {
     public void setCapacityType(String capacityType) {
         this.capacityType = capacityType;
     }
-    
+
+    public Boolean getIsPersonal() {
+        return isPersonal;
+    }
+
+    public void setIsPersonal(Boolean isPersonal) {
+        this.isPersonal = isPersonal;
+    }
+
+    public AutocompleteResult getPerson() {
+        return person;
+    }
+
+    public void setPerson(AutocompleteResult person) {
+        this.person = person;
+    }
+
 }

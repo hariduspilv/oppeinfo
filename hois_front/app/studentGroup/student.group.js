@@ -1,14 +1,15 @@
 'use strict';
 
-angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$scope', 'Classifier', 'Curriculum', 'QueryUtils', 'Session',
-  function ($q, $scope, Classifier, Curriculum, QueryUtils, Session) {
+angular.module('hitsaOis').controller('StudentGroupSearchController', ['$route', '$scope', '$q', 'Classifier', 'Curriculum', 'Session', 'QueryUtils',
+  function ($route, $scope, $q, Classifier, Curriculum, Session, QueryUtils) {
     var baseUrl = '/studentgroups';
     var clMapper = Classifier.valuemapper({studyForm: 'OPPEVORM'});
+    $scope.auth = $route.current.locals.auth;
     QueryUtils.createQueryForm($scope, baseUrl, {order: 'code'}, clMapper.objectmapper);
 
     var school = Session.school || {};
     var onlyhigher = school.higher && !school.vocational;
-    $scope.formState = {allCurriculumVersions: Curriculum.queryVersions(), curriculumVersions: [],
+    $scope.formState = {allCurriculumVersions: Curriculum.queryVersions({userId: $scope.auth.isLeadingTeacher() ? $scope.auth.user : null}), curriculumVersions: [],
                         allStudyForms: Classifier.queryForDropdown({mainClassCode: 'OPPEVORM', higher: school.higher || undefined, vocational: school.vocational || undefined}),
                         studyForms: [], curriculumVersionLabel: 'studentGroup.curriculumVersionBoth', onlyhigher: onlyhigher};
 
@@ -122,17 +123,29 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
           });
           $scope.record.speciality = $scope.formState.specialities.find(function(it) { return it.code.code === $scope.formState.speciality; }) !== undefined ? $scope.formState.speciality : null;
         });
-
-        // try to restore values
-        $scope.record.language = $scope.formState.languages.indexOf($scope.formState.language) !== -1 ? $scope.formState.language : null;
-        $scope.record.studyForm = $scope.formState.studyForms.indexOf($scope.formState.studyForm) !== -1 ? $scope.formState.studyForm : null;
-        $scope.record.curriculumVersion = $scope.formState.curriculumVersions.find(function(it) {return it.id === $scope.formState.curriculumVersion;}) !== undefined ? $scope.formState.curriculumVersion : null;
+        if (!$scope.record.isGuest) {
+          // try to restore values
+          $scope.record.language = $scope.formState.languages.indexOf($scope.formState.language) !== -1 ? $scope.formState.language : null;
+          $scope.record.studyForm = $scope.formState.studyForms.indexOf($scope.formState.studyForm) !== -1 ? $scope.formState.studyForm : null;
+          $scope.record.curriculumVersion = $scope.formState.curriculumVersions.find(function(it) {return it.id === $scope.formState.curriculumVersion;}) !== undefined ? $scope.formState.curriculumVersion : null;
+        }
       };
       if(curriculumId) {
         QueryUtils.endpoint(baseUrl+'/curriculumdata').get({id: curriculumId}, afterCurriculumChange);
       } else {
         // curriculum cleared
         afterCurriculumChange({});
+      }
+    };
+
+    /** Used by isGuest checkbox */
+    $scope.clearModels = function () {
+      if ($scope.record.isGuest) {
+        // clear unneeded values
+        $scope.record.places = undefined;
+        $scope.record.curriculum = undefined;
+        $scope.record.curriculumVersion = undefined;
+        $scope.record.studyForm = undefined;
       }
     };
 
@@ -236,7 +249,12 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
     }
 
     $scope.addStudents = function() {
-      var query = ['id', 'curriculum', 'curriculumVersion', 'language', 'studyForm'].reduce(function(q, name) {
+      $scope.studentGroupForm.$setSubmitted();
+      if (!$scope.studentGroupForm.$valid) {
+        message.error('main.messages.form-has-errors');
+        return;
+      }
+      var query = ['id', 'curriculum', 'curriculumVersion', 'language','studyForm', 'isGuest'].reduce(function(q, name) {
         q[name] = $scope.record[name];
         return q;
       }, {});

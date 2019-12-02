@@ -34,7 +34,8 @@
         </td>
         <td md-cell>{{application.curriculumCode ? application.curriculumCode : '-'}}</td>
         <td md-cell>
-          <a href="#/students/{{application.studentId}}/main">{{application.studentName ? application.studentName : '-'}}</a>
+          <a ng-if="application.canViewStudent" href="#/students/{{application.studentId}}/main">{{application.studentName ? application.studentName : '-'}}</a>
+          <span ng-if="!application.canViewStudent">{{application.studentName ? application.studentName : '-'}}</span>
         </td>
         <td md-cell>{{application.idcode ? application.idcode : '-'}}</td>
         <td md-cell>{{application.hasDirective ? ('main.yes' | translate) : ('main.no' | translate)}}</td>

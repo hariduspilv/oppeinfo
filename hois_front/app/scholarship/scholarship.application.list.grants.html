@@ -14,12 +14,14 @@
             <md-input-container flex ng-if="criteria.type !== 'STIPTOETUS_POHI'">
               <label class="textInput">{{'stipend.curriculums' | translate}}</label>
               <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum" 
-                criteria="{higher: false, closed: false, teacher: auth.teacher}" sorted-query="true" multiple></hois-select>
+                criteria="{higher: false, closed: false, teacher: auth.teacher, userId: auth.isLeadingTeacher() ? auth.user : null}"
+                sorted-query="true" multiple></hois-select>
             </md-input-container>
             <md-input-container flex ng-if="criteria.type === 'STIPTOETUS_POHI'">
               <label class="textInput">{{'stipend.curriculum' | translate}}</label>
               <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum" 
-                criteria="{higher: false, closed: false, teacher: auth.teacher}" sorted-query="true" required></hois-select>
+                criteria="{higher: false, closed: false, teacher: auth.teacher, userId: auth.isLeadingTeacher() ? auth.user : null}"
+                sorted-query="true" required></hois-select>
             </md-input-container>
           </div>
           <md-input-container flex="20" flex-xs="100" flex-offset-xs="0" flex-offset="5">

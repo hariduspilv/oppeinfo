@@ -3,7 +3,7 @@
 angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherViewController', 
   function ($scope, QueryUtils, $route, Classifier, SspCapacities, USER_ROLES, AuthService) {
     $scope.auth = $route.current.locals.auth;
-    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_TUNNIJAOTUSPLAAN);
+    $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM);
     var studyPeriodId = parseInt($route.current.params.studyPeriodId, 10);
     var teacher = $route.current.params.teacherId ? parseInt($route.current.params.teacherId, 10) : null;
     var Endpoint = QueryUtils.endpoint('/subjectStudyPeriods/teachers/container');

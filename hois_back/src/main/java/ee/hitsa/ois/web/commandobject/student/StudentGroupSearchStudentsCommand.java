@@ -1,20 +1,17 @@
 package ee.hitsa.ois.web.commandobject.student;
 
-import javax.validation.constraints.NotNull;
-
-import ee.hitsa.ois.validation.Required;
+import ee.hitsa.ois.validation.Conditional;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 
+@Conditional(selected = "isGuest", values = {"false", "null"}, required = {"curriculum", "language", "studyForm"})
 public class StudentGroupSearchStudentsCommand {
 
     private Long id;
-    @NotNull
     private EntityConnectionCommand curriculum;
     private Long curriculumVersion;
-    @Required
     private String language;
-    @Required
     private String studyForm;
+    private Boolean isGuest;
 
     public Long getId() {
         return id;
@@ -54,5 +51,13 @@ public class StudentGroupSearchStudentsCommand {
 
     public void setStudyForm(String studyForm) {
         this.studyForm = studyForm;
+    }
+
+    public Boolean getIsGuest() {
+        return isGuest;
+    }
+
+    public void setIsGuest(Boolean isGuest) {
+        this.isGuest = isGuest;
     }
 }

@@ -50,10 +50,13 @@ public class JournalDto {
     private Boolean canBeConfirmed;
     private Boolean canBeUnconfirmed;
     private Boolean canEdit;
+    private Boolean canViewReview;
     private Boolean canReview;
+    private Boolean canConnectStudyMaterials;
 
     public static JournalDto of(Journal journal) {
-        JournalDto dto = EntityUtil.bindToDto(journal, new JournalDto(), "studyYear", "journalTeachers", "journalStudents", "journalEntries", "journalRooms");
+        JournalDto dto = EntityUtil.bindToDto(journal, new JournalDto(), "studyYear", "journalTeachers",
+                "journalStudents", "journalEntries", "journalRooms", "isReviewOk", "reviewDate", "reviewInfo");
         dto.setStudyYear(EntityUtil.getCode(journal.getStudyYear().getYear()));
         dto.setStudyYearStartDate(journal.getStudyYear().getStartDate());
         dto.setStudyYearEndDate(journal.getStudyYear().getEndDate());
@@ -98,7 +101,6 @@ public class JournalDto {
         dto.setModuleOutcomesAsEntries(journal.getAddModuleOutcomes());
         dto.setAssessment(EntityUtil.getCode(journal.getAssessment()));
         dto.setIsDistinctiveAssessment(Boolean.valueOf(VocationalGradeType.KUTSEHINDAMISVIIS_E.name().equals(dto.getAssessment())));
-        dto.setIsReviewOk(journal.getReviewOk());
         return dto;
     }
 
@@ -302,6 +304,14 @@ public class JournalDto {
         this.canEdit = canEdit;
     }
 
+    public Boolean getCanViewReview() {
+        return canViewReview;
+    }
+
+    public void setCanViewReview(Boolean canViewReview) {
+        this.canViewReview = canViewReview;
+    }
+
     public Boolean getCanReview() {
         return canReview;
     }
@@ -309,6 +319,13 @@ public class JournalDto {
     public void setCanReview(Boolean canReview) {
         this.canReview = canReview;
     }
+
+    public Boolean getCanConnectStudyMaterials() {
+        return canConnectStudyMaterials;
+    }
+
+    public void setCanConnectStudyMaterials(Boolean canConnectStudyMaterials) {
+        this.canConnectStudyMaterials = canConnectStudyMaterials;
+    }
+
 }
-
-

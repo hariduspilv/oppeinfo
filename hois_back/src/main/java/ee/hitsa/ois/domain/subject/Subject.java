@@ -13,6 +13,7 @@ import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
@@ -65,22 +66,8 @@ public class Subject extends BaseEntityWithId implements Translatable {
     private Set<SubjectStudyPeriodPlan> subjectStudyPeriodPlans;
     @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
     private Set<SubjectStudyPeriod> subjectStudyPeriods;
-
-    public Set<SubjectStudyPeriod> getSubjectStudyPeriods() {
-        return subjectStudyPeriods != null ? subjectStudyPeriods : (subjectStudyPeriods = new HashSet<>());
-    }
-
-    public void setSubjectStudyPeriods(Set<SubjectStudyPeriod> subjectStudyPeriods) {
-        this.subjectStudyPeriods = subjectStudyPeriods;
-    }
-
-    public Set<SubjectStudyPeriodPlan> getSubjectStudyPeriodPlans() {
-        return subjectStudyPeriodPlans != null ? subjectStudyPeriodPlans : (subjectStudyPeriodPlans = new HashSet<>());
-    }
-
-    public void setSubjectStudyPeriodPlans(Set<SubjectStudyPeriodPlan> subjectStudyPeriodPlans) {
-        this.subjectStudyPeriodPlans = subjectStudyPeriodPlans;
-    }
+    @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
+    private Set<CurriculumVersionHigherModuleSubject> curriculumVersionHigherModuleSubjects;
 
     public School getSchool() {
         return school;
@@ -293,4 +280,31 @@ public class Subject extends BaseEntityWithId implements Translatable {
     public void setIsPractice(Boolean isPractice) {
         this.isPractice = isPractice;
     }
+
+    public Set<SubjectStudyPeriodPlan> getSubjectStudyPeriodPlans() {
+        return subjectStudyPeriodPlans != null ? subjectStudyPeriodPlans : (subjectStudyPeriodPlans = new HashSet<>());
+    }
+
+    public void setSubjectStudyPeriodPlans(Set<SubjectStudyPeriodPlan> subjectStudyPeriodPlans) {
+        this.subjectStudyPeriodPlans = subjectStudyPeriodPlans;
+    }
+
+    public Set<SubjectStudyPeriod> getSubjectStudyPeriods() {
+        return subjectStudyPeriods != null ? subjectStudyPeriods : (subjectStudyPeriods = new HashSet<>());
+    }
+
+    public void setSubjectStudyPeriods(Set<SubjectStudyPeriod> subjectStudyPeriods) {
+        this.subjectStudyPeriods = subjectStudyPeriods;
+    }
+
+    public Set<CurriculumVersionHigherModuleSubject> getCurriculumVersionHigherModuleSubjects() {
+        return curriculumVersionHigherModuleSubjects != null ? curriculumVersionHigherModuleSubjects
+                : (curriculumVersionHigherModuleSubjects = new HashSet<>());
+    }
+
+    public void setCurriculumVersionHigherModuleSubjects(
+            Set<CurriculumVersionHigherModuleSubject> curriculumVersionHigherModuleSubjects) {
+        this.curriculumVersionHigherModuleSubjects = curriculumVersionHigherModuleSubjects;
+    }
+
 }

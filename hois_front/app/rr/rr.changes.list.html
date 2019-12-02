@@ -7,7 +7,7 @@
           <div layout="column">
             <div flex layout-gt-sm="row" layout="column">
               <hois-autocomplete flex="45" ng-model="criteria.student" ha-controller="directiveControllers" url="/autocomplete/students"
-                label="{{'rr.student.student' | translate}}"></hois-autocomplete>
+                label="{{'rr.student.student' | translate}}" additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
               <hois-autocomplete flex="50" flex-offset="0" flex-offset-gt-sm="5" ng-model="criteria.group" ha-controller="directiveControllers"
                 url="/autocomplete/studentgroups" label="{{'rr.student.group' | translate}}"></hois-autocomplete>
             </div>

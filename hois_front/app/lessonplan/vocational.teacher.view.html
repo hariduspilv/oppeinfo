@@ -56,7 +56,7 @@
                     <br ng-if="$last">
                   </span>
                   <br>
-    
+
                   <span ng-repeat="teacher in journal.teachers">
                     <br ng-if="!$first"> {{teacher.teacher.nameEt}}
                   </span>
@@ -78,16 +78,25 @@
         </tr>
         <tr>
           <td ng-if="!formState.showCapacityTypes">
-            <div>
-              <span style="float:left">
-                <span ng-repeat="teacher in journal.teachers">
-                  <br ng-if="!$first"> {{teacher.teacher.nameEt}}
+            <div layout="column">
+              <div layout="row" layout-align="space-around center">
+                <span>
+                  <span ng-repeat="studentGroup in journal.studentGroups">
+                    <br ng-if="!$first"> {{studentGroup}}
+                    <br ng-if="$last">
+                  </span>
+                  <br>
+
+                  <span ng-repeat="teacher in journal.teachers">
+                    <br ng-if="!$first"> {{teacher.teacher.nameEt}}
+                  </span>
+                  <br>
+                  <div ng-if="journal.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'">
+                    <label>{{'lessonplan.journal.groupProportion' | translate}}</label>
+                    <hois-classifier-value ng-model="journal.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
+                  </div>
                 </span>
-              </span>
-            </div>
-            <div ng-if="journal.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'">
-              <label>{{'lessonplan.journal.groupProportion' | translate}}</label>
-              <hois-classifier-value ng-model="journal.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
+              </div>
             </div>
           </td>
           <td>{{'lessonplan.total' | translate}}</td>

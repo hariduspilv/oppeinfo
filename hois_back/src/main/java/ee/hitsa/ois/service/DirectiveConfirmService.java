@@ -60,8 +60,10 @@ import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.JobType;
 import ee.hitsa.ois.enums.MessageType;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.ScholarshipStatus;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.HoisException;
@@ -69,6 +71,7 @@ import ee.hitsa.ois.exception.SingleMessageWithParamsException;
 import ee.hitsa.ois.message.AcademicLeaveEnding;
 import ee.hitsa.ois.message.StudentDirectiveCreated;
 import ee.hitsa.ois.message.StudentScholarshipEnding;
+import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.service.ekis.EkisService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -122,6 +125,10 @@ public class DirectiveConfirmService {
     private UserService userService;
     @Autowired
     private Validator validator;
+    @Autowired
+    private PersonService personService;
+    @Autowired
+    private SchoolService schoolService;
 
     private static final String ABSENCE_REJECT_DIRECTIVE_CANCELED = "Käskkiri tühistatud";
 
@@ -208,6 +215,40 @@ public class DirectiveConfirmService {
                 if(scholarships.containsKey(EntityUtil.getId(ds.getStudent()))) {
                     invalidStudents.add(createInvalidStudent(ds, "directive.scholarshipExists"));
                 }
+            } else if(DirectiveType.KASKKIRI_KYLALIS.equals(directiveType)) {
+                SchoolType schoolType = schoolService.schoolType(EntityUtil.getId(directive.getSchool()));
+                boolean isOnlyHigher = schoolType.isHigher() && !schoolType.isVocational();
+                
+                CurriculumVersion curriculumVersion = ds.getCurriculumVersion();
+                if (curriculumVersion != null) {
+                    Curriculum curriculum = curriculumVersion.getCurriculum();
+                    Set<Long> uniqueRows = new LinkedHashSet<>();
+                    if (directiveService.studentExists(EntityUtil.getId(directive.getSchool()), EntityUtil.getId(ds.getPerson()), 
+                            EntityUtil.getId(curriculum))) {
+                        uniqueRows.add(Long.valueOf(rowNum));
+                    }
+                    for (DirectiveStudent ds2 : directive.getStudents()) {
+                        if (!ds2.equals(ds) && ds2.getCurriculumVersion() != null) {
+                            if (ds.getPerson().equals(ds2.getPerson()) 
+                                    && curriculum.equals(ds2.getCurriculumVersion().getCurriculum())) {
+                                uniqueRows.add(Long.valueOf(rowNum));
+                            }
+                        }
+                    }
+                    for (Long existRow : uniqueRows) {
+                        allErrors.add(createStudentExistsError(existRow.longValue()));
+                    }
+                }
+                // manually checked fields for higher
+                // school that is both higher and vocational checks directive school type
+                if (isOnlyHigher || (directive.getIsHigher() != null && directive.getIsHigher().booleanValue())) {
+                    if (ds.getPreviousStudyLevel() == null) {
+                        allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "previousStudyLevel")));
+                    }
+                    if (ds.getAbroadProgramme() == null) {
+                        allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "abroadProgramme")));
+                    }
+                }
             } else if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType)) {
                 // check by hand because for immatv it's filled automatically after directive confirmation
                 if(ds.getNominalStudyEnd() == null) {
@@ -239,6 +280,15 @@ public class DirectiveConfirmService {
                     }
                     for (Long existRow : uniqueRows) {
                         allErrors.add(createStudentExistsError(existRow.longValue()));
+                    }
+                }
+            } else if(DirectiveType.KASKKIRI_IMMATV.equals(directiveType)) {
+                CurriculumVersion curriculumVersion = ds.getCurriculumVersion();
+                if (curriculumVersion != null) {
+                    Curriculum curriculum = curriculumVersion.getCurriculum();
+                    // check by hand because it is required only in vocational study
+                    if(ds.getDormitory() == null && CurriculumUtil.isVocational(curriculum)) {
+                        allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "dormitory")));
                     }
                 }
             } else if (DirectiveType.KASKKIRI_INDOK.equals(directiveType)) {
@@ -341,7 +391,7 @@ public class DirectiveConfirmService {
                 }
                 
                 // NominalStudyEnd should be after the current one
-                if (ds.getStudent().getNominalStudyEnd() != null && ds.getStudent().getNominalStudyEnd().isAfter(ds.getNominalStudyEnd())) {
+                if (ds.getStudent().getNominalStudyEnd() != null && ds.getNominalStudyEnd() != null && ds.getStudent().getNominalStudyEnd().isAfter(ds.getNominalStudyEnd())) {
                     allErrors.add(new ErrorForField("directive.studentHasWrongNominalStudyEnd", propertyPath(rowNum, "nominalStudyEnd")));
                 }
 
@@ -602,7 +652,7 @@ public class DirectiveConfirmService {
 
     private void updateStudentData(DirectiveType directiveType, DirectiveStudent directiveStudent, Classifier studentStatus, DirectiveStudent academicLeave) {
         Student student = directiveStudent.getStudent();
-        if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType)) {
+        if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType)  || DirectiveType.KASKKIRI_KYLALIS.equals(directiveType)) {
             student = createStudent(directiveStudent);
         }
 
@@ -614,6 +664,11 @@ public class DirectiveConfirmService {
         long duration;
 
         switch(directiveType) {
+        case KASKKIRI_KYLALIS:
+            student.setType(EntityUtil.getOptionalOne(StudentType.OPPUR_K.name(), em));
+            student.setStudyStart(directiveStudent.getStartDate());
+            student.setStudyEnd(directiveStudent.getEndDate());
+            break;
         case KASKKIRI_AKAD:
             duration = ChronoUnit.DAYS.between(DateUtils.periodStart(directiveStudent), DateUtils.periodEnd(directiveStudent).plusDays(1));
             student.setNominalStudyEnd(student.getNominalStudyEnd().plusDays(duration));
@@ -666,7 +721,7 @@ public class DirectiveConfirmService {
         }
 
         student = studentService.saveWithHistory(student);
-        if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType)) {
+        if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType)  || DirectiveType.KASKKIRI_KYLALIS.equals(directiveType)) {
             // store reference to created student also into directive_student
             directiveStudent.setStudent(student);
             directiveStudent.setStudentHistory(student.getStudentHistory());
@@ -695,11 +750,10 @@ public class DirectiveConfirmService {
             Student student = ds.getStudent();
             DirectiveStudent cancelds = includedStudents.get(student.getId());
             if(cancelds != null) {
-                if(DirectiveType.KASKKIRI_IMMAT.equals(canceledDirectiveType) || DirectiveType.KASKKIRI_IMMATV.equals(canceledDirectiveType)) {
-                    // undo create student. Logic similar to EKSMAT
+                if(DirectiveType.KASKKIRI_IMMAT.equals(canceledDirectiveType) || DirectiveType.KASKKIRI_IMMATV.equals(canceledDirectiveType) || DirectiveType.KASKKIRI_KYLALIS.equals(canceledDirectiveType)) {
                     student.setStudyEnd(confirmDate);
                     student.setStatus(em.getReference(Classifier.class, StudentStatus.OPPURSTAATUS_K.name()));
-                    userService.disableUser(student, confirmDate);
+                    personService.deleteUser(confirmer, UserService.userFor(student.getPerson(), student.getId(), Role.ROLL_T));
                 } else {
                     StudentHistory original = ds.getStudentHistory();
                     copyDirectiveProperties(canceledDirectiveType, original, student);
@@ -983,7 +1037,9 @@ public class DirectiveConfirmService {
         student.setStudyStart(directiveStudent.getStartDate());
         student.setIsRepresentativeMandatory(Boolean.FALSE);
         student.setIsSpecialNeed(Boolean.FALSE);
-
+        student.setIsContractAgreed(Boolean.FALSE);
+        student.setType(EntityUtil.getOptionalOne(StudentType.OPPUR_O.name(), em));
+        
         // fill student's email
         Person person = student.getPerson();
         String email = emailGeneratorService.lookupSchoolEmail(school, person);

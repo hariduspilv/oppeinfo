@@ -1,12 +1,17 @@
-<div ng-if="auth.isAdmin() || auth.isTeacher()" class="ois-form-layout-padding ois-form-layout" ng-cloak>
+<div ng-if="auth.isAdmin() || auth.isLeadingTeacher() || auth.isTeacher()" class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
       <form name="searchForm" ng-submit="loadData()" novalidate>
         <div layout="row" layout-sm="column" layout-xs="column">
-          <div flex="45" flex-sm="100" flex-xs="100">
-            <hois-autocomplete flex ha-controller="directiveControllers" ng-model="criteria.studentObject" method="students" name="student" label="apel.student"></hois-autocomplete>
+          <div ng-if="auth.isAdmin() || auth.isTeacher()" flex="45" flex-sm="100" flex-xs="100">
+            <hois-autocomplete flex ha-controller="directiveControllers" ng-model="criteria.studentObject" method="students" name="student"
+              label="apel.student"></hois-autocomplete>
           </div>
+          <md-input-container ng-if="auth.isLeadingTeacher()" flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'apel.studentName' | translate}}</label>
+            <input ng-model="criteria.name" name="name" type="text" md-maxlength="255">
+          </md-input-container>
           <div flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <div layout="column" flex>
               <div layout="row" flex>
@@ -33,7 +38,7 @@
             </div>
           </div>
 
-          <div ng-if="!auth.isTeacher()" flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <div ng-if="hasApelViewPerm" flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <div layout="column" flex>
               <div layout="row" flex>
                 <md-input-container>
@@ -49,7 +54,7 @@
           </div>
         </div>
 
-        <div ng-if="!auth.isTeacher()" layout="row" layout-sm="column" layout-xs="column">
+        <div ng-if="hasApelViewPerm" layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'apel.status' | translate}}</label>
             <hois-classifier-select multiple ng-model="criteria.status" main-classifier-code="VOTA_STAATUS" model-value-attr="code"></hois-classifier-select>
@@ -59,7 +64,8 @@
         <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-          <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_VOTA')" ng-href="#/apelApplication/new" class="md-raised">{{'main.button.create' | translate}}</md-button>
+          <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_VOTA')" ng-href="#/apelApplication/new"
+            class="md-raised">{{'main.button.create' | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>
@@ -81,9 +87,9 @@
           <tr md-row>
             <th md-column ng-if="!auth.isStudent()" md-order-by="student_lastname, student_firstname">{{'apel.studentName' | translate}}</th>
             <th md-column ng-if="!auth.isStudent()" md-order-by="{{'curriculum_' + currentLanguageNameField()}}">{{'apel.curriculum' | translate}}</th>
-            <th md-column ng-if="!auth.isTeacher()" md-order-by="application_status">{{'apel.status' | translate}}</th>
+            <th md-column ng-if="hasApelViewPerm" md-order-by="application_status">{{'apel.status' | translate}}</th>
             <th md-column md-order-by="inserted">{{'apel.insertedDate' | translate}}</th>
-            <th md-column ng-if="!auth.isTeacher()" md-order-by="confirmed">{{'apel.confirmedDate' | translate}}</th>
+            <th md-column ng-if="hasApelViewPerm" md-order-by="confirmed">{{'apel.confirmedDate' | translate}}</th>
             <th md-column ng-if="auth.isStudent()"></th>
             <th md-column></th>
           </tr>
@@ -94,11 +100,11 @@
               <a ng-href="#/apelApplication/{{row.id}}/view">{{currentLanguageNameField(row.student)}}</a>
             </td>
             <td md-cell ng-if="!auth.isStudent()">{{currentLanguageNameField(row.curriculum)}}</td>
-            <td md-cell ng-if="!auth.isTeacher()">
+            <td md-cell ng-if="hasApelViewPerm">
               <hois-classifier-value ng-model="row.status" main-classifier-code="VOTA_STAATUS"></hois-classifier-value>
             </td>
             <td md-cell>{{row.inserted | hoisDate}}</td>
-            <td md-cell ng-if="!auth.isTeacher()">{{row.confirmed | hoisDate}}</td>
+            <td md-cell ng-if="hasApelViewPerm">{{row.confirmed | hoisDate}}</td>
             <td md-cell ng-if="auth.isStudent()">
               <div>
                 <md-button md-no-ink class="md-primary change-button" ng-href="#/apelApplication/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>

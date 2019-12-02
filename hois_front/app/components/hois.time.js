@@ -28,6 +28,19 @@ angular.module('hitsaOis')
           };
 */
           function updateTime(time) {
+            // instead of using moment() we should use moment.utc as we store local time which stores without timezone.
+            // when it tries to get value from search history then it will adjust to timezone. *.utc will not adjust it.
+            var stringToUtcTime;
+            if (time && typeof time === 'string') {
+              stringToUtcTime = moment.utc(time);
+              if (stringToUtcTime.isValid()) {
+                var d = stringToUtcTime._d;
+                d.setHours(stringToUtcTime.hours(), stringToUtcTime.minutes());
+                scope.ngModel = d;
+                return;
+              }
+            }
+
             var value = moment(time, angular.isDate(time) ? null : timeFormat, true),
               strValue = value.format(timeFormat);
             if(value.isValid()) {
@@ -59,6 +72,9 @@ angular.module('hitsaOis')
                 old.minutes(time.minutes());
                 scope.ngModel = old.toDate();
               }
+            }
+            if (timeStr === '') { // when text value is set to nothing it should reset ngModel.
+              scope.ngModel = undefined;
             }
             ctrl.$setValidity('time', timeStr ? time.isValid() : true);
           }

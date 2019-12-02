@@ -1,28 +1,27 @@
 (function () {
   'use strict';
 
-  function canEdit(auth) {
-    return auth.isAdmin() || auth.isTeacher();
-  }
-
-  angular.module('hitsaOis').controller('StudyMaterialSubjectStudyPeriodController', ['$scope', '$route', 'QueryUtils', 'ArrayUtils', 'oisFileService',
-    'dialogService', 'message', 'Classifier', '$q', function ($scope, $route, QueryUtils, ArrayUtils, oisFileService,
-      dialogService, message, Classifier, $q) {
+  angular.module('hitsaOis').controller('StudyMaterialSubjectStudyPeriodController', ['$rootScope', '$route', '$scope', '$q', 'Classifier', 'QueryUtils', 'dialogService', 'message', 'oisFileService',
+    function ($rootScope, $route, $scope, $q, Classifier, QueryUtils, dialogService, message, oisFileService) {
       $scope.auth = $route.current.locals.auth;
-      $scope.canEdit = canEdit($scope.auth);
+      $scope.canEdit = $scope.auth !== null && ($scope.auth.isAdmin() || $scope.auth.isTeacher());
       $scope.subjectStudyPeriod = $route.current.locals.subjectStudyPeriod;
       $scope.teachers = $scope.subjectStudyPeriod.teachers.map($scope.currentLanguageNameField).join(', ');
       $scope.studentGroups = $scope.subjectStudyPeriod.studentGroups.join(', ');
       $scope.getFileUrl = oisFileService.getUrl;
 
-      var ConnectEndpoint = QueryUtils.endpoint('/studyMaterial/connect');
+      if (!$route.current.locals.isView && !$scope.subjectStudyPeriod.canConnectStudyMaterials) {
+        message.error('main.messages.error.nopermission');
+        $rootScope.back('#/studyMaterial/higher/' + $scope.subjectStudyPeriod.id + '/view');
+      }
 
-      var clMapper = Classifier.valuemapper({
-        typeCode: 'OPPEMATERJAL'
-      });
+      var ConnectEndpoint = QueryUtils.endpoint('/studyMaterial/subjectStudyPeriod/' + $scope.subjectStudyPeriod.id + '/connect');
+      var clMapper = Classifier.valuemapper({typeCode: 'OPPEMATERJAL'});
 
       function loadMaterials() {
-        $scope.materials = QueryUtils.endpoint('/studyMaterial/subjectStudyPeriod/' + $scope.subjectStudyPeriod.id + '/materials').query();
+        var materialsEndpoint = ($scope.auth === null || angular.isUndefined($scope.auth) ? '/public' : '') +
+          '/studyMaterial/subjectStudyPeriod/' + $scope.subjectStudyPeriod.id + '/materials';
+        $scope.materials = QueryUtils.endpoint(materialsEndpoint).query();
         $scope.materials.$promise.then(function (materials) {
           $q.all(clMapper.promises).then(function () {
             clMapper.objectmapper(materials);
@@ -51,31 +50,43 @@
           return;
         }
         var connection = new ConnectEndpoint();
-        connection.studyMaterial = $scope.existingMaterial.id;
-        connection.subjectStudyPeriod = $scope.subjectStudyPeriod.id;
-        connection.$save().then(function () {
+        connection.$save({studyMaterial: $scope.existingMaterial.id}).then(function () {
           $scope.hAutocomplete.forEach(function (r) { r.clear(); });
           loadMaterials();
         });
       };
-    }]).controller('StudyMaterialJournalController', ['$scope', '$route', 'QueryUtils', 'ArrayUtils', 'oisFileService',
-      'dialogService', 'message', 'Classifier', '$q', function ($scope, $route, QueryUtils, ArrayUtils, oisFileService,
-        dialogService, message, Classifier, $q) {
 
+      $scope.getDefaultBack = function () {
+        switch ($route.current.params.backType) {
+          case 'declaration':
+            return $scope.auth.isAdmin() ? '/#/declarations' : '/#/declaration/current/view';
+          case 'timetable':
+            return $scope.auth === null || angular.isUndefined($scope.auth) || $scope.auth.school === null ? '/#/timetables' : '/#/timetable/generalTimetable/group';
+          default:
+            return '/#/studyMaterial/higher';
+        }
+      };
+
+    }]).controller('StudyMaterialJournalController', ['$rootScope', '$route', '$scope', '$q', 'Classifier', 'QueryUtils', 'dialogService', 'message', 'oisFileService',
+      function ($rootScope, $route, $scope, $q, Classifier, QueryUtils, dialogService, message, oisFileService) {
         $scope.auth = $route.current.locals.auth;
         $scope.journal = $route.current.locals.journal;
         $scope.teachers = $scope.journal.teachers.map($scope.currentLanguageNameField).join(', ');
         $scope.studentGroups = $scope.journal.studentGroups.join(', ');
         $scope.getFileUrl = oisFileService.getUrl;
 
-        var ConnectEndpoint = QueryUtils.endpoint('/studyMaterial/connect');
+        if (!$route.current.locals.isView && !$scope.journal.canConnectStudyMaterials) {
+          message.error('main.messages.error.nopermission');
+          $rootScope.back('#/studyMaterial/vocational/' + $scope.journal.id + '/view');
+        }
 
-        var clMapper = Classifier.valuemapper({
-          typeCode: 'OPPEMATERJAL'
-        });
+        var ConnectEndpoint = QueryUtils.endpoint('/studyMaterial/journal/' + $scope.journal.id + '/connect');
+        var clMapper = Classifier.valuemapper({typeCode: 'OPPEMATERJAL'});
 
         function loadMaterials() {
-          $scope.materials = QueryUtils.endpoint('/studyMaterial/journal/' + $scope.journal.id + '/materials').query();
+          var materialsEndpoint = ($scope.auth === null || angular.isUndefined($scope.auth) ? '/public' : '') +
+            '/studyMaterial/journal/' + $scope.journal.id + '/materials';
+          $scope.materials = QueryUtils.endpoint(materialsEndpoint).query();
           $scope.materials.$promise.then(function (materials) {
             $q.all(clMapper.promises).then(function () {
               clMapper.objectmapper(materials);
@@ -104,59 +115,22 @@
             return;
           }
           var connection = new ConnectEndpoint();
-          connection.studyMaterial = $scope.existingMaterial.id;
-          connection.journal = $scope.journal.id;
-          connection.$save().then(function () {
+          connection.$save({studyMaterial: $scope.existingMaterial.id}).then(function () {
             $scope.hAutocomplete.forEach(function (r) { r.clear(); });
             loadMaterials();
           });
         };
 
-      }]).controller('StudyMaterialSubjectStudyPeriodPublicController', ['$scope', '$route', 'QueryUtils', 'oisFileService',
-    'dialogService', 'message', 'Classifier', '$q', function ($scope, $route, QueryUtils, oisFileService,
-      dialogService, message, Classifier, $q) {
-      $scope.subjectStudyPeriod = $route.current.locals.subjectStudyPeriod;
-      $scope.teachers = $scope.subjectStudyPeriod.teachers.map($scope.currentLanguageNameField).join(', ');
-      $scope.studentGroups = $scope.subjectStudyPeriod.studentGroups.join(', ');
-      $scope.getFileUrl = oisFileService.getUrl;
-
-      var clMapper = Classifier.valuemapper({
-        typeCode: 'OPPEMATERJAL'
-      });
-
-      function loadMaterials() {
-        $scope.materials = QueryUtils.endpoint('/public/studyMaterial/subjectStudyPeriod/' + $scope.subjectStudyPeriod.id + '/materials').query();
-        $scope.materials.$promise.then(function (materials) {
-          $q.all(clMapper.promises).then(function () {
-            clMapper.objectmapper(materials);
-          });
-        });
-      }
-
-      loadMaterials();
-
-    }]).controller('StudyMaterialJournalPublicController', ['$scope', '$route', 'QueryUtils', 'oisFileService',
-    'dialogService', 'message', 'Classifier', '$q', function ($scope, $route, QueryUtils, oisFileService,
-      dialogService, message, Classifier, $q) {
-      $scope.journal = $route.current.locals.journal;
-      $scope.teachers = $scope.journal.teachers.map($scope.currentLanguageNameField).join(', ');
-      $scope.studentGroups = $scope.journal.studentGroups.join(', ');
-      $scope.getFileUrl = oisFileService.getUrl;
-
-      var clMapper = Classifier.valuemapper({
-        typeCode: 'OPPEMATERJAL'
-      });
-
-      function loadMaterials() {
-        $scope.materials = QueryUtils.endpoint('/public/studyMaterial/journal/' + $scope.journal.id + '/materials').query();
-        $scope.materials.$promise.then(function (materials) {
-          $q.all(clMapper.promises).then(function () {
-            clMapper.objectmapper(materials);
-          });
-        });
-      }
-
-      loadMaterials();
+        $scope.getDefaultBack = function () {
+          switch ($route.current.params.backType) {
+            case 'journal':
+              return '/#/students/journals';
+            case 'timetable':
+              return $scope.auth === null || angular.isUndefined($scope.auth) || $scope.auth.school === null ? '/#/timetables' : '/#/timetable/generalTimetable/group';
+            default:
+              return '/#/studyMaterial/vocational';
+          }
+        };
 
     }]);
 }());

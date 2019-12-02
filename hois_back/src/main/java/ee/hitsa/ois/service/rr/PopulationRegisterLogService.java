@@ -56,16 +56,23 @@ public class PopulationRegisterLogService {
         from.append("left join student_group sg on sg.id = s.student_group_id ");
         StringBuilder select = new StringBuilder("s.id as sid, (p.firstname || ' ' || p.lastname) as fullname, sg.id as sgid, sg.code, ");
         select.append("wrcl.inserted, wrcl.inserted_by, (wrcl.new_firstname || ' ' || wrcl.new_lastname) as new_fullname, wrcl.new_address, ");
-        select.append("(wrcl.old_firstname || ' ' || wrcl.old_lastname) as old_fullname, wrcl.old_address");
+        select.append("(wrcl.old_firstname || ' ' || wrcl.old_lastname) as old_fullname, wrcl.old_address, s.type_code as studentType");
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort(pageable);
         qb.requiredCriteria("wrcls.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("exists (select c.id from curriculum_version cv join curriculum c on c.id = cv.curriculum_id"
+                    + " where s.curriculum_version_id = cv.id and c.id in (:userCurriculumIds))", 
+                    "userCurriculumIds", user.getCurriculumIds());
+        }
+
         qb.optionalCriteria("s.id = :studentId", "studentId", cmd.getStudent() != null ? cmd.getStudent().getId() : null);
         qb.optionalCriteria("sg.id = :groupId", "groupId", cmd.getGroup() != null ? cmd.getGroup().getId() : null);
         qb.optionalCriteria("wrcl.inserted >= :validFrom", "validFrom", cmd.getFrom());
         qb.optionalCriteria("wrcl.inserted < :validThru", "validThru", cmd.getThru() != null ? cmd.getThru().plusDays(1) : null);
         return JpaQueryUtil.pagingResult(qb, select.toString(), em, pageable).map(r -> {
             WsRrChangeLogDto dto = new WsRrChangeLogDto();
-            dto.setStudent(new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 1)));
+            String studentName = PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 10));
+            dto.setStudent(new AutocompleteResult(resultAsLong(r, 0), studentName, studentName));
             Long groupId = resultAsLong(r, 2);
             if (groupId != null) {
                 dto.setGroup(new AutocompleteResult(groupId, resultAsString(r, 3), resultAsString(r, 3)));

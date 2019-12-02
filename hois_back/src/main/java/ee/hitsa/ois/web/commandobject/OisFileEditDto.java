@@ -1,10 +1,11 @@
 package ee.hitsa.ois.web.commandobject;
 
 import ee.hitsa.ois.domain.OisFile;
+import ee.hitsa.ois.service.OisFileService;
 import ee.hitsa.ois.util.EntityUtil;
 
 public class OisFileEditDto extends OisFileViewDto {
-    
+
     private byte[] fdata;
 
     public byte[] getFdata() {
@@ -14,7 +15,7 @@ public class OisFileEditDto extends OisFileViewDto {
     public void setFdata(byte[] fdata) {
         this.fdata = fdata;
     }
-    
+
     /**
      * Use this dto for editing files on frontend
      * fdata wont be sent, id will be encrypted
@@ -24,7 +25,7 @@ public class OisFileEditDto extends OisFileViewDto {
      */
     public static OisFileEditDto of(OisFile oisFile) {
         OisFileEditDto dto = EntityUtil.bindToDto(oisFile, new OisFileEditDto(), "id", "fdata");
-        dto.setLongId(oisFile.getId());
+        dto.setId(OisFileService.encryptAndDecodeId(oisFile.getId()));
         return dto;
     }
 }

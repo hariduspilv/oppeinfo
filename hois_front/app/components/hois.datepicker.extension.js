@@ -16,7 +16,7 @@ angular.module('hitsaOis').directive('hoisDatepickerExtension', function () {
     restrict: 'A',
     require: ['^mdDatepicker'],
     link: {
-      post: function(scope, element, attrs, controllers) {
+      post: function(scope, _element, attrs, controllers) {
         var mdDatepicker = controllers[0];
 
         if (mdDatepicker) {
@@ -26,9 +26,9 @@ angular.module('hitsaOis').directive('hoisDatepickerExtension', function () {
                 mdDatepicker.ngModelCtrl.$$setModelValue(undefined);
               }
             }
-          }
+          };
           
-          var previousControllerName = undefined;
+          var previousControllerName;
           attrs.$observe('hdController', function(newValue) {
             if (previousControllerName === newValue || !newValue) {
               return;

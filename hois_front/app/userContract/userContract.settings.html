@@ -1,0 +1,19 @@
+<div ng-cloak ng-include="'userContract/userContract.navbar.html'"></div>
+
+<div layout-padding ng-cloak>
+  <form name="settingsForm" layout="column">
+    <md-input-container>
+      <md-checkbox ng-model="data.isStudentTerms" ng-disabled="!canEdit">{{'userContract.isStudentTerms' | translate}}</md-checkbox>
+    </md-input-container>
+    <md-input-container ng-if="canEdit">
+      <label>{{'userContract.label' | translate}}</label>
+      <textarea ng-model="data.contract" rows="10"></textarea>
+    </md-input-container>
+    <div ng-if="!canEdit">
+      <p style="margin: 0; text-align: left; white-space: pre-wrap; font-size: 14px;" ng-bind-html="data.contract | linky: '_blank'"></p>
+    </div>
+  </form>
+  <div layout="row">
+    <md-button ng-click="save()" class="md-raised md-primary" ng-if="canEdit">{{'main.button.save' | translate}}</md-button>
+  </div>
+</div>

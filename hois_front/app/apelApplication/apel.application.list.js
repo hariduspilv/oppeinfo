@@ -1,7 +1,10 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ApelApplicationListController', function ($scope, $route, ArrayUtils, QueryUtils, Classifier, $q) {
+angular.module('hitsaOis').controller('ApelApplicationListController', function ($scope, $route, USER_ROLES, AuthService, QueryUtils, Classifier, $q) {
   $scope.auth = $route.current.locals.auth;
+  $scope.hasApelViewPerm = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_VOTA);
+  $scope.hasApelCommitteeEditPerm = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_VOTAKOM);
+
   var clMapper = Classifier.valuemapper({
     status: 'VOTA_STAATUS'
   });
@@ -17,9 +20,12 @@ angular.module('hitsaOis').controller('ApelApplicationListController', function 
     };
   }
 
-  if (!$scope.criteria.status && $scope.auth.isAdmin()) {
-    $scope.criteria.status = ['VOTA_STAATUS_E'];
-    if (ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_M_TEEMAOIGUS_VOTAKOM")) {
+  if (!$scope.criteria.status && ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher())) {
+    $scope.criteria.status = [];
+    if ($scope.hasApelViewPerm) {
+      $scope.criteria.status.push('VOTA_STAATUS_E');
+    }
+    if ($scope.hasApelCommitteeEditPerm) {
       $scope.criteria.status.push('VOTA_STAATUS_V');
     }
   }

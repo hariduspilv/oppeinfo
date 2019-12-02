@@ -18,7 +18,7 @@ public class LessonClasses {
 		this.id = id;
 	}
 	
-	public void addId(String id) {
+	public void addId(@SuppressWarnings("hiding") String id) {
 		if (StringUtils.isEmpty(id)) {
 			this.id = id;
 		} else {

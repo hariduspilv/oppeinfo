@@ -58,27 +58,33 @@ public class ScholarshipController {
     public HttpUtil.CreatedResponse create(HoisUserDetails user, @Valid @RequestBody ScholarshipTermForm form) {
         // TODO: ADD VALIDATION BASED ON THE TYPE OF SCHOLARSHIP TERM -------
         // IMPORTANT!!!!!!!!!!!!!!!!
-        UserUtil.assertIsSchoolAdmin(user);
+        // IKE: needs to be reviewed when editing higher school scholarships 
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_STIPTOETUS);
         return HttpUtil.created(scholarshipService.create(user, form));
     }
 
     @GetMapping
     public Page<ScholarshipTermSearchDto> list(ScholarshipSearchCommand command, Pageable pageable,
             HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_STIPTOETUS);
         return scholarshipService.list(user, command, pageable);
     }
 
     @GetMapping("/applications")
     public ScholarshipTermApplicationSearchDto applications(@Valid ScholarshipApplicationSearchCommand command,
             HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
+        // student group teacher doesn't need to have STIPTOETUS user right
+        if (!user.isTeacher() ) {
+            UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+        }
         return scholarshipService.applications(command, user);
     }
 
     @GetMapping("/{id:\\d+}")
     public ScholarshipTermDto get(HoisUserDetails user, @WithEntity ScholarshipTerm term) {
-        UserUtil.assertIsSchoolAdmin(user, term.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, term.getSchool(), Permission.OIGUS_V,
+                PermissionObject.TEEMAOIGUS_STIPTOETUS);
         return scholarshipService.get(term);
     }
 
@@ -104,7 +110,8 @@ public class ScholarshipController {
 
     @GetMapping("/decision/{id:\\d+}")
     public ScholarshipDecisionDto decision(HoisUserDetails user, @PathVariable("id") Long decisionId) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_STIPTOETUS);
         return scholarshipService.decision(user, decisionId);
     }
 
@@ -124,6 +131,10 @@ public class ScholarshipController {
     public List<ScholarshipStudentRejectionDto> studentProfilesRejection(HoisUserDetails user,
             @RequestParam("id") List<Long> applicationIds) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
+        // student group teacher doesn't need to have STIPTOETUS user right
+        if (!user.isTeacher() ) {
+            UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+        }
         return scholarshipService.getStudentProfilesForRejection(applicationIds);
     }
 

@@ -25,6 +25,10 @@ angular.module('hitsaOis').factory('School', ['QueryUtils',
       return QueryUtils.endpoint('/autocomplete/schoolsWithLogo').query();
     };
 
+    School.getSchoolsWithType = function () {
+      return QueryUtils.endpoint('/autocomplete/schoolsWithType').query();
+    };
+
     return School;
   }
 ]);

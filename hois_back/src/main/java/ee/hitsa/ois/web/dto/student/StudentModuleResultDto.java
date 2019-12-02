@@ -12,11 +12,13 @@ public class StudentModuleResultDto {
     private String subjectCode;
     private BigDecimal credits;
     private String grade;
+    private String gradeValue;
     private LocalDate gradeDate;
     private Boolean isOptional;
 
     public StudentModuleResultDto(Long id, Long curriculumVersionModuleId, String nameEt, String nameEn,
-            String subjectCode, BigDecimal credits, String grade, LocalDate gradeDate, Boolean isOptional) {
+            String subjectCode, BigDecimal credits, String grade, String gradeValue, LocalDate gradeDate,
+            Boolean isOptional) {
         super();
         this.id = id;
         this.curriculumVersionModuleId = curriculumVersionModuleId;
@@ -25,6 +27,7 @@ public class StudentModuleResultDto {
         this.subjectCode = subjectCode;
         this.credits = credits;
         this.grade = grade;
+        this.gradeValue = gradeValue;
         this.gradeDate = gradeDate;
         this.isOptional = isOptional;
     }
@@ -75,6 +78,14 @@ public class StudentModuleResultDto {
 
     public void setCredits(BigDecimal credits) {
         this.credits = credits;
+    }
+
+    public String getGradeValue() {
+        return gradeValue;
+    }
+
+    public void setGradeValue(String gradeValue) {
+        this.gradeValue = gradeValue;
     }
 
     public String getGrade() {

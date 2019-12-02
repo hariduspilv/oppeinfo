@@ -14,8 +14,12 @@
           <label>{{'student.idcode' | translate}}</label>
           <hois-value value="student.person.idcode"></hois-value>
         </md-input-container>
+        <md-input-container flex>
+          <label>{{'student.birthDate' | translate}}</label>
+          <hois-value value="student.person.birthdate | hoisDate"></hois-value>
+        </md-input-container>
       </div>
-      <div layout="row" layout-sm="column" layout-xs="column" flex>
+      <div layout="row" layout-sm="column" layout-xs="column" flex ng-if="!student.isGuestStudent">
         <md-input-container flex>
           <label>{{'student.studyForm' | translate}}</label>
           <hois-classifier-value ng-model="student.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
@@ -42,7 +46,7 @@
             <td md-cell>
               <span ng-if="row.reason">{{currentLanguageNameField(row.reason)}}</span>
               <a ng-if="row.journal && (auth.isStudent() || auth.isParent())" ng-href="#/students/journals/{{::row.journal.id}}">{{currentLanguageNameField(row.journal)}}</a>
-              <a ng-if="row.journal && (auth.isAdmin() || auth.isTeacher())" ng-href="#/journal/{{::row.journal.id}}/view">{{currentLanguageNameField(row.journal)}}</a>
+              <a ng-if="row.journal && (auth.isAdmin() || auth.isLeadingTeacher() || auth.isTeacher())" ng-href="#/journal/{{::row.journal.id}}/view">{{currentLanguageNameField(row.journal)}}</a>
             </td>
             <td md-cell>
               <span>{{row.remark | hoisLimitTo: 150:!row.showAll}}</span>

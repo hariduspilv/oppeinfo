@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Committee;
-import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.CommitteeService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CommitteeUserRights;
@@ -38,46 +37,41 @@ public class CommitteeController {
     private CommitteeService committeeService;
 
     @GetMapping
-    public Page<CommitteeSearchDto> search(HoisUserDetails user,
-            @NotNull CommitteeSearchCommand criteria, Pageable pageable) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+    public Page<CommitteeSearchDto> search(HoisUserDetails user, @NotNull CommitteeSearchCommand criteria,
+            Pageable pageable) {
+        UserUtil.throwAccessDeniedIf(!CommitteeUserRights.canSearch(user));
         return committeeService.search(user.getSchoolId(), criteria, pageable);
     }
 
     @GetMapping("/{id:\\d+}")
     public CommitteeDto get(HoisUserDetails user, @WithEntity Committee committee) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user, committee.getSchool());
+        UserUtil.throwAccessDeniedIf(!CommitteeUserRights.canView(user, committee));
         return committeeService.get(user, committee);
     }
 
     @PostMapping
     public CommitteeDto create(HoisUserDetails user, @NotNull @Valid @RequestBody CommitteeDto dto) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.throwAccessDeniedIf(!CommitteeUserRights.canCreate(user));
         return get(user, committeeService.create(user.getSchoolId(), dto));
     }
 
     @PutMapping("/{id:\\d+}")
-    public CommitteeDto save(HoisUserDetails user,
-            @WithVersionedEntity(versionRequestBody = true) Committee committee,
+    public CommitteeDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Committee committee,
             @NotNull @Valid @RequestBody CommitteeDto dto) {
-        if (!CommitteeUserRights.canEdit(user, committee)) {
-            throw new AssertionFailedException("User cannot edit committee");
-        }
+        UserUtil.throwAccessDeniedIf(!CommitteeUserRights.canEdit(user, committee), "User cannot edit committee");
         return get(user, committeeService.save(committee, dto));
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Committee committee,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        if (!CommitteeUserRights.canDelete(user, committee)) {
-            throw new AssertionFailedException("User cannot delete committee");
-        }
+        UserUtil.throwAccessDeniedIf(!CommitteeUserRights.canDelete(user, committee), "User cannot edit committee");
         committeeService.delete(user, committee);
     }
 
     @GetMapping("/members")
     public Set<AutocompleteResult> getMembers(HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
         return committeeService.getMembers(user.getSchoolId());
     }
 }

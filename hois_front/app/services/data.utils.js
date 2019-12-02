@@ -259,6 +259,25 @@ angular.module('hitsaOis').factory('DataUtils',
         return (array || []).filter(function (obj) {
           return filter(obj, regExp);
         });
+      },
+      
+      /**
+       * https://stackoverflow.com/a/49634926
+       * 
+       * @param {String} inputText 
+       */
+      linkifyText: function(inputText) {
+        if (!inputText) {
+          return inputText;
+        }
+        
+        var replacedText, replacePattern1;
+    
+        //URLs starting with http://, https://, or ftp://
+        replacePattern1 = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
+        replacedText = inputText.replace(replacePattern1, '<a href="$1" target="_blank">$1</a>');
+    
+        return replacedText;
       }
     };
   }

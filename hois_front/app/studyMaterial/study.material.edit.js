@@ -11,9 +11,6 @@
       var MaterialEndpoint = QueryUtils.endpoint('/studyMaterial');
       if (materialId) {
         $scope.material = MaterialEndpoint.get({ id: materialId });
-        $scope.material.$promise.then(function (material) {
-          $scope.teacher = material.teacher;
-        });
       } else {
         $scope.material = new MaterialEndpoint({
           isVisibleToStudents: false,
@@ -21,9 +18,10 @@
         });
       }
 
-      $scope.$watch('teacher', function (newTeacher) {
-        $scope.material.teacher = newTeacher ? newTeacher.id : null;
+      $scope.teachers = QueryUtils.endpoint('/studyMaterial/subjectStudyPeriod/' + $scope.subjectStudyPeriod.id + '/teachers').query({
+        studyMaterialId: materialId
       });
+
       $scope.$watch('material.isPublic', function (newIsPublic) {
         if (newIsPublic === true) {
           $scope.material.isVisibleToStudents = true;
@@ -78,8 +76,7 @@
           doSave();
         }
       };
-    }]).controller('StudyMaterialVocationalEditController', ['$scope', '$route', 'QueryUtils', 'oisFileService',
-      'dialogService', 'message',
+    }]).controller('StudyMaterialVocationalEditController', ['$scope', '$route', 'QueryUtils', 'oisFileService', 'dialogService', 'message',
       function ($scope, $route, QueryUtils, oisFileService, dialogService, message) {
         $scope.auth = $route.current.locals.auth;
         $scope.journal = $route.current.locals.journal;
@@ -88,9 +85,6 @@
         var MaterialEndpoint = QueryUtils.endpoint('/studyMaterial');
         if (materialId) {
           $scope.material = MaterialEndpoint.get({ id: materialId });
-          $scope.material.$promise.then(function (material) {
-            $scope.teacher = material.teacher;
-          });
         } else {
           $scope.material = new MaterialEndpoint({
             isVisibleToStudents: false,
@@ -98,9 +92,10 @@
           });
         }
 
-        $scope.$watch('teacher', function (newTeacher) {
-          $scope.material.teacher = newTeacher ? newTeacher.id : null;
+        $scope.teachers = QueryUtils.endpoint('/studyMaterial/journal/' + $scope.journal.id + '/teachers').query({
+          studyMaterialId: materialId
         });
+
         $scope.$watch('material.isPublic', function (newIsPublic) {
           if (newIsPublic === true) {
             $scope.material.isVisibleToStudents = true;

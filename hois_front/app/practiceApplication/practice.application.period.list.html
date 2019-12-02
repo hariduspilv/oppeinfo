@@ -55,7 +55,7 @@
               <td md-cell>{{row.validFrom | hoisDate}} - {{row.validThru | hoisDate}}</td>
               <td md-cell>
                 <span>
-                  <md-button md-no-ink class="md-primary change-button" ng-click="edit(row)">{{'main.button.edit' | translate}}</md-button>
+                  <md-button md-no-ink class="md-primary change-button" ng-click="canEdit ? edit(row) : view(row)">{{(canEdit ? 'main.button.edit' : 'main.button.view') | translate}}</md-button>
                 </span>
               </td>
             </tr>

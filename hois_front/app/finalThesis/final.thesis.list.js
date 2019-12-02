@@ -18,7 +18,7 @@ angular.module('hitsaOis').controller('FinalThesisListController', function ($sc
     });
   };
 
-  if ($scope.auth.isTeacher() || $scope.auth.isAdmin()) {
+  if ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher() || $scope.auth.isTeacher()) {
     $q.all(clMapper.promises).then($scope.loadData);
   } else if ($scope.auth.isStudent()) {
     QueryUtils.endpoint(endpoint + '/studentFinalThesis').get().$promise.then(function (result) {

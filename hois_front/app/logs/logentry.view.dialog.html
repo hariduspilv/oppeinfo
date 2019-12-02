@@ -16,7 +16,7 @@
       <div layout="row">
         <md-input-container>
           <label>{{'logs.request' | translate}}</label>&nbsp;
-          <pre><hois-value value="record.request | limitTo:requestLength"></hois-value></pre>
+          <pre class="log-entry-pre">{{ record.request | limitTo:requestLength }}</pre>
           <a ng-click="showAll(true)" ng-if="requestLength">&hellip;</a>
         </md-input-container>
       </div>
@@ -24,7 +24,7 @@
       <div layout="row">
         <md-input-container>
           <label>{{'logs.response' | translate}}</label>&nbsp;
-          <pre><hois-value value="record.response | limitTo:responseLength"></hois-value></pre>
+          <pre class="log-entry-pre">{{ record.response | limitTo:responseLength }}</pre>
           <a ng-click="showAll(false)" ng-if="responseLength">&hellip;</a>
         </md-input-container>
       </div>

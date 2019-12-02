@@ -20,25 +20,36 @@ angular.module('hitsaOis')
         clMapper.objectmapper(resultData.content);
       };
 
-      $scope.certificateTypes = Classifier.queryForDropdown({mainClassCode: 'TOEND_LIIK', filterValues: [CertificateType.TOEND_LIIK_MUU]});
+      //$scope.allCertificateTypes = Classifier.queryForDropdown({mainClassCode: 'TOEND_LIIK', filterValues: [CertificateType.TOEND_LIIK_MUU]});
       QueryUtils.endpoint('/certificate/student/status').get({id: $scope.auth.student}).$promise.then(function(response) {
-        $scope.certificateTypes.$promise.then(function() {
-          var forbiddenTypes = CertificateUtil.getForbiddenTypes(response.status);
-          $scope.certificateTypes = $scope.certificateTypes.filter(function(el){
-            return forbiddenTypes.indexOf(el.code) === -1;
+          var forbiddenTypes = [];
+          if ($scope.auth.isGuestStudent()) {
+            forbiddenTypes = CertificateUtil.getGuestStudentForbiddenTypes();
+          } else {
+            forbiddenTypes = CertificateUtil.getForbiddenTypes(response.status);
+          }
+          Classifier.queryForDropdown({mainClassCode: 'TOEND_LIIK', filterValues: [CertificateType.TOEND_LIIK_MUU]}).$promise.then(function (allCertificateTypes) {
+            $scope.certificateTypes = allCertificateTypes.filter(function(el){
+              return forbiddenTypes.indexOf(el.code) === -1;
+            });
           });
-        });
       }).catch(angular.noop);
     }
     $q.all(clMapper.promises).then($scope.loadData);
   }
-]).controller('CertificateStudentOrderController', ['$scope', 'Classifier', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$rootScope',
-  function ($scope, Classifier, QueryUtils, $route, $location, dialogService, message, $rootScope) {
+]).controller('CertificateStudentOrderController', ['$scope', 'Classifier', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$rootScope', 'CertificateUtil', 'ArrayUtils', 
+  function ($scope, Classifier, QueryUtils, $route, $location, dialogService, message, $rootScope, CertificateUtil, ArrayUtils) {
 
     var baseUrl = '/certificate';
     var Endpoint = QueryUtils.endpoint(baseUrl + '/order');
     var id = $route.current.params.id;
-
+    $scope.auth = $route.current.locals.auth;
+    if ($scope.auth.isGuestStudent() && !ArrayUtils.includes(['TOEND_LIIK_OPI', 'TOEND_LIIK_SOOR'], $route.current.params.typeCode)) {
+      message.error('main.messages.error.nopermission');
+      $location.path('');
+      return;
+    }
+    $scope.studentType = $scope.auth.type;
     $rootScope.removeLastUrlFromHistory(function(lastUrl){
       return lastUrl && (lastUrl.indexOf('certificate/' + id + '/view') !== -1 || lastUrl.indexOf('certificate/new') !== -1);
     });
@@ -61,7 +72,10 @@ angular.module('hitsaOis')
     function loadContent() {
       QueryUtils.endpoint(baseUrl + '/content').search({
         type: $scope.record.type,
-        addOutcomes: $scope.record.addOutcomes
+        addOutcomes: $scope.record.addOutcomes,
+        estonian: $scope.record.estonian,
+        english: $scope.record.english,
+        showUncompleted: $scope.record.showUncompleted
       }).$promise.then(function(response) {
         $scope.record.content = response.content;
         setReadonlyContent($scope.record.content);
@@ -69,6 +83,11 @@ angular.module('hitsaOis')
     }
 
     if($scope.record.type) {
+      if (CertificateUtil.isResultsCertificate($scope.record)) {
+        $scope.record.estonian = true;
+      } else {
+        $scope.record.estonian = undefined;
+      }
       loadContent();
     }
 
@@ -172,6 +191,7 @@ angular.module('hitsaOis')
          $scope.record.otherName = response.fullname;
          $scope.record.otherIdcode = response.idcode;
          $scope.otherFound = true;
+         $scope.studentType = response.type;
          $scope.forbiddenTypes = CertificateUtil.getForbiddenTypes(response.status);
          return response;
       }).catch(angular.noop);
@@ -184,9 +204,12 @@ angular.module('hitsaOis')
         return;
       }
       $scope.record.content = null;
-      if($scope.record.type && ($scope.record.student || $scope.record.otherIdcode && $scope.isOtherCertificate())) {
+      if($scope.record.type && ($scope.record.student || $scope.record.otherIdcode && $scope.isOtherCertificate() && $scope.otherFound)) {
         QueryUtils.endpoint(baseUrl + '/content').search(
-          {
+          { 
+            estonian: $scope.record.estonian,
+            english: $scope.record.english,
+            showUncompleted: $scope.record.showUncompleted,
             student: $scope.record.student,
             type: $scope.record.type,
             otherIdcode: $scope.record.otherIdcode,
@@ -202,12 +225,27 @@ angular.module('hitsaOis')
       }
     }
 
-    $scope.$watch('record.type', loadContent);
+    $scope.$watch('record.type', function() {
+      if (id !== undefined) return;
+      if (CertificateUtil.isResultsCertificate($scope.record)) {
+        $scope.record.estonian = true;
+      } else {
+        $scope.record.estonian = undefined;
+      }
+      $scope.student = undefined;
+      $scope.record.student = undefined;
+      $scope.record.content = undefined;
+      if(!$scope.contentEditable()) {
+        setReadonlyContent("");
+      }
+    });
+
     $scope.$watch('record.student', function(){
       if(!$scope.record.student) {
         $scope.forbiddenTypes = [];
+      } else {
+        loadContent();
       }
-      loadContent();
     });
 
 
@@ -234,10 +272,13 @@ angular.module('hitsaOis')
 
     var lookup = QueryUtils.endpoint('/autocomplete/students');
     $scope.querySearch = function (text) {
-      if(text.length >= 3) {
+      if(text.length >= 1) {
         var deferred = $q.defer();
         lookup.search(
           {
+           showGuestStudent : (CertificateUtil.isResultsCertificate($scope.record) || CertificateUtil.isStudyingCertificate($scope.record)),
+           onlyStudyingOrFinishedGuestStudent: (CertificateUtil.isResultsCertificate($scope.record) || CertificateUtil.isStudyingCertificate($scope.record)),
+           showStudentGroup: true,
            name: text,
            active: CertificateUtil.onlyActiveStudents($scope.record.type),
            finished: CertificateUtil.onlyFinishedStudents($scope.record.type)
@@ -386,7 +427,8 @@ angular.module('hitsaOis')
     $scope.idcodePattern = '^[1-6][0-9]{2}[0-1][0-9][0-3][0-9][0-9]{4}';
 
     $scope.getNameByIdcode = function() {
-      QueryUtils.endpoint(baseUrl + '/otherStudent', {get: {method: 'GET'}}).get({idcode: $scope.record.otherIdcode}).$promise.then(function(result) {
+      QueryUtils.endpoint(baseUrl + '/otherStudent', {get: {method: 'GET'}})
+      .get({idcode: $scope.record.otherIdcode, hideGuestStudents: true}).$promise.then(function(result) {
         if(result.id) {
           $scope.record.student = result.id;
           $scope.record.otherName = result.fullname;
@@ -404,6 +446,9 @@ angular.module('hitsaOis')
             $scope.otherFound = false;
           }
         }
+      }).catch(function(error) {
+        $scope.record.otherIdcode = undefined;
+        message.error(error.data._errors[0].code);
       });
     };
   }
@@ -473,6 +518,12 @@ angular.module('hitsaOis')
 }).factory('CertificateUtil', function (CertificateType, StudentUtil) {
 
   return {
+    isResultsCertificate: function(record) {
+      return record && record.type === CertificateType.TOEND_LIIK_SOOR;
+    },
+    isStudyingCertificate: function(record) {
+      return record && record.type === CertificateType.TOEND_LIIK_OPI;
+    },
     isOtherCertificate: function(record) {
       return record && record.type === CertificateType.TOEND_LIIK_MUU;
     },
@@ -498,6 +549,10 @@ angular.module('hitsaOis')
       } else {
         return [CertificateType.TOEND_LIIK_OPI, CertificateType.TOEND_LIIK_KONTAKT, CertificateType.TOEND_LIIK_LOPET];
       }
+    },
+    getGuestStudentForbiddenTypes : function() {
+      return [CertificateType.TOEND_LIIK_MUU, CertificateType.TOEND_LIIK_KONTAKT, 
+        CertificateType.TOEND_LIIK_LOPET, CertificateType.TOEND_LIIK_SESS];
     }
   };
 });

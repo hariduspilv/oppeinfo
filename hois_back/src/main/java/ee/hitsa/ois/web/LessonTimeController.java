@@ -3,7 +3,6 @@ package ee.hitsa.ois.web;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
 import javax.validation.Valid;
 
@@ -73,8 +72,8 @@ public class LessonTimeController {
         return Collections.singletonMap("periodStart", lessonTimeService.currentPeriodStartDate(user.getSchoolId()));
     }
 
-    @GetMapping("minValidFrom")
-    public Map<String, LocalDate> minValidFrom(@RequestParam Set<Long> buildings, @RequestParam(required = false) Long lessonTimeId) {
-        return Collections.singletonMap("minValidFrom", lessonTimeService.minValidFrom(buildings, lessonTimeId));
+    @GetMapping("validFromRange")
+    public Map<String, LocalDate> validFromRange(HoisUserDetails user, @RequestParam(required = false) Long lessonTimeId) {
+        return lessonTimeService.validFromRange(user.getSchoolId(), lessonTimeId);
     }
 }

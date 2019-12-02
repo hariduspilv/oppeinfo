@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeApplicationStudentController', ['$route', '$scope', '$q', 'Classifier', 'QueryUtils', 'dialogService', 'FormUtils', 'message',
-  function ($route, $scope, $q, Classifier, QueryUtils, dialogService, FormUtils, message) {
+angular.module('hitsaOis').controller('PracticeApplicationStudentController', ['$scope', '$q', 'Classifier', 'QueryUtils', 'dialogService', 'FormUtils', 'message',
+  function ($scope, $q, Classifier, QueryUtils, dialogService, FormUtils, message) {
     var baseUrl = '/practiceApplication';
     var clMapper = Classifier.valuemapper({
       status: 'PR_TAOTLUS'
@@ -67,6 +67,7 @@ angular.module('hitsaOis').controller('PracticeApplicationStudentController', ['
   }
 ]).controller('PracticeApplicationSearchController', ['$q', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'FormUtils', '$route',
 function ($q, $scope, dialogService, message, Classifier, QueryUtils, FormUtils, $route) {
+  $scope.auth = $route.current.locals.auth;
   var baseUrl = '/practiceApplication';
 
   $scope.formState = {status: 'PR_TAOTLUS_E'};
@@ -107,16 +108,34 @@ function ($q, $scope, dialogService, message, Classifier, QueryUtils, FormUtils,
   
   $q.all(clMapper.promises).then($scope.loadData);
 }
-]).controller('PracticeApplicationPeriodSearchController', ['$scope', 'dialogService', 'message', 'QueryUtils', 'FormUtils', '$route',
-  function ($scope, dialogService, message, QueryUtils, FormUtils, $route) {
+]).controller('PracticeApplicationPeriodSearchController', ['$scope', 'dialogService', 'message', 'QueryUtils', 'FormUtils', '$route', 'AuthService',
+  function ($scope, dialogService, message, QueryUtils, FormUtils, $route, AuthService) {
+    $scope.auth = $route.current.locals.auth;
     var baseUrl = '/practiceApplication';
 
+    $scope.canEdit = $scope.auth.isAdmin() && AuthService.isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAAVALDUS');
     $scope.currentNavItem = $route.current.$$route.data.currentNavItem;
     QueryUtils.createQueryForm($scope, baseUrl + '/applicationPeriods');
     angular.extend($scope.criteria, {order: 'e.\"name\"'});
     if (!$scope.criteria.validFrom && !$scope.criteria.validThru) {
       angular.extend($scope.criteria, {opened: true});
     }
+
+    $scope.view = function(row) {
+      if (!row) {
+        return;
+      }
+      dialogService.showDialog('practiceEnterprise/practice.enterprise.admission.view.dialog.html', function (dialogScope) {
+        dialogScope.header = 'enterprise.viewPeriod';
+        QueryUtils.endpoint('/practiceEnterprise/admission/' + row.id).search().$promise.then(function(response) {
+          dialogScope.enterprise = response;
+          dialogScope.enterprise.validFrom = new Date(response.validFrom);
+          dialogScope.enterprise.validThru = new Date(response.validThru);
+          dialogScope.enterprise.name = row.enterpriseName;
+          dialogScope.enterprise.regCode = row.enterpriseRegCode;
+        });
+      }, null);
+    };
 
     $scope.edit = function (row) {
       if (!row) {
@@ -183,6 +202,14 @@ function ($q, $scope, dialogService, message, Classifier, QueryUtils, FormUtils,
           dialogScope.enterprise.name = row.enterpriseName;
           dialogScope.enterprise.regCode = row.enterpriseRegCode;
         });
+
+        dialogScope.validate = function () {
+          if (dialogScope.enterprise.studentGroups === undefined || dialogScope.enterprise.studentGroups.length === 0) {
+            message.error('practiceApplication.messages.atLeastOneStudentGroup');
+            return;
+          }
+          dialogScope.submit();
+        };
       }, function (submittedDialogScope) {
         FormUtils.withValidForm(submittedDialogScope.dialogForm, function() {
           var LocationEndpoint = QueryUtils.endpoint('/practiceEnterprise/admission/' + row.id);

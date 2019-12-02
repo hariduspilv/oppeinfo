@@ -33,17 +33,19 @@ angular.module('hitsaOis').controller('StudentgroupContractController', function
               $scope.criteria.studentGroup = value.id;
               $rootScope.replaceLastUrl("#/practice/studentgroup/contracts/" + $scope.criteria.studentGroup);
               if (value.curriculumVersion !== null) {
-                QueryUtils.endpoint('/autocomplete/curriculumversions?id=' + value.curriculumVersion).query({}, function (result) {
+                QueryUtils.endpoint('/autocomplete/curriculumversions').query({id: value.curriculumVersion}, function (result) {
+                  if (result && result.length === 1) {
+                      $scope.criteria.curriculumVersion = result[0];
+                    }
+                  });
+              } else if (value.curriculum !== null) {
+                QueryUtils.endpoint('/autocomplete/curriculumsauto').query({id: value.curriculum}, function (result) {
                   if (result && result.length === 1) {
                       $scope.criteria.curriculumVersion = result[0];
                     }
                   });
               } else {
-                QueryUtils.endpoint('/autocomplete/curriculumsauto?id=' + value.curriculum).query({}, function (result) {
-                  if (result && result.length === 1) {
-                      $scope.criteria.curriculumVersion = result[0];
-                    }
-                  });
+                $scope.criteria.curriculumVersion = undefined;
               }
               $scope.reload();
             });

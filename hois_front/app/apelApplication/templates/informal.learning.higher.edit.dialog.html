@@ -77,7 +77,8 @@
               </md-input-container>
               <hois-autocomplete ng-if="dialogScope.freeChoiceSubjects" flex="45" ng-model="formState.selectedSubject"
                 method="subjects" name="subject" label="{{'apel.informalLearnings.subject' | translate}}" 
-                additional-query-params="{student: student.id, curriculumSubjects: false, curriculumVersion: curriculumVersionId, withCredits: false, noFinalSubjects: true}">
+                additional-query-params="{student: student.id, curriculumSubjects: false, curriculumVersion: curriculumVersionId, 
+                  ignoreCurriculumVersionStatus: true, withCredits: false, noFinalSubjects: true}">
               </hois-autocomplete>
               <md-input-container flex-offset="5">
                 <md-checkbox ng-model="dialogScope.freeChoiceSubjects" aria-label="{{'apel.informalLearnings.freeChoice' | translate}}" 

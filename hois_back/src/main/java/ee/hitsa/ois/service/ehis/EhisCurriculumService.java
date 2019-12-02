@@ -224,9 +224,8 @@ public class EhisCurriculumService extends EhisService {
         oppekavaOis.setKutsestandardid(occupations);
         OisFailid oisFailid = new OisFailid();
         SoapAttachment attachment;
-        try {
-            ByteArrayOutputStream zipBytesOut = new ByteArrayOutputStream();
-            ZipOutputStream zipOut = new ZipOutputStream(zipBytesOut);
+        try (ByteArrayOutputStream zipBytesOut = new ByteArrayOutputStream();
+                ZipOutputStream zipOut = new ZipOutputStream(zipBytesOut)) {
             for(CurriculumFile cf : curriculum.getFiles()) {
                 if(!cf.isSendEhis()) {
                     continue;

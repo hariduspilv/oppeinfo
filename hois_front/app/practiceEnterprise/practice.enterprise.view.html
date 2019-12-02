@@ -1,24 +1,7 @@
-<md-content>
-    <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak hois-navbar-overflowed>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.id" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/view?_noback" name="enterprise.data">
-            {{'enterprise.data' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/persons/view?_noback" name="enterprise.persons">
-            {{'enterprise.persons' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/locations/view?_noback" name="enterprise.locations">
-            {{'enterprise.locations' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/studentGroups/view?_noback" name="enterprise.studentGroups">
-            {{'enterprise.studentGroups' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/contracts/view?_noback" name="enterprise.contracts">
-            {{'enterprise.contracts' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/grades/view?_noback" name="enterprise.grades">
-            {{'enterprise.grades' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId && enterprise.application" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/admission/view?_noback" name="enterprise.admission">
-            {{'enterprise.requests' | translate}}</md-nav-item>
-    </md-nav-bar>
-</md-content>
+<div ng-include="'practiceEnterprise/practice.enterprise.navbar.html'"></div>
 
 <div class="ois-form-layout-padding ois-form-layout" layout="column" ng-cloak>
-      <fieldset ng-if="auth.isAdmin()">
+      <fieldset ng-if="auth.isAdmin() || auth.isLeadingTeacher()">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'enterprise.basicData' | translate}}</legend>
         <div class="ois-form-layout-padding form-readonly" layout="column" flex>
           <div layout="row">
@@ -51,7 +34,7 @@
             </md-input-container>
         </div>
       </fieldset>
-      <fieldset ng-if="auth.isAdmin()">
+      <fieldset ng-if="auth.isAdmin() || auth.isLeadingTeacher()">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'enterprise.schoolData' | translate}}</legend>
         <div class="ois-form-layout-padding form-readonly" style="padding-top: 1em">
             <div  layout="row">
@@ -117,9 +100,13 @@
         </div>
       </fieldset>
       <div layout="row" layout-xs="column">
-        <md-button ng-if="auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" class="md-raised md-primary" ng-href="#/practice/enterprise/{{::enterprise.id}}/edit">{{'main.button.change' | translate}}</md-button>
-        <md-button ng-if="auth.isAdmin()" ng-click="back('#/practice/enterprise')" class="md-raised">{{'main.button.back' | translate}}</md-button>
-        <md-button ng-if="auth.isAdmin() && enterprise.country === 'RIIK_EST' && !enterprise.person && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" ng-click="update()" class="md-raised">{{'enterprise.updateFromRegister' | translate}}</md-button>
+        <span ng-if="auth.isAdmin() || auth.isLeadingTeacher()">
+            <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" class="md-raised md-primary"
+                ng-href="#/practice/enterprise/{{::enterprise.id}}/edit">{{'main.button.change' | translate}}</md-button>
+            <md-button ng-click="back('#/practice/enterprise')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+            <md-button ng-if="enterprise.country === 'RIIK_EST' && !enterprise.person && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')"
+                ng-click="update()" class="md-raised">{{'enterprise.updateFromRegister' | translate}}</md-button>
+        </span>
         <div layout="row" layout-align="center center" ng-show="enterprise.ebusinessUpdated"><span>{{'enterprise.lastEnterpriseUpdate' | translate}} {{enterprise.ebusinessUpdated | hoisTimestamp}}</span></div>
       </div>
   </div>  

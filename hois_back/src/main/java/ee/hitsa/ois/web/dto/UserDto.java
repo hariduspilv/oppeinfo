@@ -5,6 +5,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.User;
+import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.UserForm;
 
@@ -12,16 +15,37 @@ public class UserDto extends UserForm {
 
     private Long id;
     private PersonMinDto person;
+    
+    private Boolean higher;
+    private Boolean vocational;
 
     public static UserDto of(User user) {
-        UserDto dto = EntityUtil.bindToDto(user, new UserDto());
+        UserDto dto = EntityUtil.bindToDto(user, new UserDto(), "curriculums");
         dto.person = EntityUtil.bindToDto(user.getPerson(), new PersonMinDto());
+        dto.person.setHasSchoolAdminRole(Boolean.valueOf(user.getPerson().getUsers().stream()
+                .filter(u -> user.getSchool() != null && u.getSchool() != null && user.getSchool().equals(u.getSchool()))
+                .filter(u -> !u.equals(user) && ClassifierUtil.equals(Role.ROLL_A, u.getRole()))
+                .filter(u -> DateUtils.isValid(u.getValidFrom(), u.getValidThru()))
+                .findAny().isPresent()));
         dto.setSchool(user.getSchool() != null ? AutocompleteResult.of(user.getSchool()) : null);
 
         Map<String, List<String>> rights = user.getUserRights().stream().collect(
                 Collectors.groupingBy(r -> EntityUtil.getCode(r.getObject()),
                         Collectors.mapping(r -> EntityUtil.getCode(r.getPermission()), Collectors.toList())));
         dto.setRights(rights);
+        if (user.getUserSchoolRole() == null) {
+            if (user.getTeacher() != null) {
+                dto.setUserRole(AutocompleteResult.of(user.getTeacher().getTeacherOccupation()));
+            }
+        } else {
+            dto.setUserRole(AutocompleteResult.of(user.getUserSchoolRole()));
+        }
+        
+        dto.setCurriculums(user.getUserCurriculums().stream().map(r -> {
+            AutocompleteResult cDto = AutocompleteResult.of(r);
+            cDto.setId(r.getCurriculum().getId());
+            return cDto;
+        }).collect(Collectors.toSet()));
         return dto;
     }
 
@@ -41,11 +65,28 @@ public class UserDto extends UserForm {
         this.person = person;
     }
 
+    public Boolean getHigher() {
+        return higher;
+    }
+
+    public void setHigher(Boolean higher) {
+        this.higher = higher;
+    }
+
+    public Boolean getVocational() {
+        return vocational;
+    }
+
+    public void setVocational(Boolean vocational) {
+        this.vocational = vocational;
+    }
+
     public static class PersonMinDto {
 
         private Long id;
         private String idcode;
         private String fullname;
+        private Boolean hasSchoolAdminRole;
 
         public Long getId() {
             return id;
@@ -69,6 +110,14 @@ public class UserDto extends UserForm {
 
         public void setFullname(String fullname) {
             this.fullname = fullname;
+        }
+
+        public Boolean getHasSchoolAdminRole() {
+            return hasSchoolAdminRole;
+        }
+
+        public void setHasSchoolAdminRole(Boolean hasSchoolAdminRole) {
+            this.hasSchoolAdminRole = hasSchoolAdminRole;
         }
     }
 }

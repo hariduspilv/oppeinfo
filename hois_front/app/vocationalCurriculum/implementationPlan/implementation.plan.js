@@ -454,9 +454,9 @@ angular.module('hitsaOis')
       }
     });
 
-    $scope.showPrintButton = function() {
-      return angular.isDefined($scope.implementationPlan.id) && ($scope.auth.isAdmin() || $scope.implementationPlan.status === $scope.VERSION_STATUS.K &&
-        curriculumEntity.status === $scope.CURRICULUM_STATUS.VERIFIED);
+    $scope.showPrintButton = function () {
+      return angular.isDefined($scope.implementationPlan.id) && (($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher()) ||
+        $scope.implementationPlan.status === $scope.VERSION_STATUS.K && curriculumEntity.status === $scope.CURRICULUM_STATUS.VERIFIED);
     };
 
     /**

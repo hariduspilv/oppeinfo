@@ -127,7 +127,7 @@
               </ul>
             </li>
           </ul>
-          <div flex layout="row" ng-show="state.currentUser" class="reprlink">
+          <div flex layout="row" ng-show="!!state.currentUser && state.currentUser.type !== 'OPPUR_K'" class="reprlink">
             <div layout="row" flex layout-align="center">
               <a class="sidenav-link center" ng-href="/#/studentrepresentatives/applications/new?_menu">{{'home.represantiveApplication' | translate}}</a>
             </div>
@@ -145,7 +145,7 @@
           <div flex layout="row" layout-align="center">
             <a class="very-small-caption" ng-click="openTerms()" md-colors="{color: 'background-400'}">{{'home.terms' | translate}}</a>
           </div>
-          <div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="very-small-caption">Versioon 1.4.1/20190924</span></div>
+          <div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="very-small-caption">Versioon 1.5.0/20191127</span></div>
           <div flex layout="row" ng-show="state.currentUser" layout-align="center">
             <a class="sidenav-link" href="https://kratt.edu.ee" target="_blank" rel="noopener">Kratt</a>
           </div>
@@ -258,16 +258,15 @@
   <script src="components/hois.input.file.js"></script>
   <script src="components/hois.multi.text.js"></script>
   <script src="components/hois.navbar.overflowed.js"></script>
-  <script src="components/hois.number.filter.js"></script>
   <script src="components/hois.school.department.select.js"></script>
   <script src="components/hois.select.js"></script>
   <script src="components/hois.value.js"></script>
+  <script src="components/hois.table.master.js"></script>
   <script src="components/hois.time.js"></script>
-  <script src="components/hois.url.filter.js"></script>
+  <script src="components/hois.data.filters.js"></script>
   <script src="components/hois.date.filter.js"></script>
   <script src="components/hois.valid.dates.filter.js"></script>
   <script src="components/hois.study.period.filter.js"></script>
-  <script src="components/hois.string.filter.js"></script>
   <script src="components/md.maxlength.js"></script>
 
   <script src="contract/contract.js"></script>
@@ -321,7 +320,7 @@
   <script src="lessonplan/lessonplan.js"></script>
   <script src="lessonplan/lessonplan.journal.js"></script>
   <script src="lessonplan/lessonplan.route.js"></script>
-  <script src="lessonplan/event.search.js"></script>
+  <script src="lessonplan/event/event.search.js"></script>
 
   <script src="logs/logs.route.js"></script>
   <script src="logs/logs.js"></script>
@@ -331,6 +330,9 @@
 
   <script src="messageTemplate/message.template.js"></script>
   <script src="messageTemplate/message.template.route.js"></script>
+
+  <script src="midtermResult/midtermResult.js"></script>
+  <script src="midtermResult/midtermResult.route.js"></script>
 
   <script src="midtermTask/midtermTask.js"></script>
   <script src="midtermTask/midtermTask.util.js"></script>
@@ -527,9 +529,14 @@
   <script src="finalProtocol/vocational/final.vocational.protocol.js"></script>
   <script src="finalProtocol/vocational/final.vocational.protocol.route.js"></script>
 
+  <script src="persons/adminRoles/admin.roles.js"></script>
+  <script src="persons/teacherRoles/teacher.roles.js"></script>
   <script src="persons/persons.js"></script>
   <script src="persons/persons.route.js"></script>
   <script src="persons/users.js"></script>
+
+  <script src="userContract/userContract.js"></script>
+  <script src="userContract/userContract.route.js"></script>
 
   <script src="vocationalCurriculum/vocational.curriculum.js"></script>
   <script src="vocationalCurriculum/implementationPlan/implementation.plan.js"></script>

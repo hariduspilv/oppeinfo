@@ -58,7 +58,8 @@
           <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="30" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'studyYear.studyPeriodEvent.endDate' | translate}}</label>
-              <md-datepicker ng-model="studyPeriodEvent.end" md-min-date="studyPeriodEvent.start" ng-model-options="{ getterSetter: true }" md-open-on-focus></md-datepicker>
+              <md-datepicker ng-model="studyPeriodEvent.end" md-min-date="studyPeriodEvent.start" ng-model-options="{ getterSetter: true }"
+                md-open-on-focus ng-required="requiresEnd"></md-datepicker>
             </md-input-container>
             <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'studyYear.studyPeriodEvent.endTime' | translate}}</label>

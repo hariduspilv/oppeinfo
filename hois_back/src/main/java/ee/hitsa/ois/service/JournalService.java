@@ -41,7 +41,9 @@ import com.google.common.base.Objects;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
+import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentVocationalResult;
@@ -80,6 +82,7 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
+import ee.hitsa.ois.util.StudyMaterialUserRights;
 import ee.hitsa.ois.validation.JournalEntryValidation;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
@@ -195,11 +198,14 @@ public class JournalService {
 
     public Page<JournalSearchDto> search(HoisUserDetails user, JournalSearchCommand command, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(JOURNAL_LIST_FROM).sort(pageable);
-        
+
         qb.requiredCriteria("j.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("c.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
+        }
+
         qb.requiredCriteria("j.study_year_id = :studyYear", "studyYear", command.getStudyYear());
-        
-        
+
         if (user.isTeacher()) {
             command.setTeacher(user.getTeacherId());
         }
@@ -219,9 +225,9 @@ public class JournalService {
                         " or jt.teacher_id=" + command.getTeacher() + ")");
             }
         }
-        
+
         qb.optionalContains("j.name_et", "name", command.getJournalName());
-        
+
         if (command.getStudentGroup() != null) {
             qb.filter("j.id in (select j.id from journal j " +
                     "join journal_omodule_theme jot on j.id=jot.journal_id " + 
@@ -230,7 +236,7 @@ public class JournalService {
                     "join student_group sg on lp.student_group_id=sg.id " + 
                     "where sg.id=" + command.getStudentGroup() + ")");
         }
-        
+
         if (command.getModule() != null) {
             String modules = command.getModule().stream().map(m -> String.valueOf(m)).collect(Collectors.joining(","));
             qb.filter("j.id in (select j.id from journal j " +
@@ -239,11 +245,11 @@ public class JournalService {
             "join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id=cvo.id " +
             "where cvo.id in (" + modules + "))"); 
         }
-        
+
         qb.optionalCriteria("j.status_code = :status", "status", command.getStatus());
-        
+
         qb.groupBy("j.id");
-        
+
         return JpaQueryUtil.pagingResult(qb, JOURNAL_LIST_SELECT, em, pageable).map(r -> {
             JournalSearchDto dto = new JournalSearchDto();
             dto.setId(resultAsLong(r, 0));
@@ -263,15 +269,23 @@ public class JournalService {
             return dto;
         });
     }
-    
+
     public JournalDto get(HoisUserDetails user, Journal journal) {
         JournalDto dto = JournalDto.of(journal);
         dto.setCanBeConfirmed(Boolean.valueOf(JournalUtil.canConfirm(user, journal)));
         dto.setCanBeUnconfirmed(Boolean.valueOf(JournalUtil.canUnconfirm(user, journal)));
         dto.setCanEdit(Boolean.valueOf(JournalUtil.hasPermissionToChange(user, journal)));
+        dto.setCanViewReview(Boolean.valueOf(JournalUtil.hasPermissionToViewReview(user, journal)));
         dto.setCanReview(Boolean.valueOf(JournalUtil.hasPermissionToReview(user, journal)));
+        dto.setCanConnectStudyMaterials(Boolean.valueOf(StudyMaterialUserRights.canEditJournal(user, journal)));
         dto.setLessonHours(usedHours(journal));
         setStudentIndividualCurriculums(dto);
+
+        if (Boolean.TRUE.equals(dto.getCanViewReview())) {
+            dto.setIsReviewOk(journal.getReviewOk());
+            dto.setReviewDate(journal.getReviewDate());
+            dto.setReviewInfo(journal.getReviewInfo());
+        }
         return dto;
     }
 
@@ -399,14 +413,30 @@ public class JournalService {
         return studentRepository.findAll((root, query, cb) -> {
             root.join("person", JoinType.INNER);
             root.join("studentGroup", JoinType.LEFT);
-            root.join("curriculumVersion", JoinType.INNER).join("curriculum", JoinType.INNER);
+            root.join("curriculumVersion", JoinType.LEFT);
+            
+            Subquery<Long> directiveQuery = query.subquery(Long.class);
+            Root<Directive> directiveRoot = directiveQuery.from(Directive.class);
+            Join<Object, Object> directiveStudentsJoin = directiveRoot.join("students", JoinType.INNER);
+            directiveQuery.select(directiveStudentsJoin.get("student").get("id"))
+                    .where(cb.and(cb.or(cb.equal(directiveRoot.get("isHigher"), Boolean.FALSE), cb.isNull(directiveRoot.get("isHigher"))),
+                            cb.equal(directiveRoot.get("type").get("code"), DirectiveType.KASKKIRI_KYLALIS.name()),
+                            cb.equal(directiveStudentsJoin.get("student").get("id"), root.get("id"))));
+            
+            Subquery<Long> curriculumQuery = query.subquery(Long.class);
+            Root<CurriculumVersion> curriculumRoot = curriculumQuery.from(CurriculumVersion.class);
+            Join<Object, Object> curriculumStudentsJoin = curriculumRoot.join("curriculum", JoinType.INNER);
+            curriculumQuery.select(curriculumStudentsJoin.get("id"))
+                    .where(cb.and(cb.or(cb.equal(curriculumStudentsJoin.get("higher"), Boolean.FALSE),cb.isNull(curriculumStudentsJoin.get("higher"))),
+                            cb.isNotNull(root.get("curriculumVersion")), cb.equal(curriculumRoot.get("id"), root.get("curriculumVersion").get("id"))));
 
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
             filters.add(cb.or(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_A.name()),
                     cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()),
                     cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_V.name())));
-            filters.add(cb.equal(root.get("curriculumVersion").get("curriculum").get("higher"), Boolean.FALSE));
+            // check if student is higher by directive or curriculum
+            filters.add(cb.or(cb.exists(directiveQuery), cb.exists(curriculumQuery)));
 
             if (StringUtils.hasText(command.getStudentName())) {
                 List<Predicate> name = new ArrayList<>();
@@ -1014,7 +1044,7 @@ public class JournalService {
         });
     }
 
-    public List<JournalStudentDto> journalStudents(Journal journal, Boolean allStudents) {
+    public List<JournalStudentDto> journalStudents(HoisUserDetails user, Journal journal, Boolean allStudents) {
         List<JournalStudent> students = journal.getJournalStudents().stream()
                 .filter(jt -> Boolean.TRUE.equals(allStudents) || StudentUtil.isActive(jt.getStudent()))
                 .collect(Collectors.toList());
@@ -1029,6 +1059,15 @@ public class JournalService {
             Set<Long> themeIds = StreamUtil.toMappedSet(t -> EntityUtil.getId(t), themes);
             Set<Long> omoduleIds = StreamUtil.toMappedSet(t -> EntityUtil.getId(t.getModule()), themes);
 
+            if (user.isLeadingTeacher()) {
+                Set<Long> viewableStudents = viewableStudents(user, studentIds);
+                for (Long studentId : mappedStudentDtos.keySet()) {
+                    if (!viewableStudents.contains(studentId)) {
+                        mappedStudentDtos.get(studentId).setCanView(Boolean.FALSE);
+                    }
+                }
+            }
+
             Map<Long, List<JournalStudentApelResultDto>> journalStudentApelResuts = journalStudentApelResults(
                     omoduleIds, themeIds, studentIds);
             for (Long studentId : journalStudentApelResuts.keySet()) {
@@ -1042,7 +1081,10 @@ public class JournalService {
 
             Set<Long> studentsWithIndividualCurriculums = studentsWithIndividualCurriculums(EntityUtil.getId(journal));
             for (Long studentId : studentsWithIndividualCurriculums) {
-                mappedStudentDtos.get(studentId).setIsIndividualCurriculum(Boolean.TRUE);
+                // all journal students might not be shown
+                if (mappedStudentDtos.containsKey(studentId)) {
+                    mappedStudentDtos.get(studentId).setIsIndividualCurriculum(Boolean.TRUE);
+                }
             }
         }
 
@@ -1052,10 +1094,21 @@ public class JournalService {
                 .comparing(JournalStudentDto::getStudentGroup, Comparator.nullsLast(Comparator.naturalOrder()))
                 .thenComparing(JournalStudentDto::getLastname, String.CASE_INSENSITIVE_ORDER)
                 .thenComparing(JournalStudentDto::getFirstname, String.CASE_INSENSITIVE_ORDER));
-        
+
         return studentDtos;
     }
-    
+
+    // leading teacher can see only his/her curriculum student group students
+    private Set<Long> viewableStudents(HoisUserDetails user, Set<Long> studentIds) {
+        List<?> data = em.createNativeQuery("select s.id from student s" +
+                " join curriculum_version cv on cv.id = s.curriculum_version_id" +
+                " where cv.curriculum_id in (?1) and s.id in (?2)")
+                .setParameter(1, user.getCurriculumIds())
+                .setParameter(2, studentIds)
+                .getResultList();
+        return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
+    }
+
     private Map<Long, List<JournalStudentApelResultDto>> journalStudentApelResults(Set<Long> omoduleIds,
             Set<Long> themeIds, Set<Long> students) {
         String informalApelResults = "select aa.student_id, " +

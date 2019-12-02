@@ -47,7 +47,7 @@ public class MessageController {
     public Page<MessageSearchDto> show(HoisUserDetails user, Pageable pageable) {
         return messageService.show(user, pageable);
     }
-    
+
     @GetMapping("/received/new")
     public Map<String, Long> unreadReceivedCount(HoisUserDetails user) {
         return messageService.unreadReceivedCount(user);
@@ -109,16 +109,16 @@ public class MessageController {
 
     @GetMapping("/studentgroups")
     public List<StudentGroupSearchDto> studentGroups(HoisUserDetails user, @Valid StudentGroupSearchCommand criteria) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
         return messageService.searchStudentGroups(user, criteria);
     }
-    
+
     @GetMapping("/teacherjournals")
     public List<JournalDto> getTeacherJournals(HoisUserDetails user) {
         UserUtil.assertIsTeacher(user);
         return messageService.searchTeacherJournals(user);
     }
-    
+
     @GetMapping("/teachersubjects")
     public List<SubjectDto> getTeacherSubjects(HoisUserDetails user) {
         UserUtil.assertIsTeacher(user);
@@ -130,13 +130,13 @@ public class MessageController {
         UserUtil.assertSameSchool(user, student.getSchool());
         return messageService.getStudentRepresentatives(student);
     }
-    
+
     private static void assertIsReceiver(HoisUserDetails user, Message message) {
         UserUtil.throwAccessDeniedIf(!message.getReceivers().stream()
                 .anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId())), 
                 "User is not message receiver");
     }
-    
+
     private static void assertCanView(HoisUserDetails user, Message message) {
         School school = message.getSendersSchool();
         if (!user.isMainAdmin() && school != null) {

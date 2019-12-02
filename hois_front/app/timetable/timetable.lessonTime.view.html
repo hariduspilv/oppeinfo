@@ -42,10 +42,10 @@
                     <span>{{::lessonTime.lessonNr}}</span>
                 </td>
                 <td md-cell>
-                  <span>{{lessonTime.startTime | hoisTime}}</span>
+                  <span>{{lessonTime.startTime | hoisTimeMin}}</span>
                 </td>
                 <td md-cell>
-                  <span>{{lessonTime.endTime | hoisTime}}</span>
+                  <span>{{lessonTime.endTime | hoisTimeMin}}</span>
                 </td>
                 <td md-cell>
                   <span>{{calculateAcademicHours(lessonTime.startTime, lessonTime.endTime)}}</span>

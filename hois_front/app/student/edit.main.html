@@ -37,15 +37,15 @@
 
         <md-input-container class="md-block">
           <label class="textInput">{{'student.postcode' | translate}}</label>
-          <input ng-model="student.person.postcode" name="postcode" type="text" required md-maxlength="10">
+          <input ng-model="student.person.postcode" name="postcode" type="text" md-maxlength="10">
         </md-input-container>
 
-        <md-input-container class="md-block" ng-if="student.userIsSchoolAdmin || student.userIsStudentGroupTeacher">
+        <md-input-container class="md-block" ng-if="student.userIsSchoolAdmin || student.userIsLeadingTeacher || student.userIsStudentGroupTeacher">
           <label>{{'student.citizenship' | translate}}</label>
           <hois-classifier-select ng-model="student.person.citizenship" name="citizenship" main-classifier-code="RIIK" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
 
-        <md-input-container class="md-block" ng-if="student.userIsSchoolAdmin || student.userIsStudentGroupTeacher">
+        <md-input-container class="md-block" ng-if="student.userIsSchoolAdmin || student.userIsLeadingTeacher || student.userIsStudentGroupTeacher">
           <label>{{'student.language' | translate}}</label>
           <hois-classifier-select ng-model="student.person.language" name="language" main-classifier-code="OPPEKEEL" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
@@ -57,13 +57,13 @@
 
       </hois-collapsable>
 
-      <hois-collapsable label="('student.study' | translate)" ng-if="student.userIsSchoolAdmin || student.userIsStudentGroupTeacher">
+      <hois-collapsable label="('student.study' | translate)" ng-if="student.userIsSchoolAdmin || student.userIsLeadingTeacher || student.userIsStudentGroupTeacher">
 
-        <md-input-container class="md-block" ng-if="student.userIsSchoolAdmin">
+        <md-input-container class="md-block" ng-if="student.userIsSchoolAdmin || student.userIsLeadingTeacher">
           <label>{{'student.studyLanguage' | translate}}</label>
           <hois-classifier-select ng-model="student.studyLanguage" name="studyLanguage" main-classifier-code="OPPEKEEL" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
-        <md-input-container class="md-block" ng-if="student.userIsSchoolAdmin && !student.isVocational">
+        <md-input-container class="md-block" ng-if="(student.userIsSchoolAdmin || student.userIsLeadingTeacher) && !student.isVocational">
           <label>{{'student.curriculumSpeciality' | translate}}</label>
           <md-select ng-model="student.curriculumSpeciality" name="studyLanguage" ng-model-options="{trackBy: '$value.id'}">
             <md-option ng-value="null"></md-option>
@@ -71,7 +71,7 @@
           </md-select>
         </md-input-container>
 
-        <md-input-container class="md-block" ng-if="student.userIsSchoolAdmin">
+        <md-input-container class="md-block" ng-if="(student.userIsSchoolAdmin || student.userIsLeadingTeacher) && !student.isGuestStudent">
           <label>{{'student.nominalStudyEnd' | translate}}</label>
           <md-datepicker class="wider-datepicker" name="nominalStudyEnd" ng-model="student.nominalStudyEnd" md-min-date="student.studyStart"></md-datepicker>
           <div ng-messages="studentEditForm.nominalStudyEnd.$error">
@@ -81,7 +81,7 @@
           </div>
         </md-input-container>
 
-        <md-input-container class="md-block" ng-if="student.userIsSchoolAdmin">
+        <md-input-container class="md-block" ng-if="(student.userIsSchoolAdmin || student.userIsLeadingTeacher) && !student.isGuestStudent">
           <label>{{'student.finSpecific' | translate}}</label>
           <hois-classifier-select ng-model="student.finSpecific" name="finSpecific" main-classifier-code="FINTAPSUSTUS" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
@@ -91,22 +91,22 @@
           <input ng-model="student.schoolEmail" name="schoolEmail" type="text" md-maxlength="255">
         </md-input-container>
 
-        <md-input-container class="md-block">
+        <md-input-container class="md-block" ng-if="!student.isGuestStudent">
           <label>{{'student.previousStudyLevel' | translate}}</label>
           <hois-classifier-select ng-model="student.previousStudyLevel" name="previousStudyLevel" main-classifier-code="OPPEASTE" required model-value-attr="code"></hois-classifier-select>
         </md-input-container>
 
-        <md-input-container ng-if="student.isVocational" class="md-block">
+        <md-input-container ng-if="student.isVocational && !student.isGuestStudent" class="md-block">
           <label>{{'student.studyCompany' | translate}}</label>
           <input ng-model="student.studyCompany" name="studyCompany" type="text" md-maxlength="1000">
         </md-input-container>
 
-        <md-input-container class="md-block">
+        <md-input-container class="md-block" ng-if="!student.isGuestStudent">
           <label>{{'student.previousSchoolName' | translate}}</label>
           <input ng-model="student.previousSchoolName" name="previousSchoolName" type="text" md-maxlength="255">
         </md-input-container>
 
-        <md-input-container class="md-block">
+        <md-input-container class="md-block" ng-if="!student.isGuestStudent">
           <label>{{'student.previousSchoolEndDate' | translate}}</label>
           <md-datepicker class="wider-datepicker" ng-model="student.previousSchoolEndDate"></md-datepicker>
         </md-input-container>
@@ -118,7 +118,7 @@
 
       </hois-collapsable>
 
-      <hois-collapsable label="('student.specialNeeds' | translate)" ng-if="student.userIsSchoolAdmin || student.userIsStudentGroupTeacher">
+      <hois-collapsable label="('student.specialNeeds' | translate)" ng-if="(student.userIsSchoolAdmin || student.userIsLeadingTeacher || student.userIsStudentGroupTeacher) && !student.isGuestStudent">
 
         <md-checkbox ng-model="student.isSpecialNeed" name="isSpecialNeed">
           {{'student.isSpecialNeed' | translate}}
@@ -137,7 +137,7 @@
 
       </hois-collapsable>
 
-      <hois-collapsable label="('student.photo.label' | translate)" ng-if="student.userIsSchoolAdmin || student.userIsStudentGroupTeacher">
+      <hois-collapsable label="('student.photo.label' | translate)" ng-if="student.userIsSchoolAdmin || student.userIsLeadingTeacher || student.userIsStudentGroupTeacher || student.studentCanAddPhoto">
         <lf-ng-md-file-input name="photoFiles"
           lf-files="photoFiles" lf-filesize="3MB"
           accept=".png, .jpg, .jpeg" lf-mimetype="image/*" preview

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import ee.hitsa.ois.domain.Certificate;
 import ee.hitsa.ois.enums.CertificateType;
 import ee.hitsa.ois.util.EnumUtil;
+import ee.hitsa.ois.util.StudentUtil;
 
 public class CertificateRtfReport {
 
@@ -17,7 +18,8 @@ public class CertificateRtfReport {
     public CertificateRtfReport(Certificate certificate) {
         this.certificate = certificate;
         this.contentEditable = Boolean.valueOf(isContentEditable(EnumUtil.valueOf(CertificateType.class, certificate.getType())));
-        this.content = convertHtmlToXslFo(certificate.getContent(), EnumUtil.valueOf(CertificateType.class, certificate.getType()));
+        Boolean higher = Boolean.valueOf(StudentUtil.isHigher(certificate.getStudent()));
+        this.content = convertHtmlToXslFo(certificate.getContent(), EnumUtil.valueOf(CertificateType.class, certificate.getType()), higher);
     }
     
     /**
@@ -28,7 +30,8 @@ public class CertificateRtfReport {
      * @param html
      * @return
      */
-    private static String convertHtmlToXslFo(String html, CertificateType type) {
+    private static String convertHtmlToXslFo(String html, CertificateType type, Boolean higher) {
+        boolean isHigher = higher != null && higher.booleanValue();
         String result = html;
         if (isContentEditable(type)) {
             result = result.replaceAll("\n", "\r");
@@ -49,6 +52,7 @@ public class CertificateRtfReport {
                             + "<fo:table table-layout=\"fixed\" width=\"80%\" border=\"solid 0.1mm black\">"
                             + "<fo:table-column column-width=\"0.34in\"/>"
                             + "<fo:table-column column-width=\"2.2in\"/>"
+                            + (isHigher ? "<fo:table-column column-width=\"0.7in\"/>" : "" )
                             + "<fo:table-column column-width=\"0.7in\"/>"
                             + "<fo:table-column column-width=\"0.2in\"/>"
                             + "<fo:table-column column-width=\"0.8in\"/>"

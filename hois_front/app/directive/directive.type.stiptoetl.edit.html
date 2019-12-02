@@ -13,25 +13,29 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row hois-table-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
-        <td md-cell>
-          <md-input-container style="width: 250px">
-            <md-select ng-model="row.directiveStudent" ng-change="scholarshipDirectiveChanged(row)" name="students[{{$index}}].directiveStudent"
-              ng-disabled="row.directiveStudent && row.existingDirectiveStudents.length === 1">
-              <md-option ng-value="existingDirective.id" ng-repeat="existingDirective in row.existingDirectiveStudents">
-                {{existingDirective.directiveNr}} ({{existingDirective.scholarshipTermNameEt}}, {{existingDirective.confirmDate | hoisDate}})
-              </md-option>
-            </md-select>
-          </md-input-container>
-          <div class="invalid" ng-messages="directiveForm['students['+$index+'].directiveStudent'].$error">
-            <p ng-message="required">{{'main.required' | translate}}</p>
-            <p ng-message="serverside">
-              <span ng-repeat="err in directiveForm['students['+$index+'].directiveStudent'].$serverError">{{err.code | translate}}</span>
-            </p>
-          </div>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <md-input-container style="width: 250px">
+              <md-select ng-model="row.directiveStudent" ng-change="scholarshipDirectiveChanged(row)" name="students[{{$index}}].directiveStudent"
+                ng-disabled="row.directiveStudent && row.existingDirectiveStudents.length === 1">
+                <md-option ng-value="existingDirective.id" ng-repeat="existingDirective in row.existingDirectiveStudents">
+                  {{existingDirective.directiveNr}} ({{existingDirective.scholarshipTermNameEt}}, {{existingDirective.confirmDate | hoisDate}})
+                </md-option>
+              </md-select>
+            </md-input-container>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-messages="directiveForm['students['+$index+'].directiveStudent'].$error">
+              <p ng-message="required">{{'main.required' | translate}}</p>
+              <p ng-message="serverside">
+                <span ng-repeat="err in directiveForm['students['+$index+'].directiveStudent'].$serverError">{{err.code | translate}}</span>
+              </p>
+            </div>
+          </hois-table-data-detail>
         </td>
         <td md-cell>
           <hois-value value="row.startDate | hoisDate"></hois-value>
@@ -39,14 +43,18 @@
         <td md-cell>
           <hois-value value="row.endDate | hoisDate"></hois-value>
         </td>
-        <td md-cell>
-          <hois-classifier-select ng-model="row.reason" name="students[{{$index}}].reason" ignore-preselected
-            criteria="{higher: formState.school.higher ? true : undefined, vocational: formState.school.vocational ? true : undefined}"
-            model-value-attr="code" main-classifier-code="KASKKIRI_STIPTOETL_POHJUS" aria-label="{{'directive.student.reason' | translate}}" 
-            only-valid style="width: 200px"></hois-classifier-select>
-          <div class="invalid" ng-show="directiveForm['students['+$index+'].reason'].$error.required">
-            {{'main.required' | translate}}
-          </div>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <hois-classifier-select ng-model="row.reason" name="students[{{$index}}].reason" ignore-preselected
+              criteria="{higher: formState.school.higher ? true : undefined, vocational: formState.school.vocational ? true : undefined}"
+              model-value-attr="code" main-classifier-code="KASKKIRI_STIPTOETL_POHJUS" aria-label="{{'directive.student.reason' | translate}}" 
+              only-valid style="width: 200px"></hois-classifier-select>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-show="directiveForm['students['+$index+'].reason'].$error.required">
+              {{'main.required' | translate}}
+            </div>
+          </hois-table-data-detail>
         </td>
         <td md-cell>
           <a ng-click="deleteStudent(row)" md-no-ink  class="remove">&times;</a>

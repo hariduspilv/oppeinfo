@@ -5,7 +5,7 @@
                 <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
                 <div layout="row">
                     <hois-autocomplete flex="50" ng-model="studentGroupObject" method="studentgroups" name="studentGroup" 
-                    label="{{'lessonplan.studentGroup'}}" additional-query-params="{valid: true}"></hois-autocomplete>
+                      label="{{'lessonplan.studentGroup'}}" additional-query-params="{valid: true, userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
                     <md-input-container flex="50" flex-sm="100" flex-xs="100">
                         <label class="textInput">{{'student.name' | translate}}</label>
                         <input ng-model="criteria.studentName" name="name" type="text" md-maxlength="255">

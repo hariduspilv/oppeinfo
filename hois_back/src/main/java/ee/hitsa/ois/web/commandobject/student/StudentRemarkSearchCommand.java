@@ -20,6 +20,7 @@ public class StudentRemarkSearchCommand {
     private List<Long> students;
     private LocalDate from;
     private LocalDate thru;
+    private List<String> reasons;
     private Boolean showJournalRemarks;
 
     public Long getStudyYear() {
@@ -92,6 +93,14 @@ public class StudentRemarkSearchCommand {
 
     public void setThru(LocalDate thru) {
         this.thru = thru;
+    }
+
+    public List<String> getReasons() {
+        return reasons;
+    }
+
+    public void setReasons(List<String> reasons) {
+        this.reasons = reasons;
     }
 
     public Boolean getShowJournalRemarks() {

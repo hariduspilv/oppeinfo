@@ -380,7 +380,7 @@ angular.module('hitsaOis')
           var week = scope.formState.weekNrs[weekIndex];
           if (week.show) {
             var weekColumn = document.createElement("th");
-            weekColumn.title = $filter('hoisDate')(scope.formState.weekBeginningDates[weekIndex]);
+            weekColumn.title = moment(new Date(scope.formState.weekBeginningDates[weekIndex])).format('YYYY-MM-DD');
             weekColumn.innerHTML = week.nr;
             weekColumn.classList.add(CENTER);
             if (week.endOfPeriod) {
@@ -520,15 +520,14 @@ angular.module('hitsaOis')
         }
 
         var capacities = '';
-        for (var capacity in theme.hours) {
-          if (theme.hours.hasOwnProperty(capacity)) {
-            var type = getCapacityByCode(scope.formState.capacityTypes, capacity);
-            if (capacities !== '' && type) {
-              capacities += '/';
-            }
-            if (type) {
-              capacities += type.value.toUpperCase() + theme.hours[capacity];
-            }
+        var themeCapacityTypes = getCapacityTypes(scope.formState.capacityTypes, theme.hours);
+        for (var ctIndex = 0; ctIndex < themeCapacityTypes.length; ctIndex++) {
+          var capacityType = themeCapacityTypes[ctIndex];
+          if (capacities !== '' && capacityType) {
+            capacities += '/';
+          }
+          if (capacityType) {
+            capacities += capacityType.value.toUpperCase() + theme.hours[capacityType.code];
           }
         }
 

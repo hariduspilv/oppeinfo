@@ -45,8 +45,8 @@
                 </div>
             </div>
             <div layout="row" layout-xs="column">
-                <md-button ng-if="auth.isAdmin() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KYSITLUS')" class="md-raised md-primary" ng-click="saveQuestion()">{{'main.button.save' | translate}}</md-button>
-                <md-button ng-if="auth.isAdmin()" ng-click="back('#/poll/questions', searchForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+                <md-button ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KYSITLUS')" class="md-raised md-primary" ng-click="saveQuestion()">{{'main.button.save' | translate}}</md-button>
+                <md-button ng-if="(auth.isAdmin() || auth.isLeadingTeacher())" ng-click="back('#/poll/questions', searchForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
             </div>
             <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
             </fieldset>
@@ -80,8 +80,8 @@
                     <td md-cell>{{row.status ? currentLanguageNameField(row.status) : '-'}}</td>
                     <td md-cell>{{row.insertedBy ? row.insertedBy : '-'}}</td>
                     <td md-cell>{{row.changedBy ? row.changedBy : '-'}}</td>
-                    <td ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE')" md-cell>
-                    <md-button md-no-ink class="md-primary change-button" 
+                    <td md-cell>
+                        <md-button md-no-ink class="md-primary change-button" 
                         ng-click="test(row)">{{'main.button.view' | translate}}</md-button>
                     </td>
                 </tr>

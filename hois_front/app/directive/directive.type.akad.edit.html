@@ -15,7 +15,7 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row hois-table-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
@@ -25,33 +25,47 @@
             <md-radio-button ng-value="false" aria-label="date">{{ 'main.date' | translate }}</md-radio-button>
           </md-radio-group>
         </td>
-        <td md-cell>
-          <hois-select ng-if="row.isPeriod" ng-model="row.studyPeriodStart" name="students[{{$index}}].studyPeriodStart" values="formState.studyPeriods" aria-label="{{'directive.student.akadStartDate' | translate}}"></hois-select>
-          <md-datepicker ng-if="!row.isPeriod" ng-model="row.startDate" md-max-date="row.endDate" name="students[{{$index}}].startDate"></md-datepicker>
-          <div ng-if="row.isPeriod" class="invalid" ng-messages="directiveForm['students['+$index+'].studyPeriodStart'].$error">
-            <p ng-message="required">{{'main.required' | translate}}</p>
-          </div>
-          <div ng-if="!row.isPeriod" class="invalid" ng-messages="directiveForm['students['+$index+'].startDate'].$error">
-            <p ng-message="required">{{'main.required' | translate}}</p>
-          </div>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <hois-select ng-if="row.isPeriod" ng-model="row.studyPeriodStart" name="students[{{$index}}].studyPeriodStart"
+              values="formState.studyPeriods" aria-label="{{'directive.student.akadStartDate' | translate}}"></hois-select>
+            <md-datepicker ng-if="!row.isPeriod" ng-model="row.startDate" md-max-date="row.endDate" name="students[{{$index}}].startDate"></md-datepicker>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div ng-if="row.isPeriod" class="invalid" ng-messages="directiveForm['students['+$index+'].studyPeriodStart'].$error">
+              <p ng-message="required">{{'main.required' | translate}}</p>
+            </div>
+            <div ng-if="!row.isPeriod" class="invalid" ng-messages="directiveForm['students['+$index+'].startDate'].$error">
+              <p ng-message="required">{{'main.required' | translate}}</p>
+            </div>
+          </hois-table-data-detail>
         </td>
-        <td md-cell>
-          <hois-select ng-if="row.isPeriod" ng-model="row.studyPeriodEnd" name="students[{{$index}}].studyPeriodEnd" values="formState.studyPeriods" aria-label="{{'directive.student.akadEndDate' | translate}}"></hois-select>
-          <md-datepicker ng-if="!row.isPeriod" ng-model="row.endDate" md-min-date="row.startDate" name="students[{{$index}}].endDate"></md-datepicker>
-          <div ng-if="row.isPeriod" class="invalid" ng-messages="directiveForm['students['+$index+'].studyPeriodEnd'].$error">
-            <p ng-message="required">{{'main.required' | translate}}</p>
-          </div>
-          <div ng-if="!row.isPeriod" class="invalid" ng-messages="directiveForm['students['+$index+'].endDate'].$error">
-            <p ng-message="required">{{'main.required' | translate}}</p>
-          </div>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <hois-select ng-if="row.isPeriod" ng-model="row.studyPeriodEnd" name="students[{{$index}}].studyPeriodEnd"
+              values="formState.studyPeriods" aria-label="{{'directive.student.akadEndDate' | translate}}"></hois-select>
+            <md-datepicker ng-if="!row.isPeriod" ng-model="row.endDate" md-min-date="row.startDate" name="students[{{$index}}].endDate"></md-datepicker>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div ng-if="row.isPeriod" class="invalid" ng-messages="directiveForm['students['+$index+'].studyPeriodEnd'].$error">
+              <p ng-message="required">{{'main.required' | translate}}</p>
+            </div>
+            <div ng-if="!row.isPeriod" class="invalid" ng-messages="directiveForm['students['+$index+'].endDate'].$error">
+              <p ng-message="required">{{'main.required' | translate}}</p>
+            </div>
+          </hois-table-data-detail>
         </td>
-        <td md-cell>
-          <hois-classifier-select ng-model="row.reason" name="students[{{$index}}].reason" only-valid ignore-preselected
-            criteria="{vocational: row.oldCurriculumVersion.isVocational ? true : undefined, higher: !row.oldCurriculumVersion.isVocational ? true : undefined}"
-            model-value-attr="code" main-classifier-code="AKADPUHKUS_POHJUS" aria-label="{{'directive.student.reason' | translate}}"></hois-classifier-select>
-          <div class="invalid" ng-messages="directiveForm['students['+$index+'].reason'].$error">
-            <p ng-message="required">{{'main.required' | translate}}</p>
-          </div>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <hois-classifier-select ng-model="row.reason" name="students[{{$index}}].reason" only-valid ignore-preselected
+              criteria="{vocational: row.oldCurriculumVersion.isVocational ? true : undefined, higher: !row.oldCurriculumVersion.isVocational ? true : undefined}"
+              model-value-attr="code" main-classifier-code="AKADPUHKUS_POHJUS" aria-label="{{'directive.student.reason' | translate}}"></hois-classifier-select>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-messages="directiveForm['students['+$index+'].reason'].$error">
+              <p ng-message="required">{{'main.required' | translate}}</p>
+            </div>
+          </hois-table-data-detail>
         </td>
         <td md-cell>
           <div ng-if="row.applicationIsPeriod">{{currentLanguageNameField(row.applicationStudyPeriodStart)}}</div>

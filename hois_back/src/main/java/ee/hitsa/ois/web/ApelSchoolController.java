@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.apelapplication.ApelSchool;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.ApelSchoolService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
@@ -36,19 +38,20 @@ public class ApelSchoolController {
 
     @GetMapping
     public Page<ApelSchoolSearchDto> search(ApelSchoolSearchCommand command, Pageable pageable, HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_VOTA);
         return apelSchoolService.search(user, command, pageable);
     }
 
     @GetMapping("/{id:\\d+}")
     public ApelSchoolDto get(HoisUserDetails user, @WithEntity ApelSchool school) {
-        UserUtil.assertIsSchoolAdminOrStudent(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, school.getSchool(), Permission.OIGUS_V,
+                PermissionObject.TEEMAOIGUS_VOTA);
         return apelSchoolService.get(school);
     }
 
     @PostMapping
     public ApelSchoolDto create(HoisUserDetails user, @Valid @RequestBody ApelSchoolForm schoolForm) {
-        UserUtil.assertIsSchoolAdminOrStudent(user);
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA);
         ApelSchool school = apelSchoolService.create(user, schoolForm);
         return get(user, school);
     }
@@ -56,14 +59,14 @@ public class ApelSchoolController {
     @PutMapping("/{id:\\d+}")
     public ApelSchoolDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) ApelSchool school,
             @Valid @RequestBody ApelSchoolForm form) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, school.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA);
         return get(user, apelSchoolService.save(user, school, form));
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") ApelSchool school,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdmin(user, school.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA);
         apelSchoolService.delete(user, school);
     }
 

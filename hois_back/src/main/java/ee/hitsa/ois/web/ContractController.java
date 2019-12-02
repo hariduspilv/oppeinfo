@@ -29,6 +29,8 @@ import ee.hitsa.ois.domain.ContractSupervisor;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.report.PracticeContractReport;
 import ee.hitsa.ois.service.ContractService;
 import ee.hitsa.ois.service.RtfService;
@@ -67,32 +69,33 @@ public class ContractController {
     private ContractService contractService;
     @Autowired
     private RtfService rtfService;
-    
+
     @Autowired
     private EntityManager em;
 
     @GetMapping
     public Page<ContractSearchDto> search(HoisUserDetails user, ContractSearchCommand command, Pageable pageable) {
-        if (user.isStudent()) {
-            command.setStudent(user.getStudentId());
-        }
+        assertCanSearch(user);
         return contractService.search(user, command, pageable);
     }
-    
+
     @GetMapping("/all")
     public Page<ContractSearchDto> search(HoisUserDetails user, ContractAllCommand command, Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LEPING);
         return contractService.searchAll(user, command, pageable);
     }
-    
+
     @GetMapping("/studentGroup")
-    public Page<StudentGroupContractSearchDto> searchStudentGroupContract(HoisUserDetails user, @Valid StudentGroupContractSearchCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+    public Page<StudentGroupContractSearchDto> searchStudentGroupContract(HoisUserDetails user,
+            @Valid StudentGroupContractSearchCommand command, Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user);
         return contractService.searchStudentGroupContract(user, command, pageable);
     }
-    
+
     @GetMapping("/ekis")
-    public Page<ContractForEkisDto> searchContractForEkis(HoisUserDetails user, @Valid ContractForEkisSearchCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdmin(user);
+    public Page<ContractForEkisDto> searchContractForEkis(HoisUserDetails user,
+            @Valid ContractForEkisSearchCommand command, Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user);
         return contractService.searchContractForEkis(user, command, pageable);
     }
 
@@ -104,7 +107,7 @@ public class ContractController {
 
     @PostMapping
     public ContractDto create(HoisUserDetails user, @Valid @RequestBody ContractForm contractForm) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LEPING);
         Contract savedContract = null;
         if (contractForm.getStudents() != null && !contractForm.getStudents().isEmpty()) {
             for (AutocompleteResult student : contractForm.getStudents()) {
@@ -125,7 +128,8 @@ public class ContractController {
     public ContractDto save(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) Contract contract,
             @Valid @RequestBody ContractForm contractForm) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, contract.getStudent().getSchool(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_LEPING);
         if (!ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_S, contract.getStatus())) {
             throw new ValidationFailedException("contract.messages.updatingOnlyAllowedForStatusS");
         }
@@ -136,7 +140,8 @@ public class ContractController {
     public ContractDto cancel(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) Contract contract,
             @Valid @RequestBody ContractCancelForm contractForm) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, contract.getStudent().getSchool(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_LEPING);
         if (!ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_K, contract.getStatus()) && !ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_Y, contract.getStatus())) {
             throw new ValidationFailedException("contract.messages.updatingOnlyAllowedForStatusKandY");
         }
@@ -147,7 +152,8 @@ public class ContractController {
     public void delete(HoisUserDetails user,
             @WithVersionedEntity(versionRequestParam = "version") Contract contract,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, contract.getStudent().getSchool(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_LEPING);
         if (!ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_Y, contract.getStatus())
                 && !ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_S, contract.getStatus())) {
             throw new ValidationFailedException("contract.messages.deletionOnlyAllowedForStatusSAndY");
@@ -158,58 +164,62 @@ public class ContractController {
     @GetMapping("studentPracticeModules/{studentId:\\d+}")
     public Collection<ContractStudentModuleDto> studentPracticeModules(HoisUserDetails user,
             @PathVariable Long studentId) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LEPING);
         return contractService.studentPracticeModules(user, studentId);
     }
 
     @GetMapping("studentPracticeSubjects/{studentId:\\d+}")
     public Collection<ContractStudentSubjectDto> studentSubjects(HoisUserDetails user, @PathVariable Long studentId) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LEPING);
         return contractService.studentPracticeHigherModules(user, studentId)
                 .stream().flatMap(it -> it.getSubjects().stream()).collect(Collectors.toList());
     }
 
     @GetMapping("/checkForEkis/{id:\\d+}")
     public Map<String, ?> checkForEkis(HoisUserDetails user, @PathVariable("id") Long contractId) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_LEPING);
         return contractService.checkForEkis(user, contractId);
     }
-    
+
     @GetMapping("/checkForEkis")
     public Map<String, ?> checkForEkis(HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user);
         return contractService.checkForEkis(user, null);
     }
-    
+
     @PutMapping("/sendEmail/{id:\\d+}")
     public void sendEmail(HoisUserDetails user, @WithEntity ContractSupervisor supervisor) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, supervisor.getContract().getStudent(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_LEPING);
         contractService.sendUniqueUrlEmailToEnterpriseSupervisor(user, supervisor);
     }
-    
+
     @PostMapping("/checkout/{id:\\d+}")
     public ContractDto checkout(HoisUserDetails user, @WithEntity Contract contract) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, contract.getStudent(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_LEPING);
         UserUtil.assertIsSchoolWithoutEkis(em.getReference(School.class, user.getSchoolId()));
         return get(user, contractService.checkout(user, contract));
     }
     
     @PostMapping("/confirm/{id:\\d+}")
     public ContractDto confirm(HoisUserDetails user, @WithEntity Contract contract) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, contract.getStudent(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_LEPING);
         UserUtil.assertIsSchoolWithoutEkis(em.getReference(School.class, user.getSchoolId()));
         return get(user, contractService.confirm(contract));
     }
 
     @PostMapping("/sendToEkis/{id:\\d+}")
     public ContractDto sendToEkis(HoisUserDetails user, @WithEntity Contract contract) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, contract.getStudent(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_LEPING);
         return get(user, contractService.sendToEkis(user, contract));
     }
     
     @PostMapping("/sendToEkis")
     public ContractEkisDto sendToEkis(HoisUserDetails user, @RequestBody ContractEkisForm contractEkisForm) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_LEPING);
         List<ContractToEkisMessageDto> passed = new ArrayList<>();
         List<ContractToEkisMessageDto> failed = new ArrayList<>();
         for (Long id : contractEkisForm.getContracts()) {
@@ -226,20 +236,30 @@ public class ContractController {
         dto.setSuccessful(passed);
         return dto;
     }
-    
+
     @GetMapping("/print/{id:\\d+}/contract.rtf")
     public void printRtf(HoisUserDetails user, @WithEntity Contract contract, HttpServletResponse response, @RequestParam(required = false) Language lang) throws IOException {
         assertCanView(user, contract);
         HttpUtil.rtf(response, String.format("praktikaleping_%s.rtf", PersonUtil.fullname(contract.getStudent().getPerson())),
                 rtfService.generateFop(PracticeContractReport.TEMPLATE_NAME, new PracticeContractReport(contract, lang), lang));
     }
-    
+
     @PutMapping("/changeContractNr/{id:\\d+}")
     public ContractDto changeContractNr(HoisUserDetails user, @WithEntity Contract contract, @RequestBody ContractNrCommand command) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, contract.getStudent(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_LEPING);
         UserUtil.assertIsSchoolWithoutEkis(em.getReference(School.class, user.getSchoolId()));
         return get(user, contractService.changeContractNr(contract, command));
         
+    }
+
+    private static void assertCanSearch(HoisUserDetails user) {
+        if (user.isSchoolAdmin() || user.isLeadingTeacher()) {
+            UserUtil.throwAccessDeniedIf(
+                    !UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_LEPING));
+        } else {
+            UserUtil.assertIsStudent(user);
+        }
     }
 
     /**
@@ -250,13 +270,13 @@ public class ContractController {
      * @return
      */
     private static void assertCanView(HoisUserDetails user, Contract contract) {
-        UserUtil.assertSameSchool(user, contract.getStudent().getSchool());
         if (user.isTeacher()) {
             UserUtil.throwAccessDeniedIf(!EntityUtil.getId(contract.getTeacher()).equals(user.getTeacherId()));
         } else if (user.isStudent() || user.isRepresentative()) {
             UserUtil.throwAccessDeniedIf(!EntityUtil.getId(contract.getStudent()).equals(user.getStudentId()));
         } else {
-            UserUtil.assertIsSchoolAdmin(user);
+            UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, contract.getStudent(), Permission.OIGUS_V,
+                    PermissionObject.TEEMAOIGUS_LEPING);
         }
     }
 }

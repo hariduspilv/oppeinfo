@@ -2,11 +2,11 @@
     <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
         <md-nav-item ng-if="!criteria.id" md-nav-href="#/poll/new?_noback" name="poll.data">
             {{'poll.basicData.label' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/{{::criteria.id}}/edit?_noback" name="poll.data">
+        <md-nav-item ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && criteria.id" md-nav-href="#/poll/{{::criteria.id}}/edit?_noback" name="poll.data">
             {{'poll.basicData.label' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/questions/{{::criteria.id}}/edit?_noback" name="poll.questions">
+        <md-nav-item ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && criteria.id" md-nav-href="#/poll/questions/{{::criteria.id}}/edit?_noback" name="poll.questions">
             {{'poll.questions.label' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/results/{{::criteria.id}}/edit?_noback" name="poll.results">
+        <md-nav-item ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && criteria.id && formState.status === 'KYSITLUS_STAATUS_K'" md-nav-href="#/poll/results/{{::criteria.id}}/edit?_noback" name="poll.results">
             {{'poll.results' | translate}}</md-nav-item>
     </md-nav-bar>
 </div>
@@ -155,9 +155,9 @@
             </div>
         </div>
         <div layout="row" layout-xs="column">
-            <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="addNewTheme()" class="md-raised">{{'poll.questions.addTheme' | translate}}</md-button>
-            <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="test()" class="md-raised">{{'poll.test' | translate}}</md-button>
-            <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="back('#/poll')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="(auth.isAdmin() || auth.isLeadingTeacher())" ng-click="addNewTheme()" class="md-raised">{{'poll.questions.addTheme' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="(auth.isAdmin() || auth.isLeadingTeacher())" ng-click="test()" class="md-raised">{{'poll.test' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="(auth.isAdmin() || auth.isLeadingTeacher())" ng-click="back('#/poll')" class="md-raised">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>
 </div>

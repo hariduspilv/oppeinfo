@@ -1,5 +1,5 @@
 <md-dialog aria-label="add enterprise dialog" flex="50" flex-md="70" flex-sm="80" flex-xs="100">
-    <form name="dialogForm" ng-submit="submit()" novalidate ng-cloak>
+    <form name="dialogForm" ng-submit="validate()" novalidate ng-cloak>
         <md-toolbar>
         <div class="md-toolbar-tools">
             <h2 flex>{{header ? (header | translate) : ('enterprise.admissionTab.addNew' | translate)}}</h2>
@@ -74,7 +74,7 @@
                 </div>
             </div>
             <div layout="row" flex="100">
-                <hois-autocomplete ng-if="!enterprise.allStudentGroups" label="timetable.timetableEvent.studentGroup" ng-model="enterprise.studentGroup" method="studentgroups" additional-query-params="{valid: true}" flex></hois-autocomplete>
+                <hois-autocomplete ng-if="!enterprise.allStudentGroups" label="practiceAdmission.studentGroup" ng-model="enterprise.studentGroup" method="studentgroups" additional-query-params="{valid: true}" flex></hois-autocomplete>
                 <md-button flex-offset="5" ng-click="addAllStudentGroups()" class="md-raised">{{"enterprise.admissionTab.allStudentGroups" | translate}}</md-button>
             </div>
             <md-table-container ng-if="enterprise.studentGroups.length > 0" layout="row" flex="100" style="max-height: 100px">

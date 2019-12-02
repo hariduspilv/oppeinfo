@@ -18,6 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.UserCurriculum;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.domain.teacher.Teacher;
@@ -144,8 +145,11 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier draft;
     
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Teacher teacher;
+    
+    @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserCurriculum> userCurriculums;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
@@ -528,6 +532,14 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
         this.addInfo = addInfo;
     }
 
+    public LocalDate getMerRegDate() {
+        return merRegDate;
+    }
+
+    public void setMerRegDate(LocalDate merRegDate) {
+        this.merRegDate = merRegDate;
+    }
+
     public LocalDate getAccreditationDate() {
         return accreditationDate;
     }
@@ -688,6 +700,15 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
         this.teacher = teacher;
     }
 
+    public Set<UserCurriculum> getUserCurriculums() {
+        return userCurriculums != null ? userCurriculums : (userCurriculums = new HashSet<>());
+    }
+
+    public void setUserCurriculums(Set<UserCurriculum> userCurriculums) {
+        getUserCurriculums().clear();
+        getUserCurriculums().addAll(userCurriculums);
+    }
+
     public StateCurriculum getStateCurriculum() {
         return stateCurriculum;
     }
@@ -772,15 +793,6 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
         return modules != null ? modules : (modules = new HashSet<>());
     }
 
-    public Set<CurriculumVersion> getVersions() {
-        return versions != null ? versions : (versions = new HashSet<>());
-    }
-
-    public void setVersions(Set<CurriculumVersion> versions) {
-        getVersions().clear();
-        getVersions().addAll(versions);
-    }
-
     public void setModules(Set<CurriculumModule> modules) {
         getModules().clear();
         getModules().addAll(modules);
@@ -795,11 +807,17 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
         getOccupations().addAll(occupations);
     }
 
-    public LocalDate getMerRegDate() {
-        return merRegDate;
+    public Set<CurriculumVersion> getVersions() {
+        return versions != null ? versions : (versions = new HashSet<>());
     }
 
-    public void setMerRegDate(LocalDate merRegDate) {
-        this.merRegDate = merRegDate;
+    public void setVersions(Set<CurriculumVersion> versions) {
+        getVersions().clear();
+        getVersions().addAll(versions);
     }
+
+    public static long getSerialversionuid() {
+        return serialVersionUID;
+    }
+
 }

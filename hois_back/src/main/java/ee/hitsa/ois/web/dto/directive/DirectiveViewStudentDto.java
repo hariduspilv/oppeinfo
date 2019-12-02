@@ -57,6 +57,7 @@ public class DirectiveViewStudentDto {
     private Boolean applicationIsPeriod;
     private LocalDate applicationStartDate;
     private LocalDate applicationEndDate;
+    private AutocompleteResult apelSchool;
     private AutocompleteResult applicationStudyPeriodStart;
     private AutocompleteResult applicationStudyPeriodEnd;
     private Boolean isAbroad;
@@ -531,6 +532,14 @@ public class DirectiveViewStudentDto {
     public void setDormitory(String dormitory) {
         this.dormitory = dormitory;
     }
+    
+    public AutocompleteResult getApelSchool() {
+        return apelSchool;
+    }
+
+    public void setApelSchool(AutocompleteResult apelSchool) {
+        this.apelSchool = apelSchool;
+    }
 
     public static DirectiveViewStudentDto of(DirectiveStudent directiveStudent) {
         DirectiveViewStudentDto dto = EntityUtil.bindToDto(directiveStudent, new DirectiveViewStudentDto(), "occupations");
@@ -678,6 +687,11 @@ public class DirectiveViewStudentDto {
         case KASKKIRI_VALIS:
             dto.setNewStudyPeriodStart(directiveStudent.getStudyPeriodStart() != null ? AutocompleteResult.of(directiveStudent.getStudyPeriodStart()) : null);
             dto.setNewStudyPeriodEnd(directiveStudent.getStudyPeriodEnd() != null ? AutocompleteResult.of(directiveStudent.getStudyPeriodEnd()) : null);
+            break;
+        case KASKKIRI_KYLALIS:
+            dto.setCurriculumVersionObject(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);
+            dto.setStudentGroupObject(directiveStudent.getStudentGroup() != null ? AutocompleteResult.of(directiveStudent.getStudentGroup()) : null);
+            dto.setApelSchool(AutocompleteResult.of(directiveStudent.getApelSchool()));
             break;
         default:
             break;

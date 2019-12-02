@@ -89,6 +89,26 @@
           </div>
         </md-whiteframe>
       </div>
+      <div ng-if="currentDeclaration.isDeclarationPeriod">
+        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+          <div md-colors="{color: 'warn'}" layout layout-align="left center">
+            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'declaration.home.openDeclaration' | translate: {period: currentLanguageNameField(currentDeclaration.period),
+              from: (currentDeclaration.declarationPeriodStart | hoisDateTimeMin), thru: (currentDeclaration.declarationPeriodEnd | hoisDateTimeMin)} }}
+              <a ng-href="#/declaration/current/view">{{'main.button.open' | translate}}</a></span>
+          </div>
+        </md-whiteframe>
+      </div>
+      <div ng-if="nextDeclaration.isDeclarationPeriod">
+        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
+          <div md-colors="{color: 'warn'}" layout layout-align="left center">
+            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'declaration.home.openDeclaration' | translate: {period: currentLanguageNameField(nextDeclaration.period),
+              from: (nextDeclaration.declarationPeriodStart | hoisDateTimeMin), thru: (nextDeclaration.declarationPeriodEnd | hoisDateTimeMin)} }}
+              <a ng-href="#/declaration/current/view">{{'main.button.open' | translate}}</a></span>
+          </div>
+        </md-whiteframe>
+      </div>
     </div>
     <div layout="column" layout-gt-md="row" layout-margin>
       <div id="column-1" flex-gt-md="{{ sessionStudentId ? '50' : '100' }}" flex="100">

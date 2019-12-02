@@ -3,11 +3,11 @@
     <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
         <md-nav-item ng-if="!criteria.id" md-nav-href="#/poll/new?_noback" name="poll.data">
             {{'poll.basicData.label' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/{{::criteria.id}}/edit?_noback" name="poll.data">
+        <md-nav-item ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && criteria.id" md-nav-href="#/poll/{{::criteria.id}}/edit?_noback" name="poll.data">
             {{'poll.basicData.label' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/questions/{{::criteria.id}}/edit?_noback" name="poll.questions">
+        <md-nav-item ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && criteria.id" md-nav-href="#/poll/questions/{{::criteria.id}}/edit?_noback" name="poll.questions">
             {{'poll.questions.label' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && criteria.id" md-nav-href="#/poll/results/{{::criteria.id}}/edit?_noback" name="poll.results">
+        <md-nav-item ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && criteria.id && formState.status.code === 'KYSITLUS_STAATUS_K'" md-nav-href="#/poll/results/{{::criteria.id}}/edit?_noback" name="poll.results">
             {{'poll.results' | translate}}</md-nav-item>
     </md-nav-bar>
 </div>
@@ -133,7 +133,7 @@
                     <div layout="column" ng-if="criteria.type === 'KYSITLUS_O'">
                         <div layout="column" ng-if="!auth.higher || (auth.higher && auth.vocational)">
                             <div layout="row">
-                                <hois-autocomplete flex="50" ng-model="formState.journal" method="journalsAndStudentGroups" name="journals" label="lessonplan.journals"></hois-autocomplete>
+                                <hois-autocomplete flex="50" ng-model="formState.journal" method="journalsAndStudentGroups" name="journals" label="poll.basicData.journals"></hois-autocomplete>
                             </div>
                             <div layout="row">
                                 <md-table-container flex="50" style="max-height: 200px">
@@ -220,15 +220,15 @@
                 </div>
             </div>
             <div layout="row" ng-if="!criteria.type">
-                <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="back('#/poll', pollForm, 'poll.confirmBack')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+                <md-button flex-xs="100" ng-if="auth.isAdmin() || auth.isLeadingTeacher()" ng-click="back('#/poll', pollForm, 'poll.confirmBack')" class="md-raised">{{'main.button.back' | translate}}</md-button>
             </div>
         </div>
         <div layout="row" layout-xs="column" ng-if="criteria.type">
-            <md-button flex-xs="100" ng-if="auth.isAdmin()" type="submit" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-            <md-button flex-xs="100" ng-if="auth.isAdmin() && formState.status !== undefined && formState.status.code === 'KYSITLUS_STAATUS_E'" ng-click="confirm()" class="md-raised">{{'main.button.confirm' | translate}}</md-button>
-            <md-button flex-xs="100" ng-if="auth.isAdmin() && formState.status !== undefined && formState.status.code === 'KYSITLUS_STAATUS_E'" ng-click="deletePoll()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
-            <md-button flex-xs="100" ng-if="auth.isAdmin() && criteria.id" ng-click="test()" class="md-raised">{{'poll.test' | translate}}</md-button>
-            <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="back('#/poll', pollForm, 'poll.confirmBack')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="auth.isAdmin() || auth.isLeadingTeacher()" type="submit" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && formState.status !== undefined && formState.status.code === 'KYSITLUS_STAATUS_E'" ng-click="confirm()" class="md-raised">{{'main.button.confirm' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && formState.status !== undefined && formState.status.code === 'KYSITLUS_STAATUS_E'" ng-click="deletePoll()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && criteria.id" ng-click="test()" class="md-raised">{{'poll.test' | translate}}</md-button>
+            <md-button flex-xs="100" ng-if="auth.isAdmin() || auth.isLeadingTeacher()" ng-click="back('#/poll', pollForm, 'poll.confirmBack')" class="md-raised">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>
 </div>

@@ -112,7 +112,7 @@ public class PracticeEnterpriseForm extends VersionedCommand {
         return practiceEnterpriseWithEnterprise;
     }
 	
-	public static PracticeEnterpriseForm of(EnterpriseSchool enterpriseSchool, HoisUserDetails user) {
+	public static PracticeEnterpriseForm of(EnterpriseSchool enterpriseSchool) {
         PracticeEnterpriseForm practiceEnterpriseForm = new PracticeEnterpriseForm();
         PracticeEnterpriseForm practiceEnterpriseWithEnterprise =  
                 EntityUtil.bindToDto(enterpriseSchool.getEnterprise(), practiceEnterpriseForm, "enterpriseSchools", "country",
@@ -185,7 +185,7 @@ public class PracticeEnterpriseForm extends VersionedCommand {
 	}
 	public void setPlaces(Integer places) {
 	    if (places != null) {
-	        this.places = Integer.toString(places);
+	        this.places = Integer.toString(places.intValue());
 	    } else {
 	        this.places = null;
 	    }

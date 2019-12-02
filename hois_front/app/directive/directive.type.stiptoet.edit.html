@@ -14,51 +14,69 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row hois-table-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
-        <td md-cell>
-          <md-input-container style="width: 250px">
-            <md-select ng-model="row.scholarshipApplication" ng-change="scholarshipApplicationChanged(row)" name="students[{{$index}}].scholarshipApplication"
-              ng-disabled="row.scholarshipApplication && row.scholarshipApplications.length === 1">
-              <md-option ng-value="application.id" ng-repeat="application in row.scholarshipApplications">
-                {{application.nameEt}}
-              </md-option>
-            </md-select>
-          </md-input-container>
-          <div class="invalid" ng-messages="directiveForm['students['+$index+'].scholarshipApplication'].$error">
-            <p ng-message="required">{{'main.required' | translate}}</p>
-            <p ng-message="serverside">
-              <span ng-repeat="err in directiveForm['students['+$index+'].scholarshipApplication'].$serverError">{{err.code | translate}}</span>
-            </p>
-          </div>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <md-input-container style="width: 250px">
+              <md-select ng-model="row.scholarshipApplication" ng-change="scholarshipApplicationChanged(row)" name="students[{{$index}}].scholarshipApplication"
+                ng-disabled="row.scholarshipApplication && row.scholarshipApplications.length === 1">
+                <md-option ng-value="application.id" ng-repeat="application in row.scholarshipApplications">
+                  {{application.nameEt}}
+                </md-option>
+              </md-select>
+            </md-input-container>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-messages="directiveForm['students['+$index+'].scholarshipApplication'].$error">
+              <p ng-message="required">{{'main.required' | translate}}</p>
+              <p ng-message="serverside">
+                <span ng-repeat="err in directiveForm['students['+$index+'].scholarshipApplication'].$serverError">{{err.code | translate}}</span>
+              </p>
+            </div>
+          </hois-table-data-detail>
         </td>
         <td md-cell>{{row.bankAccount}}</td>
-        <td md-cell>
-          <md-input-container>
-            <input ng-model="row.amountPaid" ng-disabled="!formState.scholarshipEditable" min="0" max="9999" type="number" name="students[{{$index}}].amountPaid">
-          </md-input-container>
-          <div ng-messages="directiveForm['students['+$index+'].amountPaid'].$error" ng-show="directiveForm['students['+$index+'].amountPaid'].$dirty">
-            <div ng-message="max">
-              {{'curriculum.error.max9999' | translate}}
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <md-input-container>
+              <input ng-model="row.amountPaid" ng-disabled="!formState.scholarshipEditable" min="0" max="9999" type="number" name="students[{{$index}}].amountPaid">
+            </md-input-container>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div ng-messages="directiveForm['students['+$index+'].amountPaid'].$error" ng-show="directiveForm['students['+$index+'].amountPaid'].$dirty">
+              <div ng-message="max">
+                {{'curriculum.error.max9999' | translate}}
+              </div>
             </div>
-          </div>
-          <div class="invalid" ng-show="directiveForm['students['+$index+'].amountPaid'].$error.required">
-            {{'main.required' | translate}}
-          </div>
+            <div class="invalid" ng-show="directiveForm['students['+$index+'].amountPaid'].$error.required">
+              {{'main.required' | translate}}
+            </div>
+          </hois-table-data-detail>
         </td>
-        <td md-cell>
-          <md-datepicker ng-model="row.startDate" ng-disabled="!formState.scholarshipEditable" md-max-date="row.endDate" name="students[{{$index}}].startDate"></md-datepicker>
-          <div class="invalid" ng-show="directiveForm['students['+$index+'].startDate'].$error.required">
-            {{'main.required' | translate}}
-          </div>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <md-datepicker ng-model="row.startDate" ng-disabled="!formState.scholarshipEditable" md-max-date="row.endDate"
+              name="students[{{$index}}].startDate"></md-datepicker>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-show="directiveForm['students['+$index+'].startDate'].$error.required">
+              {{'main.required' | translate}}
+            </div>
+          </hois-table-data-detail>
         </td>
-        <td md-cell>
-          <md-datepicker ng-model="row.endDate" ng-disabled="!formState.scholarshipEditable" md-min-date="row.startDate" name="students[{{$index}}].endDate"></md-datepicker>
-          <div class="invalid" ng-show="directiveForm['students['+$index+'].endDate'].$error.required">
-            {{'main.required' | translate}}
-          </div>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <md-datepicker ng-model="row.endDate" ng-disabled="!formState.scholarshipEditable" md-min-date="row.startDate"
+              name="students[{{$index}}].endDate"></md-datepicker>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-show="directiveForm['students['+$index+'].endDate'].$error.required">
+              {{'main.required' | translate}}
+            </div>
+          </hois-table-data-detail>
         </td>
         <td md-cell>
           <a ng-click="deleteStudent(row)" md-no-ink  class="remove">&times;</a>

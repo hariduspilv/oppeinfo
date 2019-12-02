@@ -158,9 +158,22 @@ angular.module('hitsaOis')
         return angular.isString(currentUser.roleCode) && angular.isString(roleIn) && currentUser.roleCode === roleIn;
       };
     }
-    function hasAccess() {
+
+    function isStudentInType(currentUser, type) {
+      return function() {
+        return isUserInRole(currentUser, 'ROLL_T')() && angular.isString(currentUser.type) && angular.isString(type) && currentUser.type === type;
+      };
+    }
+
+    function hasAccess(currentUser) {
       if (!angular.isDefined($route.current.data)) {
         return true;
+      }
+      if (currentUser.mustAgreeWithToS) {
+        return false;
+      }
+      if (isStudentInType(currentUser, 'OPPUR_K')() && $route.current.data.guestStudentForbidden) {
+        return false;
       }
       var authorizedRoles = $route.current.data.authorizedRoles;
       return AuthService.isAuthorized(authorizedRoles);
@@ -171,12 +184,14 @@ angular.module('hitsaOis')
         var unwatch = $rootScope.$watch('state.currentUser', function (currentUser) {
           if (angular.isDefined(currentUser)) {
             if (currentUser) {
-              if (hasAccess()) {
+              if (hasAccess(currentUser)) {
                 var authObject = angular.extend({}, currentUser);
                 authObject.isMainAdmin = isUserInRole(currentUser, 'ROLL_P');
                 authObject.isAdmin = isUserInRole(currentUser, 'ROLL_A');
+                authObject.isLeadingTeacher = isUserInRole(currentUser, 'ROLL_J');
                 authObject.isTeacher = isUserInRole(currentUser, 'ROLL_O');
                 authObject.isStudent = isUserInRole(currentUser, 'ROLL_T');
+                authObject.isGuestStudent = isStudentInType(currentUser, 'OPPUR_K');
                 authObject.isParent = isUserInRole(currentUser, 'ROLL_L');
                 authObject.isExternalExpert = isUserInRole(currentUser, 'ROLL_V');
                 deferred.resolve(authObject);
@@ -229,8 +244,10 @@ angular.module('hitsaOis')
     '/timetable/:schoolId?/generalTimetable/:type',
     '/timetable/:schoolId?/searchGeneralTimetable',
     '/timetable/:schoolId/:type/:typeId/:studyYearId/:weekIndex?',
-    '/studyMaterial/:schoolId/vocational/:journalId/view',
-    '/studyMaterial/:schoolId/higher/:subjectStudyPeriodId/view',
+    '/timetable/personalGeneralTimetable/:encodedPerson',
+    '/timetable/person/:encodedPerson/:studyYearId/:weekIndex?',
+    '/:backType?/studyMaterial/:schoolId?/vocational/:journalId/view',
+    '/:backType?/studyMaterial/:schoolId?/higher/:subjectStudyPeriodId/view',
     '/practiceJournals/supervisor/:uuid',
     '/poll/supervisor/:uuid',
     '/poll/expert/:uuid'
@@ -251,6 +268,9 @@ angular.module('hitsaOis')
       this.timeoutInSeconds = user.sessionTimeoutInSeconds;
       this.teacherGroupIds = user.teacherGroupIds;
       this.committees = user.committees || [];
+      this.curriculums = user.curriculums || [];
+      this.mustAgreeWithToS = user.mustAgreeWithToS;
+      this.hasSchoolRole = user.hasSchoolRole;
     };
     this.destroy = function () {
       this.userId = null;
@@ -265,6 +285,9 @@ angular.module('hitsaOis')
       this.timeoutInSeconds = null;
       this.teacherGroupIds = null;
       this.committees = [];
+      this.curriculums = [];
+      this.mustAgreeWithToS = undefined;
+      this.hasSchoolRole = undefined;
     };
   })
   .constant('USER_ROLES', {
@@ -322,6 +345,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_V_TEEMAOIGUS_OPPUR: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPUR',	//Õppurid
     ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK: 'ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK',	//Päevikud
     ROLE_OIGUS_V_TEEMAOIGUS_PARING: 'ROLE_OIGUS_V_TEEMAOIGUS_PARING',	//Päringud
+    ROLE_OIGUS_V_TEEMAOIGUS_PERSYNDMUS: 'ROLE_OIGUS_V_TEEMAOIGUS_PERSYNDMUS', //Personaalsed sündmused
     ROLE_OIGUS_V_TEEMAOIGUS_PILET: 'ROLE_OIGUS_V_TEEMAOIGUS_PILET', //Õpilaspiletid
     ROLE_OIGUS_V_TEEMAOIGUS_PRAKTIKAAVALDUS: 'ROLE_OIGUS_V_TEEMAOIGUS_PRAKTIKAAVALDUS',
     ROLE_OIGUS_V_TEEMAOIGUS_PRAKTIKAPAEVIK: 'ROLE_OIGUS_V_TEEMAOIGUS_PRAKTIKAPAEVIK',	//Praktika päevikud
@@ -335,6 +359,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_V_TEEMAOIGUS_STRUKTUUR: 'ROLE_OIGUS_V_TEEMAOIGUS_STRUKTUUR',	//Struktuuriüksused
     ROLE_OIGUS_V_TEEMAOIGUS_SYNDMUS: 'ROLE_OIGUS_V_TEEMAOIGUS_SYNDMUS',	//Sündmused
     ROLE_OIGUS_V_TEEMAOIGUS_T: 'ROLE_OIGUS_V_TEEMAOIGUS_T',	//Õppuri üldine õigus
+    ROLE_OIGUS_V_TEEMAOIGUS_TINGIMUS: 'ROLE_OIGUS_V_TEEMAOIGUS_TINGIMUS',	//Kasutustingimused
     ROLE_OIGUS_V_TEEMAOIGUS_TOEND: 'ROLE_OIGUS_V_TEEMAOIGUS_TOEND',	//Tõendid
     ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS: 'ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS', // Tugiteenus
     ROLE_OIGUS_V_TEEMAOIGUS_TUNDAEG: 'ROLE_OIGUS_V_TEEMAOIGUS_TUNDAEG',	//Tundide ajad
@@ -399,6 +424,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_M_TEEMAOIGUS_OPPUR: 'ROLE_OIGUS_M_TEEMAOIGUS_OPPUR',	//Õppurid
     ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK: 'ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK',	//Päevikud
     ROLE_OIGUS_M_TEEMAOIGUS_PARING: 'ROLE_OIGUS_M_TEEMAOIGUS_PARING',	//Päringud
+    ROLE_OIGUS_M_TEEMAOIGUS_PERSYNDMUS: 'ROLE_OIGUS_M_TEEMAOIGUS_PERSYNDMUS', //Personaalsed sündmused
     ROLE_OIGUS_M_TEEMAOIGUS_PILET: 'ROLE_OIGUS_M_TEEMAOIGUS_PILET', //Õpilaspiletid
     ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAAVALDUS: 'ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAAVALDUS',
     ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK: 'ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK',	//Praktika päevikud
@@ -412,6 +438,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_M_TEEMAOIGUS_STRUKTUUR: 'ROLE_OIGUS_M_TEEMAOIGUS_STRUKTUUR',	//Struktuuriüksused
     ROLE_OIGUS_M_TEEMAOIGUS_SYNDMUS: 'ROLE_OIGUS_M_TEEMAOIGUS_SYNDMUS',	//Sündmused
     ROLE_OIGUS_M_TEEMAOIGUS_T: 'ROLE_OIGUS_M_TEEMAOIGUS_T',	//Õppuri üldine õigus
+    ROLE_OIGUS_M_TEEMAOIGUS_TINGIMUS: 'ROLE_OIGUS_M_TEEMAOIGUS_TINGIMUS',	//Kasutustingimused
     ROLE_OIGUS_M_TEEMAOIGUS_TOEND: 'ROLE_OIGUS_M_TEEMAOIGUS_TOEND',	//Tõendid
     ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS: 'ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS', // Tugiteenus
     ROLE_OIGUS_M_TEEMAOIGUS_TUNDAEG: 'ROLE_OIGUS_M_TEEMAOIGUS_TUNDAEG',	//Tundide ajad

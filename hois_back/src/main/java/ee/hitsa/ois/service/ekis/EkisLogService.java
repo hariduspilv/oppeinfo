@@ -130,7 +130,7 @@ public class EkisLogService {
      */
     public EkisLogDto get(HoisUserDetails user, Long id, String messageType) {
         WsEkisLog logentry = em.getReference(WsEkisLog.class, id);
-        UserUtil.assertIsSchoolAdmin(user, logentry.getSchool());
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, logentry.getSchool());
         EkisLogDto dto = new EkisLogDto(null, messageType, null, null, null, null, null);
 
         if(INCOMING_REQUESTS.contains(logentry.getWsName())) {

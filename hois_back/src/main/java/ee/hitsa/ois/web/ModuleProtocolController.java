@@ -83,13 +83,13 @@ public class ModuleProtocolController {
     @GetMapping
     public Page<ModuleProtocolSearchDto> search(HoisUserDetails user, @Valid ModuleProtocolSearchCommand command,
             Pageable pageable) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        ModuleProtocolUtil.assertCanSearch(user);
         return moduleProtocolService.search(user, command, pageable);
     }
 
     @GetMapping("/{id:\\d+}")
     public ModuleProtocolDto get(HoisUserDetails user, @WithEntity Protocol protocol) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
+        ModuleProtocolUtil.assertCanView(user, protocol);
         ModuleProtocolDto dto = ModuleProtocolDto.of(protocol);
         dto.setCanBeEdited(ModuleProtocolUtil.canEdit(user, protocol));
         dto.setCanBeConfirmed(ModuleProtocolUtil.canConfirm(user, protocol));
@@ -105,8 +105,10 @@ public class ModuleProtocolController {
     @PostMapping
     public ModuleProtocolDto create(HoisUserDetails user,
             @Valid @RequestBody ModuleProtocolCreateForm moduleProtocolCreateForm) {
+        ModuleProtocolUtil.assertCanCreate(user);
         return ModuleProtocolDto.onlyId(moduleProtocolService.create(user, moduleProtocolCreateForm));
     }
+
     @PutMapping("/{id:\\d+}")
     public ModuleProtocolDto save(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
@@ -125,21 +127,21 @@ public class ModuleProtocolController {
 
     @GetMapping("occupationModules/{curriculumVersionId:\\d+}")
     public List<AutocompleteResult> occupationModules(HoisUserDetails user, @PathVariable Long curriculumVersionId) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        ModuleProtocolUtil.assertCanCreate(user);
         return moduleProtocolService.occupationModules(user, curriculumVersionId);
     }
 
     @GetMapping("occupationModule/{studyYearId:\\d+}/{curriculumVersionOccupationModuleId:\\d+}")
     public ModuleProtocolOccupationalModuleDto occupationModule(HoisUserDetails user, @PathVariable Long studyYearId,
             @PathVariable Long curriculumVersionOccupationModuleId) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        ModuleProtocolUtil.assertCanCreate(user);
         return moduleProtocolService.occupationModule(user, studyYearId, curriculumVersionOccupationModuleId);
     }
 
     @GetMapping("/{id:\\d+}/otherStudents")
     public Page<ModuleProtocolStudentSelectDto> otherStudents(HoisUserDetails user, @WithEntity Protocol protocol,
             OtherStudentsSearchCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        ModuleProtocolUtil.assertCanCreate(user);
         return moduleProtocolService.otherStudents(user, protocol, command, pageable);
     }
 
@@ -163,7 +165,6 @@ public class ModuleProtocolController {
     public EntitySignDto signToConfirm(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody ModuleProtocolSignForm moduleProtocolSignForm, HttpSession httpSession) {
-    	
         ModuleProtocolUtil.assertCanConfirm(user, protocol);
         Protocol savedProtocol = moduleProtocolService.save(protocol, moduleProtocolSignForm);
         UnsignedBdocContainer unsignedBdocContainer = bdocService.createUnsignedBdocContainer("mooduli_protokoll.pdf", 
@@ -180,14 +181,13 @@ public class ModuleProtocolController {
     @PostMapping("/{id:\\d+}/signToConfirmFinalize")
     public ModuleProtocolDto signToConfirmFinalize(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody SignatureCommand signatureCommand, HttpSession httpSession) {
-    	
         UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
-        
+
         DataToSign dataToSign = (DataToSign) httpSession.getAttribute(BDOC_TO_SIGN);
         Container container = (Container) httpSession.getAttribute(BDOC_CONT);
-        
+
         protocol.setOisFile(bdocService.getSignedBdoc(container, dataToSign, signatureCommand.getSignature(), "protokoll"));
-        
+
         httpSession.removeAttribute(BDOC_TO_SIGN);
         httpSession.removeAttribute(BDOC_CONT);
         return get(user, moduleProtocolService.confirm(user, protocol, null));
@@ -243,11 +243,11 @@ public class ModuleProtocolController {
     @GetMapping("/{id:\\d+}/print/protocol.pdf")
     public void print(HoisUserDetails user, @WithEntity Protocol protocol, HttpServletResponse response)
             throws IOException {
-        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
+        ModuleProtocolUtil.assertCanView(user, protocol);
         HttpUtil.pdf(response, protocol.getProtocolNr() + ".pdf", pdfService
                 .generate(ModuleProtocolReport.TEMPLATE_NAME, moduleProtocolService.moduleProtocolReport(protocol)));
     }
-    
+
     @GetMapping("/{id:\\d+}/calculate")
     public List<ProtocolStudentResultDto> calculateGrades(HoisUserDetails user,
             @NotNull @Valid ProtocolCalculateCommand command, @WithEntity Protocol protocol) {
@@ -257,15 +257,17 @@ public class ModuleProtocolController {
         }
         return moduleProtocolService.calculateGrades(command);
     }
-    
+
     @GetMapping("/myModules")
-    public Page<ModuleProtocolService.TeacherModuleMinimumDto> myModules(HoisUserDetails user, @RequestParam(required = true) Long studyYear, Pageable pageable) {
+    public Page<ModuleProtocolService.TeacherModuleMinimumDto> myModules(HoisUserDetails user,
+            @RequestParam(required = true) Long studyYear, Pageable pageable) {
         UserUtil.assertIsTeacher(user);
         return moduleProtocolService.availableTeacherModules(user, studyYear, pageable);
     }
-    
+
     @GetMapping("/moduleHistory/{id:\\d+}")
-    public ModuleProtocolService.LessonPlanHistoryDto getModuleLessonPlanHistory(HoisUserDetails user, @WithEntity CurriculumVersionOccupationModule module) {
+    public ModuleProtocolService.LessonPlanHistoryDto getModuleLessonPlanHistory(HoisUserDetails user,
+            @WithEntity CurriculumVersionOccupationModule module) {
         UserUtil.assertIsTeacher(user);
         return moduleProtocolService.getModuleLessonPlanHistory(module);
     }

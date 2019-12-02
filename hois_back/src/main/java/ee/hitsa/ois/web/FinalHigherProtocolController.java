@@ -59,34 +59,34 @@ public class FinalHigherProtocolController {
     private static final String BDOC_TO_SIGN = "higherFinalProtocolBdocContainerToSign";
     private static final String BDOC_CONT = "higherFinalProtocolBdocContainer";
     private static final String MOBILE_SESSCODE = "higherFinalProtocolBdocMobileSesscode";
-    
+
     @Autowired
     private FinalHigherProtocolService finalProtocolService;
     @Autowired
     private BdocService bdocService;
     @Autowired
     private PdfService pdfService;
-    
+
     @GetMapping
     public Page<HigherProtocolSearchDto> search(HoisUserDetails user, @Valid FinalHigherProtocolSearchCommand command,
             Pageable pageable) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        FinalProtocolUtil.assertCanSearchHigher(user);
         return finalProtocolService.search(user, command, pageable);
     }
-    
+
     @GetMapping("/{id:\\d+}")
     public FinalHigherProtocolDto get(HoisUserDetails user, @WithEntity Protocol protocol) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
+        FinalProtocolUtil.assertCanView(user, protocol);
         return finalProtocolService.finalHigherProtocol(user, protocol);
     }
-    
+
     @PostMapping
     public FinalHigherProtocolDto create(HoisUserDetails user,
             @Valid @RequestBody FinalHigherProtocolCreateForm finalProtocolCreateForm) {
         FinalProtocolUtil.assertCanCreateHigherProtocol(user);
         return FinalHigherProtocolDto.of(finalProtocolService.create(user, finalProtocolCreateForm));
     }
-    
+
     @PutMapping("/{id:\\d+}")
     public FinalHigherProtocolDto save(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
@@ -94,59 +94,60 @@ public class FinalHigherProtocolController {
         FinalProtocolUtil.assertCanEdit(user, protocol);
         return get(user, finalProtocolService.save(protocol, finalProtocolSaveForm));
     }
-    
+
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user,
-            @WithVersionedEntity(versionRequestParam = "version") Protocol protocol,
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") Protocol protocol,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
         FinalProtocolUtil.assertCanDelete(user, protocol);
         finalProtocolService.delete(user, protocol);
     }
-    
+
     @GetMapping("/curriculums/exam")
     public List<AutocompleteResult> examCurriculums(HoisUserDetails user) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return finalProtocolService.curriculumsForSelection(user.getSchoolId(), Boolean.FALSE);
     }
-    
+
     @GetMapping("/curriculums/thesis")
     public List<AutocompleteResult> thesisCurriculums(HoisUserDetails user) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return finalProtocolService.curriculumsForSelection(user.getSchoolId(), Boolean.TRUE);
     }
-    
+
     @GetMapping("/subjects/exam/{studyPeriodId:\\d+}/{curriculumVersionId:\\d+}")
     public List<AutocompleteResult> examSubjects(HoisUserDetails user, @PathVariable Long studyPeriodId,
             @PathVariable Long curriculumVersionId) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return finalProtocolService.subjectsForSelection(user, studyPeriodId, curriculumVersionId, Boolean.FALSE);
     }
-    
+
     @GetMapping("/subjects/thesis/{curriculumVersionId:\\d+}")
     public List<AutocompleteResult> thesisSubjects(HoisUserDetails user, @PathVariable Long curriculumVersionId) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return finalProtocolService.subjectsForSelection(user, null, curriculumVersionId, Boolean.TRUE);
     }
-    
+
     @GetMapping("/subject/exam/{curriculumVersionId:\\d+}/{studyPeriodId:\\d+}")
-    public FinalHigherProtocolSubjectDto examSubject(HoisUserDetails user, @PathVariable Long curriculumVersionId, @PathVariable Long studyPeriodId) {
+    public FinalHigherProtocolSubjectDto examSubject(HoisUserDetails user, @PathVariable Long curriculumVersionId,
+            @PathVariable Long studyPeriodId) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return finalProtocolService.subject(user, curriculumVersionId, studyPeriodId, Boolean.FALSE);
     }
-    
+
     @GetMapping("/subject/thesis/{curriculumVersionId:\\d+}/{subjectId:\\d+}")
-    public FinalHigherProtocolSubjectDto thesisSubject(HoisUserDetails user, @PathVariable Long curriculumVersionId, @PathVariable Long subjectId) {
+    public FinalHigherProtocolSubjectDto thesisSubject(HoisUserDetails user, @PathVariable Long curriculumVersionId,
+            @PathVariable Long subjectId) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return finalProtocolService.subject(user, curriculumVersionId, subjectId, Boolean.TRUE);
     }
-    
+
     @GetMapping("/committees")
-    public List<AutocompleteResult> committees(HoisUserDetails user, 
+    public List<AutocompleteResult> committees(HoisUserDetails user,
             @RequestParam(value = "finalDate", required = false) LocalDate finalDate) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return finalProtocolService.committeesForSelection(user, finalDate);
     }
-    
+
     @DeleteMapping("/{id:\\d+}/removeStudent/{studentId:\\d+}")
     public FinalHigherProtocolDto removeStudent(HoisUserDetails user, @WithEntity Protocol protocol,
             @WithEntity("studentId") ProtocolStudent student) {
@@ -154,7 +155,7 @@ public class FinalHigherProtocolController {
         finalProtocolService.removeStudent(user, student);
         return get(user, protocol);
     }
-    
+
     @PostMapping("/{id:\\d+}/signToConfirm")
     public EntitySignDto signToConfirm(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
@@ -181,9 +182,9 @@ public class FinalHigherProtocolController {
 
         DataToSign dataToSign = (DataToSign) httpSession.getAttribute(BDOC_TO_SIGN);
         Container container = (Container) httpSession.getAttribute(BDOC_CONT);
-        
+
         protocol.setOisFile(bdocService.getSignedBdoc(container, dataToSign, signatureCommand.getSignature(), "protokoll"));
-        
+
         httpSession.removeAttribute(BDOC_TO_SIGN);
         httpSession.removeAttribute(BDOC_CONT);
         return get(user, finalProtocolService.confirm(user, protocol, null));
@@ -236,12 +237,11 @@ public class FinalHigherProtocolController {
         }
         return get(user, protocol);
     }
-    
+
     @GetMapping("/{id:\\d+}/print/protocol.pdf")
     public void print(HoisUserDetails user, @WithEntity Protocol protocol, HttpServletResponse response)
             throws IOException {
-        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
-
+        FinalProtocolUtil.assertCanView(user, protocol);
         Boolean isLetterGrades = protocol.getSchool().getIsLetterGrade();
         HttpUtil.pdf(response, protocol.getProtocolNr() + ".pdf",
                 pdfService.generate(FinalProtocolReport.HIGHER_TEMPLATE_NAME, new FinalProtocolReport(protocol, isLetterGrades)));

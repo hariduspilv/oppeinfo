@@ -14,14 +14,15 @@ public class StudentGroupAutocompleteCommand extends SearchCommand {
     private Long studentGroupTeacherId;
     private Long studyYear;
     private String studyForm;
-    
+    private Long userId;
+
     private Boolean occupied;
     private LocalDate date;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String repeatCode;
     private Long weekAmount;
-
+    private Long schoolId;
     
     public Long getCurriculumId() {
         return curriculumId;
@@ -87,6 +88,14 @@ public class StudentGroupAutocompleteCommand extends SearchCommand {
         this.studyForm = studyForm;
     }
 
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
     public Boolean getOccupied() {
         return occupied;
     }
@@ -133,6 +142,14 @@ public class StudentGroupAutocompleteCommand extends SearchCommand {
 
     public void setWeekAmount(Long weekAmount) {
         this.weekAmount = weekAmount;
+    }
+
+    public Long getSchoolId() {
+        return schoolId;
+    }
+
+    public void setSchoolId(Long schoolId) {
+        this.schoolId = schoolId;
     }
     
 }

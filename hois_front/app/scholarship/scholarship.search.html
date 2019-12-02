@@ -28,7 +28,11 @@
         <div layout="row" flex>
           <md-input-container flex>
             <label class="textInput">{{'stipend.status' | translate}}</label>
-            <hois-select ng-model="criteria.isOpen" model-value-attr="code" values="statuses"></hois-select>
+            <md-select ng-model="criteria.isOpen">
+              <md-option md-option-empty></md-option>
+              <md-option value="0">{{'stipend.underRevision' | translate}}</md-option>
+              <md-option value="1">{{'stipend.published' | translate}}</md-option>
+            </md-select>
           </md-input-container>
         </div>
 
@@ -63,7 +67,7 @@
             </td>
             <td md-cell>{{::row.applicationStart | hoisDate}} - {{::row.applicationEnd | hoisDate}}</td>
             <td md-cell>{{::row.places}}</td>
-            <td md-cell>{{::row.isOpen ? 'stipend.published' : 'stipend.underRevision' | translate}}</td>
+            <td md-cell>{{row.isOpen ? 'stipend.published' : 'stipend.underRevision' | translate}}</td>
             <td md-cell>
               <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-click="changeStipend(row)">
                 {{'main.button.change' | translate}}

@@ -57,8 +57,8 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
     $scope.tabledata = $scope.endpoint.query();
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEPERIOOD);
   })
-  .controller('StudyYearsEditController', function ($location, $mdDialog, $route, $scope, $translate, Classifier, dialogService, message, DataUtils, 
-      QueryUtils, USER_ROLES, AuthService) {
+  .controller('StudyYearsEditController', function ($location, $mdDialog, $route, $scope, Classifier, dialogService, message, DataUtils, 
+      QueryUtils, USER_ROLES, AuthService, $q) {
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPEPERIOOD);
     $scope.auth = $route.current.locals.auth;
 
@@ -77,7 +77,9 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       DataUtils.convertStringToDates($scope.studyYear, ['startDate', 'endDate']);
       $scope.studyPeriods = $scope.studyYear.studyPeriods || [];
       $scope.studyPeriodEvents = $scope.studyYear.studyPeriodEvents || [];
-      periodTypes.objectmapper($scope.studyPeriods);
+      $q.all(periodTypes.promises).then(function () {
+        periodTypes.objectmapper($scope.studyPeriods);
+      });
       DataUtils.convertStringToDates($scope.studyPeriods, ['startDate', 'endDate']);
       DataUtils.convertStringToDates($scope.studyPeriodEvents, ['start', 'end']);
     }
@@ -195,6 +197,8 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
 
     $scope.openStudyPeriodEventDialog = function (item) {
       var uniqueEvent = ['SYNDMUS_AVES', 'SYNDMUS_DEKP', 'SYNDMUS_VOTA'];
+      var allowBeforePeriod = ['SYNDMUS_DEKP'];
+      var requiresEndEvent = ['SYNDMUS_DEKP'];
       var StudyPeriodEventEndpoint = QueryUtils.endpoint('/school/studyYears/'+$scope.studyYear.id+'/studyPeriodEvents');
       var parentScope = $scope;
       var DialogController = function ($scope) {
@@ -216,6 +220,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         $scope.studyPeriods = parentScope.studyPeriods;
 
         $scope.uniqueInStudyPeriod = false;
+        $scope.requiresEnd = false;
         $scope.$watch("studyPeriodEvent", function () {
           if (uniqueEvent.indexOf($scope.studyPeriodEvent.eventType) !== -1) {
             $scope.uniqueInStudyPeriod = true;
@@ -225,6 +230,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
           } else {
             $scope.uniqueInStudyPeriod = false;
           }
+          $scope.requiresEnd = requiresEndEvent.indexOf($scope.studyPeriodEvent.eventType) !== -1;
         }, true);
 
         $scope.delete = function () {
@@ -282,14 +288,18 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
               start = moment($scope.studyPeriodEvent.start).startOf('day');
               var end = moment($scope.studyPeriodEvent.end).endOf('day');
 
-              if (start.isBefore(moment($scope.studyPeriodEvent.studyPeriod.startDate).startOf('day')) || end.isAfter(moment($scope.studyPeriodEvent.studyPeriod.endDate).endOf('day'))) {
+              if ((allowBeforePeriod.indexOf($scope.studyPeriodEvent.eventType) === -1 && start.isBefore(moment($scope.studyPeriodEvent.studyPeriod.startDate).startOf('day'))) || 
+                   end.isAfter(moment($scope.studyPeriodEvent.studyPeriod.endDate).endOf('day'))) {
                 errors = true;
-                message.error('studyYear.studyPeriod.error.outsideStudyPeriod');
+                message.error(allowBeforePeriod.indexOf($scope.studyPeriodEvent.eventType) === -1 ? 
+                              'studyYear.studyPeriod.error.outsideStudyPeriod' :
+                              'studyYear.studyPeriod.error.endBeforeStudyPeriodEnd');
               }
             } else if ($scope.studyPeriodEvent.start) {
               start = moment($scope.studyPeriodEvent.start).startOf('day');
 
-              if (start.isBefore(moment($scope.studyPeriodEvent.studyPeriod.startDate).startOf('day')) || start.isAfter(moment($scope.studyPeriodEvent.studyPeriod.endDate).endOf('day'))) {
+              if ((allowBeforePeriod.indexOf($scope.studyPeriodEvent.eventType) === -1 && start.isBefore(moment($scope.studyPeriodEvent.studyPeriod.startDate).startOf('day'))) || 
+                  start.isAfter(moment($scope.studyPeriodEvent.studyPeriod.endDate).endOf('day'))) {
                 errors = true;
                 message.error('studyYear.studyPeriod.error.outsideStudyPeriod');
               }

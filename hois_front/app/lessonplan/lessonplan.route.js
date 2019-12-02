@@ -11,10 +11,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: function(Session, roles, ArrayUtils) {
-          return Session.roleCode === 'ROLL_A' && ArrayUtils.intersect(roles,
-              [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KOORM]);
-        }, 
+        authorizedRoles: function (Session, roles, ArrayUtils) {
+          return ['ROLL_A', 'ROLL_J'].indexOf(Session.roleCode) !== -1 && ArrayUtils.intersect(roles,
+            [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KOORM]);
+        },
         currentNavItem: 'lessonplan.vocational'
       }
     })
@@ -93,7 +93,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       }
     })
     .when('/lessonplans/events', {
-      templateUrl: 'lessonplan/event.search.html',
+      templateUrl: 'lessonplan/event/event.search.html',
       controller: 'LessonplanEventSearchController',
       controllerAs: 'controller',
       resolve: {
@@ -101,7 +101,25 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_SYNDMUS]
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_SYNDMUS,
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PERSYNDMUS
+        ]
+      }
+    })
+    .when('/lessonplans/rooms', {
+      templateUrl: 'lessonplan/event/event.rooms.html',
+      controller: 'LessonplanEventRoomSearchController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_SYNDMUS,
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PERSYNDMUS
+        ]
       }
     });
 }]);

@@ -1,7 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeJournalEntryController', function ($scope, $route, $location, dialogService, oisFileService, QueryUtils, message, DataUtils, ArrayUtils, Classifier) {
+angular.module('hitsaOis').controller('PracticeJournalEntryController', function ($filter, $route, $location, $scope, ArrayUtils, Classifier, DataUtils, HigherGradeUtil, QueryUtils, dialogService, message, oisFileService) {
   $scope.auth = $route.current.locals.auth;
+  $scope.letterGrades = $scope.auth.school.letterGrades;
   $scope.removeFromArray = ArrayUtils.remove;
   var DAYS_AFTER_CAN_EDIT = 30;
   $scope.practiceJournal = {
@@ -21,8 +22,19 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
   function entityToForm(entity) {
     assertPermissionToEdit(entity);
     DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
+
     $scope.gradesClassCode = entity.isHigher ? 'KORGHINDAMINE' : 'KUTSEHINDAMINE';
     $scope.grades = Classifier.queryForDropdown({ mainClassCode: $scope.gradesClassCode });
+    $scope.grades.$promise.then(function () {
+      if (entity.isHigher) {
+        $scope.grades.forEach(function (grade) {
+          grade.shownValue = $filter('hoisHigherGrade')(grade, $scope.letterGrades);
+        });
+        $scope.grades = HigherGradeUtil.orderedGrades($scope.grades);
+      } 
+      $scope.gradesMap = Classifier.toMap($scope.grades);
+    });
+
     entity.practiceJournalEntries.forEach(function (entry) {
       entry.astroHours = DataUtils.getAcademicHoursFromDouble(entry.hours);
       entry.acadHours = DataUtils.getAcademicHours(entry.hours);
@@ -84,16 +96,6 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
   $scope.getEntryColor = function (entry) {
     if ($scope.auth.isStudent() && !entry.isStudentEntry) {
       return 'pink-50';
-    }
-  };
-
-  $scope.getGrade = function (gradeCode) {
-    if ($scope.grades) {
-      for (var i = 0; i < $scope.grades.length; i++) {
-        if ($scope.grades[i].code === gradeCode) {
-          return $scope.grades[i];
-        }
-      } 
     }
   };
 

@@ -6,30 +6,11 @@
     margin-bottom: 6px;
   }
 </style>
-<md-content>
-  <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak hois-navbar-overflowed>
-      <md-nav-item ng-if="!enterprise.id" md-nav-href="#/practice/enterprise/new?_noback" name="enterprise.data">
-        {{'enterprise.data' | translate}}</md-nav-item>
-      <md-nav-item ng-if="auth.isAdmin() && enterprise.id" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/edit?_noback" name="enterprise.data">
-          {{'enterprise.data' | translate}}</md-nav-item>
-      <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/persons/edit?_noback" name="enterprise.persons">
-          {{'enterprise.persons' | translate}}</md-nav-item>
-      <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/locations/edit?_noback" name="enterprise.locations">
-          {{'enterprise.locations' | translate}}</md-nav-item>
-      <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/studentGroups/edit?_noback" name="enterprise.studentGroups">
-          {{'enterprise.studentGroups' | translate}}</md-nav-item>
-      <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/contracts/edit?_noback" name="enterprise.contracts">
-          {{'enterprise.contracts' | translate}}</md-nav-item>
-      <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/grades/edit?_noback" name="enterprise.grades">
-          {{'enterprise.grades' | translate}}</md-nav-item>
-      <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId && (enterprise.application && !enterpriseForm.application.$dirty)" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/admission/edit?_noback" name="enterprise.admission">
-        {{'enterprise.requests' | translate}}</md-nav-item>
-  </md-nav-bar>
-</md-content>
+<div ng-include="'practiceEnterprise/practice.enterprise.navbar.html'"></div>
 
 <div class="ois-form-layout-padding ois-form-layout" layout="column" ng-cloak>
   <form name="enterpriseForm" role="form" class="nomargin" novalidate>
-    <fieldset ng-if="auth.isAdmin()">
+    <fieldset ng-if="auth.isAdmin() || auth.isLeadingTeacher()">
     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'enterprise.basicData' | translate}}</legend>
       <div layout="column" flex>
         <div layout="row">
@@ -94,7 +75,7 @@
     </div>
     </fieldset>
 
-    <fieldset ng-if="auth.isAdmin()">
+    <fieldset ng-if="auth.isAdmin() || auth.isLeadingTeacher()">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'enterprise.schoolData' | translate}}</legend>
       <div layout="row">
         <div flex="70" ng-if="enterprise.country === 'RIIK_EST'">
@@ -193,10 +174,10 @@
         {{'enterprise.isActive' | translate}}
       </md-checkbox>
     </fieldset>
-    <div layout="row" layout-xs="column">
-      <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-      <md-button flex-xs="100" ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
-      <md-button flex-xs="100" ng-if="auth.isAdmin()" ng-click="goBack()" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <div ng-if="auth.isAdmin() || auth.isLeadingTeacher()" layout="row" layout-xs="column">
+      <md-button flex-xs="100" ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+      <md-button flex-xs="100" ng-if="enterprise.enterpriseSchoolId" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+      <md-button flex-xs="100" ng-click="goBack()" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>
   </form>
 </div>  

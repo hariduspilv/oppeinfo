@@ -3,17 +3,23 @@ package ee.hitsa.ois.report;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.TranslateUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.dto.report.studentgroupteacher.ResultColumnDto;
 import ee.hitsa.ois.web.dto.report.studentgroupteacher.StudentJournalResultDto;
 import ee.hitsa.ois.web.dto.report.studentgroupteacher.StudentResultColumnDto;
@@ -113,6 +119,27 @@ public abstract class ReportUtil {
         }
         Classifier c = classifierCache.getByCode(code, MainClassCode.valueOf(mainClassCode));
         return c != null ? c.getValue() : "? - " + code;
+    }
+
+    public static void assertCanViewStudentGroupTeacherReport(HoisUserDetails user, StudentGroup studentGroup) {
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_RYHMAJUHATAJA);
+        if (user.isSchoolAdmin() || user.isTeacher()) {
+            UserUtil.assertIsSchoolAdminOrStudentGroupTeacher(user, studentGroup);
+        } else if (user.isLeadingTeacher()) {
+            UserUtil.assertIsLeadingTeacher(user, studentGroup.getSchool());
+        } else {
+            throw new AccessDeniedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void assertCanViewIndividualCurriculumStatistics(HoisUserDetails user) {
+        if (user.isSchoolAdmin() || user.isLeadingTeacher()) {
+            UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_INDIVID);
+        } else if (user.isTeacher()) {
+            UserUtil.assertIsTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_RYHMAJUHATAJA);
+        } else {
+            throw new AccessDeniedException("main.messages.error.nopermission");
+        }
     }
 
 }

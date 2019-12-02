@@ -1,6 +1,5 @@
 package ee.hitsa.ois.web.commandobject.enterprise;
 
-import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;

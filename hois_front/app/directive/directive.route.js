@@ -2,7 +2,6 @@
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
   $routeProvider
-  // TODO: fix this ordering for some reason it used the lower one
     .when('/directives/coordinators', {
       templateUrl: 'directive/coordinator.search.html',
       controller: 'SimpleListController',
@@ -65,7 +64,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       },
       data: {
         authorizedRoles: function(Session, authorizedRoles) {
-          return Session.roleCode === 'ROLL_T' || Session.roleCode === 'ROLL_L' || ((Session.roleCode === 'ROLL_A' || Session.roleCode === 'ROLL_O') && (authorizedRoles || []).indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KASKKIRI) !== -1);
+          return Session.roleCode === 'ROLL_T' || Session.roleCode === 'ROLL_L' || (['ROLL_A', 'ROLL_J', 'ROLL_O'].indexOf(Session.roleCode) !== -1 &&
+            authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KASKKIRI) !== -1);
         }
       }
     })

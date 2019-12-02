@@ -3,13 +3,16 @@ package ee.hitsa.ois.web.commandobject;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.Conditional;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.Required;
 
 @DateRange
+@Conditional(selected = "role", values = {"ROLL_J"}, required = {"curriculums"})
 public class UserForm extends VersionedCommand {
 
     private EntityConnectionCommand school;
@@ -19,7 +22,9 @@ public class UserForm extends VersionedCommand {
     @Required
     private LocalDate validFrom;
     private LocalDate validThru;
+    private EntityConnectionCommand userRole;
     private Map<String, List<String>> rights;
+    private Set<EntityConnectionCommand> curriculums;
 
     public EntityConnectionCommand getSchool() {
         return school;
@@ -27,6 +32,14 @@ public class UserForm extends VersionedCommand {
 
     public void setSchool(EntityConnectionCommand school) {
         this.school = school;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public LocalDate getValidThru() {
@@ -53,11 +66,19 @@ public class UserForm extends VersionedCommand {
         this.rights = rights;
     }
 
-    public String getRole() {
-        return role;
+    public EntityConnectionCommand getUserRole() {
+        return userRole;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public void setUserRole(EntityConnectionCommand userRole) {
+        this.userRole = userRole;
+    }
+
+    public Set<EntityConnectionCommand> getCurriculums() {
+        return curriculums;
+    }
+
+    public void setCurriculums(Set<EntityConnectionCommand> curriculums) {
+        this.curriculums = curriculums;
     }
 }

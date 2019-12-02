@@ -1,10 +1,11 @@
 'use strict';
 
 angular.module('hitsaOis').controller('PracticeJournalEditController', 
-function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message, dialogService, DataUtils, USER_ROLES, ArrayUtils) {
+function ($rootScope, $location, $route, $scope, ArrayUtils, Classifier, DataUtils, QueryUtils, dialogService, message, USER_ROLES) {
   var DAYS_AFTER_CAN_EDIT = 30;
 
   $scope.auth = $route.current.locals.auth;
+  $scope.letterGrades = $scope.auth.school.letterGrades;
   $scope.practiceJournal = {moduleSubjects: [{}]};
   $scope.formState = {};
 
@@ -27,11 +28,7 @@ function ($scope, $rootScope, $location, $route, QueryUtils, Classifier, message
 
   function entityToForm(entity) {
     assertPermissionToEdit(entity);
-    if (!entity.isHigher) {
-      $scope.grades = Classifier.queryForDropdown({mainClassCode: 'KUTSEHINDAMINE'});
-    } else {
-      $scope.grades = Classifier.queryForDropdown({mainClassCode: 'KORGHINDAMINE'});
-    }
+
     DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
     $scope.formState.isHigher = entity.isHigher;
     DataUtils.convertObjectToIdentifier(entity, ['practiceEvaluation']);

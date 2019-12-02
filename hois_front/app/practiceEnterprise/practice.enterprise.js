@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, Classifier, $q, $timeout) {
+angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, Classifier, $q) {
   $scope.currentNavItem = 'enterprise.persons';
 
   $scope.auth = $route.current.locals.auth;
@@ -43,7 +43,7 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
             dialogScope.enterprise.idcode === person.idcode &&
             (dialogScope.enterprise.idcode !== undefined || dialogScope.enterprise.county !== undefined) &&
             ((person.country ===  undefined  && (dialogScope.enterprise.country === undefined || dialogScope.enterprise.country === "")) ||
-            (person.country !== undefined && dialogScope.enterprise.country != undefined && person.country.code === dialogScope.enterprise.country))) {
+            (person.country !== undefined && dialogScope.enterprise.country !== undefined && person.country.code === dialogScope.enterprise.country))) {
             clean = false;
           }
         });
@@ -93,7 +93,7 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
     });
   };
 
-}).controller('PracticeEnterpriseLocationsEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, Classifier, $q, $timeout) {
+}).controller('PracticeEnterpriseLocationsEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, Classifier, $q) {
   $scope.currentNavItem = 'enterprise.locations';
   $scope.auth = $route.current.locals.auth;
   $scope.enterprise = {};
@@ -179,7 +179,7 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
   };
 
 })
-.controller('PracticeEnterpriseStudentGroupsEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, Classifier, $q, $timeout) {
+.controller('PracticeEnterpriseStudentGroupsEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, Classifier, $q) {
   $scope.currentNavItem = 'enterprise.studentGroups';
   $scope.auth = $route.current.locals.auth;
   $scope.enterprise = {};
@@ -240,7 +240,7 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
     });
   };
 })
-.controller('PracticeEnterpriseGradesEditController', function ($scope, $route, QueryUtils, Classifier, message, $q, $location, FormUtils, $timeout) {
+.controller('PracticeEnterpriseGradesEditController', function ($scope, $route, QueryUtils, Classifier, message, $q, FormUtils) {
   $scope.currentNavItem = 'enterprise.grades';
   $scope.auth = $route.current.locals.auth;
   $scope.enterprise = {};
@@ -298,7 +298,7 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
   };
   
 })
-.controller('PracticeEnterpriseContractsViewController', function ($scope, $route, $q, QueryUtils, Classifier, $timeout) {
+.controller('PracticeEnterpriseContractsViewController', function ($scope, $route, $q, QueryUtils, Classifier) {
   $scope.currentNavItem = 'enterprise.contracts';
   $scope.auth = $route.current.locals.auth;
   $scope.enterprise = {};
@@ -316,7 +316,7 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
 
   refresh();
 })
-.controller('PracticeEnterpriseAdmissionEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, $q, $timeout) {
+.controller('PracticeEnterpriseAdmissionEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, $q) {
   $scope.currentNavItem = 'enterprise.admission';
   $scope.auth = $route.current.locals.auth;
   $scope.enterprise = {};
@@ -401,6 +401,15 @@ angular.module('hitsaOis').controller('PracticeEnterprisePersonsEditController',
         dialogScope.enterprise.name = window.localStorage.getItem('enterpriseName');
         dialogScope.enterprise.regCode = window.localStorage.getItem('enterpriseRegCode');
       }
+
+      dialogScope.validate = function () {
+        if (dialogScope.enterprise.studentGroups === undefined || dialogScope.enterprise.studentGroups.length === 0) {
+          message.error('practiceApplication.messages.atLeastOneStudentGroup');
+          return;
+        }
+        dialogScope.submit();
+      };
+
     }, function (submittedDialogScope) {
       FormUtils.withValidForm(submittedDialogScope.dialogForm, function() {
       if (row) {

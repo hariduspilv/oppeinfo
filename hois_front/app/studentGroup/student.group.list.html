@@ -11,7 +11,8 @@
 
 					<div layout="row" flex>
 						<div flex="45">
-							<hois-autocomplete ng-model="criteria.curriculum" ha-controller="directiveControllers" method="curriculums" name="curriculum" label="studentGroup.curriculum"></hois-autocomplete>
+							<hois-autocomplete ng-model="criteria.curriculum" ha-controller="directiveControllers" method="curriculums" name="curriculum"
+								label="studentGroup.curriculum" additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
 						</div>
 						<md-input-container flex="50" flex-offset="5">
 							<label>{{formState.curriculumVersionLabel | translate}}</label>

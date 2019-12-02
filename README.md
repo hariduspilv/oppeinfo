@@ -1,4 +1,4 @@
-VERSIOON:  1.4.1/20190924
+VERSIOON:  1.5.0/20191127
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -10,27 +10,35 @@ README.md - tarne ja installeerimise kirjeldus
 /hois_html - rakenduse genereeritud html-id
 
 
-EELDUS: ver. 1.4.0/20190829
+EELDUS: ver. 1.4.1/20190924
 ------------------------------------------------------
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20190924.sql
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20191127.sql
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
 
 Andmebaasi installeerimiseks:
-1. käivitada install20190924.sql skript, nt
+1. käivitada install20191127.sql skript, nt
    
-   psql -h devhois -f install20190924.sql 2>&1 | tee log.txt
+   psql -h devhois -f install20191127.sql 2>&1 | tee log.txt
    
    , kus
    
    -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install20190924.sql - install faili nimi
+   -f install20191127.sql - install faili nimi
    log.txt - andmebaasi installeerimise logi fail
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
+
+
+timetable.cypher.key=insertplceholder
+# every day at 02:00
+hois.jobs.guest.student.end.cron=0 00 2 * * *
+# every day at 00:15
+hois.jobs.poll.end.cron=0 15 0 * * *
+
 
 
 
@@ -38,7 +46,16 @@ RAKENDUSE INSTALLEERIMINE:
 ------------------------------------------------------
 1. Backendi paigaldamiseks
 	1. Teisendada kaasa pandud hois_back.jar /opt/hois kausta
-	2. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
+	2. Lisada appliction.properties järgmised parameetrid:
+	
+		# tunniplaani unikaalsete linkide krüpteerimise võti, võiks ära muuta
+		timetable.cypher.key=insertplceholder							
+		# külalisõppija staatuse lõppemise cron, kontrollitakse iga päev kell 2 öösel
+		hois.jobs.guest.student.end.cron=0 00 2 * * *
+		# küsitluse lõppemise cron, kontrollitakse iga päev kell 00:15 
+		hois.jobs.poll.end.cron=0 15 0 * * *
+	
+	3. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
 	
 2. Frontendi paigaldamiseks
 	1. Kustutada vanad html jms failid: käivitada käsk "rm -Rf /opt/hois/html/*" (nginxist vana seisu tühjendamiseks)

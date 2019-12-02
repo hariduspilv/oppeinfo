@@ -1,14 +1,14 @@
 'use strict';
 
 angular.module('hitsaOis').controller('studyYearScheduleController', 
-function ($scope, $route, $timeout, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, $window, dialogService, USER_ROLES, AuthService, config, $httpParamSerializer) {
+function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, dialogService, USER_ROLES, AuthService, config, $httpParamSerializer) {
     $scope.auth = $route.current.locals.auth;
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPETOOGRAAFIK);
 
     $scope.colorOptions = {
         disabled: true
     };
-    $scope.useMyFilter = $scope.auth.isStudent() || $scope.auth.isParent();
+    $scope.useMyFilter = $scope.auth.isLeadingTeacher() || $scope.auth.isStudent() || $scope.auth.isParent();
 
     $scope.criteria = {
         schoolDepartments: [],
@@ -160,7 +160,7 @@ function ($scope, $route, $timeout, QueryUtils, ArrayUtils, message, DataUtils, 
     };
 
     $scope.isValidGroup = function (group) {
-        if ($scope.criteria.studyYear === null) {
+        if (!$scope.criteria.studyYear) {
             return true;
         }
         return DataUtils.isValidObject($scope.criteria.studyYear.startDate, $scope.criteria.studyYear.endDate, group.validFrom, group.validThru);

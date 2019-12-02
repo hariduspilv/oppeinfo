@@ -1,0 +1,86 @@
+<div ng-cloak ng-include="'persons/persons.navbar.html'"></div>
+
+<div class="ois-form-layout-padding" layout="column" ng-cloak>
+  <form name="roleForm">
+    <div layout="column" flex>
+      <md-input-container class="readonly">
+        <label>{{'userRole.nameEt' | translate}}</label>
+        <hois-value value="occupation.nameEt" name="nameEt"></hois-value>
+        <input type="text" ng-show="false" ng-model="role.nameEt" name="nameEt" />
+        <span class="invalid" ng-messages="roleForm.nameEt.$error">
+          <p ng-message="required">{{'main.required' | translate}}</p>
+          <p ng-message="serverside">{{'userRole.roleExists' | translate}}</p>
+        </span>
+      </md-input-container>
+      <md-input-container class="readonly">
+        <label>{{'userRole.nameEn' | translate}}</label>
+        <hois-value value="occupation.nameEn"></hois-value>
+        <input type="text" ng-show="false" ng-model="role.nameEn" name="nameEn" />
+        <span class="invalid" ng-messages="roleForm.nameEn.$error">
+          <p ng-message="serverside">{{'userRole.roleExists' | translate}}</p>
+        </span>
+      </md-input-container>
+    </div>
+    <hois-collapsable class="hois-collapse2" expanded="false" ng-if="tabledata.totalElements > 0">
+      <hois-collapsable-header>
+        <span>{{'userRole.connectedUsers' | translate}} ({{tabledata.totalElements}})</span>
+      </hois-collapsable-header>
+      <md-table-container>
+        <table class="secondary-table" md-table md-progress="tabledata.$promise">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+            <tr md-row>
+              <th md-column>{{'main.order' | translate}}</th>
+              <th md-column>{{'userRole.user' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell width="10%">{{$index + 1}}.</td>
+              <td md-cell>{{currentLanguageNameField(row)}}</td>
+            </tr>
+          </tbody>
+        </table>
+        <md-table-pagination ng-show="tabledata.totalElements > 10" md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                              md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                              md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+      </md-table-container>
+    </hois-collapsable>
+    <div flex>
+      <md-table-container>
+        <table md-table>
+          <thead md-head>
+            <tr md-row>
+              <th md-column>{{'user.rights.right' | translate}}</th>
+              <th md-column ng-repeat="perm in permissions">
+                <md-checkbox ng-model="multiSelects[perm.code]" ng-change="multiSelectPermission(perm.code, multiSelects[perm.code])"
+                  aria-label="{{currentLanguageNameField(perm)}}" flex>{{currentLanguageNameField(perm)}}</md-checkbox>
+              </th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="object in objectsForRole | orderBy: currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{currentLanguageNameField(object)}}</td>
+              <td md-cell ng-repeat="perm in permissions">
+                <md-checkbox ng-if="showPermission(object.code, perm.code)" ng-model="(rights[object.code] || {})[perm.code]"
+                  aria-label="{{currentLanguageNameField(object)+' '+currentLanguageNameField(perm)}}" flex ng-change="$root.checkboxChanged = true"></md-checkbox>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </div>
+    <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+    <md-button ng-if="role.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+    <md-button ng-click="back('#/persons/teacher-roles?_menu')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </form>
+</div>
+
+<style>
+  .readonly {
+    margin-bottom: 0px !important;
+    margin-top: 18px !important;
+  }
+  .hois-collapse2 .hois-collapse-header {
+    font-size: 14px;
+  }
+</style>

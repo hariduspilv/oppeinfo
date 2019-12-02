@@ -33,11 +33,8 @@ public class StudentAbsenceController {
 
     @GetMapping("/{id:\\d+}")
     public StudentAbsenceDto get(HoisUserDetails user, @WithEntity StudentAbsence studentAbsence) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user, studentAbsence.getStudent().getSchool());
-        StudentAbsenceDto dto = StudentAbsenceDto.of(studentAbsence);
-        dto.setCanAccept(Boolean.valueOf(StudentAbsenceUtil.canAccept(user, studentAbsence)));
-        dto.setCanReject(Boolean.valueOf(StudentAbsenceUtil.canReject(user, studentAbsence)));
-        return dto;
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user, studentAbsence.getStudent());
+        return studentAbsenceService.get(user, studentAbsence);
     }
 
     @GetMapping

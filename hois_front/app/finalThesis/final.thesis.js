@@ -1,11 +1,14 @@
 'use strict';
 
-angular.module('hitsaOis').controller('FinalThesisEditController', function ($scope, $route, $location, $q, Classifier, DataUtils, QueryUtils, config, dialogService, message) {
+angular.module('hitsaOis').controller('FinalThesisEditController', function ($location, $route, $scope, QueryUtils, config, dialogService, message) {
   $scope.auth = $route.current.locals.auth;
   var endpoint = '/finalThesis';
   var FinalThesisEndpoint = QueryUtils.endpoint(endpoint);
 
   function entityToForm(entity) {
+    entity.supervisors.forEach(function (supervisor) {
+      supervisor.canEdit = !$scope.auth.isTeacher() || supervisor.isExternal || supervisor.teacher.id !== $scope.auth.teacher;
+    });
     $scope.thesis = entity;
   }
 

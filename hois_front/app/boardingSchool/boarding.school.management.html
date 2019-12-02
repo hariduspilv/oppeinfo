@@ -13,10 +13,10 @@
           <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label class="textInput">{{'student.name' | translate}}</label>
             <input ng-model="criteria.name" name="name" type="text" md-maxlength="255" autofocus>
-          </md-input-container>  
+          </md-input-container>
         </div>
 
-        <div layout="row" layout-sm="column" layout-xs="column">
+        <div ng-show="formState.showAllParameters" layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'student.idcode' | translate}}</label>
             <input ng-model="criteria.idcode" name="idcode" type="text" minlength="11" md-maxlength="11">
@@ -28,7 +28,7 @@
           </md-input-container>
         </div>
 
-        <div layout="row" flex>
+        <div ng-show="formState.showAllParameters" layout="row" flex>
           <md-input-container class="md-block">
             <md-checkbox ng-model="criteria.notActiveStudents" name="notActiveStudents">{{'boardingSchool.showNotActiveStudents' | translate}}</md-checkbox>
           </md-input-container>
@@ -37,6 +37,9 @@
         <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <a ng-click="toggleShowAllParameters()" style="margin-top: 20px">
+            {{formState.showAllParameters ? ('main.button.lessParameters' | translate) : ('main.button.moreParameters' | translate)}}
+          </a>
         </div>
       </fieldset>
     </form>
@@ -45,7 +48,7 @@
 
 <div layout-padding>
   <div flex>
-    <md-table-container fixed-column-table fixed-columns="2" resize-table search-criteria-height="550" class="fixed-md-table-container">
+    <md-table-container fixed-column-table fixed-columns="2" resize-table search-criteria-height="{{formState.showAllParameters ? 550 : 450}}" class="fixed-md-table-container">
       <form name="boardingSchools" novalidate>
         <table md-table md-progress="tabledata.$promise">
           <thead md-head md-order="criteria.order" md-on-reorder="loadData">
@@ -70,7 +73,7 @@
               <td md-cell>{{row.idcode}}</td>
               <td md-cell>
                 <md-input-container>
-                  <hois-select ng-model="row.latestDorm.room" values="rooms" ng-change="roomChanged(row)" 
+                  <hois-select ng-model="row.latestDorm.room" values="formState.rooms" ng-change="roomChanged(row)" 
                     ng-disabled="!row.canEditLatest" aria-label="{{'boardingSchool.room' | translate}}"></hois-select>
                 </md-input-container>
               </td>

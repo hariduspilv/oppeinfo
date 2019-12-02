@@ -55,6 +55,10 @@ public class SchoolForm extends VersionedCommand {
     private Boolean isMinorStudentAbsence;
     private Boolean isLetterGrade;
     private Boolean isWithoutEkis;
+    private Boolean isStudentTerms;
+    @Required
+    @ClassifierRestriction(MainClassCode.FOTOLISA)
+    private String studentPhotoAdd;
     @Size(max = 100)
     private String finalSchoolType;
     @Size(max = 500)
@@ -247,6 +251,22 @@ public class SchoolForm extends VersionedCommand {
 
     public void setIsWithoutEkis(Boolean isWithoutEkis) {
         this.isWithoutEkis = isWithoutEkis;
+    }
+
+    public Boolean getIsStudentTerms() {
+        return isStudentTerms;
+    }
+
+    public void setIsStudentTerms(Boolean isStudentTerms) {
+        this.isStudentTerms = isStudentTerms;
+    }
+
+    public String getStudentPhotoAdd() {
+        return studentPhotoAdd;
+    }
+
+    public void setStudentPhotoAdd(String studentPhotoAdd) {
+        this.studentPhotoAdd = studentPhotoAdd;
     }
 
     public String getFinalSchoolType() {

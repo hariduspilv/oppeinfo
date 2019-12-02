@@ -1,21 +1,4 @@
-<md-content>
-   <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak hois-navbar-overflowed>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.id" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/edit?_noback" name="enterprise.data">
-            {{'enterprise.data' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/persons/edit?_noback" name="enterprise.persons">
-            {{'enterprise.persons' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/locations/edit?_noback" name="enterprise.locations">
-            {{'enterprise.locations' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/studentGroups/edit?_noback" name="enterprise.studentGroups">
-            {{'enterprise.studentGroups' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/contracts/edit?_noback" name="enterprise.contracts">
-            {{'enterprise.contracts' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/grades/edit?_noback" name="enterprise.grades">
-            {{'enterprise.grades' | translate}}</md-nav-item>
-        <md-nav-item ng-if="auth.isAdmin() && enterprise.enterpriseSchoolId && enterprise.application" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/admission/edit?_noback" name="enterprise.admission">
-            {{'enterprise.requests' | translate}}</md-nav-item>
-    </md-nav-bar>
-</md-content>
+<div ng-include="'practiceEnterprise/practice.enterprise.navbar.html'"></div>
 
 <div layout-padding>
     <div flex>
@@ -60,7 +43,7 @@
     </md-table-pagination>
     </div>
 </div>
-<div layout="row" layout-xs="column">
-    <md-button ng-if="auth.isAdmin()" class="md-raised" ng-click="back('#/practice/enterprise')">{{'main.button.back' | translate}}</md-button>
-    <md-button ng-if="auth.isAdmin()" class="md-raised" ng-click="addNewPerson()">{{'enterprise.personsTab.addNew' | translate}}</md-button>
+<div ng-if="auth.isAdmin() || auth.isLeadingTeacher()" layout="row" layout-xs="column">
+    <md-button class="md-raised" ng-click="back('#/practice/enterprise')">{{'main.button.back' | translate}}</md-button>
+    <md-button class="md-raised" ng-click="addNewPerson()">{{'enterprise.personsTab.addNew' | translate}}</md-button>
 </div>

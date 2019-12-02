@@ -19,7 +19,7 @@ public class CurriculumCompletionDto {
     private final String studyLoad;
     private final String studyForm;
     private final String status;
-    private final BigDecimal creditsLastStudyPeriod;
+    private BigDecimal creditsLastStudyPeriod = BigDecimal.ZERO;
     private final BigDecimal credits;
     private final BigDecimal curriculumCompletion;
     private final Long studyPeriodCount;
@@ -27,18 +27,17 @@ public class CurriculumCompletionDto {
 
     public CurriculumCompletionDto(Object record) {
         id = resultAsLong(record, 0);
-        fullName = PersonUtil.fullname(resultAsString(record, 1), resultAsString(record, 2));
+        fullName = PersonUtil.fullnameOptionalGuest(resultAsString(record, 1), resultAsString(record, 2), resultAsString(record, 14));
         String code = resultAsString(record, 3);
         curriculumVersion = new AutocompleteResult(null, CurriculumUtil.versionName(code, resultAsString(record, 4)), CurriculumUtil.versionName(code, resultAsString(record, 5)));
         studentGroup = resultAsString(record, 6);
         studyLoad = resultAsString(record, 7);
         studyForm = resultAsString(record, 8);
         status = resultAsString(record, 9);
-        creditsLastStudyPeriod = resultAsDecimal(record, 10);
-        credits = resultAsDecimal(record, 11);
-        curriculumCompletion = resultAsDecimal(record, 12);
-        studyPeriodCount = resultAsLong(record, 13);
-        studyYearCount = resultAsLong(record, 14);
+        credits = resultAsDecimal(record, 10);
+        curriculumCompletion = resultAsDecimal(record, 11);
+        studyPeriodCount = resultAsLong(record, 12);
+        studyYearCount = resultAsLong(record, 13);
     }
 
     public Long getId() {
@@ -71,6 +70,10 @@ public class CurriculumCompletionDto {
 
     public BigDecimal getCreditsLastStudyPeriod() {
         return creditsLastStudyPeriod;
+    }
+
+    public void setCreditsLastStudyPeriod(BigDecimal creditsLastStudyPeriod) {
+        this.creditsLastStudyPeriod = creditsLastStudyPeriod;
     }
 
     public BigDecimal getCredits() {

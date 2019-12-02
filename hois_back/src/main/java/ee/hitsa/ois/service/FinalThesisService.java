@@ -26,6 +26,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.FinalThesisStatus;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
@@ -68,6 +69,10 @@ public class FinalThesisService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable);
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("c.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
+        }
+
         qb.optionalContains(Arrays.asList("ft.theme_et", "ft.theme_en"), "theme", criteria.getTheme());
         qb.optionalCriteria("ft.status_code in (:status)", "status", criteria.getStatus());
         qb.optionalContains("p.firstname || ' ' || p.lastname" , "name", criteria.getStudentName());
@@ -206,6 +211,7 @@ public class FinalThesisService {
         
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("s.status_code in :statusCodes", "statusCodes", StudentStatus.STUDENT_STATUS_ACTIVE);
+        qb.requiredCriteria("s.type_code != :studentType", "studentType", StudentType.OPPUR_K.name());
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", lookup.getName());
         qb.filter("exists (select c.id from curriculum c "
                 + "join curriculum_version cv on cv.curriculum_id = c.id "

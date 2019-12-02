@@ -8,5 +8,13 @@ angular.module('hitsaOis').controller('ApplicationStudentListController', functi
   $q.all(applicationsMapper.promises).then($scope.loadData);
 
   $scope.applicationTypesApplicable = QueryUtils.endpoint('/applications/student/'+studentId+'/applicable').search();
-  $scope.applicationTypes = Classifier.queryForDropdown({mainClassCode: 'AVALDUS_LIIK'});
+  Classifier.queryForDropdown({ mainClassCode: 'AVALDUS_LIIK' }).$promise.then(function (responses) {
+    if ($scope.auth.isGuestStudent()) {
+      $scope.applicationTypes = responses.filter(function (classifier) {
+        return classifier.code === 'AVALDUS_LIIK_MUU';
+      });
+    } else {
+      $scope.applicationTypes = responses;
+    }
+  });
 });

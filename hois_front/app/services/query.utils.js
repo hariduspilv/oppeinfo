@@ -52,7 +52,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
       }
     };
 
-    var createQueryForm = function(scope, url, defaultParams, postLoad, useLoadingWheel, ignoreStorage) {
+    var createQueryForm = function(scope, url, defaultParams, postLoad, useLoadingWheel, ignoreStorage, noEmptyMsg) {
       scope.criteria = angular.extend({}, defaultPagingParams);
 
       scope.directiveControllers = [];
@@ -105,7 +105,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
       scope.afterLoadData = function(resultData) {
         scope.tabledata.content = resultData.content;
         scope.tabledata.totalElements = resultData.totalElements;
-        if(resultData.totalElements === 0) {
+        if(resultData.totalElements === 0 && !noEmptyMsg) {
           message.info('main.messages.error.notFound');
         }
         if(angular.isFunction(postLoad)) {
@@ -184,7 +184,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
   function ($mdDialog) {
     var requests = 0, busyShowing = false;
     // Progress should be an object to be able to pass it with 2-way-binding.
-    var progress = {value: 0};
+    var progress = {value: 0, text: ''};
 
     function _notBusy() {
       requests--;
@@ -195,6 +195,10 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
     
     function setProgress(value) {
       progress.value = value;
+    }
+
+    function setText(text) {
+      progress.text = text;
     }
 
     function _createDefaultDialogObject(params) {
@@ -236,11 +240,11 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
         requests++;
         if(requests === 1 && !busyShowing) {
           progress.value = 0;
+          progress.text = params.text;
           var dialogObj = _createDefaultDialogObject(params);
           // $scope is needed for minification as it will not find a provider.
           angular.extend(dialogObj, {
             controller: ["$scope", function (scope) {
-              scope.text = params.text;
               scope.progress = progress;
             }],
             templateUrl: 'components/progress.wheel.dialog.html'
@@ -256,7 +260,8 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
     return {
       handle: handle,
       handleWithProgress: handleWithProgress,
-      setProgress: setProgress
+      setProgress: setProgress,
+      setText: setText
     };
   }
 ]);

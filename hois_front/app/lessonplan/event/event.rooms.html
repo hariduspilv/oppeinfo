@@ -1,0 +1,126 @@
+<div ng-cloak ng-include="'lessonplan/event/event.navbar.html'"></div>
+
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form name="searchForm" ng-submit="loadData()" novalidate class="nomargin" ng-model-options="{allowInvalid: true}">
+        <div layout-gt-sm="row" layout="column">
+          <md-input-container flex-gt-sm="45" flex="100">
+            <label>{{'lessonplan.rooms.building' | translate}}</label>
+            <input type="text" ng-model="criteria.building" md-maxlength="300" />
+          </md-input-container>
+          <md-input-container flex-gt-sm="50" flex="100" flex-offset-gt-sm="5" flex-offset="0">
+            <label>{{'lessonplan.rooms.room' | translate}}</label>
+            <input type="text" ng-model="criteria.room" md-maxlength="20" />
+          </md-input-container>
+        </div>
+        <div layout-gt-sm="row" layout="column">
+          <div layout="column" flex-gt-sm="45" flex="100">
+            <label class="common-label">{{'lessonplan.rooms.dateRange' | translate}}</label>
+            <div layout-gt-xs="row" layout="column">
+              <md-input-container>
+                <label>{{'main.from' | translate}}</label>
+                <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" required
+                  hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+              </md-input-container>
+              <md-input-container>
+                <label>{{'main.thru' | translate}}</label>
+                <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from" required
+                  hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+              </md-input-container>
+            </div>
+          </div>
+          <div layout="column" flex-gt-sm="50" flex="100" flex-offset-gt-sm="5" flex-offset="0">
+            <label class="common-label">{{'lessonplan.rooms.timeRange' | translate}}</label>
+            <div layout-gt-xs="row" layout="column" flex>
+              <md-input-container style="width: 150px;">
+                <label>{{'main.from' | translate}}</label>
+                <hois-time ng-model="criteria.startTime" name="startTime" ng-required="criteria.endTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
+              </md-input-container>
+              <md-input-container style="width: 150px;">
+                <label>{{'main.thru' | translate}}</label>
+                <hois-time ng-model="criteria.endTime" name="endTime" ng-required="criteria.startTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
+              </md-input-container>
+            </div>
+            <md-input-container ng-if="timeError">
+              <div class="invalid">
+                <p class="md-body-1" style="margin-block-start: 0em; margin-block-end: 0em; margin-inline-start: 0px; margin-inline-end: 0px;">
+                  {{'lessonplan.rooms.timeError' | translate}}</p>
+              </div>
+            </md-input-container>
+          </div>
+        </div>
+        <div layout-gt-xs="row" layout="column">
+          <md-input-container style="margin-right: 8px;">
+            <md-checkbox ng-model="criteria.isFreeRoom"
+              ng-change="((criteria.isBusyRoom = !criteria.isFreeRoom) || true) && setPartlyBox()">{{'lessonplan.rooms.checkRoomFree' | translate}}</md-checkbox>
+          </md-input-container>
+          <md-input-container style="margin-right: 8px;">
+            <md-checkbox ng-model="criteria.isBusyRoom"
+              ng-change="((criteria.isFreeRoom = !criteria.isBusyRoom) || true) && setPartlyBox()">{{'lessonplan.rooms.checkRoomBusy' | translate}}</md-checkbox>
+          </md-input-container>
+          <md-input-container style="margin-right: 8px;">
+            <md-checkbox ng-model="criteria.isPartlyBusyRoom" ng-disabled="!criteria.isFreeRoom">{{'lessonplan.rooms.checkRoomPartlyBusy' | translate}}</md-checkbox>
+          </md-input-container>
+        </div>
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="r_code">{{'lessonplan.rooms.room' | translate}}</th>
+            <th md-column md-order-by="b_name">{{'lessonplan.rooms.building' | translate}}</th>
+            <th md-column md-order-by="s_date, e_date">{{'lessonplan.rooms.date' | translate}}</th>
+            <th md-column><span style="white-space: pre-line; display: inline-block;">{{'lessonplan.rooms.time' | translate}}</span></th>
+            <th md-column md-order-by="seats"><span style="white-space: pre-line; display: inline-block;">{{'lessonplan.rooms.places' | translate}}</span></th>
+            <th md-column md-order-by="is_study"><span style="white-space: pre-line; display: inline-block;">{{'lessonplan.rooms.isUsedInStudy' | translate}}</span></th>
+            <th md-column md-order-by="is_dormitory"><span style="white-space: pre-line; display: inline-block;">{{'lessonplan.rooms.isDormitoryRoom' | translate}}</span></th>
+            <th md-column>{{'lessonplan.rooms.equipment' | translate}}</th>
+            <th md-column ng-if="canEdit"></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'"
+            md-colors="::(criteria.isFreeRoom && row.times.length > 0 ? {background: 'accent-50' } : null)">
+            <td md-cell>{{::row.room}}</td>
+            <td md-cell>{{::row.building}}</td>
+            <td md-cell><a ng-if="::canAddEvent(row)" ng-href="{{event(row)}}">{{::row.startDate | hoisDate}}</a><span ng-if="::!canAddEvent(row)">{{::row.startDate | hoisDate}}</span></td>
+            <td md-cell><span ng-repeat="time in row.times track by $index" style="display: block;">{{::time}}</span></td>
+            <td md-cell>{{::row.places}}</td>
+            <td md-cell>{{::(row.isUsedInStudy ? 'main.yes' : 'main.no' | translate)}}</td>
+            <td md-cell>{{::(row.isDormitoryRoom ? 'main.yes' : 'main.no' | translate)}}</td>
+            <td md-cell>
+              <table>
+                <tr ng-repeat="device in row.equipment">
+                  <td><hois-classifier-value ng-model="device.equipment" main-classifier-code="SEADMED"></hois-classifier-value></td>
+                  <td>{{::device.equipmentCount}}</td>
+                </tr>
+              </table>
+            </td>
+            <td md-cell ng-if="canEdit"><a ng-if="::canAddEvent(row)" ng-href="{{event(row)}}">{{'lessonplan.rooms.addEvent' | translate}}</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>
+
+<style>
+  table.md-table:not(.md-row-select) td.md-cell:nth-child(n+2):nth-last-child(n+2),
+  table.md-table:not(.md-row-select) th.md-column:nth-child(n+2):nth-last-child(n+2) {
+    padding: 0 28px 0 0;
+  }
+</style>

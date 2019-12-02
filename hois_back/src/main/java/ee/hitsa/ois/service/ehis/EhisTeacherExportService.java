@@ -327,7 +327,7 @@ public class EhisTeacherExportService extends EhisService {
                 queryLog = response.getLog();
                 if(!response.hasError()) {
                     error = messageHasError(response.getTeade()) || resultHasError(response.getResult());
-                    wsEhisTeacherLog.setHasXteeErrors(Boolean.valueOf(error));
+                    wsEhisTeacherLog.setHasOtherErrors(Boolean.valueOf(error));
                     wsEhisTeacherLog.setLogTxt(String.join(";", StreamUtil.nullSafeList(response.getResult())));
                 } else {
                     wsEhisTeacherLog.setHasXteeErrors(Boolean.TRUE);

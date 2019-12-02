@@ -1,10 +1,12 @@
 package ee.hitsa.ois.domain.student;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -12,10 +14,12 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Dormitory;
 import ee.hitsa.ois.domain.FinalThesis;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.PracticeJournal;
+import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
 
@@ -29,6 +33,12 @@ public class Student extends StudentBase {
     private School school;
     private String previousSchoolName;
     private LocalDate previousSchoolEndDate;
+    @Column(nullable = false)
+    private Boolean isContractAgreed;
+    private LocalDateTime contractAgreed;
+    private String contractText;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private Classifier type;
     @OneToOne(cascade = { CascadeType.PERSIST, CascadeType.REMOVE }, fetch = FetchType.LAZY)
     private StudentHistory studentHistory;
     @OneToMany(mappedBy = "student")
@@ -45,6 +55,8 @@ public class Student extends StudentBase {
     private List<Dormitory> boardingSchools;
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudentSpecialNeed> specialNeeds;
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DirectiveStudent> directiveStudents;
 
     public Person getPerson() {
         return person;
@@ -76,6 +88,30 @@ public class Student extends StudentBase {
 
     public void setPreviousSchoolEndDate(LocalDate previousSchoolEndDate) {
         this.previousSchoolEndDate = previousSchoolEndDate;
+    }
+
+    public Boolean getIsContractAgreed() {
+        return isContractAgreed;
+    }
+
+    public void setIsContractAgreed(Boolean isContractAgreed) {
+        this.isContractAgreed = isContractAgreed;
+    }
+
+    public LocalDateTime getContractAgreed() {
+        return contractAgreed;
+    }
+
+    public void setContractAgreed(LocalDateTime contractAgreed) {
+        this.contractAgreed = contractAgreed;
+    }
+
+    public String getContractText() {
+        return contractText;
+    }
+
+    public void setContractText(String contractText) {
+        this.contractText = contractText;
     }
 
     public StudentHistory getStudentHistory() {
@@ -142,4 +178,21 @@ public class Student extends StudentBase {
         getSpecialNeeds().clear();
         getSpecialNeeds().addAll(specialNeeds);
     }
+
+    public Classifier getType() {
+        return type;
+    }
+
+    public void setType(Classifier type) {
+        this.type = type;
+    }
+
+    public List<DirectiveStudent> getDirectiveStudents() {
+        return directiveStudents;
+    }
+
+    public void setDirectiveStudents(List<DirectiveStudent> directiveStudents) {
+        this.directiveStudents = directiveStudents;
+    }
+    
 }

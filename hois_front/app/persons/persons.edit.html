@@ -1,3 +1,5 @@
+<div ng-cloak ng-include="'persons/persons.navbar.html'"></div>
+
 <div class="ois-form-layout-padding" layout="column" ng-cloak>
   <form name="personForm" class="nomargin">
     <div layout="column" flex>
@@ -51,7 +53,7 @@
   <div ng-if="person.id">
     <div>&nbsp;</div>
     <fieldset>
-     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'user.role' | translate}}</legend>
+     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'person.roles' |translate}}</legend>
       <div layout="row" class="align-center">
         <md-button class="md-raised" ng-if="person.id" ng-href="#/persons/{{::person.id}}/users/new">{{'main.button.create' | translate}}</md-button>
       </div >

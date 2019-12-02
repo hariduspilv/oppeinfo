@@ -30,6 +30,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodCapacityDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodDto;
@@ -79,16 +80,18 @@ public class SubjectStudyPeriodSubjectService {
         container.setSubjectStudyPeriodDtos(subjectStudyPeriodDtos);
     }
 
-    public List<AutocompleteResult> getSubjectsList(Long schoolId, Long studyPeriodId) {
+    public List<AutocompleteResult> getSubjectsList(Long schoolId, SearchCommand command) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject s");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.requiredCriteria("s.status_code = :status", "status", SubjectStatus.AINESTAATUS_K);
-
-        qb.optionalCriteria("not exists " 
-                        + "(select * from subject_study_period ssp "
-                        + " where ssp.study_period_id = :studyPeriodId and ssp.subject_id = s.id)",
-                           "studyPeriodId", studyPeriodId);
+        if (command != null) {
+            qb.optionalContains("s.name_et", "name", command.getName());
+            qb.optionalCriteria("not exists " 
+                    + "(select * from subject_study_period ssp "
+                    + " where ssp.study_period_id = :studyPeriodId and ssp.subject_id = s.id)",
+                       "studyPeriodId", command.getId());
+        }
 
         List<?> data = qb.select("s.id, s.code, s.name_et, s.name_en, s.credits", em).getResultList();
         return StreamUtil.toMappedList(r -> {

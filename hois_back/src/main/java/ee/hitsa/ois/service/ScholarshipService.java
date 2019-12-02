@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -967,7 +968,15 @@ public class ScholarshipService {
                         + " left join scholarship_decision sd on sd.id = sa.scholarship_decision_id");
 
         qb.requiredCriteria("st.school_id = :schoolId", "schoolId", user.getSchoolId());
-        if (user.isTeacher()) {
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("(c.id in (select uc.curriculum_id from user_curriculum uc"
+                    + " where uc.user_id = :userId)"
+                    + " or st.committee_id in (select c.id from committee c"
+                    + " join committee_member cm on cm.committee_id = c.id"
+                    + " join user_ u on u.person_id = cm.person_id"
+                    + " where u.id = :userId and c.type_code = '" + CommitteeType.KOMISJON_T.name() + "')"
+                    + ")", "userId", user.getUserId());
+        } else if (user.isTeacher()) {
             qb.requiredCriteria("(sa.student_group_id in (select sg.id from student_group sg"
                     + " where sg.teacher_id = :teacherId)"
                     + " or st.committee_id in (select c.id"
@@ -1014,7 +1023,7 @@ public class ScholarshipService {
                     + " and d.status_code in (" + directiveStatuses + "))) as has_directive"
                 + ", sd.id, sd.decided, sg.code as student_group_code, sa.bank_account_owner_idcode";
         List<?> data = qb.select(select, em).getResultList();
-        return StreamUtil.toMappedList(r -> {
+        List<ScholarshipApplicationSearchDto> applications = StreamUtil.toMappedList(r -> {
         	ScholarshipApplicationSearchDto dto = new ScholarshipApplicationSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setType(resultAsString(r, 1));
@@ -1045,6 +1054,31 @@ public class ScholarshipService {
             dto.setBankAccountOwnerIdcode(resultAsString(r, 25));
             return dto;
         }, data);
+
+        if (user.isLeadingTeacher()) {
+            setCanViewStudent(user, applications);
+        }
+        return applications;
+    }
+
+    // leading teacher can see only his/her curriculum student group students
+    private void setCanViewStudent(HoisUserDetails user, List<ScholarshipApplicationSearchDto> applications) {
+        Set<Long> applicationStudentIds = StreamUtil.toMappedSet(a -> a.getStudentId(), applications);
+        if (applicationStudentIds.isEmpty()) {
+            return;
+        }
+
+        List<?> data = em.createNativeQuery("select s.id from student s"
+                + " join curriculum_version cv on cv.id = s.curriculum_version_id"
+                + " where cv.curriculum_id in (?1) and s.id in (?2)")
+                .setParameter(1, user.getCurriculumIds())
+                .setParameter(2, StreamUtil.toMappedList(a -> a.getStudentId(), applications))
+                .getResultList();
+        Set<Long> studentIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
+
+        for (ScholarshipApplicationSearchDto dto : applications) {
+            dto.setCanViewStudent(Boolean.valueOf(studentIds.contains(dto.getStudentId())));
+        }
     }
 
     public HttpStatus acceptApplications(HoisUserDetails user, List<Long> applicationIds) {

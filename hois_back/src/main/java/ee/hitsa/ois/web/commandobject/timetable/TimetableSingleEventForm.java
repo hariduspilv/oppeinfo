@@ -40,7 +40,9 @@ public class TimetableSingleEventForm {
     private String otherTeacher;
     private String otherRoom;
     private Boolean isSingleEvent;
-    
+    private Boolean isPersonal = Boolean.FALSE;
+    private AutocompleteResult person;
+
     private Boolean canEdit;
 
     public static TimetableSingleEventForm of(TimetableEventTime event) {
@@ -86,6 +88,10 @@ public class TimetableSingleEventForm {
                 .map(TimetableEventTime::getStart).max(LocalDateTime::compareTo).get();
         form.setWeekAmount(Long.valueOf(event.getStart().until(maxDate, ChronoUnit.WEEKS)));
         form.setIsSingleEvent(Boolean.valueOf(event.getTimetableEvent().getTimetableObject() == null));
+        form.setIsPersonal(event.getTimetableEvent().getIsPersonal());
+        if (Boolean.TRUE.equals(form.getIsPersonal())) {
+            form.setPerson(AutocompleteResult.of(event.getTimetableEvent().getPerson()));
+        }
         return form;
     }
 
@@ -208,12 +214,28 @@ public class TimetableSingleEventForm {
         this.isSingleEvent = isSingleEvent;
     }
 
+    public Boolean getIsPersonal() {
+        return isPersonal;
+    }
+
+    public void setIsPersonal(Boolean isPersonal) {
+        this.isPersonal = isPersonal;
+    }
+
     public Boolean getCanEdit() {
         return canEdit;
     }
 
     public void setCanEdit(Boolean canEdit) {
         this.canEdit = canEdit;
+    }
+
+    public AutocompleteResult getPerson() {
+        return person;
+    }
+
+    public void setPerson(AutocompleteResult person) {
+        this.person = person;
     }
 
 }

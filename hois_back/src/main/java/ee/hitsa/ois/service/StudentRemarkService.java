@@ -57,7 +57,7 @@ public class StudentRemarkService {
     private static final String STUDENT_REMARKS_SELECT = "sr.id remark_id, null as student_entry_id, "
             + "s.id student_id, p.firstname, p.lastname, sg.code student_group, "
             + "sr.reason_code, sr.remark, sr.inserted_by remark_inserted_by, sr.remark_time, "
-            + "null journal_id, null journal_name";
+            + "null journal_id, null journal_name, s.type_code as studentType";
 
     private static final String STUDENT_REMARKS_FROM = "from student_remark sr "
             + "join student s on s.id = sr.student_id " 
@@ -67,7 +67,7 @@ public class StudentRemarkService {
     private static final String JOURNAL_REMARKS_SELECT = "null remark_id, jes.id student_entry_id, "
             + "s2.id student_id, p2.firstname, p2.lastname, sg2.code student_group, "
             + "null reason_code, jes.add_info remark, jes.remark_inserted_by, jes.remark_inserted remark_time, "
-            + "j.id journal_id, j.name_et journal_name";
+            + "j.id journal_id, j.name_et journal_name, s2.type_code as studentType";
 
     private static final String JOURNAL_REMARKS_FROM = "from journal_entry_student jes "
             + "join journal_student js on js.id = jes.journal_student_id " + "join journal j on j.id = js.journal_id "
@@ -76,7 +76,7 @@ public class StudentRemarkService {
 
     private static final String REMARKS_UNINON_SELECT = "remark_id, student_entry_id, student_id, "
             + "firstname, lastname, student_group, reason_code, remark, remark_inserted_by, "
-            + "remark_time, journal_id, journal_name";
+            + "remark_time, journal_id, journal_name, studentType";
 
     public Page<StudentRemarkDto> search(HoisUserDetails user, StudentRemarkSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = studentRemarksQueryBuilder(user, criteria).sort(pageable);
@@ -105,13 +105,17 @@ public class StudentRemarkService {
                 DateUtils::lastMomentOfDay);
         qb.optionalCriteria("sr.remark_time >= :from", "from", criteria.getFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("sr.remark_time <= :thru", "thru", criteria.getThru(), DateUtils::lastMomentOfDay);
+        qb.optionalCriteria("sr.reason_code in (:reasons)", "reasons", criteria.getReasons());
         String studentRemarksQuery = qb.querySql(STUDENT_REMARKS_SELECT, false);
 
         String journalRemarksQuery = "";
         if (Boolean.TRUE.equals(criteria.getShowJournalRemarks())) {
             qb = new JpaNativeQueryBuilder(JOURNAL_REMARKS_FROM);
-            if (user != null && user.isTeacher()) {
-                qb.requiredCriteria("sg2.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+            if (user != null) {
+                qb.requiredCriteria("s2.school_id = :schoolId", "schoolId", user.getSchoolId());
+                if (user.isTeacher()) {
+                    qb.requiredCriteria("sg2.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+                }
             }
             qb.optionalCriteria("sg2.id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
             qb.optionalCriteria("sg2.id in (:studentGroupIds)", "studentGroupIds", criteria.getStudentGroups());
@@ -167,6 +171,9 @@ public class StudentRemarkService {
         if (criteria.getThru() != null) {
             parameters.put("thru", DateUtils.lastMomentOfDay(criteria.getThru()));
         }
+        if (criteria.getReasons() != null) {
+            parameters.put("reasons", criteria.getReasons());
+        }
         return parameters;
     }
 
@@ -174,7 +181,7 @@ public class StudentRemarkService {
         StudentRemarkDto dto = new StudentRemarkDto();
         dto.setId(resultAsLong(result, 0));
         dto.setJournalStudentEntryId(resultAsLong(result, 1));
-        String personFullname = PersonUtil.fullname(resultAsString(result, 3), resultAsString(result, 4));
+        String personFullname = PersonUtil.fullnameOptionalGuest(resultAsString(result, 3), resultAsString(result, 4), resultAsString(result, 12));
         dto.setStudent(new AutocompleteResult(resultAsLong(result, 2), personFullname, personFullname));
         dto.setStudentGroup(resultAsString(result, 5));
         dto.setReason(resultAsString(result, 6));

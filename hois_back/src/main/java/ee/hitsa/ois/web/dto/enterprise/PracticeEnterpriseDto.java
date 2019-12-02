@@ -1,15 +1,10 @@
 package ee.hitsa.ois.web.dto.enterprise;
 
 import java.util.List;
-import java.util.Optional;
 
 import ee.hitsa.ois.domain.Contract;
-import ee.hitsa.ois.domain.enterprise.Enterprise;
 import ee.hitsa.ois.domain.enterprise.EnterpriseSchool;
-import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
-import ee.hitsa.ois.web.commandobject.enterprise.PracticeEnterpriseForm;
 
 public class PracticeEnterpriseDto extends VersionedCommand {
 	private Long id;

@@ -48,5 +48,6 @@
   <md-button ng-if="!isView && canEdit" class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
   <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'main.button.printXls' | translate}}</a>
   <md-button ng-if="!isView && canEdit" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-  <md-button ng-click="back()" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  <md-button ng-if="!isView" ng-click="back()" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  <md-button ng-if="isView" ng-href="#/lessonplans/vocational" class="md-raised">{{'main.button.back' | translate}}</md-button>
 </div>

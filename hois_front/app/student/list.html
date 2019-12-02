@@ -14,34 +14,56 @@
             <input ng-model="criteria.idcode" name="idcode" type="text" minlength="11" md-maxlength="11">
           </md-input-container>
         </div>
-      <div layout="row" layout-sm="column" layout-xs="column">
+        <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
-            <label>{{'student.curriculum' | translate}}</label>
-            <hois-select ng-model="criteria.curriculumVersion" name="curriculumVersion" type="curriculumversion" multiple></hois-select>
+            <label>{{'student.curriculum' | translate}}</label> 
+            <hois-select ng-model="criteria.curriculumVersion" name="curriculumVersion" type="curriculumversion" 
+              criteria="{userId: auth.isLeadingTeacher() ? auth.user : null}" multiple></hois-select>
           </md-input-container>
 
           <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
             ng-model="criteria.studentGroupId" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" name="studentGroup"
-            label="{{'student.studentGroup'}}"></hois-autocomplete>
+            additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}" label="{{'student.studentGroup'}}"></hois-autocomplete>
         </div>
-      <div layout="row" layout-sm="column" layout-xs="column">
+        <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'student.studyForm' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.studyForm" criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" name="studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" multiple></hois-classifier-select>
+            <hois-classifier-select ng-model="criteria.studyForm" criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" 
+              name="studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" multiple></hois-classifier-select>
           </md-input-container>
 
           <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.status' | translate}}</label>
-            <hois-classifier-select ng-if="auth.isAdmin() || auth.isTeacher()" criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" ng-model="criteria.status" name="status" model-value-attr="code"
-              main-classifier-code="OPPURSTAATUS" multiple></hois-classifier-select>
-            <hois-classifier-select ng-if="auth.isStudent()" criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" ng-model="criteria.status" name="status" model-value-attr="code"
-              main-classifier-code="OPPURSTAATUS" filter-values="['OPPURSTAATUS_K', 'OPPURSTAATUS_L']" multiple></hois-classifier-select>
+            <hois-classifier-select ng-if="auth.isAdmin() || auth.isTeacher() || auth.isLeadingTeacher()" 
+              criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" 
+              ng-model="criteria.status" name="status" model-value-attr="code" main-classifier-code="OPPURSTAATUS" multiple></hois-classifier-select>
+            <hois-classifier-select ng-if="auth.isStudent()" criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}"
+              ng-model="criteria.status" name="status" model-value-attr="code" main-classifier-code="OPPURSTAATUS"
+              filter-values="['OPPURSTAATUS_K', 'OPPURSTAATUS_L']" multiple></hois-classifier-select>
           </md-input-container>
-      </div>
+        </div>
         <div layout="row">
-          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-          <md-button ng-if="auth.isAdmin() && auth.school.higher && auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_OPPUR') !== -1" class="md-raised" ng-href="#/students/specialities?_menu">{{'student.speciality.button' | translate}}</md-button>
+          <div layout="row" flex="50">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+
+            <md-button ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && auth.school.higher && auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_OPPUR') !== -1"
+              class="md-raised" ng-href="#/students/specialities?_menu">{{'student.speciality.button' | translate}}</md-button>
+            <md-checkbox ng-if="auth.isTeacher() && auth.teacherGroupIds.length > 0" layout="row" layout-align="start center" ng-model="criteria.showMyStudentGroups"
+              aria-label="{{'student.myStudentGroups' | translate}}" style="margin-bottom: 0;">{{'student.myStudentGroups' | translate}}</md-checkbox>
+          </div>
+          <div layout="row" flex="50" layout-sm="column" layout-xs="column" layout-align="start center">
+            <md-input-container flex>
+              <md-radio-group layout-gt-sm="row" ng-model="criteria.showGuestStudents" ng-init="criteria.showGuestStudents = false">
+                <md-radio-button ng-value="false" aria-label="showAll">
+                  {{'student.showAll' | translate}}
+                </md-radio-button>
+                <md-radio-button ng-value="true" aria-label="showGuestStudents">
+                  {{'student.showGuestStudents' | translate}}
+                </md-radio-button>
+              </md-radio-group>
+            </md-input-container>
+          </div>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>
@@ -55,7 +77,7 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column md-order-by="person.lastname,person.firstname">{{'student.name' | translate}}</th>
-            <th ng-if="auth.isAdmin() || auth.isTeacher()" md-column md-order-by="person.idcode">{{'student.idcode' | translate}}</th>
+            <th ng-if="auth.isAdmin() || auth.isTeacher() || auth.isLeadingTeacher()" md-column md-order-by="person.idcode">{{'student.idcode' | translate}}</th>
             <th md-column md-order-by="curriculumVersion.code">{{'student.curriculum' | translate}}</th>
             <th md-column md-order-by="studentGroup.code">{{'student.studentGroup' | translate}}</th>
             <th md-column md-order-by="{{currentLanguage()==='en' ? 'studyForm.nameEn' : 'studyForm.nameEt'}}">{{'student.studyForm' | translate}}</th>
@@ -65,10 +87,10 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <a ng-if="auth.isAdmin() || auth.isTeacher()" md-no-ink class="md-primary" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</a>
+              <a ng-if="auth.isAdmin() || auth.isTeacher() || auth.isLeadingTeacher()" md-no-ink class="md-primary" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</a>
               <span ng-if="auth.isStudent()">{{::row.fullname}}</span>
             </td>
-            <td ng-if="auth.isAdmin() || auth.isTeacher()" md-cell>{{::row.idcode}}</td>
+            <td ng-if="auth.isAdmin() || auth.isTeacher() || auth.isLeadingTeacher()" md-cell>{{::row.idcode}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
             <td md-cell>{{currentLanguageNameField(row.studentGroup)}}</td>
             <td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>

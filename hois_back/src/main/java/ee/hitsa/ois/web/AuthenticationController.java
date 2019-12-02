@@ -34,6 +34,7 @@ import ee.hitsa.ois.auth.LoginMethod;
 import ee.hitsa.ois.config.HoisJwtProperties;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.service.UserService;
@@ -245,6 +246,11 @@ public class AuthenticationController {
             return;
         }
         HoisUserDetails hoisUserDetails = userDetailsService.loadUserByUsername(idcode);
+        // For LDAP it should return UNATHORIZED in case if user has only a guest role.
+        if (Role.ROLL_X.name().equals(hoisUserDetails.getRole())) {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            return;
+        }
         PreAuthenticatedAuthenticationToken token = new PreAuthenticatedAuthenticationToken(hoisUserDetails, "", 
                 hoisUserDetails.getAuthorities());
         hoisUserDetails.setLoginMethod(LoginMethod.LOGIN_TYPE_K);

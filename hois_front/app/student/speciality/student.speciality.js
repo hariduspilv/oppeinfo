@@ -1,8 +1,9 @@
 'use strict';
 
 angular.module('hitsaOis').controller('StudentSpecialitySearchController',
-  ['$scope', 'message', 'QueryUtils', function ($scope, message, QueryUtils) {
+  ['$route', '$scope', 'message', 'QueryUtils', function ($route, $scope, message, QueryUtils) {
     var baseUrl = "/students/highspecialities";
+    $scope.auth = $route.current.locals.auth;
 
     $scope.autocompletes = [];
     $scope.curriculumVersions = QueryUtils.endpoint("/autocomplete/curriculumversions").query({closed: false});

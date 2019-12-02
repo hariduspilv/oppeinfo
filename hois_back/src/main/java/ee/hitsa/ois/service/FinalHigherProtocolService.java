@@ -6,6 +6,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -92,10 +93,18 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
     public Page<HigherProtocolSearchDto> search(HoisUserDetails user, FinalHigherProtocolSearchCommand criteria,
             Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(LIST_FROM).sort(pageable);
-            
+
         qb.filter("p.is_final = true");
         qb.filter("p.is_vocational = false");
         qb.requiredCriteria("p.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("exists (select cv.curriculum_id from curriculum_version_hmodule_subject cvhs "
+                    + "join curriculum_version_hmodule cvh on cvh.id = cvhs.curriculum_version_hmodule_id "
+                    + "join curriculum_version cv on cv.id = cvh.curriculum_version_id "
+                    + "join user_curriculum uc on uc.curriculum_id = cv.curriculum_id "
+                    + "where cvhs.subject_id = s.id and uc.user_id = :userId)", "userId", user.getUserId());
+        }
+
         qb.optionalCriteria("p.is_final_thesis = :isFinalThesis", "isFinalThesis", criteria.getIsFinalThesis());
         qb.optionalCriteria("p.status_code = :statusCode", "statusCode", criteria.getStatus());
         qb.optionalCriteria("p.protocol_nr = :protocolNr", "protocolNr", criteria.getProtocolNr());
@@ -103,7 +112,7 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
         qb.optionalCriteria("p.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(), DateUtils::lastMomentOfDay);
         qb.optionalCriteria("p.confirm_date >= :confirmedFrom", "confirmedFrom", criteria.getConfirmDateFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("p.confirm_date <= :confirmedThru", "confirmedThru", criteria.getConfirmDateThru(), DateUtils::lastMomentOfDay);
-        
+
         if (criteria.getStudentName() != null) {
             qb.filter("p.id in (select p.id from protocol p "
                     + "join protocol_student ps on p.id = ps.protocol_id "
@@ -118,7 +127,7 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
                         + "join subject s on ssp.subject_id = s.id "
                         + "where upper(s.code) like lower(:subject) or upper(s.name_et) like :subject or upper(s.name_en) like :subject)",
                 "subject", criteria.getSubject(), JpaQueryUtil::toContains);
-        
+
         if (user.isTeacher()) {
             qb.optionalCriteria("p.is_final_thesis = :isFinalThesis", "isFinalThesis", Boolean.FALSE);
             qb.optionalCriteria("exists (select protocol_id from protocol_hdata phd "
@@ -136,27 +145,51 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
             dto.setSubject(new AutocompleteResult(resultAsLong(r, 4),
                     SubjectUtil.subjectName(resultAsString(r, 5), resultAsString(r, 6), resultAsDecimal(r, 8)),
                     SubjectUtil.subjectName(resultAsString(r, 5), resultAsString(r, 7), resultAsDecimal(r, 8))));
-            
-            
+
             if (resultAsLong(r, 9) != null) {
                 dto.setCommitteeChairman(PersonUtil.fullname(resultAsString(r, 10), resultAsString(r, 11)));
             } else {
                 dto.setCommitteeChairman(resultAsString(r, 12));
             }
-            
+
             dto.setInserted(resultAsLocalDate(r, 13));
             dto.setConfirmDate(resultAsLocalDate(r, 14));
             dto.setConfirmer(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 15)));
-            dto.setCanChange(Boolean.valueOf(FinalProtocolUtil.canEdit(user, em.getReference(Protocol.class, dto.getId()))));
             return dto;
         });
 
+        setCanChangeSearchResults(user, result.getContent());
         return result;
+    }
+
+    private void setCanChangeSearchResults(HoisUserDetails user, List<HigherProtocolSearchDto> results) {
+        List<Long> protocolIds = StreamUtil.toMappedList(r -> r.getId(), results);
+        if (protocolIds.isEmpty()) {
+            return;
+        }
+
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from protocol p "
+                + "join protocol_hdata phd on phd.protocol_id = p.id "
+                + "join subject_study_period ssp on ssp.id = phd.subject_study_period_id "
+                + "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id");
+
+        qb.requiredCriteria("p.id in (:protocolIds)", "protocolIds", protocolIds);
+        qb.requiredCriteria("(p.status_code = :status or sspt.is_signatory = true)", "status",
+                ProtocolStatus.PROTOKOLL_STAATUS_S);
+
+        List<?> data = qb.select("p.id, sspt.teacher_id", em).getResultList();
+        Map<Long, List<Long>> protocolTeachers = StreamUtil.nullSafeList(data).stream().collect(Collectors
+                .groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toList())));
+
+        for (HigherProtocolSearchDto dto : results) {
+            dto.setCanChange(Boolean.valueOf(
+                    FinalProtocolUtil.canEditHigher(user, dto.getStatus(), protocolTeachers.get(dto.getId()))));
+        }
     }
 
     public FinalHigherProtocolDto finalHigherProtocol(HoisUserDetails user, Protocol protocol) {
         includeCorrectImportedOccupationCertificates(protocol);
-        
+
         FinalHigherProtocolDto dto = FinalHigherProtocolDto.of(protocol);
         dto.setCanBeEdited(Boolean.valueOf(FinalProtocolUtil.canEdit(user, protocol)));
         dto.setCanBeConfirmed(Boolean.valueOf(FinalProtocolUtil.canConfirm(user, protocol)));
@@ -246,7 +279,7 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
                         addHistory(ps);
                         Classifier grade = em.getReference(Classifier.class, dto.getGrade());
                         Short mark = HigherAssessment.getGradeMark(dto.getGrade());
-                        gradeStudent(ps, grade, mark, isLetterGrade);
+                        gradeStudent(ps, grade, mark, isLetterGrade, LocalDate.now());
                         ps.setAddInfo(dto.getAddInfo());
                     } else if (gradeRemoved(dto, ps)) {
                         HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);

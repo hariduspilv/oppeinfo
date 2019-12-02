@@ -9,6 +9,8 @@ public class CurriculumAutocompleteCommand extends SearchCommand {
     private Long teacher;
     private Integer minSpecialities;
     private String studyLevel;
+    private Boolean withMerCode = Boolean.FALSE;
+    private Long userId;
 
     public Boolean getHigher() {
         return higher;
@@ -48,6 +50,22 @@ public class CurriculumAutocompleteCommand extends SearchCommand {
 
     public void setStudyLevel(String studyLevel) {
         this.studyLevel = studyLevel;
+    }
+
+    public Boolean getWithMerCode() {
+        return withMerCode;
+    }
+
+    public void setWithMerCode(Boolean withMerCode) {
+        this.withMerCode = withMerCode;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
 }

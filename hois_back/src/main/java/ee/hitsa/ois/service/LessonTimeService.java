@@ -1,9 +1,13 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
+
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,16 +34,12 @@ import ee.hitsa.ois.domain.timetable.LessonTimeBuilding;
 import ee.hitsa.ois.domain.timetable.LessonTimeBuildingGroup;
 import ee.hitsa.ois.enums.Day;
 import ee.hitsa.ois.repository.LessonTimeBuildingGroupRepository;
-import ee.hitsa.ois.repository.LessonTimeBuildingRepository;
 import ee.hitsa.ois.repository.LessonTimeRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
-import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.timetable.LessonTimeSearchCommand;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.timetable.LessonTimeBuildingGroupDto;
 import ee.hitsa.ois.web.dto.timetable.LessonTimeDto;
 import ee.hitsa.ois.web.dto.timetable.LessonTimeGroupsDto;
@@ -53,8 +53,6 @@ public class LessonTimeService {
 
     @Autowired
     private LessonTimeRepository lessonTimeRepository;
-    @Autowired
-    private LessonTimeBuildingRepository lessonTimeBuildingRepository;
     @Autowired
     private LessonTimeBuildingGroupRepository lessonTimeBuildingGroupRepository;
     @Autowired
@@ -102,17 +100,16 @@ public class LessonTimeService {
 
         qb.requiredCriteria("valid_from <= :validFrom", "validFrom", LocalDate.now());
         qb.requiredCriteria("school_id <= :schoolId", "schoolId", schoolId);
-
+ 
         List<?> data = qb.select("valid_from", em).setMaxResults(1).getResultList();
         if(data.isEmpty()) {
             return null;
         }
-        return JpaQueryUtil.resultAsLocalDate(data.get(0), 0);
+        return resultAsLocalDate(data.get(0), 0);
     }
 
     public LessonTime create(HoisUserDetails user, LessonTimeGroupsDto newLessonTimeGroupsDto) {
         LocalDate validFrom = newLessonTimeGroupsDto.getValidFrom();
-        assertPeriodOverlapping(newLessonTimeGroupsDto, validFrom);
         LessonTimeBuildingGroup createdGroup = null;
         for (LessonTimeBuildingGroupDto groupDto : newLessonTimeGroupsDto.getLessonTimeBuildingGroups()) {
             createdGroup = createGroup(groupDto, user.getSchoolId(), validFrom);
@@ -122,14 +119,12 @@ public class LessonTimeService {
             return null;
         }
 
-        updatePreviousGroupValidThru(createdGroup, user.getSchoolId());
+        updatePreviousGroupsValidThru(createdGroup, user.getSchoolId());
         return createdGroup.getLessonTimes().stream().findFirst().orElse(null);
     }
 
     public LessonTime save(HoisUserDetails user, LessonTimeGroupsDto updatedLessonTimeGroupsDto) {
         LocalDate validFrom = updatedLessonTimeGroupsDto.getValidFrom();
-        assertPeriodOverlapping(updatedLessonTimeGroupsDto, validFrom);
-
         deleteGroups(updatedLessonTimeGroupsDto, validFrom, user.getSchoolId());
 
         LessonTimeBuildingGroup savedGroup = null;
@@ -145,87 +140,52 @@ public class LessonTimeService {
             return null;
         }
 
-        updatePreviousGroupValidThru(savedGroup, user.getSchoolId());
         return savedGroup.getLessonTimes().stream().findFirst().orElse(null);
     }
 
-    /**
-     * Tundide aegade kehtivuse ajavahemikud ühe hoone lõikes ei tohi kattuda
-     */
-    private void assertPeriodOverlapping(LessonTimeGroupsDto lessonTimeGroupsDto, LocalDate validFrom) {
-        Set<Long> selectedBuildings = lessonTimeGroupsDto.getLessonTimeBuildingGroups().stream().flatMap(group -> group.getBuildings().stream().map(AutocompleteResult::getId)).collect(Collectors.toSet());
-        LocalDate latestValidFromForBuildings = previousValidFrom(selectedBuildings, validFrom);
-        if (latestValidFromForBuildings != null && validFrom.isBefore(latestValidFromForBuildings)) {
-            throw new ValidationFailedException("timetable.lessonTime.messages.validfromIsEarlierThanLatestValidFrom");
-        }
+    public Map<String, LocalDate> validFromRange(Long schoolId, Long lessonTimeId) {
+        LessonTime lessonTime = EntityUtil.getOptionalOne(LessonTime.class, lessonTimeId, em);
+        LocalDate currentValidFrom = lessonTime != null ? lessonTime.getLessonTimeBuildingGroup().getValidFrom() : null;
+        LocalDate currentValidThru = lessonTime != null ? lessonTime.getLessonTimeBuildingGroup().getValidThru() : null;
+
+        Map<String, LocalDate> range = new HashMap<>();
+        range.put("minValidFrom", minValidFrom(schoolId, currentValidFrom));
+        range.put("maxValidFrom", currentValidThru);
+        return range;
     }
 
-    /**
-     * Minimum validFrom for selected buildings is the highest validFrom among all buildings + 1 day for avoiding overlapping.
-     */
-    public LocalDate minValidFrom(Set<Long> buildings, Long lessonTimeId) {
-        if (lessonTimeId != null) {
-            LessonTime lessonTime = em.getReference(LessonTime.class, lessonTimeId);
-            Set<LessonTimeBuildingGroup> groups = lessonTimeBuildingGroups(lessonTime.getLessonTimeBuildingGroup().getValidFrom(),
-                    EntityUtil.getId(lessonTime.getSchool()));
+    private LocalDate minValidFrom(Long schoolId, LocalDate currentValidFrom) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from lesson_time_building_group ltbg "
+                + "join lesson_time lt on lt.lesson_time_building_group_id = ltbg.id");
+        qb.requiredCriteria("lt.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalCriteria("ltbg.valid_thru < :currentValidFrom", "currentValidFrom", currentValidFrom);
 
-            Set<Long> savedBuildings = groups.stream()
-                    .flatMap(b -> b.getBuildings().stream())
-                    .map(ltb -> EntityUtil.getId(ltb.getBuilding()))
-                    .collect(Collectors.toSet());
+        qb.sort("ltbg.valid_thru desc");
+        List<?> data = qb.select("case when ltbg.valid_thru is not null then ltbg.valid_thru else ltbg.valid_from end", em)
+                .setMaxResults(1).getResultList();
 
-            if (savedBuildings.containsAll(buildings)) {
-                LocalDate beforeCurrentValidFrom = lessonTime.getLessonTimeBuildingGroup().getValidFrom().minusDays(1);
-                return previousValidFrom(buildings, beforeCurrentValidFrom);
-            }
-        }
-        LocalDate previousValidFrom = previousValidFrom(buildings, null);
-        return previousValidFrom != null ? previousValidFrom.plusDays(1) : null;
-    }
-
-    public LocalDate previousValidFrom(Set<Long> buildingIds, LocalDate before) {
-        LessonTimeBuilding lessonTimeBuilding = null;
-        if (before == null) {
-            lessonTimeBuilding = lessonTimeBuildingRepository.findFirstByBuildingIdInOrderByLessonTimeBuildingGroupValidFromDesc(buildingIds);
-        } else {
-            lessonTimeBuilding = lessonTimeBuildingRepository.findFirstByBuildingIdInAndLessonTimeBuildingGroupValidFromLessThanOrderByLessonTimeBuildingGroupValidFromDesc(buildingIds, before);
-        }
-        return lessonTimeBuilding != null ? lessonTimeBuilding.getLessonTimeBuildingGroup().getValidFrom() : null;
-    }
-
-    private void updatePreviousGroupValidThru(LessonTimeBuildingGroup savedGroup, Long schoolId) {
-        LessonTimeBuildingGroup previousGroup = getPreviousGroup(savedGroup.getBuildings(), savedGroup.getValidFrom(), schoolId);
-        if (previousGroup != null) {
-            previousGroup.setValidThru(savedGroup.getValidFrom().minusDays(1));
-            previousGroup = EntityUtil.save(previousGroup, em);
-            log.info("lesson time building group {} valid thru updated, new value is {}", previousGroup.getId(), previousGroup.getValidThru().toString());
-        }
-    }
-
-    private LessonTimeBuildingGroup getPreviousGroup(Set<LessonTimeBuilding> buildings, LocalDate validFrom, Long schoolId) {
-        if (CollectionUtils.isEmpty(buildings)) {
-            return null;
-        }
-
-        // TODO: try to get rid of array comparison
-        String buildingIds = buildings.stream().map(ltb -> EntityUtil.getId(ltb.getBuilding()).toString()).collect(Collectors.joining(","));
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
-                "from (select * from (select ltbg.id, ltbg.valid_from, array_agg(DISTINCT building_id) as buildings from lesson_time_building_group ltbg "+
-                "inner join lesson_time_building ltb on ltb.lesson_time_building_group_id = ltbg.id "+
-                "inner join lesson_time lt on lt.lesson_time_building_group_id = ltbg.id "+
-                "where lt.school_id = :schoolId " +
-                "group by ltbg.id) as buildings_query "
-                + "where buildings_query.buildings = '{" + buildingIds + "}' " //this is Array comparison
-                + ") as from_query ").sort(new Sort(Direction.DESC, "from_query.valid_from"));
-
-        qb.parameter("schoolId", schoolId);
-        qb.requiredCriteria("from_query.valid_from < :validFrom", "validFrom", validFrom);
-
-        List<?> data = qb.select("from_query.id",  em).setMaxResults(1).getResultList();
         if (!data.isEmpty()) {
-            return em.getReference(LessonTimeBuildingGroup.class, Long.valueOf(((Number)data.get(0)).longValue()));
+            LocalDate previousValidFrom = resultAsLocalDate(data.get(0), 0);
+            return previousValidFrom.plusDays(1);
         }
         return null;
+    }
+
+    private void updatePreviousGroupsValidThru(LessonTimeBuildingGroup savedGroup, Long schoolId) {
+        List<LessonTimeBuildingGroup> previousGroups = em
+                .createQuery("select ltbg from LessonTimeBuildingGroup ltbg join ltbg.lessonTimes lt "
+                        + "where lt.school.id = :schoolId and ltbg.validFrom < :validFrom and ltbg.validThru is null",
+                        LessonTimeBuildingGroup.class)
+                .setParameter("schoolId", schoolId).setParameter("validFrom", savedGroup.getValidFrom())
+                .getResultList();
+
+        LocalDate newValidThru = savedGroup.getValidFrom().minusDays(1);
+        for (LessonTimeBuildingGroup previousGroup : previousGroups) {
+            previousGroup.setValidThru(newValidThru);
+            previousGroup = EntityUtil.save(previousGroup, em);
+            log.info("lesson time building group {} valid thru updated, new value is {}", previousGroup.getId(),
+                    previousGroup.getValidThru().toString());
+        }
     }
 
     private void deleteGroups(LessonTimeGroupsDto newLessonTimeGroupsDto, LocalDate validFrom, Long schoolId) {

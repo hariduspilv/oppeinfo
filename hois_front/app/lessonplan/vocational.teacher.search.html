@@ -1,4 +1,4 @@
-<md-nav-bar md-selected-nav-item="currentNavItem" ng-if="formState.vocational && auth.isAdmin()">
+<md-nav-bar md-selected-nav-item="currentNavItem" ng-if="formState.vocational && (auth.isAdmin() || auth.isLeadingTeacher())">
   <md-nav-item ng-if="formState.vocational" md-nav-href="#/lessonplans/vocational" name="lessonplan.vocational">{{'lessonplan.search.vocational' | translate}}</md-nav-item>
   <md-nav-item ng-if="formState.vocational" md-nav-href="#/lessonplans/vocational/byteacher" name="lessonplan.vocational-byteacher">
     {{auth.higher ? ('lessonplan.search.vocationalByTeacherHigher' | translate) : ('lessonplan.search.vocationalByTeacherVocational' | translate)}}</md-nav-item>

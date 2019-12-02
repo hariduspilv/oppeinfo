@@ -26,7 +26,9 @@ public class StudentHigherSubjectResultDto {
     private Boolean isOk;
     private Boolean isApelTransfer;
     private Boolean isFormalLearning;
+    private Boolean isAddedFromDirective;
     private List<SubjectResultReplacedSubjectDto> replacedSubjects = new ArrayList<>();
+    private String allTeachers;
 
     public static StudentHigherSubjectResultDto ofHigherModuleSubject(CurriculumVersionHigherModuleSubject higherModuleSubject) {
         StudentHigherSubjectResultDto dto = new StudentHigherSubjectResultDto();
@@ -50,20 +52,20 @@ public class StudentHigherSubjectResultDto {
         return subjectDto;
     }
 
-    public void calculateIsOk() {
+    public void calculateIsOk(boolean showUncompleted) {
         if(grades != null && !grades.isEmpty()) {
             Collections.sort(grades, StreamUtil.comparingWithNullsLast(StudentHigherSubjectResultGradeDto::getIsActive));
-            lastGrade = calculateLastGrade();
-            isOk = Boolean.valueOf(lastGrade.getGrade() != null && HigherAssessment.isPositive(lastGrade.getGrade()));
+            lastGrade = calculateLastGrade(showUncompleted);
+            isOk = Boolean.valueOf((lastGrade.getGrade() != null && HigherAssessment.isPositive(lastGrade.getGrade())) || showUncompleted);
         } else {
-            isOk = Boolean.FALSE;
+            isOk = this.isAddedFromDirective == null ? Boolean.FALSE : this.isAddedFromDirective;
         }
     }
 
-    private StudentHigherSubjectResultGradeDto calculateLastGrade() {
+    private StudentHigherSubjectResultGradeDto calculateLastGrade(boolean showUncompleted) {
         for(int i = grades.size() - 1; i >= 0; i--) {
             StudentHigherSubjectResultGradeDto grade = grades.get(i);
-            if(HigherAssessment.KORGHINDAMINE_MI.name().equals(grade.getGrade()) && i != 0) {
+            if(HigherAssessment.KORGHINDAMINE_MI.name().equals(grade.getGrade()) && i != 0 && !showUncompleted) {
                 continue;
             }
             return grades.get(i);
@@ -173,6 +175,22 @@ public class StudentHigherSubjectResultDto {
 
     public void setReplacedSubjects(List<SubjectResultReplacedSubjectDto> replacedSubjects) {
         this.replacedSubjects = replacedSubjects;
+    }
+
+    public String getAllTeachers() {
+        return allTeachers;
+    }
+
+    public void setAllTeachers(String allTeachers) {
+        this.allTeachers = allTeachers;
+    }
+
+    public Boolean getIsAddedFromDirective() {
+        return isAddedFromDirective;
+    }
+
+    public void setIsAddedFromDirective(Boolean isAddedFromDirective) {
+        this.isAddedFromDirective = isAddedFromDirective;
     }
 
 }

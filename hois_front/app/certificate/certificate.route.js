@@ -1,6 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
+
   $routeProvider
     .when('/certificate', {
         templateUrl: 'certificate/certificate.search.html',
@@ -37,7 +38,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: function(Session) { return Session.roleCode === 'ROLL_T'; }
+          authorizedRoles: function(Session) {
+            return Session.roleCode === 'ROLL_T'; 
+          }
         }
       })
       .when('/certificate/:id/edit', {

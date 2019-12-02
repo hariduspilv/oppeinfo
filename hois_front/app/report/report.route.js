@@ -24,6 +24,17 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         auth: function (AuthResolver) { return AuthResolver.resolve(); },
         translationLoaded: function($translate) { return $translate.onReady(); }
       }
+    }).when('/reports/guest/students/statistics', {
+      templateUrl: 'report/guest.student.statistics.html',
+      controller: 'ReportGuestStudentStatisticsController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PARING]
+      },
+      resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); }
+      }
     }).when('/reports/students/statistics/byperiod', {
       templateUrl: 'report/student.statistics.byperiod.html',
       controller: 'ReportStudentStatisticsByperiodController',
@@ -123,7 +134,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       },
       data: {
         authorizedRoles: function (Session, roles) {
-          return Session.roleCode === 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PARING) !== -1;
+          return ['ROLL_A', 'ROLL_J'].indexOf(Session.roleCode) !== -1 && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PARING) !== -1;
         }
       }
     }).when('/reports/individualcurriculum/statistics', {
@@ -133,7 +144,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       data: {
         authorizedRoles: function(Session, roles) {
           return Session.vocational && ((Session.roleCode === 'ROLL_O' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_RYHMAJUHATAJA) !== -1) ||
-            (Session.roleCode === 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_INDIVID) !== -1));
+            (['ROLL_A', 'ROLL_J'].indexOf(Session.roleCode) !== -1 && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_INDIVID) !== -1));
         }
       },
       resolve: {

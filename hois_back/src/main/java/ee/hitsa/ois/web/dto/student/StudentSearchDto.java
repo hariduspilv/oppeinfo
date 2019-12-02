@@ -15,6 +15,7 @@ public class StudentSearchDto {
     private AutocompleteResult subject;
     private String studyForm;
     private String status;
+    private String type;
     private Long personId;
 
     public Long getId() {
@@ -111,5 +112,13 @@ public class StudentSearchDto {
 
     public void setPersonId(Long personId) {
         this.personId = personId;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

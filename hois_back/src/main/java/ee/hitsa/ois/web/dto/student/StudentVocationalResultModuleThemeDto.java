@@ -16,6 +16,7 @@ public class StudentVocationalResultModuleThemeDto {
     private String grade;
     private LocalDate date;
     private List<AutocompleteResult> teachers = new ArrayList<>();
+    private String teachersAsString;
     private String studyYear;
     private LocalDate studyYearStartDate;
     private Boolean isApelTransfer;
@@ -125,5 +126,13 @@ public class StudentVocationalResultModuleThemeDto {
 
     public void setReplacedModules(List<Long> replacedModules) {
         this.replacedModules = replacedModules;
+    }
+
+    public String getTeachersAsString() {
+        return teachersAsString;
+    }
+
+    public void setTeachersAsString(String teachersAsString) {
+        this.teachersAsString = teachersAsString;
     }
 }
