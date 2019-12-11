@@ -7,6 +7,7 @@ import java.util.List;
 import ee.hitsa.ois.domain.WsEhisStudentLog;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.service.ehis.EhisService;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 
@@ -237,7 +238,7 @@ public class EhisStudentReport {
             this.points = points;
             this.nominalStudyExtension = nominalStudyExtension;
             nominalStudyEnd = ds.getNominalStudyEnd();
-            schoolName = Boolean.TRUE.equals(ds.getIsAbroad()) ? ds.getAbroadSchool() : ds.getEhisSchool().getNameEt();
+            schoolName = Boolean.TRUE.equals(ds.getIsAbroad()) ? (ds.getAbroadSchool() != null ? ds.getAbroadSchool() : EhisService.name(ds.getApelSchool())) : ds.getEhisSchool().getNameEt();
             country = EntityUtil.getCode(ds.getCountry());
             abroadProgramme = EntityUtil.getCode(ds.getAbroadProgramme());
         }

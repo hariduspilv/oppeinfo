@@ -45,7 +45,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
       return "";
     }
     return $filter('hoisHigherGrade')(mappedGrades[code], $scope.auth.school.letterGrades);
-  }
+  };
 
   $rootScope.removeLastUrlFromHistory(function(url){
     return url && url.indexOf("new") !== -1;

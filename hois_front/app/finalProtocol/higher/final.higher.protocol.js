@@ -22,11 +22,12 @@ function ($route, $location, $scope, $filter, $q, Classifier, HigherGradeUtil, P
 
   $scope.grades = Classifier.queryForDropdown({ mainClassCode: 'KORGHINDAMINE' }, filterGrades);
   $scope.grades.$promise.then(function () {
-    $scope.grades.forEach(function (grade) {
-      grade.shownValue = $filter('hoisHigherGrade')(grade, $scope.letterGrades);
-    });
     $scope.grades = HigherGradeUtil.orderedGrades($scope.grades);
   });
+
+  $scope.gradeSelectShownValue = function (grade) {
+    return HigherGradeUtil.gradeSelectShownValue(grade, $scope.auth.school.letterGrades);
+  };
 
   if ($route.current.locals.entity) {
     entityToDto($route.current.locals.entity);

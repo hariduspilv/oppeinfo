@@ -4,7 +4,6 @@ import static ee.hitsa.ois.util.TranslateUtil.name;
 
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.enums.Language;
-import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.PersonUtil;
 
 public class ProtocolStudentReport {
@@ -12,17 +11,15 @@ public class ProtocolStudentReport {
     private final String grade;
     private final String gradeName;
 
-    ProtocolStudentReport(ProtocolStudent protocolStudent, Boolean higherSchool, Boolean letterGrades, Language lang) {
+    ProtocolStudentReport(ProtocolStudent protocolStudent, Boolean letterGrades, Language lang) {
         fullname = PersonUtil.fullname(protocolStudent.getStudent().getPerson());
         if (protocolStudent.getGrade() != null) {
-            grade = Boolean.TRUE.equals(higherSchool) && Boolean.TRUE.equals(letterGrades)
-                    && MainClassCode.KORGHINDAMINE.name().equals(protocolStudent.getGrade().getMainClassCode())
-                            ? protocolStudent.getGrade().getValue2()
-                            : protocolStudent.getGrade().getValue();
+            grade = ReportUtil.gradeValue(protocolStudent.getGrade(), letterGrades, lang);
+            gradeName = name(protocolStudent.getGrade(), lang);
         } else {
             grade = null;
+            gradeName = null;
         }
-        gradeName = protocolStudent.getGrade() != null ? name(protocolStudent.getGrade(), lang) : null;
     }
 
     public String getFullname() {

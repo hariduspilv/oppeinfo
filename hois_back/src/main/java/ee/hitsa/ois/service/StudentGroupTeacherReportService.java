@@ -786,7 +786,7 @@ public class StudentGroupTeacherReportService {
             qb.requiredCriteria("j.id in (:journalIds)", "journalIds", journalIds);
 
             qb.optionalCriteria("j.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
-            qb.requiredCriteria("je.entry_type_code in (:entryTypeCodes)", "entryTypeCodes", criteria.getEntryTypes());
+            qb.optionalCriteria("je.entry_type_code in (:entryTypeCodes)", "entryTypeCodes", criteria.getEntryTypes());
 
             qb.optionalCriteria("coalesce(je.entry_date, jes.grade_inserted) >= :entryFrom", "entryFrom",
                     criteria.getFrom(), DateUtils::firstMomentOfDay);

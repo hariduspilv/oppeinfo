@@ -15,7 +15,7 @@ public class StudentGroupAutocompleteCommand extends SearchCommand {
     private Long studyYear;
     private String studyForm;
     private Long userId;
-
+    private Boolean isGuest;
     private Boolean occupied;
     private LocalDate date;
     private LocalDateTime startTime;
@@ -150,6 +150,14 @@ public class StudentGroupAutocompleteCommand extends SearchCommand {
 
     public void setSchoolId(Long schoolId) {
         this.schoolId = schoolId;
+    }
+
+    public Boolean getIsGuest() {
+        return isGuest;
+    }
+
+    public void setIsGuest(Boolean isGuest) {
+        this.isGuest = isGuest;
     }
     
 }

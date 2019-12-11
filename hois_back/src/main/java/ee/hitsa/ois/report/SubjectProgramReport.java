@@ -56,17 +56,10 @@ public class SubjectProgramReport {
         Boolean isLetterGrade = subject.getSchool().getIsLetterGrade();
         
         Map<HigherAssessment, String> mappedGrades = classifierCache.getAll(MainClassCode.KORGHINDAMINE).stream()
-            .filter(cl -> EnumUtil.valueOf(HigherAssessment.class, cl) != null)
-            .collect(Collectors.toMap(cl -> EnumUtil.valueOf(HigherAssessment.class, cl), cl -> {
-                HigherAssessment value = EnumUtil.valueOf(HigherAssessment.class, cl);
-                if (Boolean.TRUE.equals(isLetterGrade)) {
-                    if (Boolean.TRUE.equals(value.getIsDistinctive())) {
-                        return cl.getValue2();
-                    }
-                    return this.lang == Language.EN && cl.getNameEn() != null ? cl.getNameEn() : cl.getNameEt();
-                }
-                return cl.getValue();
-            }, (o, n) -> o));
+                .filter(cl -> EnumUtil.valueOf(HigherAssessment.class, cl) != null)
+                .collect(Collectors.toMap(cl -> EnumUtil.valueOf(HigherAssessment.class, cl), cl -> {
+                    return ReportUtil.gradeValue(cl, isLetterGrade, lang);
+                }, (o, n) -> o));
         
         if (ClassifierUtil.equals(SubjectAssessment.HINDAMISVIIS_A, assessment)) {
             addAssessmentMethos(mappedGrades.get(HigherAssessment.KORGHINDAMINE_A), program.getPassDescription());

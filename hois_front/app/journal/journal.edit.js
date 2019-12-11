@@ -13,6 +13,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   var LESSONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
   var STUDENT_ROW_HEIGHT = 33;
   var STUDENT_ROW_WITH_INPUT_HEIGHT = 49;
+  var ACCEPTED_ABSENCES = ['PUUDUMINE_V', 'PUUDUMINE_PR'];
 
   $scope.formState = {
     gradeInputAsSelect: true,
@@ -86,7 +87,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
   $scope.finished = function (quickUpdateInProgress) {
     var rowHeight = quickUpdateInProgress ? STUDENT_ROW_WITH_INPUT_HEIGHT : STUDENT_ROW_HEIGHT;
-    angular.element(document.getElementsByClassName("container"))
+    angular.element(document.getElementsByClassName('container'))
       .css('height', Math.min(10, $scope.journal.journalStudents.length) * rowHeight + 40 + 18 + 'px');
   };
 
@@ -211,7 +212,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     if (!selectedEntryTypes) {
       selectedEntryTypes = journalEntryTypeValues.map(function (type) { return type.code; });
     }
-    
+
     journalEntryTypeValues.forEach(function (type) {
       type._selected = selectedEntryTypes.indexOf(type.code) !== -1;
     });
@@ -236,7 +237,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
   function loadJournalEntryDialogInitialData(dialogScope) {
     dialogScope.journalStudents = entity.journalStudents;
-    
+
     dialogScope.journalEntryStudents = [];
     dialogScope.journalStudents.forEach(function (student) {
       dialogScope.journalEntryStudents[student.id] = { isLessonAbsence: false, lessonAbsences: {} };
@@ -312,49 +313,52 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       }
 
       dialogScope.lessonsChanged = function () {
-        dialogScope.journalStudents.forEach(function(js) {
-          if (StudentUtil.isActive(js.status)) {
-            var student = dialogScope.journalEntryStudents[js.id];
-            if ((!dialogScope.journalEntry.lessons || dialogScope.journalEntry.lessons === 1) && student.isLessonAbsence) {
-              dialogScope.journalEntryStudents[js.id].isLessonAbsence = false;
-            }
-            dialogScope.journalEntryStudentChanged(js);
-          }
-        });
-      };
-
-      dialogScope.startLessonNrChanged = function () {
         setAcceptedAbsences(true);
       };
 
       function setAcceptedAbsences(changeAbsences) {
         dialogScope.journalStudents.forEach(function(js) {
           if (StudentUtil.isActive(js.status)) {
+            var entryStudent = dialogScope.journalEntryStudents[js.id];
             var studentAbsences = getStudentAcceptedAbsences(js.id);
-            
+
             if (angular.isObject(studentAbsences)) {
               if (studentAbsences.wholeDay) {
-                dialogScope.journalEntryStudents[js.id].hasWholeDayAcceptedAbsence = true;
-                dialogScope.journalEntryStudents[js.id].wholeDayAbsenceCode = studentAbsences.practice ? 'PUUDUMINE_PR' : 'PUUDUMINE_V';
-              } 
+                entryStudent.hasWholeDayAcceptedAbsence = true;
+                entryStudent.wholeDayAbsenceCode = studentAbsences.practice ? 'PUUDUMINE_PR' : 'PUUDUMINE_V';
+              }
 
               if (studentAbsences.lessons) {
+                var overlappingLessonAbsence = false;
+                var firstLessonNr = dialogScope.journalEntry.startLessonNr || 1;
+                var lastLessonNr = firstLessonNr + ((dialogScope.journalEntry.lessons || 1) - 1);
+
                 studentAbsences.lessons.forEach(function (lessonNr) {
+                  if (!overlappingLessonAbsence) {
+                    overlappingLessonAbsence = lessonNr >= firstLessonNr && lessonNr <= lastLessonNr;
+                  }
+
                   var entryLessonNr = getEntryLessonNr(lessonNr);
                   if (entryLessonNr > 0) {
-                    if (angular.isObject(dialogScope.journalEntryStudents[js.id].lessonAbsences[entryLessonNr])) {
+                    if (angular.isObject(entryStudent.lessonAbsences[entryLessonNr])) {
                       // from groupAbsences form you can set whatever absence type you want, this checks if correct accepted absence is set
-                      var setAbsenceCode = dialogScope.journalEntryStudents[js.id].lessonAbsences[entryLessonNr].absence;
-                      var acceptedAbsenceCode = getAcceptedAbsenceCode(studentAbsences, lessonNr);
+                      var setAbsenceCode = entryStudent.lessonAbsences[entryLessonNr].absence;
+                      var acceptedAbsenceCode = getAcceptedAbsenceCode(studentAbsences, entryLessonNr, false);
 
-                      dialogScope.journalEntryStudents[js.id].lessonAbsences[entryLessonNr].accepted = setAbsenceCode === acceptedAbsenceCode;
+                      entryStudent.lessonAbsences[entryLessonNr].accepted = setAbsenceCode === acceptedAbsenceCode;
                     }
                   }
                 });
+
+                // whole day absence is replaced by lesson absences if lesson absences have overlap with
+                // accepted absence lessons and start lesson nr is set
+                var startLessonNrExists = dialogScope.journalEntry.startLessonNr && dialogScope.journalEntry.startLessonNr !== '';
+                entryStudent.hasOverlappingLessonAbsence = startLessonNrExists && overlappingLessonAbsence;
               }
             } else {
-              dialogScope.journalEntryStudents[js.id].hasWholeDayAcceptedAbsence = false;
-              dialogScope.journalEntryStudents[js.id].wholeDayAbsenceCode = null;
+              entryStudent.hasWholeDayAcceptedAbsence = false;
+              entryStudent.wholeDayAbsenceCode = null;
+              entryStudent.hasOverlappingLessonAbsence = false;
             }
 
             if (changeAbsences) {
@@ -366,31 +370,30 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       }
 
       function setWholeLessonAbsence(journalStudent, studentAbsences) {
-        var hasWholeDayAcceptedAbsence = angular.isObject(studentAbsences) && studentAbsences.wholeDay;
+        var entryStudent = dialogScope.journalEntryStudents[journalStudent.id];
 
-        if (hasWholeDayAcceptedAbsence) {
+        if (entryStudent.hasWholeDayAcceptedAbsence || entryStudent.hasOverlappingLessonAbsence) {
           if (studentAbsences.practice) {
-            dialogScope.journalEntryStudents[journalStudent.id].practice = true;
+            entryStudent.practice = true;
             dialogScope.journalEntryStudentAbsenceChanged(journalStudent, true, 'PUUDUMINE_PR');
           } else {
-            dialogScope.journalEntryStudents[journalStudent.id].excused = true;
+            entryStudent.excused = true;
             dialogScope.journalEntryStudentAbsenceChanged(journalStudent, true, 'PUUDUMINE_V');
           }
         } else {
-          dialogScope.journalEntryStudents[journalStudent.id].practice = false;
-          dialogScope.journalEntryStudents[journalStudent.id].excused = false;
-          if (dialogScope.journalEntryStudents[journalStudent.id].absence === 'PUUDUMINE_V' ||
-            dialogScope.journalEntryStudents[journalStudent.id].absence === 'PUUDUMINE_PR') {
+          entryStudent.practice = false;
+          entryStudent.excused = false;
+          if (isAcceptedAbsence(entryStudent.absence)) {
             dialogScope.journalEntryStudentAbsenceChanged(journalStudent, null, null);
           }
         }
       }
 
       function setAcceptedLessonAbsences(journalStudent, studentAbsences) {
+        var entryStudent = dialogScope.journalEntryStudents[journalStudent.id];
         var lessonAbsences = angular.isObject(studentAbsences) ? studentAbsences.lessons : null;
-        var hasWholeDayAcceptedAbsence = angular.isObject(studentAbsences) && studentAbsences.wholeDay;
 
-        angular.forEach(dialogScope.journalEntryStudents[journalStudent.id].lessonAbsences, function (it) {
+        angular.forEach(entryStudent.lessonAbsences, function (it) {
           // remove previously set accepted lesson absences
           if (it.accepted) {
             it.accepted = false;
@@ -399,10 +402,10 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
           }
 
           // remove not allowed set absences
-          if (hasWholeDayAcceptedAbsence && (it.absence === 'PUUDUMINE_H' || it.absence === 'PUUDUMINE_P')) {
+          if (entryStudent.hasWholeDayAcceptedAbsence && !isAcceptedAbsence(it.absence)) {
             it.absence = null;
             dialogScope.journalEntryStudentAbsenceChanged(journalStudent, null, null, it.lessonNr);
-          } else if (!hasWholeDayAcceptedAbsence && (it.absence === 'PUUDUMINE_V' || it.absence === 'PUUDUMINE_PR')) {
+          } else if (!entryStudent.hasWholeDayAcceptedAbsence && isAcceptedAbsence(it.absence)) {
             it.absence = null;
             dialogScope.journalEntryStudentAbsenceChanged(journalStudent, null, null, it.lessonNr);
           }
@@ -413,12 +416,12 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
             var entryLessonNr = getEntryLessonNr(lessonNr);
 
             if (entryLessonNr > 0) {
-              if (!angular.isObject(dialogScope.journalEntryStudents[journalStudent.id].lessonAbsences[entryLessonNr])) {
-                dialogScope.journalEntryStudents[journalStudent.id].lessonAbsences[entryLessonNr] = {};
+              if (!angular.isObject(entryStudent.lessonAbsences[entryLessonNr])) {
+                entryStudent.lessonAbsences[entryLessonNr] = {};
               }
-              dialogScope.journalEntryStudents[journalStudent.id].lessonAbsences[entryLessonNr].accepted = true;
-              dialogScope.journalEntryStudents[journalStudent.id].lessonAbsences[entryLessonNr].lessonNr = entryLessonNr;
-              dialogScope.journalEntryStudents[journalStudent.id].lessonAbsences[entryLessonNr].excused = true;
+              entryStudent.lessonAbsences[entryLessonNr].accepted = true;
+              entryStudent.lessonAbsences[entryLessonNr].lessonNr = entryLessonNr;
+              entryStudent.lessonAbsences[entryLessonNr].excused = true;
               dialogScope.journalEntryStudentAbsenceChanged(journalStudent, true, 'PUUDUMINE_V', entryLessonNr);
             }
           });
@@ -439,19 +442,59 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
       dialogScope.hasSavedWholeDayAcceptedAbsence = function (row) {
         var js = dialogScope.journalEntryStudents[row.id];
-        return js && js.hasWholeDayAcceptedAbsence && (js.absence === 'PUUDUMINE_V' || js.absence === 'PUUDUMINE_PR');
+        return js && ((js.hasWholeDayAcceptedAbsence && isAcceptedAbsence(js.absence)) ||
+          (js.hasOverlappingLessonAbsence && js.absence === 'PUUDUMINE_V'));
       };
-    
-      dialogScope.hasAcceptedLessonAbsence = function (row, lessonNr) {
+
+      dialogScope.absenceCheckboxShown = function (row, absenceCode) {
         var js = dialogScope.journalEntryStudents[row.id];
-      
-        return js && js.lessonAbsences[lessonNr] && angular.isDefined(js.lessonAbsences[lessonNr].accepted) &&
-          js.lessonAbsences[lessonNr].accepted;
+        var studentAbsence = js.absence;
+
+        if (studentAbsence === absenceCode) {
+          // selected absence selectbox should always be shown and every type is selectable on groupAbsence form
+          return true;
+        }
+        return !isAcceptedAbsence(studentAbsence) && !isAcceptedAbsence(absenceCode);
       };
+
+      dialogScope.absenceCheckboxDisabled = function (row, absenceCode) {
+        var js = dialogScope.journalEntryStudents[row.id];
+        return !row.canEdit || (isAcceptedAbsence(absenceCode) && ((js.hasWholeDayAcceptedAbsence &&
+          js.wholeDayAbsenceCode === absenceCode) || (js.hasOverlappingLessonAbsence && absenceCode === 'PUUDUMINE_V')));
+      };
+
+      dialogScope.lessonAbsenceCheckboxShown = function (row, absenceCode, lessonNr) {
+        var js = dialogScope.journalEntryStudents[row.id];
+        var lessonAbsence = js.lessonAbsences[lessonNr];
+        var lessonAbsenceCode = angular.isDefined(lessonAbsence) ? lessonAbsence.absence : null;
+
+        if (lessonAbsenceCode === absenceCode) {
+          // selected absence selectbox should always be shown and every type is selectable on groupAbsence form
+          return true;
+        } else if (js.hasWholeDayAcceptedAbsence && js.wholeDayAbsenceCode === js.absence && isAcceptedAbsence(js.absence)) {
+          // if whole day has accepted absence then only that absence type can be selected
+          return js.wholeDayAbsenceCode === absenceCode;
+        }
+        return !isAcceptedAbsence(lessonAbsenceCode) && !isAcceptedAbsence(absenceCode);
+      };
+
+      dialogScope.lessonAbsenceCheckboxDisabled = function (row, absenceCode, lessonNr) {
+        return !row.canEdit || hasAcceptedLessonAbsence(row, absenceCode, lessonNr);
+      };
+
+      function hasAcceptedLessonAbsence(row, absenceCode, lessonNr) {
+        var js = dialogScope.journalEntryStudents[row.id];
+        return isAcceptedAbsence(absenceCode) && js && js.lessonAbsences[lessonNr] &&
+          angular.isDefined(js.lessonAbsences[lessonNr].accepted) && js.lessonAbsences[lessonNr].accepted;
+      }
+
+      function isAcceptedAbsence(absenceCode) {
+        return ACCEPTED_ABSENCES.indexOf(absenceCode) !== -1;
+      }
 
       function setStudentAbsenceCheckboxValues(it) {
         if (it.isLessonAbsence) {
-          angular.forEach(it.lessonAbsences, function (absence) { 
+          angular.forEach(it.lessonAbsences, function (absence) {
             setAbsenceCheckboxValue(absence);
           });
         } else {
@@ -461,16 +504,16 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
       function setAbsenceCheckboxValue(it) {
         switch (it.absence) {
-          case "PUUDUMINE_PR":
+          case 'PUUDUMINE_PR':
             it.practice = true;
             break;
-          case "PUUDUMINE_V":
+          case 'PUUDUMINE_V':
             it.excused = true;
             break;
-          case "PUUDUMINE_H":
+          case 'PUUDUMINE_H':
             it.late = true;
             break;
-          case "PUUDUMINE_P":
+          case 'PUUDUMINE_P':
             it.withoutReason = true;
             break;
         }
@@ -492,7 +535,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         editEntity.journalEntryStudents.forEach(function (it) {
           it.gradeValue = it.grade ? VocationalGradeUtil.removePrefix(it.grade) : null;
           dialogScope.journalEntryStudents[it.journalStudent] = it;
-          DataUtils.convertStringToDates(it.journalEntryStudentHistories, ["gradeInserted"]);
+          DataUtils.convertStringToDates(it.journalEntryStudentHistories, ['gradeInserted']);
           classifierMapper.objectmapper(it.journalEntryStudentHistories);
           setStudentAbsenceCheckboxValues(it);
         });
@@ -508,25 +551,25 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
       function changeAbsenceCheckboxValues(journalEntryStudentsRow, absence, checkboxValue) {
         switch (absence) {
-          case "PUUDUMINE_PR":
+          case 'PUUDUMINE_PR':
             journalEntryStudentsRow.practice = checkboxValue;
             journalEntryStudentsRow.withoutReason = false;
             journalEntryStudentsRow.late = false;
             journalEntryStudentsRow.excused = false;
             break;
-          case "PUUDUMINE_V":
+          case 'PUUDUMINE_V':
             journalEntryStudentsRow.excused = checkboxValue;
             journalEntryStudentsRow.withoutReason = false;
             journalEntryStudentsRow.late = false;
             journalEntryStudentsRow.practice = false;
             break;
-          case "PUUDUMINE_H":
+          case 'PUUDUMINE_H':
             journalEntryStudentsRow.late = checkboxValue;
             journalEntryStudentsRow.excused = false;
             journalEntryStudentsRow.withoutReason = false;
             journalEntryStudentsRow.practice = false;
             break;
-          case "PUUDUMINE_P":
+          case 'PUUDUMINE_P':
             journalEntryStudentsRow.withoutReason = checkboxValue;
             journalEntryStudentsRow.excused = false;
             journalEntryStudentsRow.late = false;
@@ -543,47 +586,48 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
       dialogScope.changedJournalEntryStudents = [];
       dialogScope.journalEntryStudentChanged = function (row) {
+        var entryStudent = dialogScope.journalEntryStudents[row.id];
+
         if (!dialogScope.gradeInputAsSelect) {
-          if (dialogScope.journalEntryStudents[row.id].gradeValue) {
-            dialogScope.journalEntryStudents[row.id].grade = VocationalGradeUtil.addPrefix(dialogScope.journalEntryStudents[row.id].gradeValue);
+          if (entryStudent.gradeValue) {
+            entryStudent.grade = VocationalGradeUtil.addPrefix(entryStudent.gradeValue);
           } else {
-            dialogScope.journalEntryStudents[row.id].grade = null;
+            entryStudent.grade = null;
           }
         }
 
-        dialogScope.journalEntryStudents[row.id].journalStudent = row.id;
-        if (dialogScope.changedJournalEntryStudents.indexOf(dialogScope.journalEntryStudents[row.id]) === -1) {
-          dialogScope.changedJournalEntryStudents.push(dialogScope.journalEntryStudents[row.id]);
+        entryStudent.journalStudent = row.id;
+        if (dialogScope.changedJournalEntryStudents.indexOf(entryStudent) === -1) {
+          dialogScope.changedJournalEntryStudents.push(entryStudent);
         }
       };
-      
+
       dialogScope.journalEntryStudentAbsenceChanged = function (row, checkboxValue, absence, lessonNr) {
+        var entryStudent = dialogScope.journalEntryStudents[row.id];
         var studentAbsences = getStudentAcceptedAbsences(row.id);
-        dialogScope.journalEntryStudents[row.id].journalStudent = row.id;
+        entryStudent.journalStudent = row.id;
 
         // if manually set absence is absence without reason then check if there is not already accepted absence
         if (absence === 'PUUDUMINE_P' && angular.isObject(studentAbsences)) {
-          absence = getAcceptedAbsenceCode(studentAbsences, lessonNr);
+          absence = getAcceptedAbsenceCode(studentAbsences, lessonNr, entryStudent.hasOverlappingLessonAbsence);
         }
-        
+
         if (lessonNr) {
-          if (!angular.isObject(dialogScope.journalEntryStudents[row.id].lessonAbsences[lessonNr])) {
-            dialogScope.journalEntryStudents[row.id].lessonAbsences[lessonNr] = {};
+          if (!angular.isObject(entryStudent.lessonAbsences[lessonNr])) {
+            entryStudent.lessonAbsences[lessonNr] = {};
           }
-          dialogScope.journalEntryStudents[row.id].lessonAbsences[lessonNr].lessonNr = lessonNr;
-          dialogScope.journalEntryStudents[row.id].lessonAbsences[lessonNr].absence = checkboxValue ? absence : null;
-          dialogScope.journalEntryStudents[row.id].lessonAbsences[lessonNr].accepted = checkboxValue ? isAcceptedLessonAbsence(studentAbsences, lessonNr) : false;
+          entryStudent.lessonAbsences[lessonNr].lessonNr = lessonNr;
+          entryStudent.lessonAbsences[lessonNr].absence = checkboxValue ? absence : null;
+          entryStudent.lessonAbsences[lessonNr].accepted = checkboxValue ? isAcceptedLessonAbsence(studentAbsences, lessonNr) : false;
         } else {
-          dialogScope.journalEntryStudents[row.id].absence = checkboxValue ? absence : null;
+          entryStudent.absence = checkboxValue ? absence : null;
         }
 
-        if (dialogScope.changedJournalEntryStudents.indexOf(dialogScope.journalEntryStudents[row.id]) === -1) {
-          dialogScope.changedJournalEntryStudents.push(dialogScope.journalEntryStudents[row.id]);
+        if (dialogScope.changedJournalEntryStudents.indexOf(entryStudent) === -1) {
+          dialogScope.changedJournalEntryStudents.push(entryStudent);
         }
 
-        var journalEntryStudentsRow = lessonNr ? dialogScope.journalEntryStudents[row.id].lessonAbsences[lessonNr]
-          : dialogScope.journalEntryStudents[row.id];
-        
+        var journalEntryStudentsRow = lessonNr ? entryStudent.lessonAbsences[lessonNr] : entryStudent;
         changeAbsenceCheckboxValues(journalEntryStudentsRow, absence, checkboxValue);
       };
 
@@ -599,7 +643,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         return studentAbsences && studentAbsences.lessons && studentAbsences.lessons.indexOf(absenceLessonNr) !== -1;
       }
 
-      function getAcceptedAbsenceCode(studentAbsences, lessonNr) {
+      function getAcceptedAbsenceCode(studentAbsences, lessonNr, hasOverlappingLessonAbsence) {
         if (lessonNr) {
           var absenceLessonNr = getAbsenceLessonNr(lessonNr);
           if (studentAbsences.lessons && studentAbsences.lessons.indexOf(absenceLessonNr) !== -1) {
@@ -610,6 +654,8 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         } else {
           if (studentAbsences.wholeDay) {
             return studentAbsences.practice ? 'PUUDUMINE_PR' : 'PUUDUMINE_V';
+          } else if (hasOverlappingLessonAbsence) {
+            return 'PUUDUMINE_V';
           }
           return 'PUUDUMINE_P';
         }
@@ -638,13 +684,35 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       }
 
       dialogScope.removeStudentHistory = function (row) {
-        dialogScope.journalEntryStudents[row.id].journalStudent = row.id;
-        dialogScope.journalEntryStudents[row.id].removeStudentHistory = true;
-        dialogScope.journalEntryStudents[row.id].grade = null;
-        dialogScope.journalEntryStudents[row.id].gradeValue = null;
-        if (dialogScope.changedJournalEntryStudents.indexOf(dialogScope.journalEntryStudents[row.id]) === -1) {
-          dialogScope.changedJournalEntryStudents.push(dialogScope.journalEntryStudents[row.id]);
+        var entryStudent = dialogScope.journalEntryStudents[row.id];
+        entryStudent.journalStudent = row.id;
+        entryStudent.removeStudentHistory = true;
+        entryStudent.grade = null;
+        entryStudent.gradeValue = null;
+        if (dialogScope.changedJournalEntryStudents.indexOf(entryStudent) === -1) {
+          dialogScope.changedJournalEntryStudents.push(entryStudent);
         }
+      };
+
+      dialogScope.saveEntry = function () {
+        var lessons = dialogScope.journalEntry.lessons || 1;
+
+        // create lesson absences when there is an overlap
+        dialogScope.journalStudents.forEach(function(js) {
+          if (StudentUtil.isActive(js.status)) {
+            var entryStudent = dialogScope.journalEntryStudents[js.id];
+
+            if (!entryStudent.isLessonAbsence && entryStudent.hasOverlappingLessonAbsence && entryStudent.absence === 'PUUDUMINE_V') {
+              for (var i = 1; i <= lessons; i++) {
+                if (!angular.isObject(entryStudent.lessonAbsences[i])) {
+                  dialogScope.journalEntryStudentAbsenceChanged(js, true, 'PUUDUMINE_P', i);
+                }
+              }
+              entryStudent.isLessonAbsence = true;
+            }
+          }
+        });
+        dialogScope.submit();
       };
 
       dialogScope.delete = function () {
@@ -833,7 +901,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     new ConfirmEndpoint().$update({id: $scope.journal.id}).then(function (response) {
       message.info('journal.messages.confirmed');
       if ($scope.auth.roleCode !== 'ROLL_A') {
-        $scope.back("#/journal/" + response.id + "/view");
+        $scope.back('#/journal/' + response.id + '/view');
       } else {
         $scope.journal.canBeConfirmed = response.canBeConfirmed;
         $scope.journal.canBeUnconfirmed = response.canBeUnconfirmed;

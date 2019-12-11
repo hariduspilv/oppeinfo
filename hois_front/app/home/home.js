@@ -13,9 +13,9 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
   }
 ]).controller('AuthenticatedHomeController', ['$rootScope', '$scope', '$timeout', 'AUTH_EVENTS', 'AuthService', 'USER_ROLES',
                                               'ArrayUtils', 'QueryUtils', '$resource', 'config', 'Session', '$filter', '$mdDialog',
-                                              'message', 'dialogService', 'oisFileService', 'FormUtils', 'Classifier', '$q', 'DataUtils',
+                                              'message', 'dialogService', 'oisFileService', 'FormUtils', 'Classifier', '$q',
   function ($rootScope, $scope, $timeout, AUTH_EVENTS, AuthService, USER_ROLES, ArrayUtils, QueryUtils, $resource,
-      config, Session, $filter, $mdDialog, message, dialogService, oisFileService, FormUtils, Classifier, $q, DataUtils) {
+      config, Session, $filter, $mdDialog, message, dialogService, oisFileService, FormUtils, Classifier, $q) {
     /**
      * Still under question if we need to add a delay for timeout.
      */

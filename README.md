@@ -16,7 +16,7 @@ EELDUS: ver. 1.4.1/20190924
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20191127.sql
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20191127.sql ja db/install20191127_1.sql
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
 
 Andmebaasi installeerimiseks:
@@ -32,6 +32,17 @@ Andmebaasi installeerimiseks:
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
 
+2. käivitada install20191127_1.sql skript, nt
+   
+   psql -h devhois -f install20191127_1.sql 2>&1 | tee log.txt
+   
+   , kus
+   
+   -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
+   -f install20191127_1.sql - install faili nimi
+   log.txt - andmebaasi installeerimise logi fail
+   
+   Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
 
 timetable.cypher.key=insertplceholder
 # every day at 02:00

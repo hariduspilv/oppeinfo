@@ -5,7 +5,7 @@
         <div layout="row">
           <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
             <label>{{'ehis.student.dataType' | translate}}</label>
-            <md-select ng-model="criteria.dataType" required ng-change="result = []">
+            <md-select ng-model="criteria.dataType" required ng-change="dataTypeChanged()">
               <md-option ng-repeat="val in dataTypes | orderBy: 'translate'" ng-value="val.type">
                 {{ val.translate }}
               </md-option>
@@ -20,7 +20,7 @@
           <div flex="33" ng-if="displayDates.indexOf(criteria.dataType) !== -1">
             <md-input-container flex>
               <label>{{'main.from' | translate}}</label>
-              <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" md-min-date="criteria.dataType === 'GUEST_STUDENTS' ? minDate : undefined" required></md-datepicker>
+              <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" md-min-date="minDate" required></md-datepicker>
             </md-input-container>
             <md-input-container flex>
               <label>{{'main.thru' | translate}}</label>

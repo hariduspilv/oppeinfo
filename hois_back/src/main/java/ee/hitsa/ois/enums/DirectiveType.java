@@ -29,7 +29,8 @@ public enum DirectiveType {
     KASKKIRI_OTEGEVUS(null, DirectiveValidation.Otegevus.class),
     KASKKIRI_TUGI(null, DirectiveValidation.Tugi.class),
     KASKKIRI_TUGILOPP(null, DirectiveValidation.Tugilopp.class),
-    KASKKIRI_KYLALIS(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Kylalis.class, "curriculumVersion", "studentGroup", "previousStudyLevel");
+    KASKKIRI_KYLALIS(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Kylalis.class, "curriculumVersion", "studentGroup", "previousStudyLevel"),
+    KASKKIRI_VALISKATK(null, DirectiveValidation.Valiskatk.class);
 
     private final StudentStatus studentStatus;
     private final Class<? extends DirectiveValidation> validationGroup;

@@ -40,11 +40,10 @@
             <div layout="row" layout-xs="column">
                 <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
                 <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-                <!--
                 <md-button class="md-raised" ng-click="testEmail()">{{'main.email.test' | translate}}</md-button>
                 <md-button class="md-raised" ng-click="testStatus()">{{'main.status.test' | translate}}</md-button>
                 <md-button class="md-raised" ng-click="testGuestStudent()">{{'main.guest.student.test' | translate}}</md-button>
-                -->
+                <md-button class="md-raised" ng-click="testDirectiveJobs()">{{'main.directive.jobs.test' | translate}}</md-button>
                 <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KYSITLUS')" ng-href="#/poll/new" class="md-raised">{{'main.button.create' | translate}}</md-button>
             </div>
         </div>

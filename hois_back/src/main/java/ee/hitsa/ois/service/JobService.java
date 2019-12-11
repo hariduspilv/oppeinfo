@@ -23,6 +23,7 @@ import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 
 /**
@@ -113,8 +114,27 @@ public class JobService {
                 submitValisJob(ds);
             }
             break;
+        case KASKKIRI_VALISKATK:
+            for(DirectiveStudent ds : directive.getStudents()) {
+                changeValisTulekJob(ds);
+            }
+            break;
         default:
             // do nothing
+        }
+    }
+
+    private void changeValisTulekJob(DirectiveStudent ds) {
+        // should be maximum 1 JOB_VALIS_TULEK active at once with status VALMIS
+        Long studentId = EntityUtil.getNullableId(ds.getStudent());
+        if(studentId != null) {
+            String sql = "update job set job_time = :endDate where type_code = :type and student_id = :studentId and status_code = :jobStatus";
+            Query q = em.createNativeQuery(sql);
+            q.setParameter("type", JobType.JOB_VALIS_TULEK.name());
+            q.setParameter("endDate",  JpaQueryUtil.parameterAsTimestamp(ds.getNominalStudyEnd()));
+            q.setParameter("jobStatus", JobStatus.JOB_STATUS_VALMIS.name());
+            q.setParameter("studentId", studentId);
+            q.executeUpdate();
         }
     }
 

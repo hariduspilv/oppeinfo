@@ -120,6 +120,36 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
   });
 
 }
+]).controller('ReportForeignStudentStatisticsController', ['$route', '$scope', 'Classifier', 'QueryUtils', '$q',
+function ($route, $scope, Classifier, QueryUtils, $q) {
+  $scope.auth = $route.current.locals.auth;
+  $scope.formState = {
+    departments: QueryUtils.endpoint('/autocomplete/curriculumdepartments').query(),
+    xlsUrl: 'reports/foreignstudents/statistics/foreignstudentstatistics.xls'
+  };
+  var clMapper = Classifier.valuemapper({foreignCountry: 'RIIK', programme: 'VALISKOOL_PROGRAMM'});
+  QueryUtils.createQueryForm($scope, '/reports/foreignstudents/statistics', {order: 'p.lastname,p.firstname'}, clMapper.objectmapper);
+  
+  /** Load departments when curriculum changes */
+  $scope.queryForDepartments = function() {
+    $scope.criteria.curriculumVersion = undefined;
+    if (angular.isObject($scope.formState.curriculum) && $scope.formState.curriculum.id !== undefined) {
+      $scope.criteria.curriculum = $scope.formState.curriculum.id;
+      $scope.formState.departments = QueryUtils.endpoint('/autocomplete/curriculumdepartments').query({id: $scope.criteria.curriculum});
+    } else {
+      $scope.criteria.curriculum = undefined;
+      $scope.formState.departments = QueryUtils.endpoint('/autocomplete/curriculumdepartments').query();
+    }
+  };
+
+  var unbindStudyYearWatch = $scope.$watch('criteria.studyYear', function(value) {
+    if (angular.isNumber(value)) {
+      unbindStudyYearWatch();
+      $q.all(clMapper.promises).then($scope.loadData);
+    }
+  });
+
+}
 ]).controller('ReportStudentStatisticsByperiodController', ['$scope', '$route', 'Classifier', 'QueryUtils',
   function ($scope, $route, Classifier, QueryUtils) {
     $scope.auth = $route.current.locals.auth;

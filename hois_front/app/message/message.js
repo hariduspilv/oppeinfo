@@ -429,7 +429,7 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
         return $scope.targetGroup === 'ROLL_T' && includesOrEmpty(r.role, 'ROLL_L');
     }
 
-    $scope.tarGetGroupChanged = function() {
+    $scope.targetGroupChanged = function() {
         /*
         filterReceivers() did not work in the following scenario:
         user adds a student which has representative and then selects Parents as target group.

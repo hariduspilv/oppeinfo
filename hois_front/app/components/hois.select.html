@@ -3,7 +3,7 @@
   <md-option ng-repeat="option in filteredOptions | orderBy: orderBy"
     ng-value="option[valueProperty]" aria-label="{{$root.currentLanguageNameField(option)}}">
     <span ng-style="{'color': warningParam && option['{{warningParam}}'] ? 'red': 'inherit'}">
-      {{showProperty  ? option[showProperty] : $root.currentLanguageNameField(option)}}
+      {{showFunctionValue ? showFunctionValue(option) : (showProperty ? option[showProperty] : $root.currentLanguageNameField(option))}}
     </span>
   </md-option>
 </md-select>

@@ -119,6 +119,7 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
     }
 
     public static AutocompleteResult of(Curriculum curriculum) {
+        if (curriculum == null) return null;
         return new CurriculumResult(curriculum.getId(), curriculum.getNameEt(), curriculum.getNameEn(),
                 curriculum.getCode());
     }

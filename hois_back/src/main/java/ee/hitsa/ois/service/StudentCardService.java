@@ -37,6 +37,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentCardStatus;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
@@ -174,6 +175,7 @@ public class StudentCardService {
             qb.requiredCriteria("s.status_code in (:studentStatus)", "studentStatus",
                     StudentStatus.STUDENT_STATUS_ACTIVE);
         }
+        qb.requiredCriteria("s.type_code != :studentType", "studentType", StudentType.OPPUR_K.name());
     }
 
     public void updateStudentCards(List<StudentCardSearchDto> studentCardDtos) {

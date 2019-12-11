@@ -27,7 +27,7 @@
                                 <thead md-head md-order="criteria.order" md-on-reorder="loadData">
                                     <tr md-row>
                                         <th md-column>{{'main.order' | translate}}</th>
-                                        <th md-column md-order-by="studentName">{{'poll.answers.dialog.student' | translate}}</th>
+                                        <th md-column md-order-by="p.firstname || ' ' || p.lastname">{{'poll.answers.dialog.student' | translate}}</th>
                                         <th md-column md-order-by="sg.code">{{'poll.answers.dialog.studentGroup' | translate}}</th>
                                         <th md-column md-order-by="r.status_code">{{'poll.answers.dialog.status' | translate}}</th>
                                     </tr>

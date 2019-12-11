@@ -29,6 +29,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.exception.SingleMessageWithParamsException;
 import ee.hitsa.ois.service.DirectiveConfirmService;
 import ee.hitsa.ois.service.DirectiveService;
@@ -115,6 +116,8 @@ public class DirectiveController {
         assertCanEditDirective(user, directive);
         try {
             directiveConfirmService.sendToConfirm(directive, "true".equals(ekis));
+        } catch(HoisException e) {
+            throw e;
         } catch(SingleMessageWithParamsException e) {
             return e.getParams();
         }

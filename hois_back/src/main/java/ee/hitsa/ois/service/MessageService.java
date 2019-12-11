@@ -233,8 +233,8 @@ public class MessageService {
 
         for (StudentRepresentative studentRepresentative : student.getRepresentatives().stream()
         .filter(sr -> Boolean.TRUE.equals(sr.getIsStudentVisible())).collect(Collectors.toList())) {
-            // TODO: Change Journal variable in MessageReceiverDto so it could be a list with all journals.
-            for (int i = 0; i < journalStudents.size() || i < subjectStudyPeriods.size(); i++) {
+            // TODO: Change Journal variable in MessageReceiverDto so it could be a list with all journals. Same for subjects
+            for (int i = 0; i < journalStudents.size() || i < subjectStudyPeriods.size() || i < 1; i++) {
                 MessageReceiverDto dto = new MessageReceiverDto();
                 dto.setId(student.getId());
                 dto.setPersonId(studentRepresentative.getPerson().getId());

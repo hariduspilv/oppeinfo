@@ -339,6 +339,7 @@
         "students": "Learners",
         "studentstatistics": "Learners’ statistics",
         "gueststudentstatistics": "Guest learners’ statistics",
+        "foreignstudentstatistics": "Foreign learners’ statistika",
         "studentstatisticsbyperiod": "In stationary period of learners",
         "teachersloadhigher": "Teacher’s work load (higher)",
         "teachersloadvocational": "Teacher’s work load (professional)",
@@ -1168,6 +1169,7 @@
       "studyLoadOPPEKOORMUS_TAIS": "partial > full",
       "valisEndDate": "End of studies abroad",
       "valisStartDate": "Beginning of studies abroad",
+      "cancelDate": "Cancelling date",
       "guest": {
         "curriculumVersion": "Curriculum version",
         "endDate": "Study start",
@@ -2306,7 +2308,9 @@
     "academicLeaveRevocationDate": "Date of discontinuation",
     "makeApplication": "Compile application",
     "plannedSubject": "Plannable subject",
+    "plannedModulesThemes": "Plannable module/theme",
     "substitutableSubject": "Replaceable subject",
+    "substitutableModulesThemes": "Replaceable module/theme",
     "justification": "Explanation",
     "rejection": "Rejection of application",
     "rejectReason": "Explanation for rejection of application",
@@ -2314,6 +2318,7 @@
     "inEstonianEducationalInstitution": "In Estonian educational institution",
     "inAbroadEducationalInstitution": "In foreign educational institution",
     "abroadStudiesStart": "Beginning of studies abroad",
+    "changeDate": "Change date",
     "abroadStudiesEnd": "End of studies abroad",
     "deleteconfirm": "Are you sure you wish to delete application?",
     "missingRepresentativeConfirmation": "Application misses approval of parent/representative!",
@@ -2342,7 +2347,12 @@
       "studentNotNominalStudy": "Learner has exceeded normal period",
       "studentNotOnAcademicLeave": "Learner is not on academic leave",
       "noValidAcademicLeaveApplicationFound": "Learner does not have any valid academic leave application",
-      "guestStudent": "Guest student can not apply"
+      "guestStudent": "Guest student can not apply",
+      "periodTooLargeUnderFive": "Abroad studies cannot last longer than 365 days total",
+      "periodTooLargeOverFive": "Abroad studies cannot last longer than 730 days total",
+      "confirmSave": "Are you sure, you wish to change application?",
+      "saved": "Application is updated",
+      "subjectChangeNotAllowed": "Application update forbidden"
     }
   },
   "reception": {
@@ -3200,6 +3210,33 @@
         "duration": "Duration",
         "results": "Results",
         "eap": "Number of completed credit points"
+      }
+    },
+    "foreignStudent": {
+      "studyYear": "Study year",
+      "name": "Foreign student",
+      "startDates": "Leaving date",
+      "endDates": "Return date",
+      "curriculum": "Cirriculum",
+      "curriculumVersion": "Curriculum version",
+      "structuralUnit": "Structural unit",
+      "educationLevel": "Edication level",
+      "foreignSchool": "Foreign school",
+      "foreignCountry": "Foreign country",
+      "programme": "Programme",
+      "isExtention": "Extention",
+      "foreignDuration": "Foreign study duration",
+      "table": {
+        "foreignStudentName": "Foreign student",
+        "curriculumVersion": "Curriculum version",
+        "studentGroup": "Student group",
+        "startDate": "Leaving date",
+        "endDate": "Return date",
+        "duration": "Study duration",
+        "wantedEAP": "Wanted EAP",
+        "recievedEAP": "Recieved EAP",
+        "extention": "Extention",
+        "application": "Application"
       }
     },
     "curriculumscompletion": {

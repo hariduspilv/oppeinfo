@@ -410,7 +410,12 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.reports.gueststudentstatistics',
             url: '/reports/guest/students/statistics?_menu',
-            icon: 'blur_on'
+            icon: 'blur_circular'
+          },
+          {
+            name: 'main.menu.reports.foreignstudentstatistics',
+            url: '/reports/foreign/students/statistics?_menu',
+            icon: 'blur_circular'
           },
           {
             name: 'main.menu.reports.studentstatisticsbyperiod',

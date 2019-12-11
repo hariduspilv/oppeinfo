@@ -13,11 +13,12 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
 
   $scope.grades = Classifier.queryForDropdown({ mainClassCode: 'KORGHINDAMINE' });
   $scope.grades.$promise.then(function () {
-    $scope.grades.forEach(function (grade) {
-      grade.shownValue = $filter('hoisHigherGrade')(grade, $scope.letterGrades);
-    });
     $scope.grades = HigherGradeUtil.orderedGrades($scope.grades);
   });
+
+  $scope.gradeSelectShownValue = function (grade) {
+    return HigherGradeUtil.gradeSelectShownValue(grade, $scope.auth.school.letterGrades);
+  };
 
   function getEmptyStudentResult(student, midtermTask) {
     return {

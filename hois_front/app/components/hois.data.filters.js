@@ -3,10 +3,13 @@
 angular.module('hitsaOis').filter('hoisHigherGrade', function ($rootScope, HigherGradeUtil) {
   return function (grade, letterGrades) {
     if (angular.isDefined(grade)) {
-      if (letterGrades && !HigherGradeUtil.isDistinctive(grade.code)) {
+      if (HigherGradeUtil.isDistinctive(grade.code)) {
+        return letterGrades ? grade.value2 : grade.value;
+      }
+      if (letterGrades) {
         return $rootScope.currentLanguageNameField(grade);
       }
-      return letterGrades ? grade.value2 : grade.value;
+      return $rootScope.currentLanguage() === 'en' ? grade.extraval2 : grade.extraval1;
     }
     return null;
   };

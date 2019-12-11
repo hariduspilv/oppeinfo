@@ -220,8 +220,9 @@ public class ApelApplicationController {
     public void print(HoisUserDetails user, @WithEntity ApelApplication application, HttpServletResponse response)
             throws IOException {
         UserUtil.throwAccessDeniedIf(!ApelApplicationUtil.canView(user, application));
-        ApelApplicationReport report = new ApelApplicationReport(application);
-        report.setIsHigherSchool(Boolean.valueOf(schoolService.schoolType(EntityUtil.getId(application.getSchool())).isHigher()));
+        Boolean isHigherSchool = Boolean.valueOf(schoolService.schoolType(EntityUtil.getId(application.getSchool())).isHigher());
+        Boolean letterGrades = application.getSchool().getIsLetterGrade();
+        ApelApplicationReport report = new ApelApplicationReport(application, isHigherSchool, letterGrades);
         String templateName = Boolean.TRUE.equals(application.getIsVocational()) ?
                 ApelApplicationReport.VOCATIONAL_TEMPLATE_NAME : ApelApplicationReport.HIGHER_TEMPLATE_NAME;
         HttpUtil.pdf(response, application.getId() + ".pdf", pdfService.generate(templateName, report));

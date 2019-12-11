@@ -859,8 +859,8 @@ public class TimetableEventService {
         }
     }
 
-    public Page<TimetableEventSearchDto> search(TimetableEventSearchCommand criteria, Pageable pageable, Long schoolId) {
-        JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(criteria, schoolId).sort(pageable);
+    public Page<TimetableEventSearchDto> search(TimetableEventSearchCommand criteria, Pageable pageable, HoisUserDetails user) {
+        JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(criteria, user.getSchoolId()).sort(pageable);
         String select = "tet.id, coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(te.name, j.name_et, subj.name_en) as name_en,"
                     + " tet.start, tet.end, te.consider_break, tobj.id as single_event, t.id as timetableId, te.capacity_type_code,"
                     + " te.is_personal, te.person_id, p.firstname, p.lastname";
@@ -877,6 +877,11 @@ public class TimetableEventService {
                 String personName = PersonUtil.fullname(resultAsString(r, 11), resultAsString(r, 12));
                 AutocompleteResult person = new AutocompleteResult(resultAsLong(r, 10), personName, personName);
                 dto.setPerson(person);
+            }
+            if (Boolean.TRUE.equals(dto.getIsPersonal())) {
+                dto.setCanEdit(Boolean.valueOf(UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PERSYNDMUS)));
+            } else {
+                dto.setCanEdit(Boolean.valueOf(UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_SYNDMUS)));
             }
             return dto;
         });

@@ -80,6 +80,7 @@ public class StudentCardController {
     @PostMapping("/orderRepetition/{id:\\d+}")
     public StudentCardSearchDto orderRepetition(HoisUserDetails user, @WithEntity Student student) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PILET);
+        UserUtil.assertIsNotGuestStudent(student);
         return studentCardService.orderRepetition(student);
     }
 }

@@ -1,0 +1,167 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <div flex>
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+        <form ng-submit="loadData()" novalidate ng-model-options="{allowInvalid: true}">
+            <div layout="row">
+                <md-input-container flex>
+                    <label class="textInput">{{'report.foreignStudent.studyYear' | translate}}</label>
+                    <hois-select ng-model="criteria.studyYear" type="studyyear" select-current-study-year></hois-select>
+                </md-input-container>
+                <md-input-container flex flex-offset="5">
+                    <label class="textInput">{{'report.foreignStudent.name' | translate}}</label>
+                    <input ng-model="criteria.student" type="text" md-maxlength="255">
+                </md-input-container>
+            </div>
+            <div layout="row" layout-xs="column">
+                <md-input-container>
+                    <label>{{'report.foreignStudent.startDates' | translate}}</label>
+                    <input style="visibility: hidden;">
+                </md-input-container>
+                <div layout="row">
+                    <md-input-container>
+                        <label>{{'main.from' | translate}}</label>
+                        <md-datepicker ng-model="criteria.startFrom" md-max-date="criteria.startThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                    </md-input-container>
+                    <md-input-container>
+                        <label>{{'main.thru' | translate}}</label>
+                        <md-datepicker ng-model="criteria.startThru" md-min-date="criteria.startFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                    </md-input-container>
+                </div>
+            </div>
+            <div layout="row" layout-xs="column">
+                <md-input-container>
+                    <label>{{'report.foreignStudent.endDates' | translate}}</label>
+                    <input style="visibility: hidden;">
+                </md-input-container>
+                <div layout="row">
+                    <md-input-container>
+                        <label>{{'main.from' | translate}}</label>
+                        <md-datepicker ng-model="criteria.endFrom" md-max-date="criteria.endThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                    </md-input-container>
+                    <md-input-container>
+                        <label>{{'main.thru' | translate}}</label>
+                        <md-datepicker ng-model="criteria.endThru" md-min-date="criteria.endFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                    </md-input-container>
+                </div>
+            </div>
+            <div layout="row" layout-xs="column">
+                <hois-autocomplete flex ha-controller="directiveControllers" ng-model="formState.curriculum" method="curriculums" name="curriculum"
+                additional-query-params="{}" label="report.foreignStudent.curriculum" md-selected-item-change="queryForDepartments()"></hois-autocomplete>
+                <hois-autocomplete flex ha-controller="directiveControllers" ng-model="criteria.curriculumVersion" method="curriculumversions" name="curriculumVersion"
+                additional-query-params="{curriculumId: formState.curriculum.id}" label="report.foreignStudent.curriculumVersion" flex-offset="5" flex-offset-xs="0" ha-attribute="id"></hois-autocomplete>
+            </div>
+            <div layout="row">
+                <md-input-container flex>
+                    <label>{{'school.department.department' | translate}}</label>
+                    <hois-select ng-model="criteria.department" values="formState.departments"></hois-select>
+                </md-input-container>
+                <md-input-container flex flex-offset="5">
+                  <label>{{'curriculum.educationLevel' | translate}}</label>
+                  <hois-classifier-select ng-model="criteria.educationLevel" main-classifier-code="HARIDUSTASE" watch-model="formState.curriculum.origStudyLevel"
+                    filter-values connect-main-classifier-code="HARIDUSTASE" model-value-attr="code"></hois-classifier-select>
+                </md-input-container>
+            </div>
+            <div layout="row">
+                <md-input-container flex>
+                    <label class="textInput">{{'report.foreignStudent.foreignSchool' | translate}}</label>
+                    <input ng-model="criteria.foreignSchool" type="text" md-maxlength="255">
+                </md-input-container>
+                <md-input-container flex flex-offset="5">
+                    <label class="textInput">{{'report.foreignStudent.foreignCountry' | translate}}</label>
+                    <hois-classifier-select ng-model="criteria.foreignCountry" aria-label="country" model-value-attr="code" 
+                    main-classifier-code="RIIK"></hois-classifier-select>
+                </md-input-container>
+            </div>
+            <div layout="row">
+                <md-input-container flex>
+                    <label class="textInput">{{'report.foreignStudent.programme' | translate}}</label>
+                    <hois-classifier-select ng-model="criteria.programme" aria-label="programme" model-value-attr="code" 
+                    criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}"
+                    main-classifier-code="VALISKOOL_PROGRAMM"></hois-classifier-select>
+                </md-input-container>
+                <div flex flex-offset="5" layout="row" layout-align="start center">
+                    <md-checkbox flex ng-model="criteria.isExtended" style="margin-bottom: 0px"
+                        aria-label="{{'report.foreignStudent.isExtention' | translate}}">
+                        {{'report.foreignStudent.isExtention' | translate}}
+                    </md-checkbox>
+                </div>
+            </div>
+            <div layout="row" layout-xs="column">
+                <md-input-container>
+                    <label>{{'report.foreignStudent.foreignDuration' | translate}}</label>
+                    <input style="visibility: hidden;">
+                </md-input-container>
+                <div layout="row">
+                    <md-input-container>
+                        <label>{{'main.from' | translate}}</label>
+                        <md-datepicker ng-model="criteria.durationStart" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                    </md-input-container>
+                    <md-input-container>
+                        <label>{{'main.thru' | translate}}</label>
+                        <md-datepicker ng-model="criteria.durationEnd" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                    </md-input-container>
+                </div>
+            </div>
+  
+          <div layout="row" layout-xs="column">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
+          </div>
+          <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+        </form>
+      </fieldset>
+    </div>
+  </div>
+  <div layout-padding>
+    <div flex>
+      <md-table-container>
+        <table md-table md-progress="tabledata.$promise">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+            <tr md-row>
+              <th md-column md-order-by="p.firstname, p.lastname">{{'report.foreignStudent.table.foreignStudentName' | translate}}</th>
+              <th md-column md-order-by="{{currentLanguage() === 'en' ? 'c.nameEn' : 'c.nameEt'}}">{{'report.foreignStudent.table.curriculumVersion' | translate}}</th>
+              <th md-column md-order-by="sg.code">{{'report.foreignStudent.table.studentGroup' | translate}}</th>
+              <th md-column md-order-by="coalesce(ds.startDate, startperiod.startDate)">{{'report.foreignStudent.table.startDate' | translate}}</th>
+              <th md-column md-order-by="coalesce(valiskatk.nominalStudyEnd, ds.endDate, endperiod.endDate)">{{'report.foreignStudent.table.endDate' | translate}}</th>
+              <th md-column>{{'report.foreignStudent.table.duration' | translate}}</th>
+              <th md-column md-order-by="{{currentLanguage() === 'en' ? 'coalesce(aps.nameEn, ds.abroadSchool, ehisschool.nameEn)' : 'coalesce(aps.nameEt, ds.abroadSchool, ehisschool.nameEt)'}}">
+                  {{'report.foreignStudent.foreignSchool' | translate}}</th>
+              <th md-column md-order-by="{{currentLanguage() === 'en' ? 'clCountry.nameEn' : 'clCountry.nameEt'}}">{{'report.foreignStudent.foreignCountry' | translate}}</th>
+              <th md-column md-order-by="{{currentLanguage() === 'en' ? 'clProgramme.nameEn' : 'clProgramme.nameEt'}}">{{'report.foreignStudent.programme' | translate}}</th>
+              <th md-column>{{'report.foreignStudent.table.extention' | translate}}</th>
+              <th md-column md-order-by="valis.credits">{{'report.foreignStudent.table.wantedEAP' | translate}}</th>
+              <th md-column>{{'report.foreignStudent.table.recievedEAP' | translate}}</th>
+              <th md-column></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{row.foreignStudent ? row.foreignStudent : '-'}}</td>
+              <td md-cell>{{row.curriculumVersion ? currentLanguageNameField(row.curriculumVersion) : '-'}}</td>
+              <td md-cell>{{row.studentGroup ? row.studentGroup : '-'}}</td>
+              <td md-cell>{{row.startDate ? (row.startDate | hoisDate) : '-'}}</td>
+              <td md-cell>{{row.endDate ? (row.endDate | hoisDate) : '-'}}</td>
+              <td md-cell>{{row.duration ? row.duration : '-'}}</td>
+              <td md-cell>{{row.foreignSchool ? currentLanguageNameField(row.foreignSchool) : '-'}}</td>
+              <td md-cell>{{row.foreignCountry ? currentLanguageNameField(row.foreignCountry) : '-'}}</td>
+              <td md-cell>{{row.programme ? currentLanguageNameField(row.programme) : '-'}}</td>
+              <td md-cell>{{row.extention ? row.extention : '-'}}</td>
+              <td md-cell>{{row.wantedEAP ? row.wantedEAP : '-'}}</td>
+              <td md-cell>{{row.recievedEAP ? row.recievedEAP : '-'}}</td>
+              <td md-cell>
+                <md-button md-no-ink class="md-primary change-button" ng-if="row.applicationId"
+                ng-href="#/applications/{{::row.applicationId}}/view">{{'report.foreignStudent.table.application' | translate}}</md-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                           md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                           md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" 
+                           md-page-select></md-table-pagination>
+    </div>
+</div>
+  

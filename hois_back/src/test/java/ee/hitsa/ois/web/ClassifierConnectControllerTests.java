@@ -152,7 +152,7 @@ public class ClassifierConnectControllerTests {
     private static ClassifierSelection getClassifierSelection(Object object) {
         LinkedHashMap<String, Object> classifierSelectionObject = (LinkedHashMap<String, Object>) object;
         ClassifierSelection classifierSelection = new ClassifierSelection((String)classifierSelectionObject.get("code"),
-                null, null, null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null, null, null, null, null);
         return classifierSelection;
     }
 

@@ -1925,6 +1925,10 @@ md-checkbox.md-checked.journal-lesson-absence .md-icon {
   background-color: rgba(13,71,161, 0.87);;
 }
 
+.journal-absence-container md-checkbox:not(:first-child) {
+  margin-left: 30px !important;
+}
+
 .journal-add-info-input {
   width: 100%;
 }

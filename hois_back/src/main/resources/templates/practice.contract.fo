@@ -34,7 +34,7 @@
 					<fo:block font-weight="bold">{{ "report.contract.student" | translate }}: <fo:inline font-weight="normal">{{ content.studentFullname }}</fo:inline></fo:block>
 				</fo:block-container>
 				<fo:block-container space-after="13pt">
-					<fo:block font-weight="bold">{{ "report.contract.curriculum" | translate }}: <fo:inline font-weight="normal">{{ content.student.curriculumVersion.code }}</fo:inline></fo:block>
+					<fo:block font-weight="bold">{{ "report.contract.curriculum" | translate }}: <fo:inline font-weight="normal">{% if content.student.curriculumVersion is not null %}{{ content.student.curriculumVersion.code }}{% else %}-{% endif %}</fo:inline></fo:block>
 				</fo:block-container>
 			</fo:block-container>
 			{% if content.moduleSubjects is not empty %}

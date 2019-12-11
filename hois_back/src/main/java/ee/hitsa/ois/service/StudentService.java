@@ -570,6 +570,27 @@ public class StudentService {
                     SubjectUtil.subjectName(resultAsString(r, 3), resultAsString(r, 1), resultAsDecimal(r, 4)),
                     SubjectUtil.subjectName(resultAsString(r, 3), resultAsString(r, 2), resultAsDecimal(r, 4))), data);
     }
+    
+    /**
+     * Modules and themes related to student
+     *
+     * @param student
+     * @return
+     */
+    public List<AutocompleteResult> modulesAndThemes(Student student) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_version_omodule cvo "
+                + "join curriculum_version cv on cvo.curriculum_version_id = cv.id "
+                + "join curriculum_module cm on cm.id = cvo.curriculum_module_id "
+                + "join classifier c on c.code = cm.module_code "
+                + "left join curriculum_version_omodule_theme cvot on cvot.curriculum_version_omodule_id = cvo.id");
+        qb.requiredCriteria("cvo.curriculum_version_id = :curriculumVersionId", "curriculumVersionId", EntityUtil.getId(student.getCurriculumVersion()));
+
+        List<?> data = qb.select("cvo.id, cv.code, cm.name_et as moduleEt, c.name_et as codeEt, cm.name_en as moduleEn, c.name_en as codeEn, cvot.name_et as themeEt", em).getResultList();
+        return StreamUtil.toMappedList(r ->
+            new AutocompleteResult(resultAsLong(r, 0),
+                CurriculumUtil.moduleName(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 1)),
+                CurriculumUtil.moduleName(resultAsString(r, 4), resultAsString(r, 5), resultAsString(r, 1))), data);
+    }
 
     /**
      * Student data for student view form, main data tab

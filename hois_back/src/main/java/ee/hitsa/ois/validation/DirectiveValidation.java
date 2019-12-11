@@ -27,5 +27,5 @@ public interface DirectiveValidation {
     interface Otegevus extends DirectiveValidation { }
     interface Tugi extends DirectiveValidation { }
     interface Tugilopp extends DirectiveValidation { }
-    
+    interface Valiskatk extends DirectiveValidation { }
 }

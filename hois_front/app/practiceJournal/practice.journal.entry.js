@@ -27,10 +27,11 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
     $scope.grades = Classifier.queryForDropdown({ mainClassCode: $scope.gradesClassCode });
     $scope.grades.$promise.then(function () {
       if (entity.isHigher) {
-        $scope.grades.forEach(function (grade) {
-          grade.shownValue = $filter('hoisHigherGrade')(grade, $scope.letterGrades);
-        });
         $scope.grades = HigherGradeUtil.orderedGrades($scope.grades);
+
+        $scope.gradeSelectShownValue = function (grade) {
+          return HigherGradeUtil.gradeSelectShownValue(grade, $scope.auth.school.letterGrades);
+        };
       } 
       $scope.gradesMap = Classifier.toMap($scope.grades);
     });

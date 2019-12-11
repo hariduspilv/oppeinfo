@@ -27,7 +27,6 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     if(!$scope.formState.school.higher) {
       $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
       $scope.formState.excludedTypes.push('KASKKIRI_OVORM');
-      $scope.formState.excludedTypes.push('KASKKIRI_VALIS');
       var occupations = Classifier.queryForDropdown({mainClassCodes: 'KUTSE,OSAKUTSE'});
       occupations.$promise.then(function() {
         occupationMap = Classifier.toMap(occupations);
@@ -109,6 +108,16 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
           if (!student.directiveStudent && student.existingDirectiveStudents && student.existingDirectiveStudents.length === 1) {
             student.directiveStudent = student.existingDirectiveStudents[0].id;
             $scope.scholarshipDirectiveChanged(student);
+          }
+          break;
+        case 'KASKKIRI_VALISKATK':
+          $scope.mapStudentDirective(student);
+          if (!student.directiveStudent && student.existingDirectiveStudents && student.existingDirectiveStudents.length === 1) {
+            var existingDirectiveStudent = student.existingDirectiveStudents[0];
+            student.directiveStudent = existingDirectiveStudent.id;
+            student.startDate = new Date(existingDirectiveStudent.startDate);
+            student.endDate = new Date(existingDirectiveStudent.endDate);
+            student.application = existingDirectiveStudent.applicationId;
           }
           break;
         case 'KASKKIRI_TUGILOPP': 
@@ -238,8 +247,16 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
           });
         }
       }
-      if(type === 'KASKKIRI_AKAD' || type === 'KASKKIRI_VALIS'  ) {
-        $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+      if (type === 'KASKKIRI_VALIS') {
+        $scope.formState.apelSchools = QueryUtils.endpoint('/autocomplete/apelschools').query();
+        $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query({}, function (response) {
+          response.forEach(function (studyPeriod) {
+            studyPeriod.display = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+          });
+        });
+      }
+      if(type === 'KASKKIRI_AKAD') {
+        $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query();
       }
     }
 

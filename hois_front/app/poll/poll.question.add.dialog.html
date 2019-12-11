@@ -19,20 +19,22 @@
         <md-dialog-content>
         <div class="md-dialog-content" flex>
             <div layout="column">
-                <div layout="row">
-                    <md-input-container flex>
-                        <label>{{'poll.questions.theme' | translate}}</label>
-                        <hois-select ng-model="criteria.theme" values="themes" value-property="id" show-property="nameEt" required ng-change="checkName(criteria.theme)"></hois-select>
-                    </md-input-container>
-                </div>
-                <div layout="row">
-                    <md-input-container flex>
-                        <label>{{'poll.questions.pick' | translate}}</label>
-                        <hois-select ng-model="criteria.question" values="questions" value-property="id" show-property="nameEt" ng-change="loadQuestion(criteria.question)"></hois-select>
-                    </md-input-container>
-                </div>
-                <div layout="row" flex-align="center center">
-                    <h3 style="margin: 3px 0px 3px 0px !important">{{'poll.questions.orAddNew' | translate}}</h3>
+                <div layout="column" ng-if="!onlyQuestion">
+                    <div layout="row">
+                        <md-input-container flex>
+                            <label>{{'poll.questions.theme' | translate}}</label>
+                            <hois-select ng-model="criteria.theme" values="themes" value-property="id" show-property="nameEt" required ng-change="checkName(criteria.theme)"></hois-select>
+                        </md-input-container>
+                    </div>
+                    <div layout="row">
+                        <md-input-container flex>
+                            <label>{{'poll.questions.pick' | translate}}</label>
+                            <hois-select ng-model="criteria.question" values="questions" value-property="id" show-property="nameEt" ng-change="loadQuestion(criteria.question)"></hois-select>
+                        </md-input-container>
+                    </div>
+                    <div layout="row" flex-align="center center">
+                        <h3 style="margin: 3px 0px 3px 0px !important">{{'poll.questions.orAddNew' | translate}}</h3>
+                    </div>
                 </div>
                 <div layout="row">
                     <md-input-container flex>
@@ -109,7 +111,7 @@
                         <md-button class="md-primary" ng-click="addAnswer()">{{'poll.questions.addAnswer' | translate}}</md-button>
                     </div>
                 </div>
-                <div layout="column" flex>
+                <div layout="column" flex ng-if="!onlyQuestion">
                     <md-table-container>
                         <table md-table class="secondary-table">
                         <thead md-head>

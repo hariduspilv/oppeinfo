@@ -46,6 +46,7 @@ import ee.hitsa.ois.validation.DirectiveValidation.Stiptoetl;
 import ee.hitsa.ois.validation.DirectiveValidation.Tugi;
 import ee.hitsa.ois.validation.DirectiveValidation.Tugilopp;
 import ee.hitsa.ois.validation.DirectiveValidation.Valis;
+import ee.hitsa.ois.validation.DirectiveValidation.Valiskatk;
 import ee.hitsa.ois.validation.DirectiveValidation.Kylalis;
 import ee.hitsa.ois.validation.PeriodRange;
 import ee.hitsa.ois.validation.Required;
@@ -101,7 +102,7 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private StudyPeriod studyPeriodStart;
     @ManyToOne(fetch = FetchType.LAZY)
     private StudyPeriod studyPeriodEnd;
-    @Required(groups = {Ennist.class, Tugi.class}) // Immat is checked by hand
+    @Required(groups = {Ennist.class, Tugi.class, Valiskatk.class}) // Immat is checked by hand
     private LocalDate nominalStudyEnd;
     @Required(groups = Valis.class)
     private Boolean isAbroad;
@@ -113,9 +114,8 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @Required(groups = {Valis.class, Kylalis.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier abroadPurpose;
-    @Required(groups = Valis.class)
     @ManyToOne(fetch = FetchType.LAZY)
-    private Classifier abroadProgramme; // Kylalis is checked by hand (only higher)
+    private Classifier abroadProgramme; // Kylalis and Valis is checked by hand (only higher)
     private String abroadSchool;
     private String email;
     @Required(groups = Immat.class)

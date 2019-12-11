@@ -322,9 +322,6 @@
         getDataForFormalLearningTables($scope);
 
         if (!entity.isVocational) {
-          $scope.grades.forEach(function (grade) {
-            grade.shownValue = $filter('hoisHigherGrade')(grade, $scope.auth.school.letterGrades);
-          });
           $scope.grades = HigherGradeUtil.orderedGrades($scope.grades);
         }
       });
@@ -1091,10 +1088,14 @@
             dialogScope.record.newTransferableSubjectOrModule.teachers = oModule.teachers;
           }
         }
-        
+
         dialogScope.assessmentTypeChanged = function (assessment) {
           dialogScope.record.newTransferableSubjectOrModule.grade = null;
           getGrades(assessment);
+        };
+
+        dialogScope.gradeSelectShownValue = function (grade) {
+          return HigherGradeUtil.gradeSelectShownValue(grade, $scope.auth.school.letterGrades);
         };
 
         function getGrades(assessment) {

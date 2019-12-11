@@ -14,6 +14,7 @@ public class ExistingDirectiveStudentDto {
     private LocalDate startDate;
     private LocalDate endDate;
     private LocalDate confirmDate;
+    private Long applicationId;
 
     public static ExistingDirectiveStudentDto of(DirectiveStudent directiveStudent) {
         ExistingDirectiveStudentDto dto = new ExistingDirectiveStudentDto();
@@ -85,6 +86,14 @@ public class ExistingDirectiveStudentDto {
 
     public void setConfirmDate(LocalDate confirmDate) {
         this.confirmDate = confirmDate;
+    }
+
+    public Long getApplicationId() {
+        return applicationId;
+    }
+
+    public void setApplicationId(Long applicationId) {
+        this.applicationId = applicationId;
     }
 
 }

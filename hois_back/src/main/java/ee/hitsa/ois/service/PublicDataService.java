@@ -96,6 +96,7 @@ public class PublicDataService {
 
             String nameField = Language.EN.equals(criteria.getLang()) ? "nameEn" : "nameEt";
             propertyContains(() -> root.get(nameField), cb, criteria.getName(), filters::add);
+            propertyContains(() -> root.get("code"), cb, criteria.getCode(), filters::add);
 
             if(!CollectionUtils.isEmpty(criteria.getStudyLevel())) {
                 filters.add(root.get("origStudyLevel").get("code").in(criteria.getStudyLevel()));

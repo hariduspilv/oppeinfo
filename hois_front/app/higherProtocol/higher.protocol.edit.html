@@ -63,7 +63,7 @@
               </td>
               <td md-cell>
                 <hois-select class="protocolGradeSelect" ng-model="student.grade" ng-change="gradeChanged(student)" values="grades"
-                  value-property="code" show-property="shownValue" hide-values="hideInvalid" sorted-query="true"
+                  value-property="code" show-function-value="gradeSelectShownValue" hide-values="hideInvalid" sorted-query="true"
                   aria-label="{{'higherProtocol.finalGrade' | translate}}" ng-disabled="!formState.canEditProtocol || !student.canEdit"></hois-select>
               </td>
               <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">

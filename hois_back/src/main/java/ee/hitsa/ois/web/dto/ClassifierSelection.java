@@ -22,11 +22,13 @@ public class ClassifierSelection {
     private final String value2;
     private final LocalDate validFrom;
     private final LocalDate validThru;
+    private String extraval1;
+    private String extraval2;
     private Collection<String> parents;
 
     public ClassifierSelection(String code, String nameEt, String nameEn, String nameRu, Boolean valid, 
             Boolean higher, Boolean vocational, String mainClassCode, String value, String value2,
-            LocalDate validFrom, LocalDate validThru) {
+            LocalDate validFrom, LocalDate validThru, String extraval1, String extraval2) {
         this.code = code;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
@@ -39,12 +41,15 @@ public class ClassifierSelection {
         this.value2 = value2;
         this.validFrom = validFrom;
         this.validThru = validThru;
+        this.extraval1 = extraval1;
+        this.extraval2 = extraval2;
     }
 
     public static ClassifierSelection of(Classifier c) {
         return new ClassifierSelection(c.getCode(), c.getNameEt(), c.getNameEn(), c.getNameRu(),
                 Boolean.valueOf(c.isValid()), Boolean.valueOf(c.isHigher()), Boolean.valueOf(c.isVocational()),
-                c.getMainClassCode(), c.getValue(), c.getValue2(), c.getValidFrom(), c.getValidThru());
+                c.getMainClassCode(), c.getValue(), c.getValue2(), c.getValidFrom(), c.getValidThru(), c.getExtraval1(),
+                c.getExtraval2());
     }
 
     public String getValue2() {
@@ -102,5 +107,21 @@ public class ClassifierSelection {
     public LocalDate getValidThru() {
         return validThru;
     }
-    
+
+    public String getExtraval1() {
+        return extraval1;
+    }
+
+    public void setExtraval1(String extraval1) {
+        this.extraval1 = extraval1;
+    }
+
+    public String getExtraval2() {
+        return extraval2;
+    }
+
+    public void setExtraval2(String extraval2) {
+        this.extraval2 = extraval2;
+    }
+
 }

@@ -27,6 +27,7 @@ public class TimetableEventSearchDto {
     private String capacityType;
     private Boolean isPersonal;
     private AutocompleteResult person;
+    private Boolean canEdit;
 
     public TimetableEventSearchDto(Long id, Long journalId, Long subjectStudyPeriodId, String nameEt, String nameEn,
             LocalDate date, LocalTime timeStart, LocalTime timeEnd, Boolean considerBreak, Boolean singleEvent,
@@ -197,6 +198,14 @@ public class TimetableEventSearchDto {
 
     public void setPerson(AutocompleteResult person) {
         this.person = person;
+    }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
     }
 
 }

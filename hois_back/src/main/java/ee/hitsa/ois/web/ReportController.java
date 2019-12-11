@@ -33,6 +33,7 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.report.CurriculumCompletionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumSubjectsCommand;
+import ee.hitsa.ois.web.commandobject.report.ForeignStudentStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.GuestStudentStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.IndividualCurriculumStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.ScholarshipStatisticsCommand;
@@ -45,6 +46,7 @@ import ee.hitsa.ois.web.commandobject.report.TeacherLoadCommand;
 import ee.hitsa.ois.web.commandobject.report.VotaCommand;
 import ee.hitsa.ois.web.dto.report.CurriculumCompletionDto;
 import ee.hitsa.ois.web.dto.report.CurriculumSubjectsDto;
+import ee.hitsa.ois.web.dto.report.ForeignStudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.GuestStudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.IndividualCurriculumSatisticsDto;
 import ee.hitsa.ois.web.dto.report.StudentSearchDto;
@@ -91,6 +93,20 @@ public class ReportController {
             Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
         return reportService.studentStatistics(user, criteria, pageable);
+    }
+    
+    @GetMapping("/foreignstudents/statistics")
+    public Page<ForeignStudentStatisticsDto> foreignStudentStatistics(HoisUserDetails user, @Valid ForeignStudentStatisticsCommand criteria,
+            Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        return reportService.foreignStudentStatistics(user, criteria, pageable);
+    }
+    
+    @GetMapping("/foreignstudents/statistics/foreignstudentstatistics.xls")
+    public void foreignStudentStatisticsAsExcel(HoisUserDetails user, @Valid ForeignStudentStatisticsCommand criteria,
+            HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        HttpUtil.xls(response, "foreignstudentstatistics.xls", reportService.foreignStudentStatisticsAsExcel(user, criteria));
     }
     
     @GetMapping("/gueststudents/statistics")

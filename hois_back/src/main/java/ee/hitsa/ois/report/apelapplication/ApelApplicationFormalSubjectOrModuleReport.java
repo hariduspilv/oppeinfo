@@ -7,6 +7,7 @@ import ee.hitsa.ois.domain.apelapplication.ApelApplicationFormalSubjectOrModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.report.ReportUtil;
 import ee.hitsa.ois.util.TranslateUtil;
 
 public class ApelApplicationFormalSubjectOrModuleReport {
@@ -23,7 +24,8 @@ public class ApelApplicationFormalSubjectOrModuleReport {
     private final String teachers;
     private final Boolean transfer;
     
-    public ApelApplicationFormalSubjectOrModuleReport(ApelApplicationFormalSubjectOrModule formalSubjectOrModule, Language lang) {
+    public ApelApplicationFormalSubjectOrModuleReport(ApelApplicationFormalSubjectOrModule formalSubjectOrModule,
+              Boolean letterGrades, Language lang) {
         if (Boolean.TRUE.equals(formalSubjectOrModule.getIsMySchool())) {
             School applicationSchool = formalSubjectOrModule.getApelApplicationRecord().getApelApplication().getSchool(); 
             school = TranslateUtil.name(applicationSchool, lang);
@@ -55,7 +57,7 @@ public class ApelApplicationFormalSubjectOrModuleReport {
                 : null;
         credits = formalSubjectOrModule.getCredits();
         assessment = TranslateUtil.name(formalSubjectOrModule.getAssessment(), lang);
-        grade = formalSubjectOrModule.getGrade().getValue();
+        grade = ReportUtil.gradeValue(formalSubjectOrModule.getGrade(), letterGrades , lang);
         gradeDate = formalSubjectOrModule.getGradeDate();
         teachers = formalSubjectOrModule.getTeachers();
         transfer = formalSubjectOrModule.getTransfer();

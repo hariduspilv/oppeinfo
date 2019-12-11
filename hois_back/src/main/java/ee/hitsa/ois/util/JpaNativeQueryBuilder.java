@@ -293,12 +293,18 @@ public class JpaNativeQueryBuilder {
 
         if(sort != null && ordered) {
             StringBuilder orderBy = new StringBuilder();
+            boolean isCoalesce = false;
             for(Sort.Order order : sort) {
+                if (order.getProperty().startsWith("coalesce(")) {
+                    isCoalesce = true;
+                } else if (order.getProperty().endsWith(")")) {
+                    isCoalesce = false;
+                }
                 if(orderBy.length() > 0) {
                     orderBy.append(", ");
                 }
                 orderBy.append(propertyNameToQueryName(order.getProperty()));
-                orderBy.append(order.isAscending() ? "" : " desc");
+                if (!isCoalesce) orderBy.append(order.isAscending() ? "" : " desc");
                 NullHandling nullhandling = order.getNullHandling();
                 if(NullHandling.NULLS_FIRST.equals(nullhandling)) {
                     orderBy.append(" NULLS FIRST");

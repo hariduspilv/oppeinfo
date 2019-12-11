@@ -384,7 +384,7 @@
         <md-input-container>
           <label class="textInput">{{'practiceJournal.grade' | translate}}</label>
           <hois-select ng-model="practiceJournal.grade" values="grades" value-property="code" hide-values="hideInvalid"
-            sorted-query="true" show-property="{{practiceJournal.isHigher ? 'shownValue' : 'value'}}"></hois-select>
+            sorted-query="true" show-function-value="gradeSelectShownValue" show-property="value"></hois-select>
         </md-input-container>
       </div>
 
@@ -425,7 +425,7 @@
                 <label class="responsiveLabel">{{eval.addInfo}}</label>
                 <md-input-container flex="100">
                   <hois-select aria-label="{{eval.nameEt}}" ng-model="eval.valueClf" values="grades" value-property="code"
-                    sorted-query="true" show-property="{{practiceJournal.isHigher ? 'shownValue' : 'value'}}"></hois-select>
+                    sorted-query="true" show-function-value="gradeSelectShownValue" show-property="value"></hois-select>
                 </md-input-container>
               </div>
             </div>

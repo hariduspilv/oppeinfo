@@ -11,6 +11,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.report.ReportUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.TranslateUtil;
 
@@ -26,7 +27,8 @@ public class ApelApplicationInformalSubjectOrModuleReport {
     private final List<String> outcomes;
     private final Boolean transfer;
 
-    public ApelApplicationInformalSubjectOrModuleReport(ApelApplicationInformalSubjectOrModule informalSubjectOrModule, Language lang) {
+    public ApelApplicationInformalSubjectOrModuleReport(ApelApplicationInformalSubjectOrModule informalSubjectOrModule,
+                Boolean letterGrades, Language lang) {
         if (informalSubjectOrModule.getSubject() != null) {
             name = TranslateUtil.name(informalSubjectOrModule.getSubject(), lang);
             module = TranslateUtil.name(informalSubjectOrModule.getCurriculumVersionHmodule(), lang);
@@ -51,7 +53,7 @@ public class ApelApplicationInformalSubjectOrModuleReport {
         }
         isCompulsory = Boolean.valueOf(!informalSubjectOrModule.getIsOptional().booleanValue());
         skills = informalSubjectOrModule.getSkills();
-        grade = informalSubjectOrModule.getGrade().getValue();
+        grade = ReportUtil.gradeValue(informalSubjectOrModule.getGrade(), letterGrades , lang);
         transfer = informalSubjectOrModule.getTransfer();
     }
 

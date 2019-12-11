@@ -30,6 +30,7 @@ import ee.hitsa.ois.domain.poll.Question;
 import ee.hitsa.ois.domain.poll.Response;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.service.JobExecutorService;
 import ee.hitsa.ois.service.poll.PollAsyncService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
@@ -75,6 +76,9 @@ public class PollController {
     
     @Autowired
     private PollAsyncService pollService;
+    
+    @Autowired
+    private JobExecutorService jobExecutorService;
     
     /**
      * Searches
@@ -237,8 +241,8 @@ public class PollController {
         pollService.updateThemeOrderAfterDelete(user, pollTheme.getPoll());
     }
     
-    @DeleteMapping("/question/{id:\\d+}")
-    public void deleteQuestion(HoisUserDetails user, @WithEntity PollThemeQuestion pollThemeQuestion) {
+    @DeleteMapping("/pollThemeQuestion/{id:\\d+}")
+    public void deletePollThemeQuestion(HoisUserDetails user, @WithEntity PollThemeQuestion pollThemeQuestion) {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, pollThemeQuestion.getPollTheme().getPoll().getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
         pollService.deleteQuestion(user, pollThemeQuestion);
         pollService.updateQuestionOrderAfterDelete(user, pollThemeQuestion.getPollTheme());
@@ -321,11 +325,22 @@ public class PollController {
      * @param pollTheme
      * @param questionCommand
      */
-    @PostMapping("/question/{id:\\d+}")
-    public void createQuestion(HoisUserDetails user, @WithEntity PollTheme pollTheme,
+    @PostMapping("/pollThemeQuestion/{id:\\d+}")
+    public void createPollThemeQuestion(HoisUserDetails user, @WithEntity PollTheme pollTheme,
             @RequestBody QuestionCommand questionCommand) {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, pollTheme.getPoll().getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
-        pollService.createQuestion(user, pollTheme, questionCommand);
+        pollService.createPollThemeQuestion(user, pollTheme, questionCommand);
+    }
+    
+    /**
+     * Create question without link to theme.
+     * @param user
+     * @param questionCommand
+     */
+    @PostMapping("/question")
+    public void createQuestion(HoisUserDetails user, @RequestBody QuestionCommand questionCommand) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
+        pollService.createQuestion(user, questionCommand, new Question());
     }
     
     /**
@@ -349,11 +364,11 @@ public class PollController {
      * @param questionDto
      * @return
      */
-    @PutMapping("/question/{id:\\d+}")
-    public void updateQuestion(HoisUserDetails user, @WithEntity PollThemeQuestion pollThemeQuestion,
+    @PutMapping("/pollThemeQuestion/{id:\\d+}")
+    public void updatePollThemeQuestion(HoisUserDetails user, @WithEntity PollThemeQuestion pollThemeQuestion,
             @RequestBody QuestionCommand themeCommand) {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, pollThemeQuestion.getPollTheme().getPoll().getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KYSITLUS);
-        pollService.updateQuestion(user, pollThemeQuestion, themeCommand);
+        pollService.updatePollThemeQuestion(user, pollThemeQuestion, themeCommand);
     }
     
     /**
@@ -426,6 +441,15 @@ public class PollController {
     @PutMapping("/testPollStatusJob")
     public void testPollStatusJob() {
         pollService.checkPollValidThru();
+    }
+    
+    /**
+     * Used for testing poll status switching to finished job
+     */
+    @PutMapping("/testDirectiveJobs")
+    public void testDirectiveJobs() {
+        jobExecutorService.directiveJob();
+        jobExecutorService.ehisJob();
     }
     
     /**
@@ -639,5 +663,7 @@ public class PollController {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KYSITLUS);
         return pollService.exportExcelStatus(user, key);
     }
+    
+    
     
 }

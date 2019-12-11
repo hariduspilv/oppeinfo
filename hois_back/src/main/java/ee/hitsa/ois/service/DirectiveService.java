@@ -24,6 +24,7 @@ import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_TUGI;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_TUGILOPP;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_TYHIST;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_VALIS;
+import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_VALISKATK;
 import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_A;
 import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_K;
 import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_O;
@@ -114,6 +115,7 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.service.ekis.EkisService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ApplicationUtil;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
@@ -201,6 +203,7 @@ public class DirectiveService {
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_OVORM, EnumUtil.toNameList(OPPURSTAATUS_O));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_STIPTOET, StudentStatus.STUDENT_STATUS_ACTIVE);
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_VALIS, EnumUtil.toNameList(OPPURSTAATUS_O));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_VALISKATK, EnumUtil.toNameList(OPPURSTAATUS_O, OPPURSTAATUS_V));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_STIPTOETL, StudentStatus.STUDENT_STATUS_ACTIVE);
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_KIITUS, StudentStatus.STUDENT_STATUS_ACTIVE);
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_NOOMI, StudentStatus.STUDENT_STATUS_ACTIVE);
@@ -709,7 +712,9 @@ public class DirectiveService {
                     directiveStudent.setDirectiveStudent(
                             EntityUtil.getOptionalOne(DirectiveStudent.class, formStudent.getDirectiveStudent(), em));
                 case KASKKIRI_VALIS:
+                    directiveStudent.setApelSchool(EntityUtil.getOptionalOne(ApelSchool.class, formStudent.getApelSchoolId(), em));
                     adjustPeriod(directiveStudent);
+                    ApplicationUtil.assertValidationRulesSave(formStudent, formStudent.getStudent(), em);
                     break;
                 default:
                     break;
@@ -846,22 +851,22 @@ public class DirectiveService {
         if (KASKKIRI_TUGI.equals(directiveType)) {
             return loadStudentsTugi(schoolId, cmd);
         }
-
+        List<DirectiveStudentDto> result = new ArrayList<>();
         ApplicationType applicationType = applicationType(directiveType);
         Map<Long, Application> applications = applicationType != null ? em.createQuery(
-                "select a from Application a where a.student.school.id = ?1 and a.student.id in (?2) and a.type.code = ?3 and a.status.code in (?4)", Application.class)
-            .setParameter(1, schoolId)
-            .setParameter(2, studentIds)
-            .setParameter(3, applicationType.name())
-            .setParameter(4, APPLICATION_STATUS_FOR_DIRECTIVE)
-            .getResultList()
-            .stream().collect(Collectors.toMap(r -> EntityUtil.getId(r.getStudent()), r -> r, (o, n) -> o)) : Collections.emptyMap();
+                    "select a from Application a where a.student.school.id = ?1 and a.student.id in (?2) and a.type.code = ?3 and a.status.code in (?4)", Application.class)
+                .setParameter(1, schoolId)
+                .setParameter(2, studentIds)
+                .setParameter(3, applicationType.name())
+                .setParameter(4, APPLICATION_STATUS_FOR_DIRECTIVE)
+                .getResultList()
+                .stream().collect(Collectors.toMap(r -> EntityUtil.getId(r.getStudent()), r -> r, (o, n) -> o)) : Collections.emptyMap();
 
         List<Student> students = em.createQuery("select s from Student s where s.school.id = ?1 and s.id in (?2)", Student.class)
                 .setParameter(1, schoolId).setParameter(2, studentIds).getResultList();
 
         // for each student, create DirectiveStudentDto either from application or from student
-        List<DirectiveStudentDto> result = StreamUtil.toMappedList(student -> {
+        result = StreamUtil.toMappedList(student -> {
             Application application = applications.get(student.getId());
             if(application != null) {
                 return DirectiveStudentDto.of(application, directiveType);
@@ -918,6 +923,15 @@ public class DirectiveService {
                     cmd.getDirective(), studentIds);
             for (DirectiveStudentDto dto : result) {
                 List<ExistingDirectiveStudentDto> directiveStudents = scholarships.get(dto.getStudent());
+                if (directiveStudents != null) {
+                    dto.setExistingDirectiveStudents(directiveStudents);
+                }
+            }
+        } else if (KASKKIRI_VALISKATK.equals(directiveType)) {
+            Map<Long, List<ExistingDirectiveStudentDto>> externalStudents = studentExistingExternalStudyDirectives(
+                    cmd.getDirective(), studentIds);
+            for (DirectiveStudentDto dto : result) {
+                List<ExistingDirectiveStudentDto> directiveStudents = externalStudents.get(dto.getStudent());
                 if (directiveStudents != null) {
                     dto.setExistingDirectiveStudents(directiveStudents);
                 }
@@ -987,6 +1001,46 @@ public class DirectiveService {
             eds.setDirectiveNr(resultAsString(r, 2));
             eds.setStartDate(resultAsLocalDate(r, 3));
             eds.setEndDate(resultAsLocalDate(r, 4));
+            return eds;
+        }, Collectors.toList())));
+    }
+    
+    private Map<Long, List<ExistingDirectiveStudentDto>> studentExistingExternalStudyDirectives(Long directiveId, List<Long> studentIds) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive d "
+                + "join directive_student ds on ds.directive_id = d.id");
+        qb.requiredCriteria("ds.student_id in (:studentIds)", "studentIds", studentIds);
+        qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_VALIS);
+
+        qb.filter("((ds.canceled = false and d.status_code = :directiveStatus and ds.end_date >= :today)"
+                + (directiveId != null ? " or ds.id in (select ds2.directive_student_id from directive d2 "
+                + "join directive_student ds2 on ds2.directive_id = d2.id where d2.id = :directiveId))" : ")"));
+        qb.parameter("directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
+        qb.parameter("today", JpaQueryUtil.parameterAsTimestamp(LocalDate.now()));
+
+        qb.filter("(not exists (select 1 from directive d3 join directive_student ds3 on ds3.directive_id = d3.id "
+                + "where ds3.canceled = false and d3.type_code = :lopDirectiveType and ds3.student_id = ds.student_id "
+                + "and ds3.directive_student_id = ds.id)"
+                + (directiveId != null ? " or ds.id in (select ds4.directive_student_id from directive d4 "
+                + "join directive_student ds4 on ds4.directive_id = d4.id where d4.id = :directiveId))" : ")"));
+        qb.parameter("lopDirectiveType", DirectiveType.KASKKIRI_VALISKATK.name());
+
+        if (directiveId != null) {
+            qb.parameter("directiveId", directiveId);
+        }
+
+        List<?> data = qb.select("ds.student_id, ds.id, d.directive_nr, ds.start_date, ds.end_date, ds.application_id", em)
+                .getResultList();
+        if (data.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
+            ExistingDirectiveStudentDto eds = new ExistingDirectiveStudentDto();
+            eds.setId(resultAsLong(r, 1));
+            eds.setDirectiveNr(resultAsString(r, 2));
+            eds.setStartDate(resultAsLocalDate(r, 3));
+            eds.setEndDate(resultAsLocalDate(r, 4));
+            eds.setApplicationId(resultAsLong(r, 5));
             return eds;
         }, Collectors.toList())));
     }
@@ -1277,6 +1331,21 @@ public class DirectiveService {
             qb.parameter("existingLopDirectiveType", KASKKIRI_TUGILOPP.name());
             qb.filter("c.is_higher = false");
             break;
+        case KASKKIRI_VALISKATK:
+            // should exists confirmed and not canceled KASKKIRI_VALIS directive
+            qb.filter("exists (select d_valis.id from directive d_valis "
+                    + "join directive_student ds_valis on ds_valis.directive_id = d_valis.id and ds_valis.canceled = false and ds_valis.student_id = s.id "
+                    + "where d_valis.type_code = :valisDirectiveType and d_valis.status_code = :valisDirectiveStatus and ds_valis.end_date >= :today)");
+            // should not KASKKIRI_VALIS directive
+            qb.filter("not exists (select d_valiskatk.id from directive d_valiskatk "
+                    + "join directive_student ds_valiskatk on ds_valiskatk.directive_id = d_valiskatk.id and ds_valiskatk.student_id = s.id "
+                    + "where d_valiskatk.type_code = :valiskatkDirectiveType and ds_valiskatk.nominal_study_end >= :today)");
+            qb.requiredCriteria("s.status_code = :studentStatus", "studentStatus", StudentStatus.OPPURSTAATUS_V.name());
+            qb.parameter("valisDirectiveType", DirectiveType.KASKKIRI_VALIS.name());
+            qb.parameter("valiskatkDirectiveType", DirectiveType.KASKKIRI_VALISKATK.name());
+            qb.parameter("valisDirectiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
+            qb.parameter("today", LocalDate.now());
+            break;
         default:
             break;
         }
@@ -1312,6 +1381,23 @@ public class DirectiveService {
                     String description = resultAsString(a, 1);
                     applicationDto.setDescription(description != null ? description.replaceAll("\n", " ") : null);
                     applicationDto.setConfirmed(resultAsLocalDateTime(a, 2));
+                    return applicationDto;
+                }, applications));
+            } else if (KASKKIRI_VALIS == directiveType) {
+                JpaNativeQueryBuilder applicationQB = new JpaNativeQueryBuilder("from application a").groupBy("a.id");
+                // Remove rows where we have connection with directive already (excluding "tyhistatud" directives)
+                applicationQB.requiredCriteria("not exists (select 1 from directive_student ds_app join directive d_app on d_app.id = ds_app.directive_id " + 
+                        " where d_app.status_code in (:directiveStatusApp) and ds_app.application_id = a.id and ds_app.canceled is not true )", "directiveStatusApp",
+                        EnumUtil.toNameList(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD, DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL));
+                applicationQB.requiredCriteria("a.student_id = :studentId", "studentId", dto.getId());
+                applicationQB.requiredCriteria("a.type_code = :applicationType", "applicationType", ApplicationType.AVALDUS_LIIK_VALIS.name());
+                applicationQB.requiredCriteria("a.status_code = :applicationStatus", "applicationStatus", ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name());
+                
+                List<?> applications = applicationQB.select("a.id, a.representative_confirmed", em).getResultList();
+                dto.setApplications(StreamUtil.toMappedList(a -> {
+                    DirectiveStudentSearchDto.ApplicationMinDto applicationDto = new DirectiveStudentSearchDto.ApplicationMinDto();
+                    applicationDto.setId(resultAsLong(a, 0));
+                    applicationDto.setConfirmed(resultAsLocalDateTime(a, 1));
                     return applicationDto;
                 }, applications));
             }
@@ -1455,6 +1541,10 @@ public class DirectiveService {
         if(applicationId != null) {
             // verify application to be linked
             String directiveType = EntityUtil.getCode(directiveStudent.getDirective().getType());
+            // There is no application mapping for valiskatk
+            if (directiveType.equals(DirectiveType.KASKKIRI_VALISKATK.name())) {
+                directiveType = DirectiveType.KASKKIRI_VALIS.name();
+            }
             Application app = em.getReference(Application.class, applicationId);
             ApplicationType applicationType = ApplicationType.valueOf(EntityUtil.getCode(app.getType()));
             // should be from same student and of matching type

@@ -2,8 +2,8 @@
   <legend md-colors="{color: 'primary-800'}" class="md-title-small period" ng-if="wrapper.declaration.studyPeriod">
     {{currentLanguageNameField(wrapper.declaration.studyPeriod)}}
     <span ng-if="wrapper.formState.type === DECLARATION_PERIOD_TYPE.CURRENT && wrapper.formState.declarationPeriodStart && wrapper.formState.declarationPeriodEnd">
-      ({{'declaration.declarationPeriod' | translate: {from: (wrapper.formState.declarationPeriodStart | hoisDateTime),
-         thru: (wrapper.formState.declarationPeriodEnd | hoisDateTime)} }})
+      ({{'declaration.declarationPeriod' | translate: {from: (wrapper.formState.declarationPeriodStart | hoisDateTimeMin),
+         thru: (wrapper.formState.declarationPeriodEnd | hoisDateTimeMin)} }})
     </span>
   </legend>
   <br hide-gt-xs ng-if="wrapper.formState.type === DECLARATION_PERIOD_TYPE.CURRENT && wrapper.formState.declarationPeriodStart && wrapper.formState.declarationPeriodEnd">

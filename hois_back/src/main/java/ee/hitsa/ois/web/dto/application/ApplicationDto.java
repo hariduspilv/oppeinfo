@@ -18,6 +18,7 @@ import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
+import ee.hitsa.ois.web.dto.apelapplication.ApelSchoolResult;
 
 public class ApplicationDto extends InsertedChangedVersionDto {
 
@@ -43,6 +44,7 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     private LocalDate endDate;
     private Long studyPeriodStart;
     private Long studyPeriodEnd;
+    private ApelSchoolResult apelSchool;
     private ValidAcademicLeaveDto validAcademicLeave;
     private LocalDateTime submitted;
     private Boolean isAbroad;
@@ -89,7 +91,7 @@ public class ApplicationDto extends InsertedChangedVersionDto {
         if (application.getStudentGroup() != null) {
             dto.setStudentGroup(AutocompleteResult.of(application.getStudentGroup()));
         }
-
+        dto.setApelSchool(ApelSchoolResult.of(application.getApelSchool()));
         DirectiveStudent directiveStudent = getDirectiveStudent(application);
         if (directiveStudent != null) {
             dto.setValidAcademicLeave(ValidAcademicLeaveDto.of(directiveStudent));
@@ -537,5 +539,14 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     public void setHasSpecialNeed(Boolean hasSpecialNeed) {
         this.hasSpecialNeed = hasSpecialNeed;
     }
+
+    public ApelSchoolResult getApelSchool() {
+        return apelSchool;
+    }
+
+    public void setApelSchool(ApelSchoolResult apelSchool) {
+        this.apelSchool = apelSchool;
+    }
+
 
 }

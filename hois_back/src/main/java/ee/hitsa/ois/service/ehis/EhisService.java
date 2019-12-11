@@ -26,6 +26,7 @@ import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.ExceptionUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hois.soap.LogContext;
 import ee.hois.xroad.ehis.generated.KhlIsikuandmedLisa;
@@ -205,6 +206,10 @@ public abstract class EhisService {
     protected static String code(Classifier classifier) {
         return EntityUtil.getNullableCode(classifier);
     }
+    
+    protected static BigInteger bigInt(Number number) {
+        return number != null ? BigInteger.valueOf(number.longValue()) : null;
+    }
 
     protected static String ehisValue(Classifier classifier) {
         return classifier != null ? classifier.getEhisValue() : null;
@@ -212,6 +217,10 @@ public abstract class EhisService {
 
     protected static String name(Classifier classifier) {
         return classifier != null ? classifier.getNameEt() : null;
+    }
+    
+    public static String name(Translatable translatable) {
+        return translatable != null ? translatable.getNameEt() : null;
     }
 
     protected static String value(Classifier classifier) {

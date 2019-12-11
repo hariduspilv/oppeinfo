@@ -68,11 +68,12 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
     var Endpoint = QueryUtils.endpoint('/school/studyYears');
 
     var periodTypes = Classifier.valuemapper({type: 'OPPEPERIOOD'});
+    
     $scope.eventTypes = {};
     Classifier.queryForDropdown({mainClassCode: 'SYNDMUS'}, function(arrayResult) {
       $scope.eventTypes = Classifier.toMap(arrayResult);
     });
-
+    
     function afterLoad() {
       DataUtils.convertStringToDates($scope.studyYear, ['startDate', 'endDate']);
       $scope.studyPeriods = $scope.studyYear.studyPeriods || [];
@@ -85,7 +86,9 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
     }
 
     if (id) {
-      $scope.studyYear = Endpoint.get({id: id}, afterLoad);
+      $q.all(periodTypes.promises).then(function () {
+        $scope.studyYear = Endpoint.get({id: id}, afterLoad);
+      });
     } else if (code) {
       $scope.studyYear = new Endpoint({year: code});
       $scope.studyPeriods = [];

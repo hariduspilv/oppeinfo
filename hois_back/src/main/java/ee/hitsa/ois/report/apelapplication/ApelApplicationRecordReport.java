@@ -16,7 +16,8 @@ public class ApelApplicationRecordReport {
     private final List<ApelApplicationFormalSubjectOrModuleReport> formalSubjectsOrModules;
     private final List<ApelApplicationFormalReplacedSubjectOrModuleReport> formalReplacedSubjectsOrModules;
     
-    public ApelApplicationRecordReport(ApelApplicationReport report, ApelApplicationRecord record, Language lang) {
+    public ApelApplicationRecordReport(ApelApplicationReport report, ApelApplicationRecord record,
+            Boolean letterGrades, Language lang) {
         isFormalLearning = record.getIsFormalLearning();
         
         if (Boolean.TRUE.equals(isFormalLearning)) {
@@ -29,13 +30,17 @@ public class ApelApplicationRecordReport {
             recordNr = report.getInformalLearningRecords();
         }
         
-        informalSubjectsOrModules = StreamUtil.toMappedList(r -> new ApelApplicationInformalSubjectOrModuleReport(r, lang), record.getInformalSubjectsOrModules());
+        informalSubjectsOrModules = StreamUtil.toMappedList(r -> new ApelApplicationInformalSubjectOrModuleReport(r, letterGrades, lang),
+                record.getInformalSubjectsOrModules());
         informalSubjectsOrModules.sort(Comparator.comparing(ApelApplicationInformalSubjectOrModuleReport::getName));
-        informalExperiences = StreamUtil.toMappedList(r -> new ApelApplicationInformalExperienceReport(r, lang), record.getInformalExperiences());
+        informalExperiences = StreamUtil.toMappedList(r -> new ApelApplicationInformalExperienceReport(r, lang),
+                record.getInformalExperiences());
         informalExperiences.sort(Comparator.comparing(ApelApplicationInformalExperienceReport::getName));
-        formalSubjectsOrModules = StreamUtil.toMappedList(r -> new ApelApplicationFormalSubjectOrModuleReport(r, lang), record.getFormalSubjectsOrModules());
+        formalSubjectsOrModules = StreamUtil.toMappedList(r -> new ApelApplicationFormalSubjectOrModuleReport(r, letterGrades, lang),
+                record.getFormalSubjectsOrModules());
         formalSubjectsOrModules.sort(Comparator.comparing(ApelApplicationFormalSubjectOrModuleReport::getName));
-        formalReplacedSubjectsOrModules = StreamUtil.toMappedList(r -> new ApelApplicationFormalReplacedSubjectOrModuleReport(r, lang), record.getFormalReplacedSubjectsOrModules());
+        formalReplacedSubjectsOrModules = StreamUtil.toMappedList(r -> new ApelApplicationFormalReplacedSubjectOrModuleReport(r, lang),
+                record.getFormalReplacedSubjectsOrModules());
         formalReplacedSubjectsOrModules.sort(Comparator.comparing(ApelApplicationFormalReplacedSubjectOrModuleReport::getName));
     }
     

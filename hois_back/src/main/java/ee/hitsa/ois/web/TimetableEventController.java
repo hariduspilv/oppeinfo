@@ -60,7 +60,7 @@ public class TimetableEventController {
     public Page<TimetableEventSearchDto> search(HoisUserDetails user, @Valid TimetableEventSearchCommand criteria,
             Pageable pageable) {
         TimetableUserRights.assertCanSearchEvents(user);
-        return timetableEventService.search(criteria, pageable, user.getSchoolId());
+        return timetableEventService.search(criteria, pageable, user);
     }
     
     @GetMapping("/rooms")

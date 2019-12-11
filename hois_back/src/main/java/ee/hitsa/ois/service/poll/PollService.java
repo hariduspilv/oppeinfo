@@ -532,18 +532,17 @@ public class PollService {
         EntityUtil.save(pollTheme, em);
     }
     
-    public void createQuestion(HoisUserDetails user, PollTheme pollTheme, QuestionCommand questionCommand) {
+    public void createPollThemeQuestion(HoisUserDetails user, PollTheme pollTheme, QuestionCommand questionCommand) {
         PollThemeQuestion pollThemeQuestion = new PollThemeQuestion();
         pollThemeQuestion.setQuestion(new Question());
         pollThemeQuestion.setPollTheme(pollTheme);
-        saveQuestion(user, questionCommand, pollThemeQuestion);
+        savePollThemeQuestion(user, questionCommand, pollThemeQuestion);
     }
-
-    public void saveQuestion(HoisUserDetails user, QuestionCommand questionCommand, PollThemeQuestion pollThemeQuestion) {
-        EntityUtil.setUsername(user.getUsername(), em);
+    
+    public Question createQuestion(HoisUserDetails user, QuestionCommand questionCommand, Question oldQuestion) {
         Question question = null;
         if (questionCommand.getQuestion() == null) {
-            question = pollThemeQuestion.getQuestion();
+            question = oldQuestion;
             question.setSchool(em.getReference(School.class, user.getSchoolId()));
             EntityUtil.bindToEntity(questionCommand, question);
             question.setAddInfoEn(questionCommand.getAddInfoEt());
@@ -566,9 +565,16 @@ public class PollService {
             question = em.getReference(Question.class, questionCommand.getQuestion());
             question.setNameEt(questionCommand.getNameEt());
             question.setNameEn(questionCommand.getNameEt());
-            pollThemeQuestion.setQuestion(question);
         }
-        EntityUtil.save(question, em);
+        return EntityUtil.save(question, em);
+    }
+
+    public void savePollThemeQuestion(HoisUserDetails user, QuestionCommand questionCommand, PollThemeQuestion pollThemeQuestion) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        
+        Question question = createQuestion(user, questionCommand, pollThemeQuestion.getQuestion());
+        pollThemeQuestion.setQuestion(question);
+        
         EntityUtil.bindToEntity(questionCommand, pollThemeQuestion);
         if (!pollThemeQuestion.getPollTheme().getId().equals(questionCommand.getTheme())) {
             pollThemeQuestion.setPollTheme(em.getReference(PollTheme.class, questionCommand.getTheme()));
@@ -603,9 +609,9 @@ public class PollService {
         }
     }
 
-    public void updateQuestion(HoisUserDetails user, PollThemeQuestion pollThemeQuestion,
+    public void updatePollThemeQuestion(HoisUserDetails user, PollThemeQuestion pollThemeQuestion,
             QuestionCommand questionCommand) {
-        saveQuestion(user, questionCommand, pollThemeQuestion);
+        savePollThemeQuestion(user, questionCommand, pollThemeQuestion);
     }
 
     public void confirm(HoisUserDetails user, Poll poll) {

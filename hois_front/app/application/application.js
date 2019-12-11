@@ -3,7 +3,7 @@
 
 angular.module('hitsaOis').controller('ApplicationController', function ($http, $location, $q, $route, $scope, $timeout,
   ArrayUtils, AuthService, Classifier, Curriculum, DataUtils, FormUtils, QueryUtils, USER_ROLES, config, dialogService,
-  message, oisFileService) {
+  message, oisFileService, $filter) {
   var ApplicationsEndpoint = QueryUtils.endpoint('/applications');
 
   $scope.removeFromArray = ArrayUtils.remove;
@@ -11,18 +11,29 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
   $scope.isCreate = $route.current.locals.isCreate;
   $scope.isView = $route.current.locals.isView;
   $scope.now = new Date();
+  $scope.formState = {};
+
+  $scope.apelSchoolChanged = function () {
+    if ($scope.formState.apelSchool !== undefined) {
+      $scope.application.apelSchool = $scope.formState.apelSchool.id;
+      $scope.application.country = $scope.formState.apelSchool.country;
+    } else {
+      $scope.application.apelSchool = undefined;
+      $scope.application.country = undefined;
+    }
+  };
 
   function entityToForm(savedApplication) {
     DataUtils.convertStringToDates(savedApplication, ['startDate', 'endDate']);
-    if (angular.isArray(savedApplication.plannedSubjects)) {
-      savedApplication.plannedSubjects.forEach(function (plannedSubject) {
-        if (angular.isArray(plannedSubject.equivalents)) {
-          plannedSubject.subjectsSelected = plannedSubject.equivalents.map(function (it) { return it.subject; });
-        }
-      });
-    }
+    savedApplication.plannedSubjects.map(function(plannedSubject) {
+      plannedSubject.subjectsSelected = plannedSubject.equivalents;
+      return plannedSubject;
+    });
     angular.extend($scope.application, savedApplication);
-
+    $scope.formState.apelSchool = savedApplication.apelSchool;
+    if ($scope.formState.apelSchool) {
+      $scope.apelSchoolChanged();
+    }
     $scope.canChange = canChange($scope.application);
     $scope.canSave = canSave($scope.application);
   }
@@ -109,12 +120,12 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
   };
 
   $scope.subjectsListView = function (plannedSubject) {
-    if (angular.isDefined(plannedSubject) && angular.isArray(plannedSubject.subjectsSelected) && angular.isArray($scope.studentSubjects)) {
-      var subjects = [];
-      $scope.studentSubjects.forEach(function (it) {
-        if (plannedSubject.subjectsSelected.indexOf(it.id) !== -1) {
-          subjects.push($scope.currentLanguageNameField(it));
-        }
+    var subjects = [];
+    if (angular.isDefined(plannedSubject) && angular.isArray(plannedSubject.equivalents)) {
+      plannedSubject.equivalents.forEach(function (it) {
+          if (it.nameEt !== null && it.nameEt !== undefined) {
+            subjects.push($scope.currentLanguageNameField(it));
+          }
       });
       return subjects.join(", ");
     }
@@ -210,10 +221,6 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       }
     };
 
-    $scope.plannedSubjectLength = function () {
-      return angular.isArray($scope.application.plannedSubjects) ? $scope.application.plannedSubjects.length : 0;
-    };
-
     $scope.addPlannedSubjectRow = function () {
       if (!angular.isArray($scope.application.plannedSubjects)) {
         $scope.application.plannedSubjects = [];
@@ -221,20 +228,42 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       $scope.application.plannedSubjects.push({ equivalents: [] });
     };
 
-    $scope.subjectsSelected = function (plannedSubject) {
+    $scope.subjectsChanged = function (plannedSubject) {
       if (angular.isArray(plannedSubject.subjectsSelected)) {
         var newEquivalents = [];
-        plannedSubject.subjectsSelected.forEach(function (subjectId) {
+        plannedSubject.subjectsSelected.forEach(function (selectedSubject) {
           var found = false;
           for (var i = 0; i < plannedSubject.equivalents.length && !found; i++) {
             var equivalent = plannedSubject.equivalents[i];
-            if (equivalent.subject === subjectId) {
+            if (equivalent.subject === selectedSubject.subject) {
+              found = true;
+              newEquivalents.push(equivalent);
+            }
+          }
+          if (!found) {
+            newEquivalents.push({subject: selectedSubject.subject});
+          }
+        });
+        plannedSubject.equivalents = newEquivalents;
+      } else {
+        plannedSubject.equivalents = [];
+      }
+    };
+
+    $scope.moduleOrThemeSelected = function(plannedSubject) {
+      if (angular.isArray(plannedSubject.subjectsSelected)) {
+        var newEquivalents = [];
+        plannedSubject.subjectsSelected.forEach(function (moduleTheme) {
+          var found = false;
+          for (var i = 0; i < plannedSubject.equivalents.length && !found; i++) {
+            var equivalent = plannedSubject.equivalents[i];
+            if (equivalent.themeId === moduleTheme.themeId && equivalent.moduleId === moduleTheme.moduleId) {
               newEquivalents.push(equivalent);
               found = true;
             }
           }
           if (!found) {
-            newEquivalents.push({ subject: subjectId });
+            newEquivalents.push({ themeId: moduleTheme.themeId, moduleId: moduleTheme.moduleId });
           }
         });
         plannedSubject.equivalents = newEquivalents;
@@ -248,14 +277,95 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       $scope.application.isPeriod = true;
       $scope.application.isAbroad = false;
     }
-
-    $scope.studentSubjects = QueryUtils.endpoint('/students/' + $scope.application.student.id + '/subjects').query();
+    $scope.student = QueryUtils.endpoint('/students/' + $scope.application.student.id).get();
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query({}, function (response) {
       response.forEach(function (studyPeriod) {
         studyPeriod.display = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
       });
     });
-    $q.all([$scope.studentSubjects.$promise, $scope.studyPeriods.$promise]).then(loadFormDeferred.resolve);
+    $q.resolve($scope.student.$promise, function() {loadForm(loadFormDeferred);});
+  }
+
+  function sortByName(array) {
+    return $filter('orderBy')(array, $scope.currentLanguageNameField());
+  }
+  
+  function loadForm(loadFormDeferred) {
+    if ($scope.student.curriculumVersion.isVocational) {
+      $scope.modulesAndThemesQuery = QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query({
+        student: $scope.application.student.id,
+        curriculumVersion: $scope.student.curriculumVersion.id
+      });
+    } else {
+      $scope.studentSubjects = QueryUtils.endpoint('/autocomplete/subjectsList').query();
+    }
+    $scope.apelSchools = QueryUtils.endpoint('/autocomplete/apelschools').query();
+    $q.all([$scope.student.curriculumVersion.isVocational ? $scope.modulesAndThemesQuery.$promise : $scope.studentSubjects.$promise, 
+      $scope.studyPeriods.$promise, $scope.apelSchools.$promise])
+    .then(function () {resolve(loadFormDeferred);});
+  }
+
+  $scope.addNewSchool = function () {
+    $scope.formState.isNewSchool = true;
+    emptyNewSchoolForm();
+  };
+
+  $scope.cancelCreatingNewSchool = function () {
+    $scope.formState.isNewSchool = false;
+    emptyNewSchoolForm();
+  };
+
+  $scope.newSchoolCountryChanged = function (countryCode) {
+    $scope.newSchoolEst = countryCode === 'RIIK_EST' ? true : false;
+    $scope.application.newApelSchool.ehisSchool = null;
+  };
+  
+  function emptyNewSchoolForm() {
+    $scope.newSchoolEst = false;
+    if ($scope.application) {
+      $scope.application.apelSchool = null;
+      $scope.application.newApelSchool = null;
+    }
+  }
+
+  function resolve(loadFormDeferred) {
+    if ($scope.student.curriculumVersion.isVocational) {
+      $scope.modulesAndThemes = getModulesAndThemes($scope.modulesAndThemesQuery);
+    } else {
+      $scope.studentSubjects = $scope.studentSubjects.map(function (autocompleteSubject) {
+        return {subject: autocompleteSubject.id, nameEt: autocompleteSubject.nameEt, nameEn: autocompleteSubject.nameEn};
+      });
+    }
+    loadFormDeferred.resolve();
+  }
+
+  function getModulesAndThemes(result) {
+    var modulesAndThemes = [];
+    if (result) {
+      result = sortByName(result);
+    
+      for (var i = 0; i < result.length; i++) {
+        modulesAndThemes.push({
+          moduleId: result[i].id,
+          nameEt: result[i].nameEt,
+          nameEn: result[i].nameEn,
+          isModule: true
+        });
+        var themes = sortByName(result[i].themes);
+        if (themes) {
+          for (var j = 0; j < themes.length; j++) {
+            modulesAndThemes.push({
+              moduleId: result[i].id,
+              themeId: themes[j].id,
+              nameEt: result[i].nameEt + "/" + themes[j].nameEt,
+              nameEn: result[i].nameEn + "/" + themes[j].nameEn,
+              isModule: false,
+            });
+          }
+        }
+      }
+      return modulesAndThemes;
+    }
   }
 
   function applicationOverskava(student, loadFormDeferred) {
@@ -486,6 +596,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
         $scope.studentSearchCriteria = { active: true, academicLeave: true };
         break;
       case 'AVALDUS_LIIK_VALIS':
+        $scope.studentSearchCriteria = { studying: true };
+        break;
       case 'AVALDUS_LIIK_OVORM':
       case 'AVALDUS_LIIK_MUU':
         $scope.studentSearchCriteria = { studying: true, showGuestStudent: true };
@@ -560,6 +672,28 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     QueryUtils.endpoint('/applications/' + $scope.application.id + '/submit/').put().$promise.then(function (response) {
       message.info('application.messages.submitted');
       if ($scope.auth.isAdmin() || $scope.isView) {
+        entityToForm(response);
+        $scope.applicationForm.$setPristine();
+      } else {
+        $location.url('/applications/' + $scope.application.id + '/view?_noback');
+      }
+    }).catch(angular.noop);
+  }
+
+  $scope.updateSubject = function() {
+    FormUtils.withValidForm($scope.applicationForm, function () {
+      if (angular.isDefined($scope.applicationForm) && $scope.applicationForm.$dirty === true ) {
+        dialogService.confirmDialog({prompt: 'application.messages.confirmSave'}, function() {
+          changeApplicationSubjects();
+        });
+      }
+    });
+  };
+  
+  function changeApplicationSubjects() {
+    QueryUtils.endpoint('/applications/' + $scope.application.id + '/subjects').put({plannedSubjects: $scope.application.plannedSubjects}).$promise.then(function (response) {
+      message.info('application.messages.saved');
+      if ($scope.isView) {
         entityToForm(response);
         $scope.applicationForm.$setPristine();
       } else {
@@ -716,6 +850,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
   };
 
   function beforeSave() {
+    if ($scope.application.type === 'AVALDUS_LIIK_VALIS' && $scope.application.abroadProgramme === 'VALISKOOL_PROGRAMM_1_1') {
+    }
     if ($scope.application.type === 'AVALDUS_LIIK_RAKKAVA') {
       var applicationOmoduleThemes = [];
 

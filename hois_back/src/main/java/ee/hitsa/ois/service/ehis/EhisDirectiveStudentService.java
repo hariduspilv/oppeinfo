@@ -478,13 +478,21 @@ public class EhisDirectiveStudentService extends EhisService {
 
             KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
             KhlLyhiajaliseltValismaal khlLyhiajaliseltValismaal = new KhlLyhiajaliseltValismaal();
+            Long studentId = EntityUtil.getNullableId(directiveStudent.getStudent());
+            khlLyhiajaliseltValismaal.setLyhiajaliseltValismaalId(bigInt(studentId));
             khlLyhiajaliseltValismaal.setMuutusKp(date(directive.getConfirmDate()));
-            khlLyhiajaliseltValismaal.setPerioodAlates(date(directiveStudent.getStartDate()));
-            khlLyhiajaliseltValismaal.setPerioodKuni(date(directiveStudent.getEndDate()));
+            if (directiveStudent.getStartDate() != null && directiveStudent.getEndDate() != null) {
+                khlLyhiajaliseltValismaal.setPerioodAlates(date(directiveStudent.getStartDate()));
+                khlLyhiajaliseltValismaal.setPerioodKuni(date(directiveStudent.getEndDate()));
+            } else if (directiveStudent.getStudyPeriodStart() != null && directiveStudent.getStudyPeriodEnd() != null) {
+                khlLyhiajaliseltValismaal.setPerioodAlates(date(directiveStudent.getStudyPeriodStart().getStartDate()));
+                khlLyhiajaliseltValismaal.setPerioodKuni(date(directiveStudent.getStudyPeriodEnd().getEndDate()));
+            }
             khlLyhiajaliseltValismaal.setKlEesmark(ehisValue(directiveStudent.getAbroadPurpose()));
             khlLyhiajaliseltValismaal.setAinepunkte(points.toString());
-            khlLyhiajaliseltValismaal.setNominaalajaPikendamine(BigInteger.valueOf(nominalStudyExtension.longValue()));
-            khlLyhiajaliseltValismaal.setOppeasutuseNimi(Boolean.TRUE.equals(directiveStudent.getIsAbroad()) ? directiveStudent.getAbroadSchool() : name(directiveStudent.getEhisSchool()));
+            khlLyhiajaliseltValismaal.setNominaalajaPikendamine(bigInt(nominalStudyExtension));
+            khlLyhiajaliseltValismaal.setOppeasutuseNimi(Boolean.TRUE.equals(directiveStudent.getIsAbroad()) ? 
+                    (directiveStudent.getAbroadSchool() != null ? directiveStudent.getAbroadSchool() : name(directiveStudent.getApelSchool())) : name(directiveStudent.getEhisSchool()));
             khlLyhiajaliseltValismaal.setKlSihtriik(value2(directiveStudent.getCountry()));
             khlLyhiajaliseltValismaal.setKlProgramm(ehisValue(directiveStudent.getAbroadProgramme()));
 

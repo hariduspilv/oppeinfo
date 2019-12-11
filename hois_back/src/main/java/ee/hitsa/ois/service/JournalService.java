@@ -680,16 +680,18 @@ public class JournalService {
     private void saveJournalEntryStudents(HoisUserDetails user, JournalEntryForm journalEntryForm,
             JournalEntry journalEntry) {
         for (JournalEntryStudentForm journalEntryStudentForm : journalEntryForm.getJournalEntryStudents()) {
+            // is entry lessons is not set then it is considered to be 1 but it won't be saved
+            Long lessons = journalEntryForm.getLessons() != null ? journalEntryForm.getLessons() : Long.valueOf(1);
             if (journalEntryStudentForm.getId() != null) {
                 JournalEntryStudent journalEntryStudent = em.getReference(JournalEntryStudent.class, journalEntryStudentForm.getId());
                 assertJournalEntryStudentRules(journalEntryStudent.getJournalStudent());
                 
-                updateJournalStudentEntry(user, journalEntryStudent, journalEntryStudentForm, journalEntryForm.getLessons());
+                updateJournalStudentEntry(user, journalEntryStudent, journalEntryStudentForm, lessons);
                 if (Boolean.TRUE.equals(journalEntryStudentForm.getRemoveStudentHistory())) {
                     removeStudentGradeHistory(user, journalEntryStudent);
                 }
             } else {
-                saveJournalStudentEntry(user, journalEntry, journalEntryStudentForm, journalEntryForm.getLessons());
+                saveJournalStudentEntry(user, journalEntry, journalEntryStudentForm, lessons);
             }
         }
         EntityUtil.bindEntityCollection(journalEntry.getJournalEntryCapacityTypes(),
@@ -804,15 +806,18 @@ public class JournalService {
         }
         journalEntry.getJournalEntryStudents().add(journalEntryStudent);
     }
-    
-    private void updateStudentEntryAbsences(JournalEntryStudent journalEntryStudent, JournalEntryStudentForm form, Long lessons) {
+
+    private void updateStudentEntryAbsences(JournalEntryStudent journalEntryStudent, JournalEntryStudentForm form,
+            Long lessons) {
         journalEntryStudent.setIsLessonAbsence(form.getIsLessonAbsence());
-        
+
         if (Boolean.TRUE.equals(form.getIsLessonAbsence())) {
             updateStudentEntryLessonAbsences(journalEntryStudent, form, lessons);
         } else {
-            if (form.getAbsence() != null && !form.getAbsence().equals(EntityUtil.getNullableCode(journalEntryStudent.getAbsence()))) {
-                journalEntryStudent.setAbsenceInserted(LocalDateTime.now());
+            if (form.getAbsence() != null) {
+                if (!form.getAbsence().equals(EntityUtil.getNullableCode(journalEntryStudent.getAbsence()))) {
+                    journalEntryStudent.setAbsenceInserted(LocalDateTime.now());
+                }
             } else {
                 journalEntryStudent.setAbsenceInserted(null);
             }
@@ -820,19 +825,19 @@ public class JournalService {
             journalEntryStudent.getJournalEntryStudentLessonAbsences().clear();
         }
     }
-    
+
     private void updateStudentEntryLessonAbsences(JournalEntryStudent journalEntryStudent, JournalEntryStudentForm form,
             Long lessons) {
         journalEntryStudent.setAbsence(null);
         journalEntryStudent.setAbsenceInserted(null);
         journalEntryStudent.setAbsenceAccepted(null);
-        
+
         List<JournalEntryStudentLessonAbsenceForm> formLessonAbsences = StreamUtil.toFilteredList(
                 r -> r != null && r.getAbsence() != null && r.getLessonNr().longValue() <= lessons.longValue(),
                 form.getLessonAbsences().values());
         List<Long> formLessonNrs = StreamUtil.toMappedList(r -> r.getLessonNr(), formLessonAbsences);
         journalEntryStudent.getJournalEntryStudentLessonAbsences().removeIf(r -> !formLessonNrs.contains(r.getLessonNr()));
-        
+
         Map<Long, JournalEntryStudentLessonAbsence> savedLessonAbsences = StreamUtil.toMap(r -> r.getLessonNr(),
                 journalEntryStudent.getJournalEntryStudentLessonAbsences());
         for (JournalEntryStudentLessonAbsenceForm absenceForm : formLessonAbsences) {
@@ -1267,7 +1272,7 @@ public class JournalService {
 
         for (Long journalStudent : wholeDayAbsences.keySet()) {
             boolean practice = wholeDayAbsences.get(journalStudent).stream().anyMatch(a -> a.getContractId() != null);
-            
+
             JournalEntryStudentAcceptedAbsenceDto dto = new JournalEntryStudentAcceptedAbsenceDto();
             dto.setJournalStudent(journalStudent);
             dto.setWholeDay(Boolean.TRUE);

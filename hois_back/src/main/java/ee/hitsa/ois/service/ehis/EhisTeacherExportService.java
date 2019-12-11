@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -546,30 +547,50 @@ public class EhisTeacherExportService extends EhisService {
             ametikoht.setVastavusKval(yesNo(position.getMeetsQualification()));
             ametikoht.setKlassiJuhataja(yesNo(position.getIsClassTeacher()));
 
-            StreamUtil.nullSafeList(modules).stream().collect(Collectors.groupingBy(TeacherSubject::getCurriculumModuleId)).forEach((moduleId, jtModules) -> {
-                Set<Long> journalTeacherIds = StreamUtil.nullSafeList(jtModules).stream().map(TeacherSubject::getJournalTeacherId).collect(Collectors.toSet());
+            StreamUtil.nullSafeList(modules).stream().collect(Collectors.groupingBy(TeacherSubject::getJournalTeacherId)).forEach((jtId, jtModules) -> {
+                Set<Long> moduleIds = StreamUtil.nullSafeList(jtModules).stream().map(TeacherSubject::getCurriculumModuleId).collect(Collectors.toSet());
                 
                 PedagoogAine aine = new PedagoogAine();
-                CurriculumModule cm = em.getReference(CurriculumModule.class, moduleId);
-                aine.setAineNimetus(cm.getNameEt());
-                Curriculum c = cm.getCurriculum();
-                String merCode = c.getMerCode();
-                if(StringUtils.hasText(merCode)) {
-                    // FIXME strings are allowed values too
-                    aine.getOppekavaKood().add(new BigInteger(merCode));
-                }
-                // Should check every journal which is connected to this module and sum all hours.
-                aine.setTunde(journalTeacherIds.stream().mapToLong(jtId -> {
-                    JournalTeacher journalTeacher = em.getReference(JournalTeacher.class, jtId);
-                    if (Boolean.TRUE.equals(journalTeacher.getJournal().getCapacityDiff())) {
-                        return journalTeacher.getJournalTeacherCapacities().stream().mapToLong(JournalTeacherCapacity::getHours).sum();
+                
+                Set<String> uniqueName = new HashSet<>();
+                StringBuilder subjectName = new StringBuilder();
+                Set<String> uniqueMerCode = new HashSet<>();
+                moduleIds.forEach(moduleId -> {
+                    CurriculumModule cm = em.getReference(CurriculumModule.class, moduleId);
+                    if (!uniqueName.contains(cm.getNameEt().toUpperCase())) {
+                        if (subjectName.length() > 0) {
+                            subjectName.append(", ");
+                        }
+                        subjectName.append(cm.getNameEt());
+                        uniqueName.add(cm.getNameEt().toUpperCase());
                     }
-                    return journalTeacher.getJournal().getJournalCapacities().stream().mapToLong(JournalCapacity::getHours).sum();
-                }).sum());
-                CurriculumStudyLanguage studyLang = c.getStudyLanguages().stream().findFirst().orElse(null);
-                if(studyLang != null) {
-                    aine.setKlKeel(ehisValue(studyLang.getStudyLang()));
+                    Curriculum c = cm.getCurriculum();
+                    
+                    // TODO: Ask IKE. What to do if we have several curriculums
+                    // Should we rewrite it or not.
+                    if (aine.getKlKeel() == null) {
+                        CurriculumStudyLanguage studyLang = c.getStudyLanguages().stream().findFirst().orElse(null);
+                        if(studyLang != null) {
+                            aine.setKlKeel(ehisValue(studyLang.getStudyLang()));
+                        }
+                    }
+                    
+                    String merCode = c.getMerCode();
+                    if(StringUtils.hasText(merCode) && !uniqueMerCode.contains(merCode.toUpperCase())) {
+                        // FIXME strings are allowed values too
+                        aine.getOppekavaKood().add(new BigInteger(merCode));
+                        uniqueMerCode.add(merCode.toUpperCase());
+                    }
+                });
+                aine.setAineNimetus(subjectName.toString());
+
+                JournalTeacher journalTeacher = em.getReference(JournalTeacher.class, jtId);
+                if (Boolean.TRUE.equals(journalTeacher.getJournal().getCapacityDiff())) {
+                    aine.setTunde(journalTeacher.getJournalTeacherCapacities().stream().mapToLong(JournalTeacherCapacity::getHours).sum());
+                } else {
+                    aine.setTunde(journalTeacher.getJournal().getJournalCapacities().stream().mapToLong(JournalCapacity::getHours).sum());
                 }
+                
                 aine.setTunnidErivajadus(yesNo(Boolean.FALSE));
                 ametikoht.getAine().add(aine);
             });

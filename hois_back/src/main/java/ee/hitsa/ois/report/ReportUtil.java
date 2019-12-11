@@ -10,6 +10,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.enums.CurriculumModuleType;
+import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.Permission;
@@ -119,6 +120,30 @@ public abstract class ReportUtil {
         }
         Classifier c = classifierCache.getByCode(code, MainClassCode.valueOf(mainClassCode));
         return c != null ? c.getValue() : "? - " + code;
+    }
+
+    public static String gradeValue(Classifier grade, Boolean isLetterGrade, Language lang) {
+        if (grade == null) {
+            return "";
+        }
+        if (MainClassCode.KORGHINDAMINE.name().equals(grade.getMainClassCode())) {
+            return higherGradeValue(grade, isLetterGrade, lang);
+        }
+        return grade.getValue();
+    }
+
+    private static String higherGradeValue(Classifier grade, Boolean isLetterGrade, Language lang) {
+        HigherAssessment assessment = EnumUtil.valueOf(HigherAssessment.class, grade);
+        if (assessment == null) {
+            return "";
+        }
+        if (Boolean.TRUE.equals(assessment.getIsDistinctive())) {
+            return Boolean.TRUE.equals(isLetterGrade) ? grade.getValue2() : grade.getValue();
+        }
+        if (Boolean.TRUE.equals(isLetterGrade)) {
+            return TranslateUtil.name(grade, lang);
+        }
+        return Language.EN == lang ? grade.getExtraval2() : grade.getExtraval1();
     }
 
     public static void assertCanViewStudentGroupTeacherReport(HoisUserDetails user, StudentGroup studentGroup) {

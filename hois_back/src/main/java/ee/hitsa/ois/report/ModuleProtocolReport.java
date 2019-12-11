@@ -52,7 +52,7 @@ public class ModuleProtocolReport {
 
         protocolStudents = protocol.getProtocolStudents().stream()
                 .sorted((o1, o2) -> PersonUtil.SORT.compare(o1.getStudent().getPerson(), o2.getStudent().getPerson()))
-                .map(ps -> new ProtocolStudentReport(ps, higherSchool, Boolean.FALSE, lang))
+                .map(ps -> new ProtocolStudentReport(ps, Boolean.FALSE, lang))
                 .collect(Collectors.toList());
     }
 

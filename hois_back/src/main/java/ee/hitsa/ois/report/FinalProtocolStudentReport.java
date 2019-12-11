@@ -10,8 +10,10 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.protocol.ProtocolStudentOccupation;
 import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
+import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 
@@ -28,15 +30,23 @@ public class FinalProtocolStudentReport {
             Language lang) {
         name = PersonUtil.fullname(student.getStudent().getPerson());
 
+        // can't use ReportUtil.gradeValue because higher grade should not be taken from name
         if (student.getGrade() != null) {
-            grade = Boolean.FALSE.equals(isVocational) && Boolean.TRUE.equals(letterGrades)
-                    ? student.getGrade().getValue2()
-                    : student.getGrade().getValue();
+            if (Boolean.FALSE.equals(isVocational)) {
+                HigherAssessment assessment = EnumUtil.valueOf(HigherAssessment.class, student.getGrade());
+                if (Boolean.TRUE.equals(assessment.getIsDistinctive())) {
+                    grade = Boolean.TRUE.equals(letterGrades) ? student.getGrade().getValue2() : student.getGrade().getValue();
+                } else {
+                    grade = Language.EN == lang ?  student.getGrade().getExtraval2() :  student.getGrade().getExtraval1();
+                }
+            } else {
+                grade = student.getGrade().getValue();
+            }
+            gradeName = name(student.getGrade(), lang);
         } else {
             grade = null;
+            gradeName = null;
         }
-
-        gradeName = student.getGrade() != null ? name(student.getGrade(), lang) : null;
 
         List<ProtocolStudentOccupation> nonPartOccupations = StreamUtil.toFilteredList(
                 pso -> pso.getOccupation() != null && pso.getPartOccupation() == null,

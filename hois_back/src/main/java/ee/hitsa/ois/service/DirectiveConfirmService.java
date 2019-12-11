@@ -74,6 +74,7 @@ import ee.hitsa.ois.message.StudentScholarshipEnding;
 import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.service.ekis.EkisService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ApplicationUtil;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
@@ -451,9 +452,23 @@ public class DirectiveConfirmService {
                 }
             } else if(DirectiveType.KASKKIRI_VALIS.equals(directiveType)) {
                 boolean isAbroad = Boolean.TRUE.equals(ds.getIsAbroad());
-                if(isAbroad ? !StringUtils.hasText(ds.getAbroadSchool()) : ds.getEhisSchool() == null) {
-                    allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, isAbroad ? "abroadSchool" : "ehisSchool")));
+                if(isAbroad) {
+                    if (!StringUtils.hasText(ds.getAbroadSchool()) && ds.getApelSchool() == null) {
+                        allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "abroadSchool")));
+                    }
+                } else if (ds.getEhisSchool() == null) {
+                    allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "ehisSchool")));
                 }
+                SchoolType schoolType = schoolService.schoolType(EntityUtil.getId(directive.getSchool()));
+                boolean isOnlyHigher = schoolType.isHigher() && !schoolType.isVocational();
+                // manually checked fields for higher
+                // school that is both higher and vocational checks directive school type
+                if (isOnlyHigher || (directive.getIsHigher() != null && directive.getIsHigher().booleanValue())) {
+                    if (ds.getAbroadProgramme() == null) {
+                        allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "abroadProgramme")));
+                    }
+                }
+                ApplicationUtil.assertValidationRulesConfirm(ds, EntityUtil.getId(ds.getStudent()), em);
             }
             rowNum++;
         }

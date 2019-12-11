@@ -685,8 +685,8 @@ public class DirectiveViewStudentDto {
                     : null);
             break;
         case KASKKIRI_VALIS:
-            dto.setNewStudyPeriodStart(directiveStudent.getStudyPeriodStart() != null ? AutocompleteResult.of(directiveStudent.getStudyPeriodStart()) : null);
-            dto.setNewStudyPeriodEnd(directiveStudent.getStudyPeriodEnd() != null ? AutocompleteResult.of(directiveStudent.getStudyPeriodEnd()) : null);
+            dto.setNewStudyPeriodStart(directiveStudent.getStudyPeriodStart() != null ? AutocompleteResult.ofWithYear(directiveStudent.getStudyPeriodStart()) : null);
+            dto.setNewStudyPeriodEnd(directiveStudent.getStudyPeriodEnd() != null ? AutocompleteResult.ofWithYear(directiveStudent.getStudyPeriodEnd()) : null);
             break;
         case KASKKIRI_KYLALIS:
             dto.setCurriculumVersionObject(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);

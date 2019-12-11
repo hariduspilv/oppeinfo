@@ -391,7 +391,7 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
       if (!validStudyPeriod($scope.studyPeriod)) {
         return;
       }
-      $scope.periods.unshift($scope.studyPeriod)
+      $scope.periods.unshift($scope.studyPeriod);
       $scope.controller.period = $scope.studyPeriod.id;
     });
 

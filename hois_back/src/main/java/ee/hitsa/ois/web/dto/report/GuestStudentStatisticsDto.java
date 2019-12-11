@@ -13,17 +13,21 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class GuestStudentStatisticsDto {
     
-    private Long studentId;
-    private String guestStudent;
-    private AutocompleteResult curriculumVersion;
-    private String studentGroup;
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private Long duration;
-    private AutocompleteResult homeSchool;
-    private String homeCountry;
-    private String programme;
-    private Long eap;
+    protected Long studentId;
+    protected String guestStudent;
+    protected AutocompleteResult curriculumVersion;
+    protected String studentGroup;
+    protected LocalDate startDate;
+    protected LocalDate endDate;
+    protected Long duration;
+    protected AutocompleteResult homeSchool;
+    protected String homeCountry;
+    protected String programme;
+    protected Long eap;
+    
+    public GuestStudentStatisticsDto() {
+        
+    }
     
     public GuestStudentStatisticsDto(Object r) {
         this.studentId = resultAsLong(r, 0);

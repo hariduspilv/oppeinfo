@@ -10,7 +10,7 @@ angular.module('hitsaOis').constant('HigherGrade', {
   'KORGHINDAMINE_A': 'KORGHINDAMINE_A',
   'KORGHINDAMINE_M': 'KORGHINDAMINE_M',
   'KORGHINDAMINE_MI': 'KORGHINDAMINE_MI'
-}).factory('HigherGradeUtil', function (HigherGrade, ArrayUtils) {
+}).factory('HigherGradeUtil', function ($filter, HigherGrade, ArrayUtils) {
 
   var GRADES = [HigherGrade.KORGHINDAMINE_5, HigherGrade.KORGHINDAMINE_4, HigherGrade.KORGHINDAMINE_3,
     HigherGrade.KORGHINDAMINE_2, HigherGrade.KORGHINDAMINE_1, HigherGrade.KORGHINDAMINE_0,
@@ -26,6 +26,10 @@ angular.module('hitsaOis').constant('HigherGrade', {
   var POSITIVE_GRADE_LETTER_VALUES = ['E', 'D', 'C', 'B', 'A', 'P'];
   var DISTINCTIVE_GRADE_RANGE_VALUES = ['0', '1', '2', '3', '4', '5'];
   var DISTINCTIVE_GRADE_LETTER_VALUES = ['F', 'E', 'D', 'C', 'B', 'A'];
+
+  var _gradeSelectShownValue = function (grade, letterGrades) {
+    return $filter('hoisHigherGrade')(grade, letterGrades);
+  };
 
   return {
     isPositive: function(gradeCode) {
@@ -53,6 +57,9 @@ angular.module('hitsaOis').constant('HigherGrade', {
       return grades.sort(function (grade1, grade2) {
         return GRADES.indexOf(grade1.code) - GRADES.indexOf(grade2.code);
       });
+    },
+    gradeSelectShownValue: function (grade, letterGrades) {
+      return _gradeSelectShownValue(grade, letterGrades);
     }
   };
 });

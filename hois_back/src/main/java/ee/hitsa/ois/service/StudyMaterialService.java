@@ -193,7 +193,7 @@ public class StudyMaterialService {
         if (user != null) {
             if (!((user.isSchoolAdmin() || user.isLeadingTeacher() || user.isTeacher())
                     && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEMATERJAL))) {
-                if (user.isStudent()) {
+                if (user.isStudent() || user.isRepresentative()) {
                     isVisibleToStudents = Boolean.TRUE;
                 } else {
                     isPublic = Boolean.TRUE;

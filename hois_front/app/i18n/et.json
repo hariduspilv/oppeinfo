@@ -399,6 +399,7 @@
         "students": "Õppijad",
         "studentstatistics": "Õppijate statistika",
         "gueststudentstatistics": "Külalisõp. statistika",
+        "foreignstudentstatistics": "Välisõp. statistika",
         "studentstatisticsbyperiod": "Õppijate stat. perioodis",
         "teachersLoadHigher": "Õppejõu koormus (kõrg)",
         "teachersLoadVocationalHigher": "Õppejõu koormus (kutse)",
@@ -1560,6 +1561,7 @@
       "validEnd": "Kehtivuse lõpp",
       "valisEndDate": "Välisõppe lõpp",
       "valisStartDate": "Välisõppe algus",
+      "cancelDate": "Katkestamise kp",
       "guest": {
         "curriculumVersion": "Õppekava versioon",
         "endDate": "Õpingute lõpp",
@@ -2062,7 +2064,8 @@
       "creditsEap": "Maht EAP",
       "creditsEkap": "Maht EKAP",
       "creditsEapEkap": "Maht EAP/EKAP",
-      "merCode": "HTM kood"
+      "merCode": "HTM kood",
+      "code": "Õppekava kood"
     },
     "consecution": {
       "label": "Järgnevus",
@@ -2988,7 +2991,9 @@
     "academicLeaveRevocationDate": "Katkestamise kuupäev",
     "makeApplication": "Koosta avaldus",
     "plannedSubject": "Planeeritav õppeaine",
-    "substitutableSubject": "Asendatav õppeaine",
+    "plannedModulesThemes": "Planeeritav moodul/teema",
+    "substitutableSubject": "Võimalik asendatav õppeaine",
+    "substitutableModulesThemes": "Asendatavad moodulid/teemad",
     "justification": "Põhjendus",
     "rejection": "Avalduse tagasilükkamine",
     "rejectReason": "Avalduse tagasilükkamise põhjendus",
@@ -2998,6 +3003,7 @@
     "abroadStudiesStart": "Välisõpingute algus",
     "abroadStudiesEnd": "Välisõpingute lõpp",
     "otherText": "Tekst",
+    "changeDate": "Muutmise kuupäev",
     "deleteconfirm": "Kas oled kindel, et soovid avalduse kustutada?",
     "missingRepresentativeConfirmation": "Avaldusel puudub lapsevanema/esindaja kinnitus!",
     "supportService": {
@@ -3041,6 +3047,7 @@
       "rejected": "Avaldus on tagasi lükatud",
       "periodIsTooLong": "Avalduse periood on liiga pikk",
       "startIsEarlierThanToday": "Avalduse alguskuupäev ei tohi olla varasem hetkeajast",
+      "startIsEarlierThanEnd": "Avalduse alguse kuupäev peab olema varasem lõpu kuupäevast",
       "endPeriodMissing": "Avaldusel puudub lõpu periood",
       "endDateMissing": "Avaldusel puudub lõpu kuupäev",
       "startPeriodMissing": "Avaldusel puudub alguse periood",
@@ -3067,7 +3074,12 @@
       "confirmSaveAndSubmit": "Kas oled kindel, et soovid vormil olevad andmed salvestada ja esitada?",
       "confirmConfirm": "Kas oled kindel, et soovid kinnitada?",
       "confirmSaveAndConfirm": "Kas oled kindel, et soovid vormil olevad andmed salvestada ja kinnitada?",
-      "guestStudent": "Külalisõpilane ei saa taodelda"
+      "guestStudent": "Külalisõpilane ei saa taodelda",
+      "periodTooLargeUnderFive": "Kogu välisõppes õppes oldud aeg ei saa ületada 365 päeva",
+      "periodTooLargeOverFive": "Kogu välisõppes õppes oldud aeg ei saa ületada 730 päeva",
+      "confirmSave": "Kas oled kindel, et soovid muuta avaldust?",
+      "saved": "Avaldus on uuendatud",
+      "subjectChangeNotAllowed": "Avalduse muutmine keelatud"
     }
   },
   "reception": {
@@ -3666,7 +3678,7 @@
         "remark": "Märkus",
         "description": "Selgitus"
       },
-      "changingDateAndStartLessonWarning": "Algustunni või kuupäeva muutmisel uuendab süsteem õppija puudumise andmed vastavalt kinnitatud puudumistõenditele!"
+      "changingDateAndLessonsWarning": "Algustunni, tundide arvu või kuupäeva muutmisel uuendab süsteem õppija puudumise andmed vastavalt kinnitatud puudumistõenditele!"
     },
     "apelResults": {
       "label": "VÕTA tulemused",
@@ -4113,6 +4125,34 @@
         "duration": "Päevade arv",
         "results": "Õpitulemused",
         "eap": "Tehtud ainepunktide arv"
+      }
+    },
+    "foreignStudent": {
+      "studyYear": "Õppeaasta",
+      "name": "Välisõpilane",
+      "startDates": "Mineku ajavahemik",
+      "endDates": "Tuleku ajavahemik",
+      "curriculum": "Õppekava",
+      "curriculumVersion": "Õppekava versioon",
+      "structuralUnit": "Struktuuriüksus",
+      "educationLevel": "Haridustase",
+      "foreignSchool": "Välisõpingu kool",
+      "foreignCountry": "Välisõpingu riik",
+      "programme": "Programm",
+      "isExtention": "Pikendus",
+      "foreignDuration": "Viibimise ajavahemik",
+      "table": {
+        "foreignStudentName": "Välisõpilase nimi",
+        "curriculumVersion": "Õppekava versioon/rakenduskava",
+        "studentGroup": "Õpperühm",
+        "startDate": "Mineku kuupäev",
+        "endDate": "Tuleku kuupäev",
+        "duration": "Päevade arv",
+        "wantedEAP": "Taotletud EAP",
+        "recievedEAP": "Rahuldatud EAP",
+        "eap": "Sooritatud EAP",
+        "extention": "Pikendus",
+        "application": "Vaata avaldust"
       }
     },
     "curriculumscompletion": {

@@ -42,7 +42,6 @@ import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.timetable.Journal;
@@ -265,12 +264,14 @@ public class AutocompleteService {
         qb.requiredCriteria("c.main_class_code in (:mainClassCodes)", "mainClassCodes", mainClassCodes);
 
         List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational"
-                + ", c.main_class_code, c.value, c.value2, c.valid_from, c.valid_thru", em).getResultList();
-        List<ClassifierSelection> result = StreamUtil.toMappedList(r -> new ClassifierSelection(resultAsString(r, 0),
-                    resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3),
-                    resultAsBoolean(r, 4), resultAsBoolean(r, 5), resultAsBoolean(r, 6),
-                    resultAsString(r, 7), resultAsString(r, 8), resultAsString(r, 9),
-                    resultAsLocalDate(r, 10), resultAsLocalDate(r, 11)), data);
+                + ", c.main_class_code, c.value, c.value2, c.valid_from, c.valid_thru, c.extraval1, c.extraval2", em)
+                .getResultList();
+        List<ClassifierSelection> result = StreamUtil.toMappedList(
+                r -> new ClassifierSelection(resultAsString(r, 0), resultAsString(r, 1), resultAsString(r, 2),
+                        resultAsString(r, 3), resultAsBoolean(r, 4), resultAsBoolean(r, 5), resultAsBoolean(r, 6),
+                        resultAsString(r, 7), resultAsString(r, 8), resultAsString(r, 9), resultAsLocalDate(r, 10),
+                        resultAsLocalDate(r, 11), resultAsString(r, 12), resultAsString(r, 13)),
+                data);
 
         return ClassifierUtil.sort(mainClassCodes, result);
     }
@@ -284,13 +285,13 @@ public class AutocompleteService {
         qb.requiredCriteria("c.main_class_code in (:mainClassCodes)", "mainClassCodes", mainClassCodes);
 
         List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational"
-                + ", c.main_class_code, c.value, array_to_string(parents.parent, ', '), c.valid_from, c.valid_thru", em).getResultList();
+                + ", c.main_class_code, c.value, array_to_string(parents.parent, ', '), c.valid_from, c.valid_thru"
+                + ", c.extraval1, c.extraval2", em).getResultList();
         List<ClassifierSelection> result = StreamUtil.toMappedList(r -> {
-            ClassifierSelection c = new ClassifierSelection(resultAsString(r, 0),
-                    resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3),
-                    resultAsBoolean(r, 4), resultAsBoolean(r, 5), resultAsBoolean(r, 6),
-                    resultAsString(r, 7), resultAsString(r, 8), resultAsString(r, 9),
-                    resultAsLocalDate(r, 10), resultAsLocalDate(r, 11));
+            ClassifierSelection c = new ClassifierSelection(resultAsString(r, 0), resultAsString(r, 1),
+                    resultAsString(r, 2), resultAsString(r, 3), resultAsBoolean(r, 4), resultAsBoolean(r, 5),
+                    resultAsBoolean(r, 6), resultAsString(r, 7), resultAsString(r, 8), resultAsString(r, 9),
+                    resultAsLocalDate(r, 10), resultAsLocalDate(r, 11), resultAsString(r, 12), resultAsString(r, 13));
             String parents = resultAsString(r, 9);
             if(parents != null) {
                 c.setParents(Arrays.asList(parents.split(", ")));
@@ -302,41 +303,42 @@ public class AutocompleteService {
     }
 
     public List<Classifier> schoolCapacityTypes(Long schoolId, SchoolCapacityTypeCommand command) {
-        String from = "from school_capacity_type sct join classifier c on sct.capacity_type_code = c.code";
-        
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from school_capacity_type sct "
+                + "join classifier c on sct.capacity_type_code = c.code");
         qb.requiredCriteria("sct.school_id = :schoolId", "schoolId", schoolId);
         qb.requiredCriteria("sct.is_usable = :isUsable", "isUsable", Boolean.TRUE);
         qb.optionalCriteria("sct.is_higher = :isHigher", "isHigher", command.getIsHigher());
         qb.optionalCriteria("sct.is_timetable = :isTimetable", "isTimetable", command.getIsTimetable());
-        
         if (command.getJournalId() != null && Boolean.TRUE.equals(command.getEntryTypes())) {
-            qb.filter("c.code in (select jct.capacity_type_code from journal_capacity_type jct where jct.journal_id = " + command.getJournalId() + ")");
+            qb.filter("c.code in (select jct.capacity_type_code from journal_capacity_type jct " +
+                    "where jct.journal_id = " + command.getJournalId() + ")");
         }
-        
+
         List<?> data = qb.select("c.code", em).getResultList();
-        Set<Classifier> result = StreamUtil.toMappedSet(r -> em.getReference(Classifier.class, resultAsString(r, 0)), data);
-        
+        Set<String> typeCodes = StreamUtil.toMappedSet(r -> resultAsString(r, 0), data);
+
         if (command.getJournalId() != null) {
             if (Boolean.TRUE.equals(command.getEntryTypes())) {
-                List<Classifier> entryCapacities = em.createQuery(
-                        "select ject.capacityType from JournalEntryCapacityType ject where ject.journalEntry.journal.id = ?1", Classifier.class)
+                data = em.createNativeQuery("select ject.capacity_type_code from journal_entry_capacity_type ject "
+                        + "join journal_entry je on je.id = ject.journal_entry_id where je.journal_id = ?1")
                         .setParameter(1, command.getJournalId())
                         .getResultList();
-                result.addAll(entryCapacities);
+                typeCodes.addAll(StreamUtil.toMappedSet(r -> resultAsString(r, 0), data));
             } else {
-                List<Classifier> journalCapacities = em.createQuery(
-                        "select jct.capacityType from JournalCapacityType jct where jct.journal.id = ?1", Classifier.class)
+                data = em.createNativeQuery("select jct.capacity_type_code from journal_capacity_type jct "
+                        + "where jct.journal_id = ?1")
                         .setParameter(1, command.getJournalId())
                         .getResultList();
-                result.addAll(journalCapacities);
+                typeCodes.addAll(StreamUtil.toMappedSet(r -> resultAsString(r, 0), data));
             }
         }
-        
+
         List<Classifier> types = new ArrayList<>();
-        types.addAll(result);
-        types.sort(Comparator.comparing(Language.EN.equals(command.getLang()) ? Classifier::getNameEn : Classifier::getNameEt,
-                String.CASE_INSENSITIVE_ORDER));
+        if (!typeCodes.isEmpty()) {
+            types = em.createQuery("select c from Classifier c where c.code in (:codes) order by c."
+                    + (Language.EN.equals(command.getLang()) ? "nameEn" : "nameEt"), Classifier.class)
+                    .setParameter("codes", typeCodes).getResultList();
+        }
         return types;
     }
 
@@ -884,6 +886,7 @@ public class AutocompleteService {
         qb.optionalCriteria("cv.id = :cVersionId", "cVersionId", lookup.getCurriculumVersionId());
         qb.optionalCriteria("cv.id in (:cVersionIds)", "cVersionIds", lookup.getCurriculumVersionIds());
         qb.optionalCriteria("sg.id = :studentGroupId", "studentGroupId", lookup.getId());
+        qb.optionalCriteria("sg.is_guest = :isGuest", "isGuest", lookup.getIsGuest());
         qb.optionalCriteria("sg.teacher_id = :studentGroupTeacherId", "studentGroupTeacherId",
                 lookup.getStudentGroupTeacherId());
         qb.optionalCriteria("c.id in (select uc.curriculum_id from user_ u join user_curriculum uc on uc.user_id = u.id where u.id = :userId)", "userId",
@@ -1430,19 +1433,28 @@ public class AutocompleteService {
     }
 
     public Page<AutocompleteResult> vocationalOccupationModules(Long schoolId, VocationalModuleCommand lookup) {
-        String nameField = Language.EN.equals(lookup.getLang()) ? "nameEn" : "nameEt";
+        String nameField = Language.EN.equals(lookup.getLang()) ? "name_en" : "name_et";
         PageRequest pageable = sortAndLimit(nameField);
-        JpaQueryBuilder<CurriculumVersionOccupationModule> qb = new JpaQueryBuilder<>(CurriculumVersionOccupationModule.class, "cvo");
-        qb.requiredCriteria("cvo.curriculumModule.curriculum.school.id = :schoolId", "schoolId", schoolId);
-        qb.optionalCriteria("cvo.curriculumModule.curriculum.id in (select uc.curriculum.id from UserCurriculum uc "
-                + "where uc.user.id = :userId)", "userId", lookup.getUserId());
 
-        qb.filter("cvo.curriculumModule.curriculum.higher = false");
-        qb.optionalContains(String.format("concat(%s,' - ',%s,' (',%s,')')", "cvo.curriculumModule." + nameField,
-                "cvo.curriculumModule.module." + nameField, "cvo.curriculumVersion.code"), "name", lookup.getName());
-        qb.sort("cvo.curriculumModule." + nameField);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_version_omodule cvo "
+                + "join curriculum_version cv on cv.id = cvo.curriculum_version_id "
+                + "join curriculum c on c.id = cv.curriculum_id "
+                + "join curriculum_module cm on cm.id = cvo.curriculum_module_id and cm.curriculum_id = c.id "
+                + "join classifier mcl on mcl.code = cm.module_code").sort(pageable);
 
-        return JpaQueryUtil.pagingResult(qb, em, pageable).map(AutocompleteResult::of);
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalCriteria("c.id in (select uc.curriculum_id from user_curriculum uc "
+                + "where uc.user_id = :userId)", "userId", lookup.getUserId());
+
+        qb.filter("c.is_higher = false");
+        qb.optionalContains(String.format("concat(%s,' - ',%s,' (',%s,')')", "cm." + nameField,
+                "mcl." + nameField, "cv.code"), "name", lookup.getName());
+
+        return JpaQueryUtil.pagingResult(qb, "cvo.id, cm.name_et, cm.name_en, mcl.name_et mcl_name_et, "
+                + "mcl.name_en mcl_name_en, cv.code", em, pageable).map(r -> {
+            return AutocompleteResult.curriculumVersionOccupationModuleResult(resultAsLong(r, 0), resultAsString(r, 1),
+                    resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4), resultAsString(r, 5));
+        });
     }
 
     public List<JournalAutocompleteResult> journals(HoisUserDetails user, JournalAutocompleteCommand lookup) {

@@ -29,6 +29,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 
 public abstract class UserUtil {
@@ -97,7 +98,7 @@ public abstract class UserUtil {
     }
 
     public static boolean canCancelDirective(HoisUserDetails user, Directive directive) {
-        return !ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType())
+        return !ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType()) && !ClassifierUtil.equals(DirectiveType.KASKKIRI_VALISKATK, directive.getType())
             && ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD, directive.getStatus())
             && isSchoolAdmin(user, directive.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KASKKIRI);
     }
@@ -628,6 +629,10 @@ public abstract class UserUtil {
         if (expression) {
             throw new AccessDeniedException(message);
         }
+    }
+
+    public static void assertIsNotGuestStudent(Student student) {
+        throwAccessDeniedIf(ClassifierUtil.equals(StudentType.OPPUR_K, student.getType()), "main.messages.error.guestStudent");
     }
     
 }

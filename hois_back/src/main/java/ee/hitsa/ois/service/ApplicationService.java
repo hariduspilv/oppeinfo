@@ -35,6 +35,7 @@ import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.PracticeJournal;
 import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.apelapplication.ApelSchool;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.application.ApplicationFile;
 import ee.hitsa.ois.domain.application.ApplicationOccupationModuleTheme;
@@ -88,6 +89,7 @@ import ee.hitsa.ois.web.commandobject.application.ApplicationConfirmConfirmation
 import ee.hitsa.ois.web.commandobject.application.ApplicationForm;
 import ee.hitsa.ois.web.commandobject.application.ApplicationRejectForm;
 import ee.hitsa.ois.web.commandobject.application.ApplicationSearchCommand;
+import ee.hitsa.ois.web.commandobject.application.ApplicationSubjectForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.application.ApplicationApplicableDto;
 import ee.hitsa.ois.web.dto.application.ApplicationDto;
@@ -124,6 +126,8 @@ public class ApplicationService {
     private EntityManager em;
     @Autowired
     private Validator validator;
+    @Autowired
+    private ApelSchoolService apelSchoolService;
 
     /**
      * Search student applications
@@ -268,11 +272,17 @@ public class ApplicationService {
      * @throws ValidationFailedException if application type specific validation fails
      */
     public Application save(HoisUserDetails user, Application application, ApplicationForm applicationForm) {
+        if (ApplicationType.AVALDUS_LIIK_VALIS.name().equals(applicationForm.getType())) {
+            ApplicationUtil.assertValidationRulesSave(applicationForm, applicationForm.getStudent().getId(), em);
+        }
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.bindToEntity(applicationForm, application, classifierRepository, "student", "files", "plannedSubjects",
                 "studyPeriodStart", "studyPeriodStart", "accademicApplication", "newCurriculumVersion", "oldCurriculumVersion",
-                "submitted", "studentGroup", "committee", "supportServices", "isDecided", "selectedModules", "themeMatches");
-
+                "submitted", "studentGroup", "committee", "supportServices", "isDecided", "selectedModules", "themeMatches",
+                "apelSchool");
+        applicationForm.setApelSchool(applicationForm.getNewApelSchool() != null ? apelSchoolService.create(user, applicationForm.getNewApelSchool()).getId() : applicationForm.getApelSchool());
+        application.setApelSchool(applicationForm.getApelSchool() != null ? em.getReference(ApelSchool.class, applicationForm.getApelSchool()): null);
+        application.setApelSchool(EntityUtil.getOptionalOne(ApelSchool.class, applicationForm.getApelSchool(), em));
         application.setStudyPeriodStart(EntityUtil.getOptionalOne(StudyPeriod.class, applicationForm.getStudyPeriodStart(), em));
         application.setStudyPeriodEnd(EntityUtil.getOptionalOne(StudyPeriod.class, applicationForm.getStudyPeriodEnd(), em));
         application.setOldCurriculumVersion(EntityUtil.getOptionalOne(CurriculumVersion.class, applicationForm.getOldCurriculumVersion(), em));
@@ -407,7 +417,11 @@ public class ApplicationService {
     }
 
     private void updatePlannedSubjects(Application application, ApplicationForm applicationForm) {
-        EntityUtil.bindEntityCollection(application.getPlannedSubjects(), ApplicationPlannedSubject::getId, applicationForm.getPlannedSubjects(), ApplicationPlannedSubjectDto::getId, dto -> {
+        updatePlannedSubject(application, applicationForm.getPlannedSubjects());
+    }
+    
+    private void updatePlannedSubject(Application application, Set<ApplicationPlannedSubjectDto> plannedSubjects) {
+        EntityUtil.bindEntityCollection(application.getPlannedSubjects(), ApplicationPlannedSubject::getId, plannedSubjects, ApplicationPlannedSubjectDto::getId, dto -> {
             ApplicationPlannedSubject plannedSubject = EntityUtil.bindToEntity(dto, new ApplicationPlannedSubject(), "equivalents");
             updateEquivalents(dto, plannedSubject);
             return plannedSubject;
@@ -416,12 +430,19 @@ public class ApplicationService {
             updateEquivalents(dto, plannedSubject);
         });
     }
+    
+    public Application updatePlannedSubject(Application application, ApplicationSubjectForm applicationSubjectForm) {
+        updatePlannedSubject(application, applicationSubjectForm.getPlannedSubjects());
+        return EntityUtil.save(application, em);
+    }
 
     private void updateEquivalents(ApplicationPlannedSubjectDto plannedSubjectDto, ApplicationPlannedSubject plannedSubject) {
         EntityUtil.bindEntityCollection(plannedSubject.getEquivalents(), ApplicationPlannedSubjectEquivalent::getId, plannedSubjectDto.getEquivalents(), ApplicationPlannedSubjectEquivalentDto::getId, dto -> {
             ApplicationPlannedSubjectEquivalent plannedSubjectEquivalent = new ApplicationPlannedSubjectEquivalent();
             EntityUtil.bindToEntity(dto, plannedSubjectEquivalent, "subject");
             plannedSubjectEquivalent.setSubject(EntityUtil.getOptionalOne(Subject.class, dto.getSubject(), em));
+            plannedSubjectEquivalent.setCurriculumVersionOmodule(EntityUtil.getOptionalOne(CurriculumVersionOccupationModule.class, dto.getModuleId(), em));
+            plannedSubjectEquivalent.setCurriculumVersionOmoduleTheme(EntityUtil.getOptionalOne(CurriculumVersionOccupationModuleTheme.class, dto.getThemeId(), em));
             return plannedSubjectEquivalent;
         }, null);
     }
@@ -617,7 +638,7 @@ public class ApplicationService {
         List<String> existingApplications = existingApplicationsTypes(EntityUtil.getId(student));
         boolean isHigher = StudentUtil.isHigher(student);
         Map<String, ApplicationApplicableDto> result = new HashMap<>();
-        rulesByApplicationType(student, existingApplications, isHigher, result);
+        rulesByApplicationType(student, existingApplications, result);
         rulesByApplicationClassifier(isHigher, result);
         return result;
     }
@@ -631,7 +652,7 @@ public class ApplicationService {
         }
     }
 
-    private void rulesByApplicationType(Student student, List<String> existingApplications, boolean isHigher,
+    private void rulesByApplicationType(Student student, List<String> existingApplications,
             Map<String, ApplicationApplicableDto> result) {
         boolean isActive = StudentUtil.isActive(student);
         boolean isStudying = StudentUtil.isStudying(student);
@@ -661,8 +682,6 @@ public class ApplicationService {
                 } else if (ApplicationType.AVALDUS_LIIK_VALIS.name().equals(type)) {
                     if (!isStudying) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotStudying"));
-                    } else if (!isHigher) {
-                        result.put(type, new ApplicationApplicableDto("application.messages.studentIsNotHigher"));
                     }
                 } else {
                     if (!isStudying) {

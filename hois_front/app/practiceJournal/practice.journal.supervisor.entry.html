@@ -375,7 +375,7 @@
                   <label class="responsiveLabel">{{eval.addInfo}}</label>
                   <md-input-container flex="100">
                     <hois-select aria-label="{{eval.nameEt}}" ng-model="eval.valueClf" values="grades" value-property="code" sorted-query="true"
-                      hide-values="hideInvalid" show-property="{{practiceJournal.isHigher ? 'shownValue' : 'value'}}"></hois-select>
+                      hide-values="hideInvalid" show-function-value="gradeSelectShownValue" show-property="value"></hois-select>
                   </md-input-container>
                 </div>
               </div>

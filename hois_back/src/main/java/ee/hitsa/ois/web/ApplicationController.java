@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.SupportServiceType;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.report.ApplicationTugiReport;
 import ee.hitsa.ois.service.ApplicationService;
 import ee.hitsa.ois.service.AutomaticMessageService;
@@ -51,6 +53,7 @@ import ee.hitsa.ois.web.commandobject.application.ApplicationConfirmConfirmation
 import ee.hitsa.ois.web.commandobject.application.ApplicationForm;
 import ee.hitsa.ois.web.commandobject.application.ApplicationRejectForm;
 import ee.hitsa.ois.web.commandobject.application.ApplicationSearchCommand;
+import ee.hitsa.ois.web.commandobject.application.ApplicationSubjectForm;
 import ee.hitsa.ois.web.dto.application.ApplicationApplicableDto;
 import ee.hitsa.ois.web.dto.application.ApplicationDto;
 import ee.hitsa.ois.web.dto.application.ApplicationSearchDto;
@@ -152,7 +155,7 @@ public class ApplicationController {
 
         return applicationService.applicableApplicationTypes(student);
     }
-
+    
     @PutMapping("/{id:\\d+}/submit")
     public ApplicationDto submit(HoisUserDetails user, @WithEntity Application application) {
         if(!UserUtil.canSubmitApplication(user, application)) {
@@ -171,6 +174,18 @@ public class ApplicationController {
         }
 
         return get(user, submitedApplication);
+    }
+    
+    @PutMapping("/{id:\\d+}/subjects")
+    public ApplicationDto subjects(HoisUserDetails user, @WithEntity Application application, @Valid @RequestBody ApplicationSubjectForm applicationSubjectForm) {
+        LocalDate now = LocalDate.now();
+        if(!user.isStudent() || !UserUtil.isStudent(user, application.getStudent()) || 
+                !((application.getStartDate() != null && application.getEndDate() != null && now.isAfter(application.getStartDate()) && now.isBefore(application.getEndDate())) || 
+                (application.getStudyPeriodStart() != null && application.getStudyPeriodEnd() != null && now.isBefore(application.getStudyPeriodStart().getStartDate())))) {
+            throw new HoisException("application.messages.subjectChangeNotAllowed");
+        }
+        application = applicationService.updatePlannedSubject(application, applicationSubjectForm);
+        return get(user, application);
     }
 
     @PutMapping("/{id:\\d+}/reject")

@@ -751,13 +751,21 @@ public class EhisStudentService extends EhisService {
         return studentChanges;
     }
 
+    /**
+     * EHIS only wants foreign students whos study end is later than 01.04.2014
+     * @param schoolId
+     * @param criteria
+     * @return
+     */
     private List<DirectiveStudent> findForeignStudents(Long schoolId, EhisStudentForm criteria) {
         return em.createQuery(
                 "select ds from DirectiveStudent ds left join ds.studyPeriodEnd where ds.canceled = false and ds.directive.school.id = ?1 "
                 + "and ds.directive.type.code = ?2 and ds.directive.status.code = ?3 "
-                + "and ((ds.isPeriod = false and ds.endDate >= ?4 and ds.endDate <= ?5) "
-                + "or (ds.isPeriod = true and ds.studyPeriodEnd.endDate >= ?6 and ds.studyPeriodEnd.endDate <= ?7)) "
-                + "and ds.student.type.code != ?8", DirectiveStudent.class)
+                + "and ((ds.isPeriod = false and ds.endDate >= ?4 and ds.endDate <= ?5 and ds.endDate >= ?8) "
+                + "or (ds.isPeriod = true and ds.studyPeriodEnd.endDate >= ?6 and ds.studyPeriodEnd.endDate <= ?7 and ds.studyPeriodEnd.endDate >= ?8)) "
+                + "and ds.country.code != ?9 "
+                + "and not exists(select wesl.id from WsEhisStudentLog wesl where wesl.directive.id = ds.directive.id and wesl.school.id = ds.directive.school.id and "
+                + "wesl.hasXteeErrors = false and wesl.hasOtherErrors = false)", DirectiveStudent.class)
                 .setParameter(1, schoolId)
                 .setParameter(2, DirectiveType.KASKKIRI_VALIS.name())
                 .setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
@@ -765,7 +773,8 @@ public class EhisStudentService extends EhisService {
                 .setParameter(5, criteria.getThru())
                 .setParameter(6, criteria.getFrom())
                 .setParameter(7, criteria.getThru())
-                .setParameter(8, StudentType.OPPUR_K.name())
+                .setParameter(8, LocalDate.parse("2014-04-01"))
+                .setParameter(9, "RIIK_EST")
                 .getResultList();
     }
     

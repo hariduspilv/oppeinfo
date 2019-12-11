@@ -1,4 +1,19 @@
+<style>
+  .my-select .md-select-value span:first-child {
+    visibility: collapse;
+  }
+  .my-select .md-select-value .md-text {
+    visibility: visible;
+  }
+</style>
 <div>
+  <div layout="row">
+    <md-input-container flex="20" flex-xs="100">
+      <label>{{'application.changeDate' | translate}}</label>
+      <hois-value value="application.changed | hoisDate"></hois-value>
+    </md-input-container>
+  </div>
+
   <div layout="row">
     <md-input-container flex="20" flex-xs="100">
       <label>{{'main.abroadStudies' | translate}}</label>
@@ -7,16 +22,20 @@
   </div>
 
   <div layout="row" layout-sm="column" layout-xs="column" ng-hide="application.isAbroad">
-    <md-input-container flex="60" flex-sm="100" flex-xs="100">
+    <md-input-container flex="60" flex-sm="100" flex-xs="100" ng-if="application.ehisSchool">
       <label>{{'main.educationInstitution' | translate}}</label>
       <hois-classifier-value ng-model="application.ehisSchool" main-classifier-code="EHIS_KOOL"></hois-classifier-value>
     </md-input-container>
   </div>
 
   <div layout="row" layout-sm="column" layout-xs="column" ng-hide="!application.isAbroad">
-    <md-input-container flex="60" flex-sm="100" flex-xs="100">
+    <md-input-container flex="60" flex-sm="100" flex-xs="100" ng-if="application.abroadSchool">
       <label class="textInput">{{'main.educationInstitution' | translate}}</label>
       <hois-value value="application.abroadSchool"></hois-value>
+    </md-input-container>
+    <md-input-container flex="60" flex-sm="100" flex-xs="100" ng-if="formState.apelSchool">
+      <label>{{'main.educationInstitution' | translate}}</label>
+      <hois-value value="currentLanguageNameField(formState.apelSchool)"></hois-value>
     </md-input-container>
   </div>
 
@@ -48,29 +67,73 @@
   </div>
 </div>
 
-<div>
-  <div layout="column" flex>
-    <div layout="row" class="top-margin">
-      <h2>{{'main.subjects' | translate}} </h2>
-    </div>
-    <table md-table class="secondary-table">
-      <thead md-head>
-        <tr md-row>
-          <th md-column><span>{{'application.plannedSubject' | translate}} *</span></th>
-          <th md-column><span>{{'application.substitutableSubject' | translate}} *</span></th>
-        </tr>
-      </thead>
-      <tbody md-body>
-        <tr md-row ng-repeat="plannedSubject in application.plannedSubjects | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
-          <td md-cell>
-            {{plannedSubject.name}}
-          </td>
-          <td md-cell>
-            {{subjectsListView(plannedSubject)}}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+<div ng-if="application.plannedSubjects !== null && application.plannedSubjects.length !== 0 && (!auth.isStudent() || application.status !== 'AVALDUS_STAATUS_KINNITATUD')">
+  <fieldset>
+    <legend>{{'main.subjects' | translate}}</legend>
+    <md-table-container>
+      <table md-table class="secondary-table">
+        <thead md-head>
+          <tr md-row>
+            <th md-column><span>{{(!student.curriculumVersion.isVocational ? 'application.plannedSubject': 'application.plannedModulesThemes') | translate}}</span></th>
+            <th md-column><span>{{(!student.curriculumVersion.isVocational ? 'application.substitutableSubject' : 'application.substitutableModulesThemes') | translate}}</span></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="plannedSubject in application.plannedSubjects | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              {{plannedSubject.name}}
+            </td>
+            <td md-cell>
+              {{subjectsListView(plannedSubject)}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </fieldset>
+</div>
+<div ng-if="auth.isStudent() && application.status === 'AVALDUS_STAATUS_KINNITATUD'">
+  <fieldset tabindex="1">
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.subjects' | translate}}</legend>
+    <md-button class="md-raised" href="" ng-click="addPlannedSubjectRow()">{{'main.button.addRow' | translate}}</md-button>
+    <md-table-container>
+      <table md-table class="secondary-table">
+        <thead md-head>
+          <tr md-row>
+            <th md-column><span>{{(!student.curriculumVersion.isVocational ? 'application.plannedSubject': 'application.plannedModulesThemes') | translate}}</span></th>
+            <th md-column><span>{{(!student.curriculumVersion.isVocational ? 'application.substitutableSubject' : 'application.substitutableModulesThemes') | translate}}</span></th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="plannedSubject in application.plannedSubjects | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <md-input-container>
+                <input type="text" ng-model="plannedSubject.name" aria-label="planned subject name" required>
+              </md-input-container>
+            </td>
+            <td md-cell>
+              <md-input-container ng-if="!student.curriculumVersion.isVocational">
+                <md-select class="my-select" style="display: block;" ng-model="plannedSubject.subjectsSelected" ng-change="subjectsChanged(plannedSubject)"
+                ng-model-options="{trackBy: '$value.subject'}" required multiple aria-label="planned subject equivalent subject">
+                  <md-option ng-repeat="val in studentSubjects" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
+                </md-select>
+              </md-input-container>
+              <md-input-container ng-if="student.curriculumVersion.isVocational">
+                <md-select class="my-select" ng-model="plannedSubject.subjectsSelected" ng-change="moduleOrThemeSelected(plannedSubject)"
+                  ng-model-options="{trackBy: '$value.moduleId && $value.themeId'}" required multiple aria-label="planned subject equivalent module or theme">
+                  <md-option ng-repeat="val in modulesAndThemes" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
+                </md-select>
+              </md-input-container>
+            </td>
+            <td md-cell>
+              <md-button class="remove nomargin" ng-click="removeFromArray(application.plannedSubjects, plannedSubject)">&times;</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-button ng-click="updateSubject()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+  </fieldset>
 </div>
 <div>&nbsp;<div>

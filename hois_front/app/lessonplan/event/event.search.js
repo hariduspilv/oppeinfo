@@ -73,6 +73,9 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
     };
 
     $scope.allowedToEdit = function (event) {
+      if (!event.canEdit) {
+        return false;
+      }
       if ($scope.auth.isAdmin()) {
         return !event.isPersonal || event.person.id === $scope.auth.person;
       }

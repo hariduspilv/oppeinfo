@@ -312,6 +312,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             dto.setIsPeriod(application.getIsPeriod());
             dto.setStartDate(application.getStartDate());
             dto.setEndDate(application.getEndDate());
+            dto.setApelSchoolId(EntityUtil.getNullableId(application.getApelSchool()));
             dto.setStudyPeriodStart(EntityUtil.getNullableId(application.getStudyPeriodStart()));
             dto.setStudyPeriodEnd(EntityUtil.getNullableId(application.getStudyPeriodEnd()));
             dto.setAbroadPurpose(EntityUtil.getNullableCode(application.getAbroadPurpose()));
@@ -451,6 +452,5 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         dto.setSex(EntityUtil.getNullableCode(person.getSex()));
         dto.setCitizenship(EntityUtil.getNullableCode(person.getCitizenship()));
     }
-    
     
 }

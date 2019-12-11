@@ -50,7 +50,7 @@ public class HigherProtocolReport {
         teachers = PersonUtil.sorted(ssp.getTeachers().stream().map(t -> t.getTeacher().getPerson()));
         this.protocolStudents = protocol.getProtocolStudents().stream()
                 .sorted((o1, o2) -> PersonUtil.SORT.compare(o1.getStudent().getPerson(), o2.getStudent().getPerson()))
-                .map(ps -> new ProtocolStudentReport(ps, higherSchool, letterGrades, lang))
+                .map(ps -> new ProtocolStudentReport(ps, letterGrades, lang))
                 .collect(Collectors.toList());
     }
 

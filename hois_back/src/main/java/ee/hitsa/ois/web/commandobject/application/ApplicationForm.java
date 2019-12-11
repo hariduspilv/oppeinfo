@@ -12,9 +12,9 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.Required;
-import ee.hitsa.ois.validation.StudyPeriodRange;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.OisFileForm;
+import ee.hitsa.ois.web.commandobject.apelapplication.ApelSchoolForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
@@ -24,7 +24,6 @@ import ee.hitsa.ois.web.dto.application.ApplicationSupportServiceModuleDto;
 import ee.hitsa.ois.web.dto.application.ValidAcademicLeaveDto;
 
 @DateRange(from = "startDate", thru = "endDate")
-@StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd")
 public class ApplicationForm extends InsertedChangedVersionDto {
 
     @NotNull
@@ -71,6 +70,7 @@ public class ApplicationForm extends InsertedChangedVersionDto {
     private Boolean isPeriod;
     private LocalDate startDate;
     private LocalDate endDate;
+    private Long apelSchool;
     private Long studyPeriodStart;
     private Long studyPeriodEnd;
     private ValidAcademicLeaveDto validAcademicLeave;
@@ -116,6 +116,8 @@ public class ApplicationForm extends InsertedChangedVersionDto {
     private Set<ApplicationPlannedSubjectDto> plannedSubjects;
 
     private Set<ApplicationOccupationModuleThemeDto> themeReplacements;
+    
+    private ApelSchoolForm newApelSchool;
 
     public AutocompleteResult getStudent() {
         return student;
@@ -427,5 +429,21 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     public void setThemeReplacements(Set<ApplicationOccupationModuleThemeDto> themeReplacements) {
         this.themeReplacements = themeReplacements;
+    }
+
+    public Long getApelSchool() {
+        return apelSchool;
+    }
+
+    public void setApelSchool(Long apelSchool) {
+        this.apelSchool = apelSchool;
+    }
+
+    public ApelSchoolForm getNewApelSchool() {
+        return newApelSchool;
+    }
+
+    public void setNewApelSchool(ApelSchoolForm newApelSchool) {
+        this.newApelSchool = newApelSchool;
     }
 }

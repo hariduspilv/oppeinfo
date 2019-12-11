@@ -19,6 +19,7 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.apelapplication.ApelSchool;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
@@ -36,6 +37,7 @@ import ee.hitsa.ois.validation.ApplicationValidation.Valis;
 import ee.hitsa.ois.validation.ApplicationValidation.Overskava;
 import ee.hitsa.ois.validation.ApplicationValidation.Rakkava;
 import ee.hitsa.ois.validation.ApplicationValidation.Tugi;
+import ee.hitsa.ois.validation.Conditional;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.PeriodRange;
 import ee.hitsa.ois.validation.Required;
@@ -45,6 +47,8 @@ import ee.hitsa.ois.validation.StudyPeriodRange;
 @PeriodRange(groups = {Akad.class, Valis.class})
 @DateRange(from = "startDate", thru = "endDate", groups = {Akad.class})
 @StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd", groups = {Akad.class})
+@Conditional(selected = "student.curriculumVersion.curriculum.higher", values = {"true"}, required = {"abroadProgramme"}, groups = {Valis.class})
+@Conditional(selected = "isAbroad", values = {"true"}, required = {"apelSchool"}, groups = {Valis.class})
 public class Application extends BaseEntityWithId implements Period {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -134,7 +138,6 @@ public class Application extends BaseEntityWithId implements Period {
     private Classifier abroadPurpose;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @Required(groups = {Valis.class})
     private Classifier abroadProgramme;
 
     @Required(groups = {Muu.class, Tugi.class})
@@ -147,6 +150,10 @@ public class Application extends BaseEntityWithId implements Period {
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Application academicApplication;
+    
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    private ApelSchool apelSchool;
+    
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @Required(groups = {Akadk.class})
     private Directive directive;
@@ -194,7 +201,6 @@ public class Application extends BaseEntityWithId implements Period {
     @Valid
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "application_id", nullable = false, updatable = false)
-    @Required(groups = {Valis.class})
     private Set<ApplicationPlannedSubject> plannedSubjects = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -573,6 +579,14 @@ public class Application extends BaseEntityWithId implements Period {
 
     public void setThemeMatches(Set<ApplicationOccupationModuleTheme> themeMatches) {
         this.themeMatches = themeMatches;
+    }
+
+    public ApelSchool getApelSchool() {
+        return apelSchool;
+    }
+
+    public void setApelSchool(ApelSchool apelSchool) {
+        this.apelSchool = apelSchool;
     }
 
 }

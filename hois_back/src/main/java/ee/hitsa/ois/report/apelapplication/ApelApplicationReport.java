@@ -16,7 +16,7 @@ public class ApelApplicationReport {
     public static final String HIGHER_TEMPLATE_NAME = "apel.application.higher.xhtml";
     public static final String VOCATIONAL_TEMPLATE_NAME = "apel.application.vocational.xhtml";
 
-    private Boolean isHigherSchool;
+    private final Boolean isHigherSchool;
     private final String name;
     private final String curriculumVersion;
     private final LocalDate inserted;
@@ -27,29 +27,26 @@ public class ApelApplicationReport {
     private Long informalLearningRecords = Long.valueOf(0L);
     private Long formalLearningRecords = Long.valueOf(0L);
 
-    public ApelApplicationReport(ApelApplication application) {
-        this(application, Language.ET);
+    public ApelApplicationReport(ApelApplication application, Boolean isHigherSchool, Boolean letterGrades) {
+        this(application, isHigherSchool, letterGrades, Language.ET);
     }
 
-    public ApelApplicationReport(ApelApplication application, Language lang) {
+    public ApelApplicationReport(ApelApplication application, Boolean isHigherSchool, Boolean letterGrades, Language lang) {
         Objects.requireNonNull(application);
         name = application.getStudent().getPerson().getFullname();
         curriculumVersion = application.getStudent().getCurriculumVersion().getCode();
         inserted = application.getInserted() != null ? application.getInserted().toLocalDate() : null;
         confirmed = application.getConfirmed() != null ? application.getConfirmed().toLocalDate() : null;
         status = name(application.getStatus(), lang);
-        records = StreamUtil.toMappedList(r -> new ApelApplicationRecordReport(this, r, lang),
+        records = StreamUtil.toMappedList(r -> new ApelApplicationRecordReport(this, r, letterGrades, lang),
                 application.getRecords());
         comments = StreamUtil.toMappedList(c -> new ApelApplicationCommentReport(c), application.getComments());
         comments.sort(Comparator.comparing(ApelApplicationCommentReport::getInserted));
+        this.isHigherSchool = isHigherSchool;
     }
 
     public Boolean getIsHigherSchool() {
         return isHigherSchool;
-    }
-
-    public void setIsHigherSchool(Boolean isHigherSchool) {
-        this.isHigherSchool = isHigherSchool;
     }
 
     public String getName() {

@@ -17,6 +17,7 @@ public class JournalEntryStudentForm {
     private Boolean removeStudentHistory = Boolean.FALSE;
     private String addInfo;
     private Boolean isLessonAbsence;
+    private Boolean hasOverlappingLessonAbsence;
     private Boolean isRemark;
     private Map<Long, JournalEntryStudentLessonAbsenceForm> lessonAbsences = new HashMap<>();
 
@@ -74,6 +75,14 @@ public class JournalEntryStudentForm {
 
     public void setIsLessonAbsence(Boolean isLessonAbsence) {
         this.isLessonAbsence = isLessonAbsence;
+    }
+
+    public Boolean getHasOverlappingLessonAbsence() {
+        return hasOverlappingLessonAbsence;
+    }
+
+    public void setHasOverlappingLessonAbsence(Boolean hasOverlappingLessonAbsence) {
+        this.hasOverlappingLessonAbsence = hasOverlappingLessonAbsence;
     }
 
     public Boolean getIsRemark() {

@@ -22,7 +22,7 @@
         return;
       }
       _loadData();
-    }
+    };
   }
 
   MidtermResultViewController.$inject = ['$scope', 'QueryUtils', '$route', 'message'];
@@ -32,7 +32,7 @@
     $scope.order = '-midtermDate';
 
     if (!declarationSubjectId || isNaN(declarationSubjectId)) {
-      message.error('main.messages.error.nopermission')
+      message.error('main.messages.error.nopermission');
       $scope.back('#/midtermResult');
       return;
     }

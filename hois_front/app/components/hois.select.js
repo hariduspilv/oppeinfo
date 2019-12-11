@@ -24,6 +24,7 @@ angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curricu
       valueProperty: '@',
       orderByProperty: '@',
       showProperty: '@',
+      showFunctionValue: '=',
       preselectCurrent: '@',
       selectCurrentStudyYear: '@',
       loadAfterDefer: '=',
@@ -42,7 +43,11 @@ angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curricu
       scope.filteredOptions = [];
       scope.hideOptions = [];
 
-      scope.orderBy = !scope.sortedQuery ? (scope.showProperty ? scope.showProperty : $rootScope.currentLanguageNameField()) : scope.orderByProperty;
+      if (scope.showFunctionValue) {
+        scope.orderBy = !scope.sortedQuery ? scope.showFunctionValue() : scope.orderByProperty;
+      } else {
+        scope.orderBy = !scope.sortedQuery ? (scope.showProperty ? scope.showProperty : $rootScope.currentLanguageNameField()) : scope.orderByProperty;
+      }
 
       function doFilter() {
         scope.filteredOptions = (scope.options || []).filter(function(it) {

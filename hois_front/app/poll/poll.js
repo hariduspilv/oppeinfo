@@ -1,6 +1,262 @@
 (function () {
     'use strict';
 
+    function addQuestion(ArrayUtils, dialogService, QueryUtils, oisFileService, FormUtils, scope, row, question, formThemes, type) {
+        dialogService.showDialog('poll/poll.question.add.dialog.html', function (dialogScope) {
+            dialogScope.criteria = {};
+            dialogScope.onlyQuestion = scope.new;
+            
+            dialogScope.addAnswer = function() {
+                var answer = {};
+                if (dialogScope.criteria.answers === undefined) {
+                    dialogScope.criteria.answers = [];
+                }
+                dialogScope.criteria.answers.push(answer);
+            };
+
+            dialogScope.typeKysitlusV = function() {
+                dialogScope.criteria.type = 'VASTUS_S';
+                dialogScope.pickingAnswerTypeDisabled = true;
+                dialogScope.addAnswer();
+                dialogScope.criteria.answers[0].answerNr = 1;
+                dialogScope.answerAddingDisabled = true;
+            };
+
+            if (type !== 'KYSITLUS_V') {
+                dialogScope.answerTypeFilter = ['VASTUS_S'];
+            } else {
+                dialogScope.typeKysitlusV();
+            }
+
+            dialogScope.themes = formThemes;
+            dialogScope.data = {};
+            dialogScope.data.files = [];
+            if (row) {
+                dialogScope.criteria.theme = angular.copy(row.id);
+            }
+            if (dialogScope.criteria.files === undefined) {
+                dialogScope.criteria.files = [];
+            }
+            if (question) {
+                angular.extend(dialogScope.criteria, angular.copy(question));
+            } else {
+                dialogScope.criteria.isRequired = true;
+                dialogScope.criteria.isInRow = true;
+                dialogScope.new = true;
+            }
+
+            if (type !== undefined) {
+                QueryUtils.endpoint('/poll/questions').query({type: type},function(response) {
+                    dialogScope.questions = response.filter(function(item) {
+                        var notSameId = true;
+                        formThemes.forEach(function(theme) {
+                            theme.questions.forEach(function(question) {
+                                if (question.question === item.id) {
+                                    if (question.id === dialogScope.criteria.id) {
+                                        notSameId = true;
+                                    } else {
+                                        notSameId = false;
+                                    }
+                                }
+                            });
+                        });
+                        return notSameId;
+                    });
+                });
+            }
+
+            dialogScope.getUrl = oisFileService.getUrl;
+
+            dialogScope.loadQuestion = function(questionId) {
+                if (questionId !== undefined && questionId !== "") {
+                    var PollEndPoint = QueryUtils.endpoint('/poll/question');
+                    PollEndPoint.get({id: questionId}, function (result) {
+                        // Student council should only have 1 answer
+                        // Older student council questions might have over 1 answer
+                        if (result.answers !== undefined && result.answers.length > 1 && result.type === "VASTUS_S") {
+                            message.error("poll.messages.studentCouncilAnswersError");
+                            return;
+                        }
+                        result.theme = dialogScope.criteria.theme;
+                        result.question = dialogScope.criteria.question;
+                        result.isRequired = dialogScope.criteria.isRequired;
+                        result.isInRow = dialogScope.criteria.isInRow;
+                        result.files = dialogScope.criteria.files;
+                        result.orderNr = dialogScope.criteria.orderNr;
+                        result.id = dialogScope.criteria.id;
+                        if (dialogScope.criteria.isInRow !== undefined) {
+                            result.isInRow = dialogScope.criteria.isInRow;
+                        } else {
+                            result.isInRow = true;
+                        }
+                        dialogScope.criteria = result;
+                        dialogScope.new = true;
+                        dialogScope.checkAnswer();
+                    });
+                } else if (questionId === "") {
+                    dialogScope.criteria.disabled = false;
+                }
+            };
+
+            dialogScope.$watch("criteria.nameEt", function() {
+                dialogScope.checkName(dialogScope.criteria.theme);
+            });
+
+            dialogScope.checkName = function(themeId) {
+                if (formThemes) {
+                    var ctrl = dialogScope.dialogForm.nameEt;
+                    var themes = formThemes.filter(function (theme) {
+                        return theme.id === themeId;
+                    });
+                    if (themes !== undefined && themes.length === 1) {
+                        var theme = themes[0];
+                        var sameQuestion = theme.questions.filter(function (question) {
+                            return question.nameEt === dialogScope.criteria.nameEt && question.id !== dialogScope.criteria.id;
+                        });
+                        if (sameQuestion === undefined || sameQuestion.length > 0) {
+                            ctrl.$setValidity('nameEtError', false);
+                            if (dialogScope.criteria.nameEt !== undefined) {
+                                ctrl.$setTouched();
+                            }
+                        } else {
+                            ctrl.$setValidity('nameEtError', true);
+                        }
+                    }
+                }
+            };
+
+            dialogScope.checkAnswer = function() {
+                var falseFields = [];
+                for (var index = 0; index < dialogScope.criteria.answers.length; index++) {
+                    var ctrl1 = dialogScope.dialogForm[index];
+                    for (var index2 = 0; index2 < dialogScope.criteria.answers.length; index2++) {
+                        var ctrl2 = dialogScope.dialogForm[index2];
+                        if (index !== index2) {
+                            var answer1 = dialogScope.criteria.answers[index];
+                            var answer2 = dialogScope.criteria.answers[index2];
+                            var sameAnswer = answer1.nameEt !== undefined && answer2.nameEt !== undefined &&
+                            answer1.nameEt === answer2.nameEt;
+                            if (sameAnswer) {
+                                if (!falseFields.includes(ctrl1)) {
+                                    falseFields.push(ctrl1);
+                                }
+                                if (!falseFields.includes(ctrl2)) {
+                                    falseFields.push(ctrl2);
+                                }
+                            }
+                            if (ctrl1 !== undefined && !falseFields.includes(ctrl1) && !sameAnswer) {
+                                ctrl1.$setValidity('answerEtError', true);
+                                ctrl1.$setTouched();
+                            }
+                            if (ctrl2 !== undefined && !falseFields.includes(ctrl2) && !sameAnswer) {
+                                ctrl2.$setValidity('answerEtError', true);
+                                ctrl2.$setTouched();
+                            }
+                        }
+                    }
+                }
+                falseFields.forEach(function (item) {
+                    if (item !== undefined) {
+                        item.$setValidity('answerEtError', false);
+                        item.$setTouched();
+                    }
+                });
+            };
+
+            dialogScope.getFileUrl = function(file) {
+                return oisFileService.getFileUrl(file);
+            };
+
+            dialogScope.openAddFileDialog = function () {
+                dialogService.showDialog('components/file.add.dialog.html', function (dialogScope2) {
+                    dialogScope2.addedFiles = dialogScope.criteria.files;
+                }, function (submittedDialogScope) {
+                    var fileData = submittedDialogScope.data;
+                    oisFileService.getFromLfFile(fileData.file[0], function (file) {
+                        fileData = file;
+                        dialogScope.criteria.files.push(fileData);
+                    });
+                }, null, true);
+            };
+            
+            dialogScope.deleteFile = function(file) {
+                dialogService.confirmDialog({prompt: 'apel.deleteFileConfirm'}, function() {
+                    ArrayUtils.remove(dialogScope.criteria.files, file);
+                });
+            };
+
+            dialogScope.swapCriteria = function(index1, index2) {
+                var temp = dialogScope.criteria.answers[index1];
+                dialogScope.criteria.answers[index1] = dialogScope.criteria.answers[index2];
+                dialogScope.criteria.answers[index2] = temp;
+                temp = dialogScope.criteria.answers[index1].orderNr;
+                dialogScope.criteria.answers[index1].orderNr = dialogScope.criteria.answers[index2].orderNr;
+                dialogScope.criteria.answers[index2].orderNr = temp;
+                dialogScope.checkAnswer();
+            };
+
+            dialogScope.deleteAnswer = function(answer) {
+                ArrayUtils.remove(dialogScope.criteria.answers, answer);
+                dialogScope.checkAnswer();
+            };
+
+            dialogScope.delete = function() {
+                $scope.deleteQuestion(dialogScope.criteria.id);
+            };
+
+            dialogScope.filterAnswerType = function () {
+                return dialogScope.apelSchools.filter(function (it) { return it.ehisSchool; }).map(function(it) {
+                  if (dialogScope.record.newTransferableSubjectOrModule.newApelSchool.ehisSchool !== it.ehisSchool) {
+                    return it.ehisSchool;
+                  }
+                });
+              };
+
+            dialogScope.checkAnswers = function() {
+                if (dialogScope.criteria.isRequired && dialogScope.criteria.type !== 'VASTUS_T' && 
+                (dialogScope.criteria.answers === undefined || dialogScope.criteria.answers.length === 0)) {
+                    message.error('poll.questions.noAnswersError');
+                    return false;
+                }
+                return true;
+            };
+
+        }, function (submittedDialogScope) {
+            FormUtils.withValidForm(submittedDialogScope.dialogForm, function() {
+                var PollQuestionEndpoint = QueryUtils.endpoint('/poll/pollThemeQuestion');
+                if (question) {
+                    if (!(submittedDialogScope.criteria.disabled || (submittedDialogScope.new && submittedDialogScope.criteria.question))) {
+                        submittedDialogScope.criteria.question = undefined;
+                    }
+                    var PollQuestionEndpointForUpdate = new PollQuestionEndpoint(submittedDialogScope.criteria);
+                    PollQuestionEndpointForUpdate.$update().then(function () {
+                        scope.refresh();
+                    }).catch(angular.noop);
+                } else {
+                    if (formThemes) {
+                        var theme = formThemes.filter(function (theme) {
+                            return theme.id === submittedDialogScope.criteria.theme;
+                        })[0];
+                        if (theme) {
+                            submittedDialogScope.criteria.orderNr = theme.questions.length + 1;
+                        } else {
+                            submittedDialogScope.criteria.orderNr = 1;
+                        }
+                    }
+                    if (submittedDialogScope.criteria.theme) {
+                        PollQuestionEndpoint = QueryUtils.endpoint('/poll/pollThemeQuestion/' + submittedDialogScope.criteria.theme);
+                    } else {
+                        PollQuestionEndpoint = QueryUtils.endpoint('/poll/question');
+                    }
+                    var PollQuestionEndpointForSave = new PollQuestionEndpoint(submittedDialogScope.criteria);
+                    PollQuestionEndpointForSave.$save().then(function () {
+                        scope.refresh();
+                    }).catch(angular.noop);
+                }
+            });
+        }, null, true);
+    }
+
     function openResponse(row, response, dialogService, oisFileService) {
         dialogService.showDialog(
           row.isThemePageable ? 'poll/poll.response.by.theme.dialog.html' : 
@@ -412,6 +668,12 @@
             });
         };
 
+        $scope.testDirectiveJobs = function () {
+            QueryUtils.endpoint('/poll/testDirectiveJobs').put({}, function () {
+                message.info('Käskkirjade job\'id tehtud');
+            });
+        };
+
         $scope.pollNotEnded = function(row) {
             return row.status.code !== 'KYSITLUS_STAATUS_K' && row.status.code !== 'KYSITLUS_STAATUS_L';
         };
@@ -501,13 +763,23 @@
         };
 
         $scope.refresh();
-    }).controller('PollQuestionsListController', function ($scope, $route, QueryUtils, Classifier, $q) {
+    }).controller('PollQuestionsListController', function ($scope, $route, QueryUtils, Classifier, $q, oisFileService, dialogService, FormUtils, ArrayUtils) {
         $scope.auth = $route.current.locals.auth;
+        $scope.new = true;
+
+        $scope.addNewQuestion = function() {
+            addQuestion(ArrayUtils, dialogService, QueryUtils, oisFileService, FormUtils, $scope);
+        };
+
         var clMapper = Classifier.valuemapper({
             type: 'VASTUS'
         });
         QueryUtils.createQueryForm($scope, '/poll/questionsList', {}, clMapper.objectmapper);
-        $q.all(clMapper.promises).then($scope.loadData);
+
+        $scope.refresh = function () {
+            $q.all(clMapper.promises).then($scope.loadData);
+        };
+        $scope.refresh();
     }).controller('PollSubjectsController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, oisFileService, $translate, FormUtils, message, $location) {
         $scope.auth = $route.current.locals.auth;
         if (!$scope.auth.isTeacher()) {
@@ -983,248 +1255,8 @@
         };
 
         $scope.addQuestion = function (row, question) {
-            dialogService.showDialog('poll/poll.question.add.dialog.html', function (dialogScope) {
-                dialogScope.criteria = {};
-
-                dialogScope.addAnswer = function() {
-                    var answer = {};
-                    if (dialogScope.criteria.answers === undefined) {
-                        dialogScope.criteria.answers = [];
-                    }
-                    dialogScope.criteria.answers.push(answer);
-                };
-
-                dialogScope.typeKysitlusV = function() {
-                    dialogScope.criteria.type = 'VASTUS_S';
-                    dialogScope.pickingAnswerTypeDisabled = true;
-                    dialogScope.addAnswer();
-                    dialogScope.criteria.answers[0].answerNr = 1;
-                    dialogScope.answerAddingDisabled = true;
-                };
-
-                if ($scope.formState.type !== 'KYSITLUS_V') {
-                    dialogScope.answerTypeFilter = ['VASTUS_S'];
-                } else {
-                    dialogScope.typeKysitlusV();
-                }
-
-                dialogScope.themes = $scope.criteria.themes;
-                dialogScope.data = {};
-                dialogScope.data.files = [];
-                if (row) {
-                    dialogScope.criteria.theme = angular.copy(row.id);
-                }
-                if (dialogScope.criteria.files === undefined) {
-                    dialogScope.criteria.files = [];
-                }
-                if (question) {
-                    angular.extend(dialogScope.criteria, angular.copy(question));
-                } else {
-                    dialogScope.criteria.isRequired = true;
-                    dialogScope.criteria.isInRow = true;
-                    dialogScope.new = true;
-                }
-
-                QueryUtils.endpoint('/poll/questions').query({type: $scope.formState.type},function(response) {
-                    dialogScope.questions = response.filter(function(item) {
-                        var notSameId = true;
-                        $scope.criteria.themes.forEach(function(theme) {
-                            theme.questions.forEach(function(question) {
-                                if (question.question === item.id) {
-                                    if (question.id === dialogScope.criteria.id) {
-                                        notSameId = true;
-                                    } else {
-                                        notSameId = false;
-                                    }
-                                }
-                            });
-                        });
-                        return notSameId;
-                    });
-                });
-
-                dialogScope.getUrl = oisFileService.getUrl;
-
-                dialogScope.loadQuestion = function(questionId) {
-                    if (questionId !== undefined && questionId !== "") {
-                        var PollEndPoint = QueryUtils.endpoint('/poll/question');
-                        PollEndPoint.get({id: questionId}, function (result) {
-                            // Student council should only have 1 answer
-                            // Older student council questions might have over 1 answer
-                            if (result.answers !== undefined && result.answers.length > 1 && result.type === "VASTUS_S") {
-                                message.error("poll.messages.studentCouncilAnswersError");
-                                return;
-                            }
-                            result.theme = dialogScope.criteria.theme;
-                            result.question = dialogScope.criteria.question;
-                            result.isRequired = dialogScope.criteria.isRequired;
-                            result.isInRow = dialogScope.criteria.isInRow;
-                            result.files = dialogScope.criteria.files;
-                            result.orderNr = dialogScope.criteria.orderNr;
-                            result.id = dialogScope.criteria.id;
-                            if (dialogScope.criteria.isInRow !== undefined) {
-                                result.isInRow = dialogScope.criteria.isInRow;
-                            } else {
-                                result.isInRow = true;
-                            }
-                            dialogScope.criteria = result;
-                            dialogScope.new = true;
-                            dialogScope.checkAnswer();
-                        });
-                    } else if (questionId === "") {
-                        dialogScope.criteria.disabled = false;
-                    }
-                };
-
-                dialogScope.$watch("criteria.nameEt", function() {
-                    dialogScope.checkName(dialogScope.criteria.theme);
-                });
-
-                dialogScope.checkName = function(themeId) {
-                    var ctrl = dialogScope.dialogForm.nameEt;
-                    var themes = $scope.criteria.themes.filter(function (theme) {
-                        return theme.id === themeId;
-                    });
-                    if (themes !== undefined && themes.length === 1) {
-                        var theme = themes[0];
-                        var sameQuestion = theme.questions.filter(function (question) {
-                            return question.nameEt === dialogScope.criteria.nameEt && question.id !== dialogScope.criteria.id;
-                        });
-                        if (sameQuestion === undefined || sameQuestion.length > 0) {
-                            ctrl.$setValidity('nameEtError', false);
-                            if (dialogScope.criteria.nameEt !== undefined) {
-                                ctrl.$setTouched();
-                            }
-                        } else {
-                            ctrl.$setValidity('nameEtError', true);
-                        }
-                    }
-                };
-
-                dialogScope.checkAnswer = function() {
-                    var falseFields = [];
-                    for (var index = 0; index < dialogScope.criteria.answers.length; index++) {
-                        var ctrl1 = dialogScope.dialogForm[index];
-                        for (var index2 = 0; index2 < dialogScope.criteria.answers.length; index2++) {
-                            var ctrl2 = dialogScope.dialogForm[index2];
-                            if (index !== index2) {
-                                var answer1 = dialogScope.criteria.answers[index];
-                                var answer2 = dialogScope.criteria.answers[index2];
-                                var sameAnswer = answer1.nameEt !== undefined && answer2.nameEt !== undefined &&
-                                answer1.nameEt === answer2.nameEt;
-                                if (sameAnswer) {
-                                    if (!falseFields.includes(ctrl1)) {
-                                        falseFields.push(ctrl1);
-                                    }
-                                    if (!falseFields.includes(ctrl2)) {
-                                        falseFields.push(ctrl2);
-                                    }
-                                }
-                                if (ctrl1 !== undefined && !falseFields.includes(ctrl1) && !sameAnswer) {
-                                    ctrl1.$setValidity('answerEtError', true);
-                                    ctrl1.$setTouched();
-                                }
-                                if (ctrl2 !== undefined && !falseFields.includes(ctrl2) && !sameAnswer) {
-                                    ctrl2.$setValidity('answerEtError', true);
-                                    ctrl2.$setTouched();
-                                }
-                            }
-                        }
-                    }
-                    falseFields.forEach(function (item) {
-                        if (item !== undefined) {
-                            item.$setValidity('answerEtError', false);
-                            item.$setTouched();
-                        }
-                    });
-                };
-
-                dialogScope.getFileUrl = function(file) {
-                    return oisFileService.getFileUrl(file);
-                };
-
-                dialogScope.openAddFileDialog = function () {
-                    dialogService.showDialog('components/file.add.dialog.html', function (dialogScope2) {
-                        dialogScope2.addedFiles = dialogScope.criteria.files;
-                    }, function (submittedDialogScope) {
-                        var fileData = submittedDialogScope.data;
-                        oisFileService.getFromLfFile(fileData.file[0], function (file) {
-                            fileData = file;
-                            dialogScope.criteria.files.push(fileData);
-                        });
-                    }, null, true);
-                };
-                
-                dialogScope.deleteFile = function(file) {
-                    dialogService.confirmDialog({prompt: 'apel.deleteFileConfirm'}, function() {
-                        ArrayUtils.remove(dialogScope.criteria.files, file);
-                    });
-                };
-
-                dialogScope.swapCriteria = function(index1, index2) {
-                    var temp = dialogScope.criteria.answers[index1];
-                    dialogScope.criteria.answers[index1] = dialogScope.criteria.answers[index2];
-                    dialogScope.criteria.answers[index2] = temp;
-                    temp = dialogScope.criteria.answers[index1].orderNr;
-                    dialogScope.criteria.answers[index1].orderNr = dialogScope.criteria.answers[index2].orderNr;
-                    dialogScope.criteria.answers[index2].orderNr = temp;
-                    dialogScope.checkAnswer();
-                };
-
-                dialogScope.deleteAnswer = function(answer) {
-                    ArrayUtils.remove(dialogScope.criteria.answers, answer);
-                    dialogScope.checkAnswer();
-                };
-
-                dialogScope.delete = function() {
-                    $scope.deleteQuestion(dialogScope.criteria.id);
-                };
-
-                dialogScope.filterAnswerType = function () {
-                    return dialogScope.apelSchools.filter(function (it) { return it.ehisSchool; }).map(function(it) {
-                      if (dialogScope.record.newTransferableSubjectOrModule.newApelSchool.ehisSchool !== it.ehisSchool) {
-                        return it.ehisSchool;
-                      }
-                    });
-                  };
-
-                dialogScope.checkAnswers = function() {
-                    if (dialogScope.criteria.isRequired && dialogScope.criteria.type !== 'VASTUS_T' && 
-                    (dialogScope.criteria.answers === undefined || dialogScope.criteria.answers.length === 0)) {
-                        message.error('poll.questions.noAnswersError');
-                        return false;
-                    }
-                    return true;
-                };
-
-            }, function (submittedDialogScope) {
-                FormUtils.withValidForm(submittedDialogScope.dialogForm, function() {
-                    var PollQuestionEndpoint = QueryUtils.endpoint('/poll/question');
-                    if (question) {
-                        if (!(submittedDialogScope.criteria.disabled || (submittedDialogScope.new && submittedDialogScope.criteria.question))) {
-                            submittedDialogScope.criteria.question = undefined;
-                        }
-                        var PollQuestionEndpointForUpdate = new PollQuestionEndpoint(submittedDialogScope.criteria);
-                        PollQuestionEndpointForUpdate.$update().then(function () {
-                            $scope.refresh();
-                        }).catch(angular.noop);
-                    } else {
-                        var theme = $scope.criteria.themes.filter(function (theme) {
-                            return theme.id === submittedDialogScope.criteria.theme;
-                        })[0];
-                        if (theme) {
-                            submittedDialogScope.criteria.orderNr = theme.questions.length + 1;
-                        } else {
-                            submittedDialogScope.criteria.orderNr = 1;
-                        }
-                        PollQuestionEndpoint = QueryUtils.endpoint('/poll/question/' + submittedDialogScope.criteria.theme);
-                        var PollQuestionEndpointForSave = new PollQuestionEndpoint(submittedDialogScope.criteria);
-                        PollQuestionEndpointForSave.$save().then(function () {
-                            $scope.refresh();
-                        }).catch(angular.noop);
-                    }
-                });
-            }, null, true);
+            $scope.new = false;
+            addQuestion(ArrayUtils, dialogService, QueryUtils, oisFileService, FormUtils, $scope, row, question, $scope.criteria.themes, $scope.formState.type);
         };
 
         $scope.getUrl = function(photo) {
@@ -1244,7 +1276,7 @@
 
         $scope.deleteQuestion = function(id) {
             dialogService.confirmDialog({ prompt: 'poll.questions.deleteQuestion' }, function () {
-                var PollQuestionEndpoint = QueryUtils.endpoint('/poll/question/' + id);
+                var PollQuestionEndpoint = QueryUtils.endpoint('/poll/pollThemeQuestion/' + id);
                 deleteEntity(PollQuestionEndpoint);
             });
         };

@@ -26,6 +26,9 @@ import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentAbsenceLesson;
+import ee.hitsa.ois.domain.timetable.JournalEntry;
+import ee.hitsa.ois.domain.timetable.JournalEntryStudent;
+import ee.hitsa.ois.domain.timetable.JournalEntryStudentLessonAbsence;
 import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.repository.JournalEntryStudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -171,7 +174,7 @@ public class StudentAbsenceService {
         studentAbsence.setIsAccepted(Boolean.TRUE);
         studentAbsence.setIsLessonAbsence(Boolean.TRUE);
         studentAbsence.setAcceptedBy(PersonUtil.fullname(em.getReference(Person.class, user.getPersonId())));
-        
+
         Map<LocalDate, Map<Long, Boolean>> lessonsByDate = form.getLessonsByDate();
         lessonsByDate.entrySet().removeIf(set -> set.getValue() == null);
         for (LocalDate date : lessonsByDate.keySet()) {
@@ -208,11 +211,55 @@ public class StudentAbsenceService {
             journalEntryStudentRepository.acceptAbsences(absence.name(), absences);
         }
     }
-    
+
     private void updateJournalEntryStudentAbsenceLessons(StudentAbsence studentAbsence) {
+        createAbsenceLessonsResultingFromOverlap(studentAbsence);
         Set<Long> absences = getAbsenceLessonsEntries(studentAbsence);
         if(!absences.isEmpty()) {
             journalEntryStudentRepository.acceptAbsenceLessons(Absence.PUUDUMINE_V.name(), absences);
+        }
+    }
+
+    private void createAbsenceLessonsResultingFromOverlap(StudentAbsence studentAbsence) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_entry_student jes " +
+                "join journal_student js on js.id = jes.journal_student_id " +
+                "join journal_entry je on je.id = jes.journal_entry_id " +
+                "join student_absence sa on sa.student_id = js.student_id " +
+                "join student_absence_lesson sal on sal.student_absence_id = sa.id and sal.absence = je.entry_date");
+        qb.requiredCriteria("js.student_id = :studentId", "studentId", EntityUtil.getId(studentAbsence.getStudent()));
+        qb.requiredCriteria("jes.absence_code = :noReason", "noReason", Absence.PUUDUMINE_P);
+        qb.requiredCriteria("sa.id = :studentAbsenceId", "studentAbsenceId", EntityUtil.getId(studentAbsence));
+        qb.filter("(je.entry_date = sa.valid_from or (je.entry_date >= sa.valid_from and je.entry_date <= sa.valid_thru))");
+        qb.filter("je.start_lesson_nr is not null and sal.lesson_nr >= je.start_lesson_nr " +
+                "and sal.lesson_nr <= je.start_lesson_nr + coalesce(je.lessons - 1, 0)");
+
+        List<?> data = qb.select("jes.id", em).getResultList();
+        Set<Long> entriesWithOverlap = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
+
+        if (!entriesWithOverlap.isEmpty()) {
+            List<Object[]> entryData = em.createQuery("select jes, jes.journalEntry from JournalEntryStudent jes " +
+                    "where jes.id in (:jesIds)", Object[].class)
+                    .setParameter("jesIds", entriesWithOverlap)
+                    .getResultList();
+
+            for (Object[] row : entryData) {
+                JournalEntryStudent jes = (JournalEntryStudent) row[0];
+                JournalEntry je = (JournalEntry) row[1];
+
+                int lessons = je.getLessons() != null ? je.getLessons().intValue() : 1;
+                for (int i = 1; i <= lessons; i++) {
+                    JournalEntryStudentLessonAbsence jesla = new JournalEntryStudentLessonAbsence();
+                    jesla.setJournalEntryStudent(jes);
+                    jesla.setLessonNr(Long.valueOf(i));
+                    jesla.setAbsence(jes.getAbsence());
+                    jesla.setAbsenceInserted(jes.getAbsenceInserted());
+                    jes.getJournalEntryStudentLessonAbsences().add(jesla);
+                }
+                jes.setAbsence(null);
+                jes.setAbsenceInserted(null);
+                jes.setIsLessonAbsence(Boolean.TRUE);
+                EntityUtil.save(jes, em);
+            }
         }
     }
 
@@ -222,14 +269,14 @@ public class StudentAbsenceService {
         qb.requiredCriteria("jes.absence_code = :noReason", "noReason", Absence.PUUDUMINE_P);
         if(studentAbsence.getValidThru() != null) {
             qb.requiredCriteria("je.entry_date >= :absenceFrom", "absenceFrom", studentAbsence.getValidFrom());
-            qb.requiredCriteria("je.entry_date <= :absenceThru", "absenceThru", studentAbsence.getValidThru());   
+            qb.requiredCriteria("je.entry_date <= :absenceThru", "absenceThru", studentAbsence.getValidThru());
         } else {
             qb.requiredCriteria("je.entry_date = :absenceFrom", "absenceFrom", studentAbsence.getValidFrom());
         }
         List<?> result = qb.select("jes.id", em).getResultList();
         return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), result);
     }
-    
+
     private Set<Long> getAbsenceLessonsEntries(StudentAbsence studentAbsence) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(ABSENCE_LESSON_ENTRY_FROM);
         qb.requiredCriteria("js.student_id = :studentId", "studentId", EntityUtil.getId(studentAbsence.getStudent()));

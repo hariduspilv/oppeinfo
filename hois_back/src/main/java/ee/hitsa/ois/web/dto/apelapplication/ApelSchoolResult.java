@@ -1,5 +1,8 @@
 package ee.hitsa.ois.web.dto.apelapplication;
 
+import ee.hitsa.ois.domain.apelapplication.ApelSchool;
+import ee.hitsa.ois.util.EntityUtil;
+
 public class ApelSchoolResult {
 
     private final Long id;
@@ -14,6 +17,17 @@ public class ApelSchoolResult {
         this.nameEn = nameEn;
         this.ehisSchool = ehisSchool;
         this.country = country;
+    }
+    
+    public static ApelSchoolResult of(ApelSchool apelSchool) {
+        if (apelSchool == null) return null;
+        ApelSchoolResult result = new ApelSchoolResult(
+        EntityUtil.getId(apelSchool), 
+        apelSchool.getNameEt(), 
+        apelSchool.getNameEn(),
+        EntityUtil.getNullableCode(apelSchool.getEhisSchool()),
+        EntityUtil.getNullableCode(apelSchool.getCountry()));
+        return result;
     }
 
     public Long getId() {
