@@ -1,0 +1,49 @@
+<md-dialog aria-label="add question dialog" flex="50">
+    <form name="dialogForm" ng-submit="search()" novalidate ng-cloak>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2 flex>{{(journal ? 'poll.basicData.dialog.journals' : 'poll.basicData.subjectStudyPeriods') | translate}}</h2>
+                <md-button class="md-icon-button" ng-click="cancel()">
+                    <md-icon md-font-set="material-icons">close</md-icon>
+                </md-button>
+            </div>
+        </md-toolbar>
+        <md-dialog-content>
+            <div class="md-dialog-content" flex>
+                <div layout="row">
+                    <md-input-container flex>
+                        <label>{{(journal ? 'poll.basicData.dialog.journal' : 'poll.basicData.dialog.subjectStudyPeriod') | translate}}</label>
+                        <input ng-model="name" md-maxlength="255">
+                    </md-input-container>
+                    <md-button style="margin-bottom: 10px;width: 100px;" class="md-raised md-primary" ng-click="search()">{{"main.button.search" | translate}}</md-button>
+                </div>
+                <div layout-padding>
+                    <div flex>
+                        <md-table-container style="max-height: 500px">
+                            <table md-table class="secondary-table">
+                                <tbody md-body>
+                                    <tr md-row ng-repeat="row in modifiable" ng-class-odd="'odd'" ng-class-even="'even'">
+                                        <td md-cell>{{currentLanguageNameField(row)}}</td>
+                                        <td md-cell ng-if="edit">
+                                            <md-button class="remove nomargin" ng-click="removeItem(row)">&times;</md-button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </md-table-container>
+                        <md-table-pagination 
+                            md-limit="query.limit" 
+                            md-page="query.page"
+                            md-total="{{searchedFullList.length}}"
+                            md-boundary-links="options.boundaryLinks" 
+                            md-on-paginate="paginate()"
+                            md-page-select></md-table-pagination>
+                    </div>
+                </div>
+            </div>
+        </md-dialog-content>
+        <md-dialog-actions layout="row" layout-xs="column" layout-align="start start" layout-align-xs="none none">
+            <md-button flex-xs="100" class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+        </md-dialog-actions>
+    </form>
+</md-dialog>

@@ -32,13 +32,16 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
         $scope.gradeSelectShownValue = function (grade) {
           return HigherGradeUtil.gradeSelectShownValue(grade, $scope.auth.school.letterGrades);
         };
-      } 
+      } else {
+        $scope.grades = $scope.grades.sort(function (grade1, grade2) {
+            return grade1.value - grade2.value;
+        });
+      }
       $scope.gradesMap = Classifier.toMap($scope.grades);
     });
 
     entity.practiceJournalEntries.forEach(function (entry) {
-      entry.astroHours = DataUtils.getAcademicHoursFromDouble(entry.hours);
-      entry.acadHours = DataUtils.getAcademicHours(entry.hours);
+      entry.astroHours = DataUtils.getHoursFromDoubleMinutes(entry.hours); // entry has minutes instead of hours
     });
     $scope.practiceJournal = entity;
     if ($scope.auth.isStudent()) {
@@ -50,17 +53,12 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
 
   function updateTotal() {
     var totalAstro = 0.00;
-    var totalAcad = 0.00;
     $scope.practiceJournal.practiceJournalEntries.forEach(function (entry) {
       if (entry.hours !== undefined) {
         totalAstro += entry.hours;
       }
-      if (entry.acadHours !== undefined) {
-        totalAcad += entry.acadHours;
-      }
     });
-    $scope.totalAstro = DataUtils.getAcademicHoursFromDouble(totalAstro);
-    $scope.totalAcad = Math.round(totalAcad * 100) / 100;
+    $scope.totalAstro = DataUtils.getHoursFromDoubleMinutes(totalAstro);
   }
 
   var entity = $route.current.locals.entity;
@@ -68,16 +66,8 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
     entityToForm(entity);
   }
 
-  $scope.getAstronomicalHours = DataUtils.getAstronomicalHours;
-  
   $scope.hideInvalid = function (cl) {
     return !Classifier.isValid(cl);
-  };
-
-  $scope.setAstronomicalHours = function(row, akadHours) {
-    row.hours = DataUtils.getAstronomicalHoursAsDouble(akadHours);
-    row.astroHours = DataUtils.getAstronomicalHoursAsString(akadHours);
-    updateTotal();
   };
 
   $scope.setAcademicalHours = function(row) {
@@ -85,8 +75,7 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
       return;
     }
     row.astroHours = row.astroHours.replace(".", ":");
-    row.hours = DataUtils.getAcademicHoursFromString(row.astroHours);
-    row.acadHours = DataUtils.getAcademicHours(row.hours);
+    row.hours = DataUtils.getMinutesFromString(row.astroHours);
     updateTotal();
   };
 
@@ -226,7 +215,7 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
       return false;
     }
     $scope.practiceJournal.isHigher = $scope.formState.isHigher;
-    if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {        
+    if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {
       dialogService.confirmDialog({prompt: 'practiceJournal.prompt.isAfterDaysAfterCanEditConfirm'}, function () {
         confirmPracticeJournal(true);
       });

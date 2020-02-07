@@ -6,22 +6,15 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
   message, oisFileService, $filter) {
   var ApplicationsEndpoint = QueryUtils.endpoint('/applications');
 
-  $scope.removeFromArray = ArrayUtils.remove;
+  $scope.removeFromArray = function(items, item) {
+    ArrayUtils.remove(items, item);
+    $scope.applicationForm.$setDirty();
+  };
   $scope.auth = $route.current.locals.auth;
   $scope.isCreate = $route.current.locals.isCreate;
   $scope.isView = $route.current.locals.isView;
   $scope.now = new Date();
   $scope.formState = {};
-
-  $scope.apelSchoolChanged = function () {
-    if ($scope.formState.apelSchool !== undefined) {
-      $scope.application.apelSchool = $scope.formState.apelSchool.id;
-      $scope.application.country = $scope.formState.apelSchool.country;
-    } else {
-      $scope.application.apelSchool = undefined;
-      $scope.application.country = undefined;
-    }
-  };
 
   function entityToForm(savedApplication) {
     DataUtils.convertStringToDates(savedApplication, ['startDate', 'endDate']);
@@ -30,10 +23,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       return plannedSubject;
     });
     angular.extend($scope.application, savedApplication);
-    $scope.formState.apelSchool = savedApplication.apelSchool;
-    if ($scope.formState.apelSchool) {
-      $scope.apelSchoolChanged();
-    }
+    $scope.formState.isNewSchool = false;
+    $scope.application.newApelSchool = null;
     $scope.canChange = canChange($scope.application);
     $scope.canSave = canSave($scope.application);
   }
@@ -42,7 +33,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
   $scope.application = {files: [], status: 'AVALDUS_STAATUS_KOOST'};
   $scope.canChange = canChange($scope.application);
   $scope.canSave = canSave($scope.application);
-  
+
   var entity = $route.current.locals.entity;
   if (angular.isDefined(entity)) {
     entity.$promise.then(function (response) {
@@ -54,7 +45,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       }
     });
   }
-  
+
   $scope.showOnlyTypes = !angular.isDefined(entity) && $scope.auth.isTeacher() ? ['AVALDUS_LIIK_TUGI'] : true;
 
   if (angular.isDefined(entity)) {
@@ -100,7 +91,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     } else if (application.status === 'AVALDUS_STAATUS_KINNITATUD') {
       confirmedApplicationPerm = application.type === 'AVALDUS_LIIK_RAKKAVA' && application.canChangeThemeReplacements;
     }
-    
+
     return (!$scope.application.id || $scope.application.canEditStudent) &&
       (createdApplicationPerm || reviewApplicationPerm || confirmedApplicationPerm);
   }
@@ -117,19 +108,6 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
         }
       }
     }
-  };
-
-  $scope.subjectsListView = function (plannedSubject) {
-    var subjects = [];
-    if (angular.isDefined(plannedSubject) && angular.isArray(plannedSubject.equivalents)) {
-      plannedSubject.equivalents.forEach(function (it) {
-          if (it.nameEt !== null && it.nameEt !== undefined) {
-            subjects.push($scope.currentLanguageNameField(it));
-          }
-      });
-      return subjects.join(", ");
-    }
-    return "";
   };
 
   function applicationFinm(student, loadFormDeferred) {
@@ -212,14 +190,9 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
   }
 
   function applicationValis(loadFormDeferred) {
-    $scope.isAbroadChanged = function () {
-      if ($scope.application.isAbroad) {
-        $scope.application.ehisSchool = undefined;
-      } else {
-        $scope.application.abroadSchool = undefined;
-        $scope.application.country = undefined;
-      }
-    };
+    Classifier.queryForDropdown({mainClassCode: 'EHIS_KOOL'}, function(result) {
+      $scope.ehisSchoolMap = Classifier.toMap(result);
+    });
 
     $scope.addPlannedSubjectRow = function () {
       if (!angular.isArray($scope.application.plannedSubjects)) {
@@ -250,10 +223,16 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       }
     };
 
-    $scope.moduleOrThemeSelected = function(plannedSubject) {
+    $scope.moduleOrThemeChanged = function(plannedSubject) {
+      // deselect module themes
+      deSelectModuleThemes(plannedSubject);
+      // reenable module themes
+      reEnableForSelection(plannedSubject);
       if (angular.isArray(plannedSubject.subjectsSelected)) {
         var newEquivalents = [];
         plannedSubject.subjectsSelected.forEach(function (moduleTheme) {
+          // equivalent holds already saved selected subjects/themes/modules
+          // new object is only added if it is not already saved
           var found = false;
           for (var i = 0; i < plannedSubject.equivalents.length && !found; i++) {
             var equivalent = plannedSubject.equivalents[i];
@@ -265,6 +244,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
           if (!found) {
             newEquivalents.push({ themeId: moduleTheme.themeId, moduleId: moduleTheme.moduleId });
           }
+          // if module is chosen, disable its themes
+          disableModuleThemes(moduleTheme);
         });
         plannedSubject.equivalents = newEquivalents;
       } else {
@@ -272,10 +253,57 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       }
     };
 
+    function disableModuleThemes(moduleTheme) {
+      if (moduleTheme.isModule) {
+        var moduleThemes = $scope.modulesAndThemes.filter(function(moduleOrTheme) {
+          return !moduleOrTheme.isModule && moduleOrTheme.moduleId === moduleTheme.moduleId;
+        });
+        for (var themeIndex = 0; themeIndex < moduleThemes.length; themeIndex++) {
+          moduleThemes[themeIndex].disabled = true;
+        }
+      }
+    }
+
+    function deSelectModuleThemes(plannedSubject) {
+      // find all modules
+      var selectedModules = plannedSubject.subjectsSelected.filter(function(selectedModule) {
+        return selectedModule.moduleId !== undefined && (selectedModule.themeId === undefined || selectedModule.themeId === null);
+      });
+      // deselect module themes
+      selectedModules.forEach(function(selectedModule) {
+        var themesToBeDeselected = plannedSubject.subjectsSelected.filter(function(theme) {
+          return theme.moduleId === selectedModule.moduleId && theme.themeId !== selectedModule.themeId;
+        });
+        themesToBeDeselected.forEach(function(theme) {
+          ArrayUtils.remove(plannedSubject.subjectsSelected, theme);
+        });
+      });
+    }
+
+    function reEnableForSelection(plannedSubject) {
+      for (var i = 0; i < $scope.modulesAndThemes.length; i++) {
+        var plannedModule = $scope.modulesAndThemes[i];
+        if (plannedModule.isModule) {
+          // check if this module is chosen
+          var chosenList = plannedSubject.subjectsSelected.filter(function(selectedModule) {
+            return selectedModule.moduleId === plannedModule.moduleId && selectedModule.themeId === plannedModule.themeId;
+          });
+          // if it is not chosen, make its themes enabled
+          if (chosenList === undefined || chosenList.length === 0) {
+            var moduleThemes = $scope.modulesAndThemes.filter(function(theme) {
+              return theme.isModule === false && theme.moduleId === plannedModule.moduleId;
+            });
+            for (var themeIndex = 0; themeIndex < moduleThemes.length; themeIndex++) {
+              moduleThemes[themeIndex].disabled = false;
+            }
+          }
+        }
+      }
+    }
+
     $scope.studentEhisSchool = $route.current.locals.auth.school.ehisSchool;
     if ($scope.isCreate) {
       $scope.application.isPeriod = true;
-      $scope.application.isAbroad = false;
     }
     $scope.student = QueryUtils.endpoint('/students/' + $scope.application.student.id).get();
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query({}, function (response) {
@@ -289,7 +317,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
   function sortByName(array) {
     return $filter('orderBy')(array, $scope.currentLanguageNameField());
   }
-  
+
   function loadForm(loadFormDeferred) {
     if ($scope.student.curriculumVersion.isVocational) {
       $scope.modulesAndThemesQuery = QueryUtils.endpoint('/autocomplete/curriculumversionomodulesandthemes').query({
@@ -300,7 +328,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       $scope.studentSubjects = QueryUtils.endpoint('/autocomplete/subjectsList').query();
     }
     $scope.apelSchools = QueryUtils.endpoint('/autocomplete/apelschools').query();
-    $q.all([$scope.student.curriculumVersion.isVocational ? $scope.modulesAndThemesQuery.$promise : $scope.studentSubjects.$promise, 
+    $q.all([$scope.student.curriculumVersion.isVocational ? $scope.modulesAndThemesQuery.$promise : $scope.studentSubjects.$promise,
       $scope.studyPeriods.$promise, $scope.apelSchools.$promise])
     .then(function () {resolve(loadFormDeferred);});
   }
@@ -315,18 +343,21 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     emptyNewSchoolForm();
   };
 
+  function emptyNewSchoolForm() {
+    $scope.newSchoolEst = false;
+    $scope.application.newApelSchool = null;
+  }
+
   $scope.newSchoolCountryChanged = function (countryCode) {
     $scope.newSchoolEst = countryCode === 'RIIK_EST' ? true : false;
     $scope.application.newApelSchool.ehisSchool = null;
   };
-  
-  function emptyNewSchoolForm() {
-    $scope.newSchoolEst = false;
-    if ($scope.application) {
-      $scope.application.apelSchool = null;
-      $scope.application.newApelSchool = null;
-    }
-  }
+
+  $scope.ehisSchoolChanged = function (ehisCode) {
+    var ehisSchool = $scope.ehisSchoolMap[ehisCode];
+    $scope.application.newApelSchool.nameEt = ehisSchool.nameEt;
+    $scope.application.newApelSchool.nameEn = ehisSchool.nameEn;
+  };
 
   function resolve(loadFormDeferred) {
     if ($scope.student.curriculumVersion.isVocational) {
@@ -343,10 +374,11 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     var modulesAndThemes = [];
     if (result) {
       result = sortByName(result);
-    
+
       for (var i = 0; i < result.length; i++) {
         modulesAndThemes.push({
           moduleId: result[i].id,
+          themeId: null,
           nameEt: result[i].nameEt,
           nameEn: result[i].nameEn,
           isModule: true
@@ -390,7 +422,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     };
     $q.all($scope.formState.curriculumVersions, $scope.formState.studentGroups).then(loadFormDeferred.resolve);
   }
-  
+
   function applicationRakkava(student, loadFormDeferred) {
     if (!$scope.application.id) {
       $scope.application.oldCurriculumVersion = student.curriculumVersion;
@@ -458,9 +490,9 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     };
 
     $scope.deleteService = function (service) {
-      for(var i = 0; i < $scope.application.supportServices.length; i++){ 
+      for(var i = 0; i < $scope.application.supportServices.length; i++){
         if ($scope.application.supportServices[i].code === service.code) {
-          $scope.application.supportServices.splice(i, 1); 
+          $scope.application.supportServices.splice(i, 1);
         }
       }
     };
@@ -494,7 +526,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
 
           if ($scope.application.supportModules) {
             $scope.application.supportModules.forEach(function (individualModule) {
-              
+
               var curriculumModule = ($scope.curriculumVersionModules || []).find(function (cvModule) {
                 return cvModule.module.id === individualModule.module.id;
               });
@@ -650,7 +682,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       });
     });
   };
-  
+
   $scope.onOisFileChange = function () {
     if ($scope.applicationForm.fileData && $scope.applicationForm.fileData.$modelValue && $scope.applicationForm.fileData.$modelValue[0]) {
       oisFileService.getFromLfFile($scope.applicationForm.fileData.$modelValue[0], function (file) {
@@ -689,7 +721,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       }
     });
   };
-  
+
   function changeApplicationSubjects() {
     QueryUtils.endpoint('/applications/' + $scope.application.id + '/subjects').put({plannedSubjects: $scope.application.plannedSubjects}).$promise.then(function (response) {
       message.info('application.messages.saved');
@@ -707,7 +739,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     $timeout(function () {
       FormUtils.withValidForm($scope.applicationForm, function () {
         if (angular.isDefined($scope.applicationForm) && $scope.applicationForm.$dirty === true ) {
-          dialogService.confirmDialog({prompt: 'application.messages.confirmSaveAndSubmit'}, function() {  
+          dialogService.confirmDialog({prompt: 'application.messages.confirmSaveAndSubmit'}, function() {
+            beforeSave();
             var application = new ApplicationsEndpoint($scope.application);
             application.$update().then(function (response) {
               entityToForm(response);
@@ -722,14 +755,14 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       });
     });
   };
-  
+
   $scope.getStar = function(additionalCheck) {
     return $scope.strictRequired || (angular.isDefined(additionalCheck) && !additionalCheck) ? '' : ' *';
   };
 
   function notifyAboutSpecialNeeds(confirmCallback) {
     if ($scope.application.type === 'AVALDUS_LIIK_TUGI' && !$scope.application.hasSpecialNeed) {
-      dialogService.confirmDialog({prompt: 'application.messages.studentHasNoSpecialNeedConfirm'}, function() {  
+      dialogService.confirmDialog({prompt: 'application.messages.studentHasNoSpecialNeedConfirm'}, function() {
         confirmCallback();
       });
     } else {
@@ -755,7 +788,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       FormUtils.withValidForm($scope.applicationForm, function () {
         notifyAboutSpecialNeeds(function () {
           if (angular.isDefined($scope.applicationForm) && $scope.applicationForm.$dirty === true ) {
-            dialogService.confirmDialog({prompt: 'application.messages.confirmSaveAndConfirm'}, function() {  
+            dialogService.confirmDialog({prompt: 'application.messages.confirmSaveAndConfirm'}, function() {
+              beforeSave();
               var application = new ApplicationsEndpoint($scope.application);
               application.$update().then(function (response) {
                 $scope.strictRequired = false;
@@ -764,7 +798,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
               }).catch(angular.noop);
             });
           } else {
-            dialogService.confirmDialog({prompt: 'application.messages.confirmConfirm'}, function() {  
+            dialogService.confirmDialog({prompt: 'application.messages.confirmConfirm'}, function() {
               confirm();
             });
           }
@@ -805,7 +839,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       }).catch(angular.noop);
     });
   };
-  
+
   $scope.pdfUrl = function () {
     return config.apiUrl + "/applications/print/" + $scope.application.id + "/application.pdf";
   };
@@ -850,8 +884,6 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
   };
 
   function beforeSave() {
-    if ($scope.application.type === 'AVALDUS_LIIK_VALIS' && $scope.application.abroadProgramme === 'VALISKOOL_PROGRAMM_1_1') {
-    }
     if ($scope.application.type === 'AVALDUS_LIIK_RAKKAVA') {
       var applicationOmoduleThemes = [];
 

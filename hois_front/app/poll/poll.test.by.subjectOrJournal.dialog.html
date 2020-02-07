@@ -30,34 +30,55 @@
             <div layout="column" ng-cloak>
                 <form name="responseForm" ng-submit="confirm()" ng-cloak novalidate>
                     <div flex>
+                        <div ng-if="criteria.type === 'KYSITLUS_O' && criteria.foreword !== null && showForeword">
+                            <h3 style="font-size: 16px; color: rgb(21, 101, 192)">{{'poll.basicData.foreWord' | translate}}</h3>
+                            <p style="word-break: break-word; font-size: 15px;">{{criteria.foreword}}</p>
+                            <div layout="row" layout-align="space-between">
+                                <div></div>
+                                <md-button class="md-raised" ng-click="nextSubjectOrJournal(-1)">
+                                    {{'poll.questions.next' | translate}}
+                                    <md-icon md-font-set="material-icons">keyboard_arrow_right</md-icon>
+                                </md-button>
+                            </div>
+                        </div>
                         <div ng-if="formState.themeBySubjectOrJournalId" layout="column">
                             <div ng-repeat="(key, themeList) in formState.themeBySubjectOrJournalId track by $index" layout="column" flex ng-style="{'margin-top': $first ? '0px' : '16px'}" ng-if="themeList.show">
-                                <div layout="row" ng-if="themeList.length === 0">
-                                    <p style="word-break: break-word; font-size: 15px;">{{criteria.foreword}}</p>
-                                </div>
                                 <div ng-repeat="item in themeList" layout="column" flex>
                                     <div layout="column" ng-if="first($index)">
-                                        <div layout="row" ng-if="key === 'null' && criteria.type === 'KYSITLUS_O' && hasSubjectOrJournal" class="form-readonly">
-                                            <p style="margin-top: 0px">{{'poll.response.other' | translate}}</p>
+                                        <div layout="row" ng-if="key === 'null' && criteria.type === 'KYSITLUS_O' && hasSubjectOrJournal">
+                                            <h3 style="font-size: 16px; margin-top: 0px;color: rgb(21, 101, 192)">{{'poll.response.other' | translate}}</h3>
                                         </div>
-                                        <div layout="row" ng-if="themeList.journal !== undefined" class="form-readonly">
-                                            <md-input-container flex="50">
-                                                <label>{{'poll.response.journal' | translate}}</label>
-                                                <hois-value value="currentLanguageNameField(themeList.journal)"></hois-value>
-                                            </md-input-container>
+                                        <div class="form-readonly" layout="row">
+                                            <div layout="row" ng-if="themeList.journal !== undefined" flex="50">
+                                                <md-input-container flex="100">
+                                                    <label style="font-size: 14px;">{{'poll.response.journal' | translate}}</label>
+                                                    <h3 style="font-size: 16px; color: rgb(21, 101, 192)">{{currentLanguageNameField(themeList.journal)}}</h3>
+                                                </md-input-container>
+                                            </div>
+                                            <div layout="row" ng-if="themeList.subject !== undefined" flex="50">
+                                                <md-input-container flex="100">
+                                                    <label style="font-size: 14px;">{{'poll.response.subject' | translate}}</label>
+                                                    <h3 style="font-size: 16px; color: rgb(21, 101, 192)">{{currentLanguageNameField(themeList.subject)}}</h3>
+                                                </md-input-container>
+                                            </div>
                                         </div>
-                                        <div layout="row" ng-if="themeList.subject !== undefined" class="form-readonly">
-                                            <md-input-container flex="50">
-                                                <label>{{'poll.response.subject' | translate}}</label>
-                                                <hois-value value="currentLanguageNameField(themeList.subject)"></hois-value>
-                                            </md-input-container>
-                                        </div>
-                                        <div layout="row" ng-if="criteria.foreword !== null && firstPage(themeList)">
+                                        <div layout="row" ng-if="criteria.foreword !== null && firstPage(themeList) && criteria.type !== 'KYSITLUS_O'">
                                             <p style="word-break: break-word; font-size: 15px;">{{criteria.foreword}}</p>
                                         </div>
                                     </div>
                                     <fieldset>
                                         <legend md-colors="{color: 'primary-800'}" style="word-break: break-word" class="md-title-small">{{item.orderNr + ' ' + item.nameEt}}</legend>
+                                        <div class="form-readonly">
+                                            <br>
+                                            <md-input-container flex="50" ng-if="item.isTeacher && themeList.journal !== undefined">
+                                                <label>{{'poll.response.teacherVocational' | translate}}</label>
+                                                <h3 style="color: rgb(21, 101, 192)">{{currentLanguageNameField(criteria.teacher)}}</h3>
+                                            </md-input-container>
+                                            <md-input-container flex="50" ng-if="item.isTeacher && themeList.subject !== undefined">
+                                                <label>{{'poll.response.teacherHigher' | translate}}</label>
+                                                <h3 style="color: rgb(21, 101, 192)">{{currentLanguageNameField(criteria.teacher)}}</h3>
+                                            </md-input-container>
+                                        </div>
                                         <div ng-repeat="question in item.questions track by $index" layout="row" flex>
                                             <div flex="100">
                                                 <fieldset>
@@ -103,9 +124,9 @@
                                                                     <md-button ng-if="!question.isRequired" ng-click="clearRadio(question)" class="md-raised">{{'main.button.clear' | translate}}</md-button>
                                                                 </md-input-container>
                                                             </div>
-                                                            <div ng-if="question.type === 'VASTUS_M'" layout="{{question.isInRow ? 'row' : 'column'}}" class="{{question.requiredError ? 'red-border' : ''}}">
-                                                                <div ng-repeat="answer in question.answers track by $index" flex>
-                                                                    <md-input-container flex>
+                                                            <div ng-if="question.type === 'VASTUS_M'" class="{{question.requiredError ? 'red-border' : ''}}">
+                                                                <div layout="{{question.isInRow ? 'row' : 'column'}}" flex>
+                                                                    <md-input-container ng-repeat="answer in question.answers track by $index" flex>
                                                                         <md-checkbox ng-model="answer.chosen" aria-label="checkBox" name="checkBox" ng-change="question.requiredError && checkErrors()" ng-blur="save(question)">
                                                                                 <span style="word-break: break-word">{{answer.nameEt}}</span>
                                                                         </md-checkbox>
@@ -135,23 +156,37 @@
                                 </div>
                                 <div layout="row" layout-align="space-between">
                                     <div>
-                                        <md-button class="md-raised" ng-click="previousSubjectOrJournal($index)" ng-if="!first($index)">
+                                        <md-button class="md-raised" ng-click="previousSubjectOrJournal($index)" 
+                                            style="margin-left: 0px;padding-left: 0px;"
+                                            ng-if="!first($index) || (criteria.type === 'KYSITLUS_O' && criteria.foreword !== null)">
                                             <md-icon md-font-set="material-icons">keyboard_arrow_left</md-icon>
                                             {{'poll.questions.previous' | translate}}
                                         </md-button>
                                     </div>
                                     <div>
-                                        <md-button class="md-raised" ng-click="nextSubjectOrJournal($index)" ng-if="!last($index)">
+                                        <md-button class="md-raised" ng-click="nextSubjectOrJournal($index)" style="margin-right: 0px;padding-right: 0px;"
+                                            ng-if="!last($index) || (criteria.type === 'KYSITLUS_O' && criteria.afterword !== null)">
                                             {{'poll.questions.next' | translate}}
                                             <md-icon md-font-set="material-icons">keyboard_arrow_right</md-icon>
                                         </md-button>
                                     </div>
                                 </div>
-                                <div layout="column" ng-if="last($index)">
+                                <div layout="column" ng-if="last($index) && criteria.type !== 'KYSITLUS_O' && criteria.afterword !== null">
                                     <div layout="row">
                                         <p style="word-break: break-word; font-size: 15px;">{{criteria.afterword}}</p>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                        <div ng-if="criteria.type === 'KYSITLUS_O' && criteria.afterword !== null && showAfterword">
+                            <h3 style="font-size: 16px; color: rgb(21, 101, 192)">{{'poll.basicData.afterWord' | translate}}</h3>
+                            <p style="word-break: break-word; font-size: 15px;">{{criteria.afterword}}</p>
+                            <div layout="row">
+                                <md-button class="md-raised" ng-click="previousSubjectOrJournal(subjectListLength())"
+                                    style="margin-left: 0px;padding-left: 0px;">
+                                    <md-icon md-font-set="material-icons">keyboard_arrow_left</md-icon>
+                                    {{'poll.questions.previous' | translate}}
+                                </md-button>
                             </div>
                         </div>
                     </div>

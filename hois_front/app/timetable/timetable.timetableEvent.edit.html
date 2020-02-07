@@ -39,7 +39,8 @@
           </md-checkbox>
         </md-input-container>
         <md-input-container ng-if="canCreatePersonalEvents" flex="20" flex-sm="100" flex-xs="100">
-          <md-checkbox ng-model="timetableEvent.isPersonal" ng-change="personalEventChanged()" aria-label="Is personal event">
+          <md-checkbox ng-model="timetableEvent.isPersonal" ng-change="personalEventChanged()" aria-label="Is personal event"
+            ng-disabled="!eventsPerm">
             {{'timetable.timetableEvent.personalEvent' | translate}}
           </md-checkbox>
         </md-input-container>

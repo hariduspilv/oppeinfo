@@ -27,6 +27,7 @@ import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm.DirectiveFormStudentModule;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
+import ee.hitsa.ois.web.dto.apelapplication.ApelSchoolResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 
 public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
@@ -50,6 +51,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private AutocompleteResult applicationStudyPeriodEnd;
     private AutocompleteResult studentGroupObject;
     private CurriculumVersionResult curriculumVersionObject;
+    private ApelSchoolResult apelSchoolObject;
 
     private Boolean isFullLoad = Boolean.FALSE;
     private Boolean isPartialLoad = Boolean.FALSE;
@@ -243,6 +245,14 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         this.curriculumVersionObject = curriculumVersionObject;
     }
 
+    public ApelSchoolResult getApelSchoolObject() {
+        return apelSchoolObject;
+    }
+
+    public void setApelSchoolObject(ApelSchoolResult apelSchoolObject) {
+        this.apelSchoolObject = apelSchoolObject;
+    }
+
     public List<AutocompleteResult> getSupportServices() {
         return supportServices;
     }
@@ -312,7 +322,9 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             dto.setIsPeriod(application.getIsPeriod());
             dto.setStartDate(application.getStartDate());
             dto.setEndDate(application.getEndDate());
-            dto.setApelSchoolId(EntityUtil.getNullableId(application.getApelSchool()));
+            ApelSchoolResult apelSchool = ApelSchoolResult.of(application.getApelSchool());
+            dto.setApelSchoolObject(apelSchool);
+            dto.setApelSchoolId(apelSchool != null ? apelSchool.getId() : null);
             dto.setStudyPeriodStart(EntityUtil.getNullableId(application.getStudyPeriodStart()));
             dto.setStudyPeriodEnd(EntityUtil.getNullableId(application.getStudyPeriodEnd()));
             dto.setAbroadPurpose(EntityUtil.getNullableCode(application.getAbroadPurpose()));

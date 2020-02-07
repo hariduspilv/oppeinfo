@@ -9,11 +9,10 @@ angular.module('hitsaOis').controller('TimetableLessonTimeListController', funct
 
   var currentPeriodPromise = QueryUtils.endpoint('/lessontimes/currentPeriod').get(function(period) {
     DataUtils.convertStringToDates(period, ["periodStart"]);
-    $scope.criteria.from = period.periodStart;
+    QueryUtils.createQueryForm($scope, '/lessontimes', {order: 'lessonNr', from: period.periodStart}, clMapper.objectmapper);
   }).$promise;
   promises.push(currentPeriodPromise);
 
-  QueryUtils.createQueryForm($scope, '/lessontimes', {order: 'lessonNr'}, clMapper.objectmapper);
   $q.all(promises).then(function() {
     var days = [{day:'NADALAPAEV_E'}, {day:'NADALAPAEV_T'}, {day:'NADALAPAEV_K'}, {day:'NADALAPAEV_N'}, {day:'NADALAPAEV_R'}, {day:'NADALAPAEV_L'}, {day:'NADALAPAEV_P'}];
     clMapper.objectmapper(days).forEach(function(it) {

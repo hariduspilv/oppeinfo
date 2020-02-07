@@ -1,6 +1,7 @@
 package ee.hitsa.ois.util;
 
 import ee.hitsa.ois.domain.protocol.Protocol;
+import ee.hitsa.ois.domain.protocol.ProtocolVdata;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.ProtocolStatus;
@@ -15,40 +16,44 @@ public abstract class ModuleProtocolUtil {
     }
 
     private static boolean canView(HoisUserDetails user, Protocol protocol) {
-        if(!UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL)) {
+        if (!UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL)) {
             return false;
         }
         return UserUtil.isSchoolAdmin(user, protocol.getSchool()) || UserUtil.isTeacher(user, protocol.getSchool())
-                || UserUtil.isLeadingTeacher(user,
-                        EntityUtil.getId(protocol.getProtocolVdata().getCurriculumVersion().getCurriculum()));
+                || isLeadingTeacherProtocol(user, protocol);
     }
 
     private static boolean canCreate(HoisUserDetails user) {
-        return (user.isSchoolAdmin() || user.isTeacher())
+        return (user.isSchoolAdmin() || user.isLeadingTeacher() || user.isTeacher())
                 && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL);
     }
 
     public static boolean canEdit(HoisUserDetails user, Protocol protocol) {
-        if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL)) {
+        if (!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL)) {
             return false;
         }
-        if(UserUtil.isSchoolAdmin(user, protocol.getSchool())) {
+
+        if (UserUtil.isSchoolAdmin(user, protocol.getSchool())) {
             return true;
-        }
-        if(user.isTeacher()) {
+        } else if (user.isLeadingTeacher()) {
+            return isLeadingTeacherProtocol(user, protocol);
+        } else if (user.isTeacher()) {
             return !ProtocolUtil.confirmed(protocol) && isTeacherResponsible(user, protocol);
         }
         return false;
     }
 
-    public static boolean canEdit(HoisUserDetails user, ProtocolStatus status, Long teacherResponsible) {
-        if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL)) {
+    public static boolean canEdit(HoisUserDetails user, ProtocolStatus status, Long curriculumId, Long teacherResponsible) {
+        if (!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL)) {
             return false;
         }
-        if(user.isSchoolAdmin()) {
+        if (user.isSchoolAdmin()) {
             return true;
         }
-        if(user.isTeacher()) {
+        if (user.isLeadingTeacher()) {
+            return UserUtil.isLeadingTeacher(user, curriculumId);
+        }
+        if (user.isTeacher()) {
             return ProtocolStatus.PROTOKOLL_STAATUS_S.equals(status) && user.getTeacherId().equals(teacherResponsible);
         }
         return false;
@@ -58,26 +63,23 @@ public abstract class ModuleProtocolUtil {
         if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL)) {
             return false;
         }
-        return !ProtocolUtil.confirmed(protocol) && allResultsEmpty(protocol) && 
-                (user.isSchoolAdmin() || isTeacherResponsible(user, protocol));
+        return !ProtocolUtil.confirmed(protocol) && allResultsEmpty(protocol)
+                && (UserUtil.isSchoolAdmin(user, protocol.getSchool()) || isLeadingTeacherProtocol(user, protocol)
+                        || isTeacherResponsible(user, protocol));
     }
 
     public static boolean canConfirm(HoisUserDetails user, Protocol protocol) {
         if (!UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL)) {
             return false;
         }
-        if (UserUtil.isSchoolAdmin(user, protocol.getSchool())) {
-            return true;
-        }
-        if (user.isTeacher()) {
-            return !ProtocolUtil.confirmed(protocol) && isTeacherResponsible(user, protocol);
-        }
-        return false;
+        return UserUtil.isSchoolAdmin(user, protocol.getSchool())
+                || (user.isTeacher() && !ProtocolUtil.confirmed(protocol) && isTeacherResponsible(user, protocol));
     }
 
-    public static void assertIsSchoolAdminOrTeacherResponsible(HoisUserDetails user, boolean isHigher, Long teacherId) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
-        if(user.isTeacher() && !user.getTeacherId().equals(teacherId)) {
+    public static void assertIsSchoolAdminOrLeadingTeacherOrTeacherResponsible(HoisUserDetails user,
+            ProtocolVdata protocolData, boolean isHigher) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user, protocolData.getCurriculumVersion().getCurriculum());
+        if (user.isTeacher() && !user.getTeacherId().equals(EntityUtil.getId(protocolData.getTeacher()))) {
             throw new ValidationFailedException(isHigher ? "moduleProtocol.error.teacherMismatchHigher"
                     : "moduleProtocol.error.teacherMismatchVocational");
         }
@@ -111,9 +113,13 @@ public abstract class ModuleProtocolUtil {
         UserUtil.throwAccessDeniedIf(!canConfirm(user, protocol), "User has no confirm rights");
     }
 
+    private static boolean isLeadingTeacherProtocol(HoisUserDetails user, Protocol protocol) {
+        return UserUtil.isLeadingTeacher(user, EntityUtil.getId(protocol.getProtocolVdata()
+                .getCurriculumVersion().getCurriculum()));
+    }
+
     private static boolean isTeacherResponsible(HoisUserDetails user, Protocol protocol) {
-        return UserUtil.isTeacher(user, protocol.getSchool())
-                && EntityUtil.getId(protocol.getProtocolVdata().getTeacher()).equals(user.getTeacherId());
+        return user.isTeacher() && EntityUtil.getId(protocol.getProtocolVdata().getTeacher()).equals(user.getTeacherId());
     }
 
     private static boolean allResultsEmpty(Protocol protocol) {

@@ -2,7 +2,7 @@
 /**
  * TODO: Make async requests globally usable
  */
-angular.module('hitsaOis').factory('ExcelUtils', function (QueryUtils, $http, busyHandler, $translate, $timeout, message, $rootScope) {
+angular.module('hitsaOis').factory('ExcelUtils', function (QueryUtils, $http, busyHandler, $translate, $timeout, message, $rootScope, PollingService, POLLING_STATUS) {
     var factory = {};
 
     /**
@@ -20,10 +20,29 @@ angular.module('hitsaOis').factory('ExcelUtils', function (QueryUtils, $http, bu
     factory.send = function(scope, data, name) {
         QueryUtils.loadingWheel(scope, true, false, $translate.instant('ehis.messages.requestInProgress'), true);
         busyHandler.setProgress(undefined);
-        QueryUtils.endpoint('/poll/statistics/excelExport').save2(data).$promise.then(function(result) {
-            $timeout(function () {excelExportStatus(scope, result.key, data, name);}, 1000); // give 1 second for initializing a thread
-        }).catch(function () {
-            QueryUtils.loadingWheel(scope, false);
+        PollingService.sendRequest({
+            url: '/poll/statistics/excelExport',
+            data: data,
+            pollUrl: '/poll/statistics/excelExportStatus',
+            successCallback: function (_, key) {
+                factory.get($rootScope.excel('poll/statistics/pollStatistics', {key: key}), name);
+                QueryUtils.loadingWheel(scope, false);
+            },
+            failCallback: function (pollResult, key) {
+                if (pollResult) {
+                    message.error('ehis.messages.taskStatus.' + pollResult.status, {error: pollResult.error});
+                    if ((pollResult.status === POLLING_STATUS.CANCELLED || pollResult.status === POLLING_STATUS.INTERRUPTED) && pollResult.result) {
+                        factory.get($rootScope.excel('poll/statistics/pollStatistics', {key: key}), name);
+                    }
+                }
+                QueryUtils.loadingWheel(scope, false);
+            },
+            updateProgress: function (pollResult) {
+                // Translate informational message
+                if (pollResult && pollResult.message) {
+                    busyHandler.setText($translate.instant(pollResult.message));
+                }
+            }
         });
     };
     
@@ -46,27 +65,6 @@ angular.module('hitsaOis').factory('ExcelUtils', function (QueryUtils, $http, bu
             document.body.removeChild(anchor);
         }
     };
-    
-    function excelExportStatus(scope, key, data, name) {
-        data.key = key;
-        QueryUtils.endpoint('/poll/statistics/excelExportStatus').get({key: key}).$promise.then(function (result) {
-            // Translate informational message
-           busyHandler.setText($translate.instant(result.message));
-            if (result.status === 'IN_PROGRESS') {
-                $timeout(function () {excelExportStatus(scope, key, data, name);}, 5000);
-                } else if (result.status === 'DONE') {
-                //message.info(result && result.result.length > 0 ? 'ehis.messages.exportFinished' : 'ehis.messages.nostudentsfound');
-                factory.get($rootScope.excel('poll/statistics/pollStatistics', data), name);
-                QueryUtils.loadingWheel(scope, false);
-            } else {
-                message.error('ehis.messages.taskStatus.' + result.status, {error: result.error});
-                if ((result.status === 'CANCELLED' || result.status === 'INTERRUPTED') && result.result) {
-                    factory.get($rootScope.excel('poll/statistics/pollStatistics', data), name);
-                }
-                QueryUtils.loadingWheel(scope, false);
-            }
-        });
-    }
 
     return factory;
   });

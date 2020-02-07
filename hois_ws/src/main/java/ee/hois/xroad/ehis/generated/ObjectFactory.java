@@ -43,6 +43,9 @@ public class ObjectFactory {
     private final static QName _ServiceVersion_QNAME = new QName("http://x-road.eu/xsd/identifiers", "serviceVersion");
     private final static QName _SecurityCategoryCode_QNAME = new QName("http://x-road.eu/xsd/identifiers", "securityCategoryCode");
     private final static QName _ServerCode_QNAME = new QName("http://x-road.eu/xsd/identifiers", "serverCode");
+    private final static QName _PartyClass_QNAME = new QName("http://x-road.eu/xsd/representation.xsd", "partyClass");
+    private final static QName _PartyCode_QNAME = new QName("http://x-road.eu/xsd/representation.xsd", "partyCode");
+    private final static QName _RepresentedParty_QNAME = new QName("http://x-road.eu/xsd/representation.xsd", "representedParty");
     private final static QName _EisOppeasutused_QNAME = new QName("http://producers.ehis.xtee.riik.ee/producer/ehis", "eisOppeasutused");
     private final static QName _KvkLopetatud_QNAME = new QName("http://producers.ehis.xtee.riik.ee/producer/ehis", "kvkLopetatud");
     private final static QName _KvkOppimine_QNAME = new QName("http://producers.ehis.xtee.riik.ee/producer/ehis", "kvkOppimine");
@@ -82,6 +85,8 @@ public class ObjectFactory {
     private final static QName _DokumentContent_QNAME = new QName("", "content");
     private final static QName _YhisopeAsutusKood_QNAME = new QName("", "asutusKood");
     private final static QName _OppeasutusTegevusloadNimetus_QNAME = new QName("", "nimetus");
+    private final static QName _OppeainedOppeaine_QNAME = new QName("", "oppeaine");
+    private final static QName _OppeainedKlOppeaine_QNAME = new QName("", "klOppeaine");
     private final static QName _OppejoudLyhiajalineMobiilsusLyhMobKood_QNAME = new QName("", "lyhMobKood");
     private final static QName _OppejoudLyhiajalineMobiilsusKustutatud_QNAME = new QName("", "kustutatud");
     private final static QName _EylIsicParingIsikukood_QNAME = new QName("", "isikukood");
@@ -118,6 +123,14 @@ public class ObjectFactory {
      * 
      */
     public ObjectFactory() {
+    }
+
+    /**
+     * Create an instance of {@link PankOppurLaenListV2Response }
+     * 
+     */
+    public PankOppurLaenListV2Response createPankOppurLaenListV2Response() {
+        return new PankOppurLaenListV2Response();
     }
 
     /**
@@ -222,6 +235,14 @@ public class ObjectFactory {
      */
     public XRoadLocalGroupIdentifierType createXRoadLocalGroupIdentifierType() {
         return new XRoadLocalGroupIdentifierType();
+    }
+
+    /**
+     * Create an instance of {@link XRoadRepresentedPartyType }
+     * 
+     */
+    public XRoadRepresentedPartyType createXRoadRepresentedPartyType() {
+        return new XRoadRepresentedPartyType();
     }
 
     /**
@@ -633,6 +654,38 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link KmaEhis }
+     * 
+     */
+    public KmaEhis createKmaEhis() {
+        return new KmaEhis();
+    }
+
+    /**
+     * Create an instance of {@link KmaEhisIsikList }
+     * 
+     */
+    public KmaEhisIsikList createKmaEhisIsikList() {
+        return new KmaEhisIsikList();
+    }
+
+    /**
+     * Create an instance of {@link KmaEhisResponse }
+     * 
+     */
+    public KmaEhisResponse createKmaEhisResponse() {
+        return new KmaEhisResponse();
+    }
+
+    /**
+     * Create an instance of {@link KmaEhisAndmed }
+     * 
+     */
+    public KmaEhisAndmed createKmaEhisAndmed() {
+        return new KmaEhisAndmed();
+    }
+
+    /**
      * Create an instance of {@link KodOppur }
      * 
      */
@@ -769,11 +822,19 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link KvkResponse }
+     * Create an instance of {@link KvkLopetatudResponse }
      * 
      */
-    public KvkResponse createKvkResponse() {
-        return new KvkResponse();
+    public KvkLopetatudResponse createKvkLopetatudResponse() {
+        return new KvkLopetatudResponse();
+    }
+
+    /**
+     * Create an instance of {@link KvkOppimineResponse }
+     * 
+     */
+    public KvkOppimineResponse createKvkOppimineResponse() {
+        return new KvkOppimineResponse();
     }
 
     /**
@@ -902,6 +963,30 @@ public class ObjectFactory {
      */
     public LaeYldharidusResponse createLaeYldharidusResponse() {
         return new LaeYldharidusResponse();
+    }
+
+    /**
+     * Create an instance of {@link LaeHuviharidus }
+     * 
+     */
+    public LaeHuviharidus createLaeHuviharidus() {
+        return new LaeHuviharidus();
+    }
+
+    /**
+     * Create an instance of {@link HuviOppeasutusList }
+     * 
+     */
+    public HuviOppeasutusList createHuviOppeasutusList() {
+        return new HuviOppeasutusList();
+    }
+
+    /**
+     * Create an instance of {@link LaeHuviharidusResponse }
+     * 
+     */
+    public LaeHuviharidusResponse createLaeHuviharidusResponse() {
+        return new LaeHuviharidusResponse();
     }
 
     /**
@@ -1305,11 +1390,27 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link MtsysLaeTegevusnaitajadResponse }
+     * 
+     */
+    public MtsysLaeTegevusnaitajadResponse createMtsysLaeTegevusnaitajadResponse() {
+        return new MtsysLaeTegevusnaitajadResponse();
+    }
+
+    /**
      * Create an instance of {@link MtsysEsitaTegevusnaitajad }
      * 
      */
     public MtsysEsitaTegevusnaitajad createMtsysEsitaTegevusnaitajad() {
         return new MtsysEsitaTegevusnaitajad();
+    }
+
+    /**
+     * Create an instance of {@link MtsysEsitaTegevusnaitajadResponse }
+     * 
+     */
+    public MtsysEsitaTegevusnaitajadResponse createMtsysEsitaTegevusnaitajadResponse() {
+        return new MtsysEsitaTegevusnaitajadResponse();
     }
 
     /**
@@ -1393,6 +1494,30 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link OppuridKovPortaaliV2 }
+     * 
+     */
+    public OppuridKovPortaaliV2 createOppuridKovPortaaliV2() {
+        return new OppuridKovPortaaliV2();
+    }
+
+    /**
+     * Create an instance of {@link OppuridKovPortaaliV2Response }
+     * 
+     */
+    public OppuridKovPortaaliV2Response createOppuridKovPortaaliV2Response() {
+        return new OppuridKovPortaaliV2Response();
+    }
+
+    /**
+     * Create an instance of {@link OppurV2 }
+     * 
+     */
+    public OppurV2 createOppurV2() {
+        return new OppurV2();
+    }
+
+    /**
      * Create an instance of {@link PankOppurLaenList }
      * 
      */
@@ -1406,6 +1531,22 @@ public class ObjectFactory {
      */
     public PankOppurLaenListResponse createPankOppurLaenListResponse() {
         return new PankOppurLaenListResponse();
+    }
+
+    /**
+     * Create an instance of {@link PankOppurLaenListV2 }
+     * 
+     */
+    public PankOppurLaenListV2 createPankOppurLaenListV2() {
+        return new PankOppurLaenListV2();
+    }
+
+    /**
+     * Create an instance of {@link PankOppurLaenListV2Response.Teated }
+     * 
+     */
+    public PankOppurLaenListV2Response.Teated createPankOppurLaenListV2ResponseTeated() {
+        return new PankOppurLaenListV2Response.Teated();
     }
 
     /**
@@ -1457,6 +1598,30 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link PedagoogAmetikohtV2 }
+     * 
+     */
+    public PedagoogAmetikohtV2 createPedagoogAmetikohtV2() {
+        return new PedagoogAmetikohtV2();
+    }
+
+    /**
+     * Create an instance of {@link PedagoogAmetikohtV2Response }
+     * 
+     */
+    public PedagoogAmetikohtV2Response createPedagoogAmetikohtV2Response() {
+        return new PedagoogAmetikohtV2Response();
+    }
+
+    /**
+     * Create an instance of {@link EisAmetikohadV2 }
+     * 
+     */
+    public EisAmetikohadV2 createEisAmetikohadV2() {
+        return new EisAmetikohadV2();
+    }
+
+    /**
      * Create an instance of {@link PolOppur }
      * 
      */
@@ -1478,6 +1643,14 @@ public class ObjectFactory {
      */
     public PolOppurIsikud createPolOppurIsikud() {
         return new PolOppurIsikud();
+    }
+
+    /**
+     * Create an instance of {@link PolOppurOppetoodAlush }
+     * 
+     */
+    public PolOppurOppetoodAlush createPolOppurOppetoodAlush() {
+        return new PolOppurOppetoodAlush();
     }
 
     /**
@@ -1518,6 +1691,22 @@ public class ObjectFactory {
      */
     public SaisEhisOppeasutused createSaisEhisOppeasutused() {
         return new SaisEhisOppeasutused();
+    }
+
+    /**
+     * Create an instance of {@link SaisEhisOppeasutusV2 }
+     * 
+     */
+    public SaisEhisOppeasutusV2 createSaisEhisOppeasutusV2() {
+        return new SaisEhisOppeasutusV2();
+    }
+
+    /**
+     * Create an instance of {@link SaisEhisOppeasutusV2Response }
+     * 
+     */
+    public SaisEhisOppeasutusV2Response createSaisEhisOppeasutusV2Response() {
+        return new SaisEhisOppeasutusV2Response();
     }
 
     /**
@@ -1961,11 +2150,115 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link MtsysTegevusnaitajateResponse }
+     * Create an instance of {@link TerviseInfosusteem }
      * 
      */
-    public MtsysTegevusnaitajateResponse createMtsysTegevusnaitajateResponse() {
-        return new MtsysTegevusnaitajateResponse();
+    public TerviseInfosusteem createTerviseInfosusteem() {
+        return new TerviseInfosusteem();
+    }
+
+    /**
+     * Create an instance of {@link TerviseInfosusteemResponse }
+     * 
+     */
+    public TerviseInfosusteemResponse createTerviseInfosusteemResponse() {
+        return new TerviseInfosusteemResponse();
+    }
+
+    /**
+     * Create an instance of {@link InnoveOtsused }
+     * 
+     */
+    public InnoveOtsused createInnoveOtsused() {
+        return new InnoveOtsused();
+    }
+
+    /**
+     * Create an instance of {@link Otsused }
+     * 
+     */
+    public Otsused createOtsused() {
+        return new Otsused();
+    }
+
+    /**
+     * Create an instance of {@link InnoveOtsusedResponse }
+     * 
+     */
+    public InnoveOtsusedResponse createInnoveOtsusedResponse() {
+        return new InnoveOtsusedResponse();
+    }
+
+    /**
+     * Create an instance of {@link InnoveInfoteated }
+     * 
+     */
+    public InnoveInfoteated createInnoveInfoteated() {
+        return new InnoveInfoteated();
+    }
+
+    /**
+     * Create an instance of {@link InnoveAjalugu }
+     * 
+     */
+    public InnoveAjalugu createInnoveAjalugu() {
+        return new InnoveAjalugu();
+    }
+
+    /**
+     * Create an instance of {@link InnoveAjaluguResponse }
+     * 
+     */
+    public InnoveAjaluguResponse createInnoveAjaluguResponse() {
+        return new InnoveAjaluguResponse();
+    }
+
+    /**
+     * Create an instance of {@link IaInnove }
+     * 
+     */
+    public IaInnove createIaInnove() {
+        return new IaInnove();
+    }
+
+    /**
+     * Create an instance of {@link IaKirjed }
+     * 
+     */
+    public IaKirjed createIaKirjed() {
+        return new IaKirjed();
+    }
+
+    /**
+     * Create an instance of {@link IaOppimised }
+     * 
+     */
+    public IaOppimised createIaOppimised() {
+        return new IaOppimised();
+    }
+
+    /**
+     * Create an instance of {@link NeetTeenus }
+     * 
+     */
+    public NeetTeenus createNeetTeenus() {
+        return new NeetTeenus();
+    }
+
+    /**
+     * Create an instance of {@link NeetTeenusResponse }
+     * 
+     */
+    public NeetTeenusResponse createNeetTeenusResponse() {
+        return new NeetTeenusResponse();
+    }
+
+    /**
+     * Create an instance of {@link Andmed }
+     * 
+     */
+    public Andmed createAndmed() {
+        return new Andmed();
     }
 
     /**
@@ -2177,6 +2470,22 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link EeIsikukaartKraOpingud }
+     * 
+     */
+    public EeIsikukaartKraOpingud createEeIsikukaartKraOpingud() {
+        return new EeIsikukaartKraOpingud();
+    }
+
+    /**
+     * Create an instance of {@link EeIsikukaartKraOping }
+     * 
+     */
+    public EeIsikukaartKraOping createEeIsikukaartKraOping() {
+        return new EeIsikukaartKraOping();
+    }
+
+    /**
      * Create an instance of {@link EylIsicParing }
      * 
      */
@@ -2262,6 +2571,30 @@ public class ObjectFactory {
      */
     public KmaLopetanudItem createKmaLopetanudItem() {
         return new KmaLopetanudItem();
+    }
+
+    /**
+     * Create an instance of {@link KmaEhisIsikItem }
+     * 
+     */
+    public KmaEhisIsikItem createKmaEhisIsikItem() {
+        return new KmaEhisIsikItem();
+    }
+
+    /**
+     * Create an instance of {@link KmaEhisItem }
+     * 
+     */
+    public KmaEhisItem createKmaEhisItem() {
+        return new KmaEhisItem();
+    }
+
+    /**
+     * Create an instance of {@link KmaEhisAkadPuhkus }
+     * 
+     */
+    public KmaEhisAkadPuhkus createKmaEhisAkadPuhkus() {
+        return new KmaEhisAkadPuhkus();
     }
 
     /**
@@ -2697,6 +3030,14 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link KhlNominaaliPikendaminePraktika }
+     * 
+     */
+    public KhlNominaaliPikendaminePraktika createKhlNominaaliPikendaminePraktika() {
+        return new KhlNominaaliPikendaminePraktika();
+    }
+
+    /**
      * Create an instance of {@link KhlVOTAArr }
      * 
      */
@@ -3049,6 +3390,38 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link Oppeained }
+     * 
+     */
+    public Oppeained createOppeained() {
+        return new Oppeained();
+    }
+
+    /**
+     * Create an instance of {@link YhlVanemaNousolekud }
+     * 
+     */
+    public YhlVanemaNousolekud createYhlVanemaNousolekud() {
+        return new YhlVanemaNousolekud();
+    }
+
+    /**
+     * Create an instance of {@link YhlVanemaNousolek }
+     * 
+     */
+    public YhlVanemaNousolek createYhlVanemaNousolek() {
+        return new YhlVanemaNousolek();
+    }
+
+    /**
+     * Create an instance of {@link YhlVanemaNousolekKirje }
+     * 
+     */
+    public YhlVanemaNousolekKirje createYhlVanemaNousolekKirje() {
+        return new YhlVanemaNousolekKirje();
+    }
+
+    /**
      * Create an instance of {@link YhlYldharidusLisa }
      * 
      */
@@ -3062,6 +3435,14 @@ public class ObjectFactory {
      */
     public YhlYldharidusMuuda createYhlYldharidusMuuda() {
         return new YhlYldharidusMuuda();
+    }
+
+    /**
+     * Create an instance of {@link YhlKutseope }
+     * 
+     */
+    public YhlKutseope createYhlKutseope() {
+        return new YhlKutseope();
     }
 
     /**
@@ -3134,6 +3515,102 @@ public class ObjectFactory {
      */
     public YhlPohtaPuudumine createYhlPohtaPuudumine() {
         return new YhlPohtaPuudumine();
+    }
+
+    /**
+     * Create an instance of {@link YhlUjumisandmed }
+     * 
+     */
+    public YhlUjumisandmed createYhlUjumisandmed() {
+        return new YhlUjumisandmed();
+    }
+
+    /**
+     * Create an instance of {@link YhlUjumine }
+     * 
+     */
+    public YhlUjumine createYhlUjumine() {
+        return new YhlUjumine();
+    }
+
+    /**
+     * Create an instance of {@link YhlTreener }
+     * 
+     */
+    public YhlTreener createYhlTreener() {
+        return new YhlTreener();
+    }
+
+    /**
+     * Create an instance of {@link YhlAbistajad }
+     * 
+     */
+    public YhlAbistajad createYhlAbistajad() {
+        return new YhlAbistajad();
+    }
+
+    /**
+     * Create an instance of {@link YhlAbistaja }
+     * 
+     */
+    public YhlAbistaja createYhlAbistaja() {
+        return new YhlAbistaja();
+    }
+
+    /**
+     * Create an instance of {@link HuviOppeasutus }
+     * 
+     */
+    public HuviOppeasutus createHuviOppeasutus() {
+        return new HuviOppeasutus();
+    }
+
+    /**
+     * Create an instance of {@link HuviOppur }
+     * 
+     */
+    public HuviOppur createHuviOppur() {
+        return new HuviOppur();
+    }
+
+    /**
+     * Create an instance of {@link HuviPedagoog }
+     * 
+     */
+    public HuviPedagoog createHuviPedagoog() {
+        return new HuviPedagoog();
+    }
+
+    /**
+     * Create an instance of {@link HuviKustutaOppurPeda }
+     * 
+     */
+    public HuviKustutaOppurPeda createHuviKustutaOppurPeda() {
+        return new HuviKustutaOppurPeda();
+    }
+
+    /**
+     * Create an instance of {@link HuviOppekavaKoodid }
+     * 
+     */
+    public HuviOppekavaKoodid createHuviOppekavaKoodid() {
+        return new HuviOppekavaKoodid();
+    }
+
+    /**
+     * Create an instance of {@link HuviKlOppekeeled }
+     * 
+     */
+    public HuviKlOppekeeled createHuviKlOppekeeled() {
+        return new HuviKlOppekeeled();
+    }
+
+    /**
+     * Create an instance of {@link HuviKlAmetikohad }
+     * 
+     */
+    public HuviKlAmetikohad createHuviKlAmetikohad() {
+        return new HuviKlAmetikohad();
     }
 
     /**
@@ -3297,11 +3774,35 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link EisAmetikohtV2 }
+     * 
+     */
+    public EisAmetikohtV2 createEisAmetikohtV2() {
+        return new EisAmetikohtV2();
+    }
+
+    /**
      * Create an instance of {@link OppeainedList }
      * 
      */
     public OppeainedList createOppeainedList() {
         return new OppeainedList();
+    }
+
+    /**
+     * Create an instance of {@link OppeainedListV2 }
+     * 
+     */
+    public OppeainedListV2 createOppeainedListV2() {
+        return new OppeainedListV2();
+    }
+
+    /**
+     * Create an instance of {@link OppeaineDef }
+     * 
+     */
+    public OppeaineDef createOppeaineDef() {
+        return new OppeaineDef();
     }
 
     /**
@@ -3326,6 +3827,14 @@ public class ObjectFactory {
      */
     public SaisKorgkOping createSaisKorgkOping() {
         return new SaisKorgkOping();
+    }
+
+    /**
+     * Create an instance of {@link SaisKorkNominaal }
+     * 
+     */
+    public SaisKorkNominaal createSaisKorkNominaal() {
+        return new SaisKorkNominaal();
     }
 
     /**
@@ -3497,6 +4006,78 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link Otsus }
+     * 
+     */
+    public Otsus createOtsus() {
+        return new Otsus();
+    }
+
+    /**
+     * Create an instance of {@link Soovitused }
+     * 
+     */
+    public Soovitused createSoovitused() {
+        return new Soovitused();
+    }
+
+    /**
+     * Create an instance of {@link Soovitus }
+     * 
+     */
+    public Soovitus createSoovitus() {
+        return new Soovitus();
+    }
+
+    /**
+     * Create an instance of {@link InnoveInfoteade }
+     * 
+     */
+    public InnoveInfoteade createInnoveInfoteade() {
+        return new InnoveInfoteade();
+    }
+
+    /**
+     * Create an instance of {@link IaOtsus }
+     * 
+     */
+    public IaOtsus createIaOtsus() {
+        return new IaOtsus();
+    }
+
+    /**
+     * Create an instance of {@link IaKirje }
+     * 
+     */
+    public IaKirje createIaKirje() {
+        return new IaKirje();
+    }
+
+    /**
+     * Create an instance of {@link IaOppeained }
+     * 
+     */
+    public IaOppeained createIaOppeained() {
+        return new IaOppeained();
+    }
+
+    /**
+     * Create an instance of {@link IaOppeaine }
+     * 
+     */
+    public IaOppeaine createIaOppeaine() {
+        return new IaOppeaine();
+    }
+
+    /**
+     * Create an instance of {@link IaOppimine }
+     * 
+     */
+    public IaOppimine createIaOppimine() {
+        return new IaOppimine();
+    }
+
+    /**
      * Create an instance of {@link Juriidiline }
      * 
      */
@@ -3521,11 +4102,27 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link AlushOppetoo }
+     * 
+     */
+    public AlushOppetoo createAlushOppetoo() {
+        return new AlushOppetoo();
+    }
+
+    /**
      * Create an instance of {@link KorgkOppetoo }
      * 
      */
     public KorgkOppetoo createKorgkOppetoo() {
         return new KorgkOppetoo();
+    }
+
+    /**
+     * Create an instance of {@link PohjusetaPuudumised }
+     * 
+     */
+    public PohjusetaPuudumised createPohjusetaPuudumised() {
+        return new PohjusetaPuudumised();
     }
 
     /**
@@ -3590,6 +4187,14 @@ public class ObjectFactory {
      */
     public SaisYldhOping createSaisYldhOping() {
         return new SaisYldhOping();
+    }
+
+    /**
+     * Create an instance of {@link OppekavaOisAktiivne }
+     * 
+     */
+    public OppekavaOisAktiivne createOppekavaOisAktiivne() {
+        return new OppekavaOisAktiivne();
     }
 
     /**
@@ -3874,6 +4479,33 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link String }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://x-road.eu/xsd/representation.xsd", name = "partyClass")
+    public JAXBElement<String> createPartyClass(String value) {
+        return new JAXBElement<String>(_PartyClass_QNAME, String.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link String }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://x-road.eu/xsd/representation.xsd", name = "partyCode")
+    public JAXBElement<String> createPartyCode(String value) {
+        return new JAXBElement<String>(_PartyCode_QNAME, String.class, null, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link XRoadRepresentedPartyType }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "http://x-road.eu/xsd/representation.xsd", name = "representedParty")
+    public JAXBElement<XRoadRepresentedPartyType> createRepresentedParty(XRoadRepresentedPartyType value) {
+        return new JAXBElement<XRoadRepresentedPartyType>(_RepresentedParty_QNAME, XRoadRepresentedPartyType.class, null, value);
+    }
+
+    /**
      * Create an instance of {@link JAXBElement }{@code <}{@link EisOppeasutused }{@code >}}
      * 
      */
@@ -4066,6 +4698,33 @@ public class ObjectFactory {
      * Create an instance of {@link JAXBElement }{@code <}{@link String }{@code >}}
      * 
      */
+    @XmlElementDecl(namespace = "", name = "teade", scope = KmaEhisResponse.class)
+    public JAXBElement<String> createKmaEhisResponseTeade(String value) {
+        return new JAXBElement<String>(_KmaLopetanudResponseTeade_QNAME, String.class, KmaEhisResponse.class, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link BigInteger }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "", name = "kood", scope = KmaEhisResponse.class)
+    public JAXBElement<BigInteger> createKmaEhisResponseKood(BigInteger value) {
+        return new JAXBElement<BigInteger>(_KmaLopetanudResponseKood_QNAME, BigInteger.class, KmaEhisResponse.class, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link KmaEhisAndmed }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "", name = "data", scope = KmaEhisResponse.class)
+    public JAXBElement<KmaEhisAndmed> createKmaEhisResponseData(KmaEhisAndmed value) {
+        return new JAXBElement<KmaEhisAndmed>(_KmaLopetanudResponseData_QNAME, KmaEhisAndmed.class, KmaEhisResponse.class, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link String }{@code >}}
+     * 
+     */
     @XmlElementDecl(namespace = "", name = "teade", scope = LaeAlusharidusV2Response.class)
     public JAXBElement<String> createLaeAlusharidusV2ResponseTeade(String value) {
         return new JAXBElement<String>(_KmaLopetanudResponseTeade_QNAME, String.class, LaeAlusharidusV2Response.class, value);
@@ -4195,6 +4854,33 @@ public class ObjectFactory {
     @XmlElementDecl(namespace = "", name = "data", scope = LaeYldharidusResponse.class)
     public JAXBElement<StrArray> createLaeYldharidusResponseData(StrArray value) {
         return new JAXBElement<StrArray>(_KmaLopetanudResponseData_QNAME, StrArray.class, LaeYldharidusResponse.class, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link String }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "", name = "teade", scope = LaeHuviharidusResponse.class)
+    public JAXBElement<String> createLaeHuviharidusResponseTeade(String value) {
+        return new JAXBElement<String>(_KmaLopetanudResponseTeade_QNAME, String.class, LaeHuviharidusResponse.class, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link BigInteger }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "", name = "kood", scope = LaeHuviharidusResponse.class)
+    public JAXBElement<BigInteger> createLaeHuviharidusResponseKood(BigInteger value) {
+        return new JAXBElement<BigInteger>(_KmaLopetanudResponseKood_QNAME, BigInteger.class, LaeHuviharidusResponse.class, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link StrArray }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "", name = "data", scope = LaeHuviharidusResponse.class)
+    public JAXBElement<StrArray> createLaeHuviharidusResponseData(StrArray value) {
+        return new JAXBElement<StrArray>(_KmaLopetanudResponseData_QNAME, StrArray.class, LaeHuviharidusResponse.class, value);
     }
 
     /**
@@ -4441,12 +5127,12 @@ public class ObjectFactory {
     }
 
     /**
-     * Create an instance of {@link JAXBElement }{@code <}{@link String }{@code >}}
+     * Create an instance of {@link JAXBElement }{@code <}{@link BigInteger }{@code >}}
      * 
      */
     @XmlElementDecl(namespace = "", name = "asutusKood", scope = Yhisope.class)
-    public JAXBElement<String> createYhisopeAsutusKood(String value) {
-        return new JAXBElement<String>(_YhisopeAsutusKood_QNAME, String.class, Yhisope.class, value);
+    public JAXBElement<BigInteger> createYhisopeAsutusKood(BigInteger value) {
+        return new JAXBElement<BigInteger>(_YhisopeAsutusKood_QNAME, BigInteger.class, Yhisope.class, value);
     }
 
     /**
@@ -4474,6 +5160,24 @@ public class ObjectFactory {
     @XmlElementDecl(namespace = "", name = "nimetus", scope = OppeasutusTegevusload.class)
     public JAXBElement<String> createOppeasutusTegevusloadNimetus(String value) {
         return new JAXBElement<String>(_OppeasutusTegevusloadNimetus_QNAME, String.class, OppeasutusTegevusload.class, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link String }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "", name = "oppeaine", scope = Oppeained.class)
+    public JAXBElement<String> createOppeainedOppeaine(String value) {
+        return new JAXBElement<String>(_OppeainedOppeaine_QNAME, String.class, Oppeained.class, value);
+    }
+
+    /**
+     * Create an instance of {@link JAXBElement }{@code <}{@link String }{@code >}}
+     * 
+     */
+    @XmlElementDecl(namespace = "", name = "klOppeaine", scope = Oppeained.class)
+    public JAXBElement<String> createOppeainedKlOppeaine(String value) {
+        return new JAXBElement<String>(_OppeainedKlOppeaine_QNAME, String.class, Oppeained.class, value);
     }
 
     /**

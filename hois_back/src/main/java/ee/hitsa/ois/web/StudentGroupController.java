@@ -65,19 +65,23 @@ public class StudentGroupController {
 
     @PostMapping
     public HttpUtil.CreatedResponse create(HoisUserDetails user, @Valid @RequestBody StudentGroupForm form) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPERYHM);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPERYHM);
         return new HttpUtil.CreatedResponse(studentGroupService.create(user, form));
     }
 
     @PutMapping("/{id:\\d+}")
-    public StudentGroupDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) StudentGroup studentGroup, @Valid @RequestBody StudentGroupForm form) {
-        UserUtil.assertIsSchoolAdmin(user, studentGroup.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPERYHM);
+    public StudentGroupDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) StudentGroup studentGroup,
+            @Valid @RequestBody StudentGroupForm form) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, studentGroup.getSchool(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_OPPERYHM);
         return studentGroupService.save(user, studentGroup, form);
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") StudentGroup studentGroup, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertIsSchoolAdmin(user, studentGroup.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPERYHM);
+    public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") StudentGroup studentGroup,
+            @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, studentGroup.getSchool(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_OPPERYHM);
         studentGroupService.delete(user, studentGroup);
     }
 
@@ -90,21 +94,22 @@ public class StudentGroupController {
     @GetMapping("/existsPendingLessonPlans/{id:\\d+}")
     public Map<String, Boolean> existsPendingLessonPlans(HoisUserDetails user, @WithEntity StudentGroup studentGroup,
             Long formCurriculumVersion) {
-        UserUtil.assertIsSchoolAdmin(user, studentGroup.getSchool(), Permission.OIGUS_M,
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, studentGroup.getSchool(), Permission.OIGUS_M,
                 PermissionObject.TEEMAOIGUS_OPPERYHM);
         return studentGroupService.existsPendingLessonPlans(studentGroup, formCurriculumVersion);
     }
 
     @GetMapping("/findstudents")
     public List<StudentGroupStudentDto> searchStudents(HoisUserDetails user, @Valid StudentGroupSearchStudentsCommand criteria) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPERYHM);
-        return criteria.getIsGuest() != null && criteria.getIsGuest().booleanValue() ? studentGroupService.searchGuestStudents(user.getSchoolId(), criteria) : 
-            studentGroupService.searchStudents(user.getSchoolId(), criteria);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPERYHM);
+        if (criteria.getIsGuest() != null && Boolean.TRUE.equals(criteria.getIsGuest())) {
+            return studentGroupService.searchGuestStudents(user.getSchoolId(), criteria);
+        }
+        return studentGroupService.searchStudents(user.getSchoolId(), criteria);
     }
     
     private static boolean canView(HoisUserDetails user, StudentGroup group) {
-        if (UserUtil.isSchoolAdmin(user, group.getSchool())
-                || UserUtil.isLeadingTeacher(user, group.getCurriculum())) {
+        if (UserUtil.isSchoolAdmin(user, group.getSchool()) || UserUtil.isLeadingTeacher(user, group.getCurriculum())) {
             return true;
         }
         if (user.isStudent()) {

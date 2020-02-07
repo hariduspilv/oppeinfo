@@ -4,13 +4,19 @@ import java.util.List;
 
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
 
+import javax.validation.Valid;
+
 public class ApelApplicationRecordForm extends InsertedChangedVersionDto {
 
     private Long id;
     private Boolean isFormalLearning;
+    @Valid
     private List<ApelApplicationInformalExperienceForm> informalExperiences;
+    @Valid
     private List<ApelApplicationInformalSubjectOrModuleForm> informalSubjectsOrModules;
+    @Valid
     private List<ApelApplicationFormalSubjectOrModuleForm> formalSubjectsOrModules;
+    @Valid
     private List<ApelApplicationFormalReplacedSubjectOrModuleForm> formalReplacedSubjectsOrModules;
     
     public Long getId() {

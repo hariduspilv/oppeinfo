@@ -20,7 +20,7 @@
   function getFormalLearningTableRow(scope, recordIndex, transferableSubjectOrModule, replacedSubjectOrModule) {
     if (scope.application.isVocational) {
       if (transferableSubjectOrModule.curriculumVersionOmodule) {
-        getFormalLearningModuleTableRow(scope, recordIndex, transferableSubjectOrModule, replacedSubjectOrModule, 
+        getFormalLearningModuleTableRow(scope, recordIndex, transferableSubjectOrModule, replacedSubjectOrModule,
           transferableSubjectOrModule.curriculumVersionOmodule);
       } else {
         getFormalLearningModuleTableRow(scope, recordIndex, transferableSubjectOrModule, replacedSubjectOrModule, null);
@@ -43,10 +43,10 @@
     var data = null;
     var replacedTheme = replacedSubjectOrModule.curriculumVersionOmoduleTheme;
     if (replacedTheme) {
-      data = getFormalModuleRowData(scope, transferableSubjectOrModule, scope.application.records[recordIndex].id, 
+      data = getFormalModuleRowData(scope, transferableSubjectOrModule, scope.application.records[recordIndex].id,
         oModule, replacedSubjectOrModule.curriculumVersionOmodule, replacedTheme);
     } else {
-      data = getFormalModuleRowData(scope, transferableSubjectOrModule, scope.application.records[recordIndex].id, oModule, 
+      data = getFormalModuleRowData(scope, transferableSubjectOrModule, scope.application.records[recordIndex].id, oModule,
         replacedSubjectOrModule.curriculumVersionOmodule, null);
     }
     scope.application.records[recordIndex].data.push(data);
@@ -126,7 +126,7 @@
   function getInformalLearningTableRow(scope, recordIndex, informalExperiences, informalSubjectsOrModules) {
     var data = [];
     var recordId = scope.application.records[recordIndex].id;
-    
+
     if (informalSubjectsOrModules.curriculumVersionOmodule) {
       data = getInformalModuleRowData(scope, informalSubjectsOrModules, informalSubjectsOrModules.curriculumVersionOmodule, recordId);
       scope.application.records[recordIndex].data.push(angular.extend({}, informalExperiences, data));
@@ -144,7 +144,7 @@
     data.moduleId = informalSubjectsOrModules.id;
     data.module = oModule;
     data.theme = informalSubjectsOrModules.curriculumVersionOmoduleTheme ? informalSubjectsOrModules.curriculumVersionOmoduleTheme : null;
-    data.isModule = informalSubjectsOrModules.curriculumVersionOmoduleTheme ? false : true;
+    data.isModule = !informalSubjectsOrModules.curriculumVersionOmoduleTheme;
     data.schoolResultHours = data.isModule ? getHours(informalSubjectsOrModules.curriculumVersionOmodule.themes) : informalSubjectsOrModules.curriculumVersionOmoduleTheme.hours;
     data.grade = scope.gradesMap[informalSubjectsOrModules.grade];
     data.outcomes = informalSubjectsOrModules.outcomes;
@@ -183,21 +183,6 @@
       hours += themes[i].hours;
     }
     return hours;
-  }
-
-  function recordsToIdentifiers(DataUtils, records) {
-    for (var i = 0; i < records.length; i++) {
-      formalSubjectOrModulesObjectsToIdentifiers(DataUtils, records[i]);
-    }
-  }
-
-  function formalSubjectOrModulesObjectsToIdentifiers(DataUtils, record) {
-    for (var i = 0; i < record.formalSubjectsOrModules.length; i++) {
-      DataUtils.convertObjectToIdentifier(record.formalSubjectsOrModules[i], ['apelSchool', 'subject', 'curriculumVersionHmodule','curriculumVersionOmodule']);
-    }
-    for (var j = 0; j < record.formalReplacedSubjectsOrModules.length; j++) {
-      DataUtils.convertObjectToIdentifier(record.formalReplacedSubjectsOrModules[j], ['subject', 'curriculumVersionOmodule', 'curriculumVersionOmoduleTheme']);
-    }
   }
 
   function getReplacedSubjectsIds(replacedSubjects) {
@@ -298,8 +283,16 @@
     scope.informalLearningColspan = getInformalLearningColspan(scope.application, scope.formState.viewForm);
   }
 
-  angular.module('hitsaOis').controller('ApelApplicationEditController', function ($filter, $rootScope, $scope, $route, ArrayUtils, HigherGradeUtil, VocationalGradeUtil, QueryUtils, 
-    oisFileService, dialogService, message, $location, Classifier, DataUtils, config, $q) {
+  function canSeeNominalStudyExtension(auth, application) {
+    if (application.status !== 'VOTA_STAATUS_K' && application.hasAbroadStudies) {
+      return !auth.isStudent() || application.nominalType !== null;
+    }
+    return false;
+  }
+
+angular.module('hitsaOis').controller('ApelApplicationEditController', function ($filter, $location, $rootScope, $route, $scope, $q,
+    ApelApplicationUtils, ArrayUtils, Classifier, DataUtils, HigherGradeUtil, VocationalGradeUtil, QueryUtils,
+    config, dialogService, message, oisFileService) {
 
     var ApelApplicationEndpoint = QueryUtils.endpoint('/apelApplications');
     $scope.auth = $route.current.locals.auth;
@@ -307,15 +300,28 @@
     $scope.formState = {};
     $scope.formState.viewForm = false;
 
+    Classifier.queryForDropdown({ mainClassCode: 'NOM_PIKEND' }, function (response) {
+      $scope.nominalStudyExtensions = Classifier.toMap(response);
+    });
+
     function entityToForm(entity) {
       $scope.application = entity;
       $scope.school = entity.school;
 
-      if (entity.status === 'VOTA_STAATUS_E' && $scope.auth.isAdmin()) {
-        $scope.committees = QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/committees').query();
+      if (entity.hasAbroadStudies) {
+        $scope.abroadStudiesCredits = ApelApplicationUtils.abroadStudiesCredits(entity);
       }
-      $scope.application.committeeId = $scope.application.committee ? $scope.application.committee.id : null;
+      if (entity.canExtendNominalDuration && !entity.nominalType) {
+        $scope.application.nominalType = 'NOM_PIKEND_0';
+        $scope.application.newNominalStudyEnd = entity.oldNominalStudyEnd;
+      }
+      if (entity.status === 'VOTA_STAATUS_E' && ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher())) {
+        $scope.committees = QueryUtils.endpoint('/apelApplications/' + entity.id + '/committees').query();
+      }
+      $scope.application.committeeId = entity.committee ? entity.committee.id : null;
       $scope.canChangeTransferStatus = entity.canChangeTransferStatus;
+      $scope.nominalDurationDisabled = entity.isEhisSent || ['VOTA_STAATUS_E', 'VOTA_STAATUS_V'].indexOf(entity.status) === -1;
+      $scope.canSeeNominalStudyExtension = canSeeNominalStudyExtension($scope.auth, entity);
 
       setGradesAndAssessments($q, $scope, Classifier, entity).then(function () {
         getDataForInformalLearningTables($scope);
@@ -327,6 +333,7 @@
       });
 
       setColspans($scope);
+      DataUtils.convertStringToDates($scope.application, ['inserted', 'confirmed', 'newNominalStudyEnd', 'oldNominalStudyEnd']);
     }
 
     var entity = $route.current.locals.entity;
@@ -344,7 +351,7 @@
         }
       });
     }
-    
+
     $scope.$watch('application.student', function () {
       if ($scope.application && $scope.application.student && !$scope.application.id) {
         createNewApplication();
@@ -408,6 +415,23 @@
       }
     }
 
+    $scope.nominalTypeChange = function () {
+      var newNominalStudyEnd = new Date($scope.application.oldNominalStudyEnd);
+      switch ($scope.application.nominalType) {
+        case "NOM_PIKEND_0":
+          $scope.application.newNominalStudyEnd = $scope.application.oldNominalStudyEnd;
+          break;
+        case "NOM_PIKEND_1":
+          newNominalStudyEnd.setDate(newNominalStudyEnd.getDate() + 180);
+          $scope.application.newNominalStudyEnd = newNominalStudyEnd;
+        break;
+        case "NOM_PIKEND_2":
+          newNominalStudyEnd.setDate(newNominalStudyEnd.getDate() + 360);
+          $scope.application.newNominalStudyEnd = newNominalStudyEnd;
+          break;
+      }
+    };
+
     $scope.hideInvalid = function (cl) {
       return !Classifier.isValid(cl);
     };
@@ -441,7 +465,7 @@
           for (var i = 0; i < informalSubjectsOrModules.length; i++) {
             $q(function () {
               var entry = informalSubjectsOrModules[i];
-              entry.isModule = entry.curriculumVersionOmoduleTheme ? false : true;
+              entry.isModule = !entry.curriculumVersionOmoduleTheme;
               entry.grade = dialogScope.gradesMap[entry.grade];
 
               entry.module = entry.curriculumVersionOmodule;
@@ -460,14 +484,14 @@
             });
           }
         }
-        
+
         function addNewInformalExperienceRow() {
           dialogScope.record.informalExperiences.push({
             nameEt: null,
             placeTime: null,
             hours: null,
             documents: null,
-            type: null,
+            type: null
           });
         }
 
@@ -503,7 +527,7 @@
           });
 
           QueryUtils.endpoint('/apelApplications/freeChoiceModule/:student').search({
-            student: dialogScope.student.id,
+            student: dialogScope.student.id
           }).$promise.then(function (result) {
             dialogScope.freeChoiceModule = result.id ? result : null;
           });
@@ -700,6 +724,18 @@
 
       var transferStatus = $scope.application.records[recordIndex].formalSubjectsOrModules[subjectOrModuleIndex].transfer;
       $scope.application.records[recordIndex].formalSubjectsOrModules[subjectOrModuleIndex].transfer = !transferStatus;
+
+      if ($scope.application.hasAbroadStudies) {
+        $scope.abroadStudiesCredits = ApelApplicationUtils.abroadStudiesCredits($scope.application);
+      }
+    };
+
+    $scope.transferFromApplication = function () {
+      QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/transferFromApplication').get().$promise
+        .then(function (result) {
+          message.info('apel.formalLearnings.transferSuccess');
+          entityToForm(result);
+        });
     };
 
     $scope.editFormalLearning = function (recordId) {
@@ -757,7 +793,7 @@
             dialogScope.curriculumModules = modules;
           });
         }
-        
+
         function addNewEmptyFormalSubjectOrModule() {
           dialogScope.formState.isMySchool = false;
           dialogScope.formState.isNewSchool = false;
@@ -784,7 +820,7 @@
               if (entry.curriculumVersionHmodule) {
                 entry.module = entry.curriculumVersionHmodule;
               }
-              if (!entry.grade.code) {
+              if (entry.grade && !entry.grade.code) {
                 entry.grade = dialogScope.gradesMap[formalSubjectsOrModules[i].grade];
               }
             });
@@ -794,7 +830,7 @@
         function addMissingValuesToFormalReplacedModules(replacedFormalModules) {
           for (var i = 0; i < replacedFormalModules.length; i++) {
             var entry = replacedFormalModules[i];
-            entry.isModule = entry.curriculumVersionOmoduleTheme ? false : true;
+            entry.isModule = !entry.curriculumVersionOmoduleTheme;
           }
         }
 
@@ -899,7 +935,7 @@
           } else if (typeCode === 'VOTA_AINE_LIIK_M') {
             if (dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule) {
               QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query(
-                {id: dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule.id, student: dialogScope.student.id, 
+                {id: dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule.id, student: dialogScope.student.id,
                   curriculumModules: false, curriculumVersion: dialogScope.curriculumVersionId}).$promise.then(function (modules) {
                 setTransferableModules(typeCode, modules);
                 setCurriculumVersionOmodule();
@@ -998,7 +1034,7 @@
         };
 
         dialogScope.newSchoolCountryChanged = function (countryCode) {
-          dialogScope.newSchoolEst = countryCode === 'RIIK_EST' ? true : false;
+          dialogScope.newSchoolEst = countryCode === 'RIIK_EST';
           dialogScope.record.newTransferableSubjectOrModule.newApelSchool.ehisSchool = null;
         };
 
@@ -1059,7 +1095,7 @@
               if (oModule.id !== dialogScope.record.curriculumVersionOmodule.id) {
                 setModuleData(oModule);
                 setFormerModuleResult(oModule);
-              }  
+              }
             } else {
               setModuleData(oModule);
               setFormerModuleResult(oModule);
@@ -1131,7 +1167,7 @@
           dialogScope.formState.isNewSchool = false;
           emptyNewSchoolForm();
         };
-        
+
         function emptyNewSchoolForm() {
           dialogScope.newSchoolEst = false;
           if (dialogScope.record.newTransferableSubjectOrModule) {
@@ -1226,7 +1262,7 @@
                 schoolAlreadyAdded = true;
               }
             } else {
-              if (dialogScope.apelSchools[i].nameEt === newSchool.nameEt && 
+              if (dialogScope.apelSchools[i].nameEt === newSchool.nameEt &&
                 dialogScope.apelSchools[i].country === newSchool.country) {
                 schoolAlreadyAdded = true;
               }
@@ -1266,7 +1302,7 @@
           if (dialogScope.record.apelSchool) {
             dialogScope.record.newTransferableSubjectOrModule.country = dialogScope.countryMap[dialogScope.record.apelSchool.country];
           }
-          
+
           dialogScope.record.assessment = dialogScope.assessmentsMap[dialogScope.record.newTransferableSubjectOrModule.assessment];
           dialogScope.record.curriculumVersionOmodule = dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule;
           dialogScope.record.nameEt = dialogScope.record.formalSubjectsOrModules[transferableSubjectOrModuleIndex].nameEt;
@@ -1274,7 +1310,9 @@
 
           dialogScope.record.newTransferableSubjectOrModule.curriculumVersionOmodule = dialogScope.record.formalSubjectsOrModules[transferableSubjectOrModuleIndex].curriculumVersionOmodule;
 
-          dialogScope.record.newTransferableSubjectOrModule.grade = dialogScope.record.newTransferableSubjectOrModule.grade.code;
+          if (dialogScope.record.newTransferableSubjectOrModule.grade) {
+            dialogScope.record.newTransferableSubjectOrModule.grade = dialogScope.record.newTransferableSubjectOrModule.grade.code;
+          }
           getGrades(dialogScope.record.newTransferableSubjectOrModule.assessment);
           getTransferableSubjectsOrModules(dialogScope.record.newTransferableSubjectOrModule.type);
         };
@@ -1295,7 +1333,7 @@
             dialogScope.record.formalSubjectsOrModules[changedTransferableSubjectOrModule.transferableSubjectOrModuleIndex] = changedTransferableSubjectOrModule;
             dialogScope.record.newTransferableSubjectOrModule = null;
             addMissingValuesToFormalSubjectsOrModules(dialogScope.record.formalSubjectsOrModules);
-            
+
             if (dialogScope.formState.isNewSchool) {
               addNewSchoolToSelection(changedTransferableSubjectOrModule);
             }
@@ -1308,7 +1346,7 @@
             if (transferableSubjectOrModule.transferableSubjectOrModuleIndex >= 0) {
               dialogScope.record.formalSubjectsOrModules.splice(transferableSubjectOrModule.transferableSubjectOrModuleIndex, 1);
             } else {
-              dialogScope.record.newTransferableSubjectOrModule = null;    
+              dialogScope.record.newTransferableSubjectOrModule = null;
             }
           }
           dialogScope.record.newTransferableSubjectOrModule = null;
@@ -1361,7 +1399,7 @@
         dialogScope.removeSubtitutableModuleTheme = function (row) {
           ArrayUtils.remove(dialogScope.record.formalReplacedSubjectsOrModules, row);
         };
-        
+
         dialogScope.submitVocationalFormalLearning = function () {
           if (dialogScope.record.formalSubjectsOrModules.length <= 0) {
             message.error('apel.error.atLeastOneTransferableModule');
@@ -1371,7 +1409,7 @@
             message.error('apel.error.thereMustBeMoreTransferableCreditsThanSubstitutableCreditsVocational');
           } else {
             formalSubjectsOrModulesToArray();
-            formalSubjectOrModulesObjectsToIdentifiers(DataUtils, dialogScope.record);
+            ApelApplicationUtils.formalSubjectOrModulesObjectsToIdentifiers(dialogScope.record);
             dialogScope.submit();
           }
         };
@@ -1386,10 +1424,7 @@
             replacedCredits = getReplacedSubjectsCredits(dialogScope.record.formalReplacedSubjectsOrModules);
           }
 
-          if (transferableCredits >= replacedCredits) {
-            return true;
-          }
-          return false;
+          return transferableCredits >= replacedCredits;
         }
 
         function getTransferableSubjectsOrModulesCredits(transferableModules) {
@@ -1399,7 +1434,7 @@
           }
           return credits;
         }
-        
+
         function getReplacedModulesOrThemesCredits(replacedModulesOrThemes) {
           var credits = 0;
           for (var i = 0; i < replacedModulesOrThemes.length; i++) {
@@ -1432,33 +1467,33 @@
             return false;
           }
         };
-        
+
         dialogScope.submitHigherFormalLearning = function () {
           if (dialogScope.record.formalSubjectsOrModules.length <= 0) {
             message.error('apel.error.atLeastOneTransferableSubject');
             return;
           }
-          
+
           if (!allTransferedSubjectsInFreeChoiceModules()) {
             if (dialogScope.record.formalReplacedSubjectsOrModules.length <= 0) {
               message.error('apel.error.atLeastOneSubstitutableSubject');
               return;
             }
-            
+
             if (!areThereMoreTransferableCreditsThanReplacedCredits(false)) {
               message.error('apel.error.thereMustBeMoreTransferableCreditsThanSubstitutableCreditsHigher');
               return;
-            } 
+            }
           }
 
           formalSubjectsOrModulesToArray();
-          formalSubjectOrModulesObjectsToIdentifiers(DataUtils, dialogScope.record);
+          ApelApplicationUtils.formalSubjectOrModulesObjectsToIdentifiers(dialogScope.record);
           dialogScope.submit();
         };
-        
+
         function allTransferedSubjectsInFreeChoiceModules() {
           var nonFreeChoiceModules = (dialogScope.record.formalSubjectsOrModules || []).filter(function (transfer) {
-            return transfer.curriculumVersionHmodule.type !== 'KORGMOODUL_V';
+            return transfer.curriculumVersionHmodule === null || transfer.curriculumVersionHmodule.type !== 'KORGMOODUL_V';
           });
           return nonFreeChoiceModules.length === 0;
         }
@@ -1470,7 +1505,7 @@
           });
           dialogScope.record.formalSubjectsOrModules = array;
         }
-        
+
         dialogScope.delete = function () {
           var ApelApplicationRecordEndpoint = QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/record');
           new ApelApplicationRecordEndpoint(dialogScope.record).$delete().then(function (application) {
@@ -1505,7 +1540,7 @@
       var modulesAndThemes = [];
       if (result) {
         result = sortByName(result);
-      
+
         for (var i = 0; i < result.length; i++) {
           modulesAndThemes.push({
             id: result[i].id,
@@ -1524,7 +1559,7 @@
                 themeId: themes[j].id,
                 nameEt: result[i].nameEt + "/" + themes[j].nameEt,
                 nameEn: result[i].nameEn + "/" + themes[j].nameEn,
-                isModule: false,
+                isModule: false
               });
             }
           }
@@ -1591,9 +1626,7 @@
     $scope.getUrl = oisFileService.getUrl;
 
     $scope.save = function () {
-      recordsToIdentifiers(DataUtils, $scope.application.records);
-      
-      var application = new ApelApplicationEndpoint($scope.application);
+      var application = new ApelApplicationEndpoint(ApelApplicationUtils.recordsToIdentifiers($scope.application));
       application.$update().then(function () {
         message.info('main.messages.create.success');
         entityToForm(application);
@@ -1602,232 +1635,46 @@
     };
 
     $scope.submit = function () {
-      dialogService.confirmDialog({
-        prompt: 'apel.submitConfirm'
-      }, function () {
+      dialogService.confirmDialog({ prompt: 'apel.submitConfirm' }, function () {
         QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/submit').put({}, function (response) {
           message.info('apel.messages.submitted');
           entityToForm(response);
+        }, function (response) {
+          ApelApplicationUtils.setRecordsWithErrors($scope.application, response);
         });
       });
     };
 
     $scope.sendBackToCreation = function () {
-      if ($scope.application.status === 'VOTA_STAATUS_V') {
-        dialogService.showDialog('apelApplication/templates/reason.dialog.html', function (dialogScope) {
-          dialogScope.sendBackToCreation = true;
-          dialogScope.committee = true;
-        }, function (submittedDialogScope) {
-          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendBackToCreation/').put({
-            addInfo: submittedDialogScope.reason
-          }, function (response) {
-            message.info('apel.messages.sentBackToCreation');
-            entityToForm(response);
-          });
-        });
-      } else {
-        dialogService.confirmDialog({
-          prompt: 'apel.sendBackToCreationConfirm'
-        }, function () {
-          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendBackToCreation/').put({}, function (response) {
-            message.info('apel.messages.sentBackToCreation');
-            entityToForm(response);
-          });
-        });
-      }
+      ApelApplicationUtils.sendBackToCreation($scope.application, entityToForm);
     };
 
     $scope.sendToConfirm = function () {
-      if (atLeastOneLearningTransferred()) {
-        if (!$scope.application.isVocational && formalTansferredSubjectsSmallerThanSubstitutableSubjects()) {
-          dialogService.confirmDialog({
-            prompt: 'apel.error.transferredSubjectLargerThanSubstitutableSubject',
-            extraPrompts: ['apel.sendToConfirmConfirm']
-          }, function () {
-            sendToConfirm(false);
-          });
-        } else {
-          sendToConfirm(true);
-        }
-      } else {
-        message.error('apel.error.atLeastOneLearningMustBeTransferred');
-      }
+      ApelApplicationUtils.sendToConfirm($scope.application, entityToForm);
     };
 
-    function sendToConfirm(askForConfirmation) {
-      if ($scope.application.status === 'VOTA_STAATUS_V') {
-        dialogService.showDialog('apelApplication/templates/reason.dialog.html', function (dialogScope) {
-          dialogScope.sendToConfirm = true;
-          dialogScope.committee = true;
-        }, function (submittedDialogScope) {
-          recordsToIdentifiers(DataUtils, $scope.application.records);
-          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToConfirm/').put({
-            student: $scope.application.student,
-            isVocational: $scope.application.isVocational,
-            records:  $scope.application.records,
-            committeeId: $scope.application.committeeId,
-            addInfo: submittedDialogScope.reason
-          }, function (response) {
-            message.info('apel.messages.sentToConfirm');
-            entityToForm(response);
-          });
-        });
-      } else {
-        if (askForConfirmation) {
-          dialogService.confirmDialog({
-            prompt: 'apel.sendToConfirmConfirm'
-          }, function () {
-            recordsToIdentifiers(DataUtils, $scope.application.records);
-            sendToConfirmWithoutComment();
-          });
-        } else {
-          recordsToIdentifiers(DataUtils, $scope.application.records);
-          sendToConfirmWithoutComment();
-        }
-      }
-    }
-
-    function sendToConfirmWithoutComment() {
-      QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToConfirm/').put({
-        student: $scope.application.student,
-        isVocational: $scope.application.isVocational,
-        committeeId: $scope.application.committeeId,
-        records:  $scope.application.records
-      }, function (response) {
-        message.info('apel.messages.sentToConfirm');
-        entityToForm(response);
-      });
-    }
-
     $scope.sendToCommittee = function () {
-      recordsToIdentifiers(DataUtils, $scope.application.records);
-      dialogService.confirmDialog({
-        prompt: 'apel.sendToCommitteeConfirm'
-      }, function () {
-        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToCommittee/').put({
-          student: $scope.application.student,
-          isVocational: $scope.application.isVocational,
-          records:  $scope.application.records,
-          committeeId: $scope.application.committeeId
-        }, function (response) {
-          message.info('apel.messages.sentToCommittee');
-          entityToForm(response);
-        });
-      });
+      ApelApplicationUtils.sendToCommittee($scope.application, entityToForm);
     };
 
     $scope.confirm = function () {
-      if (atLeastOneLearningTransferred()) {
-        if (!$scope.application.isVocational && formalTansferredSubjectsSmallerThanSubstitutableSubjects()) {
-          dialogService.confirmDialog({
-            prompt: 'apel.error.transferredSubjectLargerThanSubstitutableSubject',
-            extraPrompts: ['apel.confirmConfirm']
-          }, function () {
-            confirm(false);
-          });
-        } else {
-          confirm(true);
-        }
-      } else {
-        message.error('apel.error.atLeastOneLearningMustBeTransferred');
-      }
+      ApelApplicationUtils.confirm($scope.application, entityToForm);
     };
 
-    function confirm(askForConfirmation) {
-      if (askForConfirmation) {
-        dialogService.confirmDialog({
-          prompt: 'apel.confirmConfirm'
-        }, function () {
-          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/confirm/').put({}, function (response) {
-            message.info('apel.messages.confirmed');
-            entityToForm(response);
-          });
-        });
-      } else {
-        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/confirm/').put({}, function (response) {
-          message.info('apel.messages.confirmed');
-          entityToForm(response);
-        });
-      }
-    }
-
-    function atLeastOneLearningTransferred() {
-      for (var i = 0; i < $scope.application.records.length; i++) {
-        for (var j = 0; j < $scope.application.records[i].data.length; j++) {
-          if ($scope.application.records[i].data[j].transfer) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }
-
-    function formalTansferredSubjectsSmallerThanSubstitutableSubjects() {
-      var error = false;
-      $scope.application.records.forEach(function (record) {
-        if (record.isFormalLearning) {
-          var transferredCredits = 0;
-          var replacedCredits = 0;
-
-          record.formalSubjectsOrModules.forEach(function (subject) {
-            if (subject.transfer) {
-              transferredCredits += subject.credits;
-            }
-          });
-
-          record.formalReplacedSubjectsOrModules.forEach(function (subject) {
-            replacedCredits += subject.subject.credits;
-          });
-
-          record.error = transferredCredits > replacedCredits;
-          if (record.error) {
-            error = true;
-          }
-        }
-      });
-      return error;
-    }
-
     $scope.sendBack = function () {
-      dialogService.confirmDialog({
-        prompt: 'apel.sendBackConfirm'
-      }, function () {
-        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendBack/').put({}, function (response) {
-          message.info('apel.messages.sentBack');
-          entityToForm(response);
-        });
-      });
+      ApelApplicationUtils.sendBack($scope.application, entityToForm);
     };
 
     $scope.reject = function () {
-      dialogService.showDialog('apelApplication/templates/reason.dialog.html', function (dialogScope) {
-        dialogScope.rejection = true;
-        dialogScope.committee = $scope.application.status === 'VOTA_STAATUS_V';
-      }, function (submittedDialogScope) {
-        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/reject/').put({
-          addInfo: submittedDialogScope.reason
-        }, function (response) {
-          message.info('apel.messages.rejected');
-          entityToForm(response);
-        });
-      });
+      ApelApplicationUtils.reject($scope.application, entityToForm);
     };
 
     $scope.removeConfirmation = function () {
-      dialogService.confirmDialog({
-        prompt: 'apel.removeConfirmationConfirm'
-      }, function () {
-        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/removeConfirmation/').put({}, function (response) {
-          message.info('apel.messages.removedConfirmation');
-          entityToForm(response);
-        });
-      });
+      ApelApplicationUtils.removeConfirmation($scope.application, entityToForm);
     };
 
     $scope.delete = function () {
-      dialogService.confirmDialog({
-        prompt: 'apel.deleteConfirm'
-      }, function () {
+      dialogService.confirmDialog({ prompt: 'apel.deleteConfirm' }, function () {
         var application = new ApelApplicationEndpoint($scope.application);
         application.$delete().then(function () {
           message.info('main.messages.delete.success');
@@ -1835,17 +1682,23 @@
         }).catch(angular.noop);
       });
     };
-  }).controller('ApelApplicationViewController', function ($scope, $route, $q, QueryUtils, oisFileService, Classifier, DataUtils, dialogService, message, config) {
+  }).controller('ApelApplicationViewController', function ($route, $scope, $q, ApelApplicationUtils, Classifier, QueryUtils,
+      config, dialogService, oisFileService) {
     $scope.applicationId = $route.current.params.id;
     $scope.auth = $route.current.locals.auth;
     $scope.application = {};
     $scope.formState = {};
     $scope.formState.viewForm = true;
 
+    Classifier.queryForDropdown({ mainClassCode: 'NOM_PIKEND' }, function (response) {
+      $scope.nominalStudyExtensions = Classifier.toMap(response);
+    });
+
     function entityToForm(entity) {
+      $scope.school = entity.school;
       $scope.application = entity;
       $scope.application.committeeId = entity.committee ? entity.committee.id : null;
-      $scope.school = entity.school;
+      $scope.canSeeNominalStudyExtension = canSeeNominalStudyExtension($scope.auth, entity);
 
       setGradesAndAssessments($q, $scope, Classifier, entity).then(function () {
         getDataForInformalLearningTables($scope);
@@ -1853,7 +1706,14 @@
       });
       setColspans($scope);
 
-      if (entity.status === 'VOTA_STAATUS_E' && $scope.auth.isAdmin()) {
+      if (entity.hasAbroadStudies) {
+        $scope.abroadStudiesCredits = ApelApplicationUtils.abroadStudiesCredits(entity);
+      }
+      if (entity.canExtendNominalDuration && !entity.nominalType) {
+        $scope.application.nominalType = 'NOM_PIKEND_0';
+        $scope.application.newNominalStudyEnd = $scope.application.oldNominalStudyEnd;
+      }
+      if (entity.status === 'VOTA_STAATUS_E' && ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher())) {
         $scope.committees = QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/committees').query();
       }
       $scope.application.committeeId = $scope.application.committee ? $scope.application.committee.id : null;
@@ -1870,166 +1730,38 @@
       $scope.application.status = "VOTA_STAATUS_K";
     }
     $scope.applicationPdfUrl = config.apiUrl + '/apelApplications/print/' + $scope.application.id + '/application.pdf';
-    
+
     $scope.hideInvalid = function (cl) {
       return !Classifier.isValid(cl);
     };
 
-    $scope.removeConfirmation = function () {
-      dialogService.confirmDialog({
-        prompt: 'apel.removeConfirmationConfirm'
-      }, function () {
-        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/removeConfirmation/').put({}, function (response) {
-          message.info('apel.messages.removedConfirmation');
-          entityToForm(response);
-        });
-      });
-    };
-
     $scope.sendBackToCreation = function () {
-      if ($scope.application.status === 'VOTA_STAATUS_V') {
-        dialogService.showDialog('apelApplication/templates/reason.dialog.html', function (dialogScope) {
-          dialogScope.sendBackToCreation = true;
-          dialogScope.committee = true;
-        }, function (submittedDialogScope) {
-          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendBackToCreation/').put({
-            addInfo: submittedDialogScope.reason
-          }, function (response) {
-            message.info('apel.messages.sentBackToCreation');
-            entityToForm(response);
-          });
-        });
-      } else {
-        dialogService.confirmDialog({
-          prompt: 'apel.sendBackToCreationConfirm'
-        }, function () {
-          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendBackToCreation/').put({}, function (response) {
-            message.info('apel.messages.sentBackToCreation');
-            entityToForm(response);
-          });
-        });
-      }
+      ApelApplicationUtils.sendBackToCreation($scope.application, entityToForm);
     };
 
     $scope.sendToConfirm = function () {
-      if (atLeastOneLearningTransferred()) {
-        recordsToIdentifiers(DataUtils, $scope.application.records);
-        sendToConfirm();
-      } else {
-        message.error('apel.error.atLeastOneLearningMustBeTransferred');
-      }
+      ApelApplicationUtils.sendToConfirm($scope.application, entityToForm);
     };
 
-    function sendToConfirm() {
-      if ($scope.application.status === 'VOTA_STAATUS_V') {
-        dialogService.showDialog('apelApplication/templates/reason.dialog.html', function (dialogScope) {
-          dialogScope.sendToConfirm = true;
-          dialogScope.committee = true;
-        }, function (submittedDialogScope) {
-          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToConfirm/').put({
-            student: $scope.application.student,
-            isVocational: $scope.application.isVocational,
-            records:  $scope.application.records,
-            committeeId: $scope.application.committeeId,
-            addInfo: submittedDialogScope.reason
-          }, function (response) {
-            message.info('apel.messages.sentToConfirm');
-            entityToForm(response);
-          });
-        });
-      } else {
-        dialogService.confirmDialog({
-          prompt: 'apel.sendToConfirmConfirm'
-        }, function () {
-          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToConfirm/').put({
-            student: $scope.application.student, 
-            isVocational: $scope.application.isVocational, 
-            records:  $scope.application.records,
-            committeeId: $scope.application.committeeId
-          }, function (response) {
-            message.info('apel.messages.sentToConfirm');
-            entityToForm(response);
-          });
-        });
-      }
-    }
-
     $scope.sendToCommittee = function () {
-      recordsToIdentifiers(DataUtils, $scope.application.records);
-      dialogService.confirmDialog({
-        prompt: 'apel.sendToCommitteeConfirm'
-      }, function () {
-        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendToCommittee/').put({
-          student: $scope.application.student,
-          isVocational: $scope.application.isVocational,
-          records:  $scope.application.records,
-          committeeId: $scope.application.committeeId
-        }, function (response) {
-          message.info('apel.messages.sentToCommittee');
-          entityToForm(response);
-        });
-      });
+      ApelApplicationUtils.sendToCommittee($scope.application, entityToForm);
     };
 
     $scope.confirm = function () {
-      if (atLeastOneLearningTransferred()) {
-        dialogService.confirmDialog({
-          prompt: 'apel.confirmConfirm'
-        }, function () {
-          QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/confirm/').put({}, function (response) {
-            message.info('apel.messages.confirmed');
-            entityToForm(response);
-          });
-        });
-      } else {
-        message.error('apel.error.atLeastOneLearningMustBeTransferred');
-      }
+      ApelApplicationUtils.confirm($scope.application, entityToForm);
     };
 
-    function atLeastOneLearningTransferred() {
-      for (var i = 0; i < $scope.application.records.length; i++) {
-        for (var j = 0; j < $scope.application.records[i].data.length; j++) {
-          if ($scope.application.records[i].data[j].transfer) {
-            return true;
-          }
-        }
-      }
-      return false;
-    }    
-
     $scope.sendBack = function () {
-      dialogService.confirmDialog({
-        prompt: 'apel.sendBackConfirm'
-      }, function () {
-        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/sendBack/').put({}, function (response) {
-          message.info('apel.messages.sentBack');
-          entityToForm(response);
-        });
-      });
+      ApelApplicationUtils.sendBack($scope.application, entityToForm);
     };
 
     $scope.reject = function () {
-      dialogService.showDialog('apelApplication/templates/reason.dialog.html', function (dialogScope) {
-        dialogScope.rejection = true;
-        dialogScope.committee = $scope.application.status === 'VOTA_STAATUS_V';
-      }, function (submittedDialogScope) {
-        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/reject/').put({
-          addInfo: submittedDialogScope.reason
-        }, function (response) {
-          entityToForm(response);
-        });
-      });
+      ApelApplicationUtils.reject($scope.application, entityToForm);
     };
 
     $scope.removeConfirmation = function () {
-      dialogService.confirmDialog({
-        prompt: 'apel.removeConfirmationConfirm'
-      }, function () {
-        QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/removeConfirmation/').put({}, function (response) {
-          message.info('apel.messages.removedConfirmation');
-          entityToForm(response);
-        });
-      });
+      ApelApplicationUtils.removeConfirmation($scope.application, entityToForm);
     };
+
   });
 }());

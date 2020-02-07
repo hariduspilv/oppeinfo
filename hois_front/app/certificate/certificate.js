@@ -226,7 +226,7 @@ angular.module('hitsaOis')
     }
 
     $scope.$watch('record.type', function() {
-      if (id !== undefined) return;
+      if (id !== undefined) { return; }
       if (CertificateUtil.isResultsCertificate($scope.record)) {
         $scope.record.estonian = true;
       } else {

@@ -41,6 +41,7 @@ import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.ProtocolType;
+import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.report.HigherProtocolReport;
 import ee.hitsa.ois.repository.ProtocolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -74,13 +75,12 @@ import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 public class HigherProtocolService extends AbstractProtocolService {
 
     private static final String STUDENT_SELECT = "s.id, p.firstname, p.lastname, "
-            + "sg.code as studentGroupCode, c.code as curriculumCode";
-    private static final String STUDENT_FROM =
-              "from student s "
+            + "sg.code as studentGroupCode, c.code as curriculumCode, s.type_code";
+    private static final String STUDENT_FROM = "from student s "
             + "join person p on p.id = s.person_id "
-            + "join student_group sg on sg.id = s.student_group_id "
-            + "join curriculum_version cv on cv.id = s.curriculum_version_id "
-            + "join curriculum c on c.id = cv.curriculum_id "
+            + "left join student_group sg on sg.id = s.student_group_id "
+            + "left join curriculum_version cv on cv.id = s.curriculum_version_id "
+            + "left join curriculum c on c.id = cv.curriculum_id "
             + "join declaration d on d.student_id = s.id "
             + "join declaration_subject ds on d.id = ds.declaration_id "
             + "left join curriculum_version_hmodule cvh on cvh.id = ds.curriculum_version_hmodule_id";
@@ -293,6 +293,8 @@ public class HigherProtocolService extends AbstractProtocolService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_FROM);
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("s.status_code in :activeStatuses", "activeStatuses",
+                StudentStatus.STUDENT_STATUS_ACTIVE);
         qb.requiredCriteria("d.status_code = :status", "status", DeclarationStatus.OPINGUKAVA_STAATUS_K);
         qb.requiredCriteria("ds.subject_study_period_id = :subjectStudyPeriodId",
                 "subjectStudyPeriodId", criteria.getSubjectStudyPeriod());
@@ -326,9 +328,8 @@ public class HigherProtocolService extends AbstractProtocolService {
         return StreamUtil.toMappedList(r -> {
             StudentSearchDto dto = new StudentSearchDto();
             dto.setId(resultAsLong(r, 0));
-            String firstname = resultAsString(r, 1);
-            String lastname = resultAsString(r, 2);
-            dto.setFullname(PersonUtil.fullname(firstname, lastname));
+            dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2),
+                    resultAsString(r, 5)));
             dto.setStudentGroup(new AutocompleteResult(null, resultAsString(r, 3), resultAsString(r, 3)));
             dto.setCurriculum(new AutocompleteResult(null, resultAsString(r, 4), resultAsString(r, 4)));
             return dto;

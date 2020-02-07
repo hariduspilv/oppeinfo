@@ -12,20 +12,29 @@
 
     <md-dialog-content>
       <div layout-padding>
+        <md-whiteframe ng-if="record.applicationPlannedSubject" class="md-whiteframe-1dp attention-whiteframe"
+          flex="100" layout layout-align="left center">
+          <div md-colors="{color: 'default-warn'}">
+            <md-icon md-colors="{color: 'default-warn'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'apel.formalLearnings.abroadStudiesHigherRecordWarning' | translate}}</span>
+          </div>
+        </md-whiteframe>
+
         <fieldset>
-          <legend ng-class="{invalid: dialogForm.$submitted && (!record.formalSubjectsOrModules || record.formalSubjectsOrModules.length === 0)}" 
+          <legend ng-class="{invalid: dialogForm.$submitted && (!record.formalSubjectsOrModules || record.formalSubjectsOrModules.length === 0)}"
             class="md-title-small">{{'apel.formalLearnings.transferableSubjects' | translate}}</legend>
           <md-input-container>
-            <md-button ng-click="addNewTransferableSubjectOrModule()" class="md-raised">{{'main.button.addNewRow' | translate}}</md-button>
+            <md-button ng-if="!record.applicationPlannedSubject" ng-click="addNewTransferableSubjectOrModule()"
+              class="md-raised">{{'main.button.addNewRow' | translate}}</md-button>
           </md-input-container>
           <div ng-if="record.newTransferableSubjectOrModule">
             <div layout="row" layout-xs="column" flex>
               <div flex="100">
                 <div class="form-readonly" layout="row" layout-sm="column" layout-xs="column">
                   <md-input-container>
-                    <md-radio-group layout-gt-sm="row" ng-model="formState.isMySchool">
-                      <md-radio-button ng-value="true" aria-label="iternalTransfer">
-                        {{'apel.formalLearnings.iternalTransfer' | translate}}
+                    <md-radio-group layout-gt-sm="row" ng-model="formState.isMySchool" ng-disabled="record.applicationPlannedSubject">
+                      <md-radio-button ng-value="true" aria-label="internalTransfer">
+                        {{'apel.formalLearnings.internalTransfer' | translate}}
                       </md-radio-button>
                       <md-radio-button ng-value="false" aria-label="externalTransfer">
                         {{'apel.formalLearnings.externalTransfer' | translate}}
@@ -46,8 +55,9 @@
                 <div ng-if="!formState.isMySchool && !formState.isNewSchool" layout="row" layout-sm="column" layout-xs="column">
                   <md-input-container flex="45" flex-sm="100" flex-xs="100">
                     <label>{{'apel.formalLearnings.schoolNameEt' | translate}}</label>
-                    <md-select ng-model="record.newTransferableSubjectOrModule.apelSchool" ng-model-options="{trackBy: '$value.id'}"
-                      ng-change="apelSchoolChanged(record.newTransferableSubjectOrModule.apelSchool)" aria-label="apelSchool" required>
+                    <md-select ng-model="record.newTransferableSubjectOrModule.apelSchool" aria-label="apelSchool"
+                      ng-change="apelSchoolChanged(record.newTransferableSubjectOrModule.apelSchool)"
+                      ng-model-options="{trackBy: '$value.id + $value.nameEt'}" ng-disabled="record.applicationPlannedSubject" required>
                       <md-option ng-repeat="val in apelSchools" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
                     </md-select>
                   </md-input-container>
@@ -58,7 +68,7 @@
                 </div>
 
                 <div ng-if="!formState.isMySchool">
-                  <md-input-container ng-if="!formState.isNewSchool">
+                  <md-input-container ng-if="!formState.isNewSchool && !record.applicationPlannedSubject">
                     <md-button ng-click="addNewSchool()" class="md-raised">{{'apel.formalLearnings.addNewSchool' | translate}}</md-button>
                   </md-input-container>
                   <fieldset ng-if="formState.isNewSchool">
@@ -119,8 +129,8 @@
                     </md-select>
                   </md-input-container>
 
-                  <hois-autocomplete ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_M'" flex="45" flex-sm="100" flex-xs="100" 
-                    ng-model="record.newTransferableSubjectOrModule.subject" method="subjects" name="subject" label="apel.formalLearnings.transferableSubjectEt" 
+                  <hois-autocomplete ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_M'" flex="45" flex-sm="100" flex-xs="100"
+                    ng-model="record.newTransferableSubjectOrModule.subject" method="subjects" name="subject" label="apel.formalLearnings.transferableSubjectEt"
                     additional-query-params="{student: student.id, curriculumSubjects: false, curriculumVersion: curriculumVersionId,
                       ignoreCurriculumVersionStatus: true, withCredits: false, noFinalSubjects: true}"
                       md-selected-item-change="subjectChanged(record.newTransferableSubjectOrModule.subject)" ng-model-options="{ debounce: 500 }" required>
@@ -193,7 +203,7 @@
                     <md-datepicker ng-model="record.newTransferableSubjectOrModule.gradeDate" md-max-date="currentDate" md-open-on-focus></md-datepicker>
                   </md-input-container>
                   <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100">
-                    <label>{{'apel.formalLearnings.resultDate' | translate}}</label> 
+                    <label>{{'apel.formalLearnings.resultDate' | translate}}</label>
                     <input value="{{record.newTransferableSubjectOrModule.gradeDate | hoisDate}}" disabled>
                   </md-input-container>
                   <md-input-container ng-if="record.newTransferableSubjectOrModule.type === 'VOTA_AINE_LIIK_V'" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -223,11 +233,11 @@
               </div>
             </div>
 
-            <md-button ng-if="record.newTransferableSubjectOrModule.isNew" class="md-raised" 
+            <md-button ng-if="record.newTransferableSubjectOrModule.isNew" class="md-raised"
               ng-click="addTransferableSubjectOrModule()">{{'main.button.add' | translate}}</md-button>
-            <md-button ng-if="!record.newTransferableSubjectOrModule.isNew" class="md-raised" 
+            <md-button ng-if="!record.newTransferableSubjectOrModule.isNew" class="md-raised"
               ng-click="changeTransferableSubjectOrModule()">{{'main.button.edit' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="deleteTransferableSubjectOrModule()">
+            <md-button ng-if="!record.applicationPlannedSubject" class="md-raised" ng-click="deleteTransferableSubjectOrModule()">
               {{'apel.formalLearnings.remove' | translate}}</md-button>
           </div>
 
@@ -258,7 +268,9 @@
                   <td md-cell>{{row.grade | hoisHigherGrade: auth.school.letterGrades}}</td>
                   <td md-cell>{{row.gradeDate | hoisDate}}</td>
                   <td md-cell>{{row.teachers}}</td>
-                  <td md-cell>{{currentLanguageNameField(row.module)}} ({{row.isOptional ? 'main.no' : 'main.yes' | translate}})</td>
+                  <td md-cell>
+                    <span ng-if="row.module">{{currentLanguageNameField(row.module)}} ({{row.isOptional ? 'main.no' : 'main.yes' | translate}})</span>
+                  </td>
                   <td md-cell>
                     <md-button md-no-ink class="md-primary change-button" ng-click="editTransferableSubjectOrModule($index)">{{'main.button.change' | translate}}</md-button>
                   </td>

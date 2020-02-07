@@ -5,12 +5,12 @@ import java.util.List;
 import java.util.Map;
 
 import ee.hitsa.ois.web.commandobject.report.TeacherDetailLoadCommand;
+import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 import ee.hitsa.ois.web.dto.WeekDto;
-import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.StudyPeriodDto;
 
 public class TeacherDetailLoadReportDataDto {
 
-    private List<StudyPeriodDto> studyPeriods;
+    private List<StudyPeriodWithWeeksDto> studyPeriods;
     private List<Short> weekNrs;
     private Map<Short, LocalDate> weekBeginningDateMap;
     private List<WeekDto> weeks;
@@ -18,11 +18,11 @@ public class TeacherDetailLoadReportDataDto {
     private List<Long> months;
     private TeacherDetailLoadCommand criteria;
 
-    public List<StudyPeriodDto> getStudyPeriods() {
+    public List<StudyPeriodWithWeeksDto> getStudyPeriods() {
         return studyPeriods;
     }
 
-    public void setStudyPeriods(List<StudyPeriodDto> studyPeriods) {
+    public void setStudyPeriods(List<StudyPeriodWithWeeksDto> studyPeriods) {
         this.studyPeriods = studyPeriods;
     }
 

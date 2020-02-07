@@ -13,8 +13,12 @@ public abstract class WrapperCallable<V> implements Callable<V> {
     
     private final AtomicReference<V> wrapper = new AtomicReference<>();
     
-    public abstract V wrapperCall();
+    public abstract V wrapperCall() throws InterruptedException;
     public abstract float getProgress();
+    
+    public String getMessage() {
+        return "TODO: default text";//TODO
+    }
 
     @Override
     public V call() throws Exception {

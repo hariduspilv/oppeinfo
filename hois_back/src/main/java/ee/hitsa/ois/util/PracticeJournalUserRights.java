@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.PracticeJournal;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.Permission;
@@ -48,27 +49,26 @@ public final class PracticeJournalUserRights {
     }
 
     public static boolean canEdit(HoisUserDetails user, PracticeJournal practiceJournal) {
-        if (StudentUtil.isActive(practiceJournal.getStudent()) && (user.isSchoolAdmin() || user.isTeacher())) {
-            boolean canEdit = UserUtil.isSameSchool(user, practiceJournal.getSchool())
-                    && hasPracticeJournalEditPermission(user) && isBeforeDaysAfterCanEdit(practiceJournal.getEndDate());
-            if (user.isTeacher()) {
-                canEdit = canEdit && EntityUtil.getId(practiceJournal.getTeacher()).equals(user.getTeacherId());
-            }
-            return canEdit;
+        Student student = practiceJournal.getStudent();
+        if (hasPracticeJournalEditPermission(user) && StudentUtil.isActive(student)
+                & isBeforeDaysAfterCanEdit(practiceJournal.getEndDate())) {
+            return UserUtil.isSchoolAdminOrLeadingTeacher(user, student)
+                    || (user.isTeacher() && EntityUtil.getId(practiceJournal.getTeacher()).equals(user.getTeacherId()));
         }
         return false;
     }
 
     public static boolean canEdit(HoisUserDetails user, LocalDate endDate, String studentStatus) {
-        if (StudentUtil.isActive(studentStatus) && (user.isSchoolAdmin() || user.isTeacher())) {
-            return hasPracticeJournalEditPermission(user) && isBeforeDaysAfterCanEdit(endDate);
+        if (hasPracticeJournalEditPermission(user) && StudentUtil.isActive(studentStatus)
+                & isBeforeDaysAfterCanEdit(endDate)) {
+            return user.isSchoolAdmin() || user.isLeadingTeacher() || user.isTeacher();
         }
         return false;
     }
 
     public static boolean canConfirm(HoisUserDetails user, PracticeJournal practiceJournal) {
         return StudentUtil.isActive(practiceJournal.getStudent())
-                && UserUtil.isSchoolAdmin(user, practiceJournal.getSchool())
+                && UserUtil.isSchoolAdminOrLeadingTeacher(user, practiceJournal.getStudent())
                 && hasPracticeJournalConfirmPermission(user) && isBeforeDaysAfterCanEdit(practiceJournal.getEndDate());
     }
 
@@ -89,8 +89,8 @@ public final class PracticeJournalUserRights {
         if (StudentUtil.isActive(studentStatus)) {
             if (user.isStudent()) {
                 return Boolean.TRUE.equals(canStudentAddEntries);
-            } else if (user.isSchoolAdmin() || user.isTeacher()) {
-                return true;
+            } else if (user.isSchoolAdmin() || user.isLeadingTeacher() || user.isTeacher()) {
+                return hasPracticeJournalEditPermission(user);
             }
         }
         return false;
@@ -106,9 +106,9 @@ public final class PracticeJournalUserRights {
         return !isConfirmed(status) && isBeforeDaysAfterCanEdit(endDate) && Boolean.FALSE.equals(hasSupervisorOpinion);
     }
 
-    public static boolean canAdminOrTeacherAddEntries(HoisUserDetails user, PracticeJournal practiceJournal) {
-        return UserUtil.isSameSchool(user, practiceJournal.getSchool())
-                && (user.isSchoolAdmin() || EntityUtil.getId(practiceJournal.getTeacher()).equals(user.getTeacherId()));
+    public static boolean canAdminOrLeadingTeacherOrTeacherAddEntries(HoisUserDetails user, PracticeJournal practiceJournal) {
+        return UserUtil.isSchoolAdminOrLeadingTeacher(user, practiceJournal.getStudent())
+                || (user.isTeacher() && EntityUtil.getId(practiceJournal.getTeacher()).equals(user.getTeacherId()));
     }
 
     public static boolean canDelete(HoisUserDetails user, PracticeJournal practiceJournal) {
@@ -130,8 +130,8 @@ public final class PracticeJournalUserRights {
         if (StudentUtil.isActive(dto.getStudentStatus())) {
             if (user.isStudent()) {
                 return canStudentAddEntries(dto.getStatus(), dto.getEndDate(), hasOpinion(dto.getSupervisorOpinion()));
-            } else if (user.isSchoolAdmin() || user.isTeacher()) {
-                return true;
+            } else if (user.isSchoolAdmin() || user.isLeadingTeacher() || user.isTeacher()) {
+                return hasPracticeJournalEditPermission(user);
             }
         }
         return false;

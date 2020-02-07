@@ -74,9 +74,8 @@ public class PracticeJournalController {
     }
 
     @PostMapping
-    public PracticeJournalDto create(HoisUserDetails user,
-            @Valid @RequestBody PracticeJournalForm practiceJournalForm) {
-        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PRAKTIKAPAEVIK);
+    public PracticeJournalDto create(HoisUserDetails user, @Valid @RequestBody PracticeJournalForm practiceJournalForm) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PRAKTIKAPAEVIK);
         return get(user, practiceJournalService.create(user.getSchoolId(), practiceJournalForm));
     }
 
@@ -92,7 +91,7 @@ public class PracticeJournalController {
     public PracticeJournalDto confirm(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) PracticeJournal practiceJournal,
             @Valid @RequestBody PracticeJournalForm practiceJournalForm) {
-        UserUtil.throwAccessDeniedIf(!PracticeJournalUserRights.canEdit(user, practiceJournal));
+        UserUtil.throwAccessDeniedIf(!PracticeJournalUserRights.canConfirm(user, practiceJournal));
         return get(user, practiceJournalService.confirm(practiceJournal, practiceJournalForm));
     }
     
@@ -100,7 +99,7 @@ public class PracticeJournalController {
     public PracticeJournalDto open(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) PracticeJournal practiceJournal,
             @Valid @RequestBody PracticeJournalForm practiceJournalForm) {
-        UserUtil.assertIsSchoolAdmin(user, practiceJournal.getSchool());
+        UserUtil.throwAccessDeniedIf(!PracticeJournalUserRights.canConfirm(user, practiceJournal));
         return get(user, practiceJournalService.open(practiceJournal, practiceJournalForm));
     }
 
@@ -115,13 +114,15 @@ public class PracticeJournalController {
     @GetMapping("studentPracticeModules/{studentId:\\d+}")
     public Collection<ContractStudentModuleDto> studentPracticeModules(HoisUserDetails user,
             @PathVariable Long studentId) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
+        UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PRAKTIKAPAEVIK);
         return contractService.studentPracticeModules(user, studentId);
     }
 
     @GetMapping("studentPracticeSubjects/{studentId:\\d+}")
     public Collection<ContractStudentSubjectDto> studentSubjects(HoisUserDetails user, @PathVariable Long studentId) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
+        UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PRAKTIKAPAEVIK);
         return contractService.studentPracticeHigherModules(user, studentId)
                 .stream().flatMap(it -> it.getSubjects().stream()).collect(Collectors.toList());
     }
@@ -136,7 +137,7 @@ public class PracticeJournalController {
     @PutMapping("/{id:\\d+}/saveEntries/teacher")
     public PracticeJournalDto saveEntriesTeacher(HoisUserDetails user, @WithEntity PracticeJournal practiceJournal,
             @RequestBody PracticeJournalEntriesTeacherForm practiceJournalEntriesTeacherForm) {
-        UserUtil.throwAccessDeniedIf(!PracticeJournalUserRights.canAdminOrTeacherAddEntries(user, practiceJournal));
+        UserUtil.throwAccessDeniedIf(!PracticeJournalUserRights.canAdminOrLeadingTeacherOrTeacherAddEntries(user, practiceJournal));
         return get(user, practiceJournalService.saveEntriesTeacher(user, practiceJournal, practiceJournalEntriesTeacherForm));
     }
 

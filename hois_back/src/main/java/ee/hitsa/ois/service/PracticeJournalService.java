@@ -262,15 +262,18 @@ public class PracticeJournalService {
     public PracticeJournalDto get(PracticeJournal practiceJournal) {
         PracticeJournalDto dto = PracticeJournalDto.of(practiceJournal);
         if (practiceJournal.getContract() != null) {
-            if (practiceJournal.getContract().getStudentPracticeEvaluation() != null) {
-                dto.setStudentPracticeEvalCriteria(setEvalValues(StreamUtil.toMappedList(PracticeEvaluationCriteriaDto::of,practiceJournal.getContract().getStudentPracticeEvaluation().getCriteria()), practiceJournal));
+            if (practiceJournal.getContract().getStudentPracticeEvaluation() != null && practiceJournal.getContract().getStudentPracticeEvaluation().getCriteria() != null) {
+                dto.setStudentPracticeEvalCriteria(setEvalValues(practiceJournal.getContract().getStudentPracticeEvaluation().getCriteria()
+                        .stream().map(PracticeEvaluationCriteriaDto::of).sorted((o1,o2)-> o1.getOrderNr().compareTo(o2.getOrderNr())).collect(Collectors.toList()), practiceJournal));
             }
-            if (practiceJournal.getContract().getPracticeEvaluation() != null) {
-                dto.setSupervisorPracticeEvalCriteria(setEvalValues(StreamUtil.toMappedList(PracticeEvaluationCriteriaDto::of,practiceJournal.getContract().getPracticeEvaluation().getCriteria()), practiceJournal));
+            if (practiceJournal.getContract().getPracticeEvaluation() != null && practiceJournal.getContract().getPracticeEvaluation().getCriteria() != null) {
+                dto.setSupervisorPracticeEvalCriteria(setEvalValues(practiceJournal.getContract().getPracticeEvaluation().getCriteria()
+                        .stream().map(PracticeEvaluationCriteriaDto::of).sorted((o1,o2)-> o1.getOrderNr().compareTo(o2.getOrderNr())).collect(Collectors.toList()), practiceJournal));
             }
         } else {
-            if (practiceJournal.getPracticeEvaluation() != null) {
-                dto.setStudentPracticeEvalCriteria(setEvalValues(StreamUtil.toMappedList(PracticeEvaluationCriteriaDto::of,practiceJournal.getPracticeEvaluation().getCriteria()), practiceJournal));
+            if (practiceJournal.getPracticeEvaluation() != null && practiceJournal.getPracticeEvaluation().getCriteria() != null) {
+                dto.setStudentPracticeEvalCriteria(setEvalValues(practiceJournal.getPracticeEvaluation().getCriteria()
+                        .stream().map(PracticeEvaluationCriteriaDto::of).sorted((o1,o2)-> o1.getOrderNr().compareTo(o2.getOrderNr())).collect(Collectors.toList()), practiceJournal));
             }
         }
         dto.setCanAddEntries(Boolean.valueOf(StudentUtil.isActive(dto.getStudentStatus())));

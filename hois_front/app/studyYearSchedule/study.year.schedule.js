@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('studyYearScheduleController', 
+angular.module('hitsaOis').controller('studyYearScheduleController',
 function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, dialogService, USER_ROLES, AuthService, config, $httpParamSerializer) {
     $scope.auth = $route.current.locals.auth;
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPETOOGRAAFIK);
@@ -107,39 +107,46 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
     }
 
     function getWeeks() {
-        var weeks = [];
-        var weekNr = 1;
-        var start = new Date($scope.criteria.studyYear.startDate);
-        var end = $scope.criteria.studyYear.endDate;
-
-        while(start < end) {
-            var week = {};
-            week.start = start;
-            start = new Date(start.getFullYear() ,start.getMonth() ,start.getDate() + (7 - start.getDay()));
-            week.end = start;
-            week.weekNr = weekNr++;
-
-            var studyPeriod = getWeeksPeriod(week);
-            week.studyPeriodId = studyPeriod ? studyPeriod.id : null;
-
-            weeks.push(week);
-            start = new Date(start.getFullYear() ,start.getMonth() ,start.getDate() + 1);
-        }
-        $scope.weeks = weeks;
-
-        function getPeriodsLengthInWeeks (acc, val) {
-            var num = val.studyPeriodId === $scope.criteria.studyYear.studyPeriods[i].id ? 1 : 0;
-            return acc + num;
-        }
-        // set number of weeks to study periods
-        for(var i = 0; i < $scope.criteria.studyYear.studyPeriods.length; i++) {
-            var weeksNumber = $scope.weeks.reduce(getPeriodsLengthInWeeks, 0);
-            $scope.criteria.studyYear.studyPeriods[i].weeks = weeksNumber;
-        }
+      $scope.studyPeriods = QueryUtils.endpoint('/studyYearSchedule/studyYearPeriods/' + $scope.criteria.studyYear.id).query();
+      $scope.studyPeriods.$promise.then(function (response) {
+        getStudyPeriodWeeks(response);
+      });
     }
 
-    function getWeeksPeriod(week) {
-        return DataUtils.getStudyYearOrPeriodAt(week.start, $scope.criteria.studyYear.studyPeriods);
+    function getStudyPeriodWeeks(studyPeriods) {
+      var weeks = [];
+
+      studyPeriods.forEach(function (studyPeriod) {
+        for (var i = 0; i < studyPeriod.weekNrs.length; i++) {
+          var week = {};
+          week.weekNr = studyPeriod.weekNrs[i];
+          week.studyPeriodId = studyPeriod.id;
+          var start = moment(studyPeriod.weekBeginningDates[i], "YYYY-MM-DD'T'hh:mm:ss.SSS'Z'");
+          week.start = start.toDate();
+          var end = start.add(6, 'days');
+          week.end = end.toDate();
+          week.notInStudyPeriod = studyPeriod.externalWeeks.indexOf(week.weekNr) !== -1;
+          weeks.push(week);
+        }
+      });
+
+      $scope.weeks = weeks;
+
+      function getPeriodsLengthInWeeks(acc, val) {
+        var num = val.studyPeriodId === $scope.criteria.studyYear.studyPeriods[i].id ? 1 : 0;
+        return acc + num;
+      }
+
+      function getYearsLengthInWeeks(acc, val) {
+        return acc + val.weeks;
+      }
+
+      // set number of weeks to study periods
+      for (var i = 0; i < $scope.criteria.studyYear.studyPeriods.length; i++) {
+        var weeksNumber = $scope.weeks.reduce(getPeriodsLengthInWeeks, 0);
+        $scope.criteria.studyYear.studyPeriods[i].weeks = weeksNumber;
+      }
+      $scope.criteria.studyYear.weeks = $scope.criteria.studyYear.studyPeriods.reduce(getYearsLengthInWeeks, 0);
     }
 
     $scope.filterSchoolDepartments = function(dept) {

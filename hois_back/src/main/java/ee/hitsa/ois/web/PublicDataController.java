@@ -20,21 +20,18 @@ import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.report.SubjectProgramReport;
-import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.PublicDataService;
 import ee.hitsa.ois.service.StateCurriculumService;
-import ee.hitsa.ois.service.StudyMaterialService;
-import ee.hitsa.ois.service.SubjectService;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.SubjectProgramUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSearchCommand;
-import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.subject.SubjectSearchCommand;
+import ee.hitsa.ois.web.dto.AcademicCalendarDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.StateCurriculumDto;
 import ee.hitsa.ois.web.dto.StateCurriculumSearchDto;
@@ -53,19 +50,18 @@ public class PublicDataController {
     @Autowired
     private PublicDataService publicDataService;
     @Autowired
-    private StudyMaterialService studyMaterialService;
-    @Autowired
     private StateCurriculumService stateCurriculumService;
-    @Autowired
-    private SubjectService subjectService;
-    @Autowired
-    private AutocompleteService autocompleteService;
     @Autowired
     private PdfService pdfService;
     @Autowired
     private SubjectProgramUtil subjectProgramUtil;
     @Autowired
     private ClassifierService classifierService;
+
+    @GetMapping("/academicCalendar/{schoolId:\\d+}")
+    public AcademicCalendarDto academicCalendar(@PathVariable("schoolId") Long schoolId) {
+        return publicDataService.academicCalendar(schoolId);
+    }
 
     @GetMapping("/curriculum/{id:\\d+}")
     public Object curriculum(@PathVariable("id") Long id) {
@@ -114,20 +110,17 @@ public class PublicDataController {
 
     @GetMapping("/schooldepartments")
     public List<SchoolDepartmentResult> schoolDepartments(Long schoolId) {
-        return autocompleteService.schoolDepartments(schoolId);
+        return publicDataService.schoolDepartments(schoolId);
     }
 
     @GetMapping("/curriculumversions")
     public List<CurriculumVersionResult> curriculumVersions(Long schoolId) {
-        CurriculumVersionAutocompleteCommand lookup = new CurriculumVersionAutocompleteCommand();
-        lookup.setHigher(Boolean.TRUE);
-        lookup.setValid(Boolean.TRUE);
-        return autocompleteService.curriculumVersions(schoolId, lookup);
+        return publicDataService.curriculumVersions(schoolId);
     }
     
     @GetMapping("/subjectsearch")
     public Page<SubjectSearchDto> search(@Valid SubjectSearchCommand subjectSearchCommand, Pageable pageable) {
-        return subjectService.search(null, subjectSearchCommand, pageable);
+        return publicDataService.searchSubjects(subjectSearchCommand, pageable);
     }
 
     @GetMapping("/subject/view/{id:\\d+}")
@@ -137,22 +130,22 @@ public class PublicDataController {
     
     @GetMapping("/studyMaterial/journal/{id:\\d+}")
     public JournalDto journal(@WithEntity Journal journal) {
-        return studyMaterialService.getJournal(null, journal);
+        return publicDataService.journal(journal);
     }
 
     @GetMapping("/studyMaterial/journal/{id:\\d+}/materials")
     public List<StudyMaterialSearchDto> journalMaterials(@WithEntity Journal journal) {
-        return studyMaterialService.materials(null, journal, null);
+        return publicDataService.journalMaterials(journal);
     }
 
     @GetMapping("/studyMaterial/subjectStudyPeriod/{id:\\d+}")
     public SubjectStudyPeriodDto subjectStudyPeriod(@WithEntity SubjectStudyPeriod subjectStudyPeriod) {
-        return studyMaterialService.getSubjectStudyPeriod(null, subjectStudyPeriod);
+        return publicDataService.subjectStudyPeriod(subjectStudyPeriod);
     }
 
     @GetMapping("/studyMaterial/subjectStudyPeriod/{id:\\d+}/materials")
     public List<StudyMaterialSearchDto> subjectStudyPeriodMaterials(@WithEntity SubjectStudyPeriod subjectStudyPeriod) {
-        return studyMaterialService.materials(null, null, subjectStudyPeriod);
+        return publicDataService.subjectStudyPeriodMaterials(subjectStudyPeriod);
     }
 
 }

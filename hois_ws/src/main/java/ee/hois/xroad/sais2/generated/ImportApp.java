@@ -41,6 +41,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="StudyFormCode" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="ApplicationNumber" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="IsFullLoad" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
+ *         &lt;element name="IsPartialLoad" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
+ *         &lt;element name="IsUndefinedLoad" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
  *         &lt;element name="CandidateEducations" type="{http://sais2.x-road.eu/}ArrayOfCandidateEducationItem" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
@@ -74,6 +76,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "studyFormCode",
     "applicationNumber",
     "isFullLoad",
+    "isPartialLoad",
+    "isUndefinedLoad",
     "candidateEducations"
 })
 public class ImportApp {
@@ -124,6 +128,10 @@ public class ImportApp {
     protected String applicationNumber;
     @XmlElement(name = "IsFullLoad")
     protected boolean isFullLoad;
+    @XmlElement(name = "IsPartialLoad")
+    protected boolean isPartialLoad;
+    @XmlElement(name = "IsUndefinedLoad")
+    protected boolean isUndefinedLoad;
     @XmlElement(name = "CandidateEducations")
     protected ArrayOfCandidateEducationItem candidateEducations;
 
@@ -645,6 +653,38 @@ public class ImportApp {
      */
     public void setIsFullLoad(boolean value) {
         this.isFullLoad = value;
+    }
+
+    /**
+     * Gets the value of the isPartialLoad property.
+     * 
+     */
+    public boolean isIsPartialLoad() {
+        return isPartialLoad;
+    }
+
+    /**
+     * Sets the value of the isPartialLoad property.
+     * 
+     */
+    public void setIsPartialLoad(boolean value) {
+        this.isPartialLoad = value;
+    }
+
+    /**
+     * Gets the value of the isUndefinedLoad property.
+     * 
+     */
+    public boolean isIsUndefinedLoad() {
+        return isUndefinedLoad;
+    }
+
+    /**
+     * Sets the value of the isUndefinedLoad property.
+     * 
+     */
+    public void setIsUndefinedLoad(boolean value) {
+        this.isUndefinedLoad = value;
     }
 
     /**

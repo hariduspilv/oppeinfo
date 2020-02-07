@@ -15,7 +15,7 @@
           <div flex="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
             <div layout="row" flex="70">
               <md-input-container flex="100" flex-sm="100" flex-xs="100">
-                <md-select ng-model="copyTarget" placeholder="{{'timetable.management.period' | translate}}">
+                <md-select ng-model="copyTarget" placeholder="{{'timetable.management.period' | translate}}" required>
                   <md-option ng-value="target" ng-repeat="target in copyTargets">{{ target.start | hoisDate }}-{{ target.end | hoisDate }}</md-option>
                 </md-select>
               </md-input-container>

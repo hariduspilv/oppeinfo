@@ -44,7 +44,8 @@
               <hois-autocomplete flex ng-model="criteria.enterprise" method="enterprises" name="enterprise" label="enterprise.label"
                 ha-attribute="id" ha-controller="directiveControllers"></hois-autocomplete>
               <hois-autocomplete flex ng-model="criteria.student" method="students" name="student" label="apel.student"
-                ha-attribute="id" ha-controller="directiveControllers"></hois-autocomplete>
+                ha-attribute="id" ha-controller="directiveControllers"
+                additional-query-params="{id: criteria.student, userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
               <hois-autocomplete flex ng-model="criteria.studentGroup" ha-attribute="id"  ha-controller="directiveControllers"
                 method="studentgroups" name="studentGroup" label="{{'lessonplan.studentGroup'}}"
                 additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}" ></hois-autocomplete>
@@ -118,4 +119,3 @@
       md-page-select></md-table-pagination>
   </div>
 </div>
-  

@@ -22,7 +22,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
  *         &lt;element name="muutusKp" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
- *         &lt;element name="klErivajadus" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="10" minOccurs="0"/&gt;
+ *         &lt;element name="klErivajadus" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="unbounded"/&gt;
+ *         &lt;element name="klTugiteenus" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="unbounded" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -34,14 +35,17 @@ import javax.xml.datatype.XMLGregorianCalendar;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "khlErivajadusedArr", propOrder = {
     "muutusKp",
-    "klErivajadus"
+    "klErivajadus",
+    "klTugiteenus"
 })
 public class KhlErivajadusedArr {
 
     @XmlElement(required = true)
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar muutusKp;
+    @XmlElement(required = true)
     protected List<String> klErivajadus;
+    protected List<String> klTugiteenus;
 
     /**
      * Gets the value of the muutusKp property.
@@ -94,6 +98,35 @@ public class KhlErivajadusedArr {
             klErivajadus = new ArrayList<String>();
         }
         return this.klErivajadus;
+    }
+
+    /**
+     * Gets the value of the klTugiteenus property.
+     * 
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the klTugiteenus property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getKlTugiteenus().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link String }
+     * 
+     * 
+     */
+    public List<String> getKlTugiteenus() {
+        if (klTugiteenus == null) {
+            klTugiteenus = new ArrayList<String>();
+        }
+        return this.klTugiteenus;
     }
 
 }

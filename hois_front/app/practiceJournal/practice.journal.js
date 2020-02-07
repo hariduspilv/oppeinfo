@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeJournalEditController', 
+angular.module('hitsaOis').controller('PracticeJournalEditController',
 function ($rootScope, $location, $route, $scope, ArrayUtils, Classifier, DataUtils, QueryUtils, dialogService, message, USER_ROLES) {
   var DAYS_AFTER_CAN_EDIT = 30;
 
@@ -15,13 +15,13 @@ function ($rootScope, $location, $route, $scope, ArrayUtils, Classifier, DataUti
   }
 
   function assertPermissionToCreate() {
-    if (!$scope.auth.isAdmin() || $scope.auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK) === -1) {
+    if (!($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher()) || $scope.auth.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK) === -1) {
       noPermission();
     }
   }
 
   function assertPermissionToEdit(entity) {
-    if (!(entity.canEdit && $scope.auth.isAdmin())) {
+    if (!(entity.canEdit && ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher()))) {
       noPermission();
     }
   }
@@ -125,8 +125,6 @@ function ($rootScope, $location, $route, $scope, ArrayUtils, Classifier, DataUti
     ArrayUtils.remove($scope.practiceJournal.moduleSubjects, item);
   };
 
-  $scope.getAstronomicalHours = DataUtils.getAstronomicalHours;
-
   $scope.moduleChanged = function (moduleId, moduleSubject) {
     var module = $scope.formState.modulesById[moduleId];
     if (module) {
@@ -134,7 +132,7 @@ function ($rootScope, $location, $route, $scope, ArrayUtils, Classifier, DataUti
       if (themeIds.indexOf(moduleSubject.theme) === -1) {
         moduleSubject.theme = null;
       }
-      
+
       setModuleCredits(moduleSubject);
 
       if (angular.isString(module.assessmentMethodsEt)) {
@@ -228,10 +226,10 @@ function ($rootScope, $location, $route, $scope, ArrayUtils, Classifier, DataUti
     $scope.practiceJournal.isHigher = $scope.formState.isHigher;
     var practiceJournal = new PracticeJournalEndpoint($scope.practiceJournal);
     if (angular.isDefined($scope.practiceJournal.id)) {
-      if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {        
+      if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {
         dialogService.confirmDialog({prompt: 'practiceJournal.prompt.isAfterDaysAfterCanEditSave'}, function () {
           practiceJournal.$update().then(function () {
-            message.info('main.messages.update.success'); 
+            message.info('main.messages.update.success');
             $location.path('/practiceJournals');
           });
         });
@@ -243,7 +241,7 @@ function ($rootScope, $location, $route, $scope, ArrayUtils, Classifier, DataUti
         });
       }
     } else {
-      if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {        
+      if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {
         dialogService.confirmDialog({prompt: 'practiceJournal.prompt.isAfterDaysAfterCanEditSave'}, function () {
           practiceJournal.$save().then(function () {
             message.info('main.messages.create.success');
@@ -264,7 +262,7 @@ function ($rootScope, $location, $route, $scope, ArrayUtils, Classifier, DataUti
       return false;
     }
     $scope.practiceJournal.isHigher = $scope.formState.isHigher;
-    if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {        
+    if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {
       dialogService.confirmDialog({prompt: 'practiceJournal.prompt.isAfterDaysAfterCanEditConfirm'}, function () {
         confirmPracticeJournal(true);
       });

@@ -13,6 +13,7 @@ public class SubjectAutocompleteCommand extends SearchCommand {
     // no final thesis and final exam subjects
     private Boolean noFinalSubjects;
     private Long userId;
+    private Long studyPeriod;
 
     public Boolean getPractice() {
         return practice;
@@ -76,6 +77,14 @@ public class SubjectAutocompleteCommand extends SearchCommand {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Long getStudyPeriod() {
+        return studyPeriod;
+    }
+
+    public void setStudyPeriod(Long studyPeriod) {
+        this.studyPeriod = studyPeriod;
     }
 
 }

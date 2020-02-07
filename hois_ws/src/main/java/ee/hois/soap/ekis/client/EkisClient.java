@@ -88,11 +88,12 @@ public class EkisClient {
                     request.getStEkap(), request.getStHours(),
                     request.getStModule(), request.getOrgName(),
                     optional(request.getOrgCode()), request.getOrgContactName(),
-                    optional(request.getOrgTel()), request.getOrgEmail(),
+                    optional(request.getOrgTel()), optional(request.getOrgEmail()),
                     request.getOrgTutorName(), optional(request.getOrgTutorTel()),
-                    optional(request.getOrgTutorEmail()), request.getProgramme(),
+                    optional(request.getOrgTutorEmail()), optional(request.getProgramme()),
                     request.getStartDate(), optional(request.getEndDate()),
-                    request.getSchoolTutorId(), request.getPlace());
+                    request.getSchoolTutorId(), request.getPlace(),
+                    optional(request.getOutcomes()), optional(request.getAim()));
         });
         return new RegisterPracticeContractResponse(ctx, result);
     }

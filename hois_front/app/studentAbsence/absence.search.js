@@ -5,12 +5,12 @@ angular.module('hitsaOis').controller('StudentAbsenceController',
     // same constant that is in journal.edit.js
     var LESSONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
 
-    QueryUtils.createQueryForm($scope, '/absences', {order: '-sa.inserted', isAccepted: false});
+    QueryUtils.createQueryForm($scope, '/absences', {order: '-sa.inserted', status: 'isNotAccepted'});
     DataUtils.convertStringToDates($scope.criteria, ['validFrom', 'validThru']);
     $scope.auth = $route.current.locals.auth;
-    $scope.criteria.status = 'isNotAccepted';
-    $scope.criteria.isAccepted = false;
-    $scope.criteria.isRejected = false;
+    $scope.statusChanged = statusChanged;
+
+    statusChanged();
 
     var loadData = $scope.loadData;
     $scope.loadData = function() {
@@ -35,7 +35,7 @@ angular.module('hitsaOis').controller('StudentAbsenceController',
     $scope.studyYears = QueryUtils.endpoint('/autocomplete/studyYears').query();
     $scope.studyYears.$promise.then(function() {
       var currentStudyYear = DataUtils.getCurrentStudyYearOrPeriod($scope.studyYears);
-      $scope.criteria.studyYear = currentStudyYear ? currentStudyYear.id : undefined;
+      $scope.criteria.studyYear = !$scope.criteria.studyYear && currentStudyYear ? currentStudyYear.id : $scope.criteria.studyYear;
 
       if($scope.criteria.studyYear) {
         $timeout($scope.loadData);
@@ -43,24 +43,6 @@ angular.module('hitsaOis').controller('StudentAbsenceController',
         message.error('studyYear.missing');
       }
     });
-
-    $scope.statusChanged = function () {
-      $scope.criteria.isAccepted = null;
-      $scope.criteria.isRejected = null;
-
-      switch ($scope.criteria.status) {
-        case 'accepted':
-          $scope.criteria.isAccepted = true;
-          break;
-        case 'rejected':
-          $scope.criteria.isRejected = true;
-          break;
-        case 'isNotAccepted':
-          $scope.criteria.isAccepted = false;
-          $scope.criteria.isRejected = false;
-          break;
-      }
-    };
 
     var AcceptEndpoint = QueryUtils.endpoint('/absences/accept');
     $scope.accept = function (absence) {
@@ -219,4 +201,22 @@ angular.module('hitsaOis').controller('StudentAbsenceController',
     $scope.studyYearChanged = function() {
       $scope.criteria.studyPeriod = undefined;
     };
+
+    function statusChanged() {
+      $scope.criteria.isAccepted = null;
+      $scope.criteria.isRejected = null;
+
+      switch ($scope.criteria.status) {
+        case 'accepted':
+          $scope.criteria.isAccepted = true;
+          break;
+        case 'rejected':
+          $scope.criteria.isRejected = true;
+          break;
+        case 'isNotAccepted':
+          $scope.criteria.isAccepted = false;
+          $scope.criteria.isRejected = false;
+          break;
+      }
+    }
   }]);

@@ -12,6 +12,8 @@ public class SubjectAnswerDto {
     private Long answers;
     private LocalDate startDate;
     private LocalDate endDate;
+    private AutocompleteResult teacher;
+    private Boolean isSubject;
     
     public AutocompleteResult getName() {
         return name;
@@ -48,6 +50,18 @@ public class SubjectAnswerDto {
     }
     public void setStartDate(LocalDate startDate) {
         this.startDate = startDate;
+    }
+    public AutocompleteResult getTeacher() {
+        return teacher;
+    }
+    public void setTeacher(AutocompleteResult teacher) {
+        this.teacher = teacher;
+    }
+    public Boolean getIsSubject() {
+        return isSubject;
+    }
+    public void setIsSubject(Boolean isSubject) {
+        this.isSubject = isSubject;
     }
 
 }

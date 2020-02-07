@@ -39,7 +39,7 @@ public class ModuleProtocolStudentDto {
         ModuleProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent, new ModuleProtocolStudentDto(),
                 "protocolStudentHistories");
         dto.setStudentId(protocolStudent.getStudent().getId());
-        dto.setFullname(PersonUtil.fullname(protocolStudent.getStudent()));
+        dto.setFullname(PersonUtil.fullnameOptionalGuest(protocolStudent.getStudent()));
         dto.setIdcode(protocolStudent.getStudent().getPerson().getIdcode());
         dto.setStatus(EntityUtil.getCode(protocolStudent.getStudent().getStatus()));
 

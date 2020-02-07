@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.poll;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class DatasetOverride {
@@ -13,8 +14,15 @@ public class DatasetOverride {
         this.sum = sum;
     }
     
+    public DatasetOverride(List<QuestionResponsePairDto> text, Long sum, BigDecimal averageWeight) {
+        this.pointBorderColor = text;
+        this.sum = sum;
+        this.average = averageWeight;
+    }
+    
     private List<QuestionResponsePairDto> pointBorderColor;
     private Long sum;
+    private BigDecimal average;
 
     public List<QuestionResponsePairDto> getPointBorderColor() {
         return pointBorderColor;
@@ -30,5 +38,13 @@ public class DatasetOverride {
 
     public void setSum(Long sum) {
         this.sum = sum;
+    }
+
+    public BigDecimal getAverage() {
+        return average;
+    }
+
+    public void setAverage(BigDecimal average) {
+        this.average = average;
     }
 }

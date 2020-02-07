@@ -5,7 +5,7 @@ import java.util.List;
 public class ReportTable {
 
     private List<ReportStudyPeriod> studyPeriods;
-    private List<Integer> weeks;
+    private List<Short> weeks;
     private List<ReportDepartment> departments;
     
     public List<ReportStudyPeriod> getStudyPeriods() {
@@ -15,10 +15,10 @@ public class ReportTable {
         this.studyPeriods = studyPeriods;
     }
     
-    public List<Integer> getWeeks() {
+    public List<Short> getWeeks() {
         return weeks;
     }
-    public void setWeeks(List<Integer> weeks) {
+    public void setWeeks(List<Short> weeks) {
         this.weeks = weeks;
     }
     

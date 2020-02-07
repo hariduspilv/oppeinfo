@@ -1,12 +1,15 @@
 
 package ee.hois.xroad.ehis.generated;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 
 /**
@@ -19,14 +22,14 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="oppekavaKood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="oppekavaKood" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="oppekavaNimetus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oppekavaNimetusEng" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oppekavataseNimetus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="oppekavataseId" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="oppekavataseId" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="valdkond" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oppeasutusNimetus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="oppeasutusId" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="oppeasutusId" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="oppekeeled"&gt;
  *           &lt;complexType&gt;
  *             &lt;complexContent&gt;
@@ -38,8 +41,8 @@ import javax.xml.bind.annotation.XmlType;
  *             &lt;/complexContent&gt;
  *           &lt;/complexType&gt;
  *         &lt;/element&gt;
- *         &lt;element name="nominaalkestusAasta" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="nominaalkestusKuud" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="nominaalkestusAasta" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
+ *         &lt;element name="nominaalkestusKuud" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="oppekavaRyhmKood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oppekavaRyhmNimetus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oppevaldkondKood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
@@ -58,8 +61,8 @@ import javax.xml.bind.annotation.XmlType;
  *           &lt;/complexType&gt;
  *         &lt;/element&gt;
  *         &lt;element name="oppekavaStaatus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="oppekavaStaatusId" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="oppekavaStaatusMaaramineKp" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="oppekavaStaatusId" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
+ *         &lt;element name="oppekavaStaatusMaaramineKp" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
  *         &lt;element name="oppekavaVastuvotuStaatus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oppekavaVastuvotuStaatusKood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *       &lt;/sequence&gt;
@@ -99,7 +102,7 @@ import javax.xml.bind.annotation.XmlType;
 public class SaisOppekavadList {
 
     @XmlElement(required = true, nillable = true)
-    protected String oppekavaKood;
+    protected BigInteger oppekavaKood;
     @XmlElement(required = true, nillable = true)
     protected String oppekavaNimetus;
     @XmlElement(required = true, nillable = true)
@@ -107,19 +110,19 @@ public class SaisOppekavadList {
     @XmlElement(required = true, nillable = true)
     protected String oppekavataseNimetus;
     @XmlElement(required = true, nillable = true)
-    protected String oppekavataseId;
+    protected BigInteger oppekavataseId;
     @XmlElement(required = true, nillable = true)
     protected String valdkond;
     @XmlElement(required = true, nillable = true)
     protected String oppeasutusNimetus;
     @XmlElement(required = true, nillable = true)
-    protected String oppeasutusId;
+    protected BigInteger oppeasutusId;
     @XmlElement(required = true)
     protected SaisOppekavadList.Oppekeeled oppekeeled;
     @XmlElement(required = true, nillable = true)
-    protected String nominaalkestusAasta;
+    protected BigInteger nominaalkestusAasta;
     @XmlElement(required = true, nillable = true)
-    protected String nominaalkestusKuud;
+    protected BigInteger nominaalkestusKuud;
     @XmlElement(required = true, nillable = true)
     protected String oppekavaRyhmKood;
     @XmlElement(required = true, nillable = true)
@@ -137,9 +140,10 @@ public class SaisOppekavadList {
     @XmlElement(required = true, nillable = true)
     protected String oppekavaStaatus;
     @XmlElement(required = true, nillable = true)
-    protected String oppekavaStaatusId;
+    protected BigInteger oppekavaStaatusId;
     @XmlElement(required = true, nillable = true)
-    protected String oppekavaStaatusMaaramineKp;
+    @XmlSchemaType(name = "date")
+    protected XMLGregorianCalendar oppekavaStaatusMaaramineKp;
     @XmlElement(required = true, nillable = true)
     protected String oppekavaVastuvotuStaatus;
     @XmlElement(required = true, nillable = true)
@@ -150,10 +154,10 @@ public class SaisOppekavadList {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getOppekavaKood() {
+    public BigInteger getOppekavaKood() {
         return oppekavaKood;
     }
 
@@ -162,10 +166,10 @@ public class SaisOppekavadList {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setOppekavaKood(String value) {
+    public void setOppekavaKood(BigInteger value) {
         this.oppekavaKood = value;
     }
 
@@ -246,10 +250,10 @@ public class SaisOppekavadList {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getOppekavataseId() {
+    public BigInteger getOppekavataseId() {
         return oppekavataseId;
     }
 
@@ -258,10 +262,10 @@ public class SaisOppekavadList {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setOppekavataseId(String value) {
+    public void setOppekavataseId(BigInteger value) {
         this.oppekavataseId = value;
     }
 
@@ -318,10 +322,10 @@ public class SaisOppekavadList {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getOppeasutusId() {
+    public BigInteger getOppeasutusId() {
         return oppeasutusId;
     }
 
@@ -330,10 +334,10 @@ public class SaisOppekavadList {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setOppeasutusId(String value) {
+    public void setOppeasutusId(BigInteger value) {
         this.oppeasutusId = value;
     }
 
@@ -366,10 +370,10 @@ public class SaisOppekavadList {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getNominaalkestusAasta() {
+    public BigInteger getNominaalkestusAasta() {
         return nominaalkestusAasta;
     }
 
@@ -378,10 +382,10 @@ public class SaisOppekavadList {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setNominaalkestusAasta(String value) {
+    public void setNominaalkestusAasta(BigInteger value) {
         this.nominaalkestusAasta = value;
     }
 
@@ -390,10 +394,10 @@ public class SaisOppekavadList {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getNominaalkestusKuud() {
+    public BigInteger getNominaalkestusKuud() {
         return nominaalkestusKuud;
     }
 
@@ -402,10 +406,10 @@ public class SaisOppekavadList {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setNominaalkestusKuud(String value) {
+    public void setNominaalkestusKuud(BigInteger value) {
         this.nominaalkestusKuud = value;
     }
 
@@ -606,10 +610,10 @@ public class SaisOppekavadList {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getOppekavaStaatusId() {
+    public BigInteger getOppekavaStaatusId() {
         return oppekavaStaatusId;
     }
 
@@ -618,10 +622,10 @@ public class SaisOppekavadList {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setOppekavaStaatusId(String value) {
+    public void setOppekavaStaatusId(BigInteger value) {
         this.oppekavaStaatusId = value;
     }
 
@@ -630,10 +634,10 @@ public class SaisOppekavadList {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link XMLGregorianCalendar }
      *     
      */
-    public String getOppekavaStaatusMaaramineKp() {
+    public XMLGregorianCalendar getOppekavaStaatusMaaramineKp() {
         return oppekavaStaatusMaaramineKp;
     }
 
@@ -642,10 +646,10 @@ public class SaisOppekavadList {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link XMLGregorianCalendar }
      *     
      */
-    public void setOppekavaStaatusMaaramineKp(String value) {
+    public void setOppekavaStaatusMaaramineKp(XMLGregorianCalendar value) {
         this.oppekavaStaatusMaaramineKp = value;
     }
 

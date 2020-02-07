@@ -1,17 +1,15 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -27,6 +25,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.StudyPeriod;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -291,19 +290,28 @@ public class TimetableGenerationService {
         }, data);
     }
 
-    public byte[] timetableDifferenceExcel(Long timetableId) {
+    public byte[] timetableDifferenceExcel(StudyPeriod studyPeriod, LocalDate startDate) {
+        Long schoolId = EntityUtil.getId(studyPeriod.getStudyYear().getSchool());
         Map<String, Object> data = new HashMap<>();
-        Timetable currTimetable = em.getReference(Timetable.class, timetableId);
-        Long prevTimetable = findPreviousTimetable(currTimetable);
-        if (prevTimetable != null) {
-            List<TimetableDifferenceExcelDto> difference = getTimetableDifferenceForExcel(
-                    Arrays.asList(prevTimetable, EntityUtil.getId(currTimetable)), EntityUtil.getId(currTimetable),
-                    prevTimetable);
-            data.put("journals", difference);
+
+        Integer currWeekNr = studyPeriod.getWeekNrForDate(startDate);
+        if (currWeekNr != null) {
+            LocalDate prevWeekStart = startDate.minusDays(7);
+            StudyPeriod prevWeekStudyPeriod = findPreviousWeekStudyPeriod(schoolId, prevWeekStart);
+            Integer prevWeekNr = prevWeekStudyPeriod != null ? prevWeekStudyPeriod.getWeekNrForDate(prevWeekStart) : null;
+            data.put("journals", getTimetableDifferenceForExcel(studyPeriod, currWeekNr, prevWeekStudyPeriod, prevWeekNr));
         }
-        data.put("isHigherSchool",
-                Boolean.valueOf(schoolService.schoolType(EntityUtil.getId(currTimetable.getSchool())).isHigher()));
+        data.put("isHigherSchool", Boolean.valueOf(schoolService.schoolType(schoolId).isHigher()));
         return xlsService.generate("timetabledifference.xls", data);
+    }
+
+    private StudyPeriod findPreviousWeekStudyPeriod(Long schoolId, LocalDate previousWeekStart) {
+        List<StudyPeriod> data = em.createQuery("select sp from StudyPeriod sp where sp.studyYear.school.id = ?1"
+                + " and sp.startDate <= ?2 and sp.endDate >= ?2", StudyPeriod.class)
+                .setParameter(1, schoolId)
+                .setParameter(2, previousWeekStart)
+                .setMaxResults(1).getResultList();
+        return data.isEmpty() ? null : data.get(0);
     }
 
     private List<LessonTimeExcel> getLessonTimesForExcel(Timetable timetable) {
@@ -432,7 +440,13 @@ public class TimetableGenerationService {
         }
 
         Map<String, Object> result = new HashMap<>();
-        result.put("lessonsByGroups", lessonsByGroups.values());
+        result.put("lessonsByGroups", lessonsByGroups.values().stream().sorted(new Comparator<TimetablePlanExcelCell>() {
+
+            @Override
+            public int compare(TimetablePlanExcelCell o1, TimetablePlanExcelCell o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        }).collect(Collectors.toList()));
         result.put("lessonsByTeachers", lessonsByTeachers.values());
         result.put("lessonsByRooms", lessonsByRooms.values());
         result.put("lessonTimes",
@@ -446,92 +460,85 @@ public class TimetableGenerationService {
         }
     }
 
-    private Long findPreviousTimetable(Timetable timetable) {
-        LocalDate previousStart = timetable.getStartDate().with(TemporalAdjusters.previous(DayOfWeek.MONDAY));
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable t");
-        qb.requiredCriteria("t.start_date = :startDate", "startDate", previousStart);
-        qb.optionalCriteria("t.is_higher = :isHigher", "isHigher", timetable.getIsHigher());
-        qb.requiredCriteria("t.school_id = :schoolId", "schoolId", EntityUtil.getId(timetable.getSchool()));
-        List<?> data = qb.select("t.id", em).setMaxResults(1).getResultList();
-        return data.isEmpty() ? null : resultAsLong(data.get(0), 0);
-        // List<Long> prevTimetables = StreamUtil.toMappedList(r ->
-        // resultAsLong(r, 0), data);
-        // return prevTimetables.isEmpty() ? null : prevTimetables.get(0);
-    }
-
-    private List<TimetableDifferenceExcelDto> getTimetableDifferenceForExcel(List<Long> timetableIds,
-            Long currTimetableId, Long prevTimetabelId) {
-        String from = "from timetable t inner join timetable_object too on too.timetable_id = t.id"
-                + " inner join timetable_event te on te.timetable_object_id = too.id"
-                + " inner join timetable_object_student_group tosg on tosg.timetable_object_id = too.id"
-                + " inner join journal j on j.id = too.journal_id"
-                + " inner join student_group sg on sg.id = tosg.student_group_id";
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
-        qb.requiredCriteria("t.id in (:timetableIds)", "timetableIds", timetableIds);
-
-        String groupBy = "t.id, j.id, j.name_et, sg.id, sg.code, te.capacity_type_code";
-        // different string because of multiple id columns
-        String select = "t.id as timetable_id, j.id as journal_id, j.name_et, sg.id as student_group_id, sg.code, te.capacity_type_code, count(te.capacity_type_code)";
-        qb.groupBy(groupBy);
-        List<?> data = qb.select(select, em).getResultList();
-        // this and last week lesson counts by their ids
-        Map<Long, List<TimetableDifferenceExcelDto>> differencesByWeeks = data.stream()
-                .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(
-                        r -> new TimetableDifferenceExcelDto(resultAsLong(r, 1), resultAsString(r, 2),
-                                resultAsLong(r, 3), resultAsString(r, 4), resultAsString(r, 5), resultAsLong(r, 6)),
-                        Collectors.toList())));
-        
-        // key = journalId + _ + studentGroupId + _ + capacityType
-        Map<String, TimetableDifferenceExcelDto> resultMap = new HashMap<>();
-        
-        if (differencesByWeeks.get(currTimetableId) != null) {
-            List<TimetableDifferenceExcelDto> allDifferences = differencesByWeeks.get(currTimetableId);
-            if (differencesByWeeks.get(prevTimetabelId) != null) {
-                allDifferences.addAll(differencesByWeeks.get(prevTimetabelId));
-            }
-            
-            Map<Long, List<String>> teachersByJournals = getTeachersForJournals(
-                    StreamUtil.toMappedSet(TimetableDifferenceExcelDto::getJournalId, allDifferences));
-            
-            for (TimetableDifferenceExcelDto curr : differencesByWeeks.get(currTimetableId)) {
-                curr.setTeacherNames(String.join(", ", teachersByJournals.get(curr.getJournalId())));
-                resultMap.put(curr.getJournalId() + "_" + curr.getStudentGroupId() + "_" + curr.getCapacityType(), curr);
-            }
-            if (differencesByWeeks.get(prevTimetabelId) != null) {
-                for (TimetableDifferenceExcelDto prev : differencesByWeeks.get(prevTimetabelId)) {
-                    String currentKey = prev.getJournalId() + "_" + prev.getStudentGroupId() + "_" + prev.getCapacityType();
-                    TimetableDifferenceExcelDto resultRow = resultMap.get(currentKey);
-                    if (resultRow == null) {
-                        prev.setPreviousWeek(prev.getCurrentWeek());
-                        prev.setDifference(Long.valueOf(0 - prev.getCurrentWeek().longValue()));
-                        prev.setCurrentWeek(Long.valueOf(0));
-                        prev.setTeacherNames(String.join(", ", teachersByJournals.get(prev.getJournalId())));
-                        resultMap.put(currentKey, prev);
-                    } else {
-                        resultRow.setPreviousWeek(prev.getCurrentWeek());
-                        resultRow.setDifference(Long
-                                .valueOf(resultRow.getPreviousWeek().longValue() - resultRow.getCurrentWeek().longValue()));
-                    }
-                }
-            }
-        }
-
-        return resultMap.values().stream()
-                .sorted(Comparator.comparing(TimetableDifferenceExcelDto::getJournalName)
-                        .thenComparing(TimetableDifferenceExcelDto::getStudentGroup)
-                        .thenComparing(TimetableDifferenceExcelDto::getCapacityType))
-                .collect(Collectors.toList());
-    }
-
-    private Map<Long, List<String>> getTeachersForJournals(Set<Long> journalIds) {
+    private List<TimetableDifferenceExcelDto> getTimetableDifferenceForExcel(StudyPeriod currStudyPeriod,
+            Integer currWeekNr, StudyPeriod prevStudyPeriod, Integer prevWeekNr) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j"
-                + " inner join journal_teacher jt on jt.journal_id = j.id"
-                + " inner join teacher t on t.id = jt.teacher_id" + " inner join person p on p.id = t.person_id");
+                + " join (select distinct ot.lesson_plan_module_id, journal_id from journal_omodule_theme ot) jot on jot.journal_id = j.id"
+                + " join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id"
+                + " join lesson_plan lp on lp.id = lpm.lesson_plan_id"
+                + " join student_group sg on sg.id = lp.student_group_id"
+                + " left join journal_capacity jc on jc.journal_id = j.id and (j.is_capacity_diff is null or j.is_capacity_diff = false)"
+                + " left join journal_capacity_type jct on jct.id = jc.journal_capacity_type_id"
+                + " left join journal_teacher jt on jt.journal_id = j.id and j.is_capacity_diff = true"
+                + " left join journal_teacher_capacity jtc on jtc.journal_teacher_id = jt.id"
+                + " left join journal_capacity_type jct2 on jct2.id = jtc.journal_capacity_type_id"
+                + " left join classifier cl on cl.code = coalesce(jct2.capacity_type_code, jct.capacity_type_code)");
+
+        String filter = "(coalesce(jtc.study_period_id, jc.study_period_id) = :currPeriod"
+                + " and coalesce(jtc.week_nr, jc.week_nr) = :currWeekNr)";
+        qb.parameter("currPeriod", EntityUtil.getId(currStudyPeriod));
+        qb.parameter("currWeekNr", currWeekNr);
+        if (prevWeekNr != null) {
+            filter += " or (coalesce(jtc.study_period_id, jc.study_period_id) = :prevPeriod"
+                    + " and coalesce(jtc.week_nr, jc.week_nr) = :prevWeekNr)";
+            qb.parameter("prevPeriod", EntityUtil.getId(prevStudyPeriod));
+            qb.parameter("prevWeekNr", prevWeekNr);
+        }
+        qb.filter(filter);
+
+        qb.groupBy(" j.id, jt.id, jtc.id, jc.id, cl.code");
+        qb.sort("j.name_et");
+        String select = "j.id journal_id, j.name_et, string_agg(sg.code, ', ' order by sg.code), jt.id jt_id,"
+                + " cl.code capacity_type_code, coalesce(jtc.hours, jc.hours) hours,"
+                + " coalesce(jtc.week_nr, jc.week_nr) week_nr";
+        List<?> data = qb.select(select, em).getResultList();
+        return new ArrayList<>(mapDifferenceExcelDtos(data, currWeekNr, prevWeekNr).values());
+    }
+
+    private Map<String, TimetableDifferenceExcelDto> mapDifferenceExcelDtos(List<?> data, Integer currWeekNr,
+            Integer prevWeekNr) {
+        Set<Long> journalIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
+        Map<Long, Map<Long, String>> teachers = !journalIds.isEmpty() ? getTeachersForJournals(journalIds) : new HashMap<>();
+
+        // key = journalId + _ + journalTeacherId + _ + capacityType
+        Map<String, TimetableDifferenceExcelDto> resultMap = new LinkedHashMap<>();
+        for (Object r : data) {
+            Long journalId = resultAsLong(r, 0);
+            String journalName = resultAsString(r, 1);
+            String studentGroups = resultAsString(r, 2);
+            Long journalTeacherId = resultAsLong(r, 3);
+            String capacityType = resultAsString(r, 4);
+            Long hours = resultAsLong(r, 5);
+            Integer weekNr = resultAsInteger(r, 6);
+
+            String key = journalId + "_" + journalTeacherId + "_" + capacityType;
+            TimetableDifferenceExcelDto result = resultMap.get(key);
+            if (result == null) {
+                result = new TimetableDifferenceExcelDto(journalId, journalName, studentGroups, capacityType);
+                Map<Long, String> journalTeachers = teachers.containsKey(journalId) ? teachers.get(journalId) : new HashMap<>();
+                result.setTeacherNames(journalTeacherId != null ?
+                        journalTeachers.get(journalTeacherId) : String.join(", ", journalTeachers.values()));
+            }
+            if (weekNr == currWeekNr) result.setCurrentWeek(hours);
+            if (weekNr == prevWeekNr) result.setPreviousWeek(hours);
+            result.setDifference(Long.valueOf(result.getCurrentWeek().longValue() - result.getPreviousWeek().longValue()));
+            resultMap.put(key, result);
+        }
+        return resultMap;
+    }
+
+    private Map<Long, Map<Long, String>> getTeachersForJournals(Set<Long> journalIds) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j"
+                + " join journal_teacher jt on jt.journal_id = j.id"
+                + " join teacher t on t.id = jt.teacher_id"
+                + " join person p on p.id = t.person_id");
 
         qb.requiredCriteria("j.id in (:journalIds)", "journalIds", journalIds);
+        qb.sort("p.lastname, p.firstname");
 
-        List<?> data = qb.select("j.id, p.firstname, p.lastname", em).getResultList();
-        return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors
-                .mapping(r -> PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)), Collectors.toList())));
+        List<?> data = qb.select("j.id journal_id, jt.id jt_id, p.firstname, p.lastname", em).getResultList();
+        return StreamUtil.nullSafeList(data).stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors
+                .toMap(r -> resultAsLong(r, 1), r -> PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)),
+                        (v1, v2) -> v1, LinkedHashMap::new)));
     }
 }

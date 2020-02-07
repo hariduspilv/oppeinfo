@@ -17,6 +17,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.postgresql.util.PSQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
@@ -108,6 +109,10 @@ public class ControllerErrorHandler {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
             SingleMessageWithParamsException singleMessageWithParamsException = (SingleMessageWithParamsException)e;
             info = ErrorInfo.of(singleMessageWithParamsException.getMessage(), singleMessageWithParamsException.getParams());
+        } else if (e instanceof TaskRejectedException) {
+            status = HttpStatus.TOO_MANY_REQUESTS;
+            // Can it be other case?
+            info = ErrorInfo.of("concurrent.requestRejectedNoSpace");
         } else {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
             log.error("Error occured during request handling:", e);

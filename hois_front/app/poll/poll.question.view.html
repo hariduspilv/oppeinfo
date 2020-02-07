@@ -1,10 +1,10 @@
-<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+<div class="ois-form-layout-padding ois-form-layout form-readonly" ng-cloak>
     <div flex>
         <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin" ng-model-options="{allowInvalid: true}">
             <fieldset>
                 <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'poll.questions.question' | translate}}</legend>
-                <div style="padding-top: 8px"></div>
-                <div layout="column" flex class="form-readonly">
+                <div layout="column" flex>
+                    <div style="padding-top: 12px"></div>
                     <div layout="row">
                         <div layout="column" flex="50">
                             <md-input-container>
@@ -19,9 +19,19 @@
                             </md-input-container>
                         </div>
                     </div>
+                    <div style="padding-top: 12px"></div>
+                    <div layout="row">
+                        <div layout="column" flex="100">
+                            <md-input-container>
+                                <label class="textInput">{{'poll.questions.helpText' | translate}}</label>
+                                <hois-value value="formState.question.addInfoEt"></hois-value>
+                            </md-input-container>
+                        </div>
+                    </div>
                 </div>
                 <div ng-if="formState.question.type.code === 'VASTUS_M' || formState.question.type.code ===  'VASTUS_R' || formState.question.type.code === 'VASTUS_V' || formState.question.type.code === 'VASTUS_S'" layout="column" flex>
-                    <div ng-repeat="item in formState.question.answers track by $index" class="occupation-row align-center" layout="row" flex="100">
+                    <div ng-repeat="item in formState.question.answers track by $index" layout="column">
+                        <div style="padding-top: 12px"></div>
                         <div layout="row" layout-align="start center" flex="100">
                             <div layout="row" flex="20">
                                 <md-input-container flex>

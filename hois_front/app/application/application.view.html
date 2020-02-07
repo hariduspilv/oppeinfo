@@ -56,7 +56,7 @@
         </div>
         <div>&nbsp;</div>
       </div>
-      
+
       <div ng-if="application.canEditStudent && application.id > 0
           && application.status === 'AVALDUS_STAATUS_KINNITAM' && application.type === 'AVALDUS_LIIK_TUGI'
           && ((auth.isStudent() && application.isAdult) || auth.isParent() || (auth.isAdmin() && isAuthorized('ROLE_OIGUS_K_TEEMAOIGUS_AVALDUS')))">
@@ -93,7 +93,7 @@
       <div layout="row" layout-xs="column">
         <md-button ng-if="canChange" ng-href="#/applications/{{application.id}}/edit?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
         <div ng-include="'application/templates/action.buttons.html'"></div>
-        <md-button ng-if="auth.isStudent() || auth.isParent()" ng-click="back('#/applications/student')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="auth.isStudent() || auth.isParent()" ng-click="back('#/applications/student', applicationForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
         <md-button ng-if="!(auth.isStudent() || auth.isParent())" ng-click="back('#/applications/', applicationForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>

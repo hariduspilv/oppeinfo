@@ -22,12 +22,10 @@
                     <label>{{'subjectStudyPeriod.studentGroup' | translate}}</label>
                     <hois-value value="studentGroup.code"></hois-value>
                 </md-input-container>
-
                 <md-input-container  class="readonly top-margin"  flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                     <label>{{'subjectStudyPeriod.course' | translate}}</label>
                     <hois-value value="course"></hois-value>
                 </md-input-container>
-
             </div>
             <div layout="row" layout-sm="column" layout-xs="column" class="form-readonly">
                 <md-input-container flex="25" flex-sm="100" flex-xs="100" >
@@ -38,6 +36,15 @@
                     <label>{{'subjectStudyPeriod.curriculumStudyPeriod.label' | translate}}</label>
                     <hois-value value="'subjectStudyPeriod.curriculumStudyPeriod.value' | translate:curriculumStudyPeriod"></hois-value>
                 </md-input-container>
+            </div>
+            <div layout="row" style="margin-top: -18px; margin-bottom: 8px;" ng-show="record.studyPeriod && studentGroup.id && studentGroup.curriculumVersionAdmissinYear">
+              <md-input-container flex="100" flex-gt-sm="25">
+                <label>{{'subjectStudyPeriod.plannedSemester' | translate}}</label>
+                <md-select ng-model="semester">
+                  <md-option md-option-empty></md-option>
+                  <md-option ng-value="$index + 1" ng-repeat="val in semesters track by $index">{{'subjectStudyPeriod.semester' | translate: {number: $index + 1} }}</md-option>
+                </md-select>
+              </md-input-container>
             </div>
             <div flex="70" layout="row" class="common-label" md-colors="{color: 'background-400'}">
               <span ng-repeat="capacity in capacityTypes">
@@ -96,14 +103,56 @@
                             <td class="bold">{{capacitiesUtil.capacitiesSumBySubject(subject.id)}}</td>
                         </tr>
                     </tbody>
+                    <tbody ng-if="!!semester && getSubjectsBySemester().length > 0">
+                      <tr class="bold-top-line" style="background-color: rgb(248, 187, 208);">
+                        <td>
+                          <span class="bold">{{'subjectStudyPeriod.unplannedSubjects' | translate}}</span>
+                        </td>
+                        <td ng-repeat="capacityType in capacityTypes" class="bold">{{capacityType.value.toUpperCase()}}</td>
+                        <td class="bold">{{'subjectStudyPeriod.overall' | translate}}</td>
+                      </tr>
+                      <tr ng-repeat="subject in getSubjectsBySemester() | orderBy: ['-semester', unplannedSubjectOrderBy]" style="background-color: rgb(252, 228, 236);">
+                        <td>
+                          <table class="no-border">
+                            <tr>
+                              <td>
+                                <span style="margin-right: 16px;" ng-style="{'font-style': subject.semester === semester ? 'normal' : 'italic'}">
+                                  <md-tooltip ng-if="subject.semester !== semester" md-direction="right">
+                                    {{'subjectStudyPeriod.semester' | translate: {number: subject.semester} }}
+                                  </md-tooltip>
+                                  {{subject.code}} - {{currentLanguageNameField(subject.subject)}} ({{subject.credits | number:1}} EAP)
+                                </span>
+                              </td>
+                              <td>
+                                <a style="float: initial" ng-href="#/subjectStudyPeriod/new?subjectId={{subject.subject.id}}&studentGroupId={{record.studentGroup}}&studyPeriodId={{record.studyPeriod}}">{{'subjectStudyPeriod.addTeachers' | translate}}</a>
+                                <span ng-if="subject.subjectStudyPeriods.length > 0">või</span>
+                                <md-input-container ng-if="subject.subjectStudyPeriods.length > 0">
+                                  <label>{{'subjectStudyPeriod.selectExisting' | translate}}</label>
+                                  <md-select ng-model="subject.selectedPair" ng-change="selectedPair(subject)" style="padding: 0;">
+                                    <md-option md-option-empty></md-option>
+                                    <md-option ng-value="pair.id" ng-repeat="pair in subject.subjectStudyPeriods">{{currentLanguageNameField(pair)}}</md-option>
+                                  </md-select>
+                                </md-input-container>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                        <td ng-repeat="type in capacityTypes">
+                          <span ng-repeat="capacity in subject.plan.capacities | filter:{ capacityType: type.code } : true">
+                            {{capacity.hours}}
+                          </span>
+                        </td>
+                        <td></td>
+                      </tr>
+                    </tbody>
                     <tr class="bold bold-top-line" md-colors="{background: 'background-200'}">
-                        <td>{{'subjectStudyPeriod.overall' | translate | uppercase}}</td>
-                        <td ng-repeat="type in capacityTypes" >{{capacitiesUtil.capacitiesSumByType(type.code)}}</td>
-                        <td >{{capacitiesUtil.capacitiesSumOverall()}}</td>
+                      <td>{{'subjectStudyPeriod.overall' | translate | uppercase}}</td>
+                      <td ng-repeat="type in capacityTypes" >{{capacitiesUtil.capacitiesSumByType(type.code)}}</td>
+                      <td >{{capacitiesUtil.capacitiesSumOverall()}}</td>
                     </tr>
                 </table>
             </md-table-container>
-            <br>
+            <div>&nbsp;</div>
         </div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
@@ -114,12 +163,35 @@
 </div>
 
 <style>
-    tr.bold-top-line,
-    tr.bold-top-line td {
-        border-top: #525252 2px solid !important;
-    }
-    .subject-study-period td,
-    .subject-study-period th {
-        border-bottom: none !important;
-    }
+  tr.bold-top-line,
+  tr.bold-top-line td {
+      border-top: #525252 2px solid !important;
+  }
+
+  .subject-study-period td,
+  .subject-study-period th {
+      border-bottom: none !important;
+  }
+
+  table.no-border {
+    width: 100%;
+  }
+
+  table.no-border,
+  table.no-border tr,
+  table.no-border td {
+    border: none;
+    border-collapse: collapse;
+    padding: 0;
+  }
+
+  table.no-border td:nth-child(2) {
+    text-align: right;
+  }
+
+  table.no-border td:nth-child(2) md-input-container {
+    text-align: left;
+    max-width: 350px;
+    min-width: 200px;
+  }
 </style>

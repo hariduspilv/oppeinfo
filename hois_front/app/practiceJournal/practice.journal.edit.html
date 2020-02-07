@@ -3,7 +3,8 @@
     <form name="practiceJournalForm" ng-submit="save()" novalidate layout="column">
       <div flex>
         <hois-autocomplete ng-model="practiceJournal.student" method="students" name="student" label="student.label"
-          additional-query-params="{active: true, higher: formState.isHigher, showStudentGroup: true}" required ng-disabled="practiceJournal.id"></hois-autocomplete>
+          additional-query-params="{active: true, higher: formState.isHigher, showStudentGroup: true, userId: auth.isLeadingTeacher() ? auth.user : null}"
+          required ng-disabled="practiceJournal.id"></hois-autocomplete>
       </div>
 
       <div ng-if="practiceJournal.student && formState.student" class="form-readonly" layout="column">
@@ -59,19 +60,13 @@
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100">
-          <label class="textInput">{{'practiceJournal.acadHours' | translate}}</label>
+          <label class="textInput">{{'practiceJournal.astroHours' | translate}}</label>
           <input type="number" name="hours[{{$index}}]" ng-model="module.hours" min="0" max="32767" pattern="^\d+$" ng-change="updateCredits(module, $index)" ng-disabled="practiceJournal.contract" required>
           <div ng-messages="practiceJournalForm['hours['+$index+']'].$error" ng-show="practiceJournalForm['hours['+$index+']'].$dirty">
             <div ng-message="pattern">
               {{'main.messages.error.integer' | translate}}
             </div>
           </div>
-        </md-input-container>
-
-        <md-input-container flex="{{practiceJournal.contract ? '20' : '10'}}" flex-sm="100" flex-xs="100">
-          <label>{{'practiceJournal.astroHours' | translate}}</label>
-          <br>
-          <hois-value value="getAstronomicalHours(module.hours)"></hois-value>
         </md-input-container>
 
         <div flex="10" flex-sm="100" flex-xs="100" class="center" ng-if="!practiceJournal.contract">
@@ -95,19 +90,13 @@
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100">
-          <label class="textInput">{{'practiceJournal.acadHours' | translate}}</label>
+          <label class="textInput">{{'practiceJournal.astroHours' | translate}}</label>
           <input type="number" name="hours[{{$index}}]" ng-model="subject.hours" min="0" max="32767" pattern="^\d+$" ng-change="updateCredits(subject, $index)" ng-disabled="practiceJournal.contract" required>
           <div ng-messages="practiceJournalForm['hours['+$index+']'].$error" ng-show="practiceJournalForm['hours['+$index+']'].$dirty">
             <div ng-message="pattern">
               {{'main.messages.error.integer' | translate}}
             </div>
           </div>
-        </md-input-container>
-
-        <md-input-container flex="10" flex-sm="100" flex-xs="100">
-          <label>{{'practiceJournal.astroHours' | translate}}</label>
-          <br>
-          <hois-value value="getAstronomicalHours(subject.hours)"></hois-value>
         </md-input-container>
 
         <div flex="{{practiceJournal.contract ? '20' : '10'}}" flex-sm="100" flex-xs="100" class="center">
@@ -138,7 +127,7 @@
           <input type="text" ng-model="practiceJournal.practicePlace" md-maxlength="255" required ng-disabled="practiceJournal.contract">
         </md-input-container>
       </div>
-      
+
       <hois-autocomplete ng-model="practiceJournal.teacher" method="teachers" name="techers" label="contract.schoolSupervisor" additional-query-params="{valid: true}" required ng-disabled="practiceJournal.contract"></hois-autocomplete>
 
       <div layout="row" flex>
@@ -156,7 +145,7 @@
       </div>
 
       <div layout="row" layout-xs="column">
-        <md-button ng-if="(!practiceJournal.id || (practiceJournal.status !== 'PAEVIK_STAATUS_K' && practiceJournal.canEdit)) && !practiceJournal.contract" 
+        <md-button ng-if="(!practiceJournal.id || (practiceJournal.status !== 'PAEVIK_STAATUS_K' && practiceJournal.canEdit)) && !practiceJournal.contract"
           class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
         <md-button ng-if="practiceJournal.id && practiceJournal.canDelete" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="back('#/practiceJournals/', practiceJournalForm)">{{'main.button.back' | translate}}</md-button>

@@ -4,7 +4,7 @@
       <form name="contractForm" layout="column" novalidate>
       <div layout="row" layout-sm="column" layout-xs="column" flex>
         <div layout="column" flex="50" flex-xs="100" class="form-readonly">
-          <br>
+          <div>&nbsp;</div>
           <md-input-container>
             <label>{{'student.label' | translate}}</label>
             <hois-value value="currentLanguageNameField(contract.student)"></hois-value>
@@ -27,7 +27,6 @@
               <th md-column width="35%">{{'module.practice' | translate}}</th>
               <th md-column width="35%">{{'contract.theme' | translate}}</th>
               <th md-column width="10%">{{'contract.creditsEKAP' | translate}}</th>
-              <th md-column width="10%">{{'contract.acadHours' | translate}}</th>
               <th md-column width="10%">{{'contract.astroHours' | translate}}</th>
             </tr>
           </thead>
@@ -37,7 +36,6 @@
               <td md-cell>{{currentLanguageNameField(module.theme)}}</td>
               <td md-cell>{{::module.credits}}</td>
               <td md-cell>{{::module.hours}}</td>
-              <td md-cell>{{getAstronomicalHours(module.hours)}}</td>
             </tr>
           </tbody>
         </table>
@@ -49,7 +47,6 @@
             <tr md-row>
               <th md-column width="70%">{{'contract.subject' | translate}}</th>
               <th md-column width="10%">{{'contract.creditsEAP' | translate}}</th>
-              <th md-column width="10%">{{'contract.acadHours' | translate}}</th>
               <th md-column width="10%">{{'contract.astroHours' | translate}}</th>
             </tr>
           </thead>
@@ -58,7 +55,6 @@
               <td md-cell>{{currentLanguageNameField(subject.subject)}}</td>
               <td md-cell>{{::subject.credits}}</td>
               <td md-cell>{{::subject.hours}}</td>
-              <td md-cell>{{getAstronomicalHours(subject.hours)}}</td>
             </tr>
           </tbody>
         </table>

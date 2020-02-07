@@ -9,7 +9,7 @@
       <md-option ng-value="val.id" ng-repeat="val in periods">{{currentLanguageNameField(val)}}</md-option>
     </md-select>
   </md-input-container>
-  <br>
+  <div>&nbsp;</div>
   <hois-autocomplete ng-model="controller.student" url="/declarations/students" name="student"
       label="declaration.student" additional-query-params="{nextPeriod: nextPeriod.id === controller.period}" required>
   </hois-autocomplete>

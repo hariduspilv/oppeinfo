@@ -8,21 +8,20 @@
             <label class="textInput">{{'moduleProtocol.studyYear' | translate}}</label>
             <hois-select ng-model="formState.studyYear" type="studyyear" select-current-study-year required autofocus></hois-select>
           </md-input-container>
-          
+
           <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <hois-autocomplete flex ng-model="formState.teacher"  ha-attribute="id" ha-controller="directiveControllers" 
-              method="teachers" label="{{auth.higher ? 'teacher.labelHigher' : 'teacher.labelVocational'}}" 
+            <hois-autocomplete flex ng-model="formState.teacher"  ha-attribute="id" ha-controller="directiveControllers"
+              method="teachers" label="{{auth.higher ? 'teacher.labelHigher' : 'teacher.labelVocational'}}"
               additional-query-params="{valid: true, id: auth.isTeacher() ? auth.teacher : null,
                 selectedTeacherId: auth.isTeacher() ? auth.teacher : null}"
               ng-disabled="auth.isTeacher()" required></hois-autocomplete>
-
           </div>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <div flex>
-            <hois-autocomplete flex ng-model="formState.curriculumVersionObject" method="curriculumversions" label="moduleProtocol.curriculumVersion" 
-              additional-query-params="{higher: false, closed: false}" required></hois-autocomplete>
+            <hois-autocomplete flex ng-model="formState.curriculumVersionObject" method="curriculumversions" label="moduleProtocol.curriculumVersion"
+              additional-query-params="{higher: false, closed: false, userId: auth.isLeadingTeacher() ? auth.user : null}" required></hois-autocomplete>
           </div>
         </div>
 

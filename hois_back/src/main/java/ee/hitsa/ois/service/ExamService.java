@@ -287,9 +287,9 @@ public class ExamService {
                 "join declaration_subject ds on sspes.declaration_subject_id = ds.id " +
                 "join declaration d on ds.declaration_id = d.id " +
                 "join student s on d.student_id = s.id join person p on s.person_id = p.id " +
-                "join curriculum_version cv on s.curriculum_version_id = cv.id "+
-                "join curriculum c on cv.curriculum_id = c.id "+
-                "left join student_group sg on s.student_group_id = sg.id "+
+                "left join curriculum_version cv on s.curriculum_version_id = cv.id " +
+                "left join curriculum c on cv.curriculum_id = c.id " +
+                "left join student_group sg on s.student_group_id = sg.id " +
                 "where sspes.subject_study_period_exam_id = ?1 order by p.lastname, p.firstname")
             .setParameter(1, examId)
             .getResultList();
@@ -313,8 +313,8 @@ public class ExamService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from declaration_subject ds " +
                 "join declaration d on ds.declaration_id = d.id " +
                 "join student s on d.student_id = s.id join person p on s.person_id = p.id " +
-                "join curriculum_version cv on s.curriculum_version_id = cv.id " +
-                "join curriculum c on cv.curriculum_id = c.id " +
+                "left join curriculum_version cv on s.curriculum_version_id = cv.id " +
+                "left join curriculum c on cv.curriculum_id = c.id " +
                 "left join student_group sg on s.student_group_id = sg.id").sort("p.lastname", "p.firstname");
         qb.requiredCriteria("ds.subject_study_period_id = :subjectStudyPeriod", "subjectStudyPeriod", EntityUtil.getId(exam.getSubjectStudyPeriod()));
         qb.requiredCriteria("d.status_code = :declarationStatus", "declarationStatus", DeclarationStatus.OPINGUKAVA_STAATUS_K);

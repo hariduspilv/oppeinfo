@@ -22,8 +22,12 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *       &lt;sequence&gt;
  *         &lt;element name="oppimaAsumKp" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
  *         &lt;element name="esimSemestriLoppKp" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
- *         &lt;element name="kursus" type="{http://www.w3.org/2001/XMLSchema}positiveInteger"/&gt;
+ *         &lt;element name="kursus" type="{http://www.w3.org/2001/XMLSchema}positiveInteger" minOccurs="0"/&gt;
  *         &lt;element name="oppekava" type="{http://www.w3.org/2001/XMLSchema}positiveInteger"/&gt;
+ *         &lt;choice&gt;
+ *           &lt;element name="oppetooToimumiskoht" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *           &lt;element name="opibValismaal" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}ehisBoolean" minOccurs="0"/&gt;
+ *         &lt;/choice&gt;
  *         &lt;element name="klOppekeel" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="klOppevorm" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="klOppekoormus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
@@ -55,6 +59,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "esimSemestriLoppKp",
     "kursus",
     "oppekava",
+    "oppetooToimumiskoht",
+    "opibValismaal",
     "klOppekeel",
     "klOppevorm",
     "klOppekoormus",
@@ -80,12 +86,13 @@ public class KhlKorgharidusLisa {
     protected XMLGregorianCalendar oppimaAsumKp;
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar esimSemestriLoppKp;
-    @XmlElement(required = true)
     @XmlSchemaType(name = "positiveInteger")
     protected BigInteger kursus;
     @XmlElement(required = true)
     @XmlSchemaType(name = "positiveInteger")
     protected BigInteger oppekava;
+    protected String oppetooToimumiskoht;
+    protected String opibValismaal;
     @XmlElement(required = true)
     protected String klOppekeel;
     @XmlElement(required = true)
@@ -205,6 +212,54 @@ public class KhlKorgharidusLisa {
      */
     public void setOppekava(BigInteger value) {
         this.oppekava = value;
+    }
+
+    /**
+     * Gets the value of the oppetooToimumiskoht property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getOppetooToimumiskoht() {
+        return oppetooToimumiskoht;
+    }
+
+    /**
+     * Sets the value of the oppetooToimumiskoht property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setOppetooToimumiskoht(String value) {
+        this.oppetooToimumiskoht = value;
+    }
+
+    /**
+     * Gets the value of the opibValismaal property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getOpibValismaal() {
+        return opibValismaal;
+    }
+
+    /**
+     * Sets the value of the opibValismaal property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setOpibValismaal(String value) {
+        this.opibValismaal = value;
     }
 
     /**

@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.xml.bind.JAXBException;
 
+import ee.hitsa.ois.domain.school.School;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -216,28 +217,28 @@ public class TimetableController {
     }
 
     @GetMapping("/group/{school:\\d+}/{studyYear:\\d+}")
-    public List<GroupTimetableDto> groupTimetables(@PathVariable("school") Long schoolId,
+    public List<GroupTimetableDto> groupTimetables(@WithEntity("school") School school,
             @PathVariable("studyYear") Long studyYearId) {
-        return timetableService.groupTimetables(schoolId, studyYearId);
+        return timetableService.groupTimetables(school, studyYearId);
     }
 
     @GetMapping("/teacher/{school:\\d+}/{studyYear:\\d+}")
-    public List<TeacherTimetableDto> teacherTimetables(@PathVariable("school") Long schoolId,
+    public List<TeacherTimetableDto> teacherTimetables(@WithEntity("school") School school,
             @PathVariable("studyYear") Long studyYearId) {
-        return timetableService.teacherTimetables(schoolId, studyYearId);
+        return timetableService.teacherTimetables(school, studyYearId);
     }
 
     @GetMapping("/room/{school:\\d+}/{studyYear:\\d+}")
-    public List<RoomTimetableDto> roomTimetables(@PathVariable("school") Long schoolId,
+    public List<RoomTimetableDto> roomTimetables(@WithEntity("school") School school,
             @PathVariable("studyYear") Long studyYearId) {
-        return timetableService.roomTimetables(schoolId, studyYearId);
+        return timetableService.roomTimetables(school, studyYearId);
     }
 
     @GetMapping("/timetableDifference.xls")
-    public void timetableDifferenceExcel(HoisUserDetails user, @RequestParam("id") Long id,
-            HttpServletResponse response) throws IOException {
-        UserUtil.assertIsSchoolAdmin(user);
-        HttpUtil.xls(response, "timetableDifference.xls", timetableGenerationService.timetableDifferenceExcel(id));
+    public void timetableDifferenceExcel(HoisUserDetails user, @RequestParam("studyPeriod") @WithEntity("studyPeriod") StudyPeriod studyPeriod,
+            @RequestParam("startDate") LocalDate startDate, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user, studyPeriod.getStudyYear().getSchool());
+        HttpUtil.xls(response, "timetableDifference.xls", timetableGenerationService.timetableDifferenceExcel(studyPeriod, startDate));
     }
 
     @GetMapping("/timetablePlan.xlsx")
@@ -247,6 +248,17 @@ public class TimetableController {
         HttpUtil.xls(response, "timetablePlan.xlsx", timetableGenerationService.timetablePlanExcel(id));
     }
 
+    /**
+     * Get exported week from timetable with teachers, classes, rooms, lessons
+     * Parameters can be set in Untis after importing this file
+     * 
+     * @param user
+     * @param startDate
+     * @param endDate
+     * @param studyPeriod
+     * @param response
+     * @throws IOException
+     */
     @GetMapping("/exportTimetable")
     public void exportTimetable(HoisUserDetails user, @RequestParam("startDate") LocalDate startDate,
             @RequestParam("endDate") LocalDate endDate,
@@ -262,12 +274,27 @@ public class TimetableController {
         }
     }
     
+    /**
+     * Check if student group teachers, journals and journal teachers have untis codes.
+     * 
+     * @param user
+     * @param startDate
+     * @param studyPeriod
+     * @return Possible errors
+     */
     @GetMapping("/exportTimetableCheck")
     public UntisCodeError exportTimetableCheck(HoisUserDetails user, @RequestParam("startDate") LocalDate startDate, @RequestParam("studyPeriod") @WithEntity("studyPeriod") StudyPeriod studyPeriod) {
     	UserUtil.assertIsSchoolAdmin(user);
     	return timetableService.checkUntiscodes(startDate, studyPeriod, user);
     }
     
+    /**
+     * Import XML file to a timetable week (mark hours, teachers, capacity).
+     * 
+     * @param user
+     * @param dto
+     * @return Possible errors in decoding and parsing XML
+     */
     @PostMapping("/importXml")
     public TimetableImportErrorDto importXml(HoisUserDetails user, @Valid @RequestBody TimetableImportDto dto) {
     	UserUtil.assertIsSchoolAdmin(user);

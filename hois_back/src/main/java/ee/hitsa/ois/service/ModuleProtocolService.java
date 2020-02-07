@@ -82,7 +82,8 @@ public class ModuleProtocolService extends AbstractProtocolService {
     public Page<ModuleProtocolSearchDto> search(HoisUserDetails user, ModuleProtocolSearchCommand cmd,
             Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from protocol p "
-                + "inner join protocol_vdata pvd on pvd.protocol_id = p.id").sort(pageable);
+                + "join protocol_vdata pvd on pvd.protocol_id = p.id "
+                + "join curriculum_version cv on cv.id = pvd.curriculum_version_id").sort(pageable);
 
         qb.filter("p.is_final = false");
         qb.filter("p.is_vocational = true");
@@ -128,8 +129,8 @@ public class ModuleProtocolService extends AbstractProtocolService {
         }
 
         Map<Long, ModuleProtocolSearchDto> dtoById = new HashMap<>();
-        Page<ModuleProtocolSearchDto> result = JpaQueryUtil
-                .pagingResult(qb, "p.id, p.protocol_nr, p.status_code, p.inserted, p.confirm_date, p.confirmer, pvd.teacher_id", em, pageable)
+        Page<ModuleProtocolSearchDto> result = JpaQueryUtil.pagingResult(qb, "p.id, p.protocol_nr, p.status_code, "
+                + "p.inserted, p.confirm_date, p.confirmer, cv.curriculum_id, pvd.teacher_id", em, pageable)
                 .map(r -> {
                     ModuleProtocolSearchDto dto = new ModuleProtocolSearchDto();
                     dto.setId(resultAsLong(r, 0));
@@ -138,7 +139,8 @@ public class ModuleProtocolService extends AbstractProtocolService {
                     dto.setInserted(resultAsLocalDate(r, 3));
                     dto.setConfirmDate(resultAsLocalDate(r, 4));
                     dto.setConfirmer(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 5)));
-                    dto.setCanEdit(Boolean.valueOf(ModuleProtocolUtil.canEdit(user, ProtocolStatus.valueOf(dto.getStatus()), resultAsLong(r, 6))));
+                    dto.setCanEdit(Boolean.valueOf(ModuleProtocolUtil.canEdit(user, ProtocolStatus.valueOf(dto.getStatus()),
+                            resultAsLong(r, 6), resultAsLong(r, 7))));
                     dtoById.put(dto.getId(), dto);
                     return dto;
                 });
@@ -274,13 +276,14 @@ public class ModuleProtocolService extends AbstractProtocolService {
         
 
         studentsQb.sort("p.firstname, p.lastname");
-        List<?> students = studentsQb.select("distinct s.id, p.firstname, p.lastname, p.idcode, s.status_code", em)
-                .getResultList();
+        List<?> students = studentsQb.select("distinct s.id, p.firstname, p.lastname, p.idcode, " +
+                "s.status_code, s.type_code", em) .getResultList();
 
         return students.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
             ModuleProtocolStudentSelectDto dto = new ModuleProtocolStudentSelectDto();
             dto.setStudentId(resultAsLong(r, 0));
-            dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+            dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2),
+                    resultAsString(r, 5)));
             dto.setIdcode(resultAsString(r, 3));
             dto.setStatus(resultAsString(r, 4));
             return dto;
@@ -289,10 +292,6 @@ public class ModuleProtocolService extends AbstractProtocolService {
 
     @org.springframework.transaction.annotation.Transactional(isolation = Isolation.SERIALIZABLE, propagation = Propagation.REQUIRES_NEW)
     public Protocol create(HoisUserDetails user, ModuleProtocolCreateForm form) {
-        SchoolService.SchoolType type = schoolService.schoolType(user.getSchoolId());
-        ModuleProtocolUtil.assertIsSchoolAdminOrTeacherResponsible(user, type.isHigher(),
-                form.getProtocolVdata().getTeacher());
-        
         Protocol protocol = EntityUtil.bindToEntity(form, new Protocol(), "protocolStudents", "protocolVdata");
         protocol.setIsFinal(Boolean.FALSE);
         protocol.setIsVocational(Boolean.TRUE);
@@ -307,6 +306,9 @@ public class ModuleProtocolService extends AbstractProtocolService {
         ProtocolVdata protocolVdata = protocolVdataFromDto(form.getProtocolVdata());
         protocolVdata.setProtocol(protocol);
         protocol.setProtocolVdata(protocolVdata);
+
+        SchoolService.SchoolType type = schoolService.schoolType(user.getSchoolId());
+        ModuleProtocolUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacherResponsible(user, protocolVdata, type.isHigher());
         return EntityUtil.save(protocol, em);
     }
 

@@ -4,21 +4,27 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsStringList;
 
+import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -62,12 +68,16 @@ import ee.hitsa.ois.web.dto.UsersSearchDto;
 @Service
 public class PersonService {
 
+    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     @Autowired
     private EntityManager em;
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
     private SchoolService schoolService;
+    @Autowired
+    private UserService userService;
 
     private static final String PERSON_FROM = "from person p " +
             "left outer join user_ u on p.id=u.person_id " +
@@ -196,62 +206,71 @@ public class PersonService {
             user.setUserSchoolRole(EntityUtil.getOptionalOne(UserSchoolRole.class, userForm.getUserRole(), em));
         }
 
-        // we are using List with two elements (object, permission) as tuple
-        List<List<String>> newRights = new ArrayList<>();
-        // ROLL_J cannot get any role which is not described in user_defaul_role
+        // ROLL_J cannot get any role which is not described in user_default_role or in extra rights map
+        Map<String, Set<String>> roleSpecificAllowedRights = new HashMap<>();
         if (ClassifierUtil.equals(Role.ROLL_J, user.getRole())) {
             // load default permissions
             List<?> defaults = em.createNativeQuery("select urd.object_code, urd.permission_code from user_role_default urd where urd.role_code = ?1")
                     .setParameter(1, Role.ROLL_J.name())
                     .getResultList();
-            Map<String, Set<String>> defaultPermission = new HashMap<>();
-            defaults.forEach(r -> {
-                String object = resultAsString(r, 0);
-                if (!defaultPermission.containsKey(object)) {
-                    defaultPermission.put(object, new HashSet<>());
-                }
-                String permission = resultAsString(r, 1);
-                defaultPermission.get(object).add(permission);
-            });
-    
-            for(Map.Entry<String, List<String>> it : StreamUtil.nullSafeMap(userForm.getRights()).entrySet()) {
-                if(!defaultPermission.containsKey(it.getKey())) {
-                    // Should we throw or just blindly ignore it? XXX
-//                    throw new AssertionFailedException("Unknown object code: " + it.getKey());
-                    continue;
-                }
-                for(String p : StreamUtil.nullSafeList(it.getValue())) {
-                    if(!defaultPermission.get(it.getKey()).contains(p)) {
-                        // Should we throw or just blindly ignore it?
-//                        throw new AssertionFailedException("Unknown permission code: " + p);
-                        continue;
-                    }
-                    newRights.add(Arrays.asList(it.getKey(), p));
-                }
+            Map<String, Set<String>> defaultRights = defaults.stream().collect(Collectors.groupingBy(r -> resultAsString(r, 0),
+                    Collectors.mapping(r -> resultAsString(r, 1), Collectors.toSet())));
+
+            Set<String> objects = new HashSet<>(defaultRights.keySet());
+            objects.addAll(userService.LEADING_TEACHER_EXTRA_RIGHTS.keySet());
+            for (String object : objects) {
+                Set<String> permissions = new HashSet<>();
+                Set<String> defaultPermissions = defaultRights.get(object);
+                if (defaultPermissions != null) permissions.addAll(defaultPermissions);
+                Set<String> extraPermissions = userService.LEADING_TEACHER_EXTRA_RIGHTS.get(object);
+                if (extraPermissions != null) permissions.addAll(extraPermissions);
+                roleSpecificAllowedRights.put(object, permissions);
             }
-        } else {
-            // load allowed codes
-            List<?> cl = em.createNativeQuery("select c.code, c.main_class_code from classifier c where (c.main_class_code = ?1 and c.code in (select object_code from user_role_default where role_code = ?2)) or c.main_class_code = ?3")
-                    .setParameter(1, MainClassCode.TEEMAOIGUS.name())
-                    .setParameter(2, EntityUtil.getCode(user.getRole()))
-                    .setParameter(3, MainClassCode.OIGUS.name())
-                    .getResultList();
-            Set<String> objects = StreamUtil.toMappedSet(r -> resultAsString(r, 0), cl.stream().filter(r -> MainClassCode.TEEMAOIGUS.name().equals(resultAsString(r, 1))));
-            Set<String> permissions = StreamUtil.toMappedSet(r -> resultAsString(r, 0), cl.stream().filter(r -> MainClassCode.OIGUS.name().equals(resultAsString(r, 1))));
-    
-            for(Map.Entry<String, List<String>> it : StreamUtil.nullSafeMap(userForm.getRights()).entrySet()) {
-                if(!objects.contains(it.getKey())) {
-                    throw new AssertionFailedException("Unknown object code: " + it.getKey());
+        }
+
+        if (!roleSpecificAllowedRights.isEmpty()) {
+            Iterator<Map.Entry<String, List<String>>> it = StreamUtil.nullSafeMap(userForm.getRights()).entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<String, List<String>> entry = it.next();
+                if(!roleSpecificAllowedRights.containsKey(entry.getKey())) {
+                    log.warn("Not allowed object code: " + entry.getKey());
+                    it.remove();
                 }
-                for(String p : StreamUtil.nullSafeList(it.getValue())) {
-                    if(!permissions.contains(p)) {
-                        throw new AssertionFailedException("Unknown permission code: " + p);
+
+                Iterator<String> p = StreamUtil.nullSafeList(entry.getValue()).iterator();
+                while (p.hasNext()) {
+                    String permission = p.next();
+                    if(!roleSpecificAllowedRights.get(entry.getKey()).contains(permission)) {
+                        log.warn("Not allowed permission code: " + permission + "_" + entry.getKey());
+                        p.remove();
                     }
-                    newRights.add(Arrays.asList(it.getKey(), p));
                 }
             }
         }
-        
+
+        // load allowed codes
+        List<?> cl = em.createNativeQuery("select c.code, c.main_class_code from classifier c where (c.main_class_code = ?1 and c.code in (select object_code from user_role_default where role_code = ?2)) or c.main_class_code = ?3")
+                .setParameter(1, MainClassCode.TEEMAOIGUS.name())
+                .setParameter(2, EntityUtil.getCode(user.getRole()))
+                .setParameter(3, MainClassCode.OIGUS.name())
+                .getResultList();
+        Set<String> objects = StreamUtil.toMappedSet(r -> resultAsString(r, 0), cl.stream().filter(r -> MainClassCode.TEEMAOIGUS.name().equals(resultAsString(r, 1))));
+        Set<String> permissions = StreamUtil.toMappedSet(r -> resultAsString(r, 0), cl.stream().filter(r -> MainClassCode.OIGUS.name().equals(resultAsString(r, 1))));
+
+        // we are using List with two elements (object, permission) as tuple
+        List<List<String>> newRights = new ArrayList<>();
+        for(Map.Entry<String, List<String>> it : StreamUtil.nullSafeMap(userForm.getRights()).entrySet()) {
+            if(!objects.contains(it.getKey())) {
+                throw new AssertionFailedException("Unknown object code: " + it.getKey());
+            }
+            for(String p : StreamUtil.nullSafeList(it.getValue())) {
+                if(!permissions.contains(p)) {
+                    throw new AssertionFailedException("Unknown permission code: " + p);
+                }
+                newRights.add(Arrays.asList(it.getKey(), p));
+            }
+        }
+
         EntityUtil.bindEntityCollection(user.getUserRights(), r -> Arrays.asList(EntityUtil.getCode(r.getObject()), EntityUtil.getCode(r.getPermission())), newRights, id -> {
             UserRights ur = new UserRights();
             ur.setUser(user);

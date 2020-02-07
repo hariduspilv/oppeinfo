@@ -19,6 +19,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
  *         &lt;element name="isik" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}polOppurIsikud"/&gt;
+ *         &lt;element name="alush" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}polOppurOppetoodAlush"/&gt;
  *         &lt;element name="yldh" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}polOppurOppetoodYldh"/&gt;
  *         &lt;element name="korgk" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}polOppurOppetoodKorgk"/&gt;
  *       &lt;/sequence&gt;
@@ -32,6 +33,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
     "isik",
+    "alush",
     "yldh",
     "korgk"
 })
@@ -40,6 +42,8 @@ public class PolOppurResponse {
 
     @XmlElement(required = true, nillable = true)
     protected PolOppurIsikud isik;
+    @XmlElement(required = true, nillable = true)
+    protected PolOppurOppetoodAlush alush;
     @XmlElement(required = true, nillable = true)
     protected PolOppurOppetoodYldh yldh;
     @XmlElement(required = true, nillable = true)
@@ -67,6 +71,30 @@ public class PolOppurResponse {
      */
     public void setIsik(PolOppurIsikud value) {
         this.isik = value;
+    }
+
+    /**
+     * Gets the value of the alush property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link PolOppurOppetoodAlush }
+     *     
+     */
+    public PolOppurOppetoodAlush getAlush() {
+        return alush;
+    }
+
+    /**
+     * Sets the value of the alush property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link PolOppurOppetoodAlush }
+     *     
+     */
+    public void setAlush(PolOppurOppetoodAlush value) {
+        this.alush = value;
     }
 
     /**

@@ -5,7 +5,7 @@
         <th md-column ng-if="!formState.viewForm && application.canEdit">
           <a ng-click="editFormalLearning(record.id)">{{'main.button.change' | translate}}</a>
         </th>
-        <th md-column colspan="{{formalLearningColspan}}" style="text-align: center">{{'apel.formalLearnings.transferableSubjects' | translate}} </th>
+        <th md-column colspan="{{formalLearningColspan}}" style="text-align: center">{{'apel.formalLearnings.transferableSubjects' | translate}}</th>
         <th md-column style="border-left: 1px rgba(0, 0, 0, 0.12) solid;"></th>
         <th md-column colspan="2" style="text-align: center">{{'apel.formalLearnings.substitutableSubjects' | translate}}</th>
       </tr>
@@ -41,8 +41,8 @@
         <td md-cell>{{row.gradeDate | hoisDate}}</td>
         <td md-cell>{{row.teachers}}</td>
         <td md-cell>
-          <span ng-if="row.isOptional === false">{{currentLanguageNameField(row.module)}} ({{'main.yes' | translate}})</span>
-          <span ng-if="row.isOptional === true">{{currentLanguageNameField(row.module)}} ({{'main.no' | translate}})</span>
+          <span ng-if="row.module && row.isOptional === false">{{currentLanguageNameField(row.module)}} ({{'main.yes' | translate}})</span>
+          <span ng-if="row.module && row.isOptional === true">{{currentLanguageNameField(row.module)}} ({{'main.no' | translate}})</span>
         </td>
         <td md-cell style="border-left: 1px rgba(0, 0, 0, 0.12) solid;"></td>
         <td md-cell>

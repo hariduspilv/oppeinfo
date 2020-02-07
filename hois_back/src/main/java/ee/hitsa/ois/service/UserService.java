@@ -4,8 +4,10 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,6 +35,8 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.repository.PersonRepository;
@@ -60,6 +64,18 @@ public class UserService {
     private PersonRepository personRepository;
     @Autowired
     private SchoolService schoolService;
+
+    public static final Map<String, Set<String>> LEADING_TEACHER_EXTRA_RIGHTS = Collections.unmodifiableMap(
+        new HashMap<String, Set<String>>() {{
+            put(PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL.name(), Collections.singleton(Permission.OIGUS_M.name()));
+            put(PermissionObject.TEEMAOIGUS_PRAKTIKAPAEVIK.name(), new HashSet<>(Arrays.asList(Permission.OIGUS_M.name(), Permission.OIGUS_K.name())));
+            put(PermissionObject.TEEMAOIGUS_PAEVIK.name(), Collections.singleton(Permission.OIGUS_M.name()));
+            put(PermissionObject.TEEMAOIGUS_PAEVIKYLE.name(), Collections.singleton(Permission.OIGUS_M.name()));
+            put(PermissionObject.TEEMAOIGUS_TUNNIJAOTUSPLAAN.name(), Collections.singleton(Permission.OIGUS_M.name()));
+            put(PermissionObject.TEEMAOIGUS_VOTA.name(), Collections.singleton(Permission.OIGUS_M.name()));
+            put(PermissionObject.TEEMAOIGUS_VOTAKOM.name(), Collections.singleton(Permission.OIGUS_M.name()));
+            put(PermissionObject.TEEMAOIGUS_OPPERYHM.name(), Collections.singleton(Permission.OIGUS_M.name()));
+        }});
 
     /**
      * Create user for logged in user without any roles in ois
@@ -248,10 +264,12 @@ public class UserService {
 
     public UserRolesDto rolesDefaults() {
         List<?> data = em.createNativeQuery("select role_code, object_code, permission_code from user_role_default").getResultList();
-        Map<String, Map<String, List<String>>> rights = data.stream().collect(
+        Map<String, Map<String, Set<String>>> rights = data.stream().collect(
                 Collectors.groupingBy(r -> resultAsString(r, 0),
-                        Collectors.groupingBy(r -> resultAsString(r, 1), Collectors.mapping(r -> resultAsString(r, 2), Collectors.toList()))));
-        return new UserRolesDto(rights);
+                        Collectors.groupingBy(r -> resultAsString(r, 1), Collectors.mapping(r -> resultAsString(r, 2), Collectors.toSet()))));
+        Map<String, Map<String, Set<String>>> extraRights = new HashMap<>();
+        extraRights.put(Role.ROLL_J.name(), LEADING_TEACHER_EXTRA_RIGHTS);
+        return new UserRolesDto(rights, extraRights);
     }
 
     public void createPersonUserIfNecessary(String idcode, String lastname, String firstname) {

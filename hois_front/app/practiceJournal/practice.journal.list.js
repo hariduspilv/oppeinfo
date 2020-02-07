@@ -4,14 +4,14 @@ angular.module('hitsaOis').controller('PracticeJournalListController', function 
   $scope.auth = $route.current.locals.auth;
   var clMapper = Classifier.valuemapper({status: 'PAEVIK_STAATUS'});
   QueryUtils.createQueryForm($scope, '/practiceJournals', {order: 'student_person.lastname,student_person.firstname'}, clMapper.objectmapper);
-  
+
   var unbindStudyYearWatch = $scope.$watch('criteria.studyYear', function(value) {
     if (angular.isNumber(value)) {
       unbindStudyYearWatch();
       $q.all(clMapper.promises).then($scope.loadData);
     }
   });
-  
+
   $scope.directiveControllers = [];
   var clearCriteria = $scope.clearCriteria;
   $scope.clearCriteria = function () {
@@ -31,7 +31,8 @@ angular.module('hitsaOis').controller('PracticeJournalListController', function 
   };
 
   $scope.formState = {
-    canCreate: $scope.auth.isAdmin() && AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK),
+    canCreate: ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher()) &&
+      AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PRAKTIKAPAEVIK),
     canSendToEkis: AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LEPING)
   };
 

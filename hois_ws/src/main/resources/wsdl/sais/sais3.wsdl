@@ -198,14 +198,14 @@
               </documentation>
             </annotation>
           </element>
-          <element minOccurs="0" maxOccurs="1" name="ResidencePermitNumber" type="string">
+          <element minOccurs="0" maxOccurs="1" name="ResidencePermitNr" type="string">
             <annotation>
               <documentation>
                 Elamisloa number.
               </documentation>
             </annotation>
           </element>
-          <element minOccurs="0" maxOccurs="1" name="ResidencyPermitExpireDate" nillable="true" type="dateTime">
+          <element minOccurs="0" maxOccurs="1" name="ResidencyPermitExpireDate" type="dateTime">
             <annotation>
               <documentation>
                 Elamisloa kehtivus.
@@ -289,13 +289,27 @@
               </documentation>
             </annotation>
           </element>
+          <element minOccurs="1" maxOccurs="1" name="IsPartialLoad" nillable="true" type="boolean">
+            <annotation>
+              <documentation>
+                Väärtus "jah", kui tegemist osakoormusega õppijaga, muidu väärtus "ei".
+              </documentation>
+            </annotation>
+          </element>
+          <element minOccurs="1" maxOccurs="1" name="IsUndefinedLoad" nillable="true" type="boolean">
+            <annotation>
+              <documentation>
+                Väärtus "jah", kui tegemist määramata koormusega õppijaga, muidu väärtus "ei".
+              </documentation>
+            </annotation>
+          </element>
           <element minOccurs="0" maxOccurs="1" name="StudyForm" type="tns:SAISClassification">
             <annotation>
               <documentation>
                 Avalduse õppevormi klassifikaator.
               </documentation>
             </annotation>
-          </element>
+          </element> 
           <element minOccurs="0" maxOccurs="1" name="ApplicationNumber" type="string">
             <annotation>
               <documentation>
@@ -880,6 +894,7 @@
           <element minOccurs="0" maxOccurs="1" name="AdmissionTuitions" type="tns:ArrayOfAdmissionTuition"/>
           <element minOccurs="1" maxOccurs="1" name="IsPartialLoad" type="boolean"/>
           <element minOccurs="1" maxOccurs="1" name="IsFullLoad" type="boolean"/>
+          <element minOccurs="1" maxOccurs="1" name="IsUndefinedLoad" type="boolean"/>
           <element minOccurs="1" maxOccurs="1" name="AdmissionCount" nillable="true" type="int"/>
         </sequence>
       </complexType>
@@ -914,6 +929,8 @@
           <element minOccurs="0" maxOccurs="1" name="TuitionType" type="tns:SAISClassification"/>
           <element minOccurs="0" maxOccurs="1" name="Descripiton" type="tns:ArrayOfKvp"/>
           <element minOccurs="1" maxOccurs="1" name="IsFullLoad" type="boolean"/>
+          <element minOccurs="1" maxOccurs="1" name="IsPartialLoad" type="boolean"/>
+          <element minOccurs="1" maxOccurs="1" name="IsUndefinedLoad" type="boolean"/>
         </sequence>
       </complexType>
       <element name="AllAdmissionsExport">
@@ -981,6 +998,8 @@
           <element minOccurs="0" maxOccurs="1" name="StudyFormCode" type="string"/>
           <element minOccurs="0" maxOccurs="1" name="ApplicationNumber" type="string"/>
           <element minOccurs="1" maxOccurs="1" name="IsFullLoad" nillable="false" type="boolean"/>
+          <element minOccurs="1" maxOccurs="1" name="IsPartialLoad" nillable="false" type="boolean"/>
+          <element minOccurs="1" maxOccurs="1" name="IsUndefinedLoad" nillable="false" type="boolean"/>
           <element minOccurs="0" maxOccurs="1" name="CandidateEducations" type="tns:ArrayOfCandidateEducationItem"/>
         </sequence>
       </complexType>
@@ -1585,7 +1604,7 @@
   </wsdl:binding>
   <wsdl:service name="XRoadV6">
     <wsdl:port name="XRoadSoap" binding="tns:XRoadSoap">
-      <soap:address location="http://localhost:48752/XRoad/XRoadV6.asmx"/>
+      <soap:address location="http://example.org/xroad-endpoint"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>

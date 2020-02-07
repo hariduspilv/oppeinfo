@@ -49,7 +49,9 @@ function ($location, $route, $scope, message, dialogService, FormUtils, QueryUti
 
 
   $scope.lookupRegNr = function() {
-    if ($scope.enterprise.country === 'RIIK_EST' && $scope.enterpriseForm.enterpriseCode.$error.pattern === undefined && $scope.enterpriseForm.enterpriseCode.$error.minlength === undefined && $scope.enterpriseForm.enterpriseCode.$error.maxlength === undefined && $scope.enterprise.regCode) {
+    if ($scope.enterprise.country === 'RIIK_EST' && $scope.enterpriseForm.enterpriseCode.$error.pattern === undefined && 
+    $scope.enterpriseForm.enterpriseCode.$error.minlength === undefined && $scope.enterpriseForm.enterpriseCode.$error.maxlength === undefined && 
+    $scope.enterprise.regCode) {
       QueryUtils.loadingWheel($scope, true);
       QueryUtils.endpoint(baseUrl + '/regCodeCheck').get(
         {

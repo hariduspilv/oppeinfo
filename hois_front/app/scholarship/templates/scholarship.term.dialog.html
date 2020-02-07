@@ -94,6 +94,14 @@
     </md-dialog-content>
 
     <md-dialog-actions layout="row" layout-align="start center">
+      <md-button ng-if="stipend.canApply" class="md-raised md-primary" ng-href="#/scholarships/{{stipend.id}}/application"
+        ng-click="cancel()">{{'stipend.student.apply' | translate}}</md-button>
+      <md-button ng-if="stipend.alreadyApplied && stipend.application.canApply" class="md-raised"
+        ng-href="#/scholarships/{{stipend.id}}/application"
+        ng-click="cancel()">{{'stipend.student.showApplication' | translate}}</md-button>
+      <md-button ng-if="stipend.alreadyApplied && !stipend.application.canApply" class="md-raised"
+         ng-href="#/scholarships/applications/{{stipend.application.id}}"
+         ng-click="cancel()">{{'stipend.student.showApplication' | translate}}</md-button>
       <md-button class="md-raised" ng-click="cancel()">{{'main.button.close' | translate}}</md-button>
     </md-dialog-actions>
   </form>

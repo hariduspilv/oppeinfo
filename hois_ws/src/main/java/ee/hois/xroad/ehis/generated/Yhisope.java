@@ -1,6 +1,7 @@
 
 package ee.hois.xroad.ehis.generated;
 
+import java.math.BigInteger;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -19,7 +20,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="asutusKood" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="asutusKood" type="{http://www.w3.org/2001/XMLSchema}integer" minOccurs="0"/&gt;
  *         &lt;element name="asutusNimetus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="valisoppeasutus" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}ehisBoolean"/&gt;
  *       &lt;/sequence&gt;
@@ -39,7 +40,7 @@ import javax.xml.bind.annotation.XmlType;
 public class Yhisope {
 
     @XmlElementRef(name = "asutusKood", type = JAXBElement.class, required = false)
-    protected JAXBElement<String> asutusKood;
+    protected JAXBElement<BigInteger> asutusKood;
     @XmlElement(required = true, nillable = true)
     protected String asutusNimetus;
     @XmlElement(required = true, nillable = true)
@@ -50,10 +51,10 @@ public class Yhisope {
      * 
      * @return
      *     possible object is
-     *     {@link JAXBElement }{@code <}{@link String }{@code >}
+     *     {@link JAXBElement }{@code <}{@link BigInteger }{@code >}
      *     
      */
-    public JAXBElement<String> getAsutusKood() {
+    public JAXBElement<BigInteger> getAsutusKood() {
         return asutusKood;
     }
 
@@ -62,10 +63,10 @@ public class Yhisope {
      * 
      * @param value
      *     allowed object is
-     *     {@link JAXBElement }{@code <}{@link String }{@code >}
+     *     {@link JAXBElement }{@code <}{@link BigInteger }{@code >}
      *     
      */
-    public void setAsutusKood(JAXBElement<String> value) {
+    public void setAsutusKood(JAXBElement<BigInteger> value) {
         this.asutusKood = value;
     }
 

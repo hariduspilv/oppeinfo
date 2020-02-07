@@ -36,7 +36,7 @@ public class ApelApplicationRecordReport {
         informalExperiences = StreamUtil.toMappedList(r -> new ApelApplicationInformalExperienceReport(r, lang),
                 record.getInformalExperiences());
         informalExperiences.sort(Comparator.comparing(ApelApplicationInformalExperienceReport::getName));
-        formalSubjectsOrModules = StreamUtil.toMappedList(r -> new ApelApplicationFormalSubjectOrModuleReport(r, letterGrades, lang),
+        formalSubjectsOrModules = StreamUtil.toMappedList(r -> new ApelApplicationFormalSubjectOrModuleReport(report, r, letterGrades, lang),
                 record.getFormalSubjectsOrModules());
         formalSubjectsOrModules.sort(Comparator.comparing(ApelApplicationFormalSubjectOrModuleReport::getName));
         formalReplacedSubjectsOrModules = StreamUtil.toMappedList(r -> new ApelApplicationFormalReplacedSubjectOrModuleReport(r, lang),

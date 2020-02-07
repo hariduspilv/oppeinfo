@@ -1,10 +1,106 @@
 (function () {
     'use strict';
 
-    function addQuestion(ArrayUtils, dialogService, QueryUtils, oisFileService, FormUtils, scope, row, question, formThemes, type) {
+    function openAllResults(scope, QueryUtils, dialogService, pollId, journalOrSubjectId, subjectStudyPeriodId, isSubject) {
+        QueryUtils.loadingWheel(scope, true);
+        var pollableObject = {id: pollId};
+        if (journalOrSubjectId !== undefined) {
+            if (isSubject) {
+                pollableObject.subjectId = journalOrSubjectId;
+                pollableObject.subjectStudyPeriodId = subjectStudyPeriodId;
+            } else {
+                pollableObject.journalId = journalOrSubjectId;
+            }
+        }
+        QueryUtils.endpoint("/poll/results/all").get(pollableObject).$promise.then(function (response) {
+            QueryUtils.loadingWheel(scope, false);
+            dialogService.showDialog('poll/poll.results.all.dialog.html', function (dialogScope) {
+                dialogScope.content = response.content;
+                dialogScope.calculate = function(answers, question, theme) {
+                    var allAnswers = question.allAnswers;
+                    if (question.type === 'VASTUS_S') {
+                        // student council answers should calculate percentage over theme not question
+                        allAnswers = theme.questions.flatMap(function (question) {
+                            return question.allAnswers;
+                        }).reduce(function (a, b) {
+                            return a + b;
+                        }, 0);
+                    }
+                    if (allAnswers === null || allAnswers === undefined || allAnswers === 0) { return 0; }
+                    var percentage = answers / allAnswers * 100;
+                    return percentage.toFixed(1);
+                };
+            });
+        });
+    }
+    
+    function getScales(graphTheme) {
+        return {
+            xAxes: [{
+                ticks: {
+                    beginAtZero: true,
+                    max: graphTheme.max,
+                    callback: function(value) {
+                        if (!value.toString().includes('.')) {
+                            return value;
+                        }
+                    }   
+                }
+                
+            }],
+            yAxes: [{
+                ticks: {
+                    display:false
+                }
+            }]
+        };
+    }
+
+    function prepareTheme(graphTheme, scope, average, responseCount) {
+        var translatedLabels = [];
+        graphTheme.labels.forEach(function (label) {
+            translatedLabels.push(scope.currentLanguageNameField(label));
+        });
+        var translatedLabelOverride = [];
+        if (scope.formState.type !== 'KYSITLUS_V') {
+            graphTheme.labelOverride.forEach(function (labelOverride) {
+                var completeString = "";
+                labelOverride.pointBorderColor.forEach(function (pointBorderColor){
+                    completeString += scope.currentLanguageNameField(pointBorderColor.answer) + 
+                    "(" + pointBorderColor.answerNr + ")" + 
+                    ": " + pointBorderColor.answers + "\n";
+                });
+                // checkboxes
+                if (graphTheme.isCheckbox) {
+                    completeString += average + ": " + labelOverride.average + "\n";
+                }
+                completeString += responseCount + ": " + labelOverride.sum;
+                translatedLabelOverride.push(completeString);
+            });
+        }
+        graphTheme.labelOverride.forEach(function (labelOverride) {
+            labelOverride.pointBorderColor = translatedLabelOverride;
+        });
+        graphTheme.labels = translatedLabels;
+        graphTheme.options.scales = getScales(graphTheme);
+        graphTheme.options.tooltips = tooltips;
+        graphTheme.options.layout = { padding: { top: 5 } };
+    }
+
+    function addQuestion(ArrayUtils, dialogService, QueryUtils, oisFileService, FormUtils, scope, message, row, question, formThemes, type) {
         dialogService.showDialog('poll/poll.question.add.dialog.html', function (dialogScope) {
             dialogScope.criteria = {};
             dialogScope.onlyQuestion = scope.new;
+
+            dialogScope.checkType = function(type) {
+                if (type !== 'VASTUS_S' && scope.independent) {
+                    dialogScope.answerAddingDisabled = false;
+                } else if (type === 'VASTUS_S' && scope.independent){
+                    dialogScope.criteria.answers = [{}];
+                    dialogScope.criteria.answers[0].answerNr = 1;
+                    dialogScope.answerAddingDisabled = true;
+                }
+            };
             
             dialogScope.addAnswer = function() {
                 var answer = {};
@@ -17,14 +113,18 @@
             dialogScope.typeKysitlusV = function() {
                 dialogScope.criteria.type = 'VASTUS_S';
                 dialogScope.pickingAnswerTypeDisabled = true;
-                dialogScope.addAnswer();
+                dialogScope.criteria.answers = [{}];
                 dialogScope.criteria.answers[0].answerNr = 1;
                 dialogScope.answerAddingDisabled = true;
             };
 
-            if (type !== 'KYSITLUS_V') {
+            if (type !== 'KYSITLUS_V' && !scope.independent) {
                 dialogScope.answerTypeFilter = ['VASTUS_S'];
-            } else {
+            } else if (type === 'KYSITLUS_V' && scope.independent) {
+                dialogScope.criteria.answers = [{}];
+                dialogScope.criteria.answers[0].answerNr = 1;
+                dialogScope.answerAddingDisabled = true;
+            } else if (type === 'KYSITLUS_V') {
                 dialogScope.typeKysitlusV();
             }
 
@@ -201,7 +301,7 @@
             };
 
             dialogScope.delete = function() {
-                $scope.deleteQuestion(dialogScope.criteria.id);
+                scope.deleteQuestion(dialogScope.criteria.id);
             };
 
             dialogScope.filterAnswerType = function () {
@@ -281,31 +381,47 @@
             dialogScope.formState.themeBySubjectOrJournalId = {};
             
             dialogScope.criteria.themes.forEach(function (theme) {
-              if (theme.journal !== null && theme.isRepetitive) {
-                if (dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id] === undefined) {
-                  dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id] = [];
+                if (theme.journal !== null && theme.isRepetitive) {
+                    if (dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id] === undefined) {
+                    dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id] = [];
+                    }
+                    dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id].push(theme);
+                } else if (theme.subject !== null && theme.isRepetitive) {
+                    if (dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id] === undefined) {
+                    dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id] = [];
+                    }
+                    dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id].push(theme);
+                } else if (!theme.isRepetitive) {
+                    if (dialogScope.formState.themeBySubjectOrJournalId[null] === undefined) {
+                    dialogScope.formState.themeBySubjectOrJournalId[null] = [];
+                    }
+                    dialogScope.formState.themeBySubjectOrJournalId[null].push(theme);
                 }
-                dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id].push(theme);
-              } else if (theme.subject !== null && theme.isRepetitive) {
-                if (dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id] === undefined) {
-                  dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id] = [];
-                }
-                dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id].push(theme);
-              } else if (!theme.isRepetitive) {
-                if (dialogScope.formState.themeBySubjectOrJournalId[null] === undefined) {
-                  dialogScope.formState.themeBySubjectOrJournalId[null] = [];
-                }
-                dialogScope.formState.themeBySubjectOrJournalId[null].push(theme);
-              }
             });
-            Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0].show = true;
+            if (dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.foreword !== null) {
+                dialogScope.showForeword = true;
+            } else {
+                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0].show = true;
+            }
           } else {
-            dialogScope.criteria.themes[0].show = true;
+            if (dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.foreword !== null) {
+                dialogScope.showForeword = true;
+            } else {
+                dialogScope.criteria.themes[0].show = true;
+            }
           }
   
           dialogScope.previousSubjectOrJournal = function(index) {
-            Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
-            Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index - 1].show = true;
+            if (index === 0) {
+              dialogScope.showForeword = true;
+            } else {
+              Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index - 1].show = true;
+            }
+            if (index === dialogScope.subjectListLength()) {
+              dialogScope.showAfterword = false;
+            } else {
+              Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+            }
           };
   
           dialogScope.last = function(index) {
@@ -321,18 +437,46 @@
           };
   
           dialogScope.nextSubjectOrJournal = function(index) {
-            Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
-            Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index + 1].show = true;
+            if (index === -1) {
+              dialogScope.showForeword = false;
+            } else {
+              Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+            }
+            if (index === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1) {
+              dialogScope.showAfterword = true;
+            } else {
+              Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index + 1].show = true;
+            }
+          };
+
+          dialogScope.subjectListLength = function() {
+            return Object.values(dialogScope.formState.themeBySubjectOrJournalId).length;
           };
   
           dialogScope.previousTheme = function(index) {
-              dialogScope.criteria.themes[index].show = false;
+            if (index === 0) {
+              dialogScope.showForeword = true;
+            } else {
               dialogScope.criteria.themes[index - 1].show = true;
+            }
+            if (index === dialogScope.criteria.themes.length) {
+              dialogScope.showAfterword = false;
+            } else {
+              dialogScope.criteria.themes[index].show = false;
+            }
           };
   
           dialogScope.nextTheme = function(index) {
+            if (index === -1) {
+              dialogScope.showForeword = false;
+            } else {
               dialogScope.criteria.themes[index].show = false;
+            }
+            if (index === dialogScope.criteria.themes.length - 1) {
+              dialogScope.showAfterword = true;
+            } else {
               dialogScope.criteria.themes[index + 1].show = true;
+            }
           };
   
           dialogScope.close = function() {
@@ -390,6 +534,8 @@
             tableRoot.innerHTML = innerHtml;
         }
         var positionY = this._chart.canvas.offsetTop;
+        // offsetTop doesnt take scrolling into account
+        positionY -= document.getElementsByTagName("md-dialog-content")[0].scrollTop;
         var positionX = this._chart.canvas.offsetLeft;
         var max = tooltipEl.offsetParent.offsetHeight;
         // Display, position, and set styles for font
@@ -413,6 +559,7 @@
         callbacks: {
             beforeBody: function(t, d) {
                 // Use pointBorderColor to hook additional information
+                // Chose pointBorderColor because its already a defined variable in dataset and it's not being used
                 return d.datasets[0].pointBorderColor[t[0].index];
             }
          }, 
@@ -421,22 +568,6 @@
         position: 'nearest',
         custom: customTooltips
     };
-
-    function splitTitle(title, scope) {
-        var titleSpacer =  window.innerWidth / 4; // whole sentence width in px
-        var letterwidth = 5; // 5 px for  letter
-        var lettersInRow = titleSpacer / letterwidth;
-        return chunkSubstr(scope.currentLanguageNameField(title), lettersInRow);
-    }
-
-    function chunkSubstr(str, size) {
-        var numChunks = Math.ceil(str.length / size);
-        var chunks = [];
-        for (var i = 0, o = 0; i < numChunks; ++i, o += size) {
-            chunks.push(str.substr(o, size));
-        }
-        return chunks;
-    }
 
     function markImages(themes) {
         for (var theme = 0; theme < themes.length; theme++) {
@@ -470,10 +601,22 @@
             dialogScope.criteria.afterword = criteria.afterword;
     
             dialogScope.previousSubjectOrJournal = function(index) {
-                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
-                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index - 1].show = true;
+                if (index === 0) {
+                  dialogScope.showForeword = true;
+                } else {
+                  Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index - 1].show = true;
+                }
+                if (index === dialogScope.subjectListLength()) {
+                  dialogScope.showAfterword = false;
+                } else {
+                  Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+                }
+              };
+              
+            dialogScope.subjectListLength = function() {
+                return Object.values(dialogScope.formState.themeBySubjectOrJournalId).length;
             };
-    
+
             dialogScope.last = function(index) {
                 return index === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1;
             };
@@ -487,9 +630,17 @@
             };
     
             dialogScope.nextSubjectOrJournal = function(index) {
-                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
-                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index + 1].show = true;
-            };
+                if (index === -1) {
+                  dialogScope.showForeword = false;
+                } else {
+                  Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+                }
+                if (index === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1) {
+                  dialogScope.showAfterword = true;
+                } else {
+                  Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index + 1].show = true;
+                }
+              };
 
             function mapItems(itemById, list, repetitiveThemes, journal) {
                 list.forEach(function (item) {
@@ -523,27 +674,29 @@
                 QueryUtils.endpoint("/poll/themes").get({id: dialogScope.criteria.id}).$promise.then(function (data) {
                     angular.extend(dialogScope.criteria, data);
                     if (criteria.higher) {
-                        dialogScope.criteria.subjects = [{id: -1, nameEt: "õppaine kood - Õppeaine nimetus (X EAP)", nameEn: "subject code - subject name (X EAP)"}];
+                        dialogScope.criteria.subjects = [{id: -1, nameEt: "õppeaine kood - Õppeaine nimetus (X EAP)", nameEn: "subject code - subject name (X EAP)"}];
                         dialogScope.criteria.journals = [];
+                        dialogScope.criteria.teacher = {id: -1, nameEt: "Õppejõud", nameEn: "Teacher"};
                     } else {
                         dialogScope.criteria.subjects = [];
                         dialogScope.criteria.journals = [{id: -1, nameEt: "päevik (õpperühm)", nameEn: "journal (student group)"}];
+                        dialogScope.criteria.teacher = {id: -1, nameEt: "Õpetaja", nameEn: "Teacher"};
                     }
                     markImages(dialogScope.criteria.themes);
                     QueryUtils.loadingWheel(dialogScope, false, true);
                     var repetitiveThemes = dialogScope.criteria.themes.filter(function (theme) {
                         return theme.isRepetitive;
                     });
-                    dialogScope.hasSubjectOrJournal = (dialogScope.criteria.subjects !== null && dialogScope.criteria.subjects.length !== 0) ||
-                                                      (dialogScope.criteria.journals !== null && dialogScope.criteria.journals.length !== 0);
+                    dialogScope.hasSubjectOrJournal = ((dialogScope.criteria.subjects !== null && dialogScope.criteria.subjects.length !== 0) ||
+                                                      (dialogScope.criteria.journals !== null && dialogScope.criteria.journals.length !== 0)) && repetitiveThemes.length !== 0;
                     // Map journals or subjects with repedetive themes
                     dialogScope.formState.themeBySubjectOrJournalId = {};
                     if (!data.isThemePageable && data.type === 'KYSITLUS_O') {
-                        if (angular.isDefined(dialogScope.criteria.journals) && dialogScope.criteria.journals.length !== 0) {
+                        if (angular.isDefined(dialogScope.criteria.journals) && dialogScope.criteria.journals.length !== 0 && repetitiveThemes.length !== 0) {
                             dialogScope.formState.themeBySubjectOrJournalId = 
                             mapItems(dialogScope.formState.themeBySubjectOrJournalId, dialogScope.criteria.journals, repetitiveThemes, true);
                         }
-                        if (angular.isDefined(dialogScope.criteria.subjects) && dialogScope.criteria.subjects.length !== 0) {
+                        if (angular.isDefined(dialogScope.criteria.subjects) && dialogScope.criteria.subjects.length !== 0 && repetitiveThemes.length !== 0) {
                             dialogScope.formState.themeBySubjectOrJournalId = 
                             mapItems(dialogScope.formState.themeBySubjectOrJournalId, dialogScope.criteria.subjects, repetitiveThemes, false);
                         }
@@ -555,7 +708,11 @@
                                 dialogScope.formState.themeBySubjectOrJournalId[null].push(theme);
                             }
                         });
-                        Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0].show = true;
+                        if (dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.foreword !== null) {
+                            dialogScope.showForeword = true;
+                        } else {
+                            Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0].show = true;
+                        }
                     } else if (data.isThemePageable && data.type === 'KYSITLUS_O'){
                         var placeHolderList = [];
                         dialogScope.criteria.journals.forEach(function (journal) {
@@ -580,25 +737,49 @@
                         }));
                         dialogScope.criteria.themes = placeHolderList;
                         if (dialogScope.criteria.themes.length !== 0) {
-                            dialogScope.criteria.themes[0].show = true;
+                            if (dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.foreword !== null) {
+                                dialogScope.showForeword = true;
+                            } else {
+                                dialogScope.criteria.themes[0].show = true;
+                            }
                         }
                     } else {
                         if (dialogScope.criteria.themes.length !== 0) {
-                            dialogScope.criteria.themes[0].show = true;
+                            if (dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.foreword !== null) {
+                                dialogScope.showForeword = true;
+                            } else {
+                                dialogScope.criteria.themes[0].show = true;
+                            }
                         }
                     }
                 });
             };
 
             dialogScope.previousTheme = function(index) {
-                dialogScope.criteria.themes[index].show = false;
+                if (index === 0) {
+                dialogScope.showForeword = true;
+                } else {
                 dialogScope.criteria.themes[index - 1].show = true;
+                }
+                if (index === dialogScope.criteria.themes.length) {
+                dialogScope.showAfterword = false;
+                } else {
+                dialogScope.criteria.themes[index].show = false;
+                }
             };
 
             dialogScope.nextTheme = function(index) {
-                dialogScope.criteria.themes[index].show = false;
-                dialogScope.criteria.themes[index + 1].show = true;
-            };
+                if (index === -1) {
+                  dialogScope.showForeword = false;
+                } else {
+                  dialogScope.criteria.themes[index].show = false;
+                }
+                if (index === dialogScope.criteria.themes.length - 1) {
+                  dialogScope.showAfterword = true;
+                } else {
+                  dialogScope.criteria.themes[index + 1].show = true;
+                }
+              };
 
             dialogScope.clearRadio = function(question) {
                 question.radio1 = null;
@@ -650,7 +831,7 @@
             status: 'KYSITLUS_STAATUS',
             targetCodes: 'KYSITLUS_SIHT'
         });
-
+        /*
         $scope.testEmail = function() {
             QueryUtils.endpoint('/poll/testEmailService').put({}, function () {
                 message.info('email saadetud');
@@ -673,7 +854,8 @@
                 message.info('Käskkirjade job\'id tehtud');
             });
         };
-
+        */
+        
         $scope.pollNotEnded = function(row) {
             return row.status.code !== 'KYSITLUS_STAATUS_K' && row.status.code !== 'KYSITLUS_STAATUS_L';
         };
@@ -763,12 +945,13 @@
         };
 
         $scope.refresh();
-    }).controller('PollQuestionsListController', function ($scope, $route, QueryUtils, Classifier, $q, oisFileService, dialogService, FormUtils, ArrayUtils) {
+    }).controller('PollQuestionsListController', function ($scope, $route, QueryUtils, Classifier, $q, oisFileService, dialogService, FormUtils, ArrayUtils, message) {
         $scope.auth = $route.current.locals.auth;
         $scope.new = true;
+        $scope.independent = true;
 
         $scope.addNewQuestion = function() {
-            addQuestion(ArrayUtils, dialogService, QueryUtils, oisFileService, FormUtils, $scope);
+            addQuestion(ArrayUtils, dialogService, QueryUtils, oisFileService, FormUtils, $scope, message);
         };
 
         var clMapper = Classifier.valuemapper({
@@ -782,6 +965,7 @@
         $scope.refresh();
     }).controller('PollSubjectsController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, oisFileService, $translate, FormUtils, message, $location) {
         $scope.auth = $route.current.locals.auth;
+        $scope.formState = {};
         if (!$scope.auth.isTeacher()) {
             message.error('main.messages.error.nopermission');
             return $location.path('');
@@ -799,6 +983,12 @@
 
         $scope.showJournalGraph = function(row) {
             var newScope = {};
+            var name = angular.copy(row.name);
+            if (row.teacher) {
+                name.nameEt = name.nameEt + (row.teacher.nameEt !== undefined && row.teacher.nameEt !== null ? " (" + row.teacher.nameEt + ")" : "");
+                name.nameEt = name.nameEn + (row.teacher.nameEn !== undefined && row.teacher.nameEn !== null ? " (" + row.teacher.nameEn + ")" : "");
+            }
+            newScope.graphName = name;
             newScope.graphName = row.name;
             newScope.journal = true;
             newScope.teacherViewing = true;
@@ -815,82 +1005,60 @@
             newScope.teacherViewing = true;
             newScope.pollId = row.poll.id;
             var GraphEndpoint = QueryUtils.endpoint('/poll/graphWithoutStudentAnswer');
-            GraphEndpoint = new GraphEndpoint({pollId: row.poll.id, subjectId: row.name.id});
-            loadEndpoint(GraphEndpoint, newScope);
+            GraphEndpoint = new GraphEndpoint({pollId: row.poll.id, subjectStudyPeriodId: row.teacher.id});
+            loadEndpoint(GraphEndpoint, newScope, row.teacher);
         };
 
-        function loadEndpoint(endPoint, newScope) {
+        function loadEndpoint(endPoint, newScope, teacher) {
             QueryUtils.loadingWheel($scope, true);
             endPoint.$putWithoutLoad().then(function (response) {
                 QueryUtils.loadingWheel($scope, false);
                 dialogService.showDialog('poll/poll.answers.dialog.html', function (dialogScope) {
                     dialogScope.graphName = newScope.graphName;
+                    dialogScope.canComment = response.canComment;
+                    dialogScope.higher = $scope.auth.higher;
                     dialogScope.journal = newScope.journal;
                     dialogScope.teacherViewing = newScope.teacherViewing;
                     dialogScope.pollId = newScope.pollId;
                     dialogScope.formState = {};
                     dialogScope.showGraph = true;
                     dialogScope.criteria = {};
+                    // translations
+                    var responseCount = $translate.instant('poll.answers.dialog.responseCount');
+                    var average = $translate.instant('poll.answers.dialog.average');
+                    var individualResponses = $translate.instant('poll.answers.dialog.individualResponseCount');
+                    var myAnswers = $translate.instant('poll.answers.dialog.myAnswer');
 
                     dialogScope.graph = response;
                     if (response.comments !== undefined && response.comments.length === 1 && dialogScope.teacherViewing) {
                         dialogScope.criteria.addInfo = response.comments[0].addInfo;
                         dialogScope.commentRef = response.comments[0].commentRef;
                     }
-                    $translate('poll.answers.dialog.responseCount').then(function (translatedVal) {
-                        dialogScope.graph.graphByTheme.forEach(function (graphTheme) {
-                            var scales = {
-                                xAxes: [{
-                                    ticks: {
-                                        beginAtZero: true,
-                                        max: graphTheme.max
+                    dialogScope.graph.theme.forEach(function (theme) {
+                        theme.journalOrSubject.forEach(function (subject) {
+                            subject.teachers.forEach(function (teacher) {
+                                teacher.graph.forEach(function (graph) {
+                                    prepareTheme(graph, $scope, average, responseCount);
+                                    graph.labelOverride[1] = {
+                                        label: myAnswers
+                                    };
+                                    // Set legend name (average or response count)
+                                    if (graph.isCheckbox) {
+                                        setLabelOverride(graph, individualResponses);
+                                    } else {
+                                        setLabelOverride(graph, average);
                                     }
-                                    
-                                }],
-                                yAxes: [{
-                                    ticks: {
-                                        display:false
-                                    }
-                                }]
-                            };
-                            var translatedLabels = [];
-                            graphTheme.labels.forEach(function (label) {
-                                translatedLabels.push($scope.currentLanguageNameField(label));
-                            });
-                            var translatedLabelOverride = [];
-                            graphTheme.labelOverride.forEach(function (labelOverride) {
-                                var completeString = "";
-                                labelOverride.pointBorderColor.forEach(function (pointBorderColor){
-                                    completeString += $scope.currentLanguageNameField(pointBorderColor.answer) + 
-                                    "(" + pointBorderColor.answerNr + ")" + 
-                                    ": " + pointBorderColor.answers + "\n";
                                 });
-                                completeString += translatedVal + ": " + labelOverride.sum;
-                                translatedLabelOverride.push(completeString);
                             });
-                            graphTheme.labelOverride.forEach(function (labelOverride) {
-                                labelOverride.pointBorderColor = translatedLabelOverride;
-                            });
-                            graphTheme.labels = translatedLabels;
-                            graphTheme.options.title.text = splitTitle(graphTheme.options.title.text, $scope);
-                            graphTheme.options.scales = scales;
-                            graphTheme.options.tooltips = tooltips;
-                        });
-                    });
+                    });});
 
-                    $translate('poll.answers.dialog.average').then(function (translatedVal) {
-                        dialogScope.graph.graphByTheme.forEach(function (theme) {
+                    function setLabelOverride(theme, translatedVal) {
+                        if (theme.labelOverride[0] === undefined) {
+                            theme.labelOverride[0] = {label: translatedVal};
+                        } else {
                             theme.labelOverride[0].label = translatedVal;
-                        });
-                    });
-                    
-                    $translate('poll.answers.dialog.myAnswer').then(function (translatedVal) {
-                        dialogScope.graph.graphByTheme.forEach(function (theme) {
-                            theme.labelOverride[1] = {
-                                label: translatedVal
-                            };
-                        });
-                    });
+                        }
+                    }
 
                     dialogScope.saveComment = function(addInfo) {
                         FormUtils.withValidForm(dialogScope.dialogForm, function() {
@@ -898,7 +1066,7 @@
                             if (dialogScope.journal) {
                                 GraphEndpoint = new GraphEndpoint({journalId: dialogScope.graphName.id, comment: addInfo, commentRef: dialogScope.commentRef});
                             } else {
-                                GraphEndpoint = new GraphEndpoint({subjectId: dialogScope.graphName.id, comment: addInfo, commentRef: dialogScope.commentRef});
+                                GraphEndpoint = new GraphEndpoint({subjectStudyPeriodId: teacher.id, comment: addInfo, commentRef: dialogScope.commentRef});
                             }
                             GraphEndpoint.$putWithoutLoad().then(function (response) {
                                 if (response.commentRef === undefined || response.commentRef === null)  {
@@ -916,8 +1084,8 @@
             });
         }
 
-        $scope.openAnswers = function(row) {
-            if ($scope.auth.higher) {
+        $scope.openAnswers = function(row, isSubject) {
+            if (isSubject) {
                 $scope.showSubjectGraph(row);
             } else {
                 $scope.showJournalGraph(row);
@@ -941,7 +1109,6 @@
             openResponse(row, response, dialogService, oisFileService);
           });
         };
-
     }).controller('PollAnswersController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, oisFileService, $translate, message, $location) {
         $scope.auth = $route.current.locals.auth;
         if ($scope.auth.isLeadingTeacher() || $scope.auth.isMainAdmin()) {
@@ -951,8 +1118,9 @@
 
         $scope.canViewResult = function(row) {
             if ($scope.auth.isStudent() && ((((row.isTeacherComment && row.isTeacherCommentVisible) || 
-            row.isStudentVisible) && row.type.code === 'KYSITLUS_O') || row.type.code === 'KYSITLUS_V') && 
-            $scope.isInThePast(row.validThru) && !row.allTextFields) {
+            row.isStudentVisible) && (row.type === 'KYSITLUS_O' || row.type.code === 'KYSITLUS_O')) || 
+            row.type === 'KYSITLUS_V' || row.type.code === 'KYSITLUS_V') && 
+            $scope.isInThePast(row.validThru)) {
                 return true;
             }
             return false;
@@ -985,102 +1153,97 @@
             QueryUtils.loadingWheel($scope, true);
             QueryUtils.endpoint('/poll/answers').get({id: row.id}).$promise.then(function (response) {
                 QueryUtils.loadingWheel($scope, false);
-                if (response.journals.length === 0 && response.subjects.length === 0 && response.themes === false && row.type.code !== 'KYSITLUS_V') {
-                    message.info("poll.answers.dialog.allTextFields");
-                    return;
-                }
 
                 dialogService.showDialog('poll/poll.answers.dialog.html', function (dialogScope) {
                     dialogScope.formState = {};
                     dialogScope.formState = row;
                     dialogScope.criteria = response;
+                    dialogScope.higher = $scope.auth.higher;
+                    // translations
+                    var responseCount = $translate.instant('poll.answers.dialog.responseCount');
+                    var average = $translate.instant('poll.answers.dialog.average');
+                    var individualResponses = $translate.instant('poll.answers.dialog.individualResponseCount');
+                    var myAnswers = $translate.instant('poll.answers.dialog.myAnswer');
+                    var responded = $translate.instant('poll.answers.dialog.responded');
 
                     function loadEndpoint(endPoint, dialogScope) {
-                        $translate('poll.answers.dialog.responseCount').then(function (translatedVal) {
-                            dialogScope.responseCount = translatedVal;
-                        });
                         endPoint.$putWithoutLoad().then(function (response) {
                             dialogScope.graph = response;
                             if (response.comments !== undefined) {
                                 dialogScope.comments = response.comments;
                             }
+                            dialogScope.canStudentView = response.canStudentView;
+                            dialogScope.studentViewing = $scope.auth.isStudent;
                             dialogScope.showGraph = true;
-                            dialogScope.graph.graphByTheme.forEach(function (graphTheme) {
-                                var scales = {
-                                    xAxes: [{
-                                        ticks: {
-                                            beginAtZero: true,
-                                            max: graphTheme.max
-                                        }
-                                        
-                                    }],
-                                    yAxes: [{
-                                        ticks: {
-                                            display:false
-                                        }
-                                    }]
-                                };
-                                var translatedLabels = [];
-                                graphTheme.labels.forEach(function (label) {
-                                    translatedLabels.push($scope.currentLanguageNameField(label));
-                                });
-                                var translatedLabelOverride = [];
-                                graphTheme.labelOverride.forEach(function (labelOverride) {
-                                    var completeString = "";
-                                    if (dialogScope.formState.type.code !== 'KYSITLUS_V') {
-                                        labelOverride.pointBorderColor.forEach(function (pointBorderColor){
-                                            completeString += $scope.currentLanguageNameField(pointBorderColor.answer) + 
-                                            "(" + pointBorderColor.answerNr + ")" + 
-                                            ": " + pointBorderColor.answers + "\n";
-                                        });
-                                        completeString += dialogScope.responseCount + ": " + labelOverride.sum;
-                                        translatedLabelOverride.push(completeString);
-                                    } else {
-                                        var overrideIndex = graphTheme.labelOverride.indexOf(labelOverride);
-                                        if (graphTheme.data[1][overrideIndex] === 1) {
-                                            $translate('poll.answers.dialog.responded').then(function (translatedVal) {
-                                                completeString += translatedVal;
-                                                translatedLabelOverride.push(completeString);
+                            dialogScope.graph.theme.forEach(function (theme) {
+                                theme.journalOrSubject.forEach(function(subject) {
+                                    subject.teachers.forEach(function (teacher) {
+                                        teacher.graph.forEach(function (graph) {
+                                            var translatedLabels = [];
+                                            graph.labels.forEach(function (label) {
+                                                translatedLabels.push($scope.currentLanguageNameField(label));
                                             });
-                                        }
-                                    }
+                                            var translatedLabelOverride = [];
+                                            graph.labelOverride.forEach(function (labelOverride) {
+                                                var completeString = "";
+                                                if (dialogScope.formState.type.code !== 'KYSITLUS_V') {
+                                                    labelOverride.pointBorderColor.forEach(function (pointBorderColor){
+                                                        completeString += $scope.currentLanguageNameField(pointBorderColor.answer) + 
+                                                        "(" + pointBorderColor.answerNr + ")" + 
+                                                        ": " + pointBorderColor.answers + "\n";
+                                                    });
+                                                    // checkboxes
+                                                    if (graph.isCheckbox) {
+                                                        completeString += average + ": " + labelOverride.average + "\n";
+                                                    }
+                                                    completeString += responseCount + ": " + labelOverride.sum;
+                                                    translatedLabelOverride.push(completeString);
+                                                } else {
+                                                    var overrideIndex = graph.labelOverride.indexOf(labelOverride);
+                                                    if (graph.data[1][overrideIndex] === 1) {
+                                                        completeString += responded;
+                                                        translatedLabelOverride.push(completeString);
+                                                    }
+                                                }
+                                            });
+                                            graph.labelOverride.forEach(function (labelOverride) {
+                                                labelOverride.pointBorderColor = translatedLabelOverride;
+                                            });
+                                            graph.labels = translatedLabels;
+                                            graph.options.scales = getScales(graph);
+                                            graph.options.tooltips = tooltips;
+                                            graph.options.layout = { padding: { top: 5 } };
+                                            graph.labelOverride[1] = {
+                                                label: myAnswers
+                                            };
+                                            // Set legend name (average or response count)
+                                            if (graph.isCheckbox) {
+                                                setLabelOverride(graph, individualResponses);
+                                            } else {
+                                                setLabelOverride(graph, average);
+                                            }
+                                            if (dialogScope.formState.type.code === 'KYSITLUS_V') {
+                                                setLabelOverride(graph, responseCount);
+                                                graph.labelOverride[1] = {
+                                                    hidden: true,
+                                                    label: myAnswers
+                                                };
+                                            } else {
+                                                graph.labelOverride[1] = {
+                                                    label: myAnswers
+                                                };
+                                            }
+                                        });
+                                    });
                                 });
-                                graphTheme.labelOverride.forEach(function (labelOverride) {
-                                    labelOverride.pointBorderColor = translatedLabelOverride;
-                                });
-                                graphTheme.labels = translatedLabels;
-                                graphTheme.options.title.text = splitTitle(graphTheme.options.title.text, $scope);
-                                graphTheme.options.scales = scales;
-                                graphTheme.options.tooltips = tooltips;
                             });
-
-                            if (dialogScope.formState.type.code === 'KYSITLUS_V') {
-                                $translate('poll.answers.dialog.responseCount').then(function (translatedVal) {
-                                    dialogScope.graph.graphByTheme.forEach(function (theme) {
-                                        theme.labelOverride[0].label = translatedVal;
-                                    });
-                                });
-                                $translate('poll.answers.dialog.myAnswer').then(function (translatedVal) {
-                                    dialogScope.graph.graphByTheme.forEach(function (theme) {
-                                        theme.labelOverride[1] = {
-                                            hidden: true,
-                                            label: translatedVal
-                                        };
-                                    });
-                                });
-                            } else {
-                                $translate('poll.answers.dialog.average').then(function (translatedVal) {
-                                    dialogScope.graph.graphByTheme.forEach(function (theme) {
-                                        theme.labelOverride[0].label = translatedVal;
-                                    });
-                                });
-                                $translate('poll.answers.dialog.myAnswer').then(function (translatedVal) {
-                                    dialogScope.graph.graphByTheme.forEach(function (theme) {
-                                        theme.labelOverride[1] = {
-                                            label: translatedVal
-                                        };
-                                    });
-                                });
+    
+                            function setLabelOverride(theme, translatedVal) {
+                                if (theme.labelOverride[0] === undefined) {
+                                    theme.labelOverride[0] = {label: translatedVal};
+                                } else {
+                                    theme.labelOverride[0].label = translatedVal;
+                                }
                             }
                         });
                     }
@@ -1104,7 +1267,7 @@
                         dialogScope.graphName = subject;
                         dialogScope.journal = false;
                         var GraphEndpoint = QueryUtils.endpoint('/poll/graph');
-                        GraphEndpoint = new GraphEndpoint({responseId: dialogScope.formState.id, subjectId: subject.id});
+                        GraphEndpoint = new GraphEndpoint({responseId: dialogScope.formState.id, subjectStudyPeriodId: subject.id});
                         loadEndpoint(GraphEndpoint, dialogScope);
                     };
 
@@ -1165,7 +1328,10 @@
 
         $scope.saveThemeRepetitive = function(theme) {
             var PollThemeEndpoint = QueryUtils.endpoint('/poll/themes/repetitive/' + theme.id);
-            var pollThemeEndpoint = new PollThemeEndpoint({isRepetitive: theme.isRepetitive});
+            if (!theme.isRepetitive) {
+                theme.isTeacher = false;
+            }
+            var pollThemeEndpoint = new PollThemeEndpoint({isRepetitive: theme.isRepetitive, isTeacher: theme.isTeacher});
             pollThemeEndpoint.$update().then(function () {
                 message.info('main.messages.create.success');
                 $scope.refresh();
@@ -1256,7 +1422,7 @@
 
         $scope.addQuestion = function (row, question) {
             $scope.new = false;
-            addQuestion(ArrayUtils, dialogService, QueryUtils, oisFileService, FormUtils, $scope, row, question, $scope.criteria.themes, $scope.formState.type);
+            addQuestion(ArrayUtils, dialogService, QueryUtils, oisFileService, FormUtils, $scope, message, row, question, $scope.criteria.themes, $scope.formState.type);
         };
 
         $scope.getUrl = function(photo) {
@@ -1334,7 +1500,7 @@
         }
 
         $scope.calculate = function(allResponses, targetCount) {
-            if (targetCount == null || targetCount === undefined || targetCount == 0) return 0;
+            if (targetCount === null || targetCount === undefined || targetCount === 0) { return 0; }
             var percentage = allResponses / targetCount * 100;
             return percentage.toFixed(1);
         };
@@ -1353,10 +1519,36 @@
                 }
                 QueryUtils.loadingWheel($scope, false);
                 if ($scope.formState.type === 'KYSITLUS_O') {
-                    QueryUtils.createQueryForm($scope, '/poll/results/subjects/' + $scope.id, {});
-                    $scope.loadData();
+                    if ($scope.auth.vocational) {
+                        $scope.journalCriteria = { size: 10, page: 1, order: 'jj.name_et', id: $scope.id };
+                        $scope.journals = {};
+                        $scope.afterJournalsLoad = function (result) {
+                            $scope.journals.content = result.content;
+                            $scope.journals.totalElements = result.totalElements;
+                        };
+
+                        $scope.loadJournals = function () {
+                            var query = QueryUtils.getQueryParams($scope.journalCriteria);
+                            $scope.journals.$promise = QueryUtils.endpoint('/poll/results/journals/:id').search(query, $scope.afterJournalsLoad);
+                        };
+                        $scope.loadJournals();
+                    }
+                    if ($scope.auth.higher) {
+                        $scope.subjectCriteria = { size: 10, page: 1, order: 's.name_et, teacher, s.code', id: $scope.id };
+                        $scope.subjects = {};
+                        $scope.afterSubjectsLoad = function (result) {
+                            $scope.subjects.content = result.content;
+                            $scope.subjects.totalElements = result.totalElements;
+                        };
+
+                        $scope.loadSubjects = function () {
+                            var query = QueryUtils.getQueryParams($scope.subjectCriteria);
+                            $scope.subjects.$promise = QueryUtils.endpoint('/poll/results/subjects/:id').search(query, $scope.afterSubjectsLoad);
+                        };
+                        $scope.loadSubjects();
+                    }
                 } else if ($scope.formState.type === 'KYSITLUS_P') {
-                    QueryUtils.createQueryForm($scope, '/poll/results/enterprises/' + $scope.id, {});
+                    QueryUtils.createQueryForm($scope, '/poll/results/enterprises/' + $scope.id, {}, null, null, null, true);
                     $scope.loadData();
                     var PollEndPoint = QueryUtils.endpoint('/poll/results/enterprises/studentOrTeacher');
                     PollEndPoint.get({id: $scope.id}).$promise.then(function (result) {
@@ -1371,7 +1563,12 @@
 
         $scope.showJournalGraph = function(row) {
             var newScope = {};
-            newScope.graphName = row.name;
+            var name = angular.copy(row.name);
+            if (row.teacher) {
+                name.nameEt = name.nameEt + (row.teacher.nameEt !== undefined && row.teacher.nameEt !== null ? " (" + row.teacher.nameEt + ")" : "");
+                name.nameEn = name.nameEn + (row.teacher.nameEn !== undefined && row.teacher.nameEn !== null ? " (" + row.teacher.nameEn + ")" : "");
+            }
+            newScope.graphName = name;
             newScope.journal = true;
             newScope.adminViewing = true;
             newScope.pollId = $scope.id;
@@ -1394,13 +1591,17 @@
 
         $scope.subjectToExcel = function(params) {
             var data = {
-                pollId: $scope.id
+                pollId: $scope.id,
+                subjectStudyPeriodId: params.teacher.id
             };
-            if ($scope.auth.higher) {
-                data.subjectId = params.name.id;
-            } else {
-                data.journalId = params.name.id;
-            }
+            $window.location.href = $rootScope.excel('poll/results/exportSubject.xls', data);
+        };
+
+        $scope.journalToExcel = function(params) {
+            var data = {
+                pollId: $scope.id,
+                journalId: params.name.id
+            };
             $window.location.href = $rootScope.excel('poll/results/exportSubject.xls', data);
         };
 
@@ -1408,7 +1609,7 @@
             $window.location.href = $rootScope.excel('poll/results/exportSubject.xls', {pollId: $scope.id});
         };
 
-        $scope.openAllAnswers = function() {
+        $scope.openAllGraph = function() {
             var newScope = {};
             newScope.adminViewing = true;
             newScope.pollId = $scope.id;
@@ -1416,6 +1617,10 @@
             var GraphEndpoint = QueryUtils.endpoint('/poll/graphWithoutStudentAnswer');
             GraphEndpoint = new GraphEndpoint({pollId: newScope.pollId});
             loadEndpoint(GraphEndpoint, newScope);
+        };
+
+        $scope.openAllResults = function(journalOrSubjectId, teacherId, isSubject) {
+            openAllResults($scope, QueryUtils, dialogService, $scope.id, journalOrSubjectId, teacherId, isSubject);
         };
 
         $scope.openEnterpriseAnswer = function(row) {
@@ -1451,12 +1656,17 @@
 
         $scope.showSubjectGraph = function(row) {
             var newScope = {};
-            newScope.graphName = row.name;
+            var name = angular.copy(row.name);
+            if (row.teacher) {
+                name.nameEt = name.nameEt + " (" + row.teacher.nameEt + ")";
+                name.nameEn = name.nameEn + " (" + row.teacher.nameEn + ")";
+            }
+            newScope.graphName = name;
             newScope.journal = false;
             newScope.adminViewing = true;
             newScope.pollId = $scope.id;
             var GraphEndpoint = QueryUtils.endpoint('/poll/graphWithoutStudentAnswer');
-            GraphEndpoint = new GraphEndpoint({pollId: newScope.pollId, subjectId: row.name.id});
+            GraphEndpoint = new GraphEndpoint({pollId: newScope.pollId, subjectStudyPeriodId: row.teacher.id});
             loadEndpoint(GraphEndpoint, newScope);
         };
 
@@ -1468,14 +1678,16 @@
                 });
                 QueryUtils.createQueryForm(dialogScope, '/poll/results/student', {}, clMapper.objectmapper);
                 dialogScope.criteria.pollId = $scope.id;
+                dialogScope.criteria.studentName = undefined;
+                dialogScope.criteria.subjectId = undefined;
                 if (dialogScope.higher) {
-                    dialogScope.criteria.subjectId = row.name.id;
+                    dialogScope.criteria.subjectStudyPeriodId = row.teacher.id;
                     dialogScope.criteria.subject = $scope.currentLanguageNameField(row.name);
                     dialogScope.criteria.journalId = undefined;
                 } else {
                     dialogScope.criteria.journalId = row.name.id;
                     dialogScope.criteria.journal = $scope.currentLanguageNameField(row.name);
-                    dialogScope.criteria.subjectId = undefined;
+                    dialogScope.criteria.subjectStudyPeriodId = undefined;
                 }
 
                 dialogScope.search = function() {
@@ -1495,6 +1707,7 @@
                     dialogScope.graphName = newScope.graphName;
                     dialogScope.journal = newScope.journal;
                     dialogScope.adminViewing = newScope.adminViewing;
+                    dialogScope.higher = $scope.auth.higher;
                     dialogScope.pollId = newScope.pollId;
                     dialogScope.enterprise = newScope.enterprise;
                     dialogScope.student = newScope.student;
@@ -1503,92 +1716,63 @@
                     dialogScope.formState = {};
                     dialogScope.showGraph = true;
                     dialogScope.criteria = {};
+                    // translations
+                    var responseCount = $translate.instant('poll.answers.dialog.responseCount');
+                    var average = $translate.instant('poll.answers.dialog.average');
+                    var individualResponses = $translate.instant('poll.answers.dialog.individualResponseCount');
+                    var myAnswers = $translate.instant('poll.answers.dialog.myAnswer');
 
                     dialogScope.graph = response;
                     if (response.comments !== undefined) {
                         dialogScope.comments = response.comments;
                     }
-                    $translate('poll.answers.dialog.responseCount').then(function (translatedVal) {
-                        dialogScope.graph.graphByTheme.forEach(function (graphTheme) {
-                            var scales = {
-                                xAxes: [{
-                                    ticks: {
-                                        beginAtZero: true,
-                                        max: graphTheme.max
+
+                    dialogScope.graph.theme.forEach(function (theme) {
+                        theme.journalOrSubject.forEach(function (subject) {
+                            subject.teachers.forEach(function (teacher) {
+                                teacher.graph.forEach(function (graph) {
+                                    prepareTheme(graph, $scope, average, responseCount);
+                                    graph.labelOverride[1] = {
+                                        label: myAnswers
+                                    };
+                                    // Set legend name (average or response count)
+                                    if (graph.isCheckbox) {
+                                        setLabelOverride(graph, individualResponses);
+                                    } else {
+                                        setLabelOverride(graph, average);
                                     }
-                                    
-                                }],
-                                yAxes: [{
-                                    ticks: {
-                                        display:false
+                                    if ($scope.formState.type === 'KYSITLUS_V') {
+                                        graph.labelOverride[0].label = responseCount;
                                     }
-                                }]
-                            };
-                            var translatedLabels = [];
-                            graphTheme.labels.forEach(function (label) {
-                                translatedLabels.push($scope.currentLanguageNameField(label));
-                            });
-                            var translatedLabelOverride = [];
-                            if ($scope.formState.type !== 'KYSITLUS_V') {
-                                graphTheme.labelOverride.forEach(function (labelOverride) {
-                                    var completeString = "";
-                                    labelOverride.pointBorderColor.forEach(function (pointBorderColor){
-                                        completeString += $scope.currentLanguageNameField(pointBorderColor.answer) + 
-                                        "(" + pointBorderColor.answerNr + ")" + 
-                                        ": " + pointBorderColor.answers + "\n";
-                                    });
-                                    completeString += translatedVal + ": " + labelOverride.sum;
-                                    translatedLabelOverride.push(completeString);
                                 });
-                            }
-                            graphTheme.labelOverride.forEach(function (labelOverride) {
-                                labelOverride.pointBorderColor = translatedLabelOverride;
                             });
-                            graphTheme.labels = translatedLabels;
-                            graphTheme.options.title.text = splitTitle(graphTheme.options.title.text, $scope);
-                            graphTheme.options.scales = scales;
-                            graphTheme.options.tooltips = tooltips;
                         });
                     });
 
-                    if ($scope.formState.type === 'KYSITLUS_V') {
-                        $translate('poll.answers.dialog.responseCount').then(function (translatedVal) {
-                            dialogScope.graph.graphByTheme.forEach(function (theme) {
-                                theme.labelOverride[0].label = translatedVal;
-                            });
-                        });
-                    } else {
-                        $translate('poll.answers.dialog.average').then(function (translatedVal) {
-                            dialogScope.graph.graphByTheme.forEach(function (theme) {
-                                theme.labelOverride[0].label = translatedVal;
-                            });
-                        });
+                    function setLabelOverride(theme, translatedVal) {
+                        if (theme.labelOverride[0] === undefined) {
+                            theme.labelOverride[0] = {label: translatedVal};
+                        } else {
+                            theme.labelOverride[0].label = translatedVal;
+                        }
                     }
-                    
-                    $translate('poll.answers.dialog.myAnswer').then(function (translatedVal) {
-                        dialogScope.graph.graphByTheme.forEach(function (theme) {
-                            theme.labelOverride[1] = {
-                                label: translatedVal
-                            };
-                        });
-                    });
                 });
             });
         }
 
-        $scope.openAnswers = function(row) {
-            if ($scope.auth.higher) {
+        $scope.openAnswers = function(row, isSubject) {
+            if (isSubject) {
                 $scope.showSubjectGraph(row);
             } else {
                 $scope.showJournalGraph(row);
             }
         };
 
-    }).controller('PollStatisticsController', function ($scope, $route, QueryUtils, ArrayUtils, message, $rootScope, ExcelUtils) {
+    }).controller('PollStatisticsController', function ($scope, $route, QueryUtils, ArrayUtils, message, $rootScope, ExcelUtils, $timeout) {
         $scope.auth = $route.current.locals.auth;
-        $scope.criteria = {};
-        $scope.criteria.questions = [];
-        $scope.criteria.polls = [];
+        $scope.reset = resetCriteria;
+
+        resetCriteria();
 
         $scope.loadPolls = function() {
             $scope.polls = QueryUtils.endpoint('/autocomplete/polls').query({type: $scope.criteria.typeCode});
@@ -1672,6 +1856,12 @@
             }
         };
 
+        function resetCriteria() {
+            $scope.criteria = {};
+            $scope.criteria.questions = [];
+            $scope.criteria.polls = [];
+        }
+
     }).controller('PollEditController', function ($scope, $route, QueryUtils, dialogService, message, FormUtils, Classifier, $location, oisFileService, $rootScope, $q, ArrayUtils) {
         $scope.auth = $route.current.locals.auth;
         $scope.currentNavItem = 'poll.data';
@@ -1700,6 +1890,7 @@
                 $scope.displayDates = true;
             }
         };
+
         $scope.saveDates = function() {
             FormUtils.withValidForm($scope.pollForm, function() {
                 var Endpoint = QueryUtils.endpoint('/poll/changeDates/' + $scope.criteria.id);
@@ -1721,22 +1912,74 @@
             }
         });
 
-        $scope.addJournal = function() {
-            if (!angular.isArray($scope.criteria.journals)) {
-                $scope.criteria.journals = [];
+        $scope.$watch('formState.subjectStudyPeriod', function () {
+            if (angular.isDefined($scope.formState.subjectStudyPeriod) && $scope.formState.subjectStudyPeriod !== null) {
+                $scope.addSubjectStudyPeriod();
             }
-            if ($scope.criteria.journals.some(function (code) {
-                return $scope.formState.journal !== undefined && 
-                    $scope.formState.journal !== null && 
-                    code.id === $scope.formState.journal.id;
-            })) {
-                $scope.formState.journal = undefined;
-                message.error('poll.basicData.duplicateJournal');
-                return;
-            }
-            $scope.criteria.journals.push(angular.copy($scope.formState.journal));
-            $scope.formState.journal = undefined;
+        });
+
+        $scope.addAllSubjectStudyPeriods = function () {
+            QueryUtils.endpoint('/autocomplete/subjectStudyPeriods').query({studyPeriod: $scope.criteria.studyPeriod}, function (subjectStudyPeriods) {
+                $scope.criteria.subjectStudyPeriods = subjectStudyPeriods;
+                $scope.pollForm.$setDirty();
+            });
+        };
+
+        $scope.removeSubjectStudyPeriod = function(item) {
+            ArrayUtils.remove($scope.criteria.subjectStudyPeriods, item);
             $scope.pollForm.$setDirty();
+        };
+
+        $scope.addSubjectStudyPeriod = function() {
+            $scope.criteria.subjectStudyPeriods = addElementToList($scope.criteria.subjectStudyPeriods, $scope.formState.subjectStudyPeriod, 'poll.basicData.duplicateStudyPeriod');
+            $scope.formState.subjectStudyPeriod = undefined;
+        };
+
+        $scope.removeAllSubjectStudyPeriods = function () {
+            $scope.criteria.subjectStudyPeriods = [];
+            $scope.pollForm.$setDirty();
+        };
+
+        $scope.viewMoreOfList = function(modifiable, journal,edit) {
+            dialogService.showDialog('poll/poll.edit.modifiable.list.dialog.html', function (dialogScope) {
+                dialogScope.fullList = modifiable;
+                dialogScope.edit = edit;
+                dialogScope.journal = journal;
+                dialogScope.searchedFullList = dialogScope.fullList;
+
+                dialogScope.query = {
+                    page: 1,
+                    limit: 20
+                };
+
+                dialogScope.paginate = function() {
+                    dialogScope.modifiable = dialogScope.searchedFullList.slice((dialogScope.query.page - 1) * 20, dialogScope.query.page * 20);
+                };
+
+                dialogScope.removeItem = function(item) {
+                    ArrayUtils.remove(dialogScope.fullList, item);
+                    dialogScope.search();
+                };
+
+                dialogScope.search = function() {
+                    if (dialogScope.name !== undefined) {
+                        dialogScope.searchedFullList = dialogScope.fullList.filter(function(el) {
+                            return el.literalName.toLowerCase().indexOf(dialogScope.name.toLowerCase()) !== -1;
+                        });
+                    } else {
+                        dialogScope.searchedFullList = dialogScope.fullList;
+                    }
+                    dialogScope.paginate();
+                };
+
+                }, function (submittedDialogScope) {
+                    $scope.criteria.journals = submittedDialogScope.fullList;
+                }, null, true);
+        };
+
+        $scope.addJournal = function() {
+            $scope.criteria.journals = addElementToList($scope.criteria.journals, $scope.formState.journal, 'poll.basicData.duplicateJournal');
+            $scope.formState.journal = undefined;
         };
 
         $scope.removeJournal = function(journal) {
@@ -1775,7 +2018,6 @@
                 result.status = undefined;
                 result.insertedBy = undefined;
                 result.changedBy = undefined;
-
                 result.reminderDt = new Date(result.reminderDt);
                 result.validFrom = new Date(result.validFrom);
                 result.validThru = new Date(result.validThru);
@@ -1951,9 +2193,26 @@
         };
 
         $scope.save = function (confirm) {
-            if ((!angular.isArray($scope.criteria.journals) || $scope.criteria.journals.length === 0) && $scope.criteria.type === 'KYSITLUS_O' &&
-                (!$scope.auth.higher || ($scope.auth.higher && $scope.auth.vocational && ($scope.criteria.studyPeriod === undefined || $scope.criteria.studyPeriod === null)))) {
+            if (confirm && $scope.criteria.type === 'KYSITLUS_O') {
+                if (!$scope.auth.vocational && $scope.criteria.subjectStudyPeriods.length === 0) {
+                    message.error('poll.basicData.atleastOneStudyPeriod');
+                    return;
+                }
+                if ($scope.auth.vocational && $scope.auth.higher && 
+                    (!angular.isArray($scope.criteria.journals) || $scope.criteria.journals.length === 0) && 
+                    (!angular.isArray($scope.criteria.subjectStudyPeriods) || $scope.criteria.subjectStudyPeriods.length === 0)) {
+                    message.error('poll.basicData.atleastOneStudyPeriodOrJournal');
+                    return;
+                }
+            }
+            if ((!angular.isArray($scope.criteria.journals) || $scope.criteria.journals.length === 0) 
+                && $scope.criteria.type === 'KYSITLUS_O' && !$scope.auth.higher) {
                 message.error('poll.basicData.atleastOneJournal');
+                return;
+            }
+            if ((!angular.isArray($scope.criteria.journals) || $scope.criteria.journals.length === 0) && $scope.criteria.type === 'KYSITLUS_O' &&
+                $scope.auth.higher && $scope.auth.vocational && ($scope.criteria.studyPeriod === undefined || $scope.criteria.studyPeriod === null || $scope.criteria.studyPeriod === "")) {
+                message.error('poll.basicData.studyPeriodError');
                 return;
             }
             if (!angular.isArray($scope.formState.targetCodes) && $scope.criteria.type !== 'KYSITLUS_O' && $scope.criteria.type !== 'KYSITLUS_T' && $scope.criteria.type !== 'KYSITLUS_V') {
@@ -2010,7 +2269,7 @@
                 return;
             }
             if (!angular.isArray($scope.formState.targetCodes)) {
-            $scope.formState.targetCodes = [];
+                $scope.formState.targetCodes = [];
             }
             if ($scope.formState.targetCodes.some(function (code) {
                 return code.code === $scope.formState.targetCode;
@@ -2027,8 +2286,8 @@
         $scope.deleteTargetCode = function (targetCode) {
             var index = $scope.formState.targetCodes.indexOf(targetCode);
             if (index !== -1) {
-            $scope.formState.targetCodes.splice(index, 1);
-            $scope.pollForm.$setDirty();
+                $scope.formState.targetCodes.splice(index, 1);
+                $scope.pollForm.$setDirty();
             }
             $scope.checkCases();
         };
@@ -2039,11 +2298,16 @@
             $scope.pollForm.$setDirty();
         };
 
-        $scope.addAllStudentgroups = function () {
-            QueryUtils.endpoint('/autocomplete/studentgroups').query({valid: true}, function (studentgroups) {
-                $scope.formState.studentGroups = studentgroups;
+        $scope.addAllJournals = function () {
+            QueryUtils.endpoint('/autocomplete/journalsAndStudentGroups').query({}, function (journals) {
+                $scope.criteria.journals = journals;
                 $scope.pollForm.$setDirty();
             });
+        };
+
+        $scope.removeAllJournals = function () {
+            $scope.criteria.journals = [];
+            $scope.pollForm.$setDirty();
         };
 
         $scope.$watch('formState.studentgroup', function () {
@@ -2079,22 +2343,43 @@
             }
         };
 
-        $scope.addStudentGroup = function () {
-            if (!angular.isArray($scope.formState.studentGroups)) {
+        $scope.addAllStudentgroups = function () {
+            QueryUtils.endpoint('/autocomplete/studentgroups').query({valid: true}, function (studentgroups) {
+                $scope.formState.studentGroups = studentgroups;
+                $scope.pollForm.$setDirty();
+            });
+        };
+
+        $scope.removeAllStudentgroups = function () {
             $scope.formState.studentGroups = [];
-            }
-            if ($scope.formState.studentGroups.some(function (code) {
-                return $scope.formState.studentgroup !== undefined && 
-                    $scope.formState.studentgroup !== null && 
-                    code.id === $scope.formState.studentgroup.id;
-            })) {
-                $scope.formState.studentgroup = undefined;
-                message.error('poll.basicData.duplicateTargetCode');
-                return;
-            }
-            $scope.formState.studentGroups.push(angular.copy($scope.formState.studentgroup));
-            $scope.formState.studentgroup = undefined;
             $scope.pollForm.$setDirty();
+        };
+
+        function addElementToList(list, addable, duplicateError) {
+            if (!angular.isArray(list)) {
+                list = [];
+            }
+            if (list.some(function (item) { return addable !== undefined && addable !== null && item.id === addable.id;})) {
+                if (!duplicateError) {
+                    message.error('poll.basicData.duplicate');
+                } else {
+                    message.error(duplicateError);
+                }
+                return list;
+            }
+            list.push(angular.copy(addable));
+            $scope.pollForm.$setDirty();
+            return list.sort(function(a, b){
+                var lowerA = a.nameEt.toLowerCase(), lowerB = b.nameEt.toLowerCase();
+                if(lowerA < lowerB) { return -1; }
+                if(lowerA > lowerB) { return 1; }
+                return 0;
+            });
+        }
+
+        $scope.addStudentGroup = function () {
+            $scope.formState.studentGroups = addElementToList($scope.formState.studentGroups, $scope.formState.studentgroup, 'poll.basicData.duplicateStudentGroup');
+            $scope.formState.studentgroup = undefined;
         };
 
         $scope.removeAllStudentgroups = function () {
@@ -2105,8 +2390,8 @@
         $scope.deleteStudentgroup = function (studentgroup) {
             var index = $scope.formState.studentGroups.indexOf(studentgroup);
             if (index !== -1) {
-            $scope.formState.studentGroups.splice(index, 1);
-            $scope.pollForm.$setDirty();
+                $scope.formState.studentGroups.splice(index, 1);
+                $scope.pollForm.$setDirty();
             }
         };
 

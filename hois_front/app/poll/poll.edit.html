@@ -88,7 +88,12 @@
                                 <div layout="row" ng-if="auth.higher && criteria.type === 'KYSITLUS_O'">
                                     <md-input-container flex>
                                         <label>{{'poll.basicData.declarationPeriod' | translate}}</label>
-                                        <hois-select ng-model="criteria.studyPeriod" type="studyperiodyear" sorted-query="true" ng-required="auth.higher && (criteria.journals === undefined || criteria.journals.length === 0)" preselect-current aria-label="studyperiod"></hois-select>
+                                        <hois-select ng-model="criteria.studyPeriod" type="studyperiodyear" sorted-query="true" ng-if="criteria.id"
+                                        ng-required="auth.higher && (criteria.journals === undefined || criteria.journals.length === 0)" 
+                                        aria-label="studyperiod" ng-change="removeAllSubjectStudyPeriods()"></hois-select>
+                                        <hois-select ng-model="criteria.studyPeriod" type="studyperiodyear" sorted-query="true" ng-if="!criteria.id"
+                                        ng-required="auth.higher && (criteria.journals === undefined || criteria.journals.length === 0)" 
+                                        preselect-current aria-label="studyperiod" ng-change="removeAllSubjectStudyPeriods()"></hois-select>
                                     </md-input-container>
                                 </div>
                                 <div class="form-readonly" ng-if="showExpertUrl && criteria.id">
@@ -107,7 +112,7 @@
                         <div layout="row" layout-xs="column">
                             <hois-autocomplete label="poll.studentgroup" flex="50" flex-xs="100" ng-model="formState.studentgroup" method="studentgroups" additional-query-params="{valid: true}"></hois-autocomplete>
                             <md-button flex-offset="5" flex-offset-xs="0" ng-click="addAllStudentgroups()" class="md-raised">{{"poll.basicData.pickAll" | translate}}</md-button>
-                            <md-button ng-if="formState.studentGroups.length > 0" flex-offset-xs="0" ng-click="removeAllStudentgroups()" class="md-raised">{{"poll.basicData.removeAll" | translate}}</md-button>
+                            <md-button ng-if="criteria.journals.length > 0" flex-offset-xs="0" ng-click="removeAllStudentgroups()" class="md-raised">{{"poll.basicData.removeAll" | translate}}</md-button>
                         </div>
                         <div ng-if="formState.studentGroups.length > 0" layout="row">
                             <md-table-container flex="50" flex-xs="100" style="max-height: 200px">
@@ -134,25 +139,63 @@
                         <div layout="column" ng-if="!auth.higher || (auth.higher && auth.vocational)">
                             <div layout="row">
                                 <hois-autocomplete flex="50" ng-model="formState.journal" method="journalsAndStudentGroups" name="journals" label="poll.basicData.journals"></hois-autocomplete>
+                                <md-button flex-offset="5" flex-offset-xs="0" ng-click="addAllJournals()" class="md-raised">{{"poll.basicData.pickAll" | translate}}</md-button>
+                                <md-button ng-if="criteria.journals.length > 0" flex-offset-xs="0" ng-click="removeAllJournals()" class="md-raised">{{"poll.basicData.removeAll" | translate}}</md-button>
                             </div>
                             <div layout="row">
-                                <md-table-container flex="50" style="max-height: 200px">
-                                    <table md-table class="secondary-table">
-                                        <tbody md-body>
-                                            <tr md-row ng-repeat="journal in criteria.journals" ng-class-odd="'odd'" ng-class-even="'even'">
-                                                <td md-cell>{{currentLanguageNameField(journal)}}</td>
-                                                <td md-cell>
-                                                    <md-button class="remove nomargin" ng-click="removeJournal(journal)">&times;</md-button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </md-table-container>
+                                <div layout="column" flex="50">
+                                    <md-table-container>
+                                        <table md-table class="secondary-table">
+                                            <tbody md-body>
+                                                <tr md-row ng-repeat="journal in criteria.journals|limitTo:5" ng-class-odd="'odd'" ng-class-even="'even'">
+                                                    <td md-cell>{{currentLanguageNameField(journal)}}</td>
+                                                    <td md-cell>
+                                                        <md-button class="remove nomargin" ng-click="removeJournal(journal)">&times;</md-button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                    <div layout="row">
+                                        <a ng-if="criteria.journals.length > 5" ng-click="viewMoreOfList(criteria.journals, true, true)" style="font-size: 13px;">
+                                            {{'poll.basicData.viewMore' | translate}}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div layout="column" ng-if="auth.higher">
+                            <div layout="row" ng-if="!!criteria.studyPeriod">
+                                <hois-autocomplete flex="50" ng-model="formState.subjectStudyPeriod" method="subjectStudyPeriods" name="subjectStudyPeriods" 
+                                label="poll.basicData.subjectStudyPeriods" additional-query-params="{studyPeriod: criteria.studyPeriod}"></hois-autocomplete>
+                                <md-button flex-offset="5" flex-offset-xs="0" ng-click="addAllSubjectStudyPeriods()" class="md-raised">{{"poll.basicData.pickAll" | translate}}</md-button>
+                                <md-button ng-if="criteria.subjectStudyPeriods.length > 0" flex-offset-xs="0" ng-click="removeAllSubjectStudyPeriods()" class="md-raised">{{"poll.basicData.removeAll" | translate}}</md-button>
+                            </div>
+                            <div layout="row">
+                                <div layout="column" flex="50">
+                                    <md-table-container>
+                                        <table md-table class="secondary-table">
+                                            <tbody md-body>
+                                                <tr md-row ng-repeat="subjectStudyPeriod in criteria.subjectStudyPeriods|limitTo:5" ng-class-odd="'odd'" ng-class-even="'even'">
+                                                    <td md-cell>{{currentLanguageNameField(subjectStudyPeriod)}}</td>
+                                                    <td md-cell>
+                                                        <md-button class="remove nomargin" ng-click="removeSubjectStudyPeriod(subjectStudyPeriod)">&times;</md-button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </md-table-container>
+                                    <div layout="row">
+                                        <a ng-if="criteria.subjectStudyPeriods.length > 5" ng-click="viewMoreOfList(criteria.subjectStudyPeriods, false, true)" style="font-size: 13px;">
+                                            {{'poll.basicData.viewMore' | translate}}
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </fieldset>
-                <br>
+                <div>&nbsp;</div>
                 <md-input-container ng-if="criteria.type === 'KYSITLUS_O'">
                     <md-checkbox ng-model="criteria.isTeacherComment" aria-label="required" ng-checked="formState.isTeacherComment">
                         {{'poll.basicData.teacherCanComment' | translate}}
@@ -191,7 +234,7 @@
                 </div>
                 <div layout="column" class="form-readonly" flex>
                     <div layout="column" ng-if="formState.insertedBy !== undefined">
-                        <br>
+                        <div style="height: 19px"></div>
                         <div layout="row">
                             <md-input-container flex="25" flex-xs="100">
                                 <label>{{'poll.basicData.insertedBy' | translate}}</label>
@@ -200,7 +243,7 @@
                         </div>
                     </div>
                     <div layout="column" ng-if="formState.changedBy !== undefined">
-                        <br>
+                        <div style="height: 19px"></div>
                         <div layout="row">
                             <md-input-container flex="25" flex-xs="100">
                                 <label>{{'poll.basicData.changedBy' | translate}}</label>
@@ -209,7 +252,7 @@
                         </div>
                     </div>
                     <div layout="column" ng-if="formState.status !== undefined">
-                        <br>
+                        <div style="height: 19px"></div>
                         <div layout="row">
                             <md-input-container flex="25" flex-xs="100">
                                 <label>{{'poll.basicData.status' | translate}}</label>

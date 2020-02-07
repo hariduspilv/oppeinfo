@@ -1,4 +1,8 @@
 <style>
+    md-toolbar .md-toolbar-tools {
+        height: auto;
+        max-height: none;
+    }
     canvas{
         -moz-user-select: none;
         -webkit-user-select: none;
@@ -32,21 +36,34 @@
             display: none !important;
         }
     }
+
+    .justify-evenly {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .justify-evenly::before,
+    .justify-evenly::after {
+        content: '';
+        display: block;
+    }
 </style>
 <md-dialog aria-label="add question dialog" flex="50">
     <form name="dialogForm" ng-submit="submit()" novalidate ng-cloak>
-        <md-toolbar>
-            <div class="md-toolbar-tools">
-                <h2 flex ng-if="!enterprise && !teacher && !student && !poll">{{showGraph && graphName && !overall ? 
-                    (journal ? ('poll.answers.dialog.journal' | translate) + ' ' + currentLanguageNameField(graphName) :
-                    ('poll.answers.dialog.subject' | translate) + ' ' + currentLanguageNameField(graphName)) 
-                    : (overall ? ('poll.answers.dialog.themes' | translate) : currentLanguageNameField(formState.name))}}</h2>
-                <h2 flex ng-if="enterprise">{{('poll.answers.enterprise' | translate) + ' ' + currentLanguageNameField(graphName)}}</h2>
-                <h2 flex ng-if="teacher">{{(auth.higher ? 'poll.answers.teachers.higher' : 'poll.answers.teachers.vocational') | translate}}</h2>
-                <h2 flex ng-if="student">{{'poll.answers.students' | translate}}</h2>
-                <h2 flex ng-if="poll">{{'poll.answers.dialog.pollName' | translate:poll}}</h2>
+        <md-toolbar style="min-height: auto">
+            <div class="md-toolbar-tools" style="max-height: 100%; height: 100%; padding: 10px">
+                <div flex>
+                    <h2 flex ng-if="!enterprise && !teacher && !student && !poll">{{showGraph && graphName && !overall ? 
+                        (journal ? ('poll.answers.dialog.journal' | translate) + ' ' + currentLanguageNameField(graphName) :
+                        ('poll.answers.dialog.subject' | translate) + ' ' + currentLanguageNameField(graphName)) 
+                        : (overall ? ('poll.answers.dialog.themes' | translate) : currentLanguageNameField(formState.name))}}</h2>
+                    <h2 flex ng-if="enterprise">{{('poll.answers.enterprise' | translate) + ' ' + currentLanguageNameField(graphName)}}</h2>
+                    <h2 flex ng-if="teacher">{{(auth.higher ? 'poll.answers.teachers.higher' : 'poll.answers.teachers.vocational') | translate}}</h2>
+                    <h2 flex ng-if="student">{{'poll.answers.students' | translate}}</h2>
+                    <h2 flex ng-if="poll">{{'poll.answers.dialog.pollName' | translate:poll}}</h2>
+                </div>
                 <md-button class="md-icon-button" ng-click="cancel()">
-                <md-icon md-font-set="material-icons">close</md-icon>
+                    <md-icon md-font-set="material-icons">close</md-icon>
                 </md-button>
             </div>
         </md-toolbar>
@@ -60,31 +77,81 @@
                     <h3 style="margin-left: auto; margin-right: auto">{{'poll.answers.dialog.themes' | translate}}</h3>
                 </md-button>
             </div>
-            <div ng-if="showGraph" layout="column">
-                <div layout="row" ng-repeat="chart in graph.graphByTheme track by $index">
-                    <div flex="40" class="hideOnFlexXs" layout="column" layout-align="space-between">
-                        <br>
-                        <div layout="row" ng-repeat="label in chart.labels" style="word-break: break-word">
-                            {{label}}
-                        </div>
-                        <br>
+            <div ng-if="showGraph" layout="column" class="questions">
+                <div layout="column" ng-repeat="theme in graph.theme track by $index">
+                    <div layout="row" class="questions-header">
+                        <div>{{currentLanguageNameField(theme.title)}}</div>
                     </div>
-                    <div flex="60" flex-xs="100" layout="column">
-                        <canvas id="canvas" class="chart-horizontal-bar" chart-options="chart.options" width="100%"
-                            chart-data="chart.data" chart-labels="chart.labels" chart-dataset-override="chart.labelOverride">
-                        </canvas>
+                    <div layout="column" ng-repeat="subject in theme.journalOrSubject" ng-if="!theme.isRepetitive || (theme.isRepetitive && (theme.journalOrSubject.length === 1 || (subject.subjectOrJournal !== null && subject.subjectOrJournal.id !== null)))">
+                        <div ng-if="subject.subjectOrJournal !== null && subject.subjectOrJournal.id !== null" class="questions-item-primary">
+                            <h3>
+                                 <span>
+                                     {{currentLanguageNameField(subject.subjectOrJournal)}}
+                                     <md-tooltip md-direction="right">{{(higher ? 'poll.answers.subject' : 'poll.answers.journal') | translate}}</md-tooltip>
+                                 </span>
+                             </h3>
+                        </div>
+                        <div layout="column" ng-repeat="teacher in subject.teachers" class="questions-item-secondary">
+                            <h3 ng-if="teacher.teacher.id">
+                                <span>
+                                    {{currentLanguageNameField(teacher.teacher)}}
+                                    <md-tooltip md-direction="right">{{(higher ? 'poll.answers.teachers.higher' : 'poll.answers.teachers.vocational') | translate}}</md-tooltip>
+                                </span>
+                            </h3>
+                            <div layout="column" ng-repeat="chart in teacher.graph">
+                                <md-divider ng-if="!$first" style="padding-bottom: 12px;"></md-divider>
+                                <div layout="row" ng-if="chart.isCheckbox">
+                                    <div style="font-size: 13px;padding-left: 12px;">{{currentLanguageNameField(chart.options.title.text)}}</div>
+                                </div>
+                                <div layout="column" ng-if="chart.isText && chart.textAnswer !== null">
+                                    <div layout="row">
+                                        <div style="font-size: 13px;padding-left: 12px;">{{currentLanguageNameField(chart.textAnswer.question)}}</div>
+                                    </div>
+                                    <ul>
+                                        <div ng-repeat="textAnswer in chart.textAnswer.textAnswers track by $index">
+                                            <li>
+                                                <div style="font-size: 13px;">{{textAnswer}}</div>
+                                            </li>
+                                        </div>
+                                    </ul>
+                                </div>
+                                <div layout="row" ng-if="chart.labels.length !== 0">
+                                    <div flex="40" class="hideOnFlexXs justify-evenly" layout="column" style="margin-bottom: 32px;">
+                                        <div layout="row" ng-repeat="label in chart.labels" style="word-break: break-word;font-size: 13px;">
+                                            <div ng-style="{'padding-left' : chart.isCheckbox ? '48px' : '12px'}">{{label}}</div>
+                                        </div>
+                                    </div>
+                                    <div flex="60" flex-xs="100" layout="column" layout-align="center" id="chartId{{$index}}">
+                                        <canvas id="canvas" class="chart-horizontal-bar" chart-options="chart.options" width="100%"
+                                            chart-data="chart.data" chart-labels="chart.labels" chart-dataset-override="chart.labelOverride" 
+                                            height="{{chart.data[0].length * 10}}">
+                                        </canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div layout="row" ng-if="teacherViewing">
+
+                <div layout="column" ng-if="(!teacherViewing || adminViewing) && comments.length > 0 && (!studentViewing || (studentViewing && canStudentView))">
+                    <div class="questions-header">
+                        <div>
+                            {{(higher ? 'poll.answers.teachers.higherComment' : 'poll.answers.teachers.vocationalComment' ) | translate}}
+                        </div>
+                    </div>
+                    <div layout="column">
+                        <ul>
+                            <li ng-repeat="comment in comments" style="font-size: 13px;word-break: break-all;">
+                                {{currentLanguageNameField(comment.teacher) + ' - ' + comment.addInfo}}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div layout="row" ng-if="teacherViewing && canComment">
                     <md-input-container flex="100">
                         <label>{{'poll.answers.dialog.comment' | translate}}</label>
                         <textarea ng-disabled="graph.commentDisabled" ng-model="criteria.addInfo" md-maxlength="10000" ng-blur="saveComment(criteria.addInfo)"></textarea>
-                    </md-input-container>
-                </div>
-                <div layout="row" ng-if="!teacherViewing || adminViewing" ng-repeat="comment in comments">
-                    <md-input-container flex="100">
-                        <label>{{currentLanguageNameField(comment.teacher)}}</label>
-                        <textarea disabled ng-model="comment.addInfo"></textarea>
                     </md-input-container>
                 </div>
             </div>

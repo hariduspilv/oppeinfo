@@ -1,6 +1,7 @@
 
 package ee.hois.xroad.ehis.generated;
 
+import java.math.BigInteger;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -24,16 +25,18 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="oppimaAsumiseKuupaev" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
  *         &lt;element name="lopetamiseKuupaev" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
  *         &lt;element name="tase" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="erialaKood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="erialaKood" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="eriala" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="keeleKood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="staatus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="staatus" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="finantseerimiseAllikas" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oppevorm" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="koolId" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="koolId" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="nomA" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="diplom" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="cumlaude" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="cumlaude" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
+ *         &lt;element name="tasutaPaevad" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
+ *         &lt;element name="nominaal" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}saisKorkNominaal"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -58,7 +61,9 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "koolId",
     "nomA",
     "diplom",
-    "cumlaude"
+    "cumlaude",
+    "tasutaPaevad",
+    "nominaal"
 })
 public class SaisKorgkOping {
 
@@ -75,25 +80,29 @@ public class SaisKorgkOping {
     @XmlElement(required = true, nillable = true)
     protected String tase;
     @XmlElement(required = true, nillable = true)
-    protected String erialaKood;
+    protected BigInteger erialaKood;
     @XmlElement(required = true, nillable = true)
     protected String eriala;
     @XmlElement(required = true, nillable = true)
     protected String keeleKood;
     @XmlElement(required = true, nillable = true)
-    protected String staatus;
+    protected BigInteger staatus;
     @XmlElement(required = true, nillable = true)
     protected String finantseerimiseAllikas;
     @XmlElement(required = true, nillable = true)
     protected String oppevorm;
     @XmlElement(required = true, nillable = true)
-    protected String koolId;
+    protected BigInteger koolId;
     @XmlElement(required = true, nillable = true)
     protected String nomA;
     @XmlElement(required = true, nillable = true)
     protected String diplom;
     @XmlElement(required = true, nillable = true)
-    protected String cumlaude;
+    protected BigInteger cumlaude;
+    @XmlElement(required = true, nillable = true)
+    protected BigInteger tasutaPaevad;
+    @XmlElement(required = true, nillable = true)
+    protected SaisKorkNominaal nominaal;
 
     /**
      * Gets the value of the oppeasutuseKood property.
@@ -220,10 +229,10 @@ public class SaisKorgkOping {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getErialaKood() {
+    public BigInteger getErialaKood() {
         return erialaKood;
     }
 
@@ -232,10 +241,10 @@ public class SaisKorgkOping {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setErialaKood(String value) {
+    public void setErialaKood(BigInteger value) {
         this.erialaKood = value;
     }
 
@@ -292,10 +301,10 @@ public class SaisKorgkOping {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getStaatus() {
+    public BigInteger getStaatus() {
         return staatus;
     }
 
@@ -304,10 +313,10 @@ public class SaisKorgkOping {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setStaatus(String value) {
+    public void setStaatus(BigInteger value) {
         this.staatus = value;
     }
 
@@ -364,10 +373,10 @@ public class SaisKorgkOping {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getKoolId() {
+    public BigInteger getKoolId() {
         return koolId;
     }
 
@@ -376,10 +385,10 @@ public class SaisKorgkOping {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setKoolId(String value) {
+    public void setKoolId(BigInteger value) {
         this.koolId = value;
     }
 
@@ -436,10 +445,10 @@ public class SaisKorgkOping {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getCumlaude() {
+    public BigInteger getCumlaude() {
         return cumlaude;
     }
 
@@ -448,11 +457,59 @@ public class SaisKorgkOping {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setCumlaude(String value) {
+    public void setCumlaude(BigInteger value) {
         this.cumlaude = value;
+    }
+
+    /**
+     * Gets the value of the tasutaPaevad property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link BigInteger }
+     *     
+     */
+    public BigInteger getTasutaPaevad() {
+        return tasutaPaevad;
+    }
+
+    /**
+     * Sets the value of the tasutaPaevad property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link BigInteger }
+     *     
+     */
+    public void setTasutaPaevad(BigInteger value) {
+        this.tasutaPaevad = value;
+    }
+
+    /**
+     * Gets the value of the nominaal property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link SaisKorkNominaal }
+     *     
+     */
+    public SaisKorkNominaal getNominaal() {
+        return nominaal;
+    }
+
+    /**
+     * Sets the value of the nominaal property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link SaisKorkNominaal }
+     *     
+     */
+    public void setNominaal(SaisKorkNominaal value) {
+        this.nominaal = value;
     }
 
 }

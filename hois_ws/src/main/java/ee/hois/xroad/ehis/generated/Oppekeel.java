@@ -1,6 +1,7 @@
 
 package ee.hois.xroad.ehis.generated;
 
+import java.math.BigInteger;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -18,7 +19,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
  *         &lt;element name="oppekeelNimetus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="oppekeelId" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="oppekeelId" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -37,7 +38,7 @@ public class Oppekeel {
     @XmlElement(required = true, nillable = true)
     protected String oppekeelNimetus;
     @XmlElement(required = true, nillable = true)
-    protected String oppekeelId;
+    protected BigInteger oppekeelId;
 
     /**
      * Gets the value of the oppekeelNimetus property.
@@ -68,10 +69,10 @@ public class Oppekeel {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getOppekeelId() {
+    public BigInteger getOppekeelId() {
         return oppekeelId;
     }
 
@@ -80,10 +81,10 @@ public class Oppekeel {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setOppekeelId(String value) {
+    public void setOppekeelId(BigInteger value) {
         this.oppekeelId = value;
     }
 

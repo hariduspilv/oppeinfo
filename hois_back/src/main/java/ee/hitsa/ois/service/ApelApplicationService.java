@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
@@ -19,7 +20,11 @@ import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 
+import ee.hitsa.ois.domain.application.ApplicationPlannedSubject;
+import ee.hitsa.ois.domain.application.ApplicationPlannedSubjectEquivalent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,16 +51,23 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
+import ee.hitsa.ois.enums.ApelSubjectType;
 import ee.hitsa.ois.enums.CommitteeType;
+import ee.hitsa.ois.enums.DirectiveStatus;
+import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.enums.MessageType;
+import ee.hitsa.ois.enums.NominalDurationExtension;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.enums.SubjectAssessment;
+import ee.hitsa.ois.enums.VocationalGradeType;
 import ee.hitsa.ois.message.ApelApplicationCreated;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApelApplicationUtil;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
@@ -93,6 +105,8 @@ public class ApelApplicationService {
     private StudentResultHigherService studentResultHigherService;
     @Autowired
     private AutomaticMessageService automaticMessageService;
+    @Autowired
+    private Validator validator;
 
     private static final String RPM_FROM = "from apel_application aa"
             + " join student s on aa.student_id = s.id"
@@ -177,8 +191,9 @@ public class ApelApplicationService {
             dto.setConfirmed(resultAsLocalDate(r, 9));
             String studentName = PersonUtil.fullname(resultAsString(r, 3), resultAsString(r, 4));
             dto.setStudent(new AutocompleteResult(resultAsLong(r, 2), studentName, studentName));
-            dto.setCurriculum(new AutocompleteResult(resultAsLong(r, 5), resultAsString(r, 6), resultAsString(r, 7)));
-            dto.setCanEdit(Boolean.valueOf(ApelApplicationUtil.canEdit(user, dto.getStatus())));
+            Long curriculumId = resultAsLong(r, 5);
+            dto.setCurriculum(new AutocompleteResult(curriculumId, resultAsString(r, 6), resultAsString(r, 7)));
+            dto.setCanEdit(Boolean.valueOf(ApelApplicationUtil.canEdit(user, dto.getStatus(), curriculumId)));
             dto.setCanReview(Boolean.valueOf(ApelApplicationUtil.canReview(user, dto.getStatus(), committeeMembers.get(dto.getId()))));
             return dto;
         });
@@ -207,6 +222,7 @@ public class ApelApplicationService {
      */
     public ApelApplicationDto get(HoisUserDetails user, ApelApplication application) {
         ApelApplicationDto dto = ApelApplicationDto.of(application);
+
         dto.setCanEdit(Boolean.valueOf(ApelApplicationUtil.canEdit(user, application)));
         dto.setCanReview(Boolean.valueOf(ApelApplicationUtil.canReview(user, application)));
         dto.setCanSendToConfirm(Boolean.valueOf(ApelApplicationUtil.canSendToConfirm(user, application)));
@@ -218,10 +234,20 @@ public class ApelApplicationService {
                 Boolean.valueOf(ApelApplicationUtil.canCanChangeTransferStatus(user, application)));
         dto.setCanConfirm(Boolean.valueOf(ApelApplicationUtil.canConfirm(user, application)));
         dto.setCanRemoveConfirmation(Boolean.valueOf(ApelApplicationUtil.canRemoveConfirmation(user, application)));
+
+        List<AbroadStudiesHolder> finishedAbroadStudies = finishedAbroadStudies(application.getStudent());
+        dto.setHasAbroadStudies(Boolean.valueOf(!finishedAbroadStudies.isEmpty()));
+        boolean hasPlannedSubjectsToTransfer = !notTransferredPlannedSubjectIds(finishedAbroadStudies).isEmpty();
+        dto.setHasPlannedSubjectsToTransfer(Boolean.valueOf(hasPlannedSubjectsToTransfer));
+        dto.setCanExtendNominalDuration(Boolean.valueOf(canExtendNominalDuration(application)
+            && ApelApplicationUtil.hasRightsToExtendNominalDuration(user, application)));
+        dto.setOldNominalStudyEnd(application.getOldNominalStudyEnd() != null ? application.getOldNominalStudyEnd()
+                : application.getStudent().getNominalStudyEnd());
+        dto.setHasMultipleNominalDurationExtensions(Boolean.valueOf(hasMultipleNominalDurationExtensions(application)));
+
         return dto;
     }
-    
-    
+
     /**
      * Create new student APEL application
      * 
@@ -245,14 +271,20 @@ public class ApelApplicationService {
 
     /**
      * Saves which subjects/modules are transferred and application committee
-     * 
-     * @param user
+     *
      * @param application
      * @param applicationForm
      * @return
      */
     public ApelApplication save(HoisUserDetails user, ApelApplication application, ApelApplicationForm applicationForm) {
-        EntityUtil.bindToEntity(applicationForm, application, "records", "files", "committee", "decision");
+        validateSubmittedApplication(application);
+        EntityUtil.bindToEntity(applicationForm, application, "nominalType", "newNominalStudyEnd", "oldNominalStudyEnd",
+                "isEhisSent", "records", "committee", "decision", "files");
+
+        if (ApelApplicationUtil.hasRightsToExtendNominalDuration(user, application)) {
+            setNominalStudyExtension(application, applicationForm);
+        }
+
         for (ApelApplicationRecordForm recordForm : applicationForm.getRecords()) {
             for (ApelApplicationFormalSubjectOrModuleForm formalForm : recordForm.getFormalSubjectsOrModules()) {
                 ApelApplicationFormalSubjectOrModule subjectOrModule = EntityUtil
@@ -268,6 +300,26 @@ public class ApelApplicationService {
 
         application.setCommittee(EntityUtil.getOptionalOne(Committee.class, applicationForm.getCommitteeId(), em));
         return EntityUtil.save(application, em);
+    }
+
+    private void setNominalStudyExtension(ApelApplication application, ApelApplicationForm applicationForm) {
+        // nominal study extension can be set if all the conditions are currently met
+        // if it's already set then it can be changed, but if it's saved as 'no extending' then null everything
+        if (!canExtendNominalDuration(application)) {
+            if (application.getNominalType() == null || NominalDurationExtension.NOM_PIKEND_0.name()
+                    .equals(applicationForm.getNominalType())) {
+                applicationForm.setNominalType(null);
+            }
+        }
+
+        application.setNominalType(EntityUtil.getOptionalOne(applicationForm.getNominalType(), em));
+        if (application.getNominalType() != null) {
+            application.setNewNominalStudyEnd(applicationForm.getNewNominalStudyEnd());
+            if (application.getIsEhisSent() == null) application.setIsEhisSent(Boolean.FALSE);
+        } else {
+            application.setNewNominalStudyEnd(null);
+            application.setIsEhisSent(null);
+        }
     }
 
     /**
@@ -306,30 +358,6 @@ public class ApelApplicationService {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(file, em);
     }
-
-    // TODO: not needed because all records are saved one by one
-    // kept because it might be useful for combined formal and informal learning
-    /*
-    private void updateRecords(HoisUserDetails user, ApelApplication application, ApelApplicationForm applicationForm) {
-        EntityUtil.bindEntityCollection(application.getRecords(), ApelApplicationRecord::getId,
-                applicationForm.getRecords(), ApelApplicationRecordForm::getId, recordForm -> {
-            ApelApplicationRecord updatedRecord = EntityUtil.bindToEntity(recordForm, new ApelApplicationRecord(), 
-                    "apelApplication", "informalExperiences", "informalSubjectsOrModules", "formalSubjectsOrModules", "formalReplacedSubjectsOrModules");
-            updateInformalExperiences(recordForm, updatedRecord);
-            updateInformalSubjectsOrModules(recordForm, updatedRecord);
-            updateFormalSubjectsOrModules(user, recordForm, updatedRecord, applicationForm.getIsVocational());
-            updateFormalReplacedSubjectsOrModules(recordForm, updatedRecord);
-            return updatedRecord;
-        }, (recordForm, updatedRecord) -> {
-            EntityUtil.bindToEntity(recordForm, updatedRecord, "apelApplication", "informalExperiences", "informalSubjectsOrModules", 
-                    "formalSubjectsOrModules", "formalReplacedSubjectsOrModules");
-            updateInformalExperiences(recordForm, updatedRecord);
-            updateInformalSubjectsOrModules(recordForm, updatedRecord);
-            updateFormalSubjectsOrModules(user, recordForm, updatedRecord, applicationForm.getIsVocational());
-            updateFormalReplacedSubjectsOrModules(recordForm, updatedRecord);
-        });
-    }
-    */
 
     /**
      * Create new APEL application's record
@@ -399,18 +427,16 @@ public class ApelApplicationService {
                     new ApelApplicationInformalSubjectOrModule(), "apelApplicationRecord", "subject", "curriculumVersionHmodule",
                     "curriculumVersionOmodule", "curriculumVersionOmoduleTheme", "outcomes");
             subjectOrModule.setApelApplicationRecord(record);
-            subjectOrModule = updateInformalSubjectOrModule(form, subjectOrModule);
-            validateInformalSubjectOrModule(record, subjectOrModule);
+            updateInformalSubjectOrModule(form, subjectOrModule);
             return subjectOrModule;
         }, (form, subjectOrModule) -> {
             EntityUtil.bindToEntity(form, subjectOrModule, "subject", "curriculumVersionHmodule",
                     "curriculumVersionOmodule", "curriculumVersionOmoduleTheme", "outcomes");
-            subjectOrModule = updateInformalSubjectOrModule(form, subjectOrModule);
-            validateInformalSubjectOrModule(record, subjectOrModule);
+            updateInformalSubjectOrModule(form, subjectOrModule);
         });
     }
 
-    private ApelApplicationInformalSubjectOrModule updateInformalSubjectOrModule(
+    private void updateInformalSubjectOrModule(
             ApelApplicationInformalSubjectOrModuleForm form, ApelApplicationInformalSubjectOrModule subjectOrModule) {
         subjectOrModule.setSubject(form.getSubject() != null ? em.getReference(Subject.class, form.getSubject().getId()) : null);
         subjectOrModule.setCurriculumVersionHmodule(form.getCurriculumVersionHmodule() != null 
@@ -421,7 +447,6 @@ public class ApelApplicationService {
                 ? em.getReference(CurriculumVersionOccupationModuleTheme.class, form.getCurriculumVersionOmoduleTheme().getId()) : null);
         subjectOrModule.setGrade(em.getReference(Classifier.class, form.getGrade()));
         updateInformalSubjectsOrModulesOutcomes(form, subjectOrModule);
-        return subjectOrModule;
     }
 
     private void updateInformalSubjectsOrModulesOutcomes(ApelApplicationInformalSubjectOrModuleForm subjectOrModuleForm,
@@ -436,17 +461,7 @@ public class ApelApplicationService {
             return subjectOrModuleOutcomes;
         }, null);
     }
-    
-    private static void validateInformalSubjectOrModule(ApelApplicationRecord record, ApelApplicationInformalSubjectOrModule subjectOrModule) {
-        ApelApplication application = record.getApelApplication();
-        
-        if (application.getIsVocational().booleanValue()) {
-            ApelApplicationUtil.assertInformalModule(subjectOrModule);
-        } else {
-            ApelApplicationUtil.assertInformalSubject(subjectOrModule);
-        }
-    }
-    
+
     private void updateFormalSubjectsOrModules(HoisUserDetails user, ApelApplicationRecordForm recordForm,
             ApelApplicationRecord record, Boolean isVocational) {
         EntityUtil.bindEntityCollection(record.getFormalSubjectsOrModules(),
@@ -457,13 +472,13 @@ public class ApelApplicationService {
                     "curriculumVersionOmodule", "type", "grade", "assessment", "isOptional");
             subjectOrModule.setApelApplicationRecord(record);
             updateFormalSubjectOrModule(user, subjectOrModule, form, isVocational);
-            validateFormalSubjectOrModule(record, subjectOrModule);
+            validateFormalSubjectOrModule(subjectOrModule, isVocational);
             return subjectOrModule;
         }, (form, subjectOrModule) -> {
             EntityUtil.bindToEntity(form, subjectOrModule, "apelApplicationRecord", "apelSchool", "subject", "curriculumVersionHmodule", 
                     "curriculumVersionOmodule", "type", "grade", "assessment", "isOptional");
             updateFormalSubjectOrModule(user, subjectOrModule, form, isVocational);
-            validateFormalSubjectOrModule(record, subjectOrModule);
+            validateFormalSubjectOrModule(subjectOrModule, isVocational);
         });
     }
     
@@ -485,13 +500,13 @@ public class ApelApplicationService {
         }
     }
     
-    private static void validateFormalSubjectOrModule(ApelApplicationRecord record, ApelApplicationFormalSubjectOrModule subjectOrModule) {
-        ApelApplication application = record.getApelApplication();
-        
-        if (application.getIsVocational().booleanValue()) {
-            ApelApplicationUtil.assertFormalModule(subjectOrModule);
-        } else {
-            ApelApplicationUtil.assertFormalSubject(subjectOrModule);
+    private void validateFormalSubjectOrModule(ApelApplicationFormalSubjectOrModule subjectOrModule, Boolean isVocational) {
+        ApelSubjectType type = ApelSubjectType.valueOf(EntityUtil.getCode(subjectOrModule.getType()));
+        Set<ConstraintViolation<ApelApplicationFormalSubjectOrModule>> errors = validator.validate(subjectOrModule,
+                type.getValidationGroup(isVocational, subjectOrModule.getIsMySchool()));
+
+        if (!errors.isEmpty()) {
+            throw new ValidationFailedException(errors);
         }
     }
     
@@ -509,7 +524,6 @@ public class ApelApplicationService {
                     ? em.getReference(CurriculumVersionOccupationModule.class, form.getCurriculumVersionOmodule()) : null);
             replacedSubjectOrModule.setCurriculumVersionOmoduleTheme(form.getCurriculumVersionOmoduleTheme() != null 
                     ? em.getReference(CurriculumVersionOccupationModuleTheme.class, form.getCurriculumVersionOmoduleTheme()) : null);
-            validateFormalReplacedSubjectOrModule(record, replacedSubjectOrModule);
             return replacedSubjectOrModule;
         }, (form, replacedSubjectOrModule) -> {
             EntityUtil.bindToEntity(form, replacedSubjectOrModule, "apelApplicationRecord", "subject",
@@ -520,21 +534,9 @@ public class ApelApplicationService {
                     ? em.getReference(CurriculumVersionOccupationModule.class, form.getCurriculumVersionOmodule()) : null);
             replacedSubjectOrModule.setCurriculumVersionOmoduleTheme(form.getCurriculumVersionOmoduleTheme() != null 
                     ? em.getReference(CurriculumVersionOccupationModuleTheme.class, form.getCurriculumVersionOmoduleTheme()) : null);
-            validateFormalReplacedSubjectOrModule(record, replacedSubjectOrModule);
         });
     }
-    
-    private static void validateFormalReplacedSubjectOrModule(ApelApplicationRecord record,
-            ApelApplicationFormalReplacedSubjectOrModule subjectOrModule) {
-        ApelApplication application = record.getApelApplication();
-        
-        if (application.getIsVocational().booleanValue()) {
-            ApelApplicationUtil.assertFormalReplacedModule(subjectOrModule);
-        } else {
-            ApelApplicationUtil.assertFormalReplacedSubject(subjectOrModule);
-        }
-    }
-    
+
     private void setApplicationStatus(ApelApplication application, ApelApplicationStatus status) {
         application.setStatus(em.getReference(Classifier.class, status.name()));
     }
@@ -584,14 +586,38 @@ public class ApelApplicationService {
      * @return
      */
     public ApelApplication submit(ApelApplication application) {
+        validateSubmittedApplication(application);
         if (application.getRecords().isEmpty()) {
             throw new ValidationFailedException("apel.error.atLeastOneFormalOrInformalLearning");
         }
+
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_E);
         application = EntityUtil.save(application, em);
         ApelApplicationCreated data = new ApelApplicationCreated(application);
         automaticMessageService.sendMessageToStudentAndSchoolAdmins(MessageType.TEATE_LIIK_VOTA, application.getStudent(), data);
         return application;
+    }
+
+    private void validateSubmittedApplication(ApelApplication application) {
+        // formal subject or modules need to be validated because they can be transferred from abroad studies applications
+        Set<Long> recordsWithErrors = new HashSet<>();
+        for (ApelApplicationRecord record : application.getRecords()) {
+            for (ApelApplicationFormalSubjectOrModule subjectOrModule : record.getFormalSubjectsOrModules()) {
+                ApelSubjectType type = ApelSubjectType.valueOf(EntityUtil.getCode(subjectOrModule.getType()));
+                Set<ConstraintViolation<ApelApplicationFormalSubjectOrModule>> errors = validator.validate(subjectOrModule,
+                        type.getValidationGroup(application.getIsVocational(), subjectOrModule.getIsMySchool()));
+
+                if (!errors.isEmpty()) {
+                    recordsWithErrors.add(record.getId());
+                    continue;
+                }
+            }
+        }
+
+        if(!recordsWithErrors.isEmpty()) {
+            throw new ValidationFailedException("apel.error.formalRecordsHaveErrors",
+                    Collections.singletonMap("recordsWithErrors", recordsWithErrors));
+        }
     }
 
     /**
@@ -601,14 +627,15 @@ public class ApelApplicationService {
      * @param application
      * @return
      */
-    public ApelApplication sendToConfirm(ApelApplication application, ApelApplicationForm applicationForm) {
+    public ApelApplication sendToConfirm(HoisUserDetails user, ApelApplication application, ApelApplicationForm applicationForm) {
         if (application.getRecords().isEmpty()) {
             throw new ValidationFailedException("apel.error.atLeastOneFormalOrInformalLearning");
         }
-        
+
+        save(user, application,  applicationForm);
         if (ApelApplicationStatus.VOTA_STAATUS_V.name().equals(EntityUtil.getCode(application.getStatus()))) {
             application.setDecision(applicationForm.getAddInfo());
-            
+
             ApelApplicationCommentForm commentForm = new ApelApplicationCommentForm(); 
             commentForm.setAddInfo(applicationForm.getAddInfo());
             createComment(application, commentForm);
@@ -623,10 +650,11 @@ public class ApelApplicationService {
      * @param application
      * @return
      */
-    public ApelApplication sendToCommittee(ApelApplication application, ApelApplicationForm applicationForm) {
+    public ApelApplication sendToCommittee(HoisUserDetails user, ApelApplication application, ApelApplicationForm applicationForm) {
         if (application.getRecords().isEmpty()) {
             throw new ValidationFailedException("apel.error.atLeastOneFormalOrInformalLearning");
         }
+        save(user, application,  applicationForm);
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_V);
         application.setCommittee(em.getReference(Committee.class, applicationForm.getCommitteeId()));
         return EntityUtil.save(application, em);
@@ -659,6 +687,12 @@ public class ApelApplicationService {
             checkThatModulesAreTransferredOnlyOnce(application);
         } else {
             checkThatSubjectsAreReplacedOnlyOnce(application);
+        }
+
+        if (Boolean.FALSE.equals(application.getIsEhisSent())) {
+            Student student = application.getStudent();
+            application.setOldNominalStudyEnd(student.getNominalStudyEnd());
+            student.setNominalStudyEnd(application.getNewNominalStudyEnd());
         }
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_C);
         application.setConfirmedBy(user.getUsername());
@@ -876,6 +910,10 @@ public class ApelApplicationService {
      */
     public ApelApplication removeConfirmation(ApelApplication application) {
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_Y);
+        if (Boolean.FALSE.equals(application.getIsEhisSent())) {
+            application.getStudent().setNominalStudyEnd(application.getOldNominalStudyEnd());
+            application.setOldNominalStudyEnd(null);
+        }
         application.setConfirmedBy(null);
         application.setConfirmed(null);
         return EntityUtil.save(application, em);
@@ -899,10 +937,8 @@ public class ApelApplicationService {
         qb.requiredCriteria("cvhm.type_code not in (:typeCode)", "typeCode", HigherModuleType.FINAL_MODULES);
 
         List<?> data = qb.select("cvhm.id, cvhm.name_et, cvhm.name_en, cvhm.type_code", em).getResultList();
-        return StreamUtil.toMappedList(r -> {
-            return new CurriculumVersionHigherModuleResult(resultAsLong(r, 0), resultAsString(r, 1),
-                    resultAsString(r, 2), resultAsString(r, 3));
-        }, data);
+        return StreamUtil.toMappedList(r -> new CurriculumVersionHigherModuleResult(resultAsLong(r, 0),
+                resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3)), data);
     }
 
     public AutocompleteResult studentFreeChoiceModule(Student student) {
@@ -942,5 +978,176 @@ public class ApelApplicationService {
             String caption = (name != null ? name : "-") + " (" + resultAsString(r, 2) + ")";
             return new AutocompleteResult(resultAsLong(r, 0), caption, caption);
         }, result);
+    }
+
+    private List<AbroadStudiesHolder> finishedAbroadStudies(Student student) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds"
+                + " join directive d on d.id = ds.directive_id"
+                + " join application a on a.id = ds.application_id"
+                + " left join application_planned_subject aps on aps.application_id = a.id"
+                + " left join apel_application_record aar on aar.application_planned_subject_id = aps.id"
+                + " left join study_period sp on sp.id = ds.study_period_end_id"
+                + " left join (directive_student ds_katk join directive d_katk on d_katk.id = ds_katk.directive_id"
+                    + " and d_katk.type_code = :katkDirectiveType and d_katk.status_code = :directiveStatus)"
+                    + " on ds_katk.directive_student_id = ds.id and ds_katk.canceled = false");
+        qb.requiredCriteria("ds.student_id = :studentId", "studentId", student.getId());
+        qb.requiredCriteria("coalesce(ds_katk.start_date, sp.end_date, ds.end_date) < :today", "today", LocalDate.now());
+        qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_VALIS);
+        qb.requiredCriteria("d.status_code = :directiveStatus and ds.canceled = false", "directiveStatus",
+                DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+        qb.filter("a.apel_school_id is not null");
+        qb.parameter("katkDirectiveType", DirectiveType.KASKKIRI_VALISKATK.name());
+        qb.parameter("apelStatus", ApelApplicationStatus.VOTA_STAATUS_L.name());
+
+        List<?> data = qb.select("a.id a_id, aps.id aps_id, exists (select aar2.id from apel_application_record aar2"
+                + " join apel_application aa2 on aa2.id = aar2.apel_application_id"
+                + " where aar2.application_planned_subject_id = aps.id and aa2.status_code != :apelStatus) as transferred", em)
+                .getResultList();
+        List<AbroadStudiesHolder> plannedSubjects = StreamUtil.toMappedList(r -> new AbroadStudiesHolder(resultAsLong(r, 0),
+                resultAsLong(r, 1), resultAsBoolean(r, 2)), data);
+        return plannedSubjects;
+    }
+
+    private boolean canExtendNominalDuration(ApelApplication apelApplication) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from apel_application aa"
+                + " join apel_application_record aar on aar.apel_application_id = aa.id"
+                + " join apel_application_formal_subject_or_module fsm on fsm.apel_application_record_id = aar.id"
+                + " join apel_school a_s on a_s.id = fsm.apel_school_id");
+        qb.requiredCriteria("aa.id = :applicationId", "applicationId", apelApplication.getId());
+        qb.requiredCriteria("a_s.country_code != :countryCode", "countryCode", ClassifierUtil.COUNTRY_ESTONIA);
+        qb.filter("exists (select 1 from directive_student ds"
+                + " join directive d on d.id = ds.directive_id"
+                + " join application a on a.id = ds.application_id"
+                + " left join study_period sp_start on sp_start.id = ds.study_period_start_id"
+                + " left join study_period sp_end on sp_end.id = ds.study_period_end_id"
+                + " left join (directive_student ds_katk join directive d_katk on d_katk.id = ds_katk.directive_id"
+                    + " and d_katk.type_code = :katkDirectiveType and d_katk.status_code = :directiveStatus)"
+                    + " on ds_katk.directive_student_id = ds.id and ds_katk.canceled = false"
+                + " where ds.student_id = aa.student_id and d.type_code = :directiveType and d.status_code = :directiveStatus"
+                + " and coalesce(ds_katk.start_date, sp_end.end_date, ds.end_date) < :today"
+                + " and coalesce(ds_katk.start_date, sp_end.end_date, ds.end_date) >= fsm.grade_date"
+                + " and coalesce(sp_start.start_date, ds.start_date) <= fsm.grade_date)");
+        qb.parameter("directiveType", DirectiveType.KASKKIRI_VALIS.name());
+        qb.parameter("katkDirectiveType", DirectiveType.KASKKIRI_VALISKATK.name());
+        qb.parameter("directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
+        qb.parameter("today", LocalDate.now());
+
+        return !qb.select("fsm.id", em).setMaxResults(1).getResultList().isEmpty();
+    }
+
+    private boolean hasMultipleNominalDurationExtensions(ApelApplication apelApplication) {
+        List<?> data = em.createNativeQuery("select aa.id from apel_application aa"
+                + " where aa.student_id = :studentId and aa.id != :applicationId and aa.nominal_type_code is not null"
+                + " and aa.nominal_type_code != :nominalType and aa.status_code != :applicationStatus")
+                .setParameter("studentId", EntityUtil.getId(apelApplication.getStudent()))
+                .setParameter("applicationId", apelApplication.getId())
+                .setParameter("nominalType", NominalDurationExtension.NOM_PIKEND_0.name())
+                .setParameter("applicationStatus", ApelApplicationStatus.VOTA_STAATUS_L.name())
+                .setMaxResults(1).getResultList();
+        return !data.isEmpty();
+    }
+
+    public void addAbroadStudiesApplicationSubjects(ApelApplication apelApplication) {
+        List<AbroadStudiesHolder> abroadStudies = finishedAbroadStudies(apelApplication.getStudent());
+        Set<Long> plannedSubjectIds = notTransferredPlannedSubjectIds(abroadStudies);
+
+        if (!plannedSubjectIds.isEmpty()) {
+            List<ApplicationPlannedSubject> plannedSubjects = getApplicationPlannedSubjects(plannedSubjectIds);
+            List<ApplicationPlannedSubjectEquivalent> equivalents = getApplicationPlannedSubjectEquivalents(plannedSubjectIds);
+            Map<Long, List<ApplicationPlannedSubjectEquivalent>> equivalentsByPs = StreamUtil.nullSafeList(equivalents)
+                    .stream().collect(Collectors.groupingBy(e -> EntityUtil.getId(e.getApplicationPlannedSubject()),
+                            Collectors.mapping(e -> e, Collectors.toList())));
+
+            for (ApplicationPlannedSubject plannedSubject : plannedSubjects) {
+                List<ApplicationPlannedSubjectEquivalent> psEquivalents = equivalentsByPs.get(plannedSubject.getId());
+                addAbroadStudiesRecord(apelApplication, plannedSubject, psEquivalents);
+            }
+            EntityUtil.save(apelApplication, em);
+        }
+    }
+
+    private static Set<Long> notTransferredPlannedSubjectIds(List<AbroadStudiesHolder> abroadStudies) {
+        return StreamUtil.nullSafeList(abroadStudies).stream()
+                .filter(as -> as.getPlannedSubjectId() != null && Boolean.FALSE.equals(as.getAlreadyTransferred()))
+                .map(as -> as.getPlannedSubjectId()).collect(Collectors.toSet());
+    }
+
+    private List<ApplicationPlannedSubject> getApplicationPlannedSubjects(Set<Long> plannedSubjectIds) {
+        return em.createQuery("select aps from ApplicationPlannedSubject aps"
+                + " where aps.id in (:plannedSubjectIds)", ApplicationPlannedSubject.class)
+                    .setParameter("plannedSubjectIds", plannedSubjectIds)
+                    .getResultList();
+    }
+
+    private List<ApplicationPlannedSubjectEquivalent> getApplicationPlannedSubjectEquivalents(Set<Long> plannedSubjectIds) {
+        return em.createQuery("select apse from ApplicationPlannedSubjectEquivalent apse"
+                + " where apse.applicationPlannedSubject.id in (:plannedSubjectIds)", ApplicationPlannedSubjectEquivalent.class)
+                    .setParameter("plannedSubjectIds", plannedSubjectIds)
+                    .getResultList();
+    }
+
+    private void addAbroadStudiesRecord(ApelApplication apelApplication, ApplicationPlannedSubject plannedSubject,
+            List<ApplicationPlannedSubjectEquivalent> plannedSubjectEquivalents) {
+        ApelApplicationRecord record = new ApelApplicationRecord();
+        record.setApelApplication(apelApplication);
+        record.setIsFormalLearning(Boolean.TRUE);
+        record.setApplicationPlannedSubject(plannedSubject);
+        apelApplication.getRecords().add(record);
+
+        addPlannedSubjectToRecord(apelApplication, record, plannedSubject);
+        if (plannedSubjectEquivalents != null) {
+            addPlannedSubjectEquivalents(plannedSubjectEquivalents, record);
+        }
+    }
+
+    private void addPlannedSubjectToRecord(ApelApplication apelApplication, ApelApplicationRecord record,
+            ApplicationPlannedSubject plannedSubject) {
+        ApelApplicationFormalSubjectOrModule subjectOrModule = new ApelApplicationFormalSubjectOrModule();
+        subjectOrModule.setApelApplicationRecord(record);
+        subjectOrModule.setIsMySchool(Boolean.FALSE);
+        subjectOrModule.setType(em.getReference(Classifier.class, ApelSubjectType.VOTA_AINE_LIIK_M.name()));
+        subjectOrModule.setApelSchool(plannedSubject.getApplication().getApelSchool());
+        subjectOrModule.setIsOptional(Boolean.FALSE);
+        subjectOrModule.setNameEt(plannedSubject.getName());
+        subjectOrModule.setAssessment(em.getReference(Classifier.class,
+                Boolean.TRUE.equals(apelApplication.getIsVocational()) ? VocationalGradeType.KUTSEHINDAMISVIIS_M.name()
+                        : SubjectAssessment.HINDAMISVIIS_A.name()));
+        record.getFormalSubjectsOrModules().add(subjectOrModule);
+    }
+
+    private static void addPlannedSubjectEquivalents(List<ApplicationPlannedSubjectEquivalent> plannedSubjectEquivalents,
+            ApelApplicationRecord record) {
+        for (ApplicationPlannedSubjectEquivalent equivalent : plannedSubjectEquivalents) {
+            ApelApplicationFormalReplacedSubjectOrModule replacedSubjectOrModule = new ApelApplicationFormalReplacedSubjectOrModule();
+            replacedSubjectOrModule.setApelApplicationRecord(record);
+            replacedSubjectOrModule.setSubject(equivalent.getSubject());
+            replacedSubjectOrModule.setCurriculumVersionOmodule(equivalent.getCurriculumVersionOmodule());
+            replacedSubjectOrModule.setCurriculumVersionOmoduleTheme(equivalent.getCurriculumVersionOmoduleTheme());
+            record.getFormalReplacedSubjectsOrModules().add(replacedSubjectOrModule);
+        }
+    }
+
+    public static class AbroadStudiesHolder {
+        private final Long applicationId;
+        private final Long plannedSubjectId;
+        private final Boolean alreadyTransferred;
+
+        public AbroadStudiesHolder(Long applicationId, Long plannedSubjectId, Boolean alreadyTransferred) {
+            this.applicationId = applicationId;
+            this.plannedSubjectId = plannedSubjectId;
+            this.alreadyTransferred = alreadyTransferred;
+        }
+
+        public Long getApplicationId() {
+            return applicationId;
+        }
+
+        public Long getPlannedSubjectId() {
+            return plannedSubjectId;
+        }
+
+        public Boolean getAlreadyTransferred() {
+            return alreadyTransferred;
+        }
     }
 }

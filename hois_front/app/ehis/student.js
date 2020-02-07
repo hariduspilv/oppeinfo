@@ -1,7 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('StudentEhisController', ['$scope', '$route', 'message', 'QueryUtils', '$timeout', 'dialogService', '$filter', '$translate', 'busyHandler',
-  function ($scope, $route, message, QueryUtils, $timeout, dialogService, $filter, $translate, busyHandler) {
+angular.module('hitsaOis').controller('StudentEhisController', ['$scope', '$route', 'message', 'QueryUtils',
+  'dialogService', '$filter', '$translate', 'busyHandler', 'PollingService', 'POLLING_STATUS',
+  function ($scope, $route, message, QueryUtils, dialogService, $filter, $translate, busyHandler, PollingService, POLLING_STATUS) {
 
   $scope.auth = $route.current.locals.auth;
 
@@ -72,11 +73,38 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', '$rout
   }
 
   function send() {
+    if ($scope.cancelledBy) {
+      $scope.cancelledBy = null;
+    }
     QueryUtils.loadingWheel($scope, true, false, $translate.instant('ehis.messages.requestInProgress'), true);
-    QueryUtils.endpoint('/students/ehisStudentExport').save2($scope.criteria).$promise.then(function(result) {
-      $timeout(function () {pollExportStatus(result.key);}, 1000); // give 1 second for initializing a thread
-    }).catch(function () {
-      QueryUtils.loadingWheel($scope, false);
+    PollingService.sendRequest({
+      url: '/students/ehisStudentExport',
+      data: $scope.criteria,
+      pollUrl: '/students/ehisStudentExportStatus',
+      successCallback: function (pollResult) {
+        message.info(pollResult && pollResult.result.length > 0 ? 'ehis.messages.exportFinished' : 'ehis.messages.nostudentsfound');
+        $scope.result = processResult(pollResult.result);
+        busyHandler.setProgress(100);
+        QueryUtils.loadingWheel($scope, false);
+      },
+      failCallback: function (pollResult) {
+        if (pollResult) {
+          message.error('ehis.messages.taskStatus.' + pollResult.status, {error: pollResult.error});
+          if ((pollResult.status === POLLING_STATUS.CANCELLED || pollResult.status === POLLING_STATUS.INTERRUPTED) && pollResult.result) {
+            $scope.cancelledBy = pollResult.cancelledBy;
+            $scope.result = processResult(pollResult.result);
+          }
+        }
+        QueryUtils.loadingWheel($scope, false);
+      },
+      updateProgress: function (pollResult) {
+        if (pollResult) {
+          busyHandler.setProgress(Math.round(pollResult.progress * 100));
+          if (pollResult.message) {
+            busyHandler.setText($translate.instant(pollResult.message));
+          }
+        }
+      }
     });
   }
 
@@ -101,29 +129,4 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', '$rout
       message.error('main.messages.form-has-errors');
     }
   };
-
-  function pollExportStatus(key) {
-    QueryUtils.endpoint('/students/ehisStudentExportStatus').get({key: key}).$promise.then(function (result) {
-      if ($scope.cancelledBy) {
-        $scope.cancelledBy = null;
-      }
-      if (result.status === 'IN_PROGRESS') {
-        busyHandler.setProgress(Math.round(result.progress * 100));
-        $timeout(function () {pollExportStatus(key);}, 5000);
-      } else if (result.status === 'DONE') {
-        message.info(result && result.result.length > 0 ? 'ehis.messages.exportFinished' : 'ehis.messages.nostudentsfound');
-        $scope.result = processResult(result.result);
-        busyHandler.setProgress(100);
-        QueryUtils.loadingWheel($scope, false);
-      } else {
-        message.error('ehis.messages.taskStatus.' + result.status, {error: result.error});
-        if ((result.status === 'CANCELLED' || result.status === 'INTERRUPTED') && result.result) {
-          $scope.cancelledBy = result.cancelledBy;
-          $scope.result = processResult(result.result);
-        }
-        QueryUtils.loadingWheel($scope, false);
-      }
-    });
-  }
-}
-]);
+}]);

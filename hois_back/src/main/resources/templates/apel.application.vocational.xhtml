@@ -41,6 +41,24 @@
       {% endif %}
     </table>
 
+    {% if content.nominalDurationDecision != null %}
+      <p class="reporttablesubheader">{{ "report.apel.application.nominalDuration.title" | translate }}</p>
+      <table class="reporttable">
+        <tr>
+          <td>{{ "report.apel.application.nominalDuration.decision" | translate }}</td>
+          <td>{{ content.nominalDurationDecision }}</td>
+        </tr>
+        <tr>
+          <td>{{ "report.apel.application.nominalDuration.nominalStudyEnd" | translate }}</td>
+          <td>{{ content.nominalStudyEnd | hoisDate }}</td>
+        </tr>
+        <tr>
+          <td>{{ "report.apel.application.nominalDuration.abroadStudiesCreditsEKAP" | translate }}</td>
+          <td>{{ content.abroadStudiesCredits }}</td>
+        </tr>
+      </table>
+    {% endif %}
+
     {% for record in content.records %} 
       {% if loop.index == 0 %}
       <p class="reporttablesubheader">{{ "report.apel.application.formalLearning" | translate }}</p>

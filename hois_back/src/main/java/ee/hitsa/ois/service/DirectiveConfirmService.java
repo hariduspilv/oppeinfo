@@ -33,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Contract;
@@ -150,6 +149,7 @@ public class DirectiveConfirmService {
         Map<Long, List<DirectiveStudent>> individualCurriculums = findIndividualCurriculums(directive);
         Map<Long, List<ScholarshipApplication>> scholarshipApplications = findScholarshipApplications(directive);
         Map<Long, List<DirectiveStudent>> terminationScholarships = findScholarshipsAvailableForTermination(directive);
+        Map<Long, List<DirectiveStudent>> abroadStudies = findAbroadStudies(directive);
         Set<Long> changedStudents = DirectiveType.KASKKIRI_TYHIST.equals(directiveType) ? new HashSet<>(directiveService.changedStudentsForCancel(directive.getCanceledDirective())) : Collections.emptySet();
         List<DirectiveViewStudentDto> invalidStudents = new ArrayList<>();
         // validate each student's data for given directive
@@ -451,14 +451,6 @@ public class DirectiveConfirmService {
                     allErrors.add(new ErrorForField("StudentChanged", propertyPath(rowNum, "fullname")));
                 }
             } else if(DirectiveType.KASKKIRI_VALIS.equals(directiveType)) {
-                boolean isAbroad = Boolean.TRUE.equals(ds.getIsAbroad());
-                if(isAbroad) {
-                    if (!StringUtils.hasText(ds.getAbroadSchool()) && ds.getApelSchool() == null) {
-                        allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "abroadSchool")));
-                    }
-                } else if (ds.getEhisSchool() == null) {
-                    allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "ehisSchool")));
-                }
                 SchoolType schoolType = schoolService.schoolType(EntityUtil.getId(directive.getSchool()));
                 boolean isOnlyHigher = schoolType.isHigher() && !schoolType.isVocational();
                 // manually checked fields for higher
@@ -468,7 +460,28 @@ public class DirectiveConfirmService {
                         allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "abroadProgramme")));
                     }
                 }
-                ApplicationUtil.assertValidationRulesConfirm(ds, EntityUtil.getId(ds.getStudent()), em);
+                ApplicationUtil.assertValisDirectiveConstraints(ds, em);
+            } else if(DirectiveType.KASKKIRI_VALISKATK.equals(directiveType)) {
+                DirectiveStudent formAbroadStudies = ds.getDirectiveStudent();
+                if (formAbroadStudies != null) {
+                    List<DirectiveStudent> studentAbroadStudies = abroadStudies.get(EntityUtil.getId(ds.getStudent()));
+                    boolean formIndividualCurriculumAllowed = StreamUtil.nullSafeList(studentAbroadStudies).stream()
+                            .anyMatch(s -> s.equals(formAbroadStudies));
+
+                    if (formIndividualCurriculumAllowed) {
+                        if (ds.getStartDate() != null) {
+                            if (ds.getStartDate().isBefore(DateUtils.periodStart(formAbroadStudies))
+                                    || ds.getStartDate().isAfter(DateUtils.periodEnd(formAbroadStudies))) {
+                                allErrors.add(new ErrorForField("directive.notInAbroadStudiesDateRange",
+                                        propertyPath(rowNum, "startDate")));
+                            }
+                        } else {
+                            allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "startDate")));
+                        }
+                    } else {
+                        allErrors.add(new ErrorForField("directive.notValid", propertyPath(rowNum, "directiveStudent")));
+                    }
+                }
             }
             rowNum++;
         }
@@ -1035,6 +1048,28 @@ public class DirectiveConfirmService {
             .setParameter(5, DirectiveType.KASKKIRI_STIPTOETL.name())
             .setParameter(6, EntityUtil.getId(directive))
             .getResultList();
+
+        return data.stream().collect(Collectors.groupingBy(r -> EntityUtil.getId(r.getStudent())));
+    }
+
+    Map<Long, List<DirectiveStudent>> findAbroadStudies(Directive directive) {
+        if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_VALISKATK) || directive.getStudents().isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Long> studentIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudent()), directive.getStudents());
+        List<DirectiveStudent> data = em.createQuery("select ds from DirectiveStudent ds " +
+                "left join ds.studyPeriodStart sp_start left join ds.studyPeriodEnd sp_end " +
+                "where ds.canceled = false and ds.student.id in (?1) and ds.directive.type.code = ?2 and ds.directive.status.code = ?3 " +
+                "and coalesce(sp_start.startDate, ds.startDate) <= CURRENT_DATE and coalesce(sp_end.endDate, ds.endDate) >= CURRENT_DATE " +
+                "and (not exists (select ds2 from DirectiveStudent ds2 where ds2.canceled = false and ds2.directive.type.code = ?4 and ds2.id = ds.id) " +
+                "or ds.id in (select ds3.id from DirectiveStudent ds3 where ds3.directive.id = ?5))", DirectiveStudent.class)
+                .setParameter(1, studentIds)
+                .setParameter(2, DirectiveType.KASKKIRI_VALIS.name())
+                .setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+                .setParameter(4, DirectiveType.KASKKIRI_VALISKATK.name())
+                .setParameter(5, EntityUtil.getId(directive))
+                .getResultList();
 
         return data.stream().collect(Collectors.groupingBy(r -> EntityUtil.getId(r.getStudent())));
     }

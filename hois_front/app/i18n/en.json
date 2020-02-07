@@ -2311,6 +2311,7 @@
     "plannedModulesThemes": "Plannable module/theme",
     "substitutableSubject": "Replaceable subject",
     "substitutableModulesThemes": "Replaceable module/theme",
+    "modulesAndThemes": "Modules/themes",
     "justification": "Explanation",
     "rejection": "Rejection of application",
     "rejectReason": "Explanation for rejection of application",
@@ -2446,7 +2447,9 @@
       "journal": "Journal",
       "subject": "Subject",
       "other": "Other questions",
-      "duration": "Poll duration"
+      "duration": "Poll duration",
+      "teacherVocational": "Teacher",
+      "teacherHigher": "Teacher"
     },
     "messages": {
       "noPollFound": "Poll wasn't found",
@@ -2457,12 +2460,14 @@
       "noResponse": "Poll is not ready to accept answers",
       "noPoll": "Poll was not found",
       "matchingTarget": "Matching target from poll is missing",
-      "required": "Theme/themes {{themes}} consists of errors",
+      "required": "Mistakes in the form:{{themes}}",
       "unConfirmForbidden": "Cannot remove confirmation",
       "confirmedOrFinished": "Poll is confirmed or finished",
       "studentCouncilAnswersError": "Student council question should have only one answer"
     },
     "basicData": {
+      "subjectStudyPeriods": "Subject-teacher pairs",
+      "viewMore": "View more",
       "journals": "Journals *",
       "copy": "Copy",
       "label": "Basic data",
@@ -2481,6 +2486,7 @@
       "teacherCommentVisible": "Teacher comment visible to students",
       "atleastOneJournal": "At least one journal needs to be chosen",
       "atleastOne": "At least one poll target needs to be chosen",
+      "studyPeriodError": "Study period or journal is required",
       "status": "Status",
       "confirm": "Are you sure you wish to confirm the poll?",
       "themeEmpty": "There is a theme without a question. Are you sure you wish to confirm the poll?",
@@ -2499,7 +2505,12 @@
       "changedBy": "Changed by",
       "changeDates": "Change response times",
       "target": "Target",
-      "outsiderUrl": "Outer person's url"
+      "outsiderUrl": "Outer person's url",
+      "dialog": {
+        "journal": "Journal",
+        "journals": "Journals",
+        "subjectStudyPeriod":"Subject-teacher pair"
+      }
     },
     "questions": {
       "label": "Questions",
@@ -2534,6 +2545,8 @@
       "isThemePageable": "Make theme pageable",
       "isRepedetiveVocational": "Display per journal",
       "isRepedetiveHigher": "Display per subject",
+      "isTeacherVocational": "Display per teacher",
+      "isTeacherHigher": "Display per teacher",
       "nextTheme": "Next theme",
       "previousTheme": "Previous theme",
       "next": "Next",
@@ -2547,7 +2560,12 @@
       "confirm": "Are you sure, you wish to confirm your answer? After confirmation, answering is no longer accepted."
     },
     "answers": {
+      "allAnswers": "All answers",
+      "total": "Total answers",
+      "totalIndividual": "Total answered persons",
       "endDate": "End date",
+      "questionAndAverage": "Question - total average",
+      "question": "Question",
       "journalEndPeriod": "Journal end date period",
       "subjectEndPeriod": "Subject end date period",
       "amount": "Responses",
@@ -2699,7 +2717,9 @@
         "hourData": "Missing info about lesson times",
         "nrFormat": "Lesson day or time is not in number format",
         "documentFormat": "Missing journal times, document not in the right format",
-        "relationToTimetable": "Journal is not related to the timetable"
+        "relationToTimetable": "Journal is not related to the timetable",
+        "journalNotFound": "Journal not found",
+        "wrongSchool": "Journal belongs to another school"
       }
     },
     "exportDialog": {
@@ -3217,14 +3237,14 @@
       "name": "Foreign student",
       "startDates": "Leaving date",
       "endDates": "Return date",
-      "curriculum": "Cirriculum",
+      "curriculum": "Curriculum",
       "curriculumVersion": "Curriculum version",
       "structuralUnit": "Structural unit",
-      "educationLevel": "Edication level",
+      "educationLevel": "Education level",
       "foreignSchool": "Foreign school",
       "foreignCountry": "Foreign country",
       "programme": "Programme",
-      "isExtention": "Extention",
+      "isExtension": "Extension",
       "foreignDuration": "Foreign study duration",
       "table": {
         "foreignStudentName": "Foreign student",
@@ -3233,9 +3253,9 @@
         "startDate": "Leaving date",
         "endDate": "Return date",
         "duration": "Study duration",
-        "wantedEAP": "Wanted EAP",
-        "recievedEAP": "Recieved EAP",
-        "extention": "Extention",
+        "wantedCredits": "Wanted credit points",
+        "receivedCredits": "Received credit points",
+        "extension": "Extension",
         "application": "Application"
       }
     },
@@ -3607,7 +3627,7 @@
       "supervisor": "Supervisor",
       "deleteConfirm": "Are you sure you wish to delete the related person?",
       "number": "Must be a number",
-      "sameIdCodeAndCountry": "Person with the same id code and country already exists" 
+      "sameIdCodeAndCountry": "Person with the same id code and country already exists"
     },
     "iscedTab": {
       "regCode": "Enterprise registry code",

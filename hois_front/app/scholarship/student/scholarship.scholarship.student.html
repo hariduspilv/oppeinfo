@@ -17,7 +17,9 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="stipend in possibleStipends" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{currentLanguageNameField(stipend.type)}}</td>
+            <td md-cell>
+              <a ng-click="scholarshipTerms(stipend)">{{currentLanguageNameField(stipend.type)}}</a>
+            </td>
             <td md-cell>
               <span ng-if="stipend.applicationStart && stipend.applicationEnd">{{stipend.applicationStart | hoisDate}}-{{stipend.applicationEnd | hoisDate}}</span>
               <span ng-if="stipend.applicationStart && !stipend.applicationEnd">{{'main.from' | translate}} {{stipend.applicationStart | hoisDate}}</span>
@@ -32,6 +34,11 @@
               <span ng-if="stipend.canApply">
                 <a href="#/scholarships/{{stipend.id}}/application">{{'stipend.student.apply' | translate}}</a>
               </span>
+              <md-button ng-if="!stipend.canApply && !stipend.alreadyApplied" flex class="md-icon-button" ng-click="scholarshipTermCompliances(stipend)">
+                <md-icon md-colors="{color: 'default-warn'}" md-font-set="material-icons">warning</md-icon>
+                <md-tooltip>{{'stipend.messages.error.studentDoesntComply' | translate}}</md-tooltip>
+              </md-button>
+              <span ng-if="stipend.alreadyApplied">{{'stipend.student.alreadyApplied' | translate}}</span>
             </td>
           </tr>
         </tbody>
@@ -39,7 +46,7 @@
     </md-table-container>
   </fieldset>
 
-  <br/>
+  <div>&nbsp;</div>
 
   <fieldset tabindex="1">
     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.student.applications' | translate}}</legend>

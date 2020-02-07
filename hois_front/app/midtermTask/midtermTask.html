@@ -5,41 +5,41 @@
     <md-table-container>
       <table md-table>
         <thead md-head>
-          <tr md-row ng-if="!record.canBeEdited">
+          <tr md-row ng-if="!record.canBeEdited" class="sortableColumn">
             <th md-column>{{'midtermTask.nr' | translate}}</th>
             <th md-column ng-click="sortBy('nameEt')">
               {{'midtermTask.nameEt' | translate}} *
               <span class="sortorder" ng-show="propertyName === 'nameEt'" ng-class="{reverse: reverse}"></span>
             </th>
-            <th md-column ng-click="sortBy('nameEn')">
+            <th md-column ng-click="sortBy('nameEn')" class="sortableColumn">
               {{'midtermTask.nameEn' | translate}}
               <span class="sortorder" ng-show="propertyName === 'nameEn'" ng-class="{reverse: reverse}"></span>
             </th>
-            <th md-column ng-click="sortBy('descriptionEt')">
+            <th md-column ng-click="sortBy('descriptionEt')" class="sortableColumn">
               {{'midtermTask.descriptionEt' | translate}} *
               <span class="sortorder" ng-show="propertyName === 'descriptionEt'" ng-class="{reverse: reverse}"></span>
             </th>
-            <th md-column ng-click="sortBy('descriptionEn')">
+            <th md-column ng-click="sortBy('descriptionEn')" class="sortableColumn">
               {{'midtermTask.descriptionEn' | translate}}
               <span class="sortorder" ng-show="propertyName === 'descriptionEn'" ng-class="{reverse: reverse}"></span>
             </th>
-            <th md-column ng-click="sortBy('maxPoints')">
+            <th md-column ng-click="sortBy('maxPoints')" class="sortableColumn">
               {{'midtermTask.maxPoints' | translate}} *
               <span class="sortorder" ng-show="propertyName === 'maxPoints'" ng-class="{reverse: reverse}"></span>
             </th>
-            <th md-column ng-click="sortBy('percentage')">
+            <th md-column ng-click="sortBy('percentage')" class="sortableColumn">
               {{'midtermTask.percentage' | translate}} *
               <span class="sortorder" ng-show="propertyName === 'percentage'" ng-class="{reverse: reverse}"></span>
             </th>
-            <th md-column ng-click="sortBy('taskDate')">
+            <th md-column ng-click="sortBy('taskDate')" class="sortableColumn">
               {{'midtermTask.taskDate' | translate}}
               <span class="sortorder" ng-show="propertyName === 'taskDate'" ng-class="{reverse: reverse}"></span>
             </th>
-            <th md-column ng-click="sortBy('threshold')">
+            <th md-column ng-click="sortBy('threshold')" class="sortableColumn">
               {{'midtermTask.threshold' | translate}}
               <span class="sortorder" ng-show="propertyName === 'threshold'" ng-class="{reverse: reverse}"></span>
             </th>
-            <th md-column ng-click="sortBy('thresholdPercentage')">
+            <th md-column ng-click="sortBy('thresholdPercentage')" class="sortableColumn">
               {{'midtermTask.thresholdPercentage' | translate}}
               <span class="sortorder" ng-show="propertyName === 'thresholdPercentage'" ng-class="{reverse: reverse}"></span>
             </th>
@@ -176,10 +176,36 @@
 
 
 <style>
-  .sortorder:after {
-    content: '\25b2';
+  /* remove chrome blue outline on focus */
+  th:focus { outline: none; }
+
+  span:focus { outline: none; }
+
+  .sortableColumn {
+    cursor: pointer;
   }
+
+  .sortorder:after, sortorder.reverse:after {
+    text-align: left;
+    vertical-align: middle;
+    display: inline-block;
+    height: 24px!important;
+    width: 24px;
+    min-height: 24px;
+    min-width: 24px;
+    font-weight: 10!important;
+    font-size: 24px!important;
+    line-height: 24px!important;
+    font-family: "Material Icons";
+    transition: transform .25s,opacity .25s;
+    content: '\e5d8';
+  }
+
+  .sortorder:after {
+    transform: rotate(0);
+  }
+
   .sortorder.reverse:after {
-    content: '\25bc';
+    transform: rotate(180deg);
   }
 </style>

@@ -5,20 +5,17 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import java.lang.invoke.MethodHandles;
 import java.math.BigInteger;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
@@ -29,12 +26,13 @@ import javax.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import ee.hitsa.ois.concurrent.EhisFutureTask;
+import ee.hitsa.ois.concurrent.AsyncMemoryManager;
+import ee.hitsa.ois.concurrent.AsyncRequest;
 import ee.hitsa.ois.concurrent.WrapperCallable;
+import ee.hitsa.ois.concurrent.request.EhisAsyncRequest;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyYear;
@@ -51,7 +49,6 @@ import ee.hitsa.ois.domain.teacher.TeacherQualification;
 import ee.hitsa.ois.domain.timetable.JournalCapacity;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.domain.timetable.JournalTeacherCapacity;
-import ee.hitsa.ois.enums.FutureStatus;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudyLanguage;
 import ee.hitsa.ois.service.StudyYearService;
@@ -65,7 +62,6 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ehis.EhisTeacherExportForm;
 import ee.hitsa.ois.web.dto.EhisTeacherExportResultDto;
-import ee.hitsa.ois.web.dto.FutureStatusResponse;
 import ee.hois.soap.LogContext;
 import ee.hois.xroad.ehis.generated.Oppeaine;
 import ee.hois.xroad.ehis.generated.Oppeasutus;
@@ -103,132 +99,46 @@ public class EhisTeacherExportService extends EhisService {
 
     @Autowired
     private StudyYearService studyYearService;
-
-    /**
-     *  The first key - school id
-     *  The second key - request hash
-     *  Value - request object
-     *  
-     *  Values removed when:
-     *  - Future is done and its status checked in {@link #exportStudentsStatus(HoisUserDetails, String)}
-     */
-    private static final Map<Long, Map<String, ExportTeacherRequest>> EXPORT_TEACHER_REQUESTS = new ConcurrentHashMap<>();
-    private static final long RESULT_EXPIRATION_MINUTES = 60;
     
-    /**
-     * CancellationException in case if was canceled with .cancel(false)
-     * InterruptedException in case if was canceled with .cancel(true)
-     * 
-     * TODO: The last request can be not included because future's `done` true once interrupted.
-     * 
-     * @param hoisUser
-     * @param key
-     * @return
-     */
-    public FutureStatusResponse exporTeacherStatus(HoisUserDetails hoisUser, String key) {
-        FutureStatusResponse response = new FutureStatusResponse();
-        if (EXPORT_TEACHER_REQUESTS.containsKey(hoisUser.getSchoolId()) && EXPORT_TEACHER_REQUESTS.get(hoisUser.getSchoolId()).containsKey(key)) {
-            ExportTeacherRequest future = EXPORT_TEACHER_REQUESTS.get(hoisUser.getSchoolId()).get(key);
-            response.setProgress(Float.valueOf(future.getProgress()));
-            if (future.isDone()) {
-                EXPORT_TEACHER_REQUESTS.get(hoisUser.getSchoolId()).remove(key);
-                try {
-                    response.setResult(future.get());
-                    response.setHasError(Boolean.FALSE);
-                    response.setStatus(FutureStatus.DONE);
-                } catch (ExecutionException ex) {
-                    log.info("Error during executing: " + ex.getMessage());
-                    response.setHasError(Boolean.TRUE);
-                    response.setError(ex.getMessage());
-                    response.setStatus(FutureStatus.EXCEPTION);
-                } catch (CancellationException | InterruptedException ex) {
-                    // TODO: The last request can be not included because its `done` is true once interrupted.
-                    response.setHasError(Boolean.TRUE);
-                    response.setError(ex.getMessage());
-                    response.setCancelledBy(future.getCancelledBy());
-                    if (ex instanceof CancellationException) {
-                        response.setStatus(FutureStatus.CANCELLED);
-                    } else {
-                        response.setStatus(FutureStatus.INTERRUPTED);
+    public Optional<ExportTeacherRequest> findOverlappedActiveExportTeacherRequest(HoisUserDetails hoisUser, EhisTeacherExportForm form, ExportTeacherRequest origin) {
+        Optional<AsyncRequest<?>> optAsyncRequest = AsyncMemoryManager.findAny(AsyncMemoryManager.EHIS_TEACHER, hoisUser.getSchoolId(), (requestsByHash) -> {
+            return requestsByHash.values().stream().filter(request -> {
+                if (request instanceof ExportTeacherRequest) {
+                    ExportTeacherRequest castedRequest = (ExportTeacherRequest) request;
+                    if (castedRequest.isDone() || castedRequest.equals(origin)) {
+                        return false;
                     }
-                    response.setResult(future.getWrappedResult());
-                }
-                response.setStarted(future.getStarted());
-                response.setEnded(future.getEnded());
-            } else {
-                response.setHasError(Boolean.FALSE);
-                response.setStatus(FutureStatus.IN_PROGRESS);
-            }
-        } else {
-            response.setHasError(Boolean.TRUE);
-            response.setStatus(FutureStatus.NOT_FOUND);
-        }
-        return response;
-    }
-    
-    public ExportTeacherRequest findOverlappedActiveExportTeacherRequest(HoisUserDetails hoisUser, EhisTeacherExportForm form, ExportTeacherRequest origin) {
-        if (EXPORT_TEACHER_REQUESTS.containsKey(hoisUser.getSchoolId())) {
-            return EXPORT_TEACHER_REQUESTS.get(hoisUser.getSchoolId()).values().stream().filter(request -> {
-                if (request.isDone() || request.equals(origin)) {
                     return false;
+//                  return castedRequest.isAllDates() || form.isAllDates() ? true :  TODO
+//                          ((castedRequest.getFrom() == null || form.getChangeDateTo() == null) || !castedRequest.getFrom().isAfter(form.getChangeDateTo()))
+//                          && ((castedRequest.getThru() == null || form.getChangeDateFrom() == null ) || !castedRequest.getThru().isBefore(form.getChangeDateFrom()));
                 }
                 return false;
-//                return request.isAllDates() || form.isAllDates() ? true :  
-//                        ((request.getFrom() == null || form.getChangeDateTo() == null) || !request.getFrom().isAfter(form.getChangeDateTo()))
-//                        && ((request.getThru() == null || form.getChangeDateFrom() == null ) || !request.getThru().isBefore(form.getChangeDateFrom()));
             }).findAny().orElse(null);
-        }
+        });
         
-        return null;
+        if (optAsyncRequest.isPresent()) {
+            return Optional.of((ExportTeacherRequest) optAsyncRequest.get());
+        }
+        return Optional.empty();
     }
     
-    public ExportTeacherRequest findOverlappedActiveExportTeacherRequest(HoisUserDetails hoisUser, EhisTeacherExportForm ehisStudentForm) {
+    public Optional<ExportTeacherRequest> findOverlappedActiveExportTeacherRequest(HoisUserDetails hoisUser, EhisTeacherExportForm ehisStudentForm) {
         return findOverlappedActiveExportTeacherRequest(hoisUser, ehisStudentForm, null);
     }
-
-    private static void removeExpiredExportTeacherResults() {
-        LocalDateTime expirationLimit = LocalDateTime.now().minusMinutes(RESULT_EXPIRATION_MINUTES);
-        EXPORT_TEACHER_REQUESTS.values().forEach(map -> {
-            map.values().removeIf(request -> {
-                if (request.isDone()) {
-                    LocalDateTime ended = request.getEnded(); // synchronized method
-                    if (ended != null) {
-                        return expirationLimit.isAfter(ended);
-                    }
-                    return false;
-                }
-                return false;
-            });
-        });
-    }
     
-    /**
-     * Asynchronous method. Runs in different thread.
-     * Has to return {@link Future}.
-     * 
-     * 1. Creates a future object.
-     * 2. Puts into map to be able to get it. Be careful, if user checks (from frontend)
-     * it right after this request (it is async, so at this moment user might receive empty answer)
-     * then it might say that no request found. So better to wait ~1 second and after check if there is a request.
-     * 3. Checks if there is any overlapped and then cancels it.
-     * 4. Runs request.
-     * 5. Removes old done requests.
-     * 
-     * @param hoisUser user
-     * @param ehisStudentForm form
-     * @param requestHash request unique hash.
-     * @return Future
-     */
-    @Async
-    public Future<Queue<EhisTeacherExportResultDto>> exportTeachers(HoisUserDetails hoisUser, boolean higher, EhisTeacherExportForm form, String requestHash) {
-        Long schoolId = hoisUser.getSchoolId();
-        ExportTeacherRequest request = new ExportTeacherRequest(new WrapperCallable<Queue<EhisTeacherExportResultDto>>() {
+    public ExportTeacherRequest createRequest(HoisUserDetails hoisUser, boolean higher, EhisTeacherExportForm form, String key) {
+        Optional<ExportTeacherRequest> overlappedRequest = findOverlappedActiveExportTeacherRequest(hoisUser, form);
+        if (overlappedRequest.isPresent() && !overlappedRequest.get().isDone()) {
+            overlappedRequest.get().cancel(hoisUser, true);
+        }
+        return new ExportTeacherRequest(new WrapperCallable<Queue<EhisTeacherExportResultDto>>() {
             
             private AtomicInteger max = new AtomicInteger();
             
             @Override
             public Queue<EhisTeacherExportResultDto> wrapperCall() {
-                return exportToEhis(schoolId, higher, form, getWrapper(), max);
+                return exportToEhis(hoisUser.getSchoolId(), higher, form, getWrapper(), max);
             }
 
             @Override
@@ -239,26 +149,7 @@ public class EhisTeacherExportService extends EhisService {
                 return getWrapper().get().size() / (float) max.get();
             }
             
-        }, requestHash, hoisUser, form);
-
-        if (!EXPORT_TEACHER_REQUESTS.containsKey(schoolId)) {
-            EXPORT_TEACHER_REQUESTS.put(schoolId, new ConcurrentHashMap<>());
-        }
-        
-        EXPORT_TEACHER_REQUESTS.get(schoolId).put(requestHash, request);
-        
-        ExportTeacherRequest overlappedRequest = findOverlappedActiveExportTeacherRequest(hoisUser, form, request);
-        
-        if (overlappedRequest != null) {
-            if (!overlappedRequest.isDone()) {
-                overlappedRequest.cancel(hoisUser, true);
-            }
-        }
-
-        request.run();
-        
-        removeExpiredExportTeacherResults(); // Async method runs in different thread so it will not cause problems with response time.
-        return request;
+        }, key, hoisUser, form);
     }
     
     /**
@@ -555,6 +446,8 @@ public class EhisTeacherExportService extends EhisService {
                 Set<String> uniqueName = new HashSet<>();
                 StringBuilder subjectName = new StringBuilder();
                 Set<String> uniqueMerCode = new HashSet<>();
+                Map<String, Classifier> studyLanguages = new HashMap<>();
+                
                 moduleIds.forEach(moduleId -> {
                     CurriculumModule cm = em.getReference(CurriculumModule.class, moduleId);
                     if (!uniqueName.contains(cm.getNameEt().toUpperCase())) {
@@ -565,15 +458,10 @@ public class EhisTeacherExportService extends EhisService {
                         uniqueName.add(cm.getNameEt().toUpperCase());
                     }
                     Curriculum c = cm.getCurriculum();
-                    
-                    // TODO: Ask IKE. What to do if we have several curriculums
-                    // Should we rewrite it or not.
-                    if (aine.getKlKeel() == null) {
-                        CurriculumStudyLanguage studyLang = c.getStudyLanguages().stream().findFirst().orElse(null);
-                        if(studyLang != null) {
-                            aine.setKlKeel(ehisValue(studyLang.getStudyLang()));
-                        }
-                    }
+
+                    studyLanguages.putAll(c.getStudyLanguages().stream()
+                        .map(CurriculumStudyLanguage::getStudyLang)
+                        .collect(Collectors.toMap(cl -> cl.getCode(), cl -> cl, (o, n) -> o)));
                     
                     String merCode = c.getMerCode();
                     if(StringUtils.hasText(merCode) && !uniqueMerCode.contains(merCode.toUpperCase())) {
@@ -583,6 +471,13 @@ public class EhisTeacherExportService extends EhisService {
                     }
                 });
                 aine.setAineNimetus(subjectName.toString());
+                if(!studyLanguages.isEmpty()) {
+                    if (studyLanguages.containsKey(StudyLanguage.OPPEKEEL_E.name())) {
+                        aine.setKlKeel(ehisValue(studyLanguages.get(StudyLanguage.OPPEKEEL_E.name())));
+                    } else {
+                        aine.setKlKeel(ehisValue(studyLanguages.values().iterator().next()));
+                    }
+                }
 
                 JournalTeacher journalTeacher = em.getReference(JournalTeacher.class, jtId);
                 if (Boolean.TRUE.equals(journalTeacher.getJournal().getCapacityDiff())) {
@@ -809,16 +704,16 @@ public class EhisTeacherExportService extends EhisService {
         return LAE_OPPEJOUD_SERVICE_CODE;
     }
     
-    public static class ExportTeacherRequest extends EhisFutureTask<Queue<EhisTeacherExportResultDto>> {
+    public static class ExportTeacherRequest extends EhisAsyncRequest<Queue<EhisTeacherExportResultDto>> {
         
         private final boolean allDates;
         private final boolean subjectData;
         private final LocalDate from;
         private final LocalDate thru;
 
-        public ExportTeacherRequest(WrapperCallable<Queue<EhisTeacherExportResultDto>> callable, String hash,
+        public ExportTeacherRequest(WrapperCallable<Queue<EhisTeacherExportResultDto>> callable, String key,
                 HoisUserDetails user, EhisTeacherExportForm form) {
-            super(callable, hash, user);
+            super(callable, key, user);
             allDates = form.isAllDates();
             subjectData = form.isSubjectData();
             from = form.getChangeDateFrom();

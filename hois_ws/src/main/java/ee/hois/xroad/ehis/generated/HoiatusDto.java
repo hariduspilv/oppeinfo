@@ -10,18 +10,18 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java class for hoiatusDto complex type.
+ * <p>Java class for HoiatusDto complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="hoiatusDto"&gt;
+ * &lt;complexType name="HoiatusDto"&gt;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="errorMessages" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}message" maxOccurs="unbounded" minOccurs="0"/&gt;
- *         &lt;element name="warningMessages" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}message" maxOccurs="unbounded" minOccurs="0"/&gt;
- *         &lt;element name="successMessages" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}message" maxOccurs="unbounded" minOccurs="0"/&gt;
+ *         &lt;element name="errorMessages" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}Message" maxOccurs="unbounded" minOccurs="0"/&gt;
+ *         &lt;element name="warningMessages" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}Message" maxOccurs="unbounded" minOccurs="0"/&gt;
+ *         &lt;element name="successMessages" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}Message" maxOccurs="unbounded" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -31,7 +31,7 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "hoiatusDto", propOrder = {
+@XmlType(name = "HoiatusDto", propOrder = {
     "errorMessages",
     "warningMessages",
     "successMessages"

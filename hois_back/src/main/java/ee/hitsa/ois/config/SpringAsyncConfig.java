@@ -7,6 +7,7 @@ import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -16,16 +17,31 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @EnableAsync
 public class SpringAsyncConfig implements AsyncConfigurer {
     
+    /** Amount of active threads */
+    @Value("${hois.async.corePoolSize}")
+    private int CORE_POOL_SIZE;
+    /**
+     * Amount of maximum active threads with condition that an queue is full.
+     * In case if the queue is full and new tasks are coming then
+     * it will increase amount of active threads.
+     */
+    @Value("${hois.async.maxPoolSize}")
+    private int MAX_POOL_SIZE;
+    /** Size of queue */
+    @Value("${hois.async.queueCapacity}")
+    private int QUEUE_CAPACITY;
+    private static final String THREADS_NAME = "Spring-Async-";
+    
     static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Override
     public Executor getAsyncExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(40);
-        executor.setMaxPoolSize(100);
-        executor.setQueueCapacity(200);
+        executor.setCorePoolSize(CORE_POOL_SIZE);
+        executor.setMaxPoolSize(MAX_POOL_SIZE);
+        executor.setQueueCapacity(QUEUE_CAPACITY);
         executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.setThreadNamePrefix("Spring-Async-");
+        executor.setThreadNamePrefix(THREADS_NAME);
         executor.initialize();
         return executor;
     }

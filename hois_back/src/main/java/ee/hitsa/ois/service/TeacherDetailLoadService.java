@@ -25,6 +25,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -53,7 +54,6 @@ import ee.hitsa.ois.web.dto.report.teacherdetailload.PeriodDetailLoadDto;
 import ee.hitsa.ois.web.dto.report.teacherdetailload.TeacherDetailLoadDto;
 import ee.hitsa.ois.web.dto.report.teacherdetailload.TeacherDetailLoadJournalSubjectDto;
 import ee.hitsa.ois.web.dto.report.teacherdetailload.TeacherDetailLoadReportDataDto;
-import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.StudyPeriodDto;
 
 @Transactional
 @Service
@@ -73,7 +73,7 @@ public class TeacherDetailLoadService {
 
         StudyYear studyYear = em.getReference(StudyYear.class, criteria.getStudyYear());
         dto.setStudyPeriods(studyYear.getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate))
-                .map(StudyPeriodDto::new).collect(Collectors.toList()));
+                .map(StudyPeriodWithWeeksDto::new).collect(Collectors.toList()));
 
         if (Boolean.FALSE.equals(criteria.getIsHigher())) {
             List<Short> weekNrs = dto.getStudyPeriods().stream().flatMap(r -> r.getWeekNrs().stream())
@@ -296,7 +296,7 @@ public class TeacherDetailLoadService {
 
         if (Boolean.TRUE.equals(criteria.getByCapacities())) {
             if (Boolean.TRUE.equals(criteria.getByStudyPeriods()) || Boolean.TRUE.equals(criteria.getIsHigher())) {
-                List<StudyPeriodDto> studyPeriods = report.getStudyPeriods();
+                List<StudyPeriodWithWeeksDto> studyPeriods = report.getStudyPeriods();
                 dto.setCapacityPlannedHours(studyPeriodCapacityPlannedHours(criteria.getIsHigher(), teacherPlannedHours,
                         studyPeriods, capacities));
             } else if (Boolean.TRUE.equals(criteria.getByWeeks())) {
@@ -310,7 +310,7 @@ public class TeacherDetailLoadService {
             dto.setTotalCapacityPlannedHours(totalCapacityPlannedHours(teacherPlannedHours, capacities));
         } else {
             if (Boolean.TRUE.equals(criteria.getByStudyPeriods()) || Boolean.TRUE.equals(criteria.getIsHigher())) {
-                List<StudyPeriodDto> studyPeriods = report.getStudyPeriods();
+                List<StudyPeriodWithWeeksDto> studyPeriods = report.getStudyPeriods();
                 dto.setPlannedHours(studyPeriodPlannedHours(criteria.getIsHigher(), teacherPlannedHours, studyPeriods));
             } else if (Boolean.TRUE.equals(criteria.getByWeeks())) {
                 List<Short> weekNrs = report.getWeekNrs();
@@ -332,7 +332,7 @@ public class TeacherDetailLoadService {
 
         if (Boolean.TRUE.equals(criteria.getByCapacities())) {
             if (Boolean.TRUE.equals(criteria.getByStudyPeriods()) || Boolean.TRUE.equals(criteria.getIsHigher())) {
-                List<StudyPeriodDto> studyPeriods = report.getStudyPeriods();
+                List<StudyPeriodWithWeeksDto> studyPeriods = report.getStudyPeriods();
                 dto.setCapacityTimetableOccurredLessons(
                         studyPeriodCapacityTimetableOccurredEvents(timetableOccurredHours, studyPeriods, capacities));
             } else if (Boolean.TRUE.equals(criteria.getByWeeks())) {
@@ -348,7 +348,7 @@ public class TeacherDetailLoadService {
                     capacities));
         } else {
             if (Boolean.TRUE.equals(criteria.getByStudyPeriods()) || Boolean.TRUE.equals(criteria.getIsHigher())) {
-                List<StudyPeriodDto> studyPeriods = report.getStudyPeriods();
+                List<StudyPeriodWithWeeksDto> studyPeriods = report.getStudyPeriods();
                 dto.setTimetableOccurredLessons(
                         studyPeriodTimetableOccurredEvents(timetableOccurredHours, studyPeriods));
             } else if (Boolean.TRUE.equals(criteria.getByWeeks())) {
@@ -371,7 +371,7 @@ public class TeacherDetailLoadService {
 
         if (Boolean.TRUE.equals(criteria.getByCapacities())) {
             if (Boolean.TRUE.equals(criteria.getByStudyPeriods()) || Boolean.TRUE.equals(criteria.getIsHigher())) {
-                List<StudyPeriodDto> studyPeriods = report.getStudyPeriods();
+                List<StudyPeriodWithWeeksDto> studyPeriods = report.getStudyPeriods();
                 dto.setCapacityJournalOccurredLessons(
                         studyPeriodCapacityJournalOccurredLessons(journalOccurredLessons, studyPeriods, capacities));
             } else if (Boolean.TRUE.equals(criteria.getByWeeks())) {
@@ -387,7 +387,7 @@ public class TeacherDetailLoadService {
                     capacityJournalOccurredLessons(journalOccurredLessons, capacities));
         } else {
             if (Boolean.TRUE.equals(criteria.getByStudyPeriods()) || Boolean.TRUE.equals(criteria.getIsHigher())) {
-                List<StudyPeriodDto> studyPeriods = report.getStudyPeriods();
+                List<StudyPeriodWithWeeksDto> studyPeriods = report.getStudyPeriods();
                 dto.setJournalOccurredLessons(studyPeriodJournalOccurredLessons(journalOccurredLessons, studyPeriods));
             } else if (Boolean.TRUE.equals(criteria.getByWeeks())) {
                 List<WeekDto> weeks = report.getWeeks();
@@ -407,7 +407,7 @@ public class TeacherDetailLoadService {
         }
 
         if (Boolean.TRUE.equals(criteria.getByStudyPeriods()) || Boolean.TRUE.equals(criteria.getIsHigher())) {
-            List<StudyPeriodDto> studyPeriods = report.getStudyPeriods();
+            List<StudyPeriodWithWeeksDto> studyPeriods = report.getStudyPeriods();
             dto.setSingleEvents(studyPeriodTimetableOccurredEvents(teacherSingleEvents, studyPeriods));
         } else if (Boolean.TRUE.equals(criteria.getByWeeks())) {
             List<WeekDto> weeks = report.getWeeks();
@@ -427,7 +427,7 @@ public class TeacherDetailLoadService {
         }
 
         if (Boolean.TRUE.equals(criteria.getByStudyPeriods()) || Boolean.TRUE.equals(criteria.getIsHigher())) {
-            List<StudyPeriodDto> studyPeriods = report.getStudyPeriods();
+            List<StudyPeriodWithWeeksDto> studyPeriods = report.getStudyPeriods();
             dto.setSubstitutedLessons(studyPeriodTimetableOccurredEvents(teacherSubstitutedLessons, studyPeriods));
         } else if (Boolean.TRUE.equals(criteria.getByWeeks())) {
             List<WeekDto> weeks = report.getWeeks();
@@ -516,10 +516,10 @@ public class TeacherDetailLoadService {
 
     private Map<Long, List<PlannedLoad>> teacherVocationalPlannedLoads(TeacherDetailLoadCommand criteria,
             List<Long> teacherIds, TeacherDetailLoadReportDataDto report) {
-        StudyPeriodDto studyPeriod = null;
+        StudyPeriodWithWeeksDto studyPeriod = null;
         if (criteria.getStudyPeriod() != null) {
             StudyPeriod sp = em.getReference(StudyPeriod.class, criteria.getStudyPeriod());
-            studyPeriod = new StudyPeriodDto(sp);
+            studyPeriod = new StudyPeriodWithWeeksDto(sp);
         }
         List<Short> weeksBetweenFromAndThru = weeksBetweenFromAndThru(criteria.getFrom(), criteria.getThru(),
                 report.getWeeks());
@@ -556,7 +556,7 @@ public class TeacherDetailLoadService {
     }
 
     private Map<Long, List<PlannedLoad>> teacherJournalPlannedLoads(TeacherDetailLoadCommand criteria,
-            StudyPeriodDto studyPeriod, List<Short> weeksBetweenFromAndThru, List<Long> teacherIds) {
+            StudyPeriodWithWeeksDto studyPeriod, List<Short> weeksBetweenFromAndThru, List<Long> teacherIds) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_teacher jt"
                 + " join journal j on jt.journal_id = j.id"
                 + " join journal_capacity jc on jc.journal_id = j.id and (j.is_capacity_diff is null or j.is_capacity_diff = false)"
@@ -581,7 +581,7 @@ public class TeacherDetailLoadService {
     }
 
     private Map<Long, List<PlannedLoad>> teacherJournalSpecificPlannedLoads(
-            TeacherDetailLoadCommand criteria, StudyPeriodDto studyPeriod, List<Short> weeksBetweenFromAndThru,
+            TeacherDetailLoadCommand criteria, StudyPeriodWithWeeksDto studyPeriod, List<Short> weeksBetweenFromAndThru,
             List<Long> teacherIds) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_teacher jt"
                 + " join journal j on jt.journal_id = j.id"
@@ -672,9 +672,9 @@ public class TeacherDetailLoadService {
     }
 
     private static Map<Long, Long> studyPeriodPlannedHours(Boolean isHigher, List<PlannedLoad> teacherPlannedHours,
-            List<StudyPeriodDto> studyPeriods) {
+            List<StudyPeriodWithWeeksDto> studyPeriods) {
         Map<Long, Long> plannedHoursBySp = new HashMap<>();
-        for (StudyPeriodDto sp : studyPeriods) {
+        for (StudyPeriodWithWeeksDto sp : studyPeriods) {
             Long sum = Boolean.TRUE.equals(isHigher)
                     ? periodPlannedHoursSumByStudyPeriod(teacherPlannedHours, sp.getId())
                     : periodPlannedHoursSumByWeeks(teacherPlannedHours, sp.getWeekNrs());
@@ -713,9 +713,9 @@ public class TeacherDetailLoadService {
     }
 
     private static Map<Long, Map<String, Long>> studyPeriodCapacityPlannedHours(Boolean isHigher,
-            List<PlannedLoad> teacherPlannedHours, List<StudyPeriodDto> studyPeriods, List<Classifier> capacitites) {
+            List<PlannedLoad> teacherPlannedHours, List<StudyPeriodWithWeeksDto> studyPeriods, List<Classifier> capacitites) {
         Map<Long, Map<String, Long>> plannedHoursBySp = new HashMap<>();
-        for (StudyPeriodDto sp : studyPeriods) {
+        for (StudyPeriodWithWeeksDto sp : studyPeriods) {
             Map<String, Long> plannedHours = Boolean.TRUE.equals(isHigher)
                     ? periodCapacityPlannedHoursByStudyPeriod(teacherPlannedHours, sp.getId(), capacitites)
                     : periodCapacityPlannedHoursByWeeks(teacherPlannedHours, sp.getWeekNrs(), capacitites);
@@ -905,12 +905,12 @@ public class TeacherDetailLoadService {
     }
 
     private static Map<Long, Long> studyPeriodTimetableOccurredEvents(List<TimetableEvent> occurredEvents,
-            List<StudyPeriodDto> studyPeriods) {
+            List<StudyPeriodWithWeeksDto> studyPeriods) {
         Map<Long, Long> periodLessons = new HashMap<>();
 
         Map<Long, List<TimetableEvent>> occurredEventsBySp = StreamUtil.nullSafeList(occurredEvents).stream()
                 .collect(Collectors.groupingBy(e -> e.getStudyPeriodId()));
-        for (StudyPeriodDto sp : studyPeriods) {
+        for (StudyPeriodWithWeeksDto sp : studyPeriods) {
             List<TimetableEvent> spOccurredEvents = occurredEventsBySp.get(sp.getId());
             long lessonsCount = spOccurredEvents != null ? spOccurredEvents.size() : 0;
             periodLessons.put(sp.getId(), Long.valueOf(lessonsCount));
@@ -944,12 +944,12 @@ public class TeacherDetailLoadService {
     }
 
     private static Map<Long, Map<String, Long>> studyPeriodCapacityTimetableOccurredEvents(
-            List<TimetableEvent> occurredEvents, List<StudyPeriodDto> studyPeriods, List<Classifier> capacitites) {
+            List<TimetableEvent> occurredEvents, List<StudyPeriodWithWeeksDto> studyPeriods, List<Classifier> capacitites) {
         Map<Long, Map<String, Long>> periodCapacityLessons = new HashMap<>();
 
         Map<Long, List<TimetableEvent>> occurredEventsBySp = StreamUtil.nullSafeList(occurredEvents).stream()
                 .collect(Collectors.groupingBy(e -> e.getStudyPeriodId()));
-        for (StudyPeriodDto sp : studyPeriods) {
+        for (StudyPeriodWithWeeksDto sp : studyPeriods) {
             periodCapacityLessons.put(sp.getId(),
                     capacityTimetableOccurredEvents(occurredEventsBySp.get(sp.getId()), capacitites));
         }
@@ -1017,10 +1017,10 @@ public class TeacherDetailLoadService {
     }
 
     private static Map<Long, Long> studyPeriodJournalOccurredLessons(List<JournalEntry> occurredLessons,
-            List<StudyPeriodDto> studyPeriods) {
+            List<StudyPeriodWithWeeksDto> studyPeriods) {
         Map<Long, Long> periodLessons = new HashMap<>();
 
-        for (StudyPeriodDto sp : studyPeriods) {
+        for (StudyPeriodWithWeeksDto sp : studyPeriods) {
             Long lessonsCount = StreamUtil.nullSafeList(occurredLessons).stream()
                     .filter(l -> sp.getId().equals(l.getStudyPeriodId())).map(l -> l.getLessons()).reduce(Long::sum)
                     .orElse(Long.valueOf(0));
@@ -1060,9 +1060,9 @@ public class TeacherDetailLoadService {
     }
 
     private static Map<Long, Map<String, Long>> studyPeriodCapacityJournalOccurredLessons(
-            List<JournalEntry> occurredLessons, List<StudyPeriodDto> studyPeriods, List<Classifier> capacitites) {
+            List<JournalEntry> occurredLessons, List<StudyPeriodWithWeeksDto> studyPeriods, List<Classifier> capacitites) {
         Map<Long, Map<String, Long>> periodCapacityLessons = new HashMap<>();
-        for (StudyPeriodDto sp : studyPeriods) {
+        for (StudyPeriodWithWeeksDto sp : studyPeriods) {
             List<JournalEntry> periodOccurredLessons = StreamUtil
                     .toFilteredList(l -> sp.getId().equals(l.getStudyPeriodId()), occurredLessons);
             periodCapacityLessons.put(sp.getId(), capacityJournalOccurredLessons(periodOccurredLessons, capacitites));
@@ -1400,14 +1400,14 @@ public class TeacherDetailLoadService {
         List<LoadTypeDto> loadTypesRow = new ArrayList<>();
 
         if (Boolean.TRUE.equals(criteria.getByStudyPeriods()) || Boolean.TRUE.equals(criteria.getIsHigher())) {
-            List<StudyPeriodDto> studyPeriods = new ArrayList<>();
+            List<StudyPeriodWithWeeksDto> studyPeriods = new ArrayList<>();
             if (criteria.getStudyPeriod() != null) {
                 studyPeriods.add(studyPeriodDtoById(criteria.getStudyPeriod(), reportData.getStudyPeriods()));
             } else {
                 studyPeriods = reportData.getStudyPeriods();
             }
 
-            for (StudyPeriodDto dto : studyPeriods) {
+            for (StudyPeriodWithWeeksDto dto : studyPeriods) {
                 PeriodDto period = new PeriodDto();
                 period.setStudyPeriod(Boolean.TRUE);
                 period.setName(dto.getNameEt());
@@ -1422,7 +1422,7 @@ public class TeacherDetailLoadService {
             List<Short> periodWeekNrs = new ArrayList<>();
             List<Long> weekNrs = new ArrayList<>();
             if (criteria.getStudyPeriod() != null) {
-                StudyPeriodDto studyPeriod = studyPeriodDtoById(criteria.getStudyPeriod(),
+                StudyPeriodWithWeeksDto studyPeriod = studyPeriodDtoById(criteria.getStudyPeriod(),
                         reportData.getStudyPeriods());
                 periodWeekNrs = studyPeriod.getWeekNrs();
             } else {
@@ -1479,7 +1479,7 @@ public class TeacherDetailLoadService {
         return report;
     }
 
-    private static StudyPeriodDto studyPeriodDtoById(Long id, List<StudyPeriodDto> studyPeriods) {
+    private static StudyPeriodWithWeeksDto studyPeriodDtoById(Long id, List<StudyPeriodWithWeeksDto> studyPeriods) {
         return StreamUtil.toFilteredList(p -> id.equals(p.getId()), studyPeriods).get(0);
     }
 

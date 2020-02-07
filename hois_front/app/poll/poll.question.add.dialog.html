@@ -51,7 +51,7 @@
                         <textarea ng-model="criteria.addInfoEt" ng-disabled="criteria.disabled || (new && criteria.question)" md-maxlength="4000" max-rows="4"></textarea>
                     </md-input-container>
                 </div>
-                <div layout="row" flex>
+                <div layout="row" flex ng-if="!onlyQuestion">
                     <md-input-container flex>
                         <md-checkbox ng-model="criteria.isRequired">{{'poll.questions.mandatory' | translate}}</md-checkbox>
                     </md-input-container>
@@ -65,7 +65,7 @@
                     </md-input-container>
                     <div ng-if="criteria.type === 'VASTUS_M' || criteria.type ===  'VASTUS_R'" layout="row" flex="35" layout-align="left center" flex-offset="5">
                         <md-input-container flex>
-                            <md-radio-group name="criteria.isInRow" ng-model="criteria.isInRow" required="{{question.isRequried}}" layout="row" flex>
+                            <md-radio-group name="criteria.isInRow" ng-model="criteria.isInRow" layout="row" flex>
                                 <md-radio-button ng-value="true" flex>{{'poll.questions.displayRow' | translate}}</md-radio-button>
                                 <md-radio-button ng-value="false" flex>{{'poll.questions.displayColumn' | translate}}</md-radio-button>
                             </md-radio-group>

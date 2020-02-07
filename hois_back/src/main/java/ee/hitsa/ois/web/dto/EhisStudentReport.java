@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -222,22 +223,22 @@ public class EhisStudentReport {
         private final LocalDate fromDate;
         private final LocalDate toDate;
         private final String abroadPurpose;
-        private final BigDecimal points;
-        private final Integer nominalStudyExtension;
+        private final String points;
+        private final BigInteger nominalStudyExtension;
         private final LocalDate nominalStudyEnd;
         private final String schoolName;
         private final String country;
         private final String abroadProgramme;
 
-        public ForeignStudy(DirectiveStudent ds, WsEhisStudentLog log, BigDecimal points, Integer nominalStudyExtension) {
+        public ForeignStudy(DirectiveStudent ds, WsEhisStudentLog log, ForeignStudentDto foreignStudent) {
             fill(ds.getStudent(), log);
 
             fromDate = DateUtils.periodStart(ds);
             toDate = DateUtils.periodEnd(ds);
             abroadPurpose = EntityUtil.getCode(ds.getAbroadPurpose());
-            this.points = points;
-            this.nominalStudyExtension = nominalStudyExtension;
-            nominalStudyEnd = ds.getNominalStudyEnd();
+            this.points = foreignStudent.getPoints();
+            this.nominalStudyExtension = foreignStudent.getNominalStudyExtension();
+            nominalStudyEnd = ds.getStartDate();
             schoolName = Boolean.TRUE.equals(ds.getIsAbroad()) ? (ds.getAbroadSchool() != null ? ds.getAbroadSchool() : EhisService.name(ds.getApelSchool())) : ds.getEhisSchool().getNameEt();
             country = EntityUtil.getCode(ds.getCountry());
             abroadProgramme = EntityUtil.getCode(ds.getAbroadProgramme());
@@ -255,11 +256,11 @@ public class EhisStudentReport {
             return abroadPurpose;
         }
 
-        public BigDecimal getPoints() {
+        public String getPoints() {
             return points;
         }
         
-        public Integer getNominalStudyExtension() {
+        public BigInteger getNominalStudyExtension() {
             return nominalStudyExtension;
         }
 

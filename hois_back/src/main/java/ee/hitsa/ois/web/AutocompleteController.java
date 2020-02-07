@@ -33,6 +33,7 @@ import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.SpecialitiesAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.basemodule.BaseModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumAutocompleteCommand;
@@ -49,6 +50,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.JournalAutocompleteResult;
+import ee.hitsa.ois.web.dto.LiteralResult;
 import ee.hitsa.ois.web.dto.OccupiedAutocompleteResult;
 import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.RoomAutocompleteResult;
@@ -323,9 +325,14 @@ public class AutocompleteController {
      * @param lookup
      * @return journals with student groups as "journal_name(student_groups)"
      */
-    @GetMapping("/journalsAndStudentGroups")
-    public List<AutocompleteResult> journalsAndStudentGroups(HoisUserDetails user, JournalAndSubjectAutocompleteCommand lookup) {
+    @GetMapping("/journalsAndStudentGroups") 
+    public List<LiteralResult> journalsAndStudentGroups(HoisUserDetails user, SearchCommand lookup) {
         return autocompleteService.journalsAndStudentGroups(user.getSchoolId(), lookup);
+    }
+    
+    @GetMapping("/subjectStudyPeriods") 
+    public List<LiteralResult> subjectStudyPeriods(HoisUserDetails user, SubjectStudyPeriodCommand lookup) {
+        return autocompleteService.subjectStudyPeriods(user.getSchoolId(), lookup);
     }
 
     @GetMapping("/enterprises")

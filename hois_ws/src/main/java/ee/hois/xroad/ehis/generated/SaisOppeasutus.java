@@ -1,10 +1,13 @@
 
 package ee.hois.xroad.ehis.generated;
 
+import java.math.BigInteger;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 
 /**
@@ -19,13 +22,13 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;sequence&gt;
  *         &lt;element name="registrikood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="kooliNimi" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="kooliLiik" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="kooliLiik" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="aadress" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="ehak" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="indeks" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="kooliLiikNimi" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="koolId" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="sulgemiseKp" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="koolId" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
+ *         &lt;element name="sulgemiseKp" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -53,7 +56,7 @@ public class SaisOppeasutus {
     @XmlElement(required = true, nillable = true)
     protected String kooliNimi;
     @XmlElement(required = true, nillable = true)
-    protected String kooliLiik;
+    protected BigInteger kooliLiik;
     @XmlElement(required = true, nillable = true)
     protected String aadress;
     @XmlElement(required = true, nillable = true)
@@ -63,9 +66,10 @@ public class SaisOppeasutus {
     @XmlElement(required = true, nillable = true)
     protected String kooliLiikNimi;
     @XmlElement(required = true, nillable = true)
-    protected String koolId;
+    protected BigInteger koolId;
     @XmlElement(required = true, nillable = true)
-    protected String sulgemiseKp;
+    @XmlSchemaType(name = "date")
+    protected XMLGregorianCalendar sulgemiseKp;
 
     /**
      * Gets the value of the registrikood property.
@@ -120,10 +124,10 @@ public class SaisOppeasutus {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getKooliLiik() {
+    public BigInteger getKooliLiik() {
         return kooliLiik;
     }
 
@@ -132,10 +136,10 @@ public class SaisOppeasutus {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setKooliLiik(String value) {
+    public void setKooliLiik(BigInteger value) {
         this.kooliLiik = value;
     }
 
@@ -240,10 +244,10 @@ public class SaisOppeasutus {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getKoolId() {
+    public BigInteger getKoolId() {
         return koolId;
     }
 
@@ -252,10 +256,10 @@ public class SaisOppeasutus {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setKoolId(String value) {
+    public void setKoolId(BigInteger value) {
         this.koolId = value;
     }
 
@@ -264,10 +268,10 @@ public class SaisOppeasutus {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link XMLGregorianCalendar }
      *     
      */
-    public String getSulgemiseKp() {
+    public XMLGregorianCalendar getSulgemiseKp() {
         return sulgemiseKp;
     }
 
@@ -276,10 +280,10 @@ public class SaisOppeasutus {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link XMLGregorianCalendar }
      *     
      */
-    public void setSulgemiseKp(String value) {
+    public void setSulgemiseKp(XMLGregorianCalendar value) {
         this.sulgemiseKp = value;
     }
 

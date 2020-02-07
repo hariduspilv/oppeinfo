@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="taiendkoolitus" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}eeIsikukaartTaiendkoolitus" maxOccurs="unbounded" minOccurs="0"/&gt;
  *         &lt;element name="tasemeharidus" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}eeIsikukaartTasemeharidus" maxOccurs="unbounded" minOccurs="0"/&gt;
  *         &lt;element name="kvalifikatsioon" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}eeIsikukaartKvalifikatsioon" maxOccurs="unbounded" minOccurs="0"/&gt;
+ *         &lt;element name="kraOpingud" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}eeIsikukaartKraOpingud" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -40,7 +41,8 @@ import javax.xml.bind.annotation.XmlType;
     "tootamine",
     "taiendkoolitus",
     "tasemeharidus",
-    "kvalifikatsioon"
+    "kvalifikatsioon",
+    "kraOpingud"
 })
 public class EeIsikukaartBean {
 
@@ -51,6 +53,7 @@ public class EeIsikukaartBean {
     protected List<EeIsikukaartTaiendkoolitus> taiendkoolitus;
     protected List<EeIsikukaartTasemeharidus> tasemeharidus;
     protected List<EeIsikukaartKvalifikatsioon> kvalifikatsioon;
+    protected EeIsikukaartKraOpingud kraOpingud;
 
     /**
      * Gets the value of the isikuandmed property.
@@ -219,6 +222,30 @@ public class EeIsikukaartBean {
             kvalifikatsioon = new ArrayList<EeIsikukaartKvalifikatsioon>();
         }
         return this.kvalifikatsioon;
+    }
+
+    /**
+     * Gets the value of the kraOpingud property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link EeIsikukaartKraOpingud }
+     *     
+     */
+    public EeIsikukaartKraOpingud getKraOpingud() {
+        return kraOpingud;
+    }
+
+    /**
+     * Sets the value of the kraOpingud property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link EeIsikukaartKraOpingud }
+     *     
+     */
+    public void setKraOpingud(EeIsikukaartKraOpingud value) {
+        this.kraOpingud = value;
     }
 
 }

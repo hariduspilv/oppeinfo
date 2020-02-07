@@ -30,6 +30,7 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -103,7 +104,6 @@ import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleJournalDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleJournalTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanTeacherDto;
-import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.StudyPeriodDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanJournalDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanSearchDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanSearchTeacherDto;
@@ -453,6 +453,7 @@ public class LessonPlanService {
         journalCopy.setGroupProportion(journal.getGroupProportion());
         journalCopy.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
         journalCopy.setAddModuleOutcomes(journal.getAddModuleOutcomes());
+        journalCopy.setUntisCode(journal.getUntisCode());
 
         copyPreviousLessonPlanJournalCapacities(journal, journalCopy);
         copyPreviousLessonPlanJournalTeachers(journal, journalCopy);
@@ -940,7 +941,7 @@ public class LessonPlanService {
             occupationModule = lessonPlanModule.getCurriculumVersionOccupationModule();
             lessonPlan = lessonPlanModule.getLessonPlan();
         }
-        UserUtil.assertIsSchoolAdmin(user, lessonPlan.getSchool());
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, lessonPlan.getStudentGroup());
 
         Journal journal = new Journal();
         // default values filled
@@ -975,7 +976,7 @@ public class LessonPlanService {
 
     public LessonPlanCreatedJournalDto createJournal(HoisUserDetails user, LessonPlanJournalForm form) {
         LessonPlan lessonPlan = em.getReference(LessonPlan.class, form.getLessonPlan());
-        UserUtil.assertIsSchoolAdmin(user, lessonPlan.getSchool());
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, lessonPlan.getStudentGroup());
         LessonPlanModule lessonPlanModule;
         if (form.getLessonPlanModuleId() == null) {
             lessonPlanModule = new LessonPlanModule();
@@ -1327,7 +1328,7 @@ public class LessonPlanService {
                 EntityUtil.deleteEntity(em.getReference(TimetableObject.class, objectId), em);
             }
         }
-        
+
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(journal, em);
     }
@@ -1422,9 +1423,9 @@ public class LessonPlanService {
         return xlsService.generate("lessonplan.xls", data);
     }
     
-    private static List<LessonPlanXlsStudyPeriodDto> lessonplanExcelStudyPeriods(List<StudyPeriodDto> inputPeriods) {
+    private static List<LessonPlanXlsStudyPeriodDto> lessonplanExcelStudyPeriods(List<StudyPeriodWithWeeksDto> inputPeriods) {
         List<LessonPlanXlsStudyPeriodDto> studyPeriods = new ArrayList<>();
-        for (StudyPeriodDto sp : inputPeriods) {
+        for (StudyPeriodWithWeeksDto sp : inputPeriods) {
             LessonPlanXlsStudyPeriodDto studyPeriod = new LessonPlanXlsStudyPeriodDto();
             studyPeriod.setId(sp.getId());
             studyPeriod.setNameEt(sp.getNameEt());

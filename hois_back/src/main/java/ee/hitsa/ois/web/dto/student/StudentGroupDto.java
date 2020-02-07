@@ -17,6 +17,7 @@ import ee.hitsa.ois.web.commandobject.student.StudentGroupForm;
 public class StudentGroupDto extends StudentGroupForm {
 
     private Long id;
+    private Short curriculumVersionAdmissinYear;
     private List<StudentGroupStudentDto> members;
 
     public Long getId() {
@@ -25,6 +26,14 @@ public class StudentGroupDto extends StudentGroupForm {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Short getCurriculumVersionAdmissinYear() {
+        return curriculumVersionAdmissinYear;
+    }
+
+    public void setCurriculumVersionAdmissinYear(Short curriculumVersionAdmissinYear) {
+        this.curriculumVersionAdmissinYear = curriculumVersionAdmissinYear;
     }
 
     public List<StudentGroupStudentDto> getMembers() {
@@ -38,7 +47,7 @@ public class StudentGroupDto extends StudentGroupForm {
     public static StudentGroupDto of(HoisUserDetails user, StudentGroup studentGroup) {
         StudentGroupDto dto = EntityUtil.bindToDto(studentGroup, new StudentGroupDto(), "students");
         Stream<Student> students = studentGroup.getStudents().stream();
-        if(!user.isSchoolAdmin() && !user.isTeacher()) {
+        if (!(user.isSchoolAdmin() || user.isLeadingTeacher() || user.isTeacher())) {
             // only show active members
             Set<String> active = new HashSet<>(StudentStatus.STUDENT_STATUS_ACTIVE);
             students = students.filter(s -> active.contains(EntityUtil.getCode(s.getStatus())));
@@ -46,6 +55,9 @@ public class StudentGroupDto extends StudentGroupForm {
         // sort students in name order
         students = students.sorted((o1, o2) -> PersonUtil.SORT.compare(o1.getPerson(), o2.getPerson()));
         dto.setMembers(StreamUtil.toMappedList(s -> StudentGroupStudentDto.of(user, s), students));
+        if (studentGroup.getCurriculumVersion() != null) {
+            dto.setCurriculumVersionAdmissinYear(studentGroup.getCurriculumVersion().getAdmissionYear());
+        }
         return dto;
     }
 }

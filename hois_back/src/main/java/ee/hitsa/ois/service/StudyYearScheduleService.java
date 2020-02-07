@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.time.LocalDate;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -46,6 +47,7 @@ import ee.hitsa.ois.web.commandobject.StudyYearScheduleDtoContainer;
 import ee.hitsa.ois.web.commandobject.StudyYearScheduleForm;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.StudyPeriodDto;
+import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 import ee.hitsa.ois.web.dto.StudyYearDto;
 import ee.hitsa.ois.web.dto.StudyYearScheduleDto;
 import ee.hitsa.ois.web.dto.StudyYearScheduleLegendDto;
@@ -155,24 +157,21 @@ public class StudyYearScheduleService {
 
     public List<StudentGroupSearchDto> getStudentGroups(HoisUserDetails user, Boolean showMine, LocalDate from,
             LocalDate thru) {
-        Long schoolId = user.getSchoolId();
         List<StudentGroup> data;
-
         if (Boolean.TRUE.equals(showMine) && (user.isStudent() || user.isRepresentative())) {
             data = em.createQuery("select s.studentGroup from Student s where s.id = ?1", StudentGroup.class)
                     .setParameter(1, user.getStudentId()).getResultList();
-        } else if (Boolean.TRUE.equals(showMine) && user.isLeadingTeacher()) {
-            data = em.createQuery("select sg from StudentGroup sg where sg.curriculum.id in (?1)",
-                    StudentGroup.class).setParameter(1, user.getCurriculumIds()).getResultList();
-        } else if (from != null && thru != null) {
-            data = em.createQuery("select sg from StudentGroup sg where sg.school.id = ?1"
-                    + " and (sg.validFrom is null or sg.validFrom <= ?3)"
-                    + " and (sg.validThru is null or sg.validThru >= ?2)", StudentGroup.class)
-                .setParameter(1, schoolId).setParameter(2, from).setParameter(3, thru).getResultList();
         } else {
-            data = em.createQuery("select sg from StudentGroup sg where sg.school.id = ?1", StudentGroup.class)
-                .setParameter(1, schoolId).getResultList();
+            JpaQueryBuilder<StudentGroup> qb = new JpaQueryBuilder<>(StudentGroup.class, "sg").sort("code");
+            qb.requiredCriteria("sg.school.id = :schoolId", "schoolId", user.getSchoolId());
+            if (Boolean.TRUE.equals(showMine) && user.isLeadingTeacher()) {
+                qb.requiredCriteria("sg.curriculum.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
+            }
+            qb.optionalCriteria("(sg.validFrom is null or sg.validFrom <= :thru)", "thru", thru);
+            qb.optionalCriteria("(sg.validThru is null or sg.validThru >= :from)", "from", from);
+            data = qb.select(em).getResultList();
         }
+
         return StreamUtil.toMappedList(sg -> {
             StudentGroupSearchDto dto = new StudentGroupSearchDto();
             dto.setId(sg.getId());
@@ -187,7 +186,8 @@ public class StudyYearScheduleService {
     }
 
     public List<StudyYearDto> getStudyYearsWithStudyPeriods(Long schoolId) {
-        List<StudyYear> data = em.createQuery("select sy from StudyYear sy where sy.school.id = ?1", StudyYear.class)
+        List<StudyYear> data = em.createQuery("select sy from StudyYear sy where sy.school.id = ?1"
+                + " order by sy.endDate", StudyYear.class)
                 .setParameter(1, schoolId).getResultList();
         return StreamUtil.toMappedList(sy -> {
             StudyYearDto dto = StudyYearDto.of(sy);
@@ -196,32 +196,45 @@ public class StudyYearScheduleService {
         }, data);
     }
 
-    private List<ReportStudyPeriod> getStudyPeriodsWithWeeks(StudyYear studyYear) {
-        List<StudyPeriod> data = em.createQuery("select sp from StudyPeriod sp where sp.studyYear = ?1"
-                + " order by sp.endDate", StudyPeriod.class)
-                .setParameter(1, studyYear)
-                .getResultList();
+    public List<StudyPeriodWithWeeksDto> getStudyYearPeriods(StudyYear studyYear) {
+        List<StudyPeriodWithWeeksDto> studyPeriods = studyYear.getStudyPeriods().stream()
+                .sorted(Comparator.comparing(StudyPeriod::getStartDate))
+                .map(StudyPeriodWithWeeksDto::new).collect(Collectors.toList());
+        addExternalWeeksToPeriod(studyPeriods);
+        return studyPeriods;
+    }
+
+    // add weeks so that study period weeks can go from 1 to last period's week
+    public void addExternalWeeksToPeriod(List<StudyPeriodWithWeeksDto> studyPeriods) {
+        for (int i = 0; i < studyPeriods.size(); i++) {
+            StudyPeriodWithWeeksDto period = studyPeriods.get(i);
+            StudyPeriodWithWeeksDto previousPeriod = i > 0 ? studyPeriods.get(i - 1) : null;
+
+            short periodFirstWeek = period.getWeekNrs().get(0);
+            short previousPeriodLastWeek = previousPeriod != null
+                    ? previousPeriod.getWeekNrs().get(previousPeriod.getWeekNrs().size() - 1) : 0;
+            for (int weekNr = periodFirstWeek - 1; weekNr > previousPeriodLastWeek; weekNr--) {
+                Short newWeekNr = Short.valueOf((short) weekNr);
+                period.getWeekNrs().add(0, newWeekNr);
+                period.getExternalWeeks().add(newWeekNr);
+
+                LocalDate nextWeekStart = period.getWeekBeginningDates().get(0);
+                period.getWeekBeginningDates().add(0, nextWeekStart.minusDays(7));
+            }
+        }
+    }
+
+    private List<ReportStudyPeriod> getReportStudyPeriods(StudyYear studyYear) {
+        List<StudyPeriodWithWeeksDto> studyPeriods = getStudyYearPeriods(studyYear);
         return StreamUtil.toMappedList(sp -> {
             ReportStudyPeriod studyPeriodData = new ReportStudyPeriod();
-            studyPeriodData.setPeriod(StudyPeriodDto.of(sp));
-            LinkedList<Short> weekNrs = sp.getWeekNrs();
+            studyPeriodData.setPeriod(sp);
+            List<Short> weekNrs = sp.getWeekNrs();
             studyPeriodData.setWeeks(weekNrs);
-            studyPeriodData.setStartWeek(weekNrs.peekFirst());
-            studyPeriodData.setEndWeek(weekNrs.peekLast());
+            studyPeriodData.setStartWeek(weekNrs.get(0));
+            studyPeriodData.setEndWeek(weekNrs.get(weekNrs.size() - 1));
             return studyPeriodData;
-        }, data);
-    }
-    
-    private static LinkedList<Integer> getWeeks(StudyYear studyYear) {
-        LinkedList<Integer> result = new LinkedList<>();
-        LocalDate start = studyYear.getStartDate();
-        LocalDate end = studyYear.getEndDate();
-        int weekNr = 1;
-        while (start.isBefore(end) || start.isEqual(end)) {
-            start = start.plusDays(7).minusDays(start.getDayOfWeek().ordinal());
-            result.add(Integer.valueOf(weekNr++));
-        }
-        return result;
+        }, studyPeriods);
     }
 
     private StudyYearScheduleReport getReport(HoisUserDetails user, StudyYearScheduleForm schedulesCmd) {
@@ -234,11 +247,14 @@ public class StudyYearScheduleService {
         Map<Long, StudyYearScheduleLegendDto> legendMap = StreamUtil.toMap(StudyYearScheduleLegendDto::getId, legendList);
         report.setLegends(legendList);
         ReportTable table = new ReportTable();
-        List<ReportStudyPeriod> studyPeriods = getStudyPeriodsWithWeeks(studyYear);
+        List<ReportStudyPeriod> studyPeriods = getReportStudyPeriods(studyYear);
         table.setStudyPeriods(studyPeriods);
-        LinkedList<Integer> weeks = getWeeks(studyYear);
+        List<Short> weeks = new LinkedList<>();
+        for (ReportStudyPeriod period : studyPeriods) {
+            weeks.addAll(period.getWeeks());
+        }
         table.setWeeks(weeks);
-        List<SchoolDepartmentResult> departmentList = StreamUtil.toFilteredList(d -> schedulesCmd.getSchoolDepartments().contains(d.getId()), 
+        List<SchoolDepartmentResult> departmentList = StreamUtil.toFilteredList(d -> schedulesCmd.getSchoolDepartments().contains(d.getId()),
                 autocompleteService.schoolDepartments(user.getSchoolId()));
         List<StudentGroupSearchDto> studentGroups = getStudentGroups(user, schedulesCmd.getShowMine(),
                 studyYear.getStartDate(), studyYear.getEndDate());
@@ -376,14 +392,14 @@ public class StudyYearScheduleService {
                 }
             });
         });
-        List<Integer> weeks = table.getWeeks();
+        List<Short> weeks = table.getWeeks();
         LinkedList<ReportTable> tables = new LinkedList<>();
         for (int i = 0; i < weeks.size(); ) {
             int next = Math.min(i + PDF_MAX_WEEKS, weeks.size() - 1); // next index
             final int week = weeks.get(i).intValue(); // start week
             final int nextWeek = weeks.get(next).intValue(); // end week
-            boolean nextRow = next % PDF_MAX_WEEKS == 0; // is end week including or excluding
-            if ((i == next && next > 0) || weeks.isEmpty()) { // break when empty or reached the end
+            boolean nextRow = next % PDF_MAX_WEEKS == 0 && i != next; // is end week including or excluding
+            if (weeks.isEmpty()) { // break when empty
                 break;
             }
             ReportTable temp = new ReportTable();
@@ -406,10 +422,10 @@ public class StudyYearScheduleService {
             }
             temp.setDepartments(splitDepartments(table, i, nextRow ? next : next + 1));
             tables.add(temp);
-            i = next;
-            if (next == 0) { // single element in weeks
+            if (!nextRow) { // next row does not exist, should stop
                 break;
             }
+            i = next;
         }
         report.setTables(tables);
         return pdfService.generate("studyyearschedule.xhtml", report);

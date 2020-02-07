@@ -1,5 +1,5 @@
 <md-content ng-if="auth.isAdmin() || auth.isLeadingTeacher()">
-    <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak hois-navbar-overflowed>
+    <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="enterprise selection" ng-cloak hois-navbar-overflowed>
         <md-nav-item ng-if="enterprise.id" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/view?_noback" name="enterprise.data">
             {{'enterprise.data' | translate}}</md-nav-item>
         <md-nav-item ng-if="enterprise.enterpriseSchoolId" md-nav-href="#/practice/enterprise/{{::enterprise.id}}/{{::enterprise.enterpriseSchoolId}}/persons/view?_noback" name="enterprise.persons">

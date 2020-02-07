@@ -432,6 +432,9 @@ public class JournalService {
 
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
+            if (user.isLeadingTeacher()) {
+                filters.add(root.get("curriculumVersion").get("curriculum").get("id").in(user.getCurriculumIds()));
+            }
             filters.add(cb.or(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_A.name()),
                     cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()),
                     cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_V.name())));
@@ -493,6 +496,9 @@ public class JournalService {
                 + "join curriculum c on cv.curriculum_id = c.id");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("c.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
+        }
         qb.requiredCriteria("s.status_code in (:activeStudents)", "activeStudents",
                 StudentStatus.STUDENT_STATUS_ACTIVE);
 

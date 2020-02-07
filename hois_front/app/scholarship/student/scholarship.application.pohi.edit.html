@@ -1,4 +1,9 @@
 <div class="ois-form-layout-padding" ng-cloak>
+  <hois-whiteframe-warning ng-if="application.id && application.canApply">
+    <span>{{'stipend.messages.applicationNotSubmitted' | translate}}</span>
+    <span ng-if="stipend.applicationEnd">{{'stipend.messages.submissionDeadline' | translate: {deadline: (stipend.applicationEnd | hoisDate)} }}</span>
+  </hois-whiteframe-warning>
+
   <fieldset tabindex="1">
     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.student.grantTerms' | translate}}</legend>
     <div class="form-readonly ois-form-layout-padding">
@@ -90,14 +95,14 @@
     </div>
   </fieldset>
 
-  <br/>
+  <div>&nbsp;</div>
 
   <fieldset tabindex="1" ng-if="termCompliance && !termCompliance.fullyComplies">
     <legend md-colors="{color: 'default-warn'}" class="md-title-small">{{'stipend.messages.error.studentDoesntComply' | translate}}</legend>
     <div flex ng-include="'scholarship/templates/scholarship.term.compliance.list.html'"></div>
   </fieldset>
 
-  <br/>
+  <div>&nbsp;</div>
 
   <fieldset tabindex="1">
     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.student.myData' | translate}}</legend>
@@ -165,7 +170,7 @@
           <div layout="row" flex>
             <md-input-container flex="45" flex-md="100" flex-sm="100" flex-xs="100">
               <label>{{'stipend.student.bankAccountOwnerIdcode' | translate}}</label>
-              <input type="text" ng-model="application.bankAccountOwnerIdcode" name="bankAccountOwnerIdcode" required md-maxlength="20" 
+              <input type="text" ng-model="application.bankAccountOwnerIdcode" name="bankAccountOwnerIdcode" required md-maxlength="20"
                 ng-disabled="!application.canApply">
             </md-input-container>
           </div>
@@ -178,12 +183,18 @@
           </div>
 
           <div ng-include="'scholarship/scholarship.relatedFiles.edit.html'"></div>
-
           <br/>
+
+          <div layout="row" flex class="form-readonly">
+            <md-input-container flex="45" flex-md="100" flex-sm="100" flex-xs="100">
+              <label>{{'stipend.student.status' | translate}}</label>
+              <hois-classifier-value ng-model="application.status" main-classifier-code="STIPTOETUS_STAATUS"></hois-classifier-value>
+            </md-input-container>
+          </div>
 
           <div layout="row" layout-xs="column">
             <md-button class="md-raised md-primary" ng-if="application.canApply" ng-click="update(applicationForm)">{{'main.button.save' | translate}}</md-button>
-            <md-button class="md-raised" ng-if="application.canApply" ng-click="apply(applicationForm)">{{'stipend.student.apply' | translate}}</md-button>
+            <md-button class="md-raised md-primary" ng-if="application.canApply" ng-click="apply(applicationForm)">{{'main.button.submit' | translate}}</md-button>
             <md-button class="md-raised" ng-click="back('#/scholarships/myData/grants', applicationForm)">{{'main.button.back' | translate}}</md-button>
           </div>
 

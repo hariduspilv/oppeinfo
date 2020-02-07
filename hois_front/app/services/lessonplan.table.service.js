@@ -380,7 +380,7 @@ angular.module('hitsaOis')
           var week = scope.formState.weekNrs[weekIndex];
           if (week.show) {
             var weekColumn = document.createElement("th");
-            weekColumn.title = moment(new Date(scope.formState.weekBeginningDates[weekIndex])).format('YYYY-MM-DD');
+            weekColumn.title = $filter('hoisDate')(scope.formState.weekBeginningDates[weekIndex]);
             weekColumn.innerHTML = week.nr;
             weekColumn.classList.add(CENTER);
             if (week.endOfPeriod) {

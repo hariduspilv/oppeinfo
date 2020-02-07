@@ -14,7 +14,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
                         scholarshipEditable: false};
 
     $scope.withoutInitialSelection = [
-      'KASKKIRI_IMMAT', 'KASKKIRI_IMMATV', 'KASKKIRI_KIITUS', 'KASKKIRI_NOOMI', 'KASKKIRI_OTEGEVUS', 
+      'KASKKIRI_IMMAT', 'KASKKIRI_IMMATV', 'KASKKIRI_KIITUS', 'KASKKIRI_NOOMI', 'KASKKIRI_OTEGEVUS',
       'KASKKIRI_PRAKTIK', 'KASKKIRI_INDOK', 'KASKKIRI_KYLALIS'
     ];
 
@@ -110,17 +110,13 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
             $scope.scholarshipDirectiveChanged(student);
           }
           break;
-        case 'KASKKIRI_VALISKATK':
+        case 'KASKKIRI_TUGILOPP':
           $scope.mapStudentDirective(student);
           if (!student.directiveStudent && student.existingDirectiveStudents && student.existingDirectiveStudents.length === 1) {
-            var existingDirectiveStudent = student.existingDirectiveStudents[0];
-            student.directiveStudent = existingDirectiveStudent.id;
-            student.startDate = new Date(existingDirectiveStudent.startDate);
-            student.endDate = new Date(existingDirectiveStudent.endDate);
-            student.application = existingDirectiveStudent.applicationId;
+            student.directiveStudent = student.existingDirectiveStudents[0].id;
           }
           break;
-        case 'KASKKIRI_TUGILOPP': 
+        case 'KASKKIRI_VALISKATK':
           $scope.mapStudentDirective(student);
           if (!student.directiveStudent && student.existingDirectiveStudents && student.existingDirectiveStudents.length === 1) {
             student.directiveStudent = student.existingDirectiveStudents[0].id;
@@ -130,7 +126,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     }
 
     function afterLoad(result) {
-      today = new Date(); // After every reloading it should update `today` becuase 
+      today = new Date(); // After every reloading it should update `today` becuase
       if (angular.isDefined(result) && result.canEditDirective === false) {
         message.error("main.messages.error.nopermission");
         $rootScope.back("#/directives/" + result.id + "/view");
@@ -156,6 +152,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         setScholarshipEditable();
         $scope.record.students = studentConverter($scope.record.students);
         mapForeign(result);
+        checkHasForeignStudent();
       }
     }
 
@@ -240,15 +237,14 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         if (type === 'KASKKIRI_KYLALIS') {
           $scope.formState.apelSchools = QueryUtils.endpoint('/autocomplete/apelschools').query();
           $scope.formState.apelSchoolStudyLevels = Classifier.queryForDropdown({
-            mainClassCode: 'EHIS_KODU_OPPEASTE', 
+            mainClassCode: 'EHIS_KODU_OPPEASTE',
             order: 'code',
-            vocational: $scope.formState.school.vocational ? true : undefined, 
+            vocational: $scope.formState.school.vocational ? true : undefined,
             higher: $scope.formState.school.higher ? true : undefined
           });
         }
       }
       if (type === 'KASKKIRI_VALIS') {
-        $scope.formState.apelSchools = QueryUtils.endpoint('/autocomplete/apelschools').query();
         $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query({}, function (response) {
           response.forEach(function (studyPeriod) {
             studyPeriod.display = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
@@ -261,17 +257,17 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     }
 
     /**
-     * 
-     * @param {Array<Number>} students 
-     * @param {Map<Number, Number>=} studentApplicationRelationship 
-     * @param {Function} callback 
+     *
+     * @param {Array<Number>} students
+     * @param {Map<Number, Number>=} studentApplicationRelationship
+     * @param {Function} callback
      */
     function studentsToDirective(students, studentApplicationRelationship, callback) {
-      var data = {id: $scope.record.id, type: $scope.record.type, scholarshipType: $scope.record.scholarshipType, 
-        canceledDirective: canceledDirective, curriculumVersion: $scope.formState.curriculumVersion, 
-        studyLevel: $scope.formState.studyLevel, students: students.map(function(i) { return i.id; }), 
+      var data = {id: $scope.record.id, type: $scope.record.type, scholarshipType: $scope.record.scholarshipType,
+        canceledDirective: canceledDirective, curriculumVersion: $scope.formState.curriculumVersion,
+        studyLevel: $scope.formState.studyLevel, students: students.map(function(i) { return i.id; }),
         isHigher: $scope.record.isHigher};
-      
+
       if ($scope.record.type === 'KASKKIRI_TUGI') {
         if (!studentApplicationRelationship) {
           studentApplicationRelationship = {};
@@ -361,7 +357,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     $scope.directiveTypeChanged = function() {
       $scope.formState.students = [];
       $scope.formState.selectedStudents = [];
-      
+
       var data = {type: $scope.record.type};
       if(data.type === 'KASKKIRI_EKSMAT') {
         data.application = true;
@@ -440,9 +436,9 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     };
 
     /**
-     * 
-     * @param {Array<Number>} students 
-     * @param {Map<Number, Number>=} studentApplicationRelationship 
+     *
+     * @param {Array<Number>} students
+     * @param {Map<Number, Number>=} studentApplicationRelationship
      */
     function storeStudents(students, studentApplicationRelationship) {
       studentsToDirective(students, studentApplicationRelationship, function(result) {
@@ -518,6 +514,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     };
 
     $scope.foreignChanged = function(row) {
+      checkHasForeignStudent();
       if(row._foreign) {
         row.foreignIdcode = row.idcode;
         row.idcode = undefined;
@@ -532,6 +529,16 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         $scope.lookupStudent(row);
       });
     };
+
+    function checkHasForeignStudent() {
+      var isForeignStudent = false;
+      $scope.record.students.forEach(function(student) {
+        if (student._foreign) {
+          isForeignStudent = true;
+        }
+      });
+      $scope.hasForeignStudent = isForeignStudent;
+    }
 
     $scope.lookupStudent = function(row) {
       var ctrlName = 'students[' + $scope.record.students.indexOf(row) +'].idcode';
@@ -576,15 +583,6 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
           ctrl.$serverError.push({code: 'InvalidEstonianIdCode'});
           ctrl.$setValidity('serverside', false);
         }
-      }
-    };
-
-    $scope.abroadChanged = function(row) {
-      var est = 'RIIK_EST';
-      if(!row.isAbroad) {
-        row.country = est;
-      } else if(row.country === est) {
-        row.country = null;
       }
     };
 
@@ -747,7 +745,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         dialogScope.formState = { viewForm: $scope.record.type === 'KASKKIRI_TYHIST', selectedModules: [] };
         dialogScope.student = student;
         dialogScope.existingIndividualCurriculums = false;
-        
+
         QueryUtils.endpoint(baseUrl + '/studentIndividualCurriculumModules/:id').query({
           id: studentId,
           directiveId: id
@@ -759,8 +757,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
             var valid = true;
 
             if (cvModule.existingModules) {
-              dialogScope.existingIndividualCurriculums = true; 
-              
+              dialogScope.existingIndividualCurriculums = true;
+
               for (var i = 0; i < cvModule.existingModules.length; i++) {
                 var existingModuleStart = new Date(cvModule.existingModules[i].startDate);
                 existingModuleStart.setHours(0, 0, 0, 0);
@@ -783,7 +781,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
                 return cvModule.id === individualModule.curriculumVersionOmodule;
               })[0];
 
-              if (curriculumModule) { 
+              if (curriculumModule) {
                 if (curriculumModule.valid) {
                   dialogScope.formState.selectedModules.push(individualModule.curriculumVersionOmodule);
                 }
@@ -815,10 +813,10 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
 
     /**
      * Compares dates and return the highest.
-     * 
+     *
      * Used for TUGI to set `mdMinDate` for `endDate`.
      * It should be not lesser than `today` or `startDate`. If `startDate` is lesser than `today` then it should return `today`
-     * 
+     *
      * @param {Date=} [date]
      * @returns `date` if exists and more than `today`. Otherwise `today`
      */
@@ -836,7 +834,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     var clMapper = Classifier.valuemapper({status: 'KASKKIRI_STAATUS'});
 
     $scope.formState = {school: Session.school || {}};
-    
+
     var occupationMap;
     var specialitiesMap;
     if(!$scope.formState.school.higher) {
@@ -862,7 +860,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         mapStudentSpecialities(it);
       });
     });
-    
+
     function mapStudentOccupations(student) {
       if (student.occupations) {
         student.occupations = student.occupations.map(function(code) {
@@ -915,14 +913,14 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         var studentId = student.student;
         dialogScope.formState = { viewForm: true, selectedModules: [] };
         dialogScope.student = student;
-        
+
         QueryUtils.endpoint(baseUrl + '/studentIndividualCurriculumModules/:id').query({id: studentId, directiveId: id}).$promise.then(function (result) {
           dialogScope.curriculumVersionModules = result;
 
           if (dialogScope.student.modules) {
             dialogScope.student.modules.forEach(function (individualModule) {
               dialogScope.formState.selectedModules.push(individualModule.curriculumVersionOmodule);
-              
+
               var curriculumModule = (dialogScope.curriculumVersionModules || []).filter(function (cvModule) {
                 return cvModule.id === individualModule.curriculumVersionOmodule;
               })[0];

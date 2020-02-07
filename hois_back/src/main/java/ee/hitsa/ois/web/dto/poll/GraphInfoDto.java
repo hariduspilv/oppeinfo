@@ -13,6 +13,9 @@ public class GraphInfoDto {
     private List<List<BigDecimal>> data = new ArrayList<>();
     private GraphOptions options;
     private Long max;
+    private Boolean isCheckbox;
+    private Boolean isText;
+    private GraphTextAnswerDto textAnswer;
     
     public GraphInfoDto() {
         // need 2 rows of data for conclusions and personal answers
@@ -48,5 +51,29 @@ public class GraphInfoDto {
     }
     public void setMax(Long max) {
         this.max = max;
+    }
+
+    public Boolean getIsCheckbox() {
+        return isCheckbox;
+    }
+
+    public void setIsCheckbox(Boolean isCheckbox) {
+        this.isCheckbox = isCheckbox;
+    }
+
+    public Boolean getIsText() {
+        return isText;
+    }
+
+    public void setIsText(Boolean isText) {
+        this.isText = isText;
+    }
+
+    public GraphTextAnswerDto getTextAnswer() {
+        return textAnswer;
+    }
+
+    public void setTextAnswer(GraphTextAnswerDto textAnswer) {
+        this.textAnswer = textAnswer;
     }
 }

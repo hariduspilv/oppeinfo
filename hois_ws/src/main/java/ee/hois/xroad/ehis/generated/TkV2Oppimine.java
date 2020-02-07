@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="oppekavaTase" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="algusKp" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="loppKp" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="lahkumisePohjus" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="lopetamisePohjus" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="ennistamiseKp" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="oppekavaKood" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
@@ -33,6 +34,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="oppevormid" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}tkV2Oppevorm" maxOccurs="unbounded" minOccurs="0"/&gt;
  *         &lt;element name="oppekoormused" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}tkV2Oppekoormus" maxOccurs="unbounded" minOccurs="0"/&gt;
  *         &lt;element name="finAllikad" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}tkV2FinAllikas" maxOccurs="unbounded" minOccurs="0"/&gt;
+ *         &lt;element name="oppekohtId" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -48,6 +50,7 @@ import javax.xml.bind.annotation.XmlType;
     "oppekavaTase",
     "algusKp",
     "loppKp",
+    "lahkumisePohjus",
     "lopetamisePohjus",
     "ennistamiseKp",
     "oppekavaKood",
@@ -56,7 +59,8 @@ import javax.xml.bind.annotation.XmlType;
     "akadPuhkus",
     "oppevormid",
     "oppekoormused",
-    "finAllikad"
+    "finAllikad",
+    "oppekohtId"
 })
 public class TkV2Oppimine {
 
@@ -69,6 +73,7 @@ public class TkV2Oppimine {
     @XmlElement(required = true)
     protected String algusKp;
     protected String loppKp;
+    protected String lahkumisePohjus;
     protected String lopetamisePohjus;
     protected String ennistamiseKp;
     protected String oppekavaKood;
@@ -78,6 +83,7 @@ public class TkV2Oppimine {
     protected List<TkV2Oppevorm> oppevormid;
     protected List<TkV2Oppekoormus> oppekoormused;
     protected List<TkV2FinAllikas> finAllikad;
+    protected String oppekohtId;
 
     /**
      * Gets the value of the oppeasutusNimetus property.
@@ -197,6 +203,30 @@ public class TkV2Oppimine {
      */
     public void setLoppKp(String value) {
         this.loppKp = value;
+    }
+
+    /**
+     * Gets the value of the lahkumisePohjus property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getLahkumisePohjus() {
+        return lahkumisePohjus;
+    }
+
+    /**
+     * Sets the value of the lahkumisePohjus property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setLahkumisePohjus(String value) {
+        this.lahkumisePohjus = value;
     }
 
     /**
@@ -433,6 +463,30 @@ public class TkV2Oppimine {
             finAllikad = new ArrayList<TkV2FinAllikas>();
         }
         return this.finAllikad;
+    }
+
+    /**
+     * Gets the value of the oppekohtId property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getOppekohtId() {
+        return oppekohtId;
+    }
+
+    /**
+     * Sets the value of the oppekohtId property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setOppekohtId(String value) {
+        this.oppekohtId = value;
     }
 
 }

@@ -19,6 +19,10 @@ public class PracticeJournalEntry extends BaseEntityWithId {
 
     @NotNull
     private LocalDate practiceDate;
+    /**
+     * @since 23.01.2020
+     * Saves a value as minutes, not as hours.
+     */
     private Double hours;
     private String supervisorComment;
     private String teacherComment;

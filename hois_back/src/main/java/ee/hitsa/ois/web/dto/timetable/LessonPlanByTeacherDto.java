@@ -16,16 +16,16 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.LessonPlanUtil;
 import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
 import ee.hitsa.ois.web.dto.ClassifierDto;
+import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleJournalDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanModuleJournalForTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.LessonPlanTeacherDto;
-import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.StudyPeriodDto;
 
 public class LessonPlanByTeacherDto {
 
     private final String studyYearCode;
     private final String teacherName;
-    private final List<StudyPeriodDto> studyPeriods;
+    private final List<StudyPeriodWithWeeksDto> studyPeriods;
     private final List<Short> weekNrs;
     private final List<LessonPlanModuleJournalDto> journals;
     private final List<LessonPlanByTeacherSubjectDto> subjects;
@@ -39,7 +39,7 @@ public class LessonPlanByTeacherDto {
         studyYearCode = EntityUtil.getCode(studyYear.getYear());
         teacherName = teacher.getPerson().getFullname();
         studyPeriods = studyYear.getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate))
-                .map(StudyPeriodDto::new).collect(Collectors.toList());
+                .map(StudyPeriodWithWeeksDto::new).collect(Collectors.toList());
         weekNrs = studyPeriods.stream().flatMap(r -> r.getWeekNrs().stream()).collect(Collectors.toList());
         weekBeginningDates = studyPeriods.stream().flatMap(r -> r.getWeekBeginningDates().stream())
                 .collect(Collectors.toList());
@@ -60,7 +60,7 @@ public class LessonPlanByTeacherDto {
         return teacherName;
     }
 
-    public List<StudyPeriodDto> getStudyPeriods() {
+    public List<StudyPeriodWithWeeksDto> getStudyPeriods() {
         return studyPeriods;
     }
 

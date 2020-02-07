@@ -31,6 +31,7 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
+import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 
 public class LessonPlanDto extends LessonPlanForm {
 
@@ -41,7 +42,7 @@ public class LessonPlanDto extends LessonPlanForm {
     private String curriculumCode;
     private AutocompleteResult curriculumVersion;
     private Integer studyPeriod;
-    private List<StudyPeriodDto> studyPeriods;
+    private List<StudyPeriodWithWeeksDto> studyPeriods;
     private List<Short> weekNrs;
     private List<LocalDate> weekBeginningDates;
     private List<LessonPlanLegendDto> legends;
@@ -59,7 +60,8 @@ public class LessonPlanDto extends LessonPlanForm {
         dto.setCurriculumVersion(AutocompleteResult.of(studentGroup.getCurriculumVersion()));
         dto.setStudyPeriod(studentGroup.getCurriculum().getStudyPeriod());
         
-        dto.setStudyPeriods(lessonPlan.getStudyYear().getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).map(StudyPeriodDto::new).collect(Collectors.toList()));
+        dto.setStudyPeriods(lessonPlan.getStudyYear().getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate))
+                .map(StudyPeriodWithWeeksDto::new).collect(Collectors.toList()));
         LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(lessonPlan.getStudyYear());
         Set<Long> existingModuleIds = StreamUtil.toMappedSet(
                 m -> EntityUtil.getId(m.getCurriculumVersionOccupationModule()), 
@@ -76,7 +78,8 @@ public class LessonPlanDto extends LessonPlanForm {
         dto.setWeekNrs(dto.getStudyPeriods().stream().flatMap(r -> r.getWeekNrs().stream()).collect(Collectors.toList()));
         dto.setWeekBeginningDates(dto.getStudyPeriods().stream().flatMap(r -> r.getWeekBeginningDates().stream()).collect(Collectors.toList()));
 
-        Map<Long, String> colors = StreamUtil.toMap(StudyYearScheduleLegend::getId, StudyYearScheduleLegend::getColor, lessonPlan.getSchool().getStudyYearScheduleLegends());
+        Map<Long, String> colors = StreamUtil.toMap(StudyYearScheduleLegend::getId, StudyYearScheduleLegend::getColor, lessonPlan.getSchool()
+                .getStudyYearScheduleLegends());
         dto.setLegends(StreamUtil.toMappedList(e -> new LessonPlanLegendDto(e.getKey(), colors.get(e.getValue())), weekNrsLegends.entrySet()));
         return dto;
     }
@@ -137,11 +140,11 @@ public class LessonPlanDto extends LessonPlanForm {
         this.studyPeriod = studyPeriod;
     }
 
-    public List<StudyPeriodDto> getStudyPeriods() {
+    public List<StudyPeriodWithWeeksDto> getStudyPeriods() {
         return studyPeriods;
     }
 
-    public void setStudyPeriods(List<StudyPeriodDto> studyPeriods) {
+    public void setStudyPeriods(List<StudyPeriodWithWeeksDto> studyPeriods) {
         this.studyPeriods = studyPeriods;
     }
 
@@ -440,56 +443,6 @@ public class LessonPlanDto extends LessonPlanForm {
             this.teacher = teacher;
         }
 
-    }
-
-    public static class StudyPeriodDto {
-
-        private final Long id;
-        private final String nameEt;
-        private final String nameEn;
-        private LocalDate startDate;
-        private LocalDate endDate;
-        
-        private final List<Short> weekNrs;
-        private final List<LocalDate> weekBeginningDates;
-
-        public StudyPeriodDto(StudyPeriod studyPeriod) {
-            id = studyPeriod.getId();
-            nameEt = studyPeriod.getNameEt();
-            nameEn = studyPeriod.getNameEn();
-            weekNrs = studyPeriod.getWeekNrs();
-            weekBeginningDates = studyPeriod.getWeekBeginningDates();
-            startDate = studyPeriod.getStartDate();
-            endDate = studyPeriod.getEndDate();
-        }
-
-        public Long getId() {
-            return id;
-        }
-
-        public String getNameEt() {
-            return nameEt;
-        }
-
-        public String getNameEn() {
-            return nameEn;
-        }
-        
-        public LocalDate getStartDate() {
-            return startDate;
-        }
-        
-        public LocalDate getEndDate() {
-            return endDate;
-        }
-
-        public List<Short> getWeekNrs() {
-            return weekNrs;
-        }
-        
-        public List<LocalDate> getWeekBeginningDates() {
-            return weekBeginningDates;
-        }
     }
 
     public static class LessonPlanLegendDto {

@@ -25,14 +25,14 @@
                     <hois-value value="criteria.nameEt"></hois-value>
                 </md-input-container>
             </div>
-            <div layout="row" flex="100">
-                <md-input-container flex>
+            <div layout="row">
+                <md-input-container flex="100">
                     <label class="textInput">{{'poll.basicData.foreWord' | translate}}</label>
                     <hois-value value="criteria.foreword"></hois-value>
                 </md-input-container>
             </div>
-            <div layout="row" flex>
-                <md-input-container flex>
+            <div layout="row">
+                <md-input-container flex="100">
                     <label class="textInput">{{'poll.basicData.afterWord' | translate}}</label>
                     <hois-value value="criteria.afterword"></hois-value>
                 </md-input-container>
@@ -100,40 +100,63 @@
                         <table md-table class="secondary-table">
                             <thead md-head>
                                 <tr md-row>
-                                    <th md-column width="90%">{{'poll.studentgroups' | translate}}</th>
-                                    <th md-column width="10%"></th>
+                                    <th md-column>{{'poll.studentgroups' | translate}}</th>
                                 </tr>
                             </thead>
                             <tbody md-body>
                             <tr md-row ng-repeat="studentgroup in formState.studentGroups" ng-class-odd="'odd'" ng-class-even="'even'">
                                 <td md-cell>{{currentLanguageNameField(studentgroup)}}</td>
-                                <td md-cell>
-                                </td>
                             </tr>
                             </tbody>
                         </table>
                     </md-table-container>
                 </div>
-                <div layout="column" ng-if="criteria.type === 'KYSITLUS_O' && criteria.journals.length !== 0">
-                    <div layout="row" ng-if="!auth.higher || (auth.higher && auth.vocational)">
-                        <md-table-container flex="50" style="max-height: 200px">
+                <div layout="column" ng-if="criteria.type === 'KYSITLUS_O'" flex="50">
+                    <div layout="column" ng-if="(!auth.higher || (auth.higher && auth.vocational)) && criteria.journals.length !== 0" flex="100">
+                        <md-table-container>
                             <table md-table class="secondary-table">
                                 <thead md-head>
                                     <tr md-row>
-                                        <th md-column>{{'poll.journals' | translate}}</th>
+                                        <th md-column>{{'poll.basicData.dialog.journals' | translate}}</th>
                                     </tr>
                                 </thead>
                                 <tbody md-body>
-                                    <tr md-row ng-repeat="journal in criteria.journals" ng-class-odd="'odd'" ng-class-even="'even'">
+                                    <tr md-row ng-repeat="journal in criteria.journals|limitTo:5" ng-class-odd="'odd'" ng-class-even="'even'">
                                         <td md-cell>{{currentLanguageNameField(journal)}}</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </md-table-container>
+                        <div layout="row">
+                            <a ng-if="criteria.journals.length > 5" ng-click="viewMoreOfList(criteria.journals, true)" style="font-size: 13px;">
+                                {{'poll.basicData.viewMore' | translate}}
+                            </a>
+                        </div>
+                    </div>
+                    <div layout="column" ng-if="auth.higher && criteria.subjectStudyPeriods.length !== 0">
+                        <md-table-container>
+                            <table md-table class="secondary-table">
+                                <thead md-head>
+                                    <tr md-row>
+                                        <th md-column>{{'poll.basicData.subjectStudyPeriods' | translate}}</th>
+                                    </tr>
+                                </thead>
+                                <tbody md-body>
+                                    <tr md-row ng-repeat="subjectStudyPeriod in criteria.subjectStudyPeriods|limitTo:5" ng-class-odd="'odd'" ng-class-even="'even'">
+                                        <td md-cell>{{currentLanguageNameField(subjectStudyPeriod)}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </md-table-container>
+                        <div layout="row">
+                            <a ng-if="criteria.subjectStudyPeriods.length > 5" ng-click="viewMoreOfList(criteria.subjectStudyPeriods)" style="font-size: 13px;">
+                                {{'poll.basicData.viewMore' | translate}}
+                            </a>
+                        </div>
                     </div>
                 </div>
             </fieldset>
-            <br>
+            <div>&nbsp;</div>
             <md-input-container flex="45" ng-if="criteria.type === 'KYSITLUS_O'">
                 <md-checkbox ng-model="criteria.isTeacherComment" aria-label="required" disabled style="margin-bottom: 0px">
                     {{'poll.basicData.teacherCanComment' | translate}}

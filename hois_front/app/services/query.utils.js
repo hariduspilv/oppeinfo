@@ -54,6 +54,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
 
     var createQueryForm = function(scope, url, defaultParams, postLoad, useLoadingWheel, ignoreStorage, noEmptyMsg) {
       scope.criteria = angular.extend({}, defaultPagingParams);
+      scope.hiddenCriteria = {};
 
       scope.directiveControllers = [];
       scope.clearCriteria = function() {
@@ -76,11 +77,19 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
 
       if(!('_menu' in $route.current.params) && !ignoreStorage) {
         var storedCriteria = scope.fromStorage(url);
+        var storedHiddenCriteria = scope.fromStorage('hidden_' + url);
         if(angular.isNumber(storedCriteria.page)) {
           storedCriteria.page = storedCriteria.page + 1;
         }
 
-        angular.extend(scope.criteria, storedCriteria);
+        // In case if user has an url which lead to search form then there is no parameters.
+        // It should place default parameters instead of empty storedCriteria
+        if ($sessionStorage[url] === undefined) {
+          angular.extend(scope.criteria, defaultParams);
+        } else {
+          angular.extend(scope.criteria, storedCriteria);
+          angular.extend(scope.hiddenCriteria, storedHiddenCriteria);
+        }
       } else {
         // apply default parameters only when we are not restoring previously used query parameters
         angular.extend(scope.criteria, defaultParams);
@@ -136,6 +145,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
         var query = scope.getCriteria();
         if (!ignoreStorage) {
           scope.toStorage(url, query);
+          scope.toStorage('hidden_' + url, scope.hiddenCriteria);
         }
         scope.tabledata.$promise = endpoint(url).search(query, _afterLoadData, _errorAfterLoadData);
         return scope.tabledata.$promise;

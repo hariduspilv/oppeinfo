@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;sequence&gt;
  *         &lt;element name="taotlejaIsikukood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="taotluseId" type="{http://www.w3.org/2001/XMLSchema}long"/&gt;
- *         &lt;element name="hoiatusDto" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}hoiatusDto" minOccurs="0"/&gt;
+ *         &lt;element name="hoiatusDto" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}HoiatusDto" minOccurs="0"/&gt;
  *         &lt;element name="failiOigsuseKinnitusKuva" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;

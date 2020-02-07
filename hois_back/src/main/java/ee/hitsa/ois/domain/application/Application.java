@@ -48,7 +48,8 @@ import ee.hitsa.ois.validation.StudyPeriodRange;
 @DateRange(from = "startDate", thru = "endDate", groups = {Akad.class})
 @StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd", groups = {Akad.class})
 @Conditional(selected = "student.curriculumVersion.curriculum.higher", values = {"true"}, required = {"abroadProgramme"}, groups = {Valis.class})
-@Conditional(selected = "isAbroad", values = {"true"}, required = {"apelSchool"}, groups = {Valis.class})
+@Conditional(selected = "isAbroad", values = {"true"}, required = {"abroadSchool"}, groups = {Valis.class})
+@Conditional(selected = "isAbroad", values = {"false"}, required = {"ehisSchool"}, groups = {Valis.class})
 public class Application extends BaseEntityWithId implements Period {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -123,7 +124,7 @@ public class Application extends BaseEntityWithId implements Period {
     private Classifier newFinSpecific;
 
     @Required(groups = {Valis.class})
-    private Boolean isAbroad;
+    private Boolean isAbroad = Boolean.FALSE;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Classifier country;
@@ -152,6 +153,7 @@ public class Application extends BaseEntityWithId implements Period {
     private Application academicApplication;
     
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @Required(groups = {Valis.class})
     private ApelSchool apelSchool;
     
     @ManyToOne(optional = true, fetch = FetchType.LAZY)

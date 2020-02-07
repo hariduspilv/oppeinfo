@@ -1,25 +1,25 @@
 package ee.hitsa.ois.web.dto.poll;
 
-import java.util.Set;
+import java.util.List;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class PollRelatedObjectsDto {
     
-    private Set<AutocompleteResult> journals;
-    private Set<AutocompleteResult> subjects;
+    private List<AutocompleteResult> journals;
+    private List<AutocompleteResult> subjects;
     private Boolean themes;
     
-    public Set<AutocompleteResult> getJournals() {
+    public List<AutocompleteResult> getJournals() {
         return journals;
     }
-    public void setJournals(Set<AutocompleteResult> journals) {
+    public void setJournals(List<AutocompleteResult> journals) {
         this.journals = journals;
     }
-    public Set<AutocompleteResult> getSubjects() {
+    public List<AutocompleteResult> getSubjects() {
         return subjects;
     }
-    public void setSubjects(Set<AutocompleteResult> subjects) {
+    public void setSubjects(List<AutocompleteResult> subjects) {
         this.subjects = subjects;
     }
     public Boolean getThemes() {

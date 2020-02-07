@@ -28,14 +28,6 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
       if (!angular.isDefined($scope.criteria.personalEvent)) {
         $scope.criteria.personalEvent = false;
       }
-    } else {
-      $scope.criteria.personalEvent = true;
-      $scope.criteria.user = $scope.auth.user;
-    }
-
-    if ($scope.auth.isLeadingTeacher()) {
-      $scope.criteria.leadingTeacherEvents = true;
-      $scope.criteria.user = $scope.auth.user;
     }
 
     if (!angular.isDefined($scope.criteria.from)) {
@@ -61,6 +53,7 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
       $scope.directiveControllers.forEach(function (c) { 
         c.clear(); 
       }); 
+      $scope.criteria.order = '4 desc';
     };
 
     $scope.afterNow = function (date, time) {

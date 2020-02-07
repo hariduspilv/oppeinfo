@@ -9,10 +9,13 @@ public class ThemeDto implements Comparable<ThemeDto> {
     
     private Long id;
     private String nameEt;
+    private String nameEn;
     private Short orderNr;
     private Boolean isRepetitive;
+    private Boolean isTeacher;
     private AutocompleteResult journal;
     private AutocompleteResult subject;
+    private AutocompleteResult teacher;
     private List<QuestionDto> questions = new ArrayList<>();
     
     public Long getId() {
@@ -69,6 +72,24 @@ public class ThemeDto implements Comparable<ThemeDto> {
     }
     public void setSubject(AutocompleteResult subject) {
         this.subject = subject;
+    }
+    public Boolean getIsTeacher() {
+        return isTeacher;
+    }
+    public void setIsTeacher(Boolean isTeacher) {
+        this.isTeacher = isTeacher;
+    }
+    public AutocompleteResult getTeacher() {
+        return teacher;
+    }
+    public void setTeacher(AutocompleteResult teacher) {
+        this.teacher = teacher;
+    }
+    public String getNameEn() {
+        return nameEn;
+    }
+    public void setNameEn(String nameEn) {
+        this.nameEn = nameEn;
     }
 
 }

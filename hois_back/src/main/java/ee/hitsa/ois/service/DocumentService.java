@@ -757,7 +757,7 @@ public class DocumentService {
                 + " sv.grade_date,sv.subject_code,"
                 + " case when (select count (*) from apel_application_formal_subject_or_module aaf where sv.apel_application_record_id=aaf.apel_application_record_id and not aaf.is_my_school) > 0 then true else false end as is_apel_formal,"
                 + " case when (select count (*) from apel_application_informal_subject_or_module aaf where sv.apel_application_record_id=aaf.apel_application_record_id) > 0 then true else false end as is_apel_informal,"
-                + " aps.name_et as aps_name_et,aps.name_en as aps_name_en, apc.code as apc_code,apc.name_et as apc_name_et,apc.name_en as apc_name_en,"
+                + " aps.name_et as aps_name_et, coalesce(aps.name_en, aps.name_et) as aps_name_en, apc.code as apc_code,apc.name_et as apc_name_et,apc.name_en as apc_name_en,"
                 + " case when pp.is_final=true then true else false end as is_final,"
                 + " case when pp.is_final_thesis=true then true else false end as is_final_thesis,"
                 + " ft.theme_et,ft.theme_en"
@@ -811,6 +811,7 @@ public class DocumentService {
                     studyResult.setApelSchoolNameEt(apelSchoolNameEt);
                     studyResult.setApelSchoolNameEn(apelSchoolNameEt);
                 } else {
+                    // in query: coalesce(aps.name_en, aps.name_et)
                     studyResult.setApelSchoolNameEt(apelSchoolNameEn + " (" + resultAsString(r, 14) + ")");
                     studyResult.setApelSchoolNameEn(apelSchoolNameEn + " (" + resultAsString(r, 15) + ")");
                 }

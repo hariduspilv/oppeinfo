@@ -24,7 +24,7 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;sequence&gt;
  *         &lt;element name="taotlejaIsikukood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="taotluseId" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}longOrNothing" minOccurs="0"/&gt;
- *         &lt;element name="oppimineDtos" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oppimineDto" maxOccurs="unbounded"/&gt;
+ *         &lt;element name="oppimineDtos" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}OppimineDto" maxOccurs="unbounded"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;

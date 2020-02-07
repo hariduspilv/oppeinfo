@@ -400,7 +400,7 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
                 + "join person p on p.id = s.person_id "
                 + "join curriculum_version cv on s.curriculum_version_id = cv.id "
                 + "join curriculum_version_omodule cvo on cv.id = cvo.curriculum_version_id "
-                + "join student_group sg on s.student_group_id = sg.id");
+                + "left join student_group sg on s.student_group_id = sg.id");
 
         studentsQb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         studentsQb.requiredCriteria("cvo.id = :occupationalModuleId",
@@ -425,13 +425,14 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
         }
         
         studentsQb.sort("p.firstname, p.lastname");
-        List<?> students = studentsQb
-                .select("distinct s.id, p.firstname, p.lastname, p.idcode, s.status_code, sg.code", em).getResultList();
+        List<?> students = studentsQb.select("distinct s.id, p.firstname, p.lastname, p.idcode, "
+                + "s.status_code, sg.code, s.type_code", em).getResultList();
 
         return students.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
             FinalVocationalProtocolStudentDto dto = new FinalVocationalProtocolStudentDto();
             dto.setStudentId(resultAsLong(r, 0));
-            dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+            dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2),
+                    resultAsString(r, 6)));
             dto.setIdcode(resultAsString(r, 3));
             dto.setStatus(resultAsString(r, 4));
             dto.setStudentGroup(resultAsString(r, 5));

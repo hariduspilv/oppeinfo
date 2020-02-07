@@ -13,6 +13,7 @@ public class ApelApplicationRecordDto extends VersionedCommand {
     
     private Long id;
     private Boolean isFormalLearning;
+    private Long applicationPlannedSubject;
     private List<ApelApplicationInformalExperienceDto> informalExperiences;
     private List<ApelApplicationInformalSubjectOrModuleDto> informalSubjectsOrModules;
     private List<ApelApplicationFormalSubjectOrModuleDto> formalSubjectsOrModules;
@@ -22,8 +23,9 @@ public class ApelApplicationRecordDto extends VersionedCommand {
         if (record == null) {
             return null;
         }
-        ApelApplicationRecordDto dto = EntityUtil.bindToDto(record, new ApelApplicationRecordDto(),
-                "informalExperiences", "informalSubjectsOrModules");
+        ApelApplicationRecordDto dto = EntityUtil.bindToDto(record, new ApelApplicationRecordDto(), "applicationPlannedSubject",
+                "informalExperiences", "informalSubjectsOrModules", "formalSubjectsOrModules", "formalReplacedSubjectsOrModules");
+        dto.setApplicationPlannedSubject(EntityUtil.getNullableId(record.getApplicationPlannedSubject()));
         dto.setInformalExperiences(StreamUtil.toMappedList(ApelApplicationInformalExperienceDto::of, record.getInformalExperiences()));
         dto.setInformalSubjectsOrModules(StreamUtil.toMappedList(ApelApplicationInformalSubjectOrModuleDto::of,
                 record.getInformalSubjectsOrModules()));
@@ -50,6 +52,14 @@ public class ApelApplicationRecordDto extends VersionedCommand {
 
     public void setIsFormalLearning(Boolean isFormalLearning) {
         this.isFormalLearning = isFormalLearning;
+    }
+
+    public Long getApplicationPlannedSubject() {
+        return applicationPlannedSubject;
+    }
+
+    public void setApplicationPlannedSubject(Long applicationPlannedSubject) {
+        this.applicationPlannedSubject = applicationPlannedSubject;
     }
 
     public List<ApelApplicationInformalExperienceDto> getInformalExperiences() {

@@ -4,6 +4,8 @@ import java.util.Map;
 
 import javax.validation.Valid;
 
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.service.TimetableService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -91,52 +93,52 @@ public class TimetableEventController {
     }
 
     @GetMapping("/timetableSearch/{school:\\d+}")
-    public TimetableByDto searchTimetable(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria) {
+    public TimetableByDto searchTimetable(@WithEntity("school") School school, @Valid TimetableEventSearchCommand criteria) {
         return timetableEventService.searchTimetable(criteria, school);
     }
 
     @GetMapping("/timetableSearch/{school:\\d+}/calendar")
-    public TimetableCalendarDto searchTimetableIcs(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria,
+    public TimetableCalendarDto searchTimetableIcs(@WithEntity("school") School school, @Valid TimetableEventSearchCommand criteria,
             @RequestParam("lang") String language) {
         return timetableEventService.getSearchCalendar(criteria, language, school);
     }
 
     @GetMapping("/timetableSearch/{school:\\d+}/searchFormData/{studyYear:\\d+}")
-    public Map<String, ?> searchTimetableFormData(@PathVariable("school") Long school,
+    public Map<String, ?> searchTimetableFormData(@WithEntity("school") School school,
             @PathVariable("studyYear") Long studyYearId) {
         return timetableEventService.searchTimetableFormData(school, studyYearId);
     }
 
     @GetMapping("/timetableByGroup/{school:\\d+}")
-    public TimetableByGroupDto groupTimetableForWeek(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria) {
+    public TimetableByGroupDto groupTimetableForWeek(@WithEntity("school") School school, @Valid TimetableEventSearchCommand criteria) {
         return timetableEventService.groupTimetable(criteria, school);
     }
 
     @GetMapping("/timetableByGroup/{school:\\d+}/calendar")
-    public TimetableCalendarDto groupTimetableIcs(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria,
+    public TimetableCalendarDto groupTimetableIcs(@WithEntity("school") School school, @Valid TimetableEventSearchCommand criteria,
             @RequestParam("lang") String language) {
         return timetableEventService.getGroupCalendar(criteria, language, school);
     }
 
     @GetMapping("/timetableByTeacher/{school:\\d+}")
-    public TimetableByTeacherDto teacherTimetableForWeek(@PathVariable("school") Long school,
+    public TimetableByTeacherDto teacherTimetableForWeek(@WithEntity("school") School school,
             @Valid TimetableEventSearchCommand criteria) {
         return timetableEventService.teacherTimetable(criteria, school);
     }
 
     @GetMapping("/timetableByTeacher/{school:\\d+}/calendar")
-    public TimetableCalendarDto teacherTimetableIcs(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria,
+    public TimetableCalendarDto teacherTimetableIcs(@WithEntity("school") School school, @Valid TimetableEventSearchCommand criteria,
             @RequestParam("lang") String language) {
         return timetableEventService.getTeacherCalendar(criteria, language, school);
     }
 
     @GetMapping("/timetableByRoom/{school:\\d+}")
-    public TimetableByRoomDto roomTimetableForWeek(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria) {
+    public TimetableByRoomDto roomTimetableForWeek(@WithEntity("school") School school, @Valid TimetableEventSearchCommand criteria) {
         return timetableEventService.roomTimetable(criteria, school);
     }
 
     @GetMapping("/timetableByRoom/{school:\\d+}/calendar")
-    public TimetableCalendarDto roomTimetableIcs(@PathVariable("school") Long school, @Valid TimetableEventSearchCommand criteria,
+    public TimetableCalendarDto roomTimetableIcs(@WithEntity("school") School school, @Valid TimetableEventSearchCommand criteria,
             @RequestParam("lang") String language) {
         return timetableEventService.getRoomCalendar(criteria, language, school);
     }

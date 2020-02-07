@@ -259,7 +259,8 @@
         "subjects": "Õppeainete küsitlused",
         "journals": "Päeviku küsitlused",
         "questions": "Küsimused",
-        "statistics": "Statistika"
+        "statistics": "Statistika",
+        "both": "Päeviku/õppeaine küsitl."
       },
       "practice" : {
         "label": "Praktika",
@@ -1138,7 +1139,7 @@
       "birthdate": "Sünniaeg",
       "firstname": "Eesnimi",
       "lastname": "Perekonnanimi",
-      "studyStartAndBase": "Õpingute algus ja alus",  
+      "studyStartAndBase": "Õpingute algus ja alus",
       "studyEndAndBase": "Õpingute lõpp ja alus",
       "directiveNr": "käskkiri nr",
       "curriculumNameAndCode": "Õppekava nimetus ja kood",
@@ -1465,6 +1466,7 @@
     "moduleAlreadyInIndividualCurriculum": "Moodul \"{{module}}\" on juba ajavahemikus {{startDate}} - {{endDate}} IÕK-s",
     "notInIndividualCurriculumDateRange": "Lõpetamise kuupäev peab jääma individuaalse õppekava kuupäevade vahemikku",
     "notInSupportServiceDateRange": "Lõpetamise kuupäev peab jääma tugiteenuse ajavahemikku",
+    "notInAbroadStudiesDateRange": "Katkestamise kuupäev peab jääma välisõpingu ajavahemikku",
     "notValid": "Käskkiri ei kehti",
     "coordinator": {
       "alreadyexist": "Sellise isikukoodiga isik on juba dokumentide kooskõlastaja",
@@ -2174,7 +2176,8 @@
       "themeCapacitiesAndHoursMismatch": "Teema mahu jaotus ei vasta teema mahule (tundides)",
       "noSuchStudyLevel": "Kool pole seotud vastava õppetasemega",
       "noSubject": "Vähemalt üks õppeaine peab olema lisatud",
-      "vocationalThemesWithBadStudyYearNumberPresent": "Ei saa lühendada õppeaega, teemad on seotud õppeaastaga rakenduskavades {{versions}}"
+      "vocationalThemesWithBadStudyYearNumberPresent": "Ei saa lühendada õppeaega, teemad on seotud õppeaastaga rakenduskavades {{versions}}",
+      "noConnectionBetweenRyhmAndGroup": "Viga! Klassifikaatoril \"Õppekavarühm\" puudub seos klassifikaatoriga \"Õppekavagrupp\". Pöörduge peaadministraatori poole."
     },
     "prompt": {
       "deleteJointPartner": "Selle õppeasutuse ained on lisatud õppekavasse. Kas oled kindel, et soovid partnerülikooli kustutada?",
@@ -2597,8 +2600,8 @@
     "studyYearLowercase": "õppeaasta",
     "proportionPerStudyYear": "Mooduli mahtude jaotus õppeaastate lõikes (EKAP)",
     "supervisor": "Mooduli eest vastutav isik",
-    "springSemesterYear": "{{year}}. õa sügissemester",
-    "autumnSemesterYear": "{{year}}. õa kevadsemester",
+    "springSemesterYear": "{{year}}. õa kevadsemester",
+    "autumnSemesterYear": "{{year}}. õa sügissemester",
     "subject": {
       "needSemester": "Peab olema valitud vähemalt üks semester"
     },
@@ -2832,8 +2835,13 @@
       "noDataForSaving": "Andmed salvestamiseks puuduvad!"
     },
     "prompt": {
-      "addedAutomaticallyToDeclarations": "Aine-õppejõu paar lisatakse automaatselt sobivate õppijate deklaratsioonidele. Kas soovid jätkata?"
-    }
+      "addedAutomaticallyToDeclarations": "Aine-õppejõu paar lisatakse automaatselt sobivate õppijate deklaratsioonidele. Kas soovid jätkata?",
+      "addGroupToPair": "Kas soovid lisada vastav aine-õppejõu paar planeeringusse?"
+    },
+    "selectExisting": "Vali olemasolevate hulgast",
+    "semester": "{{number}}. semester",
+    "plannedSemester": "Planeeritav semester",
+    "unplannedSubjects": "Planeerimata ained"
   },
   "subjectStudyPeriodTeacher": {
     "teacher": "Õppejõud",
@@ -2993,7 +3001,8 @@
     "plannedSubject": "Planeeritav õppeaine",
     "plannedModulesThemes": "Planeeritav moodul/teema",
     "substitutableSubject": "Võimalik asendatav õppeaine",
-    "substitutableModulesThemes": "Asendatavad moodulid/teemad",
+    "substitutableModulesThemes": "Võimalik asendatav moodul/teema",
+    "modulesAndThemes": "Moodulid/teemad",
     "justification": "Põhjendus",
     "rejection": "Avalduse tagasilükkamine",
     "rejectReason": "Avalduse tagasilükkamise põhjendus",
@@ -3077,6 +3086,7 @@
       "guestStudent": "Külalisõpilane ei saa taodelda",
       "periodTooLargeUnderFive": "Kogu välisõppes õppes oldud aeg ei saa ületada 365 päeva",
       "periodTooLargeOverFive": "Kogu välisõppes õppes oldud aeg ei saa ületada 730 päeva",
+      "foreignStudyInPeriod": "Õppija on juba valitud perioodil välisõppes",
       "confirmSave": "Kas oled kindel, et soovid muuta avaldust?",
       "saved": "Avaldus on uuendatud",
       "subjectChangeNotAllowed": "Avalduse muutmine keelatud"
@@ -3173,7 +3183,9 @@
       "journal": "Päevik",
       "subject": "Õppeaine",
       "other": "Muud küsimused",
-      "duration": "Küsimustiku kestus"
+      "duration": "Küsimustiku kestus",
+      "teacherVocational": "Õpetaja",
+      "teacherHigher": "Õppejõud"
     },
     "messages": {
       "noPollFound": "Küsitlust ei leitud",
@@ -3184,12 +3196,14 @@
       "noResponse": "Küsimustikku ei saa veel täita",
       "noPoll": "Küsimustikku ei leitud",
       "matchingTarget": "Küsimustiku vastav sihtgrupp puudub",
-      "required": "Teema(de)s {{themes}} on vigu",
+      "required": "Nõutud väljad on täitmata: \n{{themes}}",
       "unConfirmForbidden": "Kinnitust ei saa enam eemaldada",
       "confirmedOrFinished": "Küsitlus on kinnitatud või lõppenud",
       "studentCouncilAnswersError": "Õpilasesinduse valikul peab olema ainult üks vastusevariant"
     },
     "basicData": {
+      "subjectStudyPeriods": "Aine-õppejõu paarid",
+      "viewMore": "Vaata rohkem",
       "journals": "Päevikud *",
       "copy": "Kopeeri",
       "label": "Põhiandmed",
@@ -3201,13 +3215,18 @@
       "journalFrom": "Päeviku lõpp alates",
       "journalThru": "Päeviku lõpp kuni",
       "notificationDate": "Meeldetuletuse kp ",
+      "duplicate": "Esineb duplikaate",
       "duplicateTargetCode": "Sihtrühm on juba valitud",
       "duplicateJournal": "Päevik on juba valitud",
+      "duplicateStudentGroup": "Õpperühm on juba valitud",
+      "duplicateStudyPeriod": "Õppeaine on juba valitud",
       "reminderError": "Peab langema vahemikku Kehtiv alates – Kehtiv kuni",
       "teacherCanComment": "Õpetaja saab kommenteerida",
       "teacherCommentVisible": "Õpetaja kommentaar on õppijatele nähtav",
       "atleastOneJournal": "Vähemalt üks päevik peab olema valitud",
       "atleastOne": "Vähemalt üks sihtrühm peab olema valitud",
+      "atleastOneStudyPeriod": "Vähemalt üks aine-õppejõu paar peab olema valitud",
+      "atleastOneStudyPeriodOrJournal": "Vähemalt üks aine-õppejõu paar või päevik peab olema valitud",
       "status": "Staatus",
       "confirm": "Kas olete kindel, et soovite küsitluse kinnitada?",
       "themeEmpty": "Küsitlus sisaldab ilma küsimuseta teemat. Kas olete kindel, et soovite küsitluse kinnitada?",
@@ -3219,6 +3238,7 @@
       "confirmError": "Kinnitamine ebaõnnestus, pole ühtegi teemat või ühelgi teemal pole küsimust",
       "removeConfirmError": "Kinnituse eemaldamine ebaõnnestus",
       "nameError": "Sama nimetusega küsitlus on juba olemas",
+      "studyPeriodError": "Deklareerimise õppeperiood või päevik peab olema valitud",
       "confirmed": "Küsimustik on kinnitatud",
       "declarationPeriod": "Deklareerimise õppeperiood",
       "studentCanSeeResponse": "Õppija näeb tagasisidet",
@@ -3226,7 +3246,12 @@
       "changedBy": "Muutja",
       "changeDates": "Muuda vastamise aegu",
       "target": "Sihtrühm",
-      "outsiderUrl": "Välise isiku vastamise url"
+      "outsiderUrl": "Välise isiku vastamise url",
+      "dialog": {
+        "journal": "Päevik",
+        "journals": "Päevikud",
+        "subjectStudyPeriod":"Aine-õppejõu paar"
+      }
     },
     "questions": {
       "label": "Küsimused",
@@ -3261,6 +3286,8 @@
       "isThemePageable": "Kuva teemad lehtede kaupa",
       "isRepedetiveVocational": "Kuva iga päeviku kohta",
       "isRepedetiveHigher": "Kuva iga õppeaine kohta",
+      "isTeacherVocational": "Küsimused kuvada iga õpetaja kohta",
+      "isTeacherHigher": "Küsimused kuvada iga õppejõu kohta",
       "nextTheme": "Järgmine teema",
       "previousTheme": "Eelmine teema",
       "next": "Edasi",
@@ -3275,6 +3302,13 @@
       "confirmed": "Vastused on ära saadetud, täname vastamast!"
     },
     "answers": {
+      "allAnswers": "Kõik vastused",
+      "total": "Vastuste arv (vastanute arv) kokku",
+      "totalIndividual": "Vastanute arv kokku",
+      "questionAndAverage": "Küsimus - kokku keskmine",
+      "question": "Küsimus",
+      "journal": "Päevik",
+      "subject":"Õppeaine",
       "endDate": "Lõppkuupäev",
       "journalEndPeriod": "Päeviku lõpu kp vahemik",
       "subjectEndPeriod": "Aine lõpu kp vahemik",
@@ -3286,7 +3320,9 @@
       "pollDuration": "Küsitluse kestvus",
       "teachers": {
         "higher": "Õppejõud",
-        "vocational": "Õpetaja"
+        "higherComment": "Õppejõu kommentaar",
+        "vocational": "Õpetaja",
+        "vocationalComment": "Õpetaja kommentaar"
       },
       "toExcel": "Excelisse",
       "checkAnswer": "Kontrolli vastamist",
@@ -3294,7 +3330,7 @@
       "enterprise": "Ettevõte",
       "target": "Sihtrühm",
       "students": "Õppijad",
-      "targetCount": "Sihtgrupi arv",
+      "targetCount": "Sihtgrupis vastajate arv",
       "answerPercentage": "Vastamise %",
       "dialog": {
         "journals": "Päevikud",
@@ -3302,7 +3338,7 @@
         "journal": "Päevik",
         "subject": "Aine",
         "Theme": "Teema",
-        "themes": "Üldised Teemad",
+        "themes": "Üldised teemad",
         "average": "Keskmine",
         "myAnswer": "Minu vastus",
         "allTextFields": "Kõik küsimused on tekstiväljad",
@@ -3314,7 +3350,8 @@
         "status": "Staatus",
         "studentResponsesJournal": "Päevikule {{journal}} õppija vastamised",
         "studentResponsesSubject": "Ainele {{subject}} õppija vastamised",
-        "pollName": "Küsitluse {{nameEt}} graafiline vaade"
+        "pollName": "Küsitluse {{nameEt}} graafiline vaade",
+        "individualResponseCount": "Vastuste arv"
       }
     },
     "results": "Tulemused",
@@ -3448,13 +3485,17 @@
     "importDialog": {
       "label": "Tunniplaani impordi tulemus",
       "errors": {
+        "emptySubjectUntis": "Puudub aine",
         "teachers": "Puuduvad õpetajad",
         "rooms": "Puuduvad ruumid",
+        "schoolDiff": "Puudub selline päevik õppeasutuses",
         "studentgroups": "Puuduvad õpperühmad",
         "hourData": "Tunni toimumise kohta pole piisavalt andmeid",
         "nrFormat": "Tunni päev või periood ei ole numbriformaadis",
         "documentFormat": "Dokument on vales formaadis, päevikul puuduvad ajad",
-        "relationToTimetable": "Päevik ei kuulu tunniplaani"
+        "relationToTimetable": "Päevik ei kuulu tunniplaani",
+        "journalNotFound": "Süsteemis ei leidu sellist päevikut",
+        "wrongSchool": "Päevik kuulub teise kooli"
       }
     },
     "exportDialog": {
@@ -4139,7 +4180,7 @@
       "foreignSchool": "Välisõpingu kool",
       "foreignCountry": "Välisõpingu riik",
       "programme": "Programm",
-      "isExtention": "Pikendus",
+      "isExtension": "Pikendus",
       "foreignDuration": "Viibimise ajavahemik",
       "table": {
         "foreignStudentName": "Välisõpilase nimi",
@@ -4148,10 +4189,9 @@
         "startDate": "Mineku kuupäev",
         "endDate": "Tuleku kuupäev",
         "duration": "Päevade arv",
-        "wantedEAP": "Taotletud EAP",
-        "recievedEAP": "Rahuldatud EAP",
-        "eap": "Sooritatud EAP",
-        "extention": "Pikendus",
+        "wantedCredits": "Taotletud ainepunktid",
+        "receivedCredits": "Rahuldatud ainepunktid",
+        "extension": "Pikendus",
         "application": "Vaata avaldust"
       }
     },
@@ -4273,7 +4313,7 @@
       "occurred": "Toimunud",
       "singleEvent": "Üksik.",
       "substitute": "Asend.",
-      "timetableShort": "(t)", 
+      "timetableShort": "(t)",
       "study": "Õppetöö",
       "journal": "Päevik",
       "journals": "Päevikud",
@@ -4436,6 +4476,15 @@
     "committee": "Komisjon",
     "committeeName": "Komisjoni nimi",
     "decision": "Otsus",
+    "abroadStudiesCreditsEKAP": "Välisõppes kogutud EKAP",
+    "abroadStudiesCreditsEAP": "Välisõppes kogutud EAP",
+    "nominalDurationExtending": "Nominaalaja määramine",
+    "nominalStudyEnd": "Nominaalaja lõpp",
+    "nominalDurationExtendingConditions": "Nominaalaja määramine on võimalik, kui:",
+    "nominalDurationCondition1": "On valitud vähemalt 1 formaalne õpe, kus õppeasutuse riigiks on märgitud mõni välismaa riik ",
+    "nominalDurationCondition2": "Formaalse õppe soorituse kuupäevaks on välisõppes viibimise ajavahemik",
+    "alreadyHasNominalDurationExtension": "Õppijal on juba nominaalaja määramine teisel VÕTA avaldusel",
+    "alreadySentToEhis": "Avalduse andmed on juba EHISesse edastatud, nominaalaega ei ole võimalik muuta",
     "addInfo": {
       "label": "Kommentaar",
       "add": "Lisa kommentaar",
@@ -4446,6 +4495,10 @@
     "formalLearnings": {
       "label": "Formaalne õpe",
       "add": "Lisa formaalne õpe",
+      "transferFromApplication": "Kanna üle avalduselt",
+      "transferSuccess": "Avalduselt ülekandmine õnnestus",
+      "abroadStudiesVocationalRecordWarning": "Antud komplekt on üle kantud välisõpingute avaldusest. Ülekantavat moodulit ei saa eemaldada ega uusi lisada.",
+      "abroadStudiesHigherRecordWarning": "Antud komplekt on üle kantud välisõpingute avaldusest. Ülekantavat õppeainet ei saa eemaldada ega uusi lisada.",
       "vocationalSubtitle": "(enda või teise õppeasutuse moodulid)",
       "higherSubtitle": "(enda või teise õppeasutuse õppeained)",
       "school": "Õppeasutus",
@@ -4474,7 +4527,7 @@
       "substitutableSubjects": "Asendatavad ained",
       "substitutableModulesThemes": "Asendatavad moodulid/teemad",
       "required": "Kohustuslik",
-      "iternalTransfer": "Kooli sisene ülekanne",
+      "internalTransfer": "Kooli sisene ülekanne",
       "externalTransfer": "Kooli väline ülekanne",
       "transferableModules": "Ülekantavad moodulid",
       "transferableModuleEt": "Ülekantav moodul",
@@ -4529,7 +4582,7 @@
       "transfer": "Kanda üle",
       "freeChoice": "Vabaõpe"
     },
-    "apelSchool": { 
+    "apelSchool": {
       "label": "VÕTA koolid",
       "schoolNameEt": "Õppeasutuse nimi",
       "schoolNameEn": "Õppeasutuse nimi i.k.",
@@ -4557,27 +4610,23 @@
       "atLeastOneSubstitutableModule": "Vähemalt üks asendatav moodul peab olema lisatud",
       "atLeastOneTransferableModule": "Vähemalt üks ülekantav moodul peab olema lisatud",
       "atLeastOneTransferableSubject": "Vähemalt üks ülekantav aine peab olema lisatud",
+      "atLeastOneLearningMustBeTransferred": "Vähemalt üks formaalne/informaalne õpe peab olema üle kantud",
+      "formalRecordsHaveErrors": "Formaalse õppe komplektid sisaldavad vigu",
       "thereMustBeMoreTransferableCreditsThanSubstitutableCreditsVocational": "Ülekantavate moodulite mahtude summa peab olema suurem või võrdne asendatavate moodulite mahtude summaga",
       "thereMustBeMoreTransferableCreditsThanSubstitutableCreditsHigher": "Ülekantava õppeaine maht peab olema suurem või võrdne asendatavate õppeainete mahtude summaga",
-      "atLeastOneLearningMustBeTransferred": "Vähemalt üks formaalne/informaalne õpe peab olema üle kantud",
-      "schoolIsNull": "Kool on kohustuslik",
-      "subjectIsNull": "Õppeaine on kohustuslik",
-      "subjectNameEtIsNull": "Õppeaine eesti keelne nimetus on kohustuslik",
-      "subjectNameEnIsNull": "Õppeaine inglise keelne nimetus on kohustuslik",
       "subjectReplacedMoreThanOnce": "Õppeaine on asendatud rohkem kui üks kord",
       "subjectTransferredMoreThanOnce": "Õppeaine on üle kantud rohkem kui üks kord",
       "subjectHasBeenPreviouslyTransferred": "Õppeaine on juba varem üle kantud",
       "subjectHasAlreadyBeenAdded": "Õppeaine on juba lisatud",
-      "moduleIsNull": "Moodul on kohustuslik",
-      "moduleNameEtIsNull": "Mooduli eesti keelne nimetus on kohustuslik",
-      "moduleNameEnIsNull": "Mooduli inglise keelne nimetus on kohustuslik",
       "moduleReplacedMoreThanOnce": "Moodul või moodulisse kuuluv teema on asendatud rohkem kui üks kord",
       "moduleTransferredMoreThanOnce": "Moodul on üle kantud rohkem kui üks kord",
       "moduleHasBeenPreviouslyTransferred": "Moodul on juba varem üle kantud",
       "moduleHasAlreadyBeenAdded": "Moodul on juba lisatud",
       "moduleOrItsThemeHasAlreadyBeenAdded": "Valitud moodul või selles sisalduv teema on juba lisatud",
       "themeOrParentModuleHasAlreadyBeenAdded": "Valitud teema või moodul, millesse teema kuulub, on juba lisatud",
-      "transferredSubjectLargerThanSubstitutableSubject": "Formaalses õppes ülekantavate ainete maht on suurem kui asendatavate ainete maht"
+      "transferredSubjectLargerThanSubstitutableSubject": "Formaalses õppes ülekantavate ainete maht on suurem kui asendatavate ainete maht",
+      "nominalStudyEndWontBeChanged": "Välisõppes kogutud EAP-de arv on 0. Nominaalaega ei pikendata!",
+      "alreadySentToEhis": "Nominaalaja pikendus juba saadetud EHISesse, tagasi kerimist ei toimu"
     }
   },
   "enterprise": {
@@ -4633,7 +4682,7 @@
       "supervisor": "Juhendaja",
       "deleteConfirm": "Kas olete kindel, et soovite seotud isiku kustutada?",
       "number": "Peab olema number",
-      "sameIdCodeAndCountry": "Sama isikukoodi ja riigiga isikukood on juba seotud isikute hulgas" 
+      "sameIdCodeAndCountry": "Sama isikukoodi ja riigiga isikukood on juba seotud isikute hulgas"
     },
     "locationsTab": {
       "name": "Nimetus",
@@ -5190,6 +5239,7 @@
       "isTeacherConfirm": "Rühmajuh. kinnitus",
       "needsConfirm": "Taotlus vajab rühmajuh. kinnitust",
       "apply": "Taotle",
+      "showApplication": "Kuva taotlus",
       "additionDate": "Lisamise kuupäev",
       "decisionDate": "Otsuse kuupäev",
       "applications": "Taotlused",
@@ -5231,6 +5281,7 @@
       "deleteRows": "Tabelis on rohkem liikmeid kui peres täiskasvanuid"
     },
     "messages": {
+      "applicationSaved": "Salvestamine õnnestus, taotlus on esitamata",
       "applicationSuccessful": "Teie taotlus on esitatud",
       "applicationAccepted": "Taotlus(ed) aktsepteeritud",
       "applicationAnnulled": "Taotlus(ed) tühistatud",
@@ -5239,6 +5290,8 @@
       "applicationUnconfirmed": "Taotlus(ed) ei ole kinnitatud",
       "resultsRefreshed": "Tulemused uuendatud",
       "compliesChecked": "Andmed kontrollitud",
+      "applicationNotSubmitted": "Taotlus on esitamata!",
+      "submissionDeadline": "Esitamise tähtaeg on {{deadline}}",
       "filesWillBeAddedOnSubmit": "Failidega seotud muudatused salvestatakse avalduse salvestamisel",
       "error" : {
         "cannotCreateDecision": "Taotlusele ei saa luua otsust",
@@ -5313,6 +5366,10 @@
         "success": "Uuendamine õnnestus"
       }
     }
+  },
+  "concurrent": {
+    "requestInQueue": "Päring on järjekorras",
+    "requestRejectedNoSpace": "Järjekord on täis. Palun proovige hiljem uuesti."
   },
   "public": {
     "url": "Avaandmete aadress"

@@ -4,10 +4,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationFormalSubjectOrModule;
+import ee.hitsa.ois.domain.apelapplication.ApelSchool;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.report.ReportUtil;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.TranslateUtil;
 
 public class ApelApplicationFormalSubjectOrModuleReport {
@@ -24,13 +26,18 @@ public class ApelApplicationFormalSubjectOrModuleReport {
     private final String teachers;
     private final Boolean transfer;
     
-    public ApelApplicationFormalSubjectOrModuleReport(ApelApplicationFormalSubjectOrModule formalSubjectOrModule,
-              Boolean letterGrades, Language lang) {
+    public ApelApplicationFormalSubjectOrModuleReport(ApelApplicationReport report, ApelApplicationFormalSubjectOrModule formalSubjectOrModule,
+        Boolean letterGrades, Language lang) {
         if (Boolean.TRUE.equals(formalSubjectOrModule.getIsMySchool())) {
             School applicationSchool = formalSubjectOrModule.getApelApplicationRecord().getApelApplication().getSchool(); 
             school = TranslateUtil.name(applicationSchool, lang);
         } else {
-            school = TranslateUtil.name(formalSubjectOrModule.getApelSchool(), lang);
+            ApelSchool apelSchool = formalSubjectOrModule.getApelSchool();
+            school = TranslateUtil.name(apelSchool, lang);
+            if (Boolean.TRUE.equals(formalSubjectOrModule.getTransfer()) && formalSubjectOrModule.getCredits() != null
+                    && !ClassifierUtil.isEstonia(apelSchool.getCountry())) {
+                report.setAbroadStudiesCredits(report.getAbroadStudiesCredits().add(formalSubjectOrModule.getCredits()));
+            }
         }
         
         if (formalSubjectOrModule.getSubject() != null) {

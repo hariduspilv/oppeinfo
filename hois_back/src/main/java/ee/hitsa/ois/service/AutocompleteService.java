@@ -44,7 +44,6 @@ import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.Timetable;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
@@ -60,6 +59,7 @@ import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.enums.TimetableEventRepeat;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.service.SchoolService.SchoolType;
+import ee.hitsa.ois.service.poll.PollService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -89,6 +89,7 @@ import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.SpecialitiesAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.basemodule.BaseModuleAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumAutocompleteCommand;
@@ -105,6 +106,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.JournalAutocompleteResult;
+import ee.hitsa.ois.web.dto.LiteralResult;
 import ee.hitsa.ois.web.dto.OccupiedAutocompleteResult;
 import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.RoomAutocompleteResult;
@@ -146,6 +148,8 @@ public class AutocompleteService {
     private PersonRepository personRepository;
     @Autowired
     private SchoolService schoolService;
+    @Autowired
+    private StudyYearService studyYearService;
 
     public List<AutocompleteResult> basemodules(Long schoolId, BaseModuleAutocompleteCommand lookup) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from base_module b");
@@ -886,7 +890,8 @@ public class AutocompleteService {
         qb.optionalCriteria("cv.id = :cVersionId", "cVersionId", lookup.getCurriculumVersionId());
         qb.optionalCriteria("cv.id in (:cVersionIds)", "cVersionIds", lookup.getCurriculumVersionIds());
         qb.optionalCriteria("sg.id = :studentGroupId", "studentGroupId", lookup.getId());
-        qb.optionalCriteria("sg.is_guest = :isGuest", "isGuest", lookup.getIsGuest());
+        if (Boolean.TRUE.equals(lookup.getIsGuest())) qb.filter("sg.is_guest = true");
+        if (Boolean.FALSE.equals(lookup.getIsGuest())) qb.filter("(sg.is_guest is null or is_guest = false)");
         qb.optionalCriteria("sg.teacher_id = :studentGroupTeacherId", "studentGroupTeacherId",
                 lookup.getStudentGroupTeacherId());
         qb.optionalCriteria("c.id in (select uc.curriculum_id from user_ u join user_curriculum uc on uc.user_id = u.id where u.id = :userId)", "userId",
@@ -1060,6 +1065,7 @@ public class AutocompleteService {
         if (otherStudents) {
             from += " inner join student_higher_result shr on s.id = shr.subject_id";
         }
+        
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
         if (!Boolean.TRUE.equals(lookup.getIgnoreCurriculumVersionStatus())) {
@@ -1082,8 +1088,10 @@ public class AutocompleteService {
         if (!otherStudents) {
             qb.requiredCriteria("s.status_code = :subjectStatusCode", "subjectStatusCode", SubjectStatus.AINESTAATUS_K);
         }
-        qb.optionalContains(Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et", "name", lookup.getName());
-        qb.optionalContains(Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et", "code", lookup.getCode());
+        String name = Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et";
+        qb.optionalContains(Arrays.asList(name, "s.code"), "name", lookup.getName());
+        // Never used at this moment
+        qb.optionalContains("s.code", "code", lookup.getCode());
         qb.optionalCriteria("is_practice = :isPractice", "isPractice", lookup.getPractice());
 
         if (lookup.getCurriculumSubjects() != null && lookup.getStudent() != null) {
@@ -1558,41 +1566,28 @@ public class AutocompleteService {
         return journalsAndSubjects;
     }
     
-    public List<AutocompleteResult> journalsAndStudentGroups(Long schoolId, JournalAndSubjectAutocompleteCommand lookup) {
-        JournalAutocompleteCommand journalLookup = new JournalAutocompleteCommand();
+    public List<LiteralResult> journalsAndStudentGroups(Long schoolId, SearchCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j "
+                + "left join journal_omodule_theme jot on j.id = jot.journal_id "
+                + "left join lesson_plan_module lpm on jot.lesson_plan_module_id = lpm.id "
+                + "left join lesson_plan lp on lpm.lesson_plan_id = lp.id "
+                + "left join student_group sg on lp.student_group_id = sg.id");
+        qb.requiredCriteria("j.school_id = :schoolId", "schoolId", schoolId);
         try {
-            StudyYear studyYear = em.createQuery("select sy from StudyYear sy "
-                    + "where ?1 between sy.startDate and sy.endDate "
-                    + "and ?2 = sy.school.id", StudyYear.class)
-                    .setParameter(1, LocalDate.now())
-                    .setParameter(2, schoolId)
-                    .setMaxResults(1).getSingleResult();
-            journalLookup.setStudyYear(EntityUtil.getId(studyYear));
+            StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
+            qb.optionalCriteria("j.study_year_id = :studyYearId", "studyYearId", EntityUtil.getId(studyYear));
         } catch (Exception e) {
             log.error("no studyYear found. fault={}", e.getMessage());
         }
-        if (lookup.getName() != null) {
-            journalLookup.setLang(lookup.getLang());
-            journalLookup.setName(lookup.getName());
-        }
-        List<JournalAutocompleteResult> journalsList = journals(schoolId, journalLookup);
-        return journalsList.stream().map(p -> {
-            Journal journal = em.getReference(Journal.class, p.getId());
-            Set<String> studentGroups = journal.getJournalOccupationModuleThemes().stream()
-                    .filter(js -> js.getLessonPlanModule() != null && js.getLessonPlanModule().getLessonPlan() != null &&
-                    js.getLessonPlanModule().getLessonPlan().getStudentGroup() != null && js.getLessonPlanModule().getLessonPlan().getStudentGroup().getCode() != null)
-                    .filter(StreamUtil.distinctByKey(js -> js.getLessonPlanModule().getLessonPlan().getStudentGroup().getCode()))
-                    .map(js -> js.getLessonPlanModule().getLessonPlan().getStudentGroup().getCode())
-                    .collect(Collectors.toSet());   
-            String journalStudentGroups = null;
-            if (studentGroups != null) {
-                journalStudentGroups = String.join(",", studentGroups);
-            }
-            String journalAndStudentGroups = (Language.EN.equals(lookup.getLang()) ? p.getNameEn() : p.getNameEt()) +
-                    ((journalStudentGroups == null || "".equals(journalStudentGroups)) ? "" : " (" + journalStudentGroups + ")");
-            AutocompleteResult dto = new AutocompleteResult(p.getId(), journalAndStudentGroups, journalAndStudentGroups);
-            return dto;
-        }).collect(Collectors.toList());
+        qb.optionalContains("j.name_et",  "name_et", lookup.getName());
+        qb.sort("j.name_et");
+        qb.groupBy("j.id, j.name_et");
+        List<?> data = qb.select("j.id, j.name_et, string_agg(distinct sg.code, ', ') as student_groups", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String studentGroups = resultAsString(r, 2);
+            String name = resultAsString(r, 1) + (studentGroups != null ? "(" + studentGroups + ")" : "");
+            return new LiteralResult(resultAsLong(r, 0), name, name, resultAsString(r, 1));
+        }, data);
     }
     
     public List<AutocompleteResult> committees(Long schoolId, CommitteeAutocompleteCommand command) {
@@ -1789,6 +1784,26 @@ public class AutocompleteService {
                 .filter(p -> p.getPolls().containsAll(lookup.getPolls()))
                 .map(p -> p.getQuestion()).collect(Collectors.toList());
         return fittingQuestions;
+    }
+
+    public List<LiteralResult> subjectStudyPeriods(Long schoolId, SubjectStudyPeriodCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period ssp "
+                + "join subject s on s.id = ssp.subject_id "
+                + "left join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
+                + "left join teacher t on t.id = sspt.teacher_id "
+                + "left join person p on p.id = t.person_id");
+        qb.requiredCriteria("s.school_id = :schoolId and t.school_id = s.school_id", "schoolId", schoolId);
+        qb.optionalContains("s.name_et", "subjectName", lookup.getName());
+        qb.optionalCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", lookup.getStudyPeriod());
+        qb.groupBy("ssp.id, s.name_et, s.name_en, s.code");
+        List<?> data = qb.select("ssp.id, s.name_et, s.name_en, s.code, string_agg(distinct concat(p.firstname, ' ', p.lastname), ', ') as teachers", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String teachers = resultAsString(r, 4);
+            String code = resultAsString(r, 3);
+            String nameEt = PollService.getSubjectNameWithTeacher(resultAsString(r, 1), code, teachers);
+            String nameEn = PollService.getSubjectNameWithTeacher(resultAsString(r, 2), code, teachers);
+            return new LiteralResult(resultAsLong(r, 0), nameEt, nameEn, resultAsString(r, 1));
+        }, data);
     }
     
 }

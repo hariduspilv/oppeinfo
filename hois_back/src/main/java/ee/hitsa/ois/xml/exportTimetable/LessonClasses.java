@@ -8,7 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 @XmlRootElement(name="lesson_classes")
 public class LessonClasses {
 	@XmlAttribute(name="id")
-	String id;
+	public String id;
 	
 	public LessonClasses() {
 		

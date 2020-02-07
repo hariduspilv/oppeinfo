@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -22,7 +21,10 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
  *         &lt;element name="muutusKp" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
- *         &lt;element name="voorkeel" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}yhlVoorkeel" maxOccurs="unbounded"/&gt;
+ *         &lt;choice&gt;
+ *           &lt;element name="kustutaKoik" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *           &lt;element name="voorkeel" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}yhlVoorkeel" maxOccurs="unbounded" minOccurs="0"/&gt;
+ *         &lt;/choice&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -34,13 +36,14 @@ import javax.xml.datatype.XMLGregorianCalendar;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "yhlVoorkeeled", propOrder = {
     "muutusKp",
+    "kustutaKoik",
     "voorkeel"
 })
 public class YhlVoorkeeled {
 
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar muutusKp;
-    @XmlElement(required = true)
+    protected String kustutaKoik;
     protected List<YhlVoorkeel> voorkeel;
 
     /**
@@ -65,6 +68,30 @@ public class YhlVoorkeeled {
      */
     public void setMuutusKp(XMLGregorianCalendar value) {
         this.muutusKp = value;
+    }
+
+    /**
+     * Gets the value of the kustutaKoik property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getKustutaKoik() {
+        return kustutaKoik;
+    }
+
+    /**
+     * Sets the value of the kustutaKoik property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setKustutaKoik(String value) {
+        this.kustutaKoik = value;
     }
 
     /**

@@ -20,6 +20,7 @@ import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.apelapplication.ApelSchoolForm;
@@ -69,24 +70,18 @@ public class ApelSchoolService {
     }
 
     private ApelSchool findAlreadyCreatedSchool(ApelSchoolForm schoolForm, Long schoolId) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from apel_school s");
-        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
-
+        JpaQueryBuilder<ApelSchool> qb = new JpaQueryBuilder<>(ApelSchool.class, "a_s");
+        qb.requiredCriteria("a_s.school.id = :schoolId", "schoolId", schoolId);
         if (schoolForm.getEhisSchool() != null) {
-            qb.requiredCriteria("s.ehis_school_code = :ehisCode", "ehisCode", schoolForm.getEhisSchool());
+            qb.requiredCriteria("a_s.ehisSchool.code = :ehisCode", "ehisCode", schoolForm.getEhisSchool());
         } else {
-            qb.requiredCriteria("s.name_et = :nameEt", "nameEt", schoolForm.getNameEt());
-            qb.requiredCriteria("s.country_code = :countryCode", "countryCode", schoolForm.getCountry());
-            qb.filter("s.ehis_school_code is null");
+            qb.requiredCriteria("a_s.nameEt = :nameEt", "nameEt", schoolForm.getNameEt());
+            qb.requiredCriteria("a_s.country.code = :countryCode", "countryCode", schoolForm.getCountry());
+            qb.filter("a_s.ehisSchool is null");
         }
 
-        List<?> data = qb.select("s.id", em).getResultList();
-        if (data.isEmpty()) {
-            return null;
-        }
-        List<ApelSchool> school = em.createQuery("select s from ApelSchool s where s.id = ?1", ApelSchool.class)
-                .setParameter(1, resultAsLong(data.get(0), 0)).setMaxResults(1).getResultList();
-        return school.get(0);
+        List<ApelSchool> school = qb.select(em).setMaxResults(1).getResultList();
+        return !school.isEmpty() ? school.get(0) : null;
     }
 
     public ApelSchool save(HoisUserDetails user, ApelSchool school, ApelSchoolForm schoolForm) {

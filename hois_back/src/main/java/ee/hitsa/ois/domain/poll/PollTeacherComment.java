@@ -6,6 +6,7 @@ import javax.persistence.ManyToOne;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
 
@@ -21,6 +22,8 @@ public class PollTeacherComment extends BaseEntityWithId {
     private Subject subject;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Journal journal;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private SubjectStudyPeriod subjectStudyPeriod;
     
     public Poll getPoll() {
         return poll;
@@ -51,6 +54,12 @@ public class PollTeacherComment extends BaseEntityWithId {
     }
     public void setJournal(Journal journal) {
         this.journal = journal;
+    }
+    public SubjectStudyPeriod getSubjectStudyPeriod() {
+        return subjectStudyPeriod;
+    }
+    public void setSubjectStudyPeriod(SubjectStudyPeriod subjectStudyPeriod) {
+        this.subjectStudyPeriod = subjectStudyPeriod;
     }
 
 }

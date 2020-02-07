@@ -13,8 +13,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 
+import ee.hitsa.ois.web.dto.timetable.DateRangeDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,12 +31,14 @@ import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MessageType;
+import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.message.ConfirmationNeededMessage;
 import ee.hitsa.ois.message.StudentApplicationChosenCommitteeMessage;
 import ee.hitsa.ois.message.StudentApplicationCreated;
 import ee.hitsa.ois.message.StudentApplicationRejectedMessage;
 import ee.hitsa.ois.service.AutomaticMessageService;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.application.ApplicationForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm.DirectiveFormStudent;
@@ -113,9 +117,18 @@ public abstract class ApplicationUtil {
     }
 
     public static void assertStartAfterToday(Application application) {
-        LocalDate start = getStartDate(application);
+        assertStartAfterToday(getStartDate(application));
+    }
+
+    private static void assertStartAfterToday(LocalDate start) {
         if (LocalDate.now().isAfter(start)) {
             throw new ValidationFailedException("application.messages.startIsEarlierThanToday");
+        }
+    }
+
+    private static void assertStartBeforeEnd(LocalDate start, LocalDate end) {
+        if (start.isAfter(end)) {
+            throw new HoisException("application.messages.startIsEarlierThanEnd");
         }
     }
 
@@ -137,82 +150,50 @@ public abstract class ApplicationUtil {
         return date;
     }
 
-    public static void assertValisConstraints(Application application) {
-        assertStartAfterToday(application);
-    }
-    
-    public static void assertValidationRulesSave(LocalDate startDate1, LocalDate endDate1, LocalDate startDate2, LocalDate endDate2,
-            String abroadProgramme, Long studentId, EntityManager em) {
-        if (AbroadProgramme.VALISKOOL_PROGRAMM_1_1.name().equals(abroadProgramme)) {
-            Student student = em.getReference(Student.class, studentId);
-            CurriculumVersion version = student.getCurriculumVersion();
-            if (version == null || version.getCurriculum().getStudyPeriod().intValue() < FIVE_YEARS_IN_MONTHS) {
-                long previousDaysBeenAbroad = daysBeenAbroad(studentId, em);
-                long applicationDuration = ChronoUnit.DAYS.between(startDate1, endDate1);
-                if (startDate2 != null && endDate2 != null) {
-                    applicationDuration += ChronoUnit.DAYS.between(startDate2, endDate2);
-                }
-                if (applicationDuration + previousDaysBeenAbroad > MAX_ABROAD_PERIOD_DAYS_UNDER_5_YEARS_CURRICULUM_PERIOD) {
-                    throw new HoisException("application.messages.periodTooLargeUnderFive");
-                }
-            }
+    public static void assertValisConstraints(Application application, EntityManager em, boolean isSubmitted) {
+        Long studentId = EntityUtil.getId(application.getStudent());
+        LocalDate start = getStartDate(application);
+        LocalDate end = getEndDate(application);
+        assertStartAfterToday(start);
+        assertStartBeforeEnd(start, end);
+        assertValisPeriodUniqueness(studentId, null, start, end, em);
+        if (isSubmitted) {
+            assertValisPeriodLength(studentId, start, end, EntityUtil.getNullableCode(application.getAbroadProgramme()), em);
         }
     }
-    
-    public static void assertValidationRulesSave(DirectiveFormStudent formStudent, Long studentId, EntityManager em) {
-        LocalDate startDate1;
-        LocalDate endDate1;
-        LocalDate startDate2 = null;
-        LocalDate endDate2 = null;
-        if (Boolean.TRUE.equals(formStudent.getIsPeriod())) {
-            StudyPeriod startPeriod = em.getReference(StudyPeriod.class, formStudent.getStudyPeriodStart());
-            StudyPeriod endPeriod = em.getReference(StudyPeriod.class, formStudent.getStudyPeriodEnd());
-            startDate1 = startPeriod.getStartDate();
-            endDate1 = startPeriod.getEndDate();
-            startDate2 = endPeriod.getStartDate();
-            endDate2 = endPeriod.getEndDate();
-            if (startDate1.isAfter(endDate2)) throw new HoisException("application.messages.startIsEarlierThanEnd");
-        } else {
-            startDate1 = formStudent.getStartDate();
-            endDate1 = formStudent.getEndDate();
-            if (startDate1.isAfter(endDate1)) throw new HoisException("application.messages.startIsEarlierThanEnd");
+
+    public static void assertValisPeriodUniqueness(Long studentId, Long directiveStudentId, LocalDate startDate,
+            LocalDate endDate, EntityManager em) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds"
+                + " join directive d on d.id = ds.directive_id"
+                + " left join study_period sp_start on sp_start.id = ds.study_period_start_id"
+                + " left join study_period sp_end on sp_end.id = ds.study_period_end_id"
+                + " left join (directive_student ds_katk join directive d_katk on d_katk.id = ds_katk.directive_id"
+                    + " and d_katk.type_code = :katkDirectiveType and d_katk.status_code = :directiveStatus)"
+                    + " on ds_katk.directive_student_id = ds.id and ds_katk.canceled = false");
+        qb.requiredCriteria("ds.student_id = :studentId", "studentId", studentId);
+        qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_VALIS);
+        qb.requiredCriteria("d.status_code = :directiveStatus and ds.canceled = false", "directiveStatus",
+                DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+        qb.parameter("katkDirectiveType", DirectiveType.KASKKIRI_VALISKATK.name());
+        qb.requiredCriteria("coalesce(ds_katk.start_date, sp_end.end_date, ds.end_date) >= :start",
+                "start", startDate);
+        qb.requiredCriteria("coalesce(sp_start.start_date, ds.start_date) <= :end", "end", endDate);
+        qb.optionalCriteria("ds.id != :directiveStudentId", "directiveStudentId", directiveStudentId);
+
+        List<?> data = qb.select("ds.id", em).setMaxResults(1).getResultList();
+        if (!data.isEmpty()) {
+            throw new HoisException("application.messages.foreignStudyInPeriod");
         }
-        if (startDate1.isBefore(LocalDate.now())) throw new HoisException("application.messages.startIsEarlierThanToday");
-        assertValidationRulesSave(startDate1, endDate1, startDate2, endDate2, formStudent.getAbroadProgramme(), studentId, em);
     }
-    
-    public static void assertValidationRulesSave(ApplicationForm applicationForm, Long studentId, EntityManager em) {
-        LocalDate startDate1;
-        LocalDate endDate1;
-        LocalDate startDate2 = null;
-        LocalDate endDate2 = null;
-        if (Boolean.TRUE.equals(applicationForm.getIsPeriod())) {
-            StudyPeriod startPeriod = em.getReference(StudyPeriod.class, applicationForm.getStudyPeriodStart());
-            StudyPeriod endPeriod = em.getReference(StudyPeriod.class, applicationForm.getStudyPeriodEnd());
-            startDate1 = startPeriod.getStartDate();
-            endDate1 = startPeriod.getEndDate();
-            startDate2 = endPeriod.getStartDate();
-            endDate2 = endPeriod.getEndDate();
-            if (startDate1.isAfter(endDate2)) throw new HoisException("application.messages.startIsEarlierThanEnd");
-        } else {
-            startDate1 = applicationForm.getStartDate();
-            endDate1 = applicationForm.getEndDate();
-            if (startDate1.isAfter(endDate1)) throw new HoisException("application.messages.startIsEarlierThanEnd");
-        }
-        if (startDate1.isBefore(LocalDate.now())) throw new HoisException("application.messages.startIsEarlierThanToday");
-        assertValidationRulesSave(startDate1, endDate1, startDate2, endDate2, applicationForm.getAbroadProgramme(), studentId, em);
-    }
-    
-    public static void assertValidationRulesConfirm(LocalDate startDate, LocalDate endDate, LocalDate startDate2, LocalDate endDate2, 
-            String abroadProgramme, Long studentId, EntityManager em) throws HoisException {
+
+    public static void assertValisPeriodLength(Long studentId, LocalDate startDate, LocalDate endDate,
+            String abroadProgramme, EntityManager em) throws HoisException {
         if (AbroadProgramme.VALISKOOL_PROGRAMM_1_1.name().equals(abroadProgramme)) {
             Student student = em.getReference(Student.class, studentId);
             CurriculumVersion version = student.getCurriculumVersion();
             long previousDaysBeenAbroad = daysBeenAbroad(studentId, em);
-            long applicationDuration = ChronoUnit.DAYS.between(startDate, endDate);
-            if (startDate2 != null && endDate2 != null) {
-                applicationDuration += ChronoUnit.DAYS.between(startDate2, endDate2);
-            }
+            long applicationDuration = ChronoUnit.DAYS.between(startDate, endDate) + 1;
             long totalAbroad = applicationDuration + previousDaysBeenAbroad;
             if (version == null || version.getCurriculum().getStudyPeriod().intValue() < FIVE_YEARS_IN_MONTHS) {
                 if (totalAbroad > MAX_ABROAD_PERIOD_DAYS_UNDER_5_YEARS_CURRICULUM_PERIOD) {
@@ -225,41 +206,37 @@ public abstract class ApplicationUtil {
             }
         }
     }
-    
-    public static void assertValidationRulesConfirm(DirectiveStudent directiveStudent, Long studentId, EntityManager em) {
-        LocalDate startDate1;
-        LocalDate endDate1;
-        LocalDate startDate2 = null;
-        LocalDate endDate2 = null;
-        if (Boolean.TRUE.equals(directiveStudent.getIsPeriod())) {
-            StudyPeriod startPeriod = directiveStudent.getStudyPeriodStart();
-            StudyPeriod endPeriod = directiveStudent.getStudyPeriodEnd();
-            startDate1 = startPeriod.getStartDate();
-            endDate1 = startPeriod.getEndDate();
-            startDate2 = endPeriod.getStartDate();
-            endDate2 = endPeriod.getEndDate();
-            if (startDate1.isAfter(endDate2)) throw new HoisException("application.messages.startIsEarlierThanEnd");
-        } else {
-            startDate1 = directiveStudent.getStartDate();
-            endDate1 = directiveStudent.getEndDate();
-            if (startDate1.isAfter(endDate1)) throw new HoisException("application.messages.startIsEarlierThanEnd");
-        }
-        if (startDate1.isBefore(LocalDate.now())) throw new HoisException("application.messages.startIsEarlierThanToday");
-        assertValidationRulesConfirm(startDate1, endDate1, startDate2, endDate2, 
-                EntityUtil.getNullableCode(directiveStudent.getAbroadProgramme()), studentId, em);
+
+    public static void assertValisDirectiveConstraints(DirectiveStudent directiveStudent, EntityManager em) {
+        Long studentId = EntityUtil.getId(directiveStudent.getStudent());
+        LocalDate start = getStartDate(directiveStudent);
+        LocalDate end = getEndDate(directiveStudent);
+        assertStartAfterToday(start);
+        assertStartBeforeEnd(start, end);
+        assertValisPeriodLength(studentId, start, end, EntityUtil.getNullableCode(directiveStudent.getAbroadProgramme()), em);
+        assertValisPeriodUniqueness(studentId, directiveStudent.getId(), start, end, em);
     }
     
     private static long daysBeenAbroad(Long studentId, EntityManager em) {
         if (studentId == null) return 0;
-        List<?> data = em.createNativeQuery("select sum(ds.start_date - ds.end_date)"
-                + " from directive d"
-                + " join directive_student ds on ds.directive_id = d.id"
+        List<?> data = em.createNativeQuery("select sum(coalesce(KATK.start_date, ds.end_date, spEnd.end_date) - coalesce(ds.start_date, spStart.start_date) + 1)"
+                + " from directive_student ds "
+                + " join directive d on ds.directive_id = d.id"
                 + " join application a on a.id = ds.application_id"
-                + " where ds.student_id = ?1 and a.directive_id = ds.directive_id and d.type_code = ?2"
-                + " and d.status_code = ?3 and ds.canceled = false")
+                + " left join study_period spStart on spStart.id = ds.study_period_start_id"
+                + " left join study_period spEnd on spEnd.id = ds.study_period_end_id"
+                + " left join (select ds1.start_date, ds1.directive_student_id, ds1.student_id from directive_student ds1"
+                    + " join directive d1 on ds1.directive_id = d1.id"
+                    + " where d1.type_code = ?4"
+                    + " and d1.status_code = ?3) KATK"
+                    + " on KATK.directive_student_id = ds.id"
+                + " where ds.student_id = ?1 and d.type_code = ?2"
+                + " and d.status_code = ?3"
+                + " and (ds.canceled is null or ds.canceled = false)")
             .setParameter(1, studentId)
             .setParameter(2, DirectiveType.KASKKIRI_VALIS.name())
             .setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+            .setParameter(4, DirectiveType.KASKKIRI_VALISKATK.name())
             .getResultList();
         Long days = resultAsLong(data.get(0), 0);
         return days == null ? 0 : days.longValue();
@@ -304,4 +281,27 @@ public abstract class ApplicationUtil {
                 .filter(r -> !Boolean.TRUE.equals(r.getCanceled()))
                 .max(Comparator.comparingLong(DirectiveStudent::getId)).orElse(null);
     }
+
+    public static void assertIsStudentValis(HoisUserDetails user, Application application, EntityManager em) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds "
+                + "join directive d on d.id = ds.directive_id "
+                + "left join study_period spStart on spStart.id = ds.study_period_start_id "
+                + "left join study_period spEnd on spEnd.id = ds.study_period_end_id "
+                + "left join (select ds1.start_date, ds1.directive_student_id, ds1.student_id from directive_student ds1 "
+                    + "join directive d1 on ds1.directive_id = d1.id "
+                    + "where d1.type_code = '" + DirectiveType.KASKKIRI_VALISKATK.name() + "') KATK "
+                    + "on KATK.directive_student_id = ds.id");
+        qb.requiredCriteria("ds.student_id = :studentId", "studentId", EntityUtil.getId(application.getStudent()));
+        qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_VALIS.name());
+        qb.requiredCriteria("coalesce(ds.start_date, spStart.start_date) <= :now", "now", LocalDate.now());
+        qb.requiredCriteria("coalesce(KATK.start_date, ds.end_date, spEnd.end_date) >= :now", "now", LocalDate.now());
+        // id, startDate, endDate
+        List<?> data = qb.select("ds.id", em).getResultList();
+        if(!user.isStudent() || !UserUtil.isStudent(user, application.getStudent()) || 
+                !ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_V, application.getStudent().getStatus())
+                || data.isEmpty()) {
+            throw new HoisException("application.messages.subjectChangeNotAllowed");
+        }
+    }
+
 }

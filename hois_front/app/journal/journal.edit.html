@@ -21,7 +21,7 @@
     </div>
     <br>
     <div ng-include="'journal/journal.entryType.buttons.tmpl.html'"></div>
-    
+
     <div class="container" fixed-column-table fixed-columns="2" ng-style="{'overflow-y': journal.journalStudents.length < 11 ? 'hidden':'scroll'}">
       <table class="journalTable">
         <thead>
@@ -38,16 +38,16 @@
                   <span ng-if="journalEntry.entryType.code !== 'SISSEKANNE_L' && journalEntry.entryType.code !== 'SISSEKANNE_O'">{{journalEntry.entryDate ? (journalEntry.entryDate | hoisDayMonth) : '-'}}</span>
                 </span>
                 <span style="float: right;">
-                  <md-icon ng-if="!journalEntry.quickUpdate" ng-click="quickUpdate(journalEntry)" 
+                  <md-icon ng-if="!journalEntry.quickUpdate" ng-click="quickUpdate(journalEntry)"
                     title="{{'journal.changeResults' | translate}}" md-font-set="material-icons">forward_5</md-icon>
-                  <md-icon ng-if="journalEntry.quickUpdate" ng-click="saveQuickUpdate(journalEntry)" md-font-set="material-icons" 
+                  <md-icon ng-if="journalEntry.quickUpdate" ng-click="saveQuickUpdate(journalEntry)" md-font-set="material-icons"
                     title="{{'journal.saveQuickUpdate' | translate}}" md-colors="{color: 'green-500'}">done</md-icon>
-                  <md-icon ng-if="journalEntry.quickUpdate" ng-click="cancelQuickUpdate(journalEntry)" md-font-set="material-icons" 
+                  <md-icon ng-if="journalEntry.quickUpdate" ng-click="cancelQuickUpdate(journalEntry)" md-font-set="material-icons"
                     title="{{'journal.cancelQuickUpdate' | translate}}" md-colors="{color: 'red-500'}">close</md-icon>
                 </span>
                 <md-tooltip>
                   <span ng-if="journalEntry.startLessonNr">
-                    <span ng-if="!journalEntry.lessons || journalEntry.lessons <= 1">{{journalEntry.startLessonNr}}. {{'journal.lesson' | translate}}</span> 
+                    <span ng-if="!journalEntry.lessons || journalEntry.lessons <= 1">{{journalEntry.startLessonNr}}. {{'journal.lesson' | translate}}</span>
                     <span ng-if="journalEntry.lessons && journalEntry.lessons > 1">{{journalEntry.startLessonNr}}. - {{journalEntry.startLessonNr + journalEntry.lessons-1}}. {{'journal.lesson' | translate}}</span>
                     ,&nbsp;
                   </span>
@@ -57,7 +57,7 @@
                 </md-tooltip>
               </div>
             </th>
-            <th ng-show="auth.isAdmin()"></th>
+            <th ng-show="auth.isAdmin() || auth.isLeadingTeacher()"></th>
           </tr>
         </thead>
         <tbody>
@@ -74,7 +74,8 @@
                     <span>{{'student.statuses.individualCurriculumShort' | translate}}</span>
                   </span>
                 </i>
-                <a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}
+                <a ng-if="row.canView" ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>
+                <span ng-if="!row.canView">{{::row.fullname}}</span>, {{row.studentGroup}}
                 <span ng-if="row.apelResults.length > 0"><a ng-click="openApelResultsDialog(row)">{{'journal.apel' | translate}}</a></span>
                 <span ng-if="row.remarks.length > 0" ng-click="openRemarkDialog(row)"><md-icon md-font-set="material-icons">message</md-icon></span>
                 <span ng-if="row.isMoodleRegistered"><md-icon md-font-set="material-icons">school</md-icon></span>
@@ -109,7 +110,7 @@
                     </span>
                   </span>
 
-                  <span ng-if="(result.absence.value || result.lessonAbsences.length > 0) 
+                  <span ng-if="(result.absence.value || result.lessonAbsences.length > 0)
                     && (result.journalEntryStudentHistories.length > 0 || (result.grade && !journalEntry.quickUpdate))">/</span>
 
                   <span ng-repeat="historyResult in result.journalEntryStudentHistories | orderBy: 'gradeInserted' track by $index">
@@ -117,7 +118,7 @@
                     <span>*</span>
                     <span ng-if="!journalEntry.quickUpdate || $index !== result.journalEntryStudentHistories.length - 1"> / </span>
                     <md-tooltip>
-                      {{historyResult.gradeInserted | hoisDate}}, &nbsp; {{historyResult.gradeInsertedBy}} 
+                      {{historyResult.gradeInserted | hoisDate}}, &nbsp; {{historyResult.gradeInsertedBy}}
                     </md-tooltip>
                   </span>
 
@@ -126,7 +127,7 @@
                                     badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
                     <span ng-if="!result.grade && result.journalEntryStudentHistories.length > 0"> - </span>
                     <md-tooltip ng-if="result.grade.value" class="tooltip-multiline">
-                      {{result.gradeInserted | hoisDate}}, &nbsp; {{result.gradeInsertedBy}} 
+                      {{result.gradeInserted | hoisDate}}, &nbsp; {{result.gradeInsertedBy}}
                       <span ng-if="result.addInfo">,&nbsp;</span> {{result.addInfo}}
                     </md-tooltip>
                   </span>
@@ -151,7 +152,7 @@
                 </div>
               </div>
             </td>
-            <td ng-show="auth.isAdmin()">
+            <td ng-show="auth.isAdmin() || auth.isLeadingTeacher()">
               <a class="remove nomargin" ng-click="removeStudentFromJournal(row.studentId)">&times;</a>
             </td>
           </tr>

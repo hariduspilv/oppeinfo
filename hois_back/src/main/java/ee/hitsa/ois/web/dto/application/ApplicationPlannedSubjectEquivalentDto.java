@@ -20,7 +20,7 @@ public class ApplicationPlannedSubjectEquivalentDto extends VersionedCommand {
         ApplicationPlannedSubjectEquivalentDto dto = EntityUtil.bindToDto(equivalent, new ApplicationPlannedSubjectEquivalentDto(), "subject");
         Subject subject = equivalent.getSubject();
         if (subject != null) {
-            dto.setSubject(EntityUtil.getId(subject));
+            dto.setSubject(subject.getId());
             dto.setNameEt(subject.getNameEt());
             dto.setNameEn(subject.getNameEn());
         }
@@ -29,12 +29,14 @@ public class ApplicationPlannedSubjectEquivalentDto extends VersionedCommand {
         if (equivalent.getCurriculumVersionOmodule() != null && equivalent.getCurriculumVersionOmodule().getCurriculumModule() != null) {
             CurriculumModule module = equivalent.getCurriculumVersionOmodule().getCurriculumModule();
             CurriculumVersionOccupationModuleTheme theme = equivalent.getCurriculumVersionOmoduleTheme();
+
+            String moduleNameEn = module.getNameEn() != null ? module.getNameEn() : module.getNameEt();
             if (theme != null && theme.getNameEt() != null) {
                 dto.setNameEt(module.getNameEt() + '/' + theme.getNameEt());
-                dto.setNameEt(module.getNameEn() + '/' + theme.getNameEt());
+                dto.setNameEn(moduleNameEn + '/' + theme.getNameEt());
             } else {
                 dto.setNameEt(module.getNameEt());
-                dto.setNameEt(module.getNameEn());
+                dto.setNameEn(moduleNameEn);
             }
         }
         return dto;

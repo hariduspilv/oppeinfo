@@ -50,6 +50,12 @@ public class MoodleClient {
     private PublicKey publicKey;
     private RestTemplate restTemplate;
     private ObjectMapper mapperInstance;
+    
+    public final ErrorResponse getConnectionError() {
+        ErrorResponse response = new ErrorResponse();
+        response.setErrorcode("connect");
+        return response;
+    }
 
     public Boolean courseLinkPossible(Config config, LogContext log, String idcode, Long courseId, 
             List<String> academicianIds) {
@@ -228,8 +234,12 @@ public class MoodleClient {
         request.setMessage(Base64.getEncoder().encodeToString(
                 crypt(config, Cipher.ENCRYPT_MODE, requestMessage.getBytes(StandardCharsets.UTF_8))));
         request.setSignature(createSignature(config, requestMessage));
-        
-        ResponseEntity<String> response = getRestTemplate().postForEntity(location(config), request, String.class);
+        ResponseEntity<String> response;
+        try {
+            response = getRestTemplate().postForEntity(location(config), request, String.class);
+        } catch(Exception e) {
+            throw new MoodleException(getConnectionError());
+        }
         
         if (HttpStatus.OK.value() != response.getStatusCodeValue()) {
             throw new MoodleException("Moodle response status code: " + response.getStatusCodeValue());

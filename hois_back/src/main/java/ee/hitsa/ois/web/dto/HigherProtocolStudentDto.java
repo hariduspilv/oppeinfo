@@ -32,7 +32,7 @@ public class HigherProtocolStudentDto extends VersionedCommand implements Protoc
         HigherProtocolStudentDto s = new HigherProtocolStudentDto();
         EntityUtil.bindToDto(protocolStudent, s, "student");
         Student student = protocolStudent.getStudent();
-        String name = PersonUtil.fullname(student.getPerson());
+        String name = PersonUtil.fullnameOptionalGuest(student);
         s.setStudent(new AutocompleteResult(EntityUtil.getId(student), name, name));
         return s;
     }

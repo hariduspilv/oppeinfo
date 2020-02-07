@@ -16,7 +16,6 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.DirectiveValidation.Immat;
 import ee.hitsa.ois.validation.DirectiveValidation.Kylalis;
-import ee.hitsa.ois.validation.DirectiveValidation.Valiskatk;
 import ee.hitsa.ois.validation.EstonianIdCode;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.StudyPeriodRange;
@@ -168,7 +167,6 @@ public class DirectiveForm extends VersionedCommand {
         private Boolean isPeriod;
         private Long studyPeriodStart;
         private Long studyPeriodEnd;
-        @Required(groups = Valiskatk.class)
         private LocalDate nominalStudyEnd;
         private Boolean isAbroad;
         @ClassifierRestriction(MainClassCode.EHIS_KOOL)

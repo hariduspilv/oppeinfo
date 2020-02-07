@@ -79,7 +79,7 @@ public class ApelApplicationController {
     @PutMapping("/{id:\\d+}")
     public ApelApplicationDto save(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) ApelApplication application,
-            @Valid @RequestBody ApelApplicationForm applicationForm) {
+            @RequestBody ApelApplicationForm applicationForm) {
         UserUtil.throwAccessDeniedIf(!ApelApplicationUtil.canCanChangeTransferStatus(user, application));
         return get(user, apelApplicationService.save(user, application, applicationForm));
     }
@@ -101,19 +101,16 @@ public class ApelApplicationController {
 
     @PutMapping("/{id:\\d+}/sendToConfirm")
     public ApelApplicationDto sendToConfirm(HoisUserDetails user, @WithEntity ApelApplication application,
-            @Valid @RequestBody ApelApplicationForm applicationForm) {
+            @RequestBody ApelApplicationForm applicationForm) {
         UserUtil.throwAccessDeniedIf(!ApelApplicationUtil.canSendToConfirm(user, application));
-        ApelApplication sentToConfirmApplication = apelApplicationService.sendToConfirm(application, applicationForm);
-        return get(user, apelApplicationService.save(user, sentToConfirmApplication,  applicationForm));
+        return get(user, apelApplicationService.sendToConfirm(user, application, applicationForm));
     }
 
     @PutMapping("/{id:\\d+}/sendToCommittee")
     public ApelApplicationDto sendToCommittee(HoisUserDetails user, @WithEntity ApelApplication application,
-            @Valid @RequestBody ApelApplicationForm applicationForm) {
+            @RequestBody ApelApplicationForm applicationForm) {
         UserUtil.throwAccessDeniedIf(!ApelApplicationUtil.canSendToCommittee(user, application));
-        ApelApplication sendToCommitteeApplication = apelApplicationService.sendToCommittee(application,
-                applicationForm);
-        return get(user, apelApplicationService.save(user, sendToCommitteeApplication, applicationForm));
+        return get(user, apelApplicationService.sendToCommittee(user, application, applicationForm));
     }
 
     @PutMapping("/{id:\\d+}/sendBackToCreation")
@@ -250,7 +247,15 @@ public class ApelApplicationController {
     @GetMapping("/{applicationId:\\d+}/committees")
     public List<AutocompleteResult> committees(HoisUserDetails user,
             @WithEntity("applicationId") ApelApplication application) {
-        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user);
         return apelApplicationService.committeesForSelection(user, application);
+    }
+
+    @GetMapping("/{applicationId:\\d+}/transferFromApplication")
+    public ApelApplicationDto transferFromApplication(HoisUserDetails user,
+            @WithEntity("applicationId") ApelApplication application) {
+        UserUtil.throwAccessDeniedIf(!ApelApplicationUtil.canEdit(user, application));
+        apelApplicationService.addAbroadStudiesApplicationSubjects(application);
+        return get(user, application);
     }
 }

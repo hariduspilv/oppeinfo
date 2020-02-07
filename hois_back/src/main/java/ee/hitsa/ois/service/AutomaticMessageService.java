@@ -170,12 +170,10 @@ public class AutomaticMessageService {
     }
 
     public void sendMessageToEnterprise(ContractSupervisor supervisor, School school, MessageType type, Object dataBean) {
-        Message message = getMessage(type, school, dataBean);
-
         String to = supervisor.getSupervisorEmail();
-        if (message != null && StringUtils.hasText(to)) {
+        if (StringUtils.hasText(to)) {
             Person automaticSender = em.getReference(Person.class, PersonUtil.AUTOMATIC_SENDER_ID);
-            mailService.sendMail(automaticSender.getEmail(), to, message.getSubject(), message.getContent());
+            sendMessageToEmail(type, school, automaticSender, dataBean, to);
         }
     }
 

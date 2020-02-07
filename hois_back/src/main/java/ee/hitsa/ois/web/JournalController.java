@@ -166,15 +166,16 @@ public class JournalController {
     }
 
     @GetMapping("/{id:\\d+}/otherStudents")
-    public Page<JournalStudentDto> otherStudents(HoisUserDetails user, @PathVariable("id") Long journalId, OtherStudentsSearchCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return journalService.otherStudents(user, journalId, command, pageable);
+    public Page<JournalStudentDto> otherStudents(HoisUserDetails user, @WithEntity Journal journal,
+            OtherStudentsSearchCommand command, Pageable pageable) {
+        JournalUtil.asssertCanChange(user, journal);
+        return journalService.otherStudents(user, journal.getId(), command, pageable);
     }
 
     @GetMapping("/{id:\\d+}/suitedStudents")
-    public List<JournalStudentDto> suitedStudents(HoisUserDetails user, @PathVariable("id") Long journalId) {
-        JournalUtil.asssertCanChange(user, em.find(Journal.class, journalId));
-        return journalService.suitedStudents(user, journalId);
+    public List<JournalStudentDto> suitedStudents(HoisUserDetails user, @WithEntity Journal journal) {
+        JournalUtil.asssertCanChange(user, journal);
+        return journalService.suitedStudents(user, journal.getId());
     }
 
     @GetMapping("/{id:\\d+}/journalStudents")

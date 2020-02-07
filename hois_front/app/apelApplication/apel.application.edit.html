@@ -11,6 +11,63 @@
         <div ng-include="'apelApplication/templates/apel.application.information.html'"></div>
       </div>
 
+      <div ng-if="canSeeNominalStudyExtension">
+        <fieldset>
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'apel.nominalDurationExtending' | translate}}</legend>
+          <md-whiteframe ng-if="application.isEhisSent" class="md-whiteframe-1dp attention-whiteframe"
+            flex="100" layout layout-align="left center">
+            <div md-colors="{color: 'default-warn'}">
+              <md-icon md-colors="{color: 'default-warn'}" md-font-set="material-icons">info_outline</md-icon>
+              <span>{{'apel.alreadySentToEhis' | translate}}</span>
+            </div>
+          </md-whiteframe>
+          <md-whiteframe ng-if="application.hasMultipleNominalDurationExtensions" class="md-whiteframe-1dp attention-whiteframe"
+            flex="100" layout layout-align="left center">
+            <div md-colors="{color: 'default-warn'}">
+              <md-icon md-colors="{color: 'default-warn'}" md-font-set="material-icons">info_outline</md-icon>
+              <span>{{'apel.alreadyHasNominalDurationExtension' | translate}}</span>
+            </div>
+          </md-whiteframe>
+          <div ng-if="!application.canExtendNominalDuration">
+            <div class="md-body-1">{{'apel.nominalDurationExtendingConditions' | translate}}</div>
+            <div class="md-body-1">1) {{'apel.nominalDurationCondition1' | translate}}</div>
+            <div class="md-body-1">2) {{'apel.nominalDurationCondition2' | translate}}</div>
+          </div>
+          <div ng-if="application.canExtendNominalDuration || application.nominalType">
+            <div flex="30" flex-sm="100" flex-xs="100" layout="row" class="horizontal-radio-group">
+              <md-input-container layout="row" layout-align="start center" flex>
+                <md-radio-group layout="row" ng-model="application.nominalType" ng-change="nominalTypeChange()"
+                  ng-disabled="nominalDurationDisabled" required>
+                  <md-radio-button value="NOM_PIKEND_0" aria-label="no extension">
+                    {{currentLanguageNameField(nominalStudyExtensions["NOM_PIKEND_0"])}}</md-radio-button>
+                  <md-radio-button value="NOM_PIKEND_1" aria-label="1 semester">
+                    {{currentLanguageNameField(nominalStudyExtensions["NOM_PIKEND_1"])}}</md-radio-button>
+                  <md-radio-button value="NOM_PIKEND_2" aria-label="2 semesters">
+                    {{currentLanguageNameField(nominalStudyExtensions["NOM_PIKEND_2"])}}</md-radio-button>
+                </md-radio-group>
+              </md-input-container>
+            </div>
+            <div layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container flex="20" flex-md="50" flex-sm="100" flex-xs="100">
+                <label>{{(application.isVocational ? 'apel.abroadStudiesCreditsEKAP' : 'apel.abroadStudiesCreditsEAP') | translate}}</label>
+                <input ng-value="abroadStudiesCredits" disabled>
+              </md-input-container>
+              <md-input-container ng-if="application.nominalType === 'NOM_PIKEND_0'" flex="10" flex-sm="100" flex-xs="100"
+                flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
+                <label>{{'apel.nominalStudyEnd' | translate}}</label>
+                <md-datepicker ng-model="application.oldNominalStudyEnd" disabled></md-datepicker>
+              </md-input-container>
+              <md-input-container ng-if="application.nominalType !== 'NOM_PIKEND_0'" flex="10" flex-sm="100" flex-xs="100"
+                flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
+                <label>{{'apel.nominalStudyEnd' | translate}}</label>
+                <md-datepicker ng-model="application.newNominalStudyEnd" ng-disabled="nominalDurationDisabled"></md-datepicker>
+              </md-input-container>
+            </div>
+          </div>
+        </fieldset>
+        <div>&nbsp;</div>
+      </div>
+
       <div ng-hide="!application.student">
         <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">
@@ -23,6 +80,8 @@
             <div ng-include="'apelApplication/templates/apel.application.formal.learning.higher.list.html'" style="margin-bottom: 20px"></div>
           </span>
           <md-button ng-if="application.canEdit" class="md-raised md-default" ng-click="editFormalLearning()">{{'main.button.create' | translate}}</md-button>
+          <md-button ng-if="application.canEdit && application.hasPlannedSubjectsToTransfer" class="md-raised md-default" ng-click="transferFromApplication()">
+            {{'apel.formalLearnings.transferFromApplication' | translate}}</md-button>
         </fieldset>
         <div>&nbsp;</div>
       </div>
@@ -35,7 +94,7 @@
           <span ng-repeat="record in application.records | filter:{isFormalLearning: false} | orderBy:'id'">
               <div ng-if="application.isVocational" ng-include="'apelApplication/templates/apel.application.informal.learning.vocational.list.html'"
                 style="margin-bottom: 20px"></div>
-              <div ng-if="!application.isVocational" ng-include="'apelApplication/templates/apel.application.informal.learning.higher.list.html'" 
+              <div ng-if="!application.isVocational" ng-include="'apelApplication/templates/apel.application.informal.learning.higher.list.html'"
                 style="margin-bottom: 20px"></div>
             </span>
           <md-button ng-if="application.canEdit" class="md-raised md-default" ng-click="editInformalLearning()">{{'main.button.create' | translate}}</md-button>
@@ -120,7 +179,7 @@
         <div>&nbsp;</div>
       </div>
 
-      <div ng-if="(application.status !== 'VOTA_STAATUS_K' && auth.isAdmin()) || application.committee || application.decision">
+      <div ng-if="(application.status !== 'VOTA_STAATUS_K' && (auth.isAdmin() || auth.isLeadingTeacher())) || application.committee || application.decision">
         <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'apel.committee ' | translate}}</legend>
           <div ng-if="application.status === 'VOTA_STAATUS_E'" flex="45" flex-sm="100" flex-xs="100">
@@ -129,7 +188,7 @@
               <hois-select ng-model="application.committeeId" values="committees" ng-disabled="!application.canEdit" required></hois-select>
             </md-input-container>
           </div>
-          <div ng-if="application.status !== 'VOTA_STAATUS_E' || (application.status === 'VOTA_STAATUS_E' && !application.canEdit)" 
+          <div ng-if="application.status !== 'VOTA_STAATUS_E' || (application.status === 'VOTA_STAATUS_E' && !application.canEdit)"
             layout="column" class="form-readonly">
             <div>&nbsp;</div>
             <md-input-container>
@@ -149,17 +208,17 @@
 
       <div ng-if="application.student" layout="row" layout-xs="column">
         <md-button class="md-raised md-primary" ng-if="canChangeTransferStatus" type="submit">{{'main.button.save' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-if="(auth.isStudent() || auth.isAdmin()) && application.status === 'VOTA_STAATUS_K'" 
+        <md-button class="md-raised md-default" ng-if="(auth.isStudent() || auth.isAdmin() || auth.isLeadingTeacher()) && application.status === 'VOTA_STAATUS_K'"
           ng-click="submit()">{{'main.button.submit' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-if="(auth.isStudent() || auth.isAdmin()) && application.status === 'VOTA_STAATUS_K'" 
+        <md-button class="md-raised md-default" ng-if="(auth.isStudent() || auth.isAdmin() || auth.isLeadingTeacher()) && application.status === 'VOTA_STAATUS_K'"
           ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-if="application.canSendToConfirm" 
+        <md-button class="md-raised md-default" ng-if="application.canSendToConfirm"
           ng-click="sendToConfirm()">{{'apel.sendToConfirm' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-if="application.canSendToCommittee" ng-click="sendToCommittee()"
           ng-disabled="!application.committeeId">{{'apel.sendToCommittee' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-if="application.canSendBackToCreation"
           ng-click="sendBackToCreation()">{{'apel.sendBackToCreation' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-if="application.canConfirm" 
+        <md-button class="md-raised md-default" ng-if="application.canConfirm"
           ng-click="confirm()">{{'apel.confirm' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-if="application.canSendBack" ng-click="sendBack()">{{'apel.sendBack' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-if="application.canReject" ng-click="reject()">{{'apel.reject' | translate}}</md-button>

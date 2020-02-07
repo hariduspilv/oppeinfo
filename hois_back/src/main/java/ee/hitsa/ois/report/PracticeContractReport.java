@@ -104,7 +104,7 @@ public class PracticeContractReport {
             if (academicHours == null) {
                 return "0:00";
             }
-            double total = academicHours.doubleValue() * 3 / 4;
+            double total = academicHours.doubleValue();
             double aHours = Math.floor(total);
             double minutes = Math.ceil((total - aHours) * 60);
             return String.format("%.0ft %2.0fmin", Double.valueOf(aHours), Double.valueOf(minutes));

@@ -97,7 +97,7 @@
                 <label>{{'certificate.content' | translate}}</label>
                 <textarea ng-model="record.content" required md-maxlength="2000" max-rows="2"></textarea>
             </md-input-container>
-            <br>
+            <div>&nbsp;</div>
             <div ng-if="!contentEditable()">
                 <label class="common-label" ng-show="record.content">{{'certificate.content' | translate}}</label>
                 <md-table-container>

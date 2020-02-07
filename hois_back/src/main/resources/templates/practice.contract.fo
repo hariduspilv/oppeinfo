@@ -54,9 +54,6 @@
 									<fo:block font-weight="bold" space-after="13pt">{{ "report.contract.creditsHigher" | translate }}</fo:block>
 								</fo:table-cell>
 								<fo:table-cell border-style="solid" margin="0 0.08in">
-									<fo:block font-weight="bold" space-after="13pt">{{ "report.contract.achours" | translate }}</fo:block>
-								</fo:table-cell>
-								<fo:table-cell border-style="solid" margin="0 0.08in">
 									<fo:block font-weight="bold" space-after="13pt">{{ "report.contract.ashours" | translate }}</fo:block>
 								</fo:table-cell>
 							</fo:table-row>
@@ -73,9 +70,6 @@
 									<fo:table-cell border-style="solid" margin="0 0.08in">
 										<fo:block space-after="13pt">{{ moduleSubject.hours }}</fo:block>
 									</fo:table-cell>
-									<fo:table-cell border-style="solid" margin="0 0.08in">
-										<fo:block space-after="13pt">{{ moduleSubject.astroHours}}</fo:block>
-									</fo:table-cell>
 								</fo:table-row>
 							{% endfor %}
 						</fo:table-body>
@@ -85,7 +79,7 @@
 					{% for moduleSubject in content.moduleSubjects %}
 						<fo:block font-weight="bold" space-after="13pt" margin-left="0.5in" text-align="justify">{{ "report.contract.practiceModule" | translate }}: {{ moduleSubject.module }}</fo:block>
 						<fo:table margin="0 0.24in 0 0.14in" table-layout="fixed" break-before="page">
-							<fo:table-column column-width="2.24in"/>
+							<fo:table-column column-width="3.89in"/>
 							<fo:table-column column-width="1.05in"/>
 							<fo:table-column column-width="1.65in"/>
 							<fo:table-column column-width="1.7in"/>
@@ -97,9 +91,6 @@
 									</fo:table-cell>
 									<fo:table-cell border-style="solid" margin="0 0.08in">
 										<fo:block font-weight="bold" space-after="13pt">{{ "report.contract.creditsVocational" | translate }}</fo:block>
-									</fo:table-cell>
-									<fo:table-cell border-style="solid" margin="0 0.08in">
-										<fo:block font-weight="bold" space-after="13pt">{{ "report.contract.achours" | translate }}</fo:block>
 									</fo:table-cell>
 									<fo:table-cell border-style="solid" margin="0 0.08in">
 										<fo:block font-weight="bold" space-after="13pt">{{ "report.contract.ashours" | translate }}</fo:block>
@@ -116,9 +107,6 @@
 									</fo:table-cell>
 									<fo:table-cell border-style="solid" margin="0 0.08in">
 										<fo:block space-after="13pt">{{ moduleSubject.hours }}</fo:block>
-									</fo:table-cell>
-									<fo:table-cell border-style="solid" margin="0 0.08in">
-										<fo:block space-after="13pt">{{ moduleSubject.astroHours}}</fo:block>
 									</fo:table-cell>
 								</fo:table-row>
 							</fo:table-body>

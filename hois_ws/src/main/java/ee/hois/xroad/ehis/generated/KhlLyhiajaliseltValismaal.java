@@ -20,7 +20,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="muutusKp" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
+ *         &lt;element name="lyhiajaliseltValismaalId" type="{http://www.w3.org/2001/XMLSchema}integer" minOccurs="0"/&gt;
+ *         &lt;element name="muutusKp" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
  *         &lt;element name="perioodAlates" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
  *         &lt;element name="perioodKuni" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
  *         &lt;element name="klEesmark" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
@@ -39,6 +40,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "khlLyhiajaliseltValismaal", propOrder = {
+    "lyhiajaliseltValismaalId",
     "muutusKp",
     "perioodAlates",
     "perioodKuni",
@@ -51,7 +53,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 })
 public class KhlLyhiajaliseltValismaal {
 
-    @XmlElement(required = true)
+    protected BigInteger lyhiajaliseltValismaalId;
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar muutusKp;
     @XmlElement(required = true)
@@ -72,6 +74,30 @@ public class KhlLyhiajaliseltValismaal {
     protected String klSihtriik;
     @XmlElement(required = true)
     protected String klProgramm;
+
+    /**
+     * Gets the value of the lyhiajaliseltValismaalId property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link BigInteger }
+     *     
+     */
+    public BigInteger getLyhiajaliseltValismaalId() {
+        return lyhiajaliseltValismaalId;
+    }
+
+    /**
+     * Sets the value of the lyhiajaliseltValismaalId property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link BigInteger }
+     *     
+     */
+    public void setLyhiajaliseltValismaalId(BigInteger value) {
+        this.lyhiajaliseltValismaalId = value;
+    }
 
     /**
      * Gets the value of the muutusKp property.

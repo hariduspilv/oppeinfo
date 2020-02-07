@@ -14,8 +14,8 @@
           </md-input-container>
 
           <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <hois-autocomplete ng-model="autocomplete.student" method="students" additional-query-params="{finishing: true}"
-              ha-controller="directiveControllers" label="document.student"></hois-autocomplete>
+            <hois-autocomplete ng-model="criteria.studentId" method="students" label="document.student" ha-controller="directiveControllers"
+              ha-attribute="id" additional-query-params="{id: criteria.studentId, finishing: true}"></hois-autocomplete>
           </div>
         </div>
 
@@ -26,10 +26,10 @@
           </md-input-container>
 
           <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <hois-autocomplete ng-if="isHigher" ng-model="autocomplete.curriculumVersion" method="curriculumversions" ha-controller="directiveControllers"
-            label="document.curriculumVersion"></hois-autocomplete>
-            <hois-autocomplete ng-if="!isHigher" ng-model="autocomplete.curriculumVersion" method="curriculumversions" ha-controller="directiveControllers"
-            label="document.curriculumVersionVocational"></hois-autocomplete>
+            <hois-autocomplete ng-if="isHigher" ng-model="criteria.curriculumVersionId" method="curriculumversions" ha-controller="directiveControllers"
+            label="document.curriculumVersion" additional-query-params="{id: criteria.curriculumVersionId}" ha-attribute="id"></hois-autocomplete>
+            <hois-autocomplete ng-if="!isHigher" ng-model="criteria.curriculumVersionId" method="curriculumversions" ha-controller="directiveControllers"
+            label="document.curriculumVersionVocational" additional-query-params="{id: criteria.curriculumVersionId}" ha-attribute="id"></hois-autocomplete>
           </div>
         </div>
 

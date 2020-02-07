@@ -16,9 +16,9 @@
 
           <md-input-container required ng-if="higher && vocational" flex="45" flex-sm="100" flex-xs="100" flex-offset="5">
             <label>{{'timetable.management.type' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.type" model-value-attr="code" default-value="TUNNIPLAAN_LIIK_V"
+            <hois-classifier-select ng-model="criteria.type" model-value-attr="code"
                                     filter-values hide-empty show-only-values="true"
-                                    watch-model connect-main-classifier-code="TUNNIPLAAN_LIIK"
+                                    connect-main-classifier-code="TUNNIPLAAN_LIIK"
                                     main-classifier-code="TUNNIPLAAN_LIIK"></hois-classifier-select>
           </md-input-container>
         </div>
@@ -54,22 +54,23 @@
             <md-button ng-if="!row.id && canEdit" md-no-ink class="md-primary change-button" ng-click="createEvent(row)">
               {{'main.button.create' | translate}}
             </md-button>
-            <!--md-button ng-if="row.id && row.isHigher" md-no-ink class="md-primary change-button"
-                       ng-href="#/timetable/{{::row.id}}/edit">{{'main.button.change' | translate}}
-            </md-button-->
             <md-button ng-if="row.id && !row.isHigher" md-no-ink class="md-primary change-button"
                        ng-href="#/timetable/{{::row.id}}/view">{{'main.button.change' | translate}}
             </md-button>
             <md-button ng-if="row.id && !row.isHigher" md-no-ink class="md-primary change-button"
                        ng-click="copyTimetable(row.id)">{{'main.button.copy' | translate}}
             </md-button>
-            <md-button ng-if="row.id && !row.isHigher" ng-href="{{excel(formState.xlsDiffUrl, {id: row.id})}}" target="_blank" class="md-primary change-button">{{'timetable.management.difference' | translate}}
+            <md-button ng-if="!row.isHigher" ng-href="{{excel(formState.xlsDiffUrl, {startDate: row.start, studyPeriod: row.studyPeriod})}}" target="_blank"
+              class="md-primary change-button">{{'timetable.management.difference' | translate}}
             </md-button>
-            <md-button ng-if="row.id" ng-href="{{excel(formState.xlsPlanUrl, {id: row.id})}}" target="_blank" class="md-primary change-button">{{'timetable.management.plan' | translate}}
+            <md-button ng-if="row.id" ng-href="{{excel(formState.xlsPlanUrl, {id: row.id})}}" target="_blank"
+              class="md-primary change-button">{{'timetable.management.plan' | translate}}
             </md-button>
-            <md-button ng-if="row.start" ng-click="exportTimetable('timetables/exportTimetable',{startDate: row.start, endDate: row.end, studyPeriod: row.studyPeriod})" target="_blank" class="md-primary change-button">{{'timetable.management.xmlExport' | translate}}
+            <md-button ng-if="row.start" ng-click="exportTimetable('timetables/exportTimetable',{startDate: row.start, endDate: row.end, studyPeriod: row.studyPeriod})"
+              target="_blank" class="md-primary change-button">{{'timetable.management.xmlExport' | translate}}
             </md-button>
-            <md-button ng-if="row.start" ng-click="openAddFileDialog(row.studyPeriod,{startDate: row.start, endDate: row.end, isHigher: row.isHigher})" target="_blank" class="md-primary change-button">{{'timetable.management.xmlImport' | translate}}
+            <md-button ng-if="row.start" ng-click="openAddFileDialog(row.studyPeriod,{startDate: row.start, endDate: row.end, isHigher: row.isHigher})"
+              target="_blank" class="md-primary change-button">{{'timetable.management.xmlImport' | translate}}
             </md-button>
           </td>
         </tr>

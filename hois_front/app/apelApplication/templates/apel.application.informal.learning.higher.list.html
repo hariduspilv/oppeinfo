@@ -27,9 +27,9 @@
     <tbody md-body>
       <tr md-row ng-repeat="row in record.data | orderBy:'subjectId'" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell ng-if="!(application.status === 'VOTA_STAATUS_K')">
-          <md-checkbox ng-if="(row.transfer === false || row.transfer === true) && canChangeTransferStatus" 
+          <md-checkbox ng-if="(row.transfer === false || row.transfer === true) && canChangeTransferStatus"
             ng-model="row.transfer" ng-click="changeInformalTransferStatus(row)" aria-label="{{'apel.informalLearnings.transfer' | translate}}"></md-checkbox>
-          <md-checkbox ng-if="(row.transfer === false || row.transfer === true) && !canChangeTransferStatus" 
+          <md-checkbox ng-if="(row.transfer === false || row.transfer === true) && !canChangeTransferStatus"
             ng-model="row.transfer" ng-click="changeInformalTransferStatus(row)" aria-label="{{'apel.informalLearnings.transfer' | translate}}" ng-disabled="true"></md-checkbox>
         </td>
         <td md-cell>

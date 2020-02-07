@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 
@@ -19,7 +18,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="koolId" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="koolId" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;sequence&gt;
  *           &lt;element name="pedagoog" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}pedagoog" maxOccurs="100000" minOccurs="0"/&gt;
  *           &lt;element name="pedagoogKustutaAlam" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}pedagoogKustutaAlam" maxOccurs="100000" minOccurs="0"/&gt;
@@ -40,7 +39,6 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class Oppeasutus {
 
-    @XmlElement(required = true)
     protected String koolId;
     protected List<Pedagoog> pedagoog;
     protected List<PedagoogKustutaAlam> pedagoogKustutaAlam;

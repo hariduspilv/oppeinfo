@@ -31,7 +31,16 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$route',
       function afterCurriculumChange(result) {
         if(curriculumId) {
           $scope.formState.curriculumVersions = $scope.formState.allCurriculumVersions.filter(function(cv) { return cv.curriculum === curriculumId;});
-          $scope.criteria.curriculumVersion = null;
+          if ($scope.criteria.curriculumVersion && $scope.criteria.curriculumVersion.length > 0) {
+            $scope.criteria.curriculumVersion.forEach(function (selectedCv) {
+              var existsInGroup = $scope.formState.curriculumVersions.find(function (cv) {
+                return selectedCv === cv.id;
+              });
+              if (!existsInGroup) {
+                $scope.criteria.curriculumVersion.splice($scope.criteria.curriculumVersion.indexOf(selectedCv), 1);
+              }
+            });
+          }
         } else {
           // all versions allowed
           $scope.formState.curriculumVersions = $scope.formState.allCurriculumVersions;
@@ -75,6 +84,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$route',
   }
 ]).controller('StudentGroupEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'Curriculum', 'QueryUtils', 'Session',
   function ($location, $mdDialog, $q, $route, $scope, dialogService, message, Classifier, Curriculum, QueryUtils, Session) {
+    $scope.auth = $route.current.locals.auth;
     var id = $route.current.params.id;
     var baseUrl = '/studentgroups';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -83,7 +93,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$route',
 
     var school = Session.school || {};
     var onlyvocational = !school.higher && school.vocational;
-    $scope.formState = {allCurriculumVersions: Curriculum.queryVersions(), curriculumVersions: [],
+    $scope.formState = {allCurriculumVersions: Curriculum.queryVersions({userId: $scope.auth.isLeadingTeacher() ? $scope.auth.user : null}), curriculumVersions: [],
                         languages: [], studyForms: [], specialities: [], selectedStudents: [], order: 'rowno',
                         curriculumVersionLabel: 'studentGroup.curriculumVersionBoth',
                         onlyvocational: onlyvocational, isVocational: school.vocational};
@@ -317,7 +327,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$route',
   function ($route, $scope, $q, Classifier, Curriculum, QueryUtils, Session, USER_ROLES, AuthService) {
     $scope.auth = $route.current.locals.auth;
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPERYHM);
-    $scope.showPersonalData = $scope.auth.isAdmin() || $scope.auth.isTeacher();
+    $scope.showPersonalData = $scope.auth.isAdmin() || $scope.auth.isLeadingTeacher() || $scope.auth.isTeacher();
     var id = $route.current.params.id;
     var baseUrl = '/studentgroups';
 

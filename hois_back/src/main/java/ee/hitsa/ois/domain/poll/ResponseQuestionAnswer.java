@@ -5,6 +5,7 @@ import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.teacher.Teacher;
 
 @Entity
 public class ResponseQuestionAnswer extends BaseEntityWithId {
@@ -21,6 +22,8 @@ public class ResponseQuestionAnswer extends BaseEntityWithId {
     private QuestionAnswer questionAnswer;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private ResponseSubject responseSubject;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private Teacher teacher;
     
     public Response getResponse() {
         return response;
@@ -57,5 +60,11 @@ public class ResponseQuestionAnswer extends BaseEntityWithId {
     }
     public void setResponseSubject(ResponseSubject responseSubject) {
         this.responseSubject = responseSubject;
+    }
+    public Teacher getTeacher() {
+        return teacher;
+    }
+    public void setTeacher(Teacher teacher) {
+        this.teacher = teacher;
     }
 }

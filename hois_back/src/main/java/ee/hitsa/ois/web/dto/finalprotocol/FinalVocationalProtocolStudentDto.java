@@ -23,7 +23,7 @@ public class FinalVocationalProtocolStudentDto extends ModuleProtocolStudentDto 
         FinalVocationalProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent, new FinalVocationalProtocolStudentDto());
         Student student = protocolStudent.getStudent();
         dto.setStudentId(student.getId());
-        dto.setFullname(PersonUtil.fullname(student.getPerson()));
+        dto.setFullname(PersonUtil.fullnameOptionalGuest(student));
         dto.setIdcode(student.getPerson().getIdcode());
         dto.setStatus(EntityUtil.getCode(student.getStatus()));
         dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);

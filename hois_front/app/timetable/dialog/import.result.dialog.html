@@ -21,7 +21,7 @@
                 <tbody md-body>
                   <tr md-row ng-repeat="row in timetable.errors" ng-class-odd="'odd'" ng-class-even="'even'">
                     <td md-cell>{{row.name ? row.name : '-'}}</td>
-                    <td md-cell>{{row.code ? (row.code | translate) : '-'}}</td>
+                    <td md-cell>{{row.code ? (row.code | translate) + (row.bracketsInfo ? ' (' + row.bracketsInfo + ')' : '' ) : '-'}}</td>
                   </tr>
                 </tbody>
               </table>

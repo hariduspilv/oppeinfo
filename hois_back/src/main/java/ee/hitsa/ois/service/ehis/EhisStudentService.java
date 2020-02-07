@@ -6,24 +6,20 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsStringList;
 
-import java.lang.invoke.MethodHandles;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -32,14 +28,14 @@ import javax.persistence.Query;
 import javax.transaction.Transactional;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
-import ee.hitsa.ois.concurrent.EhisFutureTask;
+import ee.hitsa.ois.concurrent.AsyncMemoryManager;
+import ee.hitsa.ois.concurrent.AsyncRequest;
 import ee.hitsa.ois.concurrent.WrapperCallable;
+import ee.hitsa.ois.concurrent.request.EhisAsyncRequest;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.WsEhisStudentLog;
 import ee.hitsa.ois.domain.apelapplication.ApelApplication;
@@ -50,25 +46,27 @@ import ee.hitsa.ois.domain.apelapplication.ApelSchool;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentCurriculumCompletion;
+import ee.hitsa.ois.enums.ApelInformalType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.DocumentStatus;
 import ee.hitsa.ois.enums.EhisStudentDataType;
 import ee.hitsa.ois.enums.FormStatus;
 import ee.hitsa.ois.enums.FormType;
-import ee.hitsa.ois.enums.FutureStatus;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.commandobject.ehis.EhisStudentForm;
 import ee.hitsa.ois.web.dto.EhisStudentReport;
-import ee.hitsa.ois.web.dto.FutureStatusResponse;
+import ee.hitsa.ois.web.dto.ForeignStudentDto;
 import ee.hois.xroad.ehis.generated.KhlErivajadusedArr;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
 import ee.hois.xroad.ehis.generated.KhlKursuseMuutus;
@@ -91,108 +89,64 @@ public class EhisStudentService extends EhisService {
     private static final BigInteger FORMAL_LEARNING_TYPE = BigInteger.ONE;
     private static final BigInteger INFORMAL_LEARNING_TYPE = BigInteger.valueOf(2);
     
-    /**
-     *  The first key - school id
-     *  The second key - request hash
-     *  Value - request object
-     *  
-     *  Values removed when:
-     *  - Future is done and its status checked in {@link #exportStudentsStatus(HoisUserDetails, String)}
-     */
-    private static final Map<Long, Map<String, ExportStudentsRequest>> EXPORT_STUDENTS_REQUESTS = new ConcurrentHashMap<>();
-    private static final long RESULT_EXPIRATION_MINUTES = 60;
-    
-    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
     @Autowired
     private EhisDirectiveStudentService ehisDirectiveStudentService;
     
-    /**
-     * CancellationException in case if was canceled with .cancel(false)
-     * InterruptedException in case if was canceled with .cancel(true)
-     * 
-     * TODO: The last request can be not included because future's `done` true once interrupted.
-     * 
-     * @param hoisUser
-     * @param key
-     * @return
-     */
-    public FutureStatusResponse exportStudentsStatus(HoisUserDetails hoisUser, String key) {
-        FutureStatusResponse response = new FutureStatusResponse();
-        if (EXPORT_STUDENTS_REQUESTS.containsKey(hoisUser.getSchoolId()) && EXPORT_STUDENTS_REQUESTS.get(hoisUser.getSchoolId()).containsKey(key)) {
-            ExportStudentsRequest future = EXPORT_STUDENTS_REQUESTS.get(hoisUser.getSchoolId()).get(key);
-            response.setProgress(Float.valueOf(future.getProgress()));
-            if (future.isDone()) {
-                EXPORT_STUDENTS_REQUESTS.get(hoisUser.getSchoolId()).remove(key);
-                try {
-                    response.setResult(future.get());
-                    response.setHasError(Boolean.FALSE);
-                    response.setStatus(FutureStatus.DONE);
-                } catch (ExecutionException ex) {
-                    LOG.info("Error during executing: " + ex.getMessage());
-                    response.setHasError(Boolean.TRUE);
-                    response.setError(ex.getMessage());
-                    response.setStatus(FutureStatus.EXCEPTION);
-                } catch (CancellationException | InterruptedException ex) {
-                    // TODO: The last request can be not included because its `done` is true once interrupted.
-                    response.setHasError(Boolean.TRUE);
-                    response.setError(ex.getMessage());
-                    response.setCancelledBy(future.getCancelledBy());
-                    if (ex instanceof CancellationException) {
-                        response.setStatus(FutureStatus.CANCELLED);
-                    } else {
-                        response.setStatus(FutureStatus.INTERRUPTED);
+    public Optional<ExportStudentsRequest> findOverlappedActiveExportStudentsRequest(HoisUserDetails hoisUser, EhisStudentForm ehisStudentForm, ExportStudentsRequest origin) {
+        Optional<AsyncRequest<?>> optAsyncRequest = AsyncMemoryManager.findAny(AsyncMemoryManager.EHIS_STUDENT, hoisUser.getSchoolId(), (requestsByHash) -> {
+            return requestsByHash.values().stream().filter(request -> {
+                if (request instanceof ExportStudentsRequest) {
+                    ExportStudentsRequest castedRequest = (ExportStudentsRequest) request;
+                    if (castedRequest.isDone() || castedRequest.equals(origin) || !castedRequest.getType().equals(ehisStudentForm.getDataType())) {
+                        return false;
                     }
-                    response.setResult(future.getWrappedResult());
+                    return ((castedRequest.getFrom() == null && ehisStudentForm.getThru() == null) || !castedRequest.getFrom().isAfter(ehisStudentForm.getThru()))
+                            && ((castedRequest.getThru() == null && ehisStudentForm.getFrom() == null ) || !castedRequest.getThru().isBefore(ehisStudentForm.getFrom()));
                 }
-                response.setStarted(future.getStarted());
-                response.setEnded(future.getEnded());
-            } else {
-                response.setHasError(Boolean.FALSE);
-                response.setStatus(FutureStatus.IN_PROGRESS);
-            }
-        } else {
-            response.setHasError(Boolean.TRUE);
-            response.setStatus(FutureStatus.NOT_FOUND);
-        }
-        return response;
-    }
-    
-    public ExportStudentsRequest findOverlappedActiveExportStudentsRequest(HoisUserDetails hoisUser, EhisStudentForm ehisStudentForm, ExportStudentsRequest origin) {
-        if (EXPORT_STUDENTS_REQUESTS.containsKey(hoisUser.getSchoolId())) {
-            return EXPORT_STUDENTS_REQUESTS.get(hoisUser.getSchoolId()).values().stream().filter(request -> {
-                if (request.isDone() || request.equals(origin) || !request.getType().equals(ehisStudentForm.getDataType())) {
-                    return false;
-                }
-                return ((request.getFrom() == null && ehisStudentForm.getThru() == null) || !request.getFrom().isAfter(ehisStudentForm.getThru()))
-                        && ((request.getThru() == null && ehisStudentForm.getFrom() == null ) || !request.getThru().isBefore(ehisStudentForm.getFrom()));
+                return false;
             }).findAny().orElse(null);
-        }
+        });
         
-        return null;
+        if (optAsyncRequest.isPresent()) {
+            return Optional.of((ExportStudentsRequest) optAsyncRequest.get());
+        }
+        return Optional.empty();
     }
     
-    public ExportStudentsRequest findOverlappedActiveExportStudentsRequest(HoisUserDetails hoisUser, EhisStudentForm ehisStudentForm) {
+    public Optional<ExportStudentsRequest> findOverlappedActiveExportStudentsRequest(HoisUserDetails hoisUser, EhisStudentForm ehisStudentForm) {
         return findOverlappedActiveExportStudentsRequest(hoisUser, ehisStudentForm, null);
     }
     
-    private static void removeExpiredExportStudentsResults() {
-        LocalDateTime expirationLimit = LocalDateTime.now().minusMinutes(RESULT_EXPIRATION_MINUTES);
-        EXPORT_STUDENTS_REQUESTS.values().forEach(map -> {
-            map.values().removeIf(request -> {
-                if (request.isDone()) {
-                    LocalDateTime ended = request.getEnded(); // synchronized method
-                    if (ended != null) {
-                        return expirationLimit.isAfter(ended);
-                    }
-                    return false;
+    public ExportStudentsRequest createRequest(HoisUserDetails hoisUser, String hash, EhisStudentForm form) {
+        Optional<ExportStudentsRequest> overlapped = findOverlappedActiveExportStudentsRequest(hoisUser, form);
+        if (overlapped.isPresent() && !overlapped.get().isDone()) {
+            overlapped.get().cancel(hoisUser, true);
+        }
+        return new ExportStudentsRequest(new WrapperCallable<Queue<? extends EhisStudentReport>>() {
+            
+            private AtomicInteger max = new AtomicInteger();
+
+            @Override
+            public Queue<? extends EhisStudentReport> wrapperCall() throws InterruptedException {
+                return exportStudents(hoisUser.getSchoolId(), form, getWrapper(), max);
+            }
+
+            @Override
+            public float getProgress() {
+                if (max.get() == 0) {
+                    return 0;
                 }
-                return false;
-            });
-        });
+                return getWrapper().get().size() / (float) max.get();
+            }
+
+            @Override
+            public String getMessage() {
+                return null;
+            }
+        }, hash, hoisUser, form.getFrom(), form.getThru(), form.getDataType());
     }
     
-    Queue<? extends EhisStudentReport> exportStudents(Long schoolId, EhisStudentForm ehisStudentForm,
+    public Queue<? extends EhisStudentReport> exportStudents(Long schoolId, EhisStudentForm ehisStudentForm,
             AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
         switch (ehisStudentForm.getDataType()) {
         case COURSE_CHANGE: return courseChange(schoolId, ehisStudentForm, wrapper, maxRequests);
@@ -205,65 +159,6 @@ public class EhisStudentService extends EhisService {
         case GUEST_STUDENTS: return guestStudents(schoolId, ehisStudentForm, wrapper, maxRequests);
         default: throw new AssertionFailedException("Unknown datatype");
         }
-    }
-
-    /**
-     * Asynchronous method. Runs in different thread.
-     * Has to return {@link Future}.
-     * 
-     * 1. Creates a future object.
-     * 2. Puts into map to be able to get it. Be careful, if user checks (from frontend)
-     * it right after this request (it is async, so at this moment user might receive empty answer)
-     * then it might say that no request found. So better to wait ~1 second and after check if there is a request.
-     * 3. Checks if there is any overlapped and then cancels it.
-     * 4. Runs request.
-     * 5. Removes old done requests.
-     * 
-     * @param hoisUser user
-     * @param ehisStudentForm form
-     * @param requestHash request unique hash.
-     * @return Future
-     */
-    @Async
-    public Future<Queue<? extends EhisStudentReport>> exportStudents(HoisUserDetails hoisUser, EhisStudentForm ehisStudentForm, String requestHash) {
-        Long schoolId = hoisUser.getSchoolId();
-        ExportStudentsRequest request = new ExportStudentsRequest(new WrapperCallable<Queue<? extends EhisStudentReport>>() {
-            
-            private AtomicInteger max = new AtomicInteger();
-            
-            @Override
-            public Queue<? extends EhisStudentReport> wrapperCall() {
-                return exportStudents(schoolId, ehisStudentForm, getWrapper(), max);
-            }
-
-            @Override
-            public float getProgress() {
-                if (max.get() == 0) {
-                    return 0;
-                }
-                return getWrapper().get().size() / (float) max.get();
-            }
-            
-        }, requestHash, hoisUser, ehisStudentForm.getFrom(), ehisStudentForm.getThru(), ehisStudentForm.getDataType());
-
-        if (!EXPORT_STUDENTS_REQUESTS.containsKey(schoolId)) {
-            EXPORT_STUDENTS_REQUESTS.put(schoolId, new ConcurrentHashMap<>());
-        }
-        
-        EXPORT_STUDENTS_REQUESTS.get(schoolId).put(requestHash, request);
-        
-        ExportStudentsRequest overlappedRequest = findOverlappedActiveExportStudentsRequest(hoisUser, ehisStudentForm, request);
-        
-        if (overlappedRequest != null) {
-            if (!overlappedRequest.isDone()) {
-                overlappedRequest.cancel(hoisUser, true);
-            }
-        }
-        
-        request.run();
-        
-        removeExpiredExportStudentsResults(); // Async method runs in different thread so it will not cause problems with response time.
-        return request;
     }
     
     private Queue<? extends EhisStudentReport> guestStudents(Long schoolId, EhisStudentForm ehisStudentForm,
@@ -310,11 +205,12 @@ public class EhisStudentService extends EhisService {
         Map<Student, ChangedCourse> students = findStudentsWithChangedCourse(schoolId, ehisStudentForm);
         maxRequests.set(students.size());
         students.entrySet().stream().filter(entry -> {
-            if (!Thread.interrupted()) { // Break in case if operation has been cancelled
+            try {
+                Thread.sleep(0);
                 WsEhisStudentLog log = courseChange(entry.getKey(), entry.getValue().getChanged(), entry.getValue().getNewCourse());
                 reports.add(new EhisStudentReport.Course(entry.getKey(), log, entry.getValue().getNewCourse(), entry.getValue().getChanged()));
                 return false;
-            }
+            } catch (@SuppressWarnings("unused") InterruptedException e) { }
             return true;
         }).findAny();
         return reports;
@@ -375,10 +271,16 @@ public class EhisStudentService extends EhisService {
                 boolean vocational = Boolean.TRUE.equals(app.getIsVocational());
 
                 for(ApelApplicationRecord record : StreamUtil.nullSafeList(app.getRecords())) {
-                    boolean formalLearning = Boolean.TRUE.equals(record.getIsFormalLearning());
+                    boolean existsOtherSubject =  StreamUtil.nullSafeList(record.getInformalExperiences()).stream()
+                            .anyMatch(ie -> ApelInformalType.VOTA_INFORMAAL_LIIK_M.name().equals(EntityUtil.getCode(ie.getType())));
+                    // informal learning 'other subject' is counted as formal learning
+                    boolean formalLearning = Boolean.TRUE.equals(record.getIsFormalLearning()) || existsOtherSubject;
+
                     BigInteger learningType = formalLearning ? FORMAL_LEARNING_TYPE : INFORMAL_LEARNING_TYPE;
-                    if(formalLearning) {
-                        for(ApelApplicationFormalSubjectOrModule sorm : StreamUtil.nullSafeList(record.getFormalSubjectsOrModules())) {
+                    if(Boolean.TRUE.equals(record.getIsFormalLearning())) {
+                        List<ApelApplicationFormalSubjectOrModule> transferredSorms = StreamUtil.toFilteredList(
+                                sorm -> Boolean.TRUE.equals(sorm.getTransfer()), record.getFormalSubjectsOrModules());
+                        for(ApelApplicationFormalSubjectOrModule sorm : transferredSorms) {
                             BigDecimal credits = sorm.getCredits();
                             LocalDate gradeDate = sorm.getGradeDate();
                             ApelSchool apelSchool = sorm.getApelSchool();
@@ -401,15 +303,15 @@ public class EhisStudentService extends EhisService {
                             reportRecords.add(reportRecord);
                         }
                     } else {
-                        for(ApelApplicationInformalSubjectOrModule sorm : StreamUtil.nullSafeList(record.getInformalSubjectsOrModules())) {
+                        List<ApelApplicationInformalSubjectOrModule> transferredSorms = StreamUtil.toFilteredList(
+                                sorm -> Boolean.TRUE.equals(sorm.getTransfer()), record.getInformalSubjectsOrModules());
+                        for(ApelApplicationInformalSubjectOrModule sorm : transferredSorms) {
                             BigDecimal credits;
                             if(vocational) {
                                 if(sorm.getCurriculumVersionOmoduleTheme() != null) {
                                     credits = sorm.getCurriculumVersionOmoduleTheme().getCredits();
                                 } else {
-                                    credits = sorm.getCurriculumVersionOmodule().getThemes().stream()
-                                            .map(r -> r.getCredits()).filter(r -> r != null)
-                                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                                    credits = sorm.getCurriculumVersionOmodule().getCurriculumModule().getCredits();
                                 }
                             } else {
                                 credits = sorm.getSubject().getCredits();
@@ -515,30 +417,20 @@ public class EhisStudentService extends EhisService {
             AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
         Queue<EhisStudentReport.ForeignStudy> foreignStudies = new ConcurrentLinkedQueue<>();
         wrapper.set(foreignStudies);
-        List<DirectiveStudent> students = findForeignStudents(schoolId, ehisStudentForm);
+        List<ForeignStudentDto> students = findForeignStudents(schoolId, ehisStudentForm);
         maxRequests.set(students.size());
-        for (DirectiveStudent directiveStudent : students) {
+        for (ForeignStudentDto foreignStudent : students) {
             if (Thread.interrupted()) { // Break in case if operation has been cancelled
                 break;
             }
-            BigDecimal points = BigDecimal.ZERO; // TODO get real value
-            Integer nominalStudyExtension = Integer.valueOf(getNominalStudyExtension(directiveStudent));
-            WsEhisStudentLog log = ehisDirectiveStudentService.foreignStudy(directiveStudent, points, nominalStudyExtension);
-            foreignStudies.add(new EhisStudentReport.ForeignStudy(directiveStudent, log, points, nominalStudyExtension));
+            DirectiveStudent directiveStudent = em.getReference(DirectiveStudent.class, foreignStudent.getId());
+            WsEhisStudentLog log = ehisDirectiveStudentService.foreignStudy(directiveStudent, foreignStudent);
+            if (!(Boolean.TRUE.equals(log.getHasXteeErrors()) || Boolean.TRUE.equals(log.getHasOtherErrors()))) {
+                setEhisSentApelApplication(foreignStudent.getApelApplicationIds());
+            }
+            foreignStudies.add(new EhisStudentReport.ForeignStudy(directiveStudent, log, foreignStudent));
         }
         return foreignStudies;
-    }
-    
-    private static int getNominalStudyExtension(DirectiveStudent directiveStudent) {
-        LocalDate fromDate = DateUtils.periodStart(directiveStudent);
-        LocalDate toDate = DateUtils.periodEnd(directiveStudent);
-        long months = ChronoUnit.MONTHS.between(fromDate, toDate.plusDays(1));
-        if (months >= 8) {
-            return 2;
-        } else if (months >= 3) {
-            return 1;
-        }
-        return 0;
     }
 
     private Queue<EhisStudentReport.CurriculaFulfilment> curriculumFulfillment(Long schoolId, 
@@ -757,25 +649,55 @@ public class EhisStudentService extends EhisService {
      * @param criteria
      * @return
      */
-    private List<DirectiveStudent> findForeignStudents(Long schoolId, EhisStudentForm criteria) {
-        return em.createQuery(
-                "select ds from DirectiveStudent ds left join ds.studyPeriodEnd where ds.canceled = false and ds.directive.school.id = ?1 "
-                + "and ds.directive.type.code = ?2 and ds.directive.status.code = ?3 "
-                + "and ((ds.isPeriod = false and ds.endDate >= ?4 and ds.endDate <= ?5 and ds.endDate >= ?8) "
-                + "or (ds.isPeriod = true and ds.studyPeriodEnd.endDate >= ?6 and ds.studyPeriodEnd.endDate <= ?7 and ds.studyPeriodEnd.endDate >= ?8)) "
-                + "and ds.country.code != ?9 "
-                + "and not exists(select wesl.id from WsEhisStudentLog wesl where wesl.directive.id = ds.directive.id and wesl.school.id = ds.directive.school.id and "
-                + "wesl.hasXteeErrors = false and wesl.hasOtherErrors = false)", DirectiveStudent.class)
-                .setParameter(1, schoolId)
-                .setParameter(2, DirectiveType.KASKKIRI_VALIS.name())
-                .setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
-                .setParameter(4, criteria.getFrom())
-                .setParameter(5, criteria.getThru())
-                .setParameter(6, criteria.getFrom())
-                .setParameter(7, criteria.getThru())
-                .setParameter(8, LocalDate.parse("2014-04-01"))
-                .setParameter(9, "RIIK_EST")
-                .getResultList();
+    private List<ForeignStudentDto> findForeignStudents(Long schoolId, EhisStudentForm criteria) {
+        LocalDate minDate = LocalDate.parse("2014-04-01");
+        if (criteria.getFrom().isBefore(minDate)) {
+            criteria.setFrom(minDate);
+        }
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds "
+                + "left join directive d on ds.directive_id = d.id "
+                + "left join study_period spEnd on spEnd.id = ds.study_period_end_id "
+                + "left join study_period spStart on spStart.id = ds.study_period_start_id "
+                // Valis disruption
+                + "left join (select ds1.start_date, ds1.student_id, ds1.directive_student_id "
+                    + "from directive_student ds1 "
+                    + "join directive d1 on ds1.directive_id = d1.id "
+                    + "where d1.type_code = '" + DirectiveType.KASKKIRI_VALISKATK.name() + "') as VALISKATK "
+                    + "on VALISKATK.directive_student_id = ds.id "
+                    // nominal study
+                + "left join (select nominal_cl.value, aa.id, aa.student_id, aa.confirmed "
+                            + "from apel_application aa "
+                            + "join classifier nominal_cl on nominal_cl.code = aa.nominal_type_code) as maxNominal "
+                            + "on maxNominal.confirmed > coalesce(VALISKATK.start_date, spEnd.end_date, ds.end_date) "
+                            + "and maxNominal.student_id = ds.student_id "
+                    // eap
+                + "left join (select aafsm.credits, aa.confirmed, aps.application_id, aa.id "
+                            + "from apel_application_formal_subject_or_module aafsm "
+                            + "join apel_application_record aar on aafsm.apel_application_record_id = aar.id "
+                            + "join apel_application aa on aar.apel_application_id = aa.id "
+                            + "join application_planned_subject aps on aar.application_planned_subject_id = aps.id "
+                            + "where aa.status_code = 'VOTA_STAATUS_C' and aafsm.transfer = true) apelCredit "
+                            + "on apelCredit.confirmed > coalesce(VALISKATK.start_date, spEnd.end_date, ds.end_date) "
+                            + "and apelCredit.application_id = ds.application_id");
+        qb.requiredCriteria("d.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("ds.country_code != :estonia", "estonia", ClassifierUtil.COUNTRY_ESTONIA);
+        qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_VALIS.name());
+        qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
+        qb.requiredCriteria("coalesce(VALISKATK.start_date, spEnd.end_date, ds.end_date) >= :endFrom", "endFrom", criteria.getFrom());
+        qb.requiredCriteria("coalesce(VALISKATK.start_date, spEnd.end_date, ds.end_date) <= :endThru", "endThru", criteria.getThru());
+        qb.filter("not exists(select wesl.id from ws_ehis_student_log wesl "
+                + "where wesl.directive_id = ds.directive_id and wesl.school_id = d.school_id "
+                + "and wesl.has_xtee_errors = false and wesl.has_other_errors = false)");
+        qb.filter("ds.canceled = false");
+        qb.groupBy("ds.id");
+        return JpaQueryUtil.pagingResult(qb, "ds.id, "
+                // Max nominal study
+                + "max(maxNominal.value) as nominal, "
+                 // Received EAP (points)
+                + "sum(apelCredit.credits) as credits, "
+                + "string_agg(maxNominal.id\\:\\:character varying, ',') as nominalApplications, "
+                + "string_agg(apelCredit.id\\:\\:character varying, ',') as creditApplications"
+        , em, new PageRequest(0, Integer.MAX_VALUE)).map(r -> new ForeignStudentDto(r)).getContent();
     }
     
     private List<DirectiveStudent> findGuestStudents(Long schoolId, EhisStudentForm criteria) {
@@ -803,6 +725,16 @@ public class EhisStudentService extends EhisService {
                 .setParameter(3, DateUtils.lastMomentOfDay(criteria.getThru()))
                 .setParameter(4, StudentType.OPPUR_K.name())
                 .getResultList();
+    }
+    
+    private void setEhisSentApelApplication(Set<Long> applicationIds) {
+        if (applicationIds == null || applicationIds.isEmpty()) {
+            return;
+        }
+        em.createQuery("select a from ApelApplication a where a.id in ?1", ApelApplication.class)
+            .setParameter(1, applicationIds)
+            .getResultList()
+            .forEach(apelApplication -> apelApplication.setIsEhisSent(Boolean.TRUE));
     }
 
     @Override
@@ -876,7 +808,7 @@ public class EhisStudentService extends EhisService {
     /**
      * Being a Future.
      */
-    public static class ExportStudentsRequest extends EhisFutureTask<Queue<? extends EhisStudentReport>> {
+    public static class ExportStudentsRequest extends EhisAsyncRequest<Queue<? extends EhisStudentReport>> {
         
         private final LocalDate from;
         private final LocalDate thru;

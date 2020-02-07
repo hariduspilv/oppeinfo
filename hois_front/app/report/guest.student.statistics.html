@@ -42,10 +42,10 @@
                 </md-input-container>
             </div>
             <div layout="row">
-                <hois-autocomplete flex ha-controller="directiveControllers" ng-model="formState.curriculum" method="curriculums" name="curriculum"
+                <hois-autocomplete flex ha-controller="directiveControllers" ng-model="hiddenCriteria.curriculumObj" method="curriculums" name="curriculum"
                 additional-query-params="{}" label="report.guestStudent.curriculum" md-selected-item-change="queryForDepartments()"></hois-autocomplete>
-                <hois-autocomplete flex ha-controller="directiveControllers" ng-model="criteria.curriculumVersion" method="curriculumversions" name="curriculumVersion"
-                additional-query-params="{curriculumId: formState.curriculum.id}" label="report.guestStudent.curriculumVersion" flex-offset="5" ha-attribute="id"></hois-autocomplete>
+                <hois-autocomplete flex ha-controller="directiveControllers" ng-model="hiddenCriteria.curriculumVersionObj" method="curriculumversions" name="curriculumVersion"
+                additional-query-params="{curriculumId: hiddenCriteria.curriculumObj.id}" label="report.guestStudent.curriculumVersion" flex-offset="5"></hois-autocomplete>
             </div>
             <div layout="row">
                 <md-input-container flex>
@@ -54,7 +54,7 @@
                 </md-input-container>
                 <md-input-container flex flex-offset="5">
                   <label>{{'curriculum.educationLevel' | translate}}</label>
-                  <hois-classifier-select ng-model="criteria.educationLevel" main-classifier-code="HARIDUSTASE" watch-model="formState.curriculum.origStudyLevel"
+                  <hois-classifier-select ng-model="criteria.educationLevel" main-classifier-code="HARIDUSTASE" watch-model="hiddenCriteria.curriculumObj.origStudyLevel"
                     filter-values connect-main-classifier-code="HARIDUSTASE" model-value-attr="code"></hois-classifier-select>
                 </md-input-container>
             </div>

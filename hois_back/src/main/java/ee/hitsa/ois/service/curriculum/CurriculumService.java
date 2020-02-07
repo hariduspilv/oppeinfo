@@ -16,6 +16,7 @@ import java.util.stream.IntStream;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -373,7 +374,7 @@ public class CurriculumService {
 
     public boolean isMerCodeUnique(UniqueCommand command) {
         boolean codeExists;
-        if(command.getParamValue() == null) {
+        if(command.getParamValue() == null || StringUtils.isEmpty(command.getParamValue())) {
             return true;
         } else if(command.getId() == null) {
             codeExists = curriculumRepository.existsByMerCode(command.getParamValue());

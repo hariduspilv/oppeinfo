@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.apelapplication;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,23 +24,30 @@ public class ApelApplication extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private Student student;
-    
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private School school;
-    
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier status;
-    
+
     private String confirmedBy;
     private LocalDateTime confirmed;
     private Boolean isVocational;
     private String decision;
-    
-    @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
+
+    @ManyToOne(fetch = FetchType.LAZY)
     private Committee committee;
-    
+
+    private LocalDate newNominalStudyEnd;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier nominalType;
+
+    private LocalDate oldNominalStudyEnd;
+    private Boolean isEhisSent;
+
     @OneToMany(mappedBy="apelApplication", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ApelApplicationRecord> records = new ArrayList<>();
     
@@ -84,7 +92,11 @@ public class ApelApplication extends BaseEntityWithId {
     public LocalDateTime getConfirmed() {
         return confirmed;
     }
-    
+
+    public void setConfirmed(LocalDateTime confirmed) {
+        this.confirmed = confirmed;
+    }
+
     public Boolean getIsVocational() {
         return isVocational;
     }
@@ -109,8 +121,36 @@ public class ApelApplication extends BaseEntityWithId {
         this.committee = committee;
     }
 
-    public void setConfirmed(LocalDateTime confirmed) {
-        this.confirmed = confirmed;
+    public LocalDate getNewNominalStudyEnd() {
+        return newNominalStudyEnd;
+    }
+
+    public void setNewNominalStudyEnd(LocalDate newNominalStudyEnd) {
+        this.newNominalStudyEnd = newNominalStudyEnd;
+    }
+
+    public Classifier getNominalType() {
+        return nominalType;
+    }
+
+    public void setNominalType(Classifier nominalType) {
+        this.nominalType = nominalType;
+    }
+
+    public LocalDate getOldNominalStudyEnd() {
+        return oldNominalStudyEnd;
+    }
+
+    public void setOldNominalStudyEnd(LocalDate oldNominalStudyEnd) {
+        this.oldNominalStudyEnd = oldNominalStudyEnd;
+    }
+
+    public Boolean getIsEhisSent() {
+        return isEhisSent;
+    }
+
+    public void setIsEhisSent(Boolean isEhisSent) {
+        this.isEhisSent = isEhisSent;
     }
 
     public List<ApelApplicationRecord> getRecords() {

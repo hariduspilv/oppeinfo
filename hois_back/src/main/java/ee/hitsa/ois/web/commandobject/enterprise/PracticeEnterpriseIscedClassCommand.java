@@ -4,6 +4,7 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 
 public class PracticeEnterpriseIscedClassCommand {
+    
 	@ClassifierRestriction(MainClassCode.ISCED_RYHM)
 	private String iscedClass;
 	private Integer places;

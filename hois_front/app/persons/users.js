@@ -77,7 +77,8 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
      * @return true if not leading teacher or has this permission in default rights.
      */
     function isLeadingTeacherRight(object, permission) {
-      return ($scope.user.role !== 'ROLL_J' || ($scope.userRoleDefaults.defaultRights.ROLL_J[object] || []).indexOf(permission) !== -1);
+      return $scope.user.role !== 'ROLL_J' || ($scope.userRoleDefaults.defaultRights.ROLL_J[object] || []).indexOf(permission) !== -1 ||
+        ($scope.userRoleDefaults.extraRights.ROLL_J[object] || []).indexOf(permission) !== -1;
     }
 
     function addRights(source) {
@@ -100,7 +101,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
         }
       }
     }
-    
+
     function resetRights() {
       for (var right in $scope.rights) {
         for (var code in $scope.rights[right]) {
@@ -130,7 +131,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
 
       for (var right in $scope.rights) {
         if (ArrayUtils.contains(rightsForRole, right)) {
-          $scope.rights[right][code] = AuthService.isValidRolePermission($scope.user.role, right, code) && isLeadingTeacherRight(right, code) ? 
+          $scope.rights[right][code] = AuthService.isValidRolePermission($scope.user.role, right, code) && isLeadingTeacherRight(right, code) ?
             permissionValue : false;
         }
       }
@@ -142,7 +143,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
       for (var code in $scope.multiSelects) {
         $scope.multiSelects[code] = true;
         for (var right in $scope.rights) {
-          if (ArrayUtils.contains(rightsForRole, right) && 
+          if (ArrayUtils.contains(rightsForRole, right) &&
           AuthService.isValidRolePermission($scope.user.role, right, code) &&
           isLeadingTeacherRight(right, code) &&
           !$scope.rights[right][code]) {
@@ -151,10 +152,10 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
           }
         }
       }
-    } 
+    }
 
     $scope.showPermission = function(objectCode, permCode) {
-      return AuthService.isValidRolePermission($scope.user.role, objectCode, permCode) && 
+      return AuthService.isValidRolePermission($scope.user.role, objectCode, permCode) &&
               isLeadingTeacherRight(objectCode, permCode);
     };
 
@@ -176,7 +177,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
         }
         return true;
       });
-      
+
       var objects = $scope.userRoleDefaults.defaultRights[role] || {};
       $scope.objectsForRole = filteredObjects.filter(function(it) { return objects[it.code]; });
 
@@ -262,8 +263,8 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
     }
 
     /**
-     * 
-     * @param {object} newRole 
+     *
+     * @param {object} newRole
      * @param {string} oldRole user role ID as string or "" if nothing was
      */
     function userRoleChanged(newRole, oldRole) {
@@ -326,9 +327,9 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
     }
 
     $scope.deleteCurriculum = function (curriculum) {
-      for(var i = 0; i < $scope.user.curriculums.length; i++){ 
+      for(var i = 0; i < $scope.user.curriculums.length; i++){
         if ($scope.user.curriculums[i].id === curriculum.id) {
-          $scope.user.curriculums.splice(i, 1); 
+          $scope.user.curriculums.splice(i, 1);
         }
       }
     };
@@ -337,7 +338,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
       if (!newV || newV === oldV) {
         return;
       }
-      
+
       if (!$scope.user.curriculums) {
         $scope.user.curriculums = [];
       }
@@ -391,7 +392,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
     $scope.user = Endpoint.get({id: userId});
 
     $scope.showPermission = function(objectCode, permCode) {
-      return AuthService.isValidRolePermission($scope.user.role, objectCode, permCode) && 
+      return AuthService.isValidRolePermission($scope.user.role, objectCode, permCode) &&
               ($scope.user.role !== 'ROLL_J' || ($scope.userRoleDefaults.defaultRights.ROLL_J[objectCode] || []).indexOf(permCode) !== -1);
     };
 

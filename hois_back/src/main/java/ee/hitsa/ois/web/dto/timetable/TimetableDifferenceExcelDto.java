@@ -3,24 +3,18 @@ package ee.hitsa.ois.web.dto.timetable;
 public class TimetableDifferenceExcelDto {
     private Long journalId;
     private String journalName;
-    private Long studentGroupId;
-    private String studentGroup;
+    private String studentGroups;
     private String capacityType;
     private String teacherNames;
-    private Long previousWeek;
-    private Long currentWeek;
-    private Long difference;
+    private Long previousWeek = Long.valueOf(0);
+    private Long currentWeek = Long.valueOf(0);
+    private Long difference = Long.valueOf(0);
 
-    public TimetableDifferenceExcelDto(Long journalId, String journalName, Long studentGroupId, String studentGroup, 
-            String capacityType, Long currentWeek) {
+    public TimetableDifferenceExcelDto(Long journalId, String journalName, String studentGroups, String capacityType) {
         this.journalId = journalId;
         this.journalName = journalName;
-        this.studentGroupId = studentGroupId;
-        this.studentGroup = studentGroup;
+        this.studentGroups = studentGroups;
         this.capacityType = capacityType;
-        this.currentWeek = currentWeek;
-        this.previousWeek = Long.valueOf(0);
-        this.difference = currentWeek;
     }
 
     public Long getJournalId() {
@@ -39,20 +33,12 @@ public class TimetableDifferenceExcelDto {
         this.journalName = journalName;
     }
 
-    public Long getStudentGroupId() {
-        return studentGroupId;
+    public String getStudentGroups() {
+        return studentGroups;
     }
 
-    public void setStudentGroupId(Long studentGroupId) {
-        this.studentGroupId = studentGroupId;
-    }
-
-    public String getStudentGroup() {
-        return studentGroup;
-    }
-
-    public void setStudentGroup(String studentGroup) {
-        this.studentGroup = studentGroup;
+    public void setStudentGroups(String studentGroups) {
+        this.studentGroups = studentGroups;
     }
 
     public String getCapacityType() {

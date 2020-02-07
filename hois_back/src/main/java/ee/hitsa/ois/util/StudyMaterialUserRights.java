@@ -101,14 +101,9 @@ public abstract class StudyMaterialUserRights {
         if (user.isLeadingTeacher()) {
             return UserUtil.isLeadingTeacher(user, journal);
         } else if (user.isTeacher()) {
-            return isJournalTeacher(user, journal);
+            return UserUtil.isJournalTeacher(user, journal);
         }
         return UserUtil.isSchoolAdmin(user, journal.getSchool());
-    }
-
-    private static boolean isJournalTeacher(HoisUserDetails user, Journal journal) {
-        return journal.getJournalTeachers().stream()
-                .anyMatch(t -> user.getTeacherId().equals(EntityUtil.getId(t.getTeacher())));
     }
 
     public static void assertCanEditJournal(HoisUserDetails user, Journal journal) {

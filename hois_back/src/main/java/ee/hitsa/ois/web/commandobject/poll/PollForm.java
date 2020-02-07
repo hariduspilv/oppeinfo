@@ -5,6 +5,7 @@ import java.util.List;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
+import ee.hitsa.ois.web.dto.LiteralResult;
 
 public class PollForm {
     
@@ -23,7 +24,8 @@ public class PollForm {
     private List<AutocompleteResult> studentGroups;
     private List<ClassifierSelection> targetCodes;
     private List<Long> teacherOccupations;
-    private List<AutocompleteResult> journals;
+    private List<LiteralResult> journals;
+    private List<LiteralResult> subjectStudyPeriods;
     private Boolean isTeacherComment;
     private Boolean isTeacherCommentVisible;
     private Boolean isThemePageable;
@@ -137,10 +139,10 @@ public class PollForm {
     public void setTeacherOccupations(List<Long> teacherOccupations) {
         this.teacherOccupations = teacherOccupations;
     }
-    public List<AutocompleteResult> getJournals() {
+    public List<LiteralResult> getJournals() {
         return journals;
     }
-    public void setJournals(List<AutocompleteResult> journals) {
+    public void setJournals(List<LiteralResult> journals) {
         this.journals = journals;
     }
     public Long getStudyPeriod() {
@@ -190,6 +192,12 @@ public class PollForm {
     }
     public void setThemeEmpty(Boolean themeEmpty) {
         this.themeEmpty = themeEmpty;
+    }
+    public List<LiteralResult> getSubjectStudyPeriods() {
+        return subjectStudyPeriods;
+    }
+    public void setSubjectStudyPeriods(List<LiteralResult> subjectStudyPeriods) {
+        this.subjectStudyPeriods = subjectStudyPeriods;
     }
 
 }

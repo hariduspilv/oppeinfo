@@ -950,7 +950,8 @@ angular.module('hitsaOis')
             icon:"reply"
           },
           {
-            name: authenticatedUser.higher ? 'main.menu.poll.subjects' : 'main.menu.poll.journals',
+            name: authenticatedUser.higher && authenticatedUser.vocational ? 'main.menu.poll.both' : 
+            (authenticatedUser.higher ? 'main.menu.poll.subjects' : 'main.menu.poll.journals'),
             url: '/poll/answers/subjects?_menu',
             icon:"assignment_return"
           }
@@ -973,7 +974,7 @@ angular.module('hitsaOis')
         url: "/applications?_menu",
         icon: "font_download",
       });
-      
+
       sections.push({
         name: 'main.menu.scholarships.scholarshipApplications',
         url: "/scholarships/applications/scholarships?_menu",
@@ -1129,7 +1130,7 @@ angular.module('hitsaOis')
       });
     }
 
-    function getLeadingTeacherSections(authenticatedUser) {
+    function getLeadingTeacherSections() {
       sections.push({
         name: 'main.menu.academicCalendar.label',
         type: 'link',
@@ -1595,7 +1596,7 @@ angular.module('hitsaOis')
           }
         ]
       });
-    
+
     }
 
     function getStudentSections(authenticatedUser) {
@@ -1905,7 +1906,7 @@ angular.module('hitsaOis')
         url: "/stateCurriculum/public?_menu",
         icon: "playlist_add_check",
       });
-      
+
       sections.push({
         name: 'main.menu.subjects.label',
         url: "/subject/public?_menu",

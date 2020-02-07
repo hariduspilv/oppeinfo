@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.StudyYear;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -47,6 +48,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -1105,19 +1107,13 @@ public class ReportService {
                 + "join directive_student ds on ds.student_id = s.id "
                 + "join directive d on ds.directive_id = d.id "
                 + "join person p on s.person_id = p.id "
-                + "left join (select ds1.nominal_study_end, ds1.student_id, ds1.application_id "
+                + "left join study_period startPeriod on startPeriod.id = ds.study_period_start_id "
+                + "left join study_period endPeriod on endPeriod.id = ds.study_period_end_id "
+                + "left join (select ds1.start_date, ds1.student_id, ds1.directive_student_id "
                     + "from directive_student ds1 "
                     + "join directive d1 on ds1.directive_id = d1.id "
                     + "where d1.type_code = 'KASKKIRI_VALISKATK') as VALISKATK "
-                    + "on (VALISKATK.student_id = s.id and VALISKATK.application_id = ds.application_id) "
-                + "left join (select aps.application_id, coalesce(sum(cvot.credits), sum(su.credits)) as credits "
-                    + "from application_planned_subject aps "
-                    + "left join application_planned_subject_equivalent apse on apse.application_planned_subject_id = aps.id "
-                    + "left join subject su on su.id = apse.subject_id "
-                    + "left join curriculum_version_omodule cvo on apse.curriculum_version_omodule_id = cvo.id "
-                    + "left join curriculum_version_omodule_theme cvot "
-                    + "on (apse.curriculum_version_omodule_theme_id = cvot.id or cvo.id = cvot.curriculum_version_omodule_id) "
-                    + "group by aps.application_id) as VALIS on VALIS.application_id = ds.application_id "
+                    + "on VALISKATK.directive_student_id = ds.id "
                 + "left join classifier ehisSchool on ds.ehis_school_code = ehisSchool.code "
                 + "left join apel_school aps on ds.apel_school_id = aps.id "
                 + "left join student_group sg on s.student_group_id = sg.id "
@@ -1126,46 +1122,93 @@ public class ReportService {
                 + "left join classifier cl_programme on cl_programme.code = ds.abroad_programme_code "
                 + "left join classifier cl_country on (cl_country.code = aps.country_code or cl_country.code = ds.country_code) "
                 + "left join classifier_connect cc on cc.classifier_code = c.orig_study_level_code "
-                + "left join curriculum_department cd on cd.curriculum_id = c.id "
-                + "left join study_period startPeriod on startPeriod.id = ds.study_period_start_id "
-                + "left join study_period endPeriod on endPeriod.id = ds.study_period_end_id "
-                + "left join study_year sy on ((ds.start_date >= sy.start_date and ds.end_date <= sy.end_date) or startPeriod.study_year_id = sy.id or endPeriod.study_year_id = sy.id)").sort(pageable)
-                .groupBy("s.id, p.firstname, p.lastname, cv.code, c.name_et, endPeriod.end_date, "
-                      + "c.name_en, sg.code, ds.start_date, ds.end_date, startPeriod.start_date, "
-                      + "aps.name_et, ds.abroad_school, ehisSchool.name_et, ds.application_id, "
-                      + "aps.name_en, ehisSchool.name_en, VALISKATK.nominal_study_end, cl_country.code, ds.abroad_programme_code, "
-                      + "VALIS.credits, cl_programme.name_et, cl_programme.name_en");
+                    + "and cc.main_classifier_code = 'HARIDUSTASE'"
+                + "left join school_department sd on (cv.school_department_id is not null and sd.id = cv.school_department_id) "
+                    + "or (cv.school_department_id is null and sd.id in "
+                    + "(select cd.school_department_id from curriculum_department cd where cd.curriculum_id = c.id))")
+                .sort(pageable)
+                .groupBy("s.id, p.id, c.id, cv.id, sg.id, cc.connect_classifier_code, "
+                        + "endPeriod.id, startPeriod.id, ds.id, aps.id, ds.id, ehisSchool.code, cl_country.code, "
+                        + "ds.abroad_programme_code, cl_programme.code, VALISKATK.start_date");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
-        qb.requiredCriteria("sy.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_VALIS.name());
+        qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getStudent());
         qb.optionalCriteria("c.id = :curriculumId", "curriculumId", criteria.getCurriculum());
         qb.optionalCriteria("cv.id = :curriculumVersion", "curriculumVersion", criteria.getCurriculumVersion());
-        qb.optionalCriteria("sy.id = :studyYear", "studyYear", criteria.getStudyYear());
-        qb.optionalCriteria("ds.start_date >= :startFrom", "startFrom", criteria.getStartFrom());
-        qb.optionalCriteria("ds.start_date <= :startThru", "startThru", criteria.getStartThru());
-        qb.optionalCriteria("ds.end_date >= :endFrom", "endFrom", criteria.getEndFrom());
-        qb.optionalCriteria("ds.end_date <= :endThru", "endThru", criteria.getEndThru());
-        qb.optionalCriteria("cd.school_department_id = :departmentId", "departmentId", criteria.getDepartment());
+        qb.optionalCriteria("coalesce(ds.start_date, startPeriod.start_date) >= :startFrom", "startFrom", criteria.getStartFrom());
+        qb.optionalCriteria("coalesce(ds.start_date, startPeriod.start_date) <= :startThru", "startThru", criteria.getStartThru());
+        qb.optionalCriteria("coalesce(VALISKATK.start_date, ds.end_date, endPeriod.end_date) >= :endFrom", "endFrom", criteria.getEndFrom());
+        qb.optionalCriteria("coalesce(VALISKATK.start_date, ds.end_date, endPeriod.end_date) <= :endThru", "endThru", criteria.getEndThru());
+
+        StudyYear studyYear = EntityUtil.getOptionalOne(StudyYear.class, criteria.getStudyYear(), em);
+        if (studyYear != null) {
+            qb.optionalCriteria("coalesce(ds.start_date, startPeriod.start_date) >= :syStart", "syStart", studyYear.getStartDate());
+            qb.optionalCriteria("coalesce(VALISKATK.start_date, ds.end_date, endPeriod.end_date) <= :syEnd", "syEnd", studyYear.getEndDate());
+        }
+
+        qb.optionalCriteria("((cv.school_department_id is not null and cv.school_department_id = :departmentId) or "
+                + "(cv.school_department_id is null and :departmentId in "
+                + "(select cd.school_department_id from curriculum_department cd where cd.curriculum_id = c.id)))",
+                "departmentId", criteria.getDepartment());
         qb.optionalCriteria("cc.connect_classifier_code = :educationLevel", "educationLevel", criteria.getEducationLevel());
         qb.optionalContains(Arrays.asList("ds.abroad_school", "aps.name_et", "aps.name_en", "ehisSchool.name_et", "ehisSchool.name_en"), 
                 "foreignSchool", criteria.getForeignSchool());
         qb.optionalCriteria("cl_country.code = :foreignCountry", "foreignCountry", criteria.getForeignCountry());
         qb.optionalCriteria("ds.abroad_programme_code = :programmeCode", "programmeCode", criteria.getProgramme());
-        qb.optionalCriteria("(ds.start_date >= :durationStart or startPeriod.start_date >= :durationStart)", "durationStart", criteria.getDurationStart());
-        qb.optionalCriteria("coalesce(VALISKATK.nominal_study_end, ds.end_date, endPeriod.end_date) <= :durationEnd", "durationEnd", criteria.getDurationEnd());
-        
+        qb.optionalCriteria("coalesce(ds.start_date, startPeriod.start_date) >= :durationStart", "durationStart", criteria.getDurationStart());
+        qb.optionalCriteria("coalesce(VALISKATK.start_date, ds.end_date, endPeriod.end_date) <= :durationEnd", "durationEnd", criteria.getDurationEnd());
+        if (Boolean.TRUE.equals(criteria.getIsExtended())) {
+            qb.filter("exists(select max(nominal_cl.value) as maxNominal "
+                    + "from apel_application aa "
+                    + "join classifier nominal_cl on nominal_cl.code = aa.nominal_type_code "
+                    + "where aa.student_id = s.id "
+                    + "and aa.confirmed > coalesce(VALISKATK.start_date, endPeriod.end_date, ds.end_date) "
+                    + "and aa.nominal_type_code != 'NOM_PIKEND_0' "
+                    + "group by aa.student_id)");
+        }
+        qb.filter("(ds.canceled is null or ds.canceled = false)");
+
         return JpaQueryUtil.pagingResult(qb, "s.id, p.firstname, p.lastname, cv.code, c.name_et, "
-                + "c.name_en, sg.code as student_group_code, "
-                + "coalesce (ds.start_date, startPeriod.start_date) as leavingDate, "
-                + "coalesce(VALISKATK.nominal_study_end, ds.end_date, endPeriod.end_date) as returnDate, "
-                + "coalesce(aps.name_et, ds.abroad_school, ehisSchool.name_et) as foreignSchoolEt, "
-                + "coalesce(aps.name_en, ds.abroad_school, ehisSchool.name_en) as foreignSchoolEn, "
-                + "cl_country.code as homeCountry, ds.abroad_programme_code, ds.application_id, VALIS.credits as totalWantedEAP"
+                + "c.name_en, sg.code as student_group_code, cc.connect_classifier_code education_level, "
+                + "string_agg(sd.name_et, ', ' order by sd.name_et) sd_name_et, "
+                + "string_agg(coalesce(sd.name_en, sd.name_et), ', ' order by coalesce(sd.name_en, sd.name_et)) sd_name_en, "
+                + "coalesce (ds.start_date, startPeriod.start_date) as leaving_date, "
+                + "coalesce(VALISKATK.start_date, ds.end_date, endPeriod.end_date) as return_date, "
+                + "coalesce(aps.name_et, ds.abroad_school, ehisSchool.name_et) as foreign_school_et, "
+                + "coalesce(aps.name_en, ds.abroad_school, ehisSchool.name_en) as foreign_school_en, "
+                + "cl_country.code as homeCountry, ds.abroad_programme_code, ds.application_id, "
+                // Total wanted EAP (points)
+                + "(select coalesce(sum(cvot.credits), sum(su.credits)) as credits "
+                    + "from application_planned_subject apsubj "
+                    + "left join application_planned_subject_equivalent apse on apse.application_planned_subject_id = apsubj.id "
+                    + "left join subject su on su.id = apse.subject_id "
+                    + "left join curriculum_version_omodule cvo on apse.curriculum_version_omodule_id = cvo.id "
+                    + "left join curriculum_version_omodule_theme cvot on "
+                        + "((apse.curriculum_version_omodule_theme_id = cvot.id and cvo.id = cvot.curriculum_version_omodule_id) "
+                        + "or (apse.curriculum_version_omodule_theme_id is null and cvo.id = cvot.curriculum_version_omodule_id)) "
+                        + "where apsubj.application_id = ds.application_id) as total_wanted_eap,"
+                // Received EAP (points)
+                + "(select sum(aafsm.credits) as credits "
+                    + "from apel_application_formal_subject_or_module aafsm "
+                    + "join apel_application_record aar on aafsm.apel_application_record_id = aar.id "
+                    + "join apel_application aa on aar.apel_application_id = aa.id "
+                    + "join application_planned_subject aps on aar.application_planned_subject_id = aps.id "
+                    + "where aa.status_code = 'VOTA_STAATUS_C' and aafsm.transfer = true "
+                    + "and aps.application_id = ds.application_id "
+                    + "and aa.confirmed > coalesce(VALISKATK.start_date, endPeriod.end_date, ds.end_date) "
+                    + "group by aps.application_id), "
+                // Max nominal study
+                + "(select max(nominal_cl.value) as max_nominal "
+                    + "from apel_application aa "
+                    + "join classifier nominal_cl on nominal_cl.code = aa.nominal_type_code "
+                    + "where aa.student_id = s.id "
+                    + "and aa.confirmed > coalesce(VALISKATK.start_date, endPeriod.end_date, ds.end_date)"
+                    + "group by aa.student_id)"
         , em, pageable).map(r -> new ForeignStudentStatisticsDto(r));
     }
-    
+
     public byte[] foreignStudentStatisticsAsExcel(HoisUserDetails user, ForeignStudentStatisticsCommand criteria) {
         List<ForeignStudentStatisticsDto> students = foreignStudentStatistics(user, criteria,
                 new PageRequest(0, Integer.MAX_VALUE, new Sort("p.lastname, p.firstname"))).getContent();

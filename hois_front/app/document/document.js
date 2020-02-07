@@ -190,7 +190,6 @@ angular.module('hitsaOis').controller('DiplomaSearchController', ['$scope', '$ro
         });
       })
     };
-    $scope.autocomplete = {};
     QueryUtils.createQueryForm($scope, baseUrl + '/supplement/students', {
       isHigher: $scope.isHigher,
       order: 'p.lastname, p.firstname'
@@ -198,18 +197,10 @@ angular.module('hitsaOis').controller('DiplomaSearchController', ['$scope', '$ro
     var _clearCriteria = $scope.clearCriteria;
     $scope.clearCriteria = function() {
       _clearCriteria();
-      $scope.autocomplete = {};
       $scope.criteria.isHigher = $scope.isHigher;
     };
 
     $q.all(clMapper.promises).then($scope.loadData);
-
-    $scope.$watch('autocomplete.student', function () {
-      $scope.criteria.studentId = $scope.autocomplete.student ? $scope.autocomplete.student.id : null;
-    });
-    $scope.$watch('autocomplete.curriculumVersion', function () {
-      $scope.criteria.curriculumVersionId = $scope.autocomplete.curriculumVersion ? $scope.autocomplete.curriculumVersion.id : null;
-    });
   }]).controller('SupplementController', ['$scope', '$route', '$httpParamSerializer', '$window', 'config', 'QueryUtils', 'DocumentUtils', 'dialogService', 'message',
   function ($scope, $route, $httpParamSerializer, $window, config, QueryUtils, DocumentUtils, dialogService, message) {
     var baseUrl = '/documents';

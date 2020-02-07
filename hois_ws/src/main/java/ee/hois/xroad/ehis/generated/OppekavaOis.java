@@ -46,6 +46,20 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="kutsestandardid" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oisKutsestandardid"/&gt;
  *         &lt;element name="failid" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}oisFailid"/&gt;
  *         &lt;element name="kommentaar" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="opivaljundid" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string"&gt;
+ *               &lt;maxLength value="4000"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
+ *         &lt;element name="avaOkFailUrl" minOccurs="0"&gt;
+ *           &lt;simpleType&gt;
+ *             &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string"&gt;
+ *               &lt;maxLength value="2048"/&gt;
+ *             &lt;/restriction&gt;
+ *           &lt;/simpleType&gt;
+ *         &lt;/element&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -78,7 +92,9 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "yhisOppekavaOas",
     "kutsestandardid",
     "failid",
-    "kommentaar"
+    "kommentaar",
+    "opivaljundid",
+    "avaOkFailUrl"
 })
 public class OppekavaOis {
 
@@ -123,6 +139,8 @@ public class OppekavaOis {
     @XmlElement(required = true)
     protected OisFailid failid;
     protected String kommentaar;
+    protected String opivaljundid;
+    protected String avaOkFailUrl;
 
     /**
      * Gets the value of the oppekavaKood property.
@@ -679,6 +697,54 @@ public class OppekavaOis {
      */
     public void setKommentaar(String value) {
         this.kommentaar = value;
+    }
+
+    /**
+     * Gets the value of the opivaljundid property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getOpivaljundid() {
+        return opivaljundid;
+    }
+
+    /**
+     * Sets the value of the opivaljundid property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setOpivaljundid(String value) {
+        this.opivaljundid = value;
+    }
+
+    /**
+     * Gets the value of the avaOkFailUrl property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getAvaOkFailUrl() {
+        return avaOkFailUrl;
+    }
+
+    /**
+     * Sets the value of the avaOkFailUrl property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setAvaOkFailUrl(String value) {
+        this.avaOkFailUrl = value;
     }
 
 }

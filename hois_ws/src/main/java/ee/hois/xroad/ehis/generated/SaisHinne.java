@@ -1,6 +1,7 @@
 
 package ee.hois.xroad.ehis.generated;
 
+import java.math.BigInteger;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -17,12 +18,12 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="aineKood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="aineKood" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="aineNimi" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="aineHinne" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="hindamisskaala" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="kohustuslik" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="tapsustusKood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="tapsustusKood" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="tapsustus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
@@ -45,7 +46,7 @@ import javax.xml.bind.annotation.XmlType;
 public class SaisHinne {
 
     @XmlElement(required = true, nillable = true)
-    protected String aineKood;
+    protected BigInteger aineKood;
     @XmlElement(required = true, nillable = true)
     protected String aineNimi;
     @XmlElement(required = true, nillable = true)
@@ -55,7 +56,7 @@ public class SaisHinne {
     @XmlElement(required = true, nillable = true)
     protected String kohustuslik;
     @XmlElement(required = true, nillable = true)
-    protected String tapsustusKood;
+    protected BigInteger tapsustusKood;
     @XmlElement(required = true, nillable = true)
     protected String tapsustus;
 
@@ -64,10 +65,10 @@ public class SaisHinne {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getAineKood() {
+    public BigInteger getAineKood() {
         return aineKood;
     }
 
@@ -76,10 +77,10 @@ public class SaisHinne {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setAineKood(String value) {
+    public void setAineKood(BigInteger value) {
         this.aineKood = value;
     }
 
@@ -184,10 +185,10 @@ public class SaisHinne {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getTapsustusKood() {
+    public BigInteger getTapsustusKood() {
         return tapsustusKood;
     }
 
@@ -196,10 +197,10 @@ public class SaisHinne {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setTapsustusKood(String value) {
+    public void setTapsustusKood(BigInteger value) {
         this.tapsustusKood = value;
     }
 

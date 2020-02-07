@@ -80,6 +80,9 @@
             class="md-raised" target="_blank" download ng-click="allToExcel()">
             {{'document.button.excel' | translate}}
         </md-button>
+        <md-button class="md-raised" ng-if="criteria.typeCode" ng-click="reset()">
+            {{'main.button.clear' | translate}}
+        </md-button>
     </div>
 </div>
                   

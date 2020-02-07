@@ -6,7 +6,7 @@ angular.module('hitsaOis').controller('TimetableManagementController',
     var baseUrl = '/timetables';
 
     var clMapper = Classifier.valuemapper({status: 'TUNNIPLAAN_STAATUS'});
-    QueryUtils.createQueryForm($scope, baseUrl + "/searchTimetableForManagement", {order: '3, 4'}, clMapper.objectmapper);
+    QueryUtils.createQueryForm($scope, baseUrl + "/searchTimetableForManagement", {order: '3, 4', type: 'TUNNIPLAAN_LIIK_V'}, clMapper.objectmapper);
 
     $scope.formState = {xlsDiffUrl: 'timetables/timetableDifference.xls', xlsPlanUrl: 'timetables/timetablePlan.xlsx'};
 
@@ -70,9 +70,13 @@ angular.module('hitsaOis').controller('TimetableManagementController',
       $scope.allStudyPeriods = result.studyPeriods;
       var sy = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyYears);
       if (sy) {
-        $scope.criteria.studyYear = sy.id;
+        if (!$scope.criteria.studyYear) {
+          $scope.criteria.studyYear = sy.id;
+        }
         filterStudyPeriods();
-        $scope.criteria.studyPeriod = result.currentStudyPeriod;
+        if (!studyPeriodBelongsToStudyYear($scope.criteria.studyPeriod)) {
+          $scope.criteria.studyPeriod = result.currentStudyPeriod;
+        }
       }
       $scope.higher = result.higher;
       $scope.vocational = result.vocational;

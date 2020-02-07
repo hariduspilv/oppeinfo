@@ -5,9 +5,8 @@
                     <th md-column>{{'directive.student.order' | translate}}</th>
                     <th md-column>{{'directive.student.fullname' | translate}}</th>
                     <th md-column>{{'directive.student.idcode' | translate}}</th>
-                    <th md-column>{{'directive.student.valisStartDate' | translate}}</th>
-                    <th md-column>{{'directive.student.valisEndDate' | translate}}</th>
                     <th md-column>{{'directive.student.cancelDate' | translate}}</th>
+                    <th md-column>{{'directive.student.directive' | translate}}</th>
                 </tr>
             </thead>
             <tbody md-body>
@@ -15,22 +14,13 @@
                     <td md-cell>{{$index + 1}}.</td>
                     <td md-cell>{{::row.fullname}}</td>
                     <td md-cell>{{::row.idcode}}</td>
+                    <td md-cell>{{::row.startDate | hoisDate}}</td>
                     <td md-cell>
-                        <div ng-if="row.isPeriod">{{currentLanguageNameField(row.newStudyPeriodStart)}}</div>
-                        <hois-value ng-if="!row.isPeriod" value="row.startDate | hoisDate"></hois-value>
-                    </td>
-                    <td md-cell>
-                        <div ng-if="row.isPeriod">{{currentLanguageNameField(row.newStudyPeriodEnd)}}</div>
-                        <hois-value ng-if="!row.isPeriod" value="row.endDate | hoisDate"></hois-value>
-                    </td>
-                    <td md-cell>
-                        <hois-value value="row.nominalStudyEnd | hoisDate"></hois-value>
-                        <div class="invalid" ng-messages="directiveForm['students['+$index+'].cancelDate'].$error">
-                            <p ng-message="required">{{'main.required' | translate}}</p>
-                        </div>
+                      <span ng-if="row.directiveStudentObject">
+                        {{::row.directiveStudentObject.directiveNr}} ({{::row.directiveStudentObject.startDate | hoisDate}} - {{::row.directiveStudentObject.endDate | hoisDate}})
+                      </span>
                     </td>
                 </tr>
             </tbody>
         </table>
     </md-table-container>
-      

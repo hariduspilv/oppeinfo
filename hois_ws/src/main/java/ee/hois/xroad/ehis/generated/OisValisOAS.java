@@ -17,8 +17,8 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="valisOASKood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="valisOASNimetus" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="valisOASKood" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="valisOASNimetus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -34,8 +34,8 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class OisValisOAS {
 
-    @XmlElement(required = true)
     protected String valisOASKood;
+    @XmlElement(required = true)
     protected String valisOASNimetus;
 
     /**

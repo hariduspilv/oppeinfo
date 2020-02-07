@@ -2,6 +2,7 @@ package ee.hitsa.ois.report.apelapplication;
 
 import static ee.hitsa.ois.util.TranslateUtil.name;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
@@ -9,7 +10,9 @@ import java.util.Objects;
 
 import ee.hitsa.ois.domain.apelapplication.ApelApplication;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.TranslateUtil;
 
 public class ApelApplicationReport {
 
@@ -22,6 +25,11 @@ public class ApelApplicationReport {
     private final LocalDate inserted;
     private final LocalDate confirmed;
     private final String status;
+
+    private final String nominalDurationDecision;
+    private final LocalDate nominalStudyEnd;
+    private BigDecimal abroadStudiesCredits = BigDecimal.ZERO;
+
     private final List<ApelApplicationRecordReport> records;
     private final List<ApelApplicationCommentReport> comments;
     private Long informalLearningRecords = Long.valueOf(0L);
@@ -38,6 +46,10 @@ public class ApelApplicationReport {
         inserted = application.getInserted() != null ? application.getInserted().toLocalDate() : null;
         confirmed = application.getConfirmed() != null ? application.getConfirmed().toLocalDate() : null;
         status = name(application.getStatus(), lang);
+
+        nominalDurationDecision = TranslateUtil.name(application.getNominalType(), lang);
+        nominalStudyEnd = application.getNewNominalStudyEnd();
+
         records = StreamUtil.toMappedList(r -> new ApelApplicationRecordReport(this, r, letterGrades, lang),
                 application.getRecords());
         comments = StreamUtil.toMappedList(c -> new ApelApplicationCommentReport(c), application.getComments());
@@ -67,6 +79,22 @@ public class ApelApplicationReport {
 
     public String getStatus() {
         return status;
+    }
+
+    public String getNominalDurationDecision() {
+        return nominalDurationDecision;
+    }
+
+    public LocalDate getNominalStudyEnd() {
+        return nominalStudyEnd;
+    }
+
+    public BigDecimal getAbroadStudiesCredits() {
+        return abroadStudiesCredits;
+    }
+
+    public void setAbroadStudiesCredits(BigDecimal abroadStudiesCredits) {
+        this.abroadStudiesCredits = abroadStudiesCredits;
     }
 
     public List<ApelApplicationRecordReport> getRecords() {

@@ -1,5 +1,8 @@
 package ee.hitsa.ois.xml.exportTimetable;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -16,6 +19,10 @@ public class LessonTeacher {
 	
 	public LessonTeacher(String id) {
 		this.id = id;
+	}
+	
+	public LessonTeacher(List<String> ids) {
+	    this.id = ids.stream().map(p -> "TR_" + p).collect(Collectors.joining(" "));
 	}
 	
 	public String getId() {

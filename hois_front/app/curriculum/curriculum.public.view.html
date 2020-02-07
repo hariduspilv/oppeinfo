@@ -26,7 +26,7 @@
 
     <div layout="row" layout-sm="column" layout-xs="column" flex>
       <md-input-container flex-gt-sm="25">
-        <label>{{'curriculum.credits' | translate}}</label>
+        <label>{{curriculum.higher ? 'curriculum.creditsEap' : 'curriculum.credits' | translate}}</label>
         <hois-value value="curriculum.credits"></hois-value>
       </md-input-container>
       <md-input-container flex-gt-sm="25">

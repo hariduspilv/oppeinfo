@@ -30,7 +30,6 @@ public class ApplicationPlannedSubject extends BaseEntityWithId {
     @Valid
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "application_planned_subject_id", nullable = false, updatable = false)
-    @Required(groups = {Valis.class})
     private Set<ApplicationPlannedSubjectEquivalent> equivalents = new HashSet<>();
 
     public Application getApplication() {

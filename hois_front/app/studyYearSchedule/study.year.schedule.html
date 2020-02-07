@@ -60,10 +60,10 @@
             </tr>
             <tr>
               <th class="schedule studentGroup" colspan="3"></th>
-              <th class="schedule weekCell weekNr" ng-repeat="week in weeks">
-                {{$index + 1}}
+              <th class="schedule weekCell weekNr" ng-repeat="week in weeks" ng-style="{'background': week.notInStudyPeriod ? '#eee' : 'white'}">
+                {{week.weekNr}}
                 <md-tooltip>
-                    {{week.start | hoisDate}} - {{week.end | hoisDate}}
+                  {{week.start | hoisDate}} - {{week.end | hoisDate}}
                 </md-tooltip>
               </th>
             </tr>
@@ -71,7 +71,7 @@
           <tbody ng-repeat="department in schoolDepartments | filter: filterSchoolDepartments">
             <tr>
               <td colspan="3" class="hois-collapse-header fixed-cell dividerBorder">{{currentLanguageNameField(department)}}</td>
-              <td colspan="53" class="dividerBorder" style="border-right: 1px solid #ccc !important;"></td>
+              <td ng-if="criteria.studyYear.weeks > 0" colspan="{{criteria.studyYear.weeks}}" class="dividerBorder" style="border-right: 1px solid #ccc !important;"></td>
             </tr>
             <tr class="dividerBorder" ng-repeat="sg in studentGroups | filter: filterStudentGroups(department)" ng-init="refreshHeight()">
               <td colspan="3" class="schedule fixed-cell dividerBorder" ng-style="{ background: !sg.canEdit ? '#eee' : 'white' }">{{sg.code}}</td>
@@ -103,7 +103,6 @@
 <style>
 
   table.schedule,
-  
   th.schedule,
   td.schedule {
     border-collapse: collapse;

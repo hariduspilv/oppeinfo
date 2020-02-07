@@ -305,8 +305,16 @@ public class StudentGroupYearTransferService {
             result = em.createNativeQuery("select ds.student_id"
                     + " from directive d"
                     + " join directive_student ds on ds.directive_id = d.id"
+                    + " left join (select ds1.start_date, ds1.directive_student_id, ds1.student_id from directive_student ds1"
+                        + " join directive d1 on ds1.directive_id = d1.id"
+                        + " where d1.type_code = '" + DirectiveType.KASKKIRI_VALISKATK.name() + "'"
+                        + " and d1.status_code = '" + DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name() + "') KATK"
+                        + " on KATK.directive_student_id = ds.id"
+                    + " left join study_period spStart on ds.study_period_start_id = spStart.id"
+                    + " left join study_period spEnd on ds.study_period_end_id = spEnd.id"
                     + " where d.status_code = ?1 and d.type_code = ?2"
-                    + " and ?3 between coalesce(ds.start_date, cast('-infinity' as date)) and coalesce(ds.end_date, cast('infinity' as date))"
+                    + " and ?3 between coalesce(spStart.start_date, ds.start_date, cast('-infinity' as date))"
+                    + " and coalesce(KATK.start_date, spEnd.end_date, ds.end_date, cast('infinity' as date))"
                     + " and ds.student_id in (select id from student where student_group_id in ?4)")
                     .setParameter(1, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
                     .setParameter(2, DirectiveType.KASKKIRI_VALIS.name())
@@ -323,10 +331,18 @@ public class StudentGroupYearTransferService {
             result = em.createNativeQuery("select ds.student_id"
                     + " from directive d"
                     + " join directive_student ds on ds.directive_id = d.id"
+                    + " left join (select ds1.start_date, ds1.directive_student_id, ds1.student_id from directive_student ds1"
+                        + " join directive d1 on ds1.directive_id = d1.id"
+                        + " where d1.type_code = '" + DirectiveType.KASKKIRI_VALISKATK.name() + "'"
+                        + " and d1.status_code = '" + DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name() + "') KATK"
+                        + " on KATK.directive_student_id = ds.id"
+                    + " left join study_period spStart on ds.study_period_start_id = spStart.id"
+                    + " left join study_period spEnd on ds.study_period_end_id = spEnd.id"
                     + " where d.status_code = ?1 and d.type_code = ?2"
-                    + " and coalesce(ds.start_date, cast('-infinity' as date)) < ?4 and coalesce(ds.end_date, cast('infinity' as date)) > ?3"
-                    + " and ((select min(end_date) from (select ds.end_date union select ?4 as end_date) end_dates)"
-                        + " - (select max(start_date) from (select ds.start_date union select ?3 as start_date) start_dates) + 1) >= ?5"
+                    + " and coalesce(spStart.start_date, ds.start_date, cast('-infinity' as date)) < ?4"
+                    + " and coalesce(KATK.start_date, spEnd.end_date, ds.end_date, cast('infinity' as date)) > ?3"
+                    + " and ((select min(end_date) from (select coalesce(KATK.start_date, spEnd.end_date, ds.end_date) as end_date union select ?4 as end_date) end_dates)"
+                        + " - (select max(start_date) from (select coalesce(spStart.start_date, ds.start_date) as start_date union select ?3 as start_date) start_dates) + 1) >= ?5"
                     + " and ds.student_id in (select id from student where student_group_id in ?6)")
                     .setParameter(1, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
                     .setParameter(2, DirectiveType.KASKKIRI_VALIS.name())

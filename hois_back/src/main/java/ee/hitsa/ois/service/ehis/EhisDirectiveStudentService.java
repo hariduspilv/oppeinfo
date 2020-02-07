@@ -3,7 +3,6 @@ package ee.hitsa.ois.service.ehis;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsStringList;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -44,6 +43,7 @@ import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.web.dto.ForeignStudentDto;
 import ee.hois.xroad.ehis.generated.KhlAkadPuhkusAlgus;
 import ee.hois.xroad.ehis.generated.KhlEnnistamine;
 import ee.hois.xroad.ehis.generated.KhlErivajadusedArr;
@@ -471,15 +471,13 @@ public class EhisDirectiveStudentService extends EhisService {
         makeRequest(directive, khlOppeasutusList);
     }
 
-    public WsEhisStudentLog foreignStudy(DirectiveStudent directiveStudent, BigDecimal points, Integer nominalStudyExtension) {
+    public WsEhisStudentLog foreignStudy(DirectiveStudent directiveStudent, ForeignStudentDto foreignStudent) {
         try {
             Student student = directiveStudent.getStudent();
             Directive directive = directiveStudent.getDirective();
 
             KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
             KhlLyhiajaliseltValismaal khlLyhiajaliseltValismaal = new KhlLyhiajaliseltValismaal();
-            Long studentId = EntityUtil.getNullableId(directiveStudent.getStudent());
-            khlLyhiajaliseltValismaal.setLyhiajaliseltValismaalId(bigInt(studentId));
             khlLyhiajaliseltValismaal.setMuutusKp(date(directive.getConfirmDate()));
             if (directiveStudent.getStartDate() != null && directiveStudent.getEndDate() != null) {
                 khlLyhiajaliseltValismaal.setPerioodAlates(date(directiveStudent.getStartDate()));
@@ -489,8 +487,8 @@ public class EhisDirectiveStudentService extends EhisService {
                 khlLyhiajaliseltValismaal.setPerioodKuni(date(directiveStudent.getStudyPeriodEnd().getEndDate()));
             }
             khlLyhiajaliseltValismaal.setKlEesmark(ehisValue(directiveStudent.getAbroadPurpose()));
-            khlLyhiajaliseltValismaal.setAinepunkte(points.toString());
-            khlLyhiajaliseltValismaal.setNominaalajaPikendamine(bigInt(nominalStudyExtension));
+            khlLyhiajaliseltValismaal.setAinepunkte(foreignStudent.getPoints() != null ? foreignStudent.getPoints() : "");
+            khlLyhiajaliseltValismaal.setNominaalajaPikendamine(foreignStudent.getNominalStudyExtension() != null ? foreignStudent.getNominalStudyExtension() : BigInteger.valueOf(0L));
             khlLyhiajaliseltValismaal.setOppeasutuseNimi(Boolean.TRUE.equals(directiveStudent.getIsAbroad()) ? 
                     (directiveStudent.getAbroadSchool() != null ? directiveStudent.getAbroadSchool() : name(directiveStudent.getApelSchool())) : name(directiveStudent.getEhisSchool()));
             khlLyhiajaliseltValismaal.setKlSihtriik(value2(directiveStudent.getCountry()));

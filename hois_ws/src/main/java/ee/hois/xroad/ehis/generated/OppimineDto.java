@@ -12,12 +12,12 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 
 /**
- * <p>Java class for oppimineDto complex type.
+ * <p>Java class for OppimineDto complex type.
  * 
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="oppimineDto"&gt;
+ * &lt;complexType name="OppimineDto"&gt;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
@@ -42,7 +42,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "oppimineDto", propOrder = {
+@XmlType(name = "OppimineDto", propOrder = {
     "asutuseId",
     "asutuseNimi",
     "oppeTyyp",

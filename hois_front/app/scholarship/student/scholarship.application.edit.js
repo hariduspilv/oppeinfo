@@ -93,7 +93,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
       var paymentEnd = $scope.stipend.paymentEnd ? moment($scope.stipend.paymentEnd) : null;
       var scholarshipFrom = $scope.application.scholarshipFrom ? moment($scope.application.scholarshipFrom) : null;
       var scholarshipThru = $scope.application.scholarshipThru ? moment($scope.application.scholarshipThru) : null;
-      
+
       $scope.formState.scholarshipFromMax = paymentEnd && scholarshipThru ? moment.min(paymentEnd, scholarshipThru).toDate() :
         $scope.stipend.paymentEnd || $scope.application.scholarshipThru;
 
@@ -131,7 +131,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
             callBack(result);
           } else {
             afterLoad(result);
-            message.updateSuccess();
+            message.warn('stipend.messages.applicationSaved');
             form.$setPristine();
           }
         });
@@ -140,7 +140,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
           if (callBack) {
             callBack(result);
           } else {
-            message.info('main.messages.create.success');
+            message.warn('stipend.messages.applicationSaved');
             $location.url(baseUrl + '/' + $scope.stipend.id + '/application?_noback');
           }
         });

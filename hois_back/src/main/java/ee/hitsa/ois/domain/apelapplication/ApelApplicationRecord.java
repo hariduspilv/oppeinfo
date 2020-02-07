@@ -11,6 +11,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.application.ApplicationPlannedSubject;
 
 @Entity
 public class ApelApplicationRecord extends BaseEntityWithId {
@@ -18,12 +19,15 @@ public class ApelApplicationRecord extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private ApelApplication apelApplication;
-    
+
     private Boolean isFormalLearning;
-    
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ApplicationPlannedSubject applicationPlannedSubject;
+
     @OneToMany(mappedBy="apelApplicationRecord", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ApelApplicationInformalExperience> informalExperiences = new ArrayList<>();
-    
+
     @OneToMany(mappedBy="apelApplicationRecord", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ApelApplicationInformalSubjectOrModule> informalSubjectsOrModules = new ArrayList<>();
 
@@ -51,6 +55,14 @@ public class ApelApplicationRecord extends BaseEntityWithId {
 
     public List<ApelApplicationInformalExperience> getInformalExperiences() {
         return informalExperiences;
+    }
+
+    public ApplicationPlannedSubject getApplicationPlannedSubject() {
+        return applicationPlannedSubject;
+    }
+
+    public void setApplicationPlannedSubject(ApplicationPlannedSubject applicationPlannedSubject) {
+        this.applicationPlannedSubject = applicationPlannedSubject;
     }
 
     public void setInformalExperiences(List<ApelApplicationInformalExperience> informalExperiences) {

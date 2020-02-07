@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis').filter('hoisHigherGrade', function ($rootScope, HigherGradeUtil) {
   return function (grade, letterGrades) {
-    if (angular.isDefined(grade)) {
+    if (grade !== null && angular.isDefined(grade)) {
       if (HigherGradeUtil.isDistinctive(grade.code)) {
         return letterGrades ? grade.value2 : grade.value;
       }
@@ -33,5 +33,22 @@ angular.module('hitsaOis').filter('hoisHigherGrade', function ($rootScope, Highe
       return 'http://' + input;
     }
     return input;
+  };
+}).filter('hoisUnique', function () {
+  return function (array, key) {
+    if (!key) {
+      return array;
+    }
+    var result = [];
+    var used = {};
+
+    angular.forEach(array, function (item) {
+      if (item[key] && !used[item[key]]) {
+        used[item[key]] = true;
+        result.push(item);
+      }
+    });
+
+    return result;
   };
 });

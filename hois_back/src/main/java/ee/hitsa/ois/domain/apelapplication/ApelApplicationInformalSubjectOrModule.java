@@ -16,33 +16,34 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.validation.Conditional;
+import ee.hitsa.ois.validation.Required;
 
 @Entity
+@Conditional(selected = "apelApplicationRecord.apelApplication.isVocational", values = {"true"}, required = {"curriculumVersionOmodule"})
+@Conditional(selected = "apelApplicationRecord.apelApplication.isVocational", values = {"false"}, required = {"subject"})
 public class ApelApplicationInformalSubjectOrModule extends BaseEntityWithId {
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private ApelApplicationRecord apelApplicationRecord;
     
-    @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Subject subject;
     
-    @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumVersionHigherModule curriculumVersionHmodule;
     
-    @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumVersionOccupationModuleTheme curriculumVersionOmoduleTheme;
     
-    @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumVersionOccupationModule curriculumVersionOmodule;
 
     @OneToMany(mappedBy="apelApplicationInformalSubjectOrModule", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ApelApplicationInformalSubjectOrModuleOutcomes> outcomes = new ArrayList<>();
-    
+
+    @Required
     private String skills;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

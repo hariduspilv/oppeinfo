@@ -33,12 +33,15 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *           &lt;element name="oppeasutusReorganiseerimine" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
  *           &lt;element name="riigikeelSuvaope30EAP" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
  *           &lt;element name="riigikeelSuvaope60EAP" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
+ *           &lt;element name="nominaalseOppeajaPikendamine30EKAP" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
+ *           &lt;element name="nominaalseOppeajaPikendamine60EKAP" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
  *           &lt;element name="erivajadused" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}khlErivajadusedArr"/&gt;
  *           &lt;element name="muudAndmedMuutmine" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}khlMuudAndmedMuutmine"/&gt;
  *           &lt;element name="ennistamine" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}khlEnnistamine"/&gt;
  *           &lt;element name="voorkeeled" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}khlVoorkeeledArr"/&gt;
  *           &lt;element name="oppekavaTaitmine" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}khlOppekavaTaitmine"/&gt;
  *           &lt;element name="lyhiajaliseltValismaal" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}khlLyhiajaliseltValismaal"/&gt;
+ *           &lt;element name="nominaaliPikendaminePraktika" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}khlNominaaliPikendaminePraktika"/&gt;
  *           &lt;element name="VOTAKirjed" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}khlVOTAArr"/&gt;
  *           &lt;element name="stipendiumid" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}khlStipendiumArr"/&gt;
  *         &lt;/choice&gt;
@@ -65,12 +68,15 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "oppeasutusReorganiseerimine",
     "riigikeelSuvaope30EAP",
     "riigikeelSuvaope60EAP",
+    "nominaalseOppeajaPikendamine30EKAP",
+    "nominaalseOppeajaPikendamine60EKAP",
     "erivajadused",
     "muudAndmedMuutmine",
     "ennistamine",
     "voorkeeled",
     "oppekavaTaitmine",
     "lyhiajaliseltValismaal",
+    "nominaaliPikendaminePraktika",
     "votaKirjed",
     "stipendiumid"
 })
@@ -93,12 +99,17 @@ public class KhlKorgharidusMuuda {
     protected XMLGregorianCalendar riigikeelSuvaope30EAP;
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar riigikeelSuvaope60EAP;
+    @XmlSchemaType(name = "date")
+    protected XMLGregorianCalendar nominaalseOppeajaPikendamine30EKAP;
+    @XmlSchemaType(name = "date")
+    protected XMLGregorianCalendar nominaalseOppeajaPikendamine60EKAP;
     protected KhlErivajadusedArr erivajadused;
     protected KhlMuudAndmedMuutmine muudAndmedMuutmine;
     protected KhlEnnistamine ennistamine;
     protected KhlVoorkeeledArr voorkeeled;
     protected KhlOppekavaTaitmine oppekavaTaitmine;
     protected KhlLyhiajaliseltValismaal lyhiajaliseltValismaal;
+    protected KhlNominaaliPikendaminePraktika nominaaliPikendaminePraktika;
     @XmlElement(name = "VOTAKirjed")
     protected KhlVOTAArr votaKirjed;
     protected KhlStipendiumArr stipendiumid;
@@ -416,6 +427,54 @@ public class KhlKorgharidusMuuda {
     }
 
     /**
+     * Gets the value of the nominaalseOppeajaPikendamine30EKAP property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link XMLGregorianCalendar }
+     *     
+     */
+    public XMLGregorianCalendar getNominaalseOppeajaPikendamine30EKAP() {
+        return nominaalseOppeajaPikendamine30EKAP;
+    }
+
+    /**
+     * Sets the value of the nominaalseOppeajaPikendamine30EKAP property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link XMLGregorianCalendar }
+     *     
+     */
+    public void setNominaalseOppeajaPikendamine30EKAP(XMLGregorianCalendar value) {
+        this.nominaalseOppeajaPikendamine30EKAP = value;
+    }
+
+    /**
+     * Gets the value of the nominaalseOppeajaPikendamine60EKAP property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link XMLGregorianCalendar }
+     *     
+     */
+    public XMLGregorianCalendar getNominaalseOppeajaPikendamine60EKAP() {
+        return nominaalseOppeajaPikendamine60EKAP;
+    }
+
+    /**
+     * Sets the value of the nominaalseOppeajaPikendamine60EKAP property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link XMLGregorianCalendar }
+     *     
+     */
+    public void setNominaalseOppeajaPikendamine60EKAP(XMLGregorianCalendar value) {
+        this.nominaalseOppeajaPikendamine60EKAP = value;
+    }
+
+    /**
      * Gets the value of the erivajadused property.
      * 
      * @return
@@ -557,6 +616,30 @@ public class KhlKorgharidusMuuda {
      */
     public void setLyhiajaliseltValismaal(KhlLyhiajaliseltValismaal value) {
         this.lyhiajaliseltValismaal = value;
+    }
+
+    /**
+     * Gets the value of the nominaaliPikendaminePraktika property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link KhlNominaaliPikendaminePraktika }
+     *     
+     */
+    public KhlNominaaliPikendaminePraktika getNominaaliPikendaminePraktika() {
+        return nominaaliPikendaminePraktika;
+    }
+
+    /**
+     * Sets the value of the nominaaliPikendaminePraktika property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link KhlNominaaliPikendaminePraktika }
+     *     
+     */
+    public void setNominaaliPikendaminePraktika(KhlNominaaliPikendaminePraktika value) {
+        this.nominaaliPikendaminePraktika = value;
     }
 
     /**

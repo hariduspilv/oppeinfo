@@ -8,7 +8,7 @@
                     <div layout="column" flex="50">
                         <md-input-container>
                             <label class="textInput">{{'poll.questions.name' | translate}}</label>
-                            <input ng-model="formState.question.nameEt" type="text" md-maxlength="255" name="nameEt" required>
+                            <input ng-model="formState.question.nameEt" type="text" md-maxlength="1000" name="nameEt" required>
                             <ng-messages for="dialogForm.nameEt.$error" role="alert">
                                 <ng-message when="nameEtError">{{'poll.questions.sameNameError' | translate}}</ng-message>
                             </ng-messages>
@@ -19,6 +19,14 @@
                         <md-input-container>
                             <label>{{'poll.questions.answerType' | translate}}</label>
                             <hois-value value="currentLanguageNameField(formState.question.type)"></hois-value>
+                        </md-input-container>
+                    </div>
+                </div>
+                <div layout="row">
+                    <div layout="column" flex="100">
+                        <md-input-container>
+                            <label class="textInput">{{'poll.questions.helpText' | translate}}</label>
+                            <textarea type="text" md-maxlength="4000" ng-model="formState.question.addInfoEt" max-rows="5"></textarea>
                         </md-input-container>
                     </div>
                 </div>

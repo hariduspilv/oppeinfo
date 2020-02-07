@@ -128,9 +128,9 @@
                                                                 <md-button ng-if="!question.isRequired && !formState.viewOnly" ng-click="clearRadio(question)" class="md-raised">{{'main.button.clear' | translate}}</md-button>
                                                             </md-input-container>
                                                         </div>
-                                                        <div ng-if="question.type === 'VASTUS_M'" layout="{{question.isInRow ? 'row' : 'column'}}" layout-xs="column" class="{{question.requiredError ? 'red-border' : ''}}">
-                                                            <div ng-repeat="answer in question.answers track by $index" flex>
-                                                                <md-input-container flex>
+                                                        <div ng-if="question.type === 'VASTUS_M'" layout-xs="column" class="{{question.requiredError ? 'red-border' : ''}}">
+                                                            <div layout="{{question.isInRow ? 'row' : 'column'}}" flex>
+                                                                <md-input-container ng-repeat="answer in question.answers track by $index" flex>
                                                                     <md-checkbox ng-model="answer.chosen" ng-disabled="formState.viewOnly" aria-label="checkBox" name="checkBox" ng-change="question.requiredError && checkErrors()" ng-blur="save(question)">
                                                                             <span style="word-break: break-word">{{answer.nameEt}}</span>
                                                                     </md-checkbox>
@@ -159,18 +159,18 @@
                                 <br ng-if="!$last">
                             </div>
                         </div>
-                        <div layout="row">
+                        <div layout="row" ng-if="criteria.afterword !== null">
                             <p style="word-break: break-word; font-size: 15px;">{{criteria.afterword}}</p>
                         </div>
-                    </div>
-                    <div layout="row" ng-if="!formState.viewOnly">
-                        <md-button flex-xs="100" type="submit" class="md-raised">{{'main.button.confirm' | translate}}</md-button>
                     </div>
                 </form>
             </div>
         </div>
     </md-dialog-content>
     <md-dialog-actions layout="row" layout-xs="column" layout-align="start start" layout-align-xs="none none">
+        <div layout="row" ng-if="!formState.viewOnly">
+            <md-button flex-xs="100" ng-click="confirm()" class="md-raised md-primary">{{'main.button.confirm' | translate}}</md-button>
+        </div>
         <md-button flex-xs="100" class="md-raised" ng-click="close()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
 </md-dialog>

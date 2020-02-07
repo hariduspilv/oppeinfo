@@ -23,7 +23,8 @@
           </div>
           <div ng-if="auth.isAdmin() || auth.isLeadingTeacher()" flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <hois-autocomplete flex ng-model="criteria.teacher" ha-attribute="id" ha-controller="directiveControllers" method="teachers" name="teacher" 
-              label="{{auth.higher ? 'teacher.labelHigher' : 'teacher.labelVocational'}}"></hois-autocomplete>
+              label="{{auth.higher ? 'teacher.labelHigher' : 'teacher.labelVocational'}}"
+              additional-query-params="{id: criteria.teacher}"></hois-autocomplete>
           </div>
         </div>
 

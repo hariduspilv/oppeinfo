@@ -110,9 +110,9 @@
                                                     <md-button ng-if="!question.isRequired" ng-click="clearRadio(question)" class="md-raised">{{'main.button.clear' | translate}}</md-button>
                                                 </md-input-container>
                                             </div>
-                                            <div ng-if="question.type === 'VASTUS_M'" layout="{{question.isInRow ? 'row' : 'column'}}" class="{{question.requiredError ? 'red-border' : ''}}">
-                                                <div ng-repeat="answer in question.answers track by $index" flex>
-                                                    <md-input-container flex>
+                                            <div ng-if="question.type === 'VASTUS_M'" class="{{question.requiredError ? 'red-border' : ''}}">
+                                                <div layout="{{question.isInRow ? 'row' : 'column'}}" flex>
+                                                    <md-input-container ng-repeat="answer in question.answers track by $index" flex>
                                                         <md-checkbox ng-model="answer.chosen" aria-label="checkBox" name="checkBox" ng-blur="save(question)" ng-change="question.requiredError && checkErrors()">
                                                                 <span style="word-break: break-word">{{answer.nameEt}}</span>
                                                         </md-checkbox>
@@ -158,7 +158,7 @@
                             <p style="word-break: break-word; font-size: 15px;">{{criteria.afterword}}</p>
                         </div>
                         <div layout="row">
-                            <md-button flex-xs="100" type="submit" class="md-raised">{{'main.button.confirm' | translate}}</md-button>
+                            <md-button flex-xs="100" type="submit" class="md-raised md-primary">{{'main.button.confirm' | translate}}</md-button>
                         </div>
                     </div>
                 </div>
@@ -168,7 +168,7 @@
             </div>
         </div>
         <div layout="row" ng-if="!criteria.isThemePageable">
-            <md-button flex-xs="100" type="submit" class="md-raised">{{'main.button.confirm' | translate}}</md-button>
+            <md-button flex-xs="100" type="submit" class="md-raised md-primary">{{'main.button.confirm' | translate}}</md-button>
         </div>
     </form>
 </div>

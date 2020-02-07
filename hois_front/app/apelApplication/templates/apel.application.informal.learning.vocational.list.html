@@ -28,9 +28,9 @@
     <tbody md-body>
       <tr md-row ng-repeat="row in record.data | orderBy:'moduleId'" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell ng-if="application.status !== 'VOTA_STAATUS_K'">
-          <md-checkbox ng-if="(row.transfer === false || row.transfer === true) && canChangeTransferStatus" 
+          <md-checkbox ng-if="(row.transfer === false || row.transfer === true) && canChangeTransferStatus"
             ng-model="row.transfer" ng-click="changeInformalTransferStatus(row)" aria-label="{{'apel.informalLearnings.transfer' | translate}}"></md-checkbox>
-          <md-checkbox ng-if="(row.transfer === false || row.transfer === true) && !canChangeTransferStatus" 
+          <md-checkbox ng-if="(row.transfer === false || row.transfer === true) && !canChangeTransferStatus"
             ng-model="row.transfer" ng-click="changeInformalTransferStatus(row)" aria-label="{{'apel.informalLearnings.transfer' | translate}}" ng-disabled="true"></md-checkbox>
         </td>
         <td md-cell>
@@ -38,7 +38,7 @@
           <span ng-if="row.module && !row.isModule">{{currentLanguageNameField(row.module)}}/{{currentLanguageNameField(row.theme)}}</span>
         </td>
         <td md-cell>
-          <md-checkbox ng-if="row.isModule === true || row.isModule === false" ng-model="row.isModule" 
+          <md-checkbox ng-if="row.isModule === true || row.isModule === false" ng-model="row.isModule"
             aria-label="{{'apel.informalLearnings.isModule' | translate}}" ng-disabled="true"></md-checkbox>
         </td>
         <td ng-if="row.ekap" md-cell>{{row.schoolResultHours}}/{{row.ekap}}</td>

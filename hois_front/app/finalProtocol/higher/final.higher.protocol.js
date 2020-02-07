@@ -8,6 +8,7 @@ function ($route, $location, $scope, $filter, $q, Classifier, HigherGradeUtil, P
   $scope.letterGrades = $scope.auth.school.letterGrades;
   $scope.record = $route.current.locals.entity;
   var FORBIDDEN_GRADES = ['KORGHINDAMINE_MI'];
+  var PROFESSIONAL_DIPLOMA_STUDY_LEVEL = 'OPPEASTE_514';
   var clMapper = Classifier.valuemapper({ grade: 'KORGHINDAMINE', status: 'PROTOKOLL_STAATUS', studyLevel: 'OPPEASTE' });
   $scope.formState = {};
   var deferredEntityToDto;
@@ -91,7 +92,7 @@ function ($route, $location, $scope, $filter, $q, Classifier, HigherGradeUtil, P
       resolveDeferredIfExists();
     });
   }
-  
+
   $scope.hideInvalid = function (cl) {
     return !Classifier.isValid(cl);
   }
@@ -115,7 +116,7 @@ function ($route, $location, $scope, $filter, $q, Classifier, HigherGradeUtil, P
     $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.protocol);
   };
 
-  $scope.addInfoChanged = function () {    
+  $scope.addInfoChanged = function () {
     $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.protocol);
   };
 
@@ -145,7 +146,8 @@ function ($route, $location, $scope, $filter, $q, Classifier, HigherGradeUtil, P
       return false;
     }
 
-    if (confirmValidation && angular.isArray($scope.protocol.protocolStudents)) {
+    if (confirmValidation && $scope.protocol.studyLevel.code !== PROFESSIONAL_DIPLOMA_STUDY_LEVEL &&
+        angular.isArray($scope.protocol.protocolStudents)) {
       for (var i = 0; i < $scope.protocol.protocolStudents.length; i++) {
         var student = $scope.protocol.protocolStudents[i];
         if (HigherGradeUtil.isPositive(student.grade) && !student.curriculumGrade) {
@@ -250,7 +252,7 @@ function ($route, $location, $scope, $filter, $q, Classifier, HigherGradeUtil, P
     }
 
     new FinalHigherProtocolEndpoint({
-      id: $scope.protocol.id, 
+      id: $scope.protocol.id,
       version: $scope.protocol.version,
       finalDate: $scope.protocol.finalDate,
       committeeId: $scope.protocol.committee,
@@ -268,7 +270,7 @@ function ($route, $location, $scope, $filter, $q, Classifier, HigherGradeUtil, P
     protocolStudents.forEach(function (student) {
       var occupation = null;
       var codes = Object.keys(student.occupations);
-      
+
       for (var i = 0; i < codes.length; i++) {
         if (student.occupations[codes[i]].granted) {
           occupation = codes[i];

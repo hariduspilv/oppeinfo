@@ -3,6 +3,7 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -11,8 +12,17 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.timetable.Journal;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.subject.SubjectSearchCommand;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
+import ee.hitsa.ois.web.dto.studymaterial.JournalDto;
+import ee.hitsa.ois.web.dto.studymaterial.StudyMaterialSearchDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -25,7 +35,6 @@ import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.Language;
-import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.service.curriculum.CurriculumSearchService;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -34,10 +43,14 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSearchCommand;
+import ee.hitsa.ois.web.dto.AcademicCalendarDto;
 import ee.hitsa.ois.web.dto.PublicDataMapper;
 import ee.hitsa.ois.web.dto.StateCurriculumDto;
+import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SubjectDto;
+import ee.hitsa.ois.web.dto.SubjectSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
+import ee.hitsa.ois.web.dto.studymaterial.SubjectStudyPeriodDto;
 
 @Transactional
 @Service
@@ -46,7 +59,25 @@ public class PublicDataService {
     @Autowired
     private EntityManager em;
     @Autowired
+    private AcademicCalendarService academicCalendarService;
+    @Autowired
+    private AutocompleteService autocompleteService;
+    @Autowired
     private CurriculumSearchService curriculumSearchService;
+    @Autowired
+    private StudyMaterialService studyMaterialService;
+    @Autowired
+    private SubjectService subjectService;
+
+    // TODO: forbidden school public data
+    private static final Long FORBIDDEN_SCHOOL_ID = Long.valueOf(26);
+
+    public AcademicCalendarDto academicCalendar(Long schoolId) {
+        if (isForbiddenSchool(schoolId)) {
+            return null;
+        }
+        return academicCalendarService.academicCalendar(schoolId);
+    }
 
     public Object curriculum(Long curriculumId) {
         Curriculum curriculum = em.getReference(Curriculum.class, curriculumId);
@@ -67,14 +98,13 @@ public class PublicDataService {
 
     public Object subject(Long subjectId) {
         Subject s = em.getReference(Subject.class, subjectId);
-        if(!SubjectUtil.isActive(s)) {
-            throw new EntityNotFoundException();
-        }
+        assertVisibleToPublic(s);
         return new PublicDataMapper(Language.ET).map(s);
     }
 
     private static void assertVisibleToPublic(Curriculum curriculum) {
-        if(!ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, curriculum.getStatus())) {
+        if(isForbiddenSchool(EntityUtil.getId(curriculum.getSchool()))
+                || !ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, curriculum.getStatus())) {
             throw new EntityNotFoundException();
         }
     }
@@ -93,6 +123,8 @@ public class PublicDataService {
 
             // only confirmed
             filters.add(cb.equal(root.get("status").get("code"), CurriculumStatus.OPPEKAVA_STAATUS_K.name()));
+            // TODO: forbidden school public data
+            filters.add(cb.notEqual(root.get("school").get("id"), FORBIDDEN_SCHOOL_ID));
 
             String nameField = Language.EN.equals(criteria.getLang()) ? "nameEn" : "nameEt";
             propertyContains(() -> root.get(nameField), cb, criteria.getName(), filters::add);
@@ -119,6 +151,30 @@ public class PublicDataService {
         return dto;
     }
 
+    public List<SchoolDepartmentResult> schoolDepartments(Long schoolId) {
+        if (isForbiddenSchool(schoolId)) {
+            return Collections.emptyList();
+        }
+        return autocompleteService.schoolDepartments(schoolId);
+    }
+
+    public List<CurriculumVersionResult> curriculumVersions(Long schoolId) {
+        if (isForbiddenSchool(schoolId)) {
+            return Collections.emptyList();
+        }
+        CurriculumVersionAutocompleteCommand lookup = new CurriculumVersionAutocompleteCommand();
+        lookup.setHigher(Boolean.TRUE);
+        lookup.setValid(Boolean.TRUE);
+        return autocompleteService.curriculumVersions(schoolId, lookup);
+    }
+
+    public Page<SubjectSearchDto> searchSubjects(SubjectSearchCommand subjectSearchCommand, Pageable pageable) {
+        if (isForbiddenSchool(subjectSearchCommand.getSchoolId())) {
+            return new PageImpl<>(Collections.emptyList());
+        }
+        return subjectService.search(null, subjectSearchCommand, pageable);
+    }
+
     private static void assertVisibleToPublic(StateCurriculum stateCurriculum) {
         if(!ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, stateCurriculum.getStatus())) {
             throw new EntityNotFoundException();
@@ -135,13 +191,48 @@ public class PublicDataService {
     }
 
     private static void assertVisibleToPublic(Subject subject) {
-        if(!ClassifierUtil.equals(SubjectStatus.AINESTAATUS_K, subject.getStatus())) {
+        if (isForbiddenSchool(EntityUtil.getId(subject.getSchool())) || !SubjectUtil.isActive(subject)) {
+            throw new EntityNotFoundException();
+        }
+    }
+
+    public JournalDto journal(Journal journal) {
+        assertVisibleToPublic(journal);
+        return studyMaterialService.getJournal(null, journal);
+    }
+
+    public List<StudyMaterialSearchDto> journalMaterials(Journal journal) {
+        assertVisibleToPublic(journal);
+        return studyMaterialService.materials(null, journal, null);
+    }
+
+    public SubjectStudyPeriodDto subjectStudyPeriod(SubjectStudyPeriod subjectStudyPeriod) {
+        assertVisibleToPublic(subjectStudyPeriod.getSubject());
+        return studyMaterialService.getSubjectStudyPeriod(null, subjectStudyPeriod);
+    }
+
+    public List<StudyMaterialSearchDto> subjectStudyPeriodMaterials(SubjectStudyPeriod subjectStudyPeriod) {
+        assertVisibleToPublic(subjectStudyPeriod.getSubject());
+        return studyMaterialService.materials(null, null, subjectStudyPeriod);
+    }
+
+    private static void assertVisibleToPublic(Journal journal) {
+        if (isForbiddenSchool(journal.getSchool())) {
             throw new EntityNotFoundException();
         }
     }
 
     public Object subjectProgram(SubjectProgram program) {
         return new PublicDataMapper(Language.ET).map(program);
+    }
+
+    // TODO: forbidden school public data
+    private static boolean isForbiddenSchool(Long schoolId) {
+        return FORBIDDEN_SCHOOL_ID.equals(schoolId);
+    }
+
+    private static boolean isForbiddenSchool(School school) {
+        return isForbiddenSchool(EntityUtil.getId(school));
     }
 
 }

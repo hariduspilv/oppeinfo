@@ -44,41 +44,30 @@ public abstract class JournalUtil {
 
     private static boolean teacherIsJournalFiller(HoisUserDetails user, Journal journal) {
         Map<Long, JournalTeacher> teachers = StreamUtil.toMap(jt -> EntityUtil.getId(jt.getTeacher()), journal.getJournalTeachers());
-        
-        if (teachers != null) {
-            JournalTeacher teacher = teachers.get(user.getTeacherId());
-            if (teacher != null && teacher.getIsFiller().booleanValue()) {
-                return true;
-            }
-        }
-        return false;
+        JournalTeacher teacher = teachers.get(user.getTeacherId());
+        return teacher != null && Boolean.TRUE.equals(teacher.getIsFiller());
     }
 
     private static boolean teacherIsJournalConfirmer(HoisUserDetails user, Journal journal) {
         Map<Long, JournalTeacher> teachers = StreamUtil.toMap(jt -> EntityUtil.getId(jt.getTeacher()), journal.getJournalTeachers());
-        
-        if (teachers != null) {
-            JournalTeacher teacher = teachers.get(user.getTeacherId());
-            if (teacher != null && teacher.getIsConfirmer().booleanValue()) {
-                return true;
-            }
-        }
-        return false;
+        JournalTeacher teacher = teachers.get(user.getTeacherId());
+        return teacher != null && Boolean.TRUE.equals(teacher.getIsConfirmer());
     }
 
     public static boolean hasPermissionToChange(HoisUserDetails user, Journal journal) {
-        return (UserUtil.isSchoolAdmin(user, journal.getSchool()) || 
+        return (UserUtil.isSchoolAdminOrLeadingTeacher(user, journal) ||
                 UserUtil.isTeacher(user, journal.getSchool()) && !confirmed(journal) && teacherIsJournalFiller(user, journal)) &&
                 UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PAEVIK);
     }
 
     public static boolean hasPermissionToViewReview(HoisUserDetails user, Journal journal) {
-        return (UserUtil.isSchoolAdmin(user, journal.getSchool()) || (UserUtil.isLeadingTeacher(user, journal)))
-                && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PAEVIKYLE);
+        return ((UserUtil.isSchoolAdmin(user, journal.getSchool()) || UserUtil.isLeadingTeacher(user, journal))
+                && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PAEVIKYLE))
+                || UserUtil.isJournalTeacher(user, journal);
     }
 
     public static boolean hasPermissionToReview(HoisUserDetails user, Journal journal) {
-        return UserUtil.isSchoolAdmin(user, journal.getSchool()) &&
+        return UserUtil.isSchoolAdminOrLeadingTeacher(user, journal) &&
                 UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PAEVIKYLE);
     }
 
@@ -128,7 +117,7 @@ public abstract class JournalUtil {
     }
 
     public static boolean canRemoveStudent(HoisUserDetails user, Journal journal) {
-        return UserUtil.isSchoolAdmin(user, journal.getSchool()) && hasPermissionToChange(user, journal);
+        return UserUtil.isSchoolAdminOrLeadingTeacher(user, journal.getSchool()) && hasPermissionToChange(user, journal);
     }
 
     /**

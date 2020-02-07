@@ -34,6 +34,10 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="riiklTellAasta" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="yhiselamuKasut" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="kinnipidamisasutuses" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="muutusKp" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="oppekohtId" type="{http://www.w3.org/2001/XMLSchema}long"/&gt;
+ *         &lt;element name="lahkumiseKp" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="onOppiv" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}ehisBoolean"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -60,7 +64,11 @@ import javax.xml.bind.annotation.XmlType;
     "filiaal",
     "riiklTellAasta",
     "yhiselamuKasut",
-    "kinnipidamisasutuses"
+    "kinnipidamisasutuses",
+    "muutusKp",
+    "oppekohtId",
+    "lahkumiseKp",
+    "onOppiv"
 })
 public class KorgkOppetoo {
 
@@ -98,6 +106,14 @@ public class KorgkOppetoo {
     protected String yhiselamuKasut;
     @XmlElement(required = true, nillable = true)
     protected String kinnipidamisasutuses;
+    @XmlElement(required = true, nillable = true)
+    protected String muutusKp;
+    @XmlElement(required = true, type = Long.class, nillable = true)
+    protected Long oppekohtId;
+    @XmlElement(required = true, nillable = true)
+    protected String lahkumiseKp;
+    @XmlElement(required = true, nillable = true)
+    protected String onOppiv;
 
     /**
      * Gets the value of the oppeasutus property.
@@ -505,6 +521,102 @@ public class KorgkOppetoo {
      */
     public void setKinnipidamisasutuses(String value) {
         this.kinnipidamisasutuses = value;
+    }
+
+    /**
+     * Gets the value of the muutusKp property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getMuutusKp() {
+        return muutusKp;
+    }
+
+    /**
+     * Sets the value of the muutusKp property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setMuutusKp(String value) {
+        this.muutusKp = value;
+    }
+
+    /**
+     * Gets the value of the oppekohtId property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Long }
+     *     
+     */
+    public Long getOppekohtId() {
+        return oppekohtId;
+    }
+
+    /**
+     * Sets the value of the oppekohtId property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Long }
+     *     
+     */
+    public void setOppekohtId(Long value) {
+        this.oppekohtId = value;
+    }
+
+    /**
+     * Gets the value of the lahkumiseKp property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getLahkumiseKp() {
+        return lahkumiseKp;
+    }
+
+    /**
+     * Sets the value of the lahkumiseKp property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setLahkumiseKp(String value) {
+        this.lahkumiseKp = value;
+    }
+
+    /**
+     * Gets the value of the onOppiv property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getOnOppiv() {
+        return onOppiv;
+    }
+
+    /**
+     * Sets the value of the onOppiv property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setOnOppiv(String value) {
+        this.onOppiv = value;
     }
 
 }

@@ -39,9 +39,15 @@
             <thead md-head md-order="criteria.order" md-on-reorder="loadData">
                 <tr md-row>
                     <th md-column md-order-by="p.name_et">{{'poll.poll' | translate}}</th>
-                    <th md-column md-order-by="p.valid_from, p.valid_thru">{{'poll.answers.pollDuration' | translate}}</th>
-                    <th md-column md-order-by="{{auth.higher ? 's.name_et' : 'j.name_et'}}">{{(auth.higher ? 'poll.response.subject' : 'poll.response.journal') | translate}}</th>
-                    <th md-column md-order-by="cl.name_et">{{auth.higher ? ('poll.answers.studyPeriod' | translate) : ('poll.answers.studyYear' | translate)}}</th>
+                    <th md-column md-order-by="p.valid_from, p.valid_thru">
+                        {{'poll.answers.pollDuration' | translate}}</th>
+                    <th md-column md-order-by="{{auth.higher ? 's.name_et' : 'jj.name_et'}}">
+                        {{(auth.higher && auth.vocational) ? ('poll.response.subject' | translate) + ' / ' + ('poll.response.journal' | translate) : 
+                            (auth.higher ? 'poll.response.subject' : 'poll.response.journal') | translate}}</th>
+                    <th md-column md-order-by="cl.name_et">
+                        {{auth.higher && auth.vocational ? ('poll.answers.studyPeriod' | translate) + ' / ' + ('poll.answers.studyYear' | translate) : 
+                        (auth.higher ? ('poll.answers.studyPeriod' | translate) : ('poll.answers.studyYear' | translate))}}
+                    </th>
                     <th md-column>{{'poll.answers.amount' | translate}}</th>
                     <th md-column></th>
                 </tr>
@@ -55,7 +61,7 @@
                     <td md-cell>{{row.answers}}</td>
                     <td md-cell>
                         <md-button ng-if="canViewResult(row.endDate)" md-no-ink class="md-primary change-button" 
-                        ng-click="openAnswers(row)">{{'poll.answers.viewResponse' | translate}}</md-button>
+                        ng-click="openAnswers(row, row.isSubject)">{{'poll.answers.viewResponse' | translate}}</md-button>
                     </td>
                 </tr>
             </tbody>

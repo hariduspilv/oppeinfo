@@ -781,6 +781,9 @@ public class ContractService {
      */
     public Contract checkout(HoisUserDetails user, Contract contract) {
         contract.setStatus(em.getReference(Classifier.class, ContractStatus.LEPING_STAATUS_Y.name()));
+        if (Boolean.TRUE.equals(contract.getIsPracticeAbsence()) || Boolean.TRUE.equals(contract.getIsPracticeHidden())) {
+            studentAbsenceService.createContractAbsence(contract);
+        }
         EntityUtil.save(createPracticeJournal(contract, user.getSchoolId()), em);
         contract = EntityUtil.save(contract, em);
         // TODO: Send email only once

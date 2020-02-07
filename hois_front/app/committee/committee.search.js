@@ -38,19 +38,4 @@ function ($scope, $route, QueryUtils, USER_ROLES, AuthService, FormUtils) {
       });
     }
   });
-
-  $scope.$watch('criteria.member', function(){
-    if($scope.criteria.member) {
-      if($scope.criteria.member.id) {
-        $scope.criteria.teacher = $scope.criteria.member.id;
-        $scope.criteria.memberName = null;
-      } else {
-        $scope.criteria.teacher = null;
-        $scope.criteria.memberName = $scope.criteria.member.nameEt;
-      }
-    } else {
-      $scope.criteria.teacher = null;
-      $scope.criteria.memberName = null;
-    }
-  });
 });

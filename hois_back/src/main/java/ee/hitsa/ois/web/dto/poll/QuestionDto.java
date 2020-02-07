@@ -10,6 +10,7 @@ public class QuestionDto implements Comparable<QuestionDto> {
     private Long id;
     private Short orderNr;
     private String nameEt;
+    private String nameEn;
     private String addInfoEt;
     private Boolean isRequired;
     private String type;
@@ -18,6 +19,7 @@ public class QuestionDto implements Comparable<QuestionDto> {
     private Boolean disabled;
     private String answerTxt;
     private Long responseSubjectId;
+    private Long teacherId;
     private List<QuestionAnswerDto> answers = new ArrayList<>();
     private List<OisFileEditDto> files = new ArrayList<>();
     
@@ -108,6 +110,18 @@ public class QuestionDto implements Comparable<QuestionDto> {
     }
     public void setResponseSubjectId(Long responseSubjectId) {
         this.responseSubjectId = responseSubjectId;
+    }
+    public String getNameEn() {
+        return nameEn;
+    }
+    public void setNameEn(String nameEn) {
+        this.nameEn = nameEn;
+    }
+    public Long getTeacherId() {
+        return teacherId;
+    }
+    public void setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
     }
 
 }

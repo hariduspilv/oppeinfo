@@ -135,6 +135,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
   $scope.searchStudent = function () {
     dialogService.showDialog('journal/journal.searchStudent.dialog.html', function (dialogScope) {
+      dialogScope.auth = $scope.auth;
       dialogScope.selectedStudents = [];
 
       dialogScope.$watch('criteria.studentGroupObject', function() {

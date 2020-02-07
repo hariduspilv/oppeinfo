@@ -18,6 +18,7 @@ public class PollCommand {
     private List<Long> studentGroups;
     private List<String> targetCodes;
     private List<AutocompleteResult> journals;
+    private List<AutocompleteResult> subjectStudyPeriods;
     private Long studyPeriod;
     private Boolean isTeacherComment;
     private Boolean isTeacherCommentVisible;
@@ -133,5 +134,11 @@ public class PollCommand {
     }
     public void setTeacherOccupations(List<Long> teacherOccupations) {
         this.teacherOccupations = teacherOccupations;
+    }
+    public List<AutocompleteResult> getSubjectStudyPeriods() {
+        return subjectStudyPeriods;
+    }
+    public void setSubjectStudyPeriods(List<AutocompleteResult> subjectStudyPeriods) {
+        this.subjectStudyPeriods = subjectStudyPeriods;
     }
 }

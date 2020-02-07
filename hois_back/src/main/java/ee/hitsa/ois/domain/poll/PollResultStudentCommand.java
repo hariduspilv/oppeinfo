@@ -3,7 +3,7 @@ package ee.hitsa.ois.domain.poll;
 public class PollResultStudentCommand {
     
     private Long pollId;
-    private Long subjectId;
+    private Long subjectStudyPeriodId;
     private Long journalId;
     private Long enterpriseId;
     private Boolean students;
@@ -15,12 +15,6 @@ public class PollResultStudentCommand {
     }
     public void setPollId(Long pollId) {
         this.pollId = pollId;
-    }
-    public Long getSubjectId() {
-        return subjectId;
-    }
-    public void setSubjectId(Long subjectId) {
-        this.subjectId = subjectId;
     }
     public Long getJournalId() {
         return journalId;
@@ -51,6 +45,12 @@ public class PollResultStudentCommand {
     }
     public void setTeachers(Boolean teachers) {
         this.teachers = teachers;
+    }
+    public Long getSubjectStudyPeriodId() {
+        return subjectStudyPeriodId;
+    }
+    public void setSubjectStudyPeriodId(Long subjectStudyPeriodId) {
+        this.subjectStudyPeriodId = subjectStudyPeriodId;
     }
 
 }

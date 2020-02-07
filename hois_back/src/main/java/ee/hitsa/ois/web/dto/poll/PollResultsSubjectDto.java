@@ -5,7 +5,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class PollResultsSubjectDto {
     
     private AutocompleteResult name;
-    private String teachers;
+    private AutocompleteResult teacher;
     
     public AutocompleteResult getName() {
         return name;
@@ -13,11 +13,11 @@ public class PollResultsSubjectDto {
     public void setName(AutocompleteResult name) {
         this.name = name;
     }
-    public String getTeachers() {
-        return teachers;
+    public AutocompleteResult getTeacher() {
+        return teacher;
     }
-    public void setTeachers(String teachers) {
-        this.teachers = teachers;
+    public void setTeacher(AutocompleteResult teacher) {
+        this.teacher = teacher;
     }
 
 }

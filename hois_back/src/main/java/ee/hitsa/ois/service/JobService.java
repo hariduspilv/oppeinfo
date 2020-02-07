@@ -131,7 +131,7 @@ public class JobService {
             String sql = "update job set job_time = :endDate where type_code = :type and student_id = :studentId and status_code = :jobStatus";
             Query q = em.createNativeQuery(sql);
             q.setParameter("type", JobType.JOB_VALIS_TULEK.name());
-            q.setParameter("endDate",  JpaQueryUtil.parameterAsTimestamp(ds.getNominalStudyEnd()));
+            q.setParameter("endDate",  JpaQueryUtil.parameterAsTimestamp(ds.getStartDate()));
             q.setParameter("jobStatus", JobStatus.JOB_STATUS_VALMIS.name());
             q.setParameter("studentId", studentId);
             q.executeUpdate();

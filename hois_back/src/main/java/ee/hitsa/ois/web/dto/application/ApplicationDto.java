@@ -81,6 +81,8 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     private Boolean canRemoveConfirmation;
     /** RAKKAVA application specific */
     private Boolean canChangeThemeReplacements;
+    /** VALIS application specific */
+    private Boolean canEditPlannedSubjects;
 
     private Boolean hasBeenSeenByAdmin;
 
@@ -546,6 +548,14 @@ public class ApplicationDto extends InsertedChangedVersionDto {
 
     public void setApelSchool(ApelSchoolResult apelSchool) {
         this.apelSchool = apelSchool;
+    }
+
+    public Boolean getCanEditPlannedSubjects() {
+        return canEditPlannedSubjects;
+    }
+
+    public void setCanEditPlannedSubjects(Boolean canEditPlannedSubjects) {
+        this.canEditPlannedSubjects = canEditPlannedSubjects;
     }
 
 

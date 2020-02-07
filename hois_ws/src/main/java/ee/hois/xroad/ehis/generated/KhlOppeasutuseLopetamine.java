@@ -20,12 +20,16 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
  *         &lt;element name="muutusKp" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
+ *         &lt;element name="lopueksamiKeelEesti" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}ehisBoolean" minOccurs="0"/&gt;
  *         &lt;element name="lopudokumendiNr" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="cumLaude" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}ehisBoolean" minOccurs="0"/&gt;
  *         &lt;element name="eestikeelneAkademOiend" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}khlOiendType" minOccurs="0"/&gt;
  *         &lt;element name="inglisekeelneAkademOiend" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}khlOiendType" minOccurs="0"/&gt;
  *         &lt;element name="klAkadKraad" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
- *         &lt;element name="klSpetsialiseerumine" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;choice minOccurs="0"&gt;
+ *           &lt;element name="klSpetsialiseerumine" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *           &lt;element name="spetsialiseerumineNimetus" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;/choice&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -37,18 +41,21 @@ import javax.xml.datatype.XMLGregorianCalendar;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "khlOppeasutuseLopetamine", propOrder = {
     "muutusKp",
+    "lopueksamiKeelEesti",
     "lopudokumendiNr",
     "cumLaude",
     "eestikeelneAkademOiend",
     "inglisekeelneAkademOiend",
     "klAkadKraad",
-    "klSpetsialiseerumine"
+    "klSpetsialiseerumine",
+    "spetsialiseerumineNimetus"
 })
 public class KhlOppeasutuseLopetamine {
 
     @XmlElement(required = true)
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar muutusKp;
+    protected String lopueksamiKeelEesti;
     @XmlElement(required = true)
     protected String lopudokumendiNr;
     protected String cumLaude;
@@ -56,6 +63,7 @@ public class KhlOppeasutuseLopetamine {
     protected KhlOiendType inglisekeelneAkademOiend;
     protected String klAkadKraad;
     protected String klSpetsialiseerumine;
+    protected String spetsialiseerumineNimetus;
 
     /**
      * Gets the value of the muutusKp property.
@@ -79,6 +87,30 @@ public class KhlOppeasutuseLopetamine {
      */
     public void setMuutusKp(XMLGregorianCalendar value) {
         this.muutusKp = value;
+    }
+
+    /**
+     * Gets the value of the lopueksamiKeelEesti property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getLopueksamiKeelEesti() {
+        return lopueksamiKeelEesti;
+    }
+
+    /**
+     * Sets the value of the lopueksamiKeelEesti property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setLopueksamiKeelEesti(String value) {
+        this.lopueksamiKeelEesti = value;
     }
 
     /**
@@ -223,6 +255,30 @@ public class KhlOppeasutuseLopetamine {
      */
     public void setKlSpetsialiseerumine(String value) {
         this.klSpetsialiseerumine = value;
+    }
+
+    /**
+     * Gets the value of the spetsialiseerumineNimetus property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getSpetsialiseerumineNimetus() {
+        return spetsialiseerumineNimetus;
+    }
+
+    /**
+     * Sets the value of the spetsialiseerumineNimetus property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setSpetsialiseerumineNimetus(String value) {
+        this.spetsialiseerumineNimetus = value;
     }
 
 }

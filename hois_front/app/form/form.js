@@ -8,7 +8,7 @@ angular.module('hitsaOis').controller('FormSearchController', ['$q', '$route', '
     
     var clMapper = Classifier.valuemapper({type: 'LOPUBLANKETT', status: 'LOPUBLANKETT_STAATUS'});
     QueryUtils.createQueryForm($scope, baseUrl, {}, clMapper.objectmapper);
-    $scope.criteria = {};
+    // $scope.criteria = {};
     $scope.afterLoadData = function(resultData) {
       $scope.tabledata.content = resultData;
       if(resultData.length === 0) {

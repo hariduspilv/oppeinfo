@@ -22,7 +22,8 @@
           </md-input-container>
         </div>
       </fieldset>
-      <fieldset tabindex="2" flex="66" flex-offset="4" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0">
+      <div show-xs show-sm>&nbsp;</div>
+      <fieldset tabindex="2" flex="66" flex-offset="5" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.mainData' | translate}}</legend>
         <div layout="row" flex>
           <div flex="45">
@@ -280,7 +281,7 @@
           <label>{{'main.validFrom' | translate}}</label>
           <md-datepicker ng-model="curriculum.validFrom" md-open-on-focus disabled></md-datepicker>
         </md-input-container>
-        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="4">
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
           <label>{{'main.validTo' | translate}}</label>
           <md-datepicker ng-model="curriculum.validThru" md-min-date="curriculum.validFrom" md-open-on-focus disabled></md-datepicker>
         </md-input-container>
@@ -290,7 +291,7 @@
           <label class="label">{{'main.status' | translate}}</label>
           <hois-classifier-value ng-model="curriculum.status" main-classifier-code="OPPEKAVA_STAATUS"></hois-classifier-value>
         </md-input-container>
-        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="4">
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
           <label>{{'curriculum.statusInEhis' | translate}}</label>
           <hois-classifier-value ng-model="curriculum.ehisStatus" main-classifier-code="OPPEKAVA_EHIS_STAATUS"></hois-classifier-value>
         </md-input-container>
@@ -320,11 +321,11 @@
           </div>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column" ng-show="curriculum.joint">
-          <md-input-container flex="30" flex-xs="100" ng-if="curriculum.joint">
+          <md-input-container flex="30" flex-xs="100" flex-sm="100" ng-if="curriculum.joint">
             <label>{{'curriculum.jointMentor' | translate}}</label>
             <hois-classifier-select ng-model="curriculum.jointMentor" main-classifier-code="EHIS_KOOL" model-value-attr="code" disabled></hois-classifier-select>
           </md-input-container>
-          <md-input-container flex="66" flex-xs="100" flex-offset-xs="0" flex-offset="4">
+          <md-input-container flex="66" flex-xs="100" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'curriculum.jointResponsible' | translate}}</label>
             <input ng-model="curriculum.supervisor" type="text" readonly>
           </md-input-container>
@@ -350,7 +351,6 @@
        </div>
     </fieldset>
 
-
     <div>&nbsp;</div>
     <fieldset tabindex="12">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.specialty.label' | translate}}</legend>
@@ -363,7 +363,7 @@
       </div>
     </fieldset>
 
-    <div>&nbsp;</div>
+    <div ng-show="gradeRequired()">&nbsp;</div>
     <fieldset tabindex="12" ng-show="gradeRequired()">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.grade.label' | translate}}</legend>
       <md-table-container>
@@ -377,6 +377,7 @@
       </md-table-container>
     </fieldset>
 
+    <div>&nbsp;</div>
     <fieldset tabindex="11">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
       <md-table-container>

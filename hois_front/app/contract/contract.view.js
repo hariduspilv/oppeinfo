@@ -28,8 +28,6 @@ angular.module('hitsaOis').controller('ContractViewController', ['$scope', '$loc
       }
     });
 
-    $scope.getAstronomicalHours = DataUtils.getAstronomicalHours;
-
     $scope.showCancel = function () {
       if ($scope.showCancelBoolean === undefined || $scope.showCancelBoolean === false) {
         $scope.showCancelBoolean = true;

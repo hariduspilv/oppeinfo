@@ -11,12 +11,15 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class ForeignStudentStatisticsDto extends GuestStudentStatisticsDto {
-    
+
+    private String educationLevel;
+    private AutocompleteResult schoolDepartment;
     private Long applicationId;
     private Long wantedEAP;
     private String foreignStudent;
     private AutocompleteResult foreignSchool;
     private String foreignCountry;
+    private String extention;
     
     public ForeignStudentStatisticsDto () {
         super();
@@ -32,16 +35,39 @@ public class ForeignStudentStatisticsDto extends GuestStudentStatisticsDto {
                     CurriculumUtil.versionName(curriculumCode, resultAsString(r, 5)));
         }
         this.studentGroup = resultAsString(r, 6);
-        this.startDate = resultAsLocalDate(r, 7);
-        this.endDate = resultAsLocalDate(r, 8);
+        this.educationLevel = resultAsString(r, 7);
+        this.schoolDepartment = new AutocompleteResult(null, resultAsString(r, 8), resultAsString(r, 9));
+        this.startDate = resultAsLocalDate(r, 10);
+        this.endDate = resultAsLocalDate(r, 11);
         if (startDate != null && endDate != null) {
-            this.duration = Long.valueOf(ChronoUnit.DAYS.between(startDate, endDate));
+            this.duration = Long.valueOf(ChronoUnit.DAYS.between(startDate, endDate) + 1);
         }
-        this.foreignSchool = new AutocompleteResult(null, resultAsString(r, 9), resultAsString(r, 10));
-        this.foreignCountry = resultAsString(r, 11);
-        this.programme = resultAsString(r, 12);
-        this.applicationId = resultAsLong(r, 13);
-        this.wantedEAP = resultAsLong(r, 14);
+        this.foreignSchool = new AutocompleteResult(null, resultAsString(r, 12), resultAsString(r, 13));
+        this.foreignCountry = resultAsString(r, 14);
+        this.programme = resultAsString(r, 15);
+        this.applicationId = resultAsLong(r, 16);
+        this.wantedEAP = resultAsLong(r, 17);
+        this.eap = resultAsLong(r, 18);
+        String nominalValue = resultAsString(r, 19);
+        if (nominalValue != null) {
+            this.extention = "NOM_PIKEND_" + nominalValue;
+        }
+    }
+
+    public String getEducationLevel() {
+        return educationLevel;
+    }
+
+    public void setEducationLevel(String educationLevel) {
+        this.educationLevel = educationLevel;
+    }
+
+    public AutocompleteResult getSchoolDepartment() {
+        return schoolDepartment;
+    }
+
+    public void setSchoolDepartment(AutocompleteResult schoolDepartment) {
+        this.schoolDepartment = schoolDepartment;
     }
 
     public Long getApplicationId() {
@@ -82,5 +108,13 @@ public class ForeignStudentStatisticsDto extends GuestStudentStatisticsDto {
 
     public void setForeignSchool(AutocompleteResult foreignSchool) {
         this.foreignSchool = foreignSchool;
+    }
+
+    public String getExtention() {
+        return extention;
+    }
+
+    public void setExtention(String extention) {
+        this.extention = extention;
     }
 }

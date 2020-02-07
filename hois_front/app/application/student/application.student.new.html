@@ -1,14 +1,14 @@
 <div class="ois-form-layout-padding" ng-cloak>
   <div flex>
     <form ng-submit="loadData()" layout="column" name="applicationForm" ng-controller="ApplicationController as mainCtrl">
-      <br/>
+      <div>&nbsp;</div>
       <div ng-include="'application/templates/application.html'" ng-init="application=studentApplication"></div>
-      <br/>
+      <div>&nbsp;</div>
 
       <div layout="row">
         <md-button ng-if="application.id" class="md-raised md-primary" ng-click="submit()">{{'main.button.submit' | translate}}</md-button>
         <md-button class="md-raised" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-        <md-button ng-href="#/applications/student" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-click="back('#/applications/student', applicationForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>
   </div>

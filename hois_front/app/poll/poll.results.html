@@ -18,42 +18,93 @@
             <hois-value value="calculate(formState.allResponses, formState.targetCount)"></hois-value>
         </md-input-container>
     </div>
-    <div flex ng-if="formState.type === 'KYSITLUS_O'">
+    <div flex ng-if="formState.type === 'KYSITLUS_O' && auth.vocational">
         <md-table-container>
-        <table md-table md-progress="tabledata.$promise" class="secondary-table">
-            <thead md-head md-order="criteria.order" md-on-reorder="loadData">
-                <tr md-row>
-                    <th md-column>{{'main.order' | translate}}</th>
-                    <th md-column md-order-by="{{auth.higher ? 's.name_et' : 'j.name_et'}}">
-                        {{(auth.higher ? 'poll.response.subject' : 'poll.response.journal') | translate}}
-                    </th>
-                    <th md-column md-order-by="teachers">{{(auth.higher ? 'poll.answers.teachers.higher' : 'poll.answers.teachers.vocational') | translate}}</th>
-                    <th md-column></th>
-                    <th md-column></th>
-                </tr>
-            </thead>
-            <tbody md-body>
-                <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-                    <td md-cell>{{$index + 1}}.</td>
-                    <td md-cell><a ng-click="openAnswers(row)">{{row.name ? currentLanguageNameField(row.name) : '-'}}</a></td>
-                    <td md-cell>{{row.teachers ? row.teachers : '-'}}</td>
-                    <td md-cell>
-                        <md-button md-no-ink class="md-primary change-button" target="_blank" ng-click="subjectToExcel(row)">
-                            {{'document.button.excel' | translate}}
-                        </md-button>
-                    </td>
-                    <td md-cell>
-                        <md-button md-no-ink class="md-primary change-button" ng-click="checkAnswer(row)">
-                            {{'poll.answers.checkAnswer' | translate}}
-                        </md-button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+            <table md-table md-progress="journals.$promise" class="secondary-table">
+                <thead md-head md-order="journalCriteria.order" md-on-reorder="loadJournals">
+                    <tr md-row>
+                        <th md-column width="5%">{{'main.order' | translate}}</th>
+                        <th md-column md-order-by="jj.name_et" style="word-break: break-all;" width="40%">
+                            {{'poll.response.journal' | translate}}
+                        </th>
+                        <th md-column md-order-by="teacher" style="word-break: break-all;" width="10%">{{'poll.answers.teachers.vocational' | translate}}</th>
+                        <th md-column width="15%"></th>
+                        <th md-column width="15%"></th>
+                        <th md-column width="15%"></th>
+                    </tr>
+                </thead>
+                <tbody md-body>
+                    <tr md-row ng-repeat="row in journals.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                        <td md-cell>{{$index + 1}}.</td>
+                        <td md-cell>
+                            <a ng-click="openAnswers(row, false)">{{row.name ? currentLanguageNameField(row.name) : '-'}}</a>
+                        </td>
+                        <td md-cell width="126px">{{row.teacher ? currentLanguageNameField(row.teacher) : '-'}}</td>
+                        <td md-cell style="padding: 0px 0px 0px 0px;">
+                            <md-button class="md-primary" ng-click="openAllResults(row.name.id, row.teacher.id, false)">{{'poll.answers.allAnswers' | translate}}</md-button>
+                        </td>
+                        <td md-cell style="padding: 0px 0px 0px 0px;">
+                            <md-button md-no-ink class="md-primary change-button" target="_blank" ng-click="journalToExcel(row)">
+                                {{'document.button.excel' | translate}}
+                            </md-button>
+                        </td>
+                        <td md-cell style="padding: 0px 0px 0px 0px;">
+                            <md-button md-no-ink class="md-primary change-button" ng-click="checkAnswer(row)">
+                                {{'poll.answers.checkAnswer' | translate}}
+                            </md-button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </md-table-container>
-        <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
-        md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
-        md-page-select></md-table-pagination>
+        <md-table-pagination ng-show="journals.totalElements > journalCriteria.size" md-limit="journalCriteria.size"
+            md-limit-options="[5, 10, 20, 50]" md-page="journalCriteria.page" md-total="{{journals.totalElements}}" md-on-paginate="loadJournals"
+            md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+            md-page-select></md-table-pagination>
+    </div>
+    <div flex ng-if="formState.type === 'KYSITLUS_O' && auth.higher">
+        <md-table-container>
+            <table md-table md-progress="subjects.$promise" class="secondary-table">
+                <thead md-head md-order="subjectCriteria.order" md-on-reorder="loadSubjects">
+                    <tr md-row>
+                        <th md-column width="5%">{{'main.order' | translate}}</th>
+                        <th md-column md-order-by="s.name_et" style="word-break: break-all;" width="40%">
+                            {{'poll.response.subject' | translate}}
+                        </th>
+                        <th md-column md-order-by="teacher" width="10%">{{'poll.answers.teachers.higher' | translate}}</th>
+                        <th md-column width="15%"></th>
+                        <th md-column width="15%"></th>
+                        <th md-column width="15%"></th>
+                    </tr>
+                </thead>
+                <tbody md-body>
+                    <tr md-row ng-repeat="row in subjects.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                        <td md-cell>{{$index + 1}}.</td>
+                        <td md-cell>
+                            <a ng-click="openAnswers(row, true)">{{row.name ? currentLanguageNameField(row.name) : '-'}}</a>
+                        </td>
+                        <td md-cell>{{row.teacher ? currentLanguageNameField(row.teacher) : '-'}}</td>
+                        <td md-cell style="padding: 0px 0px 0px 0px;">
+                            <md-button class="md-primary" ng-click="openAllResults(row.name.id, row.teacher.id, true)">{{'poll.answers.allAnswers' | translate}}</md-button>
+                        </td>
+                        <td md-cell style="padding: 0px 0px 0px 0px;">
+                            <md-button md-no-ink class="md-primary change-button" target="_blank" ng-click="subjectToExcel(row)">
+                                {{'document.button.excel' | translate}}
+                            </md-button>
+                        </td>
+                        <td md-cell style="padding: 0px 0px 0px 0px;">
+                            <md-button md-no-ink class="md-primary change-button" ng-click="checkAnswer(row)">
+                                {{'poll.answers.checkAnswer' | translate}}
+                            </md-button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </md-table-container>
+        <md-table-pagination ng-show="subjects.totalElements > subjectCriteria.size" md-limit="subjectCriteria.size"
+            md-limit-options="[5, 10, 20, 50]" md-page="subjectCriteria.page" md-total="{{subjects.totalElements}}" md-on-paginate="loadSubjects"
+            md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+            md-page-select></md-table-pagination>
     </div>
     <div flex ng-if="formState.type === 'KYSITLUS_P'">
         <md-table-container ng-if="studentResponse || teacherResponse">
@@ -130,11 +181,9 @@
         md-page-select></md-table-pagination>
     </div>
     <div layout="row">
-        <md-button class="md-raised" target="_blank" download ng-click="allToExcel(row)">
-            {{'document.button.excel' | translate}}
-        </md-button>
-        <md-button class="md-raised" ng-click="openAllAnswers()">
-            {{'poll.answers.graph' | translate}}
-        </md-button>
+        <md-button class="md-raised" target="_blank" download ng-click="allToExcel(row)">{{'document.button.excel' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="openAllGraph()">{{'poll.answers.graph' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="openAllResults()">{{'poll.answers.allAnswers' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="back('#/poll')">{{'main.button.back' | translate}}</md-button>
     </div>
 </div>

@@ -7,13 +7,13 @@
           <span ng-if="moduleResultById[module.curriculumModule.id].isApelTransfer && !moduleResultById[module.curriculumModule.id].isFormalLearning"> - {{'student.result.informal' | translate}}</span>
         </div>
         <div flex-offset-gt-sm="5">
-          <div ng-if="moduleResultById[module.curriculumModule.id] && moduleResultById[module.curriculumModule.id].grade 
+          <div ng-if="moduleResultById[module.curriculumModule.id] && moduleResultById[module.curriculumModule.id].grade
             && positiveGrade(moduleResultById[module.curriculumModule.id].grade.code)"
             class="bold" md-colors="{color: 'green-600'}">{{moduleResultById[module.curriculumModule.id].grade.value}} ({{moduleResultById[module.curriculumModule.id].credits}} {{'student.result.ekap' | translate}})</div>
-          <div ng-if="moduleResultById[module.curriculumModule.id] && moduleResultById[module.curriculumModule.id].grade && 
+          <div ng-if="moduleResultById[module.curriculumModule.id] && moduleResultById[module.curriculumModule.id].grade &&
             !positiveGrade(moduleResultById[module.curriculumModule.id].grade.code)"
             class="bold" md-colors="{color: 'red-500'}">{{moduleResultById[module.curriculumModule.id].grade.value}} ({{moduleResultById[module.curriculumModule.id].credits}} {{'student.result.ekap' | translate}})</div>
-          <div ng-if="(!moduleResultById[module.curriculumModule.id] || !moduleResultById[module.curriculumModule.id].grade) 
+          <div ng-if="(!moduleResultById[module.curriculumModule.id] || !moduleResultById[module.curriculumModule.id].grade)
             && module.moduleBacklog < 0" md-colors="{color: 'accent'}">{{module.moduleBacklog | number: 1}} {{'student.result.ekap' | translate}}</div>
           <div ng-if="(!moduleResultById[module.curriculumModule.id] || (moduleResultById[module.curriculumModule.id] && !moduleResultById[module.curriculumModule.id].grade))
             && module.moduleBacklog >= 0"  md-colors="{color: 'accent'}">{{'student.result.moduleNotGraded' | translate}}</div>
@@ -33,16 +33,16 @@
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-repeat="row in module.themes" 
+          <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-repeat="row in module.themes"
             ng-include="'student/templates/view.results.vocational.curriculumfulfillment.theme.tmpl.html'"></tr>
-          <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-repeat="row in module.otherCurriculumVersionModuleThemes" 
+          <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-repeat="row in module.otherCurriculumVersionModuleThemes"
             ng-include="'student/templates/view.results.vocational.curriculumfulfillment.theme.tmpl.html'"></tr>
         </tbody>
       </table>
     </md-table-container>
     <div class="md-body-2 bold" layout="row">
-      <div>{{'student.result.totalRequired' | translate}}: {{module.curriculumModule.credits}}</div>
-      <div flex-offset="10">{{'student.result.totalSubmitted' | translate}}: {{moduleResultById[module.curriculumModule.id] ? moduleResultById[module.curriculumModule.id].totalSubmitted : 0}}</div>
+      <div>{{'student.result.totalRequired' | translate}}: {{module.curriculumModule.credits | number: 1}}</div>
+      <div flex-offset="10">{{'student.result.totalSubmitted' | translate}}: {{(moduleResultById[module.curriculumModule.id] ? moduleResultById[module.curriculumModule.id].totalSubmitted : 0) | number: 1}}</div>
       <div flex-offset="10">{{'student.result.difference' | translate}}: <span md-colors="module.moduleBacklog < 0 ? {color: 'warn-A400'} : {}">{{module.moduleBacklog | number: 1}}</span></div>
     </div>
 

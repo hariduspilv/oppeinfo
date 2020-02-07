@@ -3,7 +3,7 @@
     <form layout="column" name="remarkForm">
       <div ng-if="!record.student" flex="45" flex-sm="100" flex-xs="100">
         <hois-autocomplete ng-model="record.student" method="students" name="student" label="student.label"
-          additional-query-params="{active: true, higher: false, studentGroupTeacher: teacherId}"></hois-autocomplete>
+          additional-query-params="{active: true, higher: false, studentGroupTeacher: teacherId}" required></hois-autocomplete>
       </div>
 
       <div ng-if="record.student" layout="row" class="form-readonly">

@@ -70,23 +70,12 @@ public class ApplicationForm extends InsertedChangedVersionDto {
     private Boolean isPeriod;
     private LocalDate startDate;
     private LocalDate endDate;
-    private Long apelSchool;
+    private AutocompleteResult apelSchool;
     private Long studyPeriodStart;
     private Long studyPeriodEnd;
     private ValidAcademicLeaveDto validAcademicLeave;
 
     private LocalDateTime submitted;
-
-    private Boolean isAbroad;
-
-    @Size(max = 255)
-    private String abroadSchool;
-
-    @ClassifierRestriction(MainClassCode.EHIS_KOOL)
-    private String ehisSchool;
-
-    @ClassifierRestriction(MainClassCode.RIIK)
-    private String country;
 
     @ClassifierRestriction(MainClassCode.VALISOPE_EESMARK)
     private String abroadPurpose;
@@ -287,38 +276,6 @@ public class ApplicationForm extends InsertedChangedVersionDto {
         this.submitted = submitted;
     }
 
-    public Boolean getIsAbroad() {
-        return isAbroad;
-    }
-
-    public void setIsAbroad(Boolean isAbroad) {
-        this.isAbroad = isAbroad;
-    }
-
-    public String getAbroadSchool() {
-        return abroadSchool;
-    }
-
-    public void setAbroadSchool(String abroadSchool) {
-        this.abroadSchool = abroadSchool;
-    }
-
-    public String getEhisSchool() {
-        return ehisSchool;
-    }
-
-    public void setEhisSchool(String ehisSchool) {
-        this.ehisSchool = ehisSchool;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
     public String getAbroadPurpose() {
         return abroadPurpose;
     }
@@ -431,19 +388,19 @@ public class ApplicationForm extends InsertedChangedVersionDto {
         this.themeReplacements = themeReplacements;
     }
 
-    public Long getApelSchool() {
-        return apelSchool;
-    }
-
-    public void setApelSchool(Long apelSchool) {
-        this.apelSchool = apelSchool;
-    }
-
     public ApelSchoolForm getNewApelSchool() {
         return newApelSchool;
     }
 
     public void setNewApelSchool(ApelSchoolForm newApelSchool) {
         this.newApelSchool = newApelSchool;
+    }
+
+    public AutocompleteResult getApelSchool() {
+        return apelSchool;
+    }
+
+    public void setApelSchool(AutocompleteResult apelSchool) {
+        this.apelSchool = apelSchool;
     }
 }

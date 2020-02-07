@@ -16,7 +16,21 @@ EELDUS: ver. 1.5.0/20191127
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-puudub
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20200113.sql
+EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
+
+Andmebaasi installeerimiseks:
+1. käivitada install20200113.sql skript, nt
+   
+   psql -h devhois -f install20200113.sql 2>&1 | tee log.txt
+   
+   , kus
+   
+   -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
+   -f install20200113.sql - install faili nimi
+   log.txt - andmebaasi installeerimise logi fail
+   
+   Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
 
 
 
@@ -26,12 +40,17 @@ RAKENDUSE INSTALLEERIMINE:
 	1. Teisendada kaasa pandud hois_back.jar /opt/hois kausta
 	2. Lisada appliction.properties järgmised parameetrid:
 	
-		# tunniplaani unikaalsete linkide krüpteerimise võti, võiks ära muuta
-		timetable.cypher.key=insertplceholder							
-		# külalisõppija staatuse lõppemise cron, kontrollitakse iga päev kell 2 öösel
-		hois.jobs.guest.student.end.cron=0 00 2 * * *
-		# küsitluse lõppemise cron, kontrollitakse iga päev kell 00:15 
-		hois.jobs.poll.end.cron=0 15 0 * * *
+		#need for array
+		spring.jpa.properties.hibernate.dialect=ee.hitsa.ois.config.CustomPostgreSQL94Dialect
+	
+		# asünkroonsete päringute optimeerimis eparameetrid
+		# amount of active threads at the same time
+		hois.async.corePoolSize=40
+		# amount of maximum active threads at the same time if queue is full and new requests coming
+		hois.async.maxPoolSize=100
+		# size of queue
+		hois.async.queueCapacity=200
+
 	
 	3. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
 	

@@ -1,0 +1,70 @@
+<md-dialog aria-label="all results dialog" flex>
+    <form name="dialogForm" novalidate ng-cloak>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2 flex>{{'poll.answers.allAnswers' | translate}}</h2>
+                <md-button class="md-icon-button" ng-click="cancel()">
+                <md-icon md-font-set="material-icons">close</md-icon>
+                </md-button>
+            </div>
+        </md-toolbar>
+
+        <md-dialog-content>
+            <div class="md-dialog-content" flex>
+                <div layout-padding ng-repeat="item in content">
+                    <div layout="column" class="questions">
+                        <div layout="row" class="questions-header">
+                            <div>{{item.theme.order}} {{currentLanguageNameField(item.theme)}}</div>
+                        </div>
+                        <div ng-if="item.questions.length !== 0 && item.subject.length === 0 && item.journal.length === 0" 
+                        ng-repeat="question in item.questions" class="form-readonly">
+                            <div style="padding-left: 12px;" ng-include="'poll/poll.results.all.dialog.data.html'"></div>
+                        </div>
+                        <div ng-if="item.subject.length !== 0" ng-repeat="subject in item.subject" class="form-readonly" style="padding-bottom: 12px;">
+                            <div class="questions-item-primary">
+                               <h3>
+                                    <span>{{currentLanguageNameField(subject)}}
+                                        <md-tooltip md-direction="right">{{'poll.answers.subject' | translate}}</md-tooltip>
+                                    </span>
+                                </h3>
+                           </div>
+                            <div ng-if="subject.teachers.length !== 0" ng-repeat="teacher in subject.teachers" class="form-readonly questions-item-secondary">
+                                <h3 ng-if="teacher.id">
+                                    <span>
+                                        {{currentLanguageNameField(teacher)}}
+                                        <md-tooltip md-direction="right">{{'poll.answers.teachers.higher' | translate}}</md-tooltip>
+                                    </span>
+                                </h3>
+                                <div ng-if="teacher.questions.length !== 0" ng-repeat="question in teacher.questions">
+                                    <div style="padding-left: 12px;" ng-include="'poll/poll.results.all.dialog.data.html'"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div ng-if="item.journal.length !== 0" ng-repeat="journal in item.journal" class="form-readonly" style="padding-bottom: 12px;"> <!-- JOURNAL FIX DESIGN AS SUBJECT -->
+                            <div class="questions-item-primary">
+                               <h3>
+                                    <span>
+                                        {{currentLanguageNameField(journal)}}
+                                        <md-tooltip md-direction="right">{{'poll.answers.journal' | translate}}</md-tooltip>
+                                    </span>
+                                </h3>
+                           </div>
+                            <div ng-if="journal.teachers.length !== 0" ng-repeat="teacher in journal.teachers" class="form-readonly questions-item-secondary">
+                                <h3 ng-if="teacher.id"><span>{{currentLanguageNameField(teacher)}}
+                                        <md-tooltip md-direction="right">{{'poll.answers.teachers.vocational' | translate}}</md-tooltip>
+                                    </span></h3>
+                                <div ng-if="teacher.questions.length !== 0" ng-repeat="question in teacher.questions" class="form-readonly">
+                                    <div style="padding-left: 12px;" ng-include="'poll/poll.results.all.dialog.data.html'"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </md-dialog-content>
+    
+        <md-dialog-actions layout="row" layout-xs="column" layout-align="start start" layout-align-xs="none none">
+            <md-button flex-xs="100" class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+        </md-dialog-actions>
+    </form>
+</md-dialog>

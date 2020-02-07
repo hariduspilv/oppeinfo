@@ -80,7 +80,7 @@
     </div>
   </fieldset>
 
-  <br/>
+  <div>&nbsp;</div>
 
   <fieldset tabindex="1">
     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{isStudent() ? 'stipend.student.myData' : 'stipend.student.studentData' | translate}}</legend>
@@ -128,6 +128,14 @@
       <br/>
       <div ng-include="'scholarship/scholarship.relatedFiles.edit.html'"></div>
       <br/>
+
+      <div layout="row" flex>
+        <md-input-container flex="45" flex-md="100" flex-sm="100" flex-xs="100">
+          <label>{{'stipend.student.status' | translate}}</label>
+          <hois-classifier-value ng-model="application.status" main-classifier-code="STIPTOETUS_STAATUS"></hois-classifier-value>
+        </md-input-container>
+      </div>
+
       <div layout="row">
         <md-button class="md-raised md-primary" ng-if="canManage" ng-click="accept()">{{'main.button.accept' | translate}}</md-button>
         <md-button class="md-raised" ng-click="back(isStudent() ? '#/scholarships/myData/scholarships' : '#/scholarships/applications/grants')">{{'main.button.back' | translate}}</md-button>

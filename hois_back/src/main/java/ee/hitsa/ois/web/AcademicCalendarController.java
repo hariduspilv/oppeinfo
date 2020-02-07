@@ -1,8 +1,11 @@
 package ee.hitsa.ois.web;
 
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.UserUtil;
+import ee.hitsa.ois.util.WithEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,7 +20,8 @@ public class AcademicCalendarController {
     private AcademicCalendarService academicCalendarService;
     
     @GetMapping("/{school:\\d+}")
-    public AcademicCalendarDto academicCalendar(@PathVariable("school") Long school) {
-        return academicCalendarService.academicCalendar(school);
+    public AcademicCalendarDto academicCalendar(HoisUserDetails user, @WithEntity("school") School school) {
+        UserUtil.isSameSchool(user, school);
+        return academicCalendarService.academicCalendar(school.getId());
     }
 }

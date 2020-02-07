@@ -23,11 +23,7 @@
         </td>
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>{{row.isAbroad ? 'directive.student.foreignEducationalInstitute' : 'directive.student.estonianEducationalInstitute' | translate}}</td>
-        <td md-cell>
-          <hois-classifier-value ng-if="!row.isAbroad" ng-model="row.ehisSchool" main-classifier-code="EHIS_KOOL"></hois-classifier-value>
-          <div ng-if="row.isAbroad && row.abroadSchool">{{row.abroadSchool}}</div>
-          <div ng-if="row.isAbroad && row.apelSchool">{{currentLanguageNameField(row.apelSchool)}}</div>
-        </td>
+        <td md-cell>{{currentLanguageNameField(row.apelSchool)}}</td>
         <td md-cell>
           <hois-classifier-value ng-model="row.country" main-classifier-code="RIIK"></hois-classifier-value>
         </td>

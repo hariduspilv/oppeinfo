@@ -353,6 +353,10 @@ md-input-container.md-input-focused:not([md-no-float]) .md-select-placeholder sp
   margin-left:10px;
 }
 
+/* FIXME .flex-offset-4 does not work with angularjs-material flex-offset-XX(sm/md/lg/xl).
+ * It is because main.css overrides style order in angularjs-material and places itself at top.
+ * For xs works as we have placed !important here.
+ */
 .offset-4, .flex-offset-4 {
   margin-left: 4%;
 }
@@ -1579,7 +1583,7 @@ md-chips-wrap {
 
 .timetable-drag {
   width: 55px;
-  height: 30px;
+  min-height: 30px;
   border: 1px solid #CCC;
   text-align: center;
   vertical-align: middle;
@@ -2746,4 +2750,53 @@ md-input-container label:not(.md-no-float):not(.md-container-ignore), md-input-c
 
 .log-entry-pre {
   line-height: 20px;
+}
+
+.questions div.questions-header {
+  padding: 4px 12px;
+  border-bottom: 3px solid #0D47A1;
+  color: #424242;
+  font-weight: 700;
+}
+
+.questions div.questions-item-primary {
+  background-color: #eee;
+  /* padding-bottom: 4px;
+  padding-left: 12px; */
+  padding: 8px 12px;
+  border-bottom: 1px solid #E0E0E0;
+  border-left: 2px solid rgb(255, 64, 129);
+}
+
+.questions div.questions-item-primary > * {
+  margin: 0;
+}
+
+.questions div.questions-item-primary h3 {
+  color: rgba(0,0,0,0.87);
+}
+
+.questions div.questions-item-secondary h3 {
+  padding: 4px 12px;
+  margin: 5px 0;
+  color: rgb(255, 64, 129);
+  border-bottom: 1px solid #e0e0e0;
+}
+
+table.questions-secondary-table.secondary-table {
+    border: 1px solid #e0e0e0;
+}
+
+table.questions-secondary-table.secondary-table th {
+    background-color: #eee !important;
+}
+
+table.questions-secondary-table.secondary-table tr {
+    height: 28px !important;
+}
+
+table.questions-secondary-table.secondary-table th:not(:first-child),
+table.questions-secondary-table.secondary-table td:not(:first-child) {
+    padding-left: 12px !important;
+    border-left: 1px solid #e0e0e0;
 }

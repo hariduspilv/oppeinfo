@@ -157,6 +157,19 @@ public abstract class JpaQueryUtil {
         Object value = getValue(row, index);
         return (BigDecimal)value;
     }
+    
+    /**
+     * For this to work, query parameter type needs to be ArrayUserType
+     * Scale needs to be set
+     * Dialect needs to be CustomPostgreSQL94Dialect
+     * @param row
+     * @param index
+     * @return
+     */
+    public static List<String> resultAsStringList(Object row, int index) {
+        Object value = getValue(row, index);
+        return value != null ? Arrays.asList((String[])value) : null;
+    }
 
     public static Integer resultAsInteger(Object row, int index) {
         Object value = getValue(row, index);

@@ -4,7 +4,7 @@
   angular.module('hitsaOis').controller('StudyMaterialSubjectStudyPeriodController', ['$rootScope', '$route', '$scope', '$q', 'Classifier', 'QueryUtils', 'dialogService', 'message', 'oisFileService',
     function ($rootScope, $route, $scope, $q, Classifier, QueryUtils, dialogService, message, oisFileService) {
       $scope.auth = $route.current.locals.auth;
-      $scope.canEdit = $scope.auth !== null && ($scope.auth.isAdmin() || $scope.auth.isTeacher());
+      $scope.canEdit = ($scope.auth !== undefined && $scope.auth !== null) && ($scope.auth.isAdmin() || $scope.auth.isTeacher());
       $scope.subjectStudyPeriod = $route.current.locals.subjectStudyPeriod;
       $scope.teachers = $scope.subjectStudyPeriod.teachers.map($scope.currentLanguageNameField).join(', ');
       $scope.studentGroups = $scope.subjectStudyPeriod.studentGroups.join(', ');

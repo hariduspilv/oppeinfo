@@ -19,8 +19,8 @@
                 <input type="text" ng-model="criteria.studentName" md-autofocus>
               </md-input-container>
               <div flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                <hois-autocomplete ng-model="criteria.studentGroupObject" method="studentgroups" 
-                  additional-query-params="{higher: false}" label="journal.studentGroup" flex></hois-autocomplete>
+                <hois-autocomplete ng-model="criteria.studentGroupObject" method="studentgroups" label="journal.studentGroup"
+                  additional-query-params="{higher: false, userId: auth.isLeadingTeacher() ? auth.user : null}" flex></hois-autocomplete>
               </div>
             </div>
             <div layout="row">

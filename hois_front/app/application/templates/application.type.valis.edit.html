@@ -11,40 +11,22 @@
     <fieldset tabindex="1">
     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.abroadStudies' | translate}} *</legend>
       <div layout="column">
-      <md-input-container layout="row" layout-align="start center" flex="60">
-        <md-radio-group name="isAbroad" ng-model="application.isAbroad" ng-change="isAbroadChanged()" required layout="row">
-          <md-radio-button ng-value="false" aria-label="estonian educational institution">{{ 'application.inEstonianEducationalInstitution' | translate }}</md-radio-button>
-          <md-radio-button ng-value="true" aria-label="abroad educational institution">{{ 'application.inAbroadEducationalInstitution' | translate }}</md-radio-button>
-        </md-radio-group>
-      </md-input-container>
-      <div layout="row" flex="20" md-colors="{color: 'warn-A400'}"  ng-if="applicationForm.$submitted" ng-messages="applicationForm.isAbroad.$error" >
-        <div ng-message="required">{{'main.messages.error.inputFieldIsRequired' | translate}}</div>
-      </div>
-      <div layout="row" layout-sm="column" layout-xs="column" ng-if="!application.isAbroad">
-        <md-input-container flex="60" flex-sm="100" flex-xs="100">
-          <label>{{'main.educationInstitution' | translate}}</label>
-          <hois-classifier-select ng-model="application.ehisSchool" main-classifier-code="EHIS_KOOL" ng-change="application.country = 'RIIK_EST'"
-            criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" only-valid
-            filter-values="[studentEhisSchool]" by-property="ehisSchool" model-value-attr="code" ng-required="!application.isAbroad"></hois-classifier-select>
-        </md-input-container>
-      </div>
-      <div layout="row" layout-sm="column" layout-xs="column" ng-if="application.isAbroad && !formState.isNewSchool">
+      <div layout="row" layout-sm="column" layout-xs="column" ng-if="!formState.isNewSchool">
         <md-input-container flex="30" flex-sm="100" flex-xs="100">
           <label>{{'apel.formalLearnings.schoolNameEt' | translate}}</label>
-          <md-select ng-model="formState.apelSchool" aria-label="apelSchool" ng-change="apelSchoolChanged()"
-            ng-model-options="{trackBy: '$value.id + $value.nameEt'}" required>
+          <md-select ng-model="application.apelSchool" aria-label="apelSchool" ng-model-options="{trackBy: '$value.id + $value.nameEt'}" required>
             <md-option ng-repeat="val in apelSchools" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
           </md-select>
         </md-input-container>
         <div layout="column" class="form-readonly" flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <br>
-          <md-input-container flex style="margin-bottom: none;" ng-init="apelSchoolChanged()">
+          <div>&nbsp;</div>
+          <md-input-container flex style="margin-bottom: none;">
             <label>{{'apel.formalLearnings.schoolCountry' | translate}}</label>
-            <hois-classifier-value ng-model="application.country" model-value-attr="code" main-classifier-code="RIIK"></hois-classifier-value>
+            <hois-classifier-value ng-model="application.apelSchool.country" model-value-attr="code" main-classifier-code="RIIK"></hois-classifier-value>
           </md-input-container>
         </div>
       </div>
-      <div ng-if="application.isAbroad">
+      <div>
         <md-input-container ng-if="!formState.isNewSchool">
           <md-button ng-click="addNewSchool()" class="md-raised">{{'apel.formalLearnings.addNewSchool' | translate}}</md-button>
         </md-input-container>
@@ -64,16 +46,15 @@
                 filter-values="apelSchoolsEhisCodes()" required></hois-classifier-select>
             </md-input-container>
           </div>
-          <div layout="row" layout-sm="column" layout-xs="column">
-            <md-input-container ng-if="application.newApelSchool.country" flex="30" flex-sm="100" flex-xs="100">
+          <div ng-if="application.newApelSchool.country" layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="30" flex-sm="100" flex-xs="100">
               <label>{{'apel.formalLearnings.schoolNameEt' | translate}}</label>
-              <input type="text" ng-model="application.newApelSchool.nameEt" ng-disabled="formState.isMySchool" md-maxlength="100"
-                required>
+              <input type="text" ng-model="application.newApelSchool.nameEt" md-maxlength="100" required>
             </md-input-container>
-            <md-input-container ng-if="application.newApelSchool.country" flex="30" flex-sm="100" flex-xs="100"
+            <md-input-container flex="30" flex-sm="100" flex-xs="100"
               flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'apel.formalLearnings.schoolNameEn' | translate}}</label>
-              <input type="text" ng-model="application.newApelSchool.nameEn" ng-disabled="formState.isMySchool" md-maxlength="100">
+              <input type="text" ng-model="application.newApelSchool.nameEn" md-maxlength="100">
             </md-input-container>
           </div>
           <md-button class="md-raised" ng-click="cancelCreatingNewSchool()">{{'main.button.annul' | translate}}</md-button>
@@ -104,46 +85,53 @@
 <div>&nbsp;<div>
   <div layout="column" flex>
     <fieldset tabindex="1">
-      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.subjects' | translate}}</legend>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{(!student.curriculumVersion.isVocational ? 'main.subjects' : 'application.modulesAndThemes') | translate}}</legend>
       <md-button class="md-raised" href="" ng-click="addPlannedSubjectRow()">{{'main.button.addRow' | translate}}</md-button>
       <md-table-container>
         <table md-table class="secondary-table">
           <thead md-head>
-            <tr md-row>
+            <tr md-row ng-if="student.curriculumVersion">
               <th md-column><span>{{(!student.curriculumVersion.isVocational ? 'application.plannedSubject': 'application.plannedModulesThemes') | translate}}</span></th>
               <th md-column><span>{{(!student.curriculumVersion.isVocational ? 'application.substitutableSubject' : 'application.substitutableModulesThemes') | translate}}</span></th>
               <th md-column></th>
+
             </tr>
           </thead>
-          <tbody md-body>
-            <tr md-row ng-repeat="plannedSubject in application.plannedSubjects | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
-              <td md-cell>
-                <md-input-container>
-                  <input type="text" ng-model="plannedSubject.name" aria-label="planned subject name" required>
-                </md-input-container>
+          <tbody md-body ng-if="application.plannedSubjects">
+            <tr md-row ng-repeat="plannedSubject in application.plannedSubjects | orderBy: 'id' track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell style="width:45%">
+                <div flex="row">
+                  <md-input-container style="width:100%">
+                    <label></label>
+                    <input type="text" ng-model="plannedSubject.name" aria-label="planned subject name" md-maxlength="1000" required>
+                  </md-input-container>
+                </div>
               </td>
-              <td md-cell>
-                <md-input-container ng-if="!student.curriculumVersion.isVocational">
+              <td md-cell style="width:45%">
+                <md-input-container ng-if="!student.curriculumVersion.isVocational" style="width: 100%">
                   <md-select class="my-select" style="display: block;" ng-model="plannedSubject.subjectsSelected" ng-change="subjectsChanged(plannedSubject)"
-                  ng-model-options="{trackBy: '$value.subject'}" required multiple aria-label="planned subject equivalent subject">
+                  ng-model-options="{trackBy: '$value.subject'}" multiple aria-label="replaceable subject">
                     <md-option ng-repeat="val in studentSubjects" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
                   </md-select>
                 </md-input-container>
-                <md-input-container ng-if="student.curriculumVersion.isVocational">
-                  <md-select class="my-select" ng-model="plannedSubject.subjectsSelected" ng-change="moduleOrThemeSelected(plannedSubject)"
-                    ng-model-options="{trackBy: '$value.moduleId && $value.themeId'}" required multiple aria-label="planned subject equivalent module or theme">
-                    <md-option ng-repeat="val in modulesAndThemes" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
+                <md-input-container ng-if="student.curriculumVersion.isVocational" style="width: 100%">
+                  <md-select class="my-select" ng-model="plannedSubject.subjectsSelected" ng-change="moduleOrThemeChanged(plannedSubject)"
+                    ng-model-options="{trackBy: '$value.moduleId + $value.themeId'}" multiple aria-label="replaceable module or theme">
+                    <md-option ng-repeat="val in modulesAndThemes" ng-value="val"
+                      ng-style="{'font-weight': val.isModule ? 600 : 400}" ng-disabled="val.disabled">
+                      {{currentLanguageNameField(val)}}
+                    </md-option>
                   </md-select>
                 </md-input-container>
               </td>
-              <td md-cell>
+              <td md-cell style="width:10%">
                 <md-button class="remove nomargin" ng-click="removeFromArray(application.plannedSubjects, plannedSubject)">&times;</md-button>
               </td>
             </tr>
           </tbody>
         </table>
       </md-table-container>
-    </fieldset>	
+    </fieldset>
   </div>
 </div>
 <div>&nbsp;<div>

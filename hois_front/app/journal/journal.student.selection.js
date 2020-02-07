@@ -1,6 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').controller('JournalStudentSelectionController', function ($scope, $route, QueryUtils, ArrayUtils, message, dialogService) {
+  $scope.auth = $route.current.locals.auth;
   var entity = $route.current.locals.entity;
 
   $scope.selectedStudents = [];
@@ -23,6 +24,7 @@ angular.module('hitsaOis').controller('JournalStudentSelectionController', funct
 
   $scope.searchStudent = function() {
     dialogService.showDialog('journal/journal.searchStudent.dialog.html', function(dialogScope) {
+      dialogScope.auth = $scope.auth;
       dialogScope.selectedStudents = [];
       dialogScope.searchedStudents = [];
 

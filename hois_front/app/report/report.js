@@ -19,7 +19,7 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
       }
     }
     QueryUtils.createQueryForm($scope, '/reports/students', {order: 'p.lastname,p.firstname', isHigher: $scope.auth.higher}, afterLoad);
-    
+
     $scope.directiveControllers = [];
     var _clearCriteria = $scope.clearCriteria;
     $scope.clearCriteria = function() {
@@ -51,7 +51,8 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
 
     QueryUtils.createQueryForm($scope, '/reports/students/statistics', {
       order: $scope.currentLanguage() === 'en' ? 'c.nameEn' : 'c.nameEt',
-      result: 'OPPEVORM'
+      result: 'OPPEVORM',
+      date: new Date().withoutTime()
     }, function() {
       var resultType = $scope.criteria.result;
       $scope.savedCriteria = angular.copy($scope.criteria);
@@ -72,7 +73,6 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
         }
       }
     });
-    $scope.criteria.date = new Date().withoutTime();
     var _clearCriteria = $scope.clearCriteria;
     $scope.clearCriteria = function() {
       _clearCriteria();
@@ -99,18 +99,29 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
   };
   var clMapper = Classifier.valuemapper({homeCountry: 'RIIK', programme: 'VALISKOOL_PROGRAMM'});
   QueryUtils.createQueryForm($scope, '/reports/gueststudents/statistics', {order: 'p.lastname,p.firstname'}, clMapper.objectmapper);
-  
+
   /** Load departments when curriculum changes */
   $scope.queryForDepartments = function() {
-    $scope.criteria.curriculumVersion = undefined;
-    if (angular.isObject($scope.formState.curriculum) && $scope.formState.curriculum.id !== undefined) {
-      $scope.criteria.curriculum = $scope.formState.curriculum.id;
+    // Check if I can remove curriculum version from field
+    if ($scope.hiddenCriteria.curriculumVersionObj &&
+       ($scope.hiddenCriteria.curriculumObj || {}).id !== $scope.hiddenCriteria.curriculumVersionObj.curriculum) {
+      $scope.hiddenCriteria.curriculumVersionObj = undefined;
+    }
+    if (angular.isObject($scope.hiddenCriteria.curriculumObj) && $scope.hiddenCriteria.curriculumObj.id !== undefined) {
+      $scope.criteria.curriculum = $scope.hiddenCriteria.curriculumObj.id;
       $scope.formState.departments = QueryUtils.endpoint('/autocomplete/curriculumdepartments').query({id: $scope.criteria.curriculum});
     } else {
       $scope.criteria.curriculum = undefined;
       $scope.formState.departments = QueryUtils.endpoint('/autocomplete/curriculumdepartments').query();
     }
   };
+
+  $scope.$watch('hiddenCriteria.curriculumVersionObj', function (newV, oldV) {
+    if (newV === oldV) {
+      return;
+    }
+    $scope.criteria.curriculumVersion = ($scope.hiddenCriteria.curriculumVersionObj || {}).id;
+  });
 
   var unbindStudyYearWatch = $scope.$watch('criteria.studyYear', function(value) {
     if (angular.isNumber(value)) {
@@ -127,20 +138,47 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
     departments: QueryUtils.endpoint('/autocomplete/curriculumdepartments').query(),
     xlsUrl: 'reports/foreignstudents/statistics/foreignstudentstatistics.xls'
   };
-  var clMapper = Classifier.valuemapper({foreignCountry: 'RIIK', programme: 'VALISKOOL_PROGRAMM'});
+  var clMapper = Classifier.valuemapper({
+    educationLevel: 'HARIDUSTASE',
+    foreignCountry: 'RIIK',
+    programme: 'VALISKOOL_PROGRAMM',
+    extention: 'NOM_PIKEND'
+  });
   QueryUtils.createQueryForm($scope, '/reports/foreignstudents/statistics', {order: 'p.lastname,p.firstname'}, clMapper.objectmapper);
-  
+
   /** Load departments when curriculum changes */
   $scope.queryForDepartments = function() {
-    $scope.criteria.curriculumVersion = undefined;
-    if (angular.isObject($scope.formState.curriculum) && $scope.formState.curriculum.id !== undefined) {
-      $scope.criteria.curriculum = $scope.formState.curriculum.id;
-      $scope.formState.departments = QueryUtils.endpoint('/autocomplete/curriculumdepartments').query({id: $scope.criteria.curriculum});
+    // Check if I can remove curriculum version from field
+    if ($scope.hiddenCriteria.curriculumVersion &&
+       ($scope.hiddenCriteria.curriculum || {}).id !== $scope.hiddenCriteria.curriculumVersion.curriculum) {
+      $scope.hiddenCriteria.curriculumVersion = undefined;
+    }
+    if (angular.isObject($scope.hiddenCriteria.curriculum) && $scope.hiddenCriteria.curriculum.id !== undefined) {
+      $scope.criteria.curriculum = $scope.hiddenCriteria.curriculum.id;
+      QueryUtils.endpoint('/autocomplete/curriculumdepartments').query({id: $scope.criteria.curriculum})
+        .$promise.then(function (result) {
+          $scope.formState.departments = result;
+          if ($scope.criteria.department !== null && !isCurriculumDepartment($scope.criteria.department, result)) {
+            $scope.criteria.department = null;
+          }
+      });
     } else {
       $scope.criteria.curriculum = undefined;
       $scope.formState.departments = QueryUtils.endpoint('/autocomplete/curriculumdepartments').query();
     }
   };
+
+  function isCurriculumDepartment(selectedDepartment, curriculumDepartments) {
+    var departmentIds = (curriculumDepartments || []).map(function (department) { return department.id });
+    return departmentIds.indexOf(selectedDepartment) !== -1;
+  }
+
+  $scope.$watch('hiddenCriteria.curriculumVersion', function (newV, oldV) {
+    if (newV === oldV) {
+      return;
+    }
+    $scope.criteria.curriculumVersion = ($scope.hiddenCriteria.curriculumVersion || {}).id;
+  });
 
   var unbindStudyYearWatch = $scope.$watch('criteria.studyYear', function(value) {
     if (angular.isNumber(value)) {
@@ -157,8 +195,9 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
     $scope.formState = {xlsUrl: 'reports/students/statistics/studentstatisticsbyperiod.xls'};
 
     QueryUtils.createQueryForm($scope, '/reports/students/statistics/byperiod', {
-      order: $scope.currentLanguage() === 'en' ? 'c.nameEn' : 'c.nameEt', 
-      result: 'OPPURSTAATUS_A'
+      order: $scope.currentLanguage() === 'en' ? 'c.nameEn' : 'c.nameEt',
+      result: 'OPPURSTAATUS_A',
+      from: new Date().withoutTime()
     }, function() {
       setResultClassifiers($scope.criteria.result);
     });
@@ -174,7 +213,7 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
       // get classifiers from search result curriculums
       if (angular.isDefined($scope.resultDef)) {
         var queryClassifiers = queryResultClassifiers();
-  
+
         $scope.resultDef.$promise.then(function () {
           for (var i = 0; i < $scope.resultDef.length; i++) {
             var classifier = $scope.resultDef[i];
@@ -202,7 +241,6 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
       return classifiers;
     }
 
-    $scope.criteria.from = new Date().withoutTime();
     var _clearCriteria = $scope.clearCriteria;
     $scope.clearCriteria = function() {
       _clearCriteria();
@@ -241,7 +279,7 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
     };
 
     $scope.formState = {
-      studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(), 
+      studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(),
       studyPeriods: {},
       xlsUrl: 'reports/teachers/load/higher/teachersloadhigher.xls'
     };
@@ -280,7 +318,7 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
     };
 
     $scope.formState = {
-      studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(), 
+      studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(),
       studyPeriods: {},
       xlsUrl: 'reports/teachers/load/vocational/teachersloadvocational.xls'
     };
@@ -372,7 +410,7 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
 function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $window, Classifier, DataUtils, VocationalGradeUtil, QueryUtils, config, dialogService, message) {
   $scope.gradeUtil = VocationalGradeUtil;
   $scope.auth = $route.current.locals.auth;
-  
+
   var baseUrl = '/reports/studentgroupteacher';
   var resultsMapper = Classifier.valuemapper({grade: 'KUTSEHINDAMINE', entryType: 'SISSEKANNE'});
   var absencesMapper = Classifier.valuemapper({absence: 'PUUDUMINE', entryType: 'SISSEKANNE'});
@@ -396,12 +434,12 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
   if ($scope.auth.isTeacher()) {
     $scope.teacherId = $scope.auth.teacher;
   }
-  
+
   $scope.directiveControllers = [];
 
   $scope.formState = {
     showAllParameters: false,
-    studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(), 
+    studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(),
     studyPeriods: {},
     xlsUrl: 'reports/studentgroupteacher/studentgroupteacher.xls',
     pdfUrl: 'reports/studentgroupteacher/studentgroupteacher.pdf',
@@ -445,7 +483,7 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
       $timeout(searchUsingStoredCriteria, 200);
     }
   }
-  
+
   function setEntryTypeCriteria() {
     $scope.criteria.entryTypes = [];
     angular.forEach($scope.criteria.entryType, function (boolean, type) {
@@ -471,7 +509,7 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
 
   Classifier.queryForDropdown({ mainClassCode: 'SISSEKANNE' }, function (result) {
     var entryTypes = Classifier.toMap(result);
-    $scope.entryTypes = Object.keys(entryTypes).map(function(it) { 
+    $scope.entryTypes = Object.keys(entryTypes).map(function(it) {
       return entryTypes[it];
     });
   });
@@ -550,7 +588,7 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
       message.error('main.messages.form-has-errors');
       return;
     }
-    
+
     if (!$scope.criteria.studyYear && !$scope.criteria.from) {
       message.error('report.studentGroupTeacher.error.studyYearOrEntriesFromRequired');
       return;
@@ -587,7 +625,7 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
       });
       $scope.tableTotalColumnsColspan = 6 + ($scope.record.showAverageGrade ? 1 : 0) +
         ($scope.record.showWeightedAverageGrade ? 1 : 0);
-        
+
       QueryUtils.loadingWheel($scope, false);
       $scope.criteria.formState = {studyPeriod: $scope.formState.studyPeriod, studentGroup: $scope.formState.studentGroup};
       $scope.formState.showAllParameters = false;
@@ -595,7 +633,7 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
       $scope.$broadcast('refreshFixedColumns');
     });
   };
-  
+
   $scope.clearCriteria = function() {
     $scope.formState.showAllParameters = true;
     $scope.formState.studyPeriod = null;
@@ -705,5 +743,5 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
       c.clear();
     });
   };
-  
+
 }]);

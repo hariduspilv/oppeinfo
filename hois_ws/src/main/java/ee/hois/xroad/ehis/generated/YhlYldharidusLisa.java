@@ -40,12 +40,14 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="omandabHaridKinnipidamisasutuses" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}ehisBoolean" minOccurs="0"/&gt;
  *         &lt;element name="puudulikudAastahinded" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}yhlPuudulikudAastahinded" minOccurs="0"/&gt;
  *         &lt;element name="erivajadusedTugiteenused" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}yhlErivajadusedTugiteenused" minOccurs="0"/&gt;
+ *         &lt;element name="vanemaNousolekud" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}yhlVanemaNousolekud" minOccurs="0"/&gt;
  *         &lt;element name="oppevormiMuutus" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}yhlOppevormMuutus" minOccurs="0"/&gt;
  *         &lt;element name="klOpilaskoduFin" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="pikapaevaruhm" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}ehisBoolean" minOccurs="0"/&gt;
  *         &lt;element name="lisainfo1" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="lisainfo2" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="lisainfo3" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="ujumisandmed" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}yhlUjumisandmed" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -76,12 +78,14 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "omandabHaridKinnipidamisasutuses",
     "puudulikudAastahinded",
     "erivajadusedTugiteenused",
+    "vanemaNousolekud",
     "oppevormiMuutus",
     "klOpilaskoduFin",
     "pikapaevaruhm",
     "lisainfo1",
     "lisainfo2",
-    "lisainfo3"
+    "lisainfo3",
+    "ujumisandmed"
 })
 public class YhlYldharidusLisa {
 
@@ -115,12 +119,14 @@ public class YhlYldharidusLisa {
     protected String omandabHaridKinnipidamisasutuses;
     protected YhlPuudulikudAastahinded puudulikudAastahinded;
     protected YhlErivajadusedTugiteenused erivajadusedTugiteenused;
+    protected YhlVanemaNousolekud vanemaNousolekud;
     protected YhlOppevormMuutus oppevormiMuutus;
     protected String klOpilaskoduFin;
     protected String pikapaevaruhm;
     protected String lisainfo1;
     protected String lisainfo2;
     protected String lisainfo3;
+    protected YhlUjumisandmed ujumisandmed;
 
     /**
      * Gets the value of the isikuandmed property.
@@ -603,6 +609,30 @@ public class YhlYldharidusLisa {
     }
 
     /**
+     * Gets the value of the vanemaNousolekud property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link YhlVanemaNousolekud }
+     *     
+     */
+    public YhlVanemaNousolekud getVanemaNousolekud() {
+        return vanemaNousolekud;
+    }
+
+    /**
+     * Sets the value of the vanemaNousolekud property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link YhlVanemaNousolekud }
+     *     
+     */
+    public void setVanemaNousolekud(YhlVanemaNousolekud value) {
+        this.vanemaNousolekud = value;
+    }
+
+    /**
      * Gets the value of the oppevormiMuutus property.
      * 
      * @return
@@ -744,6 +774,30 @@ public class YhlYldharidusLisa {
      */
     public void setLisainfo3(String value) {
         this.lisainfo3 = value;
+    }
+
+    /**
+     * Gets the value of the ujumisandmed property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link YhlUjumisandmed }
+     *     
+     */
+    public YhlUjumisandmed getUjumisandmed() {
+        return ujumisandmed;
+    }
+
+    /**
+     * Sets the value of the ujumisandmed property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link YhlUjumisandmed }
+     *     
+     */
+    public void setUjumisandmed(YhlUjumisandmed value) {
+        this.ujumisandmed = value;
     }
 
 }

@@ -29,7 +29,7 @@ public class FinalHigherProtocolStudentDto extends HigherProtocolStudentDto {
         FinalHigherProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent, new FinalHigherProtocolStudentDto());
         Student student = protocolStudent.getStudent();
         dto.setStudentId(EntityUtil.getId(student));
-        dto.setFullname(PersonUtil.fullname(student.getPerson()));
+        dto.setFullname(PersonUtil.fullnameOptionalGuest(student));
         dto.setIdcode(student.getPerson().getIdcode());
         dto.setStatus(EntityUtil.getCode(student.getStatus()));
         dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);

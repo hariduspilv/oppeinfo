@@ -21,6 +21,7 @@ angular.module('hitsaOis').controller('StudentScholarshipController', ['$route',
           var match = $scope.studentStipends.find(function (application) {
             return application.termId === possible.id;
           });
+          possible.application = match;
           possible.canApply = possible.termCompliance.fullyComplies ? !angular.isDefined(match) : false;
           possible.alreadyApplied = !angular.isDefined(match) ? false : true;
         });

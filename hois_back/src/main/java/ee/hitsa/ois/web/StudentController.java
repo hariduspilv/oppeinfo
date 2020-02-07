@@ -3,13 +3,13 @@ package ee.hitsa.ois.web;
 import static ee.hitsa.ois.util.UserUtil.assertIsSchoolAdmin;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletResponse;
@@ -30,6 +30,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.concurrent.AsyncManager;
+import ee.hitsa.ois.concurrent.AsyncMemoryManager;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentSupportService;
@@ -105,6 +107,8 @@ public class StudentController {
     private PdfService pdfService;
     @Autowired
     private EntityManager em;
+    @Autowired
+    private AsyncManager asyncManager;
 
     @GetMapping
     public Page<StudentSearchDto> search(HoisUserDetails user, @Valid StudentSearchCommand criteria,
@@ -292,11 +296,10 @@ public class StudentController {
     @PostMapping("/ehisStudentExport")
     public Map<String, Object> ehisStudentExport(HoisUserDetails user, @Valid @RequestBody EhisStudentForm ehisStudentForm) {
         assertIsSchoolAdmin(user);
-        String requestHash = String.format("%d-%d-%d-%d", Integer.valueOf(user.getUsername().hashCode()),
-                ehisStudentForm.getFrom() != null ? Integer.valueOf(ehisStudentForm.getFrom().hashCode()) : Integer.valueOf(0),
-                ehisStudentForm.getThru() != null ? Integer.valueOf(ehisStudentForm.getThru().hashCode()) : Integer.valueOf(0),
-                Integer.valueOf(LocalDateTime.now().hashCode()));
-        ehisStudentService.exportStudents(user, ehisStudentForm, requestHash);
+        String requestHash = asyncManager.generateKey(user);
+        ExportStudentsRequest request = ehisStudentService.createRequest(user, requestHash, ehisStudentForm);
+        asyncManager.createRequest(user, AsyncMemoryManager.EHIS_STUDENT, requestHash, request);
+        asyncManager.processRequest(request);
         HashMap<String, Object> map = new HashMap<>();
         map.put("key", requestHash);
         return map;
@@ -305,14 +308,14 @@ public class StudentController {
     @GetMapping("/ehisStudentExportCheck")
     public EhisStudentExportRequestDto ehisStudentExportCheck(HoisUserDetails user, @Valid EhisStudentForm ehisStudentForm) {
         assertIsSchoolAdmin(user);
-        ExportStudentsRequest overlappedRequest = ehisStudentService.findOverlappedActiveExportStudentsRequest(user, ehisStudentForm);
-        return overlappedRequest != null && !overlappedRequest.isDone() ? EhisStudentExportRequestDto.of(overlappedRequest) : null;
+        Optional<ExportStudentsRequest> overlappedRequest = ehisStudentService.findOverlappedActiveExportStudentsRequest(user, ehisStudentForm);
+        return overlappedRequest.isPresent() && !overlappedRequest.get().isDone() ? EhisStudentExportRequestDto.of(overlappedRequest.get()) : null;
     }
 
     @GetMapping("/ehisStudentExportStatus")
     public FutureStatusResponse ehisStudentExportStatus(HoisUserDetails user, @RequestParam(required = true) String key) {
         assertIsSchoolAdmin(user);
-        return ehisStudentService.exportStudentsStatus(user, key);
+        return asyncManager.getState(user, AsyncMemoryManager.EHIS_STUDENT, key, true);
     }
 
     @GetMapping("/{id:\\d+}/vocationalResults")

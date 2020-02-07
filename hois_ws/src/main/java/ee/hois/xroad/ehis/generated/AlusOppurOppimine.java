@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -22,9 +21,9 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="ryhm" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
- *         &lt;element name="kohaSuurus" type="{http://www.w3.org/2001/XMLSchema}double"/&gt;
- *         &lt;element name="oppimaAsumKp" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
+ *         &lt;element name="ryhm" type="{http://www.w3.org/2001/XMLSchema}integer" minOccurs="0"/&gt;
+ *         &lt;element name="kohaSuurus" type="{http://www.w3.org/2001/XMLSchema}double" minOccurs="0"/&gt;
+ *         &lt;element name="oppimaAsumKp" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
  *         &lt;element name="klErivajadus" type="{http://www.w3.org/2001/XMLSchema}string" maxOccurs="unbounded" minOccurs="0"/&gt;
  *         &lt;element name="tugiteenus" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}alusOppurTugiteenus" maxOccurs="unbounded" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
@@ -45,10 +44,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
 })
 public class AlusOppurOppimine {
 
-    @XmlElement(required = true)
     protected BigInteger ryhm;
-    protected double kohaSuurus;
-    @XmlElement(required = true)
+    protected Double kohaSuurus;
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar oppimaAsumKp;
     protected List<String> klErivajadus;
@@ -81,16 +78,24 @@ public class AlusOppurOppimine {
     /**
      * Gets the value of the kohaSuurus property.
      * 
+     * @return
+     *     possible object is
+     *     {@link Double }
+     *     
      */
-    public double getKohaSuurus() {
+    public Double getKohaSuurus() {
         return kohaSuurus;
     }
 
     /**
      * Sets the value of the kohaSuurus property.
      * 
+     * @param value
+     *     allowed object is
+     *     {@link Double }
+     *     
      */
-    public void setKohaSuurus(double value) {
+    public void setKohaSuurus(Double value) {
         this.kohaSuurus = value;
     }
 

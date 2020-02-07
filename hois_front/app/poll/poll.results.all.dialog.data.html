@@ -1,0 +1,57 @@
+<div style="word-break: break-word;
+padding:0px 0px 0px 0px;
+margin:10px 0px 10px 0px;
+font-size: 13px;
+font-weight: 700">
+    {{item.theme.order}}.{{question.question.order}} 
+    {{currentLanguageNameField(question.question)}}
+    {{(question.type !== 'VASTUS_T' && question.type !== 'VASTUS_S' && question.type !== 'VASTUS_M' && question.average !== null) ? ' - ' + question.average : ''}}
+</div>
+<div ng-if="question.type==='VASTUS_T'" flex style="padding: 0px;">
+    <ul>
+        <li ng-repeat="answer in question.answers" style="font-size: 13px;">
+            {{answer.answerTxt}}
+        </li>
+    </ul>
+</div>
+<div ng-if="question.type==='VASTUS_M'" flex>
+    <md-table-container>
+        <table md-table class="secondary-table questions-secondary-table">
+            <thead md-head>
+                <tr md-row style="padding-top:0px">
+                    <th md-column ng-repeat="answer in question.answers" style="font-weight: 400 !important;">{{answer.nameEt}}</th>
+                    <th md-column width="10%" style="font-weight: 400 !important;">{{'poll.answers.total' | translate}}</th>
+                </tr>
+            </thead>
+            <tbody md-body>
+                <tr md-row>
+                    <td md-cell ng-repeat="answer in question.answers">{{answer.answers}}</td>
+                    <td md-cell>{{question.allAnswers}} ({{question.individualAnswers}})</td>
+                </tr>
+            </tbody>
+        </table>
+    </md-table-container>
+</div>
+<div ng-if="question.type==='VASTUS_R' || question.type==='VASTUS_S' || question.type==='VASTUS_V'" flex style="padding: 0px 0px 0px 0px;">
+    <md-table-container>
+        <table md-table class="secondary-table questions-secondary-table">
+            <thead md-head>
+                <tr md-row style="padding-top:0px">
+                    <th md-column ng-repeat="answer in question.answers" style="font-weight: 400 !important;">
+                        {{question.type === 'VASTUS_S' ? answer.nameEt : answer.weight + ' - ' + answer.nameEt}} (%)
+                    </th>
+                    <th md-column width="10%" style="font-weight: 400 !important;">{{'poll.answers.totalIndividual' | translate}}</th>
+                </tr>
+            </thead>
+            <tbody md-body>
+                <tr md-row>
+                    <td md-cell ng-repeat="answer in question.answers">
+                        {{answer.answers}} 
+                        ({{calculate(answer.answers, question, item)}}%)
+                    </td>
+                    <td md-cell>{{question.individualAnswers}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </md-table-container>
+</div>

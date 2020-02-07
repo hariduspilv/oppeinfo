@@ -26,10 +26,10 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="lopetamiseAasta" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="lopetamiseKuupaev" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
  *         &lt;element name="keeleKood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="tunnustuseKood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="tunnustuseKood" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="oppevorm" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oppesuund" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="koolId" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="koolId" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="staatus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="klass" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *       &lt;/sequence&gt;
@@ -71,13 +71,13 @@ public class SaisYldhOping {
     @XmlElement(required = true, nillable = true)
     protected String keeleKood;
     @XmlElement(required = true, nillable = true)
-    protected String tunnustuseKood;
+    protected BigInteger tunnustuseKood;
     @XmlElement(required = true, nillable = true)
     protected String oppevorm;
     @XmlElement(required = true, nillable = true)
     protected String oppesuund;
     @XmlElement(required = true, nillable = true)
-    protected String koolId;
+    protected BigInteger koolId;
     @XmlElement(required = true, nillable = true)
     protected String staatus;
     @XmlElement(required = true, nillable = true)
@@ -232,10 +232,10 @@ public class SaisYldhOping {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getTunnustuseKood() {
+    public BigInteger getTunnustuseKood() {
         return tunnustuseKood;
     }
 
@@ -244,10 +244,10 @@ public class SaisYldhOping {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setTunnustuseKood(String value) {
+    public void setTunnustuseKood(BigInteger value) {
         this.tunnustuseKood = value;
     }
 
@@ -304,10 +304,10 @@ public class SaisYldhOping {
      * 
      * @return
      *     possible object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public String getKoolId() {
+    public BigInteger getKoolId() {
         return koolId;
     }
 
@@ -316,10 +316,10 @@ public class SaisYldhOping {
      * 
      * @param value
      *     allowed object is
-     *     {@link String }
+     *     {@link BigInteger }
      *     
      */
-    public void setKoolId(String value) {
+    public void setKoolId(BigInteger value) {
         this.koolId = value;
     }
 

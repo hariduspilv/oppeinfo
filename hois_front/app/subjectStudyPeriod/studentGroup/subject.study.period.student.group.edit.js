@@ -1,6 +1,10 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditController', ['$scope', 'QueryUtils', 'ArrayUtils', 'Classifier', '$route', 'message', 'dialogService', '$rootScope', 'SspCapacities', 'DataUtils', function ($scope, QueryUtils, ArrayUtils, Classifier, $route, message, dialogService, $rootScope, SspCapacities, DataUtils) {
+angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditController',
+  ['$scope', 'QueryUtils', 'ArrayUtils', 'Classifier', '$route', 'message', 'dialogService',
+   '$rootScope', 'SspCapacities', 'DataUtils', '$location', '$sessionStorage',
+  function ($scope, QueryUtils, ArrayUtils, Classifier, $route, message,
+    dialogService, $rootScope, SspCapacities, DataUtils, $location, $sessionStorage) {
 
     var studyPeriodId = $route.current.params.studyPeriodId ? parseInt($route.current.params.studyPeriodId, 10) : null;
     var studentGroup = $route.current.params.studentGroupId ? parseInt($route.current.params.studentGroupId, 10) : null;
@@ -10,6 +14,9 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
     $scope.capacityTypes = QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({ isHigher: true });
 
     $scope.record = {};
+    $scope.selectedPair = selectedPair;
+    $scope.getSubjectsBySemester = getSubjectsBySemester;
+    $scope.unplannedSubjectOrderBy = unplannedSubjectOrderBy;
 
     function setCurrentStudyPeriod() {
       if(!$scope.record.studyPeriod) {
@@ -18,8 +25,10 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
       }
     }
 
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query();
+    
     if(!studyPeriodId) {
-      $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query(setCurrentStudyPeriod);
+      $scope.studyPeriods.$promise.then(setCurrentStudyPeriod);
       $scope.studyPeriods.$promise.then(function (response) {
         response.forEach(function (studyPeriod) {
             studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
@@ -39,6 +48,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
             $scope.studentGroup.nameEt = response.code;
             $scope.course = $scope.studentGroup.course.toString();
             getCurriculum();
+            getCurriculumProgram(studentGroup, studyPeriodId);
         });
         $scope.formState = {xlsUrl: 'subjectStudyPeriods/studentGroups/subjectstudyperiodstudentgroup.xls'};
     }
@@ -49,7 +59,45 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
       }
     }
 
-    $scope.$watch('record.studyPeriod', loadStudentGroups);
+    $scope.$watch('record.studyPeriod', function() {
+      if ($scope.isEditing) {
+        // Reset paramteres after changing study period
+        $scope.record.studentGroup = undefined;
+        $scope.course = undefined;
+        $scope.curriculum = undefined;
+        $scope.curriculumStudyPeriod = undefined;
+        $scope.semester = undefined;
+      }
+      loadStudentGroups()
+    });
+    $scope.$watch('record.studentGroup', function() {
+      if(!ArrayUtils.isEmpty($scope.studentGroups) && $scope.record.studentGroup) {
+        selectStudentGroup();
+      }
+    });
+    $scope.$watchGroup(['record.studentGroup', 'record.studyPeriod'], function (newValues) {
+      if (newValues[0] && newValues[1]) {
+        getCurriculumProgram(newValues[0], newValues[1]);
+      } else {
+        $scope.curriculumProgram = [];
+      }
+    });
+
+    function getCurriculumProgram(aStudentGroupId, aStudyPeriodId) {
+      $scope.curriculumProgram = QueryUtils
+        .endpoint('/subjectStudyPeriods/studentGroups/curriculumProgram/:studyPeriodId/:studentGroupId')
+        .get({studyPeriodId: aStudyPeriodId, studentGroupId: aStudentGroupId}, function (response) {
+          if (response) {
+            for (var sem in response) {
+              if (!isNaN(sem)) {
+                for (var i = 0; i < response[sem].length; i++) {
+                  response[sem][i].semester = parseInt(sem);
+                }
+              }
+            }
+          }
+        });
+    }
 
     function getCurriculum() {
       $scope.curriculum = QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/curriculum/' + $scope.studentGroup.curriculum.id).get(getCurriculumStudyPeriod);
@@ -61,6 +109,18 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
             years: Math.floor(sp / 12),
             months: sp % 12
         };
+
+        $scope.semesters = new Array(Math.ceil(sp / 6));
+        // set current semester
+        var startYear = $scope.studentGroup.curriculumVersionAdmissinYear;
+        if (startYear) {
+          var selectedPeriod = $scope.studyPeriods.find(function (period) {
+            return period.id === $scope.record.studyPeriod;
+          });
+          if (selectedPeriod) {
+            $scope.semester = calculateCurrentSemester(startYear, selectedPeriod);
+          }
+        }
     }
 
     function selectStudentGroup() {
@@ -68,7 +128,6 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
           return el.id === $scope.record.studentGroup;
         });
         if($scope.studentGroup) {
-          // $scope.studentGroup = sg;
           $scope.course = $scope.studentGroup.course.toString();
           getCurriculum();
         }
@@ -77,13 +136,6 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
     if(!$scope.isEditing) {
       $scope.studyPeriod = QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId});
     }
-
-    $scope.$watch('record.studentGroup', function() {
-            if(!ArrayUtils.isEmpty($scope.studentGroups) && $scope.record.studentGroup) {
-                selectStudentGroup();
-            }
-        }
-    );
 
     $scope.save = function() {
       $scope.subjectStudyPeriodStudentGroupEditForm.$setSubmitted();
@@ -137,4 +189,103 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
         });
     };
 
+    function selectedPair(subject) {
+      if (subject && !!subject.selectedPair) {
+        dialogService.confirmDialog({prompt: 'subjectStudyPeriod.prompt.addGroupToPair'}, function () {
+          QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/connect/:subjectStudyPeriodId/:studentGroupId')
+          .get({subjectStudyPeriodId: subject.selectedPair, studentGroupId: $scope.studentGroup.id}, function () {
+            // If we have these values then they are readonly fields
+            $scope.curriculumProgram = [];
+            if (studentGroup && studyPeriodId) {
+              $scope.record = Endpoint.search({studyPeriod: studyPeriodId, studentGroup: studentGroup});
+              $scope.record.$promise.then(function(response){
+                  $scope.capacitiesUtil = new SspCapacities(response);
+                  $scope.capacityTypes = response.capacityTypes;
+                  $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
+                  getCurriculumProgram(studentGroup, studyPeriodId);
+              });
+            } else {
+              $location.url('/subjectStudyPeriods/studentGroups/' + $scope.studentGroup.id + '/' + $scope.record.studyPeriod + '/edit?_noback');
+            }
+          });
+        }, function () {
+          subject.selectedPair = undefined;
+        });
+      }
+    }
+
+    function getSubjectsBySemester() {
+      if (!$scope.semester || !$scope.curriculumProgram) {
+        return [];
+      }
+
+      var marked = {};
+      var counter = $scope.semester;
+      var subjects = [];
+      while (counter > 0) {
+        if ($scope.curriculumProgram[counter]) {
+          for (var i = 0; i < $scope.curriculumProgram[counter].length; i++) {
+            if ($scope.curriculumProgram[counter][i].alreadyExistsForGroup) {
+              continue;
+            }
+            if (marked[$scope.curriculumProgram[counter][i].subject.id]) {
+              continue;
+            }
+            marked[$scope.curriculumProgram[counter][i].subject.id] = true;
+            subjects.push($scope.curriculumProgram[counter][i]);
+          }
+        }
+        counter--;
+      }
+      return subjects;
+    }
+
+    function unplannedSubjectOrderBy(subjectContainer) {
+      return $scope.currentLanguageNameField(subjectContainer.subject);
+    }
+
+    /**
+     * Find a semester for selected period and group
+     * 
+     * @param {number} startYear 
+     * @param {object} selectedStudyPeriod 
+     */
+    function calculateCurrentSemester(startYear, selectedStudyPeriod) {
+      var historySemester = checkHistorySemester($scope.record.studyPeriod, $scope.record.studentGroup);
+
+      if (historySemester) {
+        return historySemester;
+      }
+
+      var periodYearStart = selectedStudyPeriod.studyYear.startDate;
+      if (typeof periodYearStart === 'string') {
+        periodYearStart = new Date(periodYearStart);
+      }
+
+      var yearDiff = periodYearStart.getFullYear() - startYear;
+      var semester = yearDiff * 2 + (selectedStudyPeriod.type === 'OPPEPERIOOD_S' ? 1 : selectedStudyPeriod.type === 'OPPEPERIOOD_K' ? 2 : -999)
+
+      if (semester < 1) {
+        return 1;
+      }
+      if (semester > $scope.semesters.length) {
+        return $scope.semesters.length;
+      }
+
+      return semester;
+    }
+
+    $scope.$watch('semester', function (newV, oldV) {
+      if (newV && newV !== oldV && $scope.record.studentGroup && $scope.record.studyPeriod) {
+        var key = "sspsg-pair-" + $scope.record.studyPeriod + "-" + $scope.record.studentGroup;
+        $sessionStorage[key] = newV;
+      }
+    });
+
+    function checkHistorySemester(studyPeriodId, studentGroudId) {
+      if (studyPeriodId && studentGroudId) {
+        var key = "sspsg-pair-" + studyPeriodId + "-" + studentGroudId;
+        return $sessionStorage[key];
+      }
+    }
 }]);

@@ -64,6 +64,7 @@ import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.message.ConfirmationNeededMessage;
 import ee.hitsa.ois.message.StudentApplicationConfirmed;
@@ -272,17 +273,11 @@ public class ApplicationService {
      * @throws ValidationFailedException if application type specific validation fails
      */
     public Application save(HoisUserDetails user, Application application, ApplicationForm applicationForm) {
-        if (ApplicationType.AVALDUS_LIIK_VALIS.name().equals(applicationForm.getType())) {
-            ApplicationUtil.assertValidationRulesSave(applicationForm, applicationForm.getStudent().getId(), em);
-        }
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.bindToEntity(applicationForm, application, classifierRepository, "student", "files", "plannedSubjects",
                 "studyPeriodStart", "studyPeriodStart", "accademicApplication", "newCurriculumVersion", "oldCurriculumVersion",
                 "submitted", "studentGroup", "committee", "supportServices", "isDecided", "selectedModules", "themeMatches",
-                "apelSchool");
-        applicationForm.setApelSchool(applicationForm.getNewApelSchool() != null ? apelSchoolService.create(user, applicationForm.getNewApelSchool()).getId() : applicationForm.getApelSchool());
-        application.setApelSchool(applicationForm.getApelSchool() != null ? em.getReference(ApelSchool.class, applicationForm.getApelSchool()): null);
-        application.setApelSchool(EntityUtil.getOptionalOne(ApelSchool.class, applicationForm.getApelSchool(), em));
+                "isAbroad", "ehisSchool", "abroadSchool", "apelSchool");
         application.setStudyPeriodStart(EntityUtil.getOptionalOne(StudyPeriod.class, applicationForm.getStudyPeriodStart(), em));
         application.setStudyPeriodEnd(EntityUtil.getOptionalOne(StudyPeriod.class, applicationForm.getStudyPeriodEnd(), em));
         application.setOldCurriculumVersion(EntityUtil.getOptionalOne(CurriculumVersion.class, applicationForm.getOldCurriculumVersion(), em));
@@ -341,6 +336,19 @@ public class ApplicationService {
                     });
         }
 
+        if (ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_VALIS, application.getType())) {
+            ApelSchool apelSchool = EntityUtil.getOptionalOne(ApelSchool.class, applicationForm.getApelSchool(), em);
+            if (applicationForm.getNewApelSchool() != null) {
+                apelSchool = apelSchoolService.create(user, applicationForm.getNewApelSchool());
+            }
+            boolean isAbroad = !ClassifierUtil.isEstonia(apelSchool.getCountry());
+            application.setIsAbroad(Boolean.valueOf(isAbroad));
+            application.setCountry(apelSchool.getCountry());
+            application.setEhisSchool(apelSchool.getEhisSchool());
+            application.setAbroadSchool(isAbroad ? apelSchool.getNameEt() : null);
+            application.setApelSchool(apelSchool);
+        }
+
         ValidAcademicLeaveDto validAcademicLeave = applicationForm.getValidAcademicLeave();
         if (validAcademicLeave != null) {
             application.setDirective(em.getReference(DirectiveStudent.class, validAcademicLeave.getId())
@@ -364,7 +372,7 @@ public class ApplicationService {
             ApplicationUtil.assertAkadkConstraints(application);
             break;
         case AVALDUS_LIIK_VALIS:
-            ApplicationUtil.assertValisConstraints(application);
+            ApplicationUtil.assertValisConstraints(application, em, false);
             break;
         case AVALDUS_LIIK_OVERSKAVA:
         case AVALDUS_LIIK_RAKKAVA:
@@ -491,6 +499,7 @@ public class ApplicationService {
         } else {
             application.setNeedsRepresentativeConfirm(Boolean.TRUE);
         }
+        validateSubmission(application);
         application = EntityUtil.save(application, em);
         
         if (!UserUtil.isStudent(user, student) && !ApplicationUtil.SEND_MESSAGE_CALL.containsKey(EnumUtil.valueOf(ApplicationType.class, application.getType()))) {
@@ -498,6 +507,17 @@ public class ApplicationService {
             automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS, student, data);
         }
         return application;
+    }
+
+    private void validateSubmission(Application application) {
+        ApplicationType applicationType = ApplicationType.valueOf(EntityUtil.getCode(application.getType()));
+        switch (applicationType) {
+            case AVALDUS_LIIK_VALIS:
+                ApplicationUtil.assertValisConstraints(application, em, true);
+                break;
+            default:
+                break;
+        }
     }
 
     public Application reject(Application application, ApplicationRejectForm applicationRejectForm) {
@@ -547,6 +567,39 @@ public class ApplicationService {
         dto.setCanViewStudent(Boolean.valueOf(UserUtil.canViewStudent(user, application.getStudent())));
         dto.setCanRemoveConfirmation(Boolean.valueOf(canRemoveApplicationConfirmation(user, application)));
         dto.setCanChangeThemeReplacements(Boolean.valueOf(canChangeThemeReplacements(user, application)));
+        if (user.isStudent() && ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_VALIS, application.getType())) {
+            dto.setCanEditPlannedSubjects(Boolean.valueOf(canEditPlannedSubjects(user, application)));
+        }
+    }
+
+    private boolean canEditPlannedSubjects(HoisUserDetails user, Application application) {
+        // TODO Auto-generated method stub
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds"
+                + " join student s on ds.student_id = s.id"
+                + " join directive d on d.id = ds.directive_id"
+                + " join application a on a.id = ds.application_id"
+                + " left join study_period sp_start on sp_start.id = ds.study_period_start_id"
+                + " left join study_period sp_end on sp_end.id = ds.study_period_end_id"
+                + " left join (directive_student ds_katk join directive d_katk on d_katk.id = ds_katk.directive_id"
+                    + " and d_katk.type_code = :katkDirectiveType and d_katk.status_code = :directiveStatus)"
+                    + " on ds_katk.directive_student_id = ds.id "
+                + " where ds.student_id = a.student_id"
+                + " and a.id = :applicationId"
+                + " and ds.student_id = :studentId"
+                + " and s.status_code = :studentStatus"
+                + " and d.type_code = :directiveType"
+                + " and d.status_code = :directiveStatus"
+                + " and coalesce(ds_katk.start_date, sp_end.end_date, ds.end_date) >= :today"
+                + " and coalesce(sp_start.start_date, ds.start_date) <= :today");
+        qb.parameter("applicationId", EntityUtil.getId(application));
+        qb.parameter("studentId", user.getStudentId());
+        qb.parameter("studentStatus", StudentStatus.OPPURSTAATUS_V.name());
+        qb.parameter("directiveType", DirectiveType.KASKKIRI_VALIS.name());
+        qb.parameter("katkDirectiveType", DirectiveType.KASKKIRI_VALISKATK.name());
+        qb.parameter("directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
+        qb.parameter("today", LocalDate.now());
+        List<?> result = qb.select("1", em).getResultList();
+        return result.size() != 0;
     }
 
     /**

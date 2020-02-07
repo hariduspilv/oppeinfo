@@ -49,13 +49,13 @@
         </div>
       </div>
       <div flex="30">
-        <img ng-if="student.photo" flex="60" style="display: block; margin-left: auto; margin-right: auto; padding-bottom: 13px;" 
+        <img ng-if="student.photo" flex="60" style="display: block; margin-left: auto; margin-right: auto; padding-bottom: 13px;"
         ng-src="{{student.imageUrl}}">
       </div>
     </div>
 
     <div layout="column">
-      <hois-collapsable label="('student.study' | translate) + ' (' + currentLanguageNameField(student.school) + ')' 
+      <hois-collapsable label="('student.study' | translate) + ' (' + currentLanguageNameField(student.school) + ')'
         + (student.individualCurriculum ? ' - ' + ('student.statuses.individualCurriculumShort' | translate) + ' ('
         + (student.individualCurriculumStart | hoisDate) + '-' + (student.individualCurriculumEnd | hoisDate) + ')' : '')">
         <div layout="row" layout-sm="column" layout-xs="column">
@@ -355,7 +355,7 @@
       </hois-collapsable>
     </div>
 
-    <div ng-if="student.isVocational===false && !student.isGuestStudent">
+    <div ng-if="!student.isGuestStudent">
       <hois-collapsable label="('student.foreignStudy' | translate)">
 
         <md-table-container>
@@ -372,7 +372,7 @@
             </thead>
             <tbody md-body>
               <tr md-row ng-repeat="row in foreignstudies.content" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td md-cell>{{::row.school}}</td>
+                <td md-cell>{{row.school != null ? currentLanguageNameField(row.school) : '-'}}</td>
                 <td md-cell>
                   <hois-classifier-value ng-model="row.country" main-classifier-code="RIIK"></hois-classifier-value>
                 </td>

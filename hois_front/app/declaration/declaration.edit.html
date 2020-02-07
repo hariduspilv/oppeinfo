@@ -58,7 +58,7 @@
         <md-button class="md-raised" ng-click="openAddExtraCurriculumSubject()">
       {{(isGuestStudent && !hasCurriculum ? 'declaration.addSubject' : 'declaration.addExtraCurriculumSubject') | translate}}</md-button>
       </div>
-      <br>
+      <div>&nbsp;</div>
     
       <fieldset ng-show="addCurriculumSubjectForm">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'declaration.addingCurriculumSubject' | translate}}</legend>
@@ -123,7 +123,7 @@
           <md-button class="md-raised md-primary" ng-click="addExtraCurriculumSubject()">{{"main.button.add" | translate}}</md-button>
         </form>
       </fieldset>
-      <br>
+      <div>&nbsp;</div>
     
       <md-table-container>
         <table md-table>
@@ -173,7 +173,7 @@
           </tbody>
         </table>
       </md-table-container>
-      <br>
+      <div>&nbsp;</div>
       <div layout="row">
         <md-button ng-show="declaration.canBeSetConfirmed" class="md-raised md-primary" ng-click="confirm()">{{'declaration.confirm' | translate}}</md-button>
         <md-button ng-show="declaration.canBeSetUnconfirmed" class="md-raised md-primary" ng-click="removeConfirmation()">{{'declaration.removeConfirmation' | translate}}</md-button>
@@ -209,6 +209,7 @@
     legend.period > span {
       position: absolute;
       margin-right: 20px;
+      display:block;
     }
   }
 </style>

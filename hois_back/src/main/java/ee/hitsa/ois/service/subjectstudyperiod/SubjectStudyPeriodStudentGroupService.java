@@ -2,12 +2,15 @@ package ee.hitsa.ois.service.subjectstudyperiod;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -22,7 +25,9 @@ import org.springframework.stereotype.Service;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
@@ -32,8 +37,10 @@ import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
 import ee.hitsa.ois.service.XlsService;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.CurriculumProgramDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodCapacityDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodDtoContainer;
@@ -135,11 +142,11 @@ public class SubjectStudyPeriodStudentGroupService {
     }
     
     public List<StudentGroupSearchDto> getStudentGroupsList(Long schoolId, Long studyPeriodId) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_group sg join curriculum c on c.id = sg.curriculum_id");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_group sg join curriculum c on c.id = sg.curriculum_id "
+                + "left join curriculum_version cv on cv.id = sg.curriculum_version_id ");
 
         qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", schoolId);
         qb.filter("c.is_higher = true");
-        qb.requiredCriteria("c.status_code = :curriculumStatus", "curriculumStatus", CurriculumStatus.OPPEKAVA_STAATUS_K);
         qb.filter("(sg.valid_from is null or sg.valid_from <= current_date)");
         qb.filter("(sg.valid_thru is null or sg.valid_thru >= current_date)");
 
@@ -149,13 +156,15 @@ public class SubjectStudyPeriodStudentGroupService {
                         + "where ssp.study_period_id = :studyPeriodId " + "and ssp_sg.student_group_id = sg.id )",
                           "studyPeriodId", studyPeriodId);
 
-        List<?> data = qb.select("sg.id, sg.code, sg.course, c.id as curricId", em).getResultList();
+        qb.sort("sg.code");
+        List<?> data = qb.select("sg.id, sg.code, sg.course, c.id as curricId, cv.admission_year", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             StudentGroupSearchDto dto = new StudentGroupSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setCode(resultAsString(r, 1));
             dto.setCourse(resultAsInteger(r, 2));
             dto.setCurriculum(new AutocompleteResult(resultAsLong(r, 3), null, null));
+            dto.setCurriculumVersionAdmissinYear(resultAsShort(r, 4));
             return dto;
         }, data);
     }
@@ -235,6 +244,99 @@ public class SubjectStudyPeriodStudentGroupService {
         subject.put("subjectPeriods", periods);
         subject.put("totals", periodTotals);
         return subject;
+    }
+
+    public Map<Short, List<CurriculumProgramDto>> getCurriculumProgram(StudentGroup group, StudyPeriod period) {
+        CurriculumVersion cv = group.getCurriculumVersion();
+        if (cv != null) {
+            Map<Short, List<CurriculumProgramDto>> mappedSubjects = new HashMap<>();
+            cv.getModules().stream().flatMap(mod -> mod.getSubjects().stream())
+                .filter(modSubject -> modSubject.getStudyYearNumber() != null)
+                .forEach(modSubject -> {
+                    short semester = (short) ((modSubject.getStudyYearNumber().intValue() - 1) * 2);
+                    Subject subject = modSubject.getSubject();
+                    
+                    CurriculumProgramDto dto = new CurriculumProgramDto();
+                    
+                    boolean used = false;
+                    semester++;
+                    if (Boolean.TRUE.equals(modSubject.getAutumn())) {
+                        Short autumnSemester = Short.valueOf(semester);
+                        if (!mappedSubjects.containsKey(autumnSemester)) {
+                            mappedSubjects.put(autumnSemester, new ArrayList<>());
+                        }
+                        mappedSubjects.get(autumnSemester).add(dto);
+                        used = true;
+                    }
+                    semester++;
+                    if (Boolean.TRUE.equals(modSubject.getSpring())) {
+                        Short springSemester = Short.valueOf(semester);
+                        if (!mappedSubjects.containsKey(springSemester)) {
+                            mappedSubjects.put(springSemester, new ArrayList<>());
+                        }
+                        mappedSubjects.get(springSemester).add(dto);
+                        used = true;
+                    }
+                    
+                    // No need to get and check other items as we are not adding it
+                    if (!used) {
+                        return;
+                    }
+                    
+                    dto.setCode(subject.getCode());
+                    dto.setSubject(new AutocompleteResult(subject.getId(), subject));
+                    dto.setCredits(subject.getCredits());
+                    
+                    boolean present = subject.getSubjectStudyPeriods().stream()
+                        // We look at ssp only before or in this period.
+                        .filter(ssp -> ssp.getStudyPeriod().getStartDate().compareTo(period.getStartDate()) < 1)
+                        .flatMap(ssp -> ssp.getStudentGroups().stream())
+                        .map(SubjectStudyPeriodStudentGroup::getStudentGroup)
+                        // group should be the same
+                        .filter(g -> group.getId().equals(EntityUtil.getId(g)))
+                        .findAny().isPresent();
+                    
+                    dto.setAlreadyExistsForGroup(Boolean.valueOf(present));
+                    
+                    // Set subject study periods which can be connected to this group
+                    dto.setSubjectStudyPeriods(subject.getSubjectStudyPeriods().stream()
+                        .filter(ssp -> ssp.getStudyPeriod().equals(period))
+                        .map(ssp -> {
+                            List<String> teachers = ssp.getTeachers().stream()
+                                    .map(sspt -> PersonUtil.fullname(sspt.getTeacher().getPerson()))
+                                    .collect(Collectors.toList());
+                            List<String> groups = ssp.getStudentGroups().stream()
+                                    .map(sspg -> sspg.getStudentGroup().getCode())
+                                    .collect(Collectors.toList());
+                            StringBuilder nameBuilder = new StringBuilder(String.join(", ", teachers));
+                            if (!groups.isEmpty()) {
+                                if (nameBuilder.length() > 0) {
+                                    nameBuilder.append(" ");
+                                }
+                                nameBuilder.append("(");
+                                nameBuilder.append(String.join(", ", groups));
+                                nameBuilder.append(")");
+                            }
+                            String name = nameBuilder.toString();
+                            return new AutocompleteResult(ssp.getId(), name, name);
+                        })
+                        .collect(Collectors.toList()));
+
+                    Optional<SubjectStudyPeriodPlan> optPlan = subject.getSubjectStudyPeriodPlans().stream().filter(sspp -> sspp.getStudyPeriod().equals(period)).findAny();
+                    if (optPlan.isPresent()) {
+                        dto.setPlan(SubjectStudyPeriodPlanDto.of(optPlan.get()));
+                    }
+                });
+            return mappedSubjects;
+        }
+        return Collections.emptyMap();
+    }
+
+    public void connect(SubjectStudyPeriod ssp, StudentGroup group) {
+        SubjectStudyPeriodStudentGroup entity = new SubjectStudyPeriodStudentGroup();
+        entity.setSubjectStudyPeriod(ssp);
+        entity.setStudentGroup(group);
+        EntityUtil.save(entity, em);
     }
 
 }

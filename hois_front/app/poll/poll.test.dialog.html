@@ -60,7 +60,7 @@
                                             </div>
                                             <div ng-if="question.type === 'VASTUS_R'" layout="row">
                                                 <md-input-container flex>
-                                                    <md-radio-group name="radio" ng-model="question.radio1" required="{{question.isRequried}}" layout="{{question.isInRow ? 'row' : 'column'}}" flex="100">
+                                                    <md-radio-group name="radio" ng-model="question.radio1" ng-required="question.isRequired" layout="{{question.isInRow ? 'row' : 'column'}}" flex="100">
                                                         <md-radio-button ng-value="answer.nameEt" aria-label="period" ng-repeat="answer in question.answers track by $index" flex>
                                                             <span style="word-break: break-word">{{answer.nameEt}}</span></md-radio-button>
                                                     </md-radio-group>
@@ -70,9 +70,9 @@
                                                     <md-button ng-if="!question.isRequired" ng-click="clearRadio(question)" class="md-raised">{{'main.button.clear' | translate}}</md-button>
                                                 </md-input-container>
                                             </div>
-                                            <div ng-if="question.type === 'VASTUS_M'" layout="{{question.isInRow ? 'row' : 'column'}}">
-                                                <div ng-repeat="answer in question.answers track by $index" flex>
-                                                    <md-input-container flex>
+                                            <div ng-if="question.type === 'VASTUS_M'">
+                                                <div layout="{{question.isInRow ? 'row' : 'column'}}" flex>
+                                                    <md-input-container ng-repeat="answer in question.answers track by $index" flex>
                                                         <md-checkbox ng-model="s" aria-label="required">
                                                                 <span style="word-break: break-word">{{answer.nameEt}}</span>
                                                         </md-checkbox>
@@ -82,13 +82,13 @@
                                             <div ng-if="question.type === 'VASTUS_T'" layout="row">
                                                 <md-input-container flex>
                                                     <label>{{answer.nameEt}}</label>
-                                                    <textarea ng-model="s" type="text" required="{{question.isRequried}}" md-maxlength="4000" max-rows="5"></textarea>
+                                                    <textarea ng-model="s" type="text" ng-required="question.isRequired" md-maxlength="4000" max-rows="5"></textarea>
                                                 </md-input-container>
                                             </div>
                                             <div ng-if="question.type === 'VASTUS_V'" layout="row">
                                                 <md-input-container flex>
                                                     <label>{{answer.nameEt}}</label>
-                                                    <hois-select ng-model="s" values="question.answers" sorted-query="true" order-by-property="orderNr" required="{{question.isRequried}}"></hois-select>
+                                                    <hois-select ng-model="s" values="question.answers" sorted-query="true" order-by-property="orderNr" ng-required="question.isRequired"></hois-select>
                                                 </md-input-container>
                                             </div>
                                         </div>

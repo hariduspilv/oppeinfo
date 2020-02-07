@@ -74,7 +74,7 @@ public class CurriculumSearchService {
             if(criteria.getCreditsMax() != null) {
                 filters.add(cb.lessThanOrEqualTo(root.get("credits"), criteria.getCreditsMax()));
             }
-            if (criteria.getIsJoint() != null) {
+            if (Boolean.TRUE.equals(criteria.getIsJoint())) { // In case if false then it should show all
                 filters.add(cb.equal(root.get("joint"), criteria.getIsJoint()));
             }
             

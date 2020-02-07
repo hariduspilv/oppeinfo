@@ -14,8 +14,19 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.util.Translatable;
+import ee.hitsa.ois.validation.Conditional;
+import ee.hitsa.ois.validation.ApelApplicationValidation.ExternalOtherModule;
+import ee.hitsa.ois.validation.ApelApplicationValidation.ExternalOtherSubject;
+import ee.hitsa.ois.validation.ApelApplicationValidation.InternalCurriculumModule;
+import ee.hitsa.ois.validation.ApelApplicationValidation.InternalCurriculumSubject;
+import ee.hitsa.ois.validation.ApelApplicationValidation.InternalOtherModule;
+import ee.hitsa.ois.validation.ApelApplicationValidation.InternalOtherSubject;
+import ee.hitsa.ois.validation.ApelApplicationValidation.InternalPreviouslyPassedModule;
+import ee.hitsa.ois.validation.ApelApplicationValidation.InternalPreviouslyPassedSubject;
+import ee.hitsa.ois.validation.Required;
 
 @Entity
+@Conditional(selected = "isMySchool", values = {"false"}, required = {"apelSchool"})
 public class ApelApplicationFormalSubjectOrModule extends BaseEntityWithId implements Translatable {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -28,41 +39,46 @@ public class ApelApplicationFormalSubjectOrModule extends BaseEntityWithId imple
     private Classifier type;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
     private ApelSchool apelSchool;
 
     private Boolean isOptional;
 
-    @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
+    @Required(groups = {InternalCurriculumSubject.class, InternalOtherSubject.class, InternalPreviouslyPassedSubject.class})
+    @ManyToOne(fetch = FetchType.LAZY)
     private Subject subject;
-    
-    @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
+
+    @Required(groups = {ExternalOtherSubject.class, InternalCurriculumSubject.class, InternalOtherSubject.class, InternalPreviouslyPassedSubject.class})
+    @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumVersionHigherModule curriculumVersionHmodule;
 
-    @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
+    @Required(groups = {InternalCurriculumModule.class, InternalOtherModule.class, InternalPreviouslyPassedModule.class})
+    @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumVersionOccupationModule curriculumVersionOmodule;
 
     private LocalDate gradeDate;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @Required(groups = {ExternalOtherModule.class, InternalCurriculumModule.class, InternalOtherModule.class, InternalPreviouslyPassedModule.class,
+            ExternalOtherSubject.class, InternalCurriculumSubject.class, InternalOtherSubject.class, InternalPreviouslyPassedSubject.class})
+    @ManyToOne(fetch = FetchType.LAZY)
     private Classifier grade;
 
     private String teachers;
 
     private Boolean transfer = Boolean.FALSE;
 
+    @Required(groups = {ExternalOtherModule.class, ExternalOtherSubject.class})
     private String nameEt;
 
+    @Required(groups = {ExternalOtherSubject.class})
     private String nameEn;
 
     private String subjectCode;
 
     private BigDecimal credits;
-    
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+
+    @Required(groups = {ExternalOtherModule.class, InternalCurriculumModule.class, InternalOtherModule.class, InternalPreviouslyPassedModule.class,
+            ExternalOtherSubject.class, InternalCurriculumSubject.class, InternalOtherSubject.class, InternalPreviouslyPassedSubject.class})
+    @ManyToOne(fetch = FetchType.LAZY)
     private Classifier assessment;
 
     public ApelApplicationRecord getApelApplicationRecord() {
@@ -202,5 +218,5 @@ public class ApelApplicationFormalSubjectOrModule extends BaseEntityWithId imple
     public void setAssessment(Classifier assessment) {
         this.assessment = assessment;
     }
-    
+
 }

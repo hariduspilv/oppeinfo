@@ -2,6 +2,7 @@ package ee.hitsa.ois.web.subjectStudyPeriod;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -16,7 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.exception.AssertionFailedException;
@@ -29,6 +33,7 @@ import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodSearchCommand;
+import ee.hitsa.ois.web.dto.CurriculumProgramDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodDtoContainer;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodStudentGroupSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
@@ -102,6 +107,23 @@ public class SubjectStudyPeriodStudentGroupController {
     @GetMapping("/curricula")
     public List<CurriculumSearchDto> getCurricula(HoisUserDetails user) {
         return subjectStudyPeriodStudentGroupService.getCurricula(user.getSchoolId());
+    }
+    
+    @GetMapping("/curriculumProgram/{studyPeriod:\\d+}/{studentGroup:\\d+}")
+    public Map<Short, List<CurriculumProgramDto>> getCurriculumProgram(HoisUserDetails user, @WithEntity("studentGroup") StudentGroup group,
+            @WithEntity("studyPeriod") StudyPeriod period) {
+        UserUtil.assertIsSchoolAdmin(user, group.getSchool());
+        UserUtil.assertSameSchool(user, period.getStudyYear().getSchool());
+        return subjectStudyPeriodStudentGroupService.getCurriculumProgram(group, period);
+    }
+    
+    @GetMapping("/connect/{subjectStudyPeriod:\\d+}/{studentGroup:\\d+}")
+    public void connectStudentGroupWithPair(HoisUserDetails user, @WithEntity("subjectStudyPeriod") SubjectStudyPeriod ssp,
+            @WithEntity("studentGroup") StudentGroup group) {
+        UserUtil.assertIsSchoolAdmin(user, group.getSchool());
+        // If has already group then it should not make another one
+        UserUtil.throwAccessDeniedIf(ssp.getStudentGroups().stream().map(sspg -> sspg.getStudentGroup()).filter(sg -> sg.equals(group)).findAny().isPresent());
+        subjectStudyPeriodStudentGroupService.connect(ssp, group);
     }
 
     @GetMapping("/searchByStudentGroup.xls")

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
+import ee.hitsa.ois.util.DateUtils;
 
 public class ExistingDirectiveStudentDto {
 
@@ -26,8 +27,8 @@ public class ExistingDirectiveStudentDto {
             dto.setScholarshipApplicationId(application.getId());
             dto.setScholarshipTermNameEt(application.getScholarshipTerm().getNameEt());
         }
-        dto.setStartDate(directiveStudent.getStartDate());
-        dto.setEndDate(directiveStudent.getEndDate());
+        dto.setStartDate(DateUtils.periodStart(directiveStudent));
+        dto.setEndDate(DateUtils.periodEnd(directiveStudent));
         dto.setConfirmDate(directiveStudent.getDirective().getConfirmDate());
         return dto; 
     }

@@ -4,7 +4,7 @@
       <tr md-row>
         <th md-column>{{'directive.student.order' | translate}}</th>
         <th md-column>{{'directive.student.foreign' | translate}}</th>
-        <th md-column class="required">{{'directive.student.idcode' | translate}}</th>
+        <th md-column ng-class="{required: !hasForeignStudent}">{{'directive.student.idcode' | translate}}</th>
         <th md-column class="required">{{'directive.student.firstname' | translate}}</th>
         <th md-column class="required">{{'directive.student.lastname' | translate}}</th>
         <th md-column class="required">{{'directive.student.birthdate' | translate}}</th>

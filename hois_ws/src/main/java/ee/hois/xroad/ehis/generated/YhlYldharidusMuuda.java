@@ -31,6 +31,9 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *           &lt;element name="oppeasutusestLahkumine" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}yhlOppeasLahkumine"/&gt;
  *           &lt;element name="puudulikeAastahinneteMuutus" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}yhlPuudulikudAastahinded"/&gt;
  *           &lt;element name="erivajadusteTugiteenusteMuutus" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}yhlErivajadusedTugiteenused"/&gt;
+ *           &lt;element name="vanemaNousolekudMuutus" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}yhlVanemaNousolekud"/&gt;
+ *           &lt;element name="kutseoppeMuutus" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}yhlKutseope"/&gt;
+ *           &lt;element name="ujumisandmeteMuutus" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}yhlUjumisandmed"/&gt;
  *         &lt;/choice&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
@@ -53,7 +56,10 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "teisteAndmeteMuutus",
     "oppeasutusestLahkumine",
     "puudulikeAastahinneteMuutus",
-    "erivajadusteTugiteenusteMuutus"
+    "erivajadusteTugiteenusteMuutus",
+    "vanemaNousolekudMuutus",
+    "kutseoppeMuutus",
+    "ujumisandmeteMuutus"
 })
 public class YhlYldharidusMuuda {
 
@@ -71,6 +77,9 @@ public class YhlYldharidusMuuda {
     protected YhlOppeasLahkumine oppeasutusestLahkumine;
     protected YhlPuudulikudAastahinded puudulikeAastahinneteMuutus;
     protected YhlErivajadusedTugiteenused erivajadusteTugiteenusteMuutus;
+    protected YhlVanemaNousolekud vanemaNousolekudMuutus;
+    protected YhlKutseope kutseoppeMuutus;
+    protected YhlUjumisandmed ujumisandmeteMuutus;
 
     /**
      * Gets the value of the isikuandmeteMuutus property.
@@ -358,6 +367,78 @@ public class YhlYldharidusMuuda {
      */
     public void setErivajadusteTugiteenusteMuutus(YhlErivajadusedTugiteenused value) {
         this.erivajadusteTugiteenusteMuutus = value;
+    }
+
+    /**
+     * Gets the value of the vanemaNousolekudMuutus property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link YhlVanemaNousolekud }
+     *     
+     */
+    public YhlVanemaNousolekud getVanemaNousolekudMuutus() {
+        return vanemaNousolekudMuutus;
+    }
+
+    /**
+     * Sets the value of the vanemaNousolekudMuutus property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link YhlVanemaNousolekud }
+     *     
+     */
+    public void setVanemaNousolekudMuutus(YhlVanemaNousolekud value) {
+        this.vanemaNousolekudMuutus = value;
+    }
+
+    /**
+     * Gets the value of the kutseoppeMuutus property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link YhlKutseope }
+     *     
+     */
+    public YhlKutseope getKutseoppeMuutus() {
+        return kutseoppeMuutus;
+    }
+
+    /**
+     * Sets the value of the kutseoppeMuutus property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link YhlKutseope }
+     *     
+     */
+    public void setKutseoppeMuutus(YhlKutseope value) {
+        this.kutseoppeMuutus = value;
+    }
+
+    /**
+     * Gets the value of the ujumisandmeteMuutus property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link YhlUjumisandmed }
+     *     
+     */
+    public YhlUjumisandmed getUjumisandmeteMuutus() {
+        return ujumisandmeteMuutus;
+    }
+
+    /**
+     * Sets the value of the ujumisandmeteMuutus property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link YhlUjumisandmed }
+     *     
+     */
+    public void setUjumisandmeteMuutus(YhlUjumisandmed value) {
+        this.ujumisandmeteMuutus = value;
     }
 
 }

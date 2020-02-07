@@ -530,24 +530,31 @@ public class StudentService {
                 "join classifier country on ds.country_code = country.code " +
                 "join classifier purpose on ds.abroad_purpose_code = purpose.code " +
                 "join classifier programme on ds.abroad_programme_code = programme.code " +
+                "left join (select ds1.start_date, ds1.directive_student_id, ds1.student_id from directive_student ds1 " +
+                    "join directive d1 on ds1.directive_id = d1.id " +
+                    "where d1.type_code = '" + DirectiveType.KASKKIRI_VALISKATK.name() + "'" + 
+                    "and d1.status_code = '" + DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name() + "') KATK " +
+                    "on KATK.directive_student_id = ds.id " +
                 "left join classifier ehis_school on ds.ehis_school_code = ehis_school.code " +
                 "left join study_period sp on ds.study_period_start_id = sp.id " +
-                "left join study_period ep on ds.study_period_end_id = ep.id").sort(pageable);
+                "left join study_period ep on ds.study_period_end_id = ep.id " +
+                "left join apel_school aps on aps.id = ds.apel_school_id").sort(pageable);
         qb.requiredCriteria("ds.student_id = :studentId", "studentId", EntityUtil.getId(student));
         qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_VALIS);
         qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
         qb.filter("ds.canceled = false");
 
-        return JpaQueryUtil.pagingResult(qb, "case when ds.is_abroad then abroad_school else ehis_school.name_et end, ds.country_code, " +
-                "case when ds.is_period then sp.start_date else ds.start_date end, case when ds.is_period then ep.end_date else ds.end_date end, " +
+        return JpaQueryUtil.pagingResult(qb, "coalesce(aps.name_et, ehis_school.name_et, ds.abroad_school) as schoolEt, " +
+                "coalesce(aps.name_en, ehis_school.name_en, ds.abroad_school) as schoolEn, ds.country_code, " +
+                "coalesce(sp.start_date, ds.start_date) as foreignStart, coalesce(KATK.start_date, ep.end_date, ds.end_date) as foreignEnd, " +
                 "ds.abroad_purpose_code, ds.abroad_programme_code", em, pageable).map(r -> {
             StudentForeignstudyDto dto = new StudentForeignstudyDto();
-            dto.setSchool(resultAsString(r, 0));
-            dto.setCountry(resultAsString(r, 1));
-            dto.setStartDate(resultAsLocalDate(r, 2));
-            dto.setEndDate(resultAsLocalDate(r, 3));
-            dto.setAbroadPurpose(resultAsString(r, 4));
-            dto.setAbroadProgramme(resultAsString(r, 5));
+            dto.setSchool(new AutocompleteResult(null, resultAsString(r, 0), resultAsString(r, 1)));
+            dto.setCountry(resultAsString(r, 2));
+            dto.setStartDate(resultAsLocalDate(r, 3));
+            dto.setEndDate(resultAsLocalDate(r, 4));
+            dto.setAbroadPurpose(resultAsString(r, 5));
+            dto.setAbroadProgramme(resultAsString(r, 6));
             return dto;
         });
     }

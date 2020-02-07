@@ -319,6 +319,7 @@ public class PublicDataMapper {
         CURRICULUM_VERSION_HIGHER_MODULE_SUBJECT.put("autumn", CurriculumVersionHigherModuleSubject::getAutumn);
         CURRICULUM_VERSION_HIGHER_MODULE_SUBJECT.put("spring", CurriculumVersionHigherModuleSubject::getSpring);
         CURRICULUM_VERSION_HIGHER_MODULE_SUBJECT.put("assessment", ms -> ms.getSubject().getAssessment().getValue());
+        CURRICULUM_VERSION_HIGHER_MODULE_SUBJECT.put("subjectId", ms -> ms.getSubject().getId());
 
         CURRICULUM_VERSION_OCCUPATION_MODULE.put("nameEt", cvom -> cvom.getCurriculumModule().getNameEt());
         CURRICULUM_VERSION_OCCUPATION_MODULE.put("nameEn", cvom -> cvom.getCurriculumModule().getNameEn());

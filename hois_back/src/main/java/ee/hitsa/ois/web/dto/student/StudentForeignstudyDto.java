@@ -2,22 +2,16 @@ package ee.hitsa.ois.web.dto.student;
 
 import java.time.LocalDate;
 
+import ee.hitsa.ois.web.dto.AutocompleteResult;
+
 public class StudentForeignstudyDto {
 
-    private String school;
+    private AutocompleteResult school;
     private String country;
     private LocalDate startDate;
     private LocalDate endDate;
     private String abroadPurpose;
     private String abroadProgramme;
-
-    public String getSchool() {
-        return school;
-    }
-
-    public void setSchool(String school) {
-        this.school = school;
-    }
 
     public String getCountry() {
         return country;
@@ -57,5 +51,13 @@ public class StudentForeignstudyDto {
 
     public void setAbroadProgramme(String abroadProgramme) {
         this.abroadProgramme = abroadProgramme;
+    }
+
+    public AutocompleteResult getSchool() {
+        return school;
+    }
+
+    public void setSchool(AutocompleteResult school) {
+        this.school = school;
     }
 }

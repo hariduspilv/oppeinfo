@@ -58,6 +58,10 @@ public abstract class PersonUtil {
     public static String fullnameAndIdcodeOptionalGuest(String firstname, String lastname, String idcode, String type) {
         return fullnameAndIdcodeOptionalGuest(fullname(firstname, lastname), idcode, type);
     }
+
+    public static String fullnameOptionalGuest(Student student) {
+        return fullnameOptionalGuest(student.getPerson().getFullname(), EntityUtil.getCode(student.getType()));
+    }
     
     public static String fullnameOptionalGuest(String firstname, String lastname, String type) {
         if (!StudentType.OPPUR_K.name().equals(type)) {

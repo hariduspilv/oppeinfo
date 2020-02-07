@@ -20,16 +20,17 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
  *         &lt;element name="oppeasutuseKirjeId" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
- *         &lt;element name="synniKp" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
- *         &lt;element name="klSugu" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
- *         &lt;element name="klKodakondsus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="isikukood" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="synniKp" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
+ *         &lt;element name="klSugu" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="klKodakondsus" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="koduOppeasutus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="klKoduoppeasutuseRiik" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="klKoduOppeaste" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="klEesmark" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="perioodAlates" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
- *         &lt;element name="perioodKuni" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
- *         &lt;element name="ainepunkte" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="perioodKuni" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
+ *         &lt;element name="ainepunkte" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="klProgramm" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
@@ -42,6 +43,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "khlLyhiAjaValisOppurSalvestamine", propOrder = {
     "oppeasutuseKirjeId",
+    "isikukood",
     "synniKp",
     "klSugu",
     "klKodakondsus",
@@ -57,12 +59,10 @@ import javax.xml.datatype.XMLGregorianCalendar;
 public class KhlLyhiAjaValisOppurSalvestamine {
 
     protected String oppeasutuseKirjeId;
-    @XmlElement(required = true)
+    protected String isikukood;
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar synniKp;
-    @XmlElement(required = true)
     protected String klSugu;
-    @XmlElement(required = true)
     protected String klKodakondsus;
     @XmlElement(required = true)
     protected String koduOppeasutus;
@@ -75,10 +75,8 @@ public class KhlLyhiAjaValisOppurSalvestamine {
     @XmlElement(required = true)
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar perioodAlates;
-    @XmlElement(required = true)
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar perioodKuni;
-    @XmlElement(required = true)
     protected String ainepunkte;
     @XmlElement(required = true)
     protected String klProgramm;
@@ -105,6 +103,30 @@ public class KhlLyhiAjaValisOppurSalvestamine {
      */
     public void setOppeasutuseKirjeId(String value) {
         this.oppeasutuseKirjeId = value;
+    }
+
+    /**
+     * Gets the value of the isikukood property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getIsikukood() {
+        return isikukood;
+    }
+
+    /**
+     * Sets the value of the isikukood property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setIsikukood(String value) {
+        this.isikukood = value;
     }
 
     /**

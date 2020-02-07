@@ -9,7 +9,8 @@ angular.module('hitsaOis').controller('ModuleProtocolListController',
   $scope.myModules = myModulesDialog;
 
   function canCreateProtocol() {
-    return ($scope.auth.isTeacher() || $scope.auth.isAdmin()) && $scope.auth.authorizedRoles.indexOf("ROLE_OIGUS_M_TEEMAOIGUS_MOODULPROTOKOLL") !== -1;
+    return ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher() || $scope.auth.isTeacher()) &&
+      $scope.auth.authorizedRoles.indexOf("ROLE_OIGUS_M_TEEMAOIGUS_MOODULPROTOKOLL") !== -1;
   }
 
   $scope.load = function() {
@@ -58,7 +59,7 @@ angular.module('hitsaOis').controller('ModuleProtocolListController',
 
   function myModulesDialog() {
     dialogService.showDialog("protocol/module.protocol.myModules.dialog.html", dialogController, undefined, undefined, true);
-    
+
     function dialogController(dialogScope) {
       var studyYearId = angular.copy($scope.criteria.studyYear);
       dialogScope.loadModuleHistory = moduleHistoryDialog;
@@ -90,7 +91,7 @@ angular.module('hitsaOis').controller('ModuleProtocolListController',
 
   function moduleHistoryDialog(moduleId) {
     dialogService.showDialog("protocol/module.protocol.module.history.dialog.html", dialogController, undefined, undefined, true);
-    
+
     function dialogController(dialogScope) {
       var HOURS_PER_EKAP = 26;
       var clStudyYearMapper = Classifier.valuemapper({

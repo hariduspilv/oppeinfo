@@ -67,9 +67,9 @@
   </div>
 </div>
 
-<div ng-if="application.plannedSubjects !== null && application.plannedSubjects.length !== 0 && (!auth.isStudent() || application.status !== 'AVALDUS_STAATUS_KINNITATUD')">
+<div ng-if="application.plannedSubjects !== null && application.plannedSubjects.length !== 0 && !application.canEditPlannedSubjects">
   <fieldset>
-    <legend>{{'main.subjects' | translate}}</legend>
+    <legend>{{(!student.curriculumVersion.isVocational ? 'main.subjects' : 'application.modulesAndThemes') | translate}}</legend>
     <md-table-container>
       <table md-table class="secondary-table">
         <thead md-head>
@@ -84,7 +84,11 @@
               {{plannedSubject.name}}
             </td>
             <td md-cell>
-              {{subjectsListView(plannedSubject)}}
+              <div layout="column">
+                <span ng-repeat="equiv in plannedSubject.equivalents">
+                  {{currentLanguageNameField(equiv)}}
+                </span>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -92,9 +96,9 @@
     </md-table-container>
   </fieldset>
 </div>
-<div ng-if="auth.isStudent() && application.status === 'AVALDUS_STAATUS_KINNITATUD'">
+<div ng-if="application.canEditPlannedSubjects">
   <fieldset tabindex="1">
-    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.subjects' | translate}}</legend>
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{(!student.curriculumVersion.isVocational ? 'main.subjects' : 'application.modulesAndThemes') | translate}}</legend>
     <md-button class="md-raised" href="" ng-click="addPlannedSubjectRow()">{{'main.button.addRow' | translate}}</md-button>
     <md-table-container>
       <table md-table class="secondary-table">
@@ -107,26 +111,29 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="plannedSubject in application.plannedSubjects | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>
-              <md-input-container>
+            <td md-cell style="width:45%">
+              <md-input-container style="width:100%">
                 <input type="text" ng-model="plannedSubject.name" aria-label="planned subject name" required>
               </md-input-container>
             </td>
-            <td md-cell>
-              <md-input-container ng-if="!student.curriculumVersion.isVocational">
+            <td md-cell style="width:45%">
+              <md-input-container ng-if="!student.curriculumVersion.isVocational" style="width:100%">
                 <md-select class="my-select" style="display: block;" ng-model="plannedSubject.subjectsSelected" ng-change="subjectsChanged(plannedSubject)"
-                ng-model-options="{trackBy: '$value.subject'}" required multiple aria-label="planned subject equivalent subject">
+                ng-model-options="{trackBy: '$value.subject'}" multiple aria-label="replaceable subject">
                   <md-option ng-repeat="val in studentSubjects" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
                 </md-select>
               </md-input-container>
-              <md-input-container ng-if="student.curriculumVersion.isVocational">
-                <md-select class="my-select" ng-model="plannedSubject.subjectsSelected" ng-change="moduleOrThemeSelected(plannedSubject)"
-                  ng-model-options="{trackBy: '$value.moduleId && $value.themeId'}" required multiple aria-label="planned subject equivalent module or theme">
-                  <md-option ng-repeat="val in modulesAndThemes" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
+              <md-input-container ng-if="student.curriculumVersion.isVocational" style="width:100%">
+                <md-select class="my-select" ng-model="plannedSubject.subjectsSelected" ng-change="moduleOrThemeChanged(plannedSubject)"
+                  ng-model-options="{trackBy: '$value.moduleId + $value.themeId'}" multiple aria-label="replaceable module or theme">
+                  <md-option ng-repeat="val in modulesAndThemes" ng-value="val" 
+                    ng-style="{'font-weight': val.isModule ? 600 : 400}" ng-disabled="val.disabled">
+                    {{currentLanguageNameField(val)}}
+                  </md-option>
                 </md-select>
               </md-input-container>
             </td>
-            <td md-cell>
+            <td md-cell style="width:10%">
               <md-button class="remove nomargin" ng-click="removeFromArray(application.plannedSubjects, plannedSubject)">&times;</md-button>
             </td>
           </tr>

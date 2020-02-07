@@ -340,20 +340,24 @@ public class StudentResultHigherService {
         }
     }
 
-    // subjects that don't belong to curriculum module subjects but are added there
-    // through apel application or subject module change
     private static void addTransferedSubjects(Set<Long> moduleIds, List<StudentHigherSubjectResultDto> moduleSubjects,
             List<StudentHigherSubjectResultDto> studentResults) {
         Set<Long> subjectIds = StreamUtil.toMappedSet(ms -> ms.getSubject().getId(), moduleSubjects);
-        List<StudentHigherSubjectResultDto> transferredSubjects = StreamUtil.toFilteredList(
-                sr -> Boolean.TRUE.equals(sr.getGrades().get(0).getIsActive())
-                        && (sr.getHigherModule() != null && moduleIds.contains(sr.getHigherModule().getId()))
-                        && (sr.getSubject() == null || !subjectIds.contains(sr.getSubject().getId())),
-                studentResults);
 
-        for (StudentHigherSubjectResultDto subjectResult : transferredSubjects) {
-            subjectResult.setIsExtraCurriculum(Boolean.FALSE);
-            moduleSubjects.add(subjectResult);
+        List<StudentHigherSubjectResultDto> transferredSubjects = StreamUtil.toFilteredList(
+            sr -> Boolean.TRUE.equals(sr.getGrades().get(0).getIsActive()) &&
+                // subjects that don't belong to curriculum module but are added there
+                // through apel application or subject module change
+                (((sr.getHigherModule() != null && moduleIds.contains(sr.getHigherModule().getId()))
+                    && !subjectIds.contains(sr.getSubject().getId()))
+                    // apel formal learning external transfer subjects (DATA_TRANSFER_PROCESS - can be without module)
+                    || sr.getSubject().getId() == null),
+            studentResults);
+
+        for (StudentHigherSubjectResultDto sr : transferredSubjects) {
+            boolean isExtraCurriculum = sr.getHigherModule() == null || !moduleIds.contains(sr.getHigherModule().getId());
+            sr.setIsExtraCurriculum(Boolean.valueOf(isExtraCurriculum));
+            moduleSubjects.add(sr);
         }
     }
 
@@ -394,8 +398,9 @@ public class StudentResultHigherService {
 
     private static void addResultsForExtraCurriculumSubjects(List<StudentHigherSubjectResultDto> moduleSubjects,
             List<StudentHigherSubjectResultDto> studentResults) {
-        List<StudentHigherSubjectResultDto> extraCurriculumResults =
-                StreamUtil.toFilteredList(sr -> Boolean.TRUE.equals(sr.getIsExtraCurriculum()), studentResults);
+        // subjects without id are already added
+        List<StudentHigherSubjectResultDto> extraCurriculumResults = StreamUtil.toFilteredList(
+                sr -> Boolean.TRUE.equals(sr.getIsExtraCurriculum()) && sr.getSubject().getId() != null, studentResults);
         mergeExtraCurriculumResults(extraCurriculumResults);
         moduleSubjects.addAll(extraCurriculumResults);
     }
@@ -405,14 +410,12 @@ public class StudentResultHigherService {
         Iterator<StudentHigherSubjectResultDto> iterator = extraCurriculumResults.iterator();
         while(iterator.hasNext()) {
             StudentHigherSubjectResultDto studentResult = iterator.next();
-            if (studentResult.getSubject() != null) {
-                Long subjectId = studentResult.getSubject().getId();
-                if(map.containsKey(subjectId)) {
-                    map.get(subjectId).getGrades().addAll(studentResult.getGrades());
-                    iterator.remove();
-                } else {
-                    map.put(subjectId, studentResult);
-                }
+            Long subjectId = studentResult.getSubject().getId();
+            if(map.containsKey(subjectId)) {
+                map.get(subjectId).getGrades().addAll(studentResult.getGrades());
+                iterator.remove();
+            } else {
+                map.put(subjectId, studentResult);
             }
         }
     }

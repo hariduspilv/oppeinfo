@@ -59,7 +59,7 @@ public class StudentGroupStudentDto {
         StudentGroupStudentDto dto = new StudentGroupStudentDto();
         Person p = student.getPerson();
         dto.setFullname(PersonUtil.fullnameOptionalGuest(p.getFullname(), EntityUtil.getNullableCode(student.getType())));
-        if (user.isSchoolAdmin() || user.isTeacher()) {
+        if (user.isSchoolAdmin() || user.isLeadingTeacher() || user.isTeacher()) {
             dto.setId(student.getId());
             dto.setIdcode(p.getIdcode());
         }

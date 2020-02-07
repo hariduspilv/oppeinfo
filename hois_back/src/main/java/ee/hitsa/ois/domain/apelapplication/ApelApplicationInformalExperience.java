@@ -7,6 +7,7 @@ import javax.persistence.ManyToOne;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.validation.Required;
 
 @Entity
 public class ApelApplicationInformalExperience extends BaseEntityWithId {
@@ -14,10 +15,14 @@ public class ApelApplicationInformalExperience extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private ApelApplicationRecord apelApplicationRecord;
-    
+
+    @Required
     private String nameEt;
+    @Required
     private String placeTime;
+    @Required
     private Short hours;
+    @Required
     private String documents;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

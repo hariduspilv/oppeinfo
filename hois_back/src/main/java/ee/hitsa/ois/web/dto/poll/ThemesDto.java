@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.LiteralResult;
 
 public class ThemesDto {
     
@@ -16,8 +17,8 @@ public class ThemesDto {
     private String afterword;
     private List<ThemeDto> themes;
     private Long responseId;
-    private Set<AutocompleteResult> subjects;
-    private Set<AutocompleteResult> journals;
+    private Set<LiteralResult> subjects;
+    private List<LiteralResult> journals;
     private LocalDate startDate;
     private LocalDate endDate;
     private AutocompleteResult name;
@@ -88,19 +89,19 @@ public class ThemesDto {
         this.type = type;
     }
 
-    public Set<AutocompleteResult> getSubjects() {
+    public Set<LiteralResult> getSubjects() {
         return subjects;
     }
 
-    public void setSubjects(Set<AutocompleteResult> subjects) {
+    public void setSubjects(Set<LiteralResult> subjects) {
         this.subjects = subjects;
     }
 
-    public Set<AutocompleteResult> getJournals() {
+    public List<LiteralResult> getJournals() {
         return journals;
     }
 
-    public void setJournals(Set<AutocompleteResult> journals) {
+    public void setJournals(List<LiteralResult> journals) {
         this.journals = journals;
     }
 

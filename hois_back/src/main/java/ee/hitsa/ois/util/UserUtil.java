@@ -267,8 +267,15 @@ public abstract class UserUtil {
     }
 
     public static boolean isSchoolAdminOrLeadingTeacher(HoisUserDetails user, StudentGroup studentGroup) {
-        return isSchoolAdmin(user, studentGroup.getSchool())
-                || isLeadingTeacher(user, studentGroup.getCurriculum());
+        return isSchoolAdmin(user, studentGroup.getSchool()) || isLeadingTeacher(user, studentGroup.getCurriculum());
+    }
+
+    public static boolean isSchoolAdminOrLeadingTeacher(HoisUserDetails user, Journal journal) {
+        return isSchoolAdmin(user, journal.getSchool()) || isLeadingTeacher(user, journal);
+    }
+
+    public static boolean isSchoolAdminOrLeadingTeacher(HoisUserDetails user, Student student) {
+        return isSchoolAdmin(user, student.getSchool()) || isLeadingTeacher(user, student);
     }
 
     public static boolean isStudent(HoisUserDetails user, School school) {
@@ -348,6 +355,11 @@ public abstract class UserUtil {
      */
     public static boolean isTeacher(HoisUserDetails user, School school) {
         return user.isTeacher() && EntityUtil.getId(school).equals(user.getSchoolId());
+    }
+
+    public static boolean isJournalTeacher(HoisUserDetails user, Journal journal) {
+        return user.isTeacher() && journal.getJournalTeachers().stream()
+                .anyMatch(t -> user.getTeacherId().equals(EntityUtil.getId(t.getTeacher())));
     }
 
     public static boolean isLeadingTeacher(HoisUserDetails user, School school) {
@@ -458,7 +470,12 @@ public abstract class UserUtil {
 
     public static void assertIsSchoolAdminOrLeadingTeacher(HoisUserDetails user, StudentGroup studentGroup) {
         throwAccessDeniedIf(!isSchoolAdminOrLeadingTeacher(user, studentGroup),
-                "User is not school admin in given school or student's curriculum leading teacher");
+                "User is not school admin in given school or student group's curriculum leading teacher");
+    }
+
+    public static void assertIsSchoolAdminOrLeadingTeacher(HoisUserDetails user, Journal journal) {
+        throwAccessDeniedIf(!isSchoolAdminOrLeadingTeacher(user, journal),
+                "User is not school admin in given school or journal's curriculum leading teacher");
     }
 
     public static void assertIsSchoolAdminOrLeadingTeacher(HoisUserDetails user, Permission permission, PermissionObject object) {

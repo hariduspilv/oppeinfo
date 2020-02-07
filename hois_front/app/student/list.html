@@ -54,8 +54,8 @@
           </div>
           <div layout="row" flex="50" layout-sm="column" layout-xs="column" layout-align="start center">
             <md-input-container flex>
-              <md-radio-group layout-gt-sm="row" ng-model="criteria.showGuestStudents" ng-init="criteria.showGuestStudents = false">
-                <md-radio-button ng-value="false" aria-label="showAll">
+              <md-radio-group layout-gt-sm="row" ng-model="criteria.showGuestStudents">
+                <md-radio-button ng-value="false || undefined || null" aria-label="showAll">
                   {{'student.showAll' | translate}}
                 </md-radio-button>
                 <md-radio-button ng-value="true" aria-label="showGuestStudents">

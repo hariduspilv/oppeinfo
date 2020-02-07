@@ -174,19 +174,18 @@ angular.module('hitsaOis').factory('DataUtils',
         return Math.round((hours / HOURS_PER_CREDIT_POINT) * 10) / 10;
       },
 
-      getAcademicHoursFromString: function (astroString) {
+      getMinutesFromString: function (astroString) {
         var seconds = moment.duration(astroString).asSeconds();
-        var hours = seconds / 60 / 60;
-        return Math.round(hours * 100) / 100;
+        var minutes = seconds / 60;
+        return Math.round(minutes * 100) / 100;
       },
 
-      getAcademicHoursFromDouble: function (academicHours) {
-        if (!angular.isNumber(academicHours)) {
+      getHoursFromDoubleMinutes: function (aMinutes) {
+        if (!angular.isNumber(aMinutes)) {
           return '0:00';
         }
-        var hours = Math.floor(academicHours);
-        var minutes = (academicHours - hours) * 60;
-        minutes = '' + Math.ceil(minutes);
+        var minutes = '' + Math.floor(aMinutes) % 60;
+        var hours = Math.floor(aMinutes / 60);
         return hours + ':' + (minutes ? (minutes.length === 1 ? ('0' + minutes) : minutes) : '00');
       },
 
@@ -194,37 +193,8 @@ angular.module('hitsaOis').factory('DataUtils',
         if (!angular.isNumber(astroHours)) {
           return 0;
         }
-        var academicHours = astroHours * 4/3;
+        var academicHours = astroHours;
         return Math.round(academicHours * 100) / 100;
-      },
-
-      getAstronomicalHoursAsString: function (academicHours) {
-        if (!angular.isNumber(academicHours)) {
-          return '0:00';
-        }
-        var total = academicHours * 3 / 4;
-        var hours = Math.floor(total);
-        var minutes = (total - hours) * 60;
-        minutes = '' + Math.ceil(minutes);
-        return hours + ':' + (minutes ? (minutes.length === 1 ? ('0' + minutes) : minutes) : '00');
-      },
-
-      getAstronomicalHoursAsDouble: function (academicHours) {
-        if (!angular.isNumber(academicHours)) {
-          return 0;
-        }
-        var total = academicHours * 3 / 4;
-        return Math.round(total * 100) / 100;
-      },
-
-      getAstronomicalHours: function (academicHours) {
-        if (!angular.isNumber(academicHours)) {
-          return '-';
-        }
-        var total = academicHours * 3 / 4;
-        var hours = Math.floor(total);
-        var minutes = (total - hours) * 60;
-        return hours + 't' + (minutes ? (' ' + minutes + 'min') : '');
       },
 
       isSameDay: function(date1, date2) {

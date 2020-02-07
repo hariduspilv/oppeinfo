@@ -6,8 +6,10 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -25,6 +27,7 @@ import ee.hitsa.ois.domain.WsEhisCurriculumLog;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumAddress;
 import ee.hitsa.ois.domain.curriculum.CurriculumFile;
+import ee.hitsa.ois.domain.curriculum.CurriculumJointPartner;
 import ee.hitsa.ois.domain.curriculum.CurriculumOccupation;
 import ee.hitsa.ois.domain.curriculum.CurriculumOccupationSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
@@ -35,8 +38,10 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.ExceptionUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hois.soap.LogContext;
+import ee.hois.soap.LogResult;
 import ee.hois.soap.SoapAttachment;
 import ee.hois.xroad.ehis.generated.OisFail;
 import ee.hois.xroad.ehis.generated.OisFailid;
@@ -51,6 +56,8 @@ import ee.hois.xroad.ehis.generated.OisOppekavadStaatus;
 import ee.hois.xroad.ehis.generated.OisOppekeeled;
 import ee.hois.xroad.ehis.generated.OisOsakutse;
 import ee.hois.xroad.ehis.generated.OisToimumiseKohad;
+import ee.hois.xroad.ehis.generated.OisValisOAS;
+import ee.hois.xroad.ehis.generated.OisYhisOppekava;
 import ee.hois.xroad.ehis.generated.OiskutseSpetsialiseerumine;
 import ee.hois.xroad.ehis.generated.OppekavaOis;
 import ee.hois.xroad.ehis.generated.OppekavaStaatusOis;
@@ -141,9 +148,23 @@ public class EhisCurriculumService extends EhisService {
             practice = curriculum.getModules().stream().filter(r -> Boolean.TRUE.equals(r.getPractice()) && r.getCredits() != null).map(r -> r.getCredits()).reduce((x, y) -> x.add(y)).orElse(BigDecimal.ZERO);
         }
         oppekavaOis.setPraktikaMaht(practice);
-        // empty element
+        
         OisOKSpetsialiseerumised specialities = new OisOKSpetsialiseerumised();
-        specialities.getOkSpetsialiseerumiseKood().add("1086");
+        Set<String> specialityNames = new HashSet<>();
+        if (higher) {
+            curriculum.getSpecialities().forEach(speciality -> {
+                specialityNames.add(speciality.getNameEt());
+            });
+        } else {
+            curriculum.getOccupations().stream()
+                .flatMap(occupation -> occupation.getSpecialities().stream())
+                .map(CurriculumOccupationSpeciality::getSpeciality).distinct()
+                .forEach(speciality -> specialityNames.add(speciality.getNameEt()));
+        }
+        specialityNames.forEach(specialityName -> specialities.getOkSpetsialiseerumiseNimetus().add(specialityName));
+        if (specialities.getOkSpetsialiseerumiseNimetus().isEmpty()) {
+            specialities.getOkSpetsialiseerumiseNimetus().add(curriculum.getNameEt());
+        }
         oppekavaOis.setSpetsialiseerumised(specialities);
         oppekavaOis.setVastavusRiikOppekava(!higher && curriculum.getStateCurriculum() != null ? value(curriculum.getStateCurriculum().getStateCurrClass()) : null);
         OisToimumiseKohad oisToimumiseKohad = new OisToimumiseKohad();
@@ -152,12 +173,12 @@ public class EhisCurriculumService extends EhisService {
                     org.apache.commons.lang3.StringUtils.leftPad(address.getAddressOv(), 4, '0'));
         }
         oppekavaOis.setToimumiseKohad(oisToimumiseKohad);
-        /*if(Boolean.TRUE.equals(curriculum.getJoint())) {
+        
+        if(Boolean.TRUE.equals(curriculum.getJoint())) {
             for(CurriculumJointPartner cjp : curriculum.getJointPartners()) {
                 OisYhisOppekava oisYhisOppekava = new OisYhisOppekava();
                 if(cjp.isAbroad()) {
                     OisValisOAS oisValisOAS = new OisValisOAS();
-                    // TODO valisOASKood
                     oisValisOAS.setValisOASNimetus(cjp.getNameEt());
                     oisYhisOppekava.setValisOAS(oisValisOAS);
                 } else {
@@ -165,7 +186,8 @@ public class EhisCurriculumService extends EhisService {
                 }
                 oppekavaOis.getYhisOppekavaOas().add(oisYhisOppekava);
             }
-        }*/
+        }
+        
         OisKutsestandardid occupations = new OisKutsestandardid();
         if(curriculum.getOccupations().isEmpty()) {
             occupations.setPuudubKehtivKutsestandard(Integer.valueOf(1));
@@ -255,10 +277,10 @@ public class EhisCurriculumService extends EhisService {
         oppekavad.getOppekava().add(oppekavaOis);
 
         EhisOisOppekavaResponse response = ehisClient.oisOppekava(getXroadHeader(), oisOppekava, attachment);
-        logQuery(curriculum, response.getLog());
+        logQuery(curriculum, response);
 
         if(response.hasError()) {
-            throw new ValidationFailedException(response.getLog().getError().toString());
+            throw new ValidationFailedException(getErrorMsg(higher, group, response.getLog()));
         }
         // check service result
         List<OisInfoteade> result = response.getResult();
@@ -273,6 +295,17 @@ public class EhisCurriculumService extends EhisService {
                 curriculum.setMerCode(htmCode.toString());
             }
         }
+    }
+    
+    private static String getErrorMsg(boolean higher, Classifier group, LogContext cxt) {
+        if (cxt.getIncomingXml() != null) {
+            if (!higher && group == null && Pattern.compile(".*<spring-ws:ValidationError.*>.*One of '\\{oppekavaGrupp\\}' is expected.</spring-ws:ValidationError>.*", Pattern.DOTALL)
+                                        .matcher(cxt.getIncomingXml()).matches()) {
+                return "curriculum.error.noConnectionBetweenRyhmAndGroup";
+            }
+        }
+        
+        return ExceptionUtil.getRootCause(cxt.getError()).toString();
     }
 
     public void updateFromEhis(HoisUserDetails userDetails, Curriculum curriculum, boolean isTest) {
@@ -312,7 +345,7 @@ public class EhisCurriculumService extends EhisService {
         XRoadHeaderV4 header = getXroadHeader();
         header.getService().setServiceCode(OIS_OPPEKAVA_STAATUS_SERVICE_CODE);
         EhisOisOppekavaStaatusResponse response = ehisClient.oisOppekavaStaatus(header, oisOppekavaStaatus);
-        logQuery(curriculum, response.getLog());
+        logQuery(curriculum, response);
 
         if(response.hasError()) {
             throw new ValidationFailedException(response.getLog().getError().toString());
@@ -345,13 +378,25 @@ public class EhisCurriculumService extends EhisService {
         }
     }
 
-    private void logQuery(Curriculum curriculum, LogContext logContext) {
+    private <T extends LogResult<List<OisInfoteade>>> void logQuery(Curriculum curriculum, T response) {
         WsEhisCurriculumLog log = new WsEhisCurriculumLog();
         log.setSchool(curriculum.getSchool());
         log.setCurriculum(curriculum);
-        log.setHasOtherErrors(Boolean.FALSE);
-        log.setHasXteeErrors(Boolean.valueOf(logContext.getError() != null));
-        ehisLogService.insert(logContext, log);
+        if (response.hasError()) {
+            log.setHasXteeErrors(Boolean.TRUE);
+            log.setLogTxt(ExceptionUtil.getRootCause(response.getLog().getError()).toString());
+        } else if (hasOtherErrors(response)) {
+            log.setHasOtherErrors(Boolean.TRUE);
+            log.setLogTxt(response.getResult().get(0).getTeade());
+        }
+        ehisLogService.insert(response.getLog(), log);
+    }
+    
+    private static <T extends LogResult<List<OisInfoteade>>> boolean hasOtherErrors(T response) {
+        if (response.getResult() != null && !response.getResult().isEmpty()) {
+            return BigInteger.ZERO.compareTo(response.getResult().get(0).getVeakood()) != 0;
+        }
+        return false;
     }
 
     // TODO remove function - for mock test only

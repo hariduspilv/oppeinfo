@@ -14,6 +14,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.student.Student;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -306,15 +307,9 @@ public class StudentAbsenceService {
     }
 
     public void createContractAbsence(Contract contract) {
-        StudentAbsence studentAbsence = new StudentAbsence();
-        studentAbsence.setStudent(contract.getStudent());
-        studentAbsence.setValidFrom(contract.getStartDate());
-        studentAbsence.setValidThru(contract.getEndDate());
-        studentAbsence.setCause(PRACTICE_JOURNAL_CAUSE);
-        studentAbsence.setIsAccepted(Boolean.TRUE);
-        studentAbsence.setIsRejected(Boolean.FALSE);
+        StudentAbsence studentAbsence = studentAbsence(contract.getStudent(), contract.getStartDate(),
+                contract.getEndDate(), PRACTICE_JOURNAL_CAUSE);
         studentAbsence.setContract(contract);
-        studentAbsence.setIsLessonAbsence(Boolean.FALSE);
         EntityUtil.save(studentAbsence, em);
         Absence absenceCode = Boolean.TRUE.equals(contract.getIsPracticeAbsence()) ? Absence.PUUDUMINE_PR
                 : Absence.PUUDUMINE_V;
@@ -323,16 +318,22 @@ public class StudentAbsenceService {
     }
 
     public void createDirectiveAbsence(DirectiveStudent directiveStudent) {
-        StudentAbsence studentAbsence = new StudentAbsence();
-        studentAbsence.setStudent(directiveStudent.getStudent());
-        studentAbsence.setValidFrom(directiveStudent.getStartDate());
-        studentAbsence.setValidThru(directiveStudent.getEndDate());
-        studentAbsence.setCause(DIRECTIVE_CAUSE);
-        studentAbsence.setIsAccepted(Boolean.TRUE);
-        studentAbsence.setIsRejected(Boolean.FALSE);
-        studentAbsence.setIsLessonAbsence(Boolean.FALSE);
+        StudentAbsence studentAbsence = studentAbsence(directiveStudent.getStudent(), directiveStudent.getStartDate(),
+                directiveStudent.getEndDate(), DIRECTIVE_CAUSE);
         studentAbsence.setDirectiveStudent(directiveStudent);
         updateJournalEntryStudentAbsences(studentAbsence, Absence.PUUDUMINE_V);
         EntityUtil.save(studentAbsence, em);
+    }
+
+    private StudentAbsence studentAbsence(Student student, LocalDate startDate, LocalDate endDate, String cause) {
+        StudentAbsence studentAbsence = new StudentAbsence();
+        studentAbsence.setStudent(student);
+        studentAbsence.setValidFrom(startDate);
+        studentAbsence.setValidThru(endDate);
+        studentAbsence.setCause(cause);
+        studentAbsence.setIsAccepted(Boolean.TRUE);
+        studentAbsence.setIsRejected(Boolean.FALSE);
+        studentAbsence.setIsLessonAbsence(Boolean.FALSE);
+        return studentAbsence;
     }
 }

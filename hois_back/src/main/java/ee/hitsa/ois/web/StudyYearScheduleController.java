@@ -7,6 +7,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.util.WithEntity;
+import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -65,6 +68,11 @@ public class StudyYearScheduleController {
     @GetMapping("/studyYears")
     public List<StudyYearDto> getStudyYearsWithStudyPeriods(HoisUserDetails user) {
         return studyYearScheduleService.getStudyYearsWithStudyPeriods(user.getSchoolId());
+    }
+
+    @GetMapping("/studyYearPeriods/{studyYearId:\\d+}")
+    public List<StudyPeriodWithWeeksDto> getStudyYearPeriods(@WithEntity("studyYearId") StudyYear studyYear) {
+        return studyYearScheduleService.getStudyYearPeriods(studyYear);
     }
 
     @GetMapping("/studyYearSchedule.xlsx")

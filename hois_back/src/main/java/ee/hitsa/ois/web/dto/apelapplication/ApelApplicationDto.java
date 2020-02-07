@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.apelapplication;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -26,6 +27,15 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
     private List<ApelApplicationFileDto> files;
     private AutocompleteResult committee;
     private String decision;
+    private String nominalType;
+    private LocalDate newNominalStudyEnd;
+    private LocalDate oldNominalStudyEnd;
+    private Boolean isEhisSent;
+
+    private Boolean hasAbroadStudies;
+    private Boolean hasPlannedSubjectsToTransfer;
+    private Boolean hasMultipleNominalDurationExtensions;
+    private Boolean canExtendNominalDuration;
     private Boolean canEdit;
     private Boolean canReview;
     private Boolean canSendToConfirm;
@@ -146,6 +156,10 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
         return committee;
     }
 
+    public void setCommittee(AutocompleteResult committee) {
+        this.committee = committee;
+    }
+
     public String getDecision() {
         return decision;
     }
@@ -154,8 +168,68 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
         this.decision = decision;
     }
 
-    public void setCommittee(AutocompleteResult committee) {
-        this.committee = committee;
+    public String getNominalType() {
+        return nominalType;
+    }
+
+    public void setNominalType(String nominalType) {
+        this.nominalType = nominalType;
+    }
+
+    public LocalDate getNewNominalStudyEnd() {
+        return newNominalStudyEnd;
+    }
+
+    public void setNewNominalStudyEnd(LocalDate newNominalStudyEnd) {
+        this.newNominalStudyEnd = newNominalStudyEnd;
+    }
+
+    public LocalDate getOldNominalStudyEnd() {
+        return oldNominalStudyEnd;
+    }
+
+    public void setOldNominalStudyEnd(LocalDate oldNominalStudyEnd) {
+        this.oldNominalStudyEnd = oldNominalStudyEnd;
+    }
+
+    public Boolean getIsEhisSent() {
+        return isEhisSent;
+    }
+
+    public void setIsEhisSent(Boolean isEhisSent) {
+        this.isEhisSent = isEhisSent;
+    }
+
+    public Boolean getHasAbroadStudies() {
+        return hasAbroadStudies;
+    }
+
+    public void setHasAbroadStudies(Boolean hasAbroadStudies) {
+        this.hasAbroadStudies = hasAbroadStudies;
+    }
+
+    public Boolean getHasPlannedSubjectsToTransfer() {
+        return hasPlannedSubjectsToTransfer;
+    }
+
+    public void setHasPlannedSubjectsToTransfer(Boolean hasPlannedSubjectsToTransfer) {
+        this.hasPlannedSubjectsToTransfer = hasPlannedSubjectsToTransfer;
+    }
+
+    public Boolean getHasMultipleNominalDurationExtensions() {
+        return hasMultipleNominalDurationExtensions;
+    }
+
+    public void setHasMultipleNominalDurationExtensions(Boolean hasMultipleNominalDurationExtensions) {
+        this.hasMultipleNominalDurationExtensions = hasMultipleNominalDurationExtensions;
+    }
+
+    public Boolean getCanExtendNominalDuration() {
+        return canExtendNominalDuration;
+    }
+
+    public void setCanExtendNominalDuration(Boolean canExtendNominalDuration) {
+        this.canExtendNominalDuration = canExtendNominalDuration;
     }
 
     public Boolean getCanReview() {

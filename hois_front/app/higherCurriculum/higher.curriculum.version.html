@@ -222,24 +222,24 @@
             <th style="width: 10%;">{{'subject.mandatory' | translate}}</th>
           </thead>
           <tbody ng-repeat="year in years | orderBy">
-            <tr class="sub-header1" ng-show="(mappedSubjects[year] | filter: {spring: true}).length > 0">
+            <tr class="sub-header1" ng-show="(mappedSubjects[year] | filter: {autumn: true}).length > 0">
               <td colspan="6">
-                {{'module.springSemesterYear' | translate: {year: year} }}
+                {{'module.autumnSemesterYear' | translate: {year: year} }}
               </td>
             </tr>
-            <tr class="higher-curriculum-subject-row" ng-repeat="subject in mappedSubjects[year] | filter: {spring: true} | orderBy: currentLanguageNameField()">
+            <tr class="higher-curriculum-subject-row" ng-repeat="subject in mappedSubjects[year] | filter: {autumn: true} | orderBy: currentLanguageNameField | hoisUnique: 'subjectId'">
               <td>{{currentLanguageNameField(subject)}}</td>
               <td>{{subject.code}}</td>
               <td>{{subject.credits}}</td>
               <td>{{subject.assessment}}</td>
               <td>{{subject.optional ? ('main.no' | translate) : ('main.yes' | translate)}}</td>
             </tr>
-            <tr class="sub-header1" ng-show="(mappedSubjects[year] | filter: {autumn: true}).length > 0">
+            <tr class="sub-header1" ng-show="(mappedSubjects[year] | filter: {spring: true}).length > 0">
               <td colspan="6">
-                  {{'module.autumnSemesterYear' | translate: {year: year} }}
+                {{'module.springSemesterYear' | translate: {year: year} }}
               </td>
             </tr>
-            <tr class="higher-curriculum-subject-row" ng-repeat="subject in mappedSubjects[year] | filter: {autumn: true} | orderBy: currentLanguageNameField()">
+            <tr class="higher-curriculum-subject-row" ng-repeat="subject in mappedSubjects[year] | filter: {spring: true} | orderBy: currentLanguageNameField | hoisUnique: 'subjectId'">
               <td>{{currentLanguageNameField(subject)}}</td>
               <td>{{subject.code}}</td>
               <td>{{subject.credits}}</td>

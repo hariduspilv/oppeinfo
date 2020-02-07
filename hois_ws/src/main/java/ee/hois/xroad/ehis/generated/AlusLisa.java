@@ -18,7 +18,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
  *         &lt;element name="lisaOppurOppimine" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}alusOppurOppimine"/&gt;
- *         &lt;element name="lisaOppurIsikuandmed" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}alusIsikuandmedDetail" minOccurs="0"/&gt;
+ *         &lt;element name="lisaOppurIsikuandmed" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}alusIsikuandmedDetail"/&gt;
  *         &lt;element name="lisaOppurFiliaal" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}alusOppurFiliaal" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
@@ -38,6 +38,7 @@ public class AlusLisa {
 
     @XmlElement(required = true)
     protected AlusOppurOppimine lisaOppurOppimine;
+    @XmlElement(required = true)
     protected AlusIsikuandmedDetail lisaOppurIsikuandmed;
     protected AlusOppurFiliaal lisaOppurFiliaal;
 

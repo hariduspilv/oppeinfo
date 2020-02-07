@@ -27,7 +27,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
         higher: false
       }).$promise.then(function (groups) {
         $scope.formState.studentGroups = groups.filter(function (group) {
-          return group.id !== result.studentGroupId;
+          return group.id !== result.studentGroupId && group.curriculumVersion !== null;
         });
       });
 
@@ -183,7 +183,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       }, function () {
         $scope.record.$delete().then(function () {
           message.info('main.messages.delete.success');
-          $location.url('/lessonplans/vocational/' + $scope.record.lessonPlan + '/edit');
+          $location.url('/lessonplans/vocational/' + $scope.record.lessonPlan + '/edit?_noback');
         }).catch(angular.noop);
       });
     };
@@ -281,7 +281,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       if (teacherIndex !== -1) {
         $scope.record.journalTeachers.splice(teacherIndex, 1);
       }
-      
+
       if (!$scope.removedJournalTeacherIds) {
         $scope.removedJournalTeacherIds = {};
       }

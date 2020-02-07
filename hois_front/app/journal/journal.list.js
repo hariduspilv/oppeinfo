@@ -31,7 +31,7 @@ angular.module('hitsaOis').controller('JournalListController', function ($scope,
     });
   };
 
-  
+
   var order = $scope.currentLanguage() === 'et' ? '2, 5, 3' : '2, 6, 3';
   QueryUtils.createQueryForm($scope, '/journals', {order: order}, clMapper.objectmapper);
   $scope.$watch('criteria.studyYear', function (studyYearId) {
@@ -41,8 +41,8 @@ angular.module('hitsaOis').controller('JournalListController', function ($scope,
       });
     }
   });
-  
-  if ($scope.auth.isTeacher()) {
+
+  if ($scope.auth.isTeacher() &&  $scope.criteria.onlyMyJournals === undefined) {
     $scope.criteria.onlyMyJournals = true;
   }
 
@@ -53,7 +53,7 @@ angular.module('hitsaOis').controller('JournalListController', function ($scope,
   $scope.$watch('criteria.moduleObject', function() {
     $scope.criteria.module = $scope.criteria.moduleObject ? $scope.criteria.moduleObject.id : null;
   });
-  
+
 
   $scope.clearSearch = function () {
     $scope.clearCriteria();

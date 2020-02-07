@@ -4,11 +4,11 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
   function ($scope, School, $location, QueryUtils, DataUtils) {
     $scope.schools = School.getSchoolsWithLogo();
     $scope.linkify = DataUtils.linkifyText;
-    
+
     $scope.openSchoolCurriculumSearch = function (schoolId) {
       $location.path('curriculums/' + schoolId);
     };
-    
+
     $scope.siteMessages = QueryUtils.endpoint("/generalmessages/showsitemessages").query();
   }
 ]).controller('AuthenticatedHomeController', ['$rootScope', '$scope', '$timeout', 'AUTH_EVENTS', 'AuthService', 'USER_ROLES',
@@ -28,8 +28,8 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
 
     /**
      * Handler.
-     * 
-     * @param {Function} finishEvent 
+     *
+     * @param {Function} finishEvent
      */
     function PageLoadingHandler(finishEvent) {
       this.promises = {};
@@ -39,11 +39,11 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
 
       /**
        * Adds a promise and gives functions to this promise.
-       * 
-       * @param {String} sName 
-       * @param {Promise} pPromise 
-       * @param {Funciton} fThen 
-       * @param {Function} fCatch 
+       *
+       * @param {String} sName
+       * @param {Promise} pPromise
+       * @param {Funciton} fThen
+       * @param {Function} fCatch
        */
       this.addPromise = function (sName, pPromise, fThen, fCatch) {
         var isPromise = typeof pPromise.then === 'function';
@@ -213,9 +213,11 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
 
     $scope.openResponse = function(row, response) {
       dialogService.showDialog(
-        row.isThemePageable ? 'poll/poll.response.by.theme.dialog.html' : 
-        (response.type === 'KYSITLUS_O' ? 'poll/poll.response.by.subjectOrJournal.dialog.html' : 
+        row.isThemePageable ? 'poll/poll.response.by.theme.dialog.html' :
+        (response.type === 'KYSITLUS_O' ? 'poll/poll.response.by.subjectOrJournal.dialog.html' :
         'poll/poll.response.dialog.html'), function (dialogScope) {
+        dialogScope.showForeword = true;
+        dialogScope.showAfterword = false;
         dialogScope.formState = {};
         dialogScope.formState.isThemePageable = row.isThemePageable;
         dialogScope.formState.name = response.name;
@@ -228,10 +230,9 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
             return oisFileService.getUrl(photo, 'pollThemeQuestionFile');
         };
 
-        // Map journals or subjects with repedetive themes
-        if (!row.isThemePageable && response.type === 'KYSITLUS_O') {
+        function mapJournalOrSubjects() {
           dialogScope.formState.themeBySubjectOrJournalId = {};
-          
+
           dialogScope.criteria.themes.forEach(function (theme) {
             if (theme.journal !== null && theme.isRepetitive) {
               if (dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id] === undefined) {
@@ -250,14 +251,44 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
               dialogScope.formState.themeBySubjectOrJournalId[null].push(theme);
             }
           });
-          Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0].show = true;
+        }
+
+        // Map journals or subjects with repedetive themes
+        if (dialogScope.criteria.type === 'KYSITLUS_O') {
+          mapJournalOrSubjects();
+            if (row.isThemePageable) {
+              dialogScope.criteria.themes = [].concat.apply([], Object.values(dialogScope.formState.themeBySubjectOrJournalId));
+              if (dialogScope.criteria.foreword === null) {
+                dialogScope.criteria.themes[0].show = true;
+                if (dialogScope.criteria.themes.length < 2) {
+                  dialogScope.showConfirm = true;
+              }
+              }
+            } else if (dialogScope.criteria.foreword === null) {
+              Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0].show = true;
+              if (Object.values(dialogScope.formState.themeBySubjectOrJournalId).length < 2) {
+                dialogScope.showConfirm = true;
+            }
+            }
         } else {
           dialogScope.criteria.themes[0].show = true;
+          if (dialogScope.criteria.themes.length < 2) {
+            dialogScope.showConfirm = true;
+        }
         }
 
         dialogScope.previousSubjectOrJournal = function(index) {
-          Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
-          Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index - 1].show = true;
+          dialogScope.showConfirm = false;
+          if (index === 0) {
+            dialogScope.showForeword = true;
+          } else {
+            Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index - 1].show = true;
+          }
+          if (index === dialogScope.subjectListLength()) {
+            dialogScope.showAfterword = false;
+          } else {
+            Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+          }
         };
 
         dialogScope.last = function(index) {
@@ -268,27 +299,76 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
           return index === 0;
         };
 
+        dialogScope.subjectListLength = function() {
+          return Object.values(dialogScope.formState.themeBySubjectOrJournalId).length;
+        };
+
         dialogScope.nextSubjectOrJournal = function(index) {
-          Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
-          Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index + 1].show = true;
+          if (index === -1) {
+            dialogScope.showForeword = false;
+          } else {
+            Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+          }
+          // display confirm button when last journal/subject theme is displayed
+          if ((((dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.afterword === null) || 
+            dialogScope.criteria.type !== 'KYSITLUS_O') 
+            && index + 1 === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1) ||
+            index === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1) {
+              dialogScope.showConfirm = true;
+          }
+          
+          if (index === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1) {
+            dialogScope.showAfterword = true;
+          } else {
+            Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index + 1].show = true;
+          }
         };
 
         dialogScope.previousTheme = function(index) {
-            dialogScope.criteria.themes[index].show = false;
+          dialogScope.showConfirm = false;
+          if (index === 0) {
+            dialogScope.showForeword = true;
+          } else {
             dialogScope.criteria.themes[index - 1].show = true;
+          }
+          if (index === dialogScope.criteria.themes.length) {
+            dialogScope.showAfterword = false;
+          } else {
+            dialogScope.criteria.themes[index].show = false;
+          }
+        };
+
+        dialogScope.firstPage = function(themeList) {
+          return Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0] === themeList;
         };
 
         dialogScope.nextTheme = function(index) {
+          if (index === -1) {
+            dialogScope.showForeword = false;
+          } else {
             dialogScope.criteria.themes[index].show = false;
+          }
+          // display confirm button when last journal/subject theme is displayed
+          if ((((dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.afterword === null) || 
+            dialogScope.criteria.type !== 'KYSITLUS_O') 
+            && index + 1 === dialogScope.criteria.themes.length - 1) ||
+            index === dialogScope.criteria.themes.length - 1) {
+              dialogScope.showConfirm = true;
+          }
+
+          if (index === dialogScope.criteria.themes.length - 1) {
+            dialogScope.showAfterword = true;
+          } else {
             dialogScope.criteria.themes[index + 1].show = true;
+          }
         };
 
         function pushToError(errorThemes, theme) {
-          if (theme.journal !== null && !errorThemes.includes(theme.journal.nameEt + ': ' + theme.nameEt)) {
+          if (theme.journal !== null && errorThemes.indexOf(theme.journal.nameEt + ': ' + theme.nameEt) === -1) {
               errorThemes.push(theme.journal.nameEt + ': ' + theme.nameEt);
-          } else if (theme.subject !== null && !errorThemes.includes(theme.subject.nameEt + ': ' + theme.nameEt)) {
+          } else if (theme.subject !== null && errorThemes.indexOf(theme.subject.nameEt + ': ' + theme.nameEt) === -1) {
               errorThemes.push(theme.subject.nameEt + ': ' + theme.nameEt);
-          } else if (!errorThemes.includes(theme.nameEt)) {
+          } else if (theme.journal === null && theme.subject === null && errorThemes.indexOf(theme.nameEt) === -1) {
               errorThemes.push(theme.nameEt);
           }
         }
@@ -356,7 +436,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
                 });
               } else {
                 if (dialogScope.formState.isThemePageable || dialogScope.criteria.type === "KYSITLUS_V") {
-                  message.error('poll.messages.required', {themes: errorObject[1].join(", ")});
+                  message.error('poll.messages.required', {themes: errorObject[1].join("\n")});
                 } else {
                   message.error('main.messages.form-has-errors');
                 }
@@ -377,7 +457,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
               theme.questions.forEach(function (themeQuestion) {
                 if (themeQuestion !== question && themeQuestion.type === 'VASTUS_S' && themeQuestion.answers[0].chosen === true) {
                   themeQuestion.answers[0].chosen = false;
-                  $q.all().then(function() {dialogScope.save(themeQuestion);});
+                  dialogScope.save(themeQuestion);
                 }
               });
             }
@@ -459,13 +539,14 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
     $scope.$on(AUTH_EVENTS.userChanged, afterAuthentication);
 
     function checkIfHasRecentRRChanges() {
+      $scope.rrHasRecentChangeLogs = undefined;
       if (['ROLL_A', 'ROLL_J'].indexOf(Session.roleCode) !== -1 && ArrayUtils.includes(Session.authorizedRoles, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_RR)) {
         QueryUtils.endpoint("/logs/rr/hasrecentchangelogs").get({}, function (response) {
           $scope.rrHasRecentChangeLogs = response.hasRecentChangeLogs; // TODO maybe should be emptined?
         });
       }
     }
-    
+
     function checkIfOpenDeclarationPeriod() {
       $scope.currentDeclaration = undefined;
       $scope.nextDeclaration = undefined;
@@ -496,7 +577,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
         });
       }
     }
-    
+
     function checkIfHasOrderedCertificates() {
       if (['ROLL_A'].indexOf(Session.roleCode) !== -1 && Session.school.withoutEkis) {
         $scope.hasOrderedCertificates = QueryUtils.endpoint("/certificate/hasorderedcertificates").get();
@@ -670,7 +751,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
             }
           }
         );
-      } 
+      }
     }
 
     function getTodayAndTomorrowDate() {
@@ -732,7 +813,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
 
     /**
      * Returns a grouped arrays by given key.
-     * 
+     *
      * @param {Array} source Array of objects
      * @param {String} key Key which is used for grouping
      * @param {String} filterName Filter name from $filter if needed. Applied to key's value
@@ -752,11 +833,11 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
       }
       return groupedResult;
     };
-    
+
     /**
      * Returns array. Removes an unnecessary inner arrays.
-     * 
-     * @param {Array} source 
+     *
+     * @param {Array} source
      */
     $scope.translateObjectToArray = function (source) {
       var array = [];
@@ -806,7 +887,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
 
     /**
      * Places at top of the container an element.
-     * 
+     *
      * @param {Element} elem Element to be placed
      * @param {Element} container  Element where elem should be placed.
      */
@@ -824,8 +905,8 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
      * in case if we had 2 columns because its height would be the same as the height of his parent.
      * For the view with 1 column (xs, sm, md) it would return 0 as it should
      * with 0 children.
-     * 
-     * @param {Element} elem 
+     *
+     * @param {Element} elem
      */
     function sumChildrenHeight(elem) {
       var sum = 0;

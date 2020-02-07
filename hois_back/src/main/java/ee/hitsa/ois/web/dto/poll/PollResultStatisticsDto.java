@@ -37,7 +37,7 @@ public class PollResultStatisticsDto extends PollResultStatisticsCommand {
 
     public static PollResultStatisticsDto of(PollStatisticsRequest request) {
         PollResultStatisticsDto dto = new PollResultStatisticsDto();
-        dto.setHash(request.getRequestHash());
+        dto.setHash(request.getRequestKey());
         return dto;
     }
 

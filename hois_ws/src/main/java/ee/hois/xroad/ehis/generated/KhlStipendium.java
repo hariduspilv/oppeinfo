@@ -23,6 +23,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="stipendiumAlgusKp" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
  *         &lt;element name="stipendiumLoppKp" type="{http://www.w3.org/2001/XMLSchema}date"/&gt;
  *         &lt;element name="doktoranditoetusSumma" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="viimaneDoktoranditoetuseValjamakseKp" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
  *         &lt;element name="oppeasutuseKirjeId" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
@@ -38,6 +39,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "stipendiumAlgusKp",
     "stipendiumLoppKp",
     "doktoranditoetusSumma",
+    "viimaneDoktoranditoetuseValjamakseKp",
     "oppeasutuseKirjeId"
 })
 public class KhlStipendium {
@@ -51,6 +53,8 @@ public class KhlStipendium {
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar stipendiumLoppKp;
     protected String doktoranditoetusSumma;
+    @XmlSchemaType(name = "date")
+    protected XMLGregorianCalendar viimaneDoktoranditoetuseValjamakseKp;
     protected String oppeasutuseKirjeId;
 
     /**
@@ -147,6 +151,30 @@ public class KhlStipendium {
      */
     public void setDoktoranditoetusSumma(String value) {
         this.doktoranditoetusSumma = value;
+    }
+
+    /**
+     * Gets the value of the viimaneDoktoranditoetuseValjamakseKp property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link XMLGregorianCalendar }
+     *     
+     */
+    public XMLGregorianCalendar getViimaneDoktoranditoetuseValjamakseKp() {
+        return viimaneDoktoranditoetuseValjamakseKp;
+    }
+
+    /**
+     * Sets the value of the viimaneDoktoranditoetuseValjamakseKp property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link XMLGregorianCalendar }
+     *     
+     */
+    public void setViimaneDoktoranditoetuseValjamakseKp(XMLGregorianCalendar value) {
+        this.viimaneDoktoranditoetuseValjamakseKp = value;
     }
 
     /**

@@ -1,6 +1,8 @@
 
 package ee.hois.xroad.ehis.generated;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -19,6 +21,7 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;sequence&gt;
  *         &lt;element name="haridusSisseastumisel" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="esimesseKlassi" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="oppeaasta" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oppimaKp" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oppeasutus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oppekava" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
@@ -37,6 +40,11 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="oppeasutusestLahkumine" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="pohikooliViimaneKlass" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="gymnaasiumiViimaneKlass" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="muutusKp" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="oppekohtId" type="{http://www.w3.org/2001/XMLSchema}long"/&gt;
+ *         &lt;element name="lahkumiseKp" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="onOppiv" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}ehisBoolean"/&gt;
+ *         &lt;element name="pohjusetaPuudumised" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}pohjusetaPuudumised" maxOccurs="unbounded" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -49,6 +57,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "yldhOppetoo", propOrder = {
     "haridusSisseastumisel",
     "esimesseKlassi",
+    "oppeaasta",
     "oppimaKp",
     "oppeasutus",
     "oppekava",
@@ -66,7 +75,12 @@ import javax.xml.bind.annotation.XmlType;
     "opilaskoduKohaFinantseerimine",
     "oppeasutusestLahkumine",
     "pohikooliViimaneKlass",
-    "gymnaasiumiViimaneKlass"
+    "gymnaasiumiViimaneKlass",
+    "muutusKp",
+    "oppekohtId",
+    "lahkumiseKp",
+    "onOppiv",
+    "pohjusetaPuudumised"
 })
 public class YldhOppetoo {
 
@@ -74,6 +88,8 @@ public class YldhOppetoo {
     protected String haridusSisseastumisel;
     @XmlElement(required = true, nillable = true)
     protected String esimesseKlassi;
+    @XmlElement(required = true, nillable = true)
+    protected String oppeaasta;
     @XmlElement(required = true, nillable = true)
     protected String oppimaKp;
     @XmlElement(required = true, nillable = true)
@@ -110,6 +126,16 @@ public class YldhOppetoo {
     protected String pohikooliViimaneKlass;
     @XmlElement(required = true, nillable = true)
     protected String gymnaasiumiViimaneKlass;
+    @XmlElement(required = true, nillable = true)
+    protected String muutusKp;
+    @XmlElement(required = true, type = Long.class, nillable = true)
+    protected Long oppekohtId;
+    @XmlElement(required = true, nillable = true)
+    protected String lahkumiseKp;
+    @XmlElement(required = true, nillable = true)
+    protected String onOppiv;
+    @XmlElement(nillable = true)
+    protected List<PohjusetaPuudumised> pohjusetaPuudumised;
 
     /**
      * Gets the value of the haridusSisseastumisel property.
@@ -157,6 +183,30 @@ public class YldhOppetoo {
      */
     public void setEsimesseKlassi(String value) {
         this.esimesseKlassi = value;
+    }
+
+    /**
+     * Gets the value of the oppeaasta property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getOppeaasta() {
+        return oppeaasta;
+    }
+
+    /**
+     * Sets the value of the oppeaasta property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setOppeaasta(String value) {
+        this.oppeaasta = value;
     }
 
     /**
@@ -589,6 +639,131 @@ public class YldhOppetoo {
      */
     public void setGymnaasiumiViimaneKlass(String value) {
         this.gymnaasiumiViimaneKlass = value;
+    }
+
+    /**
+     * Gets the value of the muutusKp property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getMuutusKp() {
+        return muutusKp;
+    }
+
+    /**
+     * Sets the value of the muutusKp property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setMuutusKp(String value) {
+        this.muutusKp = value;
+    }
+
+    /**
+     * Gets the value of the oppekohtId property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Long }
+     *     
+     */
+    public Long getOppekohtId() {
+        return oppekohtId;
+    }
+
+    /**
+     * Sets the value of the oppekohtId property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Long }
+     *     
+     */
+    public void setOppekohtId(Long value) {
+        this.oppekohtId = value;
+    }
+
+    /**
+     * Gets the value of the lahkumiseKp property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getLahkumiseKp() {
+        return lahkumiseKp;
+    }
+
+    /**
+     * Sets the value of the lahkumiseKp property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setLahkumiseKp(String value) {
+        this.lahkumiseKp = value;
+    }
+
+    /**
+     * Gets the value of the onOppiv property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getOnOppiv() {
+        return onOppiv;
+    }
+
+    /**
+     * Sets the value of the onOppiv property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setOnOppiv(String value) {
+        this.onOppiv = value;
+    }
+
+    /**
+     * Gets the value of the pohjusetaPuudumised property.
+     * 
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the pohjusetaPuudumised property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getPohjusetaPuudumised().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link PohjusetaPuudumised }
+     * 
+     * 
+     */
+    public List<PohjusetaPuudumised> getPohjusetaPuudumised() {
+        if (pohjusetaPuudumised == null) {
+            pohjusetaPuudumised = new ArrayList<PohjusetaPuudumised>();
+        }
+        return this.pohjusetaPuudumised;
     }
 
 }

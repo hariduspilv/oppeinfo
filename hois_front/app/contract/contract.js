@@ -255,8 +255,6 @@ angular.module('hitsaOis').controller('ContractEditController', function ($locat
     ArrayUtils.remove($scope.contract.moduleSubjects, item);
   };
 
-  $scope.getAstronomicalHours = DataUtils.getAstronomicalHours;
-
   $scope.moduleChanged = function (moduleId, moduleSubject) {
     var module = $scope.formState.modulesById[moduleId];
     if (module) {

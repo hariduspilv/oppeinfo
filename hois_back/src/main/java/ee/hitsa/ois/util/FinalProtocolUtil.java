@@ -2,6 +2,7 @@ package ee.hitsa.ois.util;
 
 import java.util.List;
 
+import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.enums.HigherAssessment;
@@ -12,6 +13,8 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
 public class FinalProtocolUtil {
+
+    private static final String PROFESSIONAL_DIPLOMA_STUDY_LEVEL = "OPPEASTE_514";
 
     private static boolean hasProtocolViewPermission(HoisUserDetails user, Protocol protocol) {
         return UserUtil.hasPermission(user, Permission.OIGUS_V, protocolPermissionObject(protocol));
@@ -166,7 +169,9 @@ public class FinalProtocolUtil {
     }
 
     public static void assertCurriculumGradesInput(Protocol protocol) {
-        if (!protocol.getProtocolHdata().getCurriculum().getGrades().isEmpty()) {
+        Curriculum curriculum = protocol.getProtocolHdata().getCurriculum();
+        if (!PROFESSIONAL_DIPLOMA_STUDY_LEVEL.equals(EntityUtil.getCode(curriculum.getOrigStudyLevel()))
+                && !protocol.getProtocolHdata().getCurriculum().getGrades().isEmpty()) {
             for (ProtocolStudent student : protocol.getProtocolStudents()) {
                 if (HigherAssessment.isPositive(EntityUtil.getNullableCode(student.getGrade()))
                         && student.getCurriculumGrade() == null) {

@@ -2,16 +2,16 @@
   <div flex>
     <form name="practiceJournalEntryForm" ng-submit="practiceJournalEntryForm.$valid && save()" novalidate layout="column">
       <div class="form-readonly" layout="column">
-        <br>
-        <div layout="row">
+        <div>&nbsp;</div>
+        <div layout="row" flex>
           <div md-colors="{color: 'orange'}">
             <md-icon md-colors="{color: 'orange'}" md-font-set="material-icons">info_outline</md-icon>
             <span>{{'practiceJournal.canAddEntries' | translate}}
               {{practiceJournal.endDateDisplay | hoisDate}}</span>
           </div>
         </div>
-        <br>
-        <div layout="row" flex>
+        <div>&nbsp;</div>
+        <div layout="row" layout-xs="column" flex>
           <md-input-container class="label-only" flex>
             <label>{{'student.label' | translate}}</label>
             <hois-value value="practiceJournal.student.nameEt"></hois-value>
@@ -32,12 +32,11 @@
             <label>{{'student.studentGroup' | translate}}</label>
             <hois-value value="currentLanguageNameField(practiceJournal.studentGroup)"></hois-value>
           </md-input-container>
-          <br>
         </div>
 
         <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'practice.info' | translate}}</legend>
-          <br>
+          <div>&nbsp;</div>
           <div layout="row" flex>
             <md-input-container flex>
               <label>{{'enterprise.label' | translate}}</label>
@@ -79,7 +78,6 @@
                   <th md-column width="35%">{{'practiceJournal.module' | translate}}</th>
                   <th md-column width="35%">{{'practiceJournal.theme' | translate}}</th>
                   <th md-column width="10%">{{'practiceJournal.creditsEKAP' | translate}}</th>
-                  <th md-column width="10%">{{'practiceJournal.acadHours' | translate}}</th>
                   <th md-column width="10%">{{'practiceJournal.astroHours' | translate}}</th>
                 </tr>
               </thead>
@@ -89,7 +87,6 @@
                   <td md-cell>{{currentLanguageNameField(module.theme)}}</td>
                   <td md-cell>{{::module.credits}}</td>
                   <td md-cell>{{::module.hours}}</td>
-                  <td md-cell>{{getAstronomicalHours(module.hours)}}</td>
                 </tr>
               </tbody>
             </table>
@@ -101,7 +98,6 @@
                 <tr md-row>
                   <th md-column width="70%">{{'practiceJournal.subject' | translate}}</th>
                   <th md-column width="10%">{{'practiceJournal.creditsEAP' | translate}}</th>
-                  <th md-column width="10%">{{'practiceJournal.acadHours' | translate}}</th>
                   <th md-column width="10%">{{'practiceJournal.astroHours' | translate}}</th>
                 </tr>
               </thead>
@@ -110,7 +106,6 @@
                   <td md-cell>{{currentLanguageNameField(subject.subject)}}</td>
                   <td md-cell>{{::subject.credits}}</td>
                   <td md-cell>{{::subject.hours}}</td>
-                  <td md-cell>{{getAstronomicalHours(subject.hours)}}</td>
                 </tr>
               </tbody>
             </table>
@@ -118,7 +113,7 @@
         </fieldset>
       </div>
 
-      <br>
+      <div>&nbsp;</div>
 
       <fieldset>
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'practice.fill' | translate}}</legend>
@@ -130,7 +125,6 @@
                   <th md-column>{{'practiceJournal.practiceJournalEntry.practiceDate' | translate}}</th>
                   <th md-column>{{'practiceJournal.practiceJournalEntry.description' | translate}}</th>
                   <th md-column>{{'practiceJournal.practiceJournalEntry.astroHours' | translate}}</th>
-                  <th md-column>{{'practiceJournal.acadHours' | translate}}</th>
                   <th md-column>{{'practiceJournal.practiceJournalEntry.supervisorComment' | translate}}</th>
                   <th md-column>{{'practiceJournal.practiceJournalEntry.teacherComment' | translate}}</th>
                 </tr>
@@ -150,11 +144,6 @@
                   <td md-cell>
                     <div>
                       <hois-value value="row.astroHours"></hois-value>
-                    </div>
-                  </td>
-                  <td md-cell>
-                    <div>
-                      <hois-value value="row.acadHours"></hois-value>
                     </div>
                   </td>
                   <td md-cell>
@@ -178,11 +167,6 @@
                       <hois-value style="font-weight: 700" value="totalAstro"></hois-value>
                     </md-input-container>
                   </td>
-                  <td md-cell>
-                      <md-input-container>
-                        <hois-value style="font-weight: 700" value="totalAcad"></hois-value>
-                      </md-input-container>
-                  </td>
                   <td md-cell></td>
                   <td md-cell></td>
                 </tr>
@@ -191,7 +175,7 @@
           </md-table-container>
         </div>
       </fieldset>
-      <br><br>
+      <div>&nbsp;</div><div>&nbsp;</div>
 
       <div class="form-readonly" layout="row">
         <md-input-container flex>
@@ -238,7 +222,7 @@
         </fieldset>
       </div>
       
-      <br>
+      <div>&nbsp;</div>
 
       <div class="form-readonly" layout="row" flex>
         <md-input-container flex>
@@ -290,7 +274,7 @@
         </fieldset>
       </div>
 
-      <br>
+      <div>&nbsp;</div>
 
       <div class="form-readonly" layout="row">
         <md-input-container flex>
@@ -306,7 +290,7 @@
         </md-input-container>
       </div>
 
-      <br>
+      <div>&nbsp;</div>
 
       <hois-collapsable label="('contract.studentEvaluation' | translate)" ng-if="practiceJournal.studentPracticeEvalCriteria && practiceJournal.studentPracticeEvalCriteria.length !== 0" expanded="false">
         <div class="form-readonly" layout="column" flex>
@@ -388,7 +372,7 @@
       </div>
     </form>
 
-    <br>
+    <div>&nbsp;</div>
 
     <div flex>
       <hois-collapsable label="('contract.practicePlan' | translate)" expanded="false">

@@ -4,7 +4,7 @@ import static ee.hitsa.ois.util.UserUtil.assertIsSchoolAdmin;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
-import java.util.UUID;
+import java.util.Optional;
 
 import javax.validation.Valid;
 
@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.concurrent.AsyncManager;
+import ee.hitsa.ois.concurrent.AsyncMemoryManager;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherContinuingEducation;
 import ee.hitsa.ois.domain.teacher.TeacherMobility;
@@ -68,6 +70,8 @@ public class TeacherController {
     private TeacherOccupationService teacherOccupationService;
     @Autowired
     private EhisTeacherExportService ehisTeacherExportService;
+    @Autowired
+    private AsyncManager asyncManager;
 
     @GetMapping("/{id:\\d+}")
     public TeacherDto get(HoisUserDetails user, @WithEntity Teacher teacher) {
@@ -186,29 +190,33 @@ public class TeacherController {
     @PostMapping("/exportToEhis/higher")
     public SimpleEntry<String, String> exportToEhisHigher(@Valid @RequestBody EhisTeacherExportForm form, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EHIS);
-        String key = UUID.randomUUID().toString();
-        ehisTeacherExportService.exportTeachers(user, true, form, key);
+        String key = asyncManager.generateKey(user);
+        ExportTeacherRequest request = ehisTeacherExportService.createRequest(user, true, form, key);
+        asyncManager.createRequest(user, AsyncMemoryManager.EHIS_TEACHER, key, request);
+        asyncManager.processRequest(request);
         return new SimpleEntry<>("key", key);
     }
 
     @PostMapping("/exportToEhis/vocational")
     public SimpleEntry<String, String> exportToEhisVocational(@Valid @RequestBody EhisTeacherExportForm form, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_ANDMEVAHETUS_EHIS);
-        String key = UUID.randomUUID().toString();
-        ehisTeacherExportService.exportTeachers(user, false, form, key);
+        String key = asyncManager.generateKey(user);
+        ExportTeacherRequest request = ehisTeacherExportService.createRequest(user, false, form, key);
+        asyncManager.createRequest(user, AsyncMemoryManager.EHIS_TEACHER, key, request);
+        asyncManager.processRequest(request);
         return new SimpleEntry<>("key", key);
     }
     
     @GetMapping("/ehisTeacherExportCheck")
     public EhisTeacherRequestDto ehisStudentExportCheck(HoisUserDetails user, @Valid EhisTeacherExportForm form) {
         assertIsSchoolAdmin(user);
-        ExportTeacherRequest overlappedRequest = ehisTeacherExportService.findOverlappedActiveExportTeacherRequest(user, form);
-        return overlappedRequest != null && !overlappedRequest.isDone() ? EhisTeacherRequestDto.of(overlappedRequest) : null;
+        Optional<ExportTeacherRequest> overlappedRequest = ehisTeacherExportService.findOverlappedActiveExportTeacherRequest(user, form);
+        return overlappedRequest.isPresent() && !overlappedRequest.get().isDone() ? EhisTeacherRequestDto.of(overlappedRequest.get()) : null;
     }
 
     @GetMapping("/ehisTeacherExportStatus")
     public FutureStatusResponse ehisStudentExportStatus(HoisUserDetails user, @RequestParam(required = true) String key) {
         assertIsSchoolAdmin(user);
-        return ehisTeacherExportService.exporTeacherStatus(user, key);
+        return asyncManager.getState(user, AsyncMemoryManager.EHIS_TEACHER, key, true);
     }
 }

@@ -27,13 +27,16 @@ angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController'
         $scope.gradeSelectShownValue = function (grade) {
           return HigherGradeUtil.gradeSelectShownValue(grade, $scope.auth.school.letterGrades);
         };
-      } 
+      } else {
+        $scope.grades = $scope.grades.sort(function (grade1, grade2) {
+          return grade1.value - grade2.value;
+        });
+      }
       $scope.gradesMap = Classifier.toMap($scope.grades);
     });
 
     entity.practiceJournalEntries.forEach(function (entry) {
-      entry.astroHours = DataUtils.getAcademicHoursFromDouble(entry.hours);
-      entry.acadHours = DataUtils.getAcademicHours(entry.hours);
+      entry.astroHours = DataUtils.getHoursFromDoubleMinutes(entry.hours); // entry has minutes instead of hours
     });
     $scope.practiceJournal = entity;
     $scope.practiceJournal.endDateDisplay = new Date($scope.practiceJournal.endDate);
@@ -43,18 +46,13 @@ angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController'
 
   function updateTotal() {
     var totalAstro = 0.00;
-    var totalAcad = 0.00;
     $scope.practiceJournal.practiceJournalEntries.forEach(function (entry) {
       if (entry.hours !== undefined) {
         totalAstro += entry.hours;
       }
-      if (entry.acadHours !== undefined) {
-        totalAcad += entry.acadHours;
-      }
     });
 
-    $scope.totalAstro = DataUtils.getAcademicHoursFromDouble(totalAstro);
-    $scope.totalAcad = Math.round(totalAcad * 100) / 100;
+    $scope.totalAstro = DataUtils.getHoursFromDoubleMinutes(totalAstro);
   }
 
   var entity = $route.current.locals.entity;
@@ -65,12 +63,10 @@ angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController'
   $scope.hideInvalid = function (cl) {
     return !Classifier.isValid(cl);
   };
-  
+
   $scope.getNames = function(names) {
     return names.map(function(elem){return elem.supervisorName;}).join(', ');
   };
-
-  $scope.getAstronomicalHours = DataUtils.getAstronomicalHours;
 
   $scope.openAddFileDialog = function () {
     dialogService.showDialog('practiceJournal/practice.journal.entry.add.file.dialog.html', function (dialogScope) {

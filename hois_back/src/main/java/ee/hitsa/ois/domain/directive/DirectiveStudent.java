@@ -28,6 +28,7 @@ import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.util.Period;
+import ee.hitsa.ois.validation.Conditional;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.DirectiveValidation.Akad;
 import ee.hitsa.ois.validation.DirectiveValidation.Akadk;
@@ -53,6 +54,7 @@ import ee.hitsa.ois.validation.Required;
 
 @DateRange(from = "startDate", thru = "endDate", groups = {Indok.class, Stiptoet.class})
 @PeriodRange(groups = {Akad.class, Valis.class})
+@Conditional(selected = "isAbroad", values = {"false"}, required = {"ehisSchool"}, groups = {Valis.class})
 @Entity
 public class DirectiveStudent extends BaseEntityWithId implements Period {
 
@@ -62,10 +64,10 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @Required(groups = {Akad.class, Akadk.class, Eksmat.class, Ennist.class, Finm.class, Lopet.class, Okava.class, Okoorm.class, Ovorm.class, Valis.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Student student;
-    @Required(groups = Kylalis.class)
+    @Required(groups = {Valis.class, Kylalis.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private ApelSchool apelSchool;
-    @Required(groups = {Akadk.class, Indok.class, Indoklop.class, Stiptoet.class, Tugi.class, Tugilopp.class, Kylalis.class})
+    @Required(groups = {Akadk.class, Indok.class, Indoklop.class, Kylalis.class, Stiptoet.class, Tugi.class, Tugilopp.class, Valiskatk.class})
     private LocalDate startDate;
     @Required(groups = {Indok.class, Stiptoet.class, Tugi.class, Kylalis.class})
     private LocalDate endDate;
@@ -102,7 +104,7 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private StudyPeriod studyPeriodStart;
     @ManyToOne(fetch = FetchType.LAZY)
     private StudyPeriod studyPeriodEnd;
-    @Required(groups = {Ennist.class, Tugi.class, Valiskatk.class}) // Immat is checked by hand
+    @Required(groups = {Ennist.class, Tugi.class}) // Immat is checked by hand
     private LocalDate nominalStudyEnd;
     @Required(groups = Valis.class)
     private Boolean isAbroad;

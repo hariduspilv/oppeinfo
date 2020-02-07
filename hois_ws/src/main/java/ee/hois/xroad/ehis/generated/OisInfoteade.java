@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="oppekavaStaatus" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="teade" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="veakood" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
+ *         &lt;element name="kommentaar" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -37,7 +38,8 @@ import javax.xml.bind.annotation.XmlType;
     "oppekavaKood",
     "oppekavaStaatus",
     "teade",
-    "veakood"
+    "veakood",
+    "kommentaar"
 })
 public class OisInfoteade {
 
@@ -48,6 +50,7 @@ public class OisInfoteade {
     protected String teade;
     @XmlElement(required = true)
     protected BigInteger veakood;
+    protected String kommentaar;
 
     /**
      * Gets the value of the oppekavaNimetus property.
@@ -167,6 +170,30 @@ public class OisInfoteade {
      */
     public void setVeakood(BigInteger value) {
         this.veakood = value;
+    }
+
+    /**
+     * Gets the value of the kommentaar property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getKommentaar() {
+        return kommentaar;
+    }
+
+    /**
+     * Sets the value of the kommentaar property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setKommentaar(String value) {
+        this.kommentaar = value;
     }
 
 }
