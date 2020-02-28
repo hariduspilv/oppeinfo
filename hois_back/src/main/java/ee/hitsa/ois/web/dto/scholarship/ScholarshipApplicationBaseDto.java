@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 public class ScholarshipApplicationBaseDto {
     private Long id;
+    private Long student;
     private BigDecimal averageMark;
     private BigDecimal lastPeriodMark;
     private BigDecimal saisPoints;
@@ -20,6 +21,14 @@ public class ScholarshipApplicationBaseDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getStudent() {
+        return student;
+    }
+
+    public void setStudent(Long student) {
+        this.student = student;
     }
 
     public BigDecimal getAverageMark() {

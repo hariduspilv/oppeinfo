@@ -10,6 +10,7 @@ public class ApplicationSearchDto {
 
     private Long id;
     private AutocompleteResult student;
+    private String studentGroup;
     private String status;
     private String rejectReason;
     private String type;
@@ -93,6 +94,14 @@ public class ApplicationSearchDto {
 
     public void setCanEditStudent(Boolean canEditStudent) {
         this.canEditStudent = canEditStudent;
+    }
+
+    public String getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(String studentGroup) {
+        this.studentGroup = studentGroup;
     }
 
 }

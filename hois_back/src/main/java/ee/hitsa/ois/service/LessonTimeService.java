@@ -99,8 +99,7 @@ public class LessonTimeService {
                 + "inner join lesson_time lt on lt.lesson_time_building_group_id = ltbg.id").sort(new Sort(Direction.DESC, "valid_from"));
 
         qb.requiredCriteria("valid_from <= :validFrom", "validFrom", LocalDate.now());
-        qb.requiredCriteria("school_id <= :schoolId", "schoolId", schoolId);
- 
+        qb.requiredCriteria("school_id = :schoolId", "schoolId", schoolId);
         List<?> data = qb.select("valid_from", em).setMaxResults(1).getResultList();
         if(data.isEmpty()) {
             return null;

@@ -20,6 +20,7 @@ public enum DirectiveType {
     KASKKIRI_IMMATV(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Immat.class, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel", "dormitory"),
     KASKKIRI_INDOK(null, DirectiveValidation.Indok.class),
     KASKKIRI_INDOKLOP(null, DirectiveValidation.Indoklop.class),
+    KASKKIRI_MUU(null, DirectiveValidation.Muu.class),
     KASKKIRI_TYHIST(null, null),
     KASKKIRI_STIPTOET(null, DirectiveValidation.Stiptoet.class),
     KASKKIRI_STIPTOETL(null, DirectiveValidation.Stiptoetl.class),

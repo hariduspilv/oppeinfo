@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -782,7 +783,7 @@ public class PollController {
      * @return polls
      */
     @GetMapping("/polls")
-    public Set<ResponseDto> getPolls(HoisUserDetails user) {
+    public LinkedHashSet<ResponseDto> getPolls(HoisUserDetails user) {
         return pollService.getPolls(user);
     }
     

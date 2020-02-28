@@ -15,6 +15,7 @@ import ee.hitsa.ois.enums.SubjectProgramStatus;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectProgramUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
@@ -32,6 +33,8 @@ public class DeclarationSubjectDto extends VersionedCommand {
     private Set<PrerequisiteSubjectDto> recommendedPrerequisiteSubjects;
     private Boolean isDeclaredRepeatedly;
     private Boolean isAssessed;
+    private AutocompleteResult subgroup;
+    private Set<AutocompleteResult> subgroups;
 
     public static DeclarationSubjectDto of(DeclarationSubject declarationSubject) {
         DeclarationSubjectDto dto = new DeclarationSubjectDto();
@@ -84,6 +87,9 @@ public class DeclarationSubjectDto extends VersionedCommand {
         }
         dto.setMandatoryPrerequisiteSubjects(mandatoryPrerequisiteSubjects);
         dto.setRecommendedPrerequisiteSubjects(recommendedPrerequisiteSubjects);
+
+        dto.setSubgroup(declarationSubject.getSubgroup() != null ? AutocompleteResult.of(declarationSubject.getSubgroup()) : null);
+        dto.setSubgroups(StreamUtil.toMappedSet(AutocompleteResult::of, declarationSubject.getSubjectStudyPeriod().getSubgroups()));
         
         return dto;
     }
@@ -185,5 +191,21 @@ public class DeclarationSubjectDto extends VersionedCommand {
 
     public void setModule(AutocompleteResult module) {
         this.module = module;
+    }
+
+    public AutocompleteResult getSubgroup() {
+        return subgroup;
+    }
+
+    public void setSubgroup(AutocompleteResult subgroup) {
+        this.subgroup = subgroup;
+    }
+
+    public Set<AutocompleteResult> getSubgroups() {
+        return subgroups;
+    }
+
+    public void setSubgroups(Set<AutocompleteResult> subgroups) {
+        this.subgroups = subgroups;
     }
 }

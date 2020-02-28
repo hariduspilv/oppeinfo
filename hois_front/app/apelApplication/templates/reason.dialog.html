@@ -21,8 +21,8 @@
             <span>{{'apel.rejectionWarning' | translate}}</span>
           </div>
         </md-whiteframe>
-        <div layout="row">
-          <p ng-repeat="prompt in extraPrompts">{{prompt | translate}}</p>
+        <div layout="column">
+          <div ng-repeat="prompt in extraPrompts">{{prompt | translate}}</div>
         </div>
         <div layout="column" flex>
           <md-input-container flex>

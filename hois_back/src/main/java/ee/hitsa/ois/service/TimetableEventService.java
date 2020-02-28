@@ -28,6 +28,8 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.timetable.TimetableEventSubgroup;
+import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchSubgroupDto;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -832,16 +834,22 @@ public class TimetableEventService {
                     timetableEventTimeIds, showOnlySubstitutes);
             Map<Long, List<ResultObject>> roomsByTimetableEventTime = getRoomsByTimetableEventTime(
                     timetableEventTimeIds);
+            Map<Long, List<ResultObject>> subgroupsByTimetableEventTime = getSubgroupsByTimetableEventTime(
+                    timetableEventTimeIds);
             Map<Long, List<ResultObject>> groupsByTimetableEventTime = getGroupsByTimetableEventTime(
                     timetableEventTimeIds);
 
             for (TimetableEventSearchDto dto : timetableEventTimes) {
-                dto.setTeachers(
-                        StreamUtil.toMappedList(r -> new TimetableEventSearchTeacherDto(r.getObjectId(), r.getFirstValue()), teachersByTimetableEventTime.get(dto.getId())));
-                dto.setRooms(
-                        StreamUtil.toMappedList(r -> new TimetableEventSearchRoomDto(r.getObjectId(), r.getFirstValue(), r.getSecondValue()), roomsByTimetableEventTime.get(dto.getId())));
-                dto.setStudentGroups(
-                        StreamUtil.toMappedList(r -> new TimetableEventSearchGroupDto(r.getObjectId(), r.getFirstValue()), groupsByTimetableEventTime.get(dto.getId())));
+                dto.setTeachers(StreamUtil.toMappedList(r -> new TimetableEventSearchTeacherDto(r.getObjectId(),
+                        r.getFirstValue()), teachersByTimetableEventTime.get(dto.getId())));
+                dto.setRooms(StreamUtil.toMappedList(r -> new TimetableEventSearchRoomDto(r.getObjectId(),
+                        r.getFirstValue(), r.getSecondValue()), roomsByTimetableEventTime.get(dto.getId())));
+                dto.setSubgroups(StreamUtil.toMappedList(r -> new TimetableEventSearchSubgroupDto(r.getObjectId(),
+                        r.getFirstValue()), subgroupsByTimetableEventTime.get(dto.getId())));
+                if (dto.getSubgroups().isEmpty()) {
+                    dto.setStudentGroups(StreamUtil.toMappedList(r -> new TimetableEventSearchGroupDto(r.getObjectId(),
+                            r.getFirstValue()), groupsByTimetableEventTime.get(dto.getId())));
+                }
             }
         }
     }
@@ -988,7 +996,7 @@ public class TimetableEventService {
                 queryResult);
         resultObjects.addAll(otherRoomResultObjects);
     }
-    
+
     private Map<Long, List<ResultObject>> getGroupsByTimetableEventTime(List<Long> tetIds) {
         String from ="from timetable_event_time tem"
                 + " join timetable_event te on tem.timetable_event_id = te.id"
@@ -1006,7 +1014,21 @@ public class TimetableEventService {
                 .toMappedList(r -> new ResultObject(resultAsLong(r, 0), resultAsLong(r, 1), resultAsString(r, 2)), queryResult);
         return resultObjects.stream().collect(Collectors.groupingBy(r -> r.getTimetableEventId()));
     }
-    
+
+    private Map<Long, List<ResultObject>> getSubgroupsByTimetableEventTime(List<Long> tetIds) {
+        String from = "from timetable_event_subgroup tes"
+                + " join timetable_event_time tet on tet.id = tes.timetable_event_time_id"
+                + " join subject_study_period_subgroup sspg on sspg.id = tes.subject_study_period_subgroup_id";
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
+        qb.requiredCriteria("tet.id in (:tetIds)", "tetIds", tetIds);
+
+        qb.sort("sspg.code");
+        List<?> queryResult = qb.select("tet.id, tes.subject_study_period_subgroup_id, sspg.code", em).getResultList();
+        List<ResultObject> resultObjects = StreamUtil.toMappedList(r -> new ResultObject(resultAsLong(r, 0),
+                resultAsLong(r, 1), resultAsString(r, 2)), queryResult);
+        return resultObjects.stream().collect(Collectors.groupingBy(r -> r.getTimetableEventId()));
+    }
+
     private Map<Long, List<ResultObject>> getStudyMaterialsByTimetableEventTime(HoisUserDetails user, List<Long> tetIds) {
         String from = "from timetable_event_time tem" + 
                 " join timetable_event te on tem.timetable_event_id = te.id" + 

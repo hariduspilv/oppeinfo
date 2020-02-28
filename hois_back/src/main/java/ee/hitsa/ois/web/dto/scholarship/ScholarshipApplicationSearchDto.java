@@ -1,79 +1,47 @@
 package ee.hitsa.ois.web.dto.scholarship;
 
-import java.math.BigDecimal;
+import ee.hitsa.ois.validation.DateRange;
+
 import java.time.LocalDate;
 
-public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseDto {
-    private Long place;
-    private String type;
-    private Long term;
-    private String termNameEt;
-    private String curriculumCode;
-    private String studentGroup;
+@DateRange(from = "applicationStart", thru = "applicationEnd")
+public class ScholarshipApplicationSearchDto {
+
+    private Long id;
     private Long studentId;
     private String studentName;
-    private String firstName;
-    private String lastName;
-    private String idcode;
-    private String bankAccountOwnerIdcode;
-    private BigDecimal credits;
-    private Boolean isTeacherConfirm;
-    private String rejectComment;
-    private Boolean needsConfirm;
-    private Long decisionId;
-    private LocalDate decisionDecided;
-    private Boolean hasDirective;
-    private Boolean canViewStudent = Boolean.TRUE;
+    private String studentGroup;
+    private Long termId;
+    private String termType;
+    private String termNameEt;
+    private LocalDate applicationStart;
+    private LocalDate applicationEnd;
+    private String applicationStatus;
+    private LocalDate inserted;
+    private Boolean canEdit;
 
-    private String compensationReason;
-    private String compensationFrequency;
-
-    public Long getPlace() {
-        return place;
-    }
-
-    public void setPlace(Long place) {
-        this.place = place;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public Long getTerm() {
-        return term;
-    }
-
-    public void setTerm(Long term) {
-        this.term = term;
-    }
-
-    public String getTermNameEt() {
-        return termNameEt;
-    }
-
-    public void setTermNameEt(String termNameEt) {
-        this.termNameEt = termNameEt;
-    }
-
-    public String getCurriculumCode() {
-        return curriculumCode;
-    }
-
-    public void setCurriculumCode(String curriculumCode) {
-        this.curriculumCode = curriculumCode;
-    }
-
-    public String getStudentGroup() {
-        return studentGroup;
-    }
-
-    public void setStudentGroup(String studentGroup) {
+    public ScholarshipApplicationSearchDto(Long id, Long studentId, String studentName, String studentGroup, Long termId,
+            String termType, String termNameEt, LocalDate applicationStart, LocalDate applicationEnd,
+            String applicationStatus, LocalDate inserted) {
+        this.id = id;
+        this.studentId = studentId;
+        this.studentName = studentName;
         this.studentGroup = studentGroup;
+        this.termId = termId;
+        this.termType = termType;
+        this.termNameEt = termNameEt;
+        this.applicationStart = applicationStart;
+        this.applicationEnd = applicationEnd;
+        this.applicationStatus = applicationStatus;
+        this.inserted = inserted;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Long getStudentId() {
@@ -84,22 +52,6 @@ public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseD
         this.studentId = studentId;
     }
 
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
     public String getStudentName() {
         return studentName;
     }
@@ -108,100 +60,75 @@ public class ScholarshipApplicationSearchDto extends ScholarshipApplicationBaseD
         this.studentName = studentName;
     }
 
-    public String getIdcode() {
-        return idcode;
+    public String getStudentGroup() {
+        return studentGroup;
     }
 
-    public void setIdcode(String idcode) {
-        this.idcode = idcode;
+    public void setStudentGroup(String studentGroup) {
+        this.studentGroup = studentGroup;
     }
 
-    public String getBankAccountOwnerIdcode() {
-        return bankAccountOwnerIdcode;
+    public Long getTermId() {
+        return termId;
     }
 
-    public void setBankAccountOwnerIdcode(String bankAccountOwnerIdcode) {
-        this.bankAccountOwnerIdcode = bankAccountOwnerIdcode;
+    public void setTermId(Long termId) {
+        this.termId = termId;
     }
 
-    public Boolean getIsTeacherConfirm() {
-        return isTeacherConfirm;
+    public String getTermType() {
+        return termType;
     }
 
-    public void setIsTeacherConfirm(Boolean isTeacherConfirm) {
-        this.isTeacherConfirm = isTeacherConfirm;
+    public void setTermType(String termType) {
+        this.termType = termType;
     }
 
-    public String getCompensationReason() {
-        return compensationReason;
+    public String getTermNameEt() {
+        return termNameEt;
     }
 
-    public void setCompensationReason(String compensationReason) {
-        this.compensationReason = compensationReason;
+    public void setTermNameEt(String termNameEt) {
+        this.termNameEt = termNameEt;
     }
 
-    public String getCompensationFrequency() {
-        return compensationFrequency;
+    public LocalDate getApplicationStart() {
+        return applicationStart;
     }
 
-    public void setCompensationFrequency(String compensationFrequency) {
-        this.compensationFrequency = compensationFrequency;
+    public void setApplicationStart(LocalDate applicationStart) {
+        this.applicationStart = applicationStart;
     }
 
-    public BigDecimal getCredits() {
-        return credits;
+    public LocalDate getApplicationEnd() {
+        return applicationEnd;
     }
 
-    public void setCredits(BigDecimal credits) {
-        this.credits = credits;
+    public void setApplicationEnd(LocalDate applicationEnd) {
+        this.applicationEnd = applicationEnd;
     }
 
-    public String getRejectComment() {
-        return rejectComment;
+    public String getApplicationStatus() {
+        return applicationStatus;
     }
 
-    public void setRejectComment(String rejectComment) {
-        this.rejectComment = rejectComment;
-    }
-    
-    public void setNeedsConfirm(Boolean needsConfirm) {
-    	this.needsConfirm = needsConfirm;
-    }
-    
-    public Boolean getNeedsConfirm() {
-    	return this.needsConfirm;
+    public void setApplicationStatus(String applicationStatus) {
+        this.applicationStatus = applicationStatus;
     }
 
-    public Long getDecisionId() {
-        return decisionId;
+    public LocalDate getInserted() {
+        return inserted;
     }
 
-    public void setDecisionId(Long decisionId) {
-        this.decisionId = decisionId;
+    public void setInserted(LocalDate inserted) {
+        this.inserted = inserted;
     }
 
-    public LocalDate getDecisionDecided() {
-        return decisionDecided;
+    public Boolean getCanEdit() {
+        return canEdit;
     }
 
-    public void setDecisionDecided(LocalDate decisionDecided) {
-        this.decisionDecided = decisionDecided;
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
     }
-
-    public Boolean getHasDirective() {
-        return hasDirective;
-    }
-
-    public void setHasDirective(Boolean hasDirective) {
-        this.hasDirective = hasDirective;
-    }
-
-    public Boolean getCanViewStudent() {
-        return canViewStudent;
-    }
-
-    public void setCanViewStudent(Boolean canViewStudent) {
-        this.canViewStudent = canViewStudent;
-    }
-
 }

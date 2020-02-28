@@ -86,6 +86,7 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column ng-if="!auth.isStudent()" md-order-by="student_lastname, student_firstname">{{'apel.studentName' | translate}}</th>
+            <th md-column ng-if="!auth.isStudent()" md-order-by="sg.code">{{'apel.studentGroup' | translate}}</th>
             <th md-column ng-if="!auth.isStudent()" md-order-by="{{'curriculum_' + currentLanguageNameField()}}">{{'apel.curriculum' | translate}}</th>
             <th md-column ng-if="hasApelViewPerm" md-order-by="application_status">{{'apel.status' | translate}}</th>
             <th md-column md-order-by="inserted">{{'apel.insertedDate' | translate}}</th>
@@ -99,6 +100,7 @@
             <td md-cell ng-if="!auth.isStudent()">
               <a ng-href="#/apelApplication/{{row.id}}/view">{{currentLanguageNameField(row.student)}}</a>
             </td>
+            <td md-cell ng-if="!auth.isStudent()">{{row.studentGroup}}</td>
             <td md-cell ng-if="!auth.isStudent()">{{currentLanguageNameField(row.curriculum)}}</td>
             <td md-cell ng-if="hasApelViewPerm">
               <hois-classifier-value ng-model="row.status" main-classifier-code="VOTA_STAATUS"></hois-classifier-value>

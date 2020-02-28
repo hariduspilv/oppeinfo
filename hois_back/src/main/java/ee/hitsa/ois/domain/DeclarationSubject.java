@@ -11,6 +11,7 @@ import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
 
 @Entity
 public class DeclarationSubject extends BaseEntityWithId {
@@ -26,6 +27,10 @@ public class DeclarationSubject extends BaseEntityWithId {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "curriculum_version_hmodule_id")
     private CurriculumVersionHigherModule module;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subject_study_period_subgroup_id")
+    private SubjectStudyPeriodSubgroup subgroup;
     
     private Boolean isOptional;
     private Boolean isMoodleRegistered;
@@ -69,5 +74,10 @@ public class DeclarationSubject extends BaseEntityWithId {
     public void setIsMoodleRegistered(Boolean isMoodleRegistered) {
         this.isMoodleRegistered = isMoodleRegistered;
     }
-    
+    public SubjectStudyPeriodSubgroup getSubgroup() {
+        return subgroup;
+    }
+    public void setSubgroup(SubjectStudyPeriodSubgroup subgroup) {
+        this.subgroup = subgroup;
+    }
 }

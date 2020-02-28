@@ -20,6 +20,7 @@ public class ModuleProtocolStudentDto {
     private Long id;
     private Long studentId;
     private String fullname;
+    private String studentGroup;
     private String idcode;
     @ClassifierRestriction(MainClassCode.KUTSEHINDAMINE)
     private String grade;
@@ -34,11 +35,15 @@ public class ModuleProtocolStudentDto {
      * This variable does not consider user rights, it is checked by ModuleProtocolDto.canBeEdited
      */
     private Boolean canBeDeleted;
+    private Boolean canChangeGrade;
 
     public static ModuleProtocolStudentDto of(ProtocolStudent protocolStudent) {
         ModuleProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent, new ModuleProtocolStudentDto(),
                 "protocolStudentHistories");
         dto.setStudentId(protocolStudent.getStudent().getId());
+        if (protocolStudent.getStudent().getStudentGroup() != null) {
+            dto.setStudentGroup(protocolStudent.getStudent().getStudentGroup().getCode());
+        }
         dto.setFullname(PersonUtil.fullnameOptionalGuest(protocolStudent.getStudent()));
         dto.setIdcode(protocolStudent.getStudent().getPerson().getIdcode());
         dto.setStatus(EntityUtil.getCode(protocolStudent.getStudent().getStatus()));
@@ -89,6 +94,7 @@ public class ModuleProtocolStudentDto {
                                     pj.getModuleSubjects())));
         }
         dto.setCanBeDeleted(Boolean.valueOf(ProtocolUtil.studentCanBeDeleted(protocolStudent)));
+        dto.setCanChangeGrade(Boolean.valueOf(ProtocolUtil.studentGradeCanBeChanged(protocolStudent)));
         return dto;
     }
 
@@ -178,5 +184,21 @@ public class ModuleProtocolStudentDto {
 
     public void setCanBeDeleted(Boolean canBeDeleted) {
         this.canBeDeleted = canBeDeleted;
+    }
+
+    public Boolean getCanChangeGrade() {
+        return canChangeGrade;
+    }
+
+    public void setCanChangeGrade(Boolean canChangeGrade) {
+        this.canChangeGrade = canChangeGrade;
+    }
+
+    public String getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(String studentGroup) {
+        this.studentGroup = studentGroup;
     }
 }

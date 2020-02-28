@@ -9,35 +9,31 @@
             <label class="textInput">{{'higherProtocol.studyPeriod' | translate}}</label>
             <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required autofocus sorted-query="true"></hois-select>
           </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+            <label class="textInput">{{'higherProtocol.number' | translate}}</label>
+            <input type="text" ng-model="criteria.protocolNr">
+          </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+            <label class="textInput">{{'higherProtocol.protocolStatus' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.status" criteria="{higher: true}" model-value-attr="code" main-classifier-code="PROTOKOLL_STAATUS"></hois-classifier-select>
+          </md-input-container>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="50" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'higherProtocol.subject' | translate}}</label>
-            <input type="text" ng-model="criteria.subject">
+            <input type="text" ng-model="criteria.subject" style="padding-right: 4px;width: 100%">
             <!-- <hois-select ng-model="criteria.subject" type="subject" criteria="{higher: true}"></hois-select> -->
           </md-input-container>
           <md-input-container ng-show="auth.isAdmin() || auth.isLeadingTeacher()" flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
             <label class="textInput">{{'higherProtocol.teacher' | translate}}</label>
             <hois-select ng-model="criteria.teacher" type="teacher" criteria="{higher: true}"></hois-select>
           </md-input-container>
-
-        </div>
-
-        <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex="50" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'higherProtocol.protocolStatus' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.status" criteria="{higher: true}" model-value-attr="code" main-classifier-code="PROTOKOLL_STAATUS"></hois-classifier-select>
-          </md-input-container>
-          <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-            <label class="textInput">{{'higherProtocol.number' | translate}}</label>
-            <input type="text" ng-model="criteria.protocolNr">
-          </md-input-container>
         </div>
 
 
         <div layout="row" layout-sm="column" layout-xs="column">
-          <div flex="50" flex-sm="100" flex-xs="100">
+          <div flex="25" flex-md="50" flex-sm="100" flex-xs="100">
             <div layout="column" flex>
               <label class="common-label">{{'higherProtocol.protocolCreatedDate' | translate}}</label>
               <div layout="row" flex>
@@ -53,7 +49,7 @@
             </div>
           </div>
 
-          <div flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <div flex="20" flex-md="45" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <div layout="column" flex>
               <label class="common-label">{{'higherProtocol.protocolConfirmedDate' | translate}}</label>
               <div layout="row" flex>
@@ -69,7 +65,6 @@
             </div>
           </div>
         </div>
-        <br><br><br>
         <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
@@ -91,6 +86,7 @@
             <th md-column>{{'higherProtocol.teacher' | translate}}</th>
             <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'main.status' | translate}}</th>
             <th md-column md-order-by="inserted">{{'higherProtocol.insertedDate' | translate}}</th>
+            <th md-column md-order-by="finalDate">{{'higherProtocol.protocolDate' | translate}}</th>
             <th md-column md-order-by="confirmDate">{{'higherProtocol.confirmedDate' | translate}}</th>
             <th md-column md-order-by="confirmer">{{'higherProtocol.confirmer' | translate}}</th>
             <th md-column></th>
@@ -110,6 +106,7 @@
             </td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
             <td md-cell>{{row.inserted | hoisDate}}</td>
+            <td md-cell>{{row.protocolDate | hoisDate}}</td>
             <td md-cell>{{row.confirmDate | hoisDate}}</td>
             <td md-cell>{{::row.confirmer}}</td>
             <td md-cell>

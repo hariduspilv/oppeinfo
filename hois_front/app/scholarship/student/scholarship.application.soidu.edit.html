@@ -1,6 +1,6 @@
 <div class="ois-form-layout-padding" ng-cloak>
   <hois-whiteframe-warning ng-if="application.id && application.canApply">
-    <span>{{'stipend.messages.applicationNotSubmitted' | translate}}</span>
+    <span>{{'stipend.messages.applicationUnapplied' | translate}}</span>
     <span ng-if="stipend.applicationEnd">{{'stipend.messages.submissionDeadline' | translate: {deadline: (stipend.applicationEnd | hoisDate)} }}</span>
   </hois-whiteframe-warning>
 
@@ -177,7 +177,8 @@
           <div layout="row">
             <md-button class="md-raised md-primary" ng-if="application.canApply" ng-click="update(applicationForm)">{{'main.button.save' | translate}}</md-button>
             <md-button class="md-raised md-primary" ng-if="application.canApply" ng-click="apply(applicationForm)">{{'main.button.submit' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="back('#/scholarships/myData/grants', applicationForm)">{{'main.button.back' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="back(isStudent() ? '#/scholarships/myData/grants' : '#/scholarships/applications/grants', applicationForm)">
+              {{'main.button.back' | translate}}</md-button>
           </div>
 
         </form>

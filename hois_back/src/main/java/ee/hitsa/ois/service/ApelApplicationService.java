@@ -25,6 +25,7 @@ import javax.validation.Validator;
 
 import ee.hitsa.ois.domain.application.ApplicationPlannedSubject;
 import ee.hitsa.ois.domain.application.ApplicationPlannedSubjectEquivalent;
+import ee.hitsa.ois.web.dto.timetable.DateRangeDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -110,13 +111,14 @@ public class ApelApplicationService {
 
     private static final String RPM_FROM = "from apel_application aa"
             + " join student s on aa.student_id = s.id"
+            + " left join student_group sg on s.student_group_id = sg.id"
             + " join person p on s.person_id = p.id"
             + " join curriculum_version curv on s.curriculum_version_id = curv.id"
             + " join curriculum cur on curv.curriculum_id = cur.id"
             + " join classifier c on aa.status_code = c.code";
     private static final String RPM_SELECT = "aa.id as application_id, aa.status_code as application_status, s.id as student_id,"
             + " p.firstname as student_firstname, p.lastname as student_lastname, cur.id as curriculum_id, cur.name_et as curriculum_name_et,"
-            + " cur.name_en as curriculum_name_en, aa.inserted, aa.confirmed";
+            + " cur.name_en as curriculum_name_en, aa.inserted, aa.confirmed, sg.code";
     
     /**
      * Search student APEL applications
@@ -189,6 +191,7 @@ public class ApelApplicationService {
             dto.setStatus(resultAsString(r, 1));
             dto.setInserted(resultAsLocalDate(r, 8));
             dto.setConfirmed(resultAsLocalDate(r, 9));
+            dto.setStudentGroup(resultAsString(r, 10));
             String studentName = PersonUtil.fullname(resultAsString(r, 3), resultAsString(r, 4));
             dto.setStudent(new AutocompleteResult(resultAsLong(r, 2), studentName, studentName));
             Long curriculumId = resultAsLong(r, 5);
@@ -236,6 +239,9 @@ public class ApelApplicationService {
         dto.setCanRemoveConfirmation(Boolean.valueOf(ApelApplicationUtil.canRemoveConfirmation(user, application)));
 
         List<AbroadStudiesHolder> finishedAbroadStudies = finishedAbroadStudies(application.getStudent());
+        dto.setAbroadStudyPeriods(StreamUtil.nullSafeList(finishedAbroadStudies).stream()
+                .filter(StreamUtil.distinctByKey(as -> as.getApplicationId()))
+                .map(as -> as.getPeriod()).collect(Collectors.toList()));
         dto.setHasAbroadStudies(Boolean.valueOf(!finishedAbroadStudies.isEmpty()));
         boolean hasPlannedSubjectsToTransfer = !notTransferredPlannedSubjectIds(finishedAbroadStudies).isEmpty();
         dto.setHasPlannedSubjectsToTransfer(Boolean.valueOf(hasPlannedSubjectsToTransfer));
@@ -986,12 +992,14 @@ public class ApelApplicationService {
                 + " join application a on a.id = ds.application_id"
                 + " left join application_planned_subject aps on aps.application_id = a.id"
                 + " left join apel_application_record aar on aar.application_planned_subject_id = aps.id"
-                + " left join study_period sp on sp.id = ds.study_period_end_id"
+                + " left join study_period sp_start on sp_start.id = ds.study_period_start_id"
+                + " left join study_period sp_end on sp_end.id = ds.study_period_end_id"
                 + " left join (directive_student ds_katk join directive d_katk on d_katk.id = ds_katk.directive_id"
                     + " and d_katk.type_code = :katkDirectiveType and d_katk.status_code = :directiveStatus)"
                     + " on ds_katk.directive_student_id = ds.id and ds_katk.canceled = false");
         qb.requiredCriteria("ds.student_id = :studentId", "studentId", student.getId());
-        qb.requiredCriteria("coalesce(ds_katk.start_date, sp.end_date, ds.end_date) < :today", "today", LocalDate.now());
+        qb.requiredCriteria("coalesce(ds_katk.start_date, sp_end.end_date, ds.end_date) < :today",
+                "today", LocalDate.now());
         qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_VALIS);
         qb.requiredCriteria("d.status_code = :directiveStatus and ds.canceled = false", "directiveStatus",
                 DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
@@ -999,12 +1007,14 @@ public class ApelApplicationService {
         qb.parameter("katkDirectiveType", DirectiveType.KASKKIRI_VALISKATK.name());
         qb.parameter("apelStatus", ApelApplicationStatus.VOTA_STAATUS_L.name());
 
-        List<?> data = qb.select("a.id a_id, aps.id aps_id, exists (select aar2.id from apel_application_record aar2"
+        List<?> data = qb.select("a.id a_id, aps.id aps_id, coalesce(sp_start.start_date, ds.start_date) start_date,"
+                + " coalesce(ds_katk.start_date, sp_end.end_date, ds.end_date) end_date,"
+                + " exists (select aar2.id from apel_application_record aar2"
                 + " join apel_application aa2 on aa2.id = aar2.apel_application_id"
                 + " where aar2.application_planned_subject_id = aps.id and aa2.status_code != :apelStatus) as transferred", em)
                 .getResultList();
         List<AbroadStudiesHolder> plannedSubjects = StreamUtil.toMappedList(r -> new AbroadStudiesHolder(resultAsLong(r, 0),
-                resultAsLong(r, 1), resultAsBoolean(r, 2)), data);
+                resultAsLong(r, 1), resultAsLocalDate(r, 2), resultAsLocalDate(r, 3), resultAsBoolean(r, 4)), data);
         return plannedSubjects;
     }
 
@@ -1130,11 +1140,14 @@ public class ApelApplicationService {
     public static class AbroadStudiesHolder {
         private final Long applicationId;
         private final Long plannedSubjectId;
+        private final DateRangeDto period;
         private final Boolean alreadyTransferred;
 
-        public AbroadStudiesHolder(Long applicationId, Long plannedSubjectId, Boolean alreadyTransferred) {
+        public AbroadStudiesHolder(Long applicationId, Long plannedSubjectId, LocalDate start, LocalDate end,
+                Boolean alreadyTransferred) {
             this.applicationId = applicationId;
             this.plannedSubjectId = plannedSubjectId;
+            this.period = new DateRangeDto(start, end);
             this.alreadyTransferred = alreadyTransferred;
         }
 
@@ -1144,6 +1157,10 @@ public class ApelApplicationService {
 
         public Long getPlannedSubjectId() {
             return plannedSubjectId;
+        }
+
+        public DateRangeDto getPeriod() {
+            return period;
         }
 
         public Boolean getAlreadyTransferred() {

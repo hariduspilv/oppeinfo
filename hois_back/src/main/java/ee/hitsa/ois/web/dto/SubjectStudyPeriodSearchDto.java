@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 
@@ -17,6 +18,8 @@ public class SubjectStudyPeriodSearchDto {
     private Long moodleCourseId;
     private Long subjectProgramId;
     private String subjectProgramStatus;
+    private Integer subgroups;
+    private BigDecimal credits;
 
     public Boolean getIsPracticeSubject() {
         return isPracticeSubject;
@@ -112,5 +115,21 @@ public class SubjectStudyPeriodSearchDto {
 
     public void setSubjectProgramStatus(String subjectProgramStatus) {
         this.subjectProgramStatus = subjectProgramStatus;
+    }
+
+    public Integer getSubgroups() {
+        return subgroups;
+    }
+
+    public void setSubgroups(Integer subgroups) {
+        this.subgroups = subgroups;
+    }
+
+    public BigDecimal getCredits() {
+        return credits;
+    }
+
+    public void setCredits(BigDecimal credits) {
+        this.credits = credits;
     }
 }

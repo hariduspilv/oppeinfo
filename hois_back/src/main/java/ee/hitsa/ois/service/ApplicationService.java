@@ -109,11 +109,12 @@ public class ApplicationService {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final String APPLICATION_FROM = "from application a inner join student student on a.student_id = student.id "+
-            "inner join person person on student.person_id = person.id inner join classifier type on a.type_code = type.code "+
+    private static final String APPLICATION_FROM = "from application a inner join student student on a.student_id = student.id " +
+            "left join student_group sg on student.student_group_id = sg.id " +
+            "inner join person person on student.person_id = person.id inner join classifier type on a.type_code = type.code " +
             "inner join classifier status on a.status_code = status.code";
     private static final String APPLICATION_SELECT = "a.id, a.type_code, a.status_code, a.inserted, "+
-            "a.submitted, a.student_id, person.firstname, person.lastname, a.reject_reason, student.type_code as studentType";
+            "a.submitted, a.student_id, person.firstname, person.lastname, a.reject_reason, student.type_code as studentType, sg.code as groupCode";
 
     @Autowired
     private AutomaticMessageService automaticMessageService;
@@ -188,6 +189,7 @@ public class ApplicationService {
             String name = PersonUtil.fullnameOptionalGuest(resultAsString(r, 6), resultAsString(r, 7), resultAsString(r, 9));
             dto.setStudent(new AutocompleteResult(studentId, name, name));
             dto.setRejectReason(resultAsString(r, 8));
+            dto.setStudentGroup(resultAsString(r, 10));
             return dto;
         });
         setApplicationSearchDtoRights(user, applications.getContent());

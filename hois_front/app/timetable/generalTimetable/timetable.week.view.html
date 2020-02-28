@@ -69,9 +69,15 @@
                                 <span ng-if="room.buildingCode">{{room.buildingCode}}-{{room.roomCode}}</span>
                                 <span ng-if="!room.buildingCode">{{room.roomCode}}</span>
                             </div>
-                            <div ng-repeat="teacher in event.teachers track by $index">{{teacher.name}}</div>
-                            <div ng-repeat="studentGroup in event.studentGroups track by $index">{{studentGroup.code}}</div>
-                            <div>{{event.studentGroup}}</div>
+                            <div>
+                              <span ng-repeat="teacher in event.teachers track by $index">{{teacher.name}}{{$last ? '' : ', '}}</span>
+                            </div>
+                            <div>
+                              <span ng-repeat="studentGroup in event.studentGroups track by $index">{{studentGroup.code}}{{$last ? '' : ', '}}</span>
+                            </div>
+                            <div>
+                              <span ng-repeat="subgroup in event.subgroups track by $index">{{subgroup.code}}{{$last ? '' : ', '}}</span>
+                            </div>
                         </md-tooltip>
                         <div>
                             <div>
@@ -109,6 +115,11 @@
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>
+                        <div>
+                            <span ng-repeat="subgroup in event.subgroups track by $index">
+                                <span>{{subgroup.code}}{{$last ? '' : ', '}}</span>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -141,7 +152,7 @@
                             <span ng-if="!event.public">{{'timetable.timetableEvent.occupied' | translate}}</span>
                         </div>
                         <div>
-                            {{event.teachers.length &gt; 0 ? (auth.higher ? ('student.result.teacherHigher' | translate) : ('student.result.teacherVocational' | translate)) : ""}}
+                            {{event.teachers.length &gt; 0 ? (auth.higher ? ('timetable.timetableEvent.teacherHigher' | translate) : ('timetable.timetableEvent.teacherVocational' | translate)) : ""}}
                             <span ng-repeat="teacher in event.teachers track by $index">
                                 <a ng-if="teacher.id" ng-href="/#/timetable/{{::schoolId}}/teacher/{{teacher.id}}/{{studyYearId}}/{{weekIndex}}">{{teacher.name}}</a>
                                 <span ng-if="!teacher.id">{{teacher.name}}</span>
@@ -149,7 +160,7 @@
                             </span>
                         </div>
                         <div>
-                            {{event.rooms.length &gt; 0 ? ('lessonplan.event.room' | translate) : ""}}
+                            {{event.rooms.length &gt; 0 ? ('timetable.timetableEvent.room' | translate) : ""}}
                             <span ng-repeat="room in event.rooms track by $index">
                                 <a ng-if="room.id" ng-href="/#/timetable/{{::schoolId}}/room/{{room.id}}/{{studyYearId}}/{{weekIndex}}">{{room.buildingCode}}-{{room.roomCode}}</a>
                                 <span ng-if="!room.id">{{room.roomCode}}</span>
@@ -157,10 +168,16 @@
                             </span>
                         </div>
                         <div>
-                            {{event.studentGroups.length &gt; 0 ? ('directive.student.studentGroup' | translate) : ""}}
+                            {{event.studentGroups.length &gt; 0 ? ('timetable.timetableEvent.studentGroup' | translate) : ""}}
                             <span ng-repeat="studentGroup in event.studentGroups track by $index">
                                 <a ng-href="/#/timetable/{{::schoolId}}/group/{{studentGroup.id}}/{{studyYearId}}/{{weekIndex}}">{{studentGroup.code}}</a>
                                 {{$last ? '' : ', '}}
+                            </span>
+                        </div>
+                        <div>
+                            {{event.studentGroups.length &gt; 0 ? ('timetable.timetableEvent.subgroup' | translate) : ""}}
+                            <span ng-repeat="subgroup in event.subgroups track by $index">
+                                <span>{{subgroup.code}}{{$last ? '' : ', '}}</span>
                             </span>
                         </div>
                     </div>

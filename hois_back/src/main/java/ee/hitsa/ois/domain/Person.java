@@ -18,6 +18,7 @@ public class Person extends BaseEntityWithId {
     private String lastname;
     private String idcode;
     private String foreignIdcode;
+    private String uniqueCode;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier sex;
     @ManyToOne(fetch = FetchType.LAZY)
@@ -185,5 +186,13 @@ public class Person extends BaseEntityWithId {
     @Transient
     public String getFullname() {
         return PersonUtil.fullname(firstname, lastname);
+    }
+
+    public String getUniqueCode() {
+        return uniqueCode;
+    }
+
+    public void setUniqueCode(String uniqueCode) {
+        this.uniqueCode = uniqueCode;
     }
 }

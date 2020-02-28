@@ -1,8 +1,9 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ScholarshipApplicationController', ['$location', '$route', '$scope', '$sessionStorage', '$q', 'AuthService', 'Classifier', 'USER_ROLES', 'QueryUtils', 'dialogService', 'message',
+angular.module('hitsaOis').controller('ScholarshipApplicationRankingController', ['$location', '$route', '$scope', '$sessionStorage', '$q', 'AuthService', 'Classifier', 'USER_ROLES', 'QueryUtils', 'dialogService', 'message',
   function ($location, $route, $scope, $sessionStorage, $q, AuthService, Classifier, USER_ROLES, QueryUtils, dialogService, message) {
     var baseUrl = '/scholarships';
+    $scope.currentNavItem = 'ranking';
     $scope.criteria = {};
     $scope.formState = {};
     $scope.formState.allowedStipendTypes = $route.current.locals.params.allowedStipendTypes;
@@ -63,7 +64,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['$loc
         message.error('main.messages.form-has-errors');
         return false;
       }
-      QueryUtils.endpoint(baseUrl + '/applications').search($scope.criteria, function (result) {
+      QueryUtils.endpoint(baseUrl + '/applications/ranking').search($scope.criteria, function (result) {
         if (angular.isArray(result.applications)) {
           if (result.applications.length < 1) {
             message.info('main.messages.error.notFound');
@@ -110,7 +111,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['$loc
     }
 
     function allApplicationsWithoutDirective() {
-      return $scope.applications.filter(function (it) { 
+      return $scope.applications.filter(function (it) {
         return !it.hasDirective;
       }).map(function (it) {
         return it.id;
@@ -121,7 +122,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['$loc
       var applications = chosenApplications();
       if (applications.length > 0) {
         QueryUtils.endpoint(baseUrl + '/acceptApplications').put(applications, $scope.reloadTable).$promise.then(function () {
-          message.info('stipend.messages.applicationAccepted');  
+          message.info('stipend.messages.applicationAccepted');
         });
       } else {
         message.error('stipend.messages.error.noStudentsSelected');
@@ -172,7 +173,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['$loc
       var applications = allApplicationsWithoutDirective();
       if (applications.length > 0) {
         QueryUtils.endpoint(baseUrl + '/refreshResults').put(applications, $scope.reloadTable).$promise.then(function () {
-          message.info('stipend.messages.resultsRefreshed');  
+          message.info('stipend.messages.resultsRefreshed');
         });
       } else {
         message.error('stipend.messages.error.noApplicationsWithoutDirectives');
@@ -190,7 +191,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['$loc
             }
           });
         }).$promise.then(function () {
-          message.info('stipend.messages.compliesChecked');  
+          message.info('stipend.messages.compliesChecked');
         });
       } else {
         message.error('stipend.messages.error.noApplicationsWithoutDirectives');
@@ -254,7 +255,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['$loc
           applications: $scope.rejections
         }, function () {
           message.info('stipend.messages.applicationRejected');
-          $location.path('/scholarships/applications/' + $scope.scholarshipType);
+          $location.path('/scholarships/applications/ranking/' + $scope.scholarshipType);
         });
       });
     };
@@ -264,7 +265,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationController', ['$loc
         applications: $scope.rejections
       }, function () {
         message.info('stipend.messages.applicationAnnulled');
-        $location.path('/scholarships/applications/' + $scope.scholarshipType);
+        $location.path('/scholarships/applications/ranking/' + $scope.scholarshipType);
       });
     };
 
@@ -329,7 +330,7 @@ function ($scope, $location, $q, message, QueryUtils, $route, Classifier) {
     });
     QueryUtils.endpoint(baseUrl + '/decide').save($scope.decision, function () {
       message.info('main.messages.update.success');
-      $location.path('/scholarships/applications/' + $scope.scholarshipType);
+      $location.path('/scholarships/applications/ranking/' + $scope.scholarshipType);
     });
   };
 }
@@ -371,7 +372,7 @@ function ($scope, $location, $q, message, QueryUtils, $route, Classifier, dialog
     dialogService.confirmDialog({ prompt: 'stipend.decision.deleteconfirm' }, function () {
       $scope.decision.$delete().then(function() {
         message.info('main.messages.delete.success');
-        $scope.back('/scholarships/applications/' + $scope.scholarshipType);
+        $scope.back('/scholarships/applications/ranking/' + $scope.scholarshipType);
       }).catch(angular.noop);
     });
   };

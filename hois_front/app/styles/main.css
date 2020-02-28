@@ -1270,10 +1270,10 @@ fieldset legend.md-title-small {
 	padding-left: 2px;
 }
 
-/* 
+/*
  * The style definition above about .readonly and .form-readonly creates a problem
  * where field name is places outside of the element "border".
- * 
+ *
  * This one fixes it. Should be applied manually.
  */
 .readonly-reverse-margin {
@@ -1796,7 +1796,7 @@ md-grid-tile {
   font-size: 20px;
 }
 
-.md-nav-bar li a, 
+.md-nav-bar li a,
 .md-nav-bar li ._md-nav-button-text {
   text-transform: uppercase;
 }
@@ -2324,6 +2324,16 @@ label.ui-btn {
   padding-left: 5px !important;
 }
 
+.event-header {
+  color: rgb(13, 71, 161) !important;
+  border-bottom: 1px rgba(0,0,0,0.12) solid;
+  font-weight: normal !important;
+  font-size: 12px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
 .occupied-warning .material-icons {
   font-size: 18px;
   width: 18px;
@@ -2636,7 +2646,7 @@ label.ui-btn {
   padding-right: 5px;
 }
 
-.student-group-teacher-table tr:nth-child(3) th a, 
+.student-group-teacher-table tr:nth-child(3) th a,
 .student-group-absence-table tr:nth-child(2) th a {
   color: rgba(0,0,0,0.87) !important;
 }

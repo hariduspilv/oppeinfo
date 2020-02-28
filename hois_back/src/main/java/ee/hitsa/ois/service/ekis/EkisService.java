@@ -140,7 +140,7 @@ public class EkisService {
         }
         if(person != null) {
             request.setStudent(person.getFullname());
-            request.setEmail(person.getEmail());
+            request.setEmail(StringUtils.hasText(certificate.getStudent().getEmail()) ? certificate.getStudent().getEmail() : person.getEmail());
         } else {
             request.setStudent(certificate.getOtherName());
         }
@@ -531,6 +531,7 @@ public class EkisService {
             content.setOuterschool(Boolean.TRUE.equals(ds.getIsAbroad()) ? ds.getAbroadSchool() : (ds.getEhisSchool() != null ? ds.getEhisSchool().getNameEt() : null));
             break;
         case KASKKIRI_KIITUS:
+        case KASKKIRI_MUU:
         case KASKKIRI_NOOMI:
             content.setReason(ds.getAddInfo());
         case KASKKIRI_OTEGEVUS:

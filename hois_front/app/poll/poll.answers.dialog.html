@@ -82,12 +82,12 @@
                     <div layout="row" class="questions-header">
                         <div>{{currentLanguageNameField(theme.title)}}</div>
                     </div>
-                    <div layout="column" ng-repeat="subject in theme.journalOrSubject" ng-if="!theme.isRepetitive || (theme.isRepetitive && (theme.journalOrSubject.length === 1 || (subject.subjectOrJournal !== null && subject.subjectOrJournal.id !== null)))">
+                    <div layout="column" ng-repeat="subject in theme.journalOrSubject" ng-if="(!theme.isRepetitive || type !== 'KYSITLUS_O') || (theme.isRepetitive && type === 'KYSITLUS_O' && (theme.journalOrSubject.length === 1 || (subject.subjectOrJournal !== null && subject.subjectOrJournal.id !== null)))">
                         <div ng-if="subject.subjectOrJournal !== null && subject.subjectOrJournal.id !== null" class="questions-item-primary">
                             <h3>
                                  <span>
                                      {{currentLanguageNameField(subject.subjectOrJournal)}}
-                                     <md-tooltip md-direction="right">{{(higher ? 'poll.answers.subject' : 'poll.answers.journal') | translate}}</md-tooltip>
+                                     <md-tooltip md-direction="right">{{(subject.subject ? 'poll.answers.subject' : 'poll.answers.journal') | translate}}</md-tooltip>
                                  </span>
                              </h3>
                         </div>
@@ -95,7 +95,7 @@
                             <h3 ng-if="teacher.teacher.id">
                                 <span>
                                     {{currentLanguageNameField(teacher.teacher)}}
-                                    <md-tooltip md-direction="right">{{(higher ? 'poll.answers.teachers.higher' : 'poll.answers.teachers.vocational') | translate}}</md-tooltip>
+                                    <md-tooltip md-direction="right">{{(subject.subject ? 'poll.answers.teachers.higher' : 'poll.answers.teachers.vocational') | translate}}</md-tooltip>
                                 </span>
                             </h3>
                             <div layout="column" ng-repeat="chart in teacher.graph">

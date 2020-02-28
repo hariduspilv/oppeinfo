@@ -10,6 +10,7 @@ public class DeclarationSubjectForm {
     private Long curriculumVersionHigherModule;
     @NotNull
     private Boolean isOptional;
+    private EntityConnectionCommand subgroup;
 
     public Boolean getIsOptional() {
         return isOptional;
@@ -34,5 +35,11 @@ public class DeclarationSubjectForm {
     }
     public void setCurriculumVersionHigherModule(Long curriculumVersionHigherModule) {
         this.curriculumVersionHigherModule = curriculumVersionHigherModule;
+    }
+    public EntityConnectionCommand getSubgroup() {
+        return subgroup;
+    }
+    public void setSubgroup(EntityConnectionCommand subgroup) {
+        this.subgroup = subgroup;
     }
 }

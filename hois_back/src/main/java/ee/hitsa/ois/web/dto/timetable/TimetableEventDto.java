@@ -13,6 +13,8 @@ public class TimetableEventDto {
     private List<AutocompleteResult> rooms = new ArrayList<>();
     private List<Long> teachers = new ArrayList<>();
     private List<String> teacherNames = new ArrayList<>();
+    private List<Long> subgroups = new ArrayList<>();
+    private List<String> subgroupCodes = new ArrayList<>();
     private Long studentGroup;
     private String capacityType;
 
@@ -121,6 +123,14 @@ public class TimetableEventDto {
         this.teacherNames = teacherNames;
     }
 
+    public List<Long> getSubgroups() {
+        return subgroups;
+    }
+
+    public void setSubgroups(List<Long> subgroups) {
+        this.subgroups = subgroups;
+    }
+
     public Long getJournal() {
         return journal;
     }
@@ -143,6 +153,14 @@ public class TimetableEventDto {
 
     public void setStudentGroup(Long studentGroup) {
         this.studentGroup = studentGroup;
+    }
+
+    public List<String> getSubgroupCodes() {
+        return subgroupCodes;
+    }
+
+    public void setSubgroupCodes(List<String> subgroupCodes) {
+        this.subgroupCodes = subgroupCodes;
     }
 
     public String getCapacityType() {

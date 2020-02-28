@@ -1,32 +1,57 @@
 <div class="ois-form-layout-padding" ng-cloak>
   <div class="form-readonly">
     <div layout="row" layout-sm="column" layout-xs="column">
-      <md-input-container flex flex-sm="100" flex-xs="100">
+      <md-input-container flex="20" flex-sm="100" flex-xs="100">
         <label>{{'higherProtocol.number' | translate}}</label>
         <hois-value value="record.protocolNr"></hois-value>
-      </md-input-container>
-      <md-input-container flex flex-sm="100" flex-xs="100">
-        <label>{{'higherProtocol.status' | translate}}</label>
-        <hois-classifier-value ng-model="record.status" main-classifier-code="PROTOKOLL_STAATUS"></hois-classifier-value>
-      </md-input-container>
-      <md-input-container flex flex-sm="100" flex-xs="100">
-        <label>{{'higherProtocol.studyPeriod' | translate}}</label>
-        <hois-value value="currentLanguageNameField(record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.studyPeriod)"></hois-value>
-      </md-input-container>
-    </div>
-    <div layout="row" layout-sm="column" layout-xs="column">
-      <md-input-container flex flex-sm="100" flex-xs="100">
-        <label>{{'higherProtocol.type' | translate}}</label>
-        <hois-classifier-value ng-model="record.protocolType" main-classifier-code="PROTOKOLLI_LIIK"></hois-classifier-value>
       </md-input-container>
       <md-input-container flex flex-sm="100" flex-xs="100">
         <label>{{'higherProtocol.subject' | translate}}</label>
         <hois-value value="currentLanguageNameField(record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.subject)"></hois-value>
       </md-input-container>
+      <md-input-container flex="30" flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.studyPeriod' | translate}}</label>
+        <hois-value value="currentLanguageNameField(record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.studyPeriod)"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="20" flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.type' | translate}}</label>
+        <hois-classifier-value ng-model="record.protocolType" main-classifier-code="PROTOKOLLI_LIIK"></hois-classifier-value>
+      </md-input-container>
       <md-input-container flex flex-sm="100" flex-xs="100">
         <label>{{'higherProtocol.teacher' | translate}}</label>
         <hois-value value="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.teachers.join(', ')"></hois-value>
       </md-input-container>
+      <md-input-container flex="30" flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.status' | translate}}</label>
+        <hois-classifier-value ng-model="record.status" main-classifier-code="PROTOKOLL_STAATUS"></hois-classifier-value>
+      </md-input-container>
+    </div>
+    <div layout="row" layout-sm="column" layout-xs="column" ng-if="record.protocolType === 'PROTOKOLLI_LIIK_P'">
+      <md-input-container flex="20" flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.protocolDate' | translate}}</label>
+        <hois-value value="record.finalDate | hoisDate"></hois-value>
+      </md-input-container>
+    </div>
+  </div>
+  <div style="height: 10px;"></div>
+  <div ng-if="record.subjectStudyPeriodMidtermTaskDto.subgroups.length > 0" layout="row" layout-align="space-between end"
+       style="margin-top: -15px;margin-bottom: 5px;">
+    <md-input-container style="width: 200px">
+      <label>{{'higherProtocol.subgroupSelect' | translate}}</label>
+      <md-select ng-model="record.subgroup">
+        <md-option md-option-empty></md-option>
+        <md-option ng-value="val" ng-repeat="val in record.subjectStudyPeriodMidtermTaskDto.subgroups">{{currentLanguageNameField(val)}}</md-option>
+      </md-select>
+    </md-input-container>
+
+    <div layout="column" layout-align="end">
+      <div class="common-label" flex>
+        <span>{{'student.statuses.academicLeaveShort' | translate}} - {{'student.statuses.academicLeave' | translate}}, </span>
+        <span>{{'student.statuses.exmatriculatedShort' | translate}} - {{'student.statuses.exmatriculated' | translate}}, </span>
+        <span>{{'student.statuses.finishedShort' | translate}} - {{'student.statuses.finished' | translate}}</span>
+      </div>
     </div>
   </div>
 
@@ -36,6 +61,9 @@
         <thead md-head>
           <tr md-row>
             <th md-column>{{'higherProtocol.student' | translate}}</th>
+            <th md-column>{{'higherProtocol.studentGroup' | translate}}</th>
+            <th md-column ng-if="record.subjectStudyPeriodMidtermTaskDto.subgroups.length > 0">{{'higherProtocol.subgroup' | translate}}</th>
+            <th md-column ng-if="record.protocolType === 'PROTOKOLLI_LIIK_K'">{{'higherProtocol.examDate' | translate}}</th>
             <th md-column ng-show="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject">{{'higherProtocol.practiceResult' | translate}}</th>
             <th md-column ng-repeat="midtermTask in record.subjectStudyPeriodMidtermTaskDto.midtermTasks">
               {{getMidtermTaskHeader(midtermTask)}}
@@ -45,9 +73,21 @@
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row ng-repeat="student in record.protocolStudents | orderBy: 'student.nameEt'" ng-class-odd="'odd'" ng-class-even="'even'">
+          <tr md-row ng-if="!record.subgroup.id || record.subgroup.id === student.subgroup.id" ng-repeat="student in record.protocolStudents | orderBy: 'student.nameEt'" ng-class-odd="'odd'" ng-class-even="'even'">
             <ng-form name="higherProtocolStudentForm">
-              <td md-cell>{{student.student.nameEt}}</td>
+              <td md-cell>
+                <i>
+                  <span ng-if="student.studentStatus === 'OPPURSTAATUS_A'">{{'student.statuses.academicLeaveShort' | translate}}</span>
+                  <span ng-if="student.studentStatus === 'OPPURSTAATUS_L'">{{'student.statuses.finishedShort' | translate}}</span>
+                  <span ng-if="student.studentStatus === 'OPPURSTAATUS_K'">{{'student.statuses.exmatriculatedShort' | translate}}</span>
+                </i>
+                <span>{{student.student.nameEt}}</span>
+              </td>
+              <td md-cell>{{student.studentGroup}}</td>
+              <td md-cell ng-if="record.subjectStudyPeriodMidtermTaskDto.subgroups.length > 0">
+                {{currentLanguageNameField(student.subgroup)}}
+              </td>
+              <td ng-if="record.protocolType === 'PROTOKOLLI_LIIK_K'" md-cell>{{student.examDate | hoisDate}}</td>
               <td md-cell ng-show="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject">
                 <span ng-repeat="journalResult in student.practiceJournalResults | orderBy: 'inserted'">
                   <span ng-class="{badResult: !gradeUtil.isPositive(journalResult.grade.code)}">{{journalResult.grade | hoisHigherGrade: letterGrades}}</span>

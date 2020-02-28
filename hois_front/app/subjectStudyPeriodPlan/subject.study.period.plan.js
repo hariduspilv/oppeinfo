@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController', 
-  function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier, USER_ROLES, AuthService) {
+  function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier, USER_ROLES, AuthService, $rootScope) {
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM);
 
     var allCapacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT', higher: true});
@@ -86,9 +86,27 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
         }
     };
 
+    $scope.mapComma = function(mappable, byId) {
+        if (byId) {
+            mappable.sort(function (a, b) {
+                return a.id - b.id;
+              });
+        } else {
+            mappable.sort(function (a, b) {
+                return $rootScope.currentLanguageNameField(a).localeCompare($rootScope.currentLanguageNameField(b));
+              });
+        }
+        return mappable.map(function(it) {return $scope.currentLanguageNameField(it);}).join(", ")
+    };
+
     $scope.$watch('criteria.curriculum', function() {
             $scope.subjectQueryParams = $scope.criteria.curriculum ?
-            {curricula: [$scope.criteria.curriculum.id], status: ['AINESTAATUS_K']} : {status: ['AINESTAATUS_K']};
+            {curricula: [$scope.criteria.curriculum.id], 
+                status: ['AINESTAATUS_K'],
+                sort: 's.name_et, s.name_en, s.code'} : 
+            {status: ['AINESTAATUS_K'],
+                sort: 's.name_et, s.name_en, s.code'
+            };
         }
     );
 

@@ -40,11 +40,14 @@ angular.module('hitsaOis').controller('ExamSearchController', ['$q', '$route', '
      clMapper.objectmapper(result.content);
    };
 
-   $scope.formState = {studyPeriods: QueryUtils.endpoint('/autocomplete/studyPeriods').query()};
+   $scope.formState = {studyPeriods: QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query()};
    var promises = clMapper.promises;
    promises.push($scope.formState.studyPeriods.$promise);
 
    $q.all(promises).then(function() {
+     $scope.formState.studyPeriods.forEach(function (studyPeriod) {
+       studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+     });
     if($scope.formState.studyPeriods.length > 0 && !$scope.criteria.studyPeriod) {
       var currentStudyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyPeriods);
       $scope.criteria.studyPeriod = currentStudyPeriod ? currentStudyPeriod.id : undefined;
@@ -153,13 +156,13 @@ angular.module('hitsaOis').controller('ExamSearchController', ['$q', '$route', '
 
     function timetableTimeOccupiedQuery() {
       var occupiedQuery = {rooms: $scope.record.room.id, subjectStudyPeriod: $scope.record.subjectStudyPeriod, exam: $scope.record.id};
-      
+
       var date = moment($scope.record.startDate);
       var startTime = moment($scope.record.startTime, 'HH:mm');
       var endTime = moment($scope.record.endTime, 'HH:mm');
       occupiedQuery.startTime = new Date(date.year(), date.month(), date.date(), startTime.hours(), startTime.minutes());
       occupiedQuery.endTime = new Date(date.year(), date.month(), date.date(), endTime.hours(), endTime.minutes());
-      
+
       return occupiedQuery;
     }
 

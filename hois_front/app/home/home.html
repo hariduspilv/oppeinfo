@@ -8,119 +8,87 @@
     </div>
     <div layout-margin>
       <div ng-if="canApplyForPractice">
-        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'accent'}" layout layout-align="left center">
-            <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
-            <span>{{'practiceApplication.canApplyForPractice' | translate}} <a href="/#/practice/application/myData?_menu">{{'main.button.view' | translate}}</a></span>
-          </div>
-        </md-whiteframe>
+        <hois-whiteframe-warning md-color="'accent'">
+          <span>{{'practiceApplication.canApplyForPractice' | translate}} <a href="/#/practice/application/myData?_menu">{{'main.button.view' | translate}}</a></span>
+        </hois-whiteframe-warning>
       </div>
       <div ng-if="hasUnconfirmedPrograms.has">
-        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'warn'}" layout layout-align="left center">
-            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-            <span>{{'subjectProgram.youHaveUnconfirmedPrograms' | translate}} <a ng-href="/#/{{isAdmin ? 'subjectStudyPeriods' : 'subjectProgram'}}?_menu">{{'main.button.view' | translate}}</a></span>
-          </div>
-        </md-whiteframe>
+        <hois-whiteframe-warning>
+          <span>{{'subjectProgram.youHaveUnconfirmedPrograms' | translate}} <a ng-href="/#/{{isAdmin ? 'subjectStudyPeriods' : 'subjectProgram'}}?_menu">{{'main.button.view' | translate}}</a></span>
+        </hois-whiteframe-warning>
       </div>
       <div ng-if="hasUncompletedPrograms.has">
-        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'warn'}" layout layout-align="left center">
-            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-            <span>{{'subjectProgram.youHaveUncompletedPrograms' | translate}} <a ng-href="/#/subjectStudyPeriods?_menu">{{'main.button.view' | translate}}</a></span>
-          </div>
-        </md-whiteframe>
+        <hois-whiteframe-warning>
+          <span>{{'subjectProgram.youHaveUncompletedPrograms' | translate}} <a ng-href="/#/subjectStudyPeriods?_menu">{{'main.button.view' | translate}}</a></span>
+        </hois-whiteframe-warning>
       </div>
       <div ng-if="hasExpiredBaseModules.length">
-        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'warn'}" layout layout-align="left center">
-            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-            <span>{{'basemodule.youHaveExpiredBaseModules' | translate}} <a ng-href="/#/basemodule?_menu">{{'main.button.view' | translate}}</a></span>
-          </div>
-        </md-whiteframe>
+        <hois-whiteframe-warning>
+          <span>{{'basemodule.youHaveExpiredBaseModules' | translate}} <a ng-href="/#/basemodule?_menu">{{'main.button.view' | translate}}</a></span>
+        </hois-whiteframe-warning>
       </div>
       <div ng-if="hasOrderedCertificates.has">
-        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'warn'}" layout layout-align="left center">
-            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-            <span>{{'certificate.youHaveOrderedCertificates' | translate}} <a ng-href="/#/certificate?_menu&ordered">{{'main.button.view' | translate}}</a></span>
-          </div>
-        </md-whiteframe>
+        <hois-whiteframe-warning>
+          <span>{{'certificate.youHaveOrderedCertificates' | translate}} <a ng-href="/#/certificate?_menu&ordered">{{'main.button.view' | translate}}</a></span>
+        </hois-whiteframe-warning>
       </div>
       <div ng-if="hasUnacceptedAbsences">
-        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'warn'}" layout layout-align="left center">
-            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-            <span>{{'absence.youHaveUnacceptedAbsences' | translate}} <a ng-href="/#/absences?_menu">{{'main.button.view' | translate}}</a></span>
-          </div>
-        </md-whiteframe>
+        <hois-whiteframe-warning>
+          <span>{{'absence.youHaveUnacceptedAbsences' | translate}} <a ng-href="/#/absences?_menu">{{'main.button.view' | translate}}</a></span>
+        </hois-whiteframe-warning>
       </div>
       <div ng-if="hasTodaysAbsences">
-        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'warn'}" layout layout-align="left center">
-            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-            <span>{{'absence.youHaveTodaysAbsences' | translate}} <a ng-href="/#/groupAbsences?today">{{'main.button.view' | translate}}</a></span>
-          </div>
-        </md-whiteframe>
+        <hois-whiteframe-warning>
+          <span>{{'absence.youHaveTodaysAbsences' | translate}} <a ng-href="/#/groupAbsences?today">{{'main.button.view' | translate}}</a></span>
+        </hois-whiteframe-warning>
       </div>
       <div ng-if="unconfirmedJournals && unconfirmedJournals.count > 0">
-        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'accent'}" layout layout-align="left center">
-            <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
-            <span ng-if="unconfirmedJournals.count === 1">{{'journal.unconfirmedCountOne' | translate}}</span>
-            <span ng-if="unconfirmedJournals.count > 1">{{'journal.unconfirmedCount' | translate:unconfirmedJournals}}</span>
-          </div>
-        </md-whiteframe>
-      </div>
-      <div ng-if="studentGroupRemarks && studentGroupRemarks.size > 0">
-        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'accent'}" layout layout-align="left center">
-            <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
-            <span ng-if="unconfirmedJournals.count === 1">{{'journal.unconfirmedCountOne' | translate}}</span>
-            <span ng-if="unconfirmedJournals.count > 1">{{'journal.unconfirmedCount' | translate:unconfirmedJournals}}</span>
-          </div>
-        </md-whiteframe>
+        <hois-whiteframe-warning md-color="'accent'">
+          <span ng-if="unconfirmedJournals.count === 1">{{'journal.unconfirmedCountOne' | translate}}</span>
+          <span ng-if="unconfirmedJournals.count > 1">{{'journal.unconfirmedCount' | translate:unconfirmedJournals}}</span>
+        </hois-whiteframe-warning>
       </div>
       <div ng-if="rrHasRecentChangeLogs">
-        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'warn'}" layout layout-align="left center">
-            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-            <span>{{'rr.home.hasRecentChangeLogs' | translate}} <a ng-href="/#/rr/changelogs?_menu">{{'main.button.view' | translate}}</a></span>
-          </div>
-        </md-whiteframe>
+        <hois-whiteframe-warning>
+          <span>{{'rr.home.hasRecentChangeLogs' | translate}} <a ng-href="/#/rr/changelogs?_menu">{{'main.button.view' | translate}}</a></span>
+        </hois-whiteframe-warning>
       </div>
       <div ng-if="currentDeclaration.isDeclarationPeriod">
-        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'warn'}" layout layout-align="left center">
-            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-            <span>{{'declaration.home.openDeclaration' | translate: {period: currentLanguageNameField(currentDeclaration.period),
-              from: (currentDeclaration.declarationPeriodStart | hoisDateTimeMin), thru: (currentDeclaration.declarationPeriodEnd | hoisDateTimeMin)} }}
-              <a ng-href="#/declaration/current/view">{{'main.button.open' | translate}}</a></span>
-          </div>
-        </md-whiteframe>
+        <hois-whiteframe-warning>
+          <span>{{'declaration.home.openDeclaration' | translate: {period: currentLanguageNameField(currentDeclaration.period),
+            from: (currentDeclaration.declarationPeriodStart | hoisDateTimeMin), thru: (currentDeclaration.declarationPeriodEnd | hoisDateTimeMin)} }}
+            <a ng-href="#/declaration/current/view">{{'main.button.open' | translate}}</a></span>
+        </hois-whiteframe-warning>
       </div>
       <div ng-if="nextDeclaration.isDeclarationPeriod">
-        <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-          <div md-colors="{color: 'warn'}" layout layout-align="left center">
-            <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-            <span>{{'declaration.home.openDeclaration' | translate: {period: currentLanguageNameField(nextDeclaration.period),
-              from: (nextDeclaration.declarationPeriodStart | hoisDateTimeMin), thru: (nextDeclaration.declarationPeriodEnd | hoisDateTimeMin)} }}
-              <a ng-href="#/declaration/current/view">{{'main.button.open' | translate}}</a></span>
-          </div>
-        </md-whiteframe>
+        <hois-whiteframe-warning>
+          <span>{{'declaration.home.openDeclaration' | translate: {period: currentLanguageNameField(nextDeclaration.period),
+            from: (nextDeclaration.declarationPeriodStart | hoisDateTimeMin), thru: (nextDeclaration.declarationPeriodEnd | hoisDateTimeMin)} }}
+            <a ng-href="#/declaration/current/view">{{'main.button.open' | translate}}</a></span>
+        </hois-whiteframe-warning>
       </div>
+      <div ng-if="unappliedScholarships && unappliedScholarships.length > 0">
+        <hois-whiteframe-warning md-color="'accent'" ng-repeat="stipend in unappliedScholarships">
+          <span>
+            <span>{{'home.student.applicationUnapplied' | translate: {termNameEt: stipend.nameEt} }}</span>
+            <span ng-if="stipend.applicationEnd">{{'home.student.submissionDeadline' | translate: {deadline: (stipend.applicationEnd | hoisDate)} }}</span>
+            <a ng-href="#/scholarships/{{stipend.termId}}/application">{{'main.button.view' | translate}}</a>
+          </span>
+        </hois-whiteframe-warning>
+      </div>
+
     </div>
     <div layout="column" layout-gt-md="row" layout-margin>
       <div id="column-1" flex-gt-md="{{ sessionStudentId ? '50' : '100' }}" flex="100">
         <!--div style="margin-bottom: 8px;" layout="row" >
           <a style="font-size: 13px; font-weight: normal; min-height: inherit; line-height: inherit; padding: 0;" class="md-primary md-hue-2 md-button md-ink-ripple" ng-href="/#/studentrepresentatives/applications/new?_menu">{{'home.represantiveApplication' | translate}}</a>
         </div-->
-    
+
         <div ng-include="'home/home.student.expiringOccupationStandards.html'"></div>
         <div ng-include="'home/home.student.generalMessages.html'"></div>
         <div ng-include="'home/home.student.unreadMessages.html'"></div>
         <div ng-include="'home/home.student.group.remarks.html'"></div>
-    
+
         <div ng-if="sessionStudentId" ng-include="'home/home.student.homeworkAndTests.html'"></div>
         <div ng-if="sessionStudentId" ng-include="'home/home.student.absences.html'"></div>
         <div ng-if="sessionStudentId" ng-include="'home/home.student.lastResults.html'"></div>

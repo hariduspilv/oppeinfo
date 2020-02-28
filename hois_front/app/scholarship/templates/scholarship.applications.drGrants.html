@@ -40,7 +40,8 @@
         <td md-cell>{{application.idcode ? application.idcode : '-'}}</td>
         <td md-cell>{{application.hasDirective ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
         <td md-cell>
-          <a ng-href="#/scholarships/decision/{{scholarshipType}}/{{application.decisionId}}">{{application.decisionDecided | hoisDate}}</a>
+          <a ng-if="application.canViewDecision" ng-href="#/scholarships/decision/{{scholarshipType}}/{{application.decisionId}}">{{application.decisionDecided | hoisDate}}</a>
+          <span ng-if="!application.canViewDecision">{{application.decisionDecided | hoisDate}}</span>
         </td>
         <td md-cell>{{currentLanguageNameField(application.status)}}
           <md-tooltip ng-if="['STIPTOETUS_STAATUS_L', 'STIPTOETUS_STAATUS_T'].indexOf(application.status.code) !== -1  && application.rejectComment">{{application.rejectComment}}</md-tooltip>

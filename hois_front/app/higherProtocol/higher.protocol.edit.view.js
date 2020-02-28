@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$scope', '$filter', '$q', 'QueryUtils', '$route', 'message', 'config', 'MidtermTaskUtil', 'Classifier', 'ProtocolUtils', 'oisFileService', 'HigherGradeUtil',
-function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskUtil, Classifier, ProtocolUtils, oisFileService, HigherGradeUtil) {
+angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$route', '$filter', '$location', '$scope', '$q', 'Classifier', 'HigherGradeUtil', 'QueryUtils', 'MidtermTaskUtil', 'ProtocolUtils', 'config', 'dialogService', 'message', 'oisFileService',
+function ($route, $filter, $location, $scope, $q, Classifier, HigherGradeUtil, QueryUtils, MidtermTaskUtil, ProtocolUtils, config, dialogService, message, oisFileService) {
   $scope.auth = $route.current.locals.auth;
   $scope.gradeUtil = HigherGradeUtil;
   $scope.letterGrades = $scope.auth.school.letterGrades;
@@ -53,23 +53,24 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
           result = clMapper.objectmapper(result);
         });
       });
-      
+
       $scope.savedStudents = angular.copy($scope.record.protocolStudents);
-  
+
       $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks = midtermTaskUtil.getSortedMidtermTasks($scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks);
-  
+
       addEmptyStudentResults();// TODO add to MidtermTaskUtil
-  
+
       midtermTaskUtil.sortStudentResults($scope.record.subjectStudyPeriodMidtermTaskDto.studentResults, $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks);
-  
+
       $scope.getUrl = oisFileService.getUrl;
       $scope.formState = {};
       $scope.formState.protocolPdfUrl = config.apiUrl + baseUrl + '/print/' + $scope.record.id + '/protocol.pdf';
       $scope.formState.canEditProtocol = ProtocolUtils.canEditProtocol($scope.auth, $scope.record);
       $scope.formState.canChangeConfirmedProtocolGrade = ProtocolUtils.canChangeConfirmedProtocolGrade($scope.auth, $scope.record);
+      $scope.formState.canDeleteStudents = ProtocolUtils.canAddDeleteStudents($scope.auth, $scope.record);
       $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.record);
       $scope.formState.canCalculate = $scope.record.protocolType === 'PROTOKOLLI_LIIK_P' && $scope.formState.canEditProtocol &&
-        !$scope.record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject && 
+        !$scope.record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject &&
         $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks.length > 0;
       $scope.formState.isConfirmed = $scope.record.status === 'PROTOKOLL_STAATUS_K';
       resolveDeferredIfExists();
@@ -104,6 +105,17 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
   if ($route.current.locals.entity) {
     entityToDto($route.current.locals.entity);
   }
+
+  $scope.deleteProtocolStudent = function (protocolStudent) {
+    dialogService.confirmDialog({prompt: 'higherProtocol.prompt.deleteStudent'}, function() {
+      var ProtocolStudentEndpoint = QueryUtils.endpoint(baseUrl + '/' + $scope.record.id + '/removeStudent');
+      var removedStudent = new ProtocolStudentEndpoint(protocolStudent);
+      removedStudent.$delete().then(function (protocol) {
+        message.info('main.messages.delete.success');
+        entityToDto(protocol);
+      }).catch(angular.noop);
+    });
+  };
 
   function studentHasResultForTask(student, midtermTask) {
     var result = $scope.record.subjectStudyPeriodMidtermTaskDto.studentResults.find(function(studentResult){
@@ -141,6 +153,9 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
   }
 
   $scope.save = function() {
+    if ($scope.higherProtocolForm.finalDate) {
+      $scope.higherProtocolForm.finalDate.$setValidity('required', true);
+    }
     if(!validationPassed()) {
       return;
     }
@@ -154,20 +169,29 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
     });
   }
 
+  $scope.delete = function() {
+    dialogService.confirmDialog({prompt: 'higherProtocol.prompt.delete'}, function() {
+      new Endpoint($scope.record).$delete().then(function(){
+        message.info('higherProtocol.message.deleted');
+        $location.path(baseUrl);
+      });
+    });
+  };
+
   function setCalculatedGrade(calculatedGrade) {
     var student = $scope.record.protocolStudents.find(function(s){
       return s.id === calculatedGrade.protocolStudent;
     });
-    if (angular.isDefined(student) && student.canEdit) {
+    if (angular.isDefined(student) && student.canChangeGrade) {
       student.grade = calculatedGrade.grade;
-      $scope.gradeChanged(student); 
+      $scope.gradeChanged(student);
     }
   }
 
   function setCalculatedGrades(listOfResults) {
     listOfResults.forEach(setCalculatedGrade);
   }
-  
+
   $scope.hideInvalid = function (cl) {
     return !Classifier.isValid(cl);
   };
@@ -180,14 +204,24 @@ function ($scope, $filter, $q, QueryUtils, $route, message, config, MidtermTaskU
     });
   };
 
+  $scope.$watch('record.finalDate', function() {
+    if ($scope.record !== undefined && $scope.record.finalDate && $scope.higherProtocolForm.finalDate) {
+      $scope.higherProtocolForm.finalDate.$setValidity('required', true);
+    }
+  });
+
   $scope.confirm = function () {
     deferredEntityToDto = $q.defer();
-    if(!validationPassed()) {
+    var validationFailed = !validationPassed();
+    if(validationFailed || (!$scope.record.finalDate && $scope.record.protocolType === 'PROTOKOLLI_LIIK_P')) {
+      if (!validationFailed && !$scope.record.finalDate && $scope.record.protocolType === 'PROTOKOLLI_LIIK_P') {
+        message.error('main.messages.form-has-errors');
+        $scope.higherProtocolForm.finalDate.$setValidity('required', false);
+      }
       resolveDeferredIfExists();
       return deferredEntityToDto.promise;
     }
-
-    ProtocolUtils.signBeforeConfirm($scope.auth, baseUrl + '/' + $scope.record.id, $scope.record, 'higherProtocol.message.confirmed', 
+    ProtocolUtils.signBeforeConfirm($scope.auth, baseUrl + '/' + $scope.record.id, $scope.record, 'higherProtocol.message.confirmed',
       entityToDto, resolveDeferredIfExists);
     return deferredEntityToDto.promise;
   };

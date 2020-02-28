@@ -6,6 +6,7 @@ public class UsersSearchDto {
 
     private Long id;
     private String idcode;
+    private String uniqueCode;
     private String name;
     private AutocompleteResult school;
     private AutocompleteResult curriculum;
@@ -76,5 +77,13 @@ public class UsersSearchDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getUniqueCode() {
+        return uniqueCode;
+    }
+
+    public void setUniqueCode(String uniqueCode) {
+        this.uniqueCode = uniqueCode;
     }
 }

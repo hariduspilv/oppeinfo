@@ -74,7 +74,7 @@ public class CurriculumValidationService {
         }
     }
 
-    public void assertCodeAndMerCodeAreUnique(HoisUserDetails user, CurriculumForm form, Curriculum curriculum) {
+    public void assertCodeIsUnique(HoisUserDetails user, CurriculumForm form, Curriculum curriculum) {
         Long id = EntityUtil.getNullableId(curriculum);
 
         UniqueCommand codeUniqueCommand = new UniqueCommand();
@@ -82,13 +82,7 @@ public class CurriculumValidationService {
         codeUniqueCommand.setParamValue(form.getCode());
         codeUniqueCommand.setId(id);
 
-        UniqueCommand merCodeUniqueCommand = new UniqueCommand();
-        merCodeUniqueCommand.setParamName("merCode");
-        merCodeUniqueCommand.setParamValue(form.getMerCode());
-        merCodeUniqueCommand.setId(id);
-
-        if(!curriculumService.isCodeUnique(user.getSchoolId(), codeUniqueCommand) || 
-                !curriculumService.isMerCodeUnique(merCodeUniqueCommand)) {
+        if(!curriculumService.isCodeUnique(user.getSchoolId(), codeUniqueCommand)) {
             throw new ValidationFailedException("main.messages.error.mustBeUnique");
         }
     }

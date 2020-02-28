@@ -126,9 +126,9 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th ng-if="auth.isAdmin() || auth.isLeadingTeacher()" md-column md-order-by="student_person.lastname,student_person.firstname">{{'student.label' | translate}}</th>
+            <th md-column md-order-by="sg.code">{{'studentGroup.label' | translate}}</th>
             <th md-column>{{'contract.contractNumber' | translate}}</th>
             <th md-column>{{'contract.validity' | translate}}</th>
-            <th md-column>{{'studentGroup.label' | translate}}</th>
             <th md-column>{{'enterprise.label' | translate}}</th>
             <th md-column>{{'contract.supervisors' | translate}}</th>
             <th md-column>{{'contract.schoolSupervisor' | translate}}</th>
@@ -140,9 +140,9 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td ng-if="auth.isAdmin() || auth.isLeadingTeacher()" md-cell>{{currentLanguageNameField(row.student)}}</td>
+            <td md-cell>{{row.studentGroup}}</td>
             <td md-cell>{{row.contractNr}}</td>
             <td md-cell>{{row.startDate | hoisDate}} - {{row.endDate | hoisDate}}</td>
-            <td md-cell>{{row.studentGroup}}</td>
             <td md-cell>{{row.enterpriseName}}</td>
             <td md-cell>{{row.enterpriseContactPersonName}}</td>
             <td md-cell>{{currentLanguageNameField(row.teacher)}}</td>

@@ -19,6 +19,7 @@ public class TimetableEventSearchDto {
     private List<TimetableEventSearchTeacherDto> teachers;
     private List<TimetableEventSearchRoomDto> rooms;
     private List<TimetableEventSearchGroupDto> studentGroups;
+    private List<TimetableEventSearchSubgroupDto> subgroups;
     private Boolean considerBreak;
     private Boolean singleEvent;
     private Boolean publicEvent;
@@ -135,7 +136,15 @@ public class TimetableEventSearchDto {
     public void setStudentGroups(List<TimetableEventSearchGroupDto> studentGroups) {
         this.studentGroups = studentGroups;
     }
-    
+
+    public List<TimetableEventSearchSubgroupDto> getSubgroups() {
+        return subgroups;
+    }
+
+    public void setSubgroups(List<TimetableEventSearchSubgroupDto> subgroups) {
+        this.subgroups = subgroups;
+    }
+
     public Boolean getConsiderBreak() {
         return considerBreak;
     }

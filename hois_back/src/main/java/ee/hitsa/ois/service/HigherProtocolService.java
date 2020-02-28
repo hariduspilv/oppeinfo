@@ -15,11 +15,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.util.ProtocolUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -61,7 +63,7 @@ import ee.hitsa.ois.web.commandobject.HigherProtocolSaveForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSearchCommand;
 import ee.hitsa.ois.web.commandobject.HigherProtocolStudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
-import ee.hitsa.ois.web.commandobject.SearchCommand;
+import ee.hitsa.ois.web.commandobject.higherprotocol.SubjectStudyPeriodCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.HigherProtocolDto;
 import ee.hitsa.ois.web.dto.HigherProtocolSearchDto;
@@ -87,8 +89,6 @@ public class HigherProtocolService extends AbstractProtocolService {
 
     @Autowired
     private ProtocolRepository protocolRepository;
-    @Autowired
-    private StudyYearService studyYearService;
     @Autowired
     private SchoolService schoolService;
 
@@ -209,11 +209,36 @@ public class HigherProtocolService extends AbstractProtocolService {
     }
 
     public Protocol save(Protocol protocol, HigherProtocolSaveForm form) {
+        protocol.setFinalDate(form.getFinalDate());
         updateProtocolStudents(protocol, form);
         return EntityUtil.save(protocol, em);
     }
+    
+    /**
+     * Get main protocol final date per student
+     * @param protocol
+     * @return
+     */
+    public static Map<Long, LocalDate> mapStudentToFinalDate(Protocol protocol, EntityManager em) {
+        Map<Long, LocalDate> studentToFinalDate = new HashMap<>();
+        List<?> data = em.createNativeQuery("select ps.student_id, p.final_date from protocol_student ps "
+                + "join protocol p on p.id = ps.protocol_id "
+                + "join protocol_hdata ph on ph.protocol_id = p.id "
+                + "where p.school_id = ?1 "
+                + "and ph.subject_study_period_id = ?2 "
+                + "and ph.type_code = ?3 "
+                + "and p.status_code = ?4")
+            .setParameter(1, EntityUtil.getId(protocol.getSchool()))
+            .setParameter(2, EntityUtil.getId(protocol.getProtocolHdata().getSubjectStudyPeriod()))
+            .setParameter(3, ProtocolType.PROTOKOLLI_LIIK_P.name())
+            .setParameter(4, ProtocolStatus.PROTOKOLL_STAATUS_K.name())
+            .getResultList();
+        data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> JpaQueryUtil.resultAsLocalDate(r, 1), (o, n) -> o, () -> studentToFinalDate));
+        return studentToFinalDate;
+    }
 
     private void updateProtocolStudents(Protocol protocol, HigherProtocolSaveForm form) {
+        boolean isMainProtocol = ClassifierUtil.equals(ProtocolType.PROTOKOLLI_LIIK_P, protocol.getProtocolHdata().getType());
         Boolean isLetterGrade = protocol.getSchool().getIsLetterGrade();
         Map<Long, LocalDate> protocolStudentExamDates = protocolStudentExamDates(protocol);
         EntityUtil.bindEntityCollection(protocol.getProtocolStudents(), ProtocolStudent::getId,
@@ -225,14 +250,23 @@ public class HigherProtocolService extends AbstractProtocolService {
                         Classifier grade = em.getReference(Classifier.class, dto.getGrade());
                         Long psId = EntityUtil.getId(ps);
                         Short mark = HigherAssessment.getGradeMark(dto.getGrade());
-                        LocalDate gradeDate = protocolStudentExamDates.containsKey(psId)
-                                ? protocolStudentExamDates.get(psId)
-                                : LocalDate.now();
+                        LocalDate gradeDate;
+                        if (isMainProtocol) {
+                            gradeDate = protocol.getFinalDate() != null ? protocol.getFinalDate() : LocalDate.now();
+                        } else {
+                            gradeDate = protocolStudentExamDates.containsKey(psId)
+                                    ? protocolStudentExamDates.get(psId)
+                                    : LocalDate.now();
+                        }
                         gradeStudent(ps, grade, mark, isLetterGrade, gradeDate);
                     } else if (gradeRemoved(dto, ps)) {
                         HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
                         removeGrade(ps);
+                    } else if (isMainProtocol && ps.getGrade() != null) {
+                        // If protocol date (saved in final_date field) changes then protocol student grades need to
+                        // be updated. History protocol student history won't be updated.
+                        ps.setGradeDate(protocol.getFinalDate() != null ? protocol.getFinalDate() : LocalDate.now());
                     }
                     ps.setAddInfo(dto.getAddInfo());
                 });
@@ -243,7 +277,7 @@ public class HigherProtocolService extends AbstractProtocolService {
                 + "join subject_study_period_exam_student sspes on sspes.id = ps.subject_study_period_exam_student_id "
                 + "join subject_study_period_exam sspe on sspe.id = sspes.subject_study_period_exam_id "
                 + "join timetable_event te on te.id = sspe.timetable_event_id "
-                + "where ps.protocol_id in (:protocolId)")
+                + "where ps.protocol_id = :protocolId")
                 .setParameter("protocolId", protocol.getId())
                 .getResultList();
         return StreamUtil.toMap(r -> resultAsLong(r, 0), r -> resultAsLocalDate(r, 1), data);
@@ -253,6 +287,7 @@ public class HigherProtocolService extends AbstractProtocolService {
         setConfirmation(user, protocol);
         
         if (form != null) {
+            protocol.setFinalDate(form.getFinalDate());
             updateProtocolStudents(protocol, form);
         }
         protocol = EntityUtil.save(protocol, em);
@@ -266,9 +301,8 @@ public class HigherProtocolService extends AbstractProtocolService {
         return protocol;
     }
 
-    public List<AutocompleteResult> getSubjectStudyPeriods(Long schoolId, SearchCommand lookup) {
-        Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
-        if(studyPeriodId == null) {
+    public List<AutocompleteResult> getSubjectStudyPeriods(Long schoolId, SubjectStudyPeriodCommand lookup) {
+        if(lookup.getStudyPeriodId() == null) {
             return Collections.emptyList();
         }
         
@@ -277,10 +311,13 @@ public class HigherProtocolService extends AbstractProtocolService {
                 + "left join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
                 + "left join teacher t on t.id = sspt.teacher_id "
                 + "left join person p on p.id = t.person_id");
-        qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriodId);
+        qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", lookup.getStudyPeriodId());
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains("s.name_et", "name", lookup.getName());
         
-        List<?> data = qb.groupBy("ssp.id, s.code, s.name_et, s.name_en, s.credits").select("ssp.id, s.code, s.name_et, s.name_en, s.credits, string_agg(distinct p.firstname || ' ' || p.lastname, ', ') as teachers", em).getResultList();
+        List<?> data = qb.groupBy("ssp.id, s.code, s.name_et, s.name_en, s.credits")
+                .sort("s.name_et, s.name_en, teachers, s.code")
+                .select("ssp.id, s.code, s.name_et, s.name_en, s.credits, string_agg(distinct p.firstname || ' ' || p.lastname, ', ') as teachers", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             String teacherNames = resultAsString(r, 5) != null ? " - " + resultAsString(r, 5) : "";
             String nameEt = SubjectUtil.subjectName(resultAsString(r, 1), resultAsString(r, 2), JpaQueryUtil.resultAsDecimal(r, 4)) + teacherNames;
@@ -349,7 +386,6 @@ public class HigherProtocolService extends AbstractProtocolService {
     public HigherProtocolDto get(HoisUserDetails user, Protocol protocol) {
         HigherProtocolDto dto = HigherProtocolDto.ofWithUserRights(user, protocol);
 
-        List<Long> notEditableStudents = studentsWithNewerProtocols(protocol);
         Map<Long, List<ProtocolPracticeJournalResultDto>> practiceResults = new HashMap<>();
         if(Boolean.TRUE.equals(dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getIsPracticeSubject())) {
             Set<Long> students = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
@@ -368,9 +404,14 @@ public class HigherProtocolService extends AbstractProtocolService {
                             resultAsLocalDateTime(r, 3), null), Collectors.toList())));
         }
 
+        List<Long> studentsWithNewerProtocols = studentsWithNewerProtocols(protocol);
         for (HigherProtocolStudentDto protocolStudent : dto.getProtocolStudents()) {
             Long studentId = protocolStudent.getStudent().getId();
-            protocolStudent.setCanEdit(Boolean.valueOf(!notEditableStudents.contains(studentId)));
+
+            if (studentsWithNewerProtocols.contains(studentId)) {
+                protocolStudent.setCanBeDeleted(Boolean.FALSE);
+                protocolStudent.setCanChangeGrade(Boolean.FALSE);
+            }
             List<ProtocolPracticeJournalResultDto> studentResults = practiceResults.get(studentId);
             if (studentResults != null) {
                 protocolStudent.setPracticeJournalResults(studentResults);
@@ -393,6 +434,15 @@ public class HigherProtocolService extends AbstractProtocolService {
 
         List<?> data = qb.select("ps.student_id", em).getResultList();
         return StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
+    }
+
+    @Override
+    public void removeStudent(HoisUserDetails user, ProtocolStudent student) {
+        if (ProtocolUtil.hasGrade(student)) {
+            throw new ValidationFailedException("higherProtocol.error.cantRemoveStudent");
+        }
+        EntityUtil.setUsername(user.getUsername(), em);
+        EntityUtil.deleteEntity(student, em);
     }
 
     public HigherProtocolReport higherProtocolReport(Protocol protocol) {

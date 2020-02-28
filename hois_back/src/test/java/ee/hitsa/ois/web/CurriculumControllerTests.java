@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -342,7 +343,7 @@ public class CurriculumControllerTests {
         versionModule.setSubjects(Sets.newLinkedHashSet(subject1, subject2));
 
         versionModule.setElectiveModules(Sets.newLinkedHashSet(electiveModule));
-        version1.setModules(Sets.newLinkedHashSet(versionModule));
+        version1.setModules(Collections.singletonList(versionModule));
 
         ResponseEntity<CurriculumVersionDto> versionResponse = this.restTemplate.postForEntity("/curriculum/" + testCurriculum.getId() + "/versions", version1,
                 CurriculumVersionDto.class);
@@ -733,7 +734,7 @@ public class CurriculumControllerTests {
         versionModule.setSubjects(Sets.newLinkedHashSet(subject1, subject2));
         versionModule.setElectiveModules(Sets.newLinkedHashSet(electiveModule));
 
-        dto.setModules(Sets.newLinkedHashSet(versionModule));
+        dto.setModules(Collections.singletonList(versionModule));
     }
 
     private static CurriculumVersionHigherModuleDto getCurriculumVersionHigherModuleDto() {

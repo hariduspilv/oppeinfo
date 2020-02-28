@@ -59,9 +59,9 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column md-order-by="person.lastname,person.firstname">{{'student.name' | translate}}</th>
+            <th md-column md-order-by="studentGroup.code">{{'student.studentGroup' | translate}}</th>
             <th md-column md-order-by="person.idcode">{{'student.idcode' | translate}}</th>
             <th md-column md-order-by="curriculumVersion.code">{{'student.curriculum' | translate}}</th>
-            <th md-column md-order-by="studentGroup.code">{{'student.studentGroup' | translate}}</th>
             <th md-column md-order-by="{{currentLanguage()==='en' ? 'studyForm.nameEn' : 'studyForm.nameEt'}}">{{'student.studyForm' | translate}}</th>
             <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}">{{'student.status' | translate}}</th>
           </tr>
@@ -71,9 +71,9 @@
             <td md-cell>
               <a md-no-ink class="md-primary" ng-href="#/studentResultCards/{{::row.id}}/view">{{::row.fullname}}</a>
             </td>
+            <td md-cell>{{currentLanguageNameField(row.studentGroup)}}</td>
             <td md-cell>{{::row.idcode}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
-            <td md-cell>{{currentLanguageNameField(row.studentGroup)}}</td>
             <td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
           </tr>

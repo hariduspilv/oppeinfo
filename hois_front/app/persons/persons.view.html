@@ -4,37 +4,41 @@
   <form name="personForm" class="ois-form-layout">
    <div layout="column" flex>
       <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45" flex-sm="100">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label>{{'person.idcode' | translate}}</label>
           <hois-value value="person.idcode"></hois-value>
         </md-input-container>
-        <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label>{{'person.sex' | translate}}</label>
           <hois-classifier-value ng-model="person.sex" main-classifier-code="SUGU"></hois-classifier-value>
         </md-input-container>
       </div>
-      <div layout="row">
-        <md-input-container flex="20" flex-sm="100">
+      <div layout="row" layout-xs="column">
+        <md-input-container flex="45" flex-xs="100">
           <label>{{'teacher.person.birthdate' | translate}}</label>
           <hois-value value="person.birthdate | hoisDate"></hois-value>
         </md-input-container>
+        <md-input-container flex="50" flex-xs="100" flex-offset="5" flex-offset-xs="0">
+          <label>{{'person.uniqueCode' | translate}}</label>
+          <hois-value value="person.uniqueCode"></hois-value>
+        </md-input-container>
       </div>
       <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45" flex-sm="100">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label>{{'person.firstname' | translate}}</label>
           <hois-value value="person.firstname"></hois-value>
         </md-input-container>
-        <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label>{{'person.lastname' | translate}}</label>
           <hois-value value="person.lastname"></hois-value>
         </md-input-container>
       </div>
       <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45" flex-sm="100">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label>{{'person.email' | translate}}</label>
           <hois-value value="person.email"></hois-value>
         </md-input-container>
-        <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label>{{'person.phone' | translate}}</label>
           <hois-value value="person.phone"></hois-value>
         </md-input-container>

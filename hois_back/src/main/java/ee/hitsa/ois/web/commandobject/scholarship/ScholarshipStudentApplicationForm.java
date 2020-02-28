@@ -14,6 +14,7 @@ import ee.hitsa.ois.web.dto.OisFileDto;
 public class ScholarshipStudentApplicationForm {
 
     private Long id;
+    private Long studentId;
     @Size(max = 100)
     private String email;
     @Size(max = 100)
@@ -44,6 +45,14 @@ public class ScholarshipStudentApplicationForm {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getStudentId() {
+        return studentId;
+    }
+
+    public void setStudentId(Long studentId) {
+        this.studentId = studentId;
     }
 
     public String getEmail() {

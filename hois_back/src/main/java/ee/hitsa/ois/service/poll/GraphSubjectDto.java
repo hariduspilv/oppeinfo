@@ -7,6 +7,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class GraphSubjectDto {
     
+    private Boolean subject;
     private AutocompleteResult subjectOrJournal;
     private List<GraphTeacherDto> teachers = new ArrayList<>();
     
@@ -21,5 +22,11 @@ public class GraphSubjectDto {
     }
     public void setTeachers(List<GraphTeacherDto> teachers) {
         this.teachers = teachers;
+    }
+    public Boolean getSubject() {
+        return subject;
+    }
+    public void setSubject(Boolean subject) {
+        this.subject = subject;
     }
 }

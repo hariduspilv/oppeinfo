@@ -9,7 +9,7 @@ public class ScholarshipDecisionDto extends ScholarshipDecisionForm {
     private Long id;
     private Long committeeId;
     private String committeeName;
-    private List<ScholarshipApplicationSearchDto> applications;
+    private List<ScholarshipApplicationRankingSearchDto> applications;
     
     public Long getId() {
         return id;
@@ -29,10 +29,10 @@ public class ScholarshipDecisionDto extends ScholarshipDecisionForm {
     public void setCommitteeName(String committeeName) {
         this.committeeName = committeeName;
     }
-    public List<ScholarshipApplicationSearchDto> getApplications() {
+    public List<ScholarshipApplicationRankingSearchDto> getApplications() {
         return applications;
     }
-    public void setApplications(List<ScholarshipApplicationSearchDto> applications) {
+    public void setApplications(List<ScholarshipApplicationRankingSearchDto> applications) {
         this.applications = applications;
     }
     

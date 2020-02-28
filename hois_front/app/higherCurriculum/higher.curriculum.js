@@ -152,11 +152,6 @@ angular.module('hitsaOis')
       url: baseUrl + '/unique/code'
     };
 
-    $scope.merCodeUniqueQuery = {
-      id: id,
-      url: baseUrl + '/unique/merCode'
-    };
-
     // --- Save and Delete
 
     function updateJointInfo() {

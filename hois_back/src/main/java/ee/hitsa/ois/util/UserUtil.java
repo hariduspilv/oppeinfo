@@ -563,9 +563,13 @@ public abstract class UserUtil {
     public static void assertIsStudent(HoisUserDetails user) {
         throwAccessDeniedIf(!user.isStudent(), "User is not school student");
     }
+
+    public static void assertIsStudent(HoisUserDetails user, School school) {
+        throwAccessDeniedIf(!isStudent(user, school), "User is not school student");
+    }
     
     public static void assertIsStudent(HoisUserDetails user, Student student) {
-        throwAccessDeniedIf(!isStudent(user, student), "main.messages.error.nopermission");
+        throwAccessDeniedIf(!isStudent(user, student));
     }
 
     public static void assertIsSchoolAdminOrStudent(HoisUserDetails user, School school) {
@@ -649,7 +653,7 @@ public abstract class UserUtil {
     }
 
     public static void assertIsNotGuestStudent(Student student) {
-        throwAccessDeniedIf(ClassifierUtil.equals(StudentType.OPPUR_K, student.getType()), "main.messages.error.guestStudent");
+        throwAccessDeniedIf(StudentUtil.isGuestStudent(student), "main.messages.error.guestStudent");
     }
     
 }

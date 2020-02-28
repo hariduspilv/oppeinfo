@@ -20,7 +20,7 @@ public class HigherProtocolReport {
 
     private final Boolean isHigherSchool;
     private final String protocolNr;
-    private final LocalDate inserted;
+    private final LocalDate protocolDate;
     private final String status;
     private final String type;
     private final String subject;
@@ -38,7 +38,7 @@ public class HigherProtocolReport {
         Objects.requireNonNull(protocol);
         isHigherSchool = higherSchool;
         protocolNr = protocol.getProtocolNr();
-        inserted = protocol.getInserted().toLocalDate();
+        protocolDate = protocol.getFinalDate() != null ? protocol.getFinalDate() : protocol.getInserted().toLocalDate();
         status = name(protocol.getStatus(), lang);
         type = name(protocol.getProtocolHdata().getType(), lang);
         SubjectStudyPeriod ssp = protocol.getProtocolHdata().getSubjectStudyPeriod();
@@ -70,8 +70,8 @@ public class HigherProtocolReport {
         return protocolNr;
     }
 
-    public LocalDate getInserted() {
-        return inserted;
+    public LocalDate getProtocolDate() {
+        return protocolDate;
     }
 
     public String getStatus() {

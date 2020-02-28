@@ -2,10 +2,14 @@ package ee.hitsa.ois.web.dto;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentUtil;
+import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class SubjectStudyPeriodDto extends VersionedCommand {
@@ -24,6 +28,9 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
     private List<AutocompleteResult> studentGroupObjects;
     private Long moodleCourseId;
     private Boolean capacityDiff;
+    private Set<SubjectStudyPeriodSubgroupDto> subgroups;
+    private Boolean canEditSubgroups;
+    private Long students;
 
     public List<AutocompleteResult> getStudentGroupObjects() {
         return studentGroupObjects != null ? studentGroupObjects : (studentGroupObjects = new ArrayList<>());
@@ -121,9 +128,33 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
         this.capacityDiff = capacityDiff;
     }
 
+    public Set<SubjectStudyPeriodSubgroupDto> getSubgroups() {
+        return subgroups;
+    }
+
+    public void setSubgroups(Set<SubjectStudyPeriodSubgroupDto> subgroups) {
+        this.subgroups = subgroups;
+    }
+
+    public Long getStudents() {
+        return students;
+    }
+
+    public void setStudents(Long students) {
+        this.students = students;
+    }
+
+    public Boolean getCanEditSubgroups() {
+        return canEditSubgroups;
+    }
+
+    public void setCanEditSubgroups(Boolean canEditSubgroups) {
+        this.canEditSubgroups = canEditSubgroups;
+    }
+
     public static SubjectStudyPeriodDto of(SubjectStudyPeriod subjectStudyPeriod) {
         SubjectStudyPeriodDto dto = EntityUtil.bindToDto(subjectStudyPeriod, new SubjectStudyPeriodDto(), 
-                "studyPeriod", "teacher", "subjectStudyPeriodTeachers", "subject", "capacities");
+                "studyPeriod", "teacher", "subjectStudyPeriodTeachers", "subject", "capacities", "subgroups");
         dto.setTeachers(StreamUtil.toMappedList(SubjectStudyPeriodTeacherDto::of, subjectStudyPeriod.getTeachers()));
         dto.setVersion(subjectStudyPeriod.getVersion());
         dto.setSubject(EntityUtil.getId(subjectStudyPeriod.getSubject()));
@@ -132,6 +163,13 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
         dto.setDeclarationType(EntityUtil.getNullableCode(subjectStudyPeriod.getDeclarationType()));
         dto.setGroupProportion(EntityUtil.getNullableCode(subjectStudyPeriod.getGroupProportion()));
         dto.setStudentGroups(StreamUtil.toMappedList(sg -> EntityUtil.getId(sg.getStudentGroup()), subjectStudyPeriod.getStudentGroups()));
+        dto.setSubgroups(StreamUtil.toMappedSet(sg -> SubjectStudyPeriodSubgroupDto.of(sg), subjectStudyPeriod.getSubgroups()));
+        dto.setCanEditSubgroups(Boolean.valueOf(SubjectStudyPeriodUtil.canEditSubgroups(subjectStudyPeriod)));
+        dto.setStudents(Long.valueOf(subjectStudyPeriod.getStudentGroups().stream()
+                .map(SubjectStudyPeriodStudentGroup::getStudentGroup)
+                .flatMap(sg -> sg.getStudents().stream())
+                .filter(StudentUtil::isActive)
+                .count()));
         return dto;
     }
 }

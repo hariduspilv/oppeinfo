@@ -15,6 +15,7 @@ public class HigherProtocolSearchDto {
     private Long id;
     private String protocolNr;
     private String protocolType;
+    private LocalDate protocolDate;
     private String status;
     private AutocompleteResult subject;
     private List<String> teachers;
@@ -27,6 +28,7 @@ public class HigherProtocolSearchDto {
         HigherProtocolSearchDto dto = new HigherProtocolSearchDto();
         EntityUtil.bindToDto(protocol, dto, "confirmer");
         dto.setProtocolType(EntityUtil.getCode(protocol.getProtocolHdata().getType()));
+        dto.setProtocolDate(protocol.getFinalDate());
         dto.setInserted(protocol.getInserted().toLocalDate());
         SubjectStudyPeriod subjectStudyPeriod = protocol.getProtocolHdata().getSubjectStudyPeriod();
         dto.setSubject(AutocompleteResult.of(subjectStudyPeriod.getSubject()));
@@ -66,6 +68,14 @@ public class HigherProtocolSearchDto {
 
     public void setProtocolType(String protocolType) {
         this.protocolType = protocolType;
+    }
+
+    public LocalDate getProtocolDate() {
+        return protocolDate;
+    }
+
+    public void setProtocolDate(LocalDate protocolDate) {
+        this.protocolDate = protocolDate;
     }
 
     public String getStatus() {

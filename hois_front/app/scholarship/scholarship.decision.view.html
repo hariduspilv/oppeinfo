@@ -52,9 +52,9 @@
   </form>
 
   <div ng-include="'scholarship/templates/scholarship.applications.'+scholarshipType+'.html'"></div>
-  
+
   <div layout="row">
     <md-button class="md-raised" ng-if="auth.isAdmin()" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-    <md-button class="md-raised" ng-click="back('#/scholarships/applications/' + scholarshipType)">{{'main.button.back' | translate}}</md-button>
+    <md-button class="md-raised" ng-click="back('#/scholarships/applications/ranking/' + scholarshipType)">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

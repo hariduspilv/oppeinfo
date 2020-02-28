@@ -154,24 +154,24 @@ angular.module('hitsaOis')
             icon:"folder_shared"
           },
           {
-            name: 'main.menu.scholarships.grantApplications',
-            url: "/scholarships/applications/grants?_menu",
+            name: 'main.menu.scholarships.grantApplicationsRanking',
+            url: "/scholarships/applications/ranking/grants?_menu",
             icon:"euro_symbol",
             studyLevel: {
               vocational: true
             }
           },
           {
-            name: 'main.menu.scholarships.scholarshipApplications',
-            url: "/scholarships/applications/scholarships?_menu",
+            name: 'main.menu.scholarships.scholarshipApplicationsRanking',
+            url: "/scholarships/applications/ranking/scholarships?_menu",
             icon:"euro_symbol",
             studyLevel: {
               higher: true
             }
           },
           {
-            name: 'main.menu.scholarships.drGrantApplications',
-            url: "/scholarships/applications/drGrants?_menu",
+            name: 'main.menu.scholarships.drGrantApplicationsRanking',
+            url: "/scholarships/applications/ranking/drGrants?_menu",
             icon:"functions",
             studyLevel: {
               doctoral: true
@@ -950,7 +950,7 @@ angular.module('hitsaOis')
             icon:"reply"
           },
           {
-            name: authenticatedUser.higher && authenticatedUser.vocational ? 'main.menu.poll.both' : 
+            name: authenticatedUser.higher && authenticatedUser.vocational ? 'main.menu.poll.both' :
             (authenticatedUser.higher ? 'main.menu.poll.subjects' : 'main.menu.poll.journals'),
             url: '/poll/answers/subjects?_menu',
             icon:"assignment_return"
@@ -959,8 +959,8 @@ angular.module('hitsaOis')
       });
 
       sections.push({
-        name: 'main.menu.scholarships.grantApplications',
-        url: "/scholarships/applications/grants?_menu",
+        name: 'main.menu.scholarships.grantApplicationsRanking',
+        url: "/scholarships/applications/ranking/grants?_menu",
         type: 'link',
         icon:"euro_symbol",
         studyLevel: {
@@ -976,8 +976,8 @@ angular.module('hitsaOis')
       });
 
       sections.push({
-        name: 'main.menu.scholarships.scholarshipApplications',
-        url: "/scholarships/applications/scholarships?_menu",
+        name: 'main.menu.scholarships.scholarshipApplicationsRanking',
+        url: "/scholarships/applications/ranking/scholarships?_menu",
         type: 'link',
         icon:"euro_symbol",
         studyLevel: {
@@ -985,8 +985,8 @@ angular.module('hitsaOis')
         }
       });
       sections.push({
-        name: 'main.menu.scholarships.drGrantApplications',
-        url: "/scholarships/applications/drGrants?_menu",
+        name: 'main.menu.scholarships.drGrantApplicationsRanking',
+        url: "/scholarships/applications/ranking/drGrants?_menu",
         type: 'link',
         icon:"functions",
         studyLevel: {
@@ -1255,24 +1255,24 @@ angular.module('hitsaOis')
             icon:"folder_shared"
           },
           {
-            name: 'main.menu.scholarships.grantApplications',
-            url: "/scholarships/applications/grants?_menu",
+            name: 'main.menu.scholarships.grantApplicationsRanking',
+            url: "/scholarships/applications/ranking/grants?_menu",
             icon:"euro_symbol",
             studyLevel: {
               vocational: true
             }
           },
           {
-            name: 'main.menu.scholarships.scholarshipApplications',
-            url: "/scholarships/applications/scholarships?_menu",
+            name: 'main.menu.scholarships.scholarshipApplicationsRanking',
+            url: "/scholarships/applications/ranking/scholarships?_menu",
             icon:"euro_symbol",
             studyLevel: {
               higher: true
             }
           },
           {
-            name: 'main.menu.scholarships.drGrantApplications',
-            url: "/scholarships/applications/drGrants?_menu",
+            name: 'main.menu.scholarships.drGrantApplicationsRanking',
+            url: "/scholarships/applications/ranking/drGrants?_menu",
             icon:"functions",
             studyLevel: {
               doctoral: true

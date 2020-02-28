@@ -171,7 +171,7 @@ public class FinalProtocolUtil {
     public static void assertCurriculumGradesInput(Protocol protocol) {
         Curriculum curriculum = protocol.getProtocolHdata().getCurriculum();
         if (!PROFESSIONAL_DIPLOMA_STUDY_LEVEL.equals(EntityUtil.getCode(curriculum.getOrigStudyLevel()))
-                && !protocol.getProtocolHdata().getCurriculum().getGrades().isEmpty()) {
+                && !curriculum.getGrades().isEmpty()) {
             for (ProtocolStudent student : protocol.getProtocolStudents()) {
                 if (HigherAssessment.isPositive(EntityUtil.getNullableCode(student.getGrade()))
                         && student.getCurriculumGrade() == null) {

@@ -54,8 +54,8 @@
                 <tr md-row>
                   <th md-column>{{'finalProtocol.id' | translate}}</th>
                   <th md-column>{{'student.label' | translate}}</th>
-                  <th md-column>{{'student.idcode' | translate}}</th>
                   <th md-column>{{'finalProtocol.studentGroup' | translate}}</th>
+                  <th md-column>{{'student.idcode' | translate}}</th>
                   <th md-column>{{'finalProtocol.grade' | translate}}</th>
                   <th md-column ng-if="formState.canChangeConfirmedProtocolGrade">{{'finalProtocol.changeReason' | translate}}</th>
                   <th md-column ng-repeat="grade in protocol.curriculumGrades">{{currentLanguageNameField(grade)}}</th>
@@ -67,8 +67,8 @@
                 <tr md-row ng-repeat="row in protocol.protocolStudents | orderBy: 'fullname' track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
                   <td md-cell>{{$index + 1}}</td>
                   <td md-cell>{{row.fullname}}</td>
-                  <td md-cell>{{row.idcode}}</td>
                   <td md-cell>{{row.studentGroup}}</td>
+                  <td md-cell>{{row.idcode}}</td>
                   <td md-cell>
                     <hois-select class="protocolGradeSelect" ng-model="row.grade" ng-change="gradeChanged(row)" values="grades"
                       value-property="code" show-function-value="gradeSelectShownValue" hide-values="hideInvalid" sorted-query="true"

@@ -8,6 +8,8 @@ public class UsersSearchCommand {
     private Long school;
 
     private String idcode;
+    
+    private String uniqueCode;
 
     private String name;
 
@@ -74,6 +76,14 @@ public class UsersSearchCommand {
 
     public void setNextPeriod(Boolean nextPeriod) {
         this.nextPeriod = nextPeriod;
+    }
+
+    public String getUniqueCode() {
+        return uniqueCode;
+    }
+
+    public void setUniqueCode(String uniqueCode) {
+        this.uniqueCode = uniqueCode;
     }
 
 }

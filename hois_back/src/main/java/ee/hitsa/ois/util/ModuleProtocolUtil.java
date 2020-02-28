@@ -63,7 +63,7 @@ public abstract class ModuleProtocolUtil {
         if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_MOODULPROTOKOLL)) {
             return false;
         }
-        return !ProtocolUtil.confirmed(protocol) && allResultsEmpty(protocol)
+        return !ProtocolUtil.confirmed(protocol) && ProtocolUtil.allResultsEmpty(protocol)
                 && (UserUtil.isSchoolAdmin(user, protocol.getSchool()) || isLeadingTeacherProtocol(user, protocol)
                         || isTeacherResponsible(user, protocol));
     }
@@ -120,9 +120,5 @@ public abstract class ModuleProtocolUtil {
 
     private static boolean isTeacherResponsible(HoisUserDetails user, Protocol protocol) {
         return user.isTeacher() && EntityUtil.getId(protocol.getProtocolVdata().getTeacher()).equals(user.getTeacherId());
-    }
-
-    private static boolean allResultsEmpty(Protocol protocol) {
-        return protocol.getProtocolStudents().stream().allMatch(ps -> ps.getGrade() == null);
     }
 }

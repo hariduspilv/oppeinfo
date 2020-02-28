@@ -10,6 +10,7 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.dto.SubjectStudyPeriodSubgroupForm;
 
 public class SubjectStudyPeriodForm  extends VersionedCommand {
     @Valid
@@ -31,6 +32,8 @@ public class SubjectStudyPeriodForm  extends VersionedCommand {
     
     private Long moodleCourseId;
     private Boolean capacityDiff;
+    
+    private List<SubjectStudyPeriodSubgroupForm> subgroups;
 
     public List<SubjectStudyPeriodTeacherForm> getTeachers() {
         return teachers != null ? teachers : (teachers = new ArrayList<>());
@@ -102,5 +105,13 @@ public class SubjectStudyPeriodForm  extends VersionedCommand {
 
     public void setCapacityDiff(Boolean capacityDiff) {
         this.capacityDiff = capacityDiff;
+    }
+
+    public List<SubjectStudyPeriodSubgroupForm> getSubgroups() {
+        return subgroups;
+    }
+
+    public void setSubgroups(List<SubjectStudyPeriodSubgroupForm> subgroups) {
+        this.subgroups = subgroups;
     }
 }

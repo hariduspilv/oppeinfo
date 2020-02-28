@@ -8,17 +8,20 @@ import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import org.digidoc4j.Container;
 import org.digidoc4j.DataToSign;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.bdoc.MobileIdSession;
@@ -42,8 +45,8 @@ import ee.hitsa.ois.web.commandobject.HigherProtocolSearchCommand;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSignForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolStudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
-import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.commandobject.higherprotocol.SubjectStudyPeriodCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.EntityMobileSignDto;
 import ee.hitsa.ois.web.dto.EntitySignDto;
@@ -104,8 +107,17 @@ public class HigherProtocolController {
         return get(user, higherProtocolService.save(protocol, form));
     }
 
+    @DeleteMapping("/{id:\\d+}")
+    public void delete(HoisUserDetails user,
+            @WithVersionedEntity(versionRequestParam = "version") Protocol protocol,
+            @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        HigherProtocolUtil.assertCanDelete(user, protocol);
+        higherProtocolService.delete(user, protocol);
+    }
+
+
     @GetMapping("/subjectStudyPeriods")
-    public List<AutocompleteResult> getSubjectStudyPeriods(HoisUserDetails user, SearchCommand lookup) {
+    public List<AutocompleteResult> getSubjectStudyPeriods(HoisUserDetails user, SubjectStudyPeriodCommand lookup) {
         HigherProtocolUtil.assertCanCreate(user);
         return higherProtocolService.getSubjectStudyPeriods(user.getSchoolId(), lookup);
     }
@@ -115,6 +127,14 @@ public class HigherProtocolController {
             @Valid HigherProtocolStudentSearchCommand criteria) {
         HigherProtocolUtil.assertCanCreate(user);
         return higherProtocolService.getStudents(user.getSchoolId(), criteria);
+    }
+
+    @DeleteMapping("/{id:\\d+}/removeStudent/{studentId:\\d+}")
+    public HigherProtocolDto removeStudent(HoisUserDetails user, @WithEntity Protocol protocol,
+            @WithEntity("studentId") ProtocolStudent student) {
+        HigherProtocolUtil.canChange(user,protocol);
+        higherProtocolService.removeStudent(user, student);
+        return get(user, protocol);
     }
     
     @PostMapping("/{id:\\d+}/signToConfirm")

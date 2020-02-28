@@ -20,6 +20,7 @@ public class PersonForm extends VersionedCommand {
     @Required
     @Size(max = 100)
     private String lastname;
+    private String uniqueCode;
     private LocalDate birthdate;
     @Required
     @ClassifierRestriction(MainClassCode.SUGU)
@@ -83,5 +84,13 @@ public class PersonForm extends VersionedCommand {
 
     public void setBirthdate(LocalDate birthdate) {
         this.birthdate = birthdate;
+    }
+
+    public String getUniqueCode() {
+        return uniqueCode;
+    }
+
+    public void setUniqueCode(String uniqueCode) {
+        this.uniqueCode = uniqueCode;
     }
 }

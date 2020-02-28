@@ -1,7 +1,9 @@
 package ee.hitsa.ois.domain.subject.studyperiod;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -20,6 +22,7 @@ import ee.hitsa.ois.domain.protocol.ProtocolHdata;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodCapacity;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
 
 @Entity
 public class SubjectStudyPeriod extends BaseEntityWithId {
@@ -66,6 +69,9 @@ public class SubjectStudyPeriod extends BaseEntityWithId {
 
     @Column(name = "is_capacity_diff")
     private Boolean capacityDiff;
+    
+    @OneToMany(mappedBy = "period", fetch = FetchType.LAZY, cascade = {CascadeType.ALL}, orphanRemoval = true)
+    private Set<SubjectStudyPeriodSubgroup> subgroups;
 
     public List<ProtocolHdata> getProtocols() {
         return protocols != null ? protocols : (protocols = new ArrayList<>());
@@ -174,6 +180,15 @@ public class SubjectStudyPeriod extends BaseEntityWithId {
 
     public void setCapacityDiff(Boolean isCapacityDiff) {
         this.capacityDiff = isCapacityDiff;
+    }
+
+    public Set<SubjectStudyPeriodSubgroup> getSubgroups() {
+        return subgroups != null ? subgroups : (subgroups = new HashSet<>());
+    }
+
+    public void setSubgroups(Set<SubjectStudyPeriodSubgroup> subgroups) {
+        getSubgroups().clear();
+        getSubgroups().addAll(subgroups);
     }
 
 }

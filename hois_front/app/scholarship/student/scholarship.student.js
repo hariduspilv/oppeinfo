@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('StudentScholarshipController', ['$route', '$scope', '$q', 'Classifier', 'QueryUtils', 'dialogService',
-  function ($route, $scope, $q, Classifier, QueryUtils, dialogService) {
+angular.module('hitsaOis').controller('StudentScholarshipController', ['$filter', '$route', '$scope', '$translate', '$q', 'Classifier', 'ScholarshipUtils', 'QueryUtils', 'dialogService',
+  function ($filter, $route, $scope, $translate, $q, Classifier, ScholarshipUtils, QueryUtils, dialogService) {
     var baseUrl = '/scholarships';
     var drGrant = $route.current.locals.drGrant;
     var clMapper = Classifier.valuemapper({
@@ -24,6 +24,7 @@ angular.module('hitsaOis').controller('StudentScholarshipController', ['$route',
           possible.application = match;
           possible.canApply = possible.termCompliance.fullyComplies ? !angular.isDefined(match) : false;
           possible.alreadyApplied = !angular.isDefined(match) ? false : true;
+          possible.period = ScholarshipUtils.applicationPeriod(possible, $filter, $translate);
         });
       });
     });

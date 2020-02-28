@@ -270,7 +270,7 @@ angular.module('hitsaOis')
       }
     };
 
-    var lookup = QueryUtils.endpoint('/autocomplete/students');
+    var lookup = QueryUtils.endpoint('/autocomplete/certificate/students');
     $scope.querySearch = function (text) {
       if(text.length >= 1) {
         var deferred = $q.defer();

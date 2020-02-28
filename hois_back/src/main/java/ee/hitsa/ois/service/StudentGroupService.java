@@ -59,12 +59,16 @@ import ee.hitsa.ois.web.dto.student.StudentGroupStudentDto;
 public class StudentGroupService {
 
     private static final String STUDENT_GROUP_LIST_SELECT =
-            "sg.id, sg.code, sg.study_form_code, sg.course, curriculum.id as curriculum_id, "+
-            "curriculum.name_et, curriculum.name_en, sg.valid_from, sg.valid_thru, "+
-            "(select count(*) from student s where s.student_group_id=sg.id and s.status_code in (:studentStatus)), p.firstname, p.lastname";
+            "sg.id, sg.code, sg.study_form_code, sg.course, curriculum.id as curriculum_id, " +
+            "coalesce(cv.code, curriculum.code) || ' - ' || curriculum.name_et as curriculumEt, " +
+            "coalesce(cv.code, curriculum.code) || ' - ' || curriculum.name_en as curriculumEn, " +
+            "sg.valid_from, sg.valid_thru, "+
+            "(select count(*) from student s where s.student_group_id=sg.id and s.status_code in (:studentStatus)), " +
+            "p.firstname, p.lastname";
     private static final String STUDENT_GROUP_LIST_FROM =
             "from student_group sg " +
-            "left join curriculum curriculum on sg.curriculum_id=curriculum.id "+
+            "left join curriculum_version cv on cv.id = sg.curriculum_version_id " +
+            "left join curriculum curriculum on (sg.curriculum_id=curriculum.id or cv.curriculum_id = curriculum.id) "+
             "left join classifier study_form on sg.study_form_code=study_form.code " +
             "left join teacher t on sg.teacher_id=t.id " +
             "left join person p on t.person_id=p.id";

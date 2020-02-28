@@ -260,6 +260,15 @@ public class AutocompleteController {
         }
         return asPage(autocompleteService.students(user.getSchoolId(), lookup));
     }
+    
+    @GetMapping("/certificate/students")
+    public Page<AutocompleteResult> studentsForCertificate(HoisUserDetails user, StudentAutocompleteCommand lookup) {
+        if(user.isStudent()) {
+            // student is allowed to lookup himself/herself
+            lookup.setId(user.getStudentId());
+        }
+        return asPage(autocompleteService.studentsForCertificate(user.getSchoolId(), lookup));
+    }
 
     @GetMapping("/studyMaterials")
     public List<AutocompleteResult> studyMaterials(HoisUserDetails user, StudyMaterialAutocompleteCommand lookup) {

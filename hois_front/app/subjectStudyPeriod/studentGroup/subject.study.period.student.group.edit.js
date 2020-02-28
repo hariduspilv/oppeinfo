@@ -110,7 +110,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
             months: sp % 12
         };
 
-        $scope.semesters = new Array(Math.ceil(sp / 6));
+        $scope.semesters = [].constructor(Math.ceil(sp / 6));
         // set current semester
         var startYear = $scope.studentGroup.curriculumVersionAdmissinYear;
         if (startYear) {

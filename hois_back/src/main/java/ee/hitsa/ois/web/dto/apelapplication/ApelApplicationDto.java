@@ -11,6 +11,7 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
+import ee.hitsa.ois.web.dto.timetable.DateRangeDto;
 
 public class ApelApplicationDto extends InsertedChangedVersionDto {
 
@@ -18,6 +19,7 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
     private AutocompleteResult school;
     private AutocompleteResult student;
     private CurriculumVersionResult curriculumVersion;
+    private String studentGroup;
     private String status;
     private String confirmedBy;
     private LocalDateTime confirmed;
@@ -32,9 +34,11 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
     private LocalDate oldNominalStudyEnd;
     private Boolean isEhisSent;
 
+    private List<DateRangeDto> abroadStudyPeriods;
     private Boolean hasAbroadStudies;
     private Boolean hasPlannedSubjectsToTransfer;
     private Boolean hasMultipleNominalDurationExtensions;
+
     private Boolean canExtendNominalDuration;
     private Boolean canEdit;
     private Boolean canReview;
@@ -54,6 +58,9 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
         ApelApplicationDto dto = EntityUtil.bindToDto(application, new ApelApplicationDto(), "student", "record",
                 "files", "confirmedBy");
         dto.setStudent(AutocompleteResult.of(application.getStudent(), false));
+        if (application.getStudent() != null && application.getStudent().getStudentGroup() != null) {
+            dto.setStudentGroup(application.getStudent().getStudentGroup().getCode());
+        }
         dto.setCurriculumVersion(AutocompleteResult.of(application.getStudent().getCurriculumVersion()));
         dto.setIsVocational(dto.getCurriculumVersion().getIsVocational());
         dto.setRecords(StreamUtil.toMappedList(ApelApplicationRecordDto::of, application.getRecords()));
@@ -200,6 +207,14 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
         this.isEhisSent = isEhisSent;
     }
 
+    public List<DateRangeDto> getAbroadStudyPeriods() {
+        return abroadStudyPeriods;
+    }
+
+    public void setAbroadStudyPeriods(List<DateRangeDto> abroadStudyPeriods) {
+        this.abroadStudyPeriods = abroadStudyPeriods;
+    }
+
     public Boolean getHasAbroadStudies() {
         return hasAbroadStudies;
     }
@@ -310,6 +325,14 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
 
     public void setCanChangeTransferStatus(Boolean canChangeTransferStatus) {
         this.canChangeTransferStatus = canChangeTransferStatus;
+    }
+
+    public String getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(String studentGroup) {
+        this.studentGroup = studentGroup;
     }
 
 }

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.DeclarationService;
@@ -106,6 +107,12 @@ public class DeclarationController {
     public List<DeclarationSubjectDto> getExtraCurriculumSubjectOptions(HoisUserDetails user, @WithEntity Declaration declaration) {
         UserUtil.assertSameSchool(user, declaration.getStudent().getSchool());
         return declarationService.getExtraCurriculumSubjectsOptions(declaration);
+    }
+    
+    @GetMapping("/subjects/extracurriculum/subgroups/{id:\\d+}")
+    public List<AutocompleteResult> getExtraCurriculumSubjectOptions(HoisUserDetails user, @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
+        UserUtil.assertSameSchool(user, subjectStudyPeriod.getSubject().getSchool());
+        return declarationService.getSubjectStudyPeriodSubgroups(subjectStudyPeriod);
     }
 
     @GetMapping("/isDeclarationPeriod")

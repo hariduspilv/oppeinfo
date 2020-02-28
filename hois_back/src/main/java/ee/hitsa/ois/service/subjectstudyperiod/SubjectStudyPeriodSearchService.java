@@ -1,6 +1,7 @@
 package ee.hitsa.ois.service.subjectstudyperiod;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
@@ -43,7 +44,7 @@ public class SubjectStudyPeriodSearchService {
     private static final String SELECT =
               "ssp.id as subjectStudyPeriodId, " 
             + "sp.name_et as spNameEt, sp.name_en as spNameEn, "
-            + "s.id as subjectId, s.name_et as subNameEt, s.name_en as subNameEn, s.code, "
+            + "s.id as subjectId, s.name_et as subNameEt, s.name_en as subNameEn, s.code, s.credits, "
             + "(select count(*) from declaration_subject ds where ds.subject_study_period_id = ssp.id) as declared_students";
 
     private static final String FILTER_BY_TEACHER_ID = "exists"
@@ -118,7 +119,9 @@ public class SubjectStudyPeriodSearchService {
             qb.requiredCriteria("sspt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
         }
         Page<Object[]> results = JpaQueryUtil.pagingResult(qb, select.toString(), em, pageable);
-        Map<Long, List<SubjectProgramResult>> teachersAndPrograms = teachersAndProgramsForSubjectStudyPeriod(StreamUtil.toMappedList(r -> resultAsLong(r, 0), results.getContent()));
+        List<Long> sspIds = StreamUtil.toMappedList(r -> resultAsLong(r, 0), results.getContent());
+        Map<Long, List<SubjectProgramResult>> teachersAndPrograms = teachersAndProgramsForSubjectStudyPeriods(sspIds);
+        Map<Long, Integer> subgroupCount = subgroupsQueryForSubjectStudyPeriods(sspIds);
         return results.map(r -> {
             SubjectStudyPeriodSearchDto dto = new SubjectStudyPeriodSearchDto();
             dto.setId(resultAsLong(r, 0));
@@ -126,16 +129,18 @@ public class SubjectStudyPeriodSearchService {
             dto.setSubject(getSubject(r));
             dto.setTeachers(teachersAndPrograms.get(dto.getId()).stream().map(d -> d.getTeacherName()).collect(Collectors.toList()));
             dto.setPrograms(teachersAndPrograms.get(dto.getId()));
-            dto.setStudentsNumber(resultAsLong(r, 7));
+            dto.setCredits(resultAsDecimal(r, 7));
+            dto.setStudentsNumber(resultAsLong(r, 8));
             if (user.isTeacher()) {
-                dto.setSubjectProgramId(resultAsLong(r, 8));
-                String status = resultAsString(r, 9);
+                dto.setSubjectProgramId(resultAsLong(r, 9));
+                String status = resultAsString(r, 10);
                 if (status == null) {
                     dto.setSubjectProgramStatus(SubjectProgramStatus.AINEPROGRAMM_STAATUS_L.name());
                 } else {
                     dto.setSubjectProgramStatus(status);
                 }
             }
+            dto.setSubgroups(subgroupCount.get(dto.getId()));
             return dto;
         });
     }
@@ -143,13 +148,13 @@ public class SubjectStudyPeriodSearchService {
     private static AutocompleteResult getSubject(Object r) {
         Long id = resultAsLong(r, 3);
         String code = resultAsString(r, 6);
-        String nameEtCode = resultAsString(r, 4) + "/" + code;
-        String nameEnCode = resultAsString(r, 5) + "/" + code;
+        String nameEtCode = resultAsString(r, 4) + " (" + code + ")";
+        String nameEnCode = resultAsString(r, 5) + " (" + code + ")";
         return new AutocompleteResult(id, nameEtCode,
                 nameEnCode);
     }
     
-    private Map<Long, List<SubjectProgramResult>> teachersAndProgramsForSubjectStudyPeriod(List<Long> subjectStudyPeriods) {
+    private Map<Long, List<SubjectProgramResult>> teachersAndProgramsForSubjectStudyPeriods(List<Long> subjectStudyPeriods) {
         if(subjectStudyPeriods.isEmpty()) {
             return Collections.emptyMap();
         }
@@ -172,5 +177,21 @@ public class SubjectStudyPeriodSearchService {
                     dto.setStatus(resultAsString(r, 4));
                     return dto;
                 }, Collectors.toList())));
+    }
+
+    private Map<Long, Integer> subgroupsQueryForSubjectStudyPeriods(List<Long> subjectStudyPeriods) {
+        if (subjectStudyPeriods.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        
+        List<?> results = em.createNativeQuery("select ssp.id, count(sub.id) "
+                + "from subject_study_period ssp "
+                + "left join subject_study_period_subgroup sub on sub.subject_study_period_id = ssp.id "
+                + "where ssp.id in ?1 "
+                + "group by ssp.id")
+            .setParameter(1, subjectStudyPeriods)
+            .getResultList();
+        
+        return results.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> resultAsInteger(r, 1), (o, n) -> o));
     }
 }

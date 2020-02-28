@@ -171,11 +171,6 @@ angular.module('hitsaOis')
       id: uniqueQueriesId
     };
 
-    $scope.merCodeUniqueQuery = {
-      url: '/curriculum/unique/merCode',
-      id: uniqueQueriesId
-    };
-
     //edit
     if (angular.isDefined($route.current.locals.entity)) {
       mapDtoToModel($route.current.locals.entity, $scope);

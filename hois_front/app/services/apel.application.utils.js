@@ -267,13 +267,26 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
     var credits = 0;
     application.records.forEach(function (record) {
       record.formalSubjectsOrModules.forEach(function (subject) {
-        if (subject.transfer && subject.apelSchool !== null && subject.apelSchool.country !== 'RIIK_EST') {
-          credits += subject.credits;
+        if (subject.transfer && subject.gradeDate !== null &&subject.apelSchool !== null &&
+            subject.apelSchool.country !== 'RIIK_EST') {
+          if (dateDuringAbroadStudies(application, new Date(subject.gradeDate))) {
+            credits += subject.credits;
+          }
         }
       });
     });
     return credits;
   };
+
+  function dateDuringAbroadStudies(application, date) {
+    for (var i = 0; i < application.abroadStudyPeriods.length; i++) {
+      var period = application.abroadStudyPeriods[i];
+      if (period.start.getTime() <= date.getTime() && period.end.getTime() >= date.getTime()) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   return apelApplicationUtil;
 });

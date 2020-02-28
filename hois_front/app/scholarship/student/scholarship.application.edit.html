@@ -1,1 +1,17 @@
+<div ng-if="student" class="ois-form-layout-padding" ng-cloak>
+  <div class="form-readonly" flex>
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="45" flex-sm="100" flex-xs="100">
+        <label>{{'stipend.applicant' | translate}}</label>
+        <hois-value value="currentLanguageNameField(student)"></hois-value>
+      </md-input-container>
+
+      <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <label>{{'stipend.student.studentGroup' | translate}}</label>
+        <hois-value value="currentLanguageNameField(studentGroup)"></hois-value>
+      </md-input-container>
+    </div>
+  </div>
+</div>
+
 <div ng-include="templateName"></div>

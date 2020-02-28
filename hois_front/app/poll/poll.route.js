@@ -162,5 +162,5 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); },
       }
-    })
+    });
 }]);

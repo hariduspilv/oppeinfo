@@ -1,3 +1,8 @@
+<style>
+    md-checkbox .md-label {
+        white-space: unset;
+    }
+</style>
 <div layout="column" layout-padding>
     <form name="subjectStudyPeriodEditForm" ng-cloak>
         <div layout="column">
@@ -41,13 +46,13 @@
             <table md-table class="secondary-table">
                 <tbody md-body>
                     <tr md-row ng-repeat="teacher in record.teachers" ng-class-odd="'odd'" ng-class-even="'even'">
-                        <td md-cell>{{teacher.name}}</td>
-                        <td md-cell ng-hide="record.teachers.length === 1">
+                        <td md-cell width="45%">{{teacher.name}}</td>
+                        <td md-cell ng-hide="record.teachers.length === 1" width="45%">
                             <md-checkbox ng-model="teacher.isSignatory" aria-label="{{'subjectStudyPeriodTeacher.isSignatory' | translate}}">
                                 {{'subjectStudyPeriodTeacher.isSignatory' | translate}}
                             </md-checkbox>
                         </td>
-                        <td md-cell>
+                        <td md-cell width="10%">
                             <md-button class="remove nomargin" ng-click="removeTeacher(teacher)" ng-show="obligatoryTeacher !== teacher.teacherId">&times;</md-button>
                         </td>
                     </tr>
@@ -94,7 +99,72 @@
                       </div>
                 </md-input-container>
             </div>
+            <fieldset ng-if="record.canEditSubgroups || record.subgroups.length > 0">
+                <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'subjectStudyPeriod.subgroups.label' | translate}}{{record.students ? ' (' + record.students + ')' : ''}}</legend>
+                <md-content>
+                    <div layout="column">
+                        <div layout="row" ng-if="record.canEditSubgroups">
+                            <md-input-container style="min-width: 150px; padding-right: 16px;">
+                                <label>{{'subjectStudyPeriod.subgroups.count' | translate}}</label>
+                                <md-select ng-model="subgroupCount">
+                                    <md-option md-option-empty></md-option>
+                                    <md-option ng-value="$index + 1" ng-repeat="number in [].constructor(SUBGROUP_LIMIT) track by $index">
+                                        {{$index + 1}}
+                                    </md-option>
+                                </md-select>
+                            </md-input-container>
+                            <md-input-container style="min-width: 150px;">
+                                <label>{{'subjectStudyPeriod.subgroups.defaultPlaces' | translate}}</label>
+                                <input ng-model="subgroupPlaces" type="number" pattern="^[0-9]+$" min="0" max="999" />
+                            </md-input-container>
+                            <md-button class="md-raised md-primary" ng-click="addSubgroup(subgroupCount, subgroupPlaces)">{{'subjectStudyPeriod.subgroups.add' | translate}}</md-button>
+                        </div>
+                        <md-table-container>
+                            <table md-table class="secondary-table">
+                                <thead md-head>
+                                    <tr md-row>
+                                        <th md-column>{{'subjectStudyPeriod.subgroups.name' | translate}}</th>
+                                        <th md-column>{{'subjectStudyPeriod.subgroups.teacher' | translate}}</th>
+                                        <th md-column>{{'subjectStudyPeriod.subgroups.places' | translate}}</th>
+                                        <th md-column>{{'subjectStudyPeriod.subgroups.declared' | translate}}</th>
+                                        <th md-column></th>
+                                    </tr>
+                                </thead>
+                                <tbody md-body>
+                                    <tr md-row ng-repeat="subgroup in record.subgroups" ng-class-odd="'odd'" ng-class-even="'even'">
+                                        <td md-cell>
+                                            <span ng-if="!record.canEditSubgroups">{{subgroup.code}}</span>
+                                            <md-input-container style="width: 100%;" ng-if="record.canEditSubgroups">
+                                                <input ng-model="subgroup.code" type="text" md-maxlength="100" required aria-label="{{'subjectStudyPeriod.subgroups.name' | translate}}" />
+                                            </md-input-container>
+                                        </td>
+                                        <td md-cell>
+                                            <span ng-if="!record.canEditSubgroups">{{currentLanguageNameField(subgroup.teacher)}}</span>
+                                            <md-input-container style="width: 100%;" ng-if="record.canEditSubgroups">
+                                                <md-select ng-model="subgroup.teacher.id" aria-label="{{'subjectStudyPeriod.subgroups.teacher' | translate}}">
+                                                    <md-option md-option-empty></md-option>
+                                                    <md-option ng-value="teacher.teacherId" ng-repeat="teacher in record.teachers track by teacher.teacherId">{{teacher.name}}</md-option>
+                                                </md-select>
+                                            </md-input-container>
+                                        </td>
+                                        <td md-cell>
+                                            <span ng-if="!record.canEditSubgroups">{{subgroup.places}}</span>
+                                            <md-input-container style="width: 36px;" ng-if="record.canEditSubgroups">
+                                                <input ng-model="subgroup.places" type="number" pattern="^[0-9]+$" min="0" max="999" required
+                                                  aria-label="{{'subjectStudyPeriod.subgroups.places' | translate}}" />
+                                            </md-input-container>
+                                        </td>
+                                        <td md-cell>{{subgroup.declared ? subgroup.declared : '-'}}</td>
+                                        <td md-cell><a ng-click="removeSubgroup(subgroup)" class="remove" ng-if="(subgroup.canDelete && record.canEditSubgroups) || !subgroup.id">&times;</a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </md-table-container>
+                    </div>
+                </md-content>
+            </fieldset>
         </div>
+        <div ng-if="record.canEditSubgroups || record.subgroups.length > 0">&nbsp;</div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
             <md-button class="md-raised md-default" ng-click="delete()" ng-if="record.id">{{'main.button.delete' | translate}}</md-button>

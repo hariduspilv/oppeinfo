@@ -256,6 +256,10 @@ public class TimetableGenerationService {
     private List<TimetablePlanExcelEventDto> timetablePlanEvents(Timetable timetable) {
         List<?> data = em.createNativeQuery("select tet.start, tet.end, s.code, s.name_et, s.name_en, "
                 + "string_agg(distinct sg.code, ', ' order by sg.code) student_groups, "
+                + "(select string_agg(sspsg.code, ', ' order by sspsg.code) "
+                    + "from subject_study_period_subgroup sspsg "
+                    + "join timetable_event_subgroup tes on tes.subject_study_period_subgroup_id = sspsg.id "
+                    + "where tes.timetable_event_time_id = tet.id) subgroups,"
                 + "string_agg(b.code || '-' || r.code, ', ' order by b.code, r.code) rooms, "
                 + "string_agg(p.firstname || ' ' || p.lastname, ', ' order by p.lastname, p.firstname) teachers, "
                 + "te.capacity_type_code from timetable t "
@@ -283,9 +287,10 @@ public class TimetableGenerationService {
                     SubjectUtil.subjectName(subjectCode, resultAsString(r, 4))));
 
             dto.setStudentGroups(resultAsString(r, 5));
-            dto.setRooms(resultAsString(r, 6));
-            dto.setTeachers(resultAsString(r, 7));
-            dto.setCapacityType(resultAsString(r, 8));
+            dto.setSubgroups(resultAsString(r, 6));
+            dto.setRooms(resultAsString(r, 7));
+            dto.setTeachers(resultAsString(r, 8));
+            dto.setCapacityType(resultAsString(r, 9));
             return dto;
         }, data);
     }

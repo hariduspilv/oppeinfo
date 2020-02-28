@@ -617,6 +617,7 @@ public class DirectiveViewStudentDto {
             dto.setNewStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
             break;
         case KASKKIRI_KIITUS:
+        case KASKKIRI_MUU:
         case KASKKIRI_NOOMI:
             dto.setCurriculumVersionObject(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);
             dto.setStudentGroupObject(directiveStudent.getStudentGroup() != null ? AutocompleteResult.of(directiveStudent.getStudentGroup()) : null);

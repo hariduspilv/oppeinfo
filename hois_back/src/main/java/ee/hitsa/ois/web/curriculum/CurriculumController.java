@@ -175,7 +175,7 @@ public class CurriculumController {
 
         CurriculumUtil.assertCanCreate(user);
         curriculumValidationService.validateCreateCurriculumForm(curriculumForm);
-        curriculumValidationService.assertCodeAndMerCodeAreUnique(user, curriculumForm, null);
+        curriculumValidationService.assertCodeIsUnique(user, curriculumForm, null);
         
         return CurriculumDto.onlyId(curriculumService.create(user, curriculumForm));
     }
@@ -199,7 +199,7 @@ public class CurriculumController {
 
         curriculumValidationService.assertCurriculumCanBeEdited(curriculum);
         curriculumValidationService.validateCurriculumFormWithStatusCheck(curriculum, curriculumForm);
-        curriculumValidationService.assertCodeAndMerCodeAreUnique(user, curriculumForm, curriculum);
+        curriculumValidationService.assertCodeIsUnique(user, curriculumForm, curriculum);
 
         return get(user, curriculumService.save(user, curriculum, curriculumForm));
     }
@@ -220,7 +220,7 @@ public class CurriculumController {
 
         curriculumValidationService.assertCurriculumCanBeEdited(curriculum);
         curriculumValidationService.validateCurriculumForm(curriculum, curriculumForm);
-        curriculumValidationService.assertCodeAndMerCodeAreUnique(user, curriculumForm, curriculum);
+        curriculumValidationService.assertCodeIsUnique(user, curriculumForm, curriculum);
 
         return get(user, curriculumService.saveAndProceedCurriculum(user, curriculum, curriculumForm));
     }
@@ -270,11 +270,6 @@ public class CurriculumController {
     @GetMapping("/unique/code")
     public boolean isCodeUnique(HoisUserDetails user, UniqueCommand command) {
         return curriculumService.isCodeUnique(user.getSchoolId(), command);
-    }
-
-    @GetMapping("/unique/merCode")
-    public boolean isMerCodeUnique(UniqueCommand command) {
-        return curriculumService.isMerCodeUnique(command);
     }
 
     @DeleteMapping("/{id:\\d+}")

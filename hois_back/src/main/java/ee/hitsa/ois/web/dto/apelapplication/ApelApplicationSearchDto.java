@@ -10,6 +10,7 @@ public class ApelApplicationSearchDto {
 
     private Long id;
     private AutocompleteResult student;
+    private String studentGroup;
     private AutocompleteResult curriculum;
     private String status;
     private LocalDate inserted;
@@ -84,5 +85,13 @@ public class ApelApplicationSearchDto {
 
     public void setCanReview(Boolean canReview) {
         this.canReview = canReview;
+    }
+
+    public String getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(String studentGroup) {
+        this.studentGroup = studentGroup;
     }
 }

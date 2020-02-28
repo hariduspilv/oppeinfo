@@ -23,6 +23,8 @@ import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.domain.MidtermTaskStudentResult;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.MidtermTaskRepository;
 import ee.hitsa.ois.repository.MidtermTaskStudentResultRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
@@ -138,6 +140,15 @@ public class MidtermTaskService {
                 studentResultsDtos, MidtermTaskStudentResultDto::getId, 
                 this::createStudentResult, 
                 this::updateStudentResult);
+        
+        form.getStudents().forEach(midtermStudent -> {
+            DeclarationSubject ds = em.getReference(DeclarationSubject.class, midtermStudent.getDeclarationSubject());
+            SubjectStudyPeriodSubgroup subgroup = EntityUtil.getOptionalOne(SubjectStudyPeriodSubgroup.class, midtermStudent.getSubgroup(), em);
+            if (subgroup != null && !subgroup.equals(ds.getSubgroup())) {
+                AssertionFailedException.throwIf(!subgroup.getPeriod().getId().equals(subjectStudyPeriod.getId()), "Subject study period and subgroup are not connected");
+                ds.setSubgroup(subgroup);
+            }
+        });
         midtermTaskStudentResultRepository.save(savedStudentResults);
     }
 

@@ -105,7 +105,10 @@ public class SubjectStudyPeriodPlanService {
             filters.add(cb.equal(root.get("school").get("id"), schoolId));
             filters.add(cb.equal(root.get("status").get("code"), CurriculumStatus.OPPEKAVA_STAATUS_K.name()));
             filters.add(cb.equal(root.get("higher"), Boolean.TRUE));
-            
+            // lower to ignore case
+            query.orderBy(cb.asc(cb.lower(root.get("nameEt"))), 
+                        cb.asc(cb.lower(root.get("nameEn"))), 
+                        cb.asc(cb.lower(root.get("code"))));
             if(!CollectionUtils.isEmpty(criteria.getSubjects())) {
                 Subquery<Long> subjectsQuery = query.subquery(Long.class);
                 Root<CurriculumVersionHigherModuleSubject> curriculumSubjectRoot = 
@@ -255,7 +258,7 @@ public class SubjectStudyPeriodPlanService {
                 + "left join curriculum_version cv on cv.id = cvhm.curriculum_version_id "
                 + "where cv.curriculum_id in(:curricula) and cvhms.subject_id = s.id) ", 
                 "curricula", subjectSearchCommand.getCurricula());
-
+        qb.sort(pageable);
         Page<Object[]> results = JpaQueryUtil.pagingResult(qb, "s.id, s.name_et, s.name_en, s.code, s.credits", em, pageable);
         return results.map(r -> {
             String nameEt = resultAsString(r, 1);

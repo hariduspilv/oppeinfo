@@ -14,6 +14,7 @@ public interface DirectiveValidation {
     interface Indok extends DirectiveValidation { }
     interface Indoklop extends DirectiveValidation { }
     interface Lopet extends DirectiveValidation { }
+    interface Muu extends DirectiveValidation { }
     interface Okava extends DirectiveValidation { }
     interface Okoorm extends DirectiveValidation { }
     interface Ovorm extends DirectiveValidation { }

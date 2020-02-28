@@ -15,7 +15,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
 
     $scope.withoutInitialSelection = [
       'KASKKIRI_IMMAT', 'KASKKIRI_IMMATV', 'KASKKIRI_KIITUS', 'KASKKIRI_NOOMI', 'KASKKIRI_OTEGEVUS',
-      'KASKKIRI_PRAKTIK', 'KASKKIRI_INDOK', 'KASKKIRI_KYLALIS'
+      'KASKKIRI_PRAKTIK', 'KASKKIRI_INDOK', 'KASKKIRI_KYLALIS', 'KASKKIRI_MUU'
     ];
 
     if(!canceledDirective) {
@@ -24,9 +24,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
 
     var occupationMap;
     var specialitiesMap;
-    if(!$scope.formState.school.higher) {
-      $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
-      $scope.formState.excludedTypes.push('KASKKIRI_OVORM');
+    if ($scope.formState.school.vocational) {
       var occupations = Classifier.queryForDropdown({mainClassCodes: 'KUTSE,OSAKUTSE'});
       occupations.$promise.then(function() {
         occupationMap = Classifier.toMap(occupations);
@@ -35,6 +33,12 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       specialities.$promise.then(function() {
         specialitiesMap = Classifier.toMap(specialities);
       });
+    }
+
+    if(!$scope.formState.school.higher) {
+      $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
+      $scope.formState.excludedTypes.push('KASKKIRI_OVORM');
+      $scope.formState.excludedTypes.push('KASKKIRI_MUU');
     }
     if(!$scope.formState.school.vocational) {
       $scope.formState.excludedTypes.push('KASKKIRI_INDOK');
@@ -827,8 +831,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       return today;
     }
   }
-]).controller('DirectiveViewController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'FormUtils', 'Session',
-  function ($location, $route, $scope, dialogService, message, Classifier, QueryUtils, FormUtils, Session) {
+]).controller('DirectiveViewController', ['$location', '$route', '$scope', '$q', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'FormUtils', 'Session',
+  function ($location, $route, $scope, $q, dialogService, message, Classifier, QueryUtils, FormUtils, Session) {
     var id = $route.current.params.id;
     var baseUrl = '/directives';
     var clMapper = Classifier.valuemapper({status: 'KASKKIRI_STAATUS'});
@@ -837,7 +841,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
 
     var occupationMap;
     var specialitiesMap;
-    if(!$scope.formState.school.higher) {
+    if ($scope.formState.school.vocational) {
       var occupations = Classifier.queryForDropdown({mainClassCodes: 'KUTSE,OSAKUTSE'});
       occupations.$promise.then(function() {
         occupationMap = Classifier.toMap(occupations);
@@ -856,8 +860,12 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       clMapper.objectmapper($scope.record.cancelingDirectives || []);
       $scope.record.students.forEach(function(it) {
         it._foreign = !it.idcode;
-        mapStudentOccupations(it);
-        mapStudentSpecialities(it);
+        if ($scope.formState.school.vocational) {
+          $q.all([occupations.$promise, specialities.$promise]).then(function() {
+            mapStudentOccupations(it);
+            mapStudentSpecialities(it);
+          });
+        }
       });
     });
 
@@ -942,6 +950,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
       $scope.formState.excludedTypes.push('KASKKIRI_OVORM');
       $scope.formState.excludedTypes.push('KASKKIRI_VALIS');
+      $scope.formState.excludedTypes.push('KASKKIRI_MUU');
     }
     if(!$scope.formState.school.vocational) {
       $scope.formState.excludedTypes.push('KASKKIRI_INDOK');

@@ -92,9 +92,9 @@ public class PersonService {
             "on u.person_id=roles.person_id and (u.school_id=roles.school_id or u.school_id is null and roles.school_id is null) ";
     
     private static final String PERSON_SELECT = "distinct p.idcode, p.firstname, p.lastname, u.school_id, p.id,"
-            + "array_to_string(roles.roll, ', ') as r_arr, array_to_string(roles.user_role, ', ') as ur_arr, array_to_string(roles.occupation, ', ')";
+            + "array_to_string(roles.roll, ', ') as r_arr, array_to_string(roles.user_role, ', ') as ur_arr, array_to_string(roles.occupation, ', '), p.unique_code";
     private static final String PERSON_COUNT_SELECT = "count (distinct (p.idcode, p.firstname, p.lastname, u.school_id, p.id,array_to_string(roles.roll, ', '), "
-            + "array_to_string(roles.user_role, ', '), array_to_string(roles.occupation, ', ')))";
+            + "array_to_string(roles.user_role, ', '), array_to_string(roles.occupation, ', '), p.unique_code))";
 
     public Page<UsersSearchDto> search(UsersSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(PERSON_FROM).sort(pageable);
@@ -103,6 +103,7 @@ public class PersonService {
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
 
         qb.optionalCriteria("p.idcode = :idcode", "idcode", criteria.getIdcode());
+        qb.optionalCriteria("p.unique_code = :idcode", "idcode", criteria.getUniqueCode());
         qb.optionalCriteria("roles.school_id = :school", "school", criteria.getSchool());
         qb.optionalCriteria(":roll = ANY(roles.roll)", "roll", criteria.getRole());
         
@@ -155,6 +156,7 @@ public class PersonService {
                     resultAsStringList(r, 6, ", ").stream().map(roleId -> userRoles.get(Long.valueOf(roleId))),
                     resultAsStringList(r, 7, ", ").stream().map(occupationId -> occupations.get(Long.valueOf(occupationId))))
                     .collect(Collectors.toList()));
+            dto.setUniqueCode(resultAsString(r, 8));
             return dto;
         });
     }

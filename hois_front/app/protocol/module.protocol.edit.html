@@ -10,12 +10,13 @@
                 <tr md-row>
                   <th md-column ng-if="formState.canEditProtocol" width="10">
                     <md-input-container>
-                      <md-checkbox ng-model="formState.selectAllStudents" aria-label="selectAllStudents" 
+                      <md-checkbox ng-model="formState.selectAllStudents" aria-label="selectAllStudents"
                         ng-change="updateAllStudentsCheckBoxes(formState.selectAllStudents)">
                       </md-checkbox>
                     </md-input-container>
                   </th>
                   <th md-column>{{'student.label' | translate}}</th>
+                  <th md-column>{{'student.studentGroup' | translate}}</th>
                   <th md-column>{{'student.idcode' | translate}}</th>
                   <th md-column ng-if="protocol.protocolVdata.isPractice">{{'moduleProtocol.practiceResult' | translate}}</th>
                   <th md-column ng-if="formState.showJournals" ng-repeat="journal in journals | orderBy: 'nameEt'">
@@ -42,11 +43,12 @@
                   md-select="row.id" md-select-id="row.id">
                   <td md-cell ng-if="formState.canEditProtocol">
                     <md-input-container>
-                      <md-checkbox ng-model="calculateGrades.protocolStudents[row.id]" ng-hide="!row.canBeDeleted" aria-label="selectStudent">
+                      <md-checkbox ng-model="calculateGrades.protocolStudents[row.id]" ng-hide="!row.canChangeGrade" aria-label="selectStudent">
                       </md-checkbox>
                     </md-input-container>
                   </td>
                   <td md-cell>{{row.fullname}}</td>
+                  <td md-cell>{{row.studentGroup}}</td>
                   <td md-cell>{{row.idcode}}</td>
                   <td md-cell ng-if="protocol.protocolVdata.isPractice">
                     <span ng-repeat="journalResult in row.practiceJournalResults | orderBy: 'inserted'">
@@ -77,7 +79,7 @@
                   </td>
                   <td md-cell>
                     <hois-select class="protocolGradeSelect" ng-model="row.grade" values="grades" show-property="value" value-property="code" hide-values="hideInvalid"
-                      aria-label="grade" ng-change="gradeChanged(row)" ng-disabled="!formState.canEditProtocol || !row.canBeDeleted"></hois-select>
+                      aria-label="grade" ng-change="gradeChanged(row)" ng-disabled="!formState.canEditProtocol || !row.canChangeGrade"></hois-select>
                   </td>
                   <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
                     <md-input-container ng-if="row.gradeHasChanged">

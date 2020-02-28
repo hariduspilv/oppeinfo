@@ -51,7 +51,41 @@
                     <hois-value value="record.moodleCourseId"></hois-value>
                 </md-input-container>
             </div>
+            <fieldset ng-if="record.subgroups.length > 0">
+                <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'subjectStudyPeriod.subgroups.label' | translate}}{{record.students ? ' (' + record.students + ')' : ''}}</legend>
+                <md-content>
+                    <div layout="column">
+                        <md-table-container>
+                            <table md-table class="secondary-table">
+                                <thead md-head>
+                                    <tr md-row>
+                                        <th md-column>{{'subjectStudyPeriod.subgroups.name' | translate}}</th>
+                                        <th md-column>{{'subjectStudyPeriod.subgroups.teacher' | translate}}</th>
+                                        <th md-column>{{'subjectStudyPeriod.subgroups.places' | translate}}</th>
+                                        <th md-column>{{'subjectStudyPeriod.subgroups.declared' | translate}}</th>
+                                    </tr>
+                                </thead>
+                                <tbody md-body>
+                                    <tr md-row ng-repeat="subgroup in record.subgroups" ng-class-odd="'odd'" ng-class-even="'even'">
+                                        <td md-cell>
+                                            <span>{{subgroup.code}}</span>
+                                        </td>
+                                        <td md-cell>
+                                            <span>{{currentLanguageNameField(subgroup.teacher)}}</span>
+                                        </td>
+                                        <td md-cell>
+                                            <span>{{subgroup.places}}</span>
+                                        </td>
+                                        <td md-cell>{{subgroup.declared ? subgroup.declared : '-'}}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </md-table-container>
+                    </div>
+                </md-content>
+            </fieldset>
         </div>
+        <div ng-if="record.subgroups.length > 0">&nbsp;</div>
         <div layout="row">
             <md-button class="md-primary md-raised" ng-if="isAuthorized(['ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA', 'ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK'])"
                 ng-href="#/subjectStudyPeriod/{{::record.id}}/edit">{{'main.button.change' | translate}}</md-button>

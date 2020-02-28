@@ -33,10 +33,12 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="{{currentLanguageNameField()}}">{{'subjectStudyPeriodPlan.subject' | translate}} / {{'subjectStudyPeriodPlan.curriculum' | translate}}</th>
-            <th md-column>{{'subjectStudyPeriodPlan.studyForm' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguageNameField()}}">{{'subjectStudyPeriodPlan.subject' | translate}}</th>
+            <th md-column width="40px" style="padding: 0px 20px 0px 0px">&nbsp;{{'subjectStudyPeriodPlan.eap' | translate}}</th>
+            <th md-column>&nbsp;{{'subjectStudyPeriodPlan.curriculum' | translate}}</th>
+            <th md-column>&nbsp;{{'subjectStudyPeriodPlan.studyForm' | translate}}</th>
             <th md-column class="center" ng-repeat="capacityType in capacityTypes">
-                {{capacityType.value.toUpperCase()}}
+                &nbsp;{{capacityType.value.toUpperCase()}}
             </th>
             <th md-column></th>
           </tr>
@@ -44,6 +46,8 @@
         <tbody md-body ng-repeat="row in tabledata.content">
             <tr md-row ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
+                <td md-cell style="padding: 0px 20px 0px 0px">&nbsp;{{row.credits}}</td>
+                <td md-cell></td>
                 <td md-cell colspan="{{capacityTypes.length + 1}}"></td>
                 <td md-cell>
                     <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriodPlans/{{::row.subject.id}}/{{periodId}}/new" ng-disabled="pastStudyPeriodSelected">{{'subjectStudyPeriodPlan.add' | translate}}
@@ -51,20 +55,20 @@
                 </td>
             </tr>
             <tr md-row ng-repeat="plan in row.plans | orderBy: 'id'">
+                <td md-cell class="cell"></td>
+                <td md-cell class="cell" style="padding: 0px 20px 0px 0px"></td>
                 <td md-cell class="cell">
-                    <span ng-repeat="curriculum in plan.curriculums | orderBy: 'id'">
-                        <span ng-if="$index > 0">, </span>
-                        {{currentLanguageNameField(curriculum)}}
-                    </span>
+                    <div style="padding-left: 5px;">
+                        {{mapComma(plan.curriculums, true)}}
+                    </div>
                 </td>
                 <td md-cell class="cell">
-                    <span ng-repeat="studyForm in plan.studyForms | orderBy: currentLanguageNameField()">
-                        <span ng-if="$index > 0">, </span>
-                        {{currentLanguageNameField(studyForm)}}
-                    </span>
+                    <div style="padding-left: 5px;">
+                        {{mapComma(plan.studyForms, false)}}
+                    </div>
                 </td>
                 <td md-cell class="cell center" ng-repeat="capacityType in capacityTypes">
-                    {{getCapacitiesHours(capacityType.code, plan)}}
+                    &nbsp;{{getCapacitiesHours(capacityType.code, plan)}}
                 </td>
                 <td md-cell class="cell">
                     <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriodPlans/{{::plan.id}}/edit" ng-disabled="pastStudyPeriodSelected">{{'main.button.change' | translate}}

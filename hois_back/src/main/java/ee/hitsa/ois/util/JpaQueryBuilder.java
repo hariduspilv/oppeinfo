@@ -1,5 +1,6 @@
 package ee.hitsa.ois.util;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
@@ -15,6 +16,13 @@ public class JpaQueryBuilder<T> extends JpaNativeQueryBuilder {
 
     public JpaQueryBuilder(Class<T> resultClass, String alias) {
         super("from " + resultClass.getSimpleName()+ " " + alias);
+
+        this.resultClass = resultClass;
+        this.alias = alias;
+    }
+
+    public JpaQueryBuilder(Class<T> resultClass, String alias, String joins) {
+        super("from " + resultClass.getSimpleName()+ " " + alias + (joins != null ? (" " + joins) : ""));
 
         this.resultClass = resultClass;
         this.alias = alias;

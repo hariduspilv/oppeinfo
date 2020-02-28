@@ -15,7 +15,7 @@
           <div flex="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
             <div layout="row" flex="70">
               <hois-autocomplete flex ng-model="lesson.eventRoom" method="rooms" label="lessonplan.event.room" warning-param="isOccupied"
-                additional-query-params="{buildingIds: lesson.buildingIds, isStudy: true, occupied: true, date: lesson.start, 
+                additional-query-params="{buildingIds: lesson.buildingIds, isStudy: true, occupied: true, date: lesson.start,
                     timetable: timetableId, startTime: lesson.startTime, endTime: lesson.endTime}"></hois-autocomplete>
             </div>
             <div layout="column" class="common-label" flex="70" ng-repeat="room in lesson.eventRooms">
@@ -42,28 +42,46 @@
               <hois-time ng-model="lesson.endTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
             </md-input-container>
           </div>
+          <div ng-if="subgroups.length > 0">
+            <div class="event-header">{{'timetable.timetableEvent.subgroups' | translate}}</div>
+            <div flex="100">
+              <div ng-repeat="subgroup in subgroups" layout="row" flex="70" class="common-label">
+                <div flex="10">
+                  <md-checkbox layout="row" ng-model="subgroup.selected" ng-change="subgroupSelected(subgroup)"
+                               aria-label="subgroup selected"></md-checkbox>
+                </div>
+                <div flex="100">
+                  <span>{{subgroup.code}}</span>
+                  <span ng-if="subgroup.teacher">({{currentLanguageNameField(subgroup.teacher)}})</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="event-header">
+            {{auth.higher ? ('timetable.timetableEvent.teachersHigher' | translate) : ('timetable.timetableEvent.teachersVocational' | translate)}}
+          </div>
           <div flex="100">
             <div ng-repeat="teacher in teachers" layout="row" flex="70" class="common-label">
               <div flex="10">
-                <md-checkbox layout="row" ng-model="teacher.isTeaching"></md-checkbox>
+                <md-checkbox layout="row" ng-model="teacher.isTeaching" aria-label="teacher is teaching"></md-checkbox>
               </div>
               <div flex="60">
                 <span>{{teacher.nameEt}}</span>
                 <span>&nbsp;</span>
-                
+
                 <span ng-if="teacher.capacity">
                   <span ng-if="!teacher.subjectStudyPeriod">
                     <span title="{{'timetable.timetablePlan.weekPlannedLessons' | translate}} / {{'timetable.timetablePlan.weekAllocatedLessons' | translate}}"
                       ng-style="{'color': isUnderAllocatedWeekLessons(teacher.capacity) ? 'rgba(0,0,0,0.87)' : 'red'}">
                       {{teacher.capacity.thisPlannedLessons}}/{{teacher.capacity.thisPlannedLessons - teacher.capacity.lessonsLeft}}
                     </span>
-                  </span> 
+                  </span>
                   <span ng-if="teacher.subjectStudyPeriod">
                     <span title="{{'timetable.timetablePlan.periodPlannedLessons' | translate}} / {{'timetable.timetablePlan.periodAllocatedLessons' | translate}}"
                       ng-style="{'color': isUnderAllocatedLessons(teacher.capacity) ? 'rgba(0,0,0,0.87)' : 'red'}">
                       {{teacher.capacity.totalPlannedLessons}}/{{teacher.capacity.totalAllocatedLessons}}
                     </span>
-                  </span> 
+                  </span>
                   <span ng-if="displayPeriodLessons">
                     <span title="{{'timetable.timetablePlan.periodPlannedLessons' | translate}} / {{'timetable.timetablePlan.periodAllocatedLessons' | translate}}"
                       ng-style="{'color': isUnderAllocatedTotalLessons(teacher.capacity) ? 'rgba(0,0,0,0.87)' : 'red'}">
@@ -71,7 +89,7 @@
                     </span>
                   </span>
                   <span ng-if="displayLeftOverLessons">
-                    <span title="{{'timetable.timetablePlan.periodPlannedLessons' | translate}} + {{'timetable.timetablePlan.previousPeriodNotAllocatedLessons' | translate}} /&#10;{{'timetable.timetablePlan.periodAllocatedLessons' | translate}}" 
+                    <span title="{{'timetable.timetablePlan.periodPlannedLessons' | translate}} + {{'timetable.timetablePlan.previousPeriodNotAllocatedLessons' | translate}} /&#10;{{'timetable.timetablePlan.periodAllocatedLessons' | translate}}"
                       ng-style="{'color': isUnderLeftOverTotalLessons(teacher.capacity) ? 'rgba(0,0,0,0.87)' : 'red'}">
                       ({{teacher.capacity.totalPlannedLessons + teacher.capacity.leftOverLessons}}/{{teacher.capacity.totalAllocatedLessons}})
                     </span>

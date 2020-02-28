@@ -1,7 +1,11 @@
 package ee.hitsa.ois.web.dto;
 
+import java.time.LocalDate;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -15,10 +19,12 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
     private String protocolNr;
     private String protocolType;
     private String status;
+    private LocalDate finalDate;
     private SubjectStudyPeriodMidtermTaskDto subjectStudyPeriodMidtermTaskDto;
     private OisFileViewDto oisFile;
     private Boolean canBeEdited;
     private Boolean canBeConfirmed;
+    private Boolean canBeDeleted;
 
     public static HigherProtocolDto ofWithIdOnly(Protocol protocol) {
         HigherProtocolDto dto = new HigherProtocolDto();
@@ -42,8 +48,12 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
         dto.setProtocolNr(protocol.getProtocolNr());
         dto.setProtocolType(EntityUtil.getCode(protocol.getProtocolHdata().getType()));
         dto.setStatus(EntityUtil.getCode(protocol.getStatus()));
+        dto.setFinalDate(protocol.getFinalDate());
 
-        dto.setProtocolStudents(StreamUtil.toMappedSet(HigherProtocolStudentDto::of, protocol.getProtocolStudents()));
+        Map<Long, DeclarationSubject> dsByStudentId = protocol.getProtocolHdata().getSubjectStudyPeriod().getDeclarationSubjects().stream()
+                .collect(Collectors.toMap(ds -> ds.getDeclaration().getStudent().getId(), ds -> ds, (o, n) -> o));
+        
+        dto.setProtocolStudents(StreamUtil.toMappedSet(ps -> HigherProtocolStudentDto.ofWithSubgroups(ps, dsByStudentId.get(ps.getStudent().getId())), protocol.getProtocolStudents()));
 
         Set<Long> studetnIds = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
         dto.setSubjectStudyPeriodMidtermTaskDto(SubjectStudyPeriodMidtermTaskDto.ofForProtocol(studetnIds,
@@ -55,6 +65,7 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
 
         dto.setCanBeEdited(Boolean.valueOf(HigherProtocolUtil.canChange(user, protocol)));
         dto.setCanBeConfirmed(Boolean.valueOf(HigherProtocolUtil.canConfirm(user, protocol)));
+        dto.setCanBeDeleted(Boolean.valueOf(HigherProtocolUtil.canDelete(user, protocol)));
 
         return dto;
     }
@@ -122,5 +133,22 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
     public void setCanBeConfirmed(Boolean canBeConfirmed) {
         this.canBeConfirmed = canBeConfirmed;
     }
+
+    public Boolean isCanBeDeleted() {
+        return canBeDeleted;
+    }
+
+    public void setCanBeDeleted(Boolean canBeDeleted) {
+        this.canBeDeleted = canBeDeleted;
+    }
+
+    public LocalDate getFinalDate() {
+        return finalDate;
+    }
+
+    public void setFinalDate(LocalDate finalDate) {
+        this.finalDate = finalDate;
+    }
+
 
 }

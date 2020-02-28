@@ -1,6 +1,7 @@
 package ee.hitsa.ois.domain.student;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Entity;
@@ -153,11 +154,12 @@ public class StudentGroup extends BaseEntityWithId {
     }
 
     public List<Student> getStudents() {
-        return students;
+        return students != null ? students : (students = new ArrayList<>());
     }
 
     public void setStudents(List<Student> students) {
-        this.students = students;
+        getStudents().clear();
+        getStudents().addAll(students);
     }
 
     public Boolean getIsGuest() {

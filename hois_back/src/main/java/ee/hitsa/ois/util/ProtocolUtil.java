@@ -14,11 +14,15 @@ public abstract class ProtocolUtil {
         return ProtocolStatus.PROTOKOLL_STAATUS_K.name().equals(protocolStatus);
     }
 
+    public static boolean studentGradeCanBeChanged(ProtocolStudent ps) {
+        return StudentUtil.isActive(ps.getStudent());
+    }
+
     /**
      * Student cannot be deleted from the protocol, if he is exmatriculated and has some result
      */
     public static boolean studentCanBeDeleted(ProtocolStudent ps) {
-        if(StudentUtil.hasFinished(ps.getStudent()) || StudentUtil.hasQuit(ps.getStudent())) {
+        if(!StudentUtil.isActive(ps.getStudent())) {
             return !hasGrade(ps);
         }
         return true;
@@ -26,5 +30,9 @@ public abstract class ProtocolUtil {
 
     public static boolean hasGrade(ProtocolStudent ps) {
         return ps.getGrade() != null;
+    }
+
+    public static boolean allResultsEmpty(Protocol protocol) {
+        return protocol.getProtocolStudents().stream().allMatch(ps -> !hasGrade(ps));
     }
 }

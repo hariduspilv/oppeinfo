@@ -1,8 +1,10 @@
 package ee.hitsa.ois.service.subjectstudyperiod;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -10,6 +12,7 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.subject.Subject;
@@ -17,15 +20,18 @@ import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.moodle.MoodleContext;
 import ee.hitsa.ois.service.moodle.MoodleService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodForm;
 import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodTeacherForm;
+import ee.hitsa.ois.web.dto.SubjectStudyPeriodSubgroupForm;
 
 @Transactional
 @Service
@@ -50,15 +56,58 @@ public class SubjectStudyPeriodService {
     public SubjectStudyPeriod update(SubjectStudyPeriod subjectStudyPeriod, SubjectStudyPeriodForm form,
             MoodleContext context) {
         EntityUtil.bindToEntity(form, subjectStudyPeriod, classifierRepository, "subject", "studyPeriod", "teachers",
-                "studentGroups");
+                "studentGroups", "subgroups");
         updateSubjectStudyPeriodTeachers(subjectStudyPeriod, form);
         updateStudentGroups(subjectStudyPeriod, form.getStudentGroups());
+        boolean hasSubgroupsBefore = !subjectStudyPeriod.getSubgroups().isEmpty();
+        updateSubgroups(subjectStudyPeriod, form.getSubgroups());
+        if (!(hasSubgroupsBefore || subjectStudyPeriod.getSubgroups().isEmpty())) {
+            LinkedList<SubjectStudyPeriodSubgroup> sortedSubgroupsByCode = new LinkedList<>(subjectStudyPeriod.getSubgroups().stream()
+                    .sorted(SubjectStudyPeriodUtil.COMPARATOR_SUBGROUP)
+                    .collect(Collectors.toList()));
+            
+            SubjectStudyPeriodSubgroup lastSubgroup = sortedSubgroupsByCode.peekLast();
+            SubjectStudyPeriodSubgroup subgroup = sortedSubgroupsByCode.pollFirst();
+            
+            for (int i = 0; i < subjectStudyPeriod.getDeclarationSubjects().size(); i++) {
+                DeclarationSubject ds = subjectStudyPeriod.getDeclarationSubjects().get(i);
+                
+                while (subgroup != null && subgroup.getDeclarationSubjects().size() >= subgroup.getPlaces().intValue()) {
+                    subgroup = sortedSubgroupsByCode.pollFirst();
+                }
+                
+                if (subgroup == null) {
+                    lastSubgroup.addDeclarationSubject(ds);
+                } else {
+                    subgroup.addDeclarationSubject(ds);
+                }
+            }
+        }
         if (subjectStudyPeriod.getMoodleCourseId() != null) {
             moodleService.validateMoodleCourseId(context, subjectStudyPeriod, subjectStudyPeriod.getMoodleCourseId());
         }
         subjectStudyPeriod = EntityUtil.save(subjectStudyPeriod, em);
         subjectStudyPeriodDeclarationService.addToDeclarations(subjectStudyPeriod);
         return subjectStudyPeriod;
+    }
+
+    private static void updateSubgroups(SubjectStudyPeriod subjectStudyPeriod, List<SubjectStudyPeriodSubgroupForm> subgroups) {
+        Map<Long, SubjectStudyPeriodTeacher> ssptByTeacherId = subjectStudyPeriod.getTeachers().stream()
+                .collect(Collectors.toMap(sspt -> sspt.getTeacher().getId(), sspt -> sspt, (o, n) -> o));
+        EntityUtil.bindEntityCollection(subjectStudyPeriod.getSubgroups(), SubjectStudyPeriodSubgroup::getId,
+                subgroups, SubjectStudyPeriodSubgroupForm::getId,
+                form -> {
+                    SubjectStudyPeriodSubgroup subgroup = new SubjectStudyPeriodSubgroup();
+                    subgroup.setCode(form.getCode());
+                    subgroup.setPeriod(subjectStudyPeriod);
+                    subgroup.setTeacher(form.getTeacher() != null ? ssptByTeacherId.get(form.getTeacher().getId()) : null);
+                    subgroup.setPlaces(form.getPlaces());
+                    return subgroup;
+                }, (form, subgroup) -> {
+                    subgroup.setCode(form.getCode());
+                    subgroup.setPlaces(form.getPlaces());
+                    subgroup.setTeacher(form.getTeacher() != null ? ssptByTeacherId.get(form.getTeacher().getId()) : null);
+                });
     }
 
     public void updateSubjectStudyPeriodTeachers(SubjectStudyPeriod subjectStudyPeriod, SubjectStudyPeriodForm form) {

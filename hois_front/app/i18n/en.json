@@ -1926,6 +1926,7 @@
   "person": {
     "name": "Name",
     "idcode": "Personal identification code",
+    "uniqueCode": "Unique code",
     "firstname": "First name",
     "lastname": "Last name",
     "sex": "Sex",
@@ -3019,6 +3020,7 @@
     "protocolCreatedDate": "Date of protocol creation",
     "protocolConfirmedDate": "Date of protocol confirmation",
     "protocolStatus": "Status of protocol",
+    "protocolDate": "Date of protocol",
     "status": "Status",
     "student": "Learner",
     "studentGroup": "Study group",

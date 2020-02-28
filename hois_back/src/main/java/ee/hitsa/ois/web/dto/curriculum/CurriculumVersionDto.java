@@ -3,9 +3,11 @@ package ee.hitsa.ois.web.dto.curriculum;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -15,10 +17,12 @@ import javax.validation.constraints.Size;
 import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.CurriculumVersionYearCapacitiesUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.Required;
@@ -61,7 +65,7 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
     private String curriculumStudyForm;
     private LocalDate validFrom;
     private LocalDate validThru;
-    private Set<CurriculumVersionHigherModuleDto> modules;
+    private List<CurriculumVersionHigherModuleDto> modules;
 
     /**
      * They are created on distinct form, so no need for validation
@@ -112,7 +116,22 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
             }
             dto.setYearCapacities(capacities);
         } else {
-            dto.setModules(StreamUtil.toMappedSet(CurriculumVersionHigherModuleDto::of, version.getModules()));
+            List<String> higherModuleTypeOrder = EnumUtil.toNameList(
+                    HigherModuleType.KORGMOODUL_C,   // Optional subjects
+                    HigherModuleType.KORGMOODUL_P,   // Internship
+                    HigherModuleType.KORGMOODUL_M,   // Custom module
+                    HigherModuleType.KORGMOODUL_V,   // Unschooling
+                    HigherModuleType.KORGMOODUL_F,   // Final exam
+                    HigherModuleType.KORGMOODUL_L    // Final thesis
+                    );
+            Set<CurriculumVersionHigherModuleDto> modules = StreamUtil.toMappedSet(CurriculumVersionHigherModuleDto::of, version.getModules());
+            List<CurriculumVersionHigherModuleDto> sortedModules = modules.stream()
+                    .sorted(Comparator
+                            .comparing(CurriculumVersionHigherModuleDto::getType, 
+                                    Comparator.nullsLast((p, v) -> Integer.compare(higherModuleTypeOrder.indexOf(p), higherModuleTypeOrder.indexOf(v))))
+                            .thenComparing(CurriculumVersionHigherModuleDto::getNameEt, String.CASE_INSENSITIVE_ORDER))
+                    .collect(Collectors.toList());
+            dto.setModules(sortedModules);
             dto.setSpecialitiesReferenceNumbers(StreamUtil.toMappedSet(s -> EntityUtil.getId(s.getCurriculumSpeciality()), version.getSpecialities()));
         }
         if (version.getCurriculumStudyForm() != null) {
@@ -185,11 +204,11 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
         this.description = description;
     }
 
-    public Set<CurriculumVersionHigherModuleDto> getModules() {
-        return modules != null ? modules : (modules = new HashSet<>());
+    public List<CurriculumVersionHigherModuleDto> getModules() {
+        return modules != null ? modules : (modules = new ArrayList<>());
     }
 
-    public void setModules(Set<CurriculumVersionHigherModuleDto> modules) {
+    public void setModules(List<CurriculumVersionHigherModuleDto> modules) {
         this.modules = modules;
     }
 

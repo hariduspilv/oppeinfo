@@ -532,16 +532,18 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       };
     };
 
-    function isFreeModule(module) {
-      return module.type === 'KORGMOODUL_V';
-    }
+    var moduleOrder = ['KORGMOODUL_C',   // Optional subjects
+                       'KORGMOODUL_P',   // Internship
+                       'KORGMOODUL_M',   // Custom module
+                       'KORGMOODUL_V',   // Unschooling
+                       'KORGMOODUL_F',   // Final exam
+                       'KORGMOODUL_L'];    // Final thesis
 
     function moduleComparator(v1, v2) {
-      if (isFreeModule(v1) && !isFreeModule(v2)) {
-        return 1;
-      } else if (!isFreeModule(v1) && isFreeModule(v2)) {
-        return -1;
-      } else {
+      var priority = moduleOrder.indexOf(v1.type) - moduleOrder.indexOf(v2.type);
+       if (priority !== 0) {
+         return priority;
+       } else {
         return $rootScope.currentLanguageNameField(v1).localeCompare($rootScope.currentLanguageNameField(v2));
       }
     }

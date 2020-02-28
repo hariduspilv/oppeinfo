@@ -16,6 +16,7 @@ public class TimetableRoomAndTimeForm {
     private LocalTime endTime;
     private List<RoomDto> rooms;
     private List<Long> teachers;
+    private List<Long> subgroups;
 
     public Long getTimetableEventId() {
         return timetableEventId;
@@ -57,4 +58,11 @@ public class TimetableRoomAndTimeForm {
         this.teachers = teachers;
     }
 
+    public List<Long> getSubgroups() {
+        return subgroups;
+    }
+
+    public void setSubgroups(List<Long> subgroups) {
+        this.subgroups = subgroups;
+    }
 }

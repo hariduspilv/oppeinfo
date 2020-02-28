@@ -28,8 +28,8 @@
             </md-button>
         </div>
     </md-toolbar>
-    <md-dialog-content>
-        <div class="md-dialog-content" flex>
+    <md-dialog-content in-view-container>
+        <div class="md-dialog-content" flex style="height: 100%">
             <div layout="column" ng-cloak>
                 <form name="responseForm" ng-submit="confirm()" ng-cloak novalidate>
                     <div flex>
@@ -45,9 +45,9 @@
                             </div>
                         </div>
                         <div ng-if="formState.themeBySubjectOrJournalId" layout="column">
-                            <div ng-repeat="(key, themeList) in formState.themeBySubjectOrJournalId track by $index" layout="column" 
-                                flex style="margin-top: 0px" ng-if="themeList.show">
-                                <div ng-repeat="item in themeList" layout="column" flex>
+                            <div ng-repeat="listObject in formState.themeBySubjectOrJournalId track by $index" layout="column" 
+                                flex style="margin-top: 0px" ng-if="listObject.show">
+                                <div ng-repeat="item in listObject.list" layout="column" flex>
                                     <div layout="column" ng-if="first($index)">
                                         <div layout="row" ng-if="item.journal === null && item.subject === null && criteria.type === 'KYSITLUS_O' && hasSubjectOrJournal" class="form-readonly">
                                             <h3 style="margin-top: 0px;color: rgb(21, 101, 192);font-size: 16px;">{{'poll.response.other' | translate}}</h3>
@@ -71,20 +71,22 @@
                                     <fieldset>
                                         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{item.orderNr + ' ' + item.nameEt}}</legend>
                                         <div layout="row" ng-if="item.teacher">
-                                            <div layout="column" class="form-readonly">
-                                                <br>
-                                                <md-input-container flex="50" ng-if="item.teacher && item.journal !== null">
+                                            <div layout="column" class="form-readonly" style="min-width: 80px;">
+                                                <div style="height: 19px"></div>
+                                                <md-input-container flex="100" ng-if="item.teacher && item.journal !== null">
                                                     <label>{{'poll.response.teacherVocational' | translate}}</label>
                                                     <h3 style="color: rgb(21, 101, 192)">{{currentLanguageNameField(item.teacher)}}</h3>
                                                 </md-input-container>
-                                                <md-input-container flex="50" ng-if="item.teacher && item.subject !== null">
+                                                <md-input-container flex="100" ng-if="item.teacher && item.subject !== null">
                                                     <label>{{'poll.response.teacherHigher' | translate}}</label>
                                                     <h3 style="color: rgb(21, 101, 192)">{{currentLanguageNameField(item.teacher)}}</h3>
                                                 </md-input-container>
                                             </div>
                                         </div>
-                                        <div ng-repeat="question in item.questions track by $index" layout="row" flex>
-                                            <div flex="100">
+                                        <div ng-repeat="question in item.questions track by $index" in-view="question.show = $inview" 
+                                        in-view-options="{viewportOffset: ['20%', 0, '20%']}" layout="row" flex>
+                                            <div style="height: 150px;" ng-if="!question.show"></div>
+                                            <div flex="100" ng-if="question.show">
                                                 <fieldset>
                                                     <div layout="row">
                                                         <div layout="column" flex="100">
@@ -155,11 +157,11 @@
                                                         </div>
                                                     </div>
                                                 </fieldset>
-                                                <br ng-if="!$last">
+                                                <div style="height: 19px" ng-if="!$last"></div>
                                             </div>
                                         </div>
                                     </fieldset>
-                                    <br ng-if="!$last">
+                                    <div style="height: 19px" ng-if="!$last"></div>
                                 </div>
                                 <div layout="row" layout-align="space-between">
                                     <div>

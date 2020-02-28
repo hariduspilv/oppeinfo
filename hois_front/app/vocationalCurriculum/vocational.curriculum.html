@@ -63,12 +63,7 @@
                 </div>
 				<md-input-container flex="50" flex-offset="5">
 					<label>{{'curriculum.merCode' | translate}}</label>
-					<input ng-model="curriculum.merCode" name="merCode" type="text" ng-model-options="{ debounce: 250 }" unique="merCodeUniqueQuery" ng-readonly="formState.notEditableBasicData" md-maxlength="10">
-					<div ng-messages="vocationalCurriculumForm.merCode.$error" ng-show="vocationalCurriculumForm.merCode.$dirty">
-						<div ng-message="notUnique">
-							{{'main.messages.error.mustBeUnique' | translate}}
-						</div>
-					</div>
+					<input ng-model="curriculum.merCode" name="merCode" type="text" ng-model-options="{ debounce: 250 }" ng-readonly="formState.notEditableBasicData" md-maxlength="10">
 				</md-input-container>
 			</div>
 			<!-- uus -->

@@ -1,0 +1,107 @@
+<md-content ng-cloak>
+  <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="scholarship selection">
+    <md-nav-item md-nav-href="#/scholarships/applications/ranking/{{scholarshipType}}" name="ranking">{{'stipend.ranking' | translate}}</md-nav-item>
+    <md-nav-item md-nav-href="#/scholarships/applications/{{scholarshipType}}" name="applications">{{'stipend.applications' | translate}}</md-nav-item>
+  </md-nav-bar>
+</md-content>
+
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div layout="column">
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+      <form ng-submit="loadData()" name="applicationSearchForm" ng-model-options="{allowInvalid: true}">
+        <div layout="row" layout-xs="column" flex>
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'stipend.studyYear' | translate}}</label>
+            <hois-select ng-model="criteria.studyYear" type="studyyear" name="studyyear" select-current-study-year></hois-select>
+          </md-input-container>
+
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'stipend.appliedFrom' | translate}}</label>
+            <md-datepicker ng-model="criteria.appliedFrom" md-max-date="criteria.appliedThru" hois-datepicker-extension
+              hd-controller="directiveControllers"></md-datepicker>
+          </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'stipend.appliedThru' | translate}}</label>
+            <md-datepicker ng-model="criteria.appliedThru" md-min-date="criteria.appliedFrom" hois-datepicker-extension
+              hd-controller="directiveControllers"></md-datepicker>
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-xs="column" flex>
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'stipend.grantType' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.type" name="type" model-value-attr="code"
+              main-classifier-code="STIPTOETUS" show-only-values="formState.allowedStipendTypes"></hois-classifier-select>
+          </md-input-container>
+          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label class="textInput">{{'stipend.grantName' | translate}}</label>
+            <input type="text" ng-model="criteria.nameEt" name="nameEt" md-maxlength="500">
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-xs="column" flex>
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'stipend.applicant' | translate}}</label>
+            <input type="text" ng-model="criteria.studentName" name="name" md-maxlength="500">
+          </md-input-container>
+          <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label class="textInput">{{'stipend.status' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.status" name="type" model-value-attr="code"
+              main-classifier-code="STIPTOETUS_STAATUS"></hois-classifier-select>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="formState.canCreateNewApplication"
+            ng-href="#/scholarships/applications/{{scholarshipType}}/new">{{'stipend.create' | translate}}</md-button>
+        </div>
+      </form>
+    </fieldset>
+  </div>
+</div>
+<div>&nbsp;</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="p.lastname, p.firstname">{{'stipend.applicant' | translate}}</th>
+            <th md-column md-order-by="sg.code">{{'stipend.studentGroup' | translate}}</th>
+            <th md-column md-order-by="st.type_code">{{'stipend.type' | translate}}</th>
+            <th md-column md-order-by="st.name_et">{{'stipend.grantName' | translate}}</th>
+            <th md-column md-order-by="st.application_start, st.application_end">{{'stipend.applicationPeriod' | translate}}</th>
+            <th md-column md-order-by="sa.status_code">{{'stipend.status' | translate}}</th>
+            <th md-column md-order-by="sa.inserted">{{'stipend.student.additionDate' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <a ng-if="!row.canEdit" href="#/scholarships/applications/{{row.id}}">{{row.studentName}}</a>
+              <a ng-if="row.canEdit" href="#/scholarships/{{row.termId}}/application/{{row.studentId}}">
+                {{row.studentName}}</a>
+            </td>
+            <td md-cell>{{row.studentGroup}}</td>
+            <td md-cell>{{currentLanguageNameField(row.termType)}}</td>
+            <td md-cell>{{row.termNameEt}}</td>
+            <td md-cell>{{row.applicationStart || row.applicationEnd ? getScholarshipApplicationPeriod(row) : '-'}}</td>
+            <td md-cell>{{currentLanguageNameField(row.applicationStatus)}}</td>
+            <td md-cell>{{row.inserted | hoisDate}}</td>
+            <td md-cell>
+              <md-button ng-if="row.canEdit" md-no-ink class="md-primary change-button"
+                href="#/scholarships/{{row.termId}}/application/{{row.studentId}}">{{'main.button.change' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+      md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+      md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

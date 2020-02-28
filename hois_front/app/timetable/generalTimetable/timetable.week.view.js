@@ -38,6 +38,7 @@
         person: event.person,
         teachers: event.teachers,
         studentGroups: event.studentGroups,
+        subgroups: event.subgroups,
         public: event.publicEvent,
         journalId: event.journalId,
         subjectStudyPeriodId: event.subjectStudyPeriodId,

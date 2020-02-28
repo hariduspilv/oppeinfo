@@ -277,9 +277,9 @@
         "grants": "Õppetoetused",
         "scholarships": "Stipendiumid",
         "drGrants": "Doktoranditoetus",
-        "grantApplications": "Õppetoetuste taotlused",
-        "scholarshipApplications": "Stipendiumite taotlused",
-        "drGrantApplications": "Doktoranditoet. taotlused"
+        "grantApplicationsRanking": "Õppetoetuste pingerida",
+        "scholarshipApplicationsRanking": "Stipendiumite pingerida",
+        "drGrantApplicationsRanking": "Doktoranditoet. pingerida"
       },
       "applications": {
         "label": "Avaldused",
@@ -616,7 +616,9 @@
       "lesson": "tund",
       "gradeInserted": "lisatud",
       "homework": "kodutöö",
-      "test": "kontrolltöö"
+      "test": "kontrolltöö",
+      "applicationUnapplied": "Teil on esitamata '{{termNameEt}}' taotlus.",
+      "submissionDeadline": "Esitamise tähtaeg on {{deadline}}"
     },
     "todaysRemarks": "Tänased märkused"
   },
@@ -1485,6 +1487,7 @@
       "order": "Jrk",
       "abroadProgramme": "Õppeprogramm",
       "abroadPurpose": "Õpingute eesmärk",
+      "addInfo": "Tekst",
       "akadCancelDate": "Akad. puhkuse katkestamise kuupäev",
       "akadEndDate": "Akad. puhkuse lõpp",
       "akadStartDate": "Akad. puhkuse algus",
@@ -2509,6 +2512,7 @@
   "person": {
     "name": "Nimi",
     "idcode": "Isikukood",
+    "uniqueCode": "Unikaalne kood",
     "firstname": "Eesnimi",
     "lastname": "Perekonnanimi",
     "sex": "Sugu",
@@ -2793,9 +2797,12 @@
       "subjects": "Õppeained"
     },
     "nameCode": "Õppeaine kood - Nimetus",
+    "name": "Õppeaine nimetus (kood)",
     "studyPeriod": "Õppeperiood",
     "teachersFullname": "Õppejõu ees- ja perekonnanimi",
+    "eap": "EAP",
     "declaredStudentsNumber": "Deklareerinud",
+    "subgroupsNumber": "Osarühmad",
     "addInfo": "Märkus",
     "declaration": "Deklaratsioon",
     "proportion": "Osakaal",
@@ -2817,6 +2824,16 @@
     "months": "k",
     "subjects": "Õppeained / planeeritud maht",
     "subject": "Õppeaine",
+    "subgroups": {
+      "add": "Lisa osarühmad",
+      "count": "Osarühmade arv",
+      "declared": "Osarühmas õppijate arv",
+      "label": "Osarühmad",
+      "name": "Osarühma nimetus",
+      "places": "Kohtade arv",
+      "defaultPlaces": "Kohtade arv osarühmas",
+      "teacher": "Õppejõud"
+    },
     "addSubjects": "Lisa õppeaine(d)",
     "addTeachers": "Lisa õppejõud",
     "overall": "Kokku",
@@ -2852,6 +2869,7 @@
   "subjectStudyPeriodPlan": {
     "studyPeriod": "Õppeperiood",
     "curriculum": "Õppekava",
+    "eap": "EAP",
     "subject": "Õppeaine",
     "studyForm": "Õppevorm",
     "add": "Lisa koormus",
@@ -2973,6 +2991,7 @@
     "submissionDateK": "Esitamise lõpp kpv",
     "confirmationDate": "Kinnitamise kuupäev",
     "student": "Õppija",
+    "studentGroup": "Õpperühm",
     "studentName": "Õppija nimi",
     "studentIdCode": "Õppija isikukood",
     "addStudent": "Lisa õppija",
@@ -3202,9 +3221,11 @@
       "studentCouncilAnswersError": "Õpilasesinduse valikul peab olema ainult üks vastusevariant"
     },
     "basicData": {
+      "subjectStudyPeriodsRequired": "Aine-õppejõu paarid *",
       "subjectStudyPeriods": "Aine-õppejõu paarid",
       "viewMore": "Vaata rohkem",
-      "journals": "Päevikud *",
+      "journalsRequired": "Päevikud *",
+      "journals": "Päevikud",
       "copy": "Kopeeri",
       "label": "Põhiandmed",
       "name": "Nimetus",
@@ -3250,7 +3271,8 @@
       "dialog": {
         "journal": "Päevik",
         "journals": "Päevikud",
-        "subjectStudyPeriod":"Aine-õppejõu paar"
+        "subjectStudyPeriod":"Aine-õppejõu paar",
+        "subjectStudyPeriods": "Aine-õppejõu paarid"
       }
     },
     "questions": {
@@ -3486,16 +3508,16 @@
       "label": "Tunniplaani impordi tulemus",
       "errors": {
         "emptySubjectUntis": "Puudub aine",
-        "teachers": "Puuduvad õpetajad",
-        "rooms": "Puuduvad ruumid",
-        "schoolDiff": "Puudub selline päevik õppeasutuses",
-        "studentgroups": "Puuduvad õpperühmad",
-        "hourData": "Tunni toimumise kohta pole piisavalt andmeid",
-        "nrFormat": "Tunni päev või periood ei ole numbriformaadis",
-        "documentFormat": "Dokument on vales formaadis, päevikul puuduvad ajad",
-        "relationToTimetable": "Päevik ei kuulu tunniplaani",
-        "journalNotFound": "Süsteemis ei leidu sellist päevikut",
-        "wrongSchool": "Päevik kuulub teise kooli"
+        "teachers": "Puudub õpetaja",
+        "rooms": "Puudub ruum",
+        "schoolDiff": "Puudub päevik",
+        "studentgroups": "Puudub õpperühm",
+        "hourData": "Tunni toimumise kohta pole kõiki andmeid",
+        "nrFormat": "Tunni päev või järjekorra nr ei ole numbriformaadis",
+        "documentFormat": "Päeviku toimumise aeg puudub",
+        "relationToTimetable": "Puudub päevik",
+        "journalNotFound": "Puudub päevik",
+        "wrongSchool": "Puudub päevik"
       }
     },
     "exportDialog": {
@@ -3610,6 +3632,8 @@
       "substitute": "Asendaja",
       "teacherName": "Nimi",
       "code": "Tähis",
+      "subgroup": "Osarühm",
+      "subgroups": "Osarühmad",
       "error": {
         "duplicateRoom": "Ruum on juba olemas",
         "duplicateTeacherHigher": "Õppejõud on juba olemas",
@@ -3617,7 +3641,8 @@
         "duplicateStudentGroup": "Õpperühm on juba olemas",
         "duplicateSupervisor": "Juhendaja on juba olemas",
         "endIsEarlierThanStart": "Lõppkellaaeg ei tohi olla varasem algkellaajast",
-        "teachersAndStudentGroupsNotSaveForPersonalEvent": "Personaalsel sündmusel ei salvestata õppejõudusid ning õpperühmasid"
+        "teachersAndStudentGroupsNotSaveForPersonalEvent": "Personaalsel sündmusel ei salvestata õppejõudusid ning õpperühmasid",
+        "atLeastOneSubgroupMustBeSelected": "Vähemalt üks osarühm peab olema valitud"
       }
     },
     "subjectTeacherPairs": "Aine-õppejõu paarid",
@@ -3863,30 +3888,42 @@
     "confirmer": "Kinnitaja",
     "curriculumCode": "Õppekava kood",
     "create": "Loo protokoll",
+    "examDate": "Eksami kp",
     "error": {
       "addInfoRequired": "Kinnitatud protokolli hinde muutmisel on märkuse sisestamine kohustuslik",
       "noRightsToChange": "Õigused salvestamiseks puuduvad",
+      "noRightsToDelete": "Õigused kustutamiseks puuduvad",
       "noRightsToConfirm": "Õigused kinnitamiseks puuduvad",
       "noStudents": "Protokoll peab sisaldama õppijaid",
-      "protocolStudentsAddedOrRemoved": "Protokollis ei saa muuta õppijate nimekirja"
+      "protocolStudentsAddedOrRemoved": "Protokollis ei saa muuta õppijate nimekirja",
+      "cantRemoveStudent": "Õppija eemaldamine ei ole lubatud"
     },
     "finalGrade": "Lõpphinne",
     "insertedDate": "Loomise kp",
     "message": {
       "gradeNotSelectedForAllStudents": "Protokolli kinnitamine ebaõnnestus - vähemalt ühel õpilasel on hinne määramata",
       "confirmed": "Protokoll on kinnitatud",
-      "calculated": "Lõpphinne on arvutatud"
+      "calculated": "Lõpphinne on arvutatud",
+      "deleted": "Protokoll on kustutatud"
+    },
+    "prompt": {
+      "delete": "Kas oled kindel, et soovid protokolli kustutada?",
+      "deleteStudent": "Kas oled kindel, et soovid õppija protokollist kustutada?"
     },
     "number": "Protokolli number",
     "practiceResult": "Praktika tulemus",
     "protocolCreatedDate": "Protokolli loomise kp",
     "protocolConfirmedDate": "Protokolli kinnitamise kp",
+    "protocolDate": "Protokolli kp",
     "protocolStatus": "Protokolli staatus",
     "status": "Staatus",
     "student": "Õppija",
     "studentGroup": "Õpperühm",
     "studyPeriod": "Õppeperiood",
+    "subgroup": "Osarühm",
+    "subgroupSelect":"Kuva osarühma õppijad",
     "subject": "Õppeaine",
+    "subjectRequired": "Õppeaine *",
     "teacher": "Õppejõud",
     "type": "Protokolli liik",
     "downloadSigned": "Lae allkirjastatud protokoll"
@@ -4085,6 +4122,7 @@
     "mandatoryPrerequisiteSubjects": "Kohustuslikud eeldusained",
     "recommendedPrerequisiteSubjects": "Soovituslikud eeldusained",
     "grade": "Hinne",
+    "subgroup": "Osarühm",
     "message": {
       "subjectAdded": "Õppeaine on lisatud õpingukavasse",
       "subjectRemoved": "Õppeaine on õpingukavast kustutatud",
@@ -4093,7 +4131,9 @@
       "allConfirmed": "Kinnitati {{numberOfNewlyConfirmedDeclarations}} õpingukava"
     },
     "error": {
-      "subjectDelete": "Ainet ei saa õpingukavast kustutada, kuna see on juba hinnatud"
+      "subjectDelete": "Ainet ei saa õpingukavast kustutada, kuna see on juba hinnatud",
+      "subjectExists": "Õppeaine on juba õpingukavasse valitud",
+      "noSubgroup": "Puudub osarühm"
     },
     "prompt": {
       "confirm": "Kas oled kindel, et soovid õpingukava kinnitada?",
@@ -4438,6 +4478,7 @@
   },
   "apel": {
     "student": "Õppija",
+    "studentGroup": "Õpperühm",
     "status": "Staatus",
     "insertedFrom": "Koostamise kp alates",
     "insertedThru": "Koostamise kp kuni",
@@ -4554,8 +4595,8 @@
       "ekap": "EKAP"
     },
     "informalLearnings": {
-      "label": "Informaalne õpe",
-      "add": "Lisa informaalne õpe",
+      "label": "Informaalne, mitteformaalne õpe või kombineeritud taotlus",
+      "add": "Lisa informaalne, mitteformaalne õpe või kombineeritud taotlus",
       "vocationalSubtitle": "(töökogemus/täiendkoolitus/muu moodul)",
       "higherSubtitle": "(töökogemus/täiendkoolitus/muu õppeaine)",
       "subject": "Õppeaine",
@@ -4625,7 +4666,7 @@
       "moduleOrItsThemeHasAlreadyBeenAdded": "Valitud moodul või selles sisalduv teema on juba lisatud",
       "themeOrParentModuleHasAlreadyBeenAdded": "Valitud teema või moodul, millesse teema kuulub, on juba lisatud",
       "transferredSubjectLargerThanSubstitutableSubject": "Formaalses õppes ülekantavate ainete maht on suurem kui asendatavate ainete maht",
-      "nominalStudyEndWontBeChanged": "Välisõppes kogutud EAP-de arv on 0. Nominaalaega ei pikendata!",
+      "nominalStudyEndWontBeChanged": "Välisõppes kogutud ainepunktide arv on 0. Nominaalaega ei pikendata!",
       "alreadySentToEhis": "Nominaalaja pikendus juba saadetud EHISesse, tagasi kerimist ei toimu"
     }
   },
@@ -4830,8 +4871,12 @@
     "pointsTxt": "Vahesoorituse tulemus (text)",
     "protocols": "Protokollid",
     "studyPeriod" : "Õppeperiood",
+    "subgroup": "Osarühm",
+    "subgroupSelect": "Vali osarühm",
+    "subgroupPlaces": "Kohad: {{used}}/{{all}}",
     "subject" : "Õppeaine",
     "student" : "Õppija",
+    "studentGroup": "Õpperühm",
     "taskDate": "Vahesoorituse kuupäev",
     "teacherHigher": "Õppejõud",
     "teacherVocational": "Õpetaja",
@@ -5219,6 +5264,12 @@
     "generalCriteria": "Üldised taotluse kriteeriumid",
     "previousPeriodCriteria": "Eelmise perioodi kriteeriumid",
     "bankIdcodeNotMatchingPerson": "Arveldusarve konto omaniku isikukood erineb õpilase isikukoodist",
+    "ranking": "Pingerida",
+    "applications": "Taotlused",
+    "studyYear": "Õppeaasta",
+    "appliedFrom": "Taotlemine alates",
+    "appliedThru": "Taotlemine kuni",
+    "create": "Lisa uus taotlus",
     "confirmations": {
       "publish": "Kas oled kindel, et soovid stipendiumi avalikustada?",
       "saveAndPublish": "Kas oled kindel, et soovid õppetoetuse salvestada ja avalikustada?",
@@ -5290,7 +5341,7 @@
       "applicationUnconfirmed": "Taotlus(ed) ei ole kinnitatud",
       "resultsRefreshed": "Tulemused uuendatud",
       "compliesChecked": "Andmed kontrollitud",
-      "applicationNotSubmitted": "Taotlus on esitamata!",
+      "applicationUnapplied": "Taotlus on esitamata!",
       "submissionDeadline": "Esitamise tähtaeg on {{deadline}}",
       "filesWillBeAddedOnSubmit": "Failidega seotud muudatused salvestatakse avalduse salvestamisel",
       "error" : {
@@ -5302,7 +5353,9 @@
         "studentDoesntComply": "Ei vasta toetuse tingimustele",
         "connectedDirectives": "Avaldustega on seotud käskkirju",
         "noApplicationsWithoutDirectives": "Käskkirjale kandmata taotlusi ei leitud",
-        "cannotBeHigherThanStipEndDate": "Ei saa olla suurem kui maksmise periood"
+        "cannotBeHigherThanStipEndDate": "Ei saa olla suurem kui maksmise periood",
+        "studentStatus": "Õppija peab olema aktiivne ning ei tohi olla külalisõpilane",
+        "notApplicationPeriod": "Taotlemise periood ei ole kehtiv"
       }
     },
     "reject": {

@@ -63,7 +63,7 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
 
     @Override
     public HoisUserDetails loadUserByUsername(String idcode) throws UsernameNotFoundException {
-        Person person = personRepository.findByIdcode(idcode);
+        Person person = personRepository.findByIdcodeOrUniqueCode(idcode);
         if (person == null) {
             throw new UsernameNotFoundException("No person present with idcode : " + idcode);
         }

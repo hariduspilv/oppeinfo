@@ -85,9 +85,9 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column md-order-by="p.lastname,p.firstname">{{'declaration.student' | translate}}</th>
+            <th md-column md-order-by="sg.code">{{'declaration.studentGroup' | translate}}</th>
             <th md-column md-order-by="p.idcode">{{'declaration.idcode' | translate}}</th>
             <th md-column md-order-by="cv.code">{{'declaration.curriculumVersion' | translate}}</th>
-            <th md-column md-order-by="sg.code">{{'declaration.studentGroup' | translate}}</th>
             <th md-column md-order-by="d.inserted">{{'declaration.inserted' | translate}}</th>
             <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'declaration.status' | translate}}</th>
             <th md-column md-order-by="d.confirmDate">{{'declaration.confirmDate' | translate}}</th>
@@ -97,9 +97,9 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
               <td md-cell class="one-row"><a ng-href="#/declarations/{{row.id}}/view">{{::row.student.fullname}}</a></td>
+              <td md-cell>{{currentLanguageNameField(row.student.studentGroup)}}</td>
               <td md-cell>{{::row.student.idcode}}</td>
               <td md-cell>{{currentLanguageNameField(row.student.curriculumVersion)}}</td>
-              <td md-cell>{{currentLanguageNameField(row.student.studentGroup)}}</td>
               <td md-cell>{{row.inserted | hoisDate}}</td>
               <td md-cell>{{currentLanguageNameField(row.status)}}</td>
               <td md-cell>{{row.confirmDate | hoisDate}}</td>

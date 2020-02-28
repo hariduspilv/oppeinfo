@@ -2,6 +2,7 @@ package ee.hitsa.ois.util;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -58,6 +59,10 @@ public abstract class PersonUtil {
     public static String fullnameAndIdcodeOptionalGuest(String firstname, String lastname, String idcode, String type) {
         return fullnameAndIdcodeOptionalGuest(fullname(firstname, lastname), idcode, type);
     }
+    
+    public static String fullnameAndIdcodeOptionalGuestForCertificate(String firstname, String lastname, String idcode, String sGroup, String type, LocalDate guestStart) {
+        return fullnameAndIdcodeOptionalGuestForCertificate(fullname(firstname, lastname), idcode, sGroup, type, guestStart);
+    }
 
     public static String fullnameOptionalGuest(Student student) {
         return fullnameOptionalGuest(student.getPerson().getFullname(), EntityUtil.getCode(student.getType()));
@@ -92,6 +97,38 @@ public abstract class PersonUtil {
             return  fullname + " (" + idcode + ")";
         } else if (StudentType.OPPUR_K.name().equals(type)) {
             return  fullname + " (KY)";
+        }
+        return fullname;
+    }
+    
+    public static String fullnameAndIdcodeOptionalGuestForCertificate(String fullname, String idcode, String sGroup, String type, LocalDate guestStart) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        if (StudentType.OPPUR_K.name().equals(type)) {
+            if (guestStart != null) {
+                if (StringUtils.hasText(idcode) && StringUtils.hasText(sGroup)) {
+                    return fullname + " ("+ sGroup + "; " + idcode + "; külalisõpilane alates " + guestStart.format(formatter) + ")";
+                } else if (StringUtils.hasText(idcode) && !StringUtils.hasText(sGroup)) {
+                    return fullname + " (" + idcode + "; külalisõpilane alates " + guestStart.format(formatter)+ ")";
+                } else if (!StringUtils.hasText(idcode) && StringUtils.hasText(sGroup)) {
+                    return fullname + " (" + sGroup + "; külalisõpilane alates " + guestStart.format(formatter)+ ")";
+                }
+                return fullname + " (külalisõpilane alates " + guestStart.format(formatter)+ ")";
+            }
+            if (StringUtils.hasText(idcode) && StringUtils.hasText(sGroup)) {
+                return fullname + " ("+ sGroup + "; " + idcode + "; KY)";
+            } else if (StringUtils.hasText(idcode) && !StringUtils.hasText(sGroup)) {
+                return fullname + " (" + idcode + "; KY)";
+            } else if (!StringUtils.hasText(idcode) && StringUtils.hasText(sGroup)) {
+                return fullname + " (" + sGroup + "; KY)";
+            }
+            return fullname + "(KY)";
+        }
+        if (StringUtils.hasText(idcode) && StringUtils.hasText(sGroup)) {
+            return fullname + " ("+ sGroup + "; " + idcode + ")";
+        } else if (StringUtils.hasText(idcode) && !StringUtils.hasText(sGroup)) {
+            return fullname + " (" + idcode + ")";
+        } else if (!StringUtils.hasText(idcode) && StringUtils.hasText(sGroup)) {
+            return fullname + " (" + sGroup + ")";
         }
         return fullname;
     }

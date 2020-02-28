@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -28,8 +29,8 @@ import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -43,7 +44,9 @@ import ee.hitsa.ois.domain.protocol.ProtocolHdata;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
 import ee.hitsa.ois.enums.DeclarationStatus;
+import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.StudyPeriodEventType;
 import ee.hitsa.ois.exception.AssertionFailedException;
@@ -58,6 +61,7 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
+import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.DeclarationSearchCommand;
@@ -109,11 +113,11 @@ public class DeclarationService {
 
     private static final String SUBJECT_CURRICULUM_SELECT = " ssp.id as ssp1Id, s.id as subjectId, "
             + "s.name_et, s.name_en, s.code, s.credits, c.value, cvhm.id as moduleId, "
-            + "cvhms.is_optional, array_to_string(teachers.teacher, ', ')";
+            + "cvhms.is_optional, array_to_string(teachers.teacher, ', ') as teachers, cvhm.name_et as moduleEt, cvhm.name_en as moduleEn";
     
     private static final String SUBJECT_EXTRACURRICULUM_SELECT = " distinct ssp.id as ssp1Id, s.id as subjectId, "
             + "s.name_et, s.name_en, s.code, s.credits, c.value, null as moduleId, "
-            + " false as isOptional, array_to_string(teachers.teacher, ', ')";
+            + " false as isOptional, array_to_string(teachers.teacher, ', ') as teachers, null as moduleEt, null as moduleEn";
     
     private static final String WITHOUT_DECLARATION_SELECT = " s.id, p.firstname, p.lastname, p.idcode, "
             + "cv.id as cv_id, cv.code as cv_code, sg.id as sg_id, sg.code as sg_code ";
@@ -330,6 +334,10 @@ public class DeclarationService {
         AssertionFailedException.throwIf(!EntityUtil.getId(declaration.getStudyPeriod()).equals(EntityUtil.getId(ssp.getStudyPeriod())),
                 "Declaration's and study period's ids does not match");
         UserUtil.assertSameSchool(user, ssp.getStudyPeriod().getStudyYear().getSchool());
+        ValidationFailedException.throwIf(declaration.getSubjects().stream()
+                .map(ds -> EntityUtil.getId(ds.getSubjectStudyPeriod().getSubject()))
+                .filter(sId -> sId.equals(EntityUtil.getId(ssp.getSubject())))
+                .findAny().isPresent(), "declaration.error.subjectExists");
 
         DeclarationSubject declarationSubject = new DeclarationSubject();
         declarationSubject.setDeclaration(declaration);
@@ -339,6 +347,7 @@ public class DeclarationService {
             declarationSubject.setModule(em.getReference(CurriculumVersionHigherModule.class, higherModule));
         }
         declarationSubject.setIsOptional(form.getIsOptional());
+        declarationSubject.setSubgroup(EntityUtil.getOptionalOne(SubjectStudyPeriodSubgroup.class, form.getSubgroup(), em));
         DeclarationSubjectDto dto = DeclarationSubjectDto.of(EntityUtil.save(declarationSubject, em));
         setAreSubjectsDeclaredRepeatedy(Arrays.asList(dto), dto.getDeclaration());
         return dto;
@@ -450,6 +459,7 @@ public class DeclarationService {
 
         qb.requiredCriteria("cvhm.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
                 curriculumVersion);
+        qb.requiredCriteria("cvhm.type_code != :moduleType", "moduleType", HigherModuleType.KORGMOODUL_L.name());
         qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriod);
         qb.requiredCriteria(
                 " not exists "
@@ -459,7 +469,26 @@ public class DeclarationService {
                 EntityUtil.getId(declaration));
 
         Page<Object[]> result = JpaQueryUtil.pagingResult(qb, SUBJECT_CURRICULUM_SELECT, em, pageable);
-        return result.map(this::subjectQueryResultToDto);
+        return result.map(r -> {
+            DeclarationSubjectDto dto = subjectQueryResultToDto(r);
+            // Set available subgroups
+            SubjectStudyPeriod ssp = em.getReference(SubjectStudyPeriod.class, dto.getSubjectStudyPeriod());
+            
+            List<SubjectStudyPeriodSubgroup> sortedSubgroups = ssp.getSubgroups().stream()
+                .sorted(SubjectStudyPeriodUtil.COMPARATOR_SUBGROUP)
+                .collect(Collectors.toList());
+            
+            dto.setSubgroups(StreamUtil.toMappedSet(AutocompleteResult::of, sortedSubgroups.stream().filter(subgroup -> {
+                return subgroup.getDeclarationSubjects().size() < subgroup.getPlaces().intValue();
+            })));
+
+            SubjectStudyPeriodSubgroup lastSubgroup = sortedSubgroups.isEmpty() ? null : sortedSubgroups.get(sortedSubgroups.size() - 1);
+            if (dto.getSubgroups().isEmpty() && lastSubgroup != null) {
+                dto.setSubgroups(Collections.singleton(AutocompleteResult.of(lastSubgroup)));
+            }
+            
+            return dto;
+        });
     }
 
     public List<DeclarationSubjectDto> getExtraCurriculumSubjectsOptions(Declaration declaration) {
@@ -486,7 +515,7 @@ public class DeclarationService {
                 + "where ssp2.subject_id = ssp.subject_id and ds.declaration_id = :declarationId)", "declarationId",  
                 EntityUtil.getId(declaration));
 
-        List<?> result = qb.select(SUBJECT_EXTRACURRICULUM_SELECT, em).getResultList();
+        List<?> result = qb.sort("s.name_et, s.name_en, teachers").select(SUBJECT_EXTRACURRICULUM_SELECT, em).getResultList();
         return StreamUtil.toMappedList(this::subjectQueryResultToDto, result);
     }
 
@@ -505,13 +534,42 @@ public class DeclarationService {
         dto.setSubject(subjectDto);
 
         if (resultAsLong(r, 7) != null) {
-            CurriculumVersionHigherModule curriculum = em.getReference(CurriculumVersionHigherModule.class, resultAsLong(r, 7));
-            dto.setModule(new AutocompleteResult(curriculum.getId(), curriculum.getNameEt(), curriculum.getNameEn()));
+            dto.setModule(new AutocompleteResult(resultAsLong(r, 7), resultAsString(r, 10), resultAsString(r, 11)));
         }
         dto.setIsOptional(resultAsBoolean(r, 8));
         dto.setTeachers(Arrays.asList(resultAsString(r, 9).split(", ")));
-        
         return dto;
+    }
+    
+    public List<AutocompleteResult> getSubjectStudyPeriodSubgroups(SubjectStudyPeriod subjectStudyPeriod) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period_subgroup ssps "
+                + "left join subject_study_period_teacher sspt on sspt.id = ssps.subject_study_period_teacher_id "
+                + "left join teacher t on sspt.teacher_id = t.id "
+                + "left join person p on t.person_id = p.id "
+                + "left join (select count(ds.id) as subjectCount, ds.subject_study_period_subgroup_id "
+                    + "from declaration_subject ds "
+                    + "group by ds.subject_study_period_subgroup_id) "
+                    + "S1 on S1.subject_study_period_subgroup_id = ssps.id");
+        qb.requiredCriteria("ssps.subject_study_period_id = :subjectStudyPeriodId", "subjectStudyPeriodId", EntityUtil.getId(subjectStudyPeriod));
+        List<?> subgroupResult = qb.sort("ssps.code, p.lastname")
+                .select("ssps.id as groupId, ssps.code, p.id as teacherId, p.firstname || ' ' || p.lastname as teacherName, S1.subjectCount, ssps.places", em).getResultList();
+        List<AutocompleteResult> mappedSubgroups = subgroupResult.stream()
+                .filter(p -> resultAsLong(p, 4) == null || resultAsLong(p, 4).longValue() < resultAsLong(p, 5).longValue())
+                .map(this::subgroupDto).collect(Collectors.toList());
+        if (!subgroupResult.isEmpty() && mappedSubgroups.isEmpty()) {
+            Object r = subgroupResult.get(subgroupResult.size() - 1);
+            return Arrays.asList(subgroupDto(r));
+        }
+        return mappedSubgroups;
+    }
+    
+    private AutocompleteResult subgroupDto(Object r) {
+        Long teacherPerson = resultAsLong(r, 2);
+        if (teacherPerson == null) {
+            return new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 1));
+        }
+        String name = String.format("%s (%s)", resultAsString(r, 1), resultAsString(r, 3));
+        return new AutocompleteResult(resultAsLong(r, 0), name, name);
     }
 
     public AutocompleteResult getCurrentStudyPeriod(Long schoolId) {

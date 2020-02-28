@@ -2,6 +2,8 @@ package ee.hitsa.ois.util;
 
 import java.time.LocalDate;
 
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import org.springframework.security.access.AccessDeniedException;
 
 import ee.hitsa.ois.domain.Committee;
@@ -15,28 +17,76 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 
 public class ScholarshipUtil {
 
+    public static void assertCanSearchApplications(HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
+        // student group teacher doesn't need to have STIPTOETUS user right
+        if (!user.isTeacher() ) {
+            UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+        }
+    }
+
     public static void assertCanViewApplication(HoisUserDetails user, ScholarshipApplication application) {
         if (user.isStudent()) {
             UserUtil.throwAccessDeniedIf(!user.getStudentId().equals(EntityUtil.getId(application.getStudent())),
                     "User student does not match application student");
-        } else if (user.isSchoolAdmin()) {
-            UserUtil.throwAccessDeniedIf(
-                    !user.getSchoolId().equals(EntityUtil.getId(application.getScholarshipTerm().getSchool())),
-                    "User school does not match application scholarship term school");
-        } else if (user.isLeadingTeacher()) {
-            Committee committee = application.getScholarshipTerm().getCommittee();
-            Long applicationCurriculumId = EntityUtil.getId(application.getCurriculumVersion().getCurriculum());
-            UserUtil.throwAccessDeniedIf(
-                    !(UserUtil.isLeadingTeacher(user, applicationCurriculumId) || isInCommitte(user, committee)),
-                    "Student is not in leading teacher's curriculum or part of committee");
-        } else if (user.isTeacher()) {
-            Committee committee = application.getScholarshipTerm().getCommittee();
-            UserUtil.throwAccessDeniedIf(!(isStudentGroupTeacher(user, application) || isInCommitte(user, committee)),
-                    "User teacher does not match application student group teacher or is not part of committee");
         } else {
-            throw new AccessDeniedException(
-                    "User is not application student or school admin or application student group teacher or part of committee");
+            boolean hasViewPerm = UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+
+            if (user.isSchoolAdmin()) {
+                UserUtil.throwAccessDeniedIf(!hasViewPerm);
+                UserUtil.throwAccessDeniedIf(
+                        !user.getSchoolId().equals(EntityUtil.getId(application.getScholarshipTerm().getSchool())),
+                        "User school does not match application scholarship term school");
+            } else if (user.isLeadingTeacher()) {
+                UserUtil.throwAccessDeniedIf(!hasViewPerm);
+                Committee committee = application.getScholarshipTerm().getCommittee();
+                Long applicationCurriculumId = EntityUtil.getId(application.getCurriculumVersion().getCurriculum());
+                UserUtil.throwAccessDeniedIf(
+                        !(UserUtil.isLeadingTeacher(user, applicationCurriculumId) || isInCommitte(user, committee)),
+                        "Student is not in leading teacher's curriculum or part of committee");
+            } else if (user.isTeacher()) {
+                Committee committee = application.getScholarshipTerm().getCommittee();
+                UserUtil.throwAccessDeniedIf(
+                        !(isStudentGroupTeacher(user, application) || (hasViewPerm && isInCommitte(user, committee))),
+                        "User teacher does not match application student group teacher or is not part of committee");
+            } else {
+                throw new AccessDeniedException("User is not application student or school admin or leading teacher " +
+                        "or application student group teacher or part of committee");
+            }
         }
+    }
+
+    public static void assertCanEditApplication(HoisUserDetails user, ScholarshipApplication application) {
+        AssertionFailedException.throwIf(!applicationOfEditingStatus(application), "Invalid application status");
+        assertApplicationPeriod(application.getScholarshipTerm());
+        UserUtil.throwAccessDeniedIf(!hasPermissionToEdit(user, application));
+    }
+
+    public static void assertCanEditApplication(HoisUserDetails user, ScholarshipTerm term, Student student) {
+        assertApplicationPeriod(term);
+        UserUtil.throwAccessDeniedIf(!hasPermissionToEdit(user, student));
+    }
+
+    private static boolean hasPermissionToEdit(HoisUserDetails user, ScholarshipApplication application) {
+        return hasPermissionToEdit(user, application.getStudent());
+    }
+
+    private static boolean hasPermissionToEdit(HoisUserDetails user, Student student) {
+        return UserUtil.isStudent(user, student) || UserUtil.isStudentGroupTeacher(user, student)
+                || (UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_STIPTOETUS)
+                && UserUtil.isSchoolAdmin(user, student.getSchool()));
+    }
+
+    public static boolean canEditApplication(HoisUserDetails user, String applicationStatus,
+            LocalDate applicationStart, LocalDate applicationEnd, Long studentGroupTeacherId) {
+        if (applicationOfEditingStatus(applicationStatus) && applicationPeriodActive(applicationStart, applicationEnd)) {
+            if ((user.isSchoolAdmin())) {
+                return UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+            } else if (user.isTeacher())  {
+                return user.getTeacherId().equals(studentGroupTeacherId);
+            }
+        }
+        return false;
     }
 
     private static boolean isStudentGroupTeacher(HoisUserDetails user, ScholarshipApplication application) {
@@ -57,36 +107,54 @@ public class ScholarshipUtil {
         }
     }
 
-    public static void assertCanCreateApplication(ScholarshipTerm term) {
-        AssertionFailedException.throwIf(!applicationPeriodActive(term), "Application period is not active");
+    public static void assertCanCreateApplication(HoisUserDetails user, ScholarshipTerm term, Student student) {
+        assertApplicationPeriod(term);
+        assertIsStudentAllowedNewApplications(student);
+        assertCanEditApplication(user, term, student);
     }
 
-    public static void assertCanEditApplication(HoisUserDetails user, ScholarshipApplication application) {
-        AssertionFailedException.throwIf(
-                user.getStudentId().longValue() != EntityUtil.getId(application.getStudent()).longValue(),
-                "Invalid student");
-        AssertionFailedException.throwIf(!applicationOfEditingStatus(application), "Invalid application status");
-        AssertionFailedException.throwIf(!applicationPeriodActive(application.getScholarshipTerm()),
-                "Application period is not active");
+    private static void assertIsStudentAllowedNewApplications(Student student) {
+        if (!(StudentUtil.isActive(student) && !StudentUtil.isGuestStudent(student))) {
+            throw new ValidationFailedException("stipend.messages.error.studentStatus");
+        }
     }
 
     private static boolean applicationOfEditingStatus(ScholarshipApplication application) {
-        String applicationStatus = EntityUtil.getNullableCode(application.getStatus());
+        return applicationOfEditingStatus(EntityUtil.getNullableCode(application.getStatus()));
+    }
+
+    private static boolean applicationOfEditingStatus(String applicationStatus) {
         return ScholarshipStatus.STIPTOETUS_STAATUS_K.name().equals(applicationStatus)
                 || ScholarshipStatus.STIPTOETUS_STAATUS_T.name().equals(applicationStatus);
     }
 
-    public static boolean applicationPeriodActive(ScholarshipTerm term) {
-        LocalDate now = LocalDate.now();
-        LocalDate applicationStart = term.getApplicationStart();
-        LocalDate applicationEnd = term.getApplicationEnd();
+    private static void assertApplicationPeriod(ScholarshipTerm term) {
+        if (!applicationPeriodActive(term)) {
+            throw new ValidationFailedException("stipend.messages.error.notApplicationPeriod");
+        }
+    }
 
+    private static boolean applicationPeriodActive(ScholarshipTerm term) {
+        return applicationPeriodActive(term.getApplicationStart(), term.getApplicationEnd());
+    }
+
+    private static boolean applicationPeriodActive(LocalDate applicationStart, LocalDate applicationEnd) {
+        LocalDate now = LocalDate.now();
         return (applicationStart == null || now.isAfter(applicationStart) || now.isEqual(applicationStart))
                 && (applicationEnd == null || now.isBefore(applicationEnd) || now.isEqual(applicationEnd));
     }
 
     public static boolean canApply(ScholarshipTerm term, ScholarshipApplication application) {
         return applicationPeriodActive(term) && (application == null || applicationOfEditingStatus(application));
+    }
+
+    public static boolean canViewStudentTermCompliance(HoisUserDetails user, Student student, ScholarshipTerm term) {
+        if (!UserUtil.isSameSchool(user, term.getSchool())) {
+            return false;
+        }
+        return UserUtil.isStudent(user, student) || UserUtil.isStudentGroupTeacher(user, student)
+                || (UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_STIPTOETUS)
+                    && UserUtil.isSchoolAdmin(user, student.getSchool()));
     }
 
 }

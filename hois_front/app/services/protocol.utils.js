@@ -142,15 +142,20 @@ angular.module('hitsaOis')
     };
 
     protocolUtils.canConfirm = function(auth, protocol) {
-      return protocol.canBeConfirmed && allProtocolStudentsGraded(protocol) && allChangedGradesHaveAddInfo(protocol) && 
-        CONFIRM_LOGIN_TYPES.indexOf(auth.loginMethod) !== -1;
+      return protocol.canBeConfirmed && protocolIncludingStudents(protocol) && allProtocolStudentsGraded(protocol) &&
+        allChangedGradesHaveAddInfo(protocol) && CONFIRM_LOGIN_TYPES.indexOf(auth.loginMethod) !== -1;
     };
+
+    function protocolIncludingStudents(protocol) {
+      return angular.isDefined(protocol) && angular.isArray(protocol.protocolStudents) &&
+        protocol.protocolStudents.length > 0;
+    }
 
     function allProtocolStudentsGraded(protocol) {
       if (!angular.isDefined(protocol) || !angular.isArray(protocol.protocolStudents)) {
         return false;
       }
-  
+
       var allGraded = true;
       for (var i = 0; i < protocol.protocolStudents.length; i++) {
         if (!angular.isString(protocol.protocolStudents[i].grade) || protocol.protocolStudents[i].grade.trim().length === 0) {
@@ -160,19 +165,19 @@ angular.module('hitsaOis')
       }
       return allGraded;
     }
-  
+
     function allChangedGradesHaveAddInfo(protocol) {
       if (!angular.isDefined(protocol) || !angular.isArray(protocol.protocolStudents)) {
         return false;
       }
-  
+
       var allHaveAddInfo = true;
       if (protocol.status.code === 'PROTOKOLL_STAATUS_K') {
         for (var i = 0; i < protocol.protocolStudents.length; i++) {
           if (protocol.protocolStudents[i].gradeHasChanged) {
             var addInfo = protocol.protocolStudents[i].addInfo;
             addInfo = addInfo !== undefined && addInfo !== null ? addInfo.split(' ').join('') : null;
-            
+
             if (!addInfo) {
               allHaveAddInfo = false;
               break;

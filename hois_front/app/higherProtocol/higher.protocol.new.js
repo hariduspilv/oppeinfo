@@ -1,8 +1,13 @@
 'use strict';
 
-angular.module('hitsaOis').controller('HigherProtocolNewController', function ($route, $location, $scope, ArrayUtils, QueryUtils, message) {
+angular.module('hitsaOis').controller('HigherProtocolNewController', function ($route, $location, $scope, ArrayUtils, Classifier, QueryUtils, message) {
   $scope.auth = $route.current.locals.auth;
   var baseUrl = "/higherProtocols";
+
+  $scope.protocolTypes = {};
+  Classifier.queryForDropdown({mainClassCode: 'PROTOKOLLI_LIIK'}, function(response) {
+    $scope.protocolTypes = Classifier.toMap(response);
+  });
 
   $scope.record = {
     protocolType: 'PROTOKOLLI_LIIK_P',

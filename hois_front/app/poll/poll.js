@@ -378,30 +378,42 @@
   
           // Map journals or subjects with repedetive themes
           if (!row.isThemePageable && response.type === 'KYSITLUS_O') {
-            dialogScope.formState.themeBySubjectOrJournalId = {};
+            dialogScope.formState.themeBySubjectOrJournalId = [];
             
             dialogScope.criteria.themes.forEach(function (theme) {
                 if (theme.journal !== null && theme.isRepetitive) {
-                    if (dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id] === undefined) {
-                    dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id] = [];
+                    var listJournal = dialogScope.formState.themeBySubjectOrJournalId.find(function(journal) {
+                        return journal.id === theme.journal.id;
+                    });
+                    if (listJournal === undefined) {
+                        dialogScope.formState.themeBySubjectOrJournalId.push({id: theme.journal.id, list: [theme]});
+                    } else {
+                        listJournal.list.push(theme);
                     }
-                    dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id].push(theme);
                 } else if (theme.subject !== null && theme.isRepetitive) {
-                    if (dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id] === undefined) {
-                    dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id] = [];
+                    var listSubject = dialogScope.formState.themeBySubjectOrJournalId.find(function(subject) {
+                        return subject.id === theme.subject.id;
+                    });
+                    if (listSubject === undefined) {
+                        dialogScope.formState.themeBySubjectOrJournalId.push({id: theme.subject.id, list: [theme]});
+                    } else {
+                        listSubject.list.push(theme);
                     }
-                    dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id].push(theme);
                 } else if (!theme.isRepetitive) {
-                    if (dialogScope.formState.themeBySubjectOrJournalId[null] === undefined) {
-                    dialogScope.formState.themeBySubjectOrJournalId[null] = [];
+                    var listNonRepetetive = dialogScope.formState.themeBySubjectOrJournalId.find(function(nonRepetetive) {
+                        return nonRepetetive.id === null;
+                    });
+                    if (listNonRepetetive === undefined) {
+                        dialogScope.formState.themeBySubjectOrJournalId.push({id: null, list: [theme]});
+                    } else {
+                        listNonRepetetive.list.push(theme);
                     }
-                    dialogScope.formState.themeBySubjectOrJournalId[null].push(theme);
                 }
             });
             if (dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.foreword !== null) {
                 dialogScope.showForeword = true;
             } else {
-                Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0].show = true;
+                dialogScope.formState.themeBySubjectOrJournalId[0].show = true;
             }
           } else {
             if (dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.foreword !== null) {
@@ -415,17 +427,17 @@
             if (index === 0) {
               dialogScope.showForeword = true;
             } else {
-              Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index - 1].show = true;
+              dialogScope.formState.themeBySubjectOrJournalId[index - 1].show = true;
             }
             if (index === dialogScope.subjectListLength()) {
               dialogScope.showAfterword = false;
             } else {
-              Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+              dialogScope.formState.themeBySubjectOrJournalId[index].show = false;
             }
           };
   
           dialogScope.last = function(index) {
-            return index === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1;
+            return index === dialogScope.formState.themeBySubjectOrJournalId.length - 1;
           };
   
           dialogScope.first = function(index) {
@@ -433,24 +445,24 @@
           };
 
           dialogScope.firstPage = function(themeList) {
-            return Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0] === themeList;
+            return dialogScope.formState.themeBySubjectOrJournalId[0] === themeList;
           };
   
           dialogScope.nextSubjectOrJournal = function(index) {
             if (index === -1) {
               dialogScope.showForeword = false;
             } else {
-              Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+              dialogScope.formState.themeBySubjectOrJournalId[index].show = false;
             }
             if (index === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1) {
               dialogScope.showAfterword = true;
             } else {
-              Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index + 1].show = true;
+              dialogScope.formState.themeBySubjectOrJournalId[index + 1].show = true;
             }
           };
 
           dialogScope.subjectListLength = function() {
-            return Object.values(dialogScope.formState.themeBySubjectOrJournalId).length;
+            return dialogScope.formState.themeBySubjectOrJournalId.length;
           };
   
           dialogScope.previousTheme = function(index) {
@@ -1707,6 +1719,7 @@
                     dialogScope.graphName = newScope.graphName;
                     dialogScope.journal = newScope.journal;
                     dialogScope.adminViewing = newScope.adminViewing;
+                    dialogScope.type = response.type;
                     dialogScope.higher = $scope.auth.higher;
                     dialogScope.pollId = newScope.pollId;
                     dialogScope.enterprise = newScope.enterprise;
@@ -1768,7 +1781,7 @@
             }
         };
 
-    }).controller('PollStatisticsController', function ($scope, $route, QueryUtils, ArrayUtils, message, $rootScope, ExcelUtils, $timeout) {
+    }).controller('PollStatisticsController', function ($scope, $route, QueryUtils, ArrayUtils, message, $rootScope, ExcelUtils) {
         $scope.auth = $route.current.locals.auth;
         $scope.reset = resetCriteria;
 
@@ -2205,8 +2218,8 @@
                     return;
                 }
             }
-            if ((!angular.isArray($scope.criteria.journals) || $scope.criteria.journals.length === 0) 
-                && $scope.criteria.type === 'KYSITLUS_O' && !$scope.auth.higher) {
+            if ((!angular.isArray($scope.criteria.journals) || $scope.criteria.journals.length === 0) && 
+                $scope.criteria.type === 'KYSITLUS_O' && !$scope.auth.higher) {
                 message.error('poll.basicData.atleastOneJournal');
                 return;
             }

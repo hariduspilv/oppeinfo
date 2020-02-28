@@ -876,8 +876,14 @@ public class DirectiveConfirmService {
                 .getResultList();
 
         if (!contracts.isEmpty()) {
+            em.createNativeQuery("update contract set status_code = ?1 where id in (?2)")
+                    .setParameter(1, ContractStatus.LEPING_STAATUS_L.name())
+                    .setParameter(2, StreamUtil.toMappedList(c -> c.getId(), contracts))
+                    .executeUpdate();
             for (Contract contract : contracts) {
-                contractService.endContract(contract, true);
+                if (contract.getStudentAbsence() != null) {
+                    contractService.rejectEndedContractAbsence(contract);
+                }
             }
         }
     }

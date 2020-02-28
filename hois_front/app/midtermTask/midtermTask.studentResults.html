@@ -22,11 +22,23 @@
       </md-input-container>
     </div>
 
+    <div layout="row" ng-if="record.subgroups.length > 0">
+      <md-input-container flex="15" flex-sm="50" flex-xs="100">
+        <label>{{'midtermTask.subgroupSelect' | translate}}</label>
+        <md-select ng-model="record.subgroup">
+          <md-option md-option-empty></md-option>
+          <md-option ng-value="val" ng-repeat="val in record.subgroups">{{currentLanguageNameField(val)}}</md-option>
+        </md-select>
+      </md-input-container>
+    </div>
+
     <md-table-container>
       <table md-table>
         <thead md-head>
           <tr md-row>
             <th md-column>{{'midtermTask.student' | translate}}</th>
+            <th md-column>{{'midtermTask.studentGroup' | translate}}</th>
+            <th md-column ng-if="record.subgroups.length > 0">{{'midtermTask.subgroup' | translate}}</th>
             <th md-column ng-repeat="midtermTask in record.midtermTasks">
               {{getMidtermTaskHeader(midtermTask)}}
               <span ng-if="midtermTask.moodleGradeItemId"><md-icon md-font-set="material-icons">school</md-icon></span>
@@ -37,21 +49,31 @@
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row ng-repeat="student in record.students | orderBy: ['lastname', 'firstname']" ng-class-odd="'odd'" ng-class-even="'even'">
+          <tr md-row ng-if="!record.subgroup.id || record.subgroup.id === student.subgroup.id" ng-repeat="student in record.students | orderBy: ['lastname', 'firstname']" ng-class-odd="'odd'" ng-class-even="'even'">
             <ng-form name="midtermTaskUnitForm">
               <td md-cell>
                 {{student.name}}
                 <span ng-if="student.isMoodleRegistered"><md-icon md-font-set="material-icons">school</md-icon></span>
               </td>
+              <td md-cell>{{student.studentGroup}}</td>
+              <td md-cell ng-if="record.subgroups.length > 0">
+                <span ng-if="!record.canEditSubgroups">{{currentLanguageNameField(student.subgroup)}}</span>
+                <md-select ng-if="record.canEditSubgroups" ng-model="student.subgroup" ng-model-options="{trackBy: '$value.id'}" aria-label="{{'midtermTask.subgroup' | translate}}"
+                  ng-change="updateSubgroupPlaces(student, student.subgroup.id)">
+                  <md-option ng-value="val" ng-repeat="val in record.subgroups">
+                    {{currentLanguageNameField(val)}} ({{'midtermTask.subgroupPlaces' | translate: {used: val.declared, all: val.places} }})
+                  </md-option>
+                </md-select>
+              </td>
               <td md-cell ng-repeat="result in record.studentResults | filter: filterStudentResults(student)">
                 <md-input-container ng-if="result.isText">
                   <input ng-model="result.pointsTxt" type="text" md-maxlength="10"
-                  aria-label="{{'midtermTask.pointsTxt' | translate}}" 
+                  aria-label="{{'midtermTask.pointsTxt' | translate}}"
                   ng-disabled="!student.studentResultCanBeChanged || moodleTasks[result.midtermTask]">
                 </md-input-container>
                 <md-input-container ng-if="!result.isText">
                   <input ng-model="result.points" type="number" min="0" max="{{result.maxPoints}}" pattern="^\d+(\.\d{1,2})?$"
-                  aria-label="{{'midtermTask.points' | translate}}" 
+                  aria-label="{{'midtermTask.points' | translate}}"
                   ng-disabled="!student.studentResultCanBeChanged || moodleTasks[result.midtermTask]">
                 </md-input-container>
               </td>
@@ -95,8 +117,6 @@
     </md-table-container>
   </form>
 
-
-
   <div layout="row">
       <md-button class="md-raised md-primary" ng-click="save()" ng-hide="record.subjectStudyPeriod.isPracticeSubject || record.students.length === 0">{{'main.button.save' | translate}}</md-button>
       <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods', midtermTaskResultForm)">{{'main.button.back' | translate}}</md-button>
@@ -110,8 +130,6 @@
       <md-button class="md-raised" ng-click="importMissingGrades()">{{'moodle.importMissingGrades' | translate}}</md-button>
   </div>
 </div>
-
-
 
 <style>
 

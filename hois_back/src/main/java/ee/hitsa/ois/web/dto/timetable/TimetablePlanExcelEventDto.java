@@ -10,6 +10,7 @@ public class TimetablePlanExcelEventDto {
     private LocalDateTime end;
     private AutocompleteResult name;
     private String studentGroups;
+    private String subgroups;
     private String rooms;
     private String teachers;
     private String capacityType;
@@ -44,6 +45,14 @@ public class TimetablePlanExcelEventDto {
 
     public void setStudentGroups(String studentGroups) {
         this.studentGroups = studentGroups;
+    }
+
+    public String getSubgroups() {
+        return subgroups;
+    }
+
+    public void setSubgroups(String subgroups) {
+        this.subgroups = subgroups;
     }
 
     public String getRooms() {

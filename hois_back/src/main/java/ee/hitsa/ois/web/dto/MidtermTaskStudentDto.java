@@ -10,6 +10,7 @@ import ee.hitsa.ois.util.PersonUtil;
 public class MidtermTaskStudentDto {
     private Long declarationSubject;
     private String name;
+    private String studentGroup;
 
     // used for ordering in frontend
     private String firstname;
@@ -18,6 +19,7 @@ public class MidtermTaskStudentDto {
     private Boolean studentResultCanBeChanged;
     private Long studentId;
     private Boolean isMoodleRegistered;
+    private AutocompleteResult subgroup;
 
     public static MidtermTaskStudentDto of(DeclarationSubject declarationSubject) {
         MidtermTaskStudentDto dto = new MidtermTaskStudentDto();
@@ -25,6 +27,7 @@ public class MidtermTaskStudentDto {
 
         Student student = declarationSubject.getDeclaration().getStudent();
         dto.setName(PersonUtil.fullname(student));
+        dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);
         Person person = student.getPerson();
         dto.setFirstname(person.getFirstname());
         dto.setLastname(person.getLastname());
@@ -32,6 +35,7 @@ public class MidtermTaskStudentDto {
         dto.setStudentResultCanBeChanged(Boolean.valueOf(MidtermTaskUtil.studentResultCanBeChanged(declarationSubject)));
         dto.setStudentId(EntityUtil.getId(declarationSubject.getDeclaration().getStudent()));
         dto.setIsMoodleRegistered(declarationSubject.getIsMoodleRegistered());
+        dto.setSubgroup(declarationSubject.getSubgroup() != null ? AutocompleteResult.of(declarationSubject.getSubgroup()) : null);
         return dto;
     }
 
@@ -92,6 +96,14 @@ public class MidtermTaskStudentDto {
         this.name = name;
     }
 
+    public String getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(String studentGroup) {
+        this.studentGroup = studentGroup;
+    }
+
     public String getFirstname() {
         return firstname;
     }
@@ -116,4 +128,11 @@ public class MidtermTaskStudentDto {
         this.isMoodleRegistered = isMoodleRegistered;
     }
 
+    public AutocompleteResult getSubgroup() {
+        return subgroup;
+    }
+
+    public void setSubgroup(AutocompleteResult subgroup) {
+        this.subgroup = subgroup;
+    }
 }

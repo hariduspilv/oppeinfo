@@ -11,7 +11,7 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($fil
   var viewForbiddenGrades = ['KUTSEHINDAMINE_X'];
   var allGrades = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMINE' });
   var deferredEntityToDto;
-  
+
   $scope.formState = {};
   $scope.formState.selectedStudentsExist = false;
   var state = stateStorageService.loadState(schoolId, stateKey);
@@ -22,7 +22,7 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($fil
     $scope.formState.showJournals = true;
     $scope.formState.showOutcomes = true;
   }
-  
+
   $scope.hideInvalid = function (cl) {
     return !Classifier.isValid(cl);
   };
@@ -78,7 +78,7 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($fil
     for (var p in journalResults) {
       if (journalResults.hasOwnProperty(p)) {
         journals.push(journalResults[p]);
-        
+
         if (!$scope.formState.outcomesAsEntries && journalResults[p].hasOutcomes) {
           $scope.formState.outcomesAsEntries = true;
         }
@@ -244,7 +244,7 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($fil
     if(!validationPassed()) {
       return;
     }
-    
+
     new ModuleProtocolEndpoint({ id: $scope.protocol.id, version: $scope.protocol.version, protocolStudents: $scope.protocol.protocolStudents })
       .$update().then(function (result) {
         message.info('main.messages.create.success');
@@ -282,9 +282,7 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($fil
 
   $scope.updateAllStudentsCheckBoxes = function (value) {
     $scope.protocol.protocolStudents.forEach(function (student) {
-      if (student.canBeDeleted) {
-        $scope.calculateGrades.protocolStudents[student.id] = value;
-      } else {
+      if (student.canChangeGrade) {
         $scope.calculateGrades.protocolStudents[student.id] = value;
       }
     });

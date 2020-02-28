@@ -29,16 +29,24 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
     var baseUrl = '/scholarships';
     $scope.editable = true;
     var id = $route.current.params.id;
-    QueryUtils.endpoint(baseUrl + '/' + id + '/application').get({}, function (result) {
-      $scope.stipend = result.stipend;
-      $scope.termCompliance = result.termCompliance;
+    $scope.isStudent = $route.current.locals.auth.isStudent;
+    var studentId = $route.current.params.studentId;
 
-      $scope.templateName = templateMap[result.stipend.type];
-      if(!result.application.compensationFrequency) {
-        result.application.compensationFrequency = 'STIPTOETUS_HYVITAMINE_1';
-      }
-      afterLoad(result.application);
-    });
+    function loadApplication() {
+      QueryUtils.endpoint(baseUrl + '/' + id + '/application').get({student: studentId}, function (result) {
+        $scope.student = result.student;
+        $scope.studentGroup = result.studentGroup;
+        $scope.stipend = result.stipend;
+        $scope.termCompliance = result.termCompliance;
+
+        $scope.templateName = templateMap[result.stipend.type];
+        if(!result.application.compensationFrequency) {
+          result.application.compensationFrequency = 'STIPTOETUS_HYVITAMINE_1';
+        }
+        afterLoad(result.application);
+      });
+    }
+    loadApplication();
 
     $scope.openAddFileDialog = function () {
       dialogService.showDialog('components/file.add.dialog.html', function (dialogScope) {
@@ -80,6 +88,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
 
     function afterLoad(result) {
       $scope.application = result;
+      $scope.application.studentId = studentId;
       if ($scope.stipend.type === 'STIPTOETUS_ERI') {
         DataUtils.convertStringToDates($scope.stipend, ['paymentStart', 'paymentEnd']);
         DataUtils.convertStringToDates($scope.application, ['scholarshipFrom', 'scholarshipThru']);
@@ -102,7 +111,10 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
     };
 
     function loadTermCompliances(application) {
-      QueryUtils.endpoint(baseUrl + '/studentTermCompliance/' + application.id).search(function (termCompliance) {
+      QueryUtils.endpoint(baseUrl + '/studentTermCompliance/:studentId/:scholarshipTermId').search({
+        studentId: application.student,
+        scholarshipTermId: $scope.stipend.id
+      }).$promise.then(function (termCompliance) {
         $scope.termCompliance = termCompliance;
       });
     }
@@ -115,8 +127,9 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
           }, function (result) {
             message.info('stipend.messages.applicationSuccessful');
             $location.url(baseUrl + '/applications/' + result.id + '?_noback');
+          }, function () {
+            loadTermCompliances(result);
           });
-          loadTermCompliances(result);
         });
       });
     };
@@ -141,7 +154,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
             callBack(result);
           } else {
             message.warn('stipend.messages.applicationSaved');
-            $location.url(baseUrl + '/' + $scope.stipend.id + '/application?_noback');
+            loadApplication();
           }
         });
       }
@@ -179,6 +192,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
       STIPTOETUS_TULEMUS: 'scholarship/student/scholarship.application.scho.view.html'
     };
 
+    $scope.auth = $route.current.locals.auth
     $scope.getUrl = oisFileService.getUrl;
     $scope.isNumber = angular.isNumber;
     $scope.editable = false;
@@ -188,6 +202,8 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
 
     function loadApplication() {
       QueryUtils.endpoint(baseUrl + '/application/' + id).get({}, function (result) {
+        $scope.student = result.student;
+        $scope.studentGroup = result.studentGroup;
         $scope.stipend = result.stipend;
         $scope.application = result.application;
 
@@ -195,7 +211,8 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
         if (result.stipend.type === 'STIPTOETUS_ERI') {
           calculateSumsForFamilyBlock($scope.application.family);
         }
-        $scope.canManage = AuthService.isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS') && result.application.status !== 'STIPTOETUS_STAATUS_A';
+        $scope.canManage = $scope.auth.isAdmin() && AuthService.isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS') &&
+          result.application.status === 'STIPTOETUS_STAATUS_E';
       });
     }
     loadApplication();

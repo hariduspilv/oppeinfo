@@ -48,10 +48,12 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="s.{{currentLanguageNameField()}},s.code">{{'subjectStudyPeriod.nameCode' | translate}}</th>
+            <th md-column md-order-by="s.{{currentLanguageNameField()}},s.code">{{'subjectStudyPeriod.name' | translate}}</th>
             <th md-column>{{'subjectStudyPeriod.teachersFullname' | translate}}</th>
+            <th md-column>{{'subjectStudyPeriod.eap' | translate}}</th>
             <th md-column md-order-by="sp.{{currentLanguageNameField()}}">{{'subjectStudyPeriod.studyPeriod' | translate}}</th>
             <th md-column md-order-by="declared_students">{{'subjectStudyPeriod.declaredStudentsNumber' | translate}}</th>
+            <th md-column>{{'subjectStudyPeriod.subgroupsNumber' | translate}}</th>
             <th md-column>{{'subjectProgram.label' | translate}}</th>
             <th md-column></th>
           </tr>
@@ -66,8 +68,10 @@
                 </tr>
               </table>
             </td>
+            <td md-cell>{{::row.credits}}</td>
             <td md-cell>{{currentLanguageNameField(row.studyPeriod)}}</td>
             <td md-cell><a href="#/subjectStudyPeriods/{{::row.id}}/midtermTasks/studentResults">{{::row.studentsNumber}}</a></td>
+            <td md-cell>{{::row.subgroups}}</td>
             <td md-cell ng-if="auth.isTeacher()">
               <p class="nomargin">
                 <hois-classifier-value ng-model="row.subjectProgramStatus" main-classifier-code="AINEPROGRAMM_STAATUS"></hois-classifier-value>

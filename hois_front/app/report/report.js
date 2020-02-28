@@ -169,7 +169,7 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
   };
 
   function isCurriculumDepartment(selectedDepartment, curriculumDepartments) {
-    var departmentIds = (curriculumDepartments || []).map(function (department) { return department.id });
+    var departmentIds = (curriculumDepartments || []).map(function (department) { return department.id; });
     return departmentIds.indexOf(selectedDepartment) !== -1;
   }
 

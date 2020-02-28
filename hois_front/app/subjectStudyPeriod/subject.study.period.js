@@ -1,5 +1,40 @@
 'use strict';
 
+function compareSubgroups(a, b) {
+  var result = a.code.localeCompare(b.code);
+            
+  if (result != 0) {
+      return result;
+  }
+  
+  if (a.teacher === b.teacher) {
+      return 0;
+  }
+  if (!a.teacher) {
+      return -1;
+  } else if (!b.teacher) {
+      return 1;
+  }
+  
+  // AutocompleteResult for teacher has the same value for nameEt, nameEn, nameRu
+  result = a.teacher.nameEt.localeCompare(b.teacher.nameEt);
+  
+  if (result != 0) {
+      return result;
+  }
+
+  if (a.id === b.id) {
+      return 0;
+  }
+  if (!a.id) {
+      return 1;
+  } else if (!b.id) {
+      return -1;
+  }
+  
+  return b.id - a.id;
+}
+
 angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$scope', 'QueryUtils', 'DataUtils', '$route', 'ArrayUtils', 'Classifier', 'message',
   function ($scope, QueryUtils, DataUtils, $route, ArrayUtils, Classifier, message) {
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriods', {order: 's.' + $scope.currentLanguageNameField()});
@@ -66,8 +101,13 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
     var subjectId = $route.current.params.subjectId ? parseInt($route.current.params.subjectId, 10) : null;
     var teacherId = $route.current.params.teacherId ? parseInt($route.current.params.teacherId, 10) : null;
 
+    $scope.SUBGROUP_LIMIT = 20;
+
     $scope.hasObligatoryStudentGroup = studentGroupId !== null;
     $scope.obligatoryTeacher = teacherId;
+
+    $scope.addSubgroup = addSubgroup;
+    $scope.removeSubgroup = removeSubgroup;
 
     QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list').query(function(result) {
       $scope.studentGroups = result.filter(function(el){
@@ -114,6 +154,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
               subjects.push(subject);
           });
       });
+      $scope.record.subgroups.sort(compareSubgroups);
     } else {
         var initialObject = {
             groupProportion: 'PAEVIK_GRUPI_JAOTUS_1',
@@ -216,6 +257,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
       message.updateSuccess();
       replaceLastUrl();
       $scope.subjectStudyPeriodEditForm.$setPristine();
+      $scope.record.subgroups.sort(compareSubgroups);
     }
 
     function save() {
@@ -228,6 +270,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
           $scope.record.$update().then(function(){
             message.updateSuccess();
             $scope.subjectStudyPeriodEditForm.$setPristine();
+            $scope.record.subgroups.sort(compareSubgroups);
           });
       } else {
           $scope.record.$save().then(afterCreate);
@@ -250,6 +293,62 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
          });
       });
     };
+
+    function addSubgroup(defGroupCount, defGroupPlaces) {
+      if (!angular.isArray($scope.record.subgroups)) {
+        $scope.record.subgroups = [];
+      }
+
+      var groups = collectGroups($scope.record.studentGroups);
+      if (studentGroupId) {
+        groups.push($scope.studentGroup);
+      }
+      groups.sort(compareSubgroups);
+
+      if (groups.length > 0) {
+        var subgroupPerGroup = Math.floor(defGroupCount / groups.length);
+        var extraSubgroups = defGroupCount % groups.length;
+        for (var i = 0; i < groups.length; i++) {
+          for (var j = 0; j < subgroupPerGroup; j++) {
+            $scope.record.subgroups.push(createGroup(groups[i].code + "-" + (j + 1), defGroupPlaces));
+          }
+          if (extraSubgroups > 0) {
+            $scope.record.subgroups.push(createGroup(groups[i].code + "-" + (j + 1), defGroupPlaces));
+            extraSubgroups--;
+          }
+        }
+        return;
+      }
+
+      for (var i = 0; i < defGroupCount; i++) {
+        $scope.record.subgroups.push(createGroup(null, defGroupPlaces));
+      }
+    }
+
+    function removeSubgroup(subgroup) {
+      ArrayUtils.remove($scope.record.subgroups, subgroup);
+    }
+
+    function createGroup(code, places) {
+      return {
+        code: code ? code : null,
+        places: places,
+        teacher: null
+      }
+    }
+
+    function collectGroups(idArr) {
+      if (!$scope.studentGroups) {
+        return [];
+      }
+      return idArr.map(function (id) {
+        return $scope.studentGroups.find(function (el) {
+          return el.id === id;
+        });
+      }).filter(function (el) {
+        return !!el;
+      });
+    }
   }
 ]).controller('SubjectStudyPeriodViewController', ['$scope', 'QueryUtils', '$route',
   function ($scope, QueryUtils, $route) {
@@ -268,6 +367,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
             newEl.nameEn = el.code;
             return newEl;
         });
+        $scope.record.subgroups.sort(compareSubgroups);
     });
   }
 ]).constant('DeclarationType', {

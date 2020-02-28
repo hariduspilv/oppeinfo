@@ -1,3 +1,5 @@
+<div ng-include="'scholarship/templates/scholarship.application.navbar.html'"></div>
+
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
 
   <div layout="column">
@@ -13,12 +15,12 @@
           <div layout="row" flex="20" flex-offset="5">
             <md-input-container flex ng-if="criteria.type !== 'STIPTOETUS_ERIALA'">
               <label class="textInput">{{'stipend.curriculums' | translate}}</label>
-              <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum" 
+              <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum"
                 criteria="{higher: true, closed: false, userId: auth.isLeadingTeacher() ? auth.user : null}" sorted-query="true" multiple></hois-select>
             </md-input-container>
             <md-input-container flex ng-if="criteria.type === 'STIPTOETUS_ERIALA'">
               <label class="textInput">{{'stipend.curriculum' | translate}}</label>
-              <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum" 
+              <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum"
                 criteria="{higher: true, closed: false, userId: auth.isLeadingTeacher() ? auth.user : null}" sorted-query="true" multiple required></hois-select>
             </md-input-container>
           </div>
@@ -45,7 +47,8 @@
           </md-input-container>
           <md-input-container flex="20" flex-offset="5">
             <label class="textInput">{{'stipend.status' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.status" name="type" model-value-attr="code" main-classifier-code="STIPTOETUS_STAATUS"></hois-classifier-select>
+            <hois-classifier-select ng-model="criteria.status" name="type" model-value-attr="code"
+              main-classifier-code="STIPTOETUS_STAATUS" filter-values="['STIPTOETUS_STAATUS_K']"></hois-classifier-select>
           </md-input-container>
         </div>
 

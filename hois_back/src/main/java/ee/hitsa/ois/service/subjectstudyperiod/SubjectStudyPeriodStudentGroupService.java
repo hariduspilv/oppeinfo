@@ -171,7 +171,9 @@ public class SubjectStudyPeriodStudentGroupService {
 
     public List<CurriculumSearchDto> getCurricula(Long schoolId) {
         List<Curriculum> curriculums = em.createQuery(
-                "select c from Curriculum c where c.school.id = ?1 and c.status.code = ?2 and c.higher = true", Curriculum.class)
+                "select c from Curriculum c "
+                + "where c.school.id = ?1 and c.status.code = ?2 and c.higher = true "
+                + "order by c.nameEt, c.nameEn, c.code", Curriculum.class)
             .setParameter(1, schoolId)
             .setParameter(2, CurriculumStatus.OPPEKAVA_STAATUS_K.name())
             .getResultList();

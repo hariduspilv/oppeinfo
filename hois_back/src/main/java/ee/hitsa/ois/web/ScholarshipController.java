@@ -6,6 +6,11 @@ import java.util.Map;
 
 import javax.validation.Valid;
 
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
+import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationSearchCommand;
+import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationSearchDto;
+import ee.hitsa.ois.web.dto.scholarship.UnappliedScholarshipApplicationDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,14 +36,14 @@ import ee.hitsa.ois.util.ScholarshipUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationListSubmitForm;
-import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationSearchCommand;
+import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationRankingSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipCommitteeSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipDecisionForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipStudentApplicationForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipTermForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.ScholarshipTermApplicationSearchDto;
+import ee.hitsa.ois.web.dto.ScholarshipTermApplicationRankingSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationStudentDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipDecisionDto;
@@ -71,14 +76,17 @@ public class ScholarshipController {
     }
 
     @GetMapping("/applications")
-    public ScholarshipTermApplicationSearchDto applications(@Valid ScholarshipApplicationSearchCommand command,
-            HoisUserDetails user) {
-        UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
-        // student group teacher doesn't need to have STIPTOETUS user right
-        if (!user.isTeacher() ) {
-            UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_STIPTOETUS);
-        }
-        return scholarshipService.applications(command, user);
+    public Page<ScholarshipApplicationSearchDto> applications(HoisUserDetails user,
+            @Valid ScholarshipApplicationSearchCommand command, Pageable pageable) {
+        ScholarshipUtil.assertCanSearchApplications(user);
+        return scholarshipService.applications(user, command, pageable);
+    }
+
+    @GetMapping("/applications/ranking")
+    public ScholarshipTermApplicationRankingSearchDto applicationsRanking(HoisUserDetails user,
+            @Valid ScholarshipApplicationRankingSearchCommand command) {
+        ScholarshipUtil.assertCanSearchApplications(user);
+        return scholarshipService.applicationsRanking(user, command);
     }
 
     @GetMapping("/{id:\\d+}")
@@ -111,7 +119,10 @@ public class ScholarshipController {
     @GetMapping("/decision/{id:\\d+}")
     public ScholarshipDecisionDto decision(HoisUserDetails user, @PathVariable("id") Long decisionId) {
         UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);
-        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+        // student group teacher doesn't need to have STIPTOETUS user right
+        if (!user.isTeacher() ) {
+            UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+        }
         return scholarshipService.decision(user, decisionId);
     }
 
@@ -138,15 +149,15 @@ public class ScholarshipController {
         return scholarshipService.getStudentProfilesForRejection(applicationIds);
     }
 
-    @GetMapping("/studentTermCompliance/{id:\\d+}")
-    public ScholarshipTermComplianceDto studentTermCompliance(HoisUserDetails user, @WithEntity ScholarshipApplication application) {
-        UserUtil.assertIsSchoolAdminOrStudent(user, application.getScholarshipTerm().getSchool());
-        return scholarshipService.studentTermCompliance(application);
+    @GetMapping("/studentTermCompliance/{studentId:\\d+}/{termId:\\d+}")
+    public ScholarshipTermComplianceDto studentTermCompliance(HoisUserDetails user,
+            @WithEntity("studentId") Student student, @WithEntity("termId") ScholarshipTerm term) {
+        UserUtil.throwAccessDeniedIf(!ScholarshipUtil.canViewStudentTermCompliance(user, student, term));
+        return scholarshipService.studentCompliesTerm(student, term);
     }
 
     @PutMapping("/apply/{id:\\d+}")
     public ScholarshipApplicationDto apply(HoisUserDetails user, @WithEntity ScholarshipApplication application) {
-        UserUtil.assertIsSchoolAdminOrStudent(user, application.getScholarshipTerm().getSchool());
         ScholarshipUtil.assertCanEditApplication(user, application);
         return scholarshipService.getApplicationDto(scholarshipService.apply(user, application));
     }
@@ -199,32 +210,31 @@ public class ScholarshipController {
     public Map<String, Object> getStudentApplication(HoisUserDetails user,
             @WithEntity ScholarshipApplication application) {
         ScholarshipUtil.assertCanViewApplication(user, application);
-        return scholarshipService.getApplicationView(user, application);
+        return scholarshipService.getApplicationView(application);
     }
 
     @GetMapping("/{id:\\d+}/application")
-    public Map<String, Object> application(HoisUserDetails user, @WithEntity ScholarshipTerm term) {
-        UserUtil.assertIsSchoolAdminOrStudent(user, term.getSchool());
-        return scholarshipService.getStudentApplicationView(user, term);
+    public Map<String, Object> application(HoisUserDetails user, @WithEntity ScholarshipTerm term,
+            @RequestParam(required = false) @WithEntity("student") Student student) {
+        // user rights are checked in getStudentApplicationView method
+        return scholarshipService.getStudentApplicationView(user, term, student);
     }
 
     @PostMapping("/{id:\\d+}/application")
     public ScholarshipApplicationDto saveApplication(HoisUserDetails user, @WithEntity ScholarshipTerm term,
             @Valid @RequestBody ScholarshipStudentApplicationForm form) {
-        UserUtil.assertIsSchoolAdminOrStudent(user, term.getSchool());
-        ScholarshipUtil.assertCanCreateApplication(term);
-        scholarshipService.saveApplication(user, term, form);
-        return scholarshipService.getStudentApplicationDto(user, term);
+        // user rights are checked in saveApplication method
+        ScholarshipApplication application = scholarshipService.saveApplication(user, term, form);
+        return scholarshipService.getStudentApplicationDto(application.getStudent(), term);
     }
 
     @PutMapping("/{id:\\d+}/application/{appId:\\d+}")
     public ScholarshipApplicationDto updateApplication(HoisUserDetails user, @WithEntity ScholarshipTerm term,
             @Valid @RequestBody ScholarshipStudentApplicationForm form,
             @WithEntity("appId") ScholarshipApplication application) {
-        UserUtil.assertIsSchoolAdminOrStudent(user, term.getSchool());
         ScholarshipUtil.assertCanEditApplication(user, application);
         scholarshipService.updateApplication(user, form, application);
-        return scholarshipService.getStudentApplicationDto(user, term);
+        return scholarshipService.getStudentApplicationDto(application.getStudent(), term);
     }
 
     @PutMapping("/{id:\\d+}")
@@ -246,6 +256,7 @@ public class ScholarshipController {
         UserUtil.assertIsSchoolAdmin(user, term.getSchool());
         scholarshipService.delete(term);
     }
+
 
     @GetMapping("/availableStipends")
     public List<ScholarshipTermStudentDto> availableStipends(HoisUserDetails user) {
@@ -270,4 +281,24 @@ public class ScholarshipController {
         UserUtil.assertIsStudent(user);
         return scholarshipService.studentDrGrants(user.getStudentId());
     }
+
+    @GetMapping("/schoolAvailableStipends")
+    public List<AutocompleteResult> schoolAvailableStipends(HoisUserDetails user,
+            @RequestParam("scholarshipType") String scholarshipType) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return scholarshipService.schoolAvailableStipends(user.getSchoolId(), scholarshipType);
+    }
+
+    @GetMapping("/stipendAvailableStudents")
+    public Page<AutocompleteResult> stipendAvailableStudents(HoisUserDetails user,
+            @RequestParam("termId") Long termId, SearchCommand lookup) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return scholarshipService.stipendAvailableStudents(user, termId, lookup);
+    }
+
+    @GetMapping("/studentUnappliedScholarships")
+    public List<UnappliedScholarshipApplicationDto> unappliedScholarships(HoisUserDetails user) {
+        return scholarshipService.unappliedScholarships(user);
+    }
+
 }

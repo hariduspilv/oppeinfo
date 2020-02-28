@@ -57,7 +57,7 @@
                 <hois-classifier-value ng-value="'OPPEPERIOOD_K'" main-classifier-code="OPPEPERIOOD"></hois-classifier-value>
               </th>
             </thead>
-            <tbody ng-repeat="module in version.modules | filter: {minorSpeciality: false} | filter: filterModulesBySpeciality(spectiality) | orderBy: currentLanguageNameField()">
+            <tbody ng-repeat="module in version.modules | filter: {minorSpeciality: false} | filter: filterModulesBySpeciality(spectiality)">
               <tr class="occupation-header">
                 <td colspan="6">
                   <a href="" ng-click="openAddModuleDialog(module)" flex="70">

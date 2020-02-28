@@ -61,6 +61,10 @@ public abstract class HigherProtocolUtil {
         return false;
     }
 
+    public static boolean canDelete(HoisUserDetails user, Protocol protocol) {
+        return canChange(user, protocol) && ProtocolUtil.allResultsEmpty(protocol);
+    }
+
     public static void assertCanSearch(HoisUserDetails user) {
         if(!canSearch(user)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
@@ -82,6 +86,12 @@ public abstract class HigherProtocolUtil {
     public static void assertCanChange(HoisUserDetails user, Protocol protocol) {
         if(!canChange(user, protocol)) {
             throw new ValidationFailedException("higherProtocol.error.noRightsToChange");
+        }
+    }
+
+    public static void assertCanDelete(HoisUserDetails user, Protocol protocol) {
+        if(!canDelete(user, protocol)) {
+            throw new ValidationFailedException("higherProtocol.error.noRightsToDelete");
         }
     }
 

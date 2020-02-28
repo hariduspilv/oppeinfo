@@ -307,6 +307,10 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
     function entityToForm(entity) {
       $scope.application = entity;
       $scope.school = entity.school;
+      DataUtils.convertStringToDates($scope.application, ['inserted', 'confirmed', 'newNominalStudyEnd', 'oldNominalStudyEnd']);
+      ($scope.application.abroadStudyPeriods || []).forEach(function (period) {
+        DataUtils.convertStringToDates(period, ['start', 'end']);
+      });
 
       if (entity.hasAbroadStudies) {
         $scope.abroadStudiesCredits = ApelApplicationUtils.abroadStudiesCredits(entity);
@@ -333,7 +337,6 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
       });
 
       setColspans($scope);
-      DataUtils.convertStringToDates($scope.application, ['inserted', 'confirmed', 'newNominalStudyEnd', 'oldNominalStudyEnd']);
     }
 
     var entity = $route.current.locals.entity;
@@ -1682,7 +1685,7 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
         }).catch(angular.noop);
       });
     };
-  }).controller('ApelApplicationViewController', function ($route, $scope, $q, ApelApplicationUtils, Classifier, QueryUtils,
+  }).controller('ApelApplicationViewController', function ($route, $scope, $q, ApelApplicationUtils, Classifier, DataUtils, QueryUtils,
       config, dialogService, oisFileService) {
     $scope.applicationId = $route.current.params.id;
     $scope.auth = $route.current.locals.auth;
@@ -1695,8 +1698,13 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
     });
 
     function entityToForm(entity) {
-      $scope.school = entity.school;
       $scope.application = entity;
+      $scope.school = entity.school;
+      DataUtils.convertStringToDates($scope.application, ['inserted', 'confirmed', 'newNominalStudyEnd', 'oldNominalStudyEnd']);
+      ($scope.application.abroadStudyPeriods || []).forEach(function (period) {
+        DataUtils.convertStringToDates(period, ['start', 'end']);
+      });
+
       $scope.application.committeeId = entity.committee ? entity.committee.id : null;
       $scope.canSeeNominalStudyExtension = canSeeNominalStudyExtension($scope.auth, entity);
 

@@ -575,16 +575,21 @@ public class ContractService {
     /**
      * Mark contract as ended, if it exists reject contract's absence.
      *
-     * @param contractId
+     * @param contract
+     * @param ignoreDate
      */
     public void endContract(Contract contract, boolean ignoreDate) {
         if (ignoreDate || (contract.getEndDate() != null && contract.getEndDate().isBefore(LocalDate.now()))) {
             setContractStatus(contract, ContractStatus.LEPING_STAATUS_L);
             if (contract.getStudentAbsence() != null) {
-                studentAbsenceService.reject("", contract.getStudentAbsence(), ABSENCE_REJECT_CONTRACT_ENDED);
+                rejectEndedContractAbsence(contract);
             }
             EntityUtil.save(contract, em);
         }
+    }
+
+    public void rejectEndedContractAbsence(Contract contract) {
+        studentAbsenceService.reject("", contract.getStudentAbsence(), ABSENCE_REJECT_CONTRACT_ENDED);
     }
 
     public void sendUniqueUrlEmailToEnterpriseSupervisor(HoisUserDetails user, ContractSupervisor supervisor) {

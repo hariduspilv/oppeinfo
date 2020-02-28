@@ -372,18 +372,6 @@ public class CurriculumService {
         EntityUtil.deleteEntity(curriculumFile, em);
     }
 
-    public boolean isMerCodeUnique(UniqueCommand command) {
-        boolean codeExists;
-        if(command.getParamValue() == null || StringUtils.isEmpty(command.getParamValue())) {
-            return true;
-        } else if(command.getId() == null) {
-            codeExists = curriculumRepository.existsByMerCode(command.getParamValue());
-        } else {
-            codeExists = curriculumRepository.existsByMerCodeAndIdNot(command.getParamValue(), command.getId());
-        }
-        return !codeExists;
-    }
-
     public boolean isCodeUnique(Long schoolId, UniqueCommand command) {
         boolean codeExists;
         if(command.getId() == null) {

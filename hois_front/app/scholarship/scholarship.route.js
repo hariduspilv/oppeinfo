@@ -1,6 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
+  var $route = $routeProvider.$get[$routeProvider.$get.length-1]({$on:function(){}}); // regex
 
   function isStudentGroupTeacher(Session) {
     return angular.isArray(Session.teacherGroupIds) && Session.teacherGroupIds.length > 0;
@@ -26,7 +27,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS]
+        authorizedRoles: function(Session, roles) {
+          return Session.vocational && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS) !== -1;
+        }
       }
     })
     .when('/scholarships/scholarship/new', {
@@ -48,7 +51,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS]
+        authorizedRoles: function(Session, roles) {
+          return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS) !== -1;
+        }
       }
     })
     .when('/scholarships/drGrant/new', {
@@ -70,7 +75,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS]
+        authorizedRoles: function(Session, roles) {
+          return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS) !== -1;
+        }
       }
     })
     .when('/scholarships/:id/edit', {
@@ -124,7 +131,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
+        authorizedRoles: function(Session, roles) {
+          return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS) !== -1;
+        }
       }
     })
     .when('/scholarships/grants', {
@@ -146,7 +155,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
+        authorizedRoles: function(Session, roles) {
+          return Session.vocational && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS) !== -1;
+        }
       }
     })
     .when('/scholarships/scholarships', {
@@ -168,7 +179,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
+        authorizedRoles: function(Session, roles) {
+          return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS) !== -1;
+        }
       }
     })
     .when('/scholarships/myData/scholarships', {
@@ -221,10 +234,11 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR],
+        guestStudentForbidden: true
       }
     })
-    .when('/scholarships/:id/application', {
+    .when('/scholarships/:id/application/:studentId?', {
       templateUrl: 'scholarship/student/scholarship.application.edit.html',
       controller: 'StudentScholarshipApplicationEditController',
       controllerAs: 'controller',
@@ -237,12 +251,12 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR, USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS]
       }
     })
-    .when('/scholarships/applications/grants', {
-      templateUrl: 'scholarship/scholarship.application.list.grants.html',
-      controller: 'ScholarshipApplicationController',
+    .when('/scholarships/applications/ranking/grants', {
+      templateUrl: 'scholarship/scholarship.application.ranking.grants.html',
+      controller: 'ScholarshipApplicationRankingController',
       controllerAs: 'controller',
       resolve: {
         auth: function (AuthResolver) {
@@ -261,14 +275,14 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       },
       data: {
         authorizedRoles: function(Session) {
-          return Session.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS) !== -1 || 
-            isStudentGroupTeacher(Session);
+          return Session.vocational && (Session.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS) !== -1 ||
+            isStudentGroupTeacher(Session));
         }
       }
     })
-    .when('/scholarships/applications/drGrants', {
-      templateUrl: 'scholarship/scholarship.application.list.drGrants.html',
-      controller: 'ScholarshipApplicationController',
+    .when('/scholarships/applications/ranking/drGrants', {
+      templateUrl: 'scholarship/scholarship.application.ranking.drGrants.html',
+      controller: 'ScholarshipApplicationRankingController',
       controllerAs: 'controller',
       resolve: {
         auth: function (AuthResolver) {
@@ -290,9 +304,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       }
     })
-    .when('/scholarships/applications/scholarships', {
-      templateUrl: 'scholarship/scholarship.application.list.scho.html',
-      controller: 'ScholarshipApplicationController',
+    .when('/scholarships/applications/ranking/scholarships', {
+      templateUrl: 'scholarship/scholarship.application.ranking.scho.html',
+      controller: 'ScholarshipApplicationRankingController',
       controllerAs: 'controller',
       resolve: {
         auth: function (AuthResolver) {
@@ -333,7 +347,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       },
       authorizedRoles: function(Session) {
-        return Session.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS) !== -1 || 
+        return Session.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS) !== -1 ||
           isStudentGroupTeacher(Session);
       }
     })
@@ -386,8 +400,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           return $translate.onReady();
         }
       },
-      data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS]
+      authorizedRoles: function(Session) {
+        return Session.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS) !== -1 ||
+          isStudentGroupTeacher(Session);
       }
     })
     .when('/scholarships/applications/:id', {
@@ -405,5 +420,48 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR]
       }
+    })
+    .when('/scholarships/applications/:type', {
+      templateUrl: 'scholarship/scholarship.application.search.html',
+      controller: 'ScholarshipApplicationSearchController',
+      controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        },
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        }
+      },
+      data: {
+        authorizedRoles: function(Session) {
+          return Session.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS) !== -1 ||
+            isStudentGroupTeacher(Session);
+        }
+      }
+    })
+    .when('/scholarships/applications/:type/new', {
+      templateUrl: 'scholarship/scholarship.application.new.html',
+      controller: 'ScholarshipApplicationNewController',
+      controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        },
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        }
+      },
+      data: {
+        authorizedRoles: function(Session) {
+          return Session.authorizedRoles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS) !== -1 ||
+            isStudentGroupTeacher(Session);
+        }
+      }
     });
+
+    // Regex for paths
+    $route.routes['/scholarships/applications/:id'].regexp = /^\/scholarships\/applications\/(\d+)$/;
+    $route.routes['/scholarships/applications/:type'].regexp = /^\/scholarships\/applications\/(grants|scholarships|drGrants)$/;
+    $route.routes['/scholarships/applications/:type/new'].regexp = /^\/scholarships\/applications\/(grants|scholarships|drGrants)\/new$/;
 }]);

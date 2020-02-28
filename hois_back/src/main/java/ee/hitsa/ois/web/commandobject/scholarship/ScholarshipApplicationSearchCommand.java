@@ -1,20 +1,28 @@
 package ee.hitsa.ois.web.commandobject.scholarship;
 
-import java.util.List;
-
 import ee.hitsa.ois.validation.Required;
+
+import java.time.LocalDate;
 
 public class ScholarshipApplicationSearchCommand {
 
     @Required
+    private String scholarshipType; // in some places called as scholarship group
     private String type;
-    private List<Long> curriculum;
-    private List<String> courses;
+    private LocalDate appliedFrom;
+    private LocalDate appliedThru;
     private String studentName;
+    private Long studyYear;
     private String nameEt;
-    private Long studyPeriod;
     private String status;
-    private String studentGroup;
+
+    public String getScholarshipType() {
+        return scholarshipType;
+    }
+
+    public void setScholarshipType(String scholarshipType) {
+        this.scholarshipType = scholarshipType;
+    }
 
     public String getType() {
         return type;
@@ -24,20 +32,20 @@ public class ScholarshipApplicationSearchCommand {
         this.type = type;
     }
 
-    public List<Long> getCurriculum() {
-        return curriculum;
+    public LocalDate getAppliedFrom() {
+        return appliedFrom;
     }
 
-    public void setCurriculum(List<Long> curriculum) {
-        this.curriculum = curriculum;
+    public void setAppliedFrom(LocalDate appliedFrom) {
+        this.appliedFrom = appliedFrom;
     }
 
-    public List<String> getCourses() {
-        return courses;
+    public LocalDate getAppliedThru() {
+        return appliedThru;
     }
 
-    public void setCourses(List<String> courses) {
-        this.courses = courses;
+    public void setAppliedThru(LocalDate appliedThru) {
+        this.appliedThru = appliedThru;
     }
 
     public String getStudentName() {
@@ -48,6 +56,14 @@ public class ScholarshipApplicationSearchCommand {
         this.studentName = studentName;
     }
 
+    public Long getStudyYear() {
+        return studyYear;
+    }
+
+    public void setStudyYear(Long studyYear) {
+        this.studyYear = studyYear;
+    }
+
     public String getNameEt() {
         return nameEt;
     }
@@ -56,27 +72,11 @@ public class ScholarshipApplicationSearchCommand {
         this.nameEt = nameEt;
     }
 
-    public Long getStudyPeriod() {
-        return studyPeriod;
-    }
-
-    public void setStudyPeriod(Long studyPeriod) {
-        this.studyPeriod = studyPeriod;
-    }
-
     public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public String getStudentGroup() {
-        return studentGroup;
-    }
-
-    public void setStudentGroup(String studentGroup) {
-        this.studentGroup = studentGroup;
     }
 }

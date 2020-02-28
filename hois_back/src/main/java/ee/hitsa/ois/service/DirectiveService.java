@@ -12,6 +12,7 @@ import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_INDOKLOP;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_KIITUS;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_KYLALIS;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_LOPET;
+import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_MUU;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_NOOMI;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_OKAVA;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_OKOORM;
@@ -206,6 +207,7 @@ public class DirectiveService {
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_VALISKATK, EnumUtil.toNameList(OPPURSTAATUS_O, OPPURSTAATUS_V));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_STIPTOETL, StudentStatus.STUDENT_STATUS_ACTIVE);
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_KIITUS, StudentStatus.STUDENT_STATUS_ACTIVE);
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_MUU, StudentStatus.STUDENT_STATUS_ACTIVE);
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_NOOMI, StudentStatus.STUDENT_STATUS_ACTIVE);
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_OTEGEVUS, StudentStatus.STUDENT_STATUS_ACTIVE);
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_PRAKTIK, StudentStatus.STUDENT_STATUS_ACTIVE);

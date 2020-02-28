@@ -10,6 +10,7 @@ public class GraphDto {
     private Boolean commentDisabled;
     private Boolean canComment;
     private Boolean canStudentView;
+    private String type;
 
     public List<SubjectCommentDto> getComments() {
         return comments;
@@ -49,6 +50,14 @@ public class GraphDto {
 
     public void setCanStudentView(Boolean canStudentView) {
         this.canStudentView = canStudentView;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
 }

@@ -138,7 +138,10 @@
                     <div layout="column" ng-if="criteria.type === 'KYSITLUS_O'">
                         <div layout="column" ng-if="!auth.higher || (auth.higher && auth.vocational)">
                             <div layout="row">
-                                <hois-autocomplete flex="50" ng-model="formState.journal" method="journalsAndStudentGroups" name="journals" label="poll.basicData.journals"></hois-autocomplete>
+                                <hois-autocomplete flex="50" ng-model="formState.journal" method="journalsAndStudentGroups" name="journals" 
+                                label="poll.basicData.journalsRequired" ng-if="criteria.subjectStudyPeriods === undefined || criteria.subjectStudyPeriods.length === 0"></hois-autocomplete>
+                                <hois-autocomplete flex="50" ng-model="formState.journal" method="journalsAndStudentGroups" name="journals" 
+                                label="poll.basicData.journals" ng-if="criteria.subjectStudyPeriods.length > 0"></hois-autocomplete>
                                 <md-button flex-offset="5" flex-offset-xs="0" ng-click="addAllJournals()" class="md-raised">{{"poll.basicData.pickAll" | translate}}</md-button>
                                 <md-button ng-if="criteria.journals.length > 0" flex-offset-xs="0" ng-click="removeAllJournals()" class="md-raised">{{"poll.basicData.removeAll" | translate}}</md-button>
                             </div>
@@ -167,7 +170,13 @@
                         <div layout="column" ng-if="auth.higher">
                             <div layout="row" ng-if="!!criteria.studyPeriod">
                                 <hois-autocomplete flex="50" ng-model="formState.subjectStudyPeriod" method="subjectStudyPeriods" name="subjectStudyPeriods" 
-                                label="poll.basicData.subjectStudyPeriods" additional-query-params="{studyPeriod: criteria.studyPeriod}"></hois-autocomplete>
+                                    label="poll.basicData.subjectStudyPeriodsRequired" additional-query-params="{studyPeriod: criteria.studyPeriod}" 
+                                    ng-if="!auth.vocational">
+                                </hois-autocomplete>
+                                <hois-autocomplete flex="50" ng-model="formState.subjectStudyPeriod" method="subjectStudyPeriods" name="subjectStudyPeriods" 
+                                    label="poll.basicData.subjectStudyPeriods" additional-query-params="{studyPeriod: criteria.studyPeriod}" 
+                                    ng-if="auth.vocational">
+                                </hois-autocomplete>
                                 <md-button flex-offset="5" flex-offset-xs="0" ng-click="addAllSubjectStudyPeriods()" class="md-raised">{{"poll.basicData.pickAll" | translate}}</md-button>
                                 <md-button ng-if="criteria.subjectStudyPeriods.length > 0" flex-offset-xs="0" ng-click="removeAllSubjectStudyPeriods()" class="md-raised">{{"poll.basicData.removeAll" | translate}}</md-button>
                             </div>

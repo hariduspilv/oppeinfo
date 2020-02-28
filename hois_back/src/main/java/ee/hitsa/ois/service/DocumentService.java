@@ -489,9 +489,8 @@ public class DocumentService {
                 + " from directive_student ds"
                 + " join curriculum_version cv on cv.id = ds.curriculum_version_id"
                 + " join curriculum_occupation co on co.curriculum_id = cv.curriculum_id"
-                + " join directive_student_occupation dso on dso.directive_student_id = ds.id and dso.occupation_code = co.occupation_code"
-                + " join classifier c on c.code = dso.occupation_code"
-                + " join student_occupation_certificate soc on soc.student_id = ds.student_id and dso.occupation_code = soc." + certificateField
+                + " join student_occupation_certificate soc on soc.student_id = ds.student_id and co.occupation_code = soc." + certificateField
+                + " join classifier c on c.code = soc.occupation_code"
                     + " and coalesce(soc.valid_thru, cast('infinity' as date)) >= cast(now() as date)"
                 + " where ds.directive_id = ?1 and ds.student_id = ?2 and ds.canceled = false and co.is_occupation_grant = true")
                 .setParameter(1, directiveId);

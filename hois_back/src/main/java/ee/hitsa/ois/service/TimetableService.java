@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -69,13 +70,16 @@ import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.LessonTime;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
 import ee.hitsa.ois.domain.timetable.Timetable;
 import ee.hitsa.ois.domain.timetable.TimetableEvent;
 import ee.hitsa.ois.domain.timetable.TimetableEventRoom;
+import ee.hitsa.ois.domain.timetable.TimetableEventSubgroup;
 import ee.hitsa.ois.domain.timetable.TimetableEventTeacher;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.domain.timetable.TimetableObject;
 import ee.hitsa.ois.domain.timetable.TimetableObjectStudentGroup;
+import ee.hitsa.ois.enums.CapacityType;
 import ee.hitsa.ois.enums.DeclarationStatus;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Role;
@@ -114,6 +118,7 @@ import ee.hitsa.ois.web.dto.timetable.GroupTimetableDto;
 import ee.hitsa.ois.web.dto.timetable.HigherTimetablePlanDto;
 import ee.hitsa.ois.web.dto.timetable.HigherTimetableStudentGroupCapacityDto;
 import ee.hitsa.ois.web.dto.timetable.HigherTimetableStudentGroupDto;
+import ee.hitsa.ois.web.dto.timetable.HigherTimetableSubgroupDto;
 import ee.hitsa.ois.web.dto.timetable.LessonTimeDto;
 import ee.hitsa.ois.web.dto.timetable.NameAndCode;
 import ee.hitsa.ois.web.dto.timetable.RoomTimetableDto;
@@ -230,9 +235,15 @@ public class TimetableService {
         dto.setEndDate(timetable.getEndDate());
         dto.setSubjectTeacherPairs(getPairsforTimetable(timetable));
         dto.setStudentGroups(getHigherStudentGroups(timetable));
-        dto.setStudentGroupCapacities(
-                getCapacitiesForHigherPlanning(timetable, StreamUtil.toMappedList(r -> (r.getId()), dto.getStudentGroups()),
-                        StreamUtil.toMappedList(r -> (r.getId()), dto.getSubjectTeacherPairs())));
+
+        Long studyPeriodId = EntityUtil.getId(timetable.getStudyPeriod());
+        List<Long> studentGroupIds = StreamUtil.toMappedList(r -> (r.getId()), dto.getStudentGroups());
+        List<Long> subjectStudyPeriodIds = StreamUtil.toMappedList(r -> (r.getId()), dto.getSubjectTeacherPairs());
+        dto.setStudentGroupCapacities(getCapacitiesForHigherPlanning(studyPeriodId, studentGroupIds,
+                subjectStudyPeriodIds));
+        dto.setSubjectStudyPeriodSubgroups(getSubjectStudyPeriodSubgroups(studyPeriodId, studentGroupIds,
+                subjectStudyPeriodIds));
+
         dto.setLessonTimes(getLessonTimesForPlanning(timetable));
         dto.setStudentGroups(getPlannedLessonsForHigherTimetable(timetable, dto.getStudentGroups()));
         dto.setSubjectTeacherPairs(getPlannedLessonsForHigherTimetableSsp(timetable, dto.getSubjectTeacherPairs()));
@@ -294,6 +305,9 @@ public class TimetableService {
         if (!timetableEventTimes.isEmpty()) {
             timetableEventTimes = addRoomsListToEvents(timetableEventTimes);
             timetableEventTimes = addTeachersListToEvents(timetableEventTimes);
+            if (Boolean.TRUE.equals(timetable.getIsHigher())) {
+                timetableEventTimes = addSubgroupsListToEvents(timetableEventTimes);
+            }
         }
 
         Map<Long, List<TimetableEventDto>> eventsBySubjectStudyPeriods = timetableEventTimes.stream()
@@ -333,6 +347,9 @@ public class TimetableService {
         if (!timetableEventTimes.isEmpty()) {
             timetableEventTimes = addRoomsListToEvents(timetableEventTimes);
             timetableEventTimes = addTeachersListToEvents(timetableEventTimes);
+            if (Boolean.TRUE.equals(timetable.getIsHigher())) {
+                timetableEventTimes = addSubgroupsListToEvents(timetableEventTimes);
+            }
         }
         
         Map<Long, List<TimetableEventDto>> eventsByStudentGroups = timetableEventTimes.stream()
@@ -394,23 +411,44 @@ public class TimetableService {
         qb.requiredCriteria("tet.id in (:timetableEventIds)", "timetableEventIds",
                 timetableEvents.stream().map(r -> r.getId()).collect(Collectors.toSet()));
 
+        qb.sort("p.lastname, p.firstname");
         List<?> data = qb.select("tet.id, t.id as teacher_id, p.firstname, p.lastname", em).getResultList();
 
-        Map<Long, List<Long>> teachersByTimetableEventTimes = data.stream().collect(Collectors
-                .groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toList())));
-        
-        Map<Long, List<String>> teachersNamesByTimetableEventTimes = data.stream().collect(Collectors
-                .groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)), Collectors.toList())));
+        Map<Long, Map<Long, String>> teachersByTimetableEventTimes = data.stream().collect(Collectors.
+                groupingBy(r -> resultAsLong(r, 0), Collectors.toMap(r -> resultAsLong(r, 1),
+                        r -> PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)),
+                        (v1, v2) -> v1, LinkedHashMap::new)));
 
         for (TimetableEventDto dto : timetableEvents) {
-            List<Long> teachers = teachersByTimetableEventTimes.get(dto.getId());
+            Map<Long, String> teachers = teachersByTimetableEventTimes.get(dto.getId());
             if(teachers != null) {
-                dto.setTeachers(teachers);
+                dto.setTeachers(new ArrayList<>(teachers.keySet()));
+                dto.setTeacherNames(new ArrayList<>(teachers.values()));
             }
-            
-            List<String> teacherNames = teachersNamesByTimetableEventTimes.get(dto.getId());
-            if(teacherNames != null) {
-                dto.setTeacherNames(teacherNames);
+        }
+
+        return timetableEvents;
+    }
+
+    private List<TimetableEventDto> addSubgroupsListToEvents(List<TimetableEventDto> timetableEvents) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event_subgroup tes"
+                + " join timetable_event_time tet on tet.id = tes.timetable_event_time_id"
+                + " join subject_study_period_subgroup sspg on sspg.id = tes.subject_study_period_subgroup_id");
+        qb.requiredCriteria("tet.id in (:timetableEventIds)", "timetableEventIds",
+                timetableEvents.stream().map(r -> r.getId()).collect(Collectors.toSet()));
+
+        qb.sort("sspg.code");
+        List<?> data = qb.select("tet.id, tes.subject_study_period_subgroup_id, sspg.code", em).getResultList();
+
+        Map<Long, Map<Long, String>> subgroupsByTimetableEventTimes = data.stream().collect(Collectors.
+                groupingBy(r -> resultAsLong(r, 0), Collectors.toMap(r -> resultAsLong(r, 1),
+                        r -> resultAsString(r, 2), (v1, v2) -> v1, LinkedHashMap::new)));
+
+        for (TimetableEventDto dto : timetableEvents) {
+            Map<Long, String> subgroups = subgroupsByTimetableEventTimes.get(dto.getId());
+            if (subgroups != null) {
+                dto.setSubgroups(new ArrayList<>(subgroups.keySet()));
+                dto.setSubgroupCodes(new ArrayList<>(subgroups.values()));
             }
         }
 
@@ -444,7 +482,7 @@ public class TimetableService {
             List<?> data = em.createNativeQuery("select sspt.id, sspc.capacity_type_code,"
                     + " case when ssp.is_capacity_diff then ssptc.hours else sspc.hours end,"
                     + " (select count(*) from timetable_event_time tet"
-                    + " join timetable_event_teacher tete on tete.timetable_event_time_id = tet.id"
+                    + " join timetable_event_teacher tete on tete.timetable_event_time_id = tet.id and tete.teacher_id = sspt.teacher_id"
                     + " join timetable_event te on te.id = tet.timetable_event_id"
                     + " join timetable_object too on too.id = te.timetable_object_id"
                     + " where too.subject_study_period_id = ssp.id and te.capacity_type_code = sspc.capacity_type_code)"
@@ -641,18 +679,34 @@ public class TimetableService {
         }
     }
 
+    private void addSubgroupsToTimetableEvent(TimetableEventTime timetableEventTime,
+            Set<SubjectStudyPeriodSubgroup> subgroups) {
+        for(SubjectStudyPeriodSubgroup subgroup : subgroups) {
+            TimetableEventSubgroup timetableEventSubgroup = new TimetableEventSubgroup();
+            timetableEventSubgroup.setSubjectStudyPeriodSubgroup(em.getReference(SubjectStudyPeriodSubgroup.class,
+                    EntityUtil.getId(subgroup)));
+            timetableEventSubgroup.setTimetableEventTime(timetableEventTime);
+            timetableEventTime.getTimetableEventSubgroups().add(timetableEventSubgroup);
+        }
+    }
+
     private void saveHigherTimetableEventTimes(Timetable timetable, TimetableEvent timetableEvent, TimetableEventHigherForm form) {
         List<TimetableEventTime> timetableEventTimes = timetableEvent.getTimetableEventTimes();
-        TimetableEventTime oldEventTime = form.getOldEventId() != null ? em.getReference(TimetableEventTime.class, form.getOldEventId()) : null;
-        
+        SubjectStudyPeriod timetableEventSsp = timetableEvent.getTimetableObject().getSubjectStudyPeriod();
+        TimetableEventTime oldEventTime = form.getOldEventId() != null
+                ? em.getReference(TimetableEventTime.class, form.getOldEventId()) : null;
+
         List<Teacher> teachers = oldEventTime != null
                 ? StreamUtil.toMappedList(it -> it.getTeacher(), oldEventTime.getTimetableEventTeachers())
-                : StreamUtil.toMappedList(it -> it.getTeacher(), timetableEvent.getTimetableObject().getSubjectStudyPeriod().getTeachers());
+                : StreamUtil.toMappedList(it -> it.getTeacher(), timetableEventSsp.getTeachers());
+        Set<SubjectStudyPeriodSubgroup> subgroups = oldEventTime != null
+                ? StreamUtil.toMappedSet(it -> it.getSubjectStudyPeriodSubgroup(), oldEventTime.getTimetableEventSubgroups())
+                : timetableEventSsp.getSubgroups();
         timetableEventTimes.clear();
         TimetableEventTime timetableEventTime = new TimetableEventTime();
         timetableEventTime.setStart(timetableEvent.getStart());
         timetableEventTime.setEnd(timetableEvent.getEnd());
-        
+
         if (oldEventTime != null) {
             addRoomsToTimetableEventTime(timetableEventTime, StreamUtil
                     .toMappedList(er -> EntityUtil.getId(er.getRoom()), oldEventTime.getTimetableEventRooms()));
@@ -660,6 +714,7 @@ public class TimetableService {
             addRoomsToTimetableEventTime(timetableEventTime, Arrays.asList(form.getRoom().getId()));
         }
         addTeachersToTimetableEvent(timetableEventTime, teachers);
+        addSubgroupsToTimetableEvent(timetableEventTime, subgroups);
         timetableEventTimes.add(timetableEventTime);
         long daysToAdd;
         if (ClassifierUtil.equals(TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_P, timetableEvent.getRepeat())) {
@@ -684,6 +739,7 @@ public class TimetableService {
                 addRoomsToTimetableEventTime(currentTimetableEventTime, Arrays.asList(form.getRoom().getId()));
             }
             addTeachersToTimetableEvent(currentTimetableEventTime, teachers);
+            addSubgroupsToTimetableEvent(currentTimetableEventTime, subgroups);
             timetableEventTimes.add(currentTimetableEventTime);
             currentStart = currentStart.plusDays(daysToAdd);
             currentEnd = currentEnd.plusDays(daysToAdd);
@@ -801,6 +857,16 @@ public class TimetableService {
                             timetableEventTeacher.setTeacher(em.getReference(Teacher.class, id));
                             timetableEventTeacher.setTimetableEventTime(timetableEventTime);
                             return timetableEventTeacher;
+                        })) {
+                    modified = true;
+                }
+                List<TimetableEventSubgroup> oldSubgroups = currentTime.getTimetableEventSubgroups();
+                if(EntityUtil.bindEntityCollection(oldSubgroups, r -> EntityUtil.getId(r.getSubjectStudyPeriodSubgroup()),
+                        form.getSubgroups(), r -> r, id -> {
+                            TimetableEventSubgroup subgroup = new TimetableEventSubgroup();
+                            subgroup.setSubjectStudyPeriodSubgroup(em.getReference(SubjectStudyPeriodSubgroup.class, id));
+                            subgroup.setTimetableEventTime(timetableEventTime);
+                            return subgroup;
                         })) {
                     modified = true;
                 }
@@ -1164,9 +1230,8 @@ public class TimetableService {
                 resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4), resultAsString(r, 5))), data);
     }
 
-    private List<HigherTimetableStudentGroupCapacityDto> getCapacitiesForHigherPlanning(Timetable timetable,
+    private List<HigherTimetableStudentGroupCapacityDto> getCapacitiesForHigherPlanning(Long studyPeriodId,
             List<Long> studentGroupIds, List<Long> subjectStudyPeriodIds) {
-        Long studyPeriodId = EntityUtil.getId(timetable.getStudyPeriod());
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period_capacity sspc "
                 + " join subject_study_period ssp on ssp.id = sspc.subject_study_period_id "
                 + " left join subject_study_period_student_group sspsg on sspsg.subject_study_period_id = ssp.id"
@@ -1216,22 +1281,74 @@ public class TimetableService {
     }
 
     private Map<String, Long> getPlannedTotalsForHigherStudentGroups(Long studyPeriodId) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event_time tet"
-                + " join timetable_event te on te.id = tet.timetable_event_id"
-                + " join timetable_object too on too.id = te.timetable_object_id"
-                + " join subject_study_period ssp on ssp.id = too.subject_study_period_id"
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period ssp"
+                + " join timetable_object too on too.subject_study_period_id = ssp.id"
                 + " left join timetable_object_student_group tosg on tosg.timetable_object_id = too.id"
-                + " left join student_group sg on sg.id = tosg.student_group_id");
-
+                + " left join student_group sg on sg.id = tosg.student_group_id"
+                + " left join subject_study_period_subgroup sspg on sspg.subject_study_period_id = ssp.id"
+                + " left join subject_study_period_capacity sspc on sspc.subject_study_period_id = ssp.id");
         qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriodId);
 
-        qb.groupBy("too.subject_study_period_id, sg.id, te.capacity_type_code");
+        qb.groupBy("ssp.id, sg.id, sspg.id, sspc.capacity_type_code");
+        String totalsBySubgroup = qb.querySql("ssp.id ssp_id, sg.id sg_id, sspg.id sspg_id, sspc.capacity_type_code,"
+                + " (select count(*) from timetable_event te"
+                + " join timetable_event_time tet on tet.timetable_event_id = te.id"
+                + " join timetable_object too2 on too2.id = te.timetable_object_id and too2.subject_study_period_id = ssp.id"
+                + " left join timetable_object_student_group tosg2 on tosg2.timetable_object_id = too2.id"
+                + " left join timetable_event_subgroup tes on tes.timetable_event_time_id = tet.id"
+                + " where te.capacity_type_code = sspc.capacity_type_code and (sg is null or tosg2.student_group_id = sg.id)"
+                + " and (sspg.id is null or tes.subject_study_period_subgroup_id = sspg.id)) lessons", false);
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.putAll(qb.queryParameters());
 
-        List<?> data = qb.select("too.subject_study_period_id as ssp_id, sg.id as sg_id, te.capacity_type_code, count(*)", em).getResultList();
+        qb = new JpaNativeQueryBuilder("from (" + totalsBySubgroup + ") as capacities");
+        qb.groupBy("ssp_id, sg_id, capacity_type_code");
+
+        List<?> data = qb.select("ssp_id, sg_id, capacity_type_code, min(lessons)", em, parameters).getResultList();
         // key = subject_study_period.id + _ + student_group.id + _ + capacity_type
         return StreamUtil.toMap(r -> resultAsLong(r, 0).toString() + "_"
                 + (resultAsLong(r, 1) != null ? resultAsLong(r, 1).toString() : "") + "_" + resultAsString(r, 2),
                 r -> resultAsLong(r, 3), data);
+    }
+
+    private Map<Long, List<HigherTimetableSubgroupDto>> getSubjectStudyPeriodSubgroups(Long studyPeriodId,
+            List<Long> studentGroupIds, List<Long> subjectStudyPeriodIds) {
+        if(studentGroupIds.isEmpty() && subjectStudyPeriodIds.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period ssp "
+                + " join subject_study_period_subgroup ssps on ssps.subject_study_period_id = ssp.id "
+                + " left join subject_study_period_teacher sspt on sspt.id = ssps.subject_study_period_teacher_id"
+                + " left join teacher t on t.id = sspt.teacher_id"
+                + " left join person p on p.id = t.person_id");
+        if (!studentGroupIds.isEmpty() && !subjectStudyPeriodIds.isEmpty()) {
+            qb.requiredCriteria("(exists (select 1 from subject_study_period_student_group sspsg"
+                    + " where sspsg.student_group_id in (:studentGroupIds)) or ssp.id in (:subjectStudyPeriodIds))",
+                    "studentGroupIds", studentGroupIds);
+            qb.parameter("subjectStudyPeriodIds", subjectStudyPeriodIds);
+        } else {
+            qb.optionalCriteria("exists (select 1 from subject_study_period_student_group sspsg"
+                    + " where sspsg.student_group_id in (:studentGroupIds))", "studentGroupIds", studentGroupIds);
+            qb.optionalCriteria("ssp.id in (:subjectStudyPeriodIds)", "subjectStudyPeriodIds",
+                    subjectStudyPeriodIds);
+        }
+        qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriodId);
+
+        qb.sort("ssps.code");
+        String select = "ssp.id ssp_id, ssps.id ssps_id, ssps.code, sspt.teacher_id, p.firstname, p.lastname";
+        List<?> data = qb.select(select, em).getResultList();
+
+        return StreamUtil.nullSafeList(data).stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                Collectors.mapping(r -> {
+                    AutocompleteResult teacher = null;
+                    Long teacherId = resultAsLong(r, 3);
+                    if (teacherId != null) {
+                        String teacherName = PersonUtil.fullname(resultAsString(r, 4), resultAsString(r, 5));
+                        teacher = new AutocompleteResult(teacherId, teacherName, teacherName);
+                    }
+                    return new HigherTimetableSubgroupDto(resultAsLong(r, 1), resultAsString(r, 2), teacher);
+                }, Collectors.toList())));
     }
 
     private List<TimetableStudentGroupCapacityDto> getCapacitiesForVocationalPlanning(List<Long> studentGroupIds,
@@ -1935,7 +2052,7 @@ public class TimetableService {
         return periodsWithConnectedSubjects;
     }
 
-    public void sendTimetableChangesMessages(TimetableObject object, LocalDateTime start, LocalDateTime end) {
+    public void  sendTimetableChangesMessages(TimetableObject object, LocalDateTime start, LocalDateTime end) {
         Timetable timetable = object.getTimetable();
         if(ClassifierUtil.equals(TimetableStatus.TUNNIPLAAN_STAATUS_P, timetable.getStatus())) {
             // send automatic messages about timetable change
@@ -2671,7 +2788,12 @@ public class TimetableService {
                     if (childNode.getNodeType() == Node.ELEMENT_NODE && Objects.equals("lesson_subject", childNode.getNodeName())) {
                         subjectCode = childNode.getAttributes().getNamedItem("id").getTextContent();
                         if (subjectCode != null && subjectCode.length() > 3) {
-                            subjectUntis = subjectCode.substring(3, subjectCode.lastIndexOf('`'));
+                            int lastIndexCapacity = subjectCode.lastIndexOf('`');
+                            if (lastIndexCapacity != -1) {
+                                subjectUntis = subjectCode.substring(3, lastIndexCapacity);
+                            } else {
+                                subjectUntis = subjectCode.substring(3);
+                            }
                         }
                         break;
                     }
@@ -2789,7 +2911,11 @@ public class TimetableService {
 			            	} else if (lessonNode.getNodeType() == Node.ELEMENT_NODE && "lesson_subject".equals(lessonNode.getNodeName())) {
 			            	    String subjectId = lessonNode.getAttributes().item(0).getTextContent();
 			            	    int lastIndex = subjectId.lastIndexOf('`');
-			            	    capacityType = subjectId.substring(lastIndex + 1);
+			            	    if (lastIndex != -1) {
+			            	        capacityType = subjectId.substring(lastIndex + 1);
+			            	    } else {
+			            	        capacityType = CapacityType.MAHT_a.name();
+			            	    }
                             }
 			            }
 			            

@@ -23,7 +23,8 @@ angular
     'ngStorage',
     'angular-cache',
     'color.picker',
-    'chart.js'
+    'chart.js',
+    'angular-inview'
   ])
   .config(function ($routeProvider) {
     $routeProvider

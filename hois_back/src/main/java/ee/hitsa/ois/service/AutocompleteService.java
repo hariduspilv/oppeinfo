@@ -26,6 +26,8 @@ import java.util.stream.Stream;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
+import ee.hitsa.ois.enums.ScholarshipType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -962,10 +964,18 @@ public class AutocompleteService {
         }
     }
 
-    public List<AutocompleteResult> students(Long schoolId, StudentAutocompleteCommand lookup) {
+    private List<?> studentResults(Long schoolId, StudentAutocompleteCommand lookup) {
         String from = "from student s inner join person p on s.person_id = p.id";
         if (Boolean.TRUE.equals(lookup.getShowStudentGroup())) {
             from += " left join student_group sg on s.student_group_id = sg.id";
+        }
+        if (Boolean.TRUE.equals(lookup.getShowGuestStudent())) {
+            from += " left join (select s.study_start, ds.student_id "
+                        + "from directive_student ds "
+                        + "join student s on ds.student_id = s.id "
+                        + "join directive d on d.id = ds.directive_id "
+                        + "where d.type_code = 'KASKKIRI_KYLALIS' and ds.start_date < date(now()) and ds.canceled = false) "
+                        + "DS1 on DS1.student_id = s.id";
         }
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from).sort("p.lastname", "p.firstname");
 
@@ -1044,10 +1054,63 @@ public class AutocompleteService {
 
         String select = "s.id, p.firstname, p.lastname, p.idcode"
                 + (Boolean.TRUE.equals(lookup.getShowStudentGroup()) ? ", sg.code" : ", null") + " sg_code"
-                + (Boolean.TRUE.equals(lookup.getShowGuestStudent()) ? ", s.type_code studentType" : ", null studentType");
-        List<?> data = qb.select(select, em).setMaxResults(MAX_ITEM_COUNT).getResultList();
+                + (Boolean.TRUE.equals(lookup.getShowGuestStudent()) ? ", s.type_code studentType, DS1.study_start as guestStart" : ", null studentType, null as guestStart");
+        return qb.select(select, em).setMaxResults(MAX_ITEM_COUNT).getResultList();
+    }
+    
+    public List<AutocompleteResult> students(Long schoolId, StudentAutocompleteCommand lookup) {
+        List<?> data = studentResults(schoolId, lookup);
         return StreamUtil.toMappedList(r -> {
             String name = PersonUtil.fullnameAndIdcodeOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 5));
+            return new AutocompleteResult(resultAsLong(r, 0), name, name);
+        }, data);
+    }
+    
+    public List<AutocompleteResult> studentsForCertificate(Long schoolId, StudentAutocompleteCommand lookup) {
+        List<?> data = studentResults(schoolId, lookup);
+        return StreamUtil.toMappedList(r -> {
+            String name = PersonUtil.fullnameAndIdcodeOptionalGuestForCertificate(resultAsString(r, 1), resultAsString(r, 2)
+                    , resultAsString(r, 3), resultAsString(r, 4), resultAsString(r, 5), JpaQueryUtil.resultAsLocalDate(r, 6));
+            return new AutocompleteResult(resultAsLong(r, 0), name, name);
+        }, data);
+    }
+
+    public List<AutocompleteResult> stipendAvailableStudents(HoisUserDetails user, ScholarshipTerm term,
+            SearchCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s "
+                + "join person p on s.person_id = p.id "
+                + "join student_group sg on sg.id = s.student_group_id")
+                .sort("p.lastname", "p.firstname");
+
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", EntityUtil.getId(term.getSchool()));
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname",
+                "concat(p.firstname, ' ', p.lastname, ' (', p.idcode, ')')"), "name", lookup.getName());
+        qb.requiredCriteria("s.status_code in :statusCodes", "statusCodes", StudentStatus.STUDENT_STATUS_ACTIVE);
+        qb.requiredCriteria("s.type_code != :studentType", "studentType", StudentType.OPPUR_K.name());
+        qb.requiredCriteria("not exists (select 1 from scholarship_application sa where sa.student_id = s.id "
+                        + "and sa.scholarship_term_id = :termId)", "termId", term.getId());
+
+        String termType = EntityUtil.getCode(term.getType());
+        if (ScholarshipType.GRANTS.contains(termType)) {
+            qb.filter("exists (select c.id from curriculum c "
+                    + "join curriculum_version cv on cv.curriculum_id = c.id "
+                    + "where cv.id = s.curriculum_version_id "
+                    + "and c.is_higher = false)");
+        } else {
+            qb.filter("exists (select c.id from curriculum c "
+                    + "join curriculum_version cv on cv.curriculum_id = c.id "
+                    + "where cv.id = s.curriculum_version_id "
+                    + "and c.is_higher = true)");
+        }
+        if (user.isTeacher()) {
+            qb.requiredCriteria("s.student_group_id in (select sg2.id from student_group sg2 where sg2.teacher_id = :teacherId)",
+                    "teacherId", user.getTeacherId());
+        }
+
+        String select = "s.id, p.firstname, p.lastname, sg.code";
+        List<?> data = qb.select(select, em).setMaxResults(AutocompleteService.MAX_ITEM_COUNT).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String name = PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)) + " - " + resultAsString(r, 3);
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
         }, data);
     }

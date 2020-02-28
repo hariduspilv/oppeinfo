@@ -43,6 +43,7 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.LessonTimeBuilding;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EnterpriseUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -283,6 +284,13 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
                 SubjectUtil.subjectName(subject.getCode(), subject.getNameEt(), subject.getCredits()),
                 SubjectUtil.subjectName(subject.getCode(), subject.getNameEn(), subject.getCredits()));
     }
+    
+    public static AutocompleteResult of(Subject subject, boolean withCredits) {
+        if (withCredits) return AutocompleteResult.of(subject);
+        return new AutocompleteResult(subject.getId(),
+                SubjectUtil.subjectName(subject.getCode(), subject.getNameEt()),
+                SubjectUtil.subjectName(subject.getCode(), subject.getNameEn()));
+    }
 
     public static AutocompleteResult of(SubjectSearchDto subject) {
         return new AutocompleteResult(subject.getId(),
@@ -293,6 +301,18 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
     public static AutocompleteResult of(SubjectProgram program) {
         return new SubjectProgramResult(program.getId(), null, null, program.getSubjectStudyPeriodTeacher().getTeacher().getPerson().getFullname(),
                 program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getStudyPeriod(), program.getStatus().getCode());
+    }
+
+    public static AutocompleteResult of(SubjectStudyPeriodSubgroup subgroup) {
+        return of(subgroup, true);
+    }
+    
+    public static AutocompleteResult of(SubjectStudyPeriodSubgroup subgroup, boolean includeTeacher) {
+        if (!includeTeacher || subgroup.getTeacher() == null) {
+            return new AutocompleteResult(subgroup.getId(), subgroup.getCode(), subgroup.getCode());
+        }
+        String name = String.format("%s (%s)", subgroup.getCode(), PersonUtil.fullname(subgroup.getTeacher().getTeacher().getPerson()));
+        return new AutocompleteResult(subgroup.getId(), name, name);
     }
 
     public static AutocompleteResult of(Teacher teacher) {

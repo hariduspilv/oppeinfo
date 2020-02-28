@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.MidtermTaskUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
 import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodMidtermTaskForm;
 
 public class SubjectStudyPeriodMidtermTaskDto extends SubjectStudyPeriodMidtermTaskForm {
@@ -16,8 +18,9 @@ public class SubjectStudyPeriodMidtermTaskDto extends SubjectStudyPeriodMidtermT
     private SubjectStudyPeriodSearchDto subjectStudyPeriod;
     private AutocompleteResult assessment;
     private Set<MidtermTaskDto> midtermTasks;
-    private Set<MidtermTaskStudentDto> students;
     private Set<HigherProtocolDto> protocols;
+    private List<SubjectStudyPeriodSubgroupDto> subgroups;
+    private Boolean canEditSubgroups;
 
     public static SubjectStudyPeriodMidtermTaskDto of(SubjectStudyPeriod subjectStudyPeriod) {
         SubjectStudyPeriodMidtermTaskDto dto = new SubjectStudyPeriodMidtermTaskDto();
@@ -44,6 +47,8 @@ public class SubjectStudyPeriodMidtermTaskDto extends SubjectStudyPeriodMidtermT
         dto.setStudents(StreamUtil.toMappedSet(MidtermTaskStudentDto::of, 
                 subjectStudyPeriod.getDeclarationSubjects()));
         dto.setProtocols(StreamUtil.toMappedSet(p -> HigherProtocolDto.ofForMidtermTasksForm(p.getProtocol()), subjectStudyPeriod.getProtocols()));
+        dto.setSubgroups(StreamUtil.toMappedList(SubjectStudyPeriodSubgroupDto::of, subjectStudyPeriod.getSubgroups().stream().sorted(SubjectStudyPeriodUtil.COMPARATOR_SUBGROUP)));
+        dto.setCanEditSubgroups(Boolean.valueOf(SubjectStudyPeriodUtil.canEditSubgroups(subjectStudyPeriod)));
         return dto;
     }
 
@@ -62,6 +67,7 @@ public class SubjectStudyPeriodMidtermTaskDto extends SubjectStudyPeriodMidtermT
                 .filter(sr -> studentIds.contains(EntityUtil.getId(sr.getDeclarationSubject()
                         .getDeclaration().getStudent())))
                 .map(MidtermTaskStudentResultDto::of).collect(Collectors.toSet()));
+        dto.setSubgroups(StreamUtil.toMappedList(SubjectStudyPeriodSubgroupDto::of, subjectStudyPeriod.getSubgroups().stream().sorted(SubjectStudyPeriodUtil.COMPARATOR_SUBGROUP)));
         return dto;
     }
 
@@ -71,14 +77,6 @@ public class SubjectStudyPeriodMidtermTaskDto extends SubjectStudyPeriodMidtermT
 
     public void setProtocols(Set<HigherProtocolDto> protocols) {
         this.protocols = protocols;
-    }
-
-    public Set<MidtermTaskStudentDto> getStudents() {
-        return students;
-    }
-
-    public void setStudents(Set<MidtermTaskStudentDto> students) {
-        this.students = students;
     }
 
     public SubjectStudyPeriodSearchDto getSubjectStudyPeriod() {
@@ -104,4 +102,21 @@ public class SubjectStudyPeriodMidtermTaskDto extends SubjectStudyPeriodMidtermT
     public void setMidtermTasks(Set<MidtermTaskDto> midtermTasks) {
         this.midtermTasks = midtermTasks;
     }
+
+    public List<SubjectStudyPeriodSubgroupDto> getSubgroups() {
+        return subgroups;
+    }
+
+    public void setSubgroups(List<SubjectStudyPeriodSubgroupDto> subgroups) {
+        this.subgroups = subgroups;
+    }
+
+    public Boolean getCanEditSubgroups() {
+        return canEditSubgroups;
+    }
+
+    public void setCanEditSubgroups(Boolean canEditSubgroups) {
+        this.canEditSubgroups = canEditSubgroups;
+    }
+
 }

@@ -1,8 +1,9 @@
 'use strict';
 
-angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$scope', 'QueryUtils',  '$route', 'message', 'MidtermTaskUtil', 'ArrayUtils', 'dialogService', 
+angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$scope', 'QueryUtils',  '$route', 'message', 'MidtermTaskUtil', 'ArrayUtils', 'dialogService',
 function ($scope, QueryUtils, $route, message, MidtermTaskUtil, ArrayUtils, dialogService) {
   $scope.auth = $route.current.locals.auth;
+  $scope.updateSubgroupPlaces = updateSubgroupPlaces;
 
   $scope.subjectStudyPeriodId = $route.current.params.id;
   var Endpoint = QueryUtils.endpoint('/midtermTasks/studentResults');
@@ -24,16 +25,14 @@ function ($scope, QueryUtils, $route, message, MidtermTaskUtil, ArrayUtils, dial
           };
   }
 
-  function addEmptyStudentResults() {
-    $scope.record.students.forEach(function(student){
-      var newResults = [];
-      for(var i = 0; i < $scope.record.midtermTasks.length; i++) {
-        if(!studentHasResultForTask(student, $scope.record.midtermTasks[i])) {
-          newResults.push(getEmptyStudentResult(student, $scope.record.midtermTasks[i]));
-        }
+  function addEmptyStudentResults(student) {
+    var newResults = [];
+    for (var i = 0; i < $scope.record.midtermTasks.length; i++) {
+      if (!studentHasResultForTask(student, $scope.record.midtermTasks[i])) {
+        newResults.push(getEmptyStudentResult(student, $scope.record.midtermTasks[i]));
       }
-      $scope.record.studentResults = $scope.record.studentResults.concat(newResults);
-    });
+    }
+    $scope.record.studentResults = $scope.record.studentResults.concat(newResults);
   }
 
   function loadTasks() {
@@ -47,8 +46,11 @@ function ($scope, QueryUtils, $route, message, MidtermTaskUtil, ArrayUtils, dial
   function afterload() {
     $scope.record.midtermTasks = midtermTaskUtil.getSortedMidtermTasks($scope.record.midtermTasks);
     $scope.moodleTasks = midtermTaskUtil.getMoodleTasks($scope.record.midtermTasks);
-  // TODO add to MidtermTaskUtil
-    addEmptyStudentResults();
+    $scope.record.students.forEach(function (student) {
+      student.previousSubgroup = student.subgroup !== null ? student.subgroup.id : null;
+      // TODO add to MidtermTaskUtil
+      addEmptyStudentResults(student);
+    });
     midtermTaskUtil.sortStudentResults($scope.record.studentResults, $scope.record.midtermTasks);
   }
 
@@ -117,6 +119,22 @@ function ($scope, QueryUtils, $route, message, MidtermTaskUtil, ArrayUtils, dial
       return student.studentId === protocolStudent.student.id;
     };
   };
+
+  function updateSubgroupPlaces(student, newSubgroupId) {
+    var oldSubgroup = student.previousSubgroup !== null ? $scope.record.subgroups.find(function (el) {
+      return el.id === student.previousSubgroup;
+    }) : undefined;
+    var newSubgroup = $scope.record.subgroups.find(function (el) {
+      return el.id === newSubgroupId;
+    });
+    if (oldSubgroup) {
+      oldSubgroup.declared--;
+    }
+    if (newSubgroup) {
+      newSubgroup.declared++;
+      student.previousSubgroup = newSubgroup.id;
+    }
+  }
 
 }]).controller('MidtermTaskController', ['$scope', '$sessionStorage', 'QueryUtils', 'DataUtils', '$route', 'ArrayUtils', 'message', 'dialogService', 'orderByFilter', '$rootScope', function ($scope, $sessionStorage, QueryUtils, DataUtils, $route, ArrayUtils, message, dialogService, orderBy, $rootScope) {
 

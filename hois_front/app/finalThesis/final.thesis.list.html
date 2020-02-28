@@ -89,10 +89,10 @@
           <tr md-row>
             <th md-column md-order-by="2">{{'finalThesis.label' | translate}}</th>
             <th md-column md-order-by="4">{{'finalThesis.student' | translate}}</th>
+            <th md-column md-order-by="12">{{'finalThesis.studentGroup' | translate}}</th>
             <th md-column md-order-by="7">{{'finalThesis.idcode' | translate}}</th>
             <th md-column md-order-by="8">{{'finalThesis.supervisors' | translate}}</th>
             <th md-column md-order-by="9">{{'finalThesis.curriculum' | translate}}</th>
-            <th md-column md-order-by="12">{{'finalThesis.studentGroup' | translate}}</th>
             <th md-column md-order-by="13">{{'finalThesis.insertedDate' | translate}}</th>
             <th md-column md-order-by="14">{{'finalThesis.confirmedDate' | translate}}</th>
             <th md-column></th>
@@ -104,10 +104,10 @@
               <a ng-href="#/finalThesis/{{row.id}}/view">{{row.themeEt}}</a>
             </td>
             <td md-cell>{{row.student.nameEt}}</td>
+            <td md-cell>{{row.studentGroup}}</td>
             <td md-cell>{{row.idcode}}</td>
             <td md-cell>{{row.supervisors}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
-            <td md-cell>{{row.studentGroup}}</td>
             <td md-cell>{{row.inserted | hoisDate}}</td>
             <td md-cell>{{row.confirmed | hoisDate}}</td>
             <td md-cell>

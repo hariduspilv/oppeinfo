@@ -4,7 +4,7 @@
   <form name="personForm" class="nomargin">
     <div layout="column" flex>
       <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45" flex-sm="100">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label>{{'person.idcode' | translate}}</label>
           <hois-idcode-lookup ng-model="person.idcode" name="idcode" role="person"
             after-lookup="lookupPerson(response)" after-failed-lookup="lookupFailure()" no-lookup="cleanReadOnly()" 
@@ -13,34 +13,38 @@
             <ng-message when="estonianIdcode">{{'main.messages.error.estonianIdcode' | translate}}</ng-message>
           </ng-messages>
         </md-input-container>
-        <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label>{{'person.sex' | translate}}</label>
           <hois-classifier-select ng-model="person.sex" main-classifier-code="SUGU" model-value-attr="code" required ng-disabled="idcodeReadonly"></hois-classifier-select>
         </md-input-container>
       </div>
-      <div layout="row">
-        <md-input-container flex="20" flex-sm="100">
+      <div layout="row" layout-xs="column">
+        <md-input-container flex="50" flex-xs="100">
           <label>{{'teacher.person.birthdate' | translate}}</label>
           <md-datepicker ng-model="person.birthdate" md-max-date="maxDate"
                          required md-open-on-focus ng-disabled="idcodeReadonly"></md-datepicker>
         </md-input-container>
+        <md-input-container flex="50" flex-xs="100">
+          <label>{{'person.uniqueCode' | translate}}</label>
+          <input ng-model="person.uniqueCode" disabled>
+        </md-input-container>
       </div>
-      <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45" flex-sm="100">
+      <div layout="row" layout-sm="column" layout-xs="column" >
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label>{{'person.firstname' | translate}}</label>
           <input ng-model="person.firstname" type="text" md-maxlength="100" required>
         </md-input-container>
-        <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label>{{'person.lastname' | translate}}</label>
           <input ng-model="person.lastname" type="text" md-maxlength="100" required>
         </md-input-container>
       </div>
       <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45" flex-sm="100">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label>{{'person.email' | translate}}</label>
           <input ng-model="person.email" type="email" md-maxlength="100">
         </md-input-container>
-        <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label>{{'person.phone' | translate}}</label>
           <input ng-model="person.phone" type="text" md-maxlength="100">
         </md-input-container>

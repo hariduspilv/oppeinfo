@@ -16,12 +16,7 @@
           <td md-cell>
             <a ng-click="scholarshipTerms(stipend)">{{currentLanguageNameField(stipend.type)}}</a>
           </td>
-          <td md-cell>
-            <span ng-if="stipend.applicationStart && stipend.applicationEnd">{{stipend.applicationStart | hoisDate}}-{{stipend.applicationEnd | hoisDate}}</span>
-            <span ng-if="stipend.applicationStart && !stipend.applicationEnd">{{'main.from' | translate}} {{stipend.applicationStart | hoisDate}}</span>
-            <span ng-if="!stipend.applicationStart && stipend.applicationEnd">{{'main.thru' | translate}} {{stipend.applicationEnd | hoisDate}}</span>
-            <span ng-if="!stipend.applicationStart && !stipend.applicationEnd">-</span>
-          </td>
+          <td md-cell>{{stipend.period}}</td>
           <td md-cell>{{stipend.places ? stipend.places : '-'}}</td>
           <td md-cell>
             <span ng-if="stipend.canApply">
@@ -54,7 +49,8 @@
       <tbody md-body>
         <tr md-row ng-repeat="stipend in studentStipends" ng-class-odd="'odd'" ng-class-even="'even'">
           <td md-cell>
-            <a href="#/scholarships/applications/{{stipend.id}}">{{currentLanguageNameField(stipend.type)}}</a>
+            <a ng-if="!stipend.canApply" href="#/scholarships/applications/{{stipend.id}}">{{currentLanguageNameField(stipend.type)}}</a>
+            <a ng-if="stipend.canApply" href="#/scholarships/{{stipend.termId}}/application">{{currentLanguageNameField(stipend.type)}}</a>
           </td>
           <td md-cell>{{currentLanguageNameField(stipend.status)}}
             <md-tooltip ng-if="['STIPTOETUS_STAATUS_L', 'STIPTOETUS_STAATUS_T'].indexOf(stipend.status.code) !== -1  && stipend.rejectComment">{{stipend.rejectComment}}</md-tooltip>

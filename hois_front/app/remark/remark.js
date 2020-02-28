@@ -82,8 +82,7 @@ angular.module('hitsaOis').controller('RemarkListController', ['$scope', '$route
     }
 
     $scope.update = function() {
-      FormUtils.saveRecord($scope.remarkForm, $scope.record, baseUrl);
-      $scope.remarkForm.$setPristine();
+      FormUtils.saveRecord($scope.remarkForm, $scope.record, baseUrl, $scope.remarkForm.$setPristine());
     };
 
     $scope.delete = function() {

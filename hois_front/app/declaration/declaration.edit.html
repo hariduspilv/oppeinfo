@@ -1,3 +1,12 @@
+<style>
+  .secondary-table .md-cell {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+  md-select{ 
+    background: #F5F5F5;
+  }
+</style>
 <div ng-cloak ng-include="'declaration/declaration.navbar.html'"></div>
 
 <div class="ois-form-layout-padding">
@@ -59,7 +68,7 @@
       {{(isGuestStudent && !hasCurriculum ? 'declaration.addSubject' : 'declaration.addExtraCurriculumSubject') | translate}}</md-button>
       </div>
       <div>&nbsp;</div>
-    
+
       <fieldset ng-show="addCurriculumSubjectForm">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'declaration.addingCurriculumSubject' | translate}}</legend>
         <span ng-if="tabledata.content.length === 0">
@@ -76,13 +85,14 @@
                   <th md-column md-order-by="s.credits">{{'declaration.eap' | translate}}</th>
                   <th md-column md-order-by="c.value">{{'declaration.assessment' | translate}}</th>
                   <th md-column md-order-by="cvhms.is_optional">{{'declaration.isRequired' | translate}}</th>
+                  <th md-column>{{'declaration.subgroup' | translate}}</th>
                   <th md-column></th>
                 </tr>
               </thead>
               <tbody md-body>
-                <tr ng-repeat="subject in tabledata.content">
+                <tr md-row ng-repeat="subject in tabledata.content">
                   <td md-cell>{{currentLanguageNameField(subject.module)}}</td>
-                  <td md-cell>{{currentLanguageNameField(subject.subject)}}({{subject.subject.code}})</td>
+                  <td md-cell>{{currentLanguageNameField(subject.subject)}} ({{subject.subject.code}})</td>
                   <td md-cell>
                     <table>
                       <tr ng-repeat="teacher in subject.teachers | orderBy">
@@ -93,6 +103,15 @@
                   <td md-cell>{{subject.subject.credits}}</td>
                   <td md-cell>{{subject.subject.assessment}}</td>
                   <td md-cell>{{subject.isOptional ? 'main.no' : 'main.yes' | translate}}</td>
+                  <td md-cell>
+                    <md-input-container ng-if="subject.subgroups.length > 0" style="width: 100%;">
+                      <md-select ng-model="subject.subgroup" required aria-label="{{'declaration.subgroup' | translate}}">
+                        <md-option ng-value="subgroup" ng-repeat="subgroup in subject.subgroups | orderBy: 'code'">
+                          {{currentLanguageNameField(subgroup)}}
+                        </md-option>
+                      </md-select>
+                    </md-input-container>
+                  </td>
                   <td md-cell>
                     <a href="" ng-click="addCurriculumSubject(subject)">{{'declaration.addSubjectToDeclaration' | translate}}</a>
                   </td>
@@ -108,29 +127,41 @@
             md-page-select></md-table-pagination>
         </span>
       </fieldset>
-    
+
       <fieldset ng-show="addExtraCurriculumSubjectForm">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'declaration.addingExtraCurriculumSubject' | translate}}</legend>
-        <form name="extraCurriculumForm" ng-cloak>
-          <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
-            <md-select ng-model="subject" required aria-label="{{'declaration.addingExtraCurriculumSubject' | translate}}">
-              <md-option ng-value="subject" ng-repeat="subject in subjects |
-                    orderBy: 'subject.' + currentLanguageNameField()">
-                {{currentLanguageNameField(subject.subject)}}({{subject.subject.code}}) - {{subject.teachers.join(', ')}}
-              </md-option>
-            </md-select>
+        <form name="extraCurriculumForm" ng-cloak ng-submit="addExtraCurriculumSubject()">
+          <div class="ois-form-layout" layout="row" layout-xs="column" layout-sm="column" layout-margin ng-cloak>
+            <hois-autocomplete ng-model="subject" flex="50" flex-sm="100" flex-xs="100" name="subject"
+              ha-search="searchExtraCurriculumSubjects" ha-controller="directiveControllers"
+              label="higherProtocol.subjectRequired" no-paging="true" display="display">
+            </hois-autocomplete>
+            <div layout="column" ng-if="subject.subgroups.length > 0" flex="20" flex-sm="100" flex-xs="100">
+              <md-input-container flex="100" style="padding-top: 3px;" class="md-input" 
+                ng-class="{'md-input-has-value' : subject.subgroup !== null}">
+                <label class="md-required">{{'declaration.subgroup' | translate}}</label>
+              </md-input-container>
+              <md-select ng-model="subject.subgroup"  style="margin-top: -21px;padding-top: 10px" md-no-asterisk
+                required aria-label="{{'declaration.subgroup' | translate}}">
+                <md-option ng-value="subgroup" ng-repeat="subgroup in subject.subgroups | orderBy: 'code'">
+                  {{currentLanguageNameField(subgroup)}}
+                </md-option>
+              </md-select>
+            </div>
           </div>
-          <md-button class="md-raised md-primary" ng-click="addExtraCurriculumSubject()">{{"main.button.add" | translate}}</md-button>
+          <md-button class="md-raised md-primary" type="submit"
+          ng-disabled="!subject || (!subject.subgroup && subject.subgroups.length > 0) || subject.subgroups === null || subject.subgroups === undefined || !subject.subgroups.$resolved">{{"main.button.add" | translate}}</md-button>
         </form>
       </fieldset>
       <div>&nbsp;</div>
-    
+
       <md-table-container>
         <table md-table>
           <thead md-head>
             <tr md-row>
               <th md-column>{{'declaration.subject' | translate}}</th>
               <th md-column>{{'declaration.teacher' | translate}}</th>
+              <th md-column>{{'declaration.subgroup' | translate}}</th>
               <th md-column>{{'declaration.eap_assessment' | translate}}</th>
               <th md-column>{{'declaration.module_isRequired' | translate}}</th>
               <th md-column>{{'declaration.prerequisites' | translate}}</th>
@@ -157,6 +188,7 @@
                   </tr>
                 </table>
               </td>
+              <td md-cell>{{subject.subgroup != null ? currentLanguageNameField(subject.subgroup) : '-'}}</td>
               <td md-cell>{{subject.subject.credits}} / {{subject.subject.assessment}}</td>
               <td md-cell>{{subject.module != null ? currentLanguageNameField(subject.module) : ' - '}} / {{subject.isOptional ? 'main.no' : 'main.yes' | translate}}</td>
               <td md-cell>
@@ -195,7 +227,7 @@
   table.md-table:not(.md-row-select) th.md-column:nth-child(n+2):nth-last-child(n+2) {
     padding-right: 28px !important;
   }
-  
+
   legend.period > span {
     color: rgb(25, 169, 25);
     font-size: 10pt;

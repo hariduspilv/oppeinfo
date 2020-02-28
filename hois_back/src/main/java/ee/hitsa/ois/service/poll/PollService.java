@@ -13,9 +13,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IntSummaryStatistics;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -789,8 +790,10 @@ public class PollService {
      * @param poll
      */
     private void setPollTargetCountOverallRepresentative(Poll poll) {
-        String SEARCH_SELECT = "count(distinct sr.id)";
-        String SEARCH_FROM = "from student_representative sr join student s on s.id = sr.student_id";
+        String SEARCH_SELECT = "count(distinct p.id)";
+        String SEARCH_FROM = "from person p "
+                + "join student_representative sr on sr.person_id = p.id "
+                + "join student s on s.id = sr.student_id";
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM);
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", EntityUtil.getId(poll.getSchool()));
         qb.requiredCriteria("s.status_code in (:studentStatus)", "studentStatus", StudentStatus.STUDENT_STATUS_ACTIVE);
@@ -1471,10 +1474,10 @@ public class PollService {
      * @param user
      * @return
      */
-    public Set<ResponseDto> getPolls(HoisUserDetails user) {
+    public LinkedHashSet<ResponseDto> getPolls(HoisUserDetails user) {
         // Validate user
         boolean isUserValid = validateUserForPoll(user);
-        if (!isUserValid) return new HashSet<>();
+        if (!isUserValid) return new LinkedHashSet<>();
         // Response might be found but response_object wont be present, thus response_object id should be used in dto
         String pollSelect = "p.id, p.type_code, ro.response_id as responseId, r.status_code, p.valid_from, p.valid_thru, p.is_theme_pageable,"
                 + " e.name, pe.firstname, pe.lastname, pj.start_date, pj.end_date, pt.target_code,"
@@ -1483,8 +1486,7 @@ public class PollService {
                 + "join poll_target pt on p.id = pt.poll_id "
                 + "left join response r on r.poll_id = p.id "
                 + "left join response_object ro on (ro.response_id = r.id and ro.poll_target_id = pt.id and ro.person_id = " + user.getPersonId()
-                + (user.isStudent() ? " and ro.student_id = " + user.getStudentId() : "") 
-                + (user.isRepresentative() ? " and ro.student_id = " + user.getStudentId() : "")
+                + (user.isStudent() ? " and ro.student_id = " + user.getStudentId() : "")
                 + (user.isTeacher() ? " and ro.teacher_id = " + user.getTeacherId() : "") + ") "
                 + "left join practice_journal pj on pj.id = ro.practice_journal_id "
                 + "left join student s on pj.student_id = s.id "
@@ -1534,6 +1536,8 @@ public class PollService {
         List<PollTypeDto> allReadyToAnswer = polls.stream().filter(p -> p.getResponseId() != null).collect(Collectors.toList());
         // Polls that arent confirmed
         List<PollTypeDto> readyToAnswerPolls = allReadyToAnswer.stream().filter(p -> !p.getResponseStatus().equals(ResponseStatus.KYSITVASTUSSTAATUS_V.name())).collect(Collectors.toList());
+        // Used when migrating from one representative poll per student representative to one representative poll per person
+        filterExcessStudentRepresentativePolls(readyToAnswerPolls);
         // Polls that need response
         List<PollTypeDto> toCreateResponses = polls.stream()
                 .filter(p -> p.getResponseId() == null)
@@ -1544,6 +1548,10 @@ public class PollService {
         // Newly created polls, ready to answer
         List<PollTypeDto> responses = findAndGenerateResponses(toCreateResponses, user);
         readyToAnswerPolls.addAll(responses);
+        // Order polls by end date and by name
+        Collections.sort(readyToAnswerPolls, Comparator.comparing(PollTypeDto::getPollValidThru).thenComparing((p, v) -> {
+            return p.getPollNameEt().compareToIgnoreCase(v.getPollNameEt());
+        }));
         return readyToAnswerPolls.stream().map(p -> {
             ResponseDto dto = new ResponseDto();
             dto.setId(p.getResponseId());
@@ -1554,9 +1562,24 @@ public class PollService {
             dto.setType(p.getType());
             dto.setStatus(p.getResponseStatus());
             return dto;
-        }).collect(Collectors.toSet());
+        }).collect(Collectors.toCollection(LinkedHashSet::new));
     }
-    
+
+    private static void filterExcessStudentRepresentativePolls(List<PollTypeDto> readyToAnswerPolls) {
+        Iterator<PollTypeDto> iterator = readyToAnswerPolls.iterator();
+        List<Long> seenRepresentativePolls = new ArrayList<>();
+        while (iterator.hasNext()) {
+            PollTypeDto dto = iterator.next();
+            if (PollTargets.KYSITLUS_SIHT_L.name().equals(dto.getTargetCode())) {
+                if (seenRepresentativePolls.contains(dto.getId())) {
+                    iterator.remove();
+                } else {
+                    seenRepresentativePolls.add(dto.getId());
+                }
+            }
+        }
+    }
+
     private static void setDtoName(PollTypeDto pollType, ResponseDto dto, HoisUserDetails user) {
         String enterpriseName = pollType.getEnterpriseName();
         String studentName = pollType.getContractStudentName();
@@ -1622,7 +1645,8 @@ public class PollService {
         } else if (user.isRepresentative()) {
             List<Long> studentGroupIds = getPollRelatedStudentGroups(pollType.getId());
             student = em.getReference(Student.class, user.getStudentId());
-            if (studentGroupIds == null || studentGroupIds.isEmpty() || (student.getStudentGroup() != null && studentGroupIds.contains(EntityUtil.getId(student.getStudentGroup())))) {
+            if (ClassifierUtil.oneOf(student.getStatus(), StudentStatus.OPPURSTAATUS_O, StudentStatus.OPPURSTAATUS_A, StudentStatus.OPPURSTAATUS_V) &&
+                (studentGroupIds == null || studentGroupIds.isEmpty() || (student.getStudentGroup() != null && studentGroupIds.contains(EntityUtil.getId(student.getStudentGroup()))))) {
                 responseObject.setStudent(student);
             } else {
                 return;
@@ -2105,10 +2129,12 @@ public class PollService {
     
     private ThemesDto subjectThemes(Poll poll, Response response) {
         List<PollTheme> pollThemes = poll.getPollThemes();
+        pollThemes = pollThemes.stream().sorted((o, p) -> o.getOrderNr().compareTo(p.getOrderNr())).collect(Collectors.toList());
         List<ThemeDto> themeDtos = new ArrayList<>();
         List<PollTheme> repedetiveThemes = pollThemes.stream().filter(p -> p.getIsRepetitive() != null && p.getIsRepetitive().booleanValue()).collect(Collectors.toList());
         List<PollTheme> nonRepedetiveThemes = pollThemes.stream().filter(p -> p.getIsRepetitive() == null || !p.getIsRepetitive().booleanValue()).collect(Collectors.toList());
         List<ResponseSubject> responseSubjects = response.getResponseSubjects();
+        responseSubjects = orderResponseSubjects(responseSubjects);
         for (ResponseSubject responseSubject : responseSubjects) {
             List<ThemeDto> themesBySubjectOrJournal = new ArrayList<>();
             for (PollTheme theme : repedetiveThemes) {
@@ -2118,7 +2144,8 @@ public class PollService {
                 if (responseSubject.getJournal() != null) {
                     dto.setJournal(of(responseSubject.getJournal()));
                     if (isTeacher) {
-                        teachers = em.createQuery("select distinct jt.teacher from JournalTeacher jt where jt.journal.id = ?1", Teacher.class)
+                        teachers = em.createQuery("select jt.teacher from JournalTeacher jt where jt.journal.id = ?1 "
+                                + "order by jt.teacher.person.firstname, jt.teacher.person.lastname", Teacher.class)
                                 .setParameter(1, EntityUtil.getId(responseSubject.getJournal()))
                                 .getResultList();
                     }
@@ -2127,12 +2154,14 @@ public class PollService {
                     dto.setSubject(AutocompleteResult.of(responseSubject.getSubject()));
                     if (isTeacher) {
                         if (responseSubject.getSubjectStudyPeriod() != null) {
-                            teachers = em.createQuery("select sspt.teacher from SubjectStudyPeriodTeacher sspt where sspt.subjectStudyPeriod.id = ?1", Teacher.class)
+                            teachers = em.createQuery("select sspt.teacher from SubjectStudyPeriodTeacher sspt where sspt.subjectStudyPeriod.id = ?1 "
+                                    + "order by sspt.teacher.person.firstname, sspt.teacher.person.lastname", Teacher.class)
                                     .setParameter(1, EntityUtil.getId(responseSubject.getSubjectStudyPeriod()))
                                     .getResultList();
                         } else {
                             teachers = em.createQuery("select sspt.teacher from SubjectStudyPeriodTeacher sspt "
-                                    + "where sspt.subjectStudyPeriod.studyPeriod.id = ?1 and sspt.subjectStudyPeriod.subject.id = ?2", Teacher.class)
+                                    + "where sspt.subjectStudyPeriod.studyPeriod.id = ?1 and sspt.subjectStudyPeriod.subject.id = ?2 "
+                                    + "order by sspt.teacher.person.firstname, sspt.teacher.person.lastname", Teacher.class)
                                     .setParameter(1, EntityUtil.getId(poll.getStudyPeriod()))
                                     .setParameter(2, EntityUtil.getId(responseSubject.getSubject()))
                                     .getResultList();
@@ -2162,7 +2191,6 @@ public class PollService {
             bindQuestionsToThemes(theme, dto, null, null);
             themesNonRepedetive.add(dto);
         }
-        Collections.sort(themeDtos);
         Collections.sort(themesNonRepedetive);
         themeDtos.addAll(themesNonRepedetive);
         Boolean confirmed = Boolean.FALSE;
@@ -2173,6 +2201,34 @@ public class PollService {
         themesDto.setIsThemePageable(poll.getIsThemePageable());
         themesDto.setType(poll.getType().getCode());
         return themesDto;
+    }
+
+    private static List<ResponseSubject> orderResponseSubjects(List<ResponseSubject> responseSubjects) {
+        return responseSubjects.stream().sorted((o, p) -> {
+            String name1 = null;
+            String name2 = null;
+            if (o.getJournal() != null) {
+                name1 = o.getJournal().getNameEt().toLowerCase();
+            } else if (o.getSubject() != null) {
+                name1 = o.getSubject().getNameEt().toLowerCase();
+            } else if (o.getSubjectStudyPeriod() != null && o.getSubjectStudyPeriod().getSubject() != null) {
+                name1 = p.getSubjectStudyPeriod().getSubject().getNameEt().toLowerCase();
+            }
+            if (p.getJournal() != null) {
+                name2 = p.getJournal().getNameEt().toLowerCase();
+            } else if (p.getSubject() != null) {
+                name2 = p.getSubject().getNameEt().toLowerCase();
+            } else if (p.getSubjectStudyPeriod() != null && p.getSubjectStudyPeriod().getSubject() != null) {
+                name2 = p.getSubjectStudyPeriod().getSubject().getNameEt().toLowerCase();
+            }
+            if (name1 != null) {
+                return name1.compareTo(name2);
+            } else if (name2 == null) {
+                return 0;
+            } else {
+                return "".compareTo(name2);
+            }
+        }).collect(Collectors.toList());
     }
 
     /**
@@ -2546,7 +2602,7 @@ public class PollService {
         // Not all themes will be answered completely since we are keeping polls that arent completed
         String SEARCH_SELECT = "j.id as journalId, j.name_et as journalName, ssp.id as subjectId,"
                 + " s.name_et as subjectEt, s.name_en as subjectEn, s.code, c.name_et as yearEt, c.name_en as yearEn, "
-                + "string_agg(distinct(p.firstname || ' ' || p.lastname), ', '), s.id";
+                + "string_agg(distinct(p.firstname || ' ' || p.lastname), ', ') as teachers, s.id";
         String SEARCH_FROM = "from response_subject rs "
                 + "join response_question_answer rqa on rqa.response_id = rs.response_id "
                 + "left join question_answer qa on qa.id = rqa.question_answer_id "
@@ -2565,7 +2621,7 @@ public class PollService {
         qb.requiredCriteria("rs.response_id = :responseId", "responseId", EntityUtil.getId(response));
         qb.filter("pt.is_repetitive = true");
         qb.groupBy("j.id, j.name_et, ssp.id, s.name_et, s.name_en, s.code, c.name_et, c.name_en, s.id");
-        qb.sort("j.id, s.id, ssp.id");
+        qb.sort("j.name_et, s.name_et, teachers");
         List<?> dbSubjectOrJournal = qb.select(SEARCH_SELECT, em).getResultList();
         List<SubjectOrJournalDto> subjectOrJournal = StreamUtil
                 .toMappedList(r-> {
@@ -2683,7 +2739,7 @@ public class PollService {
                         + "qa.name_et, qa1.max_nr, qa1.min_nr, SUBJECT_JOURNAL.sspId, SUBJECT_JOURNAL.journalId, SUBJECT_JOURNAL.journalEt, "
                         + "SUBJECT_JOURNAL.subjectId, SUBJECT_JOURNAL.subjectEt, SUBJECT_JOURNAL.subjectEn, SUBJECT_JOURNAL.subjectCode, "
                         + "SUBJECT_JOURNAL.teacherId, SUBJECT_JOURNAL.teacherNames, SUBJECT_JOURNAL.teacherName, pt.is_teacher, pt.is_repetitive")
-                .sort("pt.order_nr, pq.order_nr, qa.order_nr");
+                .sort("pt.order_nr, subject_journal.subjectet, subject_journal.journalet, subject_journal.teachernames, subject_journal.teachername, pq.order_nr, qa.order_nr");
         qb.requiredCriteria("pp.id = :pollId", "pollId", pollId);
         qb.optionalCriteria("SUBJECT_JOURNAL.sspId = :sspId", "sspId", command.getSubjectStudyPeriodId());
         qb.optionalCriteria("SUBJECT_JOURNAL.journalId = :journalId", "journalId", command.getJournalId());
@@ -2740,10 +2796,11 @@ public class PollService {
                     return dto;
                 }, dbAnswers);
         // Map themes
-        Map<Long, List<GraphSearchDto>> map = themeAndQuestionList.stream().collect(Collectors.toMap(p -> p.getTheme().getId(), 
-                p -> themeAndQuestionList.stream().filter(o -> o.getTheme().getId().equals(p.getTheme().getId())).collect(Collectors.toList())
-                , (oldValue, newValue) -> oldValue));
-        map = sortMapByValue(map, (o1,o2)-> o1.getValue().get(0).getTheme().getNameEt().compareTo(o2.getValue().get(0).getTheme().getNameEt()));
+        LinkedHashMap<Long, List<GraphSearchDto>> map = themeAndQuestionList.stream().collect(Collectors.toMap(
+                p -> p.getTheme().getId(), // key
+                p -> themeAndQuestionList.stream().filter(o -> o.getTheme().getId().equals(p.getTheme().getId())).collect(Collectors.toList()) // value
+                , (oldValue, newValue) -> oldValue, // merge
+                LinkedHashMap::new)); // map type
         List<GraphThemeDto> graphByTheme = new ArrayList<>();
         for (Map.Entry<Long, List<GraphSearchDto>> entry : map.entrySet()) {
             // Second list for student's answer
@@ -2753,57 +2810,34 @@ public class PollService {
             // Map responsesubjects
             SchoolService.SchoolType type = schoolService.schoolType(user.getSchoolId());
             if (type.isHigher()) {
-                Map<Long, List<GraphSearchDto>> responseSubjectMap = entryValues.stream()
-                        .collect(Collectors.toMap(p -> p.getResponseSubjectId(), 
-                        p -> entryValues.stream()
-                        .filter(o -> o.getResponseSubjectId() != null && o.getResponseSubjectId().equals(p.getResponseSubjectId()))
-                        .collect(Collectors.toList()), (oldValue, newValue) -> oldValue));
-                mapResponses(responseSubjectMap, poll, isStudent, responseId, subjectOrJournals);
+                LinkedHashMap<Long, List<GraphSearchDto>> responseSubjectMap = entryValues.stream().collect(Collectors.toMap(
+                        p -> p.getResponseSubjectId(), // key
+                        p -> entryValues.stream().filter(o -> o.getResponseSubjectId() != null && o.getResponseSubjectId().equals(p.getResponseSubjectId())).collect(Collectors.toList()), //value
+                        (oldValue, newValue) -> oldValue, // merge
+                        LinkedHashMap::new)); // map type
+                mapResponses(responseSubjectMap, poll, isStudent, responseId, subjectOrJournals, Boolean.TRUE);
             }
             if (type.isVocational()) {
-                Map<Long, List<GraphSearchDto>> journalMap = entryValues.stream()
+                LinkedHashMap<Long, List<GraphSearchDto>> journalMap = entryValues.stream()
                         .collect(Collectors.toMap(p -> p.getSubjectOrJournal() == null ? null : p.getSubjectOrJournal().getId(), 
                         p -> entryValues.stream()
                         .filter(o -> o.getResponseSubjectId() == null && p.getResponseSubjectId() == null && o.getSubjectOrJournal() != null && p.getSubjectOrJournal() != null && o.getSubjectOrJournal().getId().equals(p.getSubjectOrJournal().getId()))
-                        .collect(Collectors.toList()), (oldValue, newValue) -> oldValue));
-                mapResponses(journalMap, poll, isStudent, responseId, subjectOrJournals);
+                        .collect(Collectors.toList()), 
+                        (oldValue, newValue) -> oldValue,
+                        LinkedHashMap::new));
+                mapResponses(journalMap, poll, isStudent, responseId, subjectOrJournals, Boolean.FALSE);
             }
-            Map<Long, List<GraphSearchDto>> otherAnswers = entryValues.stream()
+            LinkedHashMap<Long, List<GraphSearchDto>> otherAnswers = entryValues.stream()
                     .collect(Collectors.toMap(p -> null, 
                     p -> entryValues.stream().filter(o -> o.getResponseSubjectId() == null && p.getResponseSubjectId() == null && o.getSubjectOrJournal() == null && p.getSubjectOrJournal() == null)
-                    .collect(Collectors.toList()), (oldValue, newValue) -> oldValue));
-            mapResponses(otherAnswers, poll, isStudent, responseId, subjectOrJournals);
+                    .collect(Collectors.toList()), 
+                    (oldValue, newValue) -> oldValue,
+                    LinkedHashMap::new));
+            mapResponses(otherAnswers, poll, isStudent, responseId, subjectOrJournals, null);
             // Add theme
             GraphThemeDto themeDto = new GraphThemeDto();
             themeDto.setTitle(theme.getTheme());
-            subjectOrJournals.stream().forEach(p -> p.setTeachers(p.getTeachers().stream().sorted(new Comparator<GraphTeacherDto>() {
-                @Override
-                public int compare(GraphTeacherDto o1, GraphTeacherDto o2) {
-                    if (o1.getTeacher() == null && o2.getTeacher() == null) {
-                        return 0;
-                    } else if (o1.getTeacher() == null) {
-                        return -1;
-                    } else if (o2.getTeacher() == null) {
-                        return 1;
-                    }
-                    String x1 = o1.getTeacher().getNameEt();
-                    String x2 = o2.getTeacher().getNameEt();
-                    return x1.compareTo(x2);
-            }}).collect(Collectors.toList())));
-            themeDto.getJournalOrSubject().addAll(subjectOrJournals.stream().sorted(new Comparator<GraphSubjectDto>() {
-                @Override
-                public int compare(GraphSubjectDto o1, GraphSubjectDto o2) {
-                    if (o1.getSubjectOrJournal() == null && o2.getSubjectOrJournal() == null) {
-                        return 0;
-                    } else if (o1.getSubjectOrJournal() == null) {
-                        return -1;
-                    } else if (o2.getSubjectOrJournal() == null) {
-                        return 1;
-                    }
-                    String x1 = o1.getSubjectOrJournal().getNameEt().toLowerCase();
-                    String x2 = o2.getSubjectOrJournal().getNameEt().toLowerCase();
-                    return x1.compareTo(x2);
-            }}).collect(Collectors.toList()));
+            themeDto.setJournalOrSubject(subjectOrJournals);
             themeDto.setIsRepetitive(theme.getIsRepetitive());
             graphByTheme.add(themeDto);
         }
@@ -2814,6 +2848,7 @@ public class PollService {
         dto.setCommentDisabled(Boolean.valueOf(!PracticeJournalUserRights.isBeforeDaysAfterCanEdit(poll.getValidThru())));
         dto.setCanComment(poll.getIsTeacherComment());
         dto.setCanStudentView(poll.getIsTeacherCommentVisible());
+        dto.setType(EntityUtil.getNullableCode(poll.getType()));
         dto.setTheme(graphByTheme);
         if (!Boolean.TRUE.equals(command.getThemes())) {
             mapMissingData(dto, pollId, repetitive, isStudent);
@@ -2821,16 +2856,17 @@ public class PollService {
         return dto;
     }
     
-    private void mapResponses(Map<Long, List<GraphSearchDto>> responseSubjectMap, Poll poll, boolean isStudent, Long responseId, List<GraphSubjectDto> subjectOrJournals) {
+    private static void mapResponses(Map<Long, List<GraphSearchDto>> responseSubjectMap, Poll poll, boolean isStudent, Long responseId, List<GraphSubjectDto> subjectOrJournals, Boolean higher) {
      // Loop per response subject in theme
         for (Map.Entry<Long, List<GraphSearchDto>> responseSubjectEntry : responseSubjectMap.entrySet()) {
             List<GraphSearchDto> responseSubjectEntryValues = responseSubjectEntry.getValue();
             // Map teachers
-            Map<Long, List<GraphSearchDto>> teacherMap = responseSubjectEntryValues.stream()
-                    .collect(Collectors.toMap(p -> p.getTeacher().getId(), 
+            LinkedHashMap<Long, List<GraphSearchDto>> teacherMap = responseSubjectEntryValues.stream().collect(Collectors.toMap(
+                    p -> p.getTeacher().getId(), // key
                     p -> responseSubjectEntryValues.stream().filter(o -> (o.getTeacher().getId() == null && p.getTeacher().getId() == null) || 
-                            (o.getTeacher().getId() != null && o.getTeacher().getId().equals(p.getTeacher().getId())))
-                    .collect(Collectors.toList()), (oldValue, newValue) -> oldValue));
+                            (o.getTeacher().getId() != null && o.getTeacher().getId().equals(p.getTeacher().getId()))).collect(Collectors.toList()), // value
+                    (oldValue, newValue) -> oldValue, // merge
+                    LinkedHashMap::new)); // map type
             GraphSubjectDto subjectDto = new GraphSubjectDto();
             // Loop per teacher
             for (Map.Entry<Long, List<GraphSearchDto>> teacherEntry : teacherMap.entrySet()) {
@@ -2844,16 +2880,13 @@ public class PollService {
                 List<GraphSearchDto> teacherEntryValues = teacherEntry.getValue();
                 GraphSearchDto subjectOrJournal = null;
                 // Map questions
-                Map<Long, List<GraphSearchDto>> questionMap = teacherEntryValues.stream()
-                        .collect(Collectors.toMap(p -> p.getQuestion().getId(), 
-                        p -> teacherEntryValues.stream().filter(o -> o.getQuestion().getId().equals(p.getQuestion().getId()))
-                        .collect(Collectors.toList())
-                        , (oldValue, newValue) -> oldValue));
-                // Sort map
-                Map<Long, List<GraphSearchDto>> sortedQuestionMap = sortMapByValue(questionMap, 
-                        (o1,o2)-> o1.getValue().get(0).getQuestion().getNameEt().compareTo(o2.getValue().get(0).getQuestion().getNameEt()));
+                LinkedHashMap<Long, List<GraphSearchDto>> questionMap = teacherEntryValues.stream()
+                        .collect(Collectors.toMap(p -> p.getQuestion().getId(), // key
+                        p -> teacherEntryValues.stream().filter(o -> o.getQuestion().getId().equals(p.getQuestion().getId())).collect(Collectors.toList()), // value
+                        (oldValue, newValue) -> oldValue, // merge
+                        LinkedHashMap::new)); // map type
                 // loop per question
-                for (Map.Entry<Long, List<GraphSearchDto>> questionEntry : sortedQuestionMap.entrySet()) {
+                for (Map.Entry<Long, List<GraphSearchDto>> questionEntry : questionMap.entrySet()) {
                     List<QuestionResponsePairDto> responses = new ArrayList<>();
                     List<GraphSearchDto> questionEntries = questionEntry.getValue();
                     GraphSearchDto firstQuestion = questionEntries.get(0);
@@ -2935,6 +2968,7 @@ public class PollService {
                 orderQuestions(teacher.getGraph());
                 if (subjectOrJournal != null) {
                     subjectDto.setSubjectOrJournal(subjectOrJournal.getSubjectOrJournal());
+                    subjectDto.setSubject(higher);
                     teacher.setTeacher(subjectOrJournal.getTeacher());
                 }
                 subjectDto.getTeachers().add(teacher);
@@ -3120,6 +3154,7 @@ public class PollService {
             graphTheme.setTitle(new AutocompleteResult(theme.getId(), 
                     getThemeName(theme.getOrderNr(), theme.getNameEt()),
                     getThemeName(theme.getOrderNr(), theme.getNameEn())));
+            graphTheme.setIsRepetitive(theme.getIsRepetitive());
             dto.getTheme().add(graphTheme);
         }
         return graphTheme;
@@ -4173,60 +4208,16 @@ public class PollService {
         qb.requiredCriteria("p.id = :pollId", "pollId", EntityUtil.getId(poll));
         qb.optionalCriteria("SUBJECT_JOURNAL.sspId = :sspId", "sspId", command.getSubjectStudyPeriodId());
         qb.optionalCriteria("SUBJECT_JOURNAL.journalId = :journalId", "journalId", command.getJournalId());
+        // Order and scalar
         SQLQuery query = getArrayTypeQuery(qb, SEARCH_SELECT);
         List<?> answers = query.list();
-        HashMap<Long, PollThemeResultDto> processedThemes = mapAnswerToTheme(answers);
+        LinkedHashMap<Long, PollThemeResultDto> processedThemes = mapAnswerToTheme(answers);
         mapAllResultsThemes(processedThemes, poll);
-        return sortProcessedThemes(processedThemes);
+        return new AllPollResultsDto(new ArrayList<>(processedThemes.values()));
     }
 
-    private static AllPollResultsDto sortProcessedThemes(HashMap<Long, PollThemeResultDto> processedThemes) {
-        // sort journal teachers
-        processedThemes.values().stream()
-            .forEach(p -> p.getJournal().stream()
-                    .forEach(t -> t.setTeachers(t.getTeachers().stream().sorted((o1, o2) -> {
-                        String x1 = o1.getNameEt().toLowerCase();
-                        String x2 = o2.getNameEt().toLowerCase();
-                        return x1.compareTo(x2);
-                    }).collect(Collectors.toList()))));
-        // sort subject teachers
-        processedThemes.values().stream()
-        .forEach(p -> p.getSubject().stream()
-                .forEach(t -> t.setTeachers(t.getTeachers().stream().sorted((o1, o2) -> {
-                    String x1 = o1.getNameEt().toLowerCase();
-                    String x2 = o2.getNameEt().toLowerCase();
-                    return x1.compareTo(x2);
-                }).collect(Collectors.toList()))));
-        // sort subjects
-        processedThemes.values().stream().forEach(p -> p.setSubject(p.getSubject().stream().sorted(new Comparator<AutocompleteSubjectOrJournal>() {
-            @Override
-            public int compare(AutocompleteSubjectOrJournal o1, AutocompleteSubjectOrJournal o2) {
-                String x1 = o1.getNameEt().toLowerCase();
-                String x2 = o2.getNameEt().toLowerCase();
-                return x1.compareTo(x2);
-        }}).collect(Collectors.toList())));
-        // sort journals
-        processedThemes.values().stream().forEach(p -> p.setJournal(p.getJournal().stream().sorted(new Comparator<AutocompleteSubjectOrJournal>() {
-            @Override
-            public int compare(AutocompleteSubjectOrJournal o1, AutocompleteSubjectOrJournal o2) {
-                String x1 = o1.getNameEt().toLowerCase();
-                String x2 = o2.getNameEt().toLowerCase();
-                return x1.compareTo(x2);
-        }}).collect(Collectors.toList())));
-        AllPollResultsDto dto = new AllPollResultsDto();
-        //sort themes
-        dto.setContent(processedThemes.values().stream().sorted(new Comparator<PollThemeResultDto>() {
-            @Override
-            public int compare(PollThemeResultDto o1, PollThemeResultDto o2) {
-                Long x1 = o1.getTheme().getOrder();
-                Long x2 = o2.getTheme().getOrder();
-                return x1.compareTo(x2);
-        }}).collect(Collectors.toList()));
-        return dto;
-    }
-
-    private static HashMap<Long, PollThemeResultDto> mapAnswerToTheme(List<?> answers) {
-        HashMap<Long, PollThemeResultDto> processedThemes = new HashMap<>();
+    private static LinkedHashMap<Long, PollThemeResultDto> mapAnswerToTheme(List<?> answers) {
+        LinkedHashMap<Long, PollThemeResultDto> processedThemes = new LinkedHashMap<>();
         for (Object r : answers) {
             Long themeId = resultAsLong(r, 0);
             Long journalId = resultAsLong(r, 17);
@@ -4400,7 +4391,7 @@ public class PollService {
 
     private SQLQuery getArrayTypeQuery(JpaNativeQueryBuilder qb, String SEARCH_SELECT) {
         Type arrayType = new CustomType(new ArrayUserType());
-        return qb.sort("pt.order_nr, ptq.order_nr, qa.order_nr")
+        return qb.sort("pt.order_nr, subject_journal.subjectet, subject_journal.journalet, subject_journal.teachername, ptq.order_nr, qa.order_nr")
         .select(SEARCH_SELECT, em).unwrap(SQLQuery.class)
         .addScalar("themeId")
         .addScalar("themeEt")

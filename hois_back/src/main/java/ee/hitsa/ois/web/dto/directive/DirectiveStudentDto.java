@@ -436,6 +436,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         case KASKKIRI_INDOK:
         case KASKKIRI_INDOKLOP:
         case KASKKIRI_KIITUS:
+        case KASKKIRI_MUU:
         case KASKKIRI_NOOMI:
         case KASKKIRI_OTEGEVUS:
         case KASKKIRI_PRAKTIK:

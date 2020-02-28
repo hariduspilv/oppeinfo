@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
+import java.math.BigDecimal;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -11,11 +12,13 @@ public class SubjectStudyPeriodPlanSearchDtoContainer {
 
     private AutocompleteResult subject;
     private Set<SubjectStudyPeriodPlanSearchDto> plans;
+    private BigDecimal credits;
 
     public static SubjectStudyPeriodPlanSearchDtoContainer of (Subject subject, Long studyPeriodId) {
         SubjectStudyPeriodPlanSearchDtoContainer container = 
                 new SubjectStudyPeriodPlanSearchDtoContainer();
-        container.setSubject(AutocompleteResult.of(subject));
+        container.setSubject(AutocompleteResult.of(subject, false));
+        container.setCredits(subject.getCredits());
         container.setPlans(StreamUtil.toMappedSet
               (SubjectStudyPeriodPlanSearchDto::of, 
                       subject.getSubjectStudyPeriodPlans().stream().filter(p ->
@@ -38,5 +41,13 @@ public class SubjectStudyPeriodPlanSearchDtoContainer {
 
     public void setPlans(Set<SubjectStudyPeriodPlanSearchDto> plans) {
         this.plans = plans;
-    }    
+    }
+
+    public BigDecimal getCredits() {
+        return credits;
+    }
+
+    public void setCredits(BigDecimal credits) {
+        this.credits = credits;
+    }
 }

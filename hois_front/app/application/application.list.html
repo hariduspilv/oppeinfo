@@ -77,6 +77,7 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
         <tr md-row>
           <th md-column md-order-by="person.lastname,person.firstname">{{'application.student' | translate}}</th>
+          <th md-column md-order-by="sg.code">{{'application.studentGroup' | translate}}</th>
           <th md-column md-order-by="{{currentLanguage()==='en' ? 'type.nameEn' : 'type.nameEt'}}">{{'application.type' | translate}}</th>
           <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}">{{'main.status' | translate}}</th>
           <th md-column md-order-by="inserted">{{'application.insertionDate' | translate}}</th>
@@ -90,6 +91,7 @@
             <a ng-if="row.canViewStudent" ng-href="/#/students/{{::row.student.id}}/main">{{::row.student.nameEt}}</a>
             <span ng-if="!row.canViewStudent">{{::row.student.nameEt}}</span>
           </td>
+          <td md-cell>{{::row.studentGroup}}</td>
           <td md-cell><a ng-href="#/applications/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a></td>
           <td md-cell>
             {{currentLanguageNameField(row.status)}}

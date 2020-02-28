@@ -57,6 +57,7 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column md-order-by="p.lastname,p.firstname">{{'absence.student' | translate}}</th>
+            <th md-column md-order-by="sg.code">{{'absence.studentGroup' | translate}}</th>
             <th md-column md-order-by="sa.valid_from">{{'absence.absenceFrom' | translate}}</th>
             <th md-column md-order-by="sa.valid_thru">{{'absence.absenceThru' | translate}}</th>
             <th md-column md-order-by="sa.cause">{{'absence.absenceCause' | translate}}</th>
@@ -71,6 +72,7 @@
             <td md-cell class="one-row">
               <a ng-href="#/students/{{row.student.id}}/main">{{currentLanguageNameField(row.student)}}</a>
             </td>
+            <td md-cell>{{::row.studentGroup}}</td>
             <td md-cell>{{row.validFrom | hoisDate}}</td>
             <td md-cell>{{row.validThru | hoisDate}}</td>
             <td md-cell>{{::row.cause}}</td>

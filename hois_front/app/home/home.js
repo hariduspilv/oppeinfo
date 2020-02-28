@@ -231,50 +231,63 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
         };
 
         function mapJournalOrSubjects() {
-          dialogScope.formState.themeBySubjectOrJournalId = {};
-
+          dialogScope.formState.themeBySubjectOrJournalId = [];
           dialogScope.criteria.themes.forEach(function (theme) {
+
             if (theme.journal !== null && theme.isRepetitive) {
-              if (dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id] === undefined) {
-                dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id] = [];
+              var listJournal = dialogScope.formState.themeBySubjectOrJournalId.find(function(journal) {
+                  return journal.id === theme.journal.id;
+              });
+              if (listJournal === undefined) {
+                  dialogScope.formState.themeBySubjectOrJournalId.push({id: theme.journal.id, list: [theme]});
+              } else {
+                  listJournal.list.push(theme);
               }
-              dialogScope.formState.themeBySubjectOrJournalId[theme.journal.id].push(theme);
             } else if (theme.subject !== null && theme.isRepetitive) {
-              if (dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id] === undefined) {
-                dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id] = [];
+              var listSubject = dialogScope.formState.themeBySubjectOrJournalId.find(function(subject) {
+                  return subject.id === theme.subject.id;
+              });
+              if (listSubject === undefined) {
+                  dialogScope.formState.themeBySubjectOrJournalId.push({id: theme.subject.id, list: [theme]});
+              } else {
+                  listSubject.list.push(theme);
               }
-              dialogScope.formState.themeBySubjectOrJournalId[theme.subject.id].push(theme);
             } else if (!theme.isRepetitive) {
-              if (dialogScope.formState.themeBySubjectOrJournalId[null] === undefined) {
-                dialogScope.formState.themeBySubjectOrJournalId[null] = [];
+              var listNonRepetetive = dialogScope.formState.themeBySubjectOrJournalId.find(function(nonRepetetive) {
+                  return nonRepetetive.id === null;
+              });
+              if (listNonRepetetive === undefined) {
+                  dialogScope.formState.themeBySubjectOrJournalId.push({id: null, list: [theme]});
+              } else {
+                  listNonRepetetive.list.push(theme);
               }
-              dialogScope.formState.themeBySubjectOrJournalId[null].push(theme);
             }
           });
         }
 
         // Map journals or subjects with repedetive themes
         if (dialogScope.criteria.type === 'KYSITLUS_O') {
-          mapJournalOrSubjects();
             if (row.isThemePageable) {
-              dialogScope.criteria.themes = [].concat.apply([], Object.values(dialogScope.formState.themeBySubjectOrJournalId));
               if (dialogScope.criteria.foreword === null) {
                 dialogScope.criteria.themes[0].show = true;
                 if (dialogScope.criteria.themes.length < 2) {
                   dialogScope.showConfirm = true;
+                }
               }
-              }
-            } else if (dialogScope.criteria.foreword === null) {
-              Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0].show = true;
-              if (Object.values(dialogScope.formState.themeBySubjectOrJournalId).length < 2) {
-                dialogScope.showConfirm = true;
+            } else {
+              mapJournalOrSubjects();
             }
+            if (!row.isThemePageable && dialogScope.criteria.foreword === null) {
+              dialogScope.formState.themeBySubjectOrJournalId[0].show = true;
+              if (dialogScope.formState.themeBySubjectOrJournalId.length < 2) {
+                dialogScope.showConfirm = true;
+              }
             }
         } else {
           dialogScope.criteria.themes[0].show = true;
           if (dialogScope.criteria.themes.length < 2) {
             dialogScope.showConfirm = true;
-        }
+          }
         }
 
         dialogScope.previousSubjectOrJournal = function(index) {
@@ -282,17 +295,17 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
           if (index === 0) {
             dialogScope.showForeword = true;
           } else {
-            Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index - 1].show = true;
+            dialogScope.formState.themeBySubjectOrJournalId[index - 1].show = true;
           }
           if (index === dialogScope.subjectListLength()) {
             dialogScope.showAfterword = false;
           } else {
-            Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+            dialogScope.formState.themeBySubjectOrJournalId[index].show = false;
           }
         };
 
         dialogScope.last = function(index) {
-          return index === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1;
+          return index === dialogScope.formState.themeBySubjectOrJournalId.length - 1;
         };
 
         dialogScope.first = function(index) {
@@ -300,27 +313,27 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
         };
 
         dialogScope.subjectListLength = function() {
-          return Object.values(dialogScope.formState.themeBySubjectOrJournalId).length;
+          return dialogScope.formState.themeBySubjectOrJournalId.length;
         };
 
         dialogScope.nextSubjectOrJournal = function(index) {
           if (index === -1) {
             dialogScope.showForeword = false;
           } else {
-            Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index].show = false;
+            dialogScope.formState.themeBySubjectOrJournalId[index].show = false;
           }
           // display confirm button when last journal/subject theme is displayed
           if ((((dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.afterword === null) || 
-            dialogScope.criteria.type !== 'KYSITLUS_O') 
-            && index + 1 === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1) ||
-            index === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1) {
+            dialogScope.criteria.type !== 'KYSITLUS_O') && 
+            index + 1 === dialogScope.formState.themeBySubjectOrJournalId.length - 1) ||
+            index === dialogScope.formState.themeBySubjectOrJournalId.length - 1) {
               dialogScope.showConfirm = true;
           }
           
-          if (index === Object.values(dialogScope.formState.themeBySubjectOrJournalId).length - 1) {
+          if (index === dialogScope.formState.themeBySubjectOrJournalId.length - 1) {
             dialogScope.showAfterword = true;
           } else {
-            Object.values(dialogScope.formState.themeBySubjectOrJournalId)[index + 1].show = true;
+            dialogScope.formState.themeBySubjectOrJournalId[index + 1].show = true;
           }
         };
 
@@ -339,7 +352,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
         };
 
         dialogScope.firstPage = function(themeList) {
-          return Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0] === themeList;
+          return dialogScope.formState.themeBySubjectOrJournalId[0] === themeList;
         };
 
         dialogScope.nextTheme = function(index) {
@@ -350,8 +363,8 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
           }
           // display confirm button when last journal/subject theme is displayed
           if ((((dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.afterword === null) || 
-            dialogScope.criteria.type !== 'KYSITLUS_O') 
-            && index + 1 === dialogScope.criteria.themes.length - 1) ||
+            dialogScope.criteria.type !== 'KYSITLUS_O') && 
+            index + 1 === dialogScope.criteria.themes.length - 1) ||
             index === dialogScope.criteria.themes.length - 1) {
               dialogScope.showConfirm = true;
           }
@@ -513,6 +526,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
       checkIfHasRecentRRChanges();
       checkIfOpenDeclarationPeriod();
       expiringOccupationStandards();
+      unappliedScholarships();
       studentGroupRemarks();
       studentAfterAuthentication();
       $scope.pageLoadingHandler.enable();
@@ -575,6 +589,13 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
         QueryUtils.endpoint("/practiceApplication/canApply").get({}, function(response) {
           $scope.canApplyForPractice = response.canApply;
         });
+      }
+    }
+
+    function unappliedScholarships() {
+      $scope.unappliedScholarships = undefined;
+      if (['ROLL_T'].indexOf(Session.roleCode) !== -1) {
+        $scope.unappliedScholarships = QueryUtils.endpoint('/scholarships/studentUnappliedScholarships').query();
       }
     }
 

@@ -1,6 +1,6 @@
 <div class="ois-form-layout-padding form-readonly" ng-cloak>
   <div flex>
-    <br>
+    <div>&nbsp;</div>
     <form name="eventForm">
       <div layout="row" layout-xs="column" flex="100">
         <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
@@ -56,7 +56,7 @@
         </md-table-container>
       </fieldset>
 
-      <br>
+      <div>&nbsp;</div>
 
       <fieldset flex="60" flex-sm="100" flex-xs="100" ng-if="timetableEvent.rooms.length > 0">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetableEvent.rooms' | translate}}</legend>
@@ -79,8 +79,6 @@
         </md-table-container>
       </fieldset>
 
-      <br>
-
       <fieldset flex="60" flex-sm="100" flex-xs="100" ng-if="timetableEvent.studentGroups.length > 0">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetableEvent.studentGroups' | translate}}</legend>
         <md-table-container>
@@ -98,6 +96,28 @@
           </table>
         </md-table-container>
       </fieldset>
+
+      <div>&nbsp;</div>
+
+      <div ng-if="timetableEvent.subgroups.length > 0">
+        <fieldset flex="60" flex-sm="100" flex-xs="100">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetableEvent.subgroups' | translate}}</legend>
+          <md-table-container>
+            <table md-table class="secondary-table">
+              <thead md-head>
+              <tr md-row>
+                <th md-column>{{'timetable.timetableEvent.code' | translate}}</th>
+              </tr>
+              </thead>
+              <tbody md-body>
+              <tr md-row ng-repeat="subgroup in timetableEvent.subgroups | orderBy: 'code'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{currentLanguageNameField(subgroup)}}</td>
+              </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </fieldset>
+      </div>
 
       <div layout="row" flex="100">
         <md-button ng-href="#/lessonplans/events" class="md-raised">{{'main.button.back' | translate}}</md-button>

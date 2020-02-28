@@ -1,4 +1,4 @@
-VERSIOON:  1.5.1/20200113
+VERSIOON:  1.5.2/20200221
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -10,24 +10,24 @@ README.md - tarne ja installeerimise kirjeldus
 /hois_html - rakenduse genereeritud html-id
 
 
-EELDUS: ver. 1.5.0/20191127
+EELDUS: ver. 1.5.1/20200113
 ------------------------------------------------------
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20200113.sql
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20200221.sql
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
 
 Andmebaasi installeerimiseks:
-1. käivitada install20200113.sql skript, nt
+1. käivitada install20200221.sql skript, nt
    
-   psql -h devhois -f install20200113.sql 2>&1 | tee log.txt
+   psql -h devhois -f install20200221.sql 2>&1 | tee log.txt
    
    , kus
    
    -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install20200113.sql - install faili nimi
+   -f install20200221.sql - install faili nimi
    log.txt - andmebaasi installeerimise logi fail
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
@@ -38,21 +38,7 @@ RAKENDUSE INSTALLEERIMINE:
 ------------------------------------------------------
 1. Backendi paigaldamiseks
 	1. Teisendada kaasa pandud hois_back.jar /opt/hois kausta
-	2. Lisada appliction.properties järgmised parameetrid:
-	
-		#need for array
-		spring.jpa.properties.hibernate.dialect=ee.hitsa.ois.config.CustomPostgreSQL94Dialect
-	
-		# asünkroonsete päringute optimeerimis eparameetrid
-		# amount of active threads at the same time
-		hois.async.corePoolSize=40
-		# amount of maximum active threads at the same time if queue is full and new requests coming
-		hois.async.maxPoolSize=100
-		# size of queue
-		hois.async.queueCapacity=200
-
-	
-	3. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
+	2. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
 	
 2. Frontendi paigaldamiseks
 	1. Kustutada vanad html jms failid: käivitada käsk "rm -Rf /opt/hois/html/*" (nginxist vana seisu tühjendamiseks)
