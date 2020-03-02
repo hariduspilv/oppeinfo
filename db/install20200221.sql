@@ -1,4 +1,4 @@
-\c tahvel_20200221_2
+\c hois
 
 insert into classifier (code,value,name_et,main_class_code,inserted,valid,is_vocational,is_higher,version,inserted_by) values('KASKKIRI_MUU','MUU','Muu','KASKKIRI',current_timestamp(3),true,true,true,0,'HÕIS');
 
