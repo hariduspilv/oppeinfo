@@ -469,3 +469,5 @@ where student.person_id = person.id and student.school_id = 989 and person.uniqu
 update person 
 set unique_code = generate_person_unique_code(11)
 where person.unique_code is null and person.idcode is null;
+
+update student set type_Code='OPPUR_T' where type_code='OPPUR_O';
