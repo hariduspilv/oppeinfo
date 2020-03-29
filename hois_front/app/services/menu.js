@@ -403,6 +403,16 @@ angular.module('hitsaOis')
             icon:"person"
           },
           {
+            name: 'main.menu.reports.studentcount',
+            url: '/reports/students/count?_menu',
+            icon: 'person'
+          },
+          {
+            name: 'main.menu.reports.studentmovement',
+            url: '/reports/students/movement?_menu',
+            icon: 'transfer_within_a_station'
+          },
+          {
             name: 'main.menu.reports.studentstatistics',
             url: "/reports/students/statistics?_menu",
             icon:"blur_circular"
@@ -1444,6 +1454,16 @@ angular.module('hitsaOis')
             name: 'main.menu.reports.students',
             url: '/reports/students/students?_menu',
             icon: 'person'
+          },
+          {
+            name: 'main.menu.reports.studentcount',
+            url: '/reports/students/count?_menu',
+            icon: 'person'
+          },
+          {
+            name: 'main.menu.reports.studentmovement',
+            url: '/reports/students/movement?_menu',
+            icon: 'transfer_within_a_station'
           },
           {
             name: 'main.menu.reports.studentstatistics',

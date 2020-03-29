@@ -952,7 +952,7 @@ public class ScholarshipService {
         return dto;
     }
 
-    public ScholarshipApplication apply(HoisUserDetails user, ScholarshipApplication application) {
+    public ScholarshipApplication apply(ScholarshipApplication application) {
         if (studentCompliesTerm(application.getStudent(), application.getScholarshipTerm()).getFullyComplies()) {
             application.setStatus(em.getReference(Classifier.class, ScholarshipStatus.STIPTOETUS_STAATUS_E.name()));
             return EntityUtil.save(application, em);
@@ -1000,13 +1000,13 @@ public class ScholarshipService {
                     resultAsLong(r, 1), PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)),
                     resultAsString(r, 4), resultAsLong(r, 5), resultAsString(r, 6), resultAsString(r, 7),
                     applicationStart, applicationEnd, applicationStatus, resultAsLocalDate(r, 11));
-            dto.setCanEdit(ScholarshipUtil.canEditApplication(user, applicationStatus, applicationStart,
-                    applicationEnd, resultAsLong(r, 12)));
+            dto.setCanEdit(Boolean.valueOf(ScholarshipUtil.canEditApplication(user, applicationStatus, applicationStart,
+                    applicationEnd, resultAsLong(r, 12))));
             return dto;
         });
     }
 
-    private void setApplicationSearchUserCriteria(HoisUserDetails user, JpaNativeQueryBuilder qb) {
+    private static void setApplicationSearchUserCriteria(HoisUserDetails user, JpaNativeQueryBuilder qb) {
         qb.requiredCriteria("st.school_id = :schoolId", "schoolId", user.getSchoolId());
         if (user.isLeadingTeacher()) {
             qb.requiredCriteria("(c.id in (select uc.curriculum_id from user_curriculum uc"

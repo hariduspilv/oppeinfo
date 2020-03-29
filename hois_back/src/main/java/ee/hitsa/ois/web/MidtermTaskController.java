@@ -90,8 +90,7 @@ public class MidtermTaskController {
             @WithEntity SubjectStudyPeriod subjectStudyPeriod,
             @NotNull @Valid @RequestBody SubjectStudyPeriodMidtermTaskForm form) {
         MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
-        MidtermTaskUtil.assertNotPractice(subjectStudyPeriod);
-        midtermTaskService.updateStudentsResults(form, subjectStudyPeriod);
+        midtermTaskService.updateStudents(form, subjectStudyPeriod);
         return getStudentsResults(user, subjectStudyPeriod);
     }
     

@@ -11,7 +11,6 @@ import ee.hitsa.ois.validation.Required;
 
 public class PersonForm extends VersionedCommand {
 
-    @Required
     @EstonianIdCode
     private String idcode;
     @Required
@@ -20,7 +19,10 @@ public class PersonForm extends VersionedCommand {
     @Required
     @Size(max = 100)
     private String lastname;
+    private String foreignIdcode;
     private String uniqueCode;
+    @ClassifierRestriction(MainClassCode.RIIK)
+    private String citizenship;
     private LocalDate birthdate;
     @Required
     @ClassifierRestriction(MainClassCode.SUGU)
@@ -84,6 +86,22 @@ public class PersonForm extends VersionedCommand {
 
     public void setBirthdate(LocalDate birthdate) {
         this.birthdate = birthdate;
+    }
+
+    public String getForeignIdcode() {
+        return foreignIdcode;
+    }
+
+    public void setForeignIdcode(String foreignIdcode) {
+        this.foreignIdcode = foreignIdcode;
+    }
+
+    public String getCitizenship() {
+        return citizenship;
+    }
+
+    public void setCitizenship(String citizenship) {
+        this.citizenship = citizenship;
     }
 
     public String getUniqueCode() {

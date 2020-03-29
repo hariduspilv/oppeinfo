@@ -5,6 +5,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import ee.hitsa.ois.service.StudyYearService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +46,8 @@ public class SubjectStudyPeriodController {
     private SubjectStudyPeriodService subjectStudyPeriodService;
     @Autowired
     private SubjectStudyPeriodSearchService subjectStudyPeriodSearchService;
+    @Autowired
+    private StudyYearService studyYearService;
     
     @GetMapping
     public Page<SubjectStudyPeriodSearchDto> search(HoisUserDetails user, SubjectStudyPeriodSearchCommand criteria, Pageable pageable) {
@@ -60,29 +63,30 @@ public class SubjectStudyPeriodController {
     @GetMapping("/{id:\\d+}")
     public SubjectStudyPeriodDto get(HoisUserDetails user, @WithEntity SubjectStudyPeriod subjectStudyPeriod) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, subjectStudyPeriod.getSubject().getSchool());
-        return SubjectStudyPeriodDto.of(subjectStudyPeriod);
+        return subjectStudyPeriodService.get(user, subjectStudyPeriod);
     }
 
     @PostMapping
     public SubjectStudyPeriodDto create(@Valid @RequestBody SubjectStudyPeriodForm form, HoisUserDetails user, 
             HttpServletRequest request) {
         UserUtil.assertIsSchoolAdmin(user);
-        return get(user, subjectStudyPeriodService.create(form, MoodleUtil.createContext(user, request)));
+        return get(user, subjectStudyPeriodService.create(user, form, MoodleUtil.createContext(user, request)));
     }
 
     @PutMapping("/{id:\\d+}")
     public SubjectStudyPeriodDto update(
             @WithVersionedEntity(versionRequestBody = true) SubjectStudyPeriod subjectStudyPeriod, 
             @Valid @RequestBody SubjectStudyPeriodForm form, HoisUserDetails user, HttpServletRequest request) {
-        SubjectStudyPeriodUtil.assertCanUpdate(user, subjectStudyPeriod);
-        return get(user, subjectStudyPeriodService.update(subjectStudyPeriod, form,
+        SubjectStudyPeriodUtil.assertCanUpdate(user, subjectStudyPeriod,
+                studyYearService.getCurrentStudyPeriod(user.getSchoolId()));
+        return get(user, subjectStudyPeriodService.update(user, subjectStudyPeriod, form,
                 MoodleUtil.createContext(user, request, subjectStudyPeriod)));
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(versionRequestParam = "version") 
     SubjectStudyPeriod subjectStudyPeriod, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        SubjectStudyPeriodUtil.assertCanUpdate(user, subjectStudyPeriod);
+        SubjectStudyPeriodUtil.assertCanDelete(user, subjectStudyPeriod);
         subjectStudyPeriodService.delete(user, subjectStudyPeriod);
     }
     

@@ -478,7 +478,7 @@
       <div layout="row">
         <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
         <md-button ng-if="practiceJournal.canConfirm && practiceJournal.status !== 'PAEVIK_STAATUS_K'" class="md-raised md-primary" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
-        <md-button ng-if="practiceJournal.canConfirm && practiceJournal.status === 'PAEVIK_STAATUS_K'" class="md-raised md-primary" ng-click="open()">{{'practiceJournal.open' | translate}}</md-button>
+        <md-button ng-if="practiceJournal.canReopen && practiceJournal.status === 'PAEVIK_STAATUS_K'" class="md-raised md-primary" ng-click="open()">{{'practiceJournal.open' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="back('#/practiceJournals/', practiceJournalEntryForm)">{{'main.button.back' | translate}}</md-button>
       </div>
     

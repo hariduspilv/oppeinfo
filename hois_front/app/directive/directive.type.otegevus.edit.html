@@ -14,15 +14,15 @@
       </tr>
       <tr>
         <th colspan="5"></th>
-        <th md-column>
+        <th md-column style="padding-bottom: 8px;">
           <md-datepicker ng-model="record.studyActivityStartDate" md-max-date="record.studyActivityEndDate"
             ng-blur="allStudyActivityChange('startDate', record.studyActivityStartDate)" aria-label="{{'directive.student.studyActivityStartDate' | translate}}"></md-datepicker>
         </th>
-        <th md-column>
+        <th md-column style="padding-bottom: 8px;">
           <md-datepicker ng-model="record.studyActivityEndDate" md-min-date="record.studyActivityStartDate"
             ng-blur="allStudyActivityChange('endDate', record.studyActivityEndDate)" aria-label="{{'directive.student.studyActivityEndDate' | translate}}"></md-datepicker>
         </th>
-        <th md-column>
+        <th md-column style="padding-bottom: 8px;">
           <md-checkbox ng-model="record.studyActivityIsAbsence" ng-disabled="!record.studyActivityStartDate || !record.studyActivityEndDate"
             ng-change="allStudyActivityChange('isAbsence', record.studyActivityIsAbsence)"
             aria-label="{{'directive.student.studyActivityIsAbsence' | translate}}"></md-checkbox>

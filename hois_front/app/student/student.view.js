@@ -765,6 +765,8 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
     }
 
     function isAddressFilled(person) {
+      // TEMPORARY REMOVED
+      return true;
       if (person.residenceCountry === 'RIIK_EST') {
         return person.address && person.addressAds && person.addressAdsOid;
       }

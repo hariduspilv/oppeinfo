@@ -21,4 +21,8 @@ angular.module('hitsaOis').controller('FinalHigherProtocolListController',
     
     $q.all(clMapper.promises).then($scope.loadData);
 
+    $scope.$watch('hiddenCriteria.subjectObject', function() {
+      $scope.criteria.subject = $scope.hiddenCriteria.subjectObject ? $scope.hiddenCriteria.subjectObject.id : null;
+    }
+  );
 });

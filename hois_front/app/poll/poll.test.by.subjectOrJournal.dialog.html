@@ -16,10 +16,10 @@
         border-radius: 5px;
     }
 </style>
-<md-dialog aria-label="add question dialog" flex>
+<md-dialog aria-label="add question dialog">
     <md-toolbar>
         <div class="md-toolbar-tools">
-            <h2 flex style="word-break: break-word;">{{criteria.nameEt}}</h2>
+            <h2 flex style="word-break: break-word; word-wrap: break-word;">{{criteria.nameEt}}</h2>
             <md-button class="md-icon-button" ng-click="cancel()">
             <md-icon md-font-set="material-icons">close</md-icon>
             </md-button>
@@ -32,7 +32,7 @@
                     <div flex>
                         <div ng-if="criteria.type === 'KYSITLUS_O' && criteria.foreword !== null && showForeword">
                             <h3 style="font-size: 16px; color: rgb(21, 101, 192)">{{'poll.basicData.foreWord' | translate}}</h3>
-                            <p style="word-break: break-word; font-size: 15px;">{{criteria.foreword}}</p>
+                            <p style="word-break: break-word; word-wrap: break-word; font-size: 15px;">{{criteria.foreword}}</p>
                             <div layout="row" layout-align="space-between">
                                 <div></div>
                                 <md-button class="md-raised" ng-click="nextSubjectOrJournal(-1)">
@@ -43,7 +43,7 @@
                         </div>
                         <div ng-if="formState.themeBySubjectOrJournalId" layout="column">
                             <div ng-repeat="(key, themeList) in formState.themeBySubjectOrJournalId track by $index" layout="column" flex ng-style="{'margin-top': $first ? '0px' : '16px'}" ng-if="themeList.show">
-                                <div ng-repeat="item in themeList" layout="column" flex>
+                                <div ng-repeat="item in themeList" layout="column">
                                     <div layout="column" ng-if="first($index)">
                                         <div layout="row" ng-if="key === 'null' && criteria.type === 'KYSITLUS_O' && hasSubjectOrJournal">
                                             <h3 style="font-size: 16px; margin-top: 0px;color: rgb(21, 101, 192)">{{'poll.response.other' | translate}}</h3>
@@ -63,11 +63,11 @@
                                             </div>
                                         </div>
                                         <div layout="row" ng-if="criteria.foreword !== null && firstPage(themeList) && criteria.type !== 'KYSITLUS_O'">
-                                            <p style="word-break: break-word; font-size: 15px;">{{criteria.foreword}}</p>
+                                            <p style="word-break: break-word; word-wrap: break-word; font-size: 15px;">{{criteria.foreword}}</p>
                                         </div>
                                     </div>
                                     <fieldset>
-                                        <legend md-colors="{color: 'primary-800'}" style="word-break: break-word" class="md-title-small">{{item.orderNr + ' ' + item.nameEt}}</legend>
+                                        <legend md-colors="{color: 'primary-800'}" style="word-break: break-word; word-wrap: break-word" class="md-title-small">{{item.orderNr + ' ' + item.nameEt}}</legend>
                                         <div class="form-readonly">
                                             <br>
                                             <md-input-container flex="50" ng-if="item.isTeacher && themeList.journal !== undefined">
@@ -85,7 +85,7 @@
                                                     <div layout="row">
                                                         <div layout="column" flex="100">
                                                             <div layout="row" layout-align="start center">
-                                                                <h2 style="word-break: break-word; margin-bottom: 0px;">{{item.orderNr + '.' + question.orderNr + ' ' + (question.isRequired ? '*' : '') + question.nameEt}}</h2>
+                                                                <h2 style="word-break: break-word; word-wrap: break-word; margin-bottom: 0px;">{{item.orderNr + '.' + question.orderNr + ' ' + (question.isRequired ? '*' : '') + question.nameEt}}</h2>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -102,12 +102,12 @@
                                                             </div>
                                                         </div>
                                                         <div layout="column" flex="{{question.pictures.length !== 0 ? '60' : '100'}}" flex-offset="{{question.pictures.length !== 0 ? '5' : '0'}}">
-                                                            <p style="word-break: break-word; margin-top: 0px;font-style: italic;font-size: 13px;">{{question.addInfoEt}}</p>
+                                                            <p style="word-break: break-word; word-wrap: break-word; margin-top: 0px;font-style: italic;font-size: 13px;">{{question.addInfoEt}}</p>
                                                             <div ng-if="question.type === 'VASTUS_S'" layout="{{question.isInRow ? 'row' : 'column'}}" flex="100" class="{{question.requiredError ? 'red-border' : ''}}">
                                                                 <div ng-repeat="answer in question.answers track by $index" flex>
                                                                     <md-input-container flex>
                                                                         <md-checkbox ng-model="answer.chosen" aria-label="required" ng-change="question.requiredError && checkErrors()" ng-blur="save(question)">
-                                                                            <span style="word-break: break-word">{{answer.nameEt}}</span>
+                                                                            <span style="word-break: break-word; word-wrap: break-word">{{answer.nameEt}}</span>
                                                                         </md-checkbox>
                                                                     </md-input-container>
                                                                 </div>
@@ -116,7 +116,7 @@
                                                                 <md-input-container flex>
                                                                     <md-radio-group name="radio" ng-model="question.answerTxt" layout="{{question.isInRow ? 'row' : 'column'}}" flex="100" ng-change="question.requiredError && checkErrors()" ng-blur="save(question)">
                                                                         <md-radio-button ng-value="answer.nameEt" aria-label="period" ng-repeat="answer in question.answers track by $index" flex>
-                                                                            <span style="word-break: break-word">{{answer.nameEt}}</span></md-radio-button>
+                                                                            <span style="word-break: break-word; word-wrap: break-word">{{answer.nameEt}}</span></md-radio-button>
                                                                     </md-radio-group>
                                                                     <div ng-if="responseForm.$submitted" ng-messages="pollForm.radio.$error" >
                                                                         <div ng-message="required">{{'main.messages.error.inputFieldIsRequired' | translate}}</div>
@@ -128,7 +128,7 @@
                                                                 <div layout="{{question.isInRow ? 'row' : 'column'}}" flex>
                                                                     <md-input-container ng-repeat="answer in question.answers track by $index" flex>
                                                                         <md-checkbox ng-model="answer.chosen" aria-label="checkBox" name="checkBox" ng-change="question.requiredError && checkErrors()" ng-blur="save(question)">
-                                                                                <span style="word-break: break-word">{{answer.nameEt}}</span>
+                                                                                <span style="word-break: break-word; word-wrap: break-word">{{answer.nameEt}}</span>
                                                                         </md-checkbox>
                                                                     </md-input-container>
                                                                 </div>
@@ -173,14 +173,14 @@
                                 </div>
                                 <div layout="column" ng-if="last($index) && criteria.type !== 'KYSITLUS_O' && criteria.afterword !== null">
                                     <div layout="row">
-                                        <p style="word-break: break-word; font-size: 15px;">{{criteria.afterword}}</p>
+                                        <p style="word-break: break-word; word-wrap: break-word; font-size: 15px;">{{criteria.afterword}}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div ng-if="criteria.type === 'KYSITLUS_O' && criteria.afterword !== null && showAfterword">
                             <h3 style="font-size: 16px; color: rgb(21, 101, 192)">{{'poll.basicData.afterWord' | translate}}</h3>
-                            <p style="word-break: break-word; font-size: 15px;">{{criteria.afterword}}</p>
+                            <p style="word-break: break-word; word-wrap: break-word; font-size: 15px;">{{criteria.afterword}}</p>
                             <div layout="row">
                                 <md-button class="md-raised" ng-click="previousSubjectOrJournal(subjectListLength())"
                                     style="margin-left: 0px;padding-left: 0px;">

@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
@@ -46,6 +47,7 @@ import ee.hitsa.ois.domain.apelapplication.ApelSchool;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentCurriculumCompletion;
+import ee.hitsa.ois.enums.ApelApplicationStatus;
 import ee.hitsa.ois.enums.ApelInformalType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
@@ -426,7 +428,12 @@ public class EhisStudentService extends EhisService {
             DirectiveStudent directiveStudent = em.getReference(DirectiveStudent.class, foreignStudent.getId());
             WsEhisStudentLog log = ehisDirectiveStudentService.foreignStudy(directiveStudent, foreignStudent);
             if (!(Boolean.TRUE.equals(log.getHasXteeErrors()) || Boolean.TRUE.equals(log.getHasOtherErrors()))) {
-                setEhisSentApelApplication(foreignStudent.getApelApplicationIds());
+                String stringNominal = foreignStudent.getNominalStudyExtension().toString();
+                setEhisSentApelApplication(foreignStudent.getApelApplicationIdsAndNominal()
+                        .entrySet().stream()
+                        .filter(entry -> stringNominal.compareTo(entry.getValue()) >= 0)
+                        .map(Entry::getKey)
+                        .collect(Collectors.toSet()));
             }
             foreignStudies.add(new EhisStudentReport.ForeignStudy(directiveStudent, log, foreignStudent));
         }
@@ -642,6 +649,46 @@ public class EhisStudentService extends EhisService {
         }
         return studentChanges;
     }
+    
+    public JpaNativeQueryBuilder findForeignStudentsQueryBuilder() {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds "
+                + "join directive d on ds.directive_id = d.id "
+                + "left join study_period spEnd on spEnd.id = ds.study_period_end_id "
+                + "left join study_period spStart on spStart.id = ds.study_period_start_id "
+                // get curriculum version for "is higher" check
+                + "join student s on s.id = ds.student_id "
+                + "join curriculum_version cv on cv.id = s.curriculum_version_id "
+                + "join curriculum c on c.id = cv.curriculum_id "
+                // Valis disruption
+                + "left join (select ds1.id, ds1.start_date, ds1.student_id, ds1.directive_student_id "
+                            + "from directive_student ds1 "
+                            + "join directive d1 on ds1.directive_id = d1.id "
+                            + "where d1.type_code = :DIRECTIVE_VALISKATK and "
+                            + "d1.status_code = :DIRECTIVE_CONFIRMED) as VALISKATK "
+                            + "on VALISKATK.directive_student_id = ds.id "
+//                // nominal study and eap
+                + "left join (select aa.id, aafsm.credits, coalesce(nominal_cl.value, '0') as nominal, aafsm.grade_date, aa.confirmed, aa.student_id, aa.is_ehis_sent "
+                            + "from apel_application aa "
+                            + "join apel_application_record aar on aar.apel_application_id = aa.id "
+                            + "join apel_application_formal_subject_or_module aafsm on aafsm.apel_application_record_id = aar.id "
+                            + "join apel_school aschool on aschool.id = aafsm.apel_school_id "
+                            + "left join classifier nominal_cl on nominal_cl.code = aa.nominal_type_code "
+                            + "where aa.status_code = :APEL_APPLICATION_STATUS and aafsm.transfer = true and aschool.country_code != :estonia) aa on "
+                            + "aa.confirmed > coalesce(case when VALISKATK.start_date is not null then VALISKATK.start_date - interval '1 day' else null end, spEnd.end_date, ds.end_date) "
+                            + "and aa.grade_date between coalesce(spStart.start_date, ds.start_date) "
+                                + "and coalesce(case when VALISKATK.start_date is not null then VALISKATK.start_date - interval '1 day' else null end, spEnd.end_date, ds.end_date) "
+                            + "and aa.student_id = ds.student_id ");
+        qb.requiredCriteria("ds.country_code != :estonia", "estonia", ClassifierUtil.COUNTRY_ESTONIA);
+        qb.parameter("APEL_APPLICATION_STATUS", ApelApplicationStatus.VOTA_STAATUS_C.name());
+        qb.parameter("DIRECTIVE_VALISKATK", DirectiveType.KASKKIRI_VALISKATK.name());
+        qb.parameter("DIRECTIVE_CONFIRMED", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
+        qb.requiredCriteria("d.type_code = :directiveTypeValis", "directiveTypeValis", DirectiveType.KASKKIRI_VALIS.name());
+        qb.filter("d.status_code = :DIRECTIVE_CONFIRMED");
+        qb.filter("ds.canceled = false");
+        qb.filter("c.is_higher");
+        qb.groupBy("ds.id, VALISKATK.id");
+        return qb;
+    }
 
     /**
      * EHIS only wants foreign students whos study end is later than 01.04.2014
@@ -654,49 +701,22 @@ public class EhisStudentService extends EhisService {
         if (criteria.getFrom().isBefore(minDate)) {
             criteria.setFrom(minDate);
         }
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds "
-                + "left join directive d on ds.directive_id = d.id "
-                + "left join study_period spEnd on spEnd.id = ds.study_period_end_id "
-                + "left join study_period spStart on spStart.id = ds.study_period_start_id "
-                // Valis disruption
-                + "left join (select ds1.start_date, ds1.student_id, ds1.directive_student_id "
-                    + "from directive_student ds1 "
-                    + "join directive d1 on ds1.directive_id = d1.id "
-                    + "where d1.type_code = '" + DirectiveType.KASKKIRI_VALISKATK.name() + "') as VALISKATK "
-                    + "on VALISKATK.directive_student_id = ds.id "
-                    // nominal study
-                + "left join (select nominal_cl.value, aa.id, aa.student_id, aa.confirmed "
-                            + "from apel_application aa "
-                            + "join classifier nominal_cl on nominal_cl.code = aa.nominal_type_code) as maxNominal "
-                            + "on maxNominal.confirmed > coalesce(VALISKATK.start_date, spEnd.end_date, ds.end_date) "
-                            + "and maxNominal.student_id = ds.student_id "
-                    // eap
-                + "left join (select aafsm.credits, aa.confirmed, aps.application_id, aa.id "
-                            + "from apel_application_formal_subject_or_module aafsm "
-                            + "join apel_application_record aar on aafsm.apel_application_record_id = aar.id "
-                            + "join apel_application aa on aar.apel_application_id = aa.id "
-                            + "join application_planned_subject aps on aar.application_planned_subject_id = aps.id "
-                            + "where aa.status_code = 'VOTA_STAATUS_C' and aafsm.transfer = true) apelCredit "
-                            + "on apelCredit.confirmed > coalesce(VALISKATK.start_date, spEnd.end_date, ds.end_date) "
-                            + "and apelCredit.application_id = ds.application_id");
+        JpaNativeQueryBuilder qb = findForeignStudentsQueryBuilder();
         qb.requiredCriteria("d.school_id = :schoolId", "schoolId", schoolId);
-        qb.requiredCriteria("ds.country_code != :estonia", "estonia", ClassifierUtil.COUNTRY_ESTONIA);
-        qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_VALIS.name());
-        qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
-        qb.requiredCriteria("coalesce(VALISKATK.start_date, spEnd.end_date, ds.end_date) >= :endFrom", "endFrom", criteria.getFrom());
-        qb.requiredCriteria("coalesce(VALISKATK.start_date, spEnd.end_date, ds.end_date) <= :endThru", "endThru", criteria.getThru());
-        qb.filter("not exists(select wesl.id from ws_ehis_student_log wesl "
-                + "where wesl.directive_id = ds.directive_id and wesl.school_id = d.school_id "
-                + "and wesl.has_xtee_errors = false and wesl.has_other_errors = false)");
-        qb.filter("ds.canceled = false");
-        qb.groupBy("ds.id");
-        return JpaQueryUtil.pagingResult(qb, "ds.id, "
+        qb.requiredCriteria(
+                "coalesce(case when VALISKATK.start_date is not null then VALISKATK.start_date - interval '1 day' else null end, spEnd.end_date, ds.end_date) >= :endFrom",
+                "endFrom", criteria.getFrom());
+        qb.requiredCriteria(
+                "coalesce(case when VALISKATK.start_date is not null then VALISKATK.start_date - interval '1 day' else null end, spEnd.end_date, ds.end_date) <= :endThru",
+                "endThru", criteria.getThru());
+        return JpaQueryUtil.pagingResult(qb, "coalesce(VALISKATK.id, ds.id) as directiveId, " // In case if we have VALISKATK then it should process VALISKATK directive, not just VALIS.
                 // Max nominal study
-                + "max(maxNominal.value) as nominal, "
+                + "coalesce(max(case when aa.is_ehis_sent then aa.nominal else '0' end), '0') as nominal_sent, "
+                + "coalesce(max(aa.nominal), '0') as nominal_all, "
                  // Received EAP (points)
-                + "sum(apelCredit.credits) as credits, "
-                + "string_agg(maxNominal.id\\:\\:character varying, ',') as nominalApplications, "
-                + "string_agg(apelCredit.id\\:\\:character varying, ',') as creditApplications"
+                + "sum(aa.credits) as credits, "
+                + "string_agg(aa.id\\:\\:character varying, ',') as apelApplications, "
+                + "string_agg(aa.nominal, ',') as apelApplications_nominal " // sets is_ehis_sent for these aa where nominal <= sent nominal
         , em, new PageRequest(0, Integer.MAX_VALUE)).map(r -> new ForeignStudentDto(r)).getContent();
     }
     

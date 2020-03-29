@@ -1,6 +1,8 @@
 package ee.hitsa.ois.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -77,8 +79,8 @@ public class JobService {
         // kiitus, noomi, otegevus and praktik are not sent to ehis.
         // muu is not sent to ehis
         if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_TYHIST, DirectiveType.KASKKIRI_AKAD, DirectiveType.KASKKIRI_AKADK, DirectiveType.KASKKIRI_LOPET,
-                DirectiveType.KASKKIRI_VALIS, DirectiveType.KASKKIRI_KIITUS, DirectiveType.KASKKIRI_NOOMI, DirectiveType.KASKKIRI_OTEGEVUS, DirectiveType.KASKKIRI_PRAKTIK,
-                DirectiveType.KASKKIRI_TUGILOPP, DirectiveType.KASKKIRI_MUU)) {
+                DirectiveType.KASKKIRI_VALIS, DirectiveType.KASKKIRI_VALISKATK, DirectiveType.KASKKIRI_KIITUS, DirectiveType.KASKKIRI_NOOMI, DirectiveType.KASKKIRI_OTEGEVUS,
+                DirectiveType.KASKKIRI_PRAKTIK, DirectiveType.KASKKIRI_TUGILOPP, DirectiveType.KASKKIRI_MUU)) {
             submitEhisSend(directive, null);
         }
 
@@ -117,6 +119,9 @@ public class JobService {
             break;
         case KASKKIRI_VALISKATK:
             for(DirectiveStudent ds : directive.getStudents()) {
+                if (Boolean.TRUE.equals(ds.getStudent().getCurriculumVersion().getCurriculum().getHigher())) {
+                    submitEhisSend(directive, ds.getStudent());
+                }
                 changeValisTulekJob(ds);
             }
             break;
@@ -126,16 +131,37 @@ public class JobService {
     }
 
     private void changeValisTulekJob(DirectiveStudent ds) {
-        // should be maximum 1 JOB_VALIS_TULEK active at once with status VALMIS
         Long studentId = EntityUtil.getNullableId(ds.getStudent());
-        if(studentId != null) {
-            String sql = "update job set job_time = :endDate where type_code = :type and student_id = :studentId and status_code = :jobStatus";
-            Query q = em.createNativeQuery(sql);
-            q.setParameter("type", JobType.JOB_VALIS_TULEK.name());
-            q.setParameter("endDate",  JpaQueryUtil.parameterAsTimestamp(ds.getStartDate()));
-            q.setParameter("jobStatus", JobStatus.JOB_STATUS_VALMIS.name());
-            q.setParameter("studentId", studentId);
-            q.executeUpdate();
+        Long originDirectiveId = EntityUtil.getNullableId(ds.getDirectiveStudent().getDirective());
+        if (studentId != null && originDirectiveId != null) {
+            LocalDate now = LocalDate.now();
+            if (ds.getStartDate().isAfter(now)) {
+                // Only 1 VALIS_TULEK job should be active (VALMIS) at the same time for given directive and student
+                String sql = "update job set job_time = :endDate where type_code = :type and student_id = :studentId and directive_id = :directiveId and status_code = :jobStatus";
+                Query q = em.createNativeQuery(sql);
+                q.setParameter("type", JobType.JOB_VALIS_TULEK.name());
+                q.setParameter("endDate", JpaQueryUtil.parameterAsTimestamp(ds.getStartDate()));
+                q.setParameter("jobStatus", JobStatus.JOB_STATUS_VALMIS.name());
+                q.setParameter("studentId", studentId);
+                q.setParameter("directiveId", originDirectiveId);
+                q.executeUpdate();
+            } else {
+                List<Job> jobs = em.createQuery("select j from Job j where j.status.code = :status and j.type.code = :type and "
+                        + "j.student.id = :studentId and j.directive.id = :directiveId", Job.class)
+                        .setParameter("status", JobStatus.JOB_STATUS_VALMIS.name())
+                        .setParameter("type", JobType.JOB_VALIS_TULEK.name())
+                        .setParameter("studentId", studentId)
+                        .setParameter("directiveId", originDirectiveId)
+                        .setMaxResults(1)
+                        .getResultList();
+                // Only 1 VALIS_TULEK job should be active (VALMIS) at the same time for given directive and student
+                if (!jobs.isEmpty()) {
+                    Job job = jobs.get(0);
+                    setJobStatus(job, JobStatus.JOB_STATUS_TAIDETUD);
+                    job.setJobTime(ds.getStartDate().atTime(LocalTime.MIN));
+                    directiveConfirmService.updateStudentStatus(job);
+                }
+            }
         }
     }
 
@@ -240,8 +266,19 @@ public class JobService {
     private void submitValisJob(DirectiveStudent ds) {
         Directive directive = ds.getDirective();
 
+        Job job;
+        if (Boolean.TRUE.equals(ds.getStudent().getCurriculumVersion().getCurriculum().getHigher())) {
+            // directive data should be sent to EHIS
+            job = new Job();
+            job.setSchool(directive.getSchool());
+            job.setDirective(directive);
+            job.setStudent(ds.getStudent());
+            job.setJobTime(LocalDateTime.now());
+            submitJob(JobType.JOB_EHIS, job);
+        }
+
         // student will be foreign student, change status O -> V
-        Job job = new Job();
+        job = new Job();
         job.setSchool(directive.getSchool());
         job.setDirective(directive);
         job.setStudent(ds.getStudent());

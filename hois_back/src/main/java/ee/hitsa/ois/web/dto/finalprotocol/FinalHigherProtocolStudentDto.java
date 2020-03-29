@@ -20,10 +20,8 @@ public class FinalHigherProtocolStudentDto extends HigherProtocolStudentDto {
     private String idcode;
     @ClassifierRestriction(MainClassCode.OPPURSTAATUS)
     private String status;
-    private String studentGroup;
     private CurriculumGradeDto curriculumGrade;
     private List<FinalProtocolStudentOccupationDto> curriculumOccupations = new ArrayList<>();
-    private Boolean canBeDeleted;
     
     public static FinalHigherProtocolStudentDto of(ProtocolStudent protocolStudent) {
         FinalHigherProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent, new FinalHigherProtocolStudentDto());
@@ -74,14 +72,6 @@ public class FinalHigherProtocolStudentDto extends HigherProtocolStudentDto {
     public void setStatus(String status) {
         this.status = status;
     }
-    
-    public String getStudentGroup() {
-        return studentGroup;
-    }
-
-    public void setStudentGroup(String studentGroup) {
-        this.studentGroup = studentGroup;
-    }
 
     public CurriculumGradeDto getCurriculumGrade() {
         return curriculumGrade;
@@ -97,14 +87,6 @@ public class FinalHigherProtocolStudentDto extends HigherProtocolStudentDto {
 
     public void setCurriculumOccupations(List<FinalProtocolStudentOccupationDto> curriculumOccupations) {
         this.curriculumOccupations = curriculumOccupations;
-    }
-
-    public Boolean getCanBeDeleted() {
-        return canBeDeleted;
-    }
-
-    public void setCanBeDeleted(Boolean canBeDeleted) {
-        this.canBeDeleted = canBeDeleted;
     }
     
 }

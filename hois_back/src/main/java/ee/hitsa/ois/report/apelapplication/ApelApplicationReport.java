@@ -10,7 +10,6 @@ import java.util.Objects;
 
 import ee.hitsa.ois.domain.apelapplication.ApelApplication;
 import ee.hitsa.ois.enums.Language;
-import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.TranslateUtil;
 

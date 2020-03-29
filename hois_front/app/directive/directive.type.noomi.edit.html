@@ -12,16 +12,26 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row hois-table-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>{{currentLanguageNameField(row.curriculumVersionObject)}}</td>
         <td md-cell>{{currentLanguageNameField(row.studentGroupObject)}}</td>
-        <td md-cell>
-          <md-input-container style="width:100%;">
-            <textarea name="students[{{$index}}].reason" ng-model="row.addInfo" md-maxlength="4000" max-rows="5" aria-label="{{'directive.student.reason' | translate}}"></textarea>
-          </md-input-container>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <md-input-container style="width:100%;">
+              <textarea name="students[{{$index}}].addInfo" ng-model="row.addInfo" md-maxlength="4000" max-rows="5"
+                ng-model-options="{allowInvalid: true}" aria-label="{{'directive.student.reason' | translate}}"></textarea>
+            </md-input-container>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-messages="directiveForm['students['+$index+'].addInfo'].$error">
+              <p ng-message="serverside">
+                <p ng-repeat="err in directiveForm['students['+$index+'].addInfo'].$serverError">{{'main.messages.error.' + err.code | translate}}</p>
+              </p>
+            </div>
+          </hois-table-data-detail>
         </td>
         <td md-cell>
           <a ng-click="deleteStudent(row)" md-no-ink  class="remove">&times;</a>

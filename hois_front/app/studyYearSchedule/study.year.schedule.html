@@ -68,7 +68,7 @@
               </th>
             </tr>
           </thead>
-          <tbody ng-repeat="department in schoolDepartments | filter: filterSchoolDepartments">
+          <tbody ng-repeat="department in schoolDepartments | orderBy: currentLanguageNameField() | filter: filterSchoolDepartments">
             <tr>
               <td colspan="3" class="hois-collapse-header fixed-cell dividerBorder">{{currentLanguageNameField(department)}}</td>
               <td ng-if="criteria.studyYear.weeks > 0" colspan="{{criteria.studyYear.weeks}}" class="dividerBorder" style="border-right: 1px solid #ccc !important;"></td>

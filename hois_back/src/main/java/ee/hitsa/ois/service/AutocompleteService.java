@@ -195,14 +195,14 @@ public class AutocompleteService {
         qb.optionalCriteria("b.is_dormitory = :isDormitory", "isDormitory", lookup.getIsDormitory());
 
         qb.sort("b.code, r.code");
-        List<?> data = qb.select("r.id, b.code as building_code, r.code as room_code, r.seats", em).getResultList();
+        List<?> data = qb.select("r.id r_id, b.id b_id, b.code as building_code, r.code as room_code, r.seats", em)
+                .getResultList();
 
         Map<Long, RoomAutocompleteResult> roomsResult = new LinkedHashMap<>();
         if (!data.isEmpty()) {
-            roomsResult = data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
-                return new RoomAutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2),
-                        resultAsLong(r, 3));
-            }, (v1, v2) -> v1, LinkedHashMap::new));
+            roomsResult = data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0),
+                    r -> new RoomAutocompleteResult(resultAsLong(r, 0), resultAsLong(r, 1), resultAsString(r, 2),
+                    resultAsString(r, 3), resultAsLong(r, 4)), (v1, v2) -> v1, LinkedHashMap::new));
         }
 
         if (Boolean.TRUE.equals(lookup.getOccupied()) && !roomsResult.isEmpty()) {
@@ -1147,10 +1147,17 @@ public class AutocompleteService {
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalCriteria("exists (select uc.curriculum_id from user_curriculum uc"
                 + " where uc.curriculum_id = cv.curriculum_id and uc.user_id = :userId)", "userId", lookup.getUserId());
-
-        if (!otherStudents) {
+        
+        if (lookup.getIsComplete() != null) {
+            if (lookup.getIsComplete().booleanValue()) {
+                qb.requiredCriteria("s.status_code != :statusCheck", "statusCheck", SubjectStatus.AINESTAATUS_S);
+            } else {
+                qb.requiredCriteria("s.status_code = :statusCheck", "statusCheck", SubjectStatus.AINESTAATUS_S);
+            }
+        } else if (!otherStudents) {
             qb.requiredCriteria("s.status_code = :subjectStatusCode", "subjectStatusCode", SubjectStatus.AINESTAATUS_K);
         }
+        
         String name = Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et";
         qb.optionalContains(Arrays.asList(name, "s.code"), "name", lookup.getName());
         // Never used at this moment

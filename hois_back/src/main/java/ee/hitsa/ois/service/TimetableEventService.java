@@ -28,8 +28,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
-import ee.hitsa.ois.domain.timetable.TimetableEventSubgroup;
-import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchSubgroupDto;
+import ee.hitsa.ois.enums.SchoolTimetableType;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -59,6 +58,7 @@ import ee.hitsa.ois.domain.timetable.TimetableEventRoom;
 import ee.hitsa.ois.domain.timetable.TimetableEventStudentGroup;
 import ee.hitsa.ois.domain.timetable.TimetableEventTeacher;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
+import ee.hitsa.ois.domain.timetable.TimetableObject;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Permission;
@@ -104,6 +104,7 @@ import ee.hitsa.ois.web.dto.timetable.TimetableEventRoomSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchGroupDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchRoomDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchSubgroupDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableSingleEventTeacherForm;
 import ee.hitsa.ois.web.dto.timetable.TimetableTimeOccupiedDto;
@@ -210,13 +211,14 @@ public class TimetableEventService {
         TimetableEvent te = tet.getTimetableEvent();
         if (form.getDate().isAfter(LocalDate.now())
                 || (form.getDate().isEqual(LocalDate.now()) && form.getStartTime().toLocalTime().isAfter(LocalTime.now()))) {
-            te = bindSingleEventFormToTimetableEventTime(form, tet);
+            te = bindSingleEventFormToTimetableEventTime(form, tet, te);
             return EntityUtil.save(te, em);
         }
         throw new ValidationFailedException("timetable.error.isBeforeNow");
     }
     
-    private TimetableEvent bindSingleEventFormToTimetableEventTime(TimetableSingleEventForm form, TimetableEventTime tet) {
+    private TimetableEvent bindSingleEventFormToTimetableEventTime(TimetableSingleEventForm form,
+            TimetableEventTime tet, TimetableEvent te) {
         boolean modified = !Objects.equals(tet.getStart(), form.getStartTime());
         if(!modified && !Objects.equals(tet.getEnd(), form.getEndTime())) {
             modified = true;
@@ -235,13 +237,17 @@ public class TimetableEventService {
         } else {
             roomsModified = bindRoomsToTimetableEvent(tet, form);
             teachersModified = bindTeachersToTimetableEvent(tet, form);
-            studentGroupsModified = bindStudentGroupsToTimetableEvent(tet, form);
+            // only single events student groups can be changed
+            if (te.getTimetableObject() == null) {
+                studentGroupsModified = bindStudentGroupsToTimetableEvent(tet, form);
+            }
         }
         
         modified = modified || roomsModified || teachersModified || studentGroupsModified;
-        if (modified && tet.getTimetableEvent().getTimetableObject() != null) {
-            timetableService.sendTimetableChangesMessages(tet.getTimetableEvent().getTimetableObject(),
-                    tet.getStart(), tet.getEnd());
+        TimetableObject timetableObject = tet.getTimetableEvent().getTimetableObject();
+        if (modified && timetableObject != null) {
+            timetableService.sendTimetableChangesMessages(timetableObject, tet.getStart(), tet.getEnd(),
+                    timetableObject.getTimetableObjectStudentGroups());
         }
         return tet.getTimetableEvent();
     }
@@ -544,62 +550,67 @@ public class TimetableEventService {
 
     private void filterTimetableSingleEvents(List<TimetableEventSearchDto> events, School school,
              TimetablePersonHolder person) {
+        boolean ascImportedTimetables = SchoolTimetableType.TIMETABLE_ASC.name()
+                .equals(EntityUtil.getCode(school.getTimetable()));
         if (person != null) {
             if (Role.ROLL_O.name().equals(person.getRole())) {
-                hideOtherTeachersSingleEventsData(events, person.getRoleId());
+                hideOtherTeachersSingleEventsData(events, person.getRoleId(), ascImportedTimetables);
             } else if (Role.ROLL_T.name().equals(person.getRole())) {
-                hideStudentSingleEventsData(events, person.getRoleId());
+                hideStudentSingleEventsData(events, person.getRoleId(), ascImportedTimetables);
             } else {
-                hideSingleEventsData(events);
+                hideSingleEventsData(events, ascImportedTimetables);
             }
         } else {
             HoisUserDetails user = TimetableService.userFromPrincipal();
             if (user != null && user.getSchoolId().equals(school.getId())) {
                 if (user.isSchoolAdmin()) {
-                    hideOtherAdminsSingleEventsData(events, user);
+                    hideOtherAdminsSingleEventsData(events, user, ascImportedTimetables);
                 } else if (user.isTeacher()) {
-                    hideOtherTeachersSingleEventsData(events, user.getTeacherId());
+                    hideOtherTeachersSingleEventsData(events, user.getTeacherId(),ascImportedTimetables);
                 } else if (user.isStudent() || user.isRepresentative()) {
-                    hideStudentSingleEventsData(events, user.getStudentId());
+                    hideStudentSingleEventsData(events, user.getStudentId(), ascImportedTimetables);
                 } else {
-                    hideSingleEventsData(events);
+                    hideSingleEventsData(events, ascImportedTimetables);
                 }
             } else {
-                hideSingleEventsData(events);
+                hideSingleEventsData(events, ascImportedTimetables);
             }
         }
     }
 
-    private static void hideSingleEventsData(List<TimetableEventSearchDto> events) {
+    private static void hideSingleEventsData(List<TimetableEventSearchDto> events, boolean ascImportedTimetables) {
         for (TimetableEventSearchDto event : events) {
             if (Boolean.TRUE.equals(event.getSingleEvent())) {
-                hideSingleEventData(event);
+                hideSingleEventData(event, ascImportedTimetables);
             }
         }
     }
 
     // if admin doesn't have TEEMAOIGUS_SYNDMUS view right then other teacher's
     // personal events should be hidden
-    private static void hideOtherAdminsSingleEventsData(List<TimetableEventSearchDto> events, HoisUserDetails user) {
+    private static void hideOtherAdminsSingleEventsData(List<TimetableEventSearchDto> events, HoisUserDetails user,
+            boolean ascImportedTimetables) {
         if (!UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_SYNDMUS)) {
             for (TimetableEventSearchDto event : events) {
                 if (event.getPerson() != null && !user.getPersonId().equals(event.getPerson().getId())) {
-                    hideSingleEventData(event);
+                    hideSingleEventData(event, ascImportedTimetables);
                 }
             }
         }
     }
 
-    private static void hideOtherTeachersSingleEventsData(List<TimetableEventSearchDto> events, Long teacherId) {
+    private static void hideOtherTeachersSingleEventsData(List<TimetableEventSearchDto> events, Long teacherId,
+            boolean ascImportedTimetables) {
         for (TimetableEventSearchDto event : events) {
             if (Boolean.TRUE.equals(event.getSingleEvent()) && !isTeachersEvent(event.getTeachers(), teacherId)) {
-                hideSingleEventData(event);
+                hideSingleEventData(event, ascImportedTimetables);
             }
         }
     }
 
     // Student can see exam time single events and his/her student group single events
-    private void hideStudentSingleEventsData(List<TimetableEventSearchDto> events, Long studentId) {
+    private void hideStudentSingleEventsData(List<TimetableEventSearchDto> events, Long studentId,
+            boolean ascImportedTimetables) {
         Student student = em.getReference(Student.class, studentId);
         Long studentGroupId = EntityUtil.getNullableId(student.getStudentGroup());
 
@@ -617,20 +628,24 @@ public class TimetableEventService {
             List<Long> eventStudentGroups = StreamUtil.toMappedList(sg -> sg.getId(), event.getStudentGroups());
             if (Boolean.TRUE.equals(event.getSingleEvent()) && !(examTimetableEventTimes.contains(event.getId())
                     || studentGroupId != null && eventStudentGroups.contains(studentGroupId))) {
-                hideSingleEventData(event);
+                hideSingleEventData(event, ascImportedTimetables);
             }
         }
     }
 
-    private static void hideSingleEventData(TimetableEventSearchDto event) {
-        event.setNameEn(null);
-        event.setNameEt(null);
-        event.setRooms(null);
-        event.setTeachers(null);
-        event.setStudentGroups(null);
-        event.setPerson(null);
-        event.setIsPersonal(null);
-        event.setPublicEvent(Boolean.FALSE);
+    private static void hideSingleEventData(TimetableEventSearchDto event, boolean ascImportedTimetables) {
+        // events imported from aSc TimetTables should not be hidden
+        if (Boolean.FALSE.equals(event.getIsImported()) || !ascImportedTimetables) {
+            event.setNameEn(null);
+            event.setNameEt(null);
+            event.setRooms(null);
+            event.setTeachers(null);
+            event.setStudentGroups(null);
+            event.setPerson(null);
+            event.setIsPersonal(null);
+            event.setIsImported(null);
+            event.setPublicEvent(Boolean.FALSE);
+        }
     }
     
     private static boolean isTeachersEvent(List<TimetableEventSearchTeacherDto> eventTeachers, Long teacherId) {
@@ -720,7 +735,8 @@ public class TimetableEventService {
         qb.optionalCriteria("tet.end <= :end", "end", criteria.getThru(), DateUtils::lastMomentOfDay);
         qb.optionalCriteria("(t.id in (:timetable) or tobj.id is null)", "timetable", criteria.getTimetables());
         qb.requiredCriteria("(te.school_id = :schoolId or t.school_id = :schoolId)", "schoolId", schoolId);
-        qb.requiredCriteria("(te.timetable_object_id is null or t.status_code in (:shownStatusCodes))", "shownStatusCodes", timetableService.shownStatusCodes());
+        qb.requiredCriteria("(te.timetable_object_id is null or t.status_code in (:shownStatusCodes))",
+                "shownStatusCodes", timetableService.shownStatusCodes(criteria.getPerson()));
 
         String studentGroupEvents = studentGroupEventsQuery(StringUtils.join(criteria.getStudentGroups(), ", "));
         if (student != null) {
@@ -807,7 +823,7 @@ public class TimetableEventService {
         String select = "distinct tet.id, j.id as journal_id, ssp.id as subject_study_period_id,"
                 + " coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(te.name, j.name_et, subj.name_en) as name_en,"
                 + " tet.start, tet.end, te.consider_break, tobj.id as single_event, t.id as timetableId, te.capacity_type_code,"
-                + " te.is_personal, te.person_id, p.firstname, p.lastname";
+                + " te.is_personal, te.person_id, p.firstname, p.lastname, te.is_imported";
         List<?> eventResult = qb.select(select, em).getResultList();
 
         List<TimetableEventSearchDto> eventResultList = StreamUtil.toMappedList(r -> {
@@ -822,6 +838,8 @@ public class TimetableEventService {
                 AutocompleteResult person = new AutocompleteResult(resultAsLong(r, 12), personName, personName);
                 dto.setPerson(person);
             }
+            Boolean isImported = resultAsBoolean(r, 15);
+            dto.setIsImported(isImported != null ? isImported : Boolean.FALSE);
             return dto;
         }, eventResult);
         return eventResultList;
@@ -882,7 +900,7 @@ public class TimetableEventService {
         JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(criteria, user.getSchoolId()).sort(pageable);
         String select = "tet.id, coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(te.name, j.name_et, subj.name_en) as name_en,"
                     + " tet.start, tet.end, te.consider_break, tobj.id as single_event, t.id as timetableId, te.capacity_type_code,"
-                    + " te.is_personal, te.person_id, p.firstname, p.lastname";
+                    + " te.is_personal, te.person_id, p.firstname, p.lastname, te.is_imported";
         // do not show exams, they are managed thru separate UI
         qb.filter("not exists(select 1 from subject_study_period_exam sspe2 where sspe2.timetable_event_id = tet.timetable_event_id)");
 
@@ -902,6 +920,8 @@ public class TimetableEventService {
             } else {
                 dto.setCanEdit(Boolean.valueOf(UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_SYNDMUS)));
             }
+            Boolean isImported = resultAsBoolean(r, 13);
+            dto.setIsImported(isImported != null ? isImported : Boolean.FALSE);
             return dto;
         });
         setRoomsTeachersAndGroupsForSearchDto(result.getContent(), criteria.getShowOnlySubstitutes());
@@ -948,7 +968,7 @@ public class TimetableEventService {
         List<ResultObject> resultObjects = StreamUtil.toMappedList(
                 r -> new ResultObject(resultAsLong(r, 0), resultAsLong(r, 1), PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3))),
                 queryResult);
-        if (Boolean.FALSE.equals(showOnlySubstitutes)) {
+        if (!Boolean.TRUE.equals(showOnlySubstitutes)) {
             setOtherTeachersByTimetableEventTime(tetIds, resultObjects);
         }
         return resultObjects.stream().collect(Collectors.groupingBy(r -> r.getTimetableEventId()));

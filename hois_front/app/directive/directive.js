@@ -949,7 +949,6 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     if(!$scope.formState.school.higher) {
       $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
       $scope.formState.excludedTypes.push('KASKKIRI_OVORM');
-      $scope.formState.excludedTypes.push('KASKKIRI_VALIS');
       $scope.formState.excludedTypes.push('KASKKIRI_MUU');
     }
     if(!$scope.formState.school.vocational) {

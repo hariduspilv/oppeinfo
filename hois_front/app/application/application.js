@@ -701,6 +701,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
   };
 
   function submit() {
+    if (!validateForm()) return;
     QueryUtils.endpoint('/applications/' + $scope.application.id + '/submit/').put().$promise.then(function (response) {
       message.info('application.messages.submitted');
       if ($scope.auth.isAdmin() || $scope.isView) {
@@ -738,6 +739,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     $scope.strictRequired = false;
     $timeout(function () {
       FormUtils.withValidForm($scope.applicationForm, function () {
+        if (!validateForm()) return;
         if (angular.isDefined($scope.applicationForm) && $scope.applicationForm.$dirty === true ) {
           dialogService.confirmDialog({prompt: 'application.messages.confirmSaveAndSubmit'}, function() {
             beforeSave();
@@ -866,6 +868,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     $timeout(function () {
       FormUtils.withValidForm($scope.applicationForm, function () {
         beforeSave();
+        if (!validateForm()) return;
         var application = new ApplicationsEndpoint($scope.application);
         if (angular.isDefined($scope.application.id)) {
           application.$update().then(function () {
@@ -882,6 +885,20 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       });
     });
   };
+
+  function validateForm() {
+    if ($scope.application.type === 'AVALDUS_LIIK_VALIS') {
+      if ($scope.application.apelSchool !== undefined && $scope.application.apelSchool.country === 'RIIK_EST' && $scope.application.apelSchool.ehisSchool === null) {
+        if ($scope.auth.isAdmin()) {
+          message.error('application.messages.apelSchoolMissingAdmin');
+        } else {
+          message.error('application.messages.apelSchoolMissing');
+        }
+        return false;
+      }
+    }
+    return true;
+  }
 
   function beforeSave() {
     if ($scope.application.type === 'AVALDUS_LIIK_RAKKAVA') {

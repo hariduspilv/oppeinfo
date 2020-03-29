@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -283,7 +284,12 @@ public class ApelApplicationService {
      * @return
      */
     public ApelApplication save(HoisUserDetails user, ApelApplication application, ApelApplicationForm applicationForm) {
-        validateSubmittedApplication(application);
+        return save(user, application, applicationForm, false);
+    }
+
+    private ApelApplication save(HoisUserDetails user, ApelApplication application,
+            ApelApplicationForm applicationForm, boolean validate) {
+        if (validate) validateSubmittedApplication(application, true);
         EntityUtil.bindToEntity(applicationForm, application, "nominalType", "newNominalStudyEnd", "oldNominalStudyEnd",
                 "isEhisSent", "records", "committee", "decision", "files");
 
@@ -592,7 +598,7 @@ public class ApelApplicationService {
      * @return
      */
     public ApelApplication submit(ApelApplication application) {
-        validateSubmittedApplication(application);
+        validateSubmittedApplication(application, false);
         if (application.getRecords().isEmpty()) {
             throw new ValidationFailedException("apel.error.atLeastOneFormalOrInformalLearning");
         }
@@ -604,27 +610,89 @@ public class ApelApplicationService {
         return application;
     }
 
-    private void validateSubmittedApplication(ApelApplication application) {
-        // formal subject or modules need to be validated because they can be transferred from abroad studies applications
+    private void validateSubmittedApplication(ApelApplication application, boolean strictValidation) {
+        boolean vocational = Boolean.TRUE.equals(application.getIsVocational());
         Set<Long> recordsWithErrors = new HashSet<>();
-        for (ApelApplicationRecord record : application.getRecords()) {
-            for (ApelApplicationFormalSubjectOrModule subjectOrModule : record.getFormalSubjectsOrModules()) {
-                ApelSubjectType type = ApelSubjectType.valueOf(EntityUtil.getCode(subjectOrModule.getType()));
-                Set<ConstraintViolation<ApelApplicationFormalSubjectOrModule>> errors = validator.validate(subjectOrModule,
-                        type.getValidationGroup(application.getIsVocational(), subjectOrModule.getIsMySchool()));
+        Map<Long, List<String>> recordErrors = new HashMap<>();
 
-                if (!errors.isEmpty()) {
-                    recordsWithErrors.add(record.getId());
-                    continue;
-                }
+        for (ApelApplicationRecord record : application.getRecords()) {
+            // formal subject or modules need to be validated because they can be transferred from abroad studies applications
+            validateFormalSubjectsOrModules(record, recordsWithErrors, recordErrors, vocational);
+
+            if (strictValidation && !recordsWithErrors.contains(record.getId())) {
+                validateTransferredCredits(record, recordsWithErrors, recordErrors, vocational);
             }
         }
 
         if(!recordsWithErrors.isEmpty()) {
-            throw new ValidationFailedException("apel.error.formalRecordsHaveErrors",
-                    Collections.singletonMap("recordsWithErrors", recordsWithErrors));
+            Map<Object, Object> params = new HashMap<>();
+            params.put("recordsWithErrors", recordsWithErrors);
+            params.put("recordErrors", recordErrors);
+            throw new ValidationFailedException("apel.error.formalRecordsHaveErrors", params);
         }
     }
+
+    private void validateFormalSubjectsOrModules(ApelApplicationRecord record, Set<Long> recordsWithErrors,
+            Map<Long, List<String>> recordErrors, boolean vocational) {
+        for (ApelApplicationFormalSubjectOrModule subjectOrModule : record.getFormalSubjectsOrModules()) {
+            ApelSubjectType type = ApelSubjectType.valueOf(EntityUtil.getCode(subjectOrModule.getType()));
+            Set<ConstraintViolation<ApelApplicationFormalSubjectOrModule>> errors = validator.validate(subjectOrModule,
+                    type.getValidationGroup(Boolean.valueOf(vocational), subjectOrModule.getIsMySchool()));
+
+            if (!errors.isEmpty()) {
+                recordsWithErrors.add(record.getId());
+                addRecordError(record.getId(), "apel.error.incompleteData", recordErrors);
+                break;
+            }
+        }
+    }
+
+    private static void validateTransferredCredits(ApelApplicationRecord record, Set<Long> recordsWithErrors,
+            Map<Long, List<String>> recordErrors, boolean vocational) {
+        BigDecimal replacedCredits;
+        if (vocational) {
+            List<BigDecimal> moduleCredits = record.getFormalReplacedSubjectsOrModules().stream()
+                    .filter(m -> m.getCurriculumVersionOmoduleTheme() == null)
+                    .map(m -> m.getCurriculumVersionOmodule().getCurriculumModule().getCredits())
+                    .collect(Collectors.toList());
+            List<BigDecimal> themeCredits = record.getFormalReplacedSubjectsOrModules().stream()
+                    .filter(m -> m.getCurriculumVersionOmoduleTheme() != null)
+                    .map(m -> m.getCurriculumVersionOmoduleTheme().getCredits())
+                    .collect(Collectors.toList());
+            replacedCredits = StreamUtil.sumBigDecimals(s -> s, Stream.concat(moduleCredits.stream(),
+                    themeCredits.stream()));
+        } else {
+            if (allTransferredSubjectsInFreeChoiceModules(record)) {
+                return;
+            }
+            replacedCredits = StreamUtil.sumBigDecimals(s -> s.getSubject().getCredits(),
+                    record.getFormalReplacedSubjectsOrModules());
+        }
+        BigDecimal transferredCredits = StreamUtil.sumBigDecimals(ApelApplicationFormalSubjectOrModule::getCredits,
+                record.getFormalSubjectsOrModules());
+
+        if (replacedCredits.compareTo(transferredCredits) > 0) {
+            recordsWithErrors.add(record.getId());
+            String error = vocational ? "apel.error.thereMustBeMoreTransferableCreditsThanSubstitutableCreditsVocational"
+                    : "apel.error.thereMustBeMoreTransferableCreditsThanSubstitutableCreditsHigher";
+            addRecordError(record.getId(), error, recordErrors);
+        }
+    }
+
+    private static void addRecordError(Long recordId, String error, Map<Long, List<String>> recordErrors) {
+        if (!recordErrors.containsKey(recordId)) {
+            recordErrors.put(recordId, new ArrayList<>());
+        }
+        recordErrors.get(recordId).add(error);
+    }
+
+
+
+    private static boolean allTransferredSubjectsInFreeChoiceModules(ApelApplicationRecord record) {
+        return record.getFormalSubjectsOrModules().stream().allMatch(s -> s.getCurriculumVersionHmodule() != null &&
+                HigherModuleType.KORGMOODUL_V.name().equals(EntityUtil.getCode(s.getCurriculumVersionHmodule().getType())));
+    }
+
 
     /**
      * Set APEL application's status to 'Being confirmed'
@@ -638,7 +706,7 @@ public class ApelApplicationService {
             throw new ValidationFailedException("apel.error.atLeastOneFormalOrInformalLearning");
         }
 
-        save(user, application,  applicationForm);
+        save(user, application,  applicationForm, true);
         if (ApelApplicationStatus.VOTA_STAATUS_V.name().equals(EntityUtil.getCode(application.getStatus()))) {
             application.setDecision(applicationForm.getAddInfo());
 
@@ -649,7 +717,7 @@ public class ApelApplicationService {
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_Y);
         return EntityUtil.save(application, em);
     }
-    
+
     /**
      * Set APEL application's status to 'Being confirmed (committee)'
      * 
@@ -660,7 +728,7 @@ public class ApelApplicationService {
         if (application.getRecords().isEmpty()) {
             throw new ValidationFailedException("apel.error.atLeastOneFormalOrInformalLearning");
         }
-        save(user, application,  applicationForm);
+        save(user, application,  applicationForm, true);
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_V);
         application.setCommittee(em.getReference(Committee.class, applicationForm.getCommitteeId()));
         return EntityUtil.save(application, em);

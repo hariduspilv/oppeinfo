@@ -5,10 +5,13 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,6 +36,7 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
 import ee.hitsa.ois.enums.MessageStatus;
@@ -48,6 +52,7 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.commandobject.MessageForm;
+import ee.hitsa.ois.web.commandobject.MessageForm.Receiver;
 import ee.hitsa.ois.web.commandobject.MessageSearchCommand;
 import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
@@ -89,6 +94,8 @@ public class MessageService {
     private StudyYearService studyYearService;
     @Autowired
     private EntityManager em;
+    @Autowired
+    private MailService mailService;
     
 
     public Page<MessageSearchDto> show(HoisUserDetails user, Pageable pageable) {
@@ -188,24 +195,97 @@ public class MessageService {
         message.setSendersSchool(EntityUtil.getOptionalOne(School.class, user.getSchoolId(), em));
         message.setSender(em.getReference(Person.class, user.getPersonId()));
         message.setSendersRole(em.getReference(Classifier.class, user.getRole()));
+        
+        Student student = null;
+        Teacher teacher = null;
+        if (user.isStudent()) {
+            student = em.getReference(Student.class, user.getStudentId());
+        } else if (user.isTeacher()) {
+            teacher = em.getReference(Teacher.class, user.getTeacherId());
+        }
+        
+        final String emailSender = student != null 
+                ? (student.getEmail() != null ? student.getEmail() : message.getSender().getEmail())
+                : (teacher != null ? (teacher.getEmail() != null ? teacher.getEmail() : message.getSender().getEmail()) : message.getSender().getEmail());
 
         if(form.getResponseTo() != null) {
             Message responseTo = em.getReference(Message.class, form.getResponseTo());
             responseTo.getResponses().add(message);
             message.setResponseTo(responseTo);
         }
-        saveReceivers(message, form.getReceivers());
+        if (form.getReceivers() != null && !form.getReceivers().isEmpty()) {
+            List<Receiver> withoutRole = form.getReceivers().stream().filter(r -> r.getRole() == null).collect(Collectors.toList());
+            form.getReceivers().removeAll(withoutRole);
+            
+            Map<String, Set<Long>> receiversByRole = form.getReceivers().stream()
+                    .collect(Collectors.groupingBy(MessageForm.Receiver::getRole,
+                            Collectors.mapping(MessageForm.Receiver::getPerson, Collectors.toSet())));
+            Set<String> emails = new LinkedHashSet<>();
+            Set<Long> personIds = withoutRole.stream().map(r -> r.getPerson()).collect(Collectors.toCollection(LinkedHashSet::new));
+
+            LocalDate now = LocalDate.now();
+            if (receiversByRole.containsKey(Role.ROLL_T.name())) {
+                // Every student should be active
+                List<?> studentEmails = em.createNativeQuery("select coalesce(s.email, p.email) "
+                        + "from student s "
+                        + "join person p on p.id = s.person_id "
+                        + "join user_ u on u.student_id = s.id "
+                        + "where s.status_code in ?1 and (u.valid_from is null or u.valid_from <= ?2) and (u.valid_thru is null or u.valid_thru >= ?3) and p.id in ?4 and s.school_id = ?5 "
+                        + "group by p.id, s.id")
+                        .setParameter(1, StudentStatus.STUDENT_STATUS_ACTIVE)
+                        .setParameter(2, JpaQueryUtil.parameterAsTimestamp(now.atTime(LocalTime.MIN)))
+                        .setParameter(3, JpaQueryUtil.parameterAsTimestamp(now.atTime(LocalTime.MAX)))
+                        .setParameter(4, receiversByRole.get(Role.ROLL_T.name()))
+                        .setParameter(5, user.getSchoolId())
+                        .getResultList();
+                emails.addAll(StreamUtil.toMappedSet(r -> resultAsString(r, 0), studentEmails));
+                personIds.addAll(receiversByRole.get(Role.ROLL_T.name()));
+                receiversByRole.remove(Role.ROLL_T.name());
+            }
+            if (receiversByRole.containsKey(Role.ROLL_O.name())) {
+                // Every teacher should be active
+                List<?> teacherEmails = em.createNativeQuery("select coalesce(t.email, p.email) "
+                        + "from teacher t "
+                        + "join person p on p.id = t.person_id "
+                        + "join user_ u on u.teacher_id = t.id "
+                        + "where t.is_active and (u.valid_from is null or u.valid_from <= ?1) and (u.valid_thru is null or u.valid_thru >= ?2) and p.id in ?3 and t.school_id = ?4 "
+                        + "group by p.id, t.id")
+                        .setParameter(1, JpaQueryUtil.parameterAsTimestamp(now.atTime(LocalTime.MIN)))
+                        .setParameter(2, JpaQueryUtil.parameterAsTimestamp(now.atTime(LocalTime.MAX)))
+                        .setParameter(3, receiversByRole.get(Role.ROLL_O.name()))
+                        .setParameter(4, user.getSchoolId())
+                        .getResultList();
+                emails.addAll(StreamUtil.toMappedSet(r -> JpaQueryUtil.resultAsString(r, 0), teacherEmails));
+                personIds.addAll(receiversByRole.get(Role.ROLL_O.name()));
+                receiversByRole.remove(Role.ROLL_O.name());
+            }
+            
+            Set<Long> otherPersonIds = receiversByRole.values().stream().flatMap(pSet -> pSet.stream()).collect(Collectors.toSet());
+            
+            // Request every person from DB to set it for MessageReceiver.
+            personIds.addAll(otherPersonIds);
+            List<Person> persons = em.createQuery("select p from Person p where p.id in ?1", Person.class).setParameter(1, personIds).getResultList();
+            
+            // Add leftover emails
+            emails.addAll(persons.stream().filter(p -> otherPersonIds.contains(p.getId())).map(Person::getEmail).collect(Collectors.toSet()));
+            
+            saveReceivers(message, persons);
+            // email should be sent personally to hide everyone's email.
+            emails.forEach(email -> {
+                mailService.sendMail(message, emailSender, Collections.singleton(email));
+            });
+        }
 
         return EntityUtil.save(message, em);
     }
 
-    private void saveReceivers(Message message, Set<Long> receivers) {
+    private void saveReceivers(Message message, List<Person> receivers) {
         if(receivers != null) {
             Classifier statusNew = em.getReference(Classifier.class, MessageStatus.TEATESTAATUS_U.name());
             message.getReceivers().addAll(StreamUtil.toMappedList(r -> {
                 MessageReceiver receiver = new MessageReceiver();
                 receiver.setStatus(statusNew);
-                receiver.setPerson(em.getReference(Person.class, r));
+                receiver.setPerson(r);
                 return receiver;
             }, receivers));
         }

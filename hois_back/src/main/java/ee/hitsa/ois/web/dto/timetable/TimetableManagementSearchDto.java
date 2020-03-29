@@ -10,6 +10,8 @@ public class TimetableManagementSearchDto {
     private LocalDate end;
     private Boolean isHigher;
     private Long studyPeriod;
+    private Boolean canExport = Boolean.FALSE;
+    private Boolean canImport = Boolean.FALSE;
 
     public TimetableManagementSearchDto(Long id, String status, LocalDate start, LocalDate end, Boolean isHigher) {
         this.id = id;
@@ -30,6 +32,13 @@ public class TimetableManagementSearchDto {
             Long studyPeriod) {
         this(id, status, start, end, isHigher);
         this.studyPeriod = studyPeriod;
+    }
+    
+    public TimetableManagementSearchDto(Long id, String status, LocalDate start, LocalDate end, Boolean isHigher,
+            Long studyPeriod, Boolean canExport, Boolean canImport) {
+        this(id, status, start, end, isHigher, studyPeriod);
+        this.canExport = canExport;
+        this.canImport = canImport;
     }
 
     public Long getId() {
@@ -78,6 +87,22 @@ public class TimetableManagementSearchDto {
 
     public void setStudyPeriod(Long studyPeriod) {
         this.studyPeriod = studyPeriod;
+    }
+
+    public Boolean getCanExport() {
+        return canExport;
+    }
+
+    public void setCanExport(Boolean canExport) {
+        this.canExport = canExport;
+    }
+
+    public Boolean getCanImport() {
+        return canImport;
+    }
+
+    public void setCanImport(Boolean canImport) {
+        this.canImport = canImport;
     }
 
 }

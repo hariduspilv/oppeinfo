@@ -1,19 +1,31 @@
 package ee.hitsa.ois.web.dto;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import ee.hitsa.ois.enums.SchoolTimetableType;
 import ee.hitsa.ois.web.dto.timetable.NameAndCode;
 
 public class TimetableImportErrorDto {
-    
-    Set<NameAndCode> errors = new HashSet<>();
 
-    public Set<NameAndCode> getErrors() {
-        return errors;
+    private SchoolTimetableType type;
+    private Map<String, List<NameAndCode>> messages = new HashMap<>();
+
+    public SchoolTimetableType getType() {
+        return type;
     }
 
-    public void setErrors(Set<NameAndCode> errors) {
-        this.errors = errors;
+    public void setType(SchoolTimetableType type) {
+        this.type = type;
     }
+
+    public Map<String, List<NameAndCode>> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(Map<String, List<NameAndCode>> messages) {
+        this.messages = messages;
+    }
+
 }

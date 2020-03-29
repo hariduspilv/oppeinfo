@@ -9,19 +9,38 @@
     </md-toolbar>
     <md-dialog-content>
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
-        <div ng-if="timetable.errors !== null && timetable.errors.length !== 0">
+        <!-- <div ng-if="timetable.messages !== null && timetable.errors.length !== 0"> -->
+        <div>
           <md-table-container style="max-height: 400px;">
               <table md-table>
                 <thead md-head>
                     <tr md-row>
-                        <th md-column>{{'journal.label' | translate}}</th>
-                        <th md-column>{{'enterprise.csv.note' | translate}}</th>
+                      <th md-column>{{timetable.type === 'TIMETABLE_UNTIS' ? 'journal.label' : 'timetable.importDialog.lesson' | translate}}</th>
+                      <th md-column>{{'enterprise.csv.note' | translate}}</th>
                     </tr>
                 </thead>
                 <tbody md-body>
-                  <tr md-row ng-repeat="row in timetable.errors" ng-class-odd="'odd'" ng-class-even="'even'">
-                    <td md-cell>{{row.name ? row.name : '-'}}</td>
-                    <td md-cell>{{row.code ? (row.code | translate) + (row.bracketsInfo ? ' (' + row.bracketsInfo + ')' : '' ) : '-'}}</td>
+                  <tr md-row ng-repeat="(key, msgs) in timetable.messages | limitTo: 20" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell ng-if="timetable.type === 'TIMETABLE_UNTIS'">{{key}}</td>
+                    <td md-cell ng-if="timetable.type === 'TIMETABLE_UNTIS'">
+                      <span ng-repeat="row in msgs" style="display: block;">
+                        {{row.code ? (row.code | translate) + (row.bracketsInfo ? ' (' + row.bracketsInfo + ')' : '' ) : '-'}}
+                      </span>
+                    </td>
+                    <td md-cell ng-if="timetable.type === 'TIMETABLE_ASC'" style="white-space: pre-line; min-width: 200px;">{{'timetable.importDialog.messages.cardInfo' | translate:
+                      {day: (msgs[0].params.day | translate),
+                      period: msgs[0].params.period ? msgs[0].params.period : '-',
+                      lessonId: msgs[0].params.lessonId ? msgs[0].params.lessonId : '-',
+                      subject: msgs[0].params.subject ? msgs[0].params.subject : '-'} }}</td>
+                    <td md-cell ng-if="timetable.type === 'TIMETABLE_ASC'">
+                      <span ng-if="msgs[0].error === 'ERROR'" style="display: block;">
+                        {{'timetable.importDialog.messages.notAdded' | translate}}
+                      </span>
+                      <span ng-repeat="row in msgs" style="display: block;">
+                        {{row.code | translate: {teachers: row.params.nfTeachers.join(', '),
+                        groups: row.params.nfGroups.join(', '), rooms: row.params.nfRooms.join(', ')} }}
+                      </span>
+                    </td>
                   </tr>
                 </tbody>
               </table>

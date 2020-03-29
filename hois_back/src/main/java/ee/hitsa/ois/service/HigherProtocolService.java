@@ -301,7 +301,7 @@ public class HigherProtocolService extends AbstractProtocolService {
         return protocol;
     }
 
-    public List<AutocompleteResult> getSubjectStudyPeriods(Long schoolId, SubjectStudyPeriodCommand lookup) {
+    public List<AutocompleteResult> getSubjectStudyPeriods(HoisUserDetails user, SubjectStudyPeriodCommand lookup) {
         if(lookup.getStudyPeriodId() == null) {
             return Collections.emptyList();
         }
@@ -312,7 +312,10 @@ public class HigherProtocolService extends AbstractProtocolService {
                 + "left join teacher t on t.id = sspt.teacher_id "
                 + "left join person p on p.id = t.person_id");
         qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", lookup.getStudyPeriodId());
-        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.optionalCriteria("exists (select 1 from subject_study_period_teacher sspt "
+                + "where sspt.subject_study_period_id = ssp.id and sspt.teacher_id = :teacherId)",
+                "teacherId", user.getTeacherId());
         qb.optionalContains("s.name_et", "name", lookup.getName());
         
         List<?> data = qb.groupBy("ssp.id, s.code, s.name_et, s.name_en, s.credits")

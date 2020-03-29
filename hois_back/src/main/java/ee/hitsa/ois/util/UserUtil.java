@@ -29,7 +29,6 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.Role;
-import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 
 public abstract class UserUtil {

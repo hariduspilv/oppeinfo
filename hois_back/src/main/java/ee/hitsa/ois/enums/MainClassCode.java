@@ -99,6 +99,7 @@ public enum MainClassCode {
     SYNDMUS,
     TEATE_LIIK,
     TEEMAOIGUS,
+    TIMETABLE,
     TOEND_LIIK,
     TOEND_STAATUS,
     TUGIKEHTIV,

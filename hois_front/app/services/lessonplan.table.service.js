@@ -940,7 +940,7 @@ angular.module('hitsaOis')
     function totalColumn(id, value, fontColor) {
       var column = document.createElement('td');
       column.id = id;
-      column.innerHTML = angular.isDefined(value) ? value : '';
+      column.innerHTML = angular.isDefined(value) && value !== null ? value : '';
       column.classList.add(CENTER);
       column.classList.add(DIVIDER);
       column.classList.add(FIX);
@@ -951,7 +951,7 @@ angular.module('hitsaOis')
     function weekTotalColumn(id, value, week, fontColor) {
       var totalHourColumn = document.createElement('td');
       totalHourColumn.id = id;
-      totalHourColumn.innerHTML = angular.isDefined(value) ? value : '';
+      totalHourColumn.innerHTML = angular.isDefined(value) && value !== null ? value : '';
       totalHourColumn.classList.add(CENTER);
       if (week.endOfPeriod) {
         totalHourColumn.classList.add(DIVIDER);
@@ -963,7 +963,7 @@ angular.module('hitsaOis')
     function studyPeriodTotalColumn(id, value, studyPeriod, fontColor) {
       var totalHourColumn = document.createElement('td');
       totalHourColumn.id = id;
-      totalHourColumn.innerHTML = angular.isDefined(value) ? value : '';
+      totalHourColumn.innerHTML = angular.isDefined(value) && value !== null ? value : '';
       totalHourColumn.colSpan = studyPeriod.weekNrs.length;
       totalHourColumn.classList.add(CENTER);
       totalHourColumn.classList.add(DIVIDER);

@@ -137,7 +137,7 @@
               <div layout="column">
                 <md-button ng-if="!(auth.isAdmin() || auth.isLeadingTeacher() || auth.isTeacher())" md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
                 <md-button ng-if="row.canAddEntries" md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/entries/edit">{{'practiceJournal.button.fill' | translate}}</md-button>
-                <md-button ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && row.canEdit && ((row.status !== 'PAEVIK_STAATUS_K') || (row.canConfirm && row.status === 'PAEVIK_STAATUS_K'))"
+                <md-button ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && row.canEdit && ((row.status !== 'PAEVIK_STAATUS_K') || (row.canReopen && row.status === 'PAEVIK_STAATUS_K'))"
                   md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
               </div>
             </td>

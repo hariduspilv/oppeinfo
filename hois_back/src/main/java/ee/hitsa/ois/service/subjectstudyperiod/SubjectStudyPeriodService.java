@@ -21,7 +21,9 @@ import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
+import ee.hitsa.ois.exception.EntityRemoveException;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.service.StudyYearService;
 import ee.hitsa.ois.service.moodle.MoodleContext;
 import ee.hitsa.ois.service.moodle.MoodleService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -31,6 +33,7 @@ import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodForm;
 import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodTeacherForm;
+import ee.hitsa.ois.web.dto.SubjectStudyPeriodDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodSubgroupForm;
 
 @Transactional
@@ -44,24 +47,35 @@ public class SubjectStudyPeriodService {
     @Autowired
     private SubjectStudyPeriodDeclarationService subjectStudyPeriodDeclarationService;
     @Autowired
+    private StudyYearService studyYearService;
+    @Autowired
     private MoodleService moodleService;
 
-    public SubjectStudyPeriod create(SubjectStudyPeriodForm form, MoodleContext context) {
+    public SubjectStudyPeriodDto get(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod) {
+        SubjectStudyPeriodDto dto = SubjectStudyPeriodDto.of(subjectStudyPeriod);
+        dto.setCanUpdate(Boolean.valueOf(SubjectStudyPeriodUtil.canUpdate(user, subjectStudyPeriod,
+                studyYearService.getCurrentStudyPeriod(user.getSchoolId()))));
+        dto.setCanDelete(Boolean.valueOf(SubjectStudyPeriodUtil.canDelete(user, subjectStudyPeriod)));
+        return dto;
+    }
+
+    public SubjectStudyPeriod create(HoisUserDetails user, SubjectStudyPeriodForm form, MoodleContext context) {
         SubjectStudyPeriod subjectStudyPeriod = new SubjectStudyPeriod();
         subjectStudyPeriod.setSubject(em.getReference(Subject.class, form.getSubject()));
         subjectStudyPeriod.setStudyPeriod(em.getReference(StudyPeriod.class, form.getStudyPeriod()));
-        return update(subjectStudyPeriod, form, context);
+        return update(user, subjectStudyPeriod, form, context);
     }
 
-    public SubjectStudyPeriod update(SubjectStudyPeriod subjectStudyPeriod, SubjectStudyPeriodForm form,
-            MoodleContext context) {
+    public SubjectStudyPeriod update(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod,
+            SubjectStudyPeriodForm form, MoodleContext context) {
         EntityUtil.bindToEntity(form, subjectStudyPeriod, classifierRepository, "subject", "studyPeriod", "teachers",
                 "studentGroups", "subgroups");
-        updateSubjectStudyPeriodTeachers(subjectStudyPeriod, form);
-        updateStudentGroups(subjectStudyPeriod, form.getStudentGroups());
-        boolean hasSubgroupsBefore = !subjectStudyPeriod.getSubgroups().isEmpty();
+        if (user.isSchoolAdmin()) {
+            updateSubjectStudyPeriodTeachers(subjectStudyPeriod, form);
+            updateStudentGroups(subjectStudyPeriod, form.getStudentGroups());
+        }
         updateSubgroups(subjectStudyPeriod, form.getSubgroups());
-        if (!(hasSubgroupsBefore || subjectStudyPeriod.getSubgroups().isEmpty())) {
+        if (!subjectStudyPeriod.getSubgroups().isEmpty()) {
             LinkedList<SubjectStudyPeriodSubgroup> sortedSubgroupsByCode = new LinkedList<>(subjectStudyPeriod.getSubgroups().stream()
                     .sorted(SubjectStudyPeriodUtil.COMPARATOR_SUBGROUP)
                     .collect(Collectors.toList()));
@@ -71,6 +85,10 @@ public class SubjectStudyPeriodService {
             
             for (int i = 0; i < subjectStudyPeriod.getDeclarationSubjects().size(); i++) {
                 DeclarationSubject ds = subjectStudyPeriod.getDeclarationSubjects().get(i);
+                
+                if (ds.getSubgroup() != null) {
+                    continue;
+                }
                 
                 while (subgroup != null && subgroup.getDeclarationSubjects().size() >= subgroup.getPlaces().intValue()) {
                     subgroup = sortedSubgroupsByCode.pollFirst();
@@ -107,6 +125,12 @@ public class SubjectStudyPeriodService {
                     subgroup.setCode(form.getCode());
                     subgroup.setPlaces(form.getPlaces());
                     subgroup.setTeacher(form.getTeacher() != null ? ssptByTeacherId.get(form.getTeacher().getId()) : null);
+                },
+                removedSubgroup -> {
+                    ValidationFailedException.throwIf(!removedSubgroup.getDeclarationSubjects().isEmpty(), "You cannot delete subgroup which has declaration subjects");
+                    if (!removedSubgroup.getTimetableEventSubgroups().isEmpty()) {
+                        throw new EntityRemoveException(null, null);
+                    }
                 });
     }
 

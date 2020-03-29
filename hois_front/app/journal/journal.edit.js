@@ -790,7 +790,16 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   };
 
   $scope.saveQuickUpdate = function (journalEntry) {
+    var activeStudents = $scope.journal.journalStudents.filter(function (student) {
+      return StudentUtil.isActive(student.status);
+    }).map(function (student) {
+      return student.id;
+    });
+
     var journalEntryStudents = Object.values(journalEntry.quickUpdateStudents);
+    journalEntryStudents = journalEntryStudents.filter(function (entry) {
+      return activeStudents.indexOf(entry.journalStudent) !== -1;
+    });
     var formValid = gradeInputsValid(journalEntryStudents);
 
     if (!formValid) {

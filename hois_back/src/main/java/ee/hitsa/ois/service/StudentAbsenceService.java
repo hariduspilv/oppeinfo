@@ -325,7 +325,7 @@ public class StudentAbsenceService {
         EntityUtil.save(studentAbsence, em);
     }
 
-    private StudentAbsence studentAbsence(Student student, LocalDate startDate, LocalDate endDate, String cause) {
+    private static StudentAbsence studentAbsence(Student student, LocalDate startDate, LocalDate endDate, String cause) {
         StudentAbsence studentAbsence = new StudentAbsence();
         studentAbsence.setStudent(student);
         studentAbsence.setValidFrom(startDate);

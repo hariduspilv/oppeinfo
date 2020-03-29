@@ -4,6 +4,18 @@ angular.module('hitsaOis').controller('HigherProtocolNewController', function ($
   $scope.auth = $route.current.locals.auth;
   var baseUrl = "/higherProtocols";
 
+  if ($scope.auth.isTeacher()) {
+    $scope.$watch('studyPeriod', function () {
+      if (angular.isDefined($scope.studyPeriod)) {
+        QueryUtils.endpoint('/higherProtocols/subjectStudyPeriods').query({
+          studyPeriodId: $scope.studyPeriod
+        }).$promise.then(function (subjectStudyPeriods) {
+          $scope.subjectStudyPeriods = subjectStudyPeriods;
+        });
+      }
+    });
+  }
+
   $scope.protocolTypes = {};
   Classifier.queryForDropdown({mainClassCode: 'PROTOKOLLI_LIIK'}, function(response) {
     $scope.protocolTypes = Classifier.toMap(response);
@@ -12,6 +24,12 @@ angular.module('hitsaOis').controller('HigherProtocolNewController', function ($
   $scope.record = {
     protocolType: 'PROTOKOLLI_LIIK_P',
     students: []
+  };
+
+  $scope.clearForm = function() {
+    $scope.record.subjectStudyPeriod = undefined;
+    $scope.record.students = [];
+    $scope.students = [];
   };
 
   function getStudents() {

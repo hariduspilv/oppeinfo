@@ -1,0 +1,168 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <div flex>
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+        <form name="searchForm" ng-submit="searchForm.$valid && loadResults()" ng-model-options="{allowInvalid: true}">
+            <div layout="row" layout-sm="column" layout-xs="column">
+                <div layout="row">
+                  <md-input-container>
+                    <label>{{'report.studentCount.from' | translate}}</label>
+                    <md-datepicker ng-model="formState.from" md-max-date="formState.thru" required hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                  </md-input-container>
+                  <md-input-container flex-offset="5" style="padding-right: 38px;">
+                    <label>{{'report.studentCount.thru' | translate}}</label>
+                    <md-datepicker ng-model="formState.thru" md-min-date="formState.from" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <label style="margin-top: 20px;font-size: 13px;">{{'report.studentCount.dateCriteria' | translate}}</label>
+                </div>
+            </div>
+            <div layout="row" layout-sm="column" layout-xs="column">
+                <md-input-container style="width: 317px; padding-right: 21px">
+                  <label class="textInput">{{'report.studentCount.studentType' | translate}}</label>
+                  <hois-classifier-select ng-model="formState.studentTypes" model-value-attr="code" main-classifier-code="OPPUR"
+                  filter-values="['OPPUR_O']" multiple required></hois-classifier-select>
+                </md-input-container>
+                <md-input-container style="width: 505px">
+                  <label>{{'report.studentCount.resultType' | translate}}</label>
+                  <md-select ng-model="formState.resultType" aria-label="{{'report.studentCount.resultType' | translate}}"
+                    ng-change="resultTypeChanged(formState.resultType)" required>
+                    <md-option ng-repeat="val in resultTypes" ng-value="val">
+                      {{('report.studentCount.select.' + val) | translate}}
+                    </md-option>
+                  </md-select>
+                </md-input-container>
+            </div>
+            <div layout="row" layout-sm="column" layout-xs="column" ng-if="formState.resultType === 'COUNT_STAT_AGE'">
+              <md-input-container style="width: 150px;padding-right: 18px; margin-top: 8px">
+                <label>{{'report.studentCount.ageFrom' | translate}}</label>
+                <input ng-model="formState.ageFrom" type="number" name="ageFrom" min="1" max="100" pattern="^\d+$" required>
+                <div ng-messages="searchForm.ageFrom.$error" ng-show="searchForm.ageFrom.$dirty">
+                  <div ng-message="min">
+                    {{'main.messages.error.min' | translate: {min: 1} }}
+                  </div>
+                  <div ng-message="max">
+                    {{'main.messages.error.max' | translate: {max: 100} }}
+                  </div>
+                  <div ng-message="pattern">
+                    {{'main.messages.error.integer' | translate}}
+                  </div>
+                </div>
+              </md-input-container>
+              <md-input-container style="width: 150px; margin-top: 8px">
+                <label>{{'report.studentCount.ageStep' | translate}}</label>
+                <input ng-model="formState.ageStep" type="number" name="ageStep" min="1" max="100" pattern="^\d+$" required>
+                <div ng-messages="searchForm.ageStep.$error" ng-show="searchForm.ageStep.$dirty">
+                  <div ng-message="min">
+                    {{'main.messages.error.min' | translate: {min: 1} }}
+                  </div>
+                  <div ng-message="max">
+                    {{'main.messages.error.max' | translate: {max: 100} }}
+                  </div>
+                  <div ng-message="pattern">
+                    {{'main.messages.error.integer' | translate}}
+                  </div>
+                </div>
+              </md-input-container>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <label style="margin-top: 15px;font-size: 13px;padding-right: 20px;font-weight: 500;">
+              {{'report.studentCount.detail.label' | translate}} :
+            </label>
+            <div layout="row" flex="80">
+              <md-checkbox 
+                  ng-change="clearSort()"
+                  ng-model="formState.perStatus" style="margin-top: 10px; padding-right: 27px;"
+                  aria-label="{{'report.studentCount.detail.studentStatus' | translate}}">
+                  {{'report.studentCount.detail.studentStatus' | translate}}
+              </md-checkbox>
+              <md-checkbox
+                  ng-change="clearSort()"
+                  ng-model="formState.perSex" style="margin-top: 10px;"
+                  aria-label="{{'report.studentCount.detail.studentSex' | translate}}">
+                  {{'report.studentCount.detail.studentSex' | translate}}
+              </md-checkbox>
+            </div>
+          </div>
+  
+          <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
+          </div>
+          <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+        </form>
+      </fieldset>
+    </div>
+  </div>
+  <div layout-padding>
+    <div flex>
+      <md-table-container resize-table search-criteria-height="350">
+        <table md-table md-progress="tabledata.$promise">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+            <tr md-row>
+              <th ng-if="criteria.resultType !== undefined && criteria.resultType !== 'COUNT_STAT_OVERALL'" 
+                md-order-by="{{getObjectOrderNumber()}}" md-column>
+                {{('report.studentCount.table.' + criteria.resultType + 
+                (criteria.resultType === 'COUNT_STAT_CURRICULA' ? (auth.higher ? '.higher' : '.vocational') : '')) | translate}}</th>
+              <!-- PER STATUS -->
+              <th md-column md-order-by="2" 
+                ng-style="{'padding-left':(criteria.resultType !== undefined && criteria.resultType === 'COUNT_STAT_OVERALL') ? '23px' : '0px'}" 
+                ng-if="criteria.perStatus && !criteria.perSex">{{'report.studentCount.table.studying.label' | translate}}</th>
+              <th md-column md-order-by="3" ng-if="criteria.perStatus && !criteria.perSex">{{'report.studentCount.table.academic.label' | translate}}</th>
+              <th md-column md-order-by="4" ng-if="criteria.perStatus && !criteria.perSex">{{'report.studentCount.table.foreign.label' | translate}}</th>
+              <!-- PER SEX -->
+              <th md-column md-order-by="3" ng-if="criteria.perSex && !criteria.perStatus">{{'report.studentCount.table.sex.male' | translate}}</th>
+              <th md-column md-order-by="2" ng-if="criteria.perSex && !criteria.perStatus">{{'report.studentCount.table.sex.female' | translate}}</th>
+              <!-- PER STATUS AND PER SEX -->
+              <th md-column md-order-by="3" ng-if="criteria.perSex && criteria.perStatus">{{'report.studentCount.table.studying.male' | translate}}</th>
+              <th md-column md-order-by="2" ng-if="criteria.perSex && criteria.perStatus">{{'report.studentCount.table.studying.female' | translate}}</th>
+              <th md-column md-order-by="4" ng-if="criteria.perSex && criteria.perStatus">{{'report.studentCount.table.studying.sum' | translate}}</th>
+              <th md-column md-order-by="6" ng-if="criteria.perSex && criteria.perStatus">{{'report.studentCount.table.academic.male' | translate}}</th>
+              <th md-column md-order-by="5" ng-if="criteria.perSex && criteria.perStatus">{{'report.studentCount.table.academic.female' | translate}}</th>
+              <th md-column md-order-by="7" ng-if="criteria.perSex && criteria.perStatus">{{'report.studentCount.table.academic.sum' | translate}}</th>
+              <th md-column md-order-by="9" ng-if="criteria.perSex && criteria.perStatus">{{'report.studentCount.table.foreign.male' | translate}}</th>
+              <th md-column md-order-by="8" ng-if="criteria.perSex && criteria.perStatus">{{'report.studentCount.table.foreign.female' | translate}}</th>
+              <th md-column md-order-by="10" ng-if="criteria.perSex && criteria.perStatus">{{'report.studentCount.table.foreign.sum' | translate}}</th>
+              <th md-column md-order-by="11" ng-if="criteria.perSex && criteria.perStatus">{{'report.studentCount.table.sum.male' | translate}}</th>
+              <th md-column md-order-by="12" ng-if="criteria.perSex && criteria.perStatus">{{'report.studentCount.table.sum.female' | translate}}</th>
+
+              <th md-column md-order-by="1">{{'report.studentCount.table.sum.label' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td ng-if="criteria.resultType !== undefined && criteria.resultType !== 'COUNT_STAT_OVERALL'" 
+                md-cell>{{currentLanguageNameField(row.object)}}</td>
+              <!-- PER STATUS -->
+              <td md-cell ng-if="criteria.perStatus && !criteria.perSex">{{row.studying}}</td>
+              <td md-cell ng-if="criteria.perStatus && !criteria.perSex">{{row.academic}}</td>
+              <td md-cell ng-if="criteria.perStatus && !criteria.perSex">{{row.foreign}}</td>
+              <!-- PER SEX -->
+              <td md-cell ng-if="criteria.perSex && !criteria.perStatus">{{row.male}}</td>
+              <td md-cell ng-if="criteria.perSex && !criteria.perStatus">{{row.female}}</td>
+              <!-- PER STATUS AND PER SEX -->
+              <td md-cell ng-if="criteria.perSex && criteria.perStatus">{{row.studyingMale}}</td>
+              <td md-cell ng-if="criteria.perSex && criteria.perStatus">{{row.studyingFemale}}</td>
+              <td md-cell ng-if="criteria.perSex && criteria.perStatus">{{row.studying}}</td>
+              <td md-cell ng-if="criteria.perSex && criteria.perStatus">{{row.academicMale}}</td>
+              <td md-cell ng-if="criteria.perSex && criteria.perStatus">{{row.academicFemale}}</td>
+              <td md-cell ng-if="criteria.perSex && criteria.perStatus">{{row.academic}}</td>
+              <td md-cell ng-if="criteria.perSex && criteria.perStatus">{{row.foreignMale}}</td>
+              <td md-cell ng-if="criteria.perSex && criteria.perStatus">{{row.foreignFemale}}</td>
+              <td md-cell ng-if="criteria.perSex && criteria.perStatus">{{row.foreign}}</td>
+              <td md-cell ng-if="criteria.perSex && criteria.perStatus">{{row.male}}</td>
+              <td md-cell ng-if="criteria.perSex && criteria.perStatus">{{row.female}}</td>
+
+              <td md-cell>{{row.sum}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                           md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                           md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+    </div>
+  </div>
+  

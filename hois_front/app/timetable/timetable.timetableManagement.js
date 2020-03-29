@@ -34,7 +34,7 @@ angular.module('hitsaOis').controller('TimetableManagementController',
             angular.extend(criteria, params);
             var newFile = new ImportTimetableEndpoint(criteria);
             newFile.$save().then(function(response) {
-                if (response.errors !== null && response.errors.length !== 0) {
+                if (response.messages !== null && Object.keys(response.messages).length > 0) {
                   dialogService.showDialog('timetable/dialog/import.result.dialog.html', function (dialogScope) {
                     dialogScope.timetable = response;
                   }, null);
@@ -47,16 +47,18 @@ angular.module('hitsaOis').controller('TimetableManagementController',
     };
 
     $scope.exportTimetable = function(url, params) {
-      QueryUtils.endpoint("/timetables/exportTimetableCheck").search(params).$promise.then(function (response) {
-        if ((response.teachers === null || response.teachers.length === 0) &&
-          (response.journals === null || response.journals.length === 0)) {
-          $window.location.href = $rootScope.excel(url, params);
-        } else {
-          dialogService.showDialog('timetable/dialog/export.result.dialog.html', function (dialogScope) {
-            dialogScope.timetable = response;
-          }, null);
-        }
-      });
+      if ($scope.formState.timetableType === 'TIMETABLE_UNTIS' || $scope.formState.timetableType === 'TIMETABLE_ASC') {
+        QueryUtils.endpoint("/timetables/exportTimetableCheck").search(params).$promise.then(function (response) {
+          if ((response.teachers === null || response.teachers.length === 0) &&
+            (response.journals === null || response.journals.length === 0)) {
+            $window.location.href = $rootScope.excel(url, params);
+          } else {
+            dialogService.showDialog('timetable/dialog/export.result.dialog.html', function (dialogScope) {
+              dialogScope.timetable = response;
+            }, null);
+          }
+        });
+      }
     };
 
     function filterStudyPeriods() {
@@ -92,6 +94,7 @@ angular.module('hitsaOis').controller('TimetableManagementController',
       } else if($scope.allStudyPeriods.length === 0) {
         message.error('studyYear.studyPeriod.missing');
       }
+      $scope.formState.timetableType = result.tType;
     });
 
     $scope.$watch('criteria.studyYear', function () {

@@ -85,7 +85,7 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
         });
 
         record.error = transferredCredits > replacedCredits;
-        if (record.error) {
+        if (!error && record.error) {
           error = true;
         }
       }
@@ -258,6 +258,7 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
       if (err.code === 'apel.error.formalRecordsHaveErrors') {
         application.records.forEach(function (record) {
           record.error = err.params.recordsWithErrors.indexOf(record.id) !== -1;
+          record.errorMessages = err.params.recordErrors[record.id];
         });
       }
     });

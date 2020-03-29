@@ -32,6 +32,7 @@ public abstract class HttpUtil {
     public static final String APPLICATION_XLS = "application/vnd.ms-excel";
     public static final String TEXT_CSV_UTF8 = "text/csv; Charset=UTF-8";
     public static final String APPLICATION_ZIP = "application/zip";
+    public static final String APPLICATION_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
     
     private static final byte[] UTF8_BOM = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 
@@ -56,6 +57,10 @@ public abstract class HttpUtil {
 
     public static void xls(HttpServletResponse response, String filename, byte[] xls) throws IOException {
         file(response, filename, APPLICATION_XLS, xls);
+    }
+    
+    public static void xlsx(HttpServletResponse response, String filename, byte[] xlsx) throws IOException {
+        file(response, filename, APPLICATION_XLSX, xlsx);
     }
 
     public static void xml(HttpServletResponse response, String filename, byte[] xml) throws IOException {
@@ -87,7 +92,7 @@ public abstract class HttpUtil {
         try (BufferedOutputStream bos = new BufferedOutputStream(response.getOutputStream())) {
             response.setContentType(filetype);
             response.setContentLength(data.length);
-            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + toValidFilename(filename));
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=\"" + toValidFilename(filename) + "\"");
             bos.write(data);
         }
     }

@@ -147,10 +147,9 @@ public class JournalController {
 
     @PostMapping("/{id:\\d+}/journalEntry/quickUpdate")
     public Map<Long, List<JournalEntryStudentResultDto>> quickUpdateJournalEntry(HoisUserDetails user,
-            @WithEntity Journal journal, @RequestBody JournalEntryQuickUpdateForm journalEntryForm,
-            @RequestParam(required = false) Boolean allStudents) {
+            @WithEntity Journal journal, @RequestBody JournalEntryQuickUpdateForm journalEntryForm) {
         JournalUtil.asssertCanChange(user, journal);
-        return journalService.quickUpdateJournalEntry(user, journalEntryForm, allStudents);
+        return journalService.quickUpdateJournalEntry(user, journalEntryForm);
     }
 
     @PostMapping("/{id:\\d+}/addStudentsToJournal")

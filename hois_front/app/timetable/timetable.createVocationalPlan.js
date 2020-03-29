@@ -77,20 +77,27 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       $scope.lessonsInDay = [];
       for (var j = 0; $scope.weekday.length > j; j++) {
         var currentDay = $scope.weekday[j];
-        $scope.lessonsInDay[currentDay] = $scope.plan.lessonTimes.filter(function (it) {
+
+        var dayLessonTimes = $scope.plan.lessonTimes.filter(function (it) {
           return it[currentDay] === true;
         });
-        var previousLessonNrs = [],
-          index = $scope.lessonsInDay[currentDay].length - 1,
-          currentLessons = $scope.lessonsInDay[currentDay];
-        while (index >= 0) {
-          if (!previousLessonNrs.includes(currentLessons[index].lessonNr)) {
-            previousLessonNrs.push(currentLessons[index].lessonNr);
-          } else {
-            currentLessons.splice(index, 1);
-          }
-          index -= 1;
-        }
+        var lessonNrs = dayLessonTimes.map(function (lessonTime) {
+          return lessonTime.lessonNr;
+        }).filter(function (value, index, self) {
+          return self.indexOf(value) === index;
+        });
+
+        var lessonsInDay = [];
+        lessonNrs.forEach(function (lessonNr) {
+          var lessonNrLessonTimes = dayLessonTimes.filter(function (it) {
+            return it.lessonNr === lessonNr;
+          });
+          lessonsInDay.push({
+            lessonNr: lessonNr,
+            lessonTimes: lessonNrLessonTimes
+          });
+        });
+        $scope.lessonsInDay[currentDay] = lessonsInDay;
       }
       $scope.lessonsInDay.sort(function (a, b) {
         return $scope.weekday.indexOf(a) - $scope.weekday.indexOf(b);
@@ -267,26 +274,17 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
     }
 
     $scope.isUnderAllocatedWeekLessons = function (journal) {
-      if ($scope.getTotalsByJournal(journal, 'thisPlannedLessons') >= 
-        $scope.getTotalsByJournal(journal, 'thisPlannedLessons') - $scope.getTotalsByJournal(journal, 'lessonsLeft')) {
-        return true;
-      }
-      return false;
+      return $scope.getTotalsByJournal(journal, 'thisPlannedLessons') >=
+        $scope.getTotalsByJournal(journal, 'thisPlannedLessons') - $scope.getTotalsByJournal(journal, 'lessonsLeft');
     };
 
     $scope.isUnderAllocatedTotalLessons = function (journal) {
-      if ($scope.getTotalsByJournal(journal, 'totalPlannedLessons') >= $scope.getTotalsByJournal(journal, 'totalAllocatedLessons')) {
-        return true;
-      }
-      return false;
+      return $scope.getTotalsByJournal(journal, 'totalPlannedLessons') >= $scope.getTotalsByJournal(journal, 'totalAllocatedLessons');
     };
 
     $scope.isUnderLeftOverTotalLessons = function (journal) {
-      if ($scope.getTotalsByJournal(journal, 'totalPlannedLessons') + $scope.getTotalsByJournal(journal, 'leftOverLessons') >= 
-        $scope.getTotalsByJournal(journal, 'totalAllocatedLessons')) {
-        return true;
-      }
-      return false;
+      return $scope.getTotalsByJournal(journal, 'totalPlannedLessons') + $scope.getTotalsByJournal(journal, 'leftOverLessons') >=
+        $scope.getTotalsByJournal(journal, 'totalAllocatedLessons');
     };
 
     $scope.getByCapacity = function (capacity, param) {
@@ -430,6 +428,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         dialogScope.lessonCapacityName = $scope.getCapacityType(currentEvent.capacityType);
         dialogScope.lesson.startTime = new Date(currentEvent.start);
         dialogScope.lesson.endTime = new Date(currentEvent.end);
+        dialogScope.weekday = $scope.weekday[dialogScope.lesson.startTime.getDay()];
         if (currentEvent.rooms) {
           dialogScope.lesson.eventRooms = angular.copy(currentEvent.rooms);
         } else {
@@ -446,29 +445,34 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
               return;
             }
             dialogScope.lesson.eventRooms.push(dialogScope.lesson.eventRoom);
+
+            var lessonTime = buildingLessonTime(dialogScope.weekday, dialogScope.lesson.lessonNr,
+              dialogScope.lesson.eventRoom.buildingId);
+            if (lessonTime) {
+              dialogScope.lesson.startTime = lessonNewTime(dialogScope.lesson.startTime, lessonTime.startTime);
+              dialogScope.lesson.endTime = lessonNewTime(dialogScope.lesson.endTime, lessonTime.endTime);
+            }
+
             dialogScope.lesson.eventRoom = null;
           }
         });
 
+        function lessonNewTime(date, time) {
+          date = moment(date);
+          time = moment(time, 'HH:mm');
+          return new Date(date.year(), date.month(), date.date(), time.hours(), time.minutes());
+        }
+
         dialogScope.isUnderAllocatedWeekLessons = function (capacity) {
-          if (capacity.thisPlannedLessons >= capacity.thisPlannedLessons - capacity.lessonsLeft) {
-            return true;
-          }
-          return false;
+          return capacity.thisPlannedLessons >= capacity.thisPlannedLessons - capacity.lessonsLeft;
         };
-    
+
         dialogScope.isUnderAllocatedTotalLessons = function (capacity) {
-          if (capacity.totalPlannedLessons >= capacity.totalAllocatedLessons) {
-            return true;
-          }
-          return false;
+          return capacity.totalPlannedLessons >= capacity.totalAllocatedLessons;
         };
-    
+
         dialogScope.isUnderLeftOverTotalLessons = function (capacity) {
-          if (capacity.totalPlannedLessons + capacity.leftOverLessons >= capacity.totalAllocatedLessons) {
-            return true;
-          }
-          return false;
+          return capacity.totalPlannedLessons + capacity.leftOverLessons >= capacity.totalAllocatedLessons;
         };
 
         dialogScope.$watchGroup(['lesson.eventRooms.length', 'lesson.startTime', 'lesson.endTime'], function () {
@@ -513,10 +517,10 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
           return false;
         };
 
-        dialogScope.deleteEvent = function (toDelete) {
+        dialogScope.deleteEvent = function (event) {
           bsave=true;
           QueryUtils.endpoint(baseUrl + '/deleteVocationalEvent').save({
-            timetableEventId: toDelete
+            timetableEventId: event.id
           }).$promise.then(function (result) {
             initializeData(result, currGroupId, $scope.plan.currentStudentGroups);
             dialogScope.cancel();
@@ -553,6 +557,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
 
     $scope.saveEvent = function (params) {
       bsave=true;
+      var lessonTime = this.lesson.lessonTimes[0];
       var currGroupId = $scope.plan.selectedGroup;
       var selectedDay, daysSoFar = 0;
       for (var k = 0; $scope.dayOrder.length > k; k++) {
@@ -562,11 +567,43 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
           break;
         }
       }
-      var journalId = params.journalId;
+      var journalId = parseInt(params.journalId);
+
+      var buildingIds = [];
+      if (params.oldEventId) {
+        var lesson = $scope.plan.plannedLessons.find(function (it) {
+          return it.id === Number(params.oldEventId);
+        });
+        if (lesson.rooms.length > 0) {
+          buildingIds = lesson.rooms.map(function (it) {
+            return it.buildingId;
+          });
+        }
+      } else {
+        var journal = $scope.plan.journals.find(function (it) {
+          return it.id === journalId;
+        });
+        if (journal.rooms.length > 0) {
+          buildingIds = journal.rooms.map(function (it) {
+            return it.buildingId;
+          });
+        }
+      }
+
+      buildingIds.filter(function (value, index, self) {
+        return self.indexOf(value) === index;
+      });
+      if (buildingIds.length === 1) {
+        var buildingTime = buildingLessonTime(selectedDay, lessonTime.lessonNr, buildingIds[0]);
+        if (buildingTime) {
+          lessonTime = buildingTime;
+        }
+      }
+
       var query = {
         journal: journalId,
         timetable: $scope.timetableId,
-        lessonTime: this.lessonTime.id,
+        lessonTime: lessonTime.id,
         selectedDay: selectedDay,
         oldEventId: params.oldEventId,
         capacityType: params.capacityType
@@ -575,7 +612,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       var occupiedQuery = {
         journal: journalId,
         timetable: $scope.timetableId,
-        lessonTime: this.lessonTime.id,
+        lessonTime: lessonTime.id,
         selectedDay: selectedDay,
         oldEventId: params.oldEventId
       };
@@ -607,6 +644,16 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         }
       });
     };
+
+    function buildingLessonTime(selectedDay, lessonNr, buildingNr) {
+      var lessonNrLessonTimes = $scope.lessonsInDay[selectedDay].find(function (it) {
+        return it.lessonNr === lessonNr;
+      });
+      return lessonNrLessonTimes.lessonTimes.find(function (it) {
+        return it.buildingIds.indexOf(buildingNr) !== -1;
+      });
+    }
+
 
     function saveVocationalEvent(query, currGroupId) {
       QueryUtils.endpoint(baseUrl + '/saveVocationalEvent').save(query).$promise.then(function (result) {

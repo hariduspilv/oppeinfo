@@ -1,7 +1,14 @@
-<md-dialog aria-label="grade add dialog" flex="30" flex-xs="100" ng-cloak>
+<md-dialog aria-label="grade add dialog" flex="40" flex-xs="100" ng-cloak>
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2 flex>{{'document.confirm.title' | translate}}</h2>
+    </div>
+  </md-toolbar>
   <md-dialog-content>
     <div class="md-dialog-content">
-      <div>{{'document.confirm.check' | translate}}</div>
+      <hois-whiteframe-warning md-color="'accent'">
+        <span>{{'document.confirm.check' | translate}}</span>
+      </hois-whiteframe-warning>
       <form name="dialogForm">
         <div layout="row" ng-repeat="form in forms">
           <md-input-container flex="100" flex-sm="100" flex-xs="100">

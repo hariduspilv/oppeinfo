@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -553,11 +554,14 @@ public class DocumentService {
         AssertionFailedException.throwIf(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD, directive.getStatus()), 
                 "Directive is not confirmed");
         List<Form> forms = requireFreeForms(user, FormType.valueOf(confirmForm.getFormType()), confirmForm.getNumerals());
+        forms.sort(Comparator.comparing(f -> confirmForm.getNumerals().indexOf(f.getNumeral())));
         Classifier diplomaStatus = em.getReference(Classifier.class, DocumentStatus.LOPUDOK_STAATUS_T.name());
         Classifier formStatus = em.getReference(Classifier.class, FormStatus.LOPUBLANKETT_STAATUS_T.name());
         LocalDate now = LocalDate.now();
         Iterator<Form> iterator = forms.iterator();
-        for (Diploma diploma : getDiplomas(confirmForm)) {
+        List<Diploma> diplomas = getDiplomas(confirmForm);
+        diplomas.sort(Comparator.comparing(d -> confirmForm.getStudentIds().indexOf(EntityUtil.getId(d.getStudent()))));
+        for (Diploma diploma : diplomas) {
             AssertionFailedException.throwIf(!ClassifierUtil.equals(DocumentStatus.LOPUDOK_STAATUS_K, diploma.getStatus()), 
                     "diploma is already printed");
             Form form = iterator.next();

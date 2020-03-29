@@ -89,8 +89,9 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
 
     $scope.testStatus = { code: "AINEPROGRAMM_STAATUS_L"};
   }
-]).controller('SubjectStudyPeriodEditController', ['$scope', 'QueryUtils', 'ArrayUtils', '$route', 'dialogService', 'message', '$q', '$rootScope', 'DeclarationType',
-  function ($scope, QueryUtils, ArrayUtils, $route, dialogService, message, $q, $rootScope, DeclarationType) {
+]).controller('SubjectStudyPeriodEditController', ['$location', '$route', '$rootScope', '$scope', '$q', 'ArrayUtils', 'DeclarationType', 'QueryUtils', 'dialogService', 'message',
+  function ($location, $route, $rootScope, $scope, $q, ArrayUtils, DeclarationType, QueryUtils, dialogService, message) {
+    $scope.auth = $route.current.locals.auth;
 
     var baseUrl = '/subjectStudyPeriods';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -137,6 +138,10 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
 
     if(id) {
       $scope.record = $route.current.locals.record;
+      if (!$scope.record.canUpdate) {
+        $location.url('/subjectStudyPeriod/' + $scope.record.id + '/view?_noback');
+      }
+
       if(studentGroupId) {
           ArrayUtils.remove($scope.record.studentGroups, studentGroupId);
       }

@@ -6,6 +6,7 @@ public class UsersSearchDto {
 
     private Long id;
     private String idcode;
+    private String foreignIdcode;
     private String uniqueCode;
     private String name;
     private AutocompleteResult school;
@@ -77,6 +78,14 @@ public class UsersSearchDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getForeignIdcode() {
+        return foreignIdcode;
+    }
+
+    public void setForeignIdcode(String foreignIdcode) {
+        this.foreignIdcode = foreignIdcode;
     }
 
     public String getUniqueCode() {

@@ -1,13 +1,15 @@
 'use strict';
 
-angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$scope', 'QueryUtils',  '$route', 'message', 'MidtermTaskUtil', 'ArrayUtils', 'dialogService',
-function ($scope, QueryUtils, $route, message, MidtermTaskUtil, ArrayUtils, dialogService) {
+angular.module('hitsaOis').controller('MidtermTaskStudentResultsController',
+['$q', '$route', '$scope', '$timeout', 'ArrayUtils', 'Classifier', 'MidtermTaskUtil', 'QueryUtils', 'dialogService', 'message',
+function ($q, $route, $scope, $timeout, ArrayUtils, Classifier, MidtermTaskUtil, QueryUtils, dialogService, message) {
   $scope.auth = $route.current.locals.auth;
   $scope.updateSubgroupPlaces = updateSubgroupPlaces;
 
   $scope.subjectStudyPeriodId = $route.current.params.id;
   var Endpoint = QueryUtils.endpoint('/midtermTasks/studentResults');
   var midtermTaskUtil = new MidtermTaskUtil();
+  var clMapper = Classifier.valuemapper({ grade: 'KORGHINDAMINE' });
 
   function studentHasResultForTask(student, midtermTask) {
     var result = $scope.record.studentResults.find(function(studentResult){
@@ -46,12 +48,23 @@ function ($scope, QueryUtils, $route, message, MidtermTaskUtil, ArrayUtils, dial
   function afterload() {
     $scope.record.midtermTasks = midtermTaskUtil.getSortedMidtermTasks($scope.record.midtermTasks);
     $scope.moodleTasks = midtermTaskUtil.getMoodleTasks($scope.record.midtermTasks);
+    $q.all(clMapper.promises).then(function () {
+      $scope.record.protocols.forEach(function (protocol) {
+        protocol.protocolStudents.forEach(function (student) {
+          clMapper.objectmapper(student);
+        });
+      });
+    });
     $scope.record.students.forEach(function (student) {
       student.previousSubgroup = student.subgroup !== null ? student.subgroup.id : null;
       // TODO add to MidtermTaskUtil
       addEmptyStudentResults(student);
     });
     midtermTaskUtil.sortStudentResults($scope.record.studentResults, $scope.record.midtermTasks);
+    // set pristine after timeout as ngModel in mdSelect will set dirty
+    $timeout(function () {
+      $scope.midtermTaskResultForm.$setPristine();
+    });
   }
 
   loadTasks();
@@ -75,7 +88,6 @@ function ($scope, QueryUtils, $route, message, MidtermTaskUtil, ArrayUtils, dial
       message.updateSuccess();
       $scope.record = response;
       afterload();
-      $scope.midtermTaskResultForm.$setPristine();
     });
   };
 

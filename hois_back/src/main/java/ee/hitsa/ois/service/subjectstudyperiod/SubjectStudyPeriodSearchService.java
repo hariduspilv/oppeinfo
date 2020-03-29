@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.service.StudyYearService;
+import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,7 +45,7 @@ public class SubjectStudyPeriodSearchService {
 
     private static final String SELECT =
               "ssp.id as subjectStudyPeriodId, " 
-            + "sp.name_et as spNameEt, sp.name_en as spNameEn, "
+            + "sp.id spId, sp.name_et as spNameEt, sp.name_en as spNameEn, "
             + "s.id as subjectId, s.name_et as subNameEt, s.name_en as subNameEn, s.code, s.credits, "
             + "(select count(*) from declaration_subject ds where ds.subject_study_period_id = ssp.id) as declared_students";
 
@@ -60,10 +62,12 @@ public class SubjectStudyPeriodSearchService {
             + "left join declaration d on d.id = ds.declaration_id "
             + "where d.student_id = :studentId "
             + "and ssp3.id = ssp.id)";
-    
+
     @Autowired
     private EntityManager em;
-    
+    @Autowired
+    private StudyYearService studyYearService;
+
     public List<SubjectResult> searchSubjects(HoisUserDetails user, SearchCommand lookup) {
 
         String from ="from subject s"
@@ -122,18 +126,19 @@ public class SubjectStudyPeriodSearchService {
         List<Long> sspIds = StreamUtil.toMappedList(r -> resultAsLong(r, 0), results.getContent());
         Map<Long, List<SubjectProgramResult>> teachersAndPrograms = teachersAndProgramsForSubjectStudyPeriods(sspIds);
         Map<Long, Integer> subgroupCount = subgroupsQueryForSubjectStudyPeriods(sspIds);
+        Long currentStudyPeriod = studyYearService.getCurrentStudyPeriod(user.getSchoolId());
         return results.map(r -> {
             SubjectStudyPeriodSearchDto dto = new SubjectStudyPeriodSearchDto();
             dto.setId(resultAsLong(r, 0));
-            dto.setStudyPeriod(new AutocompleteResult(null, resultAsString(r, 1), resultAsString(r, 2)));
+            dto.setStudyPeriod(new AutocompleteResult(resultAsLong(r, 1), resultAsString(r, 2), resultAsString(r, 3)));
             dto.setSubject(getSubject(r));
             dto.setTeachers(teachersAndPrograms.get(dto.getId()).stream().map(d -> d.getTeacherName()).collect(Collectors.toList()));
             dto.setPrograms(teachersAndPrograms.get(dto.getId()));
-            dto.setCredits(resultAsDecimal(r, 7));
-            dto.setStudentsNumber(resultAsLong(r, 8));
+            dto.setCredits(resultAsDecimal(r, 8));
+            dto.setStudentsNumber(resultAsLong(r, 9));
             if (user.isTeacher()) {
-                dto.setSubjectProgramId(resultAsLong(r, 9));
-                String status = resultAsString(r, 10);
+                dto.setSubjectProgramId(resultAsLong(r, 10));
+                String status = resultAsString(r, 11);
                 if (status == null) {
                     dto.setSubjectProgramStatus(SubjectProgramStatus.AINEPROGRAMM_STAATUS_L.name());
                 } else {
@@ -141,15 +146,17 @@ public class SubjectStudyPeriodSearchService {
                 }
             }
             dto.setSubgroups(subgroupCount.get(dto.getId()));
+            dto.setCanEdit(Boolean.valueOf(SubjectStudyPeriodUtil.canUpdateSearchResult(user,
+                    dto.getStudyPeriod().getId(), currentStudyPeriod)));
             return dto;
         });
     }
 
     private static AutocompleteResult getSubject(Object r) {
-        Long id = resultAsLong(r, 3);
-        String code = resultAsString(r, 6);
-        String nameEtCode = resultAsString(r, 4) + " (" + code + ")";
-        String nameEnCode = resultAsString(r, 5) + " (" + code + ")";
+        Long id = resultAsLong(r, 4);
+        String code = resultAsString(r, 7);
+        String nameEtCode = resultAsString(r, 5) + " (" + code + ")";
+        String nameEnCode = resultAsString(r, 6) + " (" + code + ")";
         return new AutocompleteResult(id, nameEtCode,
                 nameEnCode);
     }

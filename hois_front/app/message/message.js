@@ -121,7 +121,7 @@ angular.module('hitsaOis')
         var record = {
             subject: "Re: " + $scope.respondedMessage.subject,
             content: "\n>" + $scope.respondedMessage.content,
-            receivers: [$scope.respondedMessage.sendersId],
+            receivers: [{person: $scope.respondedMessage.sendersId, role: $scope.respondedMessage.sendersRole}],
             responseTo: id
         };
         $scope.record = new Endpoint(record);
@@ -669,7 +669,12 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
             message.info('message.messageSent');
             $rootScope.back('#/messages/sent');
         }
-        $scope.record.receivers = $scope.receivers.map(function(r){return r.personId;});
+        $scope.record.receivers = $scope.receivers.map(function(r) {
+            return {
+                person: r.personId,
+                role: (r.role || [])[0]
+            };
+        });
         $scope.record.$save(afterSend);
     };
 

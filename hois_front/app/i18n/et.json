@@ -398,6 +398,8 @@
         "curriculumscompletion": "Õppekava täitmine",
         "label": "Päringud",
         "students": "Õppijad",
+        "studentcount": "Õppijate arv",
+        "studentmovement": "Õppijate liikumine",
         "studentstatistics": "Õppijate statistika",
         "gueststudentstatistics": "Külalisõp. statistika",
         "foreignstudentstatistics": "Välisõp. statistika",
@@ -1469,6 +1471,7 @@
     "notInIndividualCurriculumDateRange": "Lõpetamise kuupäev peab jääma individuaalse õppekava kuupäevade vahemikku",
     "notInSupportServiceDateRange": "Lõpetamise kuupäev peab jääma tugiteenuse ajavahemikku",
     "notInAbroadStudiesDateRange": "Katkestamise kuupäev peab jääma välisõpingu ajavahemikku",
+    "disruptedAtAbroadStudiesStart": "Katkestamise kuupäev ei tohi olla sama, mis välisõpingu alguskuupäev",
     "notValid": "Käskkiri ei kehti",
     "coordinator": {
       "alreadyexist": "Sellise isikukoodiga isik on juba dokumentide kooskõlastaja",
@@ -1742,8 +1745,8 @@
     "messageTemplates": "Teadete mallid",
     "type": "Teate liik",
     "validDate": "Kehtivuse kuupäev",
-    "validFrom": "Kehtivuse alguskuupäev",
-    "validThru": "Kehtivuse lõppkuupäev"
+    "validFrom": "Kehtivuse algus",
+    "validThru": "Kehtivuse lõpp"
   },
   "certificate": {
     "showUncompletedSubjects": "Kuva ka sooritamata ained",
@@ -2512,10 +2515,12 @@
   "person": {
     "name": "Nimi",
     "idcode": "Isikukood",
+    "foreignIdcode": "Välismaa isikukood",
     "uniqueCode": "Unikaalne kood",
     "firstname": "Eesnimi",
     "lastname": "Perekonnanimi",
     "sex": "Sugu",
+    "citizenship": "Kodakondsus",
     "phone": "Isiklik kontakttelefon",
     "email": "Isiklik e-posti aadress",
     "roles": "Rollid",
@@ -2829,6 +2834,7 @@
       "count": "Osarühmade arv",
       "declared": "Osarühmas õppijate arv",
       "label": "Osarühmad",
+      "labelNumberTooltip": "aktiivseid õppijaid kokku",
       "name": "Osarühma nimetus",
       "places": "Kohtade arv",
       "defaultPlaces": "Kohtade arv osarühmas",
@@ -3108,7 +3114,9 @@
       "foreignStudyInPeriod": "Õppija on juba valitud perioodil välisõppes",
       "confirmSave": "Kas oled kindel, et soovid muuta avaldust?",
       "saved": "Avaldus on uuendatud",
-      "subjectChangeNotAllowed": "Avalduse muutmine keelatud"
+      "subjectChangeNotAllowed": "Avalduse muutmine keelatud",
+      "apelSchoolMissingAdmin": "Valitud õppeasutusel on seadistamata EHIS kool",
+      "apelSchoolMissing": "Valitud õppeasutusel on seadistamata EHIS kool, pöörduge administratiivse töötaja poole"
     }
   },
   "reception": {
@@ -3454,8 +3462,9 @@
       "excel": "Excelisse"
     },
     "confirm": {
+      "title": "Blankettide numbrite kinnitamine",
       "print": "Kontrollige trükitud blankette: {{forms}}. Kas blanketid on õiged?",
-      "check": "Kontrollige trükitud blankette:",
+      "check": "Kontrollige trükitud blankette. Peale kinnitamist ei saa blankettide numbreid enam muuta!",
       "correct": "Kas blanketid on õiged?",
       "yes": "Jah, kinnitan trükkimise",
       "no": "Ei, proovin uuesti"
@@ -3506,6 +3515,7 @@
   "timetable": {
     "importDialog": {
       "label": "Tunniplaani impordi tulemus",
+      "lesson": "Tund",
       "errors": {
         "emptySubjectUntis": "Puudub aine",
         "teachers": "Puudub õpetaja",
@@ -3518,6 +3528,17 @@
         "relationToTimetable": "Puudub päevik",
         "journalNotFound": "Puudub päevik",
         "wrongSchool": "Puudub päevik"
+      },
+      "messages": {
+        "invalidDocument": "Dokumendi formaat on vale",
+        "cardInfo": "{{day}}, tund {{period}}\nTunni id: {{lessonId}}\nPäevik: {{subject}}",
+        "notFoundTeacher": "Puudub õpetaja: {{teachers}}",
+        "notFoundGroup": "Puudub õpperühm: {{groups}}",
+        "notFoundRoom": "Puudub ruum: {{rooms}}",
+        "notFoundEverything": "Puuduvad õpetaja, ruum ja õpperühm",
+        "noLesson": "Tunnil puuduvad andmed",
+        "notAdded": "Tund ei ole lisatud",
+        "wrongPeriod": "Puudub tunni algus- ja/või lõppaeg"
       }
     },
     "exportDialog": {
@@ -3634,6 +3655,9 @@
       "code": "Tähis",
       "subgroup": "Osarühm",
       "subgroups": "Osarühmad",
+      "changeChosenEvent": "Muuda valitud päeva sündmus",
+      "changeUpcomingEvents": "Muuda ka kõik tulevad sündmused",
+      "changingStudentGroupsWarning": "Õpperühmad muudetakse kõigil kordusega lisatud tundidel!",
       "error": {
         "duplicateRoom": "Ruum on juba olemas",
         "duplicateTeacherHigher": "Õppejõud on juba olemas",
@@ -3642,7 +3666,8 @@
         "duplicateSupervisor": "Juhendaja on juba olemas",
         "endIsEarlierThanStart": "Lõppkellaaeg ei tohi olla varasem algkellaajast",
         "teachersAndStudentGroupsNotSaveForPersonalEvent": "Personaalsel sündmusel ei salvestata õppejõudusid ning õpperühmasid",
-        "atLeastOneSubgroupMustBeSelected": "Vähemalt üks osarühm peab olema valitud"
+        "atLeastOneSubgroupMustBeSelected": "Vähemalt üks osarühm peab olema valitud",
+        "atLeastOneStudentGroupMustBeSelected": "Vähemalt üks õpperühm peab olema valitud"
       }
     },
     "subjectTeacherPairs": "Aine-õppejõu paarid",
@@ -4166,7 +4191,8 @@
       "birthdate_from": "Sünnikp. alates",
       "birthdate_thru": "Sünnikp. kuni",
       "credits": "Tehtud ainepunktide arv",
-      "curriculum": "Õppekava",
+      "curriculumHigher": "Õppekava versioon",
+      "curriculumVocational": "Rakenduskava",
       "dormitory": "Õpilaskodu",
       "email": "E-posti aadress",
       "fin": "Finantseerimise allikas",
@@ -4176,14 +4202,115 @@
       "merCode": "Õppekava HTM kood",
       "name": "Õppija nimi",
       "occupationcertificate": "Kutsetunnistus",
+      "previousSchool": "Eelnev õppeasutus",
+      "previousStudyLevel": "Eelnev haridus",
       "status": "Õppija staatus",
       "studentGroup": "Õpperühm",
+      "studyCompany": "Õpipoisi ettevõte",
       "studyForm": "Õppevorm",
       "studyLevel": "Õppetase",
       "studyLoad": "Õppekoormus",
-      "studyStart": "Õpingute alguse kuupäev",
+      "studyStart": "Õpingute algus",
       "studyStart_from": "Õpingute alg. kp. alates",
-      "studyStart_thru": "Õpingute alg. kp. kuni"
+      "studyStart_thru": "Õpingute alg. kp. kuni",
+      "nominalStudyEnd": "Nominaalaja lõpp",
+      "nominalStudyEnd_from": "Nom. aja lõpp kp alates",
+      "nominalStudyEnd_thru": "Nom. aja lõpp kp kuni",
+      "displayStudentRepresentative": "Kuva esindajate andmed",
+      "studentRepresentative": "Õppija esindaja (nimi, telefon, e-post)"
+    },
+    "studentMovement": {
+      "from": "Alates",
+      "thru": "Kuni",
+      "queryType": "Päringu liik",
+      "select": {
+        "MOVEMENT_STAT_SUM": "Õpilasi kokku",
+        "MOVEMENT_STAT_CURRICULUM_GROUP": "Õppekavarühmade lõikes",
+        "MOVEMENT_STAT_STRUCTURAL_UNIT": "Struktuuriüksuste lõikes",
+        "MOVEMENT_STAT_CURRICULA": "Õppekavade lõikes",
+        "MOVEMENT_STAT_STUDENT_GROUP": "Õpperühmade lõikes",
+        "MOVEMENT_STAT_COURSE": "Kursuste lõikes",
+        "MOVEMENT_STAT_STUDY_LEVEL": "Õppetasemete lõikes"
+      },
+      "table": {
+        "studyFrom": "Õppijate arv seisuga ",
+        "startedStudying": "Õppima asunute arv",
+        "exmatOwnWish": "Välja arvatute arv (eksmatrikuleeritud) omal soovil",
+        "exmatElse": "Välja arvatute arv (eksmatrikuleeritud) muul põhjusel",
+        "completed": "Lõpetanute arv",
+        "exmatPercentage": "Väljalangevuse %",
+        "completedPercentage": "Lõpetamise %",
+        "MOVEMENT_STAT_STUDY_LEVEL": "Õppetase",
+        "MOVEMENT_STAT_STUDENT_GROUP": "Õpperühm",
+        "MOVEMENT_STAT_STRUCTURAL_UNIT": "Struktuuriüksus",
+        "MOVEMENT_STAT_CURRICULUM_GROUP": "Õppekavarühm",
+        "MOVEMENT_STAT_COURSE": "Kursus",
+        "MOVEMENT_STAT_CURRICULA": {
+          "higher": "Õppekava versioon",
+          "vocational": "Rakenduskava"
+        }
+      }
+    },
+    "studentCount": {
+      "from": "Alates",
+      "thru": "Kuni",
+      "dateCriteria": "'Kuni' kuupäev tuleb täita, kui soovitakse leida aktiivsete õppurite arvu kindlas vahemikus",
+      "studentType": "Õppija liik",
+      "resultType": "Statistika liik",
+      "ageFrom": "Vanus alates",
+      "ageStep": "Samm",
+      "select": {
+        "COUNT_STAT_OVERALL": "Üldarv",
+        "COUNT_STAT_STUDY_LEVEL": "Õppetasemete lõikes",
+        "COUNT_STAT_STUDENT_GROUP": "Õpperühmade lõikes",
+        "COUNT_STAT_STRUCTURAL_UNIT": "Struktuuriüksuste lõikes",
+        "COUNT_STAT_AGE": "Vanuse lõikes",
+        "COUNT_STAT_CURRICULA": "Õppekavade lõikes",
+        "COUNT_STAT_COURSE": "Kursuste lõikes"
+      },
+      "table": {
+        "sex": {
+          "male": "Mees",
+          "female": "Naine"
+        },
+        "sum": {
+          "label": "Kokku",
+          "female": "Kokku (naine)",
+          "male": "Kokku (mees)"
+        },
+        "studying": {
+          "label": "Õpib",
+          "sum" : "Õpib kokku",
+          "male": "Õpib (mees)",
+          "female": "Õpib (naine)"
+        },
+        "academic": {
+          "label": "Akadeemilisel",
+          "sum" : "Akadeemilisel kokku",
+          "male": "Akadeemilisel (mees)",
+          "female": "Akadeemilisel (naine)"
+        },
+        "foreign": {
+          "label": "Välisõppes",
+          "sum" : "Välisõppes kokku",
+          "male": "Välisõppes (mees)",
+          "female": "Välisõppes (naine)"
+        },
+        "COUNT_STAT_STUDY_LEVEL": "Õppetase",
+        "COUNT_STAT_STUDENT_GROUP": "Õpperühm",
+        "COUNT_STAT_STRUCTURAL_UNIT": "Struktuuriüksus",
+        "COUNT_STAT_AGE": "Vanusegrupp",
+        "COUNT_STAT_COURSE": "Kursus",
+        "COUNT_STAT_CURRICULA": {
+          "higher": "Õppekava versioon",
+          "vocational": "Rakenduskava"
+        }
+      },
+      "detail": {
+        "label": "Statistika detailsus",
+        "studentStatus": "Õppija staatuste kaupa",
+        "studentSex": "Õppija soo kaupa"
+      }
     },
     "guestStudent": {
       "studyYear": "Õppeaasta",
@@ -4653,6 +4780,7 @@
       "atLeastOneTransferableSubject": "Vähemalt üks ülekantav aine peab olema lisatud",
       "atLeastOneLearningMustBeTransferred": "Vähemalt üks formaalne/informaalne õpe peab olema üle kantud",
       "formalRecordsHaveErrors": "Formaalse õppe komplektid sisaldavad vigu",
+      "incompleteData": "Sisestatud andmed on puudulikud",
       "thereMustBeMoreTransferableCreditsThanSubstitutableCreditsVocational": "Ülekantavate moodulite mahtude summa peab olema suurem või võrdne asendatavate moodulite mahtude summaga",
       "thereMustBeMoreTransferableCreditsThanSubstitutableCreditsHigher": "Ülekantava õppeaine maht peab olema suurem või võrdne asendatavate õppeainete mahtude summaga",
       "subjectReplacedMoreThanOnce": "Õppeaine on asendatud rohkem kui üks kord",

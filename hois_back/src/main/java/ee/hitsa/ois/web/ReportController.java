@@ -37,7 +37,9 @@ import ee.hitsa.ois.web.commandobject.report.ForeignStudentStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.GuestStudentStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.IndividualCurriculumStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.ScholarshipStatisticsCommand;
+import ee.hitsa.ois.web.commandobject.report.StudentCountCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentGroupTeacherCommand;
+import ee.hitsa.ois.web.commandobject.report.StudentMovementCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsByPeriodCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsCommand;
@@ -49,6 +51,8 @@ import ee.hitsa.ois.web.dto.report.CurriculumSubjectsDto;
 import ee.hitsa.ois.web.dto.report.ForeignStudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.GuestStudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.IndividualCurriculumSatisticsDto;
+import ee.hitsa.ois.web.dto.report.StudentCountDto;
+import ee.hitsa.ois.web.dto.report.StudentMovementDto;
 import ee.hitsa.ois.web.dto.report.StudentSearchDto;
 import ee.hitsa.ois.web.dto.report.StudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.TeacherLoadDto;
@@ -86,6 +90,32 @@ public class ReportController {
             HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
         HttpUtil.xls(response, "students.xls", reportService.studentsAsExcel(user, criteria));
+    }
+    
+    @GetMapping("/students/movement")
+    public Page<StudentMovementDto> studentsCount(HoisUserDetails user, @Valid StudentMovementCommand criteria,
+            Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        return reportService.studentMovement(user, criteria, pageable);
+    }
+    
+    @GetMapping("/students/movement.xls")
+    public void studentsMovementAsExcel(HoisUserDetails user, @Valid StudentMovementCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        HttpUtil.xls(response, "studentsmovement.xls", reportService.studentsMovementAsExcel(user, criteria));
+    }
+    
+    @GetMapping("/students/count")
+    public Page<StudentCountDto> studentsCount(HoisUserDetails user, @Valid StudentCountCommand criteria,
+            Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        return reportService.studentCount(user, criteria, pageable);
+    }
+    
+    @GetMapping("/students/count.xls")
+    public void studentsAsExcel(HoisUserDetails user, @Valid StudentCountCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        HttpUtil.xls(response, "studentscount.xls", reportService.studentsCountAsExcel(user, criteria));
     }
 
     @GetMapping("/students/statistics")

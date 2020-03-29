@@ -6,6 +6,10 @@ public class NameAndCode {
     private String code;
     private String bracketsInfo;
     
+    public NameAndCode(String code) {
+        this.code = code;
+    }
+    
     public NameAndCode(String name, String code) {
         this.name = name;
         this.code = code;

@@ -85,9 +85,13 @@ public abstract class MidtermTaskUtil {
     public static boolean resultIsText(MidtermTask task) {
         return BigDecimal.ZERO.compareTo(task.getMaxPoints()) == 0;
     }
+    
+    public static boolean isPractice(SubjectStudyPeriod ssp) {
+        return Boolean.TRUE.equals(ssp.getSubject().getIsPractice());
+    }
 
     public static void assertNotPractice(SubjectStudyPeriod ssp){
-        if(Boolean.TRUE.equals(ssp.getSubject().getIsPractice())) {
+        if(isPractice(ssp)) {
             throw new ValidationFailedException("midtermTask.error.isPractice");
         }
     }

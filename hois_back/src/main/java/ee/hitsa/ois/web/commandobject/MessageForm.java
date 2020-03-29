@@ -2,6 +2,7 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.util.Set;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.validation.Required;
@@ -16,13 +17,14 @@ public class MessageForm extends VersionedCommand {
     private String content;
     private Long responseTo;
     @Required
-    private Set<Long> receivers;
+    @Valid
+    private Set<Receiver> receivers;
 
-    public Set<Long> getReceivers() {
+    public Set<Receiver> getReceivers() {
         return receivers;
     }
 
-    public void setReceivers(Set<Long> receivers) {
+    public void setReceivers(Set<Receiver> receivers) {
         this.receivers = receivers;
     }
 
@@ -48,5 +50,28 @@ public class MessageForm extends VersionedCommand {
 
     public void setResponseTo(Long responseTo) {
         this.responseTo = responseTo;
+    }
+    
+    public static class Receiver {
+
+        @Required
+        private Long person;
+        private String role;
+
+        public Long getPerson() {
+            return person;
+        }
+
+        public void setPerson(Long person) {
+            this.person = person;
+        }
+
+        public String getRole() {
+            return role;
+        }
+
+        public void setRole(String role) {
+            this.role = role;
+        }
     }
 }

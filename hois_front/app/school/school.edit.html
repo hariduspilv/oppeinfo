@@ -93,19 +93,26 @@
       </md-checkbox>
     </md-input-container>
 
-    <div class="photo-radio" layout-gt-sm="row" layout="column" layout-align="start start" layout-align-gt-sm="start center">
-        <span class="common-label" style="margin-right: 1em;">{{'school.studentPhotoAdd' | translate}}:</span>
-        <md-radio-group layout-gt-xs="row" ng-model="school.studentPhotoAdd" name="studentPhotoAdd" required>
-          <md-radio-button value="FOTOLISA_KOIK" aria-label="{{currentLanguageNameField(clPhoto['FOTOLISA_KOIK'])}}">
-            {{currentLanguageNameField(clPhoto['FOTOLISA_KOIK'])}}
-          </md-radio-button>
-          <md-radio-button value="FOTOLISA_TAIS" aria-label="{{currentLanguageNameField(clPhoto['FOTOLISA_TAIS'])}}">
-            {{currentLanguageNameField(clPhoto['FOTOLISA_TAIS'])}}
-          </md-radio-button>
-          <md-radio-button value="FOTOLISA_EI" aria-label="{{currentLanguageNameField(clPhoto['FOTOLISA_EI'])}}">
-            {{currentLanguageNameField(clPhoto['FOTOLISA_EI'])}}
-          </md-radio-button>
-        </md-radio-group>
+    <div class="custom-radio" layout-gt-sm="row" layout="column" layout-align="start start" layout-align-gt-sm="start center">
+      <span class="common-label" style="margin-right: 1em;">{{'school.studentPhotoAdd' | translate}}:</span>
+      <md-radio-group layout-gt-xs="row" ng-model="school.studentPhotoAdd" name="studentPhotoAdd" required>
+        <md-radio-button value="FOTOLISA_KOIK" aria-label="{{currentLanguageNameField(clPhoto['FOTOLISA_KOIK'])}}">
+          {{currentLanguageNameField(clPhoto['FOTOLISA_KOIK'])}}
+        </md-radio-button>
+        <md-radio-button value="FOTOLISA_TAIS" aria-label="{{currentLanguageNameField(clPhoto['FOTOLISA_TAIS'])}}">
+          {{currentLanguageNameField(clPhoto['FOTOLISA_TAIS'])}}
+        </md-radio-button>
+        <md-radio-button value="FOTOLISA_EI" aria-label="{{currentLanguageNameField(clPhoto['FOTOLISA_EI'])}}">
+          {{currentLanguageNameField(clPhoto['FOTOLISA_EI'])}}
+        </md-radio-button>
+      </md-radio-group>
+    </div>
+
+    <div class="custom-radio" layout-gt-sm="row" layout="column" layout-align="start start" layout-align-gt-sm="start center">
+      <span class="common-label" style="margin-right: 1em;">{{'Tunniplaani koostamine Tahvli välis programmiga' | translate}}:</span>
+      <hois-classifier-radio layout-gt-xs="row" ng-model="school.timetable" name="timetable" model-value-attr="code" order="value"
+        main-classifier-code="TIMETABLE" required></hois-classifier-radio>
+      </md-radio-group>
     </div>
 
     <md-input-container class="md-block">
@@ -179,15 +186,15 @@
 </div>
 
 <style>
-div.photo-radio {
+div.custom-radio {
   margin-bottom: 8px;
 }
 
-div.photo-radio md-radio-group {
+div.custom-radio md-radio-group {
   color: rgb(150, 150, 150);
 }
 
-div.photo-radio md-radio-button {
+div.custom-radio md-radio-button {
   margin-top: 4px;
   margin-bottom: 4px;
 }

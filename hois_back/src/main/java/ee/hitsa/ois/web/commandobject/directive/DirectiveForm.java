@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
+import javax.validation.groups.Default;
 
 import ee.hitsa.ois.domain.directive.DirectiveStudentModule;
 import ee.hitsa.ois.enums.MainClassCode;
@@ -16,6 +17,7 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.DirectiveValidation.Immat;
 import ee.hitsa.ois.validation.DirectiveValidation.Kylalis;
+import ee.hitsa.ois.validation.DirectiveValidation.Muu;
 import ee.hitsa.ois.validation.EstonianIdCode;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.StudyPeriodRange;
@@ -184,7 +186,10 @@ public class DirectiveForm extends VersionedCommand {
         private Long student;
         private Long saisApplication;
         private Long scholarshipApplication;
-        @Size(max = 4000, message="maxlength")
+        @Size.List({
+                @Size(max = 255, groups = {Muu.class}, message = "maxlength"),
+                @Size(max = 4000, groups = {Default.class}, message = "maxlength"),
+        })
         private String addInfo;
         private Boolean isAbsence;
         private List<String> occupations;

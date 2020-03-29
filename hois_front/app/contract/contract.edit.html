@@ -5,21 +5,22 @@
         <hois-autocomplete ng-model="contract.student" method="students" name="student" label="student.label"
          ng-disabled="contract.id || contract.practiceApplication" 
          additional-query-params="{showGuestStudent: true, active: true, higher: formState.isHigher, showStudentGroup: true, userId: auth.isLeadingTeacher() ? auth.user : null}" 
-         flex="70" flex-xs="100" required></hois-autocomplete>
-          <md-button class="md-raised" ng-if="!contract.id || contract.status.code === 'LEPING_STAATUS_S'" flex="30" flex-xs="100" ng-disabled="!contract.student" ng-click="copyContract()">
+         flex="100" required></hois-autocomplete>
+          <md-button class="md-raised" ng-if="!contract.id || contract.status.code === 'LEPING_STAATUS_S'"
+            flex-xs="100" ng-disabled="!contract.student" ng-click="copyContract()" style="min-width: 260px;">
             {{'contract.useContractData' | translate}}</md-button>
       </div>
       <div ng-if="studentGroup" flex>
-        <div layout="row">
-          <div flex="70" layout="column" class="form-readonly">
+        <div layout="row" layout-xs="column">
+          <div flex="100" layout="column" class="form-readonly">
             <br/>
             <md-input-container>
                 <label>{{'lessonplan.studentGroup' | translate}}</label>
                 <hois-value value="currentLanguageNameField(studentGroup)"></hois-value>
             </md-input-container>
           </div>
-          <md-button class="md-raised" ng-if="!contract.id || contract.status.code === 'LEPING_STAATUS_S'" flex="30" style="height: 38px;"
-           layout="column" ng-disabled="!contract.student" ng-click="copyContract()">
+          <md-button class="md-raised" ng-if="!contract.id || contract.status.code === 'LEPING_STAATUS_S'" flex-xs="100"
+            style="height: 38px; min-width: 260px;" layout="column" ng-disabled="!contract.student" ng-click="copyContract()">
               {{'contract.useContractData' | translate}}</md-button>
         </div>
         <div layout="row" flex="100">
@@ -79,17 +80,17 @@
       </div>
 
       <div ng-if="!formState.isHigher" ng-repeat="module in contract.moduleSubjects track by $index" layout="row" layout-sm="column" layout-xs="column" flex>
-        <md-input-container flex="100">
+        <md-input-container flex="100" flex-gt-sm="35">
           <label>{{'module.practice' | translate}}</label>
           <hois-select ng-model="module.module" values="formState.modules" ng-change="moduleChanged(module.module, module)" required></hois-select>
         </md-input-container>
 
-        <md-input-container flex="100" flex-offset-gt-md="5">
+        <md-input-container flex="100" flex-gt-sm="25" flex-offset-gt-sm="5">
           <label>{{'contract.theme' | translate}}</label>
           <hois-select ng-model="module.theme" values="formState.themesByModuleId[module.module]" ng-change="themeChanged(module.theme, module)"></hois-select>
         </md-input-container>
 
-        <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
+        <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-sm="5">
           <label>{{'contract.creditsEKAP' | translate}}</label>
           <input type="number" name="credits[{{$index}}]" ng-model="module.credits" ng-min="0" ng-max="999.9" ng-change="updateHours(module, $index)" required>
         </md-input-container>
@@ -114,12 +115,12 @@
       </div>
 
       <div ng-if="formState.isHigher" ng-repeat="subject in contract.moduleSubjects track by $index" layout="row" layout-sm="column" layout-xs="column" flex>
-        <md-input-container flex="100">
+        <md-input-container flex="100" flex-gt-sm="65">
           <label>{{'contract.subject' | translate}}</label>
           <hois-select ng-model="subject.subject" values="formState.subjects" ng-change="subjectChanged(subject.subject, subject)" required></hois-select>
         </md-input-container>
 
-        <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
+        <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-sm="5">
           <label>{{'contract.creditsEAP' | translate}}</label>
           <input type="number" name="credits[{{$index}}]" ng-model="subject.credits" ng-min="0" ng-max="999.9" ng-change="updateHours(subject, $index)" required>
         </md-input-container>

@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import java.util.stream.Collectors;
@@ -76,9 +75,7 @@ public class PersonService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private SchoolService schoolService;
-    @Autowired
-    private UserService userService;
-
+    
     private static final String PERSON_FROM = "from person p " +
             "left outer join user_ u on p.id=u.person_id " +
             "left outer join (select array_agg(uu.role_code) as roll, array_agg(usr.id) as user_role, " +
@@ -92,9 +89,9 @@ public class PersonService {
             "on u.person_id=roles.person_id and (u.school_id=roles.school_id or u.school_id is null and roles.school_id is null) ";
     
     private static final String PERSON_SELECT = "distinct p.idcode, p.firstname, p.lastname, u.school_id, p.id,"
-            + "array_to_string(roles.roll, ', ') as r_arr, array_to_string(roles.user_role, ', ') as ur_arr, array_to_string(roles.occupation, ', '), p.unique_code";
+            + "array_to_string(roles.roll, ', ') as r_arr, array_to_string(roles.user_role, ', ') as ur_arr, array_to_string(roles.occupation, ', '), p.unique_code, p.foreign_idcode";
     private static final String PERSON_COUNT_SELECT = "count (distinct (p.idcode, p.firstname, p.lastname, u.school_id, p.id,array_to_string(roles.roll, ', '), "
-            + "array_to_string(roles.user_role, ', '), array_to_string(roles.occupation, ', '), p.unique_code))";
+            + "array_to_string(roles.user_role, ', '), array_to_string(roles.occupation, ', '), p.unique_code, p.foreign_idcode))";
 
     public Page<UsersSearchDto> search(UsersSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(PERSON_FROM).sort(pageable);
@@ -103,6 +100,7 @@ public class PersonService {
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
 
         qb.optionalCriteria("p.idcode = :idcode", "idcode", criteria.getIdcode());
+        qb.optionalContains("p.foreign_idcode", "foreignIdcode", criteria.getForeignIdcode());
         qb.optionalCriteria("p.unique_code = :idcode", "idcode", criteria.getUniqueCode());
         qb.optionalCriteria("roles.school_id = :school", "school", criteria.getSchool());
         qb.optionalCriteria(":roll = ANY(roles.roll)", "roll", criteria.getRole());
@@ -157,6 +155,7 @@ public class PersonService {
                     resultAsStringList(r, 7, ", ").stream().map(occupationId -> occupations.get(Long.valueOf(occupationId))))
                     .collect(Collectors.toList()));
             dto.setUniqueCode(resultAsString(r, 8));
+            dto.setForeignIdcode(resultAsString(r, 9));
             return dto;
         });
     }
@@ -185,8 +184,10 @@ public class PersonService {
             throw new AssertionFailedException("Cannot edit system user");
         }
         EntityUtil.bindToEntity(personForm, person, classifierRepository);
-        person.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(personForm.getIdcode()));
-        person.setSex(em.getReference(Classifier.class, EstonianIdCodeValidator.sexFromIdcode(personForm.getIdcode())));
+        if (personForm.getIdcode() != null) {
+            person.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(personForm.getIdcode()));
+            person.setSex(em.getReference(Classifier.class, EstonianIdCodeValidator.sexFromIdcode(personForm.getIdcode())));
+        }
         return EntityUtil.save(person, em);
     }
 
@@ -219,12 +220,12 @@ public class PersonService {
                     Collectors.mapping(r -> resultAsString(r, 1), Collectors.toSet())));
 
             Set<String> objects = new HashSet<>(defaultRights.keySet());
-            objects.addAll(userService.LEADING_TEACHER_EXTRA_RIGHTS.keySet());
+            objects.addAll(UserService.LEADING_TEACHER_EXTRA_RIGHTS.keySet());
             for (String object : objects) {
                 Set<String> permissions = new HashSet<>();
                 Set<String> defaultPermissions = defaultRights.get(object);
                 if (defaultPermissions != null) permissions.addAll(defaultPermissions);
-                Set<String> extraPermissions = userService.LEADING_TEACHER_EXTRA_RIGHTS.get(object);
+                Set<String> extraPermissions = UserService.LEADING_TEACHER_EXTRA_RIGHTS.get(object);
                 if (extraPermissions != null) permissions.addAll(extraPermissions);
                 roleSpecificAllowedRights.put(object, permissions);
             }

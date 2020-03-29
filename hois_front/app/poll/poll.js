@@ -975,7 +975,7 @@
             $q.all(clMapper.promises).then($scope.loadData);
         };
         $scope.refresh();
-    }).controller('PollSubjectsController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, oisFileService, $translate, FormUtils, message, $location) {
+    }).controller('PollSubjectsController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, oisFileService, $translate, FormUtils, message, $location, $timeout) {
         $scope.auth = $route.current.locals.auth;
         $scope.formState = {};
         if (!$scope.auth.isTeacher()) {
@@ -1118,10 +1118,12 @@
           PollEndPoint.get({id: row.id}).$promise.then(function (response) {
             markImages(response.themes);
             QueryUtils.loadingWheel($scope, false, true);
-            openResponse(row, response, dialogService, oisFileService);
+            $timeout(function () {
+                openResponse(row, response, dialogService, oisFileService);
+            });
           });
         };
-    }).controller('PollAnswersController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, oisFileService, $translate, message, $location) {
+    }).controller('PollAnswersController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, oisFileService, $translate, message, $location, $timeout) {
         $scope.auth = $route.current.locals.auth;
         if ($scope.auth.isLeadingTeacher() || $scope.auth.isMainAdmin()) {
             message.error('main.messages.error.nopermission');
@@ -1313,7 +1315,9 @@
           PollEndPoint.get({id: row.id}).$promise.then(function (response) {
             markImages(response.themes);
             QueryUtils.loadingWheel($scope, false, true);
-            openResponse(row, response, dialogService, oisFileService);
+            $timeout(function () {
+                openResponse(row, response, dialogService, oisFileService);
+            });
           });
         };
 
@@ -1682,9 +1686,9 @@
             loadEndpoint(GraphEndpoint, newScope);
         };
 
-        $scope.checkAnswer = function(row) {
+        $scope.checkAnswer = function(row, higher) {
             dialogService.showDialog('poll/poll.results.student.dialog.html', function (dialogScope) {
-                dialogScope.higher = $scope.auth.higher;
+                dialogScope.higher = higher;
                 var clMapper = Classifier.valuemapper({
                     status: 'KYSITVASTUSSTAATUS'
                 });

@@ -4,16 +4,19 @@ public class TimetableDifferenceExcelDto {
     private Long journalId;
     private String journalName;
     private String studentGroups;
+    private String themes;
     private String capacityType;
     private String teacherNames;
     private Long previousWeek = Long.valueOf(0);
     private Long currentWeek = Long.valueOf(0);
     private Long difference = Long.valueOf(0);
 
-    public TimetableDifferenceExcelDto(Long journalId, String journalName, String studentGroups, String capacityType) {
+    public TimetableDifferenceExcelDto(Long journalId, String journalName, String studentGroups,
+            String themes, String capacityType) {
         this.journalId = journalId;
         this.journalName = journalName;
         this.studentGroups = studentGroups;
+        this.themes = themes;
         this.capacityType = capacityType;
     }
 
@@ -39,6 +42,14 @@ public class TimetableDifferenceExcelDto {
 
     public void setStudentGroups(String studentGroups) {
         this.studentGroups = studentGroups;
+    }
+
+    public String getThemes() {
+        return themes;
+    }
+
+    public void setThemes(String themes) {
+        this.themes = themes;
     }
 
     public String getCapacityType() {

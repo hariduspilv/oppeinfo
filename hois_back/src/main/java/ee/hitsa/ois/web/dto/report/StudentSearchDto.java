@@ -7,6 +7,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -22,6 +23,7 @@ public class StudentSearchDto {
     private final String fullName;
     private final String idcode;
     private final LocalDate studyStart;
+    private final LocalDate nominalStudyEnd;
     private final String studyLevel;
     private final AutocompleteResult curriculumVersion;
     private final String merCode;
@@ -33,9 +35,15 @@ public class StudentSearchDto {
     private final String finSpecific;
     private final String language;
     private final String email;
+    private final String previousStudyLevel;
+    private final String previousSchoolName;
+    private final String studyCompany;
     private final BigDecimal credits;
     private final String dormitory;
-    private List<StudentOccupationCertificateDto> occupationCertificates;
+    private List<StudentRepresentativeDto> studentRepresentatives = new ArrayList<>();
+    private List<String> studentRepresentativesString = new ArrayList<>();
+    private List<StudentOccupationCertificateDto> occupationCertificates = new ArrayList<>();
+    private List<String> occupationCertificatesString = new ArrayList<>();
 
     public StudentSearchDto(Object record) {
         id = resultAsLong(record, 0);
@@ -58,6 +66,10 @@ public class StudentSearchDto {
         email = resultAsString(record, 17);
         credits = resultAsDecimal(record, 18);
         dormitory = resultAsString(record, 19);
+        previousStudyLevel = resultAsString(record, 21);
+        previousSchoolName = resultAsString(record, 22);
+        studyCompany = resultAsString(record, 23);
+        nominalStudyEnd = resultAsLocalDate(record, 24);
     }
 
     public Long getId() {
@@ -142,5 +154,45 @@ public class StudentSearchDto {
 
     public void setOccupationCertificates(List<StudentOccupationCertificateDto> occupationCertificates) {
         this.occupationCertificates = occupationCertificates;
+    }
+
+    public List<StudentRepresentativeDto> getStudentRepresentatives() {
+        return studentRepresentatives;
+    }
+
+    public void setStudentRepresentatives(List<StudentRepresentativeDto> studentRepresentatives) {
+        this.studentRepresentatives = studentRepresentatives;
+    }
+
+    public String getPreviousStudyLevel() {
+        return previousStudyLevel;
+    }
+
+    public String getPreviousSchoolName() {
+        return previousSchoolName;
+    }
+
+    public String getStudyCompany() {
+        return studyCompany;
+    }
+
+    public List<String> getStudentRepresentativesString() {
+        return studentRepresentativesString;
+    }
+
+    public void setStudentRepresentativesString(List<String> studentRepresentativesString) {
+        this.studentRepresentativesString = studentRepresentativesString;
+    }
+
+    public List<String> getOccupationCertificatesString() {
+        return occupationCertificatesString;
+    }
+
+    public void setOccupationCertificatesString(List<String> occupationCertificatesString) {
+        this.occupationCertificatesString = occupationCertificatesString;
+    }
+
+    public LocalDate getNominalStudyEnd() {
+        return nominalStudyEnd;
     }
 }

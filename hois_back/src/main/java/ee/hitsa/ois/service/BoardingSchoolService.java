@@ -414,14 +414,12 @@ public class BoardingSchoolService {
 
         Map<Long, RoomAutocompleteResult> rooms = new HashMap<>();
         if (!roomIds.isEmpty()) {
-            List<?> data = em.createNativeQuery("select r.id r_id, b.code b_code, r.code r_code, r.seats from room r "
+            List<?> data = em.createNativeQuery("select r.id r_id, b.id b_id, b.code b_code, r.code r_code, r.seats from room r "
                     + "join building b on r.building_id = b.id "
                     + "where r.id in (?1)")
                     .setParameter(1, roomIds).getResultList();
-            rooms = StreamUtil.toMap(r -> resultAsLong(r, 0), r -> {
-                return new RoomAutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2),
-                        resultAsLong(r, 3));
-            }, data);
+            rooms = StreamUtil.toMap(r -> resultAsLong(r, 0), r -> new RoomAutocompleteResult(resultAsLong(r, 0),
+                    resultAsLong(r, 1), resultAsString(r, 2), resultAsString(r, 3), resultAsLong(r, 4)), data);
         }
 
         for (BoardingSchoolManagementCheckDto check : checks) {
@@ -508,7 +506,7 @@ public class BoardingSchoolService {
             BoardingSchoolRoomDto dto = new BoardingSchoolRoomDto();
             dto.setBuilding(new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1),
                 resultAsString(r, 1)));
-            dto.setRoom(new RoomAutocompleteResult(resultAsLong(r, 2), resultAsString(r, 3),
+            dto.setRoom(new RoomAutocompleteResult(resultAsLong(r, 2), resultAsLong(r, 0), resultAsString(r, 3),
                 resultAsString(r, 4), resultAsLong(r, 5)));
 
             Long freeSeats = resultAsLong(r, 7);

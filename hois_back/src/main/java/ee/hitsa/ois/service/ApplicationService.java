@@ -591,7 +591,7 @@ public class ApplicationService {
                 + " and s.status_code = :studentStatus"
                 + " and d.type_code = :directiveType"
                 + " and d.status_code = :directiveStatus"
-                + " and coalesce(ds_katk.start_date, sp_end.end_date, ds.end_date) >= :today"
+                + " and coalesce(case when ds_katk.start_date is not null then ds_katk.start_date - interval '1 day' else null end, sp_end.end_date, ds.end_date) >= :today"
                 + " and coalesce(sp_start.start_date, ds.start_date) <= :today");
         qb.parameter("applicationId", EntityUtil.getId(application));
         qb.parameter("studentId", user.getStudentId());

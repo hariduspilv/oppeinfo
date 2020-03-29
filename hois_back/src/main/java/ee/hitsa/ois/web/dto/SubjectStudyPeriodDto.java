@@ -29,8 +29,11 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
     private Long moodleCourseId;
     private Boolean capacityDiff;
     private Set<SubjectStudyPeriodSubgroupDto> subgroups;
-    private Boolean canEditSubgroups;
     private Long students;
+
+    private Boolean canUpdate;
+    private Boolean canEditSubgroups;
+    private Boolean canDelete;
 
     public List<AutocompleteResult> getStudentGroupObjects() {
         return studentGroupObjects != null ? studentGroupObjects : (studentGroupObjects = new ArrayList<>());
@@ -144,12 +147,28 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
         this.students = students;
     }
 
+    public Boolean getCanUpdate() {
+        return canUpdate;
+    }
+
+    public void setCanUpdate(Boolean canUpdate) {
+        this.canUpdate = canUpdate;
+    }
+
     public Boolean getCanEditSubgroups() {
         return canEditSubgroups;
     }
 
     public void setCanEditSubgroups(Boolean canEditSubgroups) {
         this.canEditSubgroups = canEditSubgroups;
+    }
+
+    public Boolean getCanDelete() {
+        return canDelete;
+    }
+
+    public void setCanDelete(Boolean canDelete) {
+        this.canDelete = canDelete;
     }
 
     public static SubjectStudyPeriodDto of(SubjectStudyPeriod subjectStudyPeriod) {

@@ -75,6 +75,9 @@ public class School extends BaseEntityWithId implements Translatable {
     @JsonIgnore
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier studentPhotoAdd;
+    @JsonIgnore
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private Classifier timetable;
     private String finalSchoolType;
     @Column(name = "final_62")
     private String final62;
@@ -345,6 +348,14 @@ public class School extends BaseEntityWithId implements Translatable {
 
     public void setStudentPhotoAdd(Classifier studentPhotoAdd) {
         this.studentPhotoAdd = studentPhotoAdd;
+    }
+
+    public Classifier getTimetable() {
+        return timetable;
+    }
+
+    public void setTimetable(Classifier timetable) {
+        this.timetable = timetable;
     }
 
 }

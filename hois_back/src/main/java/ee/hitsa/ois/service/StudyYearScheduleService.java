@@ -46,7 +46,6 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.StudyYearScheduleDtoContainer;
 import ee.hitsa.ois.web.commandobject.StudyYearScheduleForm;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
-import ee.hitsa.ois.web.dto.StudyPeriodDto;
 import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 import ee.hitsa.ois.web.dto.StudyYearDto;
 import ee.hitsa.ois.web.dto.StudyYearScheduleDto;

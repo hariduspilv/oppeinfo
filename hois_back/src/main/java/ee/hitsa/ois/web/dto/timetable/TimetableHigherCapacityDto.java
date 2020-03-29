@@ -3,8 +3,8 @@ package ee.hitsa.ois.web.dto.timetable;
 public class TimetableHigherCapacityDto {
 
     private String capacityType;
-    private Long totalPlannedLessons = Long.valueOf(0);
-    private Long totalAllocatedLessons = Long.valueOf(0);
+    private Long totalPlannedLessons;
+    private Long totalAllocatedLessons;
 
     public TimetableHigherCapacityDto() {
     }
@@ -24,7 +24,7 @@ public class TimetableHigherCapacityDto {
     }
 
     public Long getTotalPlannedLessons() {
-        return totalPlannedLessons;
+        return totalPlannedLessons != null ? totalPlannedLessons : Long.valueOf(0);
     }
 
     public void setTotalPlannedLessons(Long totalPlannedLessons) {
@@ -32,7 +32,7 @@ public class TimetableHigherCapacityDto {
     }
 
     public Long getTotalAllocatedLessons() {
-        return totalAllocatedLessons;
+        return totalAllocatedLessons != null ? totalAllocatedLessons : Long.valueOf(0);
     }
 
     public void setTotalAllocatedLessons(Long totalAllocatedLessons) {

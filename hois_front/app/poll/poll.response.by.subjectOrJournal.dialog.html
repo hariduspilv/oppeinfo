@@ -47,7 +47,7 @@
                         <div ng-if="formState.themeBySubjectOrJournalId" layout="column">
                             <div ng-repeat="listObject in formState.themeBySubjectOrJournalId track by $index" layout="column" 
                                 flex style="margin-top: 0px" ng-if="listObject.show">
-                                <div ng-repeat="item in listObject.list" layout="column" flex>
+                                <div ng-repeat="item in listObject.list" layout="column">
                                     <div layout="column" ng-if="first($index)">
                                         <div layout="row" ng-if="item.journal === null && item.subject === null && criteria.type === 'KYSITLUS_O' && hasSubjectOrJournal" class="form-readonly">
                                             <h3 style="margin-top: 0px;color: rgb(21, 101, 192);font-size: 16px;">{{'poll.response.other' | translate}}</h3>

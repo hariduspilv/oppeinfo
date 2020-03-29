@@ -32,7 +32,6 @@ import ee.hitsa.ois.domain.poll.Question;
 import ee.hitsa.ois.domain.poll.Response;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
-import ee.hitsa.ois.service.JobExecutorService;
 import ee.hitsa.ois.service.poll.PollAsyncService;
 import ee.hitsa.ois.service.poll.PollAsyncService.PollStatisticsRequest;
 import ee.hitsa.ois.service.security.HoisUserDetails;

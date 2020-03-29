@@ -26,6 +26,8 @@ public class SubjectStudyPeriodSubgroup extends BaseEntityWithId {
     @JoinColumn(name = "subject_study_period_teacher_id")
     private SubjectStudyPeriodTeacher teacher;
     private Short places;
+    @OneToMany(mappedBy = "subjectStudyPeriodSubgroup", fetch = FetchType.LAZY, orphanRemoval = false)
+    private Set<TimetableEventSubgroup> timetableEventSubgroups;
     @OneToMany(mappedBy = "subgroup", fetch = FetchType.LAZY, orphanRemoval = false, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     private Set<DeclarationSubject> declarationSubjects;
 
@@ -66,6 +68,15 @@ public class SubjectStudyPeriodSubgroup extends BaseEntityWithId {
             getDeclarationSubjects().add(ds);
             ds.setSubgroup(this);
         }
+    }
+
+    public Set<TimetableEventSubgroup> getTimetableEventSubgroups() {
+        return timetableEventSubgroups != null ? timetableEventSubgroups : (timetableEventSubgroups = new HashSet<>());
+    }
+
+    public void setTimetableEventSubgroups(Set<TimetableEventSubgroup> timetableEventSubgroups) {
+        getTimetableEventSubgroups().clear();
+        getTimetableEventSubgroups().addAll(timetableEventSubgroups);
     }
 
     public Set<DeclarationSubject> getDeclarationSubjects() {

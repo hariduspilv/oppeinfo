@@ -22,7 +22,7 @@
         </md-whiteframe>
 
         <fieldset>
-          <legend ng-class="{invalid: dialogForm.$submitted && (!record.formalSubjectsOrModules || record.formalSubjectsOrModules.length === 0)}"
+          <legend ng-class="{invalid: dialogForm.$submitted && !areTransferredSubjectsOrModulesValid()}"
             class="md-title-small">{{'apel.formalLearnings.transferableModules' | translate}}</legend>
           <md-input-container>
             <md-button ng-if="!record.applicationPlannedSubject" ng-click="addNewTransferableSubjectOrModule()"
@@ -250,7 +250,7 @@
         </fieldset>
         <br>
         <fieldset>
-          <legend ng-class="{invalid: areReplacedSubjectsOrModulesInvalid()}"
+          <legend ng-class="{invalid: dialogForm.$submitted && !areReplacedModulesValid()}"
             class="md-title-small">{{'apel.formalLearnings.substitutableModulesThemes' | translate}}</legend>
           <div flex="50">
             <md-input-container style="width: 100%">

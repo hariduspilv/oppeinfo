@@ -9,6 +9,7 @@ public class JournalEntryQuickUpdateForm {
     @Required
     private Long journalEntryId;
     private List<JournalEntryStudentForm> journalEntryStudents;
+    private Boolean allStudents;
 
     public Long getJournalEntryId() {
         return journalEntryId;
@@ -26,4 +27,11 @@ public class JournalEntryQuickUpdateForm {
         this.journalEntryStudents = journalEntryStudents;
     }
 
+    public Boolean getAllStudents() {
+        return allStudents;
+    }
+
+    public void setAllStudents(Boolean allStudents) {
+        this.allStudents = allStudents;
+    }
 }

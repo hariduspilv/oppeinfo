@@ -9,6 +9,8 @@ public class UsersSearchCommand {
 
     private String idcode;
     
+    private String foreignIdcode;
+    
     private String uniqueCode;
 
     private String name;
@@ -76,6 +78,14 @@ public class UsersSearchCommand {
 
     public void setNextPeriod(Boolean nextPeriod) {
         this.nextPeriod = nextPeriod;
+    }
+
+    public String getForeignIdcode() {
+        return foreignIdcode;
+    }
+
+    public void setForeignIdcode(String foreignIdcode) {
+        this.foreignIdcode = foreignIdcode;
     }
 
     public String getUniqueCode() {

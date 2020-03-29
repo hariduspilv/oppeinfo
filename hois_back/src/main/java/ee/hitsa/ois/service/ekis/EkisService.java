@@ -275,8 +275,7 @@ public class EkisService {
         request.setStCourse(course);
         
         List<ContractModuleSubject> moduleSubjects = contract.getModuleSubjects();
-        request.setStEkap(moduleSubjects.stream().map(ContractModuleSubject::getCredits)
-                .reduce(BigDecimal.ZERO, BigDecimal::add).toString());
+        request.setStEkap(StreamUtil.sumBigDecimals(ContractModuleSubject::getCredits, moduleSubjects).toString());
         request.setStHours(Integer.toString(moduleSubjects.stream().map(ContractModuleSubject::getHours)
                 .mapToInt(Short::intValue).sum()));
         Stream<String> moduleStream = null;

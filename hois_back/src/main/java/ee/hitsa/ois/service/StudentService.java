@@ -529,7 +529,7 @@ public class StudentService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds join directive d on ds.directive_id = d.id " +
                 "join classifier country on ds.country_code = country.code " +
                 "join classifier purpose on ds.abroad_purpose_code = purpose.code " +
-                "join classifier programme on ds.abroad_programme_code = programme.code " +
+                "left join classifier programme on ds.abroad_programme_code = programme.code " +
                 "left join (select ds1.start_date, ds1.directive_student_id, ds1.student_id from directive_student ds1 " +
                     "join directive d1 on ds1.directive_id = d1.id " +
                     "where d1.type_code = '" + DirectiveType.KASKKIRI_VALISKATK.name() + "'" + 
@@ -546,7 +546,7 @@ public class StudentService {
 
         return JpaQueryUtil.pagingResult(qb, "coalesce(aps.name_et, ehis_school.name_et, ds.abroad_school) as schoolEt, " +
                 "coalesce(aps.name_en, ehis_school.name_en, ds.abroad_school) as schoolEn, ds.country_code, " +
-                "coalesce(sp.start_date, ds.start_date) as foreignStart, coalesce(KATK.start_date, ep.end_date, ds.end_date) as foreignEnd, " +
+                "coalesce(sp.start_date, ds.start_date) as foreignStart, coalesce(case when KATK.start_date is not null then KATK.start_date - interval '1 day' else null end, ep.end_date, ds.end_date) as foreignEnd, " +
                 "ds.abroad_purpose_code, ds.abroad_programme_code", em, pageable).map(r -> {
             StudentForeignstudyDto dto = new StudentForeignstudyDto();
             dto.setSchool(new AutocompleteResult(null, resultAsString(r, 0), resultAsString(r, 1)));
@@ -712,7 +712,7 @@ public class StudentService {
     }
 
     private void setStudentBoardingSchool(StudentViewDto studentDto) {
-        List<?> result = em.createNativeQuery("select d.id, b.code b_code, r.code r_code, d.valid_from,"
+        List<?> result = em.createNativeQuery("select d.id, b.id b_id, b.code b_code, r.code r_code, d.valid_from,"
                 + " d.valid_thru, d.add_info from dormitory d"
                 + " join room r on r.id = d.room_id"
                 + " join building b on b.id = r.building_id"
@@ -723,11 +723,11 @@ public class StudentService {
                 .getResultList();
         if (!result.isEmpty()) {
             Object r = result.get(0);
-            studentDto.setBoardingSchool(new RoomAutocompleteResult(resultAsLong(r, 0),
-                    resultAsString(r, 1), resultAsString(r, 2)));
-            studentDto.setBoardingSchoolValidFrom(resultAsLocalDate(r, 3));
-            studentDto.setBoardingSchoolValidThru(resultAsLocalDate(r, 4));
-            studentDto.setBoardingSchoolAddInfo(resultAsString(r, 5));
+            studentDto.setBoardingSchool(new RoomAutocompleteResult(resultAsLong(r, 0), resultAsLong(r, 1),
+                    resultAsString(r, 2), resultAsString(r, 3)));
+            studentDto.setBoardingSchoolValidFrom(resultAsLocalDate(r, 4));
+            studentDto.setBoardingSchoolValidThru(resultAsLocalDate(r, 5));
+            studentDto.setBoardingSchoolAddInfo(resultAsString(r, 6));
         }
     }
 
@@ -1406,7 +1406,8 @@ public class StudentService {
                 + "join study_year sy on pj.study_year_id = sy.id "
                 + "where pj.student_id = ?1 "
                 + "union "
-                + "select ps.protocol_id, 'protocol', cm.name_et, cm.name_et, sy.end_date, sy.year_code, p.protocol_nr from protocol_student ps "
+                + "select ps.protocol_id, case when p.is_final = true then 'finalProtocol' else 'protocol' end, cm.name_et, "
+                + "cm.name_et, sy.end_date, sy.year_code, p.protocol_nr from protocol_student ps "
                 + "join protocol p on ps.protocol_id = p.id "
                 + "join protocol_vdata pvd on ps.protocol_id = pvd.protocol_id "  
                 + "join curriculum_version_omodule cvo on pvd.curriculum_version_omodule_id = cvo.id " 

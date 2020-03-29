@@ -1,12 +1,12 @@
 package ee.hitsa.ois.web.dto;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import ee.hitsa.ois.util.JpaQueryUtil;
 
@@ -15,31 +15,28 @@ public class ForeignStudentDto {
     private Long id;
     private String points;
     private BigInteger nominalStudyExtension;
-    private Set<Long> apelApplicationIds = new HashSet<>();
+    private Map<Long, String> apelApplicationIdsAndNominal = new HashMap<>();
     
     public ForeignStudentDto(Object r) {
         this.id = JpaQueryUtil.resultAsLong(r, 0);
-        String studyExtension = JpaQueryUtil.resultAsString(r, 1);
-        if (studyExtension != null) {
-            Long studyExtentionNr = Long.valueOf(studyExtension);
-            if (studyExtentionNr != null) {
-                this.nominalStudyExtension = BigInteger.valueOf(studyExtentionNr.longValue());
-            }
-        }
-        Long eap = JpaQueryUtil.resultAsLong(r, 2);
+        String studyExtensionEhisSent = JpaQueryUtil.resultAsString(r, 1);
+        String studyExtension = JpaQueryUtil.resultAsString(r, 2);
+        this.nominalStudyExtension = new BigInteger(studyExtensionEhisSent.equals("0") ? studyExtension : studyExtensionEhisSent);
+        Long eap = JpaQueryUtil.resultAsLong(r, 3);
         if (eap != null) {
             this.points = String.valueOf(eap);
         }
-        String nominalApelApplicationIds = JpaQueryUtil.resultAsString(r, 3);
-        String creditApelApplicationIds = JpaQueryUtil.resultAsString(r, 4);
-        apelApplicationIds.addAll(getIds(nominalApelApplicationIds));
-        apelApplicationIds.addAll(getIds(creditApelApplicationIds));
+        apelApplicationIdsAndNominal.putAll(getApelApplicationEntries(JpaQueryUtil.resultAsStringList(r, 4, ","), JpaQueryUtil.resultAsStringList(r, 5, ",")));
     }
     
-    private static List<Long> getIds(String nominalApelApplicationIds) {
-        if (nominalApelApplicationIds == null) return new ArrayList<>();
-        List<String> stringIds = Arrays.asList(nominalApelApplicationIds.split(","));
-        return stringIds.stream().map(p -> Long.valueOf(p)).collect(Collectors.toList());
+    private static Map<Long, String> getApelApplicationEntries(List<String> apelApplicationIds, List<String> apelApplicationNominal) {
+        if (apelApplicationIds == null || apelApplicationNominal == null) { 
+            return Collections.emptyMap(); 
+        }
+        
+        return IntStream.range(0, apelApplicationIds.size())
+                .boxed()
+                .collect(Collectors.toMap(i -> Long.valueOf(apelApplicationIds.get(i.intValue())), i -> apelApplicationNominal.get(i.intValue()), (o, n) -> o));
     }
     
     public Long getId() {
@@ -61,12 +58,12 @@ public class ForeignStudentDto {
         this.nominalStudyExtension = nominalStudyExtension;
     }
 
-    public Set<Long> getApelApplicationIds() {
-        return apelApplicationIds;
+    public Map<Long, String> getApelApplicationIdsAndNominal() {
+        return apelApplicationIdsAndNominal;
     }
 
-    public void setApelApplicationIds(Set<Long> apelApplicationIds) {
-        this.apelApplicationIds = apelApplicationIds;
+    public void setApelApplicationIdsAndNominal(Map<Long, String> apelApplicationIdsAndNominal) {
+        this.apelApplicationIdsAndNominal = apelApplicationIdsAndNominal;
     }
 
 }

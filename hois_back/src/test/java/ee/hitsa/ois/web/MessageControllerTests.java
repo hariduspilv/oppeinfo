@@ -211,7 +211,11 @@ public class MessageControllerTests {
         MessageForm form = new MessageForm();
         form.setSubject(TEXT);
         form.setContent(TEXT);
-        form.setReceivers(Stream.of(Long.valueOf(2)).collect(Collectors.toSet()));
+        form.setReceivers(Stream.of(Long.valueOf(2)).map(pId -> {
+            MessageForm.Receiver receiver = new MessageForm.Receiver();
+            receiver.setPerson(pId);
+            return receiver;
+        }).collect(Collectors.toSet()));
         return form;
     }
 }

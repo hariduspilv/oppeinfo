@@ -27,12 +27,12 @@
 
         <div class="md-block" ng-if="student.person.residenceCountry === 'RIIK_EST'">
           <hois-ads-adapter class="md-text" ng-model="student.person.addressAds" ads-oid-model="student.person.addressAdsOid"
-            address-model="student.person.address" required></hois-ads-adapter>
+            address-model="student.person.address"></hois-ads-adapter>
         </div>
 
         <md-input-container class="md-block" ng-if="student.person.residenceCountry !== 'RIIK_EST'">
           <label class="textInput">{{'student.address' | translate}}</label>
-          <input ng-model="student.person.address" name="address" type="text" required md-maxlength="255">
+          <input ng-model="student.person.address" name="address" type="text" md-maxlength="255">
         </md-input-container>
 
         <md-input-container class="md-block">

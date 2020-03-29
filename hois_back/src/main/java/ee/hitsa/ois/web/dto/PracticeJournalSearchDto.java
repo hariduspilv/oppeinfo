@@ -18,7 +18,7 @@ public class PracticeJournalSearchDto {
     private LocalDateTime studentLastEntryDate;
     private String status;
     private Boolean canEdit;
-    private Boolean canConfirm;
+    private Boolean canReopen;
     private Boolean canStudentAddEntries;
     private Boolean canAddEntries;
     private String contractStatus;
@@ -120,12 +120,12 @@ public class PracticeJournalSearchDto {
         this.canEdit = canEdit;
     }
 
-    public Boolean getCanConfirm() {
-        return canConfirm;
+    public Boolean getCanReopen() {
+        return canReopen;
     }
 
-    public void setCanConfirm(Boolean canConfirm) {
-        this.canConfirm = canConfirm;
+    public void setCanReopen(Boolean canReopen) {
+        this.canReopen = canReopen;
     }
 
     public Boolean getCanStudentAddEntries() {

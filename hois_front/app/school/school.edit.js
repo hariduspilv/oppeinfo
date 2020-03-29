@@ -34,7 +34,7 @@ angular.module('hitsaOis').controller('SchoolEditController', ['$scope', '$route
       $scope.school = Endpoint.get({id: id});
       $scope.school.$promise.then(afterLoad);
     }else{
-      $scope.school = new Endpoint({studentPhotoAdd: 'FOTOLISA_EI'});
+      $scope.school = new Endpoint({studentPhotoAdd: 'FOTOLISA_EI', timetable: 'TIMETABLE_EI'});
       afterLoad();
     }
 

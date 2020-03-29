@@ -1,9 +1,9 @@
 package ee.hitsa.ois.web.commandobject.report;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import ee.hitsa.ois.validation.DateRange;
-import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 
 @DateRange(from = "birthdateFrom", thru = "studyStartThru")
 @DateRange(from = "studyStartFrom", thru = "studyStartThru")
@@ -15,9 +15,11 @@ public class StudentSearchCommand {
     private LocalDate birthdateThru;
     private LocalDate studyStartFrom;
     private LocalDate studyStartThru;
+    private LocalDate nominalStudyEndFrom;
+    private LocalDate nominalStudyEndThru;
     private String studyLevel;
-    private EntityConnectionCommand curriculumVersion;
-    private Long studentGroup;
+    private List<Long> curriculumVersions;
+    private List<Long> studentGroups;
     private String studyLoad;
     private String studyForm;
     private String status;
@@ -25,7 +27,11 @@ public class StudentSearchCommand {
     private String finSpecific;
     private String language;
     private String dormitory;
+    private String studyCompany;
+    private String previousStudyLevel;
+    private String previousSchoolName;
     private Boolean isHigher;
+    private Boolean displayRepresentative = Boolean.FALSE;
 
     public String getName() {
         return name;
@@ -81,22 +87,6 @@ public class StudentSearchCommand {
 
     public void setStudyLevel(String studyLevel) {
         this.studyLevel = studyLevel;
-    }
-
-    public EntityConnectionCommand getCurriculumVersion() {
-        return curriculumVersion;
-    }
-
-    public void setCurriculumVersion(EntityConnectionCommand curriculumVersion) {
-        this.curriculumVersion = curriculumVersion;
-    }
-
-    public Long getStudentGroup() {
-        return studentGroup;
-    }
-
-    public void setStudentGroup(Long studentGroup) {
-        this.studentGroup = studentGroup;
     }
 
     public String getStudyLoad() {
@@ -161,6 +151,70 @@ public class StudentSearchCommand {
 
     public void setIsHigher(Boolean isHigher) {
         this.isHigher = isHigher;
+    }
+
+    public Boolean getDisplayRepresentative() {
+        return displayRepresentative;
+    }
+
+    public void setDisplayRepresentative(Boolean displayRepresentative) {
+        this.displayRepresentative = displayRepresentative;
+    }
+
+    public String getStudyCompany() {
+        return studyCompany;
+    }
+
+    public void setStudyCompany(String studyCompany) {
+        this.studyCompany = studyCompany;
+    }
+
+    public String getPreviousStudyLevel() {
+        return previousStudyLevel;
+    }
+
+    public void setPreviousStudyLevel(String previousStudyLevel) {
+        this.previousStudyLevel = previousStudyLevel;
+    }
+
+    public String getPreviousSchoolName() {
+        return previousSchoolName;
+    }
+
+    public void setPreviousSchoolName(String previousSchoolName) {
+        this.previousSchoolName = previousSchoolName;
+    }
+
+    public List<Long> getStudentGroups() {
+        return studentGroups;
+    }
+
+    public void setStudentGroups(List<Long> studentGroups) {
+        this.studentGroups = studentGroups;
+    }
+
+    public List<Long> getCurriculumVersions() {
+        return curriculumVersions;
+    }
+
+    public void setCurriculumVersions(List<Long> curriculumVersions) {
+        this.curriculumVersions = curriculumVersions;
+    }
+
+    public LocalDate getNominalStudyEndFrom() {
+        return nominalStudyEndFrom;
+    }
+
+    public void setNominalStudyEndFrom(LocalDate nominalStudyEndFrom) {
+        this.nominalStudyEndFrom = nominalStudyEndFrom;
+    }
+
+    public LocalDate getNominalStudyEndThru() {
+        return nominalStudyEndThru;
+    }
+
+    public void setNominalStudyEndThru(LocalDate nominalStudyEndThru) {
+        this.nominalStudyEndThru = nominalStudyEndThru;
     }
     
 }

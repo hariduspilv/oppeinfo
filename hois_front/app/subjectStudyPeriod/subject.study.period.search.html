@@ -106,7 +106,7 @@
               </table>
             </td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-if="isAuthorized(['ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA', 'ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK'])" 
+              <md-button md-no-ink class="md-primary change-button" ng-if="row.canEdit"
                 ng-href="#/subjectStudyPeriod/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>

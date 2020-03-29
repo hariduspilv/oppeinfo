@@ -21,21 +21,20 @@
         <hois-value value="currentLanguageNameField(record.assessment)"></hois-value>
       </md-input-container>
     </div>
-
     <div layout="row" ng-if="record.subgroups.length > 0">
       <md-input-container flex="15" flex-sm="50" flex-xs="100">
         <label>{{'midtermTask.subgroupSelect' | translate}}</label>
-        <md-select ng-model="record.subgroup">
+        <md-select ng-model="controller.subgroup" ng-model-options="{trackBy: '$value.id'}">
           <md-option md-option-empty></md-option>
           <md-option ng-value="val" ng-repeat="val in record.subgroups">{{currentLanguageNameField(val)}}</md-option>
         </md-select>
       </md-input-container>
     </div>
-
     <md-table-container>
       <table md-table>
         <thead md-head>
           <tr md-row>
+            <th md-column>{{'main.order' | translate}}</th>
             <th md-column>{{'midtermTask.student' | translate}}</th>
             <th md-column>{{'midtermTask.studentGroup' | translate}}</th>
             <th md-column ng-if="record.subgroups.length > 0">{{'midtermTask.subgroup' | translate}}</th>
@@ -49,8 +48,9 @@
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row ng-if="!record.subgroup.id || record.subgroup.id === student.subgroup.id" ng-repeat="student in record.students | orderBy: ['lastname', 'firstname']" ng-class-odd="'odd'" ng-class-even="'even'">
+          <tr md-row ng-repeat="student in record.students | filter: {subgroup: {id: controller.subgroup.id}} | orderBy: ['lastname', 'firstname']" ng-class-odd="'odd'" ng-class-even="'even'">
             <ng-form name="midtermTaskUnitForm">
+              <td md-cell>{{$index + 1}}.</td>
               <td md-cell>
                 {{student.name}}
                 <span ng-if="student.isMoodleRegistered"><md-icon md-font-set="material-icons">school</md-icon></span>
@@ -58,8 +58,8 @@
               <td md-cell>{{student.studentGroup}}</td>
               <td md-cell ng-if="record.subgroups.length > 0">
                 <span ng-if="!record.canEditSubgroups">{{currentLanguageNameField(student.subgroup)}}</span>
-                <md-select ng-if="record.canEditSubgroups" ng-model="student.subgroup" ng-model-options="{trackBy: '$value.id'}" aria-label="{{'midtermTask.subgroup' | translate}}"
-                  ng-change="updateSubgroupPlaces(student, student.subgroup.id)">
+                <md-select ng-if="record.canEditSubgroups" ng-model="student.subgroup" ng-model-options="{trackBy: '$value.id'}"
+                  aria-label="{{'midtermTask.subgroup' | translate}}" ng-change="updateSubgroupPlaces(student, student.subgroup.id)">
                   <md-option ng-value="val" ng-repeat="val in record.subgroups">
                     {{currentLanguageNameField(val)}} ({{'midtermTask.subgroupPlaces' | translate: {used: val.declared, all: val.places} }})
                   </md-option>
@@ -83,7 +83,7 @@
                     <td>
                       <table>
                         <tr ng-repeat="protocolStudent in protocol.protocolStudents | filter: filterStudentProtocols(student)">
-                          <td>{{protocolStudent.gradeValue}}</td>
+                          <td>{{protocolStudent.grade | hoisHigherGrade: auth.school.letterGrades}}</td>
                         </tr>
                       </table>
                     </td>
@@ -118,7 +118,7 @@
   </form>
 
   <div layout="row">
-      <md-button class="md-raised md-primary" ng-click="save()" ng-hide="record.subjectStudyPeriod.isPracticeSubject || record.students.length === 0">{{'main.button.save' | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-click="save()" ng-hide="(record.subjectStudyPeriod.isPracticeSubject && record.subgroups.length === 0) || record.students.length === 0">{{'main.button.save' | translate}}</md-button>
       <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods', midtermTaskResultForm)">{{'main.button.back' | translate}}</md-button>
       <md-button class="md-raised" ng-href="#/subjectStudyPeriods/{{subjectStudyPeriodId}}/midtermTasks"
       ng-hide="record.subjectStudyPeriod.isPracticeSubject">{{'midtermTask.add' | translate}}</md-button>

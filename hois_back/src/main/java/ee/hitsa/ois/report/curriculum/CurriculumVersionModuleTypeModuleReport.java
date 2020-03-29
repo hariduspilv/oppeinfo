@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.StreamUtil;
@@ -21,7 +19,7 @@ public class CurriculumVersionModuleTypeModuleReport {
         name = TranslateUtil.name(occupationModule.getCurriculumModule(), lang);
         studyYearCredits = StreamUtil.toMap(om -> om.getStudyYearNumber(), om -> om.getCredits(), StreamUtil
                 .toFilteredList(om -> studyYears.contains(om.getStudyYearNumber()), occupationModule.getYearCapacities()));
-        totalCredits = studyYearCredits.values().stream().collect(Collectors.reducing(BigDecimal.ZERO, BigDecimal::add));
+        totalCredits = StreamUtil.sumBigDecimals(sy -> sy, studyYearCredits.values());
     }
 
     public String getName() {

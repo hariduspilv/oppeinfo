@@ -49,6 +49,7 @@ public class PracticeJournalDto extends VersionedCommand {
     private Boolean canEdit;
     private Boolean canDelete;
     private Boolean canConfirm;
+    private Boolean canReopen;
     private AutocompleteResult subject;
     private Boolean isHigher;
     private AutocompleteResult practiceEvaluation;
@@ -295,6 +296,14 @@ public class PracticeJournalDto extends VersionedCommand {
 
     public void setCanConfirm(Boolean canConfirm) {
         this.canConfirm = canConfirm;
+    }
+
+    public Boolean getCanReopen() {
+        return canReopen;
+    }
+
+    public void setCanReopen(Boolean canReopen) {
+        this.canReopen = canReopen;
     }
 
     public Boolean getCanDelete() {

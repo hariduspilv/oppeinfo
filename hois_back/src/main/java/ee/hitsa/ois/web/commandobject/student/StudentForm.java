@@ -204,7 +204,7 @@ public class StudentForm extends VersionedCommand {
         @ClassifierRestriction(MainClassCode.OPPEKEEL)
         private String language;
         private String bankaccount;
-        @Required
+        //@Required // TEMPORARY REMOVED
         @Size(max = 255)
         private String address;
         @Size(max = 20)

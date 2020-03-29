@@ -310,7 +310,8 @@ public class StudentResultHigherService {
     }
 
     private void addDeclarationSubjects(List<StudentHigherSubjectResultDto> moduleSubjects, Student student) {
-        List<Long> addedSubjectIds = moduleSubjects.stream().filter(p -> p.getSubject() != null).map(p -> p.getSubject().getId()).collect(Collectors.toList());
+        calculateIsOk(moduleSubjects, true);
+        List<Long> addedSubjectIds = moduleSubjects.stream().filter(p -> p.getSubject() != null && p.getIsOk().booleanValue()).map(p -> p.getSubject().getId()).collect(Collectors.toList());
         // Should have only one declaration
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from declaration d "
                 + "join declaration_subject ds on ds.declaration_id = d.id "

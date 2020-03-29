@@ -19,6 +19,8 @@ import ee.hitsa.ois.web.dto.FutureStatusResponse;
 @Service
 public class AsyncManager {
     
+    private static final int EXPIRATION_MINUTES = 60;
+    
     /**
      * UUIDv4
      * The number of random version 4 UUIDs which need to be generated in order
@@ -46,7 +48,7 @@ public class AsyncManager {
         if (optRequest.isPresent()) {
             AsyncRequest<?> future = optRequest.get();
             future.setLastPollTime(LocalDateTime.now());
-            response = future.generateReponse();
+            response = future.generateResponse();
             if (removeIfDone && future.isDone()) {
                 AsyncMemoryManager.remove(type, user.getSchoolId(), key);
             }
@@ -63,7 +65,7 @@ public class AsyncManager {
      */
     @Scheduled(cron = "0 */15 * * * *")
     public void removeExpiredRequests() {
-        AsyncMemoryManager.removeExpiredRequests(60);
+        AsyncMemoryManager.removeExpiredRequests(EXPIRATION_MINUTES);
     }
     
 }

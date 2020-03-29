@@ -1,3 +1,13 @@
+<style>
+    md-checkbox .md-label {
+        white-space: unset;
+    }
+    @media (max-width: 600px) {
+        md-checkbox .md-label {
+            white-space: initial;
+        }
+    }
+</style>
 <div layout="column" layout-padding>
     <form name="subjectStudyPeriodEditForm" ng-cloak>
         <div layout="column" class="form-readonly">
@@ -16,8 +26,8 @@
             <table md-table class="secondary-table">
                 <tbody md-body>
                     <tr md-row ng-repeat="teacher in record.teachers" ng-class-odd="'odd'" ng-class-even="'even'">
-                        <td md-cell>{{teacher.name}}</td>
-                        <td md-cell ng-hide="record.teachers.length === 1">
+                        <td md-cell width="50%">{{teacher.name}}</td>
+                        <td md-cell width="50%" ng-hide="record.teachers.length === 1">
                             <md-checkbox ng-model="teacher.isSignatory" disabled aria-label="{{'subjectStudyPeriodTeacher.isSignatory' | translate}}">
                                 {{'subjectStudyPeriodTeacher.isSignatory' | translate}}
                             </md-checkbox>
@@ -52,7 +62,15 @@
                 </md-input-container>
             </div>
             <fieldset ng-if="record.subgroups.length > 0">
-                <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'subjectStudyPeriod.subgroups.label' | translate}}{{record.students ? ' (' + record.students + ')' : ''}}</legend>
+                <legend md-colors="{color: 'primary-800'}" class="md-title-small">
+                    {{'subjectStudyPeriod.subgroups.label' | translate}}
+                    <span>
+                        {{record.students ? ' (' + record.students + ')' : ''}}
+                        <md-tooltip ng-if="record.students">
+                            {{'subjectStudyPeriod.subgroups.labelNumberTooltip' | translate}}
+                        </md-tooltip>
+                    </span>
+                </legend>
                 <md-content>
                     <div layout="column">
                         <md-table-container>
@@ -87,7 +105,7 @@
         </div>
         <div ng-if="record.subgroups.length > 0">&nbsp;</div>
         <div layout="row">
-            <md-button class="md-primary md-raised" ng-if="isAuthorized(['ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA', 'ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK'])"
+            <md-button class="md-primary md-raised" ng-if="record.canUpdate"
                 ng-href="#/subjectStudyPeriod/{{::record.id}}/edit">{{'main.button.change' | translate}}</md-button>
             <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods')">{{'main.button.back' | translate}}</md-button>
         </div>

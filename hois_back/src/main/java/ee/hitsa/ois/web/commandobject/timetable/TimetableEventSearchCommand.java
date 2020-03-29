@@ -26,7 +26,7 @@ public class TimetableEventSearchCommand {
     private Boolean personalEvent;
     private Long user;
     private Boolean leadingTeacherEvents;
-    private TimetablePersonHolder person;
+    private TimetablePersonHolder person; // for personal timetables accessed by encoded url
 
     public String getName() {
         return name;

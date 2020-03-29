@@ -33,6 +33,8 @@ angular.module('hitsaOis').controller('PersonsEditController', ['$location', '$r
         $location.path(baseUrl + '/' + response.id + '/edit');
         message.info('person.exists');
       }
+      $scope.person.birthdate = response.birthdate;
+      $scope.person.sex = response.sex;
     };
 
     function clearData() {

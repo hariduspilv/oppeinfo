@@ -15,7 +15,6 @@ import ee.hitsa.ois.web.dto.ModuleProtocolStudentDto;
 
 public class FinalVocationalProtocolStudentDto extends ModuleProtocolStudentDto {
 
-    private String studentGroup;
     private AutocompleteResult theme;
     private List<FinalProtocolStudentOccupationDto> curriculumOccupations = new ArrayList<>();
     
@@ -46,14 +45,6 @@ public class FinalVocationalProtocolStudentDto extends ModuleProtocolStudentDto 
         }
 
         return dto;
-    }
-
-    public String getStudentGroup() {
-        return studentGroup;
-    }
-
-    public void setStudentGroup(String studentGroup) {
-        this.studentGroup = studentGroup;
     }
     
     public AutocompleteResult getTheme() {

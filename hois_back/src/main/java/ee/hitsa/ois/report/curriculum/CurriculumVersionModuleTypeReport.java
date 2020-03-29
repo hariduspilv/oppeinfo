@@ -6,8 +6,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.StreamUtil;
@@ -38,7 +36,7 @@ public class CurriculumVersionModuleTypeReport {
                     }
                 }
             }
-            totalCredits = studyYearCredits.values().stream().collect(Collectors.reducing(BigDecimal.ZERO, BigDecimal::add));
+            totalCredits = StreamUtil.sumBigDecimals(sy -> sy, studyYearCredits.values());
         } else {
             totalCredits = BigDecimal.ZERO;
         }

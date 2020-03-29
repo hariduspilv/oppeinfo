@@ -1,6 +1,5 @@
 package ee.hitsa.ois.web.dto;
 
-import java.time.LocalDate;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -19,7 +18,6 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
     private String protocolNr;
     private String protocolType;
     private String status;
-    private LocalDate finalDate;
     private SubjectStudyPeriodMidtermTaskDto subjectStudyPeriodMidtermTaskDto;
     private OisFileViewDto oisFile;
     private Boolean canBeEdited;
@@ -141,14 +139,5 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
     public void setCanBeDeleted(Boolean canBeDeleted) {
         this.canBeDeleted = canBeDeleted;
     }
-
-    public LocalDate getFinalDate() {
-        return finalDate;
-    }
-
-    public void setFinalDate(LocalDate finalDate) {
-        this.finalDate = finalDate;
-    }
-
 
 }

@@ -4,8 +4,6 @@ import java.util.Map;
 
 import javax.validation.Valid;
 
-import ee.hitsa.ois.domain.school.School;
-import ee.hitsa.ois.service.TimetableService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.service.TimetableEventService;
 import ee.hitsa.ois.service.security.HoisUserDetails;

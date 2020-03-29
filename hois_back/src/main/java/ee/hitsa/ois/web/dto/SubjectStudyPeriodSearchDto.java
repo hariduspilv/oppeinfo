@@ -21,6 +21,8 @@ public class SubjectStudyPeriodSearchDto {
     private Integer subgroups;
     private BigDecimal credits;
 
+    private Boolean canEdit;
+
     public Boolean getIsPracticeSubject() {
         return isPracticeSubject;
     }
@@ -131,5 +133,13 @@ public class SubjectStudyPeriodSearchDto {
 
     public void setCredits(BigDecimal credits) {
         this.credits = credits;
+    }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
     }
 }

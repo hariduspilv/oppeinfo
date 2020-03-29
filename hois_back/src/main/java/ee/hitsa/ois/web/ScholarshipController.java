@@ -159,7 +159,7 @@ public class ScholarshipController {
     @PutMapping("/apply/{id:\\d+}")
     public ScholarshipApplicationDto apply(HoisUserDetails user, @WithEntity ScholarshipApplication application) {
         ScholarshipUtil.assertCanEditApplication(user, application);
-        return scholarshipService.getApplicationDto(scholarshipService.apply(user, application));
+        return scholarshipService.getApplicationDto(scholarshipService.apply(application));
     }
 
     @PutMapping("/acceptApplications")

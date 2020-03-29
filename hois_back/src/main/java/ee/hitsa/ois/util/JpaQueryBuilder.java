@@ -1,6 +1,5 @@
 package ee.hitsa.ois.util;
 
-import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManager;

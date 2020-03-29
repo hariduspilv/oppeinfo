@@ -5,7 +5,7 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
     $scope.auth = $route.current.locals.auth;
     var certificateMapper = Classifier.valuemapper({occupationCode: 'KUTSE', partOccupationCode: 'OSAKUTSE', specialityCode: 'SPETSKUTSE'});
     var clMapper = Classifier.valuemapper({dormitory: 'YHISELAMU', fin: 'FINALLIKAS', finSpecific: 'FINTAPSUSTUS', language: 'OPPEKEEL',
-      studyLevel: 'OPPEASTE', studyForm: 'OPPEVORM', studyLoad: 'OPPEKOORMUS', status: 'OPPURSTAATUS'});
+      studyLevel: 'OPPEASTE', studyForm: 'OPPEVORM', studyLoad: 'OPPEKOORMUS', status: 'OPPURSTAATUS', previousStudyLevel: 'OPPEASTE'});
 
     function certMapper(it) {
       certificateMapper.objectmapper(it);
@@ -30,8 +30,19 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
       });
     };
 
+    var _loadData = $scope.loadData;
+    $scope.loadData = function() {
+      $scope.$broadcast('refreshFixedColumns');
+      _loadData();
+    }
+
+    $scope.toggleShowAllParameters = function () {
+      $scope.formState.showAllParameters = !$scope.formState.showAllParameters;
+    };
+
     $scope.formState = {
-      xlsUrl: 'reports/students/students.xls'
+      xlsUrl: 'reports/students/students.xls',
+      showAllParameters: false
     };
 
     $scope.curriculumVersionChanged = function() {
@@ -43,6 +54,142 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
       $q.all(clMapper.promises).then($scope.loadData);
     });
   }
+]).controller('ReportStudentCountController', ['$q', '$scope', '$route', 'Classifier', 'QueryUtils',
+function ($q, $scope, $route, Classifier, QueryUtils) {
+  $scope.auth = $route.current.locals.auth;
+  $scope.formState = {
+    xlsUrl: 'reports/students/count.xls',
+  };
+  var certificateMapper = Classifier.valuemapper({occupationCode: 'KUTSE', partOccupationCode: 'OSAKUTSE', specialityCode: 'SPETSKUTSE'});
+  QueryUtils.createQueryForm($scope, '/reports/students/count');
+
+  $scope.clearCriteria = function() {
+    $scope.formState = {
+      xlsUrl: 'reports/students/count.xls',
+    };
+  };
+
+  $scope.getObjectOrderNumber = function() {
+    switch ($scope.criteria.resultType) {
+      case 'COUNT_STAT_STUDY_LEVEL':
+        return "c.orig_study_level_code, oslc.name_et, oslc.name_en";
+      case 'COUNT_STAT_STUDENT_GROUP':
+        return "sg.code";
+      case 'COUNT_STAT_STRUCTURAL_UNIT':
+        return "sd1.name_et, sd1.name_en";
+      case 'COUNT_STAT_AGE':
+        return "cast(v.agefrom as int)";
+      case 'COUNT_STAT_CURRICULA':
+        return "cv.code || ' - ' || c.name_et, cv.code || ' - ' || c.name_en";
+      case 'COUNT_STAT_COURSE':
+        return "sg.course";
+      default:
+        break;
+      }
+  };
+
+  $scope.clearSort = function() {
+    $scope.criteria.order = undefined;
+  };
+
+  $scope.resultTypeChanged = function(resultType) {
+    if (resultType === 'COUNT_STAT_AGE') {
+      $scope.formState.ageFrom = 15;
+      $scope.formState.ageStep = 5;
+    } else {
+      $scope.formState.ageFrom = undefined;
+      $scope.formState.ageStep = undefined;
+    }
+    $scope.clearSort();
+  };
+
+  $scope.resultTypes = ["COUNT_STAT_OVERALL",
+                                  "COUNT_STAT_STUDY_LEVEL",
+                                  "COUNT_STAT_STUDENT_GROUP",
+                                  "COUNT_STAT_STRUCTURAL_UNIT",
+                                  "COUNT_STAT_AGE",
+                                  "COUNT_STAT_CURRICULA",
+                                  "COUNT_STAT_COURSE"];
+  
+  function initCriteria() {
+    $scope.formState.studentTypes = ['OPPUR_T', 'OPPUR_K'];
+    $scope.formState.perStatus = true;
+    $scope.formState.from = new Date();
+    $scope.formState.resultType = 'COUNT_STAT_OVERALL';
+  }
+
+  initCriteria();
+
+  $scope.loadResults = function() {
+    // reset page when changing statistics type
+    $scope.criteria.page = 1;
+    $scope.criteria = angular.merge({}, $scope.criteria, $scope.formState);
+    $scope.loadData();
+  };
+
+  $q.all(certificateMapper.promises).then(function() {
+    $scope.loadResults();
+  });
+}
+]).controller('ReportStudentMovementController', ['$q', '$scope', '$route', 'QueryUtils', 'DataUtils',
+function ($q, $scope, $route, QueryUtils, DataUtils) {
+  $scope.auth = $route.current.locals.auth;
+  $scope.formState = {
+    xlsUrl: 'reports/students/movement.xls'
+  };
+
+  $scope.staticState = {
+    studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query()
+  };
+
+  QueryUtils.createQueryForm($scope, '/reports/students/movement');
+
+  $scope.staticState.studyYears.$promise.then(function () {
+    if (!$scope.formState.from && !$scope.formState.thru) {
+      var sy = DataUtils.getCurrentStudyYearOrPeriod($scope.staticState.studyYears);
+      DataUtils.convertStringToDates(sy, ['from', 'thru']);
+      if (sy) {
+        $scope.formState.from = sy ? sy.startDate : null;
+        $scope.formState.thru = sy ? sy.endDate : null;
+      }
+    }
+  });
+
+  $scope.clearCriteria = function() {
+    $scope.formState = {
+      xlsUrl: 'reports/students/movement.xls'
+    };
+  };
+
+  $scope.clearSort = function() {
+    $scope.criteria.order = undefined;
+  };
+
+  $scope.staticState.queryTypes = ["MOVEMENT_STAT_SUM",
+                                "MOVEMENT_STAT_CURRICULUM_GROUP",
+                                "MOVEMENT_STAT_STRUCTURAL_UNIT",
+                                "MOVEMENT_STAT_CURRICULA",
+                                "MOVEMENT_STAT_STUDENT_GROUP",
+                                "MOVEMENT_STAT_COURSE",
+                                "MOVEMENT_STAT_STUDY_LEVEL"];
+  
+  function initCriteria() {
+    $scope.formState.queryType = 'MOVEMENT_STAT_SUM';
+  }
+
+  initCriteria();
+
+  $scope.loadResults = function() {
+    // reset page when changing statistics type
+    $scope.criteria.page = 1;
+    $scope.criteria = angular.merge({}, $scope.criteria, $scope.formState);
+    $scope.loadData();
+  };
+
+  $q.all([$scope.staticState.studyYears.$promise]).then(function() {
+    $scope.loadResults();
+  });
+}
 ]).controller('ReportStudentStatisticsController', ['$route', '$scope', 'Classifier', 'QueryUtils', 'message',
   function ($route, $scope, Classifier, QueryUtils, message) {
     $scope.auth = $route.current.locals.auth;

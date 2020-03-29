@@ -15,6 +15,7 @@ public class MessageDto extends MessageForm {
     private Long id;
     private LocalDateTime inserted;
     private Long sendersId;
+    private String sendersRole;
     private String sendersName;
     private List<String> receiversNames;
     private Boolean isRead;
@@ -22,10 +23,15 @@ public class MessageDto extends MessageForm {
     public static MessageDto of(Message message) {
         MessageDto dto = EntityUtil.bindToDto(message, new MessageDto(), "sender", "responseTo", "receivers");
         dto.setSendersId(EntityUtil.getId(message.getSender()));
+        dto.setSendersRole(EntityUtil.getNullableCode(message.getSendersRole()));
         dto.setSendersName(message.getSender().getFullname());
         dto.setReceiversNames(PersonUtil.sorted(message.getReceivers().stream().map(MessageReceiver::getPerson)));
         dto.setResponseTo(EntityUtil.getNullableId(message.getResponseTo()));
-        dto.setReceivers(StreamUtil.toMappedSet(MessageReceiver::getId, message.getReceivers()));
+        dto.setReceivers(StreamUtil.toMappedSet(r -> {
+            MessageForm.Receiver receiver = new MessageForm.Receiver();
+            receiver.setPerson(r.getId());
+            return receiver;
+        }, message.getReceivers()));
         return dto;
     }
 
@@ -51,6 +57,14 @@ public class MessageDto extends MessageForm {
 
     public void setSendersId(Long sendersId) {
         this.sendersId = sendersId;
+    }
+
+    public String getSendersRole() {
+        return sendersRole;
+    }
+
+    public void setSendersRole(String sendersRole) {
+        this.sendersRole = sendersRole;
     }
 
     public String getSendersName() {

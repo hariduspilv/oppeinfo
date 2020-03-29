@@ -61,7 +61,7 @@
             <thead md-head>
               <tr md-row>
                 <th md-column ng-repeat="capacity in plan.currentCapacitiesGrouped track by $index">
-                  <span title="{{capacity[0].subjectName}}&#10;{{capacity[0].teachersString}}&#10;{{capacity[0].subgroupsString}}">{{capacity[0].subjectCode}}</span>
+                  <span title="{{capacity[0].subject}}&#10;{{capacity[0].teachersString}}&#10;{{capacity[0].subgroupsString}}">{{capacity[0].subjectCode}}</span>
                   <span title="{{'timetable.timetablePlan.periodPlannedLessons' | translate}} / {{'timetable.timetablePlan.periodAllocatedLessons' | translate}}">
                     (<span ng-repeat="current in capacity" ng-style="{'color': isUnderAllocatedLessons(current) ? 'rgba(0,0,0,0.87)' : 'red'}">
                       {{getCapacityTypeValue(current.capacityType)}}: {{current.totalPlannedLessons}}/{{current.totalAllocatedLessons
@@ -158,7 +158,7 @@
                 ng-class="{'timetable-higher-drop' : (plan.selectedGroup === group.dropdownValue && plan.repeatCode && plan.lessonAmount), 'timetable-higher-drag' : lessonTime.id ? true : false, 'timetable-higher' : true}"
                 drop-fn="saveEventAfterClashCheck(data)" ng-click="changeEvent(lessonTime)" ng-attr-ois-higher-drop="{{plan.selectedGroup === group.dropdownValue}}"
                 ng-attr-ois-drag="{{(plan.selectedGroup === group.dropdownValue) && lessonTime.id !== undefined}}" id="{{lessonTime.id}}-{{group.id}}" ng-style="lessonTimeStyle(lessonTime)"
-                title="{{lessonTime.subjectName}}/{{currentLanguageNameField(getCapacityType(lessonTime.capacityType))}}&#10;{{lessonTime.teacherNames.join(', ')}}&#10;{{lessonTime.subgroupCodes.join(', ')}}"
+                title="{{currentLanguageNameField(lessonTime.subject)}}/{{currentLanguageNameField(getCapacityType(lessonTime.capacityType))}}&#10;{{lessonTime.teacherNames.join(', ')}}&#10;{{lessonTime.subgroupCodes.join(', ')}}"
                 journal-id="{{lessonTime.subjectStudyPeriod}}" capacity-type="{{lessonTime.capacityType}}" style="word-break: break-all;height: 100%;">
                 <span ng-if="lessonTime.id">
                   {{lessonTime.subjectCode}}/{{getCapacityTypeValue(lessonTime.capacityType)}}

@@ -286,7 +286,6 @@ public class ApplicationController {
         return applicationService.curriculumVersionThemeReplacements(student, applicationId, curriculumVersionId);
     }
 
-    @SuppressWarnings("fallthrough")
     private static void checkUpdateBusinessRules(HoisUserDetails user, Application application, ApplicationForm applicationForm) {
         UserUtil.assertSameSchool(user, application.getStudent().getSchool());
 

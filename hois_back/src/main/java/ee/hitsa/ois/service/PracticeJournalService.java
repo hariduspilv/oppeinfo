@@ -172,8 +172,8 @@ public class PracticeJournalService {
                     dto.getEndDate(), hasSupervisorOpinion)));
             String studentStatus = resultAsString(r, 27);
             dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, dto.getEndDate(), studentStatus)));
-            dto.setCanConfirm(
-                    Boolean.valueOf(PracticeJournalUserRights.canConfirm(user, dto.getEndDate(), studentStatus)));
+            dto.setCanReopen(
+                    Boolean.valueOf(PracticeJournalUserRights.canReopen(user, studentStatus)));
             
             String studentName = PersonUtil.fullnameOptionalGuest(resultAsString(r, 6), resultAsString(r, 7), resultAsString(r, 28));
             dto.setStudent(new AutocompleteResult(resultAsLong(r, 5), studentName, studentName));
@@ -285,6 +285,7 @@ public class PracticeJournalService {
         PracticeJournalDto dto = get(practiceJournal);
         dto.setCanEdit(Boolean.valueOf(PracticeJournalUserRights.canEdit(user, practiceJournal)));
         dto.setCanConfirm(Boolean.valueOf(PracticeJournalUserRights.canConfirm(user, practiceJournal)));
+        dto.setCanReopen(Boolean.valueOf(PracticeJournalUserRights.canReopen(user, practiceJournal)));
         dto.setCanDelete(Boolean.valueOf(PracticeJournalUserRights.canDelete(user, practiceJournal)));
         dto.setCanAddEntries(Boolean.valueOf(PracticeJournalUserRights.canAddEntries(user, dto)));
         return dto;

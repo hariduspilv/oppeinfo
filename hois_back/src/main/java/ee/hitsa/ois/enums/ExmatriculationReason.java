@@ -9,8 +9,10 @@ public enum ExmatriculationReason {
     EKSMAT_POHJUS_E,
     EKSMAT_POHJUS_F,
     EKSMAT_POHJUS_G,
+    EKSMAT_POHJUS_G_KUTSE,
     EKSMAT_POHJUS_H,
     EKSMAT_POHJUS_J,
+    EKSMAT_POHJUS_J_KUTSE,
     EKSMAT_POHJUS_L,
     EKSMAT_POHJUS_M,
     EKSMAT_POHJUS_N,
@@ -21,6 +23,9 @@ public enum ExmatriculationReason {
     EKSMAT_POHJUS_T,
     EKSMAT_POHJUS_V,
     EKSMAT_POHJUS_W,
-    EKSMAT_POHJUS_Y;
+    EKSMAT_POHJUS_Y,
+    EKSMAT_POHJUS_X,
+    EKSMAT_POHJUS_Z;
+    
 
 }

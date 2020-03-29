@@ -6,16 +6,20 @@
           <div layout="row">
             <md-input-container style="width: 340px;" flex-sm="100">
               <label class="textInput">{{'stipend.studyPeriod' | translate}}</label>
-              <hois-select ng-model="studyPeriod" type="studyperiodyear"
+              <hois-select ng-model="studyPeriod" type="studyperiodyear" ng-change="clearForm()"
                 sorted-query="true" preselect-current required></hois-select>
             </md-input-container>
           </div>
           <div layout="row" flex="100">
-            <hois-autocomplete flex-offset="5" flex-offset-sm="0" flex-offset-xs="0" flex="100"
+            <hois-autocomplete ng-if="auth.isAdmin()" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0" flex="100"
               ng-model="record.subjectStudyPeriod" url="/higherProtocols/subjectStudyPeriods"
               additional-query-params="{studyPeriodId: studyPeriod}"
               label="higherProtocol.subject" required no-paging="true" ha-attribute="id">
             </hois-autocomplete>
+            <md-input-container ng-if="auth.isTeacher()" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0" flex="100">
+              <label class="textInput">{{'higherProtocol.subject' | translate}}</label>
+              <hois-select ng-model="record.subjectStudyPeriod" values="subjectStudyPeriods" required></hois-select>
+            </md-input-container>
           </div>
         </div>
         <br>

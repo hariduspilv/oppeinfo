@@ -1,10 +1,12 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -25,13 +27,15 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
-import ee.hitsa.ois.domain.StudyPeriod;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.timetable.Timetable;
 import ee.hitsa.ois.enums.Day;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.exception.HoisException;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
@@ -101,7 +105,7 @@ public class TimetableGenerationService {
     private XlsService xlsService;
 
     /** Generate iCalendar for given timetable
-     * @param groupTimetable
+     * @param timetable
      * @param lang
      * @return calendar filename and iCalendar format calendar as a string
      */
@@ -113,7 +117,7 @@ public class TimetableGenerationService {
 
     /**
      * Generate iCalendar for given search result
-     * @param studentTimetable
+     * @param searchResult
      * @param lang
      * @return calendar filename and iCalendar format calendar as a string
      */
@@ -224,7 +228,7 @@ public class TimetableGenerationService {
             data.putAll(getSheetDataHigher(timetable));
             return xlsService.generate("timetableplanhigher.xlsx", data);
         }
-        data.putAll(getSheetData(timetable));
+        data.putAll(getSheetData(timetable, Language.ET));
         return xlsService.generate("timetableplan.xlsx", data);
     }
 
@@ -367,7 +371,7 @@ public class TimetableGenerationService {
         return new HashMap<>();
     }
 
-    private Map<String, Object> getSheetData(Timetable timetable) {
+    private Map<String, Object> getSheetData(Timetable timetable, Language lang) {
         List<TimetableEventDto> events = timetableService.getPlannedLessonsForVocationalTimetable(timetable);
 
         List<LessonTimeExcel> lessonTimesForExcel = getLessonTimesForExcel(timetable);
@@ -407,7 +411,7 @@ public class TimetableGenerationService {
             }
             
             addEmptyBlocks(groupLessons.getDisplayValues(), index);
-            String groupResult = event.getSubjectName();
+            String groupResult = TranslateUtil.name(event.getSubject(), lang);
             
             if (!event.getRooms().isEmpty()) {
                 for (AutocompleteResult room : event.getRooms()) {
@@ -416,7 +420,8 @@ public class TimetableGenerationService {
                     if (index == roomLessons.getDisplayValues().size() - 1) {
                         continue;
                     }
-                    roomLessons.getDisplayValues().add(new TimetablePlanExcelCell(event.getId(), event.getSubjectName()));
+                    roomLessons.getDisplayValues().add(new TimetablePlanExcelCell(event.getId(),
+                            TranslateUtil.name(event.getSubject(), lang)));
                 }
                 groupResult += "; " + event.getRooms().stream().map(r -> r.getNameEt()).collect(Collectors.joining(", "));
             }
@@ -427,7 +432,8 @@ public class TimetableGenerationService {
                     if (index == teacherLessons.getDisplayValues().size() - 1) {
                         continue;
                     }
-                    teacherLessons.getDisplayValues().add(new TimetablePlanExcelCell(teacherId, event.getSubjectName()));
+                    teacherLessons.getDisplayValues().add(new TimetablePlanExcelCell(teacherId,
+                            TranslateUtil.name(event.getSubject(), lang)));
                 }
                 groupResult += "; "
                         + event.getTeachers().stream().map(t -> teachersByIds.get(t)).collect(Collectors.joining(", "));
@@ -445,13 +451,9 @@ public class TimetableGenerationService {
         }
 
         Map<String, Object> result = new HashMap<>();
-        result.put("lessonsByGroups", lessonsByGroups.values().stream().sorted(new Comparator<TimetablePlanExcelCell>() {
-
-            @Override
-            public int compare(TimetablePlanExcelCell o1, TimetablePlanExcelCell o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-        }).collect(Collectors.toList()));
+        result.put("lessonsByGroups", lessonsByGroups.values().stream()
+                .sorted(Comparator.comparing(TimetablePlanExcelCell::getName))
+                .collect(Collectors.toList()));
         result.put("lessonsByTeachers", lessonsByTeachers.values());
         result.put("lessonsByRooms", lessonsByRooms.values());
         result.put("lessonTimes",
@@ -468,11 +470,13 @@ public class TimetableGenerationService {
     private List<TimetableDifferenceExcelDto> getTimetableDifferenceForExcel(StudyPeriod currStudyPeriod,
             Integer currWeekNr, StudyPeriod prevStudyPeriod, Integer prevWeekNr) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j"
-                + " join (select distinct ot.lesson_plan_module_id, journal_id from journal_omodule_theme ot) jot on jot.journal_id = j.id"
+                + " join journal_omodule_theme jot on jot.journal_id = j.id"
+                + " join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id"
                 + " join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id"
                 + " join lesson_plan lp on lp.id = lpm.lesson_plan_id"
                 + " join student_group sg on sg.id = lp.student_group_id"
-                + " left join journal_capacity jc on jc.journal_id = j.id and (j.is_capacity_diff is null or j.is_capacity_diff = false)"
+                + " left join journal_capacity jc on jc.journal_id = j.id and"
+                    + " (j.is_capacity_diff is null or j.is_capacity_diff = false)"
                 + " left join journal_capacity_type jct on jct.id = jc.journal_capacity_type_id"
                 + " left join journal_teacher jt on jt.journal_id = j.id and j.is_capacity_diff = true"
                 + " left join journal_teacher_capacity jtc on jtc.journal_teacher_id = jt.id"
@@ -494,6 +498,7 @@ public class TimetableGenerationService {
         qb.groupBy(" j.id, jt.id, jtc.id, jc.id, cl.code");
         qb.sort("j.name_et");
         String select = "j.id journal_id, j.name_et, string_agg(sg.code, ', ' order by sg.code), jt.id jt_id,"
+                + " string_agg(cvot.name_et, ', ' order by cvot.name_et) themes,"
                 + " cl.code capacity_type_code, coalesce(jtc.hours, jc.hours) hours,"
                 + " coalesce(jtc.week_nr, jc.week_nr) week_nr";
         List<?> data = qb.select(select, em).getResultList();
@@ -512,20 +517,21 @@ public class TimetableGenerationService {
             String journalName = resultAsString(r, 1);
             String studentGroups = resultAsString(r, 2);
             Long journalTeacherId = resultAsLong(r, 3);
-            String capacityType = resultAsString(r, 4);
-            Long hours = resultAsLong(r, 5);
-            Integer weekNr = resultAsInteger(r, 6);
+            String themes = resultAsString(r, 4);
+            String capacityType = resultAsString(r, 5);
+            Long hours = resultAsLong(r, 6);
+            Integer weekNr = resultAsInteger(r, 7);
 
             String key = journalId + "_" + journalTeacherId + "_" + capacityType;
             TimetableDifferenceExcelDto result = resultMap.get(key);
             if (result == null) {
-                result = new TimetableDifferenceExcelDto(journalId, journalName, studentGroups, capacityType);
+                result = new TimetableDifferenceExcelDto(journalId, journalName, studentGroups, themes, capacityType);
                 Map<Long, String> journalTeachers = teachers.containsKey(journalId) ? teachers.get(journalId) : new HashMap<>();
                 result.setTeacherNames(journalTeacherId != null ?
                         journalTeachers.get(journalTeacherId) : String.join(", ", journalTeachers.values()));
             }
-            if (weekNr == currWeekNr) result.setCurrentWeek(hours);
-            if (weekNr == prevWeekNr) result.setPreviousWeek(hours);
+            if (weekNr.equals(currWeekNr)) result.setCurrentWeek(hours);
+            if (weekNr.equals(prevWeekNr)) result.setPreviousWeek(hours);
             result.setDifference(Long.valueOf(result.getCurrentWeek().longValue() - result.getPreviousWeek().longValue()));
             resultMap.put(key, result);
         }
@@ -545,5 +551,122 @@ public class TimetableGenerationService {
         return StreamUtil.nullSafeList(data).stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors
                 .toMap(r -> resultAsLong(r, 1), r -> PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)),
                         (v1, v2) -> v1, LinkedHashMap::new)));
+    }
+
+    public byte[] timetableAscExport(LocalDate startDate, StudyPeriod studyPeriod,
+            HoisUserDetails user) {
+        Map<String, Object> data = new HashMap<>();
+        Integer weekNr = studyPeriod.getWeekNrForDate(startDate);
+        if (weekNr == null) {
+            throw new HoisException("timetable.management.exportError");
+        }
+        String from = "from journal j "
+                // hours, union for journal capacity and journal teacher capacity
+                + "join (select jh.id as journalId, sum(jc.hours) as hours "
+                    + "from journal_capacity jc "
+                    + "join journal jh on jh.id = jc.journal_id "
+                    + "where jc.week_nr = :weeknr and jc.study_period_id = :period and jh.is_capacity_diff is not true "
+                    + "group by jh.id "
+                    + "union "
+                    + "select jh.id as journalId, sum(jtc.hours) as hours "
+                    + "from journal_teacher_capacity jtc "
+                    + "join journal_teacher jt on jt.id = jtc.journal_teacher_id "
+                    + "join journal jh on jh.id = jt.journal_id "
+                    + "where jtc.week_nr = :weeknr and jtc.study_period_id = :period and jh.is_capacity_diff is true "
+                    + "group by jh.id) journalHours on journalHours.journalId = j.id "
+                // credits and student groups and group teachers
+                + "join (select jot.journal_id as journalId, sum(cvot.credits) as credits, string_agg(distinct sg.code, ',') sGroups, "
+                    + "string_agg(distinct concat(psg.firstname, ' ', psg.lastname), ', ') filter (where psg.id is not null) as sgTeachers "
+                    + "from journal_omodule_theme jot "
+                    + "join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id "
+                    + "join lesson_plan lp on lp.id = lpm.lesson_plan_id "
+                    + "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id "
+                    + "join student_group sg on lp.student_group_id = sg.id "
+                    + "left join teacher tsg on sg.teacher_id = tsg.id "
+                    + "left join person psg on tsg.person_id = psg.id "
+                    + "where lp.is_usable "
+                    + "group by jot.journal_id ) journalThemes on journalThemes.journalId = j.id "
+                // teachers
+                + "left join (select jt.journal_id as journalId, string_agg(p.firstname || ' ' || p.lastname, ',' order by p.lastname, p.firstname) as teachers "
+                    + "from journal_teacher jt "
+                    + "join teacher t on t.id = jt.teacher_id "
+                    + "join person p on p.id = t.person_id "
+                    + "group by jt.journal_id) as journalTeachers on journalTeachers.journalId = j.id ";
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from).sort("journal_name");
+        qb.parameter("weeknr", weekNr);
+        qb.parameter("period", studyPeriod.getId());
+        qb.requiredCriteria("j.school_id = :school", "school", user.getSchoolId());
+        List<?> results = qb.select("distinct j.id as journal_id, j.name_et as journal_name, journalHours.hours as hours, "
+                + "journalThemes.credits as credits, journalThemes.sGroups as student_groups, journalTeachers.teachers as teachers, "
+                + "journalThemes.sgTeachers as groupTeachers", em).getResultList();
+        data.put("lessons", StreamUtil.toMappedList(r -> {
+            AscTimetableExcelItem item = new AscTimetableExcelItem();
+            item.setSubject(resultAsString(r, 1));
+            item.setTotalPerWeek(resultAsInteger(r, 2));
+            item.setCredits(resultAsDecimal(r, 3));
+            item.setClasses(resultAsString(r, 4));
+            item.setTeachers(resultAsString(r, 5));
+            item.setCourseManager(resultAsString(r, 6));
+            return item;
+        }, results));
+        return xlsService.generate("timetableascexport.xlsx", data);
+    }
+    
+    public static class AscTimetableExcelItem {
+
+        private String teachers;
+        private String classes;
+        private String subject;
+        private BigDecimal credits;
+        private Integer totalPerWeek;
+        private String courseManager;
+
+        public String getTeachers() {
+            return teachers;
+        }
+
+        public void setTeachers(String teachers) {
+            this.teachers = teachers;
+        }
+
+        public String getClasses() {
+            return classes;
+        }
+
+        public void setClasses(String classes) {
+            this.classes = classes;
+        }
+
+        public String getSubject() {
+            return subject;
+        }
+
+        public void setSubject(String subject) {
+            this.subject = subject;
+        }
+
+        public BigDecimal getCredits() {
+            return credits;
+        }
+
+        public void setCredits(BigDecimal credits) {
+            this.credits = credits;
+        }
+
+        public Integer getTotalPerWeek() {
+            return totalPerWeek;
+        }
+
+        public void setTotalPerWeek(Integer totalPerWeek) {
+            this.totalPerWeek = totalPerWeek;
+        }
+
+        public String getCourseManager() {
+            return courseManager;
+        }
+
+        public void setCourseManager(String courseManager) {
+            this.courseManager = courseManager;
+        }
     }
 }

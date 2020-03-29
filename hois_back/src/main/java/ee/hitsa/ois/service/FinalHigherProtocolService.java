@@ -121,13 +121,8 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
                     + "where upper(per.firstname || ' ' || per.lastname) like '%" + criteria.getStudentName().toUpperCase() + "%')");
         }
 
-        qb.optionalCriteria(
-                "exists (select protocol_id " + "from protocol_hdata phd "
-                        + "join subject_study_period ssp on phd.subject_study_period_id = ssp.id "
-                        + "join subject s on ssp.subject_id = s.id "
-                        + "where upper(s.code) like lower(:subject) or upper(s.name_et) like :subject or upper(s.name_en) like :subject)",
-                "subject", criteria.getSubject(), JpaQueryUtil::toContains);
-
+        qb.optionalCriteria("(s.id = :subject or phd.final_subject_id = :subject)", "subject", criteria.getSubject());
+        
         if (user.isTeacher()) {
             qb.optionalCriteria("p.is_final_thesis = :isFinalThesis", "isFinalThesis", Boolean.FALSE);
             qb.optionalCriteria("exists (select protocol_id from protocol_hdata phd "
@@ -404,7 +399,7 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
         qb.requiredCriteria("subj.id = :subjectId", "subjectId", subjectId);
 
         List<?> students = qb.select("distinct s.id, p.firstname, p.lastname, p.idcode as id_code,"
-                + "s.status_code, s.type_code", em).getResultList();
+                + "s.status_code, s.type_code, sg.code", em).getResultList();
         
         return students.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
             FinalHigherProtocolStudentDto dto = new FinalHigherProtocolStudentDto();
@@ -413,6 +408,7 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
                     resultAsString(r, 5)));
             dto.setIdcode(resultAsString(r, 3));
             dto.setStatus(resultAsString(r, 4));
+            dto.setStudentGroup(resultAsString(r, 6));
             return dto;
         }));
     }
@@ -422,7 +418,7 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
         qb.requiredCriteria("ds.subject_study_period_id = :subjectStudyPeriodId", "subjectStudyPeriodId", subjectStudyPeriodId);
 
         List<?> students = qb.select("distinct s.id, p.firstname, p.lastname, p.idcode as idCode," +
-                "s.status_code, s.type_code", em).getResultList();
+                "s.status_code, s.type_code, sg.code", em).getResultList();
         
         return students.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
             FinalHigherProtocolStudentDto dto = new FinalHigherProtocolStudentDto();
@@ -431,6 +427,7 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
                     resultAsString(r, 5)));
             dto.setIdcode(resultAsString(r, 3));
             dto.setStatus(resultAsString(r, 4));
+            dto.setStudentGroup(resultAsString(r, 6));
             return dto;
         }));
     }

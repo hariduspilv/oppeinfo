@@ -8,7 +8,9 @@ import java.util.List;
 import ee.hitsa.ois.domain.WsEhisStudentLog;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.service.ehis.EhisService;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 
@@ -233,15 +235,20 @@ public class EhisStudentReport {
         public ForeignStudy(DirectiveStudent ds, WsEhisStudentLog log, ForeignStudentDto foreignStudent) {
             fill(ds.getStudent(), log);
 
-            fromDate = DateUtils.periodStart(ds);
-            toDate = DateUtils.periodEnd(ds);
-            abroadPurpose = EntityUtil.getCode(ds.getAbroadPurpose());
+            boolean interruption = ClassifierUtil.oneOf(ds.getDirective().getType(), DirectiveType.KASKKIRI_VALISKATK);
+            DirectiveStudent originalDirectiveStudent = interruption ? ds.getDirectiveStudent() : ds; 
+            
+            fromDate = DateUtils.periodStart(originalDirectiveStudent);
+            toDate = interruption ? ds.getStartDate().minusDays(1) : DateUtils.periodEnd(originalDirectiveStudent);
+            abroadPurpose = EntityUtil.getCode(originalDirectiveStudent.getAbroadPurpose());
             this.points = foreignStudent.getPoints();
             this.nominalStudyExtension = foreignStudent.getNominalStudyExtension();
-            nominalStudyEnd = ds.getStartDate();
-            schoolName = Boolean.TRUE.equals(ds.getIsAbroad()) ? (ds.getAbroadSchool() != null ? ds.getAbroadSchool() : EhisService.name(ds.getApelSchool())) : ds.getEhisSchool().getNameEt();
-            country = EntityUtil.getCode(ds.getCountry());
-            abroadProgramme = EntityUtil.getCode(ds.getAbroadProgramme());
+            nominalStudyEnd = originalDirectiveStudent.getStartDate();
+            schoolName = Boolean.TRUE.equals(originalDirectiveStudent.getIsAbroad())
+                    ? (originalDirectiveStudent.getAbroadSchool() != null ? originalDirectiveStudent.getAbroadSchool()
+                    : EhisService.name(originalDirectiveStudent.getApelSchool())) : originalDirectiveStudent.getEhisSchool().getNameEt();
+            country = EntityUtil.getCode(originalDirectiveStudent.getCountry());
+            abroadProgramme = EntityUtil.getCode(originalDirectiveStudent.getAbroadProgramme());
         }
 
         public LocalDate getFromDate() {

@@ -10,6 +10,7 @@ import ee.hitsa.ois.domain.timetable.TimetableEvent;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.enums.SchoolTimetableType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableSingleEventForm;
@@ -123,5 +124,27 @@ public abstract class TimetableUserRights {
             return true;
         }
         return false;
+    }
+    
+    /**
+     * Check if user can import or export timetable
+     * 
+     * @param user - authenticated user
+     * @param school - user's school
+     * @return true if the user can import or export timetable
+     */
+    public static boolean canImportOrExportTimetable(HoisUserDetails user, School school) {
+        return user.isSchoolAdmin() && ClassifierUtil.oneOf(school.getTimetable(), SchoolTimetableType.TIMETABLE_UNTIS, SchoolTimetableType.TIMETABLE_ASC);
+    }
+    
+    /**
+     * Check if an user can import or export timetable. If he/she cannot export then it throws an error
+     * 
+     * @param user - authenticated user
+     * @param school - user's school
+     * @throws ValidationFailedException
+     */
+    public static void assertCanImportOrExportTimetable(HoisUserDetails user, School school) {
+        ValidationFailedException.throwIf(!canImportOrExportTimetable(user, school), "main.messages.error.nopermission");
     }
 }

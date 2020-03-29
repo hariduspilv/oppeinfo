@@ -1,0 +1,12 @@
+package ee.hitsa.ois.enums;
+
+public enum StudentCountType {
+    
+    COUNT_STAT_OVERALL,
+    COUNT_STAT_STUDY_LEVEL,
+    COUNT_STAT_STUDENT_GROUP,
+    COUNT_STAT_STRUCTURAL_UNIT,
+    COUNT_STAT_AGE,
+    COUNT_STAT_CURRICULA,
+    COUNT_STAT_COURSE
+}

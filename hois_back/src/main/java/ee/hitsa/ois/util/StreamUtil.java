@@ -1,5 +1,6 @@
 package ee.hitsa.ois.util;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -8,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -150,5 +152,16 @@ public abstract class StreamUtil {
     public static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
         Set<Object> seen = ConcurrentHashMap.newKeySet();
         return t -> seen.add(keyExtractor.apply(t));
+    }
+
+    public static <T> BigDecimal sumBigDecimals(Function<T, BigDecimal> mapper, Stream<T> data) {
+        if(data == null) {
+            return BigDecimal.ZERO;
+        }
+        return data.map(mapper).filter(Objects::nonNull).reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public static <T> BigDecimal sumBigDecimals(Function<T, BigDecimal> mapper, Collection<T> data) {
+        return sumBigDecimals(mapper, data != null ? data.stream() : null);
     }
 }

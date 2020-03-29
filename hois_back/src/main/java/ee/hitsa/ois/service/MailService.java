@@ -1,7 +1,7 @@
 package ee.hitsa.ois.service;
 
 import java.lang.invoke.MethodHandles;
-import java.util.List;
+import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
 import javax.mail.Message;
@@ -66,8 +66,12 @@ public class MailService {
         }
     }
 
-    public void sendMail(ee.hitsa.ois.domain.Message message, List<String> receivers) {
+    public void sendMail(ee.hitsa.ois.domain.Message message, Collection<String> receivers) {
         sendMail(message.getSender().getEmail(), String.join(",", StreamUtil.toFilteredList(r -> r != null, receivers)), message.getSubject(), message.getContent());
+    }
+
+    public void sendMail(ee.hitsa.ois.domain.Message message, String sender, Collection<String> receivers) {
+        sendMail(sender, String.join(",", StreamUtil.toFilteredList(r -> r != null, receivers)), message.getSubject(), message.getContent());
     }
 
 }

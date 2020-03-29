@@ -3,9 +3,11 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.parameterAsTimestamp;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
@@ -15,9 +17,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -31,6 +35,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.NullHandling;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -61,7 +68,6 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
-import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.DeclarationSearchCommand;
@@ -74,6 +80,7 @@ import ee.hitsa.ois.web.dto.DeclarationSubjectDto;
 import ee.hitsa.ois.web.dto.PrerequisiteSubjectDto;
 import ee.hitsa.ois.web.dto.StudyPeriodEventDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
+import ee.hitsa.ois.web.dto.SubjectStudyPeriodSubgroupDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 
 @Transactional
@@ -127,6 +134,23 @@ public class DeclarationService {
             + "left join student_group sg on sg.id = s.student_group_id "
             + "left join curriculum_version cv on cv.id = s.curriculum_version_id "
             + "left join curriculum c on c.id = cv.curriculum_id ";
+
+    private static final String SUBGROUPS_SELECT= "ssp.id as ssp_id, subgroup.id as sg_id, subgroup.code, "
+            + "p.firstname || ' ' || p.lastname, subgroup.places, ds.declarations";
+    
+    private static final String SUBGROUPS_FROM = "from subject_study_period ssp "
+            + "join subject_study_period_subgroup subgroup on subgroup.subject_study_period_id = ssp.id "
+            + "left join subject_study_period_teacher sspt on sspt.subject_study_period_id = subgroup.id "
+            + "left join teacher t on t.id = sspt.teacher_id "
+            + "left join person p on p.id = t.person_id "
+            + "left join (select ds.subject_study_period_subgroup_id as subgroup_id, count(*) as declarations "
+                + "from declaration_subject ds group by ds.subject_study_period_subgroup_id) as ds on ds.subgroup_id = subgroup.id";
+    
+    private static final Sort SUBGROUPS_SORT = new Sort(
+            new Sort.Order(Direction.ASC, "subgroup.code"),
+            new Sort.Order(Direction.ASC, "p.lastname", NullHandling.NULLS_FIRST),
+            new Sort.Order(Direction.ASC, "p.firstname", NullHandling.NULLS_LAST),
+            new Sort.Order(Direction.ASC, "subgroup.id"));
     
     public List<AutocompleteResult> autocompleteStudents(HoisUserDetails user, SearchCommand lookup) {
 
@@ -469,22 +493,28 @@ public class DeclarationService {
                 EntityUtil.getId(declaration));
 
         Page<Object[]> result = JpaQueryUtil.pagingResult(qb, SUBJECT_CURRICULUM_SELECT, em, pageable);
+        Set<Long> sspIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), result.getContent());
+        Map<Long, List<SubjectStudyPeriodSubgroupDto>> subgroups = subquerySubgroups(sspIds);
+        
         return result.map(r -> {
             DeclarationSubjectDto dto = subjectQueryResultToDto(r);
-            // Set available subgroups
-            SubjectStudyPeriod ssp = em.getReference(SubjectStudyPeriod.class, dto.getSubjectStudyPeriod());
-            
-            List<SubjectStudyPeriodSubgroup> sortedSubgroups = ssp.getSubgroups().stream()
-                .sorted(SubjectStudyPeriodUtil.COMPARATOR_SUBGROUP)
-                .collect(Collectors.toList());
-            
-            dto.setSubgroups(StreamUtil.toMappedSet(AutocompleteResult::of, sortedSubgroups.stream().filter(subgroup -> {
-                return subgroup.getDeclarationSubjects().size() < subgroup.getPlaces().intValue();
-            })));
+            List<SubjectStudyPeriodSubgroupDto> periodSubgroups = subgroups.get(dto.getSubjectStudyPeriod());
+            if (periodSubgroups == null || periodSubgroups.isEmpty()) {
+                return dto;
+            }
 
-            SubjectStudyPeriodSubgroup lastSubgroup = sortedSubgroups.isEmpty() ? null : sortedSubgroups.get(sortedSubgroups.size() - 1);
-            if (dto.getSubgroups().isEmpty() && lastSubgroup != null) {
-                dto.setSubgroups(Collections.singleton(AutocompleteResult.of(lastSubgroup)));
+            dto.setSubgroups(periodSubgroups.stream().filter(sgDto -> {
+                if (sgDto.getDeclared() == null) {
+                    return true;
+                }
+                return sgDto.getPlaces().intValue() < sgDto.getDeclared().intValue();
+            }).map(sgDto -> {
+                return new AutocompleteResult(sgDto.getId(), sgDto.getNameEt(), sgDto.getNameEn());
+            }).collect(Collectors.toCollection(LinkedHashSet::new)));
+
+            if (dto.getSubgroups().isEmpty()) {
+                SubjectStudyPeriodSubgroupDto lastSubgroup = periodSubgroups.get(periodSubgroups.size() - 1);
+                dto.setSubgroups(Collections.singleton(new AutocompleteResult(lastSubgroup.getId(), lastSubgroup.getNameEt(), lastSubgroup.getNameEn())));
             }
             
             return dto;
@@ -517,6 +547,28 @@ public class DeclarationService {
 
         List<?> result = qb.sort("s.name_et, s.name_en, teachers").select(SUBJECT_EXTRACURRICULUM_SELECT, em).getResultList();
         return StreamUtil.toMappedList(this::subjectQueryResultToDto, result);
+    }
+    
+    private Map<Long, List<SubjectStudyPeriodSubgroupDto>> subquerySubgroups(Set<Long> sspIds) {
+        if (sspIds == null || sspIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SUBGROUPS_FROM).sort(SUBGROUPS_SORT);
+        qb.requiredCriteria("ssp.id in :sspIds", "sspIds", sspIds);
+        
+        List<?> results = qb.select(SUBGROUPS_SELECT, em).getResultList();
+        return results.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                Collectors.mapping(r -> {
+                    SubjectStudyPeriodSubgroupDto dto = new SubjectStudyPeriodSubgroupDto();
+                    dto.setId(resultAsLong(r, 1));
+                    dto.setCode(resultAsString(r, 2));
+                    String teacherName = resultAsString(r, 3);
+                    dto.setTeacher(teacherName == null ? null : new AutocompleteResult(null, teacherName, teacherName));
+                    dto.setPlaces(resultAsShort(r, 4));
+                    dto.setDeclared(resultAsInteger(r, 5));
+                    return dto;
+                }, Collectors.toList())));
     }
 
     private DeclarationSubjectDto subjectQueryResultToDto(Object r) {

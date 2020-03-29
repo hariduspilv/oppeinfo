@@ -42,6 +42,9 @@
                     <span>{{'student.label' | translate}}</span>
                   </th>
                   <th md-column>
+                    <span>{{'student.studentGroup' | translate}}</span>
+                  </th>
+                  <th md-column>
                     <span>{{'student.idcode' | translate}}</span>
                   </th>
                   <th md-column>
@@ -52,6 +55,7 @@
               <tbody md-body>
                 <tr md-row md-select="row.studentId" ng-repeat="row in tabledata.content | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
                   <td md-cell>{{row.fullname}}</td>
+                  <td md-cell>{{row.studentGroup}}</td>
                   <td md-cell>{{row.idcode}}</td>
                   <td md-cell>{{row.studentGroup}}</td>
                 </tr>

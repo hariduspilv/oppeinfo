@@ -1404,12 +1404,12 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
         };
 
         dialogScope.submitVocationalFormalLearning = function () {
-          if (dialogScope.record.formalSubjectsOrModules.length <= 0) {
+          if (ArrayUtils.isEmpty(dialogScope.record.formalSubjectsOrModules)) {
             message.error('apel.error.atLeastOneTransferableModule');
-          } else if (dialogScope.record.formalReplacedSubjectsOrModules.length <= 0) {
+          } else if (!areTransferredSubjectsOrModulesValid()) {
+            message.error('apel.error.incompleteData');
+          } else if (ArrayUtils.isEmpty(dialogScope.record.formalReplacedSubjectsOrModules)) {
             message.error('apel.error.atLeastOneSubstitutableModule');
-          } else if (!areThereMoreTransferableCreditsThanReplacedCredits(true)) {
-            message.error('apel.error.thereMustBeMoreTransferableCreditsThanSubstitutableCreditsVocational');
           } else {
             formalSubjectsOrModulesToArray();
             ApelApplicationUtils.formalSubjectOrModulesObjectsToIdentifiers(dialogScope.record);
@@ -1417,74 +1417,54 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
           }
         };
 
-        function areThereMoreTransferableCreditsThanReplacedCredits(isVocational) {
-          var transferableCredits = getTransferableSubjectsOrModulesCredits(dialogScope.record.formalSubjectsOrModules);
-          var replacedCredits = 0;
+        dialogScope.areTransferredSubjectsOrModulesValid = function () {
+          return areTransferredSubjectsOrModulesValid();
+        };
 
-          if (isVocational) {
-            replacedCredits = getReplacedModulesOrThemesCredits(dialogScope.record.formalReplacedSubjectsOrModules);
-          } else {
-            replacedCredits = getReplacedSubjectsCredits(dialogScope.record.formalReplacedSubjectsOrModules);
-          }
-
-          return transferableCredits >= replacedCredits;
-        }
-
-        function getTransferableSubjectsOrModulesCredits(transferableModules) {
-          var credits = 0;
-          for (var i = 0; i < transferableModules.length; i++) {
-            credits += transferableModules[i].credits;
-          }
-          return credits;
-        }
-
-        function getReplacedModulesOrThemesCredits(replacedModulesOrThemes) {
-          var credits = 0;
-          for (var i = 0; i < replacedModulesOrThemes.length; i++) {
-            if (replacedModulesOrThemes[i].curriculumVersionOmoduleTheme) {
-              credits += replacedModulesOrThemes[i].curriculumVersionOmoduleTheme.credits;
-            } else {
-              credits += replacedModulesOrThemes[i].curriculumVersionOmodule.credits;
+        function areTransferredSubjectsOrModulesValid() {
+          if (!ArrayUtils.isEmpty(dialogScope.record.formalSubjectsOrModules)) {
+            for (var i = 0; i < dialogScope.record.formalSubjectsOrModules.length; i++) {
+              var som =  dialogScope.record.formalSubjectsOrModules[0];
+              if (som.credits === null || som.assessment === null || som.grade === null) {
+                return false;
+              } else {
+                if (dialogScope.isVocational) {
+                  return som.nameEt !== null || som.curriculumVersionOmodule !== null;
+                } else {
+                  return ((som.nameEt !== null && som.nameEn !== null) || som.subject !== null) &&
+                    som.curriculumVersionHmodule !== null;
+                }
+              }
             }
           }
-          return credits;
+          return false;
         }
 
-        function getReplacedSubjectsCredits(replacedSubjects) {
-          var credits = 0;
-          for (var i = 0; i < replacedSubjects.length; i++) {
-            credits += replacedSubjects[i].subject.credits;
-          }
-          return credits;
-        }
+        dialogScope.areReplacedModulesValid = function () {
+          return !ArrayUtils.isEmpty(dialogScope.record.formalReplacedSubjectsOrModules);
+        };
 
-        dialogScope.areReplacedSubjectsOrModulesInvalid = function () {
-          if (dialogScope.isVocational) {
-            return dialogScope.dialogForm.$submitted && (!dialogScope.record.formalReplacedSubjectsOrModules ||
-              dialogScope.record.formalReplacedSubjectsOrModules.length === 0);
-          } else {
-            if (!allTransferedSubjectsInFreeChoiceModules()) {
-              return dialogScope.dialogForm.$submitted && (!dialogScope.record.formalReplacedSubjectsOrModules ||
-                dialogScope.record.formalReplacedSubjectsOrModules.length === 0);
-            }
-            return false;
+        dialogScope.areReplacedSubjectsValid = function () {
+          if (!allTransferredSubjectsInFreeChoiceModules()) {
+            return !ArrayUtils.isEmpty(dialogScope.record.formalReplacedSubjectsOrModules);
           }
+          return true;
         };
 
         dialogScope.submitHigherFormalLearning = function () {
-          if (dialogScope.record.formalSubjectsOrModules.length <= 0) {
+          if (ArrayUtils.isEmpty(dialogScope.record.formalSubjectsOrModules)) {
             message.error('apel.error.atLeastOneTransferableSubject');
             return;
-          }
-
-          if (!allTransferedSubjectsInFreeChoiceModules()) {
-            if (dialogScope.record.formalReplacedSubjectsOrModules.length <= 0) {
-              message.error('apel.error.atLeastOneSubstitutableSubject');
+          } else {
+            if (!areTransferredSubjectsOrModulesValid()) {
+              message.error('apel.error.incompleteData');
               return;
             }
+          }
 
-            if (!areThereMoreTransferableCreditsThanReplacedCredits(false)) {
-              message.error('apel.error.thereMustBeMoreTransferableCreditsThanSubstitutableCreditsHigher');
+          if (!allTransferredSubjectsInFreeChoiceModules()) {
+            if (ArrayUtils.isEmpty(dialogScope.record.formalReplacedSubjectsOrModules)) {
+              message.error('apel.error.atLeastOneSubstitutableSubject');
               return;
             }
           }
@@ -1494,7 +1474,7 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
           dialogScope.submit();
         };
 
-        function allTransferedSubjectsInFreeChoiceModules() {
+        function allTransferredSubjectsInFreeChoiceModules() {
           var nonFreeChoiceModules = (dialogScope.record.formalSubjectsOrModules || []).filter(function (transfer) {
             return transfer.curriculumVersionHmodule === null || transfer.curriculumVersionHmodule.type !== 'KORGMOODUL_V';
           });

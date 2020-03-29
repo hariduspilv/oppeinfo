@@ -131,7 +131,11 @@ public class MidtermTaskService {
         return newMidtermTask;
     }
 
-    public void updateStudentsResults(SubjectStudyPeriodMidtermTaskForm form, SubjectStudyPeriod subjectStudyPeriod) {
+    private void updateStudentsResults(SubjectStudyPeriodMidtermTaskForm form, SubjectStudyPeriod subjectStudyPeriod) {
+        if (MidtermTaskUtil.isPractice(subjectStudyPeriod)) {
+            return;
+        }
+        
         Set<MidtermTaskStudentResultDto> studentResultsDtos = removeEmptyStudentResults(form.getStudentResults());
         Set<MidtermTaskStudentResult> savedStudentResults = MidtermTaskUtil.getStudentResults(subjectStudyPeriod);
         deleteStudentResults(studentResultsDtos, savedStudentResults);
@@ -141,6 +145,14 @@ public class MidtermTaskService {
                 this::createStudentResult, 
                 this::updateStudentResult);
         
+        midtermTaskStudentResultRepository.save(savedStudentResults);
+    }
+    
+    private void updateStudentSubgroups(SubjectStudyPeriodMidtermTaskForm form, SubjectStudyPeriod subjectStudyPeriod) {
+        if (subjectStudyPeriod.getSubgroups().isEmpty()) {
+            return;
+        }
+        
         form.getStudents().forEach(midtermStudent -> {
             DeclarationSubject ds = em.getReference(DeclarationSubject.class, midtermStudent.getDeclarationSubject());
             SubjectStudyPeriodSubgroup subgroup = EntityUtil.getOptionalOne(SubjectStudyPeriodSubgroup.class, midtermStudent.getSubgroup(), em);
@@ -149,7 +161,11 @@ public class MidtermTaskService {
                 ds.setSubgroup(subgroup);
             }
         });
-        midtermTaskStudentResultRepository.save(savedStudentResults);
+    }
+    
+    public void updateStudents(SubjectStudyPeriodMidtermTaskForm form, SubjectStudyPeriod subjectStudyPeriod) {
+        updateStudentsResults(form, subjectStudyPeriod);
+        updateStudentSubgroups(form, subjectStudyPeriod);
     }
 
     private Set<MidtermTaskStudentResultDto> removeEmptyStudentResults(Set<MidtermTaskStudentResultDto> studentResults) {

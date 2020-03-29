@@ -862,11 +862,11 @@ public class JournalService {
     }
 
     public Map<Long, List<JournalEntryStudentResultDto>> quickUpdateJournalEntry(HoisUserDetails user,
-            JournalEntryQuickUpdateForm journalEntryForm, Boolean allStudents) {
+            JournalEntryQuickUpdateForm journalEntryForm) {
         JournalEntry journalEntry = em.getReference(JournalEntry.class, journalEntryForm.getJournalEntryId());
         quickUpdateJournalStudents(user, journalEntry, journalEntryForm);
         journalEntry = EntityUtil.save(journalEntry, em);
-        return journalEntryByDateStudentResults(journalEntry, allStudents);
+        return journalEntryByDateStudentResults(journalEntry, journalEntryForm.getAllStudents());
     }
 
     private void quickUpdateJournalStudents(HoisUserDetails user, JournalEntry journalEntry,

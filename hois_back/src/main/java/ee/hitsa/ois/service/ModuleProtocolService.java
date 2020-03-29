@@ -260,7 +260,8 @@ public class ModuleProtocolService extends AbstractProtocolService {
 
     private Map<Long, ModuleProtocolStudentSelectDto> studentsForSelection(HoisUserDetails user, Long occupationalModuleId) {
         JpaNativeQueryBuilder studentsQb = new JpaNativeQueryBuilder(
-                "from student s " + 
+                "from student s " +
+                "left join student_group sg on sg.id = s.student_group_id " + 
                 "join person p on p.id = s.person_id " + 
                 "join curriculum_version cv on s.curriculum_version_id = cv.id " + 
                 "join curriculum_version_omodule cvo on cv.id = cvo.curriculum_version_id");
@@ -277,7 +278,7 @@ public class ModuleProtocolService extends AbstractProtocolService {
 
         studentsQb.sort("p.firstname, p.lastname");
         List<?> students = studentsQb.select("distinct s.id, p.firstname, p.lastname, p.idcode, " +
-                "s.status_code, s.type_code", em) .getResultList();
+                "s.status_code, s.type_code, sg.code", em) .getResultList();
 
         return students.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
             ModuleProtocolStudentSelectDto dto = new ModuleProtocolStudentSelectDto();
@@ -286,6 +287,7 @@ public class ModuleProtocolService extends AbstractProtocolService {
                     resultAsString(r, 5)));
             dto.setIdcode(resultAsString(r, 3));
             dto.setStatus(resultAsString(r, 4));
+            dto.setStudentGroup(resultAsString(r, 6));
             return dto;
         }));
     }

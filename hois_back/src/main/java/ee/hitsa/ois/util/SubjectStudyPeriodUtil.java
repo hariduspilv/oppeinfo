@@ -10,8 +10,9 @@ import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacherCapacity;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodCapacity;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.validation.ValidationFailedException;
 
 public abstract class SubjectStudyPeriodUtil {
     
@@ -34,7 +35,7 @@ public abstract class SubjectStudyPeriodUtil {
                 return 1;
             }
             
-            result = PersonUtil.fullname(o1.getTeacher().getTeacher().getPerson()).compareTo(PersonUtil.fullname(o2.getTeacher().getTeacher().getPerson()));
+            result = PersonUtil.SORT.compare(o1.getTeacher().getTeacher().getPerson(), o2.getTeacher().getTeacher().getPerson());
             
             if (result != 0) {
                 return result;
@@ -82,11 +83,42 @@ public abstract class SubjectStudyPeriodUtil {
         return Long.valueOf(sum);
     }
 
-    public static void assertCanUpdate(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user, subjectStudyPeriod.getSubject().getSchool());
-        if(user.isTeacher() && !teacherAddedToSsp(user.getTeacherId(), subjectStudyPeriod.getTeachers())) {
-            throw new ValidationFailedException("teacher not added to subject study period");
+    public static void assertCanUpdate(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod,
+            Long currentStudyPeriod) {
+        UserUtil.throwAccessDeniedIf(!canUpdate(user, subjectStudyPeriod, currentStudyPeriod));
+    }
+
+    public static boolean canUpdate(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod,
+            Long currentStudyPeriod) {
+        if (!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_AINEOPPETAJA)) {
+            return false;
         }
+
+        if (user.isSchoolAdmin()) {
+            return UserUtil.isSchoolAdmin(user, subjectStudyPeriod.getSubject().getSchool());
+        } else if (user.isTeacher()) {
+            return EntityUtil.getId(subjectStudyPeriod.getStudyPeriod()).equals(currentStudyPeriod) &&
+                    teacherAddedToSsp(user.getTeacherId(), subjectStudyPeriod.getTeachers());
+        }
+        return false;
+    }
+
+    public static boolean canUpdateSearchResult(HoisUserDetails user, Long studyPeriod, Long currentStudyPeriod) {
+        if (!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_AINEOPPETAJA)) {
+            return false;
+        }
+        return user.isSchoolAdmin() || (user.isTeacher() && studyPeriod.equals(currentStudyPeriod));
+    }
+
+    public static void assertCanDelete(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod) {
+        UserUtil.throwAccessDeniedIf(!canDelete(user, subjectStudyPeriod));
+    }
+
+    public static boolean canDelete(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod) {
+        if (!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_AINEOPPETAJA)) {
+            return false;
+        }
+        return UserUtil.isSchoolAdmin(user, subjectStudyPeriod.getSubject().getSchool());
     }
 
     private static boolean teacherAddedToSsp(Long teacherId, List<SubjectStudyPeriodTeacher> sspTeachers) {

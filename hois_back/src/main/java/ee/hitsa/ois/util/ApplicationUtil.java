@@ -13,14 +13,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
-import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 
-import ee.hitsa.ois.web.dto.timetable.DateRangeDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.Directive;
@@ -40,8 +37,6 @@ import ee.hitsa.ois.message.StudentApplicationRejectedMessage;
 import ee.hitsa.ois.service.AutomaticMessageService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.commandobject.application.ApplicationForm;
-import ee.hitsa.ois.web.commandobject.directive.DirectiveForm.DirectiveFormStudent;
 
 public abstract class ApplicationUtil {
     
@@ -176,7 +171,8 @@ public abstract class ApplicationUtil {
         qb.requiredCriteria("d.status_code = :directiveStatus and ds.canceled = false", "directiveStatus",
                 DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
         qb.parameter("katkDirectiveType", DirectiveType.KASKKIRI_VALISKATK.name());
-        qb.requiredCriteria("coalesce(ds_katk.start_date, sp_end.end_date, ds.end_date) >= :start",
+        qb.requiredCriteria(
+                "coalesce(case when ds_katk.start_date is not null then ds_katk.start_date - interval '1 day' else null end, sp_end.end_date, ds.end_date) >= :start",
                 "start", startDate);
         qb.requiredCriteria("coalesce(sp_start.start_date, ds.start_date) <= :end", "end", endDate);
         qb.optionalCriteria("ds.id != :directiveStudentId", "directiveStudentId", directiveStudentId);
@@ -219,7 +215,7 @@ public abstract class ApplicationUtil {
     
     private static long daysBeenAbroad(Long studentId, EntityManager em) {
         if (studentId == null) return 0;
-        List<?> data = em.createNativeQuery("select sum(coalesce(KATK.start_date, ds.end_date, spEnd.end_date) - coalesce(ds.start_date, spStart.start_date) + 1)"
+        List<?> data = em.createNativeQuery("select sum(coalesce(case when KATK.start_date is not null then (KATK.start_date - interval '1 day')\\:\\:date else null end, ds.end_date, spEnd.end_date) - coalesce(ds.start_date, spStart.start_date) + 1)"
                 + " from directive_student ds "
                 + " join directive d on ds.directive_id = d.id"
                 + " join application a on a.id = ds.application_id"
@@ -294,7 +290,7 @@ public abstract class ApplicationUtil {
         qb.requiredCriteria("ds.student_id = :studentId", "studentId", EntityUtil.getId(application.getStudent()));
         qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_VALIS.name());
         qb.requiredCriteria("coalesce(ds.start_date, spStart.start_date) <= :now", "now", LocalDate.now());
-        qb.requiredCriteria("coalesce(KATK.start_date, ds.end_date, spEnd.end_date) >= :now", "now", LocalDate.now());
+        qb.requiredCriteria("coalesce(case when KATK.start_date is not null then KATK.start_date - interval '1 day' else null end, ds.end_date, spEnd.end_date) >= :now", "now", LocalDate.now());
         // id, startDate, endDate
         List<?> data = qb.select("ds.id", em).getResultList();
         if(!user.isStudent() || !UserUtil.isStudent(user, application.getStudent()) || 

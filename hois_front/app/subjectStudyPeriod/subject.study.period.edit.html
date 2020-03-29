@@ -2,6 +2,11 @@
     md-checkbox .md-label {
         white-space: unset;
     }
+    @media (max-width: 600px) {
+        md-checkbox .md-label {
+            white-space: initial;
+        }
+    }
 </style>
 <div layout="column" layout-padding>
     <form name="subjectStudyPeriodEditForm" ng-cloak>
@@ -11,7 +16,7 @@
                     <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
                     <hois-select ng-model="record.studyPeriod" values="studyPeriods" disabled required></hois-select>
                 </md-input-container>
-                <hois-autocomplete flex="50" flex-sm="100" ng-model="record.subject" method="subjectsList"
+                <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" ng-model="record.subject" method="subjectsList"
                     label="subjectStudyPeriod.nameCode" required no-paging="true" ha-attribute="id"
                     flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-disabled="disableSubject">
                 </hois-autocomplete>
@@ -22,7 +27,7 @@
                 This autocomplete is supposed to be cleared after selecting an item as multiple teachers can be added
             -->
 
-             <md-autocomplete
+             <md-autocomplete ng-show="auth.isAdmin()"
                 name="teacherInput"
                 md-selected-item="teacher"
                 md-search-text="queryText"
@@ -43,16 +48,16 @@
                 </md-not-found>
             </md-autocomplete>
 
+            <h2 ng-show="!auth.isAdmin() && record.teachers.length > 0">{{'subjectStudyPeriod.teacher' | translate}}</h2>
             <table md-table class="secondary-table">
                 <tbody md-body>
                     <tr md-row ng-repeat="teacher in record.teachers" ng-class-odd="'odd'" ng-class-even="'even'">
                         <td md-cell width="45%">{{teacher.name}}</td>
                         <td md-cell ng-hide="record.teachers.length === 1" width="45%">
-                            <md-checkbox ng-model="teacher.isSignatory" aria-label="{{'subjectStudyPeriodTeacher.isSignatory' | translate}}">
-                                {{'subjectStudyPeriodTeacher.isSignatory' | translate}}
-                            </md-checkbox>
+                            <md-checkbox ng-model="teacher.isSignatory" aria-label="{{'subjectStudyPeriodTeacher.isSignatory' | translate}}"
+                                ng-disabled="!auth.isAdmin()">{{'subjectStudyPeriodTeacher.isSignatory' | translate}}</md-checkbox>
                         </td>
-                        <td md-cell width="10%">
+                        <td ng-if="auth.isAdmin()" md-cell width="10%">
                             <md-button class="remove nomargin" ng-click="removeTeacher(teacher)" ng-show="obligatoryTeacher !== teacher.teacherId">&times;</md-button>
                         </td>
                     </tr>
@@ -62,7 +67,8 @@
             <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="!hasObligatoryStudentGroup">
                     <label>{{'subjectStudyPeriod.studentGroups' | translate}}</label>
-                    <hois-select ng-model="record.studentGroups" values="studentGroups" multiple ng-required="record.declarationType === 'DEKLARATSIOON_KOIK'"></hois-select>
+                    <hois-select ng-model="record.studentGroups" values="studentGroups" multiple
+                        ng-disabled="!auth.isAdmin()" ng-required="record.declarationType === 'DEKLARATSIOON_KOIK'"></hois-select>
                 </md-input-container>
                 <md-input-container flex="10" flex-sm="100" flex-xs="100" ng-if="hasObligatoryStudentGroup">
                     <label>{{'subjectStudyPeriod.studentGroupPreselected' | translate}}</label>
@@ -70,11 +76,12 @@
                 </md-input-container>
                 <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="hasObligatoryStudentGroup">
                     <label>{{'subjectStudyPeriod.otherStudentGroups' | translate}}</label>
-                    <hois-select ng-model="record.studentGroups" values="studentGroups" multiple></hois-select>
+                    <hois-select ng-model="record.studentGroups" values="studentGroups" multiple ng-disabled="!auth.isAdmin()"></hois-select>
                 </md-input-container>
                 <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                     <label>{{'subjectStudyPeriod.proportion' | translate}}</label>
-                    <hois-classifier-select ng-model="record.groupProportion" model-value-attr="code" main-classifier-code="PAEVIK_GRUPI_JAOTUS" required></hois-classifier-select>
+                    <hois-classifier-select ng-model="record.groupProportion" model-value-attr="code" main-classifier-code="PAEVIK_GRUPI_JAOTUS"
+                        ng-disabled="!auth.isAdmin()" required></hois-classifier-select>
                 </md-input-container>
             </div>
             <md-input-container>
@@ -83,7 +90,8 @@
             </md-input-container>
             <md-input-container>
                 <label>{{'subjectStudyPeriod.declaration' | translate}}</label>
-                <hois-classifier-select ng-model="record.declarationType" model-value-attr="code" main-classifier-code="DEKLARATSIOON"></hois-classifier-select>
+                <hois-classifier-select ng-model="record.declarationType" model-value-attr="code" main-classifier-code="DEKLARATSIOON"
+                    ng-disabled="!auth.isAdmin()"></hois-classifier-select>
             </md-input-container>
             <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="record.id">
@@ -100,7 +108,15 @@
                 </md-input-container>
             </div>
             <fieldset ng-if="record.canEditSubgroups || record.subgroups.length > 0">
-                <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'subjectStudyPeriod.subgroups.label' | translate}}{{record.students ? ' (' + record.students + ')' : ''}}</legend>
+                <legend md-colors="{color: 'primary-800'}" class="md-title-small">
+                    {{'subjectStudyPeriod.subgroups.label' | translate}}
+                    <span>
+                        {{record.students ? ' (' + record.students + ')' : ''}}
+                        <md-tooltip ng-if="record.students">
+                            {{'subjectStudyPeriod.subgroups.labelNumberTooltip' | translate}}
+                        </md-tooltip>
+                    </span>
+                </legend>
                 <md-content>
                     <div layout="column">
                         <div layout="row" ng-if="record.canEditSubgroups">
@@ -167,7 +183,7 @@
         <div ng-if="record.canEditSubgroups || record.subgroups.length > 0">&nbsp;</div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-            <md-button class="md-raised md-default" ng-click="delete()" ng-if="record.id">{{'main.button.delete' | translate}}</md-button>
+            <md-button ng-if="record.canDelete" class="md-raised md-default" ng-click="delete()" ng-if="record.id">{{'main.button.delete' | translate}}</md-button>
             <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods', subjectStudyPeriodEditForm)">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>

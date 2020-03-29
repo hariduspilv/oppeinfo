@@ -166,5 +166,9 @@ public abstract class ReportUtil {
             throw new AccessDeniedException("main.messages.error.nopermission");
         }
     }
+    
+    public static long val(Long l) {
+        return l == null ? 0L : l.longValue();
+    }
 
 }

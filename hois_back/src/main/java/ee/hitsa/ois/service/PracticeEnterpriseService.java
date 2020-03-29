@@ -1013,9 +1013,10 @@ public class PracticeEnterpriseService {
 			EnterpriseSchool school = null;
 			try {
 				enterprise = em.createQuery("select e from Enterprise e "
-		        		+ ("J".equalsIgnoreCase(row.getPerson()) ? "where lower(e.name) = '" + row.getName().toLowerCase() + "' ": "where e.regCode = '" + row.getRegCode() + "' ")
-		        		+ "and e.country.code = ?1", Enterprise.class)
-		        		.setParameter(1, "RIIK_" + row.getCountry())
+		        		+ ("J".equalsIgnoreCase(row.getPerson()) ? "where lower(e.name) = ?1 ": "where e.regCode = ?1 ")
+		        		+ "and e.country.code = ?2", Enterprise.class)
+				        .setParameter(1, "J".equalsIgnoreCase(row.getPerson()) ? row.getName().toLowerCase() : row.getRegCode())
+		        		.setParameter(2, "RIIK_" + row.getCountry())
 		        		.getSingleResult();
 			} catch (NoResultException | NonUniqueResultException t) {
 				if (t instanceof NonUniqueResultException) {
@@ -1027,10 +1028,11 @@ public class PracticeEnterpriseService {
 			try {
 				school = em.createQuery("select s from EnterpriseSchool s "
 		        		+ "where s.school.id = ?1 "
-		        		+ ("J".equalsIgnoreCase(row.getPerson()) ? "and lower(s.enterprise.name) = '" + row.getName().toLowerCase() + "' " : "and s.enterprise.regCode = '" + row.getRegCode() + "' ")
-		        		+ "and s.enterprise.country.code = ?2", EnterpriseSchool.class)
+		        		+ ("J".equalsIgnoreCase(row.getPerson()) ? "and lower(s.enterprise.name) = ?2 " : "and s.enterprise.regCode = ?2 ")
+		        		+ "and s.enterprise.country.code = ?3", EnterpriseSchool.class)
 		        		.setParameter(1, user.getSchoolId())
-		        		.setParameter(2, "RIIK_" + row.getCountry())
+		        		.setParameter(2, "J".equalsIgnoreCase(row.getPerson()) ? row.getName().toLowerCase() : row.getRegCode())
+		        		.setParameter(3, "RIIK_" + row.getCountry())
 		        		.getSingleResult();
 			} catch (NoResultException | NonUniqueResultException t) {
 				if (t instanceof NonUniqueResultException) {

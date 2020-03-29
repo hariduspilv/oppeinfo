@@ -1,5 +1,6 @@
 package ee.hitsa.ois.concurrent;
 
+import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
@@ -7,14 +8,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.locks.StampedLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import ee.hitsa.ois.enums.FutureStatus;
 import ee.hitsa.ois.web.dto.FutureStatusResponse;
 
 public abstract class AsyncRequest<R> extends FutureTask<R> {
     
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    
     protected final StampedLock sl = new StampedLock();
 
-    /** Unique identificator */
+    /** Unique identifier */
     private final String key;
     private LocalDateTime started;
     private LocalDateTime ended;
@@ -76,7 +82,7 @@ public abstract class AsyncRequest<R> extends FutureTask<R> {
      * 
      * @return
      */
-    public FutureStatusResponse generateReponse() {
+    public FutureStatusResponse generateResponse() {
         FutureStatusResponse response = new FutureStatusResponse();
         response.setStarted(this.getStarted());
         response.setEnded(this.getEnded());
@@ -86,6 +92,7 @@ public abstract class AsyncRequest<R> extends FutureTask<R> {
             try {
                 fillIfDone(response);
             } catch (ExecutionException ex) {
+                LOG.error("Error during async request completetion", ex);
                 fillIfExecutionException(response, ex);
             } catch (CancellationException ex) {
                 fillIfCancelled(response, ex);

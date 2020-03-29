@@ -119,7 +119,7 @@ public class HigherProtocolController {
     @GetMapping("/subjectStudyPeriods")
     public List<AutocompleteResult> getSubjectStudyPeriods(HoisUserDetails user, SubjectStudyPeriodCommand lookup) {
         HigherProtocolUtil.assertCanCreate(user);
-        return higherProtocolService.getSubjectStudyPeriods(user.getSchoolId(), lookup);
+        return higherProtocolService.getSubjectStudyPeriods(user, lookup);
     }
 
     @GetMapping("/students")

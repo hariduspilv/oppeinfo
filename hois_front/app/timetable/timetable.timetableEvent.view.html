@@ -30,19 +30,21 @@
         </md-input-container>
       </div>
 
-      <fieldset flex="60" flex-sm="100" flex-xs="100" ng-if="timetableEvent.teachers.length > 0">
-        <legend md-colors="{color: 'primary-800'}" class="md-title-small">
-          {{auth.higher ? ('timetable.timetableEvent.teacherHigher' | translate) : ('timetable.timetableEvent.teachersVocational' | translate)}}
-        </legend>
-        <md-table-container>
-          <table md-table class="secondary-table">
-            <thead md-head>
+      <div ng-if="timetableEvent.teachers.length > 0 || timetableEvent.otherTeacher">
+        <div>&nbsp;</div>
+        <fieldset flex="60" flex-sm="100" flex-xs="100">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">
+            {{auth.higher ? ('timetable.timetableEvent.teacherHigher' | translate) : ('timetable.timetableEvent.teachersVocational' | translate)}}
+          </legend>
+          <md-table-container>
+            <table md-table class="secondary-table">
+              <thead md-head>
               <tr md-row>
                 <th md-column>{{'timetable.timetableEvent.teacherName' | translate}}</th>
                 <th md-column>{{'timetable.timetableEvent.substitute' | translate}}</th>
               </tr>
-            </thead>
-            <tbody md-body>
+              </thead>
+              <tbody md-body>
               <tr md-row ng-repeat="teacher in timetableEvent.teachers | orderBy: sortTeachers" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{currentLanguageNameField(teacher.teacher)}}</td>
                 <td md-cell>{{teacher.isSubstitute ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
@@ -51,55 +53,59 @@
                 <td md-cell>{{timetableEvent.otherTeacher}}</td>
                 <td md-cell>{{'main.no' | translate}}</td>
               </tr>
-            </tbody>
-          </table>
-        </md-table-container>
-      </fieldset>
+              </tbody>
+            </table>
+          </md-table-container>
+        </fieldset>
+      </div>
 
-      <div>&nbsp;</div>
-
-      <fieldset flex="60" flex-sm="100" flex-xs="100" ng-if="timetableEvent.rooms.length > 0">
-        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetableEvent.rooms' | translate}}</legend>
-        <md-table-container>
-          <table md-table class="secondary-table">
-            <thead md-head>
+      <div ng-if="timetableEvent.rooms.length > 0 || timetableEvent.otherRoom">
+        <div>&nbsp;</div>
+        <fieldset flex="60" flex-sm="100" flex-xs="100">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetableEvent.rooms' | translate}}</legend>
+          <md-table-container>
+            <table md-table class="secondary-table">
+              <thead md-head>
               <tr md-row>
                 <th md-column>{{'timetable.timetableEvent.code' | translate}}</th>
               </tr>
-            </thead>
-            <tbody md-body>
+              </thead>
+              <tbody md-body>
               <tr md-row ng-repeat="room in timetableEvent.rooms | orderBy: currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{room.nameEt}}</td>
               </tr>
               <tr md-row ng-if="timetableEvent.otherRoom">
                 <td md-cell>{{timetableEvent.otherRoom}}</td>
               </tr>
-            </tbody>
-          </table>
-        </md-table-container>
-      </fieldset>
+              </tbody>
+            </table>
+          </md-table-container>
+        </fieldset>
+      </div>
 
-      <fieldset flex="60" flex-sm="100" flex-xs="100" ng-if="timetableEvent.studentGroups.length > 0">
-        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetableEvent.studentGroups' | translate}}</legend>
-        <md-table-container>
-          <table md-table class="secondary-table">
-            <thead md-head>
+      <div ng-if="timetableEvent.studentGroups.length > 0">
+        <div>&nbsp;</div>
+        <fieldset flex="60" flex-sm="100" flex-xs="100">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetableEvent.studentGroups' | translate}}</legend>
+          <md-table-container>
+            <table md-table class="secondary-table">
+              <thead md-head>
               <tr md-row>
                 <th md-column>{{'timetable.timetableEvent.code' | translate}}</th>
               </tr>
-            </thead>
-            <tbody md-body>
+              </thead>
+              <tbody md-body>
               <tr md-row ng-repeat="studentGroup in timetableEvent.studentGroups | orderBy: currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{studentGroup.nameEt}}</td>
               </tr>
-            </tbody>
-          </table>
-        </md-table-container>
-      </fieldset>
-
-      <div>&nbsp;</div>
+              </tbody>
+            </table>
+          </md-table-container>
+        </fieldset>
+      </div>
 
       <div ng-if="timetableEvent.subgroups.length > 0">
+        <div>&nbsp;</div>
         <fieldset flex="60" flex-sm="100" flex-xs="100">
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetableEvent.subgroups' | translate}}</legend>
           <md-table-container>
@@ -118,7 +124,7 @@
           </md-table-container>
         </fieldset>
       </div>
-
+      <div>&nbsp;</div>
       <div layout="row" flex="100">
         <md-button ng-href="#/lessonplans/events" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>

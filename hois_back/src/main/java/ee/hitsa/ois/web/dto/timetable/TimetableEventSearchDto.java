@@ -28,6 +28,7 @@ public class TimetableEventSearchDto {
     private String capacityType;
     private Boolean isPersonal;
     private AutocompleteResult person;
+    private Boolean isImported;
     private Boolean canEdit;
 
     public TimetableEventSearchDto(Long id, Long journalId, Long subjectStudyPeriodId, String nameEt, String nameEn,
@@ -199,6 +200,14 @@ public class TimetableEventSearchDto {
 
     public void setIsPersonal(Boolean isPersonal) {
         this.isPersonal = isPersonal;
+    }
+
+    public Boolean getIsImported() {
+        return isImported;
+    }
+
+    public void setIsImported(Boolean isImported) {
+        this.isImported = isImported;
     }
 
     public AutocompleteResult getPerson() {

@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.persistence.Query;
@@ -113,6 +115,19 @@ public class EhisDirectiveStudentService extends EhisService {
                 case KASKKIRI_IMMAT:
                 case KASKKIRI_IMMATV:
                     admissionMatriculation(directiveStudent);
+                    break;
+                case KASKKIRI_VALIS:
+                    if (!ClassifierUtil.COUNTRY_ESTONIA.equals(EntityUtil.getNullableCode(directiveStudent.getCountry()))) {
+                        foreignStudy(directiveStudent);
+                    }
+                    break;
+                case KASKKIRI_VALISKATK:
+                    if (directiveStudent.getDirectiveStudent() != null
+                            && directiveStudent.getDirectiveStudent().getEhisId() != null
+                            && !ClassifierUtil.COUNTRY_ESTONIA.equals(
+                                    EntityUtil.getNullableCode(directiveStudent.getDirectiveStudent().getCountry()))) {
+                        foreignStudy(directiveStudent);
+                    }
                     break;
                 case KASKKIRI_TUGI:
                     setSpecialNeeds(directiveStudent);
@@ -470,35 +485,74 @@ public class EhisDirectiveStudentService extends EhisService {
 
         makeRequest(directive, khlOppeasutusList);
     }
+    
+    private WsEhisStudentLog foreignStudyInternal(DirectiveStudent directiveStudent, ForeignStudentDto foreignStudent) {
+        Student student = directiveStudent.getStudent();
+        Directive directive = directiveStudent.getDirective();
+        DirectiveStudent originStudent = ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_VALISKATK)
+                ? directiveStudent.getDirectiveStudent()
+                : directiveStudent;
 
+        KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+        KhlLyhiajaliseltValismaal khlLyhiajaliseltValismaal = new KhlLyhiajaliseltValismaal();
+        khlLyhiajaliseltValismaal.setLyhiajaliseltValismaalId(originStudent.getEhisId() != null ? new BigInteger(originStudent.getEhisId()) : null);
+        khlLyhiajaliseltValismaal.setMuutusKp(date(directive.getConfirmDate()));
+        if (originStudent.getStartDate() != null && originStudent.getEndDate() != null) {
+            khlLyhiajaliseltValismaal.setPerioodAlates(date(originStudent.getStartDate()));
+            // Set VALISKATK startDate in case if we are having VALISKATK directive instead of VALIS
+            khlLyhiajaliseltValismaal.setPerioodKuni(date(directiveStudent.equals(originStudent)
+                    ? originStudent.getEndDate()
+                    : directiveStudent.getStartDate().minusDays(1)));
+        } else if (originStudent.getStudyPeriodStart() != null && originStudent.getStudyPeriodEnd() != null) {
+            khlLyhiajaliseltValismaal.setPerioodAlates(date(originStudent.getStudyPeriodStart().getStartDate()));
+            // Set VALISKATK startDate in case if we are having VALISKATK directive instead of VALIS
+            khlLyhiajaliseltValismaal.setPerioodKuni(date(directiveStudent.equals(originStudent)
+                    ? originStudent.getStudyPeriodEnd().getEndDate()
+                    : directiveStudent.getStartDate().minusDays(1)));
+        }
+        khlLyhiajaliseltValismaal.setKlEesmark(ehisValue(originStudent.getAbroadPurpose()));
+        if (foreignStudent != null) {
+            khlLyhiajaliseltValismaal.setAinepunkte(foreignStudent.getPoints() != null ? foreignStudent.getPoints() : "0"); // by default should be 0
+            khlLyhiajaliseltValismaal.setNominaalajaPikendamine(foreignStudent.getNominalStudyExtension() != null ? foreignStudent.getNominalStudyExtension() : BigInteger.valueOf(0L));   
+        } else {
+            khlLyhiajaliseltValismaal.setAinepunkte("0");
+            khlLyhiajaliseltValismaal.setNominaalajaPikendamine(BigInteger.ZERO);
+        }
+        khlLyhiajaliseltValismaal.setOppeasutuseNimi(Boolean.TRUE.equals(originStudent.getIsAbroad()) ? 
+                (originStudent.getAbroadSchool() != null ? originStudent.getAbroadSchool() : name(originStudent.getApelSchool())) : name(originStudent.getEhisSchool()));
+        khlLyhiajaliseltValismaal.setKlSihtriik(value2(originStudent.getCountry()));
+        khlLyhiajaliseltValismaal.setKlProgramm(ehisValue(originStudent.getAbroadProgramme()));
+
+        KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+        khlKorgharidusMuuda.setLyhiajaliseltValismaal(khlLyhiajaliseltValismaal);
+        khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+
+        WsEhisStudentLog result = makeRequest(directive, khlOppeasutusList);
+        
+        Pattern pattern = Pattern.compile(".+Andmeid on edukalt laetud\\. Uus lyhiajaliselt valismaal id on (\\d+).+$",
+                Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(result.getResponse());
+        if (matcher.matches()) {
+            originStudent.setEhisId(matcher.group(1));
+        }
+        
+        return result;
+    }
+    
+    private WsEhisStudentLog foreignStudy(DirectiveStudent directiveStudent) {
+        return foreignStudyInternal(directiveStudent, null);
+    }
+
+    /**
+     * Used to send manually from EhisStudentService
+     * 
+     * @param directiveStudent
+     * @param foreignStudent
+     * @return
+     */
     public WsEhisStudentLog foreignStudy(DirectiveStudent directiveStudent, ForeignStudentDto foreignStudent) {
         try {
-            Student student = directiveStudent.getStudent();
-            Directive directive = directiveStudent.getDirective();
-
-            KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
-            KhlLyhiajaliseltValismaal khlLyhiajaliseltValismaal = new KhlLyhiajaliseltValismaal();
-            khlLyhiajaliseltValismaal.setMuutusKp(date(directive.getConfirmDate()));
-            if (directiveStudent.getStartDate() != null && directiveStudent.getEndDate() != null) {
-                khlLyhiajaliseltValismaal.setPerioodAlates(date(directiveStudent.getStartDate()));
-                khlLyhiajaliseltValismaal.setPerioodKuni(date(directiveStudent.getEndDate()));
-            } else if (directiveStudent.getStudyPeriodStart() != null && directiveStudent.getStudyPeriodEnd() != null) {
-                khlLyhiajaliseltValismaal.setPerioodAlates(date(directiveStudent.getStudyPeriodStart().getStartDate()));
-                khlLyhiajaliseltValismaal.setPerioodKuni(date(directiveStudent.getStudyPeriodEnd().getEndDate()));
-            }
-            khlLyhiajaliseltValismaal.setKlEesmark(ehisValue(directiveStudent.getAbroadPurpose()));
-            khlLyhiajaliseltValismaal.setAinepunkte(foreignStudent.getPoints() != null ? foreignStudent.getPoints() : "");
-            khlLyhiajaliseltValismaal.setNominaalajaPikendamine(foreignStudent.getNominalStudyExtension() != null ? foreignStudent.getNominalStudyExtension() : BigInteger.valueOf(0L));
-            khlLyhiajaliseltValismaal.setOppeasutuseNimi(Boolean.TRUE.equals(directiveStudent.getIsAbroad()) ? 
-                    (directiveStudent.getAbroadSchool() != null ? directiveStudent.getAbroadSchool() : name(directiveStudent.getApelSchool())) : name(directiveStudent.getEhisSchool()));
-            khlLyhiajaliseltValismaal.setKlSihtriik(value2(directiveStudent.getCountry()));
-            khlLyhiajaliseltValismaal.setKlProgramm(ehisValue(directiveStudent.getAbroadProgramme()));
-
-            KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
-            khlKorgharidusMuuda.setLyhiajaliseltValismaal(khlLyhiajaliseltValismaal);
-            khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
-
-            return makeRequest(directive, khlOppeasutusList);
+            return foreignStudyInternal(directiveStudent, foreignStudent);
         } catch(Exception e) {
             return bindingException(directiveStudent.getDirective(), e);
         }

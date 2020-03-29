@@ -157,6 +157,7 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private Boolean isAbsence;
     @ManyToOne(fetch = FetchType.LAZY) // Immat is checked by hand (only higher)
     private Classifier dormitory;
+    private String ehisId;
 
     @OneToOne(mappedBy = "directiveStudent")
     private StudentAbsence studentAbsence;
@@ -516,6 +517,14 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
 
     public void setApelSchool(ApelSchool apelSchool) {
         this.apelSchool = apelSchool;
+    }
+
+    public String getEhisId() {
+        return ehisId;
+    }
+
+    public void setEhisId(String ehisId) {
+        this.ehisId = ehisId;
     }
 
 }

@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.xml.bind.JAXBException;
@@ -26,12 +27,16 @@ import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.timetable.Timetable;
+import ee.hitsa.ois.enums.SchoolTimetableType;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.service.TimetableGenerationService;
 import ee.hitsa.ois.service.TimetableService;
 import ee.hitsa.ois.service.XmlService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.HttpUtil;
+import ee.hitsa.ois.util.TimetableUserRights;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.TimetableCopyForm;
@@ -55,6 +60,7 @@ import ee.hitsa.ois.web.dto.timetable.TimetableStudyYearWeekDto;
 import ee.hitsa.ois.web.dto.timetable.UntisCodeError;
 import ee.hitsa.ois.web.dto.timetable.VocationalTimetablePlanDto;
 import ee.hitsa.ois.xml.exportTimetable.Document;
+import ee.hitsa.ois.service.timetable.TimetableExporter;
 
 @RestController
 @RequestMapping("/timetables")
@@ -66,6 +72,10 @@ public class TimetableController {
     private TimetableService timetableService;
     @Autowired
     private TimetableGenerationService timetableGenerationService;
+    @Autowired
+    private TimetableExporter timetableExporter;
+    @Autowired
+    private EntityManager em;
 
     @GetMapping("/{id:\\d+}")
     public TimetableDto edit(HoisUserDetails user, @WithEntity Timetable timetable) {
@@ -249,8 +259,14 @@ public class TimetableController {
     }
 
     /**
+     * Untis:
      * Get exported week from timetable with teachers, classes, rooms, lessons
      * Parameters can be set in Untis after importing this file
+     * 
+     * aSc Timetable:
+     * Get exported week from timetable with teachers, classes, subjects and amount of lessons
+     * 
+     * XXX: Find the problem in frontend with corrupted excel file if link does not have extension
      * 
      * @param user
      * @param startDate
@@ -259,16 +275,25 @@ public class TimetableController {
      * @param response
      * @throws IOException
      */
-    @GetMapping("/exportTimetable")
+    @GetMapping("/exportTimetable.xlsx")
     public void exportTimetable(HoisUserDetails user, @RequestParam("startDate") LocalDate startDate,
             @RequestParam("endDate") LocalDate endDate,
             @RequestParam("studyPeriod") @WithEntity("studyPeriod") StudyPeriod studyPeriod,
             HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user);
-        Document document = timetableService.getExportedWeek(startDate, endDate, studyPeriod, user);
+        School school = em.getReference(School.class, user.getSchoolId());
+        TimetableUserRights.assertCanImportOrExportTimetable(user, school);
         try {
-            HttpUtil.xml(response, startDate.toString() + "-" + endDate.toString() + ".xml",
-                    xmlService.generateFromObject(document));
+            if (ClassifierUtil.equals(SchoolTimetableType.TIMETABLE_UNTIS, school.getTimetable())) {
+                Document document = timetableService.getExportedWeek(startDate, endDate, studyPeriod, user);
+                HttpUtil.xml(response, startDate.toString() + "-" + endDate.toString() + ".xml",
+                        xmlService.generateFromObject(document));
+            } else if (ClassifierUtil.equals(SchoolTimetableType.TIMETABLE_ASC, school.getTimetable())) {
+                HttpUtil.xlsx(response, startDate.toString() + "-" + endDate.toString() + ".xlsx",
+                        timetableGenerationService.timetableAscExport(startDate, studyPeriod, user));
+            } else {
+                throw new HoisException("This school timetable type is not supported or/and not used in the system.");
+            }
         } catch (JAXBException e) {
             throw new HoisException(e);
         }
@@ -285,7 +310,7 @@ public class TimetableController {
     @GetMapping("/exportTimetableCheck")
     public UntisCodeError exportTimetableCheck(HoisUserDetails user, @RequestParam("startDate") LocalDate startDate, @RequestParam("studyPeriod") @WithEntity("studyPeriod") StudyPeriod studyPeriod) {
     	UserUtil.assertIsSchoolAdmin(user);
-    	return timetableService.checkUntiscodes(startDate, studyPeriod, user);
+    	return timetableService.checkExportPossibilites(startDate, studyPeriod, user);
     }
     
     /**
@@ -297,9 +322,11 @@ public class TimetableController {
      */
     @PostMapping("/importXml")
     public TimetableImportErrorDto importXml(HoisUserDetails user, @Valid @RequestBody TimetableImportDto dto) {
-    	UserUtil.assertIsSchoolAdmin(user);
+        School school = em.getReference(School.class, user.getSchoolId());
+        TimetableUserRights.assertCanImportOrExportTimetable(user, school);
     	TimetableImportErrorDto errorDto = new TimetableImportErrorDto();
-    	errorDto.setErrors(timetableService.importXml(user, dto));
+    	errorDto.setType(EnumUtil.valueOf(SchoolTimetableType.class, school.getTimetable())); 
+    	errorDto.setMessages(timetableExporter.importXml(user, dto));
     	return errorDto;
     }
 

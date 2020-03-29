@@ -51,30 +51,37 @@ public final class PracticeJournalUserRights {
     public static boolean canEdit(HoisUserDetails user, PracticeJournal practiceJournal) {
         Student student = practiceJournal.getStudent();
         if (hasPracticeJournalEditPermission(user) && StudentUtil.isActive(student)
-                & isBeforeDaysAfterCanEdit(practiceJournal.getEndDate())) {
-            return UserUtil.isSchoolAdminOrLeadingTeacher(user, student)
-                    || (user.isTeacher() && EntityUtil.getId(practiceJournal.getTeacher()).equals(user.getTeacherId()));
+                && isBeforeDaysAfterCanEdit(practiceJournal.getEndDate())) {
+            return UserUtil.isSchoolAdminOrLeadingTeacher(user, student);
         }
         return false;
     }
 
     public static boolean canEdit(HoisUserDetails user, LocalDate endDate, String studentStatus) {
         if (hasPracticeJournalEditPermission(user) && StudentUtil.isActive(studentStatus)
-                & isBeforeDaysAfterCanEdit(endDate)) {
-            return user.isSchoolAdmin() || user.isLeadingTeacher() || user.isTeacher();
+                && isBeforeDaysAfterCanEdit(endDate)) {
+            return user.isSchoolAdmin() || user.isLeadingTeacher();
         }
         return false;
     }
 
     public static boolean canConfirm(HoisUserDetails user, PracticeJournal practiceJournal) {
         return StudentUtil.isActive(practiceJournal.getStudent())
-                && UserUtil.isSchoolAdminOrLeadingTeacher(user, practiceJournal.getStudent())
-                && hasPracticeJournalConfirmPermission(user) && isBeforeDaysAfterCanEdit(practiceJournal.getEndDate());
+                && (UserUtil.isSchoolAdminOrLeadingTeacher(user, practiceJournal.getStudent())
+                        || (user.isTeacher() && EntityUtil.getId(practiceJournal.getTeacher()).equals(user.getTeacherId())))
+                && hasPracticeJournalConfirmPermission(user);
     }
-
-    public static boolean canConfirm(HoisUserDetails user, LocalDate endDate, String studentStatus) {
-        return StudentUtil.isActive(studentStatus) && user.isSchoolAdmin() && hasPracticeJournalConfirmPermission(user)
-                && isBeforeDaysAfterCanEdit(endDate);
+    
+    public static boolean canReopen(HoisUserDetails user, PracticeJournal practiceJournal) {
+        return StudentUtil.isActive(practiceJournal.getStudent())
+                && (UserUtil.isSchoolAdminOrLeadingTeacher(user, practiceJournal.getSchool())
+                        && hasPracticeJournalConfirmPermission(user));
+    }
+    
+    public static boolean canReopen(HoisUserDetails user, String studentStatus) {
+        return StudentUtil.isActive(studentStatus) 
+                && (user.isSchoolAdmin() || user.isLeadingTeacher()) 
+                && hasPracticeJournalConfirmPermission(user);
     }
 
     public static boolean isBeforeDaysAfterCanEdit(LocalDate endDate) {

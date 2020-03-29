@@ -16,7 +16,9 @@ public class TimetableRoomAndTimeForm {
     private LocalTime endTime;
     private List<RoomDto> rooms;
     private List<Long> teachers;
+    private List<Long> studentGroups;
     private List<Long> subgroups;
+    private Boolean changeUpcomingEvents = Boolean.FALSE;
 
     public Long getTimetableEventId() {
         return timetableEventId;
@@ -58,6 +60,14 @@ public class TimetableRoomAndTimeForm {
         this.teachers = teachers;
     }
 
+    public List<Long> getStudentGroups() {
+        return studentGroups;
+    }
+
+    public void setStudentGroups(List<Long> studentGroups) {
+        this.studentGroups = studentGroups;
+    }
+
     public List<Long> getSubgroups() {
         return subgroups;
     }
@@ -65,4 +75,13 @@ public class TimetableRoomAndTimeForm {
     public void setSubgroups(List<Long> subgroups) {
         this.subgroups = subgroups;
     }
+
+    public Boolean getChangeUpcomingEvents() {
+        return changeUpcomingEvents;
+    }
+
+    public void setChangeUpcomingEvents(Boolean changeUpcomingEvents) {
+        this.changeUpcomingEvents = changeUpcomingEvents;
+    }
+
 }

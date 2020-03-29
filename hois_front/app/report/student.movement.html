@@ -1,0 +1,107 @@
+<style>
+  .limited-size-th-100 {
+    max-width: 100px; 
+    height: auto; 
+    white-space: normal;
+    display: inline-block;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+  .limited-size-th-65 {
+    max-width: 65px; 
+    height: auto; 
+    white-space: normal;
+    display: inline-block;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+</style>
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <div flex>
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+        <form name="searchForm" ng-submit="searchForm.$valid && loadResults()" ng-model-options="{allowInvalid: true}">
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <div layout="row">
+                <md-input-container style="padding-right: 7px">
+                    <label>{{'report.studentMovement.from' | translate}}</label>
+                    <md-datepicker ng-model="formState.from" md-max-date="formState.thru" required hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                </md-input-container>
+                <md-input-container flex-offset="5" style="padding-right: 41px">
+                    <label>{{'report.studentMovement.thru' | translate}}</label>
+                    <md-datepicker ng-model="formState.thru" md-min-date="formState.from" required hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                </md-input-container>
+            </div>
+            <md-input-container style="width: 505px">
+              <label>{{'report.studentMovement.queryType' | translate}}</label>
+              <md-select ng-model="formState.queryType" aria-label="{{'report.studentMovement.queryType' | translate}}" ng-change="clearSort()" required>
+                <md-option ng-repeat="val in staticState.queryTypes" ng-value="val">
+                  {{('report.studentMovement.select.' + val) | translate}}
+                </md-option>
+              </md-select>
+            </md-input-container>
+          </div>
+  
+          <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
+          </div>
+          <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+        </form>
+      </fieldset>
+    </div>
+  </div>
+  <div layout-padding>
+    <div flex>
+      <md-table-container resize-table search-criteria-height="350">
+        <table md-table md-progress="tabledata.$promise">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+            <tr md-row>
+              <th ng-if="criteria.queryType !== undefined && criteria.queryType !== 'MOVEMENT_STAT_SUM'" md-column md-order-by="10">
+                {{('report.studentMovement.table.' + criteria.queryType + 
+                (criteria.queryType === 'MOVEMENT_STAT_CURRICULA' ? (auth.higher ? '.higher' : '.vocational') : '')) | translate}}</th>
+              <th md-column md-order-by="1" ng-style="{'padding-left':(criteria.queryType !== undefined && criteria.queryType === 'MOVEMENT_STAT_SUM') ? '23px' : '0px'}">
+                <span class="limited-size-th-65">{{('report.studentMovement.table.studyFrom' | translate) + (criteria.from | hoisDate)}}</span>
+              </th>
+              <th md-column md-order-by="2">
+                <span class="limited-size-th-65">{{'report.studentMovement.table.startedStudying' | translate}}</span>
+              </th>
+              <th md-column md-order-by="3">
+                <span class="limited-size-th-100">{{'report.studentMovement.table.exmatOwnWish' | translate}}</span>
+              </th>
+              <th md-column md-order-by="4">
+                <span class="limited-size-th-100">{{'report.studentMovement.table.exmatElse' | translate}}</span>
+              </th>
+              <th md-column md-order-by="5">
+                <span class="limited-size-th-65">{{'report.studentMovement.table.completed' | translate}}</span>
+              </th>
+              <th md-column md-order-by="6">
+                <span class="limited-size-th-65">{{('report.studentMovement.table.studyFrom' | translate) + (criteria.thru | hoisDate)}}</span>
+              </th>
+              <th md-column md-order-by="7">{{'report.studentMovement.table.exmatPercentage' | translate}}</th>
+              <th md-column md-order-by="8">{{'report.studentMovement.table.completedPercentage' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td ng-if="criteria.queryType !== undefined && criteria.queryType !== 'MOVEMENT_STAT_SUM'" 
+                md-cell>{{currentLanguageNameField(row.object)}}</td>
+              <td md-cell>{{row.studyingFrom}}</td>
+              <td md-cell>{{row.startedStudying}}</td>
+              <td md-cell>{{row.exmatOwnWish}}</td>
+              <td md-cell>{{row.exmatElse}}</td>
+              <td md-cell>{{row.completed}}</td>
+              <td md-cell>{{row.studyingThru}}</td>
+              <td md-cell>{{row.exmatPercentage}}</td>
+              <td md-cell>{{row.completionPercentage}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                           md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                           md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+    </div>
+  </div>
+  

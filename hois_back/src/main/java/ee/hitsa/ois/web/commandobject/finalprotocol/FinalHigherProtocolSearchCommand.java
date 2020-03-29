@@ -15,7 +15,7 @@ public class FinalHigherProtocolSearchCommand {
     @ClassifierRestriction(MainClassCode.PROTOKOLL_STAATUS)
     private String status;
     private String protocolNr;
-    private String subject;
+    private Long subject;
     private LocalDate insertedFrom;
     private LocalDate insertedThru;
     private LocalDate confirmDateFrom;
@@ -53,11 +53,11 @@ public class FinalHigherProtocolSearchCommand {
         this.protocolNr = protocolNr;
     }
     
-    public String getSubject() {
+    public Long getSubject() {
         return subject;
     }
     
-    public void setSubject(String subject) {
+    public void setSubject(Long subject) {
         this.subject = subject;
     }
     

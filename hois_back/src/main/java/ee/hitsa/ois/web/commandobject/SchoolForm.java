@@ -59,6 +59,9 @@ public class SchoolForm extends VersionedCommand {
     @Required
     @ClassifierRestriction(MainClassCode.FOTOLISA)
     private String studentPhotoAdd;
+    @Required
+    @ClassifierRestriction(MainClassCode.TIMETABLE)
+    private String timetable;
     @Size(max = 100)
     private String finalSchoolType;
     @Size(max = 500)
@@ -267,6 +270,14 @@ public class SchoolForm extends VersionedCommand {
 
     public void setStudentPhotoAdd(String studentPhotoAdd) {
         this.studentPhotoAdd = studentPhotoAdd;
+    }
+
+    public String getTimetable() {
+        return timetable;
+    }
+
+    public void setTimetable(String timetable) {
+        this.timetable = timetable;
     }
 
     public String getFinalSchoolType() {

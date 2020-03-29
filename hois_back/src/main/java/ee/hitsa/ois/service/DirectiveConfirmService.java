@@ -474,6 +474,9 @@ public class DirectiveConfirmService {
                                     || ds.getStartDate().isAfter(DateUtils.periodEnd(formAbroadStudies))) {
                                 allErrors.add(new ErrorForField("directive.notInAbroadStudiesDateRange",
                                         propertyPath(rowNum, "startDate")));
+                            } else if (!ds.getStartDate().isAfter(DateUtils.periodStart(formAbroadStudies))) {
+                                allErrors.add(new ErrorForField("directive.disruptedAtAbroadStudiesStart",
+                                        propertyPath(rowNum, "startDate")));
                             }
                         } else {
                             allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "startDate")));
@@ -696,6 +699,7 @@ public class DirectiveConfirmService {
             student.setType(EntityUtil.getOptionalOne(StudentType.OPPUR_K.name(), em));
             student.setStudyStart(directiveStudent.getStartDate());
             student.setStudyEnd(directiveStudent.getEndDate());
+            student.setPreviousStudyLevel(null);
             break;
         case KASKKIRI_AKAD:
             duration = ChronoUnit.DAYS.between(DateUtils.periodStart(directiveStudent), DateUtils.periodEnd(directiveStudent).plusDays(1));
@@ -1094,7 +1098,7 @@ public class DirectiveConfirmService {
         student.setIsRepresentativeMandatory(Boolean.FALSE);
         student.setIsSpecialNeed(Boolean.FALSE);
         student.setIsContractAgreed(Boolean.FALSE);
-        student.setType(EntityUtil.getOptionalOne(StudentType.OPPUR_O.name(), em));
+        student.setType(EntityUtil.getOptionalOne(StudentType.OPPUR_T.name(), em));
         
         // fill student's email
         Person person = student.getPerson();

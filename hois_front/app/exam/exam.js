@@ -224,6 +224,14 @@ angular.module('hitsaOis').controller('ExamSearchController', ['$q', '$route', '
       });
     };
 
+    $scope.searchSubjectStudyPeriods = function (text) {
+      return DataUtils.filterArrayByText($scope.formState.subjectStudyPeriods, text, function (obj, regex) {
+          return regex.test(obj.display.toUpperCase());
+      }).sort(function (a, b) {
+        return a.display.localeCompare(b.display);
+      });
+    };
+
     if(!id) {
       var studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query({}, function (response) {
         response.forEach(function (studyPeriod) {
@@ -237,7 +245,11 @@ angular.module('hitsaOis').controller('ExamSearchController', ['$q', '$route', '
       $scope.studyPeriodChanged = function() {
         if($scope.formState.studyPeriod) {
           var query = {studyPeriod: $scope.formState.studyPeriod};
-          $scope.formState.subjectStudyPeriods = subjectStudyPeriodEndpoint.query(query);
+          $scope.formState.subjectStudyPeriods = subjectStudyPeriodEndpoint.query(query, function (response) {
+            response.forEach( function (subjectStudyPeriod) {
+              subjectStudyPeriod.display = $scope.currentLanguageNameField(subjectStudyPeriod.subject) + ' - ' + (subjectStudyPeriod.teacherNames || []).join(', ');
+            });
+          });
         } else {
           $scope.formState.subjectStudyPeriods = [];
         }

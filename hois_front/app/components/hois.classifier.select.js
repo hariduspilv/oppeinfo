@@ -113,7 +113,8 @@ angular.module('hitsaOis')
         connectMainClassifierCode: '@',
         searchFromConnect: '@',
         selectFirstValue: '@',
-        defaultValue: '@'
+        defaultValue: '@',
+        order: '@'
       },
       link: function postLink(scope, element, attrs, ngModelControllers) {
         scope.isRequired = angular.isDefined(scope.required);
@@ -170,7 +171,7 @@ angular.module('hitsaOis')
   function classifierPostLink(scope, Classifier, ClassifierConnect) {
 
     var optionsByCode = {};
-    var params = { order: scope.$root.currentLanguageNameField()};
+    var params = { order: scope.order ? scope.order : scope.$root.currentLanguageNameField()};
 
     if(angular.isDefined(scope.mainClassifierCode)) {
       params.mainClassCode = scope.mainClassifierCode;

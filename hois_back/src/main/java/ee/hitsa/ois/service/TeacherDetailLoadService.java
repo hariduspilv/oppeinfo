@@ -1106,7 +1106,6 @@ public class TeacherDetailLoadService {
                     weekLessons.add(lesson);
                 }
             }
-            occurredLessons.removeAll(weekLessons);
             groupedLessons.put(week.getNr(), weekLessons);
         }
         return groupedLessons;
