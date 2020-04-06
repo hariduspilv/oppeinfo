@@ -44,4 +44,4 @@ $$;
 
 INSERT INTO "public"."classifier" ("code", "value", "value2", "name_et", "name_en", "name_ru", "parent_class_code", "main_class_code", "inserted", "changed", "valid", "description", "valid_from", "valid_thru", 
 "extraval1", "extraval2", "ehis_value", "is_vocational", "is_higher", "version", "inserted_by", "changed_by") 
-VALUES ('OPPEVORM_SO', 'SO', NULL, 'Sessioonõpe', NULL, NULL, NULL, 'OPPEVORM', '2016-10-31 18:43:15.681826', '2019-12-16 10:28:44.788', 'f', NULL, NULL, NULL, NULL, NULL, 'K', 'f', 't', '5', NULL, 'Anu Piirisild (47611116519)');
+VALUES ('OPPEVORM_SO', 'SO', NULL, 'Sessioonõpe', NULL, NULL, NULL, 'OPPEVORM', '2016-10-31 18:43:15.681826', '2019-12-16 10:28:44.788', 'f', NULL, NULL, NULL, NULL, NULL, 'SO', 'f', 't', '5', NULL, 'Anu Piirisild (47611116519)');
