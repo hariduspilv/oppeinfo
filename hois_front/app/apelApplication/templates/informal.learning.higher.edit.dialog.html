@@ -76,12 +76,12 @@
                 </md-select>
               </md-input-container>
               <hois-autocomplete ng-if="dialogScope.freeChoiceSubjects" flex="45" ng-model="formState.selectedSubject"
-                method="subjects" name="subject" label="{{'apel.informalLearnings.subject' | translate}}" 
-                additional-query-params="{student: student.id, curriculumSubjects: false, curriculumVersion: curriculumVersionId, 
+                method="subjects" name="subject" label="{{'apel.informalLearnings.subject' | translate}}"
+                additional-query-params="{student: student.id, curriculumSubjects: false, curriculumVersion: curriculumVersionId,
                   ignoreCurriculumVersionStatus: true, withCredits: false, noFinalSubjects: true}">
               </hois-autocomplete>
               <md-input-container flex-offset="5">
-                <md-checkbox ng-model="dialogScope.freeChoiceSubjects" aria-label="{{'apel.informalLearnings.freeChoice' | translate}}" 
+                <md-checkbox ng-model="dialogScope.freeChoiceSubjects" aria-label="{{'apel.informalLearnings.freeChoice' | translate}}"
                   style="margin-bottom: 0;">{{'apel.informalLearnings.freeChoice' | translate}}</md-checkbox>
               </md-input-container>
             </div>
@@ -89,11 +89,11 @@
             <table md-table md-progress="tabledata.$promise" class="secondary-table">
               <thead md-head>
                 <tr md-row>
-                  <th md-column>{{'apel.informalLearnings.subject' | translate}}</th>
+                  <th md-column class="apel-min-width">{{'apel.informalLearnings.subject' | translate}}</th>
                   <th md-column>{{'apel.informalLearnings.module' | translate}}</th>
                   <th md-column>{{'apel.informalLearnings.required' | translate}}</th>
                   <th md-column>{{'apel.informalLearnings.creditsEAP' | translate}}</th>
-                  <th md-column>{{'apel.informalLearnings.acquiredSkills' | translate}}</th>
+                  <th md-column class="apel-min-width">{{'apel.informalLearnings.acquiredSkills' | translate}}</th>
                   <th md-column></th>
                 </tr>
               </thead>

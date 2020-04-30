@@ -40,7 +40,7 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout, $wi
         }
 
         var table = container.querySelectorAll('table');
-        var currentTableHeight = table[0].offsetHeight;
+        var currentTableHeight = angular.isDefined(table[0]) ? table[0].offsetHeight : 0;
 
         var newTableHeight = currentTableHeight > 0 && currentTableHeight < tableMaxHeight ? currentTableHeight : tableMaxHeight;
         newTableHeight += 17; // scrollbar width

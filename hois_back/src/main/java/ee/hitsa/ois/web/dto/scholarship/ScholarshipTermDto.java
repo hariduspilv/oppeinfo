@@ -12,6 +12,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class ScholarshipTermDto {
     private Long id;
     private String type;
+    private String scholarshipEhis;
     private String nameEt;
     private Long studyPeriod;
     private LocalDate applicationStart;
@@ -26,8 +27,12 @@ public class ScholarshipTermDto {
     private List<String> courses;
     private BigDecimal averageMark;
     private String averageMarkPriority;
+    private BigDecimal wagMark;
+    private String wagMarkPriority;
     private BigDecimal lastPeriodMark;
     private String lastPeriodMarkPriority;
+    private BigDecimal lastPeriodWagMark;
+    private String lastPeriodWagMarkPriority;
     private BigDecimal curriculumCompletion;
     private String curriculumCompletionPriority;
     private Long maxAbsences;
@@ -47,6 +52,10 @@ public class ScholarshipTermDto {
     private Boolean isModuleGrade;
     private Boolean isApelGrade;
     private Boolean isJournalGrade;
+    private Boolean isNominalEnd;
+    private Boolean isNegative;
+    private Boolean isBeforeImmat;
+    private Boolean isSais;
     private Boolean isLastPeriodOutcomes;
     private Boolean isLastPeriodPeriodGrade;
     private Boolean isLastPeriodJournalFinalGrade;
@@ -428,6 +437,78 @@ public class ScholarshipTermDto {
 
     public void setLastPeriodGradeThru(LocalDate lastPeriodGradeThru) {
         this.lastPeriodGradeThru = lastPeriodGradeThru;
+    }
+
+    public String getScholarshipEhis() {
+        return scholarshipEhis;
+    }
+
+    public void setScholarshipEhis(String scholarshipEhis) {
+        this.scholarshipEhis = scholarshipEhis;
+    }
+
+    public BigDecimal getWagMark() {
+        return wagMark;
+    }
+
+    public void setWagMark(BigDecimal wagMark) {
+        this.wagMark = wagMark;
+    }
+
+    public String getWagMarkPriority() {
+        return wagMarkPriority;
+    }
+
+    public void setWagMarkPriority(String wagMarkPriority) {
+        this.wagMarkPriority = wagMarkPriority;
+    }
+
+    public BigDecimal getLastPeriodWagMark() {
+        return lastPeriodWagMark;
+    }
+
+    public void setLastPeriodWagMark(BigDecimal lastPeriodWagMark) {
+        this.lastPeriodWagMark = lastPeriodWagMark;
+    }
+
+    public String getLastPeriodWagMarkPriority() {
+        return lastPeriodWagMarkPriority;
+    }
+
+    public void setLastPeriodWagMarkPriority(String lastPeriodWagMarkPriority) {
+        this.lastPeriodWagMarkPriority = lastPeriodWagMarkPriority;
+    }
+
+    public Boolean getIsNominalEnd() {
+        return isNominalEnd;
+    }
+
+    public void setIsNominalEnd(Boolean isNominalEnd) {
+        this.isNominalEnd = isNominalEnd;
+    }
+
+    public Boolean getIsNegative() {
+        return isNegative;
+    }
+
+    public void setIsNegative(Boolean isNegative) {
+        this.isNegative = isNegative;
+    }
+
+    public Boolean getIsBeforeImmat() {
+        return isBeforeImmat;
+    }
+
+    public void setIsBeforeImmat(Boolean isBeforeImmat) {
+        this.isBeforeImmat = isBeforeImmat;
+    }
+
+    public Boolean getIsSais() {
+        return isSais;
+    }
+
+    public void setIsSais(Boolean isSais) {
+        this.isSais = isSais;
     }
 
 }

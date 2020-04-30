@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.commandobject.report;
 
+import ee.hitsa.ois.domain.StudyYear;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +11,7 @@ import javax.validation.constraints.NotNull;
 public class StudentGroupTeacherCommand {
 
     private Long studyYear;
+    private StudyYear studyYearObject;
     private Long studyPeriod;
     private LocalDate studyPeriodStart;
     private LocalDate studyPeriodEnd;
@@ -19,6 +22,7 @@ public class StudentGroupTeacherCommand {
     private LocalDate from;
     private LocalDate thru;
     private List<String> entryTypes = new ArrayList<>();
+    private Boolean outcomeResults = Boolean.FALSE;
     private Boolean moduleGrade = Boolean.FALSE;
     private Boolean absencesPerJournals = Boolean.FALSE;
     private Boolean journalsWithEntries = Boolean.FALSE;
@@ -26,6 +30,8 @@ public class StudentGroupTeacherCommand {
     private Boolean averageGrade = Boolean.FALSE;
     private Boolean weightedAverageGrade = Boolean.FALSE;
     private Boolean onlyModuleGrades = Boolean.FALSE;
+    private Boolean allModules = Boolean.FALSE;
+    private Boolean allModulesAndOutcomes = Boolean.FALSE;
 
     public Long getStudyYear() {
         return studyYear;
@@ -33,6 +39,14 @@ public class StudentGroupTeacherCommand {
 
     public void setStudyYear(Long studyYear) {
         this.studyYear = studyYear;
+    }
+
+    public StudyYear getStudyYearObject() {
+        return studyYearObject;
+    }
+
+    public void setStudyYearObject(StudyYear studyYearObject) {
+        this.studyYearObject = studyYearObject;
     }
 
     public Long getStudyPeriod() {
@@ -107,6 +121,14 @@ public class StudentGroupTeacherCommand {
         this.entryTypes = entryTypes;
     }
 
+    public Boolean getOutcomeResults() {
+        return outcomeResults;
+    }
+
+    public void setOutcomeResults(Boolean outcomeResults) {
+        this.outcomeResults = outcomeResults;
+    }
+
     public Boolean getModuleGrade() {
         return moduleGrade;
     }
@@ -163,4 +185,19 @@ public class StudentGroupTeacherCommand {
         this.onlyModuleGrades = onlyModuleGrades;
     }
 
+    public Boolean getAllModules() {
+        return allModules;
+    }
+
+    public void setAllModules(Boolean allModules) {
+        this.allModules = allModules;
+    }
+
+    public Boolean getAllModulesAndOutcomes() {
+        return allModulesAndOutcomes;
+    }
+
+    public void setAllModulesAndOutcomes(Boolean allModulesAndOutcomes) {
+        this.allModulesAndOutcomes = allModulesAndOutcomes;
+    }
 }

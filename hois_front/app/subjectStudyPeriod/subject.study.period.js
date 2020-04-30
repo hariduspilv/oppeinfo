@@ -3,7 +3,7 @@
 function compareSubgroups(a, b) {
   var result = a.code.localeCompare(b.code);
             
-  if (result != 0) {
+  if (result !== 0) {
       return result;
   }
   
@@ -19,7 +19,7 @@ function compareSubgroups(a, b) {
   // AutocompleteResult for teacher has the same value for nameEt, nameEn, nameRu
   result = a.teacher.nameEt.localeCompare(b.teacher.nameEt);
   
-  if (result != 0) {
+  if (result !== 0) {
       return result;
   }
 
@@ -325,7 +325,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         return;
       }
 
-      for (var i = 0; i < defGroupCount; i++) {
+      for (var k = 0; k < defGroupCount; k++) {
         $scope.record.subgroups.push(createGroup(null, defGroupPlaces));
       }
     }
@@ -339,7 +339,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         code: code ? code : null,
         places: places,
         teacher: null
-      }
+      };
     }
 
     function collectGroups(idArr) {

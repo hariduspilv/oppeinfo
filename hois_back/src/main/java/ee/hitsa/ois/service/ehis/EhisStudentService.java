@@ -60,6 +60,7 @@ import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
@@ -90,6 +91,12 @@ public class EhisStudentService extends EhisService {
 
     private static final BigInteger FORMAL_LEARNING_TYPE = BigInteger.ONE;
     private static final BigInteger INFORMAL_LEARNING_TYPE = BigInteger.valueOf(2);
+    private static final String SQL_WHERE_CURRICULUM_JOINTMENTOR = "s.type_code != 'OPPUR_K' "
+            + "and exists (select 1 from curriculum_version ch_cv "
+            + "join curriculum ch_c on ch_c.id = ch_cv.curriculum_id "
+            + "join school ch_sc on ch_sc.id = s.school_id "
+            + "join classifier ch_ehis on ch_ehis.code = ch_sc.ehis_school_code "
+            + "where ch_cv.id = s.curriculum_version_id and ch_c.is_joint and ch_c.joint_mentor_code is not null and ch_ehis.code != ch_c.joint_mentor_code) ";
     
     @Autowired
     private EhisDirectiveStudentService ehisDirectiveStudentService;
@@ -380,7 +387,8 @@ public class EhisStudentService extends EhisService {
                 + " and d.confirm_date >= ?4 and d.confirm_date <= ?5"
                 + " and dip.status_code != ?6 and dip_f.status_code = ?7"
                 + " and sup.status_code != ?6 and sup_f.status_code = ?7"
-                + " and sup_f.type_code in (?8) and s.type_code != ?10")
+                + " and sup_f.type_code in (?8) and s.type_code != ?10"
+                + " and not (" + SQL_WHERE_CURRICULUM_JOINTMENTOR + ")")
                 .setParameter(1, schoolId)
                 .setParameter(2, DirectiveType.KASKKIRI_LOPET.name())
                 .setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
@@ -409,6 +417,15 @@ public class EhisStudentService extends EhisService {
                     .getResultList();
             List<String> extraNr = StreamUtil.toMappedList(er -> resultAsString(er, 0), extraResult);
             List<String> extraNrEn = StreamUtil.toMappedList(er -> resultAsString(er, 0), extraResultEn);
+            if (!directiveStudent.getStudent().getFinalThesis().isEmpty()
+                    && CurriculumUtil.isMagisterOrDoctoralOrIntegratedStudy(
+                            directiveStudent.getStudent().getCurriculumVersion().getCurriculum())) {
+                WsEhisStudentLog logFinalThesis = ehisDirectiveStudentService.graduationFinalThesis(directiveStudent);
+                if (logFinalThesis.getHasOtherErrors().booleanValue() || logFinalThesis.getHasXteeErrors().booleanValue()) {
+                    graduations.add(new EhisStudentReport.Graduation(directiveStudent, logFinalThesis, docNr, academicNr, extraNr, academicNrEn, extraNrEn));
+                    continue;
+                }
+            }
             WsEhisStudentLog log = ehisDirectiveStudentService.graduation(directiveStudent, docNr, academicNr, extraNr, academicNrEn, extraNrEn);
             graduations.add(new EhisStudentReport.Graduation(directiveStudent, log, docNr, academicNr, extraNr, academicNrEn, extraNrEn));
         }
@@ -544,7 +561,9 @@ public class EhisStudentService extends EhisService {
     }
 
     private List<Student> findStudents(Long schoolId) {
-        return em.createQuery("select s from Student s where s.school.id = ?1 and s.status.code in ?2 and s.type.code != ?3", Student.class)
+        return em.createQuery("select s from Student s where s.school.id = ?1 and s.status.code in ?2 and s.type.code != ?3 "
+                + "and not (s.curriculumVersion.curriculum.joint = true and s.curriculumVersion.curriculum.jointMentor.code is not null and "
+                + "s.curriculumVersion.curriculum.jointMentor.code != s.school.ehisSchool.code)", Student.class)
                 .setParameter(1, schoolId)
                 .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
                 .setParameter(3, StudentType.OPPUR_K.name())
@@ -568,6 +587,7 @@ public class EhisStudentService extends EhisService {
                 + "where s.school_id = ?1 and s.status_code in ?7 "
                 + "and exists (select 1 from student_special_need ssn2 where ssn2.student_id = s.id and coalesce(ssn2.changed, ssn2.inserted) >= ?5 and coalesce(ssn2.changed, ssn2.inserted) <= ?6) "
                 + "and ssn_cl.ehis_value is not null and s.type_code != ?8 "
+                + "and not (" + SQL_WHERE_CURRICULUM_JOINTMENTOR + ") "
                 + "group by s.id")
         .setParameter(1, schoolId)
         .setParameter(2, DirectiveType.KASKKIRI_TUGI.name())
@@ -598,7 +618,7 @@ public class EhisStudentService extends EhisService {
                 + "join student_group sg on sg.id = sgyf.student_group_id "
                 + "join student s on s.student_group_id = sg.id "
                 + "where s.school_id = ?1 and s.status_code in ?2 and sgyf.changed >= ?3 and sgyf.changed <= ?4 "
-                + "and s.type_code != ?5 "
+                + "and s.type_code != ?5 and not (" + SQL_WHERE_CURRICULUM_JOINTMENTOR + ") "
                 + "order by sgyf.changed asc ")
                 .setParameter(1, schoolId)
                 .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
@@ -630,7 +650,8 @@ public class EhisStudentService extends EhisService {
                 + " join student s on sh.student_id = s.id"
                 + " left join student_history sh2 on sh.student_id = sh2.student_id and sh2.inserted <= ?3"
                 + " where s.school_id = ?1 and s.status_code in ?2 and coalesce(sh.dormitory_code, 'x') != 'x'"
-                + " and sh.inserted >= ?3 and sh.inserted <= ?4 and s.type_code != ?5) x where x.first_dormitory_code != x.last_dormitory_code")
+                + " and sh.inserted >= ?3 and sh.inserted <= ?4 and s.type_code != ?5 and not (" + SQL_WHERE_CURRICULUM_JOINTMENTOR + "))"
+                + " x where x.first_dormitory_code != x.last_dormitory_code")
                 .setParameter(1, schoolId)
                 .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
                 .setParameter(3, JpaQueryUtil.parameterAsTimestamp(DateUtils.firstMomentOfDay(criteria.getFrom())))
@@ -709,6 +730,7 @@ public class EhisStudentService extends EhisService {
         qb.requiredCriteria(
                 "coalesce(case when VALISKATK.start_date is not null then VALISKATK.start_date - interval '1 day' else null end, spEnd.end_date, ds.end_date) <= :endThru",
                 "endThru", criteria.getThru());
+        qb.filter("not (" + SQL_WHERE_CURRICULUM_JOINTMENTOR + ")");
         return JpaQueryUtil.pagingResult(qb, "coalesce(VALISKATK.id, ds.id) as directiveId, " // In case if we have VALISKATK then it should process VALISKATK directive, not just VALIS.
                 // Max nominal study
                 + "coalesce(max(case when aa.is_ehis_sent then aa.nominal else '0' end), '0') as nominal_sent, "
@@ -739,7 +761,11 @@ public class EhisStudentService extends EhisService {
     }
 
     private List<ApelApplication> findApelApplications(Long schoolId, EhisStudentForm criteria) {
-        return em.createQuery("select a from ApelApplication a where a.school.id = ?1 and a.confirmed >= ?2 and a.confirmed <= ?3 and a.student.type.code != ?4", ApelApplication.class)
+        return em.createQuery("select a from ApelApplication a where a.school.id = ?1 and a.confirmed >= ?2 and a.confirmed <= ?3 "
+                + "and a.student.type.code != ?4 and not ( "
+                + "a.student.curriculumVersion.curriculum.joint = true and "
+                + "a.student.curriculumVersion.curriculum.jointMentor.code is not null and "
+                + "a.student.curriculumVersion.curriculum.jointMentor.code != a.student.school.ehisSchool.code)", ApelApplication.class)
                 .setParameter(1, schoolId)
                 .setParameter(2, DateUtils.firstMomentOfDay(criteria.getFrom()))
                 .setParameter(3, DateUtils.lastMomentOfDay(criteria.getThru()))

@@ -5,9 +5,11 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,6 +28,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.enums.FormType;
+import ee.hitsa.ois.enums.HigherAssessment;
+import ee.hitsa.ois.enums.OccupationalGrade;
+import ee.hitsa.ois.enums.ProtocolStatus;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumResult;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -99,7 +106,7 @@ import ee.hitsa.ois.web.dto.student.StudentVocationalModuleDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultByTimeDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultModuleThemeDto;
-import ee.hitsa.ois.web.dto.student.StudentVocationalStudyProgramme;
+import ee.hitsa.ois.web.dto.student.StudentVocationalStudyProgrammeDto;
 
 @Transactional
 @Service
@@ -116,7 +123,9 @@ public class StudentService {
             "left outer join classifier study_form on s.study_form_code=study_form.code ";
     
     private static final List<String> JOURNAL_RESULT_ENTRY_TYPES = EnumUtil.toNameList(JournalEntryType.SISSEKANNE_L,
-            JournalEntryType.SISSEKANNE_O, JournalEntryType.SISSEKANNE_R, JournalEntryType.SISSEKANNE_H);
+            JournalEntryType.SISSEKANNE_R, JournalEntryType.SISSEKANNE_H);
+
+    private static final BigDecimal DISTINCTIVE_GRADES_CRITERIA = BigDecimal.valueOf(0.5);
 
     @Autowired
     private AutomaticMessageService automaticMessageService;
@@ -128,6 +137,8 @@ public class StudentService {
     private CurriculumVersionOccupationModuleRepository curriculumVersionOccupationModuleRepository;
     @Autowired
     private StudentRemarkService studentRemarkService;
+    @Autowired
+    private UserService userService;
 
     /**
      * Search students
@@ -278,7 +289,8 @@ public class StudentService {
             }
         }
 
-        if (!(UserUtil.isSchoolAdmin(user, student.getSchool()) || UserUtil.isLeadingTeacher(user, student))) {
+        if (!(UserUtil.isSchoolAdmin(user, student.getSchool()) || UserUtil.isLeadingTeacher(user, student)
+                || UserUtil.isStudentGroupTeacher(user, student))) {
             return student;
         }
 
@@ -853,10 +865,26 @@ public class StudentService {
                 "left join student ss on aa.student_id = ss.id " + 
                 "join study_year sy on sy.id = get_study_year(cast(aa.confirmed as date), cast(aa.school_id as int)) " + 
             "where aa.student_id=:studentId and aa.status_code='VOTA_STAATUS_C' and aaf.transfer = true";
+
+        String outocomeResults = "select false as module, scmor.grade_date, scmor.curriculum_module_outcomes_id, null, " +
+                "p.firstname || ' ' || p.lastname as teachers, '" + JournalEntryType.SISSEKANNE_O.name() + "', " +
+                "cmo.outcome_et || ' (' || cm.name_et || ' - ' || mcl.name_et || ')' as my_theme, " +
+                "cmo.outcome_en || ' (' || coalesce(cm.name_en,cm.name_et) || ' - ' || coalesce(cm.name_en,cm.name_et) || ')' as my_theme_en, " +
+                "null, null, scmor.grade_code, sy.year_code, sy.start_date, false as informal, false as formal, false as practice " +
+                "from student_curriculum_module_outcomes_result scmor " +
+                "join curriculum_module_outcomes cmo on cmo.id = scmor.curriculum_module_outcomes_id " +
+                "join curriculum_module cm on cm.id = cmo.curriculum_module_id " +
+                "join classifier mcl on mcl.code = cm.module_code " +
+                "join student s on s.id = scmor.student_id " +
+                "left join teacher t on t.id = scmor.grade_inserted_teacher_id " +
+                "left join person p on p.id = t.person_id " +
+                "join study_year sy on sy.id = get_study_year(cast(scmor.grade_date as date), cast(s.school_id as int)) " +
+                "where scmor.student_id = :studentId";
         
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from (" + journalResults + " union all " + practiceJournalResults + " union all " + protocolResults + 
-                " union all " + informalApelResults + " union all " + formalApelResults + ") xx where grade_code is not null");
+                " union all " + informalApelResults + " union all " + formalApelResults + " union all " + outocomeResults +
+                ") xx where grade_code is not null");
         qb.parameter("studentId", EntityUtil.getId(student));
         qb.parameter("entryTypeCodes", JOURNAL_RESULT_ENTRY_TYPES);
         
@@ -896,7 +924,7 @@ public class StudentService {
 
     public StudentVocationalResultDto vocationalResults(Student student) {
         StudentVocationalResultDto dto = new StudentVocationalResultDto();
-        List<StudentVocationalResultModuleThemeDto> results = studentVocationalResults(student, false);
+        List<StudentVocationalResultModuleThemeDto> results = studentVocationalResults(student, false, true);
         dto.setResults(results);
         
         Long curriculumVersionId = EntityUtil.getId(student.getCurriculumVersion());
@@ -911,12 +939,14 @@ public class StudentService {
         return dto;
     }
 
-    public List<StudentVocationalResultModuleThemeDto> studentVocationalResults(Student student, boolean showUncompleted) {
+    public List<StudentVocationalResultModuleThemeDto> studentVocationalResults(Student student, boolean showUncompleted,
+            boolean generateNameBeforehand) {
         List<StudentVocationalResultModuleThemeDto> result = new ArrayList<>();
         if (student.getCurriculumVersion() != null) {
-            result.addAll(vocationalResultsThemeResults(student));
-            result.addAll(vocationalResultsModuleResults(student));
-            result.addAll(formalLearningReplacedModuleResults(student));
+            result.addAll(vocationalResultsOutcomeResults(student));
+            result.addAll(vocationalResultsThemeResults(student, generateNameBeforehand));
+            result.addAll(vocationalResultsModuleResults(student, generateNameBeforehand));
+            result.addAll(formalLearningReplacedModuleResults(student, generateNameBeforehand));
         }
         if (showUncompleted) addExtraModulesAndThemes(student, result);
         return result;
@@ -948,30 +978,26 @@ public class StudentService {
             qb.optionalCriteria(checkForModules, "moduleIds", addedModules);
         }
         qb.requiredCriteria("js.student_id = :studentId", "studentId", EntityUtil.getId(student));
-        qb.groupBy("themeId, themeEt, moduleId, moduleEt, moduleEn, "
-                + "codeEt, codeEn, cm.credits, cv.code");
+        qb.groupBy("themeId, themeEt, moduleId, moduleEt, moduleEn, cm_order, cv_code, module_code, cvo_id, cm_curriculum ");
         List<?> data = qb.select("cvot.id themeId, cvot.name_et themeEt, cm.id moduleId, cm.name_et moduleEt, cm.name_en moduleEn, "
-                + "mcl.name_et as codeEt, mcl.name_en as codeEn, cm.credits, cv.code, string_agg(p.firstname||' '||p.lastname,', ') as teachers", em).getResultList();
+                + "cm.credits, string_agg(p.firstname||' '||p.lastname,', ') as teachers, "
+                + "cm.order_nr cm_order, cv.code cv_code, cm.module_code module_code, cvo.id cvo_id, cm.curriculum_id cm_curriculum ", em).getResultList();
         for (Object r : data) {
             StudentVocationalResultModuleThemeDto dto = new StudentVocationalResultModuleThemeDto();
             dto.setTheme(new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 1)));
-            String moduleEn = resultAsString(r, 4);
-            String versionEn = resultAsString(r, 6);
-            dto.setModule(new AutocompleteResult(resultAsLong(r, 2), 
-                    // module name, module code name, curriculum version code
-                    CurriculumUtil.moduleName(resultAsString(r, 3), resultAsString(r, 5), resultAsString(r, 8)), 
-                    CurriculumUtil.moduleName(
-                            StringUtils.isEmpty(moduleEn) ? resultAsString(r, 3) : moduleEn, 
-                            StringUtils.isEmpty(versionEn) ? resultAsString(r, 5) : versionEn, resultAsString(r, 8))));
-            dto.setCredits(JpaQueryUtil.resultAsDecimal(r, 7));
-            dto.setTeachersAsString(resultAsString(r, 9));
+            dto.setCurriculumVersionModuleId(resultAsLong(r, 10));
+            dto.setModule(new StudentVocationalResultModuleThemeDto.CurriculumModuleResult(resultAsLong(r, 2), resultAsString(r, 3), resultAsString(r, 4),
+                    resultAsString(r, 9), resultAsString(r, 8), resultAsShort(r, 7), resultAsDecimal(r, 5)));
+            dto.setCredits(JpaQueryUtil.resultAsDecimal(r, 5));
+            dto.setTeachersAsString(resultAsString(r, 6));
+            dto.setCurriculum(new CurriculumResult(resultAsLong(r, 11), null, null, null));
             result.add(dto);
         }
     }
 
-
     // protocol results and apel informal learning results
-    private List<StudentVocationalResultModuleThemeDto> vocationalResultsModuleResults(Student student) {
+    private List<StudentVocationalResultModuleThemeDto> vocationalResultsModuleResults(Student student,
+            boolean generateNameBeforehand) {
         List<StudentVocationalResultModuleThemeDto> result = new ArrayList<>();
         
         String from = "from student_vocational_result svr"
@@ -990,21 +1016,22 @@ public class StudentService {
         List<?> rows = qb.select("distinct cvo.id cvo_id, cm.id cm_id, cv.code, cm.name_et as module_name_et, mcl.name_et classifer_name_et, "
                 + "cm.name_en as module_name_en, mcl.name_en as classifer_name_en, "
                 + "cm.credits, svr.apel_application_record_id, svr.grade_code, svr.grade_date, "
-                + "svr.teachers, sy.year_code, sy.start_date",
+                + "svr.teachers, sy.year_code, sy.start_date, cm.order_nr, cm.module_code, cm.curriculum_id ",
                 em).getResultList();
 
         for (Object r : rows) {
             StudentVocationalResultModuleThemeDto dto = new StudentVocationalResultModuleThemeDto();
             
             dto.setCurriculumVersionModuleId(resultAsLong(r, 0));
-            String moduleEn = resultAsString(r, 5);
-            String versionEn = resultAsString(r, 6);
-            dto.setModule(new AutocompleteResult(resultAsLong(r, 1),
-                    CurriculumUtil.moduleName(resultAsString(r, 3), resultAsString(r, 4), resultAsString(r, 2)),
-                    CurriculumUtil.moduleName(
-                            StringUtils.isEmpty(moduleEn) ? resultAsString(r, 3) : moduleEn, 
-                            StringUtils.isEmpty(versionEn) ? resultAsString(r, 4) : versionEn, resultAsString(r, 2))));
+            if (generateNameBeforehand) {
+                dto.setModule(new StudentVocationalResultModuleThemeDto.CurriculumModuleResult(AutocompleteResult.curriculumModuleResult(resultAsLong(r, 1), resultAsString(r, 3),
+                        resultAsString(r, 5), resultAsString(r, 4), resultAsString(r, 6), resultAsString(r, 2))));
+            } else {
+                dto.setModule(new StudentVocationalResultModuleThemeDto.CurriculumModuleResult(resultAsLong(r, 1), resultAsString(r, 3), resultAsString(r, 5),
+                        resultAsString(r, 15), resultAsString(r, 2), resultAsShort(r, 14), resultAsDecimal(r, 7)));
+            }
             dto.setCredits(resultAsDecimal(r, 7));
+            dto.setCurriculum(new CurriculumResult(resultAsLong(r, 16), null, null, null));
             
             Long apelApplicationRecordId = resultAsLong(r, 8);
             dto.setIsApelTransfer(apelApplicationRecordId != null ? Boolean.TRUE : Boolean.FALSE);
@@ -1019,7 +1046,8 @@ public class StudentService {
         return result;
     }
     
-    private List<StudentVocationalResultModuleThemeDto> formalLearningReplacedModuleResults(Student student) {
+    private List<StudentVocationalResultModuleThemeDto> formalLearningReplacedModuleResults(Student student,
+            boolean generateNameBeforehand) {
         List<StudentVocationalResultModuleThemeDto> result = new ArrayList<>();
         
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_vocational_result svr "
@@ -1031,27 +1059,44 @@ public class StudentService {
         qb.requiredCriteria("svr.student_id = :studentId", "studentId", EntityUtil.getId(student));
         qb.sort("svr.grade_date");
         qb.groupBy("svr.arr_modules, svr.module_name_et, svr.module_name_en, svr.credits, a_s.id, "
-                + "svr.grade_code, svr.grade_date, svr.teachers, sy.year_code, sy.start_date");
+                + "svr.grade_code, svr.grade_date, svr.teachers, sy.year_code, sy.start_date, svr.id ");
         
-        List<?> rows = qb.select("svr.module_name_et, svr.module_name_en, string_agg(cm.name_et || ' - ' || mcl.name_et, ', ') as replaced_modules_et, " + 
-                "string_agg(cm.name_en || ' - ' || mcl.name_en, ', ') as replaced_modules_en, svr.credits, a_s.id as school_id, " + 
+        List<?> rows = qb.select("svr.module_name_et, svr.module_name_en, " +
+                "string_agg(cm.name_et" + (generateNameBeforehand ? " || ' - ' || mcl.name_et" : "") + ", ', ') as replaced_modules_et, " +
+                "string_agg(cm.name_en" + (generateNameBeforehand ? " || ' - ' || mcl.name_en" : "") + ", ', ') as replaced_modules_en, " +
+                "svr.credits, a_s.id as school_id, " +
                 "a_s.name_et, a_s.name_en, svr.grade_code, svr.grade_date, svr.teachers, sy.year_code, sy.start_date, " +
-                "array_to_string(array_agg(cast(cm.id as text)), ',')", em).getResultList();
+                "array_to_string(array_agg(cast(cm.id as text)), ','), svr.id svr_id, " +
+                "max(cm.order_nr) as cm_order, " + 
+                "min(cm.curriculum_id) as curriculum_id ", em).getResultList();
 
         for (Object r : rows) {
             StudentVocationalResultModuleThemeDto dto = new StudentVocationalResultModuleThemeDto();
             dto.setCurriculumVersionModuleId(null);
             String svrEn = resultAsString(r, 1);
             String moduleEn = resultAsString(r, 3);
-            dto.setModule(new AutocompleteResult(null, 
-                    formalLearningResultModuleName(resultAsString(r, 0), resultAsString(r, 2), resultAsString(r, 6)),
-                    formalLearningResultModuleName(
-                            StringUtils.isEmpty(svrEn) ? resultAsString(r, 0) : svrEn, 
-                            StringUtils.isEmpty(moduleEn) ? resultAsString(r, 2) : moduleEn, resultAsString(r, 7))));
+            if (generateNameBeforehand) {
+                dto.setModule(new StudentVocationalResultModuleThemeDto.CurriculumModuleResult(new AutocompleteResult(null, 
+                        formalLearningResultModuleName(resultAsString(r, 0), resultAsString(r, 2), resultAsString(r, 6)),
+                        formalLearningResultModuleName(
+                                StringUtils.isEmpty(svrEn) ? resultAsString(r, 0) : svrEn, 
+                                StringUtils.isEmpty(moduleEn) ? resultAsString(r, 2) : moduleEn, resultAsString(r, 7)))));
+            } else {
+                dto.setModule(new StudentVocationalResultModuleThemeDto.CurriculumModuleResult(new AutocompleteResult(
+                        Long.valueOf(resultAsLong(r, 14).longValue() * -1), // For grouping it by module id svr id should be different
+                        formalLearningResultModuleName(resultAsString(r, 0), resultAsString(r, 2),
+                                resultAsString(r, 6)),
+                        formalLearningResultModuleName(StringUtils.isEmpty(svrEn) ? resultAsString(r, 0) : svrEn,
+                                StringUtils.isEmpty(moduleEn) ? resultAsString(r, 2) : moduleEn,
+                                resultAsString(r, 7)))));
+            }
             dto.setCredits(resultAsDecimal(r, 4));
             dto.setGrade(resultAsString(r, 8));
             dto.setIsApelTransfer(Boolean.TRUE);
             dto.setIsFormalLearning(Boolean.TRUE);
+            dto.getModule().setOrderNr(resultAsShort(r, 15));
+            dto.setCurriculum(new CurriculumResult(resultAsLong(r, 16), null, null, null)); // ID for certificate sorting
+            dto.setDate(resultAsLocalDate(r, 9));
             
             String replacedModulesAsString = resultAsString(r, 13);
             if(replacedModulesAsString != null) {
@@ -1074,10 +1119,10 @@ public class StudentService {
         return null;
     }
 
-    private Collection<StudentVocationalResultModuleThemeDto> vocationalResultsThemeResults(Student student) {
+    private Collection<StudentVocationalResultModuleThemeDto> vocationalResultsThemeResults(Student student, boolean generateNameBeforehand) {
         String journalSelect = "cvo_id, cm_id, cv_code, cm_name_et, mcl_name_et, cm_name_en, mcl_name_en, cvot_id, cvot_name_et, cvot_credits, "
                 + "grade_code, grade_inserted, teacher_id, teacher_firstname, teacher_lastname, sy_year_code, sy_start_date, "
-                + "is_apel_transfer, is_formal, curriculum_version_result";
+                + "is_apel_transfer, is_formal, curriculum_version_result, cm_order, cm_module_code, cm_credits, cm_curriculum ";
 
         String journalCurriculumResults = " select * from (select distinct on (cvot.id, teacher_id) cvo.id cvo_id, cm.id cm_id, "
                 + "cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits, "
@@ -1086,7 +1131,8 @@ public class StudentService {
                 + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, "
                 + "false is_apel_transfer, false is_formal, first_value(cv.id) over (partition by jot.journal_id order by case when "
                 + "cvo.curriculum_version_id = :curriculumVersionId then 1 else 0 end desc, case when cm.curriculum_id = :curriculumId then 1 else 0 end desc, "
-                + "cvo.curriculum_version_id) = :curriculumVersionId curriculum_version_result "
+                + "cvo.curriculum_version_id) = :curriculumVersionId curriculum_version_result, "
+                + "cm.order_nr cm_order, cm.module_code cm_module_code, cm.curriculum_id cm_curriculum "
                 + "from journal_student js "
                 + "join journal_omodule_theme jot on jot.journal_id = js.journal_id "
                 + "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id "
@@ -1111,7 +1157,8 @@ public class StudentService {
                 + "jes.grade_code grade_code, jes.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
                 + "tp.lastname teacher_lastname, cvot.id cvot_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, "
                 + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, "
-                + "false is_apel_transfer, false is_formal, false curriculum_version_result "
+                + "false is_apel_transfer, false is_formal, false curriculum_version_result, "
+                + "cm.order_nr cm_order, cm.module_code cm_module_code, cm.curriculum_id cm_curriculum "
                 + "from journal_student js "
                 + "join journal_omodule_theme jot on jot.journal_id = js.journal_id "
                 + "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id "
@@ -1141,7 +1188,8 @@ public class StudentService {
                 + "cvot.credits cvot_credits, pj.grade_code grade_code, pj.grade_inserted grade_inserted, tp.id teacher_id, tp.firstname teacher_firstname, "
                 + "tp.lastname teacher_lastname, cvot.id cvot_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, " 
                 + "mcl.name_en mcl_name_en, cm.credits cm_credits, sy.year_code sy_year_code, sy.start_date sy_start_date, "
-                + "false is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result "
+                + "false is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result, "
+                + "cm.order_nr cm_order, cm.module_code cm_module_code, cm.curriculum_id cm_curriculum "
                 + "from practice_journal pj "
                 + "join practice_journal_module_subject pjms on pj.id = pjms.practice_journal_id "
                 + "join curriculum_version_omodule_theme cvot on cvot.id = pjms.curriculum_version_omodule_theme_id "
@@ -1161,7 +1209,8 @@ public class StudentService {
                 + "cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, mcl.name_en mcl_name_en, "
                 + "cvot.id cvot_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits, aai.grade_code grade_code, aa.confirmed grade_inserted, null as teacher_id, "
                 + "null teacher_firstname, null teacher_lastname, sy.year_code sy_year_code, sy.start_date sy_start_date, "
-                + "true is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result "
+                + "true is_apel_transfer, false is_formal, cv.id = :curriculumVersionId curriculum_version_result, "
+                + "cm.order_nr cm_order, cm.module_code cm_module_code, cm.credits cm_credits, cm.curriculum_id cm_curriculum "
                 + "from apel_application aa join apel_application_record aar on aa.id = aar.apel_application_id "
                 + "join apel_application_informal_subject_or_module aai on aar.id = aai.apel_application_record_id "
                 + "join curriculum_version_omodule_theme cvot on aai.curriculum_version_omodule_theme_id = cvot.id "
@@ -1176,7 +1225,8 @@ public class StudentService {
                 + "mcl.name_et mcl_name_et, cm.name_en cm_name_en, mcl.name_en mcl_name_en, "
                 + "cvot.id cvot_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits, 'KUTSEHINDAMINE_A' grade_code, aa.confirmed grade_inserted, null as teacher_id, "
                 + "null teacher_firstname, null teacher_lastname, sy.year_code sy_year_code, sy.start_date sy_start_date, "
-                + "true is_apel_transfer, true is_formal, cv.id = :curriculumVersionId curriculum_version_result "
+                + "true is_apel_transfer, true is_formal, cv.id = :curriculumVersionId curriculum_version_result, "
+                + "cm.order_nr cm_order, cm.module_code cm_module_code, cm.credits cm_credits, cm.curriculum_id cm_curriculum "
                 + "from apel_application aa join apel_application_record aar on aa.id = aar.apel_application_id "
                 + "join apel_application_formal_subject_or_module aaf on aar.id = aaf.apel_application_record_id "
                 + "join apel_application_formal_replaced_subject_or_module aarf on aar.id = aarf.apel_application_record_id "
@@ -1202,7 +1252,7 @@ public class StudentService {
 
         List<?> rows = qb.select("cvo_id, cm_id, cv_code, cm_name_et, mcl_name_et, cm_name_en, mcl_name_en,"
                 + "cvot_id, cvot_name_et, cvot_credits, grade_code, grade_inserted, teacher_id, teacher_firstname, teacher_lastname, "
-                + "sy_year_code, sy_start_date, is_apel_transfer, is_formal, curriculum_version_result",
+                + "sy_year_code, sy_start_date, is_apel_transfer, is_formal, curriculum_version_result, cm_order, cm_module_code, cm_credits, cm_curriculum ",
                 em).getResultList();
 
         Map<Long, StudentVocationalResultModuleThemeDto> result = new HashMap<>();
@@ -1215,13 +1265,14 @@ public class StudentService {
             } else {
                 dto = new StudentVocationalResultModuleThemeDto();
                 dto.setCurriculumVersionModuleId(resultAsLong(r, 0));
-                String moduleEn = resultAsString(r, 5);
-                String versionEn = resultAsString(r, 6);
-                dto.setModule(new AutocompleteResult(resultAsLong(r, 1),
-                        CurriculumUtil.moduleName(resultAsString(r, 3), resultAsString(r, 4), resultAsString(r, 2)),
-                        CurriculumUtil.moduleName(
-                                StringUtils.isEmpty(moduleEn) ? resultAsString(r, 3) : moduleEn, 
-                                StringUtils.isEmpty(versionEn) ? resultAsString(r, 4) : versionEn, resultAsString(r, 2))));
+                if (generateNameBeforehand) {
+                    dto.setModule(new StudentVocationalResultModuleThemeDto.CurriculumModuleResult(AutocompleteResult.curriculumModuleResult(resultAsLong(r, 1), resultAsString(r, 3),
+                            resultAsString(r, 5), resultAsString(r, 4), resultAsString(r, 6), resultAsString(r, 2))));
+                } else {
+                    dto.setModule(new StudentVocationalResultModuleThemeDto.CurriculumModuleResult(resultAsLong(r, 1), resultAsString(r, 3), resultAsString(r, 5),
+                            resultAsString(r, 21), resultAsString(r, 2), resultAsShort(r, 20), resultAsDecimal(r, 22)));
+                }
+                dto.setCurriculum(new CurriculumResult(resultAsLong(r, 23), null, null, null));
 
                 dto.setTheme(new AutocompleteResult(themeId, resultAsString(r, 8), resultAsString(r, 8)));
                 dto.setCredits(resultAsDecimal(r, 9));
@@ -1238,6 +1289,35 @@ public class StudentService {
             }
         }
         return result.values();
+    }
+
+    private List<StudentVocationalResultModuleThemeDto> vocationalResultsOutcomeResults(Student student) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_curriculum_module_outcomes_result scmor "
+                + "join curriculum_module_outcomes cmo on cmo.id = scmor.curriculum_module_outcomes_id "
+                + "join curriculum_module cm on cm.id = cmo.curriculum_module_id "
+                + "join curriculum c on c.id = cm.curriculum_id "
+                + "left join teacher t on t.id = scmor.grade_inserted_teacher_id "
+                + "left join person p on p.id = t.person_id");
+        qb.requiredCriteria("scmor.student_id = :student_id", "student_id", EntityUtil.getId(student));
+        qb.filter("scmor.grade_code is not null");
+
+        List<?> data = qb.select("cm.id cm_id, cm.name_et, cm.name_en, cmo.id, cmo.outcome_et, cmo.outcome_en, "
+                + "scmor.grade_code, scmor.grade_date, p.firstname, p.lastname, "
+                + "c.id c_id, c.name_et c_name_et, c.name_en c_name_en, c.code c_code, cm.order_nr cm_order, cm.module_code, cm.credits credits ", em)
+                .getResultList();
+        return StreamUtil.toMappedList(r -> {
+            StudentVocationalResultModuleThemeDto dto = new StudentVocationalResultModuleThemeDto();
+            dto.setModule(new StudentVocationalResultModuleThemeDto.CurriculumModuleResult(resultAsLong(r, 0), resultAsString(r, 1),
+                    resultAsString(r, 2), resultAsString(r, 15), null, resultAsShort(r, 14), resultAsDecimal(r, 16)));
+            dto.setOutcome(new AutocompleteResult(resultAsLong(r, 3), resultAsString(r, 4), resultAsString(r, 5)));
+            dto.setGrade(resultAsString(r, 6));
+            dto.setDate(resultAsLocalDate(r, 7));
+            String teacherName = PersonUtil.fullname(resultAsString(r, 8), resultAsString(r, 9));
+            dto.getTeachers().add(new AutocompleteResult(null, teacherName, teacherName));
+            dto.setCurriculum(new CurriculumResult(resultAsLong(r, 10), resultAsString(r, 11), resultAsString(r, 12),
+                    resultAsString(r, 13)));
+            return dto;
+        }, data);
     }
 
     private List<StudentVocationalModuleDto> vocationalCurriculumModules(Student student, Long curriculumVersionId,
@@ -1447,7 +1527,7 @@ public class StudentService {
         return rows.values().stream().collect(Collectors.toList());
     }
 
-    public Map<Long, StudentVocationalStudyProgramme> studentStudyProgrammes(Set<Long> studentIds) {
+    private Map<Long, StudentVocationalStudyProgrammeDto> studentStudyProgrammes(Set<Long> studentIds) {
         List<?> data = em.createNativeQuery("select student_id, "
                 + "sum(case when m.module_code = 'KUTSEMOODUL_Y' then m.credits else 0 end) as general, "
                 + "sum(case when m.module_code = 'KUTSEMOODUL_P' then m.credits else 0 end) as core, "
@@ -1471,7 +1551,7 @@ public class StudentService {
                         CurriculumModuleType.KUTSEMOODUL_P, CurriculumModuleType.KUTSEMOODUL_L))
                 .setParameter(2, studentIds)
                 .getResultList();
-        return StreamUtil.toMap(r -> resultAsLong(r, 0), r -> new StudentVocationalStudyProgramme(resultAsDecimal(r, 1),
+        return StreamUtil.toMap(r -> resultAsLong(r, 0), r -> new StudentVocationalStudyProgrammeDto(resultAsDecimal(r, 1),
                 resultAsDecimal(r, 2), resultAsDecimal(r, 3), resultAsDecimal(r, 4)), data);
     }
 
@@ -1551,14 +1631,17 @@ public class StudentService {
     public void endGuestStudent() {
         List<Student> students = em.createQuery("select s from Student s "
                 + "where s.type.code = ?1 "
-                + "and s.studyEnd < ?2", Student.class)
+                + "and s.status.code != ?2 "
+                + "and s.studyEnd < ?3", Student.class)
                 // Guest
                 .setParameter(1, StudentType.OPPUR_K.name())
-                .setParameter(2, LocalDate.now())
+                .setParameter(2, StudentStatus.OPPURSTAATUS_L.name())
+                .setParameter(3, LocalDate.now())
                 .getResultList();
         for (Student student : students) {
             student.setStatus(EntityUtil.getOptionalOne(StudentStatus.OPPURSTAATUS_L.name(), em));
-            EntityUtil.save(student, em);
+            userService.disableUser(student, LocalDate.now().minusDays(1));
+            saveWithHistory(student);
         }
     }
     
@@ -1576,6 +1659,138 @@ public class StudentService {
             .setParameter(2, DirectiveType.KASKKIRI_KYLALIS.name())
             .setMaxResults(1).getResultList();
         return JpaQueryUtil.resultAsBoolean(directiveStudyLevels.get(0), 0);
+    }
+
+    public Set<Long> cumLaudes(Set<Long> studentIds, boolean isHigher) {
+        if (isHigher) {
+            return higherCumLaudes(studentIds);
+        }
+        return vocationalCumLaudes(studentIds);
+    }
+
+    private Set<Long> higherCumLaudes(Set<Long> studentIds) {
+        List<?> data = em.createNativeQuery("select scc.student_id from student_curriculum_completion scc"
+                + " join protocol_student ps on ps.student_id = scc.student_id"
+                + " join protocol p on p.id = ps.protocol_id"
+                + " where scc.student_id in ?1 and scc.average_mark >= 4.6 and p.status_code = ?2"
+                + " and ((p.is_final = true and p.is_final_thesis = false and ps.grade_code = ?3)"
+                + " or exists(select 1 from protocol_student_occupation pso where pso.protocol_student_id = ps.id))"
+                + " and exists(select 1 from student s join curriculum_version cv on s.curriculum_version_id = cv.id"
+                + " join curriculum c on cv.curriculum_id = c.id and c.is_higher = true"
+                + " where s.id = scc.student_id)")
+                .setParameter(1, studentIds)
+                .setParameter(2, ProtocolStatus.PROTOKOLL_STAATUS_K.name())
+                .setParameter(3, HigherAssessment.KORGHINDAMINE_5.name())
+                .getResultList();
+        return data.stream().map(r -> resultAsLong(r, 0)).collect(Collectors.toSet());
+    }
+
+    private Set<Long> vocationalCumLaudes(Set<Long> studentIds) {
+        List<?> data = em.createNativeQuery("select scc.student_id from student_curriculum_completion scc"
+                + " join protocol_student ps on ps.student_id = scc.student_id"
+                + " join protocol p on p.id = ps.protocol_id"
+                + " where scc.student_id in ?1 and scc.average_mark >= 4.6 and p.status_code = ?2"
+                + " and ((p.is_final = true and p.is_final_thesis = false and ps.grade_code = ?3)"
+                + " or exists(select 1 from protocol_student_occupation pso where pso.protocol_student_id = ps.id))"
+                + " and exists(select 1 from student s join curriculum_version cv on s.curriculum_version_id = cv.id"
+                + " join curriculum c on cv.curriculum_id = c.id"
+                + " join classifier_connect cc on c.orig_study_level_code = cc.classifier_code and cc.connect_classifier_code = ?4"
+                + " where s.id = scc.student_id)"
+                + " and not exists(select 1 from student_vocational_result svr3 where svr3.student_id = scc.student_id"
+                + " and svr3.grade_code = ?5)")
+                .setParameter(1, studentIds)
+                .setParameter(2, ProtocolStatus.PROTOKOLL_STAATUS_K.name())
+                .setParameter(3, OccupationalGrade.KUTSEHINDAMINE_5.name())
+                .setParameter(4, FormType.LOPUBLANKETT_KK.name())
+                .setParameter(5, OccupationalGrade.KUTSEHINDAMINE_3.name())
+                .getResultList();
+
+        Set<Long> studentsMeetingCriteria = data.stream().map(r -> resultAsLong(r, 0)).collect(Collectors.toSet());
+        if (!studentsMeetingCriteria.isEmpty()) {
+            Set<Long> filteredStudentIds = studentsMeetingCriteria;
+            Map<Long, StudentVocationalStudyProgrammeDto> studyProgrammes = studyProgrammesWithEarnedCredits(
+                    filteredStudentIds, true);
+
+            for (Long studentId : filteredStudentIds) {
+                StudentVocationalStudyProgrammeDto studentStudyProgramme = studyProgrammes.get(studentId);
+                if (studentStudyProgramme == null) {
+                    studentsMeetingCriteria.remove(studentId);
+                    continue;
+                }
+
+                BigDecimal studentGeneralCredits = studentStudyProgramme.getEarnedGeneralStudies();
+                BigDecimal programmeGeneralCredits = studentStudyProgramme.getGeneralStudies();
+                if (BigDecimal.ZERO.compareTo(programmeGeneralCredits) != 0
+                        && studentGeneralCredits.divide(programmeGeneralCredits, 3, RoundingMode.DOWN)
+                        .compareTo(DISTINCTIVE_GRADES_CRITERIA) == -1) {
+                    studentsMeetingCriteria.remove(studentId);
+                    continue;
+                }
+
+                BigDecimal programmeCoreAndFreeCredits = studentStudyProgramme.getCoreStudies()
+                        .add(studentStudyProgramme.getFreeChoice());
+                BigDecimal studentCoreAndFreeCredits = studentStudyProgramme.getEarnedCoreStudies()
+                        .add(studentStudyProgramme.getEarnedFreeChoice());
+                if (BigDecimal.ZERO.compareTo(programmeCoreAndFreeCredits) != 0
+                        && studentCoreAndFreeCredits.divide(programmeCoreAndFreeCredits, 3, RoundingMode.DOWN)
+                        .compareTo(DISTINCTIVE_GRADES_CRITERIA) == -1) {
+                    studentsMeetingCriteria.remove(studentId);
+                }
+            }
+        }
+        return studentsMeetingCriteria;
+    }
+
+    public Map<Long, StudentVocationalStudyProgrammeDto> studyProgrammesWithEarnedCredits(Set<Long> studentIds,
+            boolean onlyDistinctiveGrades) {
+        Map<Long, StudentVocationalStudyProgrammeDto> studyProgrammes = studentStudyProgrammes(studentIds);
+
+        Map<Long, BigDecimal> generalStudiesCredits = studentModuleTypeCredits(studentIds,
+                EnumUtil.toNameList(CurriculumModuleType.KUTSEMOODUL_Y), onlyDistinctiveGrades, true);
+        Map<Long, BigDecimal> coreStudiesCredits = studentModuleTypeCredits(studentIds,
+                EnumUtil.toNameList(CurriculumModuleType.KUTSEMOODUL_P), onlyDistinctiveGrades, true);
+        Map<Long, BigDecimal> freeChoiceCredits = studentModuleTypeCredits(studentIds,
+                EnumUtil.toNameList(CurriculumModuleType.KUTSEMOODUL_Y, CurriculumModuleType.KUTSEMOODUL_P,
+                        CurriculumModuleType.KUTSEMOODUL_L), onlyDistinctiveGrades, false);
+
+        for (Map.Entry<Long, StudentVocationalStudyProgrammeDto> entry : studyProgrammes.entrySet()) {
+            StudentVocationalStudyProgrammeDto dto = entry.getValue();
+            dto.setEarnedGeneralStudies(generalStudiesCredits.get(entry.getKey()));
+            dto.setEarnedCoreStudies(coreStudiesCredits.get(entry.getKey()));
+            dto.setEarnedFreeChoice(freeChoiceCredits.get(entry.getKey()));
+        }
+        return studyProgrammes;
+    }
+
+    private Map<Long, BigDecimal> studentModuleTypeCredits(Set<Long> studentIds, List<String> moduleTypes,
+            boolean onlyDistinctiveGrades, boolean ofModuleType) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_vocational_result svr"
+                + " join curriculum_version_omodule cmm on (svr.arr_modules is null"
+                + " and svr.curriculum_version_omodule_id = cmm.id or cmm.id=any(svr.arr_modules))");
+        qb.requiredCriteria("svr.student_id in (:studentIds)", "studentIds", studentIds);
+        List<String> grades = OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE;
+        if (onlyDistinctiveGrades) {
+            grades.remove(OccupationalGrade.KUTSEHINDAMINE_A.name());
+        }
+        qb.requiredCriteria("svr.grade_code in (:positiveGrades)", "positiveGrades", grades);
+        qb.filter("cmm.curriculum_module_id in (select cm.id as m_id from curriculum_version cv"
+                + " join curriculum_version_omodule cvo on cv.id=cvo.curriculum_version_id"
+                + " join curriculum_module cm on cvo.curriculum_module_id=cm.id and cv.curriculum_id=cm.curriculum_id"
+                + " and coalesce(cm.is_additional,false)=false"
+                + " and cm.module_code" + (ofModuleType ? " " : " not ") + "in (:moduleTypes)"
+                + " and coalesce(cm.is_additional,false)=false"
+                + " join student ss on cv.id=ss.curriculum_version_id"
+                + " left join student_group sg on ss.student_group_id=sg.id"
+                + " where ss.id in (:studentIds) and (sg.id is null or coalesce(sg.speciality_code,'x')='x' or"
+                + " coalesce(sg.speciality_code,'x')!='x' and exists("
+                + " select 1 from curriculum_module_occupation cmo"
+                + " left join classifier_connect ccc on cmo.occupation_code=ccc.connect_classifier_code"
+                + " where cmo.curriculum_module_id=cm.id and (cmo.occupation_code=sg.speciality_code or ccc.classifier_code=sg.speciality_code))))"
+                + " group by svr.student_id");
+        qb.parameter("moduleTypes", moduleTypes);
+
+        List<?> data = qb.select("svr.student_id, sum(svr.credits)", em).getResultList();
+        return StreamUtil.toMap(r -> resultAsLong(r, 0), r -> resultAsDecimal(r, 1), data);
     }
 
 }

@@ -10,10 +10,13 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class CertificateReport {
     
     private String school;
+    private String schoolGenitive;
     private String schoolEn;
     private Boolean isHigherSchool;
     private CertificateReportStudent student;
     private String gradeSystem;
+    private String gradesDescription;
+    private List<CertificateReportGrade> grades;
     private String studyYear;
     private List<CertificateReportSession> sessions;
     private CertificateReportSession lastSession;
@@ -23,6 +26,7 @@ public class CertificateReport {
     public static CertificateReport of(Student student) {
         CertificateReport report = new CertificateReport();
         report.setSchool(student.getSchool().getNameEt());
+        report.setSchoolGenitive(student.getSchool().getNameGenitiveEt());
         report.setSchoolEn(student.getSchool().getNameEn());
         report.setStudent(CertificateReportStudent.of(student));
         return report;
@@ -31,6 +35,7 @@ public class CertificateReport {
     public static CertificateReport of(Person person, School school) {
         CertificateReport report = new CertificateReport();
         report.setSchool(school.getNameEt());
+        report.setSchoolGenitive(school.getNameGenitiveEt());
         report.setSchoolEn(school.getNameEn());
         report.setStudent(CertificateReportStudent.of(person));
         return report;
@@ -39,6 +44,7 @@ public class CertificateReport {
     public static CertificateReport of(School school, String otherName, String otherIdcode) {
         CertificateReport report = new CertificateReport();
         report.setSchool(school.getNameEt());
+        report.setSchoolGenitive(school.getNameGenitiveEt());
         report.setSchoolEn(school.getNameEn());
         report.setStudent(CertificateReportStudent.of(otherName, otherIdcode));
         return report;
@@ -72,6 +78,14 @@ public class CertificateReport {
 
     public void setSchool(String school) {
         this.school = school;
+    }
+
+    public String getSchoolGenitive() {
+        return schoolGenitive;
+    }
+
+    public void setSchoolGenitive(String schoolGenitive) {
+        this.schoolGenitive = schoolGenitive;
     }
 
     public Boolean getIsHigherSchool() {
@@ -114,12 +128,28 @@ public class CertificateReport {
         this.gradeSystem = gradeSystem;
     }
 
+    public String getGradesDescription() {
+        return gradesDescription;
+    }
+
+    public void setGradesDescription(String gradesDescription) {
+        this.gradesDescription = gradesDescription;
+    }
+
     public AutocompleteResult getAbroadProgramme() {
         return abroadProgramme;
     }
 
     public void setAbroadProgramme(AutocompleteResult abroadProgramme) {
         this.abroadProgramme = abroadProgramme;
+    }
+
+    public List<CertificateReportGrade> getGrades() {
+        return grades;
+    }
+
+    public void setGrades(List<CertificateReportGrade> grades) {
+        this.grades = grades;
     }
     
 }

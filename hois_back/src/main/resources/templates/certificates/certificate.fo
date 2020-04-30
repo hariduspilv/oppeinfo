@@ -33,16 +33,15 @@
 						<fo:table-cell><fo:block><fo:leader/></fo:block></fo:table-cell>
 						<fo:table-cell text-align="right" margin-right="0.08in"><fo:block>{{ content.certificate.certificateNr }}</fo:block></fo:table-cell>
 					</fo:table-row>
+					<fo:table-row height="0.29in">
+						<fo:table-cell><fo:block><fo:leader/></fo:block></fo:table-cell>
+						<fo:table-cell text-align="right" margin-right="0.08in"><fo:block>{{ content.certificate.inserted | hoisDate }}</fo:block></fo:table-cell>
+					</fo:table-row>
 				</fo:table-body>
 			</fo:table>
 			<fo:block><fo:leader/></fo:block>
 			<fo:block><fo:leader/></fo:block>
-			<fo:block><fo:leader/></fo:block>
-			<fo:block><fo:leader/></fo:block>
-			<fo:block font-weight="bold">{{ content.certificate.headline }}</fo:block>
-			<fo:block><fo:leader/></fo:block>
-			<fo:block><fo:leader/></fo:block>
-			<fo:block><fo:leader/></fo:block>
+			<fo:block font-weight="bold" space-after="15pt">{{ content.certificate.headline }}</fo:block>
 			<fo:block white-space-collapse="true" linefeed-treatment="preserve">{% if content.contentEditable %}{{ content.content }}{% else %}{{ content.content | raw}}{% endif %}</fo:block>
 			<fo:block><fo:leader/></fo:block>
 			<fo:block><fo:leader/></fo:block>

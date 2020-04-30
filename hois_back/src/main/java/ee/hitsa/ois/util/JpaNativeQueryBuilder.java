@@ -3,6 +3,7 @@ package ee.hitsa.ois.util;
 import static ee.hitsa.ois.util.JpaQueryUtil.parameterAsTimestamp;
 import static ee.hitsa.ois.util.JpaQueryUtil.toContains;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -79,6 +80,12 @@ public class JpaNativeQueryBuilder {
 
     public void optionalCriteria(String criteria, String name, String value) {
         if(StringUtils.hasText(value)) {
+            filter(criteria, name, value);
+        }
+    }
+    
+    public void optionalCriteria(String criteria, String name, BigDecimal value) {
+        if(value != null) {
             filter(criteria, name, value);
         }
     }

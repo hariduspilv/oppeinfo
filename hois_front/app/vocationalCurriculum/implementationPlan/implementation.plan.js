@@ -21,6 +21,7 @@ angular.module('hitsaOis')
 
     var HOURS_PER_EKAP = 26;
 
+    $scope.moduleOrderBy = Curriculum.curriculumModuleOrder;
     $scope.CURRICULUM_STATUS = Curriculum.STATUS;
     $scope.VERSION_STATUS = Curriculum.VERSION_STATUS;
 

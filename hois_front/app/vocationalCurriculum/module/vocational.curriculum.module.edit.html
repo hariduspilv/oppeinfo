@@ -168,7 +168,7 @@
           <hois-classifier-select name="module" ng-model="module.module" show-only-values="possibleTypes" main-classifier-code="KUTSEMOODUL" criteria="{vocational: true}"
             required ng-disabled="module.id && !module.basicDataCanBeEdited" only-valid ignore-preselected model-value-attr="code"></hois-classifier-select>
         </md-input-container>
-        <md-input-container flex="10" flex-sm="50" flex-xs="50" flex-offset="5">
+        <md-input-container flex="10" flex-sm="25" flex-xs="25" flex-offset="5">
           <label>{{'module.credits' | translate}}</label>
           <input ng-model="module.credits" type="number" name="credits" min="0" max="999" pattern="^\d+(\.\d{1})?$" required ng-readonly="module.baseModule || moduleType === moduleTypes.BASE_MODULE">
           <div ng-messages="vocationalCurriculumModuleForm.credits.$error" ng-show="vocationalCurriculumModuleForm.credits.$dirty">
@@ -180,6 +180,18 @@
             </div>
             <div ng-message="pattern">
               {{'stateCurriculum.error.decimalPresision' | translate}}
+            </div>
+          </div>
+        </md-input-container>
+        <md-input-container flex="10" flex-sm="20" flex-xs="20" flex-offset="5">
+          <label>{{'module.orderNr' | translate}}</label>
+          <input ng-model="module.orderNr" type="number" name="orderNr" min="0" max="32767" pattern="^\d+?$">
+          <div ng-messages="vocationalCurriculumModuleForm.orderNr.$error" ng-show="vocationalCurriculumModuleForm.orderNr.$dirty">
+            <div ng-message="min">
+              {{'main.messages.error.positive' | translate}}
+            </div>
+            <div ng-message="max">
+              {{'main.messages.error.max' | translate: {max: 32767} }}
             </div>
           </div>
         </md-input-container>

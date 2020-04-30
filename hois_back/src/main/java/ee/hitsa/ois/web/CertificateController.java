@@ -37,9 +37,11 @@ import ee.hitsa.ois.service.CertificateValidationService;
 import ee.hitsa.ois.service.RtfService;
 import ee.hitsa.ois.service.ekis.EkisService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -216,9 +218,14 @@ public class CertificateController {
     @GetMapping("/print/{id:\\d+}/certificate.rtf")
     public void print(HoisUserDetails user, @WithEntity Certificate certificate, HttpServletResponse response, @RequestParam(required = false) Language lang) throws IOException {
         UserUtil.assertIsSchoolAdmin(user, certificate.getSchool(), Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_TOEND);
-        UserUtil.assertIsSchoolWithoutEkis(certificate.getSchool());
-        HttpUtil.rtf(response, String.format("toend%s.rtf", certificate.getStudent() != null ? "_" + PersonUtil.fullname(certificate.getStudent().getPerson()) : ""),
-                rtfService.generateFop(CertificateRtfReport.TEMPLATE_NAME, new CertificateRtfReport(certificate), lang));
+        // check if we need different xsl-fo template (SOOR vocational needs landscape)
+        boolean isVocationalSoor = certificate.getStudent() != null
+                && ClassifierUtil.oneOf(certificate.getType(), CertificateType.TOEND_LIIK_SOOR)
+                && !StudentUtil.isHigher(certificate.getStudent());
+        HttpUtil.rtf(response, String.format("toend%s.rtf",
+                certificate.getStudent() != null ? "_" + PersonUtil.fullname(certificate.getStudent().getPerson()) : ""),
+                rtfService.generateFop(isVocationalSoor ? CertificateRtfReport.TEMPLATE_NAME_SOOR_VOCATIONAL
+                        : CertificateRtfReport.TEMPLATE_NAME, new CertificateRtfReport(certificate), lang));
     }
     
     @GetMapping("/hasorderedcertificates")

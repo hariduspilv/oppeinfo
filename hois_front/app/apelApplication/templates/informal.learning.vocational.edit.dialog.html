@@ -82,12 +82,12 @@
             <table md-table md-progress="tabledata.$promise" class="secondary-table">
               <thead md-head>
                 <tr md-row>
-                  <th md-column>{{'apel.informalLearnings.module' | translate}}/{{'apel.informalLearnings.theme' | translate}}</th>
+                  <th md-column class="apel-min-width">{{'apel.informalLearnings.module' | translate}}/{{'apel.informalLearnings.theme' | translate}}</th>
                   <th md-column>{{'apel.informalLearnings.isModule' | translate}}</th>
                   <th md-column>{{'apel.informalLearnings.hours' | translate}}/{{'apel.informalLearnings.ekap' | translate}}</th>
                   <th md-column>{{'apel.informalLearnings.result' | translate}}</th>
-                  <th md-column>{{'apel.informalLearnings.outcomes' | translate}}</th>
-                  <th md-column>{{'apel.informalLearnings.acquiredSkills' | translate}}</th>
+                  <th md-column class="apel-min-width">{{'apel.informalLearnings.outcomes' | translate}}</th>
+                  <th md-column class="apel-min-width">{{'apel.informalLearnings.acquiredSkills' | translate}}</th>
                   <th md-column></th>
                 </tr>
               </thead>
@@ -124,7 +124,7 @@
                         {{currentLanguage() === 'en' ? outcome.curriculumModuleOutcomes.outcomeEn : outcome.curriculumModuleOutcomes.outcomeEt}}
                       </md-input-container>
                     </td>
-                    <td md-cell style="width: 40%; min-width: 400px;">
+                    <td md-cell>
                       <md-input-container style="width: 100%">
                         <textarea ng-model="subjectOrModule.skills" required md-maxlength="4000" max-rows="3" aria-label="{{'apel.informalLearnings.acquiredSkills' | translate}}"></textarea>
                       </md-input-container>

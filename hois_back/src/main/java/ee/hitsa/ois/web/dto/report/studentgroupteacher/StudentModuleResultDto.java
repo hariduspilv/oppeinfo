@@ -7,7 +7,7 @@ public class StudentModuleResultDto {
     private Long id;
     private String grade;
     private LocalDate gradeInserted;
-    private Boolean itendedModule = Boolean.TRUE;
+    private String gradeInsertedBy;
 
     public StudentModuleResultDto() {
 
@@ -17,6 +17,7 @@ public class StudentModuleResultDto {
         this.id = columnResult.getId();
         this.grade = columnResult.getGrade();
         this.gradeInserted = columnResult.getGradeInserted();
+        this.gradeInsertedBy = columnResult.getGradeInsertedBy();
     }
 
     public Long getId() {
@@ -43,12 +44,11 @@ public class StudentModuleResultDto {
         this.grade = grade;
     }
 
-    public Boolean getItendedModule() {
-        return itendedModule;
+    public String getGradeInsertedBy() {
+        return gradeInsertedBy;
     }
 
-    public void setItendedModule(Boolean itendedModule) {
-        this.itendedModule = itendedModule;
+    public void setGradeInsertedBy(String gradeInsertedBy) {
+        this.gradeInsertedBy = gradeInsertedBy;
     }
-
 }

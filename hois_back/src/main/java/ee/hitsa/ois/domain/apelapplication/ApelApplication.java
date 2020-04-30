@@ -17,6 +17,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResult;
 
 @Entity
 public class ApelApplication extends BaseEntityWithId {
@@ -56,7 +57,10 @@ public class ApelApplication extends BaseEntityWithId {
     
     @OneToMany(mappedBy="apelApplication", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ApelApplicationFile> files = new ArrayList<>();
-    
+
+    @OneToMany(mappedBy="apelApplication", cascade = CascadeType.ALL)
+    private List<StudentCurriculumModuleOutcomesResult> outcomeResults = new ArrayList<>();
+
     public Student getStudent() {
         return student;
     }
@@ -176,5 +180,12 @@ public class ApelApplication extends BaseEntityWithId {
     public void setFiles(List<ApelApplicationFile> files) {
         this.files = files;
     }
-    
+
+    public List<StudentCurriculumModuleOutcomesResult> getOutcomeResults() {
+        return outcomeResults;
+    }
+
+    public void setOutcomeResults(List<StudentCurriculumModuleOutcomesResult> outcomeResults) {
+        this.outcomeResults = outcomeResults;
+    }
 }

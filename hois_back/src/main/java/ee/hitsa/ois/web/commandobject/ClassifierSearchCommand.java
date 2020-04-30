@@ -9,6 +9,7 @@ public class ClassifierSearchCommand extends SearchCommand {
     private List<String> mainClassCodes;
     private Boolean vocational;
     private Boolean higher;
+    private Boolean valid;
 
 	public String getValue() {
 		return value;
@@ -55,6 +56,14 @@ public class ClassifierSearchCommand extends SearchCommand {
 		return "ClassifierSearchCommand [value=" + value + ", code=" + getCode() + ", name=" + getName() + ", mainClassCode="
 				+ mainClassCode + ", language=" + getLang() + "]";
 	}
+
+    public Boolean getValid() {
+        return valid;
+    }
+
+    public void setValid(Boolean valid) {
+        this.valid = valid;
+    }
 
 
 }

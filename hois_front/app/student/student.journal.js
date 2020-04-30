@@ -58,12 +58,13 @@
         scope.nextWeekIndex = scope.weeks[shownWeekIndex + 1] ? shownWeekIndex + 1 : null;
     }
 
-    angular.module('hitsaOis').controller('StudentJournalListController', ['$scope', '$route', 'QueryUtils', 'Classifier', 'DataUtils', 'stateStorageService',
-        function ($scope, $route, QueryUtils, Classifier, DataUtils, stateStorageService) {
+    angular.module('hitsaOis').controller('StudentJournalListController', ['$scope', '$route', 'Classifier', 'DataUtils', 'VocationalGradeUtil', 'QueryUtils', 'stateStorageService',
+        function ($scope, $route, Classifier, DataUtils, VocationalGradeUtil, QueryUtils, stateStorageService) {
             $scope.currentNavItem = 'journals';
             $scope.auth = $route.current.locals.auth;
+            $scope.gradeUtil = VocationalGradeUtil;
             var studentId = $scope.auth.student;
-            var clMapper = Classifier.valuemapper({entryType: 'SISSEKANNE'});
+            var clMapper = Classifier.valuemapper({entryType: 'SISSEKANNE', grade: 'KUTSEHINDAMINE'});
 
             var schoolId = $route.current.locals.auth.school.id;
             var stateKey = 'studentJournal';
@@ -142,17 +143,17 @@
                 stateStorageService.changeState(schoolId, stateKey, {openedStudyYears: openedStudyYears});
             }
 
-            var positiveResults = ['A', '3', '4', '5'];
-            $scope.resultIsPostive = function (result) {
-                return positiveResults.indexOf(result) !== -1;
-            };
-
-            var boldResults = ['SISSEKANNE_E', "SISSEKANNE_I", "SISSEKANNE_H"];
+            var boldResults = ['SISSEKANNE_E', 'SISSEKANNE_I', 'SISSEKANNE_H'];
             $scope.isTestButNotFinal = function (entryType) {
                 return boldResults.indexOf(entryType) !== -1;
             };
+
+            var finalResults = ['SISSEKANNE_O', 'SISSEKANNE_L'];
+            $scope.isFinal = function (entryType) {
+              return finalResults.indexOf(entryType) !== -1;
+            };
         }
-    ]).controller('StudentJournalStudyController', ['$scope', '$route', 'QueryUtils', 
+    ]).controller('StudentJournalStudyController', ['$scope', '$route', 'QueryUtils',
         function ($scope, $route, QueryUtils) {
             $scope.currentNavItem = 'study';
             $scope.auth = $route.current.locals.auth;
@@ -169,7 +170,7 @@
                 getPreviousAndNextWeek($scope);
             };
         }
-    ]).controller('StudentJournalTasksController', ['$scope', '$route', 'QueryUtils', 
+    ]).controller('StudentJournalTasksController', ['$scope', '$route', 'QueryUtils',
         function ($scope, $route, QueryUtils) {
             $scope.currentNavItem = 'tasks';
             $scope.auth = $route.current.locals.auth;
@@ -190,9 +191,9 @@
         $scope.auth = $route.current.locals.auth;
         var studentId = $scope.auth.student;
         var journalId = $route.current.params.id;
-  
-        var clMapper = Classifier.valuemapper({entryType: 'SISSEKANNE'});
-  
+
+        var clMapper = Classifier.valuemapper({entryType: 'SISSEKANNE', grade: 'KUTSEHINDAMINE'});
+
         $scope.journalEntryTypeColors = {
             'SISSEKANNE_T': 'default-grey-50',
             'SISSEKANNE_E': 'default-amber-100',
@@ -216,13 +217,16 @@
         $scope.getEntryMdColor = function (type) {
             return $mdColors.getThemeColor($scope.journalEntryTypeColors[type]);
         };
-  
+
         QueryUtils.endpoint('/journals/studentJournal/').search({studentId: studentId, journalId: journalId}).$promise.then(function (journal) {
             journal.journalEntries.forEach(function (entry) {
                 clMapper.objectmapper(entry);
+                (entry.previousResults || []).forEach(function (result) {
+                  clMapper.objectmapper(result);
+                });
             });
             $scope.journal = journal;
         });
-  
+
       }]);
 }());

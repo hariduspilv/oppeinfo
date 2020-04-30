@@ -27,6 +27,8 @@ public class ScholarshipTerm extends BaseEntityWithId {
     private String nameEt;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier type;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier scholarshipEhis;
     private LocalDate applicationStart;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, name = "study_period_id")
@@ -39,9 +41,15 @@ public class ScholarshipTerm extends BaseEntityWithId {
     private BigDecimal averageMark;
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Classifier averageMarkPriority;
+    private BigDecimal wagMark;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier wagMarkPriority;
     private BigDecimal lastPeriodMark;
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Classifier lastPeriodMarkPriority;
+    private BigDecimal lastPeriodWagMark;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier lastPeriodWagMarkPriority;
     private BigDecimal curriculumCompletion;
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Classifier curriculumCompletionPriority;
@@ -72,6 +80,10 @@ public class ScholarshipTerm extends BaseEntityWithId {
     private Boolean isModuleGrade;
     private Boolean isApelGrade;
     private Boolean isJournalGrade;
+    private Boolean isNominalEnd;
+    private Boolean isNegative;
+    private Boolean isBeforeImmat;
+    private Boolean isSais;
     private Boolean isLastPeriodOutcomes;
     private Boolean isLastPeriodPeriodGrade;
     private Boolean isLastPeriodJournalFinalGrade;
@@ -257,43 +269,48 @@ public class ScholarshipTerm extends BaseEntityWithId {
     }
 
     public List<ScholarshipTermCourse> getScholarshipTermCourses() {
-        return scholarshipTermCourses;
+        return scholarshipTermCourses != null ? scholarshipTermCourses : (scholarshipTermCourses = new ArrayList<>());
     }
 
     public void setScholarshipTermCourses(List<ScholarshipTermCourse> scholarshipTermCourses) {
-        this.scholarshipTermCourses = scholarshipTermCourses;
+        getScholarshipTermCourses().clear();
+        getScholarshipTermCourses().addAll(scholarshipTermCourses);
     }
 
     public List<ScholarshipTermCurriculum> getScholarshipTermCurriculums() {
-        return scholarshipTermCurriculums;
+        return scholarshipTermCurriculums != null ? scholarshipTermCurriculums : (scholarshipTermCurriculums = new ArrayList<>());
     }
 
     public void setScholarshipTermCurriculums(List<ScholarshipTermCurriculum> scholarshipTermCurriculums) {
-        this.scholarshipTermCurriculums = scholarshipTermCurriculums;
+        getScholarshipTermCurriculums().clear();
+        getScholarshipTermCurriculums().addAll(scholarshipTermCurriculums);
     }
 
     public List<ScholarshipTermStudyLoad> getScholarshipTermStudyLoads() {
-        return scholarshipTermStudyLoads;
+        return scholarshipTermStudyLoads != null ? scholarshipTermStudyLoads : (scholarshipTermStudyLoads = new ArrayList<>());
     }
 
     public List<ScholarshipTermStudyForm> getScholarshipTermStudyForms() {
-        return scholarshipTermStudyForms;
+        return scholarshipTermStudyForms != null ? scholarshipTermStudyForms : (scholarshipTermStudyForms = new ArrayList<>());
     }
 
     public void setScholarshipTermStudyForms(List<ScholarshipTermStudyForm> scholarshipTermStudyForms) {
-        this.scholarshipTermStudyForms = scholarshipTermStudyForms;
+        getScholarshipTermStudyForms().clear();
+        getScholarshipTermStudyForms().addAll(scholarshipTermStudyForms);
     }
 
     public void setScholarshipTermStudyLoads(List<ScholarshipTermStudyLoad> scholarshipTermStudyLoads) {
-        this.scholarshipTermStudyLoads = scholarshipTermStudyLoads;
+        getScholarshipTermStudyLoads().clear();
+        getScholarshipTermStudyLoads().addAll(scholarshipTermStudyLoads);
     }
 
     public List<ScholarshipApplication> getScholarshipApplications() {
-        return scholarshipApplications;
+        return scholarshipApplications != null ? scholarshipApplications : (scholarshipApplications = new ArrayList<>());
     }
 
     public void setScholarshipApplications(List<ScholarshipApplication> scholarshipApplications) {
-        this.scholarshipApplications = scholarshipApplications;
+        getScholarshipApplications().clear();
+        getScholarshipApplications().addAll(scholarshipApplications);
     }
 
     public Boolean getIsAcademicLeave() {
@@ -462,6 +479,78 @@ public class ScholarshipTerm extends BaseEntityWithId {
 
     public void setLastPeriodGradeThru(LocalDate lastPeriodGradeThru) {
         this.lastPeriodGradeThru = lastPeriodGradeThru;
+    }
+
+    public Classifier getScholarshipEhis() {
+        return scholarshipEhis;
+    }
+
+    public void setScholarshipEhis(Classifier scholarshipEhis) {
+        this.scholarshipEhis = scholarshipEhis;
+    }
+
+    public BigDecimal getWagMark() {
+        return wagMark;
+    }
+
+    public void setWagMark(BigDecimal wagMark) {
+        this.wagMark = wagMark;
+    }
+
+    public Classifier getWagMarkPriority() {
+        return wagMarkPriority;
+    }
+
+    public void setWagMarkPriority(Classifier wagMarkPriority) {
+        this.wagMarkPriority = wagMarkPriority;
+    }
+
+    public BigDecimal getLastPeriodWagMark() {
+        return lastPeriodWagMark;
+    }
+
+    public void setLastPeriodWagMark(BigDecimal lastPeriodWagMark) {
+        this.lastPeriodWagMark = lastPeriodWagMark;
+    }
+
+    public Classifier getLastPeriodWagMarkPriority() {
+        return lastPeriodWagMarkPriority;
+    }
+
+    public void setLastPeriodWagMarkPriority(Classifier lastPeriodWagMarkPriority) {
+        this.lastPeriodWagMarkPriority = lastPeriodWagMarkPriority;
+    }
+
+    public Boolean getIsNominalEnd() {
+        return isNominalEnd;
+    }
+
+    public void setIsNominalEnd(Boolean isNominalEnd) {
+        this.isNominalEnd = isNominalEnd;
+    }
+
+    public Boolean getIsNegative() {
+        return isNegative;
+    }
+
+    public void setIsNegative(Boolean isNegative) {
+        this.isNegative = isNegative;
+    }
+
+    public Boolean getIsBeforeImmat() {
+        return isBeforeImmat;
+    }
+
+    public void setIsBeforeImmat(Boolean isBeforeImmat) {
+        this.isBeforeImmat = isBeforeImmat;
+    }
+
+    public Boolean getIsSais() {
+        return isSais;
+    }
+
+    public void setIsSais(Boolean isSais) {
+        this.isSais = isSais;
     }
 
 }

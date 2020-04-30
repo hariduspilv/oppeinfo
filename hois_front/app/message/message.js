@@ -116,6 +116,7 @@ angular.module('hitsaOis')
 //         backUrl: backUrl && backUrl === "home" ? "#/" : "#/message/" + id + "/view?backUrl=received"
         backUrl: backUrl && backUrl === "home" ? "#/" : "#/messages/received"
     };
+    checkIfUserHasEmail();
 
     function afterLoad() {
         var record = {
@@ -150,6 +151,12 @@ angular.module('hitsaOis')
         }
         $scope.record.$save(afterSend);
     };
+    
+    function checkIfUserHasEmail() {
+        QueryUtils.endpoint(baseUrl + '/hasEmail').get({}, function (response) {
+            $scope.noEmail = !response.hasEmail;
+        });
+    }
 }]).controller('messageNewController', ['$scope', 'QueryUtils', '$route', 'message', 'ArrayUtils', '$resource', 'config', '$rootScope', '$q', '$translate', 
 function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $rootScope, $q, $translate) {
 
@@ -158,6 +165,7 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
     $scope.record = new Endpoint();
     $scope.auth = $route.current.locals.auth;
     $scope.formState = {};
+    checkIfUserHasEmail();
 
     if ($scope.auth.isAdmin()) {
         $scope.targetGroups = ['ROLL_O', 'ROLL_T', 'ROLL_L', 'ROLL_P'];
@@ -680,5 +688,11 @@ function ($scope, QueryUtils, $route, message, ArrayUtils, $resource, config, $r
 
     function formIsValid() {
         return $scope.messageNewForm.$valid && $scope.receivers.length > 0;
+    }
+
+    function checkIfUserHasEmail() {
+        QueryUtils.endpoint(baseUrl + '/hasEmail').get({}, function (response) {
+            $scope.noEmail = !response.hasEmail;
+        });
     }
 }]);

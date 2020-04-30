@@ -1,8 +1,10 @@
 package ee.hitsa.ois.report.certificate;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.student.Student;
@@ -10,6 +12,8 @@ import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.StudentUtil;
+import ee.hitsa.ois.util.TranslateUtil;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class CertificateReportStudent {
 
@@ -21,41 +25,51 @@ public class CertificateReportStudent {
     private String fullname;
     private String idCode;
     private String birthDate;
-    private String studyForm;
-    private String studyLoad;
+    private AutocompleteResult studyForm;
+    private AutocompleteResult studyLoad;
     private String nominalStudyEnd;
     private String studyStart;
     private String studyEnd;
     private CerfificateReportCurriculum curriculum;
+    private List<CertificateEvent> events;
     private List<CertificateStudentResult> results;
+    private Map<CertificateStudentResultHeader, Map<CertificateStudentResult, List<CertificateStudentResult>>> mappedResults;
+    private List<AutocompleteResult> apelSchools;
     private boolean hasQuit;
     private boolean isGuestStudent;
     private boolean higher = false;
+    private boolean isActive = true;
     private String diplomaNr;
     private String occupationText;
     private String partoccupationText;
     private String curriculumGradeNameEt;
-    
+    private BigDecimal creditsAll;
+    private BigDecimal averageMark;
+
     private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     public static CertificateReportStudent of(Student student) {
         CertificateReportStudent reportStudent = of(student.getPerson());
 
-        if(student.getStudyForm() != null) {
-            reportStudent.setStudyForm(student.getStudyForm().getNameEt().toLowerCase());
+        if (student.getStudyForm() != null) {
+            reportStudent.setStudyForm(new AutocompleteResult(null, student.getStudyForm().getNameEt().toLowerCase(),
+                    TranslateUtil.getNonNullableNameEn(student.getStudyForm()).toLowerCase()));
         }
-        if(student.getStudyLoad() != null) {
-            reportStudent.setStudyLoad(student.getStudyLoad().getNameEt().toLowerCase());
+        if (student.getStudyLoad() != null) {
+            reportStudent.setStudyLoad(new AutocompleteResult(null, student.getStudyLoad().getNameEt().toLowerCase(),
+                    TranslateUtil.getNonNullableNameEn(student.getStudyLoad()).toLowerCase()));
         }
         reportStudent.setNominalStudyEnd(DateUtils.nullableDate(student.getNominalStudyEnd()));
         reportStudent.setStudyStart(DateUtils.nullableDate(student.getStudyStart()));
-        reportStudent.setStudyEnd(DateUtils.nullableDate(
-                StudentUtil.isStudying(student) ? LocalDate.now() : student.getStudyEnd()));
+        reportStudent.setStudyEnd(
+                DateUtils.nullableDate(StudentUtil.isStudying(student) ? LocalDate.now() : student.getStudyEnd()));
         if (student.getCurriculumVersion() != null) {
-            reportStudent.setCurriculum(new CerfificateReportCurriculum(student.getCurriculumVersion().getCurriculum()));
+            reportStudent
+                    .setCurriculum(new CerfificateReportCurriculum(student.getCurriculumVersion().getCurriculum()));
         }
         reportStudent.setHasQuit(StudentUtil.hasQuit(student));
         reportStudent.setGuestStudent(ClassifierUtil.equals(StudentType.OPPUR_K, student.getType()));
+        reportStudent.setIsActive(StudentUtil.isActive(student));
         return reportStudent;
     }
 
@@ -117,6 +131,14 @@ public class CertificateReportStudent {
         this.hasQuit = hasQuit;
     }
 
+    public List<CertificateEvent> getEvents() {
+        return events;
+    }
+
+    public void setEvents(List<CertificateEvent> events) {
+        this.events = events;
+    }
+
     public List<CertificateStudentResult> getResults() {
         return results;
     }
@@ -149,19 +171,19 @@ public class CertificateReportStudent {
         this.nominalStudyEnd = nominalStudyEnd;
     }
 
-    public String getStudyForm() {
+    public AutocompleteResult getStudyForm() {
         return studyForm;
     }
 
-    public void setStudyForm(String studyForm) {
+    public void setStudyForm(AutocompleteResult studyForm) {
         this.studyForm = studyForm;
     }
 
-    public String getStudyLoad() {
+    public AutocompleteResult getStudyLoad() {
         return studyLoad;
     }
 
-    public void setStudyLoad(String studyLoad) {
+    public void setStudyLoad(AutocompleteResult studyLoad) {
         this.studyLoad = studyLoad;
     }
 
@@ -227,5 +249,46 @@ public class CertificateReportStudent {
 
     public void setHigher(boolean higher) {
         this.higher = higher;
+    }
+
+    public boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    public Map<CertificateStudentResultHeader, Map<CertificateStudentResult, List<CertificateStudentResult>>> getMappedResults() {
+        return mappedResults;
+    }
+
+    public void setMappedResults(
+            Map<CertificateStudentResultHeader, Map<CertificateStudentResult, List<CertificateStudentResult>>> mappedResults) {
+        this.mappedResults = mappedResults;
+    }
+
+    public BigDecimal getCreditsAll() {
+        return creditsAll;
+    }
+
+    public void setCreditsAll(BigDecimal creditsAll) {
+        this.creditsAll = creditsAll;
+    }
+
+    public BigDecimal getAverageMark() {
+        return averageMark;
+    }
+
+    public void setAverageMark(BigDecimal averageMark) {
+        this.averageMark = averageMark;
+    }
+
+    public List<AutocompleteResult> getApelSchools() {
+        return apelSchools;
+    }
+
+    public void setApelSchools(List<AutocompleteResult> apelSchools) {
+        this.apelSchools = apelSchools;
     }
 }

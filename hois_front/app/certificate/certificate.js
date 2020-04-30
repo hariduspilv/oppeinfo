@@ -126,8 +126,8 @@ angular.module('hitsaOis')
       }
     };
   }
-]).controller('CertificateEditController', ['$scope', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$q', 'CertificateUtil', '$rootScope', '$timeout', 'resourceErrorHandler', 'config',
-  function ($scope, QueryUtils, $route, $location, dialogService, message, $q, CertificateUtil, $rootScope, $timeout, resourceErrorHandler, config) {
+]).controller('CertificateEditController', ['$location', '$timeout', '$q', '$rootScope', '$route', '$scope', 'Classifier', 'CertificateUtil', 'QueryUtils', 'config', 'dialogService', 'message', 'resourceErrorHandler',
+  function ($location, $timeout, $q, $rootScope, $route, $scope, Classifier, CertificateUtil, QueryUtils, config, dialogService, message, resourceErrorHandler) {
 
     var baseUrl = '/certificate';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -137,6 +137,10 @@ angular.module('hitsaOis')
     var changedByOtherIdCodeChange = false;
     $scope.forbiddenTypes = [];
     $scope.auth = $route.current.locals.auth;
+
+    Classifier.queryForDropdown({ mainClassCode: 'TOEND_LIIK' }, function (response) {
+      $scope.typeMap = Classifier.toMap(response);
+    });
 
     $rootScope.removeLastUrlFromHistory(function(lastUrl){
       return lastUrl && (lastUrl.indexOf('certificate/' + id + '/view') !== -1 || lastUrl.indexOf('certificate/new') !== -1);
@@ -266,6 +270,7 @@ angular.module('hitsaOis')
 
     $scope.addOutcomesChanged = function() {
       if($scope.record.student) {
+        setTypeName();
         $timeout(loadContent, 1000);
       }
     };
@@ -353,6 +358,21 @@ angular.module('hitsaOis')
 
     function displayFormError(response) {
       resourceErrorHandler.responseError(response, $scope.certificateEditForm).catch(angular.noop);
+    }
+
+    $scope.changedType = function () {
+      setTypeName();
+    };
+
+    function setTypeName() {
+      if ($scope.record.type) {
+        var typeClassifier = $scope.typeMap[$scope.record.type];
+        if (angular.isDefined($scope.record.estonian) && !$scope.record.estonian) {
+          $scope.record.headline = typeClassifier.nameEn != null ? typeClassifier.nameEn : typeClassifier.nameEt;
+        } else {
+          $scope.record.headline = typeClassifier.nameEt;
+        }
+      }
     }
 
     $scope.changedCertificateNr = function () {

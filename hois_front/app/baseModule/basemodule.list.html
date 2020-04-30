@@ -22,6 +22,12 @@
                    </div>
                 </div>
             </div>
+            <div layout="row">
+                <md-input-container flex-gt-sm="45" flex="100">
+                    <label class="textInput">{{'basemodule.search.addNameEt' | translate}}</label>
+                    <input ng-model="criteria.addNameEt" type="text" md-maxlength="255">
+                </md-input-container>
+            </div>
             <div layout-gt-sm="row" layout="column">
                 <md-autocomplete
                     name="curriculum"
@@ -76,9 +82,10 @@
             <table md-table md-progress="tabledata.$promise">
                 <thead md-head md-order="criteria.order" md-on-reorder="loadData">
                     <tr md-row>
-                        <th md-column style="width:35%" md-order-by="b.{{currentLanguageNameField()}}">{{'basemodule.label' | translate}}</th>
-                        <th md-column style="width:25%">{{'basemodule.search.curriculum' | translate}}</th>
-                        <th md-column style="width:25%">{{'basemodule.search.curriculumVersion' | translate}}</th>
+                        <th md-column style="width:25%" md-order-by="b.{{currentLanguageNameField()}}">{{'basemodule.label' | translate}}</th>
+                        <th md-column style="width:20%" md-order-by="b.addNameEt">{{'basemodule.search.addNameEt' | translate}}</th>
+                        <th md-column style="width:20%">{{'basemodule.search.curriculum' | translate}}</th>
+                        <th md-column style="width:20%">{{'basemodule.search.curriculumVersion' | translate}}</th>
                         <th md-column style="width:5%">{{'basemodule.ekap' | translate}}</th>
                         <th md-column style="width:10%"></th>
                     </tr>
@@ -86,6 +93,11 @@
                 <tbody md-body>
                     <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
                         <td md-cell><a ng-href="#/basemodule/{{::row.id}}/view">{{currentLanguageNameField(row)}}</a></td>
+                        <td md-cell>
+                            {{row.addNameEt | hoisLimitTo: 20:!row.showAddName}}
+                            <span class="custom-tooltip" ng-if="!row.showAddName && row.addNameEt.length > 20" ng-click="row.showAddName = true">{{'basemodule.search.showMore' | translate}}</span>
+                            <span class="custom-tooltip" ng-if="row.showAddName" ng-click="row.showAddName = false">{{'basemodule.search.showLess' | translate}}</span>
+                        </td>
                         <td md-cell ng-init="row.c = row.curriculums.join(', ')">
                             {{row.c | hoisLimitTo: 20:!row.showC}}
                             <span class="custom-tooltip" ng-if="!row.showC && row.c.length > 20" ng-click="row.showC = true">{{'basemodule.search.showMore' | translate}}</span>

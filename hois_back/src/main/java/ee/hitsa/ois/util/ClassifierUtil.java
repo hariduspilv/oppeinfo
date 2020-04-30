@@ -1,5 +1,6 @@
 package ee.hitsa.ois.util;
 
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -137,6 +138,13 @@ public abstract class ClassifierUtil {
      */
     public static Classifier validOne(Classifier o, Classifier n) {
         return o.isValid() ? o : n;
+    }
+    
+    public static boolean isValid(Classifier cl) {
+        LocalDate now = LocalDate.now();
+        return cl.isValid()
+                && (cl.getValidFrom() == null || !now.isBefore(cl.getValidFrom()))
+                && (cl.getValidThru() == null || !now.isAfter(cl.getValidThru()));
     }
 
     // sorters for classifiers

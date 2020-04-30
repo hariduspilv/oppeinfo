@@ -38,7 +38,7 @@ public class JournalDto {
     private LocalDate endDate;
     private Boolean hasJournalStudents;
     private List<AutocompleteResult> journalRooms = new ArrayList<>();
-    private Boolean moduleOutcomesAsEntries;
+    private Boolean includesOutcomes;
     private String assessment;
     private Boolean isDistinctiveAssessment;
     private Long moodleCourseId;
@@ -98,8 +98,8 @@ public class JournalDto {
                 r.getRoom().getCode(), r.getRoom().getCode()), journal.getJournalRooms()));
 
         dto.setHasJournalStudents(Boolean.valueOf(!journal.getJournalStudents().isEmpty()));
-        dto.setModuleOutcomesAsEntries(journal.getAddModuleOutcomes());
-        dto.setAssessment(EntityUtil.getCode(journal.getAssessment()));
+        dto.setIncludesOutcomes(journal.getAddModuleOutcomes());
+        dto.setAssessment(EntityUtil.getNullableCode(journal.getAssessment()));
         dto.setIsDistinctiveAssessment(Boolean.valueOf(VocationalGradeType.KUTSEHINDAMISVIIS_E.name().equals(dto.getAssessment())));
         return dto;
     }
@@ -224,12 +224,12 @@ public class JournalDto {
         this.individualCurriculums = individualCurriculums;
     }
 
-    public Boolean getModuleOutcomesAsEntries() {
-        return moduleOutcomesAsEntries;
+    public Boolean getIncludesOutcomes() {
+        return includesOutcomes;
     }
 
-    public void setModuleOutcomesAsEntries(Boolean moduleOutcomesAsEntries) {
-        this.moduleOutcomesAsEntries = moduleOutcomesAsEntries;
+    public void setIncludesOutcomes(Boolean includesOutcomes) {
+        this.includesOutcomes = includesOutcomes;
     }
 
     public String getAssessment() {

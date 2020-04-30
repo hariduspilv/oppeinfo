@@ -36,9 +36,12 @@ public class CurriculumVersionModulesReport {
         
         Comparator<CurriculumVersionOccupationModule> compareType = Comparator.comparingInt(m -> ReportUtil.CURRICULUM_MODULE_ORDER.indexOf(
                 EntityUtil.getCode(m.getCurriculumModule().getModule())));
-        modules = StreamUtil.toMappedList(m -> new CurriculumVersionModuleReport(m, lang), 
-                curriculumVersion.getOccupationModules().stream()
-                .sorted(compareType.thenComparing(m -> TranslateUtil.name(m.getCurriculumModule(), lang))));
+        modules = StreamUtil.toMappedList(m -> new CurriculumVersionModuleReport(m, lang), curriculumVersion
+                .getOccupationModules().stream()
+                .sorted(compareType.thenComparing(Comparator.comparing(om -> om.getCurriculumModule().getOrderNr(),
+                        Comparator.nullsLast(Comparator.naturalOrder())))
+                        .thenComparing(Comparator.comparing(om -> TranslateUtil.name(om.getCurriculumModule(), lang),
+                                String.CASE_INSENSITIVE_ORDER))));
     }
 
     public String getSchool() {

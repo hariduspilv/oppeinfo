@@ -147,7 +147,7 @@ public class ApelApplicationController {
     @PutMapping("/{id:\\d+}/removeConfirmation")
     public ApelApplicationDto removeConfirmation(HoisUserDetails user, @WithEntity ApelApplication application) {
         UserUtil.throwAccessDeniedIf(!ApelApplicationUtil.canRemoveConfirmation(user, application));
-        ApelApplication removedConfirmationApplication = apelApplicationService.removeConfirmation(application);
+        ApelApplication removedConfirmationApplication = apelApplicationService.removeConfirmation(user, application);
         return get(user, removedConfirmationApplication);
     }
 

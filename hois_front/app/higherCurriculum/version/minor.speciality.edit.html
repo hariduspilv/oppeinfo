@@ -3,6 +3,18 @@
   <span flex></span>
   <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
     <div layout="column">
+      <md-input-container>
+        <label>{{'module.orderNr' | translate}}</label>
+        <input ng-model="data.orderNr" type="number" name="orderNr" min="0" max="32767" pattern="^\d+?$">
+        <div ng-messages="minorSpecialityForm.orderNr.$error" ng-show="minorSpecialityForm.orderNr.$dirty">
+          <div ng-message="min">
+            {{'main.messages.error.positive' | translate}}
+          </div>
+          <div ng-message="max">
+            {{'main.messages.error.max' | translate: {max: 32767} }}
+          </div>
+        </div>
+      </md-input-container>
       <md-input-container flex>
         <label>{{'curriculum.minorSpecialty.nameEt' | translate}}</label>
         <input ng-model="data.nameEt" type="text" required md-maxlength="255">

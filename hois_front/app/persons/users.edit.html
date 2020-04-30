@@ -20,7 +20,7 @@
       </md-input-container>
       <md-input-container flex>
         <label>{{'user.role' | translate}}</label>
-        <hois-classifier-select ng-model="user.role" filter-values="filterValues" ng-change="roleChanged()"
+        <hois-classifier-select ng-model="user.role" filter-values="filterValues" ng-change="roleChanged()" ignore-preselected
           main-classifier-code="ROLL" model-value-attr="code" required ng-disabled="user.role === 'ROLL_O'"></hois-classifier-select>
       </md-input-container>
       <md-input-container flex ng-if="user.role === 'ROLL_A' && auth.isAdmin()">
@@ -36,8 +36,9 @@
         <label>{{user.role === 'ROLL_O' ? 'userRole.occupation' : 'userRole.label' | translate}}</label>
         <hois-value value="currentLanguageNameField(user.userRole)"></hois-value>
       </md-input-container>
-      <hois-autocomplete flex ng-show="user.role === 'ROLL_J'" ng-model="autoCurriculum" url="/users/curriculums" name="curriculum"
-        label="{{'user.curriculums'}}" additional-query-params="{}" no-paging="true" ng-required="user.role === 'ROLL_J' && user.curriculums.length &lt; 1"></hois-autocomplete>
+      <hois-autocomplete flex ng-if="user.role === 'ROLL_J' && user.school.id" ng-model="controller.autoCurriculum" url="/users/curriculums" name="curriculum"
+        label="{{'user.curriculums'}}" additional-query-params="{id: user.school.id}"
+        no-paging="true" ng-required="user.role === 'ROLL_J' && user.curriculums.length &lt; 1"></hois-autocomplete>
       <div ng-show="user.role === 'ROLL_J'" layout="column" class="common-label" flex="95" ng-repeat="curriculum in user.curriculums | orderBy: [currentLanguageNameField(), 'code']">
         <div layout="row" flex layout-align="start center">
           <div flex="5">&nbsp;</div>

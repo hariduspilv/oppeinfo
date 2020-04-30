@@ -182,6 +182,6 @@ public class UsersController {
     @GetMapping("/curriculums")
     public List<AutocompleteResult> userCurriculums(HoisUserDetails user, SearchCommand cmd) {
         UserUtil.assertIsMainAdminOrSchoolAdmin(user);
-        return userService.getCurriculums(user.getSchoolId(), cmd);
+        return userService.getCurriculums(user.getSchoolId() != null ? user.getSchoolId() : cmd.getId(), cmd);
     }
 }

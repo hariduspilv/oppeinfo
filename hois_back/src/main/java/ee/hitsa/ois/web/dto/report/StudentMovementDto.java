@@ -7,6 +7,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class StudentMovementDto {
     
     private AutocompleteResult object;
+    private String htmCode;
     private Long studyingFrom;
     private Long studyingThru;
     private Long startedStudying;
@@ -69,6 +70,12 @@ public class StudentMovementDto {
     }
     public void setCompletionPercentage(BigDecimal completionPercentage) {
         this.completionPercentage = completionPercentage;
+    }
+    public String getHtmCode() {
+        return htmCode;
+    }
+    public void setHtmCode(String htmCode) {
+        this.htmCode = htmCode;
     }
 
 }

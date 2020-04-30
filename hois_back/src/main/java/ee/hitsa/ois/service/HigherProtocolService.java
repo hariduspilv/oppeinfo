@@ -391,20 +391,7 @@ public class HigherProtocolService extends AbstractProtocolService {
 
         Map<Long, List<ProtocolPracticeJournalResultDto>> practiceResults = new HashMap<>();
         if(Boolean.TRUE.equals(dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getIsPracticeSubject())) {
-            Set<Long> students = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
-            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from practice_journal pj "
-                    + "join practice_journal_module_subject pjms on pjms.practice_journal_id = pj.id");
-
-            qb.requiredCriteria("pj.student_id in (:studentId)", "studentId", students);
-            qb.requiredCriteria("pjms.subject_id = :subjectId", "subjectId",
-                    dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getSubject().getId());
-            qb.filter("pj.grade_code is not null");
-
-            List<?> data = qb.select("pj.student_id, pj.id, pj.grade_code, pj.grade_inserted", em).getResultList();
-
-            practiceResults = StreamUtil.nullSafeList(data).stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), 
-                    Collectors.mapping(r -> new ProtocolPracticeJournalResultDto(resultAsLong(r, 1), resultAsString(r, 2),
-                            resultAsLocalDateTime(r, 3), null), Collectors.toList())));
+            practiceResults = studentPracticeResults(dto);
         }
 
         List<Long> studentsWithNewerProtocols = studentsWithNewerProtocols(protocol);
@@ -421,6 +408,27 @@ public class HigherProtocolService extends AbstractProtocolService {
             }
         }
         return dto;
+    }
+
+    private  Map<Long, List<ProtocolPracticeJournalResultDto>> studentPracticeResults(HigherProtocolDto dto) {
+        Set<Long> students = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
+        if (students.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from practice_journal pj "
+                + "join practice_journal_module_subject pjms on pjms.practice_journal_id = pj.id");
+
+        qb.requiredCriteria("pj.student_id in (:studentId)", "studentId", students);
+        qb.requiredCriteria("pjms.subject_id = :subjectId", "subjectId",
+                dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getSubject().getId());
+        qb.filter("pj.grade_code is not null");
+
+        List<?> data = qb.select("pj.student_id, pj.id, pj.grade_code, pj.grade_inserted", em).getResultList();
+
+        return StreamUtil.nullSafeList(data).stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                Collectors.mapping(r -> new ProtocolPracticeJournalResultDto(resultAsLong(r, 1), resultAsString(r, 2),
+                        resultAsLocalDateTime(r, 3), null), Collectors.toList())));
     }
 
     private List<Long> studentsWithNewerProtocols(Protocol protocol) {

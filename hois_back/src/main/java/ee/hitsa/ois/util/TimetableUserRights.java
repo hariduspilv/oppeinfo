@@ -83,7 +83,7 @@ public abstract class TimetableUserRights {
     }
 
     public static boolean canEditOrDeleteEvent(HoisUserDetails user, TimetableEventTime eventTime) {
-        if (eventTime.getStart().isBefore(LocalDateTime.now())) {
+        if (eventTime.getTimetableEvent().getJuhanEventId() != null || eventTime.getStart().isBefore(LocalDateTime.now())) {
             return false;
         }
 

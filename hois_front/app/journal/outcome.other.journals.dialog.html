@@ -1,0 +1,58 @@
+<md-dialog aria-label="outcome other journals dialog" flex="50">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2 flex>{{'journal.outcomes.otherJournals' | translate}}</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-font-set="material-icons">close</md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <div class="md-dialog-content">
+      <div layout-padding>
+
+        <div flex>
+          <div layout="row" class="form-readonly">
+            <md-input-container flex="100">
+              <label>{{'journal.outcomes.name' | translate}}</label>
+              <hois-value value="currentLanguageNameField(outcome)"></hois-value>
+            </md-input-container>
+          </div>
+
+          <md-table-container>
+            <table md-table>
+              <thead md-head>
+              <tr md-row flex>
+                <th md-column>{{'main.nr' | translate}}</th>
+                <th md-column>{{'journal.label' | translate}}</th>
+                <th md-column>{{auth.higher ? ('journal.teachersHigher' | translate) : ('journal.teachersVocational' | translate)}}</th>
+                <th md-column>{{'journal.studentGroups' | translate}}</th>
+                <th md-column>{{'journal.studyYear' | translate}}</th>
+              </tr>
+              </thead>
+              <tbody md-body>
+              <tr md-row ng-repeat="journal in outcome.otherJournals track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{$index + 1}}</td>
+                <td md-cell>{{journal.nameEt}}</td>
+                <td md-cell>{{journal.teachers}}</td>
+                <td md-cell>{{journal.studentGroups}}</td>
+                <td md-cell>
+                  <hois-classifier-value ng-model="journal.studyYear" model-value-attr="code"
+                    main-classifier-code="OPPEAASTA"></hois-classifier-value>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </div>
+      </div>
+    </div>
+  </md-dialog-content>
+
+  <span flex></span>
+  <md-dialog-actions layout="row" layout-align="start center">
+    <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+  </md-dialog-actions>
+</md-dialog>

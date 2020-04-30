@@ -20,6 +20,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.student.StudentCurriculumCompletion;
+import ee.hitsa.ois.domain.student.StudentCurriculumCompletionHigherModule;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -56,6 +59,8 @@ public class StudentResultHigherService {
 
     @Autowired
     private EntityManager em;
+    @Autowired
+    private StudentService studentService;
 
     public List<StudentHigherSubjectResultDto> positiveHigherResults(Student student, boolean showUncompleted) {
         List<CurriculumVersionHigherModule> modules = new ArrayList<>();
@@ -64,7 +69,7 @@ public class StudentResultHigherService {
         if (student.getCurriculumVersion() != null) {
             modules = getStudentModules(student);
             moduleSubjects = getModuleSubjects(modules);
-            studentResults = getStudentResults(student, true);
+            studentResults = getStudentResults(student, true, false);
         }
         List<StudentHigherSubjectResultDto> mergedList = mergeModuleSubjectsAndResults(modules, moduleSubjects,
                 studentResults, showUncompleted, student);
@@ -77,13 +82,14 @@ public class StudentResultHigherService {
     }
 
     public StudentHigherResultDto higherResults(Student student) {
+        StudentCurriculumCompletion completion = studentService.getStudentCurriculumCompletion(student);
         List<CurriculumVersionHigherModule> modules = new ArrayList<>();
         List<StudentHigherSubjectResultDto> moduleSubjects = new ArrayList<>();
         if (student.getCurriculumVersion() != null) {
             modules = getStudentModules(student);
             moduleSubjects = getModuleSubjects(modules);
         }
-        List<StudentHigherSubjectResultDto> studentResults = getStudentResults(student, false);
+        List<StudentHigherSubjectResultDto> studentResults = getStudentResults(student, false, true);
         List<StudentHigherSubjectResultDto> mergedList = mergeModuleSubjectsAndResults(modules, moduleSubjects,
                 studentResults, false, student);
         calculateIsOk(mergedList, false);
@@ -92,9 +98,10 @@ public class StudentResultHigherService {
         dto.setModules(StreamUtil.toMappedList(StudentHigherModuleResultDto::of, modules));
         dto.setSubjectResults(mergedList);
         setExtraCurriculumSubjects(dto);
-        calculateModulesCompletion(dto);
+        calculateModulesCompletion(dto, completion, modulesMarkedComplete(student));
         calculateAverageGrade(dto);
-        calculateCurriculumCompletion(dto);
+        dto.setCreditsSubmittedConsidered(completion.getCredits());
+        dto.setIsCurriculumFulfilled(Boolean.valueOf(BigDecimal.ZERO.setScale(1).equals(completion.getStudyBacklog())));
         setStudyPeriodResults(dto);
         return dto;
     }
@@ -180,14 +187,15 @@ public class StudentResultHigherService {
         return results;
     }
 
-    private List<StudentHigherSubjectResultDto> getStudentResults(Student student, boolean onlyActiveResults) {
+    private List<StudentHigherSubjectResultDto> getStudentResults(Student student, boolean onlyActiveResults, boolean generateNameBeforehand) {
         String query = "from student_higher_result shr "
                 + "left join student_higher_result_module shrm on shr.id = shrm.student_higher_result_id "
                 + "left join curriculum_version_hmodule cvh on cvh.id = coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id) "
                 + "left join classifier cl on shr.grade_code = cl.code "
                 + "left join apel_application_record aar on shr.apel_application_record_id = aar.id "
                 + "left join apel_application aa on aar.apel_application_id = aa.id "
-                + "left join apel_school a_s on shr.apel_school_id = a_s.id";
+                + "left join apel_school a_s on shr.apel_school_id = a_s.id "
+                + "left join classifier country on country.code = a_s.country_code ";
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(query).sort("shr.grade_date");
         qb.requiredCriteria("shr.student_id = :studentId", "studentId", EntityUtil.getId(student));
@@ -203,7 +211,8 @@ public class StudentResultHigherService {
                 + "shr.apel_application_record_id, aar.is_formal_learning, a_s.id as school_id, a_s.name_et, a_s.name_en, "
                 + "shr.grade_code, shr.grade, shr.grade_date, shr.teachers, "
                 + "coalesce(shr.study_period_id, get_study_period(cast(shr.grade_date as date), cast(aa.school_id as int))) as study_period_id, "
-                + "cl.name_et grade_name_et, cl.name_en grade_name_en, shr.is_active",
+                + "cl.name_et grade_name_et, cl.name_en grade_name_en, shr.is_active, "
+                + "country.name_et c_name_et, coalesce(country.name_en, country.name_et) c_name_en",
                 em).getResultList();
 
         List<StudentHigherSubjectResultDto> studentResults = new ArrayList<>();
@@ -230,8 +239,15 @@ public class StudentResultHigherService {
             if (dto.getIsApelTransfer().booleanValue()) {
                 dto.setIsFormalLearning(resultAsBoolean(r, 11));
                 if (dto.getIsFormalLearning().booleanValue() && resultAsLong(r, 12) != null) {
-                    dto.getSubject().setNameEt(dto.getSubject().getNameEt() + " - " + resultAsString(r, 13));
-                    dto.getSubject().setNameEn(dto.getSubject().getNameEn() + " - " + resultAsString(r, 14));
+                    if (generateNameBeforehand) {
+                        dto.getSubject().setNameEt(dto.getSubject().getNameEt() + " - " + resultAsString(r, 13));
+                        dto.getSubject().setNameEn(dto.getSubject().getNameEn() + " - " + resultAsString(r, 14));
+                    }
+                    String schoolNameEt = resultAsString(r, 13);
+                    String schoolNameEn = resultAsString(r, 14);
+                    schoolNameEn = schoolNameEn != null ? schoolNameEn + " (" + resultAsString(r, 24) + ")": schoolNameEt + " (" + resultAsString(r, 24) + ")";
+                    schoolNameEt = schoolNameEt + " (" + resultAsString(r, 23) + ")";
+                    subject.setSchool(new AutocompleteResult(resultAsLong(r, 12), schoolNameEt, schoolNameEn));
                 }
             }
 
@@ -427,19 +443,41 @@ public class StudentResultHigherService {
         }
     }
 
-    private static void calculateModulesCompletion(StudentHigherResultDto dto) {
+    private static void calculateModulesCompletion(StudentHigherResultDto dto, StudentCurriculumCompletion completion,
+            Map<Long, StudentCurriculumCompletionHigherModule> modulesMarkedComplete) {
         for(StudentHigherModuleResultDto module : dto.getModules()) {
-            List<StudentHigherSubjectResultDto> modulesPositiveResults = filterModulesPositiveResults(module.getId(), dto.getSubjectResults());
+            Long moduleId = module.getId();
+            List<StudentHigherSubjectResultDto> modulesPositiveResults = filterModulesPositiveResults(moduleId, dto.getSubjectResults());
             module.setMandatoryCreditsSubmitted(calculateCredits(modulesPositiveResults, Boolean.FALSE));
             module.setOptionalCreditsSubmitted(calculateCredits(modulesPositiveResults, Boolean.TRUE));
             module.setMandatoryDifference(module.getMandatoryCreditsSubmitted().subtract(module.getCompulsoryStudyCredits()));
             module.setOptionalDifference(module.getOptionalCreditsSubmitted().subtract(module.getOptionalStudyCredits()));
             module.setTotalDifference(calculateTotalDifference(module));
             calculateElectiveModulesCompletion(dto.getSubjectResults(), module);
-            module.calculateIsOk();
+            if (modulesMarkedComplete.containsKey(moduleId)) {
+                module.setStudentCurriculumCompletionHigherModule(modulesMarkedComplete.get(moduleId).getId());
+                module.setIsOk(Boolean.TRUE);
+            } else {
+                module.calculateIsOk();
+                if (Boolean.FALSE.equals(module.getIsOk()) && HigherModuleType.KORGMOODUL_V.name().equals(module.getType())) {
+                    module.setIsOk(Boolean.valueOf(BigDecimal.ZERO.setScale(1).equals(completion.getStudyOptionalBacklog())));
+                }
+                // if module is OK without marking it complete then there is no need for marking it complete
+                if (Boolean.TRUE.equals(module.getIsOk())) {
+                    module.setCanMarkComplete(Boolean.FALSE);
+                }
+            }
         }
     }
 
+    private Map<Long, StudentCurriculumCompletionHigherModule> modulesMarkedComplete(Student student) {
+        List<StudentCurriculumCompletionHigherModule> markedComplete = em.createQuery(
+                "select scchm from StudentCurriculumCompletionHigherModule scchm " +
+                        "where scchm.student.id = ?1", StudentCurriculumCompletionHigherModule.class)
+                .setParameter(1, EntityUtil.getId(student))
+                .getResultList();
+        return StreamUtil.toMap(m -> EntityUtil.getId(m.getModule()), m -> m, markedComplete);
+    }
 
     private static void calculateElectiveModulesCompletion(List<StudentHigherSubjectResultDto> subjectResults,
             StudentHigherModuleResultDto module) {
@@ -482,7 +520,6 @@ public class StudentResultHigherService {
         BigDecimal numerator = BigDecimal.ZERO;
         BigDecimal denominator = BigDecimal.ZERO;
 
-        BigDecimal creditsSubmittedConsidered = BigDecimal.ZERO;
         BigDecimal creditsSubmitted = BigDecimal.ZERO;
 
         for(StudentHigherSubjectResultDto subjectResult : dto.getSubjectResults()) {
@@ -491,13 +528,10 @@ public class StudentResultHigherService {
                 BigDecimal credits = subjectResult.getSubject().getCredits();
 
                 HigherAssessment grade = HigherAssessment.valueOf(subjectResult.getLastGrade().getGrade());
-                if (grade.getIsDistinctive().booleanValue()) {
+                if (Boolean.TRUE.equals(grade.getIsDistinctive())) {
                     BigDecimal gradeMark = BigDecimal.valueOf(grade.getMark().longValue());
                     numerator = numerator.add(gradeMark.multiply(credits));
                     denominator = denominator.add(credits);
-                }
-                if (Boolean.FALSE.equals(subjectResult.getIsExtraCurriculum())) {
-                    creditsSubmittedConsidered = creditsSubmittedConsidered.add(credits);
                 }
                 creditsSubmitted = creditsSubmitted.add(credits);
             }
@@ -505,14 +539,7 @@ public class StudentResultHigherService {
         if(BigDecimal.ZERO.compareTo(denominator) != 0) {
             dto.setAverageGrade(numerator.divide(denominator, 3, BigDecimal.ROUND_HALF_UP));
         }
-        dto.setCreditsSubmittedConsidered(creditsSubmittedConsidered);
         dto.setCreditsSubmitted(creditsSubmitted);
-    }
-
-    private static void calculateCurriculumCompletion(StudentHigherResultDto dto) {
-        List<StudentHigherModuleResultDto> modules = dto.getModules();
-        boolean isOk = modules != null && !modules.isEmpty() && modules.stream().allMatch(m -> Boolean.TRUE.equals(m.getIsOk()));
-        dto.setIsCurriculumFulfilled(Boolean.valueOf(isOk));
     }
 
     private void setStudyPeriodResults(StudentHigherResultDto dto) {
@@ -632,5 +659,21 @@ public class StudentResultHigherService {
                 }
             }
         }
+    }
+
+    public void markModuleComplete(Student student, CurriculumVersionHigherModule module) {
+        Map<Long, StudentCurriculumCompletionHigherModule> markedComplete = modulesMarkedComplete(student);
+        Long moduleId = EntityUtil.getId(module);
+        if (!markedComplete.containsKey(moduleId)) {
+            StudentCurriculumCompletionHigherModule higherModuleCompletion = new StudentCurriculumCompletionHigherModule();
+            higherModuleCompletion.setStudent(student);
+            higherModuleCompletion.setModule(module);
+            EntityUtil.save(higherModuleCompletion, em);
+        }
+    }
+
+    public void removeModuleCompletion(HoisUserDetails user, StudentCurriculumCompletionHigherModule moduleCompletion) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        EntityUtil.deleteEntity(moduleCompletion, em);
     }
 }

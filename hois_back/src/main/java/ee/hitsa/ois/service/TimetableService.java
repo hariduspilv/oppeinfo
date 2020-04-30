@@ -395,7 +395,7 @@ public class TimetableService {
         LessonTime lessonTime = em.getReference(LessonTime.class, form.getLessonTime());
         TimetableEvent timetableEvent = saveVocationalTimetableEvent(timetableObject, lessonTime, form);
         TimetableEventTime timetableEventTime = saveVocationalTimetableEventTime(timetableEvent, journal);
-        sendTimetableChangesMessages(timetableObject, timetableEventTime.getStart(), timetableEventTime.getEnd(), null);
+        sendTimetableChangesMessages(timetableObject, Collections.singletonList(timetableEventTime), null);
         return EntityUtil.save(timetable, em);
     }
 
@@ -643,16 +643,16 @@ public class TimetableService {
 
         TimetableEvent timetableEvent;
         TimetableObject timetableObject;
-        LocalDateTime eventStart, eventEnd;
+        List<TimetableEventTime> savedEvents;
         if (form.getOldEventId() != null) {
             TimetableEventTime timetableEventTime = em.getReference(TimetableEventTime.class, form.getOldEventId());
             timetableEvent = timetableEventTime.getTimetableEvent();
             timetableObject = timetableEvent.getTimetableObject();
 
-            eventStart = form.getStartTime().plus(Duration.between(timetableEventTime.getStart(), timetableEventTime.getEnd()));
-            eventEnd = form.getStartTime();
-            timetableEventTime.setEnd(eventStart);
-            timetableEventTime.setStart(eventEnd);
+            timetableEventTime.setEnd(form.getStartTime().plus(Duration.between(timetableEventTime.getStart(),
+                    timetableEventTime.getEnd())));
+            timetableEventTime.setStart(form.getStartTime());
+            savedEvents = Collections.singletonList(timetableEventTime);
         } else {
             List<Long> studentGroups;
             if (Boolean.TRUE.equals(form.isForAllGroups())) {
@@ -665,10 +665,9 @@ public class TimetableService {
             timetableEvent = addTimetableEvent(timetableObject);
             saveHigherTimetableEvent(timetableEvent, timetableObject, form);
             saveHigherTimetableEventTimes(timetable, timetableEvent, form);
-            eventStart = timetableEvent.getStart();
-            eventEnd = timetableEvent.getEnd();
+            savedEvents = timetableEvent.getTimetableEventTimes();
         }
-        sendTimetableChangesMessages(timetableObject, eventStart, eventEnd, timetableObject.getTimetableObjectStudentGroups());
+        sendTimetableChangesMessages(timetableObject, savedEvents, timetableObject.getTimetableObjectStudentGroups());
         return EntityUtil.save(timetable, em);
     }
 
@@ -851,21 +850,24 @@ public class TimetableService {
             EntityUtil.setUsername(user.getUsername(), em);
             TimetableEventTime timetableEventTime = em.getReference(TimetableEventTime.class, form.getTimetableEventId());
             TimetableEvent timetableEvent = timetableEventTime.getTimetableEvent();
+
+            List<TimetableEventTime> changedEvents;
             boolean modified = !Objects.equals(timetableEvent.getStart().toLocalTime(), form.getStartTime());
             if(!modified && !Objects.equals(timetableEvent.getEnd().toLocalTime(), form.getEndTime())) {
                 modified = true;
             }
             if (Boolean.TRUE.equals(form.getChangeUpcomingEvents())) {
                 // events that are before the event time in the form should not be changed
-                List<TimetableEventTime> eventsToBeChanged = timetableEvent.getTimetableEventTimes().stream()
+                changedEvents = timetableEvent.getTimetableEventTimes().stream()
                         .filter(t -> !t.getStart().toLocalDate().isBefore(timetableEventTime.getStart().toLocalDate()))
                         .collect(Collectors.toList());
-                for (TimetableEventTime currentTime : eventsToBeChanged) {
+                for (TimetableEventTime currentTime : changedEvents) {
                     if (saveTimetableEventTime(form, timetableEventTime, currentTime)) {
                         modified = true;
                     }
                 }
             } else {
+                changedEvents = Collections.singletonList(timetableEventTime);
                 if (saveTimetableEventTime(form, timetableEventTime, timetableEventTime)) {
                     modified = true;
                 }
@@ -874,30 +876,33 @@ public class TimetableService {
             TimetableObject timetableObject = timetableEvent.getTimetableObject();
             Timetable timetable = timetableObject.getTimetable();
             List<TimetableObjectStudentGroup> messageStudentGroups = new ArrayList<>();
-            if (Boolean.TRUE.equals(timetable.getIsHigher()) && timetableObject.getSubjectStudyPeriod()
-                    .getSubgroups().isEmpty()) {
-                if (form.getStudentGroups() == null || form.getStudentGroups().isEmpty()) {
-                    throw new AssertionFailedException("If there is no connected subgroup then one studengroup is required");
-                }
-                List<TimetableObjectStudentGroup> oldStudentGroups = timetableObject.getTimetableObjectStudentGroups();
-                messageStudentGroups.addAll(oldStudentGroups);
-                if (EntityUtil.bindEntityCollection(oldStudentGroups, r -> EntityUtil.getId(r.getStudentGroup()),
-                        form.getStudentGroups(), r -> r, id -> {
-                            TimetableObjectStudentGroup studentGroup = new TimetableObjectStudentGroup();
-                            studentGroup.setStudentGroup(em.getReference(StudentGroup.class, id));
-                            studentGroup.setTimetableObject(timetableObject);
-                            return studentGroup;
-                        })) {
-                    messageStudentGroups.addAll(StreamUtil.toFilteredList(sg -> !messageStudentGroups.contains(sg),
-                            oldStudentGroups));
-                    modified = true;
+            if (Boolean.TRUE.equals(timetable.getIsHigher())) {
+                if (timetableObject.getSubjectStudyPeriod().getSubgroups().isEmpty()) {
+                    if (form.getStudentGroups() == null || form.getStudentGroups().isEmpty()) {
+                        throw new AssertionFailedException("If there is no connected subgroup then one studengroup is required");
+                    }
+                    List<TimetableObjectStudentGroup> oldStudentGroups = timetableObject.getTimetableObjectStudentGroups();
+                    messageStudentGroups.addAll(oldStudentGroups);
+                    if (EntityUtil.bindEntityCollection(timetableObject.getTimetableObjectStudentGroups(),
+                            r -> EntityUtil.getId(r.getStudentGroup()), form.getStudentGroups(), r -> r, id -> {
+                                TimetableObjectStudentGroup studentGroup = new TimetableObjectStudentGroup();
+                                studentGroup.setStudentGroup(em.getReference(StudentGroup.class, id));
+                                studentGroup.setTimetableObject(timetableObject);
+                                return studentGroup;
+                            })) {
+                        List<TimetableObjectStudentGroup> newStudentGroups = StreamUtil.toFilteredList(
+                                sg -> !oldStudentGroups.contains(sg), timetableObject.getTimetableObjectStudentGroups());
+                        messageStudentGroups.addAll(newStudentGroups);
+                        modified = true;
+                    }
+                } else {
+                    messageStudentGroups =  timetableObject.getTimetableObjectStudentGroups();
                 }
             }
 
             timetable = EntityUtil.save(timetable, em);
             if(modified) {
-                sendTimetableChangesMessages(timetableEvent.getTimetableObject(), timetableEventTime.getStart(),
-                        timetableEventTime.getEnd(), messageStudentGroups);
+                sendTimetableChangesMessages(timetableEvent.getTimetableObject(), changedEvents, messageStudentGroups);
             }
             return timetable;
         }
@@ -951,28 +956,29 @@ public class TimetableService {
         Timetable timetable = timetableObject.getTimetable();
 
         EntityUtil.setUsername(user.getUsername(), em);
+        List<TimetableEventTime> deletedEvents;
         if (Boolean.TRUE.equals(timetable.getIsHigher())) {
             if (Boolean.TRUE.equals(form.getChangeUpcomingEvents())) {
                 // events that are before the event time in the form should not be deleted
-                List<TimetableEventTime> eventsToBeDeleted = timetableEvent.getTimetableEventTimes().stream()
+                deletedEvents = timetableEvent.getTimetableEventTimes().stream()
                         .filter(t -> !t.getStart().toLocalDate().isBefore(timetableEventTime.getStart().toLocalDate()))
                         .collect(Collectors.toList());
-                for (TimetableEventTime currentTime : eventsToBeDeleted) {
+                for (TimetableEventTime currentTime : deletedEvents) {
                     timetableEvent.getTimetableEventTimes().remove(currentTime);
                     EntityUtil.deleteEntity(currentTime, em);
                 }
             } else {
+                deletedEvents = Collections.singletonList(timetableEventTime);
                 EntityUtil.deleteEntity(timetableEventTime, em);
             }
             if (timetableEvent.getTimetableEventTimes().isEmpty()) {
                 EntityUtil.deleteEntity(timetableEvent, em);
             }
         } else {
+            deletedEvents = timetableEvent.getTimetableEventTimes();
             EntityUtil.deleteEntity(timetableEvent, em);
         }
-
-        sendTimetableChangesMessages(timetableObject, timetableEventTime.getStart(), timetableEventTime.getEnd(),
-                timetableObject.getTimetableObjectStudentGroups());
+        sendTimetableChangesMessages(timetableObject, deletedEvents, timetableObject.getTimetableObjectStudentGroups());
         if (timetableObject.getTimetableEvents().isEmpty()) {
             EntityUtil.deleteEntity(timetableObject, em);
         }
@@ -2180,7 +2186,7 @@ public class TimetableService {
         return periodsWithConnectedSubjects;
     }
 
-    public void  sendTimetableChangesMessages(TimetableObject object, LocalDateTime start, LocalDateTime end,
+    public void  sendTimetableChangesMessages(TimetableObject object, List<TimetableEventTime> changedEvents,
             List<TimetableObjectStudentGroup> objectStudentGroups) {
         Timetable timetable = object.getTimetable();
         if(ClassifierUtil.equals(TimetableStatus.TUNNIPLAAN_STAATUS_P, timetable.getStatus())) {
@@ -2208,7 +2214,7 @@ public class TimetableService {
             }
             for(Student student : students) {
                 if(StudentUtil.isActive(student)) {
-                    TimetableChanged msg = new TimetableChanged(student, subject, journalName, start, end);
+                    TimetableChanged msg = new TimetableChanged(student, subject, journalName, changedEvents);
                     automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_MUUD_TUNNIPL, student, msg);
                 }
             }

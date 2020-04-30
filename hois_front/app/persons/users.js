@@ -2,6 +2,7 @@
 
 angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q', '$rootScope', '$route', '$scope', 'dialogService', 'Classifier', 'message', 'QueryUtils', 'ArrayUtils', 'AuthService', 'School',
   function ($location, $q, $rootScope, $route, $scope, dialogService, Classifier, message, QueryUtils, ArrayUtils, AuthService, School) {
+    var vm = this;
     $scope.currentNavItem = "users";
     var personId = $route.current.params.person;
     var userId = $route.current.params.user;
@@ -159,14 +160,31 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
               isLeadingTeacherRight(objectCode, permCode);
     };
 
-    // Main admin can change school so with this it should consider school type (higher/vocational)
+    // Main admin can change school
     $scope.schoolChanged = function () {
       var school = $scope.user.school;
       var role = $scope.user.role;
+
+      if ($scope.user.curriculums) {
+        $scope.user.curriculums.length = 0;
+      }
+      
+      if (!!(school || {}).id) {
+        // Remove admin role if user has admin role already in this school
+        if ($scope.user.person.schoolAdminInSchools.indexOf(school.id) !== -1) {
+          if ($scope.filterValues.indexOf('ROLL_A') === -1) {
+            $scope.filterValues.push('ROLL_A');
+          }
+        } else if ($scope.filterValues.indexOf('ROLL_A') !== -1) {
+          $scope.filterValues.splice($scope.filterValues.indexOf('ROLL_A'), 1);
+        }
+      }
+
       if (!role || !school) {
         return;
       }
 
+      // Update user rights filter so it should consider school type (higher/vocational)
       var higher = (mappedSchoolsWithType[school.id] || {}).higher ? true : undefined;
       var vocational = (mappedSchoolsWithType[school.id] || {}).vocational ? true : undefined;
       var filteredObjects = $scope.objects.filter(function(it) {
@@ -334,7 +352,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
       }
     };
 
-    $scope.$watch('autoCurriculum', function (newV, oldV) {
+    $scope.$watch('controller.autoCurriculum', function (newV, oldV) {
       if (!newV || newV === oldV) {
         return;
       }
@@ -349,7 +367,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
         $scope.user.curriculums.push(newV);
       }
 
-      $scope.autoCurriculum = null;
+      vm.autoCurriculum = null;
     });
 
     var mappedSchoolsWithType = {};
@@ -364,7 +382,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
 
     $q.all([$scope.objects.$promise, $scope.permissions.$promise, $scope.userRoleDefaults.$promise,
             $scope.user.$promise, $scope.userRoles.$promise, userRoleRights.$promise, schoolsWithType, allRoles.$promise]).then(function() {
-      if (!$scope.user.id && $scope.user.person.hasSchoolAdminRole) {
+      if ($scope.user.person.schoolAdminInSchools.indexOf(($scope.user.school || {}).id) !== -1) {
         $scope.filterValues.push('ROLL_A');
       }
       if (!$scope.user.role) {

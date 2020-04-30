@@ -8,7 +8,9 @@
  * Factory in the hitsaOis.
  */
 angular.module('hitsaOis')
-  .factory('Curriculum', function ($resource, config, QueryUtils) {
+  .factory('Curriculum', function ($resource, config, QueryUtils, $rootScope) {
+
+    var SHORT_MAX_VALUE = 32767;
     
     function Curriculum() {
     }
@@ -68,6 +70,21 @@ angular.module('hitsaOis')
     Curriculum.queryVersions = function(params) {
       return QueryUtils.endpoint('/autocomplete/curriculumversions').query(params);
     };
+
+    function orderCurriculumModuleByOrderNr(cModule) {
+      return cModule.orderNr === undefined || cModule.orderNr === null ? SHORT_MAX_VALUE : cModule.orderNr; // undefined and null place at the end
+    }
+
+    Curriculum.curriculumModuleOrder = function (defaultOrder) {
+      if (angular.isFunction(defaultOrder)) {
+        return [orderCurriculumModuleByOrderNr, defaultOrder];
+      } else if (!!defaultOrder) {
+        return [orderCurriculumModuleByOrderNr, function (module) {
+          return module[defaultOrder];
+        }];
+      }
+      return [orderCurriculumModuleByOrderNr, $rootScope.currentLanguageNameField];
+    }
 
     return Curriculum;
   });

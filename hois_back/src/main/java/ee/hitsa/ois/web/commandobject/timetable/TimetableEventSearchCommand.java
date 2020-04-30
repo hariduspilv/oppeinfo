@@ -24,6 +24,7 @@ public class TimetableEventSearchCommand {
     private Long journalOrSubjectId;
     private Boolean showOnlySubstitutes;
     private Boolean personalEvent;
+    private Boolean juhanEvent;
     private Long user;
     private Boolean leadingTeacherEvents;
     private TimetablePersonHolder person; // for personal timetables accessed by encoded url
@@ -162,6 +163,14 @@ public class TimetableEventSearchCommand {
 
     public void setPersonalEvent(Boolean personalEvent) {
         this.personalEvent = personalEvent;
+    }
+
+    public Boolean getJuhanEvent() {
+        return juhanEvent;
+    }
+
+    public void setJuhanEvent(Boolean juhanEvent) {
+        this.juhanEvent = juhanEvent;
     }
 
     public Long getUser() {

@@ -183,7 +183,7 @@
         <div ng-if="record.canEditSubgroups || record.subgroups.length > 0">&nbsp;</div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-            <md-button ng-if="record.canDelete" class="md-raised md-default" ng-click="delete()" ng-if="record.id">{{'main.button.delete' | translate}}</md-button>
+            <md-button ng-if="record.id && record.canDelete" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
             <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods', subjectStudyPeriodEditForm)">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>

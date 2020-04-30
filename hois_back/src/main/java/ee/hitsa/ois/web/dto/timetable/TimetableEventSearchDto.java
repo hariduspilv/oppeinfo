@@ -29,7 +29,7 @@ public class TimetableEventSearchDto {
     private Boolean isPersonal;
     private AutocompleteResult person;
     private Boolean isImported;
-    private Boolean canEdit;
+    private Boolean isJuhanEvent;
 
     public TimetableEventSearchDto(Long id, Long journalId, Long subjectStudyPeriodId, String nameEt, String nameEn,
             LocalDate date, LocalTime timeStart, LocalTime timeEnd, Boolean considerBreak, Boolean singleEvent,
@@ -218,12 +218,11 @@ public class TimetableEventSearchDto {
         this.person = person;
     }
 
-    public Boolean getCanEdit() {
-        return canEdit;
+    public Boolean getIsJuhanEvent() {
+        return isJuhanEvent;
     }
 
-    public void setCanEdit(Boolean canEdit) {
-        this.canEdit = canEdit;
+    public void setIsJuhanEvent(Boolean isJuhanEvent) {
+        this.isJuhanEvent = isJuhanEvent;
     }
-
 }

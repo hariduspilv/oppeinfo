@@ -4,7 +4,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.BeanUtils;
 
@@ -23,15 +25,17 @@ public class JournalXlsDto extends JournalDto {
     private List<JournalEntryDto> journalEntries = new ArrayList<>();
     private List<JournalStudentDto> journalStudents = new ArrayList<>();
     private List<JournalEntryByDateXlsDto> journalEntriesByDate = new ArrayList<>();
-    private LocalDate journalEndResultDate;
-    private List<JournalEntryByDateXlsDto> journalEndResults = new ArrayList<>();
+    private List<JournalEntryByDateXlsDto> outcomeEntries = new ArrayList<>();
+
+    private Boolean includesFinalResult = Boolean.FALSE;
+    private LocalDate journalFinalResultDate;
+    private Map<Long, String> journalFinalResults = new HashMap<>();
 
     public static JournalXlsDto of(Journal journal) {
         JournalDto journalDto = JournalDto.of(journal);
         JournalXlsDto dto = new JournalXlsDto();
         BeanUtils.copyProperties(journalDto, dto, "journalEntries", "journalStudents");
 
-        int outcomeWithoutOrderNr = 0;
         for (JournalEntry entry : journal.getJournalEntries()) {
             dto.getJournalEntries().add(EntityUtil.bindToDto(entry, new JournalEntryDto()));
             
@@ -40,15 +44,6 @@ public class JournalXlsDto extends JournalDto {
                         new JournalEntryByDateXlsDto());
                 journalEntryByDateDto.setStartLessonNr(entry.getStartLessonNr());
                 journalEntryByDateDto.setLessons(entry.getLessons());
-
-                if (entry.getCurriculumModuleOutcomes() != null) {
-                    if (entry.getCurriculumModuleOutcomes().getOrderNr() != null) {
-                        journalEntryByDateDto.setOutcomeOrderNr(entry.getCurriculumModuleOutcomes().getOrderNr());
-                    } else {
-                        journalEntryByDateDto.setOutcomeOrderNr(Long.valueOf(outcomeWithoutOrderNr++));
-                    }
-                    journalEntryByDateDto.setCurriculumModule(EntityUtil.getId(entry.getCurriculumModuleOutcomes().getCurriculumModule()));
-                }
 
                 for (JournalEntryStudent journalEntryStudent : entry.getJournalEntryStudents()) {
                     if (journalEntryStudent.getGrade() != null) {
@@ -81,28 +76,20 @@ public class JournalXlsDto extends JournalDto {
                 }
                 dto.getJournalEntriesByDate().add(journalEntryByDateDto);
             } else {
-                JournalEntryByDateXlsDto journalEndResult = EntityUtil.bindToDto(entry,
-                        new JournalEntryByDateXlsDto());
-                
                 for (JournalEntryStudent journalEntryStudent : entry.getJournalEntryStudents()) {
                     if (journalEntryStudent.getGrade() != null) {
-                        journalEndResult.getJournalStudentGrade().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
+                        dto.getJournalFinalResults().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
                                 journalEntryStudent.getGrade().getValue());
                     }
                 }
-                dto.getJournalEndResults().add(journalEndResult);
+
+                if (Boolean.FALSE.equals(dto.getIncludesFinalResult())) {
+                    dto.setIncludesFinalResult(Boolean.TRUE);
+                    dto.setJournalFinalResultDate(entry.getEntryDate());
+                }
             }
         }
-
-        if (!dto.getJournalEndResults().isEmpty()) {
-            dto.setJournalEndResultDate(dto.getJournalEndResults().get(0).getEntryDate());
-        }
-
-        Collections.sort(dto.getJournalEntries(),
-                Comparator.comparing(JournalEntryDto::getEntryDate, Comparator.nullsLast(Comparator.reverseOrder())));
-        
-        setOutcomeEntriesUnqiueOrderNrs(dto.getJournalEntriesByDate());
-        orderJournalEntriesByDate(dto.getJournalEntriesByDate());
+        JournalUtil.orderJournalEntriesByDate(dto.getJournalEntriesByDate());
 
         for (JournalStudent journalStudent : journal.getJournalStudents()) {
             dto.getJournalStudents().add(JournalStudentDto.of(journalStudent));
@@ -150,59 +137,35 @@ public class JournalXlsDto extends JournalDto {
         this.journalEntriesByDate = journalEntriesByDate;
     }
 
-    public LocalDate getJournalEndResultDate() {
-        return journalEndResultDate;
+    public List<JournalEntryByDateXlsDto> getOutcomeEntries() {
+        return outcomeEntries;
     }
 
-    public void setJournalEndResultDate(LocalDate journalEndResultDate) {
-        this.journalEndResultDate = journalEndResultDate;
+    public void setOutcomeEntries(List<JournalEntryByDateXlsDto> outcomeEntries) {
+        this.outcomeEntries = outcomeEntries;
     }
 
-    public List<JournalEntryByDateXlsDto> getJournalEndResults() {
-        return journalEndResults;
+    public Boolean getIncludesFinalResult() {
+        return includesFinalResult;
     }
 
-    public void setJournalEndResults(List<JournalEntryByDateXlsDto> journalEndResults) {
-        this.journalEndResults = journalEndResults;
-    }
-    
-    private static void setOutcomeEntriesUnqiueOrderNrs(List<JournalEntryByDateXlsDto> entries) {
-        // order outcomes by curriculum module id and their order nr and then give outcomes from different modules a unique outcome order nr
-        Collections.sort(entries, Comparator.comparing(JournalEntryByDateXlsDto::getCurriculumModule, Comparator.nullsFirst(Comparator.naturalOrder()))
-                .thenComparing(JournalEntryByDateXlsDto::getOutcomeOrderNr, Comparator.nullsFirst(Comparator.naturalOrder())));
-        List<Long> orderNrs = new ArrayList<>();
-        for (int i = 0; i < entries.size(); i++) {
-            Long entryOrderNr = entries.get(i) != null && entries.get(i).getOutcomeOrderNr() != null ? entries.get(i).getOutcomeOrderNr() : null;
-            if (entryOrderNr != null) {
-                if (!orderNrs.contains(entryOrderNr)) {
-                    orderNrs.add(entryOrderNr);
-                } else {
-                    Long newOrderNr = Long.valueOf(orderNrs.stream().max(Comparator.comparing(nr -> nr)).get().longValue() + 1);
-                    entries.get(i).setOutcomeOrderNr(newOrderNr);
-                    orderNrs.add(newOrderNr);
-                }
-            }
-        }
+    public void setIncludesFinalResult(Boolean includesFinalResult) {
+        this.includesFinalResult = includesFinalResult;
     }
 
-    private static void orderJournalEntriesByDate(List<JournalEntryByDateXlsDto> entries) {
-        // order day entries by lesson nr
-        Collections.sort(entries, Comparator.comparing(JournalEntryByDateXlsDto::getEntryDate, Comparator.nullsFirst(Comparator.naturalOrder()))
-                .thenComparing(JournalEntryByDateXlsDto::getStartLessonNr, Comparator.nullsLast(Comparator.naturalOrder()))
-                .thenComparing(JournalEntryByDateXlsDto::getLessons, Comparator.nullsFirst(Comparator.naturalOrder())));
-        
-        // outcome entries that don't have a date are ordered last among entries without date, all other entries are ordered by date
-        Collections.sort(entries, Comparator.comparing(JournalEntryByDateXlsDto::getOutcomeOrderNr, Comparator.nullsFirst(Comparator.naturalOrder())));
-        Collections.sort(entries, Comparator.comparing(JournalEntryByDateXlsDto::getEntryDate, Comparator.nullsFirst(Comparator.naturalOrder())));
-        
-        Collections.sort(entries, (JournalEntryByDateXlsDto o1, JournalEntryByDateXlsDto o2) -> {
-            if (JournalUtil.isOutcomeEntryWithoutDate(o1) && !JournalUtil.isOutcomeEntryWithoutDate(o2)) {
-                return 1;
-            } else if (!JournalUtil.isOutcomeEntryWithoutDate(o1) && JournalUtil.isOutcomeEntryWithoutDate(o2)) {
-                return -1;
-            }
-            return 0;
-        });
+    public LocalDate getJournalFinalResultDate() {
+        return journalFinalResultDate;
     }
 
+    public void setJournalFinalResultDate(LocalDate journalFinalResultDate) {
+        this.journalFinalResultDate = journalFinalResultDate;
+    }
+
+    public Map<Long, String> getJournalFinalResults() {
+        return journalFinalResults;
+    }
+
+    public void setJournalFinalResults(Map<Long, String> journalFinalResults) {
+        this.journalFinalResults = journalFinalResults;
+    }
 }

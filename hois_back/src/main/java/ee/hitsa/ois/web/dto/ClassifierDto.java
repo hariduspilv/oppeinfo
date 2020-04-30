@@ -28,6 +28,12 @@ public class ClassifierDto extends InsertedChangedVersionDto implements Translat
     public static ClassifierDto of(Classifier classifier) {
         return EntityUtil.bindToDto(classifier, new ClassifierDto());
     }
+    
+    public static ClassifierDto ofMin(String code) {
+        ClassifierDto dto = new ClassifierDto();
+        dto.setCode(code);
+        return dto;
+    }
 
     public String getValue2() {
         return value2;

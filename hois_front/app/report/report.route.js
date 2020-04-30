@@ -35,6 +35,28 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         auth: function (AuthResolver) { return AuthResolver.resolve(); },
         translationLoaded: function($translate) { return $translate.onReady(); }
       }
+    }).when('/reports/students/data', {
+      templateUrl: 'report/student.data.html',
+      controller: 'ReportStudentDataController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PARING]
+      },
+      resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); }
+      }
+    }).when('/reports/subjectStudyPeriod/data', {
+      templateUrl: 'report/subject.study.period.html',
+      controller: 'ReportSubjectStudyPeriodController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PARING]
+      },
+      resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function($translate) { return $translate.onReady(); }
+      }
     }).when('/reports/students/statistics', {
       templateUrl: 'report/student.statistics.html',
       controller: 'ReportStudentStatisticsController',

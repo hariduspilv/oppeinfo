@@ -109,7 +109,8 @@
             <div layout="row">
               <md-button class="md-raised md-primary" ng-if="canEdit" ng-click="changeStipend(stipend)">{{'main.button.edit' | translate}}</md-button>
               <md-button class="md-raised" ng-if="!stipend.isOpen && stipend.id && canEdit" ng-click="publish()">{{'main.button.publishtoStudents' | translate}}</md-button>
-              <md-button class="md-raised" ng-click="back('#/scholarships/', stipendForm)">{{'main.button.back' | translate}}</md-button>
+              <md-button class="md-raised" ng-if="stipend.id" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+              <md-button class="md-raised" ng-click="back('#/scholarships?_menu', stipendForm)">{{'main.button.back' | translate}}</md-button>
             </div>
           </div>
         </div>

@@ -126,5 +126,4 @@ public class ProtocolVdataDto {
     public void setIsPractice(Boolean isPractice) {
         this.isPractice = isPractice;
     }
-    
 }

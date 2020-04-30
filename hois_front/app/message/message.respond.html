@@ -1,6 +1,10 @@
 
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
     <form layout="column" name="messageRespondForm" novalidate>
+        <div md-colors="{color: 'default-warn'}" ng-if="noEmail">
+            <md-icon md-colors="{color: 'default-warn'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'message.noEmail' | translate}}</span>
+        </div>
         <div layout="row">
             <md-input-container flex="50" flex-sm="100" flex-xs="100">
                 <label class="textInput">{{'message.subject' | translate}}</label>

@@ -168,6 +168,8 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
 ]).controller('StudentViewResultsController', ['$route', '$scope', '$localStorage', 'QueryUtils', 'config', 'StudentUtil',
 function ($route, $scope, $localStorage, QueryUtils, config, StudentUtil) {
   $scope.auth = $route.current.locals.auth;
+  $scope.formState = {};
+  $scope.formState.openAllCollapsables = false;
 
   $scope.studentId = ($scope.auth.isStudent() || $scope.auth.isParent() ? $scope.auth.student : $route.current.params.id);
   QueryUtils.endpoint('/students').get({ id: $scope.studentId }).$promise.then(function (student) {
@@ -245,17 +247,27 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
   });
 
   $scope.loadCurriculumFulfillment = function() {
-    
+    var outcomeIds = themeOutcomeIds();
+
     if (!angular.isObject($scope.vocationalResultsCurriculum)) {
       var formalLearningResult = [];
+      var otherOutcomeResults = [];
       var moduleResultById = {};
       $scope.vocationalResults.results.forEach(function (it) {
         if (!angular.isObject(moduleResultById[it.module.id])) {
-          moduleResultById[it.module.id] = { themeResultById: {}, totalSubmitted: 0 };
+          moduleResultById[it.module.id] = { themeResultById: {}, outcomeResultById: {}, totalSubmitted: 0 };
         }
 
         if (angular.isObject(it.theme)) {
           moduleResultById[it.module.id].themeResultById[it.theme.id] = it;
+        } else if (angular.isObject(it.outcome)) {
+          // outcomes that do not belong to any module themes that are shown in curriculum fullfillment
+          // are shown under 'other outcomes' hois-collapsable
+          if (outcomeIds.indexOf(it.outcome.id) !== -1) {
+            moduleResultById[it.module.id].outcomeResultById[it.outcome.id] = it;
+          } else {
+            otherOutcomeResults.push(it);
+          }
         } else {
           angular.extend(moduleResultById[it.module.id], it);
 
@@ -278,58 +290,28 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
         });
       });
 
-      // calculate total submitted credits by module
-      angular.forEach(moduleResultById, function (moduleResult, moduleId) {
-        moduleId = parseInt(moduleId, 10);
-        var curriculumModule = $scope.vocationalResults.curriculumModules.filter(function (it) {
-          return it.curriculumModule.id === moduleId;
-        })[0];
-        if (!angular.isObject(curriculumModule)) {
-          curriculumModule = $scope.vocationalResults.extraCurriculaModules.filter(function (it) {
-            return it.curriculumModule.id === moduleId;
-          })[0];
-        }
+      $scope.moduleResultById = moduleResultById;
 
-        if (angular.isObject(curriculumModule)) {
-          var curriculumModuleThemes = [].concat(curriculumModule.themes.map(function (it) { return it.id; }));
-          curriculumModuleThemes = curriculumModuleThemes.concat(curriculumModule.otherCurriculumVersionModuleThemes.map(function (it) { return it.id; }));
-
-          angular.forEach(moduleResult.themeResultById, function (themeResult) {
-            // count only credits of themes that are shown and that are positive
-            if (curriculumModuleThemes.indexOf(themeResult.theme.id) !== -1 && themeResult.grade && VocationalGradeUtil.isPositive(themeResult.grade.code)) {
-              moduleResult.totalSubmitted += themeResult.credits;
-            }
-          });
-        }
-      });
-
-      // calculate backlogs
+      // when setting module submitted credits theme.isOk is set
       $scope.vocationalResults.curriculumModules.forEach(function (it) {
-        it.moduleBacklog = (moduleResultById[it.curriculumModule.id]? moduleResultById[it.curriculumModule.id].totalSubmitted : 0) - it.curriculumModule.credits;
+        setModuleSubmittedCreditsAndBacklogs(it);
       });
       $scope.vocationalResults.extraCurriculaModules.forEach(function (it) {
-        it.moduleBacklog = (moduleResultById[it.curriculumModule.id]? moduleResultById[it.curriculumModule.id].totalSubmitted : 0) - it.curriculumModule.credits;
+        setModuleSubmittedCreditsAndBacklogs(it);
       });
-
-      $scope.moduleResultById = moduleResultById;
-      $scope.positiveThemeResult = function (themeResult) {
-        return angular.isObject(themeResult) && angular.isObject(themeResult.grade) && angular.isString(themeResult.grade.code) && VocationalGradeUtil.isPositive(themeResult.grade.code);
-      };
 
       $scope.vocationalResultsCurriculum = {};
-      $scope.vocationalResultsCurriculum.vocationalResultsModules = $scope.vocationalResults.curriculumModules.sort(function (m1, m2) {
-        return m1.curriculumModule.orderNr - m2.curriculumModule.orderNr || $rootScope.currentLanguageNameField(m1.curriculumModule).localeCompare($rootScope.currentLanguageNameField(m2.curriculumModule));
-      });
-      $scope.vocationalResultsCurriculum.extraCurriculaVocationalResultsModules = $scope.vocationalResults.extraCurriculaModules.sort(function (m1, m2) {
-        return m1.curriculumModule.orderNr - m2.curriculumModule.orderNr || $rootScope.currentLanguageNameField(m1.curriculumModule).localeCompare($rootScope.currentLanguageNameField(m2.curriculumModule));
-      });
+      $scope.vocationalResultsCurriculum.vocationalResultsModules =
+        $scope.vocationalResults.curriculumModules.sort(moduleComparator);
+      $scope.vocationalResultsCurriculum.extraCurriculaVocationalResultsModules =
+        $scope.vocationalResults.extraCurriculaModules.sort(moduleComparator);
 
       // remove modules that are replaced by apel formal learning
       formalLearningResult.forEach(function (formalLearning) {
         formalLearning.replacedModules.forEach(function (replacedModuleId) {
-          var replacedModule = $scope.vocationalResultsCurriculum.vocationalResultsModules.filter(function (module) {
+          var replacedModule = $scope.vocationalResultsCurriculum.vocationalResultsModules.find(function (module) {
             return module.curriculumModule.id === replacedModuleId;
-          })[0];
+          });
           if (angular.isObject(replacedModule)) {
             var curriculumModuleIndex = $scope.vocationalResultsCurriculum.vocationalResultsModules.indexOf(replacedModule);
             if (curriculumModuleIndex > -1) {
@@ -337,9 +319,9 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
             }
           }
 
-          var replacedExtraCurriculaModule = $scope.vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.filter(function (module) {
+          var replacedExtraCurriculaModule = $scope.vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.find(function (module) {
             return module.curriculumModule.id === replacedModuleId;
-          })[0];
+          });
           if (angular.isObject(replacedExtraCurriculaModule)) {
             var extraCurriculuaModuleIndex = $scope.vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.indexOf(replacedExtraCurriculaModule);
             if (extraCurriculuaModuleIndex > -1) {
@@ -379,8 +361,41 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       $scope.vocationalResultsCurriculum.replacedModuleResults = $scope.vocationalResultsCurriculum.replacedModuleResults.filter(function (module, index) {
         return onlyReplacedExtraCurriculaIndexes.indexOf(index) === -1;
       });
+      $scope.vocationalResultsCurriculum.otherOutcomeResults = otherOutcomeResults;
+      changeModulesExpandedStatus();
     }
   };
+
+  function moduleComparator(m1, m2) {
+    return moduleOrderComparator(m1, m2) || m1.curriculumModule.specOrderNr - m2.curriculumModule.specOrderNr ||
+      $rootScope.currentLanguageNameField(m1.curriculumModule).localeCompare($rootScope.currentLanguageNameField(m2.curriculumModule));
+  }
+
+  function moduleOrderComparator(m1, m2) {
+    return (m1.curriculumModule.orderNr === null) - (m2.curriculumModule.orderNr === null) ||
+      + (m1.curriculumModule.orderNr > m2.curriculumModule.orderNr) || - (m1.curriculumModule.orderNr < m2.curriculumModule.orderNr);
+  }
+
+  function themeOutcomeIds() {
+    var outcomeIds = [];
+    $scope.vocationalResults.curriculumModules.forEach(function (module) {
+      outcomeIds = outcomeIds.concat(getModuleOutcomes(module));
+    });
+    $scope.vocationalResults.extraCurriculaModules.forEach(function (module) {
+      outcomeIds = outcomeIds.concat(getModuleOutcomes(module));
+    });
+    return outcomeIds;
+  }
+
+  function getModuleOutcomes(module) {
+    var moduleOutcomes = [];
+    module.themes.forEach(function (theme) {
+      theme.curriculumModuleOutcomes.forEach(function (outcome) {
+        moduleOutcomes.push(outcome.id);
+      });
+    });
+    return moduleOutcomes;
+  }
 
   function loadVocationalResults() {
     QueryUtils.loadingWheel($scope, true);
@@ -396,6 +411,20 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       $scope.loadCurriculumFulfillment();
       QueryUtils.loadingWheel($scope, false);
     });
+  }
+
+  $scope.changeModulesExpandedStatus = function () {
+    changeModulesExpandedStatus();
+  };
+
+  function changeModulesExpandedStatus() {
+    $scope.vocationalResultsCurriculum.vocationalResultsModules.forEach(function (module) {
+      module.collapsableOpen = $scope.formState.openAllCollapsables;
+    });
+    $scope.vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.forEach(function (module) {
+      module.collapsableOpen = $scope.formState.openAllCollapsables;
+    });
+    $scope.vocationalResultsCurriculum.otherOutcomesCollapsableOpen = $scope.formState.openAllCollapsables;
   }
 
   $scope.loadStudyYearResults = function () {
@@ -447,6 +476,52 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
     return VocationalGradeUtil.isPositive(grade);//(angular.isNumber(grade) && grade > 2) || (angular.isString(grade) && parseInt(grade, 10) > 2);
   };
 
+  function setModuleSubmittedCreditsAndBacklogs(module) {
+    var moduleResult = $scope.moduleResultById[module.curriculumModule.id];
+    module.themes.forEach(function (theme) {
+      var themeResult = angular.isDefined(moduleResult) ? moduleResult.themeResultById[theme.id] : undefined;
+      if (isThemeGraded(theme, themeResult)) {
+        var outcomeResults = angular.isDefined(moduleResult) ? moduleResult.outcomeResultById : undefined;
+        theme.isOk = isThemeOk(theme, themeResult, outcomeResults);
+      }
+
+      if (theme.isOk) {
+        moduleResult.totalSubmitted += theme.credits;
+      }
+    });
+    module.moduleBacklog = (moduleResult ? moduleResult.totalSubmitted : 0) - module.curriculumModule.credits;
+  }
+
+  // 'isOk' column value should not be shown if theme has no assessment, is not graded by outcomes
+  // and doesn't already have a grade
+  function isThemeGraded(theme, themeResult) {
+    return angular.isDefined(theme) && (angular.isDefined(themeResult) || theme.assessment !== null || theme.moduleOutcomes);
+  }
+
+  function isThemeOk(theme, themeResult, outcomeResults) {
+    if (!theme.moduleOutcomes) {
+      return themeHasPositiveGrade(themeResult);
+    }
+    return themeHasPositiveGrade(themeResult) || (angular.isDefined(outcomeResults) &&
+      allOutcomesWithPositiveGrades(theme, outcomeResults));
+  }
+
+  function themeHasPositiveGrade(themeResult) {
+    return angular.isDefined(themeResult) && angular.isObject(themeResult.grade) &&
+      VocationalGradeUtil.isPositive(themeResult.grade.code);
+  }
+
+  function allOutcomesWithPositiveGrades(theme, outcomeResults) {
+    var allResultsPositive = true;
+    for (var i = 0; i < theme.curriculumModuleOutcomes.length; i++) {
+      var themeOutcomeResult = outcomeResults[theme.curriculumModuleOutcomes[i].id];
+      if (!themeOutcomeResult || !VocationalGradeUtil.isPositive(themeOutcomeResult.grade.code)) {
+        return false;
+      }
+    }
+    return allResultsPositive;
+  }
+
   function loadCurrentNavItemData() {
     if ($scope.resultsCurrentNavItem === 'student.curriculumFulfillment') {
       loadVocationalResults();
@@ -471,14 +546,19 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
     }
   }
 
-}]).controller('StudentViewResultsHigherController', ['$rootScope', '$route', '$scope', 'Classifier', 'HigherGradeUtil', 'StudentUtil', 'QueryUtils', 'message',
-  function ($rootScope, $route, $scope, Classifier, HigherGradeUtil, StudentUtil, QueryUtils, message) {
+}]).controller('StudentViewResultsHigherController', ['$rootScope', '$route', '$scope', 'AuthService', 'Classifier', 'HigherGradeUtil', 'StudentUtil', 'QueryUtils', 'dialogService', 'message',
+  function ($rootScope, $route, $scope, AuthService, Classifier, HigherGradeUtil, StudentUtil, QueryUtils, dialogService, message) {
+    $scope.studentId = ($scope.auth.isStudent() || $scope.auth.isParent()) ? $scope.auth.student : $route.current.params.id;
     $scope.auth = $route.current.locals.auth;
     $scope.gradeUtil = HigherGradeUtil;
     var clMapper = Classifier.valuemapper({ grade: 'KORGHINDAMINE'});
 
-    $scope.canChangeStudentModules = ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher()) && StudentUtil.isActive($scope.student.status) &&
-      $scope.auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_OPPUR') !== -1;
+    var studentIsActive = StudentUtil.isActive($scope.student.status);
+    $scope.canChangeStudentModules = ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher()) && studentIsActive &&
+      AuthService.isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPPUR');
+    $scope.canViewModulesAsDone = $scope.auth.isAdmin() && AuthService.isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_OKTAITMINE');
+    $scope.canChangeModulesAsDone = $scope.auth.isAdmin() && studentIsActive &&
+      AuthService.isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OKTAITMINE');
 
     $scope.$watch('resultsCurrentNavItem', function () {
       if ($scope.resultsCurrentNavItem === 'student.changeModules') {
@@ -490,22 +570,77 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       }
     });
 
-    function loadHigherResults() {
-      var id = ($scope.auth.isStudent() || $scope.auth.isParent()) ? $scope.auth.student : $route.current.params.id;
-      QueryUtils.endpoint('/students/' + id + '/higherResults').get().$promise.then(function (response) {
+    function loadHigherResults(expandedModules) {
+      QueryUtils.endpoint('/students/' + $scope.studentId + '/higherResults').get().$promise.then(function (response) {
+        response.modules.forEach(function (module) {
+          module.markedComplete = module.studentCurriculumCompletionHigherModule !== null;
+          module.studyCredits = module.compulsoryStudyCredits + module.optionalStudyCredits;
+          module.creditsSubmitted = module.mandatoryCreditsSubmitted + module.optionalCreditsSubmitted;
+          module.difference = (module.mandatoryDifference < 0 ? module.mandatoryDifference : 0) +
+            (module.optionalDifference < 0 ? module.optionalDifference : 0);
+        });
         response.subjectResults.forEach(function (result) {
           result.grades.forEach(function (grade) {
-            grade = clMapper.objectmapper(grade);
+            clMapper.objectmapper(grade);
           });
         });
         $scope.higherResults = response;
         $scope.student.higherResults = $scope.higherResults;
         $scope.student.higherResults.modules.sort(moduleComparator);
+        changeModulesExpandedStatus(expandedModules);
       });
     }
 
     if (!angular.isDefined($scope.higherResults)) {
       loadHigherResults();
+    }
+
+    $scope.changeModulesExpandedStatus = function () {
+      changeModulesExpandedStatus();
+    };
+
+    $scope.changeModuleCompletion = function (module) {
+      var expandedModules = getExpandedModules();
+      if (module.studentCurriculumCompletionHigherModule === null) {
+        dialogService.confirmDialog({ prompt: 'student.result.higher.markModuleCompleteConfirm' }, function () {
+          QueryUtils.endpoint('/students/' + $scope.studentId + '/markModuleComplete/' + module.id).put({}, function () {
+            loadHigherResults(expandedModules);
+          });
+        }, function () {
+          module.markedComplete = false;
+        });
+      } else {
+        dialogService.confirmDialog({ prompt: 'student.result.higher.removeModuleCompletionConfirm' }, function () {
+          QueryUtils.endpoint('/students/' + $scope.studentId + '/removeModuleCompletion/' +
+            module.studentCurriculumCompletionHigherModule).delete({}, function () {
+              loadHigherResults(expandedModules);
+          });
+        }, function () {
+          module.markedComplete = true;
+        });
+      }
+    };
+
+    function changeModulesExpandedStatus(expandedModules) {
+      if (angular.isArray(expandedModules)) {
+        $scope.higherResults.modules.forEach(function (module) {
+          module.collapsableOpen = expandedModules.indexOf(module.id) !== -1;
+        });
+      } else {
+        $scope.higherResults.modules.forEach(function (module) {
+          module.collapsableOpen = $scope.formState.openAllCollapsables;
+        });
+      }
+    }
+
+    function getExpandedModules() {
+      var expandedModules = [];
+      $scope.higherResults.modules.forEach(function (module) {
+        if (module.collapsableOpen) {
+          expandedModules.push(module.id);
+        }
+      });
+      return expandedModules;
     }
 
     $scope.hasMandatorySubjects = function (module) {
@@ -540,12 +675,12 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
                        'KORGMOODUL_L'];    // Final thesis
 
     function moduleComparator(v1, v2) {
-      var priority = moduleOrder.indexOf(v1.type) - moduleOrder.indexOf(v2.type);
-       if (priority !== 0) {
-         return priority;
-       } else {
-        return $rootScope.currentLanguageNameField(v1).localeCompare($rootScope.currentLanguageNameField(v2));
-      }
+      return moduleOrderComparator(v1, v2) || moduleOrder.indexOf(v1.type) - moduleOrder.indexOf(v2.type) ||
+        $rootScope.currentLanguageNameField(v1).localeCompare($rootScope.currentLanguageNameField(v2));
+    }
+
+    function moduleOrderComparator(m1, m2) {
+      return (m1.orderNr === null) - (m2.orderNr === null) || + (m1.orderNr > m2.orderNr) || - (m1.orderNr < m2.orderNr);
     }
 
     $scope.loadChangeableModules = function () {
@@ -572,11 +707,12 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
     }
 
     $scope.saveChangedModules = function () {
+      var expandedModules = getExpandedModules();
       QueryUtils.endpoint('/students/' + $scope.student.id + '/changeHigherCurriculumModules/').post(
         {modules: $scope.changeableModules}).$promise.then(function(changeableModules) {
         message.updateSuccess();
         setChangeableModules(changeableModules);
-        loadHigherResults();
+        loadHigherResults(expandedModules);
       });
     };
 
@@ -613,7 +749,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
           $scope.applicationTypes = responses;
         }
       });
-      $scope.certificateTypes = Classifier.queryForDropdown({mainClassCode: 'TOEND_LIIK', 
+      $scope.certificateTypes = Classifier.queryForDropdown({mainClassCode: 'TOEND_LIIK',
       filterValues: ($scope.auth.isGuestStudent() ? CertificateUtil.getGuestStudentForbiddenTypes() : [CertificateType.TOEND_LIIK_MUU])});
     }
 
@@ -731,7 +867,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
     $scope.changeStudyYear = function (studyYear) {
       $scope.generalTimetableUtils.changeState({ studyYearId: studyYear.id }, $scope.schoolId);
       $scope.criteria.studyYearId = studyYear.id;
-    };  
+    };
 
     $scope.showStudentWeek = function () {
       var newState = {};
@@ -777,9 +913,9 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       $scope.student = student;
       afterLoad();
     });
-    
+
     $scope.specialities = QueryUtils.endpoint("/students/" + id + "/specialities").query();
-    
+
     function withPhoto(afterPhotoLoad) {
       if ($scope.studentEditForm.photoFiles && $scope.studentEditForm.photoFiles.$modelValue[0]) {
         $scope.student.deleteCurrentPhoto = null;
@@ -819,7 +955,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
         $scope.student = response;
       });
       $scope.currentNavItem = 'student.absences';
-      
+
       $scope.absencesCriteria = { size: 20, page: 1, order: 'validFrom, validThru' };
 
       $scope.loadAbsences = function () {
@@ -837,7 +973,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
         absence = angular.copy(absence, {});
         absence.studentName = $scope.tabledata.studentName;
         absence.studentGroup = $scope.tabledata.studentGroup;
-        
+
         $mdDialog.show({
           controller: function ($scope) {
             $scope.record = new AbsenceEndpoint(absence || {});
@@ -894,13 +1030,13 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
         var query = QueryUtils.getQueryParams($scope.remarksCriteria);
         QueryUtils.endpoint('/remarks/student/' + $scope.studentId).search(query, $scope.afterLoadData);
       };
-      
+
       $scope.afterLoadData = function(resultData) {
         $scope.tabledata = {};
         $scope.tabledata.content = clMapper.objectmapper(resultData.content);
         $scope.tabledata.totalElements = resultData.totalElements;
       };
-      
+
       $q.all(clMapper.promises).then($scope.loadRemarks);
 
     }]).controller('StudentViewRRController', ['$route', '$scope', 'QueryUtils',
@@ -962,7 +1098,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
               });
             });
           };
-          
+
           dialogScope.close = function () {
             dialogScope.dialogForm.$setSubmitted();
             if (dialogScope.dialogForm.$dirty) {
@@ -1024,20 +1160,20 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
     }]).controller('StudentSearchController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils',
     function ($q, $route, $scope, Classifier, QueryUtils) {
       $scope.auth = $route.current.locals.auth;
-  
+
       var clMapping = $route.current.locals.clMapping;
       var clMapper = clMapping ? Classifier.valuemapper(clMapping) : undefined;
       QueryUtils.createQueryForm($scope, $route.current.locals.url, {
         order: 'person.lastname,person.firstname',
         showMyStudentGroups: $scope.auth.isTeacher() && $scope.auth.teacherGroupIds.length > 0
       }, clMapper ? clMapper.objectmapper : undefined);
-  
+
       if(clMapper) {
         $q.all(clMapper.promises).then($scope.loadData);
       } else {
         $scope.loadData();
       }
-  
+
       $scope.directiveControllers = [];
       var clearCriteria = $scope.clearCriteria;
       $scope.clearCriteria = function () {

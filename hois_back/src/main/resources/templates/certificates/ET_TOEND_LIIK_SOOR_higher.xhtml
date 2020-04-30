@@ -1,14 +1,38 @@
-{{ content.school }} tõendab, et 
-<b>{{ content.student.firstname }} {{ content.student.lastname }} 
-{{ content.student.idcode != null ? "(ik " + content.student.idcode : "(sünd " + content.student.birthDate }})
-</b> 
-{{ content.student.isGuestStudent ? (content.student.higher ? "oli külalisüliõpilane" : "oli külalisõpilane" ) : "õppis" }}
-{{ content.abroadProgramme != null ? " (" + content.abroadProgramme.nameEt + ")" : ""}}
- {{ content.student.studyStart != null ? content.student.studyStart : "määramata"}} 
-- {{ content.student.studyEnd != null ? content.student.studyEnd : "määramata"}}
-{{ content.student.curriculum != null ? " õppekaval " + content.student.curriculum.name + "(kood " + content.student.curriculum.code + ")" : "" }}
+<p>
+	{{ content.student.firstname }} {{content.student.lastname }} ({{ content.student.idcode != null ? content.student.idcode : content.student.birthDate }})
+	{% if content.student.isActive %}
+		on alates {{ content.student.studyStart != null ? content.student.studyStart : "määramata"}}
+	{% else %}
+		oli {{ content.student.studyStart != null ? content.student.studyStart : "määramata" }} - {{ content.student.studyEnd != null ? content.student.studyEnd : "määramata" }}
+	{% endif %}
+	{{ content.schoolGenitive != null ? content.schoolGenitive : content.school }}
+	{{ content.student.isGuestStudent ? (content.student.higher ? "külalisüliõpilane" : "külalisõpilane") : "üliõpilane" }}.
+</p>
+<p>
+	Õppekava: {{ content.student.curriculum != null ? content.student.curriculum.name + " (" + (content.student.curriculum.merCode != null ? content.student.curriculum.merCode  : "-") + ")" : "-" }}
+</p>
+{% if not content.student.isGuestStudent %}
+<p>
+	Õppetase: {{ content.student.curriculum != null ? (content.student.curriculum.studyLevel | name) : "-" }}
+</p>
+<p>
+	Õppevorm: {{ content.student.studyForm != null ? (content.student.studyForm | name) : "-" }}
+</p>
+<p>
+	Õppekoormus: {{ content.student.studyLoad != null ? (content.student.studyLoad | name) : "-" }}
+</p>
+{% endif %}
+{% if content.student.events != null and content.student.events.isEmpty() == false %}
+<p>
+	{% for event in content.student.events %}
+		Õppija viibib {{ event.start }} – {{ event.end }} {{ event.name }}
+	{% endfor %}
+</p>
+{% endif %}
 {% if content.student.results != null and content.student.results.isEmpty() == false %}
- ja tema teadmisi hinnati järgmiselt:
+<p>
+	Õppetöö osana on läbinud
+</p>
 
 <table class="widerTable">
 	<thead>
@@ -44,29 +68,58 @@
 	</tbody>
 
 </table>
+
+<p>
+Kokku: {{ content.student.creditsAll != null ? content.student.creditsAll : '0' }} EAP<br>
+Kaalutud keskmine hinne: {{ content.student.averageMark != null ? content.student.averageMark : '-' }}
+</p>
+{% if content.student.apelSchools is not empty %}
+<p>
+{% for apelSchool in content.student.apelSchools %}
+	{% if not loop.first %}<br>{% endif %}
+	*{{ apelSchool.id }} {{ apelSchool | name }}
+{% endfor %}
+</p>
 {% endif %}
 
-{% if content.student.results != null and content.student.results.isEmpty() == false and content.student.isGuestStudent and content.gradeSystem != null %}
-{{ "report.certificate.gradeSystem" | translate }}:
-<br>
-{{content.gradeSystem}}
+{% if content.grades is not empty %}
+{{ "report.certificate.gradeSystem2" | translate }}:
+<table class="widerTable2">
+	<thead>
+		<tr>
+			<th>{{ "report.certificate.gradeValue" | translate }}</th>
+			<th>{{ "report.certificate.gradeShort" | translate }}</th>
+			<th>{{ "report.certificate.gradeDescription" | translate }}</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for grade in content.grades %}
+			<tr>
+				<td>{{ grade.value }}</td>
+				<td>{{ grade.shortDescription }}</td>
+				<td>{{ grade.description }}</td>
+			</tr>
+		{% endfor %}
+	</tbody>
+</table>
+	{% if content.gradesDescription != null %}
+	{{ content.gradesDescription }}
+	{% endif %}
+{% endif %}
 {% endif %}
 
 {% if content.addOutcomes %}
+<p>
 <br>
 {% for result in content.student.results %}
 <b>{{ result.subject }}</b><br>
 {{ result.outcomes }}<br>
 {% endfor %}
+</p>
 {% endif %}
-
-{% if content.student.hasQuit %}
-<p>Õppur lahkus õppetöölt / katkestas õppetöö</p>
-{% endif %}
-
 
 <style>
-  .widerTable {
+  .widerTable, .widerTable2 {
     border-spacing: 50px 10px;
   }
 </style>

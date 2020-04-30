@@ -51,6 +51,10 @@ public abstract class ReportUtil {
             return Boolean.TRUE.equals(columnsForExcel)
                     ? TranslateUtil.translate("studentgroupteacher.wholePracticeModule", lang)
                     : "PM: " + TranslateUtil.name(resultColumn.getFullPracticeModule(), lang);
+        } else if (resultColumn.getOutcome() != null) {
+            int orderNr = resultColumn.getOutcome().getOrderNr() != null
+                ? resultColumn.getOutcome().getOrderNr().intValue() : 0;
+            return "OV" + (orderNr + 1) + ": " + TranslateUtil.name(resultColumn.getOutcome(), lang);
         } else if (resultColumn.getModule() != null) {
             return Boolean.TRUE.equals(columnsForExcel)
                     ? TranslateUtil.translate("studentgroupteacher.moduleGrade", lang)
@@ -67,6 +71,8 @@ public abstract class ReportUtil {
             return classifierValue(resultColumn.getPracticeModuleThemeResult().getGrade(), VOCATIONAL_GRADE, classifierCache);
         } else if (resultColumn.getPracticeModuleResult() != null) {
             return classifierValue(resultColumn.getPracticeModuleResult().getGrade(), VOCATIONAL_GRADE, classifierCache);
+        } else if (resultColumn.getOutcomeResult() != null) {
+            return classifierValue(resultColumn.getOutcomeResult().getGrade(), VOCATIONAL_GRADE, classifierCache);
         } else if (resultColumn.getModuleResult() != null) {
             return classifierValue(resultColumn.getModuleResult().getGrade(), VOCATIONAL_GRADE, classifierCache);
         }

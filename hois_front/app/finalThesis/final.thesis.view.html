@@ -5,7 +5,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'finalThesis.student' | translate}}</label>
-            <hois-value value="thesis.person.firstname + ' ' + thesis.person.lastname"></hois-value>
+            <hois-value value="currentLanguageNameField(thesis.person)"></hois-value>
           </md-input-container>
           <md-input-container ng-if="thesis.confirmed" flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'finalThesis.confirmed' | translate}}</label>
@@ -36,7 +36,51 @@
             <hois-value value="thesis.themeEn"></hois-value>
           </md-input-container>
         </div>
-        <br>
+        
+        <div ng-if="thesis.isMagisterOrDoctoralOrIntegratedStudy">
+          <div layout="row">
+            <md-input-container flex-gt-sm="45" flex="100">
+              <label>{{'finalThesis.language' | translate}}</label>
+              <hois-classifier-value ng-model="thesis.language" main-classifier-code="LOPUTOO_KEEL"></hois-classifier-value>
+            </md-input-container>
+          </div>
+          <fieldset>
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'finalThesis.cercsTitle' | translate}}</legend>
+            <md-table-container>
+              <table md-table>
+                <tbody ng-repeat="cercs in thesis.cercses">
+                  <tr>
+                    <td rowspan="2" style="vertical-align: top; width: 240px; min-width: 180px;">
+                      <p class="md-body-1" style="padding-left: 8px;">{{'finalThesis.cercs' | translate}} ({{$index + 1}})</p>
+                    </td>
+                    <td>
+                      <md-input-container style="width: 100%; margin-top: 18px; margin-bottom: 0px;">
+                        <label>{{'finalThesis.cercsType' | translate}}</label>
+                        <hois-classifier-value ng-model="cercs.cercsType" main-classifier-code="CERCS_TYPE"></hois-classifier-value>
+                      </md-input-container>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <md-input-container style="width: 100%; margin-top: 18px; margin-bottom: 0px;">
+                        <label>{{'finalThesis.cercsValue' | translate}}</label>
+                        <hois-classifier-value ng-model="cercs.cercs" main-classifier-code="CERCS"></hois-classifier-value>
+                      </md-input-container>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </md-table-container>
+          </fieldset>
+          <div>&nbsp;</div>
+  
+          <div layout="row">
+            <md-input-container flex="100">
+              <label>{{'finalThesis.curriculumGrade' | translate}}</label>
+              <hois-value value="currentLanguageNameField(thesis.curriculumGrade)"></hois-value>
+            </md-input-container>
+          </div>
+        </div>
 
         <div layout="row">
           <md-input-container>

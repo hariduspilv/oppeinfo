@@ -22,6 +22,7 @@ import javax.persistence.Query;
 import javax.transaction.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -866,5 +867,18 @@ public class MessageService {
             }
             return dto;
         }, result);
+    }
+    
+    public boolean userHasEmail(HoisUserDetails user) {
+        Person person = em.getReference(Person.class, user.getPersonId());
+        String email = person.getEmail();
+        if (user.isStudent()) {
+            Student student = em.getReference(Student.class, user.getStudentId());
+            email = student.getEmail() != null ? student.getEmail() : email;
+        } else if (user.isTeacher()) {
+            Teacher teacher = em.getReference(Teacher.class, user.getTeacherId());
+            email = teacher.getEmail() != null ? teacher.getEmail() : email;
+        }
+        return StringUtils.isNotBlank(email);
     }
 }

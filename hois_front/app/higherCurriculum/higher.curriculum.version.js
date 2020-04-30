@@ -17,6 +17,7 @@ angular.module('hitsaOis')
     var Endpoint = QueryUtils.endpoint('/curriculumVersion');
     var id = $route.current.params.versionId;
 
+    $scope.moduleOrderBy = Curriculum.curriculumModuleOrder;
     $scope.STATUS = Curriculum.STATUS;
     $scope.VERSION_STATUS = Curriculum.VERSION_STATUS;
 

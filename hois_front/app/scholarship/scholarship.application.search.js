@@ -3,6 +3,7 @@
 angular.module('hitsaOis').controller('ScholarshipApplicationSearchController', ['$route', '$scope', '$q', 'USER_ROLES', 'AuthService', 'Classifier', 'ScholarshipUtils', 'QueryUtils', 'message',
   function ($route, $scope, $q, USER_ROLES, AuthService, Classifier, ScholarshipUtils, QueryUtils, message) {
     $scope.auth = $route.current.locals.auth;
+    $scope.isHigher = $scope.auth.school.higher;
     $scope.currentNavItem = 'applications';
     var baseUrl = '/scholarships/applications';
     $scope.scholarshipType = $route.current.params.type;
@@ -17,6 +18,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationSearchController', 
 
     var clMapper = Classifier.valuemapper({
       termType: 'STIPTOETUS',
+      termEhisType: 'EHIS_STIPENDIUM',
       applicationStatus: 'STIPTOETUS_STAATUS'
     });
 

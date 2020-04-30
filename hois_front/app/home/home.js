@@ -745,6 +745,13 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
         QueryUtils.endpoint('/journals/studentJournalLastResults/').query({studentId: Session.studentId}).$promise,
         function (result) {
           $scope.lastResults = result;
+
+          var clMapper = Classifier.valuemapper({grade: 'KUTSEHINDAMINE'});
+          $q.all(clMapper.promises).then(function () {
+            $scope.lastResults.forEach(function (lastResult) {
+              lastResult = clMapper.objectmapper(lastResult);
+            });
+          });
           if (result.length === 0) {
             $scope.pageLoadingHandler.setFinish("lastResults");
           }

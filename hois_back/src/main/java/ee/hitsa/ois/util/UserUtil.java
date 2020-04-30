@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
+import ee.hitsa.ois.enums.HigherModuleType;
 import org.springframework.security.access.AccessDeniedException;
 
 import ee.hitsa.ois.domain.Person;
@@ -30,6 +32,7 @@ import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.validation.ValidationFailedException;
 
 public abstract class UserUtil {
 
@@ -248,6 +251,21 @@ public abstract class UserUtil {
         return StudentUtil.isActive(student) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR)
                 && (isSchoolAdmin(user, student.getSchool())
                         || isLeadingTeacher(user, student));
+    }
+
+    private static boolean canMarkStudentModuleComplete(HoisUserDetails user, Student student,
+            CurriculumVersionHigherModule module) {
+        return canChangeModuleCompletion(user, student)
+                && HigherModuleType.CAN_MARK_AS_COMPLETE.contains(EntityUtil.getCode(module.getType()));
+    }
+
+    private static boolean canRemoveModuleCompletion(HoisUserDetails user, Student student) {
+        return canChangeModuleCompletion(user, student);
+    }
+
+    public static boolean canChangeModuleCompletion(HoisUserDetails user, Student student) {
+        return StudentUtil.isActive(student) && isSchoolAdmin(user, student.getSchool())
+                && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OKTAITMINE);
     }
 
     /**
@@ -630,6 +648,15 @@ public abstract class UserUtil {
         throwAccessDeniedIf(!canEditStudentSupportServices(user, student), "main.messages.error.nopermission");
     }
 
+    public static void assertCanMarkStudentModuleComplete(HoisUserDetails user, Student student,
+            CurriculumVersionHigherModule module) {
+        throwAccessDeniedIf(!canMarkStudentModuleComplete(user, student, module));
+    }
+
+    public static void assertCanRemoveModuleCompletion(HoisUserDetails user, Student student) {
+        throwAccessDeniedIf(!canRemoveModuleCompletion(user, student));
+    }
+
     private static String roleName(Permission permission, PermissionObject object) {
         return ROLE_NAME_CACHE.get(permission).computeIfAbsent(object, o ->  "ROLE_" + permission.name() + "_" + o.name());
     }
@@ -653,6 +680,23 @@ public abstract class UserUtil {
 
     public static void assertIsNotGuestStudent(Student student) {
         throwAccessDeniedIf(StudentUtil.isGuestStudent(student), "main.messages.error.guestStudent");
+    }
+
+    public static void assertOneSchoolAdminPerSchoolUser(Person person, Long schoolId) {
+        assertOneSchoolAdminPerSchoolUser(person, schoolId, null);
+    }
+
+    public static void assertOneSchoolAdminPerSchoolUser(Person person, Long schoolId, User user) {
+        if (user != null && EntityUtil.getNullableCode(user.getRole()).equals(Role.ROLL_A.name())) {
+            // ignored in case if user is already an admin
+            return;
+        }
+        ValidationFailedException.throwIf(person.getUsers().stream()
+                .filter(u -> EntityUtil.getCode(u.getRole()).equals(Role.ROLL_A.name()) && u.getSchool() != null)
+                .filter(u -> EntityUtil.getId(u.getSchool()).equals(schoolId))
+                .filter(u -> user == null || !user.getId().equals(EntityUtil.getId(u)))
+                .filter(u -> DateUtils.isValid(u.getValidFrom(), u.getValidThru()))
+                .findAny().isPresent(), "user.shouldBeUniqueAdmin");
     }
     
 }

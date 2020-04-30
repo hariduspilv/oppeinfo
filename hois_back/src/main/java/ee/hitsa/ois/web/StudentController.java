@@ -15,6 +15,8 @@ import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
+import ee.hitsa.ois.domain.student.StudentCurriculumCompletionHigherModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -392,7 +394,21 @@ public class StudentController {
             throw new HoisException(error.getMessage(), error);
         }
     }
-    
+
+    @PutMapping("/{id:\\d+}/markModuleComplete/{moduleId:\\d+}")
+    public void markModuleComplete(HoisUserDetails user, @WithEntity Student student,
+        @WithEntity("moduleId") CurriculumVersionHigherModule module) {
+        UserUtil.assertCanMarkStudentModuleComplete(user, student, module);
+        studentResultHigherService.markModuleComplete(student, module);
+    }
+
+    @DeleteMapping("/{id:\\d+}/removeModuleCompletion/{moduleCompletionId:\\d+}")
+    public void removeModuleCompletion(HoisUserDetails user, @WithEntity Student student,
+            @WithEntity("moduleCompletionId") StudentCurriculumCompletionHigherModule moduleCompletion) {
+        UserUtil.assertCanRemoveModuleCompletion(user, student);
+        studentResultHigherService.removeModuleCompletion(user, moduleCompletion);
+    }
+
     /**
      * Used for testing mail service
      */

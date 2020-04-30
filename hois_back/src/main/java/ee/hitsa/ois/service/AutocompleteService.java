@@ -160,8 +160,14 @@ public class AutocompleteService {
         if (lookup.getNotExpired().equals(Boolean.TRUE)) {
             qb.requiredCriteria("b.valid_from <= :now and (b.valid_thru is null or b.valid_thru >= :now)", "now", LocalDate.now());
         }
-        List<?> data = qb.select("b.id, b.name_et, b.name_en", em).getResultList();
+        List<?> data = qb.select("b.id, b.name_et, b.name_en, b.add_name_et", em).getResultList();
         return StreamUtil.toMappedList(r -> {
+            String additionalName = resultAsString(r, 3);
+            if (additionalName != null) {
+                String nameEn = resultAsString(r, 2);
+                return new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1) + " (" + additionalName + ")",
+                        nameEn != null ? nameEn + " (" + additionalName + ")" : null);
+            }
             return new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2));
         }, data);
     }
@@ -258,6 +264,7 @@ public class AutocompleteService {
         String nameField = Language.EN.equals(classifierSearchCommand.getLang()) ? "nameEn" : "nameEt";
         JpaQueryBuilder<Classifier> qb = new JpaQueryBuilder<>(Classifier.class, "c").sort(nameField);
         qb.requiredCriteria("c.mainClassCode = :mainClassCode", "mainClassCode", classifierSearchCommand.getMainClassCode());
+        qb.optionalCriteria("c.valid = :valid", "valid", classifierSearchCommand.getValid());
         qb.optionalContains("c." + nameField, "name", classifierSearchCommand.getName());
 
         return qb.select(em).setMaxResults(MAX_ITEM_COUNT).getResultList();
@@ -837,10 +844,11 @@ public class AutocompleteService {
      * @param schoolId
      * @return
      */
-    public List<SchoolDepartmentResult> schoolDepartments(Long schoolId) {
+    public List<SchoolDepartmentResult> schoolDepartments(Long schoolId, SearchCommand lookup) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from school_department sd inner join school s on s.id = sd.school_id");
         // optional for teacher's view form, when user is external expert
         qb.optionalCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalContains("sd.name_et", "departmentEt", lookup.getName());
 
         List<?> data = qb.select(
                 "sd.id, sd.name_et, sd.name_en, sd.school_id, s.code, sd.valid_from, sd.valid_thru, "
@@ -853,6 +861,10 @@ public class AutocompleteService {
             dto.setValid(resultAsBoolean(r, 7));
             return dto;
         }, data);
+    }
+    
+    public List<SchoolDepartmentResult> schoolDepartments(Long schoolId) {
+        return schoolDepartments(schoolId, new SearchCommand());
     }
     
     /**
@@ -1231,10 +1243,19 @@ public class AutocompleteService {
         return StreamUtil.toMappedList(r -> {
             String code = resultAsString(r, 3);
             BigDecimal credits = resultAsDecimal(r, 4);
-            String nameEt = SubjectUtil.subjectName(code, resultAsString(r, 1),
-                    Boolean.TRUE.equals(lookup.getWithCredits()) ? credits : null);
-            String nameEn = SubjectUtil.subjectName(code, resultAsString(r, 2),
-                    Boolean.TRUE.equals(lookup.getWithCredits()) ? credits : null);
+            String nameEt;
+            String nameEn;
+            if (Boolean.TRUE.equals(lookup.getWithCode())) {
+                nameEt = SubjectUtil.subjectName(code, resultAsString(r, 1),
+                        Boolean.TRUE.equals(lookup.getWithCredits()) ? credits : null);
+                nameEn = SubjectUtil.subjectName(code, resultAsString(r, 2),
+                        Boolean.TRUE.equals(lookup.getWithCredits()) ? credits : null);
+            } else {
+                nameEt = SubjectUtil.subjectNameWithoutCode(resultAsString(r, 1),
+                        Boolean.TRUE.equals(lookup.getWithCredits()) ? credits : null);
+                nameEn = SubjectUtil.subjectNameWithoutCode(resultAsString(r, 2),
+                        Boolean.TRUE.equals(lookup.getWithCredits()) ? credits : null);
+            }
             return new SubjectResult(resultAsLong(r, 0), nameEt, nameEn, code, credits, resultAsString(r, 5),
                     resultAsString(r, 6), resultAsLocalDate(r, 7), resultAsString(r, 8));
         }, data);

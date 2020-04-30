@@ -1,20 +1,40 @@
-{{ content.schoolEn }} proves, that 
-<b>{{ content.student.firstname }} {{ content.student.lastname }} 
-{{ content.student.idcode != null ? "(personal identity code " + content.student.idcode : "(birth date " + content.student.birthDate }})
-</b> 
-{{ content.student.isGuestStudent ? "was a guest student" : "studied" }}
-{{ content.abroadProgramme != null ? " (" + content.abroadProgramme.nameEn + ")" : ""}}
- {{ content.student.studyStart != null ? content.student.studyStart : "unassigned"}} 
-- {{ content.student.studyEnd != null ? content.student.studyEnd : "unassigned"}}
-{{ content.student.curriculum != null ? " on curriculum " + content.student.curriculum.nameEn + "(code " + content.student.curriculum.code + ")" : "" }}
-{% if content.student.results != null and content.student.results.isEmpty() == false %}
- and his/her results were graded as such:
+<p>
+	{{ content.student.firstname }} {{content.student.lastname }} ({{ content.student.idcode != null ? content.student.idcode : content.student.birthDate }})
+	{% if content.student.isActive %}
+		has been a student of {{ content.schoolEn != null ? content.schoolEn : content.school }} since {{ content.student.studyStart != null ? content.student.studyStart : "unspecified"}}.
+	{% else %}
+		was a student of {{ content.schoolEn != null ? content.schoolEn : content.school }}
+		during {{ content.student.studyStart != null ? content.student.studyStart : "unspecified" }} to {{ content.student.studyEnd != null ? content.student.studyEnd : "unspecified" }}.
+	{% endif %}
+</p>
+<p>
+	Curriculum: {{ content.student.curriculum != null ? content.student.curriculum.nameEn + " (" + (content.student.curriculum.merCode != null ? content.student.curriculum.merCode  : "-") + ")" : "-" }}
+</p>
+{% if not content.student.isGuestStudent %}
+<p>
+	Level of education: {{ content.student.curriculum != null ? (content.student.curriculum.studyLevel | name) : "-" }}
+</p>
+<p>
+	Study form: {{ content.student.studyForm != null ? (content.student.studyForm | name) : "-" }}
+</p>
+{% endif %}
+{% if content.student.events != null and content.student.events.isEmpty() == false %}
+<p>
+	{% for event in content.student.events %}
+		The student is on {{ event.name }} {{ event.start }} – {{ event.end }}
+	{% endfor %}
+</p>
+{% endif %}
+{% if content.student.mappedResults != null and content.student.mappedResults.isEmpty() == false %}
+<p>
+	As part of studies student has passed
+</p>
 
 <table class="widerTable">
 	<thead>
 		<tr>
 			<th>{{ "report.certificate.nr" | translate }}</th>
-			<th>{{ "report.certificate.module.theme" | translate }}</th>
+			<th>{{ "report.certificate.module.theme.outcome" | translate }}</th>
 			<th>{{ "report.certificate.credits.vocational" | translate }}</th>
 			<th colspan="2">{{ "report.certificate.grade" | translate }}</th>
 			<th>{{ "report.certificate.date" | translate }}</th>
@@ -27,24 +47,65 @@
 			</th>
 		</tr>
 	</thead>
+	{% set counter = 0 %}
 	<tbody>
-		{% for result in content.student.results %}
-		<tr>
-			<td>{{loop.index + 1}}</td>
-			<td>{{ result.moduleEn }} / {{ result.theme }}</td>
-			<td>{{ result.hours }}</td>
-			<td>{{ result.gradeValue }}</td>
-			<td>{{ result.gradeNameEn }}</td>
-			<td>{{ result.date }}</td>
-			<td>{{ result.assessedBy }}</td>
-		</tr>
+		{% for category in content.student.mappedResults %}
+			{% if not loop.first %}
+			<tr>
+				<td>​</td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+			</tr>
+			{% endif %}
+			{% if category.key.code != null %}
+			<tr>
+				<td></td>
+				<td style="text-align: center;"><b>{{ category.key | name }}</b></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td></td>
+			</tr>
+			{% endif %}
+			{% for result in category.value %}
+				<tr>
+					<td style="vertical-align: top;">{% if not result.key.isHeader %}{% set counter = counter + 1 %}{{ counter }}{% endif %}</td>
+					<td><b>
+						{{ result.key.module | name }}
+						{% if result.key.moduleCode != null and result.key.moduleCode.code != null %} - {{ result.key.moduleCode | name }}
+							{% if result.key.versionCode != null %} ({{ result.key.versionCode }}){% endif %}
+						{% endif %}</b></td>
+					<td><b>{{ not result.key.isHeader ? result.key.hours : result.key.moduleCredits }}</b></td>
+					<td><b>{{ not result.key.isHeader ? result.key.gradeValue : '' }}</b></td>
+					<td><b>{{ not result.key.isHeader ? result.key.gradeNameEn : '' }}</b></td>
+					<td><b>{{ not result.key.isHeader ? result.key.date : '' }}</b></td>
+					<td><b>{{ not result.key.isHeader ? result.key.assessedBy : '' }}</b></td>
+				</tr>
+				{% set outcomeCounter = 0 %}
+				{% for nested in result.value %}
+					{% set counter = counter + 1 %}
+					<tr>
+						<td style="vertical-align: top;">{{ counter }}</td>
+						<td>{% if nested.theme != null %}{{ nested.theme }}{% else %}{% set outcomeCounter = outcomeCounter + 1 %}ÕV {{outcomeCounter}}. {{ nested.outcomeEn }}{% endif %}</td>
+						<td>{{ nested.hours }}</td>
+						<td>{{ nested.gradeValue }}</td>
+						<td>{{ nested.gradeNameEn }}</td>
+						<td>{{ nested.date }}</td>
+						<td>{{ nested.assessedBy }}</td>
+					</tr>
+				{% endfor %}
+			{% endfor %}
 		{% endfor %}
 	</tbody>
-
 </table>
 {% endif %}
 
-{% if content.student.results != null and content.student.results.isEmpty() == false and content.student.isGuestStudent and content.gradeSystem != null %}
+{% if content.student.mappedResults != null and content.student.mappedResults.isEmpty() == false and content.student.isGuestStudent and content.gradeSystem != null %}
 {{ "report.certificate.gradeSystem" | translate }}:
 <br>
 {{content.gradeSystem}}
@@ -52,19 +113,36 @@
 
 {% if content.addOutcomes %}
 <br>
-{% for result in content.student.results %}
-<b>{{ result.moduleEn }} / {{ result.theme }}</b><br>
-{{ result.outcomesEn }}<br>
+{% for category in content.student.mappedResults %}
+	{% for result in category.value %}
+		{% if not result.key.isHeader and result.key.addResultOutcomes %}
+		<b>
+			{{ result.key.module | name }}
+			{% if result.key.theme is not empty %}
+				/ {{ result.key.theme }}
+			{% endif %}
+		</b>
+		<br>
+		{{ result.key.outcomesEn }}<br>
+		{% endif %}
+		{% for nested in result.value %}
+			{% if nested.addResultOutcomes %}
+			<b>
+				{{ nested.module | name }}
+				{% if nested.theme is not empty %}
+					/ {{ nested.theme }}
+				{% endif %}
+			</b>
+			<br>
+			{{ nested.outcomesEn }}<br>
+			{% endif %}
+		{% endfor %}
+	{% endfor %}
 {% endfor %}
 {% endif %}
 
-{% if content.student.hasQuit %}
-<p>Student has quit studying</p>
-{% endif %}
-
-
 <style>
   .widerTable {
-    border-spacing: 50px 10px;
+    border-spacing: 50px 0px;
   }
 </style>

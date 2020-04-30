@@ -701,7 +701,9 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
   };
 
   function submit() {
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
     QueryUtils.endpoint('/applications/' + $scope.application.id + '/submit/').put().$promise.then(function (response) {
       message.info('application.messages.submitted');
       if ($scope.auth.isAdmin() || $scope.isView) {
@@ -739,7 +741,9 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     $scope.strictRequired = false;
     $timeout(function () {
       FormUtils.withValidForm($scope.applicationForm, function () {
-        if (!validateForm()) return;
+        if (!validateForm()) {
+          return;
+        }
         if (angular.isDefined($scope.applicationForm) && $scope.applicationForm.$dirty === true ) {
           dialogService.confirmDialog({prompt: 'application.messages.confirmSaveAndSubmit'}, function() {
             beforeSave();
@@ -868,7 +872,9 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     $timeout(function () {
       FormUtils.withValidForm($scope.applicationForm, function () {
         beforeSave();
-        if (!validateForm()) return;
+        if (!validateForm()) {
+          return;
+        }
         var application = new ApplicationsEndpoint($scope.application);
         if (angular.isDefined($scope.application.id)) {
           application.$update().then(function () {

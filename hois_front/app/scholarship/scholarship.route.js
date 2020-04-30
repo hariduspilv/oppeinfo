@@ -22,6 +22,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         params: function () {
           return {
             allowedStipendTypes: ['STIPTOETUS_POHI', 'STIPTOETUS_ERI', 'STIPTOETUS_SOIDU'],
+            enableEhisType: false,
             typeIsScholarship: false
           };
         }
@@ -46,6 +47,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         params: function () {
           return {
             allowedStipendTypes: ['STIPTOETUS_TULEMUS', 'STIPTOETUS_ERIALA', 'STIPTOETUS_MUU'],
+            enableEhisType: true,
             typeIsScholarship: true
           };
         }
@@ -70,6 +72,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         params: function () {
           return {
             allowedStipendTypes: ['STIPTOETUS_DOKTOR'],
+            enableEhisType: true,
             typeIsScholarship: true
           };
         }
@@ -132,7 +135,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       },
       data: {
         authorizedRoles: function(Session, roles) {
-          return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS) !== -1;
+          return (Session.school || {}).doctoral && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS) !== -1;
         }
       }
     })
@@ -181,6 +184,20 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       data: {
         authorizedRoles: function(Session, roles) {
           return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STIPTOETUS) !== -1;
+        }
+      }
+    })
+    .when('/scholarships/others', {
+      templateUrl: 'scholarship/scholarship.others.html',
+      controller: 'ScholarshipOthersController',
+      controllerAs: 'controller',
+      resolve: {
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        translationLoaded: function ($translate) { return $translate.onReady(); }
+      },
+      data: {
+        authorizedRoles: function(Session, roles) {
+          return Session.higher && roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_STIPTOETUS) !== -1;
         }
       }
     })

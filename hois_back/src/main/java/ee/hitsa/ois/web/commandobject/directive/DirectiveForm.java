@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 import javax.validation.groups.Default;
@@ -43,6 +44,8 @@ public class DirectiveForm extends VersionedCommand {
     private String cancelType;
     @ClassifierRestriction(MainClassCode.STIPTOETUS)
     private String scholarshipType;
+    @ClassifierRestriction(MainClassCode.EHIS_STIPENDIUM)
+    private String scholarshipEhis;
     @Valid
     private List<? extends DirectiveFormStudent> students;
     private List<Long> selectedStudents;
@@ -109,6 +112,14 @@ public class DirectiveForm extends VersionedCommand {
 
     public void setScholarshipType(String scholarshipType) {
         this.scholarshipType = scholarshipType;
+    }
+
+    public String getScholarshipEhis() {
+        return scholarshipEhis;
+    }
+
+    public void setScholarshipEhis(String scholarshipEhis) {
+        this.scholarshipEhis = scholarshipEhis;
     }
 
     public List<? extends DirectiveFormStudent> getStudents() {
@@ -181,7 +192,9 @@ public class DirectiveForm extends VersionedCommand {
         @ClassifierRestriction(MainClassCode.VALISKOOL_PROGRAMM)
         private String abroadProgramme;
         @Min(0)
+        @Max(9999) // EHIS does not allow more than 9999,99
         private BigDecimal amountPaid;
+        private String bankAccount;
         private Long application;
         private Long student;
         private Long saisApplication;
@@ -447,6 +460,14 @@ public class DirectiveForm extends VersionedCommand {
 
         public void setAmountPaid(BigDecimal amountPaid) {
             this.amountPaid = amountPaid;
+        }
+
+        public String getBankAccount() {
+            return bankAccount;
+        }
+
+        public void setBankAccount(String bankAccount) {
+            this.bankAccount = bankAccount;
         }
 
         public Long getApplication() {

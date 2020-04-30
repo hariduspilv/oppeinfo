@@ -5,6 +5,7 @@ import java.util.List;
 
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
 
 public class ModuleDto implements Translatable {
 
@@ -16,7 +17,8 @@ public class ModuleDto implements Translatable {
     private Boolean isPracticeModule;
     private Boolean isPracticeModuleGraded;
     private List<AutocompleteResult> practiceModuleThemes = new ArrayList<>();
-    private Long colspan;
+    private List<CurriculumModuleOutcomeResult> outcomes = new ArrayList<>();
+    private Long colspan = 0L;
 
     public Long getId() {
         return id;
@@ -82,6 +84,14 @@ public class ModuleDto implements Translatable {
 
     public void setPracticeModuleThemes(List<AutocompleteResult> practiceModuleThemes) {
         this.practiceModuleThemes = practiceModuleThemes;
+    }
+
+    public List<CurriculumModuleOutcomeResult> getOutcomes() {
+        return outcomes;
+    }
+
+    public void setOutcomes(List<CurriculumModuleOutcomeResult> outcomes) {
+        this.outcomes = outcomes;
     }
 
     public Long getColspan() {

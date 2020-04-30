@@ -40,6 +40,7 @@ angular.module('hitsaOis')
         showOnlyValues: '@', //model of array of classifiers (if value === true, all items are shown)
         watchModel: '@',
         watchMultiple: '@',
+        watchCodes: '@',
         searchFromConnect: '@',
         selectFirstValue: '@',
         defaultValue: '@',
@@ -84,8 +85,13 @@ angular.module('hitsaOis')
         };
 
         scope.getLabel = angular.isDefined(scope.onlyValid) ? hoisValidDatesFilter : scope.$root.currentLanguageNameField;
-
         classifierPostLink(scope, Classifier, ClassifierConnect);
+
+        if (angular.isDefined(scope.watchCodes)) {
+          scope.$watch('mainClassifierCodes', function() {
+            classifierPostLink(scope, Classifier, ClassifierConnect);
+          });
+        }
       }
     };
   })
@@ -190,12 +196,13 @@ angular.module('hitsaOis')
       var deselectHiddenValue = function() {
         if (angular.isUndefined(scope.ignorePreselected)) {
           if (angular.isArray(scope.value)) {
-            scope.value.forEach(function(valueCode, index, array) {
+            //removing from list requires backward iterating
+            for (var i = scope.value.length - 1; i >= 0; i--) {
+              var valueCode = scope.value[i];
               if(angular.isString(valueCode) && (!angular.isDefined(scope.optionsByCode[valueCode]) || scope.optionsByCode[valueCode].hide)) {
-                // Removed making scope.value undefined. (Several values might be there then only 1 value should be hidden)
-                array.splice(index, 1);
+                scope.value.splice(i, 1);
               }
-            });
+            }
           } else if(angular.isObject(scope.value) && angular.isString(scope.value.code) &&
             (!angular.isDefined(scope.optionsByCode[scope.value.code]) || scope.optionsByCode[scope.value.code].hide)) {
             scope.value = undefined;

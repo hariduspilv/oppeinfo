@@ -113,10 +113,12 @@ public abstract class CurriculumUtil {
     public static boolean isFreeModule(CurriculumModule m) {
         return ClassifierUtil.equals(CurriculumModuleType.KUTSEMOODUL_V, m.getModule());
     }
-
-    public static int vocationalModuleOrderNr(CurriculumModule module) {
+    
+    public static int vocationalModuleOrderNr(String moduleCode) {
+        if (moduleCode == null) {
+            return 4;
+        }
         int orderNr;
-        String moduleCode = EntityUtil.getCode(module.getModule());
         if (moduleCode.equals(CurriculumModuleType.KUTSEMOODUL_P.name())) {
             orderNr = 1;
         } else if (moduleCode.equals(CurriculumModuleType.KUTSEMOODUL_Y.name())) {
@@ -127,6 +129,10 @@ public abstract class CurriculumUtil {
             orderNr = 4;
         }
         return orderNr;
+    }
+
+    public static int vocationalModuleOrderNr(CurriculumModule module) {
+        return vocationalModuleOrderNr(EntityUtil.getCode(module.getModule()));
     }    
 
     public static int vocationalModuleOrderNr(CurriculumVersionOccupationModule occupationModule) {
@@ -244,6 +250,25 @@ public abstract class CurriculumUtil {
                 || UserUtil.isLeadingTeacher(user, EntityUtil.getId(version.getCurriculum())))
                 && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_OPPEKAVA)
                 && ClassifierUtil.equals(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K, version.getStatus());
+    }
+    
+    public static boolean isMagisterOrDoctoralOrIntegratedStudy(Curriculum curriculum) {
+        return isIntegratedStudy(curriculum) || isMagisterStudy(curriculum) || isDoctoralStudy(curriculum);
+    }
+
+    public static boolean isIntegratedStudy(Curriculum curriculum) {
+        String studyLevel = EntityUtil.getCode(curriculum.getOrigStudyLevel());
+        return studyLevel.matches("OPPEASTE_503");
+    }
+    
+    public static boolean isMagisterStudy(Curriculum curriculum) {
+        String studyLevel = EntityUtil.getCode(curriculum.getOrigStudyLevel());
+        return studyLevel.matches("OPPEASTE_6.*?");
+    }
+    
+    public static boolean isDoctoralStudy(Curriculum curriculum) {
+        String studyLevel = EntityUtil.getCode(curriculum.getOrigStudyLevel());
+        return studyLevel.matches("OPPEASTE_7.*?");
     }
 
 //  User rights validation

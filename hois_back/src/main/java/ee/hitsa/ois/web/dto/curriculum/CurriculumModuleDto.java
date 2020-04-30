@@ -30,7 +30,7 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
     private Integer studyPeriod;
     private Boolean basicDataCanBeEdited;
     public Boolean canHaveOccupations;
-    public Long orderNr;
+    public Long specOrderNr;
 
     public static CurriculumModuleDto of(CurriculumModule module) {
         CurriculumModuleDto dto = EntityUtil.bindToDto
@@ -85,7 +85,8 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
         dto.setNameEn(module.getNameEn());
         dto.setCredits(module.getCredits());
         dto.setModule(EntityUtil.getCode(module.getModule()));
-        dto.setOrderNr(Long.valueOf(CurriculumUtil.vocationalModuleOrderNr(module)));
+        dto.setSpecOrderNr(Long.valueOf(CurriculumUtil.vocationalModuleOrderNr(module)));
+        dto.setOrderNr(module.getOrderNr());
         return dto;
     }
 
@@ -158,12 +159,12 @@ public class CurriculumModuleDto extends CurriculumModuleForm {
         this.canHaveOccupations = canHaveOccupations;
     }
 
-    public Long getOrderNr() {
-        return orderNr;
+    public Long getSpecOrderNr() {
+        return specOrderNr;
     }
 
-    public void setOrderNr(Long orderNr) {
-        this.orderNr = orderNr;
+    public void setSpecOrderNr(Long specOrderNr) {
+        this.specOrderNr = specOrderNr;
     }
 
 }

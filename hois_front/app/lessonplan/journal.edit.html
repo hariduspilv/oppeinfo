@@ -12,15 +12,8 @@
             </div>
           </div>
 
-          <div flex>
-            <br>
-            <md-checkbox ng-model="record.addModuleOutcomes" aria-label="{{'lessonplan.journal.addModuleOutcomes' | translate}}">
-              {{'lessonplan.journal.addModuleOutcomes' | translate}}
-            </md-checkbox>
-          </div>
-
           <div layout="row" flex="100" flex-sm="100" flex-xs="100">
-            <md-input-container flex> 
+            <md-input-container flex>
               <label class="textInput">{{'lessonplan.journal.theme' | translate}}</label>
               <md-select name="theme" ng-model="formState.theme">
                 <md-option md-option-empty></md-option>
@@ -29,10 +22,10 @@
                   <span ng-if="theme.studyYearNumber">({{theme.studyYearNumber}}. {{'main.studyYearShort' | translate}})</span>
                 </md-option>
               </md-select>
-            </md-input-container>          
+            </md-input-container>
           </div>
 
-          <div layout="column" class="common-label" flex="95" 
+          <div layout="column" class="common-label" flex="95"
             ng-repeat="theme in record.journalOccupationModuleThemes | orderBy: orderByThemeName">
             <div layout="row" flex layout-align="start center">
               <div flex="5">&nbsp;</div>
@@ -51,8 +44,9 @@
           <div layout="row" flex="100" flex-sm="100" flex-xs="100">
             <md-input-container flex="100" flex-sm="100" flex-xs="100">
               <label class="textInput">{{'lessonplan.journal.assessment' | translate}}</label>
-              <hois-classifier-select flex="100" flex-sm="100" flex-xs="100" ng-model="record.assessment" required main-classifier-code="KUTSEHINDAMISVIIS"
-                model-value-attr="code"></hois-classifier-select>
+              <hois-classifier-select flex="100" flex-sm="100" flex-xs="100" ng-model="record.assessment"
+                main-classifier-code="KUTSEHINDAMISVIIS" model-value-attr="code" name="assessment"
+                ng-required="!occupationBasedAssessment()"></hois-classifier-select>
             </md-input-container>
           </div>
 
@@ -62,7 +56,7 @@
               <input type="text" ng-model="record.nameEt" md-maxlength="255" required>
             </md-input-container>
           </div>
-          
+
           <div layout="row" flex="100" flex-sm="100" flex-xs="100">
             <md-input-container flex="50" flex-sm="100" flex-xs="100">
                 <label>{{'teacher.untis' | translate}}</label>
@@ -73,7 +67,7 @@
                   </div>
                 </div>
               </md-input-container>
-          
+
             <md-input-container flex="50" flex-sm="100" flex-xs="100">
               <label class="textInput">{{'lessonplan.journal.groupProportion' | translate}}</label>
               <hois-classifier-select ng-model="record.groupProportion" required main-classifier-code="PAEVIK_GRUPI_JAOTUS" model-value-attr="code"></hois-classifier-select>
@@ -81,7 +75,7 @@
           </div>
 
           <div layout="row" flex="100" flex-sm="100" flex-xs="100">
-            <hois-autocomplete ng-model="formState.teacher" method="teachers" additional-query-params="{valid: true}" 
+            <hois-autocomplete ng-model="formState.teacher" method="teachers" additional-query-params="{valid: true}"
               label="{{auth.higher ? 'lessonplan.journal.teacherHigher' : 'lessonplan.journal.teacherVocational'}}" flex></hois-autocomplete>
           </div>
 

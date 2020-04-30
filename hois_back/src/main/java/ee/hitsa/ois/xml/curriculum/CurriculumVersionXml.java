@@ -2,8 +2,11 @@ package ee.hitsa.ois.xml.curriculum;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
@@ -12,6 +15,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import ee.hitsa.ois.LocalDateTimeXmlAdapter;
 import ee.hitsa.ois.LocalDateXmlAdapter;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -49,7 +53,11 @@ public class CurriculumVersionXml {
         xml.setType(ClassifierUtil.getNullableNameEt(version.getType()));
         xml.setStatus(ClassifierUtil.getNullableNameEt(version.getStatus()));
         xml.setSpecialities(StreamUtil.toMappedSet(s -> EntityUtil.getId(s.getCurriculumSpeciality()), version.getSpecialities()));
-        xml.setModules(StreamUtil.toMappedSet(CurriculumVersionHigherModuleXml::of, version.getModules()));
+        xml.setModules(version.getModules().stream().sorted(Comparator
+                .comparing(CurriculumVersionHigherModule::getOrderNr, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(
+                        Comparator.comparing(CurriculumVersionHigherModule::getNameEt, String.CASE_INSENSITIVE_ORDER)))
+                .map(CurriculumVersionHigherModuleXml::of).collect(Collectors.toCollection(LinkedHashSet::new)));
         return xml;
     }
 

@@ -10,6 +10,7 @@ angular.module('hitsaOis').directive('hoisIdcodeLookup', function ($q, QueryUtil
       afterFailedLookup: '&',
       afterLookup: '&',
       noLookup: '&',
+      beforeLookup: '&',
       ngModel: '=',
       ngReadonly: '=',
       role: '@'
@@ -28,6 +29,7 @@ angular.module('hitsaOis').directive('hoisIdcodeLookup', function ($q, QueryUtil
         var idcode = scope.ngModel;
         if(!scope.ngReadonly && idcode && idcode !== scope.idcode) {
           if (idcode.length === 11) {
+            scope.beforeLookup();
             QueryUtils.endpoint('/autocomplete/persons', {search: {method: 'GET'}}).search({idcode: idcode, role: scope.role}).$promise.then(function(response) {
               validFormat();
               scope.idcode = idcode;

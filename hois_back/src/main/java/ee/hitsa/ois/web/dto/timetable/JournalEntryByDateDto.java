@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto.timetable;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,23 +9,17 @@ import java.util.Map;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 
-public class JournalEntryByDateDto {
+public class JournalEntryByDateDto extends JournalEntryByDateBaseDto {
 
     private Long id;
-    private LocalDate entryDate;
-    private Long startLessonNr;
-    private Long lessons;
-    private String nameEt;
-    @ClassifierRestriction(MainClassCode.SISSEKANNE)
-    private String entryType;
     private String teacher;
-    private Long curriculumModule;
-    private Long curriculumModuleOutcomes;
-    private Long outcomeOrderNr;
     private Long moodleGradeItemId;
     
     // Key is JournalStudent ID
-    private Map<Long, List<JournalEntryStudentResultDto>> journalStudentResults = new HashMap<>();
+    private Map<Long, List<JournalEntryStudentResultDto>> journalStudentResults;
+    // Key is Student ID
+    private Map<Long, StudentCurriculumModuleOutcomesResultDto> studentOutcomeResults;
+    private List<JournalSearchDto> otherJournals;
     
     public Long getId() {
         return id;
@@ -34,76 +29,12 @@ public class JournalEntryByDateDto {
         this.id = id;
     }
 
-    public LocalDate getEntryDate() {
-        return entryDate;
-    }
-
-    public void setEntryDate(LocalDate entryDate) {
-        this.entryDate = entryDate;
-    }
-
-    public Long getStartLessonNr() {
-        return startLessonNr;
-    }
-
-    public void setStartLessonNr(Long startLessonNr) {
-        this.startLessonNr = startLessonNr;
-    }
-
-    public Long getLessons() {
-        return lessons;
-    }
-
-    public void setLessons(Long lessons) {
-        this.lessons = lessons;
-    }
-
-    public String getNameEt() {
-        return nameEt;
-    }
-
-    public void setNameEt(String nameEt) {
-        this.nameEt = nameEt;
-    }
-
-    public String getEntryType() {
-        return entryType;
-    }
-
-    public void setEntryType(String entryType) {
-        this.entryType = entryType;
-    }
-
     public String getTeacher() {
         return teacher;
     }
 
     public void setTeacher(String teacher) {
         this.teacher = teacher;
-    }
-
-    public Long getCurriculumModule() {
-        return curriculumModule;
-    }
-
-    public void setCurriculumModule(Long curriculumModule) {
-        this.curriculumModule = curriculumModule;
-    }
-
-    public Long getCurriculumModuleOutcomes() {
-        return curriculumModuleOutcomes;
-    }
-
-    public void setCurriculumModuleOutcomes(Long curriculumModuleOutcomes) {
-        this.curriculumModuleOutcomes = curriculumModuleOutcomes;
-    }
-    
-    public Long getOutcomeOrderNr() {
-        return outcomeOrderNr;
-    }
-
-    public void setOutcomeOrderNr(Long outcomeOrderNr) {
-        this.outcomeOrderNr = outcomeOrderNr;
     }
 
     public Long getMoodleGradeItemId() {
@@ -115,11 +46,26 @@ public class JournalEntryByDateDto {
     }
 
     public Map<Long, List<JournalEntryStudentResultDto>> getJournalStudentResults() {
-        return journalStudentResults;
+        return journalStudentResults != null ? journalStudentResults : new HashMap<>();
     }
 
     public void setJournalStudentResults(Map<Long, List<JournalEntryStudentResultDto>> journalStudentResults) {
         this.journalStudentResults = journalStudentResults;
     }
 
+    public Map<Long, StudentCurriculumModuleOutcomesResultDto> getStudentOutcomeResults() {
+        return studentOutcomeResults != null ? studentOutcomeResults : new HashMap<>();
+    }
+
+    public void setStudentOutcomeResults(Map<Long, StudentCurriculumModuleOutcomesResultDto> studentOutcomeResults) {
+        this.studentOutcomeResults = studentOutcomeResults;
+    }
+
+    public List<JournalSearchDto> getOtherJournals() {
+        return otherJournals != null ? otherJournals : new ArrayList<>();
+    }
+
+    public void setOtherJournals(List<JournalSearchDto> otherJournals) {
+        this.otherJournals = otherJournals;
+    }
 }

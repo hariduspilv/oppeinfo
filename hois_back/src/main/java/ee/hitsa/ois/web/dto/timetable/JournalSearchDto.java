@@ -17,6 +17,7 @@ public class JournalSearchDto {
     private String curriculums;
     private Boolean isReviewOk;
     private LocalDate reviewDate;
+    private String studyYear;
     private Boolean canEdit;
     
     public Long getId() {
@@ -105,6 +106,14 @@ public class JournalSearchDto {
 
     public void setReviewDate(LocalDate reviewDate) {
         this.reviewDate = reviewDate;
+    }
+
+    public String getStudyYear() {
+        return studyYear;
+    }
+
+    public void setStudyYear(String studyYear) {
+        this.studyYear = studyYear;
     }
 
     public Boolean getCanEdit() {

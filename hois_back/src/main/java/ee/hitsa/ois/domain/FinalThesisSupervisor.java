@@ -1,5 +1,7 @@
 package ee.hitsa.ois.domain;
 
+import java.time.LocalDate;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -32,6 +34,9 @@ public class FinalThesisSupervisor extends BaseEntityWithId {
     private String email;
     private String phone;
     private String bankaccount;
+    private LocalDate birthdate;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier sex;
 
     public FinalThesis getFinalThesis() {
         return finalThesis;
@@ -119,6 +124,22 @@ public class FinalThesisSupervisor extends BaseEntityWithId {
 
     public void setBankaccount(String bankaccount) {
         this.bankaccount = bankaccount;
+    }
+
+    public LocalDate getBirthdate() {
+        return birthdate;
+    }
+
+    public void setBirthdate(LocalDate birthdate) {
+        this.birthdate = birthdate;
+    }
+
+    public Classifier getSex() {
+        return sex;
+    }
+
+    public void setSex(Classifier sex) {
+        this.sex = sex;
     }
     
 }

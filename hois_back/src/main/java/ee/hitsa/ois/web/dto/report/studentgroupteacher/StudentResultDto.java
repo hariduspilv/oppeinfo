@@ -6,8 +6,10 @@ public class StudentResultDto {
 
     private Long moduleId;
     private Long moduleThemeId;
+    private Long outcomeId;
     private String grade;
     private LocalDate gradeInserted;
+    private String gradeInsertedBy;
 
     public StudentResultDto() {
 
@@ -16,8 +18,10 @@ public class StudentResultDto {
     public StudentResultDto(StudentResultDto result) {
         this.moduleId = result.getModuleId();
         this.moduleThemeId = result.getModuleThemeId();
+        this.outcomeId = result.getOutcomeId();
         this.grade = result.getGrade();
         this.gradeInserted = result.getGradeInserted();
+        this.gradeInsertedBy = result.getGradeInsertedBy();
     }
 
     public Long getModuleId() {
@@ -36,6 +40,14 @@ public class StudentResultDto {
         this.moduleThemeId = moduleThemeId;
     }
 
+    public Long getOutcomeId() {
+        return outcomeId;
+    }
+
+    public void setOutcomeId(Long outcomeId) {
+        this.outcomeId = outcomeId;
+    }
+
     public String getGrade() {
         return grade;
     }
@@ -52,4 +64,11 @@ public class StudentResultDto {
         this.gradeInserted = gradeInserted;
     }
 
+    public String getGradeInsertedBy() {
+        return gradeInsertedBy;
+    }
+
+    public void setGradeInsertedBy(String gradeInsertedBy) {
+        this.gradeInsertedBy = gradeInsertedBy;
+    }
 }

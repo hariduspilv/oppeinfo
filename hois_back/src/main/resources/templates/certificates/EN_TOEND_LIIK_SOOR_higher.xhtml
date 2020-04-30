@@ -1,14 +1,37 @@
-{{ content.schoolEn }} proves, that 
-<b>{{ content.student.firstname }} {{ content.student.lastname }} 
-{{ content.student.idcode != null ? "(personal identity code " + content.student.idcode : "(birth date " + content.student.birthDate }})
-</b>
- {{ content.student.isGuestStudent ? "was a guest student" : "studied" }}
-{{ content.abroadProgramme != null ? " (" + content.abroadProgramme.nameEn + ")" : ""}}
- {{ content.student.studyStart != null ? content.student.studyStart : "unassigned"}} 
-- {{ content.student.studyEnd != null ? content.student.studyEnd : "unassigned"}}
-{{ content.student.curriculum != null ? " on curriculum " + content.student.curriculum.nameEn + "(code " + content.student.curriculum.code + ")" : "" }}
+<p>
+	{{ content.student.firstname }} {{content.student.lastname }} ({{ content.student.idcode != null ? content.student.idcode : content.student.birthDate }})
+	{% if content.student.isActive %}
+		has been a student of {{ content.schoolEn != null ? content.schoolEn : content.school }} since {{ content.student.studyStart != null ? content.student.studyStart : "unspecified"}}.
+	{% else %}
+		was a student of {{ content.schoolEn != null ? content.schoolEn : content.school }}
+		during {{ content.student.studyStart != null ? content.student.studyStart : "unspecified" }} to {{ content.student.studyEnd != null ? content.student.studyEnd : "unspecified" }}.
+	{% endif %}
+</p>
+<p>
+	Curriculum: {{ content.student.curriculum != null ? content.student.curriculum.nameEn + " (" + (content.student.curriculum.merCode != null ? content.student.curriculum.merCode  : "-") + ")" : "-" }}
+</p>
+{% if not content.student.isGuestStudent %}
+<p>
+	Level of education: {{ content.student.curriculum != null ? (content.student.curriculum.studyLevel | name) : "-" }}
+</p>
+<p>
+	Study form: {{ content.student.studyForm != null ? (content.student.studyForm | name) : "-" }}
+</p>
+<p>
+	Study load: {{ content.student.studyLoad != null ? (content.student.studyLoad | name) : "-" }}
+</p>
+{% endif %}
+{% if content.student.events != null and content.student.events.isEmpty() == false %}
+<p>
+	{% for event in content.student.events %}
+		The student is on {{ event.name }} {{ event.start }} – {{ event.end }}
+	{% endfor %}
+</p>
+{% endif %}
 {% if content.student.results != null and content.student.results.isEmpty() == false %}
- and his/her results were graded as such:
+<p>
+	As part of studies student has passed
+</p>
 
 <table class="widerTable">
 	<thead>
@@ -44,29 +67,55 @@
 	</tbody>
 
 </table>
+<p>
+Total: {{ content.student.creditsAll != null ? content.student.creditsAll : '0' }} EAP<br>
+Weighted average grade: {{ content.student.averageMark != null ? content.student.averageMark : '-' }}
+</p>
+{% if content.student.apelSchools is not empty %}
+<p>
+{% for apelSchool in content.student.apelSchools %}
+	{% if not loop.first %}<br>{% endif %}
+	*{{ apelSchool.id }} {{ apelSchool | name }}
+{% endfor %}
+</p>
 {% endif %}
 
-{% if content.student.results != null and content.student.results.isEmpty() == false and content.student.isGuestStudent and content.gradeSystem != null %}
-{{ "report.certificate.gradeSystem" | translate }}:
-<br>
-{{content.gradeSystem}}
+{% if content.grades is not empty %}
+{{ "report.certificate.gradeSystem2" | translate }}:
+<table class="widerTable2">
+	<thead>
+		<tr>
+			<th>{{ "report.certificate.gradeValue" | translate }}</th>
+			<th>{{ "report.certificate.gradeShort" | translate }}</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for grade in content.grades %}
+			<tr>
+				<td>{{ grade.value }}</td>
+				<td>{{ grade.shortDescription }}</td>
+			</tr>
+		{% endfor %}
+	</tbody>
+</table>
+	{% if content.gradesDescription != null %}
+		{{ content.gradesDescription }}
+	{% endif %}
+{% endif %}
 {% endif %}
 
 {% if content.addOutcomes %}
+<p>
 <br>
 {% for result in content.student.results %}
 <b>{{ result.subjectEn }}</b><br>
 {{ result.outcomesEn }}<br>
 {% endfor %}
+</p>
 {% endif %}
-
-{% if content.student.hasQuit %}
-<p>Student has quit studying</p>
-{% endif %}
-
 
 <style>
-  .widerTable {
+  .widerTable, .widerTable2 {
     border-spacing: 50px 10px;
   }
 </style>

@@ -10,10 +10,12 @@
         </th>
         <th md-column>{{'stipend.nr' | translate}}</th>
         <th md-column>{{'stipend.type' | translate}}</th>
+        <th md-column>{{'stipend.typeEhis' | translate}}</th>
         <th md-column>{{'stipend.scholarshipName' | translate}}</th>
         <th md-column>{{'stipend.curriculum' | translate}}</th>
         <th md-column>{{'stipend.applicant' | translate}}</th>
         <th md-column>{{'stipend.student.idCode' | translate}}</th>
+        <th md-column>{{'stipend.studentGroup' | translate}}</th>
         <th md-column>{{'stipend.student.averageMark' | translate}}</th>
         <th md-column>{{'stipend.student.lastPeriodMark' | translate}}</th>
         <th md-column>{{'stipend.student.credits' | translate}}</th>
@@ -33,6 +35,7 @@
         </td>
         <td md-cell>{{$index + 1}}</td>
         <td md-cell>{{currentLanguageNameField(application.type)}}</td>
+        <td md-cell>{{currentLanguageNameField(application.typeEhis)}}</td>
         <td md-cell>
           <a href="#/scholarships/applications/{{application.id}}">{{application.termNameEt}}</a>
         </td>
@@ -49,6 +52,7 @@
           </div>
         </td>
         <td md-cell>{{application.idcode ? application.idcode : '-'}}</td>
+        <td md-cell>{{application.studentGroup ? application.studentGroup : '-'}}</td>
         <td md-cell>
           {{isNumber(application.saisPoints) ? application.saisPoints : application.averageMark ? application.averageMark : '-'}}
           <span class="scholarship-sais" ng-show="isNumber(application.saisPoints)"> S</span>

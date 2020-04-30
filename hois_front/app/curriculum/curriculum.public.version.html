@@ -63,7 +63,7 @@
   <span ng-if="version.modules.length > 0">
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.modules' | translate}}</legend>
-      <hois-collapsable ng-repeat="module in version.modules | orderBy: 'nameEt'" expanded="false" label="currentLanguageNameField(module) + ' ' + module.totalCredits + ' ' + ('curriculum.public.higherCreditsUnit' | translate)">
+      <hois-collapsable ng-repeat="module in version.modules | orderBy: moduleOrderBy()" expanded="false" label="currentLanguageNameField(module) + ' ' + module.totalCredits + ' ' + ('curriculum.public.higherCreditsUnit' | translate)">
         <md-table-container>
           <table ng-if="(mandatorySubjects = (module.subjects | filter : {optional: false})).length > 0" md-table class="secondary-table">
             <thead md-head>
@@ -135,7 +135,7 @@
     <div>&nbsp;</div>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.modules' | translate}}</legend>
-      <hois-collapsable ng-repeat="module in version.occupationModules | orderBy: 'nameEt'" expanded="false" label="currentLanguageNameField(module) + ' ' + module.totalCredits + ' ' + ('curriculum.public.vocationalCreditsUnit' | translate)">
+      <hois-collapsable ng-repeat="module in version.occupationModules | orderBy: moduleOrderBy()" expanded="false" label="currentLanguageNameField(module) + ' ' + module.totalCredits + ' ' + ('curriculum.public.vocationalCreditsUnit' | translate)">
         <div layout="column">
           <md-input-container flex>
             <label>{{'curriculum.public.assessment' | translate}}</label>

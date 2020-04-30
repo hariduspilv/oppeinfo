@@ -22,11 +22,15 @@ import ee.hitsa.ois.domain.WsEhisStudentLog;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.exception.BadConfigurationException;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.ExceptionUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.Translatable;
+import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hois.soap.LogContext;
 import ee.hois.xroad.ehis.generated.KhlIsikuandmedLisa;
@@ -109,6 +113,14 @@ public abstract class EhisService {
     }
 
     protected static KhlOppeasutusList getKhlOppeasutusList(Student student) {
+        if (!StudentUtil.isGuestStudent(student)) {
+            Curriculum curriculum = student.getCurriculumVersion().getCurriculum();
+            if (Boolean.TRUE.equals(curriculum.getJoint()) && curriculum.getJointMentor() != null
+                    && !student.getSchool().getEhisSchool().equals(curriculum.getJointMentor())) {
+                throw new HoisException(TranslateUtil.translate("ehis.schoolIsNotJointMentor", Language.ET));
+            }
+        }
+        
         KhlOppeasutusList khlOppeasutusList = new KhlOppeasutusList();
         KhlOppeasutus khlOppeasutus = new KhlOppeasutus();
 

@@ -1,7 +1,7 @@
 <div layout="row" flex>
   <md-input-container flex>
     <label class="textInput">{{'stipend.grantName' | translate}}</label>
-    <input type="text" ng-model="stipend.nameEt" name="nameEt" required md-maxlength="500">
+    <input type="text" ng-model="stipend.nameEt" name="nameEt" required md-maxlength="255">
   </md-input-container>
 </div>
 <div layout="row" flex>
@@ -91,6 +91,7 @@
 <div layout="row">
   <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
   <md-button class="md-raised" ng-if="!stipend.isOpen && stipend.id" ng-click="publish()">{{'main.button.publishtoStudents' | translate}}</md-button>
+  <md-button class="md-raised" ng-if="stipend.id" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
   <md-button class="md-raised" ng-if="stipend.id && !stipend.isOpen" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-  <md-button class="md-raised" ng-click="back('#/scholarships/grants', stipendForm)">{{'main.button.back' | translate}}</md-button>
+  <md-button class="md-raised" ng-click="back('#/scholarships?_menu', stipendForm)">{{'main.button.back' | translate}}</md-button>
 </div>

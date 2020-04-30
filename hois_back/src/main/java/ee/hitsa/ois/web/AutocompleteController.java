@@ -205,8 +205,8 @@ public class AutocompleteController {
     }
 
     @GetMapping("/schooldepartments")
-    public List<SchoolDepartmentResult> schoolDepartments(HoisUserDetails user) {
-        return autocompleteService.schoolDepartments(user.getSchoolId());
+    public List<SchoolDepartmentResult> schoolDepartments(HoisUserDetails user, SearchCommand lookup) {
+        return autocompleteService.schoolDepartments(user.getSchoolId(), lookup);
     }
     
     @GetMapping("/curriculumdepartments")

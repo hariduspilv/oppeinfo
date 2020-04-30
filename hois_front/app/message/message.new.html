@@ -1,5 +1,9 @@
 <div layout="column" layout-padding>
     <form name="messageNewForm">
+        <div md-colors="{color: 'default-warn'}" ng-if="noEmail">
+            <md-icon md-colors="{color: 'default-warn'}" md-font-set="material-icons">info_outline</md-icon>
+            <span>{{'message.noEmail' | translate}}</span>
+        </div>
         <div layout="column">
 
             <md-input-container flex="50" flex-sm="100" flex-xs="100">

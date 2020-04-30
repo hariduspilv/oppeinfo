@@ -17,6 +17,13 @@ public abstract class SubjectUtil {
     public static String subjectName(String code, String name) {
         return String.format("%1$s (%2$s)", name, code);
     }
+    
+    public static String subjectNameWithoutCode(String name, BigDecimal credits) {
+        if (credits == null) {
+            return name;
+        }
+        return String.format("%1$s (%2$s EAP)", name, credits);
+    }
 
     public static boolean isActive(Subject subject) {
         return ClassifierUtil.equals(SubjectStatus.AINESTAATUS_K, subject.getStatus());

@@ -47,8 +47,8 @@ public class Student extends StudentBase {
     private List<JournalStudent> journalStudents;
     @OneToMany(mappedBy = "student")
     private List<StudentOccupationCertificate> occupationCertificates;
-    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
-    private FinalThesis finalThesis;
+    @OneToMany(mappedBy = "student")
+    private List<FinalThesis> finalThesis;
     @OneToMany(mappedBy = "student")
     private List<PracticeJournal> practiceJournals;
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -146,11 +146,11 @@ public class Student extends StudentBase {
         this.occupationCertificates = occupationCertificates;
     }
 
-    public FinalThesis getFinalThesis() {
-        return finalThesis;
+    public List<FinalThesis> getFinalThesis() {
+        return finalThesis != null ? finalThesis : new ArrayList<>();
     }
 
-    public void setFinalThesis(FinalThesis finalThesis) {
+    public void setFinalThesis(List<FinalThesis> finalThesis) {
         this.finalThesis = finalThesis;
     }
 

@@ -211,7 +211,7 @@ public class CurriculumVersion extends BaseEntityWithId {
     }
 
     public Set<CurriculumVersionOccupationModule> getOccupationModules() {
-        return occupationModules;
+        return occupationModules != null ? occupationModules : (occupationModules = new HashSet<>());
     }
 
     public void setOccupationModules(Set<CurriculumVersionOccupationModule> occupationModules) {

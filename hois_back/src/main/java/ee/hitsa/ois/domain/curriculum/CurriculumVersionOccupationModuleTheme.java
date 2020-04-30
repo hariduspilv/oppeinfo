@@ -53,8 +53,11 @@ public class CurriculumVersionOccupationModuleTheme extends BaseEntityWithId {
     @Column(name = "grade5_description")
     private String grade5Description;
     
-    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     private BaseModuleTheme baseModuleTheme;
+
+    @Column(name="is_module_outcomes")
+    private Boolean moduleOutcomes;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "curriculum_version_omodule_theme_id", nullable = false, updatable = false)
@@ -110,24 +113,6 @@ public class CurriculumVersionOccupationModuleTheme extends BaseEntityWithId {
 
     public void setStudyYearNumber(Short studyYearNumber) {
         this.studyYearNumber = studyYearNumber;
-    }
-
-    public Set<CurriculumVersionOccupationModuleThemeCapacity> getCapacities() {
-        return capacities;
-    }
-
-    public void setCapacities(Set<CurriculumVersionOccupationModuleThemeCapacity> capacities) {
-        getCapacities().clear();
-        getCapacities().addAll(capacities);
-    }
-
-    public Set<CurriculumVersionOccupationModuleOutcome> getOutcomes() {
-        return outcomes;
-    }
-
-    public void setOutcomes(Set<CurriculumVersionOccupationModuleOutcome> outcomes) {
-        getOutcomes().clear();
-        getOutcomes().addAll(outcomes);
     }
 
     public CurriculumVersionOccupationModule getModule() {
@@ -193,4 +178,31 @@ public class CurriculumVersionOccupationModuleTheme extends BaseEntityWithId {
     public void setBaseModuleTheme(BaseModuleTheme baseModuleTheme) {
         this.baseModuleTheme = baseModuleTheme;
     }
+
+    public Boolean getModuleOutcomes() {
+        return moduleOutcomes;
+    }
+
+    public void setModuleOutcomes(Boolean moduleOutcomes) {
+        this.moduleOutcomes = moduleOutcomes;
+    }
+
+    public Set<CurriculumVersionOccupationModuleOutcome> getOutcomes() {
+        return outcomes;
+    }
+
+    public void setOutcomes(Set<CurriculumVersionOccupationModuleOutcome> outcomes) {
+        getOutcomes().clear();
+        getOutcomes().addAll(outcomes);
+    }
+
+    public Set<CurriculumVersionOccupationModuleThemeCapacity> getCapacities() {
+        return capacities;
+    }
+
+    public void setCapacities(Set<CurriculumVersionOccupationModuleThemeCapacity> capacities) {
+        getCapacities().clear();
+        getCapacities().addAll(capacities);
+    }
+
 }

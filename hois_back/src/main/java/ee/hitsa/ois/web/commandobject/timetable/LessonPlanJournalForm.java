@@ -28,7 +28,6 @@ public class LessonPlanJournalForm extends VersionedCommand {
     private Long lessonPlanModuleId;
     private String untisCode;
 
-    @Required
     @ClassifierRestriction(MainClassCode.KUTSEHINDAMISVIIS)
     private String assessment;
     @Required
@@ -48,7 +47,6 @@ public class LessonPlanJournalForm extends VersionedCommand {
     private List<LessonPlanGroupForm> groups;
     
     private List<AutocompleteResult> journalRooms;
-    private Boolean addModuleOutcomes;
 
     public Long getLessonPlan() {
         return lessonPlan;
@@ -137,14 +135,6 @@ public class LessonPlanJournalForm extends VersionedCommand {
 
     public void setJournalRooms(List<AutocompleteResult> journalRooms) {
         this.journalRooms = journalRooms;
-    }
-    
-    public Boolean getAddModuleOutcomes() {
-        return addModuleOutcomes;
-    }
-
-    public void setAddModuleOutcomes(Boolean addModuleOutcomes) {
-        this.addModuleOutcomes = addModuleOutcomes;
     }
 
     public String getUntisCode() {

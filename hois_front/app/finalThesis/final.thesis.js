@@ -1,14 +1,24 @@
 'use strict';
 
-angular.module('hitsaOis').controller('FinalThesisEditController', function ($location, $route, $scope, QueryUtils, config, dialogService, message) {
+angular.module('hitsaOis').controller('FinalThesisEditController', function ($location, $route, $scope, QueryUtils, config, dialogService, message, DataUtils) {
   $scope.auth = $route.current.locals.auth;
   var endpoint = '/finalThesis';
   var FinalThesisEndpoint = QueryUtils.endpoint(endpoint);
+  var isEditForm = $route.current.locals.params.isEdit;
+
+  $scope.cercsValueChanged = cercsValueChanged;
+  $scope.cercsTypeChanged = cercsTypeChanged;
 
   function entityToForm(entity) {
     entity.supervisors.forEach(function (supervisor) {
       supervisor.canEdit = !$scope.auth.isTeacher() || supervisor.isExternal || supervisor.teacher.id !== $scope.auth.teacher;
     });
+    if (isEditForm && entity.curriculumGrade) {
+      entity.curriculumGrade = entity.curriculumGrade.id;
+    }
+    if (isEditForm && entity.cercses.length < 100) {
+      entity.cercses.push({});
+    }
     $scope.thesis = entity;
   }
 
@@ -24,7 +34,8 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
   } else {
     $scope.thesis = {
       hasDraft: false,
-      supervisors: []
+      supervisors: [],
+      cercses: []
     };
 
     if ($scope.auth.isStudent()) {
@@ -46,11 +57,28 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
 
   $scope.$watch('thesis.student', function () {
     if ($scope.thesis.student) {
-      QueryUtils.endpoint('/students/' + $scope.thesis.student.id).get(function (result) {
+      QueryUtils.endpoint(endpoint + '/student/' + $scope.thesis.student.id).get(function (result) {
         $scope.thesis.person = result.person;
         $scope.thesis.curriculumVersion = result.curriculumVersion;
         $scope.thesis.studentGroup = result.studentGroup;
-        $scope.thesis.isVocational = result.curriculumVersion.isVocational;
+        $scope.thesis.isVocational = result.isVocational;
+        $scope.thesis.curriculumGrades = result.curriculumGrades;
+        $scope.thesis.isMagisterStudy = result.isMagisterStudy;
+        $scope.thesis.isDoctoralStudy = result.isDoctoralStudy;
+        $scope.thesis.isIntegratedStudy = result.isIntegratedStudy;
+        $scope.thesis.isMagisterOrDoctoralOrIntegratedStudy = result.isMagisterStudy || result.isDoctoralStudy || result.isIntegratedStudy;
+        if ($scope.thesis.isMagisterOrDoctoralOrIntegratedStudy) {
+          if (!$scope.thesis.language) {
+            if ($scope.thesis.isMagisterStudy || $scope.thesis.isIntegratedStudy) {
+              $scope.thesis.language = 'LOPUTOO_KEEL_et';
+            } else {
+              $scope.thesis.language = 'LOPUTOO_KEEL_en';
+            }
+          }
+          if (isEditForm && $scope.thesis.cercses.length === 0) {
+            $scope.thesis.cercses.push({});
+          }
+        }
       });
     }
   });
@@ -61,6 +89,7 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
       message.error('finalThesis.error.maxSupervisors');
     } else {
       dialogService.showDialog('finalThesis/supervisor.add.dialog.html', function (dialogScope) {
+        dialogScope.isMagisterOrDoctoralOrIntegratedStudy = $scope.thesis.isMagisterOrDoctoralOrIntegratedStudy;
         dialogScope.newSupervisor = angular.isDefined(supervisorIndex) ? false : true;
         if (!dialogScope.newSupervisor) {
           dialogScope.supervisor = angular.copy($scope.thesis.supervisors[supervisorIndex]);
@@ -97,6 +126,28 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
             dialogScope.submit();
           }
         };
+
+        dialogScope.preventBtn = false;
+
+        dialogScope.changedIdcode = function () {
+          dialogScope.preventBtn = false;
+          if (!!dialogScope.supervisor.idcode) {
+            dialogScope.supervisor.sex = DataUtils.sexFromIdcode(dialogScope.supervisor.idcode);
+            dialogScope.supervisor.birthdate = DataUtils.birthdayFromIdcode(dialogScope.supervisor.idcode);
+          }
+        };
+
+        dialogScope.preventSave = function () {
+          dialogScope.preventBtn = true;
+
+        }
+
+        dialogScope.wrongIdcode = function (response) {
+          if (response.status === 404) {
+            dialogScope.changedIdcode();
+          }
+          dialogScope.preventBtn = false;
+        }
   
       }, function (submittedDialogScope) {
         var modifiedSupervisor = submittedDialogScope.supervisor;
@@ -138,6 +189,24 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
       message.error('finalThesis.error.supervisorRequired');
       return false;
     }
+    
+    // Check supervisor data if outer.
+    if ($scope.thesis.isMagisterOrDoctoralOrIntegratedStudy) {
+      for (var i = 0; i < $scope.thesis.supervisors.length; i++) {
+        if ($scope.thesis.supervisors[i].isExternal) {
+          if (!$scope.thesis.supervisors[i].idcode && (!$scope.thesis.supervisors[i].birthdate || !$scope.thesis.supervisors[i].sex)) {
+            message.error('finalThesis.error.supervisorOutdated');
+            return false;
+          }
+        }
+      }
+    }
+    
+    // For view form
+    if ($scope.thesis.isMagisterOrDoctoralOrIntegratedStudy && $scope.thesis.cercses.length === 0) {
+      message.error('finalThesis.error.cercsRequired');
+      return false;
+    }
 
     if(!$scope.finalThesisForm.$valid) {
       message.error('main.messages.form-has-errors');
@@ -149,8 +218,11 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
 
   $scope.save = function () {
     if (isValid()) {
+      if ($scope.thesis.cercses.length > 0) {
+        cercsTypeChanged($scope.thesis.cercses.length - 1, $scope.thesis.cercses[$scope.thesis.cercses.length - 1].cercsType, false, true);
+      }
       var finalThesis = new FinalThesisEndpoint($scope.thesis);
-  
+
       if (angular.isDefined($scope.thesis.id)) {
         finalThesis.$update().then(function (result) {
           message.info('main.messages.update.success');
@@ -170,6 +242,9 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
       dialogService.confirmDialog({
         prompt: 'finalThesis.confirmConfirm'
       }, function () {
+        if ($scope.thesis.cercses.length > 0) {
+          cercsTypeChanged($scope.thesis.cercses.length - 1, $scope.thesis.cercses[$scope.thesis.cercses.length - 1].cercsType, false, true);
+        }
         QueryUtils.endpoint(endpoint + '/' + $scope.thesis.id + '/confirm').put($scope.thesis, function (response) {
           message.info('finalThesis.isConfirmed');
           entityToForm(response);
@@ -177,4 +252,35 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
       });
     }
   };
+
+  function cercsValueChanged(index, value) {
+    for (var i = 0; i < $scope.thesis.cercses.length; i++) {
+      if (i !== index && $scope.thesis.cercses[i].cercs === value) {
+        $scope.thesis.cercses[index].cercs = undefined;
+        message.error('finalThesis.error.duplicateCercs')
+        return;
+      }
+    }
+    if ($scope.thesis.cercses.length === index + 1 && $scope.thesis.cercses.length < 100 && !!value) {
+      addEmptyCercsToThesis();
+    }
+  }
+
+  function cercsTypeChanged(index, type, ignoreLast, canByEmpty) {
+    if ($scope.thesis.cercses.length > (!!canByEmpty ? 0 : 1) && !type && (!ignoreLast || $scope.thesis.cercses.length !== index + 1)) {
+      removeCercs(index);
+    }
+  }
+
+  function addEmptyCercsToThesis() {
+    if (!angular.isArray($scope.thesis.cercses)) {
+      $scope.thesis.cercses = [];
+    }
+    $scope.thesis.cercses.push({});
+  }
+
+  function removeCercs(index) {
+    $scope.thesis.cercses.splice(index, 1);
+  }
+
 });

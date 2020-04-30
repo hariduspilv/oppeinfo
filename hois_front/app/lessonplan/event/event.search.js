@@ -16,7 +16,7 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
         studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
       });
     });
-    
+
     QueryUtils.createQueryForm($scope, baseUrl, {
       order:'4 desc'
     });
@@ -45,14 +45,20 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
       }
     };
 
+    $scope.isJuhanEventChanged = function () {
+      if (!$scope.criteria.singleEvent) {
+        $scope.criteria.singleEvent = true;
+      }
+    };
+
     var _clearCriteria = $scope.clearCriteria;
-    $scope.directiveControllers = []; 
+    $scope.directiveControllers = [];
     $scope.clearEventCriteria = function () {
       _clearCriteria();
       $scope.criteria.singleEvent = false;
-      $scope.directiveControllers.forEach(function (c) { 
-        c.clear(); 
-      }); 
+      $scope.directiveControllers.forEach(function (c) {
+        c.clear();
+      });
       $scope.criteria.order = '4 desc';
     };
 
@@ -66,7 +72,7 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
     };
 
     $scope.allowedToEdit = function (event) {
-      if (!event.canEdit) {
+      if (event.isJuhanEvent) {
         return false;
       }
       if ($scope.auth.isAdmin()) {
@@ -102,7 +108,7 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
 
     $scope.setPartlyBox = checkCheckboxPartlyBusy;
     $scope.event = getEventLink;
-    
+
     QueryUtils.createQueryForm($scope, '/timetableevents/rooms', {isFreeRoom: true, from: new Date(), thru: new Date()});
 
     var _loadData = $scope.loadData;

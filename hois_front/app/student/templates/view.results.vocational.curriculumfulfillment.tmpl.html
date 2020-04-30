@@ -1,3 +1,6 @@
+<md-checkbox ng-model="formState.openAllCollapsables" ng-change="changeModulesExpandedStatus()" name="openAll">
+  {{'student.result.openAll' | translate}}
+</md-checkbox>
 
 <div ng-repeat="module in ::vocationalResultsCurriculum.vocationalResultsModules">
   <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.list.tmpl.html'"></div>
@@ -7,19 +10,50 @@
   <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.formallearning.tmpl.html'"></div>
 </div>
 
-<div ng-if="vocationalResultsCurriculum.extraCurriculaVocationalResultsModules && vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.length !== 0">
+<div ng-if="vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.length > 0
+     || vocationalResultsCurriculum.replacedExtraCurriculaModuleResults.length > 0">
   <h3>{{'student.result.otherModuleResults' | translate}}</h3>
 
   <div ng-repeat="module in ::vocationalResultsCurriculum.extraCurriculaVocationalResultsModules">
     <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.list.tmpl.html'"></div>
   </div>
+
+  <div ng-repeat="result in ::vocationalResultsCurriculum.replacedExtraCurriculaModuleResults">
+    <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.formallearning.tmpl.html'"></div>
+  </div>
 </div>
 
-<div ng-repeat="result in ::vocationalResultsCurriculum.replacedExtraCurriculaModuleResults">
-  <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.formallearning.tmpl.html'"></div>
-</div>
+<hois-collapsable ng-if="vocationalResultsCurriculum.otherOutcomeResults.length > 0" expanded="vocationalResultsCurriculum.otherOutcomesCollapsableOpen">
+  <hois-collapsable-header>
+    <div>{{'student.result.otherOutcomes' | translate}}</div>
+  </hois-collapsable-header>
+  <md-table-container>
+    <table md-table class="secondary-table">
+      <thead md-head>
+      <tr md-row>
+        <th md-column>{{'student.result.name' | translate}}</th>
+        <th md-column>{{'student.result.grade' | translate}}</th>
+        <th md-column>{{'student.result.date' | translate}}</th>
+        <th md-column>{{auth.higher ? ('student.result.teacherHigher' | translate) : ('student.result.teacherVocational' | translate)}}</th>
+      </tr>
+      </thead>
+      <tbody md-body>
+        <tr md-row ng-repeat="result in ::vocationalResultsCurriculum.otherOutcomeResults | orderBy: 'date' track by $index">
+          <td md-cell>{{currentLanguageNameField(result.outcome)}} ({{currentLanguageNameField(result.curriculum)}})</td>
+          <td md-cell>{{result.grade.value}}</td>
+          <td md-cell>{{result.date | hoisDate}}</td>
+          <td md-cell>{{displayTeachers(result.teachers)}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </md-table-container>
+</hois-collapsable>
 
-<div ng-if="vocationalResultsCurriculum.vocationalResultsModules && vocationalResultsCurriculum.vocationalResultsModules.length==0 && vocationalResultsCurriculum.extraCurriculaVocationalResultsModules && vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.length === 0">
+<div ng-if="vocationalResultsCurriculum.vocationalResultsModules.length==0 &&
+  vocationalResultsCurriculum.replacedModuleResults.length === 0 &&
+  vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.length === 0 &&
+  vocationalResultsCurriculum.replacedExtraCurriculaModuleResults.length === 0 &&
+  vocationalResultsCurriculum.otherOutcomeResults.length === 0">
   <span>{{'student.result.missing' | translate}}</span>
 </div>
 

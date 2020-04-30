@@ -30,6 +30,7 @@ public class DirectiveViewDto {
     private AutocompleteResult canceledDirective;
     private String canceledDirectiveType;
     private String scholarshipType;
+    private String scholarshipEhis;
     private LocalDateTime inserted;
     private List<DirectiveViewStudentDto> students;
     private List<DirectiveSearchDto> cancelingDirectives;
@@ -139,6 +140,14 @@ public class DirectiveViewDto {
 
     public void setScholarshipType(String scholarshipType) {
         this.scholarshipType = scholarshipType;
+    }
+
+    public String getScholarshipEhis() {
+        return scholarshipEhis;
+    }
+
+    public void setScholarshipEhis(String scholarshipEhis) {
+        this.scholarshipEhis = scholarshipEhis;
     }
 
     public LocalDateTime getInserted() {

@@ -235,7 +235,11 @@ public class PublicDataMapper {
         CURRICULUM.put("jointPartners", Curriculum::getJointPartners);
         CURRICULUM.put("specialities", Curriculum::getSpecialities);
         CURRICULUM.put("studyForms", c -> StreamUtil.toMappedList(CurriculumStudyForm::getStudyForm, c.getStudyForms()));
-        CURRICULUM.put("modules", Curriculum::getModules);
+        CURRICULUM.put("modules", c -> c.getModules().stream()
+                .sorted(Comparator.comparing(CurriculumModule::getOrderNr,
+                        Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(Comparator.comparing(CurriculumModule::getNameEt, String.CASE_INSENSITIVE_ORDER)))
+                .collect(Collectors.toList()));
         CURRICULUM.put("occupations", Curriculum::getOccupations);
         CURRICULUM.put("versions", c -> StreamUtil.toFilteredList(CurriculumUtil::isCurriculumVersionConfirmed, c.getVersions()));
 
@@ -287,9 +291,19 @@ public class PublicDataMapper {
         CURRICULUM_VERSION.put("validThru", CurriculumVersion::getValidThru);
         CURRICULUM_VERSION.put("yearCapacities", PublicDataMapper::calculateYearCapacities);
 
-        CURRICULUM_VERSION.put("modules", CurriculumVersion::getModules);
+        CURRICULUM_VERSION.put("modules",
+                cv -> cv.getModules().stream()
+                        .sorted(Comparator.comparing(CurriculumVersionHigherModule::getOrderNr,
+                                Comparator.nullsLast(Comparator.naturalOrder()))
+                                .thenComparing(Comparator.comparing(CurriculumVersionHigherModule::getNameEt, String.CASE_INSENSITIVE_ORDER)))
+                        .collect(Collectors.toList()));
         CURRICULUM_VERSION.put("specialities", CurriculumVersion::getSpecialities);
-        CURRICULUM_VERSION.put("occupationModules", CurriculumVersion::getOccupationModules);
+        CURRICULUM_VERSION.put("occupationModules",
+                cv -> cv.getOccupationModules().stream()
+                        .sorted(Comparator.comparing((CurriculumVersionOccupationModule om) -> om.getCurriculumModule().getOrderNr(),
+                                Comparator.nullsLast(Comparator.naturalOrder()))
+                                .thenComparing(Comparator.comparing(om -> om.getCurriculumModule().getNameEt(), String.CASE_INSENSITIVE_ORDER)))
+                        .collect(Collectors.toList()));
 
         CURRICULUM_VERSION_ELECTIVE_MODULE.put("nameEt", CurriculumVersionElectiveModule::getNameEt);
         CURRICULUM_VERSION_ELECTIVE_MODULE.put("nameEn", CurriculumVersionElectiveModule::getNameEn);
@@ -297,6 +311,7 @@ public class PublicDataMapper {
 
         CURRICULUM_VERSION_HIGHER_MODULE.put("nameEt", CurriculumVersionHigherModule::getNameEt);
         CURRICULUM_VERSION_HIGHER_MODULE.put("nameEn", CurriculumVersionHigherModule::getNameEn);
+        CURRICULUM_VERSION_HIGHER_MODULE.put("orderNr", CurriculumVersionHigherModule::getOrderNr);
         CURRICULUM_VERSION_HIGHER_MODULE.put("objectivesEt", CurriculumVersionHigherModule::getObjectivesEt);
         CURRICULUM_VERSION_HIGHER_MODULE.put("objectivesEn", CurriculumVersionHigherModule::getObjectivesEn);
         CURRICULUM_VERSION_HIGHER_MODULE.put("outcomesEt", CurriculumVersionHigherModule::getOutcomesEt);
@@ -323,6 +338,7 @@ public class PublicDataMapper {
 
         CURRICULUM_VERSION_OCCUPATION_MODULE.put("nameEt", cvom -> cvom.getCurriculumModule().getNameEt());
         CURRICULUM_VERSION_OCCUPATION_MODULE.put("nameEn", cvom -> cvom.getCurriculumModule().getNameEn());
+        CURRICULUM_VERSION_OCCUPATION_MODULE.put("orderNr", cvom -> cvom.getCurriculumModule().getOrderNr());
         CURRICULUM_VERSION_OCCUPATION_MODULE.put("requirementsEt", CurriculumVersionOccupationModule::getRequirementsEt);
         CURRICULUM_VERSION_OCCUPATION_MODULE.put("assessmentsEt", CurriculumVersionOccupationModule::getAssessmentsEt);
         CURRICULUM_VERSION_OCCUPATION_MODULE.put("learningMethodsEt", CurriculumVersionOccupationModule::getLearningMethodsEt);

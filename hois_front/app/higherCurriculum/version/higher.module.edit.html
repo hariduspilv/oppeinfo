@@ -42,7 +42,18 @@
           </md-input-container>
         </div>
 
-
+        <md-input-container>
+          <label>{{'module.orderNr' | translate}}</label>
+          <input ng-model="data.orderNr" type="number" name="orderNr" min="0" max="32767" pattern="^\d+?$">
+          <div ng-messages="higherModuleForm.orderNr.$error" ng-show="higherModuleForm.orderNr.$dirty">
+            <div ng-message="min">
+              {{'main.messages.error.positive' | translate}}
+            </div>
+            <div ng-message="max">
+              {{'main.messages.error.max' | translate: {max: 32767} }}
+            </div>
+          </div>
+        </md-input-container>
         <md-input-container>
           <label>{{'module.nameEt' | translate}}</label>
           <input ng-model="data.nameEt" type="text" required md-maxlength="255">

@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -129,6 +130,13 @@ public class MessageController {
     public List<MessageReceiverDto> getStudentsParents(HoisUserDetails user, @WithEntity("studentId") Student student) {
         UserUtil.assertSameSchool(user, student.getSchool());
         return messageService.getStudentRepresentatives(student);
+    }
+    
+    @GetMapping("/hasEmail")
+    public Map<String, Object> userHasEmail(HoisUserDetails user) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("hasEmail", Boolean.valueOf(messageService.userHasEmail(user)));
+        return map;
     }
 
     private static void assertIsReceiver(HoisUserDetails user, Message message) {

@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -21,12 +22,15 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.FinalThesis;
+import ee.hitsa.ois.domain.FinalThesisCercs;
 import ee.hitsa.ois.domain.FinalThesisSupervisor;
+import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.FinalThesisStatus;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.StudentType;
+import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
@@ -43,9 +47,10 @@ import ee.hitsa.ois.web.commandobject.FinalThesisSupervisorForm;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherForm.TeacherPersonForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.FinalThesisDto;
-import ee.hitsa.ois.web.dto.FinalThesisSearchDto;
 import ee.hitsa.ois.web.dto.TeacherDto;
+import ee.hitsa.ois.web.dto.finalthesis.FinalThesisDto;
+import ee.hitsa.ois.web.dto.finalthesis.FinalThesisSearchDto;
+import ee.hitsa.ois.web.dto.finalthesis.FinalThesisStudentDto;
 
 @Transactional
 @Service
@@ -53,6 +58,8 @@ public class FinalThesisService {
 
     @Autowired
     private EntityManager em;
+    @Autowired
+    private ClassifierRepository classifierRepository;
 
     private static final String SEARCH_FROM = "from final_thesis ft"
             + " left join final_thesis_supervisor fts on fts.final_thesis_id = ft.id"
@@ -170,39 +177,66 @@ public class FinalThesisService {
     }
     
     public FinalThesis save(FinalThesis finalThesis, FinalThesisForm form) {
-        EntityUtil.bindToEntity(form, finalThesis, "student", "status", "supervisors", "draft");
+        EntityUtil.bindToEntity(form, finalThesis, classifierRepository, "student", "status", "supervisors", "draft", "cercs");
         finalThesis.setDraft(Boolean.TRUE.equals(form.getHasDraft()) ? form.getDraft() : null);
 
         EntityUtil.bindEntityCollection(finalThesis.getSupervisors(), FinalThesisSupervisor::getId,
             form.getSupervisors(), FinalThesisSupervisorForm::getId, supervisorForm -> {
-                FinalThesisSupervisor supervisor = EntityUtil.bindToEntity(supervisorForm, new FinalThesisSupervisor(), "finalThesis", "teacher");
+                FinalThesisSupervisor supervisor = new FinalThesisSupervisor();
                 supervisor.setFinalThesis(finalThesis);
-                if (supervisorForm.getTeacher() != null) {
-                    Teacher teacher = em.getReference(Teacher.class, supervisorForm.getTeacher().getId());
-                    supervisor.setTeacher(teacher);
-                    supervisor.setIdcode(teacher.getPerson().getIdcode());
-                    supervisor.setOccupation(teacher.getTeacherOccupation().getOccupationEt());
-                    supervisor.setEmail(teacher.getEmail());
-                    supervisor.setPhone(teacher.getPhone());
-                }
+                updateSupervisor(supervisorForm, supervisor);
                 return supervisor;
             }, (supervisorForm, supervisor) -> {
-                EntityUtil.bindToEntity(supervisorForm, supervisor, "finalThesis", "teacher");
-                if (supervisorForm.getTeacher() != null) {
-                    Teacher teacher = em.getReference(Teacher.class, supervisorForm.getTeacher().getId());
-                    supervisor.setTeacher(teacher);
-                    supervisor.setIdcode(teacher.getPerson().getIdcode());
-                    supervisor.setOccupation(teacher.getTeacherOccupation().getOccupationEt());
-                    supervisor.setEmail(teacher.getEmail());
-                    supervisor.setPhone(teacher.getPhone());
+                Long oldTeacherId = EntityUtil.getNullableId(supervisor.getTeacher());
+                Long newTeacherId = supervisorForm.getTeacher() != null ? supervisorForm.getTeacher().getId() : null;
+                
+                // inserted is used to send data about final thesis to EHIS
+                // if teacher is changed but record is not deleted then it should delete old and create a new record.
+                if (Objects.equals(oldTeacherId, newTeacherId)) {
+                    updateSupervisor(supervisorForm, supervisor);
+                } else {
+                    finalThesis.getSupervisors().remove(supervisor);
+                    FinalThesisSupervisor nSupervisor = new FinalThesisSupervisor();
+                    nSupervisor.setFinalThesis(finalThesis);
+                    updateSupervisor(supervisorForm, nSupervisor);
+                    finalThesis.getSupervisors().add(nSupervisor);
                 }
         });
+        
+        if (finalThesis.getStudent().getCurriculumVersion() != null
+                && CurriculumUtil.isMagisterOrDoctoralOrIntegratedStudy(
+                        finalThesis.getStudent().getCurriculumVersion().getCurriculum())) {
+            finalThesis.setCurriculumGrade(EntityUtil.getOptionalOne(CurriculumGrade.class, form.getCurriculumGrade(), em));
+            EntityUtil.bindEntityCollection(finalThesis.getCercses(), c -> c.getCercs().getCode(), form.getCercses(),
+                    c -> c.getCercs(), (formCercs) -> {
+                        FinalThesisCercs cercs = new FinalThesisCercs();
+                        cercs.setCercs(em.getReference(Classifier.class, formCercs.getCercs()));
+                        cercs.setFinalThesis(finalThesis);
+                        return cercs;
+                    });
+        } else {
+            finalThesis.setCurriculumGrade(null);
+            finalThesis.setLanguage(null);
+            finalThesis.getCercses().clear();
+        }
         
         if (FinalThesisUtil.confirmed(finalThesis)) {
             FinalThesisUtil.hasRequiredSupervisors(finalThesis);
         }
         
         return EntityUtil.save(finalThesis, em);
+    }
+    
+    private void updateSupervisor(FinalThesisSupervisorForm supervisorForm, FinalThesisSupervisor supervisor) {
+        EntityUtil.bindToEntity(supervisorForm, supervisor, classifierRepository, "finalThesis", "teacher");
+        if (supervisorForm.getTeacher() != null) {
+            Teacher teacher = em.getReference(Teacher.class, supervisorForm.getTeacher().getId());
+            supervisor.setTeacher(teacher);
+            supervisor.setIdcode(teacher.getPerson().getIdcode());
+            supervisor.setOccupation(teacher.getTeacherOccupation().getOccupationEt());
+            supervisor.setEmail(teacher.getEmail());
+            supervisor.setPhone(teacher.getPhone());
+        }
     }
     
     public List<AutocompleteResult> students(HoisUserDetails user, SearchCommand lookup) {
@@ -261,6 +295,10 @@ public class FinalThesisService {
         studentFinalThesis.put("finalThesisRequired", required);
         studentFinalThesis.put("finalThesis", finalThesisId);
         return studentFinalThesis;
+    }
+
+    public FinalThesisStudentDto student(Student student) {
+        return new FinalThesisStudentDto(student);
     }
     
 }

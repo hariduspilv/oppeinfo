@@ -371,7 +371,6 @@ public class UserService {
                 .groupBy("c.id");
 
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
-        qb.optionalCriteria("c.id = :curriculumId", "curriculumId", term.getId());
         qb.optionalContains(Language.EN.equals(term.getLang()) ? "concat(c.mer_code, ' - ', c.name_en, ' (', c.code, ')')"
                 : "concat(c.mer_code, ' - ', c.name_et, ' (', c.code, ')')", "name", term.getName());
         qb.requiredCriteria("c.status_code != :status", "status", CurriculumStatus.OPPEKAVA_STAATUS_C);

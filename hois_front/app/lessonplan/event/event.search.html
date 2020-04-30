@@ -64,6 +64,9 @@
           <md-input-container ng-if="canViewPersonalEvents" flex="20" flex-sm="100" flex-xs="100">
             <md-checkbox ng-model="criteria.personalEvent" ng-change="isPersonalEventChanged()">{{'lessonplan.event.personalEvent' | translate}}</md-checkbox>
           </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-xs="100">
+            <md-checkbox ng-model="criteria.juhanEvent" ng-change="isJuhanEventChanged()">{{'lessonplan.event.juhanEvent' | translate}}</md-checkbox>
+          </md-input-container>
         </div>
 
         <div layout="row">
@@ -90,6 +93,7 @@
             <th ng-if="eventsPerm" md-column>{{'lessonplan.event.studentGroups' | translate}}</th>
             <th ng-if="eventsPerm" md-column>{{'lessonplan.event.singleEvent' | translate}}</th>
             <th ng-if="eventsPerm && auth.isAdmin()" md-column>{{'lessonplan.event.personalEvent' | translate}}</th>
+            <th ng-if="eventsPerm" md-column>{{'lessonplan.event.juhanEvent' | translate}}</th>
             <th ng-if="canEdit"></th>
           </tr>
         </thead>
@@ -109,6 +113,7 @@
             <td ng-if="eventsPerm" md-cell><span ng-repeat="group in row.studentGroups">{{::group.code}}{{$last ? "" : ", "}}</span></td>
             <td ng-if="eventsPerm" md-cell>{{row.singleEvent ? 'main.yes' : 'main.no' | translate}}</td>
             <td ng-if="eventsPerm && auth.isAdmin()" md-cell>{{row.isPersonal ? 'main.yes' : 'main.no' | translate}}</td>
+            <td ng-if="eventsPerm" md-cell>{{row.isJuhanEvent ? 'main.yes' : 'main.no' | translate}}</td>
             <td md-cell ng-if="canEdit">
               <md-button md-no-ink class="md-primary change-button" ng-if="allowedToEdit(row) && afterNow(row.date, row.timeStart)"
                 ng-href="#/timetable/timetableEvent/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>

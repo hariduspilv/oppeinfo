@@ -15,6 +15,7 @@ public class SubjectAutocompleteCommand extends SearchCommand {
     private Long userId;
     private Long studyPeriod;
     private Boolean isComplete;
+    private Boolean withCode = Boolean.TRUE;
 
     public Boolean getPractice() {
         return practice;
@@ -94,5 +95,13 @@ public class SubjectAutocompleteCommand extends SearchCommand {
 
     public void setIsComplete(Boolean isComplete) {
         this.isComplete = isComplete;
+    }
+
+    public Boolean getWithCode() {
+        return withCode;
+    }
+
+    public void setWithCode(Boolean withCode) {
+        this.withCode = withCode;
     }
 }

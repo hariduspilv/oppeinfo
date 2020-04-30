@@ -2,43 +2,52 @@
   <thead>
     <tr>
       <th></th>
+      <th ng-if="record.showStudentProgress" colspan="3"></th>
       <th ng-repeat="type in record.moduleTypes" colspan="{{type.colspan}}">
         <hois-classifier-value ng-model="type.code" main-classifier-code="KUTSEMOODUL"></hois-classifier-value>
       </th>
-      <th colspan="{{tableTotalColumnsColspan}}"></th>
+      <th ng-if="!record.showStudentProgress" colspan="{{tableTotalColumnsColspan}}"></th>
     </tr>
     <tr>
       <th></th>
+      <th ng-if="record.showStudentProgress" colspan="3"></th>
       <th ng-repeat="module in record.modules" colspan="{{module.colspan}}">
         {{currentLanguageNameField(module) | hoisLimitTo: 10}}
         <md-tooltip class="tooltip-multiline">{{currentLanguageNameField(module)}}</md-tooltip>
       </th>
-      <th colspan="{{tableTotalColumnsColspan}}">
+      <th ng-if="!record.showStudentProgress" colspan="{{tableTotalColumnsColspan}}">
         <span ng-if="record.averageGrade">{{'report.studentGroupTeacher.studentAverageGrade' | translate}}:
           {{record.averageGrade}}</span>
       </th>
     </tr>
     <tr>
       <th>{{'report.studentGroupTeacher.studentName' | translate}}</th>
-      <th ng-repeat="column in record.resultColumns">
+      <th ng-if="record.showStudentProgress">{{'report.studentGroupTeacher.curriculumFulfilled' | translate}}</th>
+      <th ng-if="record.showStudentProgress">{{'report.studentGroupTeacher.isCumLaude' | translate}}</th>
+      <th ng-if="record.showStudentProgress">{{'report.studentGroupTeacher.weightedAverageGrade' | translate}}</th>
+      <th ng-repeat="column in record.resultColumns" ng-class="{'all-modules-module': record.showStudentProgress && column.module}">
         <span ng-if="column.journal">
           <a ng-href="#/journal/{{column.journal.id}}/view" class="md-primary change-button">
             {{currentLanguageNameField(column.journal) | hoisLimitTo: 10}}</a>
           <md-tooltip class="tooltip-multiline">{{currentLanguageNameField(column.journal)}}</md-tooltip>
         </span>
-        <span ng-if="column.module">M</span>
         <span ng-if="column.practiceModuleTheme">
           <span>{{currentLanguageNameField(column.practiceModuleTheme) | hoisLimitTo: 10}}</span>
           <md-tooltip class="tooltip-multiline">{{currentLanguageNameField(column.practiceModuleTheme)}}</md-tooltip>
         </span>
         <span ng-if="column.fullPracticeModule">{{'report.studentGroupTeacher.wholePracticeModule' | translate}}</span>
+        <span ng-if="column.outcome">
+          <span>{{'report.studentGroupTeacher.outcome' | translate}}{{column.outcome.orderNr + 1}}</span>
+          <md-tooltip class="tooltip-multiline">{{currentLanguageNameField(column.outcome)}}</md-tooltip>
+        </span>
+        <span ng-if="column.module">M</span>
       </th>
-      <th>{{'report.studentGroupTeacher.journalEntryLessons' | translate}}</th>
-      <th>{{'report.studentGroupTeacher.totalAbsences' | translate}}</th>
-      <th>{{'report.studentGroupTeacher.totalAbsencesPercentage' | translate}}</th>
-      <th>{{'report.studentGroupTeacher.withoutReasonAbsences' | translate}}</th>
-      <th>{{'report.studentGroupTeacher.withReasonAbsences' | translate}}</th>
-      <th>{{'report.studentGroupTeacher.beingLate' | translate}}</th>
+      <th ng-if="!record.showStudentProgress">{{'report.studentGroupTeacher.journalEntryLessons' | translate}}</th>
+      <th ng-if="!record.showStudentProgress">{{'report.studentGroupTeacher.totalAbsences' | translate}}</th>
+      <th ng-if="!record.showStudentProgress">{{'report.studentGroupTeacher.totalAbsencesPercentage' | translate}}</th>
+      <th ng-if="!record.showStudentProgress">{{'report.studentGroupTeacher.withoutReasonAbsences' | translate}}</th>
+      <th ng-if="!record.showStudentProgress">{{'report.studentGroupTeacher.withReasonAbsences' | translate}}</th>
+      <th ng-if="!record.showStudentProgress">{{'report.studentGroupTeacher.beingLate' | translate}}</th>
       <th ng-if="record.showAverageGrade">{{'report.studentGroupTeacher.averageGrade' | translate}}</th>
       <th ng-if="record.showWeightedAverageGrade">{{'report.studentGroupTeacher.weightedAverageGrade' | translate}}</th>
     </tr>
@@ -46,27 +55,23 @@
   <tbody>
     <tr ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
       <td>
-        <div>
-          <i>
-            <span ng-if="row.status === 'OPPURSTAATUS_A'">{{'student.statuses.academicLeaveShort' | translate}}</span>
-            <span ng-if="row.status === 'OPPURSTAATUS_L'">{{'student.statuses.finishedShort' | translate}}</span>
-            <span ng-if="row.status === 'OPPURSTAATUS_K'">{{'student.statuses.exmatriculatedShort' | translate}}</span>
-            <span ng-if="row.isIndividualCurriculum">
-              <span ng-if="row.status !== 'OPPURSTAATUS_O' && row.status !== 'OPPURSTAATUS_V'">, </span>
-              <span>{{'student.statuses.individualCurriculumShort' | translate}}</span>
-            </span>
-          </i>
-          <span>{{row.fullname}}</span>
-          <a ng-if="row.remarks.length > 0" ng-click="openRemarkDialog(row)">
-            <md-icon class="md-icon-button">message</md-icon>
-          </a>
-        </div>
+        <span ng-include="'report/templates/studentgroup.teacher.student.name.column.html'"></span>
       </td>
-      <td ng-repeat="resultColumn in row.resultColumns" md-colors="resultColumn.journalResult && !resultColumn.journalResult.existsInJournal ? {background: 'deep-orange-100'} : null">
+      <td ng-if="record.showStudentProgress">
+        <span ng-include="'report/templates/studentgroup.teacher.student.curriculum.fulfillment.column.html'"></span>
+      </td>
+      <td ng-if="record.showStudentProgress">{{row.progress.isCumLaude ? 'main.yes' : 'main.no' | translate}}</td>
+      <td ng-if="record.showStudentProgress">{{row.progress.weightedAverageGrade}}</td>
+      <td ng-repeat="resultColumn in row.resultColumns"
+          ng-class="{'deep-orange-100': (resultColumn.journalResult && !resultColumn.journalResult.existsInJournal) ||
+             (resultColumn.outcomeResult && record.showStudentProgress && !resultColumn.intendedModule),
+            'blue-100': resultColumn.moduleResult && record.showStudentProgress && resultColumn.intendedModule,
+            'deep-orange-200': resultColumn.moduleResult && record.showStudentProgress && !resultColumn.intendedModule}">
         <div ng-if="resultColumn.journalResult" layout="row">
           <div ng-repeat="result in resultColumn.journalResult.results">
             <span ng-if="!gradeUtil.isPositive(result.grade.code)" class="badResult">{{result.grade.value}}</span>
-            <span ng-if="gradeUtil.isPositive(result.grade.code) && entryTypeColors[result.entryType.code]" md-colors="{color: getEntryColor(result.entryType.code)}">{{result.grade.value}}</span>
+            <span ng-if="gradeUtil.isPositive(result.grade.code) && entryTypeColors[result.entryType.code]"
+              md-colors="{color: getEntryColor(result.entryType.code)}">{{result.grade.value}}</span>
             <span ng-if="gradeUtil.isPositive(result.grade.code) && !entryTypeColors[result.entryType.code]">{{result.grade.value}}</span>
             <md-tooltip class="tooltip-multiline">
               <span>{{result.gradeInserted ? (result.gradeInserted | hoisDate) : '-'}},</span>
@@ -122,19 +127,26 @@
             <span>{{resultColumn.practiceModuleResult.gradeInserted ? (resultColumn.practiceModuleResult.gradeInserted | hoisDate) : '-'}}</span>
           </md-tooltip>
         </div>
+        <div ng-if="resultColumn.outcomeResult">
+          <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.outcomeResult.grade.code)}">{{resultColumn.outcomeResult.grade.value}}</div>
+          <md-tooltip>
+            <span>{{resultColumn.outcomeResult.gradeInserted ? (resultColumn.outcomeResult.gradeInserted | hoisDate) : '-'}},</span>
+            <span>{{resultColumn.outcomeResult.gradeInsertedBy}}</span>
+          </md-tooltip>
+        </div>
         <div ng-if="resultColumn.moduleResult">
           <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.moduleResult.grade.code)}">{{resultColumn.moduleResult.grade.value}}</div>
           <md-tooltip>
-            <span>{{resultColumn.moduleGrade.gradeInserted ? (resultColumn.moduleGrade.gradeInserted | hoisDate) : '-'}}</span>
+            <span>{{resultColumn.moduleResult.gradeInserted ? (resultColumn.moduleResult.gradeInserted | hoisDate) : '-'}}</span>
           </md-tooltip>
         </div>
       </td>
-      <td>{{row.journalEntryLessons}}</td>
-      <td>{{row.totalAbsences}}</td>
-      <td>{{row.lessonAbsencePercentage}}</td>
-      <td>{{row.withoutReasonAbsences}}</td>
-      <td>{{row.withReasonAbsences}}</td>
-      <td>{{row.beingLate}}</td>
+      <td ng-if="!record.showStudentProgress">{{row.journalEntryLessons}}</td>
+      <td ng-if="!record.showStudentProgress">{{row.totalAbsences}}</td>
+      <td ng-if="!record.showStudentProgress">{{row.lessonAbsencePercentage}}</td>
+      <td ng-if="!record.showStudentProgress">{{row.withoutReasonAbsences}}</td>
+      <td ng-if="!record.showStudentProgress">{{row.withReasonAbsences}}</td>
+      <td ng-if="!record.showStudentProgress">{{row.beingLate}}</td>
       <td ng-if="record.showAverageGrade">{{row.averageGrade}}</td>
       <td ng-if="record.showWeightedAverageGrade">{{row.weightedAverageGrade}}</td>
     </tr>

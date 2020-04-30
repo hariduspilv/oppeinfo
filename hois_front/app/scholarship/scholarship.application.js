@@ -21,6 +21,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationRankingController',
     var clMapper = Classifier.valuemapper({
       status: 'STIPTOETUS_STAATUS',
       type: 'STIPTOETUS',
+      typeEhis: 'EHIS_STIPENDIUM',
       compensationFrequency: 'STIPTOETUS_HYVITAMINE',
       compensationReason: 'STIPTOETUS_HYVITAMINE_POHJUS'
     });
@@ -227,7 +228,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationRankingController',
 
     var previousType;
     $scope.resetCurriculum = function () {
-      if (previousType === 'STIPTOETUS_POHI') {
+      if (previousType === 'STIPTOETUS_POHI' || previousType === 'STIPTOETUS_ERIALA') {
         $scope.criteria.curriculum = [];
       }
       previousType = $scope.criteria.type;
@@ -279,9 +280,11 @@ function ($scope, $location, $q, message, QueryUtils, $route, Classifier) {
   var clMapper = Classifier.valuemapper({
     status: 'STIPTOETUS_STAATUS',
     type: 'STIPTOETUS',
+    typeEhis: 'EHIS_STIPENDIUM',
     compensationFrequency: 'STIPTOETUS_HYVITAMINE',
     compensationReason: 'STIPTOETUS_HYVITAMINE_POHJUS'
   });
+  $scope.isNumber = angular.isNumber;
   QueryUtils.endpoint(baseUrl + '/decision').get({
     ids: $route.current.params.ids
   }, function (result) {
@@ -346,9 +349,12 @@ function ($scope, $location, $q, message, QueryUtils, $route, Classifier, dialog
   var clMapper = Classifier.valuemapper({
     status: 'STIPTOETUS_STAATUS',
     type: 'STIPTOETUS',
+    typeEhis: 'EHIS_STIPENDIUM',
     compensationFrequency: 'STIPTOETUS_HYVITAMINE',
     compensationReason: 'STIPTOETUS_HYVITAMINE_POHJUS'
   });
+  
+  $scope.isNumber = angular.isNumber;
 
   $scope.decision = Endpoint.get({id: id}, function (result) {
     $scope.decision.committee = result.committeeId;

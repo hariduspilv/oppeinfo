@@ -6,6 +6,10 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,13 +22,24 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
+import javax.xml.ws.Holder;
 
 import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.report.SchoolQuery;
+import ee.hitsa.ois.domain.report.SchoolQueryCriteria;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.school.SchoolDepartment;
+import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.teacher.Teacher;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -34,14 +49,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
+import ee.hitsa.ois.enums.DeclarationStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.ExmatriculationReason;
 import ee.hitsa.ois.enums.HigherAssessment;
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.OccupationalGrade;
+import ee.hitsa.ois.enums.ReportStudentData;
 import ee.hitsa.ois.enums.Sex;
 import ee.hitsa.ois.enums.StudentCountType;
 import ee.hitsa.ois.enums.StudentMovementType;
@@ -49,6 +68,7 @@ import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -59,33 +79,43 @@ import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumCompletionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumSubjectsCommand;
 import ee.hitsa.ois.web.commandobject.report.ForeignStudentStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.GuestStudentStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.IndividualCurriculumStatisticsCommand;
+import ee.hitsa.ois.web.commandobject.report.Order;
+import ee.hitsa.ois.web.commandobject.report.QuerySaveCommand;
 import ee.hitsa.ois.web.commandobject.report.ScholarshipStatisticsCommand;
+import ee.hitsa.ois.web.commandobject.report.SchoolQueryCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentCountCommand;
+import ee.hitsa.ois.web.commandobject.report.StudentDataCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentMovementCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsByPeriodCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsCommand;
+import ee.hitsa.ois.web.commandobject.report.SubjectStudyPeriodDataCommand;
 import ee.hitsa.ois.web.commandobject.report.TeacherLoadCommand;
 import ee.hitsa.ois.web.commandobject.report.VotaCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
+import ee.hitsa.ois.web.dto.report.ClassifierResult;
 import ee.hitsa.ois.web.dto.report.CurriculumCompletionDto;
 import ee.hitsa.ois.web.dto.report.CurriculumSubjectsDto;
 import ee.hitsa.ois.web.dto.report.ForeignStudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.GuestStudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.IndividualCurriculumSatisticsDto;
+import ee.hitsa.ois.web.dto.report.ReportStudentDataDto;
 import ee.hitsa.ois.web.dto.report.ScholarshipReportDto;
+import ee.hitsa.ois.web.dto.report.SchoolQueryDto;
 import ee.hitsa.ois.web.dto.report.StudentCountDto;
 import ee.hitsa.ois.web.dto.report.StudentMovementDto;
 import ee.hitsa.ois.web.dto.report.StudentRepresentativeDto;
 import ee.hitsa.ois.web.dto.report.StudentSearchDto;
 import ee.hitsa.ois.web.dto.report.StudentStatisticsDto;
+import ee.hitsa.ois.web.dto.report.SubjectStudyPeriodDataDto;
 import ee.hitsa.ois.web.dto.report.TeacherLoadDto;
 import ee.hitsa.ois.web.dto.report.VotaDto;
 
@@ -101,6 +131,8 @@ public class ReportService {
     private SchoolService schoolService;
     @Autowired
     private StudyYearService studyYearService;
+    @Autowired
+    private ClassifierService classifierService;
 
     private static final String DATA_TRANSFER_ROWS = "DATA_TRANSFER_PROCESS";
 
@@ -236,25 +268,33 @@ public class ReportService {
                 + (StudentCountType.COUNT_STAT_AGE.equals(resultType) ? " join (values " + String.join(", ", values) + ") "
                         + "as v(ageFrom, ageThru, label) on extract(year from age(:paramDate, p.birthdate)) between v.ageFrom and v.ageThru " : "")
                 + "left join (select " + (criteria.getThru() == null ? "distinct on(sh.student_id) " : "distinct on(sh.student_id, sh.status_code) ") 
-                    + "sh.student_id, sh.study_start, sh.study_end, sh.status_code "
+                    + "sh.student_id, sh.valid_from, sh.valid_thru, sh.status_code, sh.curriculum_version_id, sh.student_group_id "
                     + "from student_history sh "
                     + "where sh.status_code in (:statusCodes) "
+                    // data transer generated student history should be ignored
+                    + "and sh.inserted_by != 'DATA_TRANSFER_PROCESS' and upper(sh.inserted_by) not like upper('%andmete%kanne%') "
                     + (criteria.getThru() != null ? 
-                            "and sh.study_start <= :studyEnd and (sh.study_end >= :studyStart or sh.study_end is null) "
-                            + "and cast(sh.valid_from as date) <= :studyEnd and (cast(sh.valid_thru as date) >= :studyStart or sh.valid_thru is null)"
-                            : "and sh.study_start <= :studyStart and (sh.study_end > :studyStart or sh.study_end is null) "
-                            + "and cast(sh.valid_from as date) <= :studyStart and (cast(sh.valid_thru as date) > :studyStart or sh.valid_thru is null)")
-                    + " order by sh.student_id" + (criteria.getThru() != null ? ", sh.status_code" : "") + " , sh.study_start"
+                            "and cast(sh.valid_from as date) <= :studyEnd and (cast(sh.valid_thru as date) >= :studyStart or sh.valid_thru is null)"
+                            : "and cast(sh.valid_from as date) <= :studyStart and (cast(sh.valid_thru as date) > :studyStart or sh.valid_thru is null)")
+                    + " order by sh.student_id" + (criteria.getThru() != null ? ", sh.status_code" : "") + " , sh.valid_from"
                     + ") SH1 on SH1.student_id = s.id "
-                + "left join curriculum_version cv on s.curriculum_version_id = cv.id "
+                + "left join curriculum_version cv on coalesce(SH1.curriculum_version_id, s.curriculum_version_id) = cv.id "
                 + "left join curriculum c on cv.curriculum_id = c.id "
-                + "left join school_department SD1 on :resultType = '" + StudentCountType.COUNT_STAT_STRUCTURAL_UNIT.name() 
-                    + "' and (SD1.id = cv.school_department_id and cv.school_department_id is not null) or "
-                    + "(SD1.id = (select distinct on(cd.curriculum_id) sd.id "
-                    + "from school_department sd "
-                    + "left join curriculum_department cd on cd.school_department_id = sd.id "
-                    + "where cd.curriculum_id = c.id order by cd.curriculum_id, sd.name_et) and cv.school_department_id is null) "
-                + "left join student_group sg on s.student_group_id = sg.id "
+                + "left join classifier_connect cc on cc.classifier_code = c.isced_class_code and cc.main_classifier_code = '" + MainClassCode.ISCED_SUUN.name() + "' "
+                    + "and :resultType = '" + StudentCountType.COUNT_STAT_ISCED_VALD.name() +  "' "
+                + "left join classifier_connect cc_1 on cc_1.classifier_code = cc.connect_classifier_code "
+                    + "and :resultType = '" + StudentCountType.COUNT_STAT_ISCED_VALD.name() +  "' "
+                + "left join classifier c_connected on c_connected.code = cc_1.connect_classifier_code "
+                    + "and :resultType = '" + StudentCountType.COUNT_STAT_ISCED_VALD.name() +  "' "
+                + "left join (select coalesce(SD1.id, SD2.id) as id, coalesce(SD1.name_et, SD2.name_et) as name_et, coalesce(coalesce(SD1.name_en, SD1.name_et), coalesce(SD2.name_en, SD2.name_et)) as name_en, cv.id as version_id from "
+                    + "curriculum_version cv "
+                    + "left join school_department SD1 on SD1.id = cv.school_department_id "
+                    + "left join (select distinct on(cd.curriculum_id) sd.id, sd.name_et, sd.name_en, cd.curriculum_id from "
+                        + "school_department sd "
+                        + "join curriculum_department cd on cd.school_department_id = sd.id "
+                        + "order by cd.curriculum_id, sd.name_et) SD2 on SD2.curriculum_id = cv.curriculum_id"
+                        + ") SD1 on SD1.version_id = cv.id and :resultType = '" + StudentCountType.COUNT_STAT_STRUCTURAL_UNIT.name() + "' "
+                + "left join student_group sg on coalesce(SH1.student_group_id, s.student_group_id) = sg.id "
                 + "left join classifier oslc on oslc.code = c.orig_study_level_code").sort(pageable);
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.filter(":resultType = :resultType");
@@ -262,11 +302,11 @@ public class ReportService {
         // type codes should not change
         qb.requiredCriteria("s.type_code in (:studentTypes)", "studentTypes", criteria.getStudentTypes());
         if (criteria.getThru() == null) {
-            qb.filter("((s.study_start <= :studyStart and (s.study_end > :studyStart or s.study_end is null) and s.status_code in :statusCodes) "
-                    + "or (SH1.study_start <= :studyStart and (SH1.study_end > :studyStart or SH1.study_end is null) and SH1.status_code in :statusCodes))");
+            qb.filter("((SH1.student_id is null and (s.study_start <= :studyStart or s.study_start is null) and (s.study_end > :studyStart or s.study_end is null) and s.status_code in :statusCodes) "
+                    + "or (cast(SH1.valid_from as date) <= :studyStart and (cast(SH1.valid_thru as date) > :studyStart or SH1.valid_thru is null) and SH1.status_code in :statusCodes))");
         } else {
-            qb.requiredCriteria("((s.study_start <= :studyEnd and (s.study_end >= :studyStart or s.study_end is null) and s.status_code in :statusCodes) "
-                    + "or (SH1.study_start <= :studyEnd and (SH1.study_end >= :studyStart or SH1.study_end is null) and SH1.status_code in :statusCodes))", "studyEnd", criteria.getThru());
+            qb.requiredCriteria("((SH1.student_id is null and (s.study_start <= :studyEnd or s.study_start is null) and (s.study_end >= :studyStart or s.study_end is null) and s.status_code in :statusCodes) "
+                    + "or (cast(SH1.valid_from as date) <= :studyEnd and (cast(SH1.valid_thru as date) >= :studyStart or SH1.valid_thru is null) and SH1.status_code in :statusCodes))", "studyEnd", criteria.getThru());
         }
         qb.parameter("studyStart", criteria.getFrom());
         qb.parameter("statusCodes", StudentStatus.STUDENT_STATUS_ACTIVE);
@@ -287,15 +327,15 @@ public class ReportService {
                 mapOverallCountResults(r, criteria, dto);
                 return dto;
             }
-            mapOtherCountResults(r, criteria, dto, user);
+            mapOtherCountResults(r, criteria, dto);
             return dto;
         });
         List<StudentCountDto> modifiedResult = new ArrayList<>();
         modifiedResult.addAll(result.getContent());
-        if (result.isLast() && !resultType.equals(StudentCountType.COUNT_STAT_OVERALL)) {
+        if (result.getContent().size() != pageable.getPageSize() && !resultType.equals(StudentCountType.COUNT_STAT_OVERALL)) {
             addSum(qb, modifiedResult, criteria);
         }
-        return new PageImpl<>(modifiedResult, pageable, result.isLast() ? result.getTotalElements() : result.getTotalElements() + 1);
+        return new PageImpl<>(modifiedResult, pageable, result.getTotalElements() + 1);
     }
     
     /**
@@ -308,9 +348,7 @@ public class ReportService {
     public byte[] studentsCountAsExcel(HoisUserDetails user, StudentCountCommand criteria) {
         List<StudentCountDto> students = studentCount(user, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
         Map<String, Object> data = new HashMap<>();
-        SchoolType schoolType = schoolService.schoolType(user.getSchoolId());
-        String name = "report.studentCount." + criteria.getResultType() + 
-                (StudentCountType.COUNT_STAT_CURRICULA.name().equals(criteria.getResultType()) ? (schoolType.isHigher() ? ".higher" : ".vocational") : "");
+        String name = "report.studentCount." + criteria.getResultType();
         data.put("name", name);
         data.put("criteria", criteria);
         data.put("students", students);
@@ -328,7 +366,7 @@ public class ReportService {
         StudentMovementType queryType = StudentMovementType.valueOf(criteria.getQueryType());
         List<String> groupByList = new ArrayList<>();
         List<String> select = new ArrayList<>();
-        extendSelectPerCriteria(select);
+        extendSelectPerCriteria(select, criteria);
         extendSelectAndGroupByPerResultType(queryType, groupByList, select);
         String sort = sortPerResultType(queryType, pageable);
         JpaNativeQueryBuilder qb = createQuery(select, user.getSchoolId(), groupByList, pageable, criteria, sort);
@@ -342,39 +380,39 @@ public class ReportService {
                 mapOverallCountResults(r, dto);
                 return dto;
             }
-            mapOtherCountResults(r, criteria, dto, user);
+            mapOtherCountResults(r, criteria, dto);
             return dto;
         });
         List<StudentMovementDto> modifiedResult = new ArrayList<>();
         modifiedResult.addAll(result.getContent());
-        if (result.isLast() && !queryType.equals(StudentMovementType.MOVEMENT_STAT_SUM)) {
+        if (result.getContent().size() != pageable.getPageSize() && !queryType.equals(StudentMovementType.MOVEMENT_STAT_SUM)) {
             select = new ArrayList<>();
-            extendSelectPerCriteria(select);
+            extendSelectPerCriteria(select, criteria);
             qb = createQuery(select, user.getSchoolId(), new ArrayList<>(), pageable, criteria, null);
             addSum(qb, modifiedResult);
         }
-        return new PageImpl<>(modifiedResult, pageable, result.isLast() ? result.getTotalElements() : result.getTotalElements() + 1);
+        return new PageImpl<>(modifiedResult, pageable, result.getTotalElements() + 1);
     }
     
     private static void extendSelectPerResultTypeAlias(List<String> select, StudentMovementType queryType) {
         switch (queryType) {
         case MOVEMENT_STAT_STUDY_LEVEL:
-            select.add("data.orig_study_level_code, data.name_et, data.name_en");
+            select.add("data.orig_study_level_code, data.name_et, data.name_en, null as mer_code");
             break;
         case MOVEMENT_STAT_STUDENT_GROUP:
-            select.add("data.student_group_id, data.codeEt, data.codeEn");
+            select.add("data.id, data.codeEt, data.codeEn, null as mer_code");
             break;
         case MOVEMENT_STAT_CURRICULUM_GROUP:
-            select.add("data.isced_class_code, data.iscedEt, data.iscedEn");
+            select.add("data.isced_class_code, data.iscedEt, data.iscedEn, null as mer_code");
             break;
         case MOVEMENT_STAT_STRUCTURAL_UNIT:
-            select.add("data.id, data.name_et, data.name_en");
+            select.add("data.id, data.name_et, data.name_en, null as mer_code");
             break;
         case MOVEMENT_STAT_CURRICULA:
-            select.add("data.id, data.curriculaEt, data.curriculaEn");
+            select.add("data.id, data.curriculaEt, data.curriculaEn, data.mer_code as mer_code");
             break;
         case MOVEMENT_STAT_COURSE:
-            select.add("null, data.courseEt, data.courseEn");
+            select.add("null, data.courseEt, data.courseEn, null as mer_code");
             break;
         default:
             break;
@@ -386,17 +424,50 @@ public class ReportService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from (select " + String.join(", ", select) 
         + " from student s "
         + "join person p on s.person_id = p.id "
-        + "left join curriculum_version cv on s.curriculum_version_id = cv.id "
-        + "left join curriculum c on cv.curriculum_id = c.id "
-        + "left join school_department SD1 on :queryType = '" + StudentMovementType.MOVEMENT_STAT_STRUCTURAL_UNIT.name() 
-            +  "' and ((SD1.id = cv.school_department_id and cv.school_department_id is not null) or "
-            + "(SD1.id = (select distinct on(cd.curriculum_id) sd.id "
-            + "from school_department sd "
-            + "left join curriculum_department cd on cd.school_department_id = sd.id "
-            + "where cd.curriculum_id = c.id order by cd.curriculum_id, sd.name_et) and cv.school_department_id is null)) "
-        + "left join student_group sg on s.student_group_id = sg.id "
-        + "left join classifier oslc on oslc.code = c.orig_study_level_code "
-        + "left join classifier isced on isced.code = c.isced_class_code "
+        // studying from
+        + "left join (select distinct on (ss.id) ss.id, "
+            + "coalesce(sh.curriculum_version_id, ss.curriculum_version_id) as curriculum_version_id, "
+            + "coalesce(sh.student_group_id, ss.student_group_id) as student_group_id from student ss " 
+            + "left join student_history sh on sh.student_id = ss.id "
+                + "and sh.status_code in :statusCodes "
+                + "and cast(sh.valid_from as date) < :studystart and (cast(sh.valid_thru as date) >= :studystart or sh.valid_thru is null) "
+                + "and sh.inserted_by != 'DATA_TRANSFER_PROCESS' and upper(sh.inserted_by) not like upper('%andmete%kanne%') "
+            // data transer generated student history should be ignored
+            + "where ("
+                + "(sh.id is null and (ss.study_start < :studystart or ss.study_start is null) and (ss.study_end >= :studystart or ss.study_end is null) and ss.status_code in :statusCodes) "
+                + "or sh.id is not null) "
+            + "order by ss.id, sh.valid_thru NULLS FIRST, sh.valid_from DESC) S1 on S1.id = s.id "
+         // studying thru
+        + "left join (select distinct on (ss.id) ss.id, "
+            + "coalesce(sh.curriculum_version_id, ss.curriculum_version_id) as curriculum_version_id, "
+            + "coalesce(sh.student_group_id, ss.student_group_id) as student_group_id from student ss "
+            + "left join student_history sh on sh.student_id = ss.id "
+                + "and sh.status_code in :statusCodes "
+                + "and cast(sh.valid_from as date) <= :studyEnd and (cast(sh.valid_thru as date) > :studyEnd or sh.valid_thru is null) "
+                + "and sh.inserted_by != 'DATA_TRANSFER_PROCESS' and upper(sh.inserted_by) not like upper('%andmete%kanne%') "
+            // data transer generated student history should be ignored
+            + "where ("
+                + "(sh.id is null and (ss.study_start <= :studyEnd or ss.study_start is null) and (ss.study_end > :studyEnd or ss.study_end is null) and ss.status_code in :statusCodes) "
+                + "or sh.id is not null) "
+            + "order by ss.id, sh.valid_thru NULLS FIRST, sh.valid_from DESC) S2 on S2.id = s.id "
+        // can be 2 of these
+        + ((StudentMovementType.MOVEMENT_STAT_CURRICULA.name().equals(criteria.getQueryType()) || StudentMovementType.MOVEMENT_STAT_CURRICULUM_GROUP.name().equals(criteria.getQueryType())
+                || StudentMovementType.MOVEMENT_STAT_STRUCTURAL_UNIT.name().equals(criteria.getQueryType()) || StudentMovementType.MOVEMENT_STAT_STUDY_LEVEL.name().equals(criteria.getQueryType())) ?
+            "left join curriculum_version cv on (cv.id = S1.curriculum_version_id or cv.id = S2.curriculum_version_id or cv.id = s.curriculum_version_id) "
+            + "left join curriculum c on cv.curriculum_id = c.id "
+            + "left join (select coalesce(SD1.id, SD2.id) as id, coalesce(SD1.name_et, SD2.name_et) as name_et, coalesce(coalesce(SD1.name_en, SD1.name_et), coalesce(SD2.name_en, SD2.name_et)) as name_en, cv.id as version_id from "
+                + "curriculum_version cv "
+                + "left join school_department SD1 on SD1.id = cv.school_department_id "
+                + "left join (select distinct on(cd.curriculum_id) sd.id, sd.name_et, sd.name_en, cd.curriculum_id from "
+                    + "school_department sd "
+                    + "join curriculum_department cd on cd.school_department_id = sd.id "
+                    + "order by cd.curriculum_id, sd.name_et) SD2 on SD2.curriculum_id = cv.curriculum_id"
+                    + ") SD1 on SD1.version_id = cv.id and :queryType = '" + StudentMovementType.MOVEMENT_STAT_STRUCTURAL_UNIT.name() + "' "
+            + "left join classifier oslc on oslc.code = c.orig_study_level_code "
+            + "left join classifier isced on isced.code = c.isced_class_code " : "")
+        // can be 2 of these
+        + ((StudentMovementType.MOVEMENT_STAT_STUDENT_GROUP.name().equals(criteria.getQueryType()) || StudentMovementType.MOVEMENT_STAT_COURSE.name().equals(criteria.getQueryType())) ? 
+                "left join student_group sg on (sg.id = S1.student_group_id or sg.id = S2.student_group_id or sg.id = s.student_group_id)" : "")
         + "where s.school_id = :schoolId "
         + "and s.type_code != '" + StudentType.OPPUR_K.name() + "'"
         + (!groupByList.isEmpty() ? " group by " + String.join(", ", groupByList) : "")
@@ -463,7 +534,7 @@ public class ReportService {
             case MOVEMENT_STAT_STRUCTURAL_UNIT:
                 return "sd1.name_et, sd1.name_en";
             case MOVEMENT_STAT_CURRICULA:
-                return "cv.code || ' - ' || c.name_et, cv.code || ' - ' || c.name_en";
+                return "c.name_et, c.name_en";
             case MOVEMENT_STAT_COURSE:
                 return "sg.course";
             default:
@@ -476,20 +547,18 @@ public class ReportService {
     public byte[] studentsMovementAsExcel(HoisUserDetails user, StudentMovementCommand criteria) {
         List<StudentMovementDto> students = studentMovement(user, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
         Map<String, Object> data = new HashMap<>();
-        SchoolType schoolType = schoolService.schoolType(user.getSchoolId());
-        String name = "report.studentMovement." + criteria.getQueryType() + 
-                (StudentMovementType.MOVEMENT_STAT_CURRICULA.name().equals(criteria.getQueryType()) ? (schoolType.isHigher() ? ".higher" : ".vocational") : "");
+        String name = "report.studentMovement." + criteria.getQueryType();
         data.put("name", name);
         data.put("criteria", criteria);
         data.put("students", students);
         return xlsService.generate("studentsmovement.xls", data);
     }
 
-    private void mapOtherCountResults(Object r, StudentMovementCommand criteria, StudentMovementDto dto, HoisUserDetails user) {
+    private static void mapOtherCountResults(Object r, StudentMovementCommand criteria, StudentMovementDto dto) {
         mapOverallCountResults(r, dto);
         dto.setObject(new AutocompleteResult(null, resultAsString(r, 9), resultAsString(r, 10)));
+        dto.setHtmCode(resultAsString(r, 11));
         if (dto.getObject().getNameEt() == null) {
-            boolean isHigher = schoolService.schoolType(user.getSchoolId()).isHigher();
             if (StudentMovementType.MOVEMENT_STAT_STUDENT_GROUP.name().equals(criteria.getQueryType())) {
                 dto.setObject(new AutocompleteResult(null, "Ilma rühmata", "Without group"));
             } else if (StudentMovementType.MOVEMENT_STAT_CURRICULUM_GROUP.name().equals(criteria.getQueryType())) {
@@ -501,7 +570,7 @@ public class ReportService {
             } else if (StudentMovementType.MOVEMENT_STAT_STUDY_LEVEL.name().equals(criteria.getQueryType())) {
                 dto.setObject(new AutocompleteResult(null, "Ilma õppetasemeta", "Without study level"));
             } else if (StudentMovementType.MOVEMENT_STAT_CURRICULA.name().equals(criteria.getQueryType())) {
-                dto.setObject(new AutocompleteResult(null, isHigher ? "Ilma õppekava versioonita" : "Ilma rakenduskavata", "Without curricula"));
+                dto.setObject(new AutocompleteResult(null, "Ilma õppekavata", "Without curricula"));
             }
         }
     }
@@ -538,41 +607,42 @@ public class ReportService {
         switch (queryType) {
         case MOVEMENT_STAT_STUDY_LEVEL:
             groupByList.add("c.orig_study_level_code, oslc.name_et, oslc.name_en");
-            select.add("c.orig_study_level_code, oslc.name_et, oslc.name_en");
+            select.add("c.orig_study_level_code, oslc.name_et, oslc.name_en, null as mer_code");
             break;
         case MOVEMENT_STAT_STUDENT_GROUP:
-            groupByList.add("s.student_group_id, sg.code");
-            select.add("s.student_group_id, sg.code as codeEt, sg.code as codeEn");
+            groupByList.add("sg.id, sg.code");
+            select.add("sg.id, sg.code as codeEt, sg.code as codeEn, null as mer_code");
             break;
         case MOVEMENT_STAT_CURRICULUM_GROUP:
             groupByList.add("c.isced_class_code, isced.name_et, isced.name_en");
-            select.add("c.isced_class_code, isced.name_et as iscedEt, isced.name_en as iscedEn");
+            select.add("c.isced_class_code, isced.name_et as iscedEt, isced.name_en as iscedEn, null as mer_code");
             break;
         case MOVEMENT_STAT_STRUCTURAL_UNIT:
             groupByList.add("SD1.id, SD1.name_et, SD1.name_en");
-            select.add("SD1.id, SD1.name_et, SD1.name_en");
+            select.add("SD1.id, SD1.name_et, SD1.name_en, null as mer_code");
             break;
         case MOVEMENT_STAT_CURRICULA:
-            groupByList.add("cv.id, cv.code || ' - ' || c.name_et, cv.code || ' - ' || c.name_en");
-            select.add("cv.id, cv.code || ' - ' || c.name_et as curriculaEt, cv.code || ' - ' || c.name_en as curriculaEn");
+            groupByList.add("c.id, c.name_et, c.name_en");
+            select.add("c.id, c.name_et || ' (' || c.code || ')' as curriculaEt, c.name_en || ' (' || c.code || ')' as curriculaEn, c.mer_code as mer_code");
             break;
         case MOVEMENT_STAT_COURSE:
             groupByList.add("sg.course");
-            select.add("null, sg.course\\:\\:character varying as courseEt, sg.course\\:\\:character varying as courseEn");
+            select.add("null, sg.course\\:\\:character varying as courseEt, sg.course\\:\\:character varying as courseEn, null as mer_code");
             break;
         default:
             break;
         }
     }
     
-    private static void extendSelectPerCriteria(List<String> select) {
+    private static void extendSelectPerCriteria(List<String> select, StudentMovementCommand command) {
             select.add("sum(case when "
-                    + "exists(select distinct ss.id from student ss "
-                    + "left join student_history sh on sh.student_id = ss.id "
-                    + "where ss.id = s.id "
-                    + "and ((ss.study_start < :studystart and (ss.study_end >= :studystart or ss.study_end is null) and ss.status_code in :statusCodes) "
-                    + "or (sh.study_start < :studystart and (sh.study_end >= :studystart or sh.study_end is null)  and sh.status_code in :statusCodes "
-                    + "and cast(sh.valid_from as date) < :studystart and (cast(sh.valid_thru as date) >= :studystart or sh.valid_thru is null)))) then 1 else 0 end) as studyingBeforeFrom");
+                    + "S1.id is not null "
+                    + ((StudentMovementType.MOVEMENT_STAT_CURRICULA.name().equals(command.getQueryType()) || StudentMovementType.MOVEMENT_STAT_CURRICULUM_GROUP.name().equals(command.getQueryType())
+                            || StudentMovementType.MOVEMENT_STAT_STRUCTURAL_UNIT.name().equals(command.getQueryType()) || StudentMovementType.MOVEMENT_STAT_STUDY_LEVEL.name().equals(command.getQueryType())) ? 
+                            "and S1.curriculum_version_id = cv.id " : "")
+                    + ((StudentMovementType.MOVEMENT_STAT_STUDENT_GROUP.name().equals(command.getQueryType()) || StudentMovementType.MOVEMENT_STAT_COURSE.name().equals(command.getQueryType())) ? 
+                            "and (S1.student_group_id = sg.id or (S1.student_group_id is null and sg.id is null))" : "")
+                    + "then 1 else 0 end) as studyingBeforeFrom");
             // study start directives are KASKKIRI_IMMAT, KASKKIRI_IMMATV and KASKKIRI_ENNIST
             select.add("sum(case when "
                     + "exists(select 1 from directive d join directive_student ds on d.id = ds.directive_id "
@@ -609,12 +679,13 @@ public class ReportService {
                     + "and d.confirm_date between :studystart and :studyEnd ) "
                     + "then 1 else 0 end) as finishedStudying");
             select.add("sum(case when "
-                    + "exists(select distinct ss.id from student ss "
-                    + "left join student_history sh on sh.student_id = ss.id "
-                    + "where ss.id = s.id "
-                    + "and ((ss.study_start <= :studyEnd and (ss.study_end > :studyEnd or ss.study_end is null) and ss.status_code in :statusCodes) "
-                    + "or (sh.study_start <= :studyEnd and (sh.study_end > :studyEnd or sh.study_end is null)  and sh.status_code in :statusCodes "
-                    + "and cast(sh.valid_from as date) <= :studyEnd and (cast(sh.valid_thru as date) > :studyEnd or sh.valid_thru is null)))) then 1 else 0 end) as studyingAfterThru");
+                    + "S2.id is not null "
+                    + ((StudentMovementType.MOVEMENT_STAT_CURRICULA.name().equals(command.getQueryType()) || StudentMovementType.MOVEMENT_STAT_CURRICULUM_GROUP.name().equals(command.getQueryType())
+                            || StudentMovementType.MOVEMENT_STAT_STRUCTURAL_UNIT.name().equals(command.getQueryType()) || StudentMovementType.MOVEMENT_STAT_STUDY_LEVEL.name().equals(command.getQueryType())) ? 
+                            "and S2.curriculum_version_id = cv.id " : "")
+                    + ((StudentMovementType.MOVEMENT_STAT_STUDENT_GROUP.name().equals(command.getQueryType()) || StudentMovementType.MOVEMENT_STAT_COURSE.name().equals(command.getQueryType())) ? 
+                            "and (S2.student_group_id = sg.id or (S2.student_group_id is null and sg.id is null))" : "")
+                    + "then 1 else 0 end) as studyingAfterThru");
     }
 
     private void addSum(JpaNativeQueryBuilder qb, List<StudentCountDto> modifiedResult, StudentCountCommand criteria) {
@@ -643,8 +714,8 @@ public class ReportService {
             select.add("c.orig_study_level_code, oslc.name_et, oslc.name_en");
             break;
         case COUNT_STAT_STUDENT_GROUP:
-            groupByList.add("s.student_group_id, sg.code");
-            select.add("s.student_group_id, sg.code as codeEt, sg.code as codeEn");
+            groupByList.add("sg.id, sg.code");
+            select.add("sg.id, sg.code as codeEt, sg.code as codeEn");
             if (pageable.getSort() == null) {
                 qb.sort("sg.code");
             }
@@ -664,10 +735,10 @@ public class ReportService {
             }
             break;
         case COUNT_STAT_CURRICULA:
-            groupByList.add("cv.id, cv.code || ' - ' || c.name_et, cv.code || ' - ' || c.name_en");
-            select.add("cv.id, cv.code || ' - ' || c.name_et as curriculaEt, cv.code || ' - ' || c.name_en as curriculaEn");
+            groupByList.add("c.id, c.name_et, c.name_en");
+            select.add("c.mer_code, c.name_et || ' (' || c.code || ')' as curriculaEt, c.name_en || ' (' || c.code || ')' as curriculaEn");
             if (pageable.getSort() == null) {
-                qb.sort("cv.code || ' - ' || c.name_et, cv.code || ' - ' || c.name_en");
+                qb.sort("c.name_et, c.name_en");
             }
             break;
         case COUNT_STAT_COURSE:
@@ -675,6 +746,13 @@ public class ReportService {
             select.add("null, sg.course\\:\\:character varying as courseEt, sg.course\\:\\:character varying as courseEn");
             if (pageable.getSort() == null) {
                 qb.sort("sg.course");
+            }
+            break;
+        case COUNT_STAT_ISCED_VALD:
+            groupByList.add("c_connected.code, c_connected.name_et, c_connected.name_et");
+            select.add("null, c_connected.name_et as iscedValdEt, c_connected.name_et as iscedValdEn");
+            if (pageable.getSort() == null) {
+                qb.sort("c_connected.name_et, c_connected.name_et");
             }
             break;
         default:
@@ -688,29 +766,23 @@ public class ReportService {
         String studentHistoryStatement;
         String checkStatement;
         if (criteria.getThru() != null) {
-            studentStatement = "(SH1.student_id is null and s.status_code = '" + status + "' "
-                    + "and s.study_start <= :studyEnd "
-                    + "and (s.study_end >= :studyStart or s.study_end is null))";
+            studentStatement = "(SH1.student_id is null and s.status_code = '" + status + "')";
             studentHistoryStatement = "(SH1.status_code = '" + status + "' "
-                    + "and SH1.study_start <= :studyEnd "
-                    + "and (SH1.study_end >= :studyStart or SH1.study_end is null))";
+                    + "and cast(SH1.valid_from as date) <= :studyEnd "
+                    + "and (cast(SH1.valid_thru as date) >= :studyStart or SH1.valid_thru is null))";
             checkStatement = "true";
         } else {
-            studentStatement = "(s.status_code = '" + status + "' "
-                    + "and s.study_start <= :studyStart "
-                    + "and (s.study_end > :studyStart or s.study_end is null))";
+            studentStatement = "(s.status_code = '" + status + "')";
             studentHistoryStatement = "(SH1.status_code = '" + status + "' "
-                    + "and SH1.study_start <= :studyStart "
-                    + "and (SH1.study_end > :studyStart or SH1.study_end is null))";
+                    + "and cast(SH1.valid_from as date) <= :studyStart "
+                    + "and (cast(SH1.valid_thru as date) > :studyStart or SH1.valid_thru is null))";
             // if statuses are different for student and student history and both are in date range, select the students status over history
             // there shouldn't be a student represented in both statuses at the same time
             checkStatement = "case when s.status_code != SH1.status_code "
                     + "and s.status_code in :statusCodes "
-                    + "and s.study_start <= :studyStart "
-                    + "and (s.study_end > :studyStart or s.study_end is null) "
-                    + "and SH1.study_start <= :studyStart "
+                    + "and cast(SH1.valid_from as date) <= :studyStart "
                     + "and SH1.status_code in :statusCodes "
-                    + "and (SH1.study_end > :studyStart or SH1.study_end is null) "
+                    + "and (cast(SH1.valid_thru as date) > :studyStart or cast(SH1.valid_thru as date) is null) "
                     + "then SH1.status_code = '" + status + "' else true end";
         }
         fullStatement = "(" +studentStatement + " or " + studentHistoryStatement + ") and " + checkStatement;
@@ -748,19 +820,30 @@ public class ReportService {
         }
     }
 
-    private void mapOtherCountResults(Object r, StudentCountCommand criteria, StudentCountDto dto, HoisUserDetails user) {
+    private static void mapOtherCountResults(Object r, StudentCountCommand criteria, StudentCountDto dto) {
         mapOverallCountResults(r, criteria, dto);
         if (Boolean.TRUE.equals(criteria.getPerStatus()) && Boolean.TRUE.equals(criteria.getPerSex())) {
             dto.setObject(new AutocompleteResult(null, resultAsString(r, 13), resultAsString(r, 14)));
+            if (StudentCountType.COUNT_STAT_CURRICULA.name().equals(criteria.getResultType())) {
+                dto.setHtmCode(resultAsString(r, 12));
+            }
         } else if (Boolean.TRUE.equals(criteria.getPerSex())) {
             dto.setObject(new AutocompleteResult(null, resultAsString(r, 4), resultAsString(r, 5)));
+            if (StudentCountType.COUNT_STAT_CURRICULA.name().equals(criteria.getResultType())) {
+                dto.setHtmCode(resultAsString(r, 3));
+            }
         } else if (Boolean.TRUE.equals(criteria.getPerStatus())) {
             dto.setObject(new AutocompleteResult(null, resultAsString(r, 5), resultAsString(r, 6)));
+            if (StudentCountType.COUNT_STAT_CURRICULA.name().equals(criteria.getResultType())) {
+                dto.setHtmCode(resultAsString(r, 4));
+            }
         } else {
             dto.setObject(new AutocompleteResult(null, resultAsString(r, 2), resultAsString(r, 3)));
+            if (StudentCountType.COUNT_STAT_CURRICULA.name().equals(criteria.getResultType())) {
+                dto.setHtmCode(resultAsString(r, 1));
+            }
         }
         if (dto.getObject().getNameEt() == null) {
-            boolean isHigher = schoolService.schoolType(user.getSchoolId()).isHigher();
             if (StudentCountType.COUNT_STAT_STUDENT_GROUP.name().equals(criteria.getResultType())) {
                 dto.setObject(new AutocompleteResult(null, "Ilma rühmata", "Without group"));
             } else if (StudentCountType.COUNT_STAT_COURSE.name().equals(criteria.getResultType())) {
@@ -770,7 +853,9 @@ public class ReportService {
             } else if (StudentCountType.COUNT_STAT_STUDY_LEVEL.name().equals(criteria.getResultType())) {
                 dto.setObject(new AutocompleteResult(null, "Ilma õppetasemeta", "Without study level"));
             } else if (StudentCountType.COUNT_STAT_CURRICULA.name().equals(criteria.getResultType())) {
-                dto.setObject(new AutocompleteResult(null, isHigher ? "Ilma õppekava versioonita" : "Ilma rakenduskavata", "Without curricula"));
+                dto.setObject(new AutocompleteResult(null, "Ilma õppekavata", "Without curricula"));
+            } else if (StudentCountType.COUNT_STAT_ISCED_VALD.name().equals(criteria.getResultType())) {
+                dto.setObject(new AutocompleteResult(null, "Ilma valdkonnata", "Without field"));
             }
         }
     }
@@ -1413,17 +1498,18 @@ public class ReportService {
     public byte[] scholarshipStatisticsAsExcel(HoisUserDetails user, ScholarshipStatisticsCommand criteria) {
         StringBuilder from = new StringBuilder("from directive d ");
         from.append("join directive_student ds on ds.directive_id = d.id ");
-        from.append("join scholarship_application sa on sa.id = ds.scholarship_application_id ");
-        from.append("join student s on s.id = sa.student_id ");
+        from.append("join classifier c on c.code = coalesce(d.scholarship_type_code, d.scholarship_ehis_code) ");
+        from.append("join student s on s.id = ds.student_id ");
+        from.append("left join student_group sg on sg.id = s.student_group_id ");
         from.append("join person p on p.id = s.person_id ");
-        from.append("join scholarship_term st on st.id = sa.scholarship_term_id ");
-        from.append("join classifier c on c.code = st.type_code ");
-        from.append("left join student_group sg on sg.id = sa.student_group_id ");
+        from.append("left join scholarship_application sa on sa.id = ds.scholarship_application_id ");
+        from.append("left join scholarship_term st on st.id = sa.scholarship_term_id ");
         StringBuilder select = new StringBuilder("sg.code, p.idcode, p.firstname || ' ' || p.lastname as fullname, ");
         select.append("d.confirm_date, d.directive_nr, coalesce(ds.amount_paid, st.amount_paid) as amount_paid, c.name_et, c.name_en, ");
         select.append("sa.bank_account_owner_idcode, sa.bank_account_owner_name, coalesce(ds.bank_account, sa.bank_account) as bank_account, ");
         select.append("coalesce(ds.start_date, sa.scholarship_from, st.payment_start) as date_from, ");
-        select.append("coalesce(ds.end_date, sa.scholarship_thru, st.payment_end) as date_thru ");
+        select.append("coalesce(ds.end_date, sa.scholarship_thru, st.payment_end) as date_thru, ");
+        select.append("sa.id as sApplication ");
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString());
 
         qb.requiredCriteria("d.school_id = :schoolId", "schoolId", user.getSchoolId());
@@ -1437,17 +1523,22 @@ public class ReportService {
         qb.filter("(d.confirm_date >= :from and d.confirm_date <= :thru)");
         qb.parameter("from", criteria.getFrom());
         qb.parameter("thru", criteria.getThru());
-        qb.optionalCriteria("st.type_code in (:types)", "types", criteria.getTypes());
+        qb.optionalCriteria("(d.scholarship_type_code in (:types) or d.scholarship_ehis_code in (:types))", "types", criteria.getTypes());
         List<?> results = qb.select(select.toString(), em).getResultList();
         Map<String, Object> context = new HashMap<>();
         context.put("scholarships", StreamUtil.toMappedList(row -> {
+            boolean hasScholarshipApplication = resultAsLong(row, 13) != null;
             ScholarshipReportDto dto = new ScholarshipReportDto();
             dto.setGroup(resultAsString(row, 0));
             dto.setStudent(new ScholarshipReportDto.Person(resultAsString(row, 1), resultAsString(row, 2)));
             dto.setDecisionDate(resultAsLocalDate(row, 3));
             dto.setProtocolNr(resultAsString(row, 4));
             dto.setAmountPaid(resultAsDecimal(row, 5));
-            dto.setType(new AutocompleteResult(null, resultAsString(row, 6), resultAsString(row, 7)));
+            if (hasScholarshipApplication) {
+                dto.setType(new AutocompleteResult(null, resultAsString(row, 6), resultAsString(row, 7)));
+            } else {
+                dto.setType(new AutocompleteResult(null, "Muu - " + resultAsString(row, 6), "Muu - " + resultAsString(row, 7)));
+            }
             String receiverIdCode = resultAsString(row, 8);
             String receiverName = resultAsString(row, 9);
             if (receiverIdCode != null || receiverName != null) {
@@ -1756,9 +1847,9 @@ public class ReportService {
                 + "left join classifier cl_country on (cl_country.code = aps.country_code or cl_country.code = ds.country_code) "
                 + "left join classifier_connect cc on cc.classifier_code = c.orig_study_level_code "
                     + "and cc.main_classifier_code = 'HARIDUSTASE'"
-                + "left join school_department sd on (cv.school_department_id is not null and sd.id = cv.school_department_id) "
+                + "left join school_department sd on ((cv.school_department_id is not null and sd.id = cv.school_department_id) "
                     + "or (cv.school_department_id is null and sd.id in "
-                    + "(select cd.school_department_id from curriculum_department cd where cd.curriculum_id = c.id)) ")
+                    + "(select cd.school_department_id from curriculum_department cd where cd.curriculum_id = c.id)))")
 //                + "left join (select aa.id, aafsm.credits, coalesce(nominal_cl.value, '0') as nominal, aafsm.grade_date, aa.confirmed, aa.student_id, aa.is_ehis_sent "
 //                          + "from apel_application aa "
 //                          + "join apel_application_record aar on aar.apel_application_id = aa.id "
@@ -1885,5 +1976,1027 @@ public class ReportService {
         data.put("criteria", criteria);
         data.put("students", students);
         return xlsService.generate("foreignstudentstatistics.xls", data);
+    }
+
+    @SuppressWarnings("boxing")
+    public Page<ReportStudentDataDto> studentData(HoisUserDetails user, StudentDataCommand criteria, Pageable pageable) {
+        String SEARCH_FROM = "from student s "
+                + "join person p on s.person_id = p.id "
+                + "left join student_group sg on s.student_group_id = sg.id "
+                + "left join curriculum_version cv on s.curriculum_version_id = cv.id "
+                + "left join curriculum c on cv.curriculum_id = c.id "
+                + "left join school_department sd1 on (cv.school_department_id is not null and sd1.id = cv.school_department_id) "
+                + "left join student_curriculum_completion scc on scc.student_id = s.id "
+                + "left join (select cd.curriculum_id, string_agg(sd.id\\:\\:text, ', ') as ids, string_agg(sd.name_et, ', ') as nameEt "
+                    + "from curriculum_department cd "
+                    + "join school_department sd on cd.school_department_id = sd.id "
+                    + "group by cd.curriculum_id) "
+                    + "sd2 on (cv.school_department_id is null and sd2.curriculum_id = c.id) ";
+        
+        if (Boolean.TRUE.equals(criteria.getDirectiveTypesShow()) || (criteria.getDirectiveTypes() != null && !criteria.getDirectiveTypes().isEmpty()) || 
+            Boolean.TRUE.equals(criteria.getDirectiveReasonsShow()) || (criteria.getDirectiveReasons() != null && !criteria.getDirectiveReasons().isEmpty()) || 
+            Boolean.TRUE.equals(criteria.getDirectiveConfirmDateShow()) || criteria.getDirectiveConfirmDateFrom() != null || criteria.getDirectiveConfirmDateThru() != null) {
+            SEARCH_FROM += "left join (select ds.id, ds.student_id, d.type_code, ds.reason_code, d.confirm_date "
+                    + "from directive d "
+                    + "join directive_student ds on ds.directive_id = d.id "
+                    + "where d.status_code = '" + DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name() + "' "
+                    + "and ds.canceled != true) D1 on D1.student_id = s.id ";
+        }
+        
+        if (Boolean.TRUE.equals(criteria.getEapSumShow()) || criteria.getEapSum() != null) SEARCH_FROM += creditSubQuery(criteria);
+        
+        if (Boolean.TRUE.equals(criteria.getWeightedAverageShow()) || criteria.getWeightedAverage() != null) SEARCH_FROM += weightedAverageSubQuery(criteria);
+        
+        if (Boolean.TRUE.equals(criteria.getAverageSumShow()) || criteria.getAverageSum() != null) SEARCH_FROM += averageSubQuery(null, null, "averageSum");
+        
+        if (Boolean.TRUE.equals(criteria.getAverageShow()) || criteria.getAverage() != null) SEARCH_FROM += averageSubQuery(criteria);
+        
+        if (Boolean.TRUE.equals(criteria.getDebtSumShow()) || criteria.getDebtSum() != null) SEARCH_FROM += debtSubQuery(null, null, "debtSum");
+        
+        if (Boolean.TRUE.equals(criteria.getDebtShow()) || criteria.getDebt() != null) SEARCH_FROM += debtSubQuery(criteria);
+        
+        if (Boolean.TRUE.equals(criteria.getDebtPointsSumShow()) || criteria.getDebtPointsSum() != null) SEARCH_FROM += debtPointsSubQuery(null, null, "debtPointsSum");
+        
+        if (Boolean.TRUE.equals(criteria.getDebtPointsShow()) || criteria.getDebtPoints() != null) SEARCH_FROM += debtPointsSubQuery(criteria);
+        
+        if (Boolean.TRUE.equals(criteria.getDeclaredEapShow()) || criteria.getDeclaredEap() != null) SEARCH_FROM += declaredEAP(criteria);
+
+        if (Boolean.TRUE.equals(criteria.getDeclaredSubjectShow()) || (criteria.getDeclaredSubject() != null && !criteria.getDeclaredSubject().isEmpty())) SEARCH_FROM += declaredSubject(criteria);
+
+        if (Boolean.TRUE.equals(criteria.getActiveResultShow()) || (criteria.getActiveResult() != null && !criteria.getActiveResult().isEmpty())) SEARCH_FROM += activeResult(criteria);
+        
+        if (Boolean.TRUE.equals(criteria.getDeclarationConfirmationShow()) || criteria.getDeclarationConfirmationFrom() != null || criteria.getDeclarationConfirmationThru() != null) SEARCH_FROM += declarationConfirmation(user);
+        
+        String sortFields = (criteria.getOrderField1() != null && !StringUtils.isEmpty(criteria.getOrderField1()) ? (criteria.getOrderField1() + (Boolean.TRUE.equals(criteria.getOrderField1Desc()) ? " desc, " : ", " )) : "") +
+                            (criteria.getOrderField2() != null && !StringUtils.isEmpty(criteria.getOrderField2()) ? (criteria.getOrderField2() + (Boolean.TRUE.equals(criteria.getOrderField2Desc()) ? " desc, " : ", " )) : "") +
+                            (criteria.getOrderField3() != null && !StringUtils.isEmpty(criteria.getOrderField3()) ? (criteria.getOrderField3() + (Boolean.TRUE.equals(criteria.getOrderField3Desc()) ? " desc" : "" )) : "");
+        
+        String[] sortList = sortFields.equals("") ? null : sortFields.split(", ");
+    
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(((sortList != null && sortList.length != 0) ? new Sort(sortList) : pageable.getSort()));
+        
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        
+        setHeaderDataCriteria(qb, criteria);
+        
+        setPersonDataCriteria(qb, criteria);
+        
+        setStudyDataCriteria(qb, criteria);
+        
+        setContactDataCriteria(qb, criteria);
+        
+        setStatisticsDataCriteria(qb, criteria);
+        
+        setAddInfoDataCriteria(qb, criteria);
+        
+        String PERSON_DATA_SELECT = "s.id, p.firstname, p.lastname, p.sex_code as sex, coalesce(p.idcode, p.foreign_idcode) as idCode, "
+                + "p.bankaccount, p.birthdate, p.residence_country_code as residence_country, p.citizenship_code as citizenship, ";
+        
+        String STUDY_DATA_SELECT = "case when s.type_code = '" + StudentType.OPPUR_K.name() + "' then true else false end as guest_student, "
+                                 + "case when s.status_code = '" + StudentStatus.OPPURSTAATUS_V.name() + "' then true else false end as foreign_student, "
+                                 + (Boolean.TRUE.equals(criteria.getCumLaudeShow()) ? "exists(select 1 from directive d "
+                                         + "join directive_student ds on ds.directive_id = d.id "
+                                         + "where d.status_code = '" + DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name() + "' "
+                                         + "and d.type_code = '" + DirectiveType.KASKKIRI_LOPET.name() + "' "
+                                         + "and ds.canceled != true "
+                                         + "and ds.is_cum_laude = true "
+                                         + "and ds.student_id = s.id) as cum_laude, " : "null as cum_laude, ")
+                                 + "s.study_start as immat_date, "
+                                 + "s.study_end as finished_date, "
+                                 + (Boolean.TRUE.equals(criteria.getDirectiveTypesShow()) ? "D1.type_code as directive_types, " : "null as directive_types, ")
+                                 + (Boolean.TRUE.equals(criteria.getDirectiveConfirmDateShow()) ? "D1.confirm_date as directive_confirm_date, " : "null as directive_confirm_date, ")
+                                 + (Boolean.TRUE.equals(criteria.getDirectiveReasonsShow()) ? "D1.reason_code as directive_reasons, " : "null as directive_reasons, ")
+                                 + "sg.id as studentGroupId, sg.code as student_groups, s.status_code as student_statuses, s.study_form_code as study_form, s.study_load_code as study_load, coalesce(sd1.name_et, sd2.nameEt) as school_department, "
+                                 + "c.id as curriculumId, c.code || ' ' || c.name_et as curriculum_et, c.code || ' ' || c.name_en as curriculum_en, "
+                                 + "c.mer_code as ehis_code, c.orig_study_level_code as study_level, sg.speciality_code as speciality, sg.course as study_year_nr, "
+                                 + "s.fin_specific_code as fin, s.language_code as language, "
+                                 + "case when round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) is null then 0 else round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) end as curriculum_percentage, ";
+        
+        String CONTACT_DATA_SELECT = "p.address, p.phone, s.email as official_email, p.email as personal_email, ";
+        
+        String STATISTICS_DATA_SELECT = "scc.credits as eap"
+                + ", scc.average_mark as weighted_average_sum"
+                + (Boolean.TRUE.equals(criteria.getEapSumShow()) ? ", case when credits.sum is null then '0' else credits.sum end as eap_sum" : ", null as eap_sum")
+                + (Boolean.TRUE.equals(criteria.getWeightedAverageShow()) ? ", case when weightedAverage.weightedAverage is null then '0' else weightedAverage.weightedAverage end as weighted_average" : ", null as weighted_average")
+                + (Boolean.TRUE.equals(criteria.getAverageSumShow()) ? ", case when averageSum.averageSum is null then '0' else averageSum.averageSum end as average_sum" : ", null as average_sum")
+                + (Boolean.TRUE.equals(criteria.getAverageShow()) ? ", case when average.average is null then '0' else average.average end as average" : ", null as average")
+                + (Boolean.TRUE.equals(criteria.getDebtSumShow()) ? ", case when debtSum.debtSum is null then '0' else debtSum.debtSum end as debt_sum" : ", null as debt_sum")
+                + (Boolean.TRUE.equals(criteria.getDebtShow()) ? ", case when debt.debt is null then '0' else debt.debt end as debt" :", null as debt")
+                + (Boolean.TRUE.equals(criteria.getDebtPointsSumShow()) ? ", case when debtPointsSum.debtPointsSum is null then '0' else debtPointsSum.debtPointsSum end as debt_points_sum" : ", null as debt_points_sum")
+                + (Boolean.TRUE.equals(criteria.getDebtPointsShow()) ? ", case when debtPoints.debtPoints is null then '0' else debtPoints.debtPoints end as debt_points" : ", null as debt_points")
+                + (Boolean.TRUE.equals(criteria.getDeclaredEapShow()) ? ", case when declaredEAP.declaredEAP is null then '0' else declaredEAP.declaredEAP end as declared_eap" : ", null as declared_eap");
+        
+        String ADD_INFO_SELECT = 
+               (Boolean.TRUE.equals(criteria.getActiveResultShow()) ? 
+                    ", activeResult.grade_code as grade_code, activeResult.id as subjectId, activeResult.code || ' - ' || activeResult.name_et as active_result_subject_et, activeResult.code || ' - ' || activeResult.name_en as active_result_subject_en" 
+                    : ", null as grade_code, null as subjectId, null as active_result_subject_et, null as active_result_subject_en")
+                + (Boolean.TRUE.equals(criteria.getDeclaredSubjectShow()) ? 
+                    ", declaredSubject.id as declaredSubjectId, declaredSubject.code || ' - ' || declaredSubject.name_et as declared_subject_et, declaredSubject.code || ' - ' || declaredSubject.name_en as declared_subject_en" 
+                    : ", null as declaredSubjectId, null as declared_subject_et, null as declared_subject_en")
+                + (Boolean.TRUE.equals(criteria.getDeclarationConfirmationShow()) ? ", declarationConfirmation.confirm_date as declaration_confirmation" : ", null as declaration_confirmation")
+                + ", s.previous_school_name, extract(year from s.previous_school_end_date) as completed_school_year";
+        Holder<Integer> i = new Holder<>(Integer.valueOf(0));
+        return JpaQueryUtil.pagingResult(qb, 
+                PERSON_DATA_SELECT + STUDY_DATA_SELECT + CONTACT_DATA_SELECT + STATISTICS_DATA_SELECT + ADD_INFO_SELECT, em, pageable).map(r -> {
+                    i.value ++;
+                    return new ReportStudentDataDto(r, criteria, i.value);
+                });
+    }
+
+    private static void setAddInfoDataCriteria(JpaNativeQueryBuilder qb, StudentDataCommand criteria) {
+        qb.optionalCriteria("declarationConfirmation.confirm_date >= :confirmationFrom", "confirmationFrom", criteria.getDeclarationConfirmationFrom());
+        qb.optionalCriteria("declarationConfirmation.confirm_date <= :confirmationThru", "confirmationThru", criteria.getDeclarationConfirmationThru());
+        qb.optionalContains("s.previous_school_name", "previousSchoolName", criteria.getPreviousSchoolName());
+        if (criteria.getCompletedSchoolYearSign() != null) {
+            qb.optionalCriteria("extract(year from s.previous_school_end_date) " + criteria.getCompletedSchoolYearSign() + " :completedSchoolYear", "completedSchoolYear", criteria.getCompletedSchoolYear());
+        }
+    }
+
+    private String declarationConfirmation(HoisUserDetails user) {
+        Long currentStudyPeriod = studyYearService.getCurrentStudyPeriod(user.getSchoolId());
+        return "join (select d.confirm_date, d.student_id "
+                + "from declaration d "
+                + "where d.study_period_id = " + currentStudyPeriod + " "
+                + "and d.status_code = '" + DeclarationStatus.OPINGUKAVA_STAATUS_K.name() + "') as declarationConfirmation on declarationConfirmation.student_id = s.id ";
+    }
+
+    private static String declaredSubject(StudentDataCommand criteria) {
+        return "join (select distinct on (s.id, d.student_id) d.student_id, s.id, s.name_et, s.name_en, s.code from declaration d "
+                + "join declaration_subject ds on ds.declaration_id = d.id "
+                + "join subject_study_period ssp on ssp.id = ds.subject_study_period_id "
+                + "join subject s on s.id = ssp.subject_id "
+                + "where d.status_code = '" + DeclarationStatus.OPINGUKAVA_STAATUS_K.name() + "' "
+                + (criteria.getDeclaredSubject() != null  ? "and s.id in (" + String.join(", ", criteria.getDeclaredSubject().stream().map(String::valueOf).collect(Collectors.toList())) + ") " : "")
+                + (Boolean.TRUE.equals(criteria.getDeclaredSubjectRepetitive()) ? 
+                        "and exists( "
+                        + "select * from declaration_subject ds2 "
+                        + "join declaration d2 on d2.id = ds2.declaration_id "
+                        + "join subject_study_period ssp2 on ssp2.id = ds2.subject_study_period_id "
+                        + "and ds2.declaration_id <> ds.declaration_id "
+                        + "and d2.student_id = d.student_id "
+                        + "and ssp2.subject_id = ssp.subject_id) ": "")
+                + ") as declaredSubject on declaredSubject.student_id = s.id ";
+    }
+
+    private static String activeResult(StudentDataCommand criteria) {
+        return "left join (select shr.student_id, shr.grade_code, s.id, s.name_et, s.name_en, s.code from student_higher_result shr "
+                + "join subject s on shr.subject_id = s.id "
+                + "where shr.is_active = true "
+                + (criteria.getActiveResult() != null  ? "and shr.subject_id in (" + String.join(", ", criteria.getActiveResult().stream().map(String::valueOf).collect(Collectors.toList())) + ") " : "")
+                + (Boolean.TRUE.equals(criteria.getActiveResultPositive()) ? "and shr.grade_code in (:higherPositiveGrades) " : "")
+                + (Boolean.FALSE.equals(criteria.getActiveResultPositive()) ? "and shr.grade_code not in (:higherPositiveGrades) " : "")
+                + ") as activeResult on activeResult.student_id = s.id " 
+                + ((Boolean.TRUE.equals(criteria.getDeclaredSubjectShow()) 
+                        || (criteria.getDeclaredSubject() != null && !criteria.getDeclaredSubject().isEmpty())) ? "and activeResult.id = declaredSubject.id " : "");
+    }
+
+    /**
+     * Only in higher
+     * @param criteria
+     * @return
+     */
+    private String declaredEAP(StudentDataCommand criteria) {
+        Long studyPeriodId = criteria.getDeclaredEapPeriod();
+        LocalDate startDate = criteria.getDeclaredEapFrom();
+        LocalDate endDate = criteria.getDeclaredEapThru();
+        if (studyPeriodId != null) {
+            StudyPeriod sp = em.getReference(StudyPeriod.class, studyPeriodId);
+            startDate = sp.getStartDate();
+            endDate = sp.getEndDate();
+        }
+        return "left join(select sum(s.credits) as declaredEap, d.student_id from " +
+                    "declaration_subject ds " +
+                    "join declaration d on d.id = ds.declaration_id and d.status_code = '" + DeclarationStatus.OPINGUKAVA_STAATUS_K.name() + "' " +
+                    "left join subject_study_period ssp on ssp.id = ds.subject_study_period_id " +
+                    "left join subject s on ssp.subject_id = s.id " +
+                    (startDate != null ? "and d.confirm_date >= :declaredFrom " : "") +
+                    (endDate != null ? "and d.confirm_date <= :declaredThru " : "") +
+                    "group by d.student_id) declaredEap on declaredEap.student_id = s.id ";
+    }
+
+    private String debtPointsSubQuery(StudentDataCommand criteria) {
+        Long studyPeriodId = criteria.getDebtPointsPeriod();
+        LocalDate startDate = criteria.getDebtPointsFrom();
+        LocalDate endDate = criteria.getDebtPointsThru();
+        if (studyPeriodId != null) {
+            StudyPeriod sp = em.getReference(StudyPeriod.class, studyPeriodId);
+            startDate = sp.getStartDate();
+            endDate = sp.getEndDate();
+        }
+        return debtPointsSubQuery(startDate, endDate, "debtPoints");
+    }
+
+    private static String debtPointsSubQuery(LocalDate startDate, LocalDate endDate, String variable) {
+        return "left join (select sum(" + variable + ") as " + variable + ", student_id from (select " + variable + ", student_id from " +
+                "(select sum(s.credits) as " + variable + ", d.student_id from " +
+                    "declaration_subject ds " +
+                    "join declaration d on d.id = ds.declaration_id and d.status_code = '" + DeclarationStatus.OPINGUKAVA_STAATUS_K.name() + "' " +
+                    "left join subject_study_period ssp on ssp.id = ds.subject_study_period_id " +
+                    "left join subject s on ssp.subject_id = s.id " +
+                    "left join student_higher_result shr on shr.subject_id = ssp.subject_id " +
+                    "where shr.grade_code not in (:higherPositiveGrades) " +
+                    "and shr.is_active = true " +
+                    (startDate != null ? "and shr.grade_date >= :debtPointsFrom " : "") +
+                    (endDate != null ? "and shr.grade_date <= :debtPointsThru " : "") +
+                    "group by d.student_id) as " + variable + " " +
+                "union all " +
+                "select sum(credits) as " + variable + ", student_id from (select distinct on (svr.curriculum_version_omodule_id) svr.credits, svr.student_id " +
+                    "from student_vocational_result svr " +
+                    "where svr.grade_code not in (:vocationalPositiveGrades) " +
+                    (startDate != null ? "and svr.grade_date >= :debtPointsFrom " : "") +
+                    (endDate != null ? "and svr.grade_date <= :debtPointsThru " : "") +
+                    "order by svr.curriculum_version_omodule_id, coalesce(svr.changed, svr.inserted) desc) as " + variable +
+                    " group by student_id ) as " + variable + " group by student_id " +
+            ") as " + variable + " on " + variable + ".student_id = s.id ";
+    }
+
+    private String debtSubQuery(StudentDataCommand criteria) {
+        Long studyPeriodId = criteria.getDebtPeriod();
+        LocalDate startDate = criteria.getDebtFrom();
+        LocalDate endDate = criteria.getDebtThru();
+        if (studyPeriodId != null) {
+            StudyPeriod sp = em.getReference(StudyPeriod.class, studyPeriodId);
+            startDate = sp.getStartDate();
+            endDate = sp.getEndDate();
+        }
+        return debtSubQuery(startDate, endDate, "debt");
+    }
+
+    private static String debtSubQuery(LocalDate startDate, LocalDate endDate, String variable) {
+        return "left join (select " + variable + "." + variable + ", student_id from " +
+                    "(select count(distinct ds.id) as " + variable + ", d.student_id from " +
+                        "declaration_subject ds " +
+                        "join declaration d on d.id = ds.declaration_id and d.status_code = '" + DeclarationStatus.OPINGUKAVA_STAATUS_K.name() + "' " +
+                        "left join subject_study_period ssp on ssp.id = ds.subject_study_period_id " +
+                        "left join student_higher_result shr on shr.subject_id = ssp.subject_id " +
+                        "where shr.grade_code not in (:higherPositiveGrades) " +
+                        "and shr.is_active = true " +
+                        (startDate != null ? "and shr.grade_date >= :debtFrom " : "") +
+                        (endDate != null ? "and shr.grade_date <= :debtThru " : "") +
+                        "group by d.student_id) as " + variable + " " +
+                        "union all " +
+                    "select count(distinct je.curriculum_module_outcomes_id) as " + variable + ", js.student_id from " +
+                        "journal_entry je join journal_entry_student jes on jes.journal_entry_id = je.id " +
+                        "join journal_student js on  jes.journal_student_id = js.id " +
+                        "where jes.grade_code not in (:vocationalPositiveGrades) " +
+                        (startDate != null ? "and jes.grade_inserted >= :debtFrom " : "") +
+                        (endDate != null ? "and jes.grade_inserted <= :debtThru " : "") +
+                        "group by js.student_id " +
+                        "union all " +
+                    "select count(distinct id), student_id from (select distinct on (svr.curriculum_version_omodule_id) svr.id, svr.student_id " +
+                        "from student_vocational_result svr " +
+                        "where svr.grade_code not in (:vocationalPositiveGrades) " +
+                        (startDate != null ? "and svr.grade_date >= :debtFrom " : "") +
+                        (endDate != null ? "and svr.grade_date <= :debtThru " : "") +
+                        "order by svr.curriculum_version_omodule_id, coalesce(svr.changed, svr.inserted) desc) as " + variable +
+                        " group by student_id " +
+                ") as " + variable + " on " + variable + ".student_id = s.id ";
+    }
+
+    private String averageSubQuery(StudentDataCommand criteria) {
+        Long studyPeriodId = criteria.getAveragePeriod();
+        LocalDate startDate = criteria.getAverageFrom();
+        LocalDate endDate = criteria.getAverageThru();
+        if (studyPeriodId != null) {
+            StudyPeriod sp = em.getReference(StudyPeriod.class, studyPeriodId);
+            startDate = sp.getStartDate();
+            endDate = sp.getEndDate();
+        }
+        return averageSubQuery(startDate, endDate, "average");
+    }
+    
+    private static String averageSubQuery(LocalDate startDate, LocalDate endDate, String variable) {
+        return "left join (select " + variable + ", student_id from (" +
+                "select * from (select floor((sum(grade_mark) * 100) / count(distinct id)) / 100 as " + variable + ", student_id " +
+                "from (select distinct on (svr.curriculum_version_omodule_id) svr.id, svr.grade_mark, svr.student_id " +
+                "from student_vocational_result svr " +
+                "where svr.grade_code in (:vocationalPositiveGrades) " +
+                (startDate != null ? "and svr.grade_date >= :averageFrom " : "") +
+                (endDate != null ? "and svr.grade_date <= :averageThru " : "") +
+                "and svr.grade_mark is not null and svr.grade_mark != 0 " +
+                "and svr.credits is not null and credits != 0 " +
+                "order by svr.curriculum_version_omodule_id, coalesce(svr.changed, svr.inserted) desc) " +
+                "as distinct_module_credits group by student_id) credits_sum where credits_sum." + variable + " is not null " +
+                "union all " +
+                "select floor((sum(shr.grade_mark) * 100) / count(distinct shr.id)) / 100 as " + variable + ", shr.student_id " +
+                "from student_higher_result shr " +
+                "where shr.grade_code in (:higherPositiveGrades) " +
+                "and shr.is_active = true " +
+                (startDate != null ? "and shr.grade_date >= :averageFrom " : "") +
+                (endDate != null ? "and shr.grade_date <= :averageThru " : "") +
+                "and shr.grade_mark is not null and shr.grade_mark != 0 " +
+                "and shr.credits is not null and shr.credits != 0 " +
+                "group by shr.student_id) spCredits ) as " + variable + " on " + variable + ".student_id = s.id ";
+    }
+
+    private String creditSubQuery(StudentDataCommand criteria) {
+        Long studyPeriodId = criteria.getEapSumPeriod();
+        LocalDate startDate = criteria.getEapSumFrom();
+        LocalDate endDate = criteria.getEapSumThru();
+        if (studyPeriodId != null) {
+            StudyPeriod sp = em.getReference(StudyPeriod.class, studyPeriodId);
+            startDate = sp.getStartDate();
+            endDate = sp.getEndDate();
+        }
+        return "left join (select spCredits.sum, spCredits.student_id from (" +
+        "select * from (select sum(credits), student_id from (select distinct on (svr.curriculum_version_omodule_id) svr.credits, svr.student_id " +
+        "from student_vocational_result svr " +
+        "where svr.grade_code in (:vocationalPositiveGrades) " +
+        (startDate != null ? "and svr.grade_date >= :creditsFrom " : "") +
+        (endDate != null ? "and svr.grade_date <= :creditsThru " : "") +
+        (Boolean.TRUE.equals(criteria.getEapSumApel()) ? "" : "and svr.apel_application_record_id is null ") +
+        "order by svr.curriculum_version_omodule_id, coalesce(svr.changed, svr.inserted) desc) " +
+        "as distinct_module_credits group by student_id) credits_sum where sum is not null " +
+        "union all " +
+        "select sum(shr.credits), shr.student_id from student_higher_result shr " +
+        "where shr.grade_code in (:higherPositiveGrades) " +
+        "and shr.is_active = true " +
+        (startDate != null ? "and shr.grade_date >= :creditsFrom " : "") +
+        (endDate != null ? "and shr.grade_date <= :creditsThru " : "") +
+        (Boolean.TRUE.equals(criteria.getEapSumApel()) ? "" : "and shr.apel_application_record_id is null ") +
+        "group by shr.student_id) spCredits) as credits on credits.student_id = s.id ";
+    }
+
+    private String weightedAverageSubQuery(StudentDataCommand criteria) {
+        Long studyPeriodId = criteria.getWeightedAveragePeriod();
+        LocalDate startDate = criteria.getWeightedAverageFrom();
+        LocalDate endDate = criteria.getWeightedAverageThru();
+        if (studyPeriodId != null) {
+            StudyPeriod sp = em.getReference(StudyPeriod.class, studyPeriodId);
+            startDate = sp.getStartDate();
+            endDate = sp.getEndDate();
+        }
+        
+        return "left join (select weightedAverage, student_id from (" +
+                "select * from (select floor(sum(gradeMark)*100/sum(credits))/100 as weightedAverage, student_id " +
+                "from (select distinct on (svr.curriculum_version_omodule_id) svr.credits * svr.grade_mark as gradeMark, svr.credits, svr.student_id " +
+                "from student_vocational_result svr " +
+                "where svr.grade_code in (:vocationalPositiveGrades) " +
+                (startDate != null ? "and svr.grade_date >= :weightedAverageFrom " : "") +
+                (endDate != null ? "and svr.grade_date <= :weightedAverageThru " : "") +
+                "and svr.grade_mark is not null and svr.grade_mark != 0 " +
+                "and svr.credits is not null and credits != 0 " +
+                "order by svr.curriculum_version_omodule_id, coalesce(svr.changed, svr.inserted) desc) as distinct_module_credits group by student_id) credits_sum where credits_sum.weightedAverage is not null " +
+                "union all " +
+                "select floor(sum(shr.credits * shr.grade_mark)*100/sum(shr.credits))/100 as weightedAverage, shr.student_id " +
+                "from student_higher_result shr " +
+                "where shr.grade_code in (:higherPositiveGrades) " +
+                "and shr.is_active = true " +
+                (startDate != null ? "and shr.grade_date >= :weightedAverageFrom " : "") +
+                (endDate != null ? "and shr.grade_date <= :weightedAverageThru " : "") +
+                "and shr.grade_mark is not null and shr.grade_mark != 0 " +
+                "and shr.credits is not null and shr.credits != 0 " +
+                "group by shr.student_id) spCredits ) as weightedAverage on weightedAverage.student_id = s.id ";
+    }
+    
+    private void setStatisticsDataCriteria(JpaNativeQueryBuilder qb, StudentDataCommand criteria) {
+        if (criteria.getEapSign() != null) {
+            qb.optionalCriteria("scc.credits " + criteria.getEapSign() + " :eap", "eap", criteria.getEap());
+        }
+        
+        if (Boolean.TRUE.equals(criteria.getEapSumShow()) || criteria.getEapSum() != null) {
+            if (criteria.getEapSumSign() != null) {
+                qb.optionalCriteria("credits.sum " + criteria.getEapSumSign() + " :eapSum", "eapSum", criteria.getEapSum());
+            }
+            Long studyPeriodId = criteria.getEapSumPeriod();
+            LocalDate startDate = criteria.getEapSumFrom();
+            LocalDate endDate = criteria.getEapSumThru();
+            if (studyPeriodId != null) {
+                StudyPeriod sp = em.getReference(StudyPeriod.class, studyPeriodId);
+                startDate = sp.getStartDate();
+                endDate = sp.getEndDate();
+            }
+            if (startDate != null) qb.parameter("creditsFrom", JpaQueryUtil.parameterAsTimestamp(startDate));
+            if (endDate != null) qb.parameter("creditsThru", JpaQueryUtil.parameterAsTimestamp(endDate));
+        }
+        if (criteria.getWeightedAverageSumSign() != null) {
+            qb.optionalCriteria("scc.average_mark " + criteria.getWeightedAverageSumSign() + " :weightedAverageSum", "weightedAverageSum", criteria.getWeightedAverageSum());
+        }
+        if (Boolean.TRUE.equals(criteria.getWeightedAverageShow()) || criteria.getWeightedAverage() != null) {
+            if (criteria.getWeightedAverageSign() != null) {
+                qb.optionalCriteria("weightedAverage.weightedAverage " + criteria.getWeightedAverageSign() + " :weightedAverage", "weightedAverage", criteria.getWeightedAverage());
+            }
+            Long studyPeriodId = criteria.getWeightedAveragePeriod();
+            LocalDate startDate = criteria.getWeightedAverageFrom();
+            LocalDate endDate = criteria.getWeightedAverageThru();
+            if (studyPeriodId != null) {
+                StudyPeriod sp = em.getReference(StudyPeriod.class, studyPeriodId);
+                startDate = sp.getStartDate();
+                endDate = sp.getEndDate();
+            }
+            if (startDate != null) qb.parameter("weightedAverageFrom", JpaQueryUtil.parameterAsTimestamp(startDate));
+            if (endDate != null) qb.parameter("weightedAverageThru", JpaQueryUtil.parameterAsTimestamp(endDate));
+        }
+        if (criteria.getAverageSumSign() != null) {
+            qb.optionalCriteria("averageSum.averageSum " + criteria.getAverageSumSign() + " :averageSum", "averageSum", criteria.getAverageSum());
+        }
+        if (Boolean.TRUE.equals(criteria.getAverageShow()) || criteria.getAverage() != null) {
+            if (criteria.getAverageSign() != null) {
+                qb.optionalCriteria("average.average " + criteria.getAverageSign() + " :average", "average", criteria.getAverage());
+            }
+            Long studyPeriodId = criteria.getAveragePeriod();
+            LocalDate startDate = criteria.getAverageFrom();
+            LocalDate endDate = criteria.getAverageThru();
+            if (studyPeriodId != null) {
+                StudyPeriod sp = em.getReference(StudyPeriod.class, studyPeriodId);
+                startDate = sp.getStartDate();
+                endDate = sp.getEndDate();
+            }
+            if (startDate != null) qb.parameter("averageFrom", JpaQueryUtil.parameterAsTimestamp(startDate));
+            if (endDate != null) qb.parameter("averageThru", JpaQueryUtil.parameterAsTimestamp(endDate));
+        }
+        if (criteria.getDebtSumSign() != null) {
+            qb.optionalCriteria("debtSum.debtSum " + criteria.getDebtSumSign() + " :debtSum", "debtSum", criteria.getDebtSum());
+        }
+        if (Boolean.TRUE.equals(criteria.getDebtShow()) || criteria.getDebt() != null) {
+            if (criteria.getDebtSign() != null) {
+                qb.optionalCriteria("debt.debt " + criteria.getDebtSign() + " :debt", "debt", criteria.getDebt());
+            }
+            Long studyPeriodId = criteria.getDebtPeriod();
+            LocalDate startDate = criteria.getDebtFrom();
+            LocalDate endDate = criteria.getDebtThru();
+            if (studyPeriodId != null) {
+                StudyPeriod sp = em.getReference(StudyPeriod.class, studyPeriodId);
+                startDate = sp.getStartDate();
+                endDate = sp.getEndDate();
+            }
+            if (startDate != null) qb.parameter("debtFrom", JpaQueryUtil.parameterAsTimestamp(startDate));
+            if (endDate != null) qb.parameter("debtThru", JpaQueryUtil.parameterAsTimestamp(endDate));
+        }
+        if (criteria.getDebtPointsSumSign() != null) {
+            qb.optionalCriteria("debtPointsSum.debtPointsSum " + criteria.getDebtPointsSumSign() + " :debtPointsSum", "debtPointsSum", criteria.getDebtPointsSum());
+        }
+        if (Boolean.TRUE.equals(criteria.getDebtPointsShow()) || criteria.getDebtPoints() != null) {
+            if (criteria.getDebtPointsSign() != null) {
+                qb.optionalCriteria("debtPoints.debtPoints " + criteria.getDebtPointsSign() + " :debtPoints", "debtPoints", criteria.getDebtPoints());
+            }
+            Long studyPeriodId = criteria.getDebtPointsPeriod();
+            LocalDate startDate = criteria.getDebtPointsFrom();
+            LocalDate endDate = criteria.getDebtPointsThru();
+            if (studyPeriodId != null) {
+                StudyPeriod sp = em.getReference(StudyPeriod.class, studyPeriodId);
+                startDate = sp.getStartDate();
+                endDate = sp.getEndDate();
+            }
+            if (startDate != null) qb.parameter("debtPointsFrom", JpaQueryUtil.parameterAsTimestamp(startDate));
+            if (endDate != null) qb.parameter("debtPointsThru", JpaQueryUtil.parameterAsTimestamp(endDate));
+        }
+        if (Boolean.TRUE.equals(criteria.getDeclaredEapShow()) || criteria.getDeclaredEap() != null) {
+            if (criteria.getDeclaredEapSign() != null) {
+                qb.optionalCriteria("declaredEap.declaredEap " + criteria.getDeclaredEapSign() + " :declaredEap", "declaredEap", criteria.getDeclaredEap());
+            }
+            Long studyPeriodId = criteria.getDeclaredEapPeriod();
+            LocalDate startDate = criteria.getDeclaredEapFrom();
+            LocalDate endDate = criteria.getDeclaredEapThru();
+            if (studyPeriodId != null) {
+                StudyPeriod sp = em.getReference(StudyPeriod.class, studyPeriodId);
+                startDate = sp.getStartDate();
+                endDate = sp.getEndDate();
+            }
+            if (startDate != null) qb.parameter("declaredFrom", JpaQueryUtil.parameterAsTimestamp(startDate));
+            if (endDate != null) qb.parameter("declaredThru", JpaQueryUtil.parameterAsTimestamp(endDate));
+        }
+        qb.filter(":vocationalPositiveGrades = :vocationalPositiveGrades");
+        qb.filter(":higherPositiveGrades = :higherPositiveGrades");
+        qb.parameter("vocationalPositiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
+        qb.parameter("higherPositiveGrades", HigherAssessment.GRADE_POSITIVE);
+    }
+
+    private static void setHeaderDataCriteria(JpaNativeQueryBuilder qb, StudentDataCommand criteria) {
+        if (ReportStudentData.STUDENT_DATA_ACTIVE.name().equals(criteria.getResultType())) {
+            qb.requiredCriteria("s.status_code in :activeStatuses", "activeStatuses", StudentStatus.STUDENT_STATUS_ACTIVE);
+        } else if (ReportStudentData.STUDENT_DATA_STUDENTGROUP.name().equals(criteria.getResultType())) {
+            qb.filter("s.student_group_id is not null");
+        } else if (ReportStudentData.STUDENT_DATA_STUDYING.name().equals(criteria.getResultType())) {
+            qb.requiredCriteria("s.status_code = :studyingStatus", "studyingStatus", StudentStatus.OPPURSTAATUS_O.name());
+        } else if (ReportStudentData.STUDENT_DATA_GRADUATES.name().equals(criteria.getResultType())) {
+            qb.requiredCriteria("s.status_code = :finishedStatus", "finishedStatus", StudentStatus.OPPURSTAATUS_L.name());
+        }
+        if (Boolean.TRUE.equals(criteria.getWithoutGuestStudents())) {
+            qb.requiredCriteria("s.type_code != :guestStudentType", "guestStudentType", StudentType.OPPUR_K.name());
+        }
+    }
+
+    private static void setContactDataCriteria(JpaNativeQueryBuilder qb, StudentDataCommand criteria) {
+        qb.optionalContains("p.address", "address", criteria.getAddress());
+        qb.optionalContains("p.phone", "phone", criteria.getPhone());
+        qb.optionalContains("p.email", "personalEmail", criteria.getPersonalEmail());
+        qb.optionalContains("s.email", "officialEmail", criteria.getOfficialEmail());
+    }
+
+    private static void setStudyDataCriteria(JpaNativeQueryBuilder qb, StudentDataCommand criteria) {
+        Boolean isGuestStudent = criteria.getGuestStudent();
+        if (Boolean.TRUE.equals(isGuestStudent)) {
+            qb.requiredCriteria("s.type_code = :guestStudentType", "guestStudentType", StudentType.OPPUR_K.name());
+        } else if (Boolean.FALSE.equals(isGuestStudent)) {
+            qb.requiredCriteria("s.type_code != :guestStudentType", "guestStudentType", StudentType.OPPUR_K.name());
+        }
+        
+        Boolean isForeignStudent = criteria.getForeignStudent();
+        if (Boolean.TRUE.equals(isForeignStudent)) {
+            qb.requiredCriteria("s.status_code = :foreignStudentStatus", "foreignStudentStatus", StudentStatus.OPPURSTAATUS_V.name());
+        } else if (Boolean.FALSE.equals(isForeignStudent)) {
+            qb.requiredCriteria("s.status_code != :foreignStudentStatus", "foreignStudentStatus", StudentStatus.OPPURSTAATUS_V.name());
+        }
+        
+        Boolean isCumLaude = criteria.getCumLaude();
+        if (Boolean.TRUE.equals(isCumLaude)) {
+            qb.filter("exists(select 1 from directive d "
+                    + "join directive_student ds on ds.directive_id = d.id "
+                    + "where d.status_code = '" + DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name() + "' "
+                    + "and d.type_code = '" + DirectiveType.KASKKIRI_LOPET.name() + "' "
+                    + "and ds.canceled != true "
+                    + "and ds.is_cum_laude = true "
+                    + "and ds.student_id = s.id)");
+        } else if (Boolean.FALSE.equals(isCumLaude)) {
+            qb.filter("not exists(select 1 from directive d "
+                    + "join directive_student ds on ds.directive_id = d.id "
+                    + "where d.status_code = '" + DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name() + "' "
+                    + "and d.type_code = '" + DirectiveType.KASKKIRI_LOPET.name() + "' "
+                    + "and ds.canceled != true "
+                    + "and ds.is_cum_laude = true "
+                    + "and ds.student_id = s.id)");
+        }
+        
+        qb.optionalCriteria("s.study_start >= :immatFrom", "immatFrom", criteria.getImmatDateFrom());
+        qb.optionalCriteria("s.study_start <= :immatThru", "immatThru", criteria.getImmatDateThru());
+        qb.optionalCriteria("(s.study_end >= :finishedFrom or s.study_end is null)", "finishedFrom", criteria.getFinishedDateFrom());
+        qb.optionalCriteria("s.study_end <= :finishedThru", "finishedThru", criteria.getFinishedDateThru());
+        qb.optionalCriteria("D1.type_code in (:directiveTypes)", "directiveTypes", criteria.getDirectiveTypes());
+        qb.optionalCriteria("D1.reason_code in (:directiveReasons)", "directiveReasons", criteria.getDirectiveReasons());
+        qb.optionalCriteria("D1.confirm_date >= :confirmFrom", "confirmFrom", criteria.getDirectiveConfirmDateFrom());
+        qb.optionalCriteria("D1.confirm_date <= :confirmThru", "confirmThru", criteria.getDirectiveConfirmDateThru());
+        qb.optionalCriteria("sg.id in (:sgIds)", "sgIds", criteria.getStudentGroups());
+        qb.optionalCriteria("s.status_code in (:studentStatuses)", "studentStatuses", criteria.getStudentStatuses());
+        qb.optionalCriteria("s.study_form_code in (:studyForms)", "studyForms", criteria.getStudyForm());
+        qb.optionalCriteria("s.study_load_code in (:studyLoads)", "studyLoads", criteria.getStudyLoad());
+        // school department uses array in array
+        List<Long> schoolDepartments = criteria.getSchoolDepartment();
+        if (schoolDepartments != null && schoolDepartments.size() != 0) {
+            String arrayInArray = "";
+            for (int i = 0; i < schoolDepartments.size(); i++) {
+                Long id = schoolDepartments.get(i);
+                if (i == schoolDepartments.size() - 1) {
+                    arrayInArray += "'" + id + "' in (sd2.ids)";
+                } else {
+                    arrayInArray += "'" + id + "' in (sd2.ids) or ";
+                }
+            }
+            qb.optionalCriteria("(" + arrayInArray + " or sd1.id in (:schoolDepartments))", "schoolDepartments", schoolDepartments);
+        }
+        
+        qb.optionalCriteria("c.id in (:curriculumIds)", "curriculumIds", criteria.getCurriculum());
+        qb.optionalContains("c.mer_code", "ehisCode", criteria.getEhisCode());
+        qb.optionalCriteria("c.orig_study_level_code in (:studyLevels)", "studyLevels", criteria.getStudyLevel());
+        qb.optionalCriteria("sg.speciality_code in (:specialityCodes)", "specialityCodes", criteria.getSpeciality());
+        qb.optionalCriteria("sg.course = :studyYearNumber", "studyYearNumber", criteria.getStudyYearNumber());
+        qb.optionalCriteria("s.fin_specific_code in (:finCodes)", "finCodes", criteria.getFin());
+        qb.optionalCriteria("s.language_code in (:studyLanguages)", "studyLanguages", criteria.getLanguage());
+        qb.optionalCriteria("round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) > :curriculumPercentageFrom", "curriculumPercentageFrom", criteria.getCurriculumPercentageFrom());
+        qb.optionalCriteria("round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) < :curriculumPercentageThru", "curriculumPercentageThru", criteria.getCurriculumPercentageThru());
+    }
+
+    private static void setPersonDataCriteria(JpaNativeQueryBuilder qb, StudentDataCommand criteria) {
+        qb.optionalContains("p.firstname", "firstName", criteria.getFirstname());
+        qb.optionalContains("p.lastname", "lastName", criteria.getLastname());
+        qb.optionalCriteria("p.sex_code = :sexCode", "sexCode", criteria.getSex());
+        qb.optionalContains("coalesce(p.idcode, p.foreign_idcode)", "idCode", criteria.getIdcode());
+        qb.optionalContains("p.bankaccount", "bankAccount", criteria.getBankaccount());
+        qb.optionalCriteria("p.birthdate >= :birthDayFrom", "birthDayFrom", criteria.getBirthdateFrom());
+        qb.optionalCriteria("p.birthdate <= :birthDayThru", "birthDayThru", criteria.getBirthdateThru());
+        qb.optionalCriteria("p.residence_country_code in :residenceCountryCodes", "residenceCountryCodes", criteria.getResidenceCountry());
+        qb.optionalCriteria("p.citizenship_code in :citizenshipCodes", "citizenshipCodes", criteria.getCitizenship());
+    }
+
+    public byte[] studentsDataAsExcel(HoisUserDetails user, StudentDataCommand criteria, Pageable pageable) {
+        List<ReportStudentDataDto> students = studentData(user, criteria, new PageRequest(0, Integer.MAX_VALUE, pageable.getSort())).getContent();
+        Map<String, Object> data = new HashMap<>();
+        List<String> header = convertToHeader(criteria, "studentData");
+        List<List<Object>> studentData = getData(header, students);
+        data.put("data", studentData);
+        data.put("header", header);
+        data.put("criteria", criteria);
+        return xlsService.generate("studentsdata.xls", data);
+    }
+
+    private List<List<Object>> getData(List<String> header, List<?> students) {
+        ClassifierUtil.ClassifierCache classifierCache = new ClassifierUtil.ClassifierCache(classifierService);
+        List<String> classifierFields = Arrays.asList("sex", "residenceCountry", "citizenship", "directiveTypes", "fin", 
+                "speciality", "studentStatuses", "studyForm", "studyLoad", "studyLevel", "language", "activeResult", "studyYear");
+        List<String> booleanTranslatable = Arrays.asList("guestStudent", "foreignStudent", "cumLaude");
+        List<List<Object>> result = new ArrayList<>();
+        for (Object student : students) {
+            List<Object> studentData = new ArrayList<>();
+            for (String fieldNameTranslation : header) {
+                Method classMethod;
+                try {
+                    String[] splittedTranslation = fieldNameTranslation.split("\\.");
+                    String fieldName = splittedTranslation[splittedTranslation.length - 1];
+                    classMethod = student.getClass().getMethod("get" + fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1));
+                    Object value = classMethod.invoke(student);
+                    if (value instanceof String) {
+                        if ("directiveReasons".equals(fieldName)) {
+                            if (((String)value).startsWith("AKADPUHKUS_POHJUS")) {
+                                value = classifierCache.getByCode((String)value, MainClassCode.valueOf("AKADPUHKUS_POHJUS"));
+                            } else if (((String)value).startsWith("EKSMAT_POHJUS")) {
+                                value = classifierCache.getByCode((String)value, MainClassCode.valueOf("EKSMAT_POHJUS"));
+                            } else if (((String)value).startsWith("KASKKIRI_STIPTOETL_POHJUS")) {
+                                value = classifierCache.getByCode((String)value, MainClassCode.valueOf("KASKKIRI_STIPTOETL_POHJUS"));
+                            }
+                        } else if (classifierFields.contains(fieldName)) {
+                            value = classifierCache.getByCode((String)value, MainClassCode.valueOf(((String)value).split("\\_")[0]));
+                        }
+                    } else if (value instanceof Boolean && booleanTranslatable.contains(fieldName)) {
+                        if (Boolean.TRUE.equals(value)) {
+                            value = TranslateUtil.translate("yes", Language.ET);
+                        } else {
+                            value = TranslateUtil.translate("no", Language.ET);
+                        }
+                    }
+                    studentData.add(value);
+                } catch (@SuppressWarnings("unused") Exception e) {
+                    continue;
+                }
+            }
+            result.add(studentData);
+        }
+        return result;
+    }
+
+    private static List<String> convertToHeader(Object criteria, String variable) {
+        List<String> header = new ArrayList<>();
+        List<Method> methods = Arrays.asList(criteria.getClass().getDeclaredMethods());
+        List<Method> sortedMethods = methods.stream().filter(p -> p.getName().endsWith("Show") && p.getName().startsWith("get")).collect(Collectors.toList());
+        // Sort methos as they are in front-end table
+        // @Order should be used on getter fields of criteria since reflection takes methods in random order
+        sortedMethods.sort(new Comparator<Method>() {
+            @Override
+            public int compare(Method o1, Method o2) {
+                Order or1 = o1.getAnnotation(Order.class);
+                Order or2 = o2.getAnnotation(Order.class);
+                // nulls last
+                if (or1 != null && or2 != null) {
+                    return or1.value() - or2.value();
+                } else
+                if (or1 != null && or2 == null) {
+                    return -1;
+                } else
+                if (or1 == null && or2 != null) {
+                    return 1;
+                }
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+        // Get names of fields that should be shown
+        for (Method method : sortedMethods) {
+            try {
+                Method classMethod = criteria.getClass().getMethod(method.getName());
+                Boolean value = (Boolean) classMethod.invoke(criteria);
+                if (Boolean.TRUE.equals(value)) {
+                    String translation = method.getName().replace("get", "").replace("Show", "");
+                    header.add("report." + variable + "." + translation.substring(0, 1).toLowerCase() + translation.substring(1));
+                    if ("ActiveResult".equals(translation)) {
+                        header.add("report." + variable + "." + translation.substring(0, 1).toLowerCase() + translation.substring(1) + "Subject");
+                    }
+                }
+            } catch (@SuppressWarnings("unused") Exception e) {
+                continue;
+            }
+        }
+        return header;
+    }
+    
+    private void validateQuery(HoisUserDetails user, QuerySaveCommand criteria) {
+        List<SchoolQuery> schoolQueries = em.createQuery("select sq from SchoolQuery sq where sq.school.id = :schoolId and lower(sq.nameEt) = :schoolQueryName", SchoolQuery.class)
+            .setParameter("schoolId", user.getSchoolId())
+            .setParameter("schoolQueryName", criteria.getQueryNameEt().toLowerCase())
+            .getResultList();
+            if (!schoolQueries.isEmpty()) {
+                throw new HoisException("report.studentData.error.repetitiveName");
+            }
+    }
+
+    public void saveQuery(HoisUserDetails user, StudentDataCommand criteria) {
+        validateQuery(user, criteria);
+        
+        SchoolQuery schoolQuery = new SchoolQuery();
+        schoolQuery.setNameEt(criteria.getQueryNameEt());
+        schoolQuery.setIsWithoutGuests(criteria.getWithoutGuestStudents());
+        schoolQuery.setQuerySubType(criteria.getResultType());
+        schoolQuery.setOrderby1(criteria.getOrderField1());
+        schoolQuery.setOrderby2(criteria.getOrderField2());
+        schoolQuery.setOrderby3(criteria.getOrderField3());
+        schoolQuery.setIsOrderby1Desc(criteria.getOrderField1Desc());
+        schoolQuery.setIsOrderby2Desc(criteria.getOrderField2Desc());
+        schoolQuery.setIsOrderby3Desc(criteria.getOrderField3Desc());
+        schoolQuery.setSchool(em.getReference(School.class, user.getSchoolId()));
+        schoolQuery.setIsStudentQuery(Boolean.TRUE);
+        schoolQuery = EntityUtil.save(schoolQuery, em);
+        // Get names of fields that should be shown
+        saveQueryCriteria(schoolQuery, criteria);
+    }
+    
+    public void saveQuery(HoisUserDetails user, SubjectStudyPeriodDataCommand criteria) {
+        validateQuery(user, criteria);
+        
+        SchoolQuery schoolQuery = new SchoolQuery();
+        schoolQuery.setNameEt(criteria.getQueryNameEt());
+        schoolQuery.setSchool(em.getReference(School.class, user.getSchoolId()));
+        schoolQuery.setIsStudentQuery(Boolean.FALSE);
+        schoolQuery = EntityUtil.save(schoolQuery, em);
+        // Get names of fields that should be shown
+        saveQueryCriteria(schoolQuery, criteria);
+    }
+    
+    /**
+     * Uses reflection to save all fields with 'Show' ending as main code
+     * Main code, 'Show' and 'Sign' fields are saved in one object, otherwise creates new object
+     * @param schoolQuery
+     * @param criteria
+     * @param objectClass 
+     */
+    private void saveQueryCriteria(SchoolQuery schoolQuery, Object criteria) {
+        List<Method> methods = Arrays.asList(criteria.getClass().getDeclaredMethods());
+        List<Method> mainMethods = methods.stream().filter(p -> p.getName().endsWith("Show") && p.getName().startsWith("get")).collect(Collectors.toList());
+        List<SchoolQueryCriteria> schoolQueryCriterias = new ArrayList<>();
+        for (Method mainMethodShow : mainMethods) {
+            try {
+                String mainMethod = mainMethodShow.getName().replace("Show", "");
+                // fields that are saved in the same object
+                List<String> methodNames = Arrays.asList(mainMethod, mainMethod + "Show", mainMethod + "Sign");
+                List<Method> existingMethods = new ArrayList<>();
+                for (String method : methodNames) {
+                    try {
+                        Method classMethod = criteria.getClass().getMethod(method);
+                        Object value = classMethod.invoke(criteria);
+                        if (value != null) {
+                            if (!mainMethod.endsWith("Show") || (mainMethod.endsWith("Show") && Boolean.TRUE.equals(value))) {
+                                existingMethods.add(classMethod);
+                            }
+                        }
+                    } catch (@SuppressWarnings("unused") NoSuchMethodException nsme) {
+                        continue;
+                    }
+                }
+                SchoolQueryCriteria schoolQueryCriteria = new SchoolQueryCriteria();
+                schoolQueryCriteria.setSchoolQuery(schoolQuery);
+                schoolQueryCriteria.setCriteriaCode(mainMethod.replace("get", ""));
+                for (Method classMethod : existingMethods) {
+                    Object value = classMethod.invoke(criteria);
+                    if (classMethod.getName().endsWith("Show")) {
+                        schoolQueryCriteria.setShowInResults((Boolean) value);
+                    }  else if (classMethod.getName().endsWith("Sign")) {
+                        schoolQueryCriteria.setCriteriaCondition(value.toString());
+                    } else if (classMethod.getName().equals(mainMethod)) {
+                        schoolQueryCriteria.setCriteriaVal1(value.toString());
+                    }
+                }
+                if (existingMethods.size() != 0) schoolQueryCriterias.add(schoolQueryCriteria);
+                // fields that are saved as separate objects
+                methodNames = Arrays.asList(mainMethod + "From", mainMethod + "Thru", mainMethod + "Period", mainMethod + "Apel", mainMethod + "Repetitive", mainMethod + "Positive");
+                existingMethods = new ArrayList<>();
+                for (String method : methodNames) {
+                    try {
+                        Method classMethod = criteria.getClass().getMethod(method);
+                        Object value = classMethod.invoke(criteria);
+                        if (value != null) {
+                            existingMethods.add(classMethod);
+                        }
+                    } catch (@SuppressWarnings("unused") NoSuchMethodException nsme) {
+                        continue;
+                    }
+                }
+                for (Method classMethod : existingMethods) {
+                    schoolQueryCriteria = new SchoolQueryCriteria();
+                    schoolQueryCriteria.setSchoolQuery(schoolQuery);
+                    schoolQueryCriteria.setCriteriaCode(classMethod.getName().replace("get", ""));
+                    Object value = classMethod.invoke(criteria);
+                    schoolQueryCriteria.setCriteriaVal1(value.toString());
+                    schoolQueryCriterias.add(schoolQueryCriteria);
+                }
+            } catch (@SuppressWarnings("unused") SecurityException | IllegalAccessException | InvocationTargetException e) {
+                continue;
+            }
+        }
+        schoolQueryCriterias.forEach(p -> EntityUtil.save(p, em));
+    }
+
+    public List<AutocompleteResult> savedStudentQueries(HoisUserDetails user, SchoolQueryCommand command) {
+        List<?> data = em.createNativeQuery("select sq.id, sq.name_et from school_query sq where sq.school_id = :schoolId and sq.is_student_query = :isStudentQuery")
+                .setParameter("schoolId", user.getSchoolId())
+                .setParameter("isStudentQuery", command.getIsStudentQuery())
+                .getResultList();
+        return data.stream().map(p -> new AutocompleteResult(resultAsLong(p, 0), resultAsString(p, 1), resultAsString(p, 1))).collect(Collectors.toList());
+    }
+
+    public void deleteQuery(HoisUserDetails user, SchoolQuery schoolQuery) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        EntityUtil.deleteEntity(schoolQuery, em);
+    }
+
+    @SuppressWarnings("boxing")
+    public Page<SubjectStudyPeriodDataDto> subjectStudyPeriodData(HoisUserDetails user, SubjectStudyPeriodDataCommand criteria, Pageable pageable) {
+        
+        String SEARCH_FROM = "from subject s "
+                + "left join subject_study_period ssp on ssp.subject_id = s.id "
+                + "left join study_period sp on sp.id = ssp.study_period_id "
+                + "left join study_year sy on sp.study_year_id = sy.id "
+                + (Boolean.TRUE.equals(criteria.getOptionalSubjectShow()) || criteria.getOptionalSubject() != null || 
+                    Boolean.TRUE.equals(criteria.getCurriculumShow()) || criteria.getCurriculum() != null ?
+                    "left join curriculum_version_hmodule_subject cvhs on cvhs.subject_id = s.id " : "")
+                + (Boolean.TRUE.equals(criteria.getCurriculumShow()) || criteria.getCurriculum() != null ? 
+                    "left join curriculum_version_hmodule cvh on cvhs.curriculum_version_hmodule_id = cvh.id "
+                    + "left join curriculum_version cv on cvh.curriculum_version_id = cv.id "
+                    + "left join curriculum c on cv.curriculum_id = c.id " : "")
+                + "left join (select string_agg(p.firstname || ' ' || p.lastname, ', ' order by p.firstname || ' ' || p.lastname) as name, array_agg(t.id\\:\\:character varying) as teacherIds, sspt.subject_study_period_id "
+                    + "from subject_study_period_teacher sspt "
+                    + "join teacher t on sspt.teacher_id = t.id "
+                    + "join person p on t.person_id = p.id "
+                    + "group by sspt.subject_study_period_id"
+                    + ") teachers on teachers.subject_study_period_id = ssp.id "
+                + "left join (select string_agg(sg.code, ', ' order by sg.code) as studentGroupCodes, array_agg(sg.id\\:\\:character varying) as studentGroupIds, array_agg(distinct(sg.course)\\:\\:character varying) as studentGroupCourses, sspsg.subject_study_period_id "
+                    + "from subject_study_period_student_group sspsg "
+                    + "join student_group sg on sspsg.student_group_id = sg.id "
+                    + "group by sspsg.subject_study_period_id"
+                    + ") groups on groups.subject_study_period_id = ssp.id "
+                + "left join (select string_agg(p.protocol_nr\\:\\:character varying, ', ' order by p.protocol_nr) as protocolNumbers, ph.subject_study_period_id "
+                    + "from protocol_hdata ph "
+                    + "join protocol p on p.id = ph.protocol_id "
+                    + "group by ph.subject_study_period_id "
+                    + ") protocols on protocols.subject_study_period_id = ssp.id";
+    
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable);
+        
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.optionalContains("s.code", "subjectCode", criteria.getSubjectCode());
+        qb.optionalCriteria("s.id = :subjectEt", "subjectEt", criteria.getSubjectEt());
+        qb.optionalCriteria("s.id = :subjectEn", "subjectEn", criteria.getSubjectEn());
+        qb.optionalCriteria(":teacherId\\:\\:character varying = any(teachers.teacherIds)", "teacherId", criteria.getTeacher());
+        qb.optionalCriteria("c.id in (:curriculumIds)", "curriculumIds", criteria.getCurriculum());
+        if (criteria.getStudyYearSign() != null) {
+            qb.optionalCriteria("sy.year_code " + criteria.getStudyYearSign() + " :yearCode", "yearCode", criteria.getStudyYear());
+        }
+        qb.optionalCriteria("sp.type_code in (:periodCodes)", "periodCodes", criteria.getStudyPeriod());
+        if (criteria.getCourse() != null) {
+            String result = "(";
+            for (int i = 0; i < criteria.getCourse().size(); i++) {
+                String course = criteria.getCourse().get(i);
+                if (i == criteria.getCourse().size() - 1) {
+                    result += course + "\\:\\:character varying = any(groups.studentGroupCourses)";
+                } else {
+                    result += course + "\\:\\:character varying = any(groups.studentGroupCourses) or ";
+                }
+            }
+            result += ") ";
+            qb.filter(result);
+        }
+        qb.optionalCriteria(":studentGroupId\\:\\:character varying = any(groups.studentGroupIds)", "studentGroupId", criteria.getStudentGroup());
+        if (criteria.getEapSign() != null) {
+            qb.optionalCriteria("s.credits " + criteria.getEapSign() + " :eap", "eap", criteria.getEap());
+        }
+        qb.optionalCriteria("cvhs.is_optional = :optionalSubject", "optionalSubject", criteria.getOptionalSubject());
+        qb.optionalContains("ssp.moodle_course_id\\:\\:character varying", "moodleId", criteria.getMoodleId());
+        if (Boolean.TRUE.equals(criteria.getProtocol())) {
+            qb.filter("protocols.protocolNumbers is not null");
+        } else if (Boolean.FALSE.equals(criteria.getProtocol())) {
+            qb.filter("protocols.protocolNumbers is null");
+        }
+        
+        String SELECT = "s.code, s.id, s.name_et, s.name_en, s.credits, teachers.name, "
+                + (Boolean.TRUE.equals(criteria.getCurriculumShow()) ? "c.id as curriculumId, c.code || ' ' || c.name_et as curriculumEt, c.code || ' ' || c.name_en as curriculumEn, " :
+                    "null as curriculumId, null as curriculumEt, null as curriculumEn, ")
+                + "sy.year_code, sp.name_et as studyPeriodEt, sp.name_en as studyPeriodEn, array_to_string(groups.studentGroupCourses, ', '), "
+                + (Boolean.TRUE.equals(criteria.getOptionalSubjectShow()) ? " cvhs.is_optional as isOptional, " : "null as isOptional, ")
+                + "groups.studentGroupCodes, ssp.moodle_course_id, protocols.protocolNumbers";
+        String GROUP_BY = "s.code, s.id, s.name_et, s.name_en, s.credits, teachers.name, "
+                + (Boolean.TRUE.equals(criteria.getCurriculumShow()) ? "c.id, c.code || ' ' || c.name_et, c.code || ' ' || c.name_en, " : "")
+                + "sy.year_code, sp.name_et, sp.name_en, groups.studentGroupCourses, "
+                + (Boolean.TRUE.equals(criteria.getOptionalSubjectShow()) ? "cvhs.is_optional, " : "")
+                + "groups.studentGroupCodes, ssp.moodle_course_id, protocols.protocolNumbers, ssp.id";
+        qb.groupBy(GROUP_BY);
+        Holder<Integer> i = new Holder<>(Integer.valueOf(0));
+        return JpaQueryUtil.pagingResult(qb, SELECT, em, pageable).map(r -> {
+            i.value ++;
+            return new SubjectStudyPeriodDataDto(r, i.value);
+        });
+    }
+
+    public Object getQuery(SchoolQuery schoolQuery, Class<? extends SchoolQueryDto>  commandClass) {
+        ClassifierUtil.ClassifierCache classifierCache = new ClassifierUtil.ClassifierCache(classifierService);
+        SchoolQueryDto command;
+        try {
+            command = commandClass.newInstance();
+        } catch (@SuppressWarnings("unused") InstantiationException | IllegalAccessException e1) {
+            return null;
+        }
+        command.setResultType(schoolQuery.getQuerySubType());
+        command.setWithoutGuestStudents(schoolQuery.getIsWithoutGuests());
+        command.setOrderField1(schoolQuery.getOrderby1());
+        command.setOrderField2(schoolQuery.getOrderby2());
+        command.setOrderField3(schoolQuery.getOrderby3());
+        command.setOrderField1Desc(schoolQuery.getIsOrderby1Desc());
+        command.setOrderField2Desc(schoolQuery.getIsOrderby2Desc());
+        command.setOrderField3Desc(schoolQuery.getIsOrderby3Desc());
+        List<SchoolQueryCriteria> criterias = schoolQuery.getSchoolQueryCriteria();
+        for (SchoolQueryCriteria criteria : criterias) {
+            String criteriaCode = criteria.getCriteriaCode();
+            if (Boolean.TRUE.equals(criteria.getShowInResults())) {
+                String method = "set" + criteriaCode + "Show";
+                try {
+                    Method classMethod = command.getClass().getMethod(method, Boolean.class);
+                    classMethod.invoke(command, criteria.getShowInResults());
+                } catch (@SuppressWarnings("unused") Exception e) {
+                    continue;
+                }
+            }
+            if (criteria.getCriteriaCondition() != null) {
+                String method = "set" + criteriaCode + "Sign";
+                try {
+                    Method classMethod = command.getClass().getMethod(method, String.class);
+                    classMethod.invoke(command, criteria.getCriteriaCondition());
+                } catch (@SuppressWarnings("unused") Exception e) {
+                    continue;
+                }
+            }
+            if (criteria.getCriteriaVal1() != null) {
+                List<Method> methods = Arrays.asList(commandClass.getMethods());
+                String methodName = "set" + criteriaCode;
+                Optional<Method> method = methods.stream().filter(p -> methodName.equals(p.getName())).findFirst();
+                if (method.isPresent()) {
+                    Method classMethod = method.get();
+                    Class<?> usedClass = classMethod.getParameterTypes()[0];
+                    try {
+                        if (usedClass.equals(Boolean.class)) {
+                            classMethod.invoke(command, Boolean.valueOf(criteria.getCriteriaVal1()));
+                        } else if (usedClass.equals(String.class)) {
+                            classMethod.invoke(command, criteria.getCriteriaVal1());
+                        } else if (usedClass.equals(Long.class)) {
+                            classMethod.invoke(command, Long.valueOf(criteria.getCriteriaVal1()));
+                        } else if (usedClass.equals(BigDecimal.class)) {
+                            classMethod.invoke(command, new BigDecimal(criteria.getCriteriaVal1()));
+                        } else if (usedClass.equals(LocalDate.class)) {
+                            classMethod.invoke(command, LocalDate.parse(criteria.getCriteriaVal1()));
+                        } else if (usedClass.equals(AutocompleteResult.class)) {
+                            // Autocomplete single fields
+                            AutocompleteResult autocompleteResult = null;
+                            if ("SubjectEt".equals(criteriaCode) || "SubjectEn".equals(criteriaCode)) {
+                                autocompleteResult = AutocompleteResult.of(em.getReference(Subject.class, Long.valueOf(criteria.getCriteriaVal1())));
+                            } else if ("StudentGroup".equals(criteriaCode)) {
+                                autocompleteResult = AutocompleteResult.of(em.getReference(StudentGroup.class, Long.valueOf(criteria.getCriteriaVal1())));
+                            } else if ("Teacher".equals(criteriaCode)) {
+                                autocompleteResult = AutocompleteResult.of(em.getReference(Teacher.class, Long.valueOf(criteria.getCriteriaVal1())));
+                            }
+                            classMethod.invoke(command, autocompleteResult);
+                        } else if (usedClass.equals(List.class)) {
+                            ParameterizedType type = (ParameterizedType)classMethod.getGenericParameterTypes()[0];
+                            Type classType = type.getActualTypeArguments()[0];
+                            String listVal = criteria.getCriteriaVal1();
+                            List<String> stringValues = Arrays.asList(listVal.substring(1, listVal.length() - 1).split(", "));
+                            if (classType.equals(ClassifierResult.class)) {
+                                String classifierName = stringValues.get(0);
+                                List<Classifier> classifiers = stringValues.stream().map(p -> classifierCache.getByCode(p, MainClassCode.valueOf(classifierName.split("\\_")[0]))).collect(Collectors.toList());
+                                List<ClassifierResult> classifierResults = classifiers.stream().map(p -> ClassifierResult.of(p)).collect(Collectors.toList());
+                                classMethod.invoke(command, classifierResults);
+                            } else if (classType.equals(Long.class)) {
+                                List<Long> longValues = stringValues.stream().map(Long::valueOf).collect(Collectors.toList());
+                                classMethod.invoke(command, longValues);
+                            } else if (classType.equals(String.class)) {
+                                classMethod.invoke(command, stringValues);
+                            } else if (classType.equals(AutocompleteResult.class)) {
+                                // Autocomplete list fields
+                                List<Long> longValues = stringValues.stream().map(Long::valueOf).collect(Collectors.toList());
+                                List<AutocompleteResult> autocompleteValues = null;
+                                if ("StudentGroups".equals(criteriaCode)) {
+                                    autocompleteValues = longValues.stream().map(p -> AutocompleteResult.of(em.getReference(StudentGroup.class, p))).collect(Collectors.toList());
+                                } else if ("SchoolDepartment".equals(criteriaCode)) {
+                                    autocompleteValues = longValues.stream().map(p -> AutocompleteResult.of(em.getReference(SchoolDepartment.class, p))).collect(Collectors.toList());
+                                } else if ("Curriculum".equals(criteriaCode)) {
+                                    autocompleteValues = longValues.stream().map(p -> AutocompleteResult.of(em.getReference(Curriculum.class, p))).collect(Collectors.toList());
+                                } else if ("ActiveResult".equals(criteriaCode) || "DeclaredSubject".equals(criteriaCode)) {
+                                    autocompleteValues = longValues.stream().map(p -> AutocompleteResult.of(em.getReference(Subject.class, p))).collect(Collectors.toList());
+                                }
+                                classMethod.invoke(command, autocompleteValues);
+                            }
+                        }
+                    } catch (@SuppressWarnings("unused") IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+                        continue;
+                    }
+                }
+            }
+            
+        }
+        return command;
+    }
+
+    public byte[] subjectStudyPeriodDataAsExcel(HoisUserDetails user, SubjectStudyPeriodDataCommand criteria,
+            Pageable pageable) {
+        List<SubjectStudyPeriodDataDto> students = subjectStudyPeriodData(user, criteria, new PageRequest(0, Integer.MAX_VALUE, pageable.getSort())).getContent();
+        Map<String, Object> data = new HashMap<>();
+        List<String> header = convertToHeader(criteria, "subjectStudyPeriodData");
+        List<List<Object>> studentData = getData(header, students);
+        data.put("data", studentData);
+        data.put("header", header);
+        data.put("criteria", criteria);
+        return xlsService.generate("subjectstudyperioddata.xls", data);
     }
 }

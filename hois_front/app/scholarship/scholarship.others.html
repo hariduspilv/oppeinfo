@@ -1,0 +1,14 @@
+<div ng-include="'scholarship/scholarship.navbar.html'"></div>
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <form ng-submit="save()">
+    <div layout="column" style="padding: 0 16px;">
+      <p class="underlined-header" style="margin-top: 0px;">{{'stipend.othersHeadline' | translate}}</p>
+      <div layout="row" ng-repeat="type in ehisScholarships">
+        <md-checkbox ng-model="allowedEhisTypes[type]"><hois-classifier-value ng-model="type" main-classifier-code="EHIS_STIPENDIUM"></hois-classifier-value></md-checkbox>
+      </div>
+      <div layout="row">
+        <md-button type="submit" ng-disabled="!promise.$$state.status" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+      </div>
+    </div>
+  </form>
+</div>

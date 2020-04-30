@@ -46,6 +46,8 @@ public class TimetableEvent extends BaseEntityWithId {
     @ManyToOne(fetch = FetchType.LAZY)
     private Person person;
 
+    private Long juhanEventId;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "timetable_event_id", nullable = false, updatable = false)
     private List<TimetableEventTime> timetableEventTimes = new ArrayList<>();
@@ -152,6 +154,14 @@ public class TimetableEvent extends BaseEntityWithId {
 
     public void setPerson(Person person) {
         this.person = person;
+    }
+
+    public Long getJuhanEventId() {
+        return juhanEventId;
+    }
+
+    public void setJuhanEventId(Long juhanEventId) {
+        this.juhanEventId = juhanEventId;
     }
 
     public List<TimetableEventTime> getTimetableEventTimes() {

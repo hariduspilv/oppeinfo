@@ -45,6 +45,6 @@ public abstract class EnumUtil {
         if (classifier == null) {
             return null;
         }
-        return Enums.getIfPresent(enumClass, EntityUtil.getCode(classifier)).orNull();
+        return valueOf(enumClass, EntityUtil.getCode(classifier));
     }
 }

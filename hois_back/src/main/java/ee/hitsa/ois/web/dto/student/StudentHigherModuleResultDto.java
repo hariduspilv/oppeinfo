@@ -17,14 +17,18 @@ public class StudentHigherModuleResultDto extends CurriculumVersionHigherModuleD
     private BigDecimal mandatoryDifference;
     private BigDecimal optionalDifference;
     private BigDecimal totalDifference;
+    private Long studentCurriculumCompletionHigherModule;
     private Boolean isOk;
     private Long electiveModulesCompleted;
     private List<StudentHigherElectiveModuleResultDto> electiveModulesResults;
+
+    private Boolean canMarkComplete;
 
     public static StudentHigherModuleResultDto of(CurriculumVersionHigherModule higherModule) {
         StudentHigherModuleResultDto dto = EntityUtil.bindToDto(higherModule, new StudentHigherModuleResultDto(),
                 "electiveModules", "specialities", "subjects");
         dto.setElectiveModulesResults(StreamUtil.toMappedList(StudentHigherElectiveModuleResultDto::of, higherModule.getElectiveModules()));
+        dto.setCanMarkComplete(HigherModuleType.CAN_MARK_AS_COMPLETE.contains(EntityUtil.getCode(higherModule.getType())));
         return dto;
     }
 
@@ -60,6 +64,14 @@ public class StudentHigherModuleResultDto extends CurriculumVersionHigherModuleD
 
     public void setElectiveModulesCompleted(Long electiveModulesCompleted) {
         this.electiveModulesCompleted = electiveModulesCompleted;
+    }
+
+    public Long getStudentCurriculumCompletionHigherModule() {
+        return studentCurriculumCompletionHigherModule;
+    }
+
+    public void setStudentCurriculumCompletionHigherModule(Long studentCurriculumCompletionHigherModule) {
+        this.studentCurriculumCompletionHigherModule = studentCurriculumCompletionHigherModule;
     }
 
     public Boolean getIsOk() {
@@ -108,5 +120,13 @@ public class StudentHigherModuleResultDto extends CurriculumVersionHigherModuleD
 
     public void setTotalDifference(BigDecimal totalDifference) {
         this.totalDifference = totalDifference;
+    }
+
+    public Boolean getCanMarkComplete() {
+        return canMarkComplete;
+    }
+
+    public void setCanMarkComplete(Boolean canMarkComplete) {
+        this.canMarkComplete = canMarkComplete;
     }
 }

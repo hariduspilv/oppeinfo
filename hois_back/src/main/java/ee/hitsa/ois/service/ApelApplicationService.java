@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +27,7 @@ import javax.validation.Validator;
 
 import ee.hitsa.ois.domain.application.ApplicationPlannedSubject;
 import ee.hitsa.ois.domain.application.ApplicationPlannedSubjectEquivalent;
+import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResult;
 import ee.hitsa.ois.web.dto.timetable.DateRangeDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -120,6 +122,8 @@ public class ApelApplicationService {
     private static final String RPM_SELECT = "aa.id as application_id, aa.status_code as application_status, s.id as student_id,"
             + " p.firstname as student_firstname, p.lastname as student_lastname, cur.id as curriculum_id, cur.name_et as curriculum_name_et,"
             + " cur.name_en as curriculum_name_en, aa.inserted, aa.confirmed, sg.code";
+
+    private static final String OUTCOME_RESULT_ADDINFO = "VÕTA";
     
     /**
      * Search student APEL applications
@@ -768,10 +772,63 @@ public class ApelApplicationService {
             application.setOldNominalStudyEnd(student.getNominalStudyEnd());
             student.setNominalStudyEnd(application.getNewNominalStudyEnd());
         }
+        addStudentCurriculumOutcomeResults(user, application);
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_C);
         application.setConfirmedBy(user.getUsername());
         application.setConfirmed(LocalDateTime.now());
         return EntityUtil.save(application, em);
+    }
+
+    private void addStudentCurriculumOutcomeResults(HoisUserDetails user, ApelApplication application) {
+        List<CurriculumModuleOutcome> apelApplicationOutcomes = apelApplicationOutcomes(application.getId());
+        if (!apelApplicationOutcomes.isEmpty()) {
+            Student student = application.getStudent();
+            Map<Long, StudentCurriculumModuleOutcomesResult> existingResults = existingStudentCurriculumOutcomeResults(student.getId());
+            for (CurriculumModuleOutcome outcome : apelApplicationOutcomes) {
+                StudentCurriculumModuleOutcomesResult currentResult = existingResults.get(outcome.getId());
+                String currentResultGrade = currentResult != null ? EntityUtil.getNullableCode(currentResult.getGrade()) : null;
+                if (currentResult == null) {
+                    StudentCurriculumModuleOutcomesResult result = new StudentCurriculumModuleOutcomesResult();
+                    result.setStudent(student);
+                    result.setCurriculumModuleOutcomes(outcome);
+                    setOutcomeResultGrade(user, application, result);
+                    EntityUtil.save(result, em);
+                } else if (!OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE.contains(currentResultGrade)) {
+                    if (currentResultGrade != null) {
+                        currentResult.addToHistory();
+                    }
+                    setOutcomeResultGrade(user, application, currentResult);
+                    EntityUtil.save(currentResult, em);
+                }
+            }
+        }
+    }
+
+    private void setOutcomeResultGrade(HoisUserDetails user, ApelApplication application,
+            StudentCurriculumModuleOutcomesResult result) {
+        result.setGrade(em.getReference(Classifier.class, OccupationalGrade.KUTSEHINDAMINE_A.name()));
+        result.setGradeDate(LocalDate.now());
+        result.setGradeInserted(LocalDateTime.now());
+        result.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(user.getUsername()));
+        result.setAddInfo(OUTCOME_RESULT_ADDINFO);
+        result.setApelApplication(application);
+    }
+
+    private List<CurriculumModuleOutcome> apelApplicationOutcomes(Long applicationId) {
+        return em.createQuery("select aaismo.curriculumModuleOutcomes from ApelApplicationInformalSubjectOrModuleOutcomes aaismo" +
+                " where aaismo.apelApplicationInformalSubjectOrModule.apelApplicationRecord.apelApplication.id = :applicationId",
+                CurriculumModuleOutcome.class)
+                .setParameter("applicationId", applicationId)
+                .getResultList();
+    }
+
+    private Map<Long, StudentCurriculumModuleOutcomesResult> existingStudentCurriculumOutcomeResults(Long studentId) {
+        List<StudentCurriculumModuleOutcomesResult> results = em.createQuery("select scmor from"
+                + " StudentCurriculumModuleOutcomesResult scmor where scmor.student.id = :studentId",
+                StudentCurriculumModuleOutcomesResult.class)
+                .setParameter("studentId", studentId)
+                .getResultList();
+        return StreamUtil.toMap(r -> EntityUtil.getId(r.getCurriculumModuleOutcomes()), r -> r, results);
     }
 
     private void checkThatSubjectsDoNotAlreadyHavePositiveGrade(Long studentId, List<Long> replacedIds) {
@@ -982,15 +1039,31 @@ public class ApelApplicationService {
      * @param application
      * @return
      */
-    public ApelApplication removeConfirmation(ApelApplication application) {
+    public ApelApplication removeConfirmation(HoisUserDetails user, ApelApplication application) {
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_Y);
         if (Boolean.FALSE.equals(application.getIsEhisSent())) {
             application.getStudent().setNominalStudyEnd(application.getOldNominalStudyEnd());
             application.setOldNominalStudyEnd(null);
         }
+        removeStudentCurriculumOutcomeResults(user, application);
         application.setConfirmedBy(null);
         application.setConfirmed(null);
         return EntityUtil.save(application, em);
+    }
+
+    private void removeStudentCurriculumOutcomeResults(HoisUserDetails user, ApelApplication application) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        Iterator<StudentCurriculumModuleOutcomesResult> resultsInterator = application.getOutcomeResults().iterator();
+        while (resultsInterator.hasNext()) {
+            StudentCurriculumModuleOutcomesResult result = resultsInterator.next();
+            resultsInterator.remove();
+            application.getOutcomeResults().remove(result);
+            if (result.getHistory().size() > 0) {
+                result.removeGrade();
+            } else {
+                EntityUtil.deleteEntity(result, em);
+            }
+        }
     }
 
     public CurriculumVersionHigherModuleDto subjectModule(Long curriculumVersionId, Long subjectId) {

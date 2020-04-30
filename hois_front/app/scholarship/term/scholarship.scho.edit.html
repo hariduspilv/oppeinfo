@@ -1,7 +1,7 @@
 <div layout="row" flex>
   <md-input-container flex>
     <label class="textInput">{{'stipend.scholarshipName' | translate}}</label>
-    <input type="text" ng-model="stipend.nameEt" name="nameEt" required md-maxlength="500">
+    <input type="text" ng-model="stipend.nameEt" name="nameEt" required md-maxlength="255">
   </md-input-container>
 </div>
 <div layout="row" flex>
@@ -83,12 +83,34 @@
   </div>
   <div layout="row" flex>
     <md-input-container flex="45">
+      <label class="textInput">{{'stipend.wagMark' | translate}}</label>
+      <input ng-model="stipend.wagMark" type="number" autofocus aria-label="wagMark" min="0" max="5">
+    </md-input-container>
+    <md-input-container flex="50" flex-offset="5">
+      <label class="textInput">{{'stipend.priority' | translate}}</label>
+      <hois-select ng-model="stipend.wagMarkPriority" values="formState.priorities | filter: wagMarkPriorityFilter"
+        show-property="value" value-property="code"></hois-select>
+    </md-input-container>
+  </div>
+  <div layout="row" flex>
+    <md-input-container flex="45">
       <label class="textInput">{{'stipend.lastPeriodMark' | translate}}</label>
       <input ng-model="stipend.lastPeriodMark" type="number" autofocus aria-label="averageMark" min="0" max="5">
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
       <label class="textInput">{{'stipend.priority' | translate}}</label>
       <hois-select ng-model="stipend.lastPeriodMarkPriority" values="formState.priorities | filter: lastPeriodMarkPriorityFilter"
+        show-property="value" value-property="code"></hois-select>
+    </md-input-container>
+  </div>
+  <div layout="row" flex>
+    <md-input-container flex="45">
+      <label class="textInput">{{'stipend.lastPeriodWagMark' | translate}}</label>
+      <input ng-model="stipend.lastPeriodWagMark" type="number" autofocus aria-label="lastPeriodWagMark" min="0" max="5">
+    </md-input-container>
+    <md-input-container flex="50" flex-offset="5">
+      <label class="textInput">{{'stipend.priority' | translate}}</label>
+      <hois-select ng-model="stipend.lastPeriodWagMarkPriority" values="formState.priorities | filter: lastPeriodWagMarkPriorityFilter"
         show-property="value" value-property="code"></hois-select>
     </md-input-container>
   </div>
@@ -118,6 +140,25 @@
     <md-checkbox ng-model="stipend.isAcademicLeave" aria-label="Is academic leave" flex="50">
       {{'stipend.isAcademicLeave' | translate}}
     </md-checkbox>
+    <md-checkbox ng-model="stipend.isSais" aria-label="Is sais" flex="50">
+      {{'stipend.isSais' | translate}}
+    </md-checkbox>
+  </div>
+  <div layout="row" flex>
+    <md-checkbox ng-model="stipend.isApelGrade" aria-label="Is apel grade" flex="50">
+      {{'stipend.isApelGradeHigher' | translate}}
+    </md-checkbox>
+    <md-checkbox ng-model="stipend.isBeforeImmat" aria-label="Is before immat" flex="50">
+      {{'stipend.isBeforeImmat' | translate}}
+    </md-checkbox>
+  </div>
+  <div layout="row" flex>
+    <md-checkbox ng-model="stipend.isNegative" aria-label="Is negative" flex="50">
+      {{'stipend.isNegative' | translate}}
+    </md-checkbox>
+    <md-checkbox ng-if="stipend.type === 'STIPTOETUS_MUU'" ng-model="stipend.isNominalEnd" aria-label="Is nominal end" flex="50">
+      {{'stipend.isNominalEnd' | translate}}
+    </md-checkbox>
   </div>
   <div layout="row" flex>
     <md-input-container flex="45">
@@ -129,6 +170,7 @@
 <div layout="row">
   <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
   <md-button class="md-raised" ng-if="!stipend.isOpen && stipend.id" ng-click="publish()">{{'main.button.publishtoStudents' | translate}}</md-button>
+  <md-button class="md-raised" ng-if="stipend.id" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
   <md-button class="md-raised" ng-if="stipend.id && !stipend.isOpen" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
   <md-button class="md-raised" ng-click="back('#/scholarships/scholarships', stipendForm)">{{'main.button.back' | translate}}</md-button>
 </div>

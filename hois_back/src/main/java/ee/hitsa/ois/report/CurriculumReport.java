@@ -99,7 +99,13 @@ public class CurriculumReport {
         // XXX language-specific field
         admissionRequirements = curriculum.getAdmissionRequirementsEt();
         specialities = curriculumVersion.getSpecialities().stream().map(r -> String.format("%s %s", name(r.getCurriculumSpeciality(), lang), r.getCurriculumSpeciality().getCredits())).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
-        minorSpecialities = curriculumVersion.getModules().stream().filter(r -> Boolean.TRUE.equals(r.getMinorSpeciality())).map(r -> String.format("%s %s", name(r, lang), r.getTotalCredits())).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
+        minorSpecialities = curriculumVersion.getModules().stream()
+                .filter(r -> Boolean.TRUE.equals(r.getMinorSpeciality()))
+                .sorted(Comparator
+                        .comparing(CurriculumVersionHigherModule::getOrderNr,
+                                Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(Comparator.comparing(m -> name(m, lang), String.CASE_INSENSITIVE_ORDER)))
+                .map(r -> String.format("%s %s", name(r, lang), r.getTotalCredits())).collect(Collectors.toList());
         // XXX language-specific field
         objectives = curriculum.getObjectivesEt();
         // XXX language-specific field
@@ -227,7 +233,12 @@ public class CurriculumReport {
 
         public Structure(CurriculumVersionSpeciality speciality, List<CurriculumVersionHigherModule> modules, Language lang) {
             this.name = name(speciality.getCurriculumSpeciality(), lang);
-            this.modules = modules.stream().map(r -> String.format("%s %s/%s", name(r, lang), r.getCompulsoryStudyCredits(), r.getOptionalStudyCredits())).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
+            this.modules = modules.stream()
+                    .sorted(Comparator
+                            .comparing(CurriculumVersionHigherModule::getOrderNr,
+                                    Comparator.nullsLast(Comparator.naturalOrder()))
+                            .thenComparing(Comparator.comparing(m -> name(m, lang), String.CASE_INSENSITIVE_ORDER)))
+                    .map(r -> String.format("%s %s/%s", name(r, lang), r.getCompulsoryStudyCredits(), r.getOptionalStudyCredits())).collect(Collectors.toList());
         }
 
         public String getName() {

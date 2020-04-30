@@ -19,7 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -27,12 +29,7 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
 
-import ee.hitsa.ois.util.JpaQueryBuilder;
-import ee.hitsa.ois.web.commandobject.SearchCommand;
-import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationSearchCommand;
-import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationSearchDto;
-import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermResult;
-import ee.hitsa.ois.web.dto.scholarship.UnappliedScholarshipApplicationDto;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -40,11 +37,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.CommitteeMember;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.ScholarshipNoApplication;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.directive.Directive;
@@ -73,11 +72,14 @@ import ee.hitsa.ois.enums.ScholarshipType;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.ScholarshipUtil;
@@ -85,32 +87,39 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshiApplicationRejectionForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationListSubmitForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationRankingSearchCommand;
+import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipCommitteeSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipDecisionForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipStudentApplicationForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipTermForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierDto;
+import ee.hitsa.ois.web.dto.ScholarshipNoApplicationDto;
 import ee.hitsa.ois.web.dto.ScholarshipTermApplicationRankingSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationRankingSearchDto;
+import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationStudentDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipDecisionDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipStudentRejectionDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermApplicationDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermComplianceDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermDto;
+import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermResult;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermStudentDto;
+import ee.hitsa.ois.web.dto.scholarship.UnappliedScholarshipApplicationDto;
 
 @Transactional
 @Service
 public class ScholarshipService {
 
-    private static final int SAIS_POINTS_MONTHS = 6;
+    private static final int SAIS_POINTS_MONTHS = 3;
     private static final List<String> VALID_DIRECTIVE_STATUSES = EnumUtil.toNameList(
             DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL,
             DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL,
@@ -137,6 +146,10 @@ public class ScholarshipService {
     private EntityManager em;
     @Autowired
     private StudyYearService studyYearService;
+    @Autowired
+    private ClassifierService classifierService;
+    @Autowired
+    private SchoolService schoolService;
     
     /**
      * Create scholarship term
@@ -175,9 +188,12 @@ public class ScholarshipService {
     }
 
     public ScholarshipTerm save(ScholarshipTerm scholarshipTerm, ScholarshipTermForm form) {
-        EntityUtil.bindToEntity(form, scholarshipTerm, classifierRepository, "curriculums", "studyLoads", "courses");
+        EntityUtil.bindToEntity(form, scholarshipTerm, classifierRepository, "curriculums", "studyLoads", "courses", "isNominalEnd");
         if (ScholarshipType.STIPTOETUS_SOIDU.name().equals(form.getType())) {
             scholarshipTerm.setIsStudyBacklog(Boolean.TRUE);
+        }
+        if (ScholarshipType.STIPTOETUS_MUU.name().equals(form.getType())) {
+            scholarshipTerm.setIsNominalEnd(form.getIsNominalEnd());
         }
         scholarshipTerm.setStudyPeriod(em.getReference(StudyPeriod.class, form.getStudyPeriod()));
         Long committeeId = form.getCommittee();
@@ -702,9 +718,10 @@ public class ScholarshipService {
         boolean periodEndExists = params.getPeriodEnd() != null;
         boolean isModuleGrade = Boolean.TRUE.equals(params.getIsModuleGrade()); 
         boolean isApelGrade = Boolean.TRUE.equals(params.getIsApelGrade());
+        boolean isOutcomes = Boolean.TRUE.equals(params.getIsOutcomes());
         List<String> entryTypes = entryTypes(params);
 
-        if (!(isModuleGrade || isApelGrade || !entryTypes.isEmpty())) {
+        if (!(isModuleGrade || isApelGrade || isOutcomes || !entryTypes.isEmpty())) {
             return new ArrayList<>();
         }
 
@@ -716,6 +733,20 @@ public class ScholarshipService {
             if (periodStartExists || periodEndExists) {
                 sql += " and coalesce(svr.grade_date, svr.inserted)"
                         + periodComparisonCondition(periodStartExists, periodEndExists);
+            }
+            addUnion = true;
+        }
+
+        if (isOutcomes) {
+            if (addUnion) {
+                sql += " union all ";
+            }
+            sql += "select grade.code as grade_code"
+                    + " from student_curriculum_module_outcomes_result scmor"
+                    + " join classifier grade on grade.code = scmor.grade_code"
+                    + " where scmor.student_id = ?1";
+            if (periodStartExists || periodEndExists) {
+                sql += " and scmor.grade_date" + periodComparisonCondition(periodStartExists, periodEndExists);
             }
             addUnion = true;
         }
@@ -753,7 +784,6 @@ public class ScholarshipService {
                     + " from (select js.journal_id, jes.grade_inserted, grade.code as grade_code"
                     + STUDENT_JOURNAL_ENTRIES + periodDateCondition + moduleResultCondition + apelResultCondition; 
             sql += ") g";
-            addUnion = true;
         }
 
         Query query = em.createNativeQuery(sql).setParameter(1, EntityUtil.getId(student));
@@ -772,9 +802,6 @@ public class ScholarshipService {
 
     private static List<String> entryTypes(AverageGradeParams params) {
         List<String> entryTypes = new ArrayList<>();
-        if (Boolean.TRUE.equals(params.getIsOutcomes())) {
-            entryTypes.add(JournalEntryType.SISSEKANNE_O.name());
-        }
         if (Boolean.TRUE.equals(params.getIsPeriodGrade())) {
             entryTypes.add(JournalEntryType.SISSEKANNE_R.name());
         }
@@ -819,12 +846,13 @@ public class ScholarshipService {
     }
 
     private static boolean useSaisPoints(ScholarshipTerm term, Student student) {
-        return term.getType().isHigher() && student.getStudyStart() != null && 
-                LocalDate.now().minusMonths(SAIS_POINTS_MONTHS).isBefore(student.getStudyStart());
+        return term.getType().isHigher() && student.getStudyStart() != null
+                && LocalDate.now().minusMonths(SAIS_POINTS_MONTHS).isBefore(student.getStudyStart())
+                && Boolean.TRUE.equals(term.getIsSais());
     }
     
     private BigDecimal getSaisPoints(Student student) {
-        List<?> result = em.createNativeQuery("select sa.points"
+        List<?> result = em.createNativeQuery("select coalesce(sa.points, 0) points"
                 + " from directive_student ds"
                 + " join sais_application sa on sa.id = ds.sais_application_id"
                 + " where ds.canceled = false and ds.student_id = ?1")
@@ -991,7 +1019,7 @@ public class ScholarshipService {
         qb.optionalCriteria("sa.status_code = :status", "status", command.getStatus());
 
         String select = "sa.id sa_id, s.id s_id, p.firstname, p.lastname, sg.code, st.id st_id, st.type_code,"
-                + " st.name_et, st.application_start, st.application_end, sa.status_code, sa.inserted, sg.teacher_id";
+                + " st.name_et, st.application_start, st.application_end, sa.status_code, sa.inserted, sg.teacher_id, st.scholarship_ehis_code";
         return JpaQueryUtil.pagingResult(qb, select, em, pageable).map(r -> {
             LocalDate applicationStart = resultAsLocalDate(r, 8);
             LocalDate applicationEnd = resultAsLocalDate(r, 9);
@@ -999,7 +1027,7 @@ public class ScholarshipService {
             ScholarshipApplicationSearchDto dto = new ScholarshipApplicationSearchDto(resultAsLong(r, 0),
                     resultAsLong(r, 1), PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)),
                     resultAsString(r, 4), resultAsLong(r, 5), resultAsString(r, 6), resultAsString(r, 7),
-                    applicationStart, applicationEnd, applicationStatus, resultAsLocalDate(r, 11));
+                    applicationStart, applicationEnd, applicationStatus, resultAsLocalDate(r, 11), resultAsString(r, 13));
             dto.setCanEdit(Boolean.valueOf(ScholarshipUtil.canEditApplication(user, applicationStatus, applicationStart,
                     applicationEnd, resultAsLong(r, 12))));
             return dto;
@@ -1083,7 +1111,7 @@ public class ScholarshipService {
                 + ", p.firstname, p.lastname, p.idcode, sa.average_mark, sa.last_period_mark , sa.curriculum_completion"
                 + ", sa.is_teacher_confirmed, sa.status_code, sa.compensation_reason_code, sa.compensation_frequency_code"
                 + ", sa.credits, sa.absences, sa.reject_comment, st.is_teacher_confirm"
-                + ", (select case when s.study_start > date(now()) - interval '" + SAIS_POINTS_MONTHS + " months'"
+                + ", (select case when st.is_sais and s.study_start > date(now()) - interval '" + SAIS_POINTS_MONTHS + " months'"
                     + " then sais.points else null end"
                     + " from directive_student ds"
                     + " join sais_application sais on sais.id = ds.sais_application_id"
@@ -1091,7 +1119,7 @@ public class ScholarshipService {
                 + ", (select exists(select 1 from directive_student ds join directive d on d.id = ds.directive_id"
                     + " where ds.scholarship_application_id = sa.id and ds.canceled = false"
                     + " and d.status_code in (" + directiveStatuses + "))) as has_directive"
-                + ", sd.id, sd.decided, sg.code as student_group_code, sa.bank_account_owner_idcode";
+                + ", sd.id, sd.decided, sg.code as student_group_code, sa.bank_account_owner_idcode, st.scholarship_ehis_code";
         List<?> data = qb.select(select, em).getResultList();
         List<ScholarshipApplicationRankingSearchDto> applications = StreamUtil.toMappedList(r -> {
         	ScholarshipApplicationRankingSearchDto dto = new ScholarshipApplicationRankingSearchDto();
@@ -1122,6 +1150,7 @@ public class ScholarshipService {
             dto.setDecisionDecided(resultAsLocalDate(r, 23));
             dto.setStudentGroup(resultAsString(r, 24));
             dto.setBankAccountOwnerIdcode(resultAsString(r, 25));
+            dto.setTypeEhis(resultAsString(r, 26));
             return dto;
         }, data);
 
@@ -1469,6 +1498,31 @@ public class ScholarshipService {
         }
     }
 
+    /**
+     * Collects all school stipends which does not require an application
+     * 
+     * @param schoolId
+     * @return classifier codes
+     */
+    public ScholarshipNoApplicationDto getAllowedWithoutApplicationStipends(Long schoolId) {
+        return ScholarshipNoApplicationDto.of(em.getReference(School.class, schoolId));
+    }
+
+    
+    public void updateAllowedWithoutApplicationStipends(HoisUserDetails user,
+            ScholarshipNoApplicationDto form) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        School school = em.getReference(School.class, user.getSchoolId());
+        final ClassifierCache classifierCache = new ClassifierUtil.ClassifierCache(classifierService);
+        EntityUtil.bindEntityCollection(school.getScholarshipNoApplicationTypes(), type -> EntityUtil.getCode(type.getScholarshipEhis()),
+                form.getAllowedEhisTypes(), newCode -> {
+                    ScholarshipNoApplication entity = new ScholarshipNoApplication();
+                    entity.setSchool(school);
+                    entity.setScholarshipEhis(classifierCache.getByCode(newCode, MainClassCode.EHIS_STIPENDIUM));
+                    return entity;
+                });
+    }
+
     private static class StudentResults {
         private BigDecimal averageMark;
         private BigDecimal lastPeriodMark;
@@ -1606,5 +1660,87 @@ public class ScholarshipService {
             this.isJournalGrade = isJournalGrade;
         }
 
+    }
+
+    public ScholarshipTerm copy(ScholarshipTerm term) {
+        ScholarshipTerm copiedTerm = new ScholarshipTerm();
+        BeanUtils.copyProperties(term, copiedTerm,
+                // BaseEntity
+                "id", "version", "inserted", "insertedBy", "changed", "changedBy",
+                // Fields to not be copied by task
+                "applicationStart", "applicationEnd", "paymentStart", "paymentEnd",
+                // Status
+                "isOpen",
+                // OneToMany fields
+                "scholarshipTermCourses", "scholarshipTermCurriculums", "scholarshipTermStudyLoads",
+                "scholarshipTermStudyForms", "scholarshipApplications");
+        copiedTerm.setIsOpen(Boolean.FALSE);
+        copyOneToMany(term.getScholarshipTermCourses(), ScholarshipTermCourse::new, (nObj) -> {
+            nObj.setScholarshipTerm(copiedTerm);
+            copiedTerm.getScholarshipTermCourses().add(nObj);
+        });
+        copyOneToMany(term.getScholarshipTermCurriculums(), ScholarshipTermCurriculum::new, (nObj) -> {
+            nObj.setScholarshipTerm(copiedTerm);
+            copiedTerm.getScholarshipTermCurriculums().add(nObj);
+        });
+        copyOneToMany(term.getScholarshipTermStudyLoads(), ScholarshipTermStudyLoad::new, (nObj) -> {
+            nObj.setScholarshipTerm(copiedTerm);
+            copiedTerm.getScholarshipTermStudyLoads().add(nObj);
+        });
+        copyOneToMany(term.getScholarshipTermStudyForms(), ScholarshipTermStudyForm::new, (nObj) -> {
+            nObj.setScholarshipTerm(copiedTerm);
+            copiedTerm.getScholarshipTermStudyForms().add(nObj);
+        });
+        return EntityUtil.save(copiedTerm, em);
+    }
+    
+    private static <T extends BaseEntityWithId> void copyOneToMany(List<T> objects, Supplier<T> supplier, Consumer<T> link) {
+        objects.stream().forEach(obj -> {
+            T newObj = supplier.get();
+            BeanUtils.copyProperties(obj, newObj,
+                    "id", "version", "inserted", "insertedBy", "changed", "changedBy",
+                    "scholarshipTerm");
+            link.accept(newObj);
+        });
+    }
+
+    public List<ClassifierDto> getSchoolScholarshipTypes(Long schoolId, boolean all) {
+        SchoolType schoolType = schoolService.schoolType(schoolId);
+        School school = em.getReference(School.class, schoolId);
+        List<ClassifierDto> result = new ArrayList<>();
+        List<Classifier> stipends = classifierService.findAllByMainClassCode(MainClassCode.STIPTOETUS);
+        
+        boolean noDoctoralCurriculum = em.createNativeQuery(
+                "select 1 from curriculum c join classifier cl on cl.code = c.orig_study_level_code where c.school_id = ?1 and cl.value ~ '^7.*$'")
+                .setParameter(1, schoolId)
+                .setMaxResults(1).getResultList().isEmpty();
+        
+        stipends.stream().filter(cl -> {
+            if (all) {
+                return true; // for readonly
+            }
+            if (!ClassifierUtil.isValid(cl)) {
+                return false;
+            }
+            if (ClassifierUtil.oneOf(cl, ScholarshipType.STIPTOETUS_DOKTOR) && noDoctoralCurriculum) {
+                return false;
+            }
+            if (cl.isHigher() && schoolType.isHigher()) {
+                return true;
+            }
+            if (cl.isVocational() && schoolType.isVocational()) {
+                return true;
+            }
+            return false;
+        }).map(ClassifierDto::of).collect(Collectors.toCollection(() -> result));
+        
+        if (all) {
+            classifierService.findAllByMainClassCode(MainClassCode.EHIS_STIPENDIUM).stream().map(ClassifierDto::of)
+                    .collect(Collectors.toCollection(() -> result));
+        } else {
+            school.getScholarshipNoApplicationTypes().stream().map(type -> type.getScholarshipEhis())
+                    .map(ClassifierDto::of).collect(Collectors.toCollection(() -> result));
+        }
+        return result;
     }
 }

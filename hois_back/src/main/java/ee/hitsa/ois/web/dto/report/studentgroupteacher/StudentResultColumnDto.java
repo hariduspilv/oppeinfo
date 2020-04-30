@@ -5,8 +5,9 @@ public class StudentResultColumnDto {
     private StudentJournalResultDto journalResult;
     private StudentModuleResultDto practiceModuleThemeResult;
     private StudentModuleResultDto practiceModuleResult;
+    private StudentModuleResultDto outcomeResult;
     private StudentModuleResultDto moduleResult;
-    private String moduleType;
+    private Boolean intendedModule = Boolean.TRUE;
 
     public StudentResultColumnDto() {
 
@@ -19,10 +20,12 @@ public class StudentResultColumnDto {
             this.practiceModuleThemeResult = new StudentModuleResultDto(studentResult.getPracticeModuleThemeResult());
         }  else if (studentResult.getPracticeModuleResult() != null) {
             this.practiceModuleResult = new StudentModuleResultDto(studentResult.getPracticeModuleResult());
+        } else if (studentResult.getOutcomeResult() != null) {
+            this.outcomeResult = new StudentModuleResultDto(studentResult.getOutcomeResult());
         } else if (studentResult.getModuleResult() != null) {
             this.moduleResult = new StudentModuleResultDto(studentResult.getModuleResult());
         }
-        this.moduleType = studentResult.getModuleType();
+        this.intendedModule = studentResult.getIntendedModule();
     }
 
     public StudentJournalResultDto getJournalResult() {
@@ -49,6 +52,14 @@ public class StudentResultColumnDto {
         this.practiceModuleResult = practiceModuleResult;
     }
 
+    public StudentModuleResultDto getOutcomeResult() {
+        return outcomeResult;
+    }
+
+    public void setOutcomeResult(StudentModuleResultDto outcomeResult) {
+        this.outcomeResult = outcomeResult;
+    }
+
     public StudentModuleResultDto getModuleResult() {
         return moduleResult;
     }
@@ -57,12 +68,11 @@ public class StudentResultColumnDto {
         this.moduleResult = moduleResult;
     }
 
-    public String getModuleType() {
-        return moduleType;
+    public Boolean getIntendedModule() {
+        return intendedModule;
     }
 
-    public void setModuleType(String moduleType) {
-        this.moduleType = moduleType;
+    public void setIntendedModule(Boolean intendedModule) {
+        this.intendedModule = intendedModule;
     }
-
 }

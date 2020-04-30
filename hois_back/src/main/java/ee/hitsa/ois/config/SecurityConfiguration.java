@@ -218,3 +218,19 @@ class AsyncSecurityHolderInheritance extends WebSecurityConfigurerAdapter {
                     .disable();
     }
 }
+
+@Configuration
+@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER - 5)
+class ApiConfiguration extends WebSecurityConfigurerAdapter {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.antMatcher("/juhan/**")
+                .authorizeRequests()
+                .anyRequest()
+                .permitAll()
+                .and()
+        .csrf()
+                .disable();
+    }
+}

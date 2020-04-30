@@ -92,5 +92,9 @@ public abstract class TranslateUtil {
         }
     }
 
+    public static String getNonNullableNameEn(Translatable data) {
+        return data.getNameEn() != null ? data.getNameEn() : data.getNameEt();
+    }
+
     private static final ConcurrentMap<Language, ResourceBundle> BUNDLE_CACHE = new ConcurrentHashMap<>();
 }

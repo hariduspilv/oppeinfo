@@ -79,6 +79,7 @@ public class DirectiveViewStudentDto {
     private String addInfo;
     private Boolean isAbsence;
     private AutocompleteResult scholarshipApplicationObject;
+    private String scholarshipTermEhis;
     private List<DirectiveFormStudentModule> modules;
     private ExistingDirectiveStudentDto directiveStudentObject;
     private List<AutocompleteResult> supportServices;
@@ -493,6 +494,14 @@ public class DirectiveViewStudentDto {
         this.scholarshipApplicationObject = scholarshipApplicationObject;
     }
 
+    public String getScholarshipTermEhis() {
+        return scholarshipTermEhis;
+    }
+
+    public void setScholarshipTermEhis(String scholarshipTermEhis) {
+        this.scholarshipTermEhis = scholarshipTermEhis;
+    }
+
     public List<DirectiveFormStudentModule> getModules() {
         return modules;
     }
@@ -662,9 +671,15 @@ public class DirectiveViewStudentDto {
             if (sa != null) {
                 String nameEt = sa.getScholarshipTerm().getNameEt();
                 dto.setScholarshipApplicationObject(new AutocompleteResult(sa.getId(), nameEt, nameEt));
+                dto.setScholarshipTermEhis(EntityUtil.getNullableCode(sa.getScholarshipTerm().getScholarshipEhis()));
             }
+            dto.setStudentGroupObject(directiveStudent.getStudentGroup() != null ? AutocompleteResult.of(directiveStudent.getStudentGroup())
+                    : student != null && student.getStudentGroup() != null ? AutocompleteResult.of(student.getStudentGroup()) : null);
             break;
         case KASKKIRI_STIPTOETL:
+            dto.setStudentGroupObject(directiveStudent.getStudentGroup() != null ? AutocompleteResult.of(directiveStudent.getStudentGroup())
+                    : student != null && student.getStudentGroup() != null ? AutocompleteResult.of(student.getStudentGroup()) : null);
+            // fallthrough
         case KASKKIRI_VALISKATK:
             dto.setDirectiveStudentObject(directiveStudent.getDirectiveStudent() != null
                     ? ExistingDirectiveStudentDto.of(directiveStudent.getDirectiveStudent())

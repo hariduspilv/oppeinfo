@@ -133,7 +133,12 @@ public class TemplateService {
             if(input == null) {
                 return null;
             }
-            return ((LocalDate)input).format(format);
+            if (input instanceof LocalDate) {
+                return ((LocalDate)input).format(format);
+            } else if (input instanceof LocalDateTime) {
+                return ((LocalDateTime)input).format(format);
+            }
+            return null;
         }
     }
     

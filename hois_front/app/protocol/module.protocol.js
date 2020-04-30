@@ -60,7 +60,6 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($fil
             id: journalResult.journalId,
             nameEt: journalResult.nameEt,
             capacity: journalResult.capacity,
-            hasOutcomes: journalResult.journalHasOutcomes
           });
         }
 
@@ -74,14 +73,9 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($fil
       });
     });
     var journals = [];
-    $scope.formState.outcomesAsEntries = false;
     for (var p in journalResults) {
       if (journalResults.hasOwnProperty(p)) {
         journals.push(journalResults[p]);
-
-        if (!$scope.formState.outcomesAsEntries && journalResults[p].hasOutcomes) {
-          $scope.formState.outcomesAsEntries = true;
-        }
       }
     }
     $scope.journals = journals;
@@ -93,7 +87,12 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($fil
     $scope.protocol.protocolStudents.forEach(function (protocolStudent) {
       var outcomeResults = [];
       protocolStudent.outcomeResults.forEach(function (outcomeResult) {
-        outcomeResults.push({id: outcomeResult.curriculumModuleOutcomeId, grade: outcomeResult.grade, gradeInserted: outcomeResult.gradeInserted });
+        outcomeResults.push({
+          id: outcomeResult.curriculumModuleOutcomeId,
+          grade: outcomeResult.grade,
+          gradeDate: outcomeResult.gradeDate,
+          gradeInserted: outcomeResult.gradeInserted
+        });
       });
 
       outcomeResults = sortResultsByGradeInserted(outcomeResults);
@@ -143,6 +142,7 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($fil
       $scope.getUrl = oisFileService.getUrl;
       loadJournals();
       loadOutcomes();
+      $scope.formState.hasOutcomes = $scope.protocol.protocolVdata.outcomes.length > 0;
       $scope.formState.canEditProtocol = ProtocolUtils.canEditProtocol($scope.auth, $scope.protocol);
       $scope.formState.canChangeConfirmedProtocolGrade = ProtocolUtils.canChangeConfirmedProtocolGrade($scope.auth, $scope.protocol);
       $scope.formState.canAddDeleteStudents = ProtocolUtils.canAddDeleteStudents($scope.auth, $scope.protocol);

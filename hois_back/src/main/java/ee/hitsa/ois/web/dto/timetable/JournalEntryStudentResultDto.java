@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,6 +22,8 @@ public class JournalEntryStudentResultDto {
     private List<JournalEntryStudentLessonAbsenceDto> lessonAbsences;
     private List<JournalEntryStudentHistoryDto> journalEntryStudentHistories;
     private Boolean isRemark;
+
+    private LocalDate gradeDate; // theme outcome result
 
     public Long getJournalEntryStudentId() {
         return journalEntryStudentId;
@@ -116,6 +119,14 @@ public class JournalEntryStudentResultDto {
 
     public void setIsRemark(Boolean isRemark) {
         this.isRemark = isRemark;
+    }
+
+    public LocalDate getGradeDate() {
+        return gradeDate;
+    }
+
+    public void setGradeDate(LocalDate gradeDate) {
+        this.gradeDate = gradeDate;
     }
 
 }

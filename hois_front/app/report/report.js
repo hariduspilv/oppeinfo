@@ -34,7 +34,7 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
     $scope.loadData = function() {
       $scope.$broadcast('refreshFixedColumns');
       _loadData();
-    }
+    };
 
     $scope.toggleShowAllParameters = function () {
       $scope.formState.showAllParameters = !$scope.formState.showAllParameters;
@@ -60,7 +60,7 @@ function ($q, $scope, $route, Classifier, QueryUtils) {
   $scope.formState = {
     xlsUrl: 'reports/students/count.xls',
   };
-  var certificateMapper = Classifier.valuemapper({occupationCode: 'KUTSE', partOccupationCode: 'OSAKUTSE', specialityCode: 'SPETSKUTSE'});
+  var clMapper = Classifier.valuemapper({occupationCode: 'KUTSE', partOccupationCode: 'OSAKUTSE', specialityCode: 'SPETSKUTSE'});
   QueryUtils.createQueryForm($scope, '/reports/students/count');
 
   $scope.clearCriteria = function() {
@@ -80,9 +80,11 @@ function ($q, $scope, $route, Classifier, QueryUtils) {
       case 'COUNT_STAT_AGE':
         return "cast(v.agefrom as int)";
       case 'COUNT_STAT_CURRICULA':
-        return "cv.code || ' - ' || c.name_et, cv.code || ' - ' || c.name_en";
+        return "c.name_et || ' (' || c.code || ')', c.name_en || ' (' || c.code || ')'";
       case 'COUNT_STAT_COURSE':
         return "sg.course";
+      case 'COUNT_STAT_ISCED_VALD':
+        return "c_connected.name_et, c_connected.name_en";
       default:
         break;
       }
@@ -104,13 +106,14 @@ function ($q, $scope, $route, Classifier, QueryUtils) {
   };
 
   $scope.resultTypes = ["COUNT_STAT_OVERALL",
-                                  "COUNT_STAT_STUDY_LEVEL",
-                                  "COUNT_STAT_STUDENT_GROUP",
-                                  "COUNT_STAT_STRUCTURAL_UNIT",
-                                  "COUNT_STAT_AGE",
-                                  "COUNT_STAT_CURRICULA",
-                                  "COUNT_STAT_COURSE"];
-  
+                        "COUNT_STAT_STUDY_LEVEL",
+                        "COUNT_STAT_STUDENT_GROUP",
+                        "COUNT_STAT_STRUCTURAL_UNIT",
+                        "COUNT_STAT_AGE",
+                        "COUNT_STAT_CURRICULA",
+                        "COUNT_STAT_COURSE",
+                        "COUNT_STAT_ISCED_VALD"];
+
   function initCriteria() {
     $scope.formState.studentTypes = ['OPPUR_T', 'OPPUR_K'];
     $scope.formState.perStatus = true;
@@ -122,12 +125,14 @@ function ($q, $scope, $route, Classifier, QueryUtils) {
 
   $scope.loadResults = function() {
     // reset page when changing statistics type
+    $scope.clearSort();
     $scope.criteria.page = 1;
     $scope.criteria = angular.merge({}, $scope.criteria, $scope.formState);
+    $scope.criteria.studentTypes = angular.copy($scope.formState.studentTypes);
     $scope.loadData();
   };
 
-  $q.all(certificateMapper.promises).then(function() {
+  $q.all(clMapper.promises).then(function() {
     $scope.loadResults();
   });
 }
@@ -172,7 +177,7 @@ function ($q, $scope, $route, QueryUtils, DataUtils) {
                                 "MOVEMENT_STAT_STUDENT_GROUP",
                                 "MOVEMENT_STAT_COURSE",
                                 "MOVEMENT_STAT_STUDY_LEVEL"];
-  
+
   function initCriteria() {
     $scope.formState.queryType = 'MOVEMENT_STAT_SUM';
   }
@@ -189,6 +194,420 @@ function ($q, $scope, $route, QueryUtils, DataUtils) {
   $q.all([$scope.staticState.studyYears.$promise]).then(function() {
     $scope.loadResults();
   });
+}
+]).controller('ReportStudentDataController', ['$q', '$scope', '$route', 'Classifier', 'QueryUtils', 'classifierAutocomplete', 'message', 'FormUtils', '$translate', '$rootScope', 'dialogService',
+function ($q, $scope, $route, Classifier, QueryUtils, classifierAutocomplete, message, FormUtils, $translate, $rootScope, dialogService) {
+  $scope.auth = $route.current.locals.auth;
+  $scope.currentNavItem = 'student.data.search';
+  $scope.savedHeader = {};
+  var clMapper = Classifier.valuemapper({sex: 'SUGU', residenceCountry: 'RIIK', citizenship: 'RIIK', 
+    directiveTypes: 'KASKKIRI', stiptoetlReason: 'KASKKIRI_STIPTOETL_POHJUS', fin: 'FINTAPSUSTUS', 
+    exmatReason: 'EKSMAT_POHJUS', akadReason: 'AKADPUHKUS_POHJUS', speciality: 'SPETSKUTSE', 
+    studentStatuses: 'OPPURSTAATUS', studyForm: 'OPPEVORM', studyLoad: 'OPPEKOORMUS', studyLevel: 'OPPEASTE', 
+    language: 'OPPEKEEL', activeResult: 'KORGHINDAMINE'});
+    
+  QueryUtils.createQueryForm($scope, '/reports/students/data', {sort: 'firstname, lastname'}, clMapper.objectmapper);
+
+  function getSavedQueries() {
+    $scope.formState.savedQueries = QueryUtils.endpoint('/reports/students/data/query/savedStudentQueries').query({isStudentQuery: true});
+  }
+
+  function initCollapsable() {
+    $scope.collapsable = {
+      personDataExpanded: true,
+      studyDataExpanded: false,
+      contactDataExpanded: false,
+      statisticsExpanded: false,
+      addInfoExpanded: false,
+      isSortingExpanded: false,
+      queryExpanded: false,
+    };
+  }
+
+  initCollapsable();
+
+  function initState() {
+    $scope.searched = false;
+    $scope.formState = {
+      xlsUrl: 'reports/students/data.xls',
+      biggerThan: '>',
+      smallerThan: '<',
+      equal: '=',
+      orderFields1: [],
+      orderFields2: [],
+      orderFields3: [],
+      criteria: {
+        resultType: 'STUDENT_DATA_ALL',
+        fullname: false
+      }
+    };
+
+    $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query({}, function (response) {
+      response.forEach(function (studyPeriod) {
+        studyPeriod.display = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+      });
+    });
+
+    getSavedQueries();
+
+    // clear everything from criteria except size, page and sort
+    // this should keep link to queryutil
+    var notChangeableCriteria = ["size", "page", "sort"];
+    var fieldNames = Object.keys($scope.criteria);
+    fieldNames.forEach(function(fieldName) {
+      if (notChangeableCriteria.indexOf(fieldName) === -1) {
+        $scope.criteria[fieldName] = undefined;
+      }
+    });
+  }
+
+  $scope.deleteStudentQuery = function(studentQueryId) {
+    dialogService.confirmDialog({prompt: 'report.studentData.query.message.delete'}, function() {
+      var StudentQueryEndPoint = QueryUtils.endpoint('/reports/students/data/query');
+      new StudentQueryEndPoint().$delete({id: studentQueryId}).then(function () {
+        message.info('main.messages.delete.success');
+        getSavedQueries();
+      }).catch(angular.noop);
+    });
+  };
+
+  $scope.loadQueryToForm = function(studentQueryId) {
+    $scope.formState.criteria = QueryUtils.endpoint('/reports/students/data/query/' + studentQueryId).get({}, function () {
+      message.info('report.studentData.query.message.queryLoaded');
+      $scope.updateOrderFields();
+      initCollapsable();
+    });
+  };
+
+  $scope.hasValue = function(field) {
+    return field !== undefined && field !== null && field !== "";
+  };
+
+  $scope.isEmpty = function(field) {
+    return field === undefined || field === null || field === "";
+  };
+
+  $scope.filterOrderField = function (field1Val, field2Val) {
+    return function (field) {
+      return field.val !== field1Val && field.val !== field2Val;
+    };
+  };
+
+  $scope.clearFields = function(attributename1, attributename2) {
+    $scope.formState.criteria[attributename1] = null;
+    if (attributename2 !== undefined) {
+      $scope.formState.criteria[attributename2] = null;
+    }
+  };
+
+  $scope.isCheckboxed = function() {
+    var groupNames = Object.keys($scope.formState.criteria);
+    var checkBoxed = false;
+    groupNames.forEach(function(groupName) {
+      if (groupName.endsWith("Show") && $scope.formState.criteria[groupName] === true && groupName !== 'nrShow') {
+        checkBoxed = true;
+      }
+    });
+    return checkBoxed;
+  };
+
+  function pushToList(variableName, list) {
+    var variable = {};
+    variable.translation = "report.studentData." + variableName;
+    variable.val = mapVariableName(variableName);
+    list.push(variable);
+  }
+
+  $scope.updateOrderFields = function() {
+    var returnableList = [];
+    var groupNames = Object.keys($scope.formState.criteria);
+    groupNames.forEach(function(groupName) {
+      if (groupName.endsWith("Show") && $scope.formState.criteria[groupName] === true && groupName !== 'nrShow') {
+        if (groupName === 'activeResultShow') {
+          pushToList('activeResultSubject', returnableList);
+        }
+        pushToList(groupName.replace("Show", ""), returnableList);
+      }
+    });
+    $scope.formState.orderFields1 = angular.copy(returnableList);
+    $scope.formState.orderFields2 = angular.copy(returnableList);
+    $scope.formState.orderFields3 = angular.copy(returnableList);
+  };
+
+  function mapVariableName(variableName) {
+    if (variableName === 'fullname') {
+      if ($scope.formState.criteria[variableName] === true) {
+        return "p.lastname || ' ' || p.firstname";
+      }
+      return "p.firstname || ' ' || p.lastname";
+    } else if (variableName === 'curriculum') {
+      return variableName + ($translate.use() === 'en' ? 'En' : 'Et');
+    } else if (variableName === 'studyYearNumber') {
+      return "study_year_nr";
+    } else if (variableName === 'activeResult') {
+      return 'gradeCode';
+    } else if (variableName === 'activeResultSubject') {
+      return variableName + ($translate.use() === 'en' ? 'En' : 'Et');
+    } else if (variableName === 'declaredSubject') {
+      return variableName + ($translate.use() === 'en' ? 'En' : 'Et');
+    }
+    return variableName;
+  }
+  
+  initState();
+
+  $scope.getDirectiveReason = function(row) {
+    if (row.stiptoetlReason !== null && row.stiptoetlReason !== undefined) {return row.stiptoetlReason;}
+    if (row.exmatReason !== null && row.exmatReason !== undefined) {return row.exmatReason;}
+    if (row.akadReason !== null && row.akadReason !== undefined) {return row.akadReason;}
+    return null;
+  };
+
+  $scope.saveQuery = function() {
+    FormUtils.withValidForm($scope.queryForm, function() {
+      //Post
+      if ($scope.savedHeader.queryNameEt === undefined || $scope.savedHeader.queryNameEt === null || $scope.savedHeader.queryNameEt === "") {
+        message.error('report.studentData.query.message.error.name');
+        return;
+      }
+      var CriteriaEndPoint = QueryUtils.endpoint('/reports/students/data/query/save');
+      var parameters = new CriteriaEndPoint($scope.savedHeader);
+      parameters.$save().then(function() {
+        message.info('main.messages.create.success');
+        getSavedQueries();
+      }).catch(angular.noop);
+    });
+  };
+
+  $scope.excelDL = function(url, criteria) {
+    var extendedCriteria = angular.extend({}, criteria, $scope.savedHeader.criteria);
+    return $rootScope.excel(url, extendedCriteria);
+  };
+
+  $scope.getDirectiveReasons = function() {
+    if ($scope.formState.criteria.directiveTypes !== null) {
+      var reasons = [];
+      if ($scope.formState.criteria.directiveTypes.indexOf('KASKKIRI_EKSMAT') !== -1) {
+        reasons.push('EKSMAT_POHJUS');
+      }
+      if ($scope.formState.criteria.directiveTypes.indexOf('KASKKIRI_AKAD') !== -1) {
+        reasons.push('AKADPUHKUS_POHJUS');
+      }
+      if ($scope.formState.criteria.directiveTypes.indexOf('KASKKIRI_STIPTOETL') !== -1) {
+        reasons.push('KASKKIRI_STIPTOETL_POHJUS');
+      }
+      return reasons.join(', ');
+    }
+  };
+
+  $scope.countryAutocompleteSearch = function(queryText) {
+    return classifierAutocomplete.searchByName(queryText, 'RIIK');
+  };
+
+  $scope.specialityAutocompleteSearch = function(queryText) {
+    return classifierAutocomplete.searchByName(queryText, 'SPETSKUTSE', {valid: true});
+  };
+
+  $scope.clearCriteria = function() {
+    initState();
+  };
+
+  $scope.clearSort = function() {
+    $scope.criteria.order = undefined;
+  };
+
+  $scope.resultTypeChanged = function(resultType) {
+    if (resultType === 'COUNT_STAT_AGE') {
+      $scope.formState.ageFrom = 15;
+      $scope.formState.ageStep = 5;
+    } else {
+      $scope.formState.ageFrom = undefined;
+      $scope.formState.ageStep = undefined;
+    }
+    $scope.clearSort();
+  };
+
+  $scope.resultTypes = ["STUDENT_DATA_ALL",
+                        "STUDENT_DATA_ACTIVE",
+                        "STUDENT_DATA_STUDYING",
+                        "STUDENT_DATA_STUDENTGROUP",
+                        "STUDENT_DATA_GRADUATES"];
+
+  $scope.loadResults = function() {
+    FormUtils.withValidForm($scope.searchForm, function() {
+      // reset page when changing statistics type
+      var checkBoxed = $scope.isCheckboxed();
+      if (!checkBoxed) {
+        message.error('report.studentData.error.showInResults');
+        $scope.searched = false;
+        return;
+      }
+      $scope.criteria.page = 1;
+      $scope.criteria = angular.extend({}, $scope.criteria, $scope.formState.criteria);
+      $scope.savedHeader = angular.copy($scope.formState.criteria);
+      $q.all(clMapper.promises).then($scope.loadData);
+      $scope.searched = true;
+    });
+  };
+}
+]).controller('ReportSubjectStudyPeriodController', ['$q', '$scope', '$route', 'Classifier', 'QueryUtils', 'message', 'FormUtils', '$rootScope', 'dialogService',
+function ($q, $scope, $route, Classifier, QueryUtils, message, FormUtils, $rootScope, dialogService) {
+  $scope.auth = $route.current.locals.auth;
+  $scope.currentNavItem = 'subject.study.period.search';
+  $scope.savedHeader = {};
+  var clMapper = Classifier.valuemapper({studyYear: 'OPPEAASTA'});
+    
+  QueryUtils.createQueryForm($scope, '/reports/subjectStudyPeriod/data', {sort: 's.name_et, s.name_en'}, clMapper.objectmapper, true);
+
+  function getSavedQueries() {
+    $scope.formState.savedQueries = QueryUtils.endpoint('/reports/students/data/query/savedStudentQueries').query({isStudentQuery: false});
+  }
+
+  function initCollapsable() {
+    $scope.collapsable = {
+      subjectExpanded: true,
+      subjectStudyPeriodExpanded: false,
+      queryExpanded: false
+    };
+  }
+
+  initCollapsable();
+
+  function initState() {
+    $scope.searched = false;
+    $scope.formState = {
+      xlsUrl: 'reports/subjectStudyPeriod/data.xls',
+      biggerThan: '>',
+      smallerThan: '<',
+      equal: '=',
+      criteria: {}
+    };
+
+    $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query({}, function (response) {
+      response.forEach(function (studyPeriod) {
+        studyPeriod.display = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
+      });
+    });
+
+    getSavedQueries();
+
+    // clear everything from criteria except size, page and sort
+    // this should keep link to queryutil
+    var notChangeableCriteria = ["size", "page", "sort"];
+    var fieldNames = Object.keys($scope.criteria);
+    fieldNames.forEach(function(fieldName) {
+      if (notChangeableCriteria.indexOf(fieldName) === -1) {
+        $scope.criteria[fieldName] = undefined;
+      }
+    });
+  }
+
+  $scope.deleteStudentQuery = function(studentQueryId) {
+    dialogService.confirmDialog({prompt: 'report.studentData.query.message.delete'}, function() {
+      var StudentQueryEndPoint = QueryUtils.endpoint('/reports/students/data/query');
+      new StudentQueryEndPoint().$delete({id: studentQueryId}).then(function () {
+        message.info('main.messages.delete.success');
+        getSavedQueries();
+      }).catch(angular.noop);
+    });
+  };
+
+  $scope.loadQueryToForm = function(studentQueryId) {
+    $scope.formState.criteria = QueryUtils.endpoint('/reports/subjectStudyPeriod/data/query/' + studentQueryId).get({}, function () {
+      message.info('report.studentData.query.message.queryLoaded');
+      initCollapsable();
+    });
+  };
+
+  $scope.hasValue = function(field) {
+    return field !== undefined && field !== null && field !== "";
+  };
+
+  $scope.isEmpty = function(field) {
+    return field === undefined || field === null || field === "";
+  };
+
+  $scope.filterOrderField = function (field1Val, field2Val) {
+    return function (field) {
+      return field.val !== field1Val && field.val !== field2Val;
+    };
+  };
+
+  $scope.clearFields = function(attributename1, attributename2) {
+    $scope.formState.criteria[attributename1] = null;
+    if (attributename2 !== undefined) {
+      $scope.formState.criteria[attributename2] = null;
+    }
+  };
+
+  function setFalseToNulls() {
+    var groupNames = Object.keys($scope.savedHeader);
+    groupNames.forEach(function(groupName) {
+      if (groupName.endsWith("Show") && $scope.savedHeader[groupName] === false) {
+        $scope.savedHeader[groupName] = undefined;
+      }
+    });
+  }
+
+  $scope.isCheckboxed = function() {
+    var groupNames = Object.keys($scope.formState.criteria);
+    var checkBoxed = false;
+    groupNames.forEach(function(groupName) {
+      if (groupName.endsWith("Show") && $scope.formState.criteria[groupName] === true) {
+        checkBoxed = true;
+      }
+    });
+    return checkBoxed;
+  };
+  
+  initState();
+
+  $scope.saveQuery = function() {
+    FormUtils.withValidForm($scope.queryForm, function() {
+      //Post
+      if ($scope.savedHeader.queryNameEt === undefined || $scope.savedHeader.queryNameEt === null || $scope.savedHeader.queryNameEt === "") {
+        message.error('report.studentData.query.message.error.name');
+        return;
+      }
+      setFalseToNulls();
+      var CriteriaEndPoint = QueryUtils.endpoint('/reports/subjectStudyPeriod/data/query/save');
+      var parameters = new CriteriaEndPoint($scope.savedHeader);
+      parameters.$save().then(function() {
+        message.info('main.messages.create.success');
+        getSavedQueries();
+      }).catch(angular.noop);
+    });
+  };
+
+  $scope.excelDL = function(url, criteria) {
+    var extendedCriteria = angular.extend({}, criteria, $scope.savedHeader.criteria);
+    return $rootScope.excel(url, extendedCriteria);
+  };
+
+  $scope.clearCriteria = function() {
+    initState();
+  };
+
+  $scope.clearSort = function() {
+    $scope.criteria.order = undefined;
+  };
+
+  $scope.loadResults = function() {
+    FormUtils.withValidForm($scope.searchForm, function() {
+      // reset page when changing statistics type
+      var checkBoxed = $scope.isCheckboxed();
+      if (!checkBoxed) {
+        message.error('report.studentData.error.showInResults');
+        $scope.searched = false;
+        return;
+      }
+      $scope.criteria.page = 1;
+      $scope.criteria = angular.extend({}, $scope.criteria, $scope.formState.criteria);
+      $scope.savedHeader = angular.copy($scope.formState.criteria);
+      $q.all(clMapper.promises).then($scope.loadData);
+      $scope.searched = true;
+    });
+  };
 }
 ]).controller('ReportStudentStatisticsController', ['$route', '$scope', 'Classifier', 'QueryUtils', 'message',
   function ($route, $scope, Classifier, QueryUtils, message) {
@@ -723,6 +1142,21 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
     }
   };
 
+  $scope.allModulesChanged = function () {
+    if ($scope.criteria.allModules) {
+      $scope.criteria.studyYear = null;
+      $scope.criteria.onlyModuleGrades = true;
+      $scope.onlyModuleGradesChanged();
+    }
+  };
+
+  $scope.allModulesAndOutcomesChanged = function () {
+    if ($scope.criteria.allModulesAndOutcomes) {
+      $scope.criteria.allModules = true;
+      $scope.allModulesChanged();
+    }
+  };
+
   $scope.toggleShowAllParameters = function () {
     $scope.formState.showAllParameters = !$scope.formState.showAllParameters;
     $scope.$broadcast('refreshFixedTableHeight');
@@ -736,14 +1170,11 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
       return;
     }
 
-    if (!$scope.criteria.studyYear && !$scope.criteria.from) {
-      message.error('report.studentGroupTeacher.error.studyYearOrEntriesFromRequired');
-      return;
-    }
-
-    if ($scope.formState.showAllParameters && ($scope.criteria.entryTypes === undefined || $scope.criteria.entryTypes.length === 0)) {
-      message.error('report.studentGroupTeacher.error.atLeastOneEntryTypeRequired');
-      return;
+    if (!$scope.criteria.allModules) {
+      if (!$scope.criteria.studyYear && !$scope.criteria.from) {
+        message.error('report.studentGroupTeacher.error.studyYearOrEntriesFromRequired');
+        return;
+      }
     }
 
     QueryUtils.loadingWheel($scope, true);
@@ -764,6 +1195,9 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
           }
           if (column.practiceModuleResult) {
             resultsMapper.objectmapper(column.practiceModuleResult);
+          }
+          if (column.outcomeResult) {
+            resultsMapper.objectmapper(column.outcomeResult);
           }
           if (column.moduleResult) {
             resultsMapper.objectmapper(column.moduleResult);
@@ -809,30 +1243,16 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
   };
 
   $scope.openRemarkDialog = function (student) {
-    dialogService.showDialog('report/studentgroup.teacher.remark.dialog.html', function (dialogScope) {
+    dialogService.showDialog('report/templates/studentgroup.teacher.remark.dialog.html', function (dialogScope) {
       dialogScope.auth = $scope.auth;
       dialogScope.student = student;
     });
   };
 }
-]).controller("ScholarshipStatisticsController", ["$scope", "Classifier", "$route", function ($scope, Classifier, $route) {
-  var auth = $route.current.locals.auth;
+]).controller("ScholarshipStatisticsController", ["$scope", 'ScholarshipUtils', function ($scope, ScholarshipUtils) {
   $scope.criteria = {};
   $scope.url = "reports/scholarships/statistics.xlsx";
-  $scope.types = Classifier.queryForDropdown({mainClassCode: "STIPTOETUS"});
-  $scope.types.$promise.then(function (response) {
-    $scope.types = response.filter(function (r) {
-      return (auth.vocational && r.vocational) || (auth.higher && r.higher);
-    });
-  });
-
-  // function isFormValid() {
-  //   if ($scope.scholarshipStatisticExportForm) {
-  //     $scope.scholarshipStatisticExportForm.$setSubmitted();
-  //     return $scope.scholarshipStatisticExportForm.$valid;
-  //   }
-  //   return false;
-  // }
+  $scope.types = ScholarshipUtils.getScholarshipSchoolTypes();
 }
 ]).controller("IndividualCurriculumStatisticsController", ['$route', '$scope', 'DataUtils', 'FormUtils', 'QueryUtils', function ($route, $scope, DataUtils, FormUtils, QueryUtils) {
   $scope.auth = $route.current.locals.auth;

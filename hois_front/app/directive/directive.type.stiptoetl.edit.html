@@ -5,6 +5,7 @@
         <th md-column>{{'directive.student.order' | translate}}</th>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
         <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column>{{'directive.student.studentGroup' | translate}}</th>
         <th md-column class="required">{{'directive.student.directive' | translate}}</th>
         <th md-column>{{'directive.student.stipStartDate' | translate}}</th>
         <th md-column>{{'directive.student.stipEndDate' | translate}}</th>
@@ -17,6 +18,7 @@
         <td md-cell>{{$index + 1}}.</td>
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
+        <td md-cell>{{::currentLanguageNameField(row.studentGroupObject)}}</td>
         <td md-cell hois-table-data>
           <hois-table-data-master>
             <md-input-container style="width: 250px">

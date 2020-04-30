@@ -160,7 +160,7 @@ angular.module('hitsaOis')
       }
       return true;
     }
-    
+
     function validationReplaceFormPassed() {
       $scope.replaceModuleForm.$setSubmitted();
       if (!$scope.replaceModuleForm.$valid) {
@@ -203,7 +203,7 @@ angular.module('hitsaOis')
     /**
      * Copies data from the connected base module to occupation module.
      * NB! Ignores themes.
-     * 
+     *
      * @param {Funciton} callback function which is called in the end
      */
     function copyBaseModuleData(callback) {
@@ -295,7 +295,7 @@ angular.module('hitsaOis')
     var previousValues = {};
     /**
      * Removes the mark that this theme for this module has been selected and adds a new mark for selected one
-     * 
+     *
      * @param {Number} moduleId occupation module id
      * @param {Nubmer} themeId occupation theme id
      * @param {Object} bTheme base module theme
@@ -498,14 +498,26 @@ angular.module('hitsaOis')
               }
               return false;
             });
-          }
-          
+          };
+
           dialogScope.joinOutcomes = function (arr, seperator) {
             if (!arr || angular.isUndefined(seperator)) return '';
             return arr.map(function (r) {
                 return $scope.currentLanguage() === 'en' ? r.outcomeEn : r.outcomeEt
             }).join(seperator);
-          }
+          };
+
+          dialogScope.outcomesChanged = function () {
+            if (dialogScope.occupationModuleTheme.outcomes.length === 0) {
+              dialogScope.occupationModuleTheme.moduleOutcomes = false;
+            }
+          };
+
+          dialogScope.moduleOutcomesChanged = function () {
+            if (dialogScope.occupationModuleTheme.moduleOutcomes) {
+              dialogScope.occupationModuleTheme.assessment = null;
+            }
+          };
 
           dialogScope.saveTheme = function () {
             var submittedDialogScope = dialogScope;

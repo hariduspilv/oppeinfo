@@ -50,7 +50,7 @@
   <md-input-container ng-if="journals.length > 0" flex="10" flex-md="20" flex-sm="100" flex-xs="100">
     <md-checkbox ng-model="formState.showJournals">{{'moduleProtocol.showJournals' | translate}}</md-checkbox>
   </md-input-container>
-  <md-input-container ng-if="formState.outcomesAsEntries" flex="10" flex-md="20" flex-sm="100" flex-xs="100">
+  <md-input-container ng-if="formState.hasOutcomes" flex="10" flex-md="20" flex-sm="100" flex-xs="100">
     <md-checkbox ng-model="formState.showOutcomes">{{'moduleProtocol.showOutcomes' | translate}}</md-checkbox>
   </md-input-container>
 </div>

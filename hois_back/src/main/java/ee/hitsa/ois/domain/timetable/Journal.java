@@ -29,7 +29,7 @@ public class Journal extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private StudyYear studyYear;
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Classifier assessment;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier groupProportion;

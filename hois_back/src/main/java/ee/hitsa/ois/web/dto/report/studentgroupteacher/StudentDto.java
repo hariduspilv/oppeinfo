@@ -27,6 +27,8 @@ public class StudentDto {
     private BigDecimal averageGrade;
     private BigDecimal weightedAverageGrade;
 
+    private StudentProgressDto progress;
+
     public Long getId() {
         return id;
     }
@@ -155,4 +157,11 @@ public class StudentDto {
         this.weightedAverageGrade = weightedAverageGrade;
     }
 
+    public StudentProgressDto getProgress() {
+        return progress;
+    }
+
+    public void setProgress(StudentProgressDto progress) {
+        this.progress = progress;
+    }
 }

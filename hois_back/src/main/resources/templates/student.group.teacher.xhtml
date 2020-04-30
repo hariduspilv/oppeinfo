@@ -18,11 +18,18 @@
         <thead>
           <tr>
             <th class="label">{{ "studentgroupteacher.studentName" | translate }}</th>
+
+            {% if content.showStudentProgress and loop.index == 0 %}
+              <th class="label">{{ "studentgroupteacher.curriculumFulfilled" | translate }}</th>
+              <th class="label">{{ "studentgroupteacher.isCumLaude" | translate }}</th>
+              <th class="label">{{ "studentgroupteacher.weightedAverageGrade" | translate }}</th>
+            {% endif %}
+
             {% for column in table.resultColumns %}
               <th class="label">{{ column }}</th>
             {% endfor %}
 
-            {% if loop.index == loop.length - 1 %}
+            {% if content.showTotalColumns and loop.index == loop.length - 1 %}
               <th class="label">{{ "studentgroupteacher.journalEntryLessons" | translate }}</th>
               <th class="label">{{ "studentgroupteacher.totalAbsences" | translate }}</th>
               <th class="label">{{ "studentgroupteacher.totalAbsencesPercentage" | translate }}</th>
@@ -60,6 +67,27 @@
               </i>
               <span>{{ student.fullname }}</span>
             </td>
+
+            {% if student.progress is not empty %}
+              <td class="center">
+                {% if student.progress.isCurriculumFulfilled %}
+                  {{ student.isCumLaude }}
+                <span>{{ "studentgroupteacher.fulfilled" | translate }}</span>
+                {% else %}
+                  <span>{{ "studentgroupteacher.notFulfilled" | translate }}</span>
+                {% endif %}
+              </td>
+              <td class="center">
+                {% if student.progress.isCumLaude %}
+                {{ student.isCumLaude }}
+                <span>{{ "yes" | translate }}</span>
+                {% else %}
+                <span>{{ "no" | translate }}</span>
+                {% endif %}
+              </td>
+              <td class="center">{{ student.progress.weightedAverageGrade }}</td>
+            {% endif %}
+
             {% for column in student.resultColumns %}
               <td class="center" style="white-space: nowrap">{{ column }}</td>
             {% endfor %}

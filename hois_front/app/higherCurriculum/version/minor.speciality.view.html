@@ -2,6 +2,10 @@
   <span flex></span>
   <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
     <div layout="column">
+      <md-input-container>
+        <label>{{'module.orderNr' | translate}}</label>
+        <input ng-model="data.orderNr" type="number" readonly>
+      </md-input-container>
       <md-input-container flex>
         <label>{{'curriculum.minorSpecialty.nameEt' | translate}}</label>
         <input ng-model="data.nameEt" type="text" readonly>

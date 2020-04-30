@@ -3,6 +3,8 @@ package ee.hitsa.ois.util;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
@@ -19,6 +21,7 @@ public abstract class DateUtils {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
     private static final DateTimeFormatter SHORT_YEAR_FORMATTER = DateTimeFormatter.ofPattern("YY");
+    private static final DateTimeFormatter ISO8601_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     public static String nullableDate(LocalDate date) {
         return date != null ? date(date) : null;
@@ -90,6 +93,19 @@ public abstract class DateUtils {
 
     public static LocalDateTime toLocalDateTime(XMLGregorianCalendar cal) {
         return cal.toGregorianCalendar().toZonedDateTime().toLocalDateTime();
+    }
+
+    public static LocalDate toLocalDate(ZonedDateTime zonedDateTime) {
+        return zonedDateTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDate();
+    }
+
+    public static LocalDateTime toLocalDateTime(ZonedDateTime zonedDateTime) {
+        return zonedDateTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+    }
+
+    public static String toISOString(LocalDateTime dateTime) {
+        ZonedDateTime zonedDateTime = ZonedDateTime.of(dateTime, ZoneId.systemDefault());
+        return zonedDateTime.format(ISO8601_FORMATTER);
     }
 
     public static boolean periodsOverlap(LocalDate firstPeriodStart, LocalDate firstPeriodEnd,

@@ -22,8 +22,7 @@ table {
 .studentGroupTeachertable td,
 .studentGroupTeachertable th {
     border-spacing: 0;
-    border-top: 1px solid black;
-    border-left: 1px solid black;
+    border: solid black thin;
     padding: 3px;
     min-width: 50px;
 }
@@ -31,15 +30,6 @@ table {
 .studentGroupTeachertable td:first-child,
 .studentGroupTeachertable th:first-child {
     min-width: 100px;
-}
-
-.studentGroupTeachertable tr:last-child > td{
-    border-bottom: 1px solid black;
-}
-
-.studentGroupTeachertable td:last-child,
-.studentGroupTeachertable th:last-child{
-    border-right: 1px solid black; 
 }
 
 .studentGroupTeachertable th { 

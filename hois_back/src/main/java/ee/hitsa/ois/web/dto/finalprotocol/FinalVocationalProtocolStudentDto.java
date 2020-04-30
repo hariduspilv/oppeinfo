@@ -27,7 +27,7 @@ public class FinalVocationalProtocolStudentDto extends ModuleProtocolStudentDto 
         dto.setStatus(EntityUtil.getCode(student.getStatus()));
         dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);
         dto.setCanBeDeleted(Boolean.valueOf(FinalProtocolUtil.studentCanBeDeleted(protocolStudent)));
-        FinalThesis thesis = student.getFinalThesis();
+        FinalThesis thesis = !student.getFinalThesis().isEmpty() ? student.getFinalThesis().get(0) : null;
         dto.setTheme(thesis != null ? new AutocompleteResult(thesis.getId(), thesis.getThemeEt(), thesis.getThemeEn())
                 : null);
 

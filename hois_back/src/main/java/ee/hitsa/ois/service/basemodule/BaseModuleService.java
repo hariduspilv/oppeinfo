@@ -87,6 +87,7 @@ public class BaseModuleService {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from.toString()).sort(pageable).groupBy("b.id");
         qb.requiredCriteria("b.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalContains(Arrays.asList("b.name_et", "b.name_en"), "searchName", cmd.getName());
+        qb.optionalContains("b.add_name_et", "additionalName", cmd.getAddNameEt());
         qb.optionalCriteria("b.valid_from >= :from", "from", cmd.getValidFrom());
         qb.optionalCriteria("b.valid_thru <= :thru", "thru", cmd.getValidThru());
         qb.optionalCriteria("c.id = :curriculumId", "curriculumId", (cmd.getCurriculum() != null ? cmd.getCurriculum().getId() : null));
@@ -95,7 +96,7 @@ public class BaseModuleService {
         // It might be not a problem when we use Set to remove duplicates, but there is a possibility to have 2 items with the same name, but they are different.
         // The second way to deal with it: request from DB separately information about curriculums and curriculum versions. Might be a problem with performance.
         return JpaQueryUtil.pagingResult(qb, "b.id, b.name_et, b.name_en, b.credits, string_agg(c.code, ',') as curriculums,"
-                + " string_agg(cv.code, ',') as curriculum_versions, b.school_id", em, pageable).map(r -> {
+                + " string_agg(cv.code, ',') as curriculum_versions, b.school_id, b.add_name_et", em, pageable).map(r -> {
             BaseModuleSearchDto dto = new BaseModuleSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setNameEt(resultAsString(r, 1));
@@ -110,6 +111,7 @@ public class BaseModuleService {
                 dto.setCurriculumVersions(new LinkedHashSet<>(Arrays.asList(cVersions.split(","))));
             }
             dto.setCanEdit(Boolean.valueOf(BaseModuleUserRights.canEdit(user, em.getReference(School.class, resultAsLong(r, 6)))));
+            dto.setAddNameEt(resultAsString(r, 7));
             return dto;
         });
     }

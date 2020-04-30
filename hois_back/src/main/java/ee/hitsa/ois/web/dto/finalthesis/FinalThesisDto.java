@@ -1,14 +1,18 @@
-package ee.hitsa.ois.web.dto;
+package ee.hitsa.ois.web.dto.finalthesis;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.FinalThesis;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class FinalThesisDto extends VersionedCommand {
     
@@ -17,10 +21,13 @@ public class FinalThesisDto extends VersionedCommand {
     private String status;
     private String themeEt;
     private String themeEn;
+    private String language;
+    private AutocompleteResult curriculumGrade;
     private Boolean hasDraft;
     private String draft;
     private String addInfo;
     private List<FinalThesisSupervisorDto> supervisors = new ArrayList<>();
+    private Set<FinalThesisCercsDto> cercses;
     private LocalDateTime confirmed;
     
     private Boolean canBeEdited;
@@ -30,9 +37,11 @@ public class FinalThesisDto extends VersionedCommand {
         if (finalThesis == null) {
             return null;
         }
-        FinalThesisDto dto = EntityUtil.bindToDto(finalThesis, new FinalThesisDto(), "supervisorsForms");
+        FinalThesisDto dto = EntityUtil.bindToDto(finalThesis, new FinalThesisDto(), "supervisorsForms", "cercs");
         dto.setSupervisors(StreamUtil.toMappedList(s -> FinalThesisSupervisorDto.of(s), finalThesis.getSupervisors()));
         Collections.sort(dto.getSupervisors(), StreamUtil.comparingWithNullsLast(FinalThesisSupervisorDto::getId));
+
+        dto.setCercses(finalThesis.getCercses().stream().map(FinalThesisCercsDto::of).collect(Collectors.toCollection(LinkedHashSet::new)));
         return dto;
     }
     
@@ -130,6 +139,30 @@ public class FinalThesisDto extends VersionedCommand {
 
     public void setCanBeConfirmed(Boolean canBeConfirmed) {
         this.canBeConfirmed = canBeConfirmed;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public AutocompleteResult getCurriculumGrade() {
+        return curriculumGrade;
+    }
+
+    public void setCurriculumGrade(AutocompleteResult curriculumGrade) {
+        this.curriculumGrade = curriculumGrade;
+    }
+
+    public Set<FinalThesisCercsDto> getCercses() {
+        return cercses;
+    }
+
+    public void setCercses(Set<FinalThesisCercsDto> cercses) {
+        this.cercses = cercses;
     }
     
 }

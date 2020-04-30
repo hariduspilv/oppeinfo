@@ -2,8 +2,8 @@ package ee.hitsa.ois.report.curriculum;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.StreamUtil;
@@ -18,7 +18,6 @@ public class CurriculumModulesTypeReport {
     public CurriculumModulesTypeReport(String code, List<CurriculumModule> curriculumModules, Language lang) {
         this.code = code;
         modules = StreamUtil.toMappedList(cm -> new CurriculumModulesTypeModuleReport(cm, lang), curriculumModules);
-        modules.sort(Comparator.comparing(CurriculumModulesTypeModuleReport::getName));
         totalCredits = StreamUtil.sumBigDecimals(CurriculumModulesTypeModuleReport::getCredits, modules);
     }
 

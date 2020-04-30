@@ -1,4 +1,4 @@
-package ee.hitsa.ois.web.dto;
+package ee.hitsa.ois.web.dto.finalthesis;
 
 import ee.hitsa.ois.domain.FinalThesisSupervisor;
 import ee.hitsa.ois.util.EntityUtil;

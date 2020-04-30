@@ -64,20 +64,7 @@ public class ModuleProtocolStudentDto {
                                                 .stream().mapToInt(it -> it.getHours() == null ? 0
                                                         : it.getHours().intValue())
                                                 .sum()),
-                                        EntityUtil.getCode(jes.getGrade()),
-                                        jes.getJournalEntry().getJournal().getAddModuleOutcomes())));
-
-                journalStudent.getJournalEntryStudents().stream()
-                        .filter(jes -> JournalEntryType.SISSEKANNE_O.name()
-                                .equals(EntityUtil.getCode(jes.getJournalEntry().getEntryType())))
-                        .filter(jes -> EntityUtil.getNullableCode(jes.getGrade()) != null)
-                        .filter(jes -> JournalUtil.filterJournalEntryStudentsByCurriculumModule(
-                                EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule().getCurriculumModule()), jes))
-                        .forEach(jes -> dto.getOutcomeResults()
-                                .add(new ModuleProtocolOutcomeResultDto(jes.getJournalEntry().getJournal().getId(),
-                                        jes.getJournalEntry().getCurriculumModuleOutcomes().getId(),
-                                        EntityUtil.getCode(jes.getGrade()),
-                                        jes.getGradeInserted())));
+                                        EntityUtil.getCode(jes.getGrade()))));
             }
             
         }

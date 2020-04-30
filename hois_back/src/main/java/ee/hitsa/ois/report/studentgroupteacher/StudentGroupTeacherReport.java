@@ -18,18 +18,22 @@ import ee.hitsa.ois.web.dto.report.studentgroupteacher.ModuleDto;
 import ee.hitsa.ois.web.dto.report.studentgroupteacher.ModuleTypeDto;
 import ee.hitsa.ois.web.dto.report.studentgroupteacher.StudentDto;
 import ee.hitsa.ois.web.dto.report.studentgroupteacher.StudentGroupTeacherDto;
+import ee.hitsa.ois.web.dto.report.studentgroupteacher.StudentProgressDto;
 
 public class StudentGroupTeacherReport {
 
     public static final String TEMPLATE_NAME = "student.group.teacher.xhtml";
-    private static final int TABLE_SIZE = 10;
+    private static final int TABLE_SIZE = 8;
     private static final int ABSENCE_COLUMNS = 6;
+    private static final int PROGRESS_COLUMNS = 3;
 
     private List<StudentGroupTeacherReportTable> tables;
     private List<StudentGroupTeacherReportJournal> journals;
     private BigDecimal averageGrade;
     private Boolean showAverageGrade;
     private Boolean showWeightedAverageGrade;
+    private Boolean showStudentProgress;
+    private Boolean showTotalColumns;
 
     public StudentGroupTeacherReport(StudentGroupTeacherCommand criteria, StudentGroupTeacherDto dto,
             ClassifierCache classifierCache) {
@@ -41,6 +45,9 @@ public class StudentGroupTeacherReport {
         this.averageGrade = dto.getAverageGrade();
         this.showAverageGrade = criteria.getAverageGrade();
         this.showWeightedAverageGrade = criteria.getWeightedAverageGrade();
+        this.showStudentProgress = dto.getShowStudentProgress();
+        this.showTotalColumns = Boolean.FALSE.equals(dto.getShowStudentProgress())
+                && Boolean.FALSE.equals(dto.getShowModuleResultTable());
 
         List<String> resultColumns = StreamUtil
                 .toMappedList(rc -> ReportUtil.resultColumnAsString(rc, Boolean.FALSE, lang), dto.getResultColumns());
@@ -75,8 +82,11 @@ public class StudentGroupTeacherReport {
 
     private void setTables(StudentGroupTeacherDto dto, List<String> resultColumns,
             Map<Long, List<String>> studentResultColumns) {
-        int totalColumns = ABSENCE_COLUMNS + (Boolean.TRUE.equals(this.getShowAverageGrade()) ? 1 : 0)
-                + (Boolean.TRUE.equals(this.getShowWeightedAverageGrade()) ? 1 : 0);
+        int totalColumns = 0;
+        if (this.showTotalColumns) {
+            totalColumns = ABSENCE_COLUMNS + (Boolean.TRUE.equals(this.getShowAverageGrade()) ? 1 : 0)
+                    + (Boolean.TRUE.equals(this.getShowWeightedAverageGrade()) ? 1 : 0);
+        }
         int columnCount = resultColumns.size();
         int tableCount = columnCount / TABLE_SIZE;
         if (columnCount % TABLE_SIZE != 0) {
@@ -87,6 +97,7 @@ public class StudentGroupTeacherReport {
         tables = new ArrayList<>();
         for (int i = 0; i < tableCount; i++) {
             StudentGroupTeacherReportTable table = new StudentGroupTeacherReportTable();
+            System.out.println(i * TABLE_SIZE + " - " + Math.min((i + 1) * TABLE_SIZE, resultColumns.size()));
             List<String> tableResultColumns = resultColumns.subList(i * TABLE_SIZE,
                     Math.min((i + 1) * TABLE_SIZE, resultColumns.size()));
 
@@ -103,7 +114,11 @@ public class StudentGroupTeacherReport {
                 tableStudent.put("isIndividualCurriculum", student.getIsIndividualCurriculum());
                 tableStudent.put("resultColumns", tableResults);
 
-                if (i == tableCount - 1 && tableResults.size() + totalColumns <= TABLE_SIZE) {
+                if (this.showStudentProgress && i == 0) {
+                    tableStudent.put("progress", getStudentProgress(student));
+                }
+
+                if (this.showTotalColumns && i == tableCount - 1 && tableResults.size() + totalColumns <= TABLE_SIZE) {
                     absencesAdded = true;
                     setStudentAbsenceColumns(tableStudent, student);
                 }
@@ -114,7 +129,7 @@ public class StudentGroupTeacherReport {
             tables.add(table);
         }
 
-        if (!absencesAdded) {
+        if (this.showTotalColumns && !absencesAdded) {
             StudentGroupTeacherReportTable table = new StudentGroupTeacherReportTable();
             List<Map<String, Object>> tableStudents = new ArrayList<>();
             for (StudentDto student : dto.getStudents()) {
@@ -126,6 +141,16 @@ public class StudentGroupTeacherReport {
             table.setStudents(tableStudents);
             tables.add(table);
         }
+    }
+
+    private static Map<String, Object> getStudentProgress(StudentDto student) {
+        Map<String, Object> progress = new HashMap<>();
+        if (student.getProgress() != null) {
+            progress.put("isCurriculumFulfilled", student.getProgress().getIsCurriculumFulfilled());
+            progress.put("isCumLaude", student.getProgress().getIsCumLaude());
+            progress.put("weightedAverageGrade", student.getProgress().getWeightedAverageGrade());
+        }
+        return progress;
     }
 
     private static void setStudentAbsenceColumns(Map<String, Object> tableStudent, StudentDto student) {
@@ -179,4 +204,19 @@ public class StudentGroupTeacherReport {
         this.showWeightedAverageGrade = showWeightedAverageGrade;
     }
 
+    public Boolean getShowStudentProgress() {
+        return showStudentProgress;
+    }
+
+    public void setShowStudentProgress(Boolean showStudentProgress) {
+        this.showStudentProgress = showStudentProgress;
+    }
+
+    public Boolean getShowTotalColumns() {
+        return showTotalColumns;
+    }
+
+    public void setShowTotalColumns(Boolean showTotalColumns) {
+        this.showTotalColumns = showTotalColumns;
+    }
 }

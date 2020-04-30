@@ -2,10 +2,14 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.util.List;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.finalthesis.FinalThesisCercsForm;
 
 public class FinalThesisForm extends VersionedCommand {
     
@@ -21,8 +25,13 @@ public class FinalThesisForm extends VersionedCommand {
     private String draft;
     @Size(max=4000)
     private String addInfo;
+    @ClassifierRestriction(MainClassCode.LOPUTOO_KEEL)
+    private String language;
+    private EntityConnectionCommand curriculumGrade;
     
     private List<FinalThesisSupervisorForm> supervisors;
+    @Valid
+    private List<FinalThesisCercsForm> cercses;
     
     public Long getId() {
         return id;
@@ -86,6 +95,30 @@ public class FinalThesisForm extends VersionedCommand {
 
     public void setSupervisors(List<FinalThesisSupervisorForm> supervisors) {
         this.supervisors = supervisors;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public List<FinalThesisCercsForm> getCercses() {
+        return cercses;
+    }
+
+    public void setCercses(List<FinalThesisCercsForm> cercses) {
+        this.cercses = cercses;
+    }
+
+    public EntityConnectionCommand getCurriculumGrade() {
+        return curriculumGrade;
+    }
+
+    public void setCurriculumGrade(EntityConnectionCommand curriculumGrade) {
+        this.curriculumGrade = curriculumGrade;
     }
 
 }

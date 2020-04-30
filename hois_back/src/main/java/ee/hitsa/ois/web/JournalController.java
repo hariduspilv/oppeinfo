@@ -10,6 +10,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
+import ee.hitsa.ois.web.commandobject.timetable.JournalOutcomeForm;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
+import ee.hitsa.ois.web.dto.timetable.JournalOutcomeDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -115,7 +119,8 @@ public class JournalController {
     }
 
     @GetMapping("/{id:\\d+}/journalEntry")
-    public Page<JournalEntryTableDto> journalTableEntries(HoisUserDetails user, @PathVariable("id") Long journalId, Pageable pageable) {
+    public Page<JournalEntryTableDto> journalTableEntries(HoisUserDetails user,
+            @PathVariable("id") Long journalId, Pageable pageable) {
         JournalUtil.assertCanView(user, em.find(Journal.class, journalId));
         return journalService.journalTableEntries(journalId, pageable);
     }
@@ -135,7 +140,7 @@ public class JournalController {
     @PutMapping("/{id:\\d+}/journalEntry/{journalEntry:\\d+}")
     public void updateJournalEntry(HoisUserDetails user, @WithEntity Journal journal, @RequestBody JournalEntryForm journalEntryForm, @PathVariable("journalEntry") Long journalEntrylId) {
         JournalUtil.asssertCanChange(user, journal);
-        journalService.updateJournalEntry(user, journalEntryForm, journalEntrylId);
+        journalService.updateJournalEntry(user, journal, journalEntryForm, journalEntrylId);
     }
 
     @DeleteMapping("/{journalId:\\d+}/journalEntry/{id:\\d+}")
@@ -150,6 +155,28 @@ public class JournalController {
             @WithEntity Journal journal, @RequestBody JournalEntryQuickUpdateForm journalEntryForm) {
         JournalUtil.asssertCanChange(user, journal);
         return journalService.quickUpdateJournalEntry(user, journalEntryForm);
+    }
+
+    @GetMapping("/{id:\\d+}/journalOutcome")
+    public Page<CurriculumModuleOutcomeResult> journalTableOutcomes(HoisUserDetails user,
+            @PathVariable("id") Long journalId, Pageable pageable) {
+        JournalUtil.assertCanView(user, em.find(Journal.class, journalId));
+        return journalService.journalTableOutcomes(journalId, pageable);
+    }
+
+    @GetMapping("/{id:\\d+}/journalOutcome/{outcome:\\d+}")
+    public JournalOutcomeDto journalOutcome(HoisUserDetails user, @WithEntity Journal journal,
+            @WithEntity("outcome") CurriculumModuleOutcome outcome) {
+        JournalUtil.assertCanView(user, journal);
+        return journalService.journalOutcome(user, journal, outcome);
+    }
+
+    @PostMapping("/{id:\\d+}/journalOutcome/{outcome:\\d+}")
+    public void saveJournalOutcome(HoisUserDetails user, @WithEntity Journal journal,
+            @WithEntity("outcome") CurriculumModuleOutcome outcome,
+            @Valid @RequestBody JournalOutcomeForm journalOutcomeForm) {
+        JournalUtil.asssertCanChange(user, journal);
+        journalService.saveOutcomeResults(user, outcome, journalOutcomeForm);
     }
 
     @PostMapping("/{id:\\d+}/addStudentsToJournal")
@@ -184,7 +211,8 @@ public class JournalController {
     }
 
     @GetMapping("/{id:\\d+}/journalEntriesByDate")
-    public List<JournalEntryByDateDto> journalEntriesByDate(HoisUserDetails user, @WithEntity Journal journal, @RequestParam(required = false) Boolean allStudents) {
+    public List<JournalEntryByDateDto> journalEntriesByDate(HoisUserDetails user, @WithEntity Journal journal,
+            @RequestParam(required = false) Boolean allStudents) {
         JournalUtil.assertCanView(user, journal);
         return journalService.journalEntriesByDate(journal, allStudents);
     }
@@ -201,12 +229,12 @@ public class JournalController {
         HttpUtil.xls(response, "journal.xls", journalService.journalAsExcel(journal));
     }
 
-    @GetMapping("/{id:\\d+}/hasFinalEntry")
-    public Map<String, Boolean> hasFinalEntry(HoisUserDetails user, @WithEntity Journal journal)  {
+    @GetMapping("/{id:\\d+}/canAddFinalEntry")
+    public Map<String, Boolean> canAddFinalEntry(HoisUserDetails user, @WithEntity Journal journal)  {
         JournalUtil.assertCanView(user, journal);
-        return Collections.singletonMap("hasFinalEntry", Boolean.valueOf(JournalUtil.hasFinalEntry(journal)));
+        return Collections.singletonMap("canAddFinalEntry", Boolean.valueOf(journalService.canAddFinalEntry(journal)));
     }
-    
+
     @GetMapping("/{id:\\d+}/usedHours")
     public JournalLessonHoursDto usedHours(HoisUserDetails user, @WithEntity Journal journal) {
         JournalUtil.assertCanView(user, journal);

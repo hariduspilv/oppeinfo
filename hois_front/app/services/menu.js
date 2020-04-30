@@ -413,6 +413,11 @@ angular.module('hitsaOis')
             icon: 'transfer_within_a_station'
           },
           {
+            name: 'main.menu.reports.custom',
+            url: '/reports/students/data?_menu',
+            icon: 'perm_data_setting'
+          },
+          {
             name: 'main.menu.reports.studentstatistics',
             url: "/reports/students/statistics?_menu",
             icon:"blur_circular"
@@ -701,14 +706,6 @@ angular.module('hitsaOis')
             icon:"euro_symbol",
             studyLevel: {
               higher: true
-            }
-          },
-          {
-            name: 'main.menu.scholarships.drGrants',
-            url: "/scholarships?_menu",
-            icon:"functions",
-            studyLevel: {
-              doctoral: true
             }
           },
           {
@@ -1464,6 +1461,11 @@ angular.module('hitsaOis')
             name: 'main.menu.reports.studentmovement',
             url: '/reports/students/movement?_menu',
             icon: 'transfer_within_a_station'
+          },
+          {
+            name: 'main.menu.reports.custom',
+            url: '/reports/students/data?_menu',
+            icon: 'perm_data_setting'
           },
           {
             name: 'main.menu.reports.studentstatistics',

@@ -1,23 +1,27 @@
 package ee.hitsa.ois.util;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResult;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudent;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.JournalStatus;
+import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
-import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateXlsDto;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateBaseDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
 
 public abstract class JournalUtil {
@@ -132,20 +136,23 @@ public abstract class JournalUtil {
                 LocalDate.now().plusWeeks(2).isAfter(studyYear.getEndDate());
     }
 
-    public static boolean isFinalResult(JournalEntryByDateDto dto) {
+    public static boolean isFinalResult(JournalEntryByDateBaseDto dto) {
         return JournalEntryType.SISSEKANNE_L.name().equals(dto.getEntryType());
     }
 
-    public static boolean isFinalResult(JournalEntryByDateXlsDto dto) {
-        return JournalEntryType.SISSEKANNE_L.name().equals(dto.getEntryType());
-    }
-
-    public static boolean isOutcomeEntryWithoutDate(JournalEntryByDateDto dto) {
+    public static boolean isOutcomeEntryWithoutDate(JournalEntryByDateBaseDto dto) {
         return dto.getOutcomeOrderNr() != null && dto.getEntryDate() == null;
     }
 
-    public static boolean isOutcomeEntryWithoutDate(JournalEntryByDateXlsDto dto) {
-        return dto.getOutcomeOrderNr() != null && dto.getEntryDate() == null;
+    public static boolean canEditOutcomeGrade(HoisUserDetails user, StudentCurriculumModuleOutcomesResult result) {
+        // userrights are checked in hasPermissionToChange method
+        if (EntityUtil.getNullableId(result.getApelApplication()) == null) {
+            String grade = EntityUtil.getNullableCode(result.getGrade());
+            return grade == null || !OccupationalGrade.isPositive(grade) ||
+                    (user.isSchoolAdmin() || user.isLeadingTeacher() || (user.isTeacher() && user.getTeacherId()
+                            .equals(EntityUtil.getNullableId(result.getGradeInsertedTeacher()))));
+        }
+        return false;
     }
 
     public static void assertCanView(HoisUserDetails user) {
@@ -200,5 +207,65 @@ public abstract class JournalUtil {
         if(!canConfirmAll(user, studyYear)) {
             throw new ValidationFailedException("journal.messages.confirmAllNotAllowed");
         }
+    }
+
+    public static void assertCanEditOutcomeGrade(HoisUserDetails user, StudentCurriculumModuleOutcomesResult result) {
+        if(!canEditOutcomeGrade(user, result)) {
+            throw new ValidationFailedException("journal.messages.changingOutcomeResultNotAllowed");
+        }
+    }
+
+    public static void setOutcomeEntriesUnqiueOrderNrs(List<? extends JournalEntryByDateBaseDto> entries) {
+        // order outcomes by curriculum module id and their order nr and then give outcomes from different modules a unique outcome order nr
+        Collections.sort(entries, Comparator.comparing(JournalEntryByDateBaseDto::getCurriculumModule, Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(JournalEntryByDateBaseDto::getOutcomeOrderNr, Comparator.nullsFirst(Comparator.naturalOrder())));
+        List<Long> orderNrs = new ArrayList<>();
+        for (int i = 0; i < entries.size(); i++) {
+            Long entryOrderNr = entries.get(i) != null && entries.get(i).getOutcomeOrderNr() != null ? entries.get(i).getOutcomeOrderNr() : null;
+            if (entryOrderNr != null) {
+                entries.get(i).setOutcomeOrderNr(uniqueOrderNr(entryOrderNr, orderNrs));
+            }
+        }
+    }
+
+    public static Long uniqueOrderNr(Long entryOrderNr, List<Long> assignedOrderNrs) {
+        if (!assignedOrderNrs.contains(entryOrderNr)) {
+            assignedOrderNrs.add(entryOrderNr);
+            return entryOrderNr;
+        }
+        Long highestAssignedNr = Collections.max(assignedOrderNrs);
+        Long newOrderNr = Long.valueOf(highestAssignedNr.longValue() + 1);
+        assignedOrderNrs.add(newOrderNr);
+        return newOrderNr;
+    }
+
+    public static void orderJournalEntriesByDate(List<? extends JournalEntryByDateBaseDto> entries) {
+        // order day entries by lesson nr
+        Collections.sort(entries, Comparator.comparing(JournalEntryByDateBaseDto::getEntryDate, Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(JournalEntryByDateBaseDto::getStartLessonNr, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(JournalEntryByDateBaseDto::getLessons, Comparator.nullsFirst(Comparator.naturalOrder())));
+
+        // outcome entries that don't have a date are ordered last among entries without date, all other entries are ordered by date
+        Collections.sort(entries, Comparator.comparing(JournalEntryByDateBaseDto::getOutcomeOrderNr, Comparator.nullsFirst(Comparator.naturalOrder())));
+        Collections.sort(entries, Comparator.comparing(JournalEntryByDateBaseDto::getEntryDate, Comparator.nullsFirst(Comparator.naturalOrder())));
+
+        Collections.sort(entries, (JournalEntryByDateBaseDto o1, JournalEntryByDateBaseDto o2) -> {
+            if (isOutcomeEntryWithoutDate(o1) && !isOutcomeEntryWithoutDate(o2)) {
+                return 1;
+            } else if (!isOutcomeEntryWithoutDate(o1) && isOutcomeEntryWithoutDate(o2)) {
+                return -1;
+            }
+            return 0;
+        });
+
+        // put final results to the end of the list
+        Collections.sort(entries, (JournalEntryByDateBaseDto o1, JournalEntryByDateBaseDto o2) -> {
+            if (isFinalResult(o1) && !isFinalResult(o2)) {
+                return 1;
+            } else if (!isFinalResult(o1) && isFinalResult(o2)) {
+                return -1;
+            }
+            return 0;
+        });
     }
 }

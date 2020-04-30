@@ -73,6 +73,7 @@ public class LessonPlanDto extends LessonPlanForm {
                     .filter(m -> !existingModuleIds.contains(EntityUtil.getId(m)))
                     .map(m -> LessonPlanModuleDto.of(m)))
                 .sorted(Comparator.comparing(LessonPlanModuleDto::getTypeOrder, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(Comparator.comparing(LessonPlanModuleDto::getOrderNr, Comparator.nullsLast(Comparator.naturalOrder())))
                         .thenComparing(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)))
                 .collect(Collectors.toList()));
         dto.setWeekNrs(dto.getStudyPeriods().stream().flatMap(r -> r.getWeekNrs().stream()).collect(Collectors.toList()));
@@ -195,6 +196,7 @@ public class LessonPlanDto extends LessonPlanForm {
         private Integer totalHours;
         private Long typeOrder;
         private Long curriculumVersionId;
+        private Short orderNr;
 
         public static LessonPlanModuleDto of(LessonPlanModule lessonPlanModule, LessonPlanCapacityMapper capacityMapper) {
             LessonPlanModuleDto dto = new LessonPlanModuleDto();
@@ -209,6 +211,7 @@ public class LessonPlanDto extends LessonPlanForm {
                     .stream().mapToInt(CurriculumVersionOccupationModuleCapacity::getHours).sum()));
             dto.setTypeOrder(Long.valueOf(CurriculumUtil.vocationalModuleOrderNr(lessonPlanModule.getCurriculumVersionOccupationModule())));
             dto.setCurriculumVersionId(EntityUtil.getId(lessonPlanModule.getCurriculumVersionOccupationModule().getCurriculumVersion()));
+            dto.setOrderNr(lessonPlanModule.getCurriculumVersionOccupationModule().getCurriculumModule().getOrderNr());
             return dto;
         }
 
@@ -219,6 +222,7 @@ public class LessonPlanDto extends LessonPlanForm {
             dto.setTotalHours(Integer.valueOf(0));
             dto.setTypeOrder(Long.valueOf(CurriculumUtil.vocationalModuleOrderNr(occupationModule)));
             dto.setCurriculumVersionId(EntityUtil.getId(occupationModule.getCurriculumVersion()));
+            dto.setOrderNr(occupationModule.getCurriculumModule().getOrderNr());
             return dto;
         }
 
@@ -267,6 +271,14 @@ public class LessonPlanDto extends LessonPlanForm {
 
         public void setCurriculumVersionId(Long curriculumVersionId) {
             this.curriculumVersionId = curriculumVersionId;
+        }
+
+        public Short getOrderNr() {
+            return orderNr;
+        }
+
+        public void setOrderNr(Short orderNr) {
+            this.orderNr = orderNr;
         }
 
     }

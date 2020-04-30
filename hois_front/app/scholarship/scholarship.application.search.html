@@ -30,12 +30,12 @@
 
         <div layout="row" layout-xs="column" flex>
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'stipend.grantType' | translate}}</label>
+            <label class="textInput">{{isHigher ? 'stipend.scholarshipType' : 'stipend.grantType' | translate}}</label>
             <hois-classifier-select ng-model="criteria.type" name="type" model-value-attr="code"
               main-classifier-code="STIPTOETUS" show-only-values="formState.allowedStipendTypes"></hois-classifier-select>
           </md-input-container>
           <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <label class="textInput">{{'stipend.grantName' | translate}}</label>
+            <label class="textInput">{{isHigher ? 'stipend.scholarshipName' : 'stipend.grantName' | translate}}</label>
             <input type="text" ng-model="criteria.nameEt" name="nameEt" md-maxlength="500">
           </md-input-container>
         </div>
@@ -71,8 +71,8 @@
           <tr md-row>
             <th md-column md-order-by="p.lastname, p.firstname">{{'stipend.applicant' | translate}}</th>
             <th md-column md-order-by="sg.code">{{'stipend.studentGroup' | translate}}</th>
-            <th md-column md-order-by="st.type_code">{{'stipend.type' | translate}}</th>
-            <th md-column md-order-by="st.name_et">{{'stipend.grantName' | translate}}</th>
+            <th md-column md-order-by="st.type_code, st.scholarship_ehis_code">{{'stipend.type' | translate}}</th>
+            <th md-column md-order-by="st.name_et">{{isHigher ? 'stipend.scholarshipName' : 'stipend.grantName' | translate}}</th>
             <th md-column md-order-by="st.application_start, st.application_end">{{'stipend.applicationPeriod' | translate}}</th>
             <th md-column md-order-by="sa.status_code">{{'stipend.status' | translate}}</th>
             <th md-column md-order-by="sa.inserted">{{'stipend.student.additionDate' | translate}}</th>
@@ -87,7 +87,7 @@
                 {{row.studentName}}</a>
             </td>
             <td md-cell>{{row.studentGroup}}</td>
-            <td md-cell>{{currentLanguageNameField(row.termType)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.termType)}} <span ng-if="row.termEhisType">({{currentLanguageNameField(row.termEhisType)}})</span></td>
             <td md-cell>{{row.termNameEt}}</td>
             <td md-cell>{{row.applicationStart || row.applicationEnd ? getScholarshipApplicationPeriod(row) : '-'}}</td>
             <td md-cell>{{currentLanguageNameField(row.applicationStatus)}}</td>

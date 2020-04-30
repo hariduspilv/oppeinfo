@@ -16,6 +16,8 @@ public class ScholarshipTermForm {
     @Required
     @ClassifierRestriction(MainClassCode.STIPTOETUS)
     private String type;
+    @ClassifierRestriction(MainClassCode.EHIS_STIPENDIUM)
+    private String scholarshipEhis;
     @Required
     private String nameEt;
     @NotNull
@@ -34,9 +36,15 @@ public class ScholarshipTermForm {
     private BigDecimal averageMark;
     @ClassifierRestriction(MainClassCode.PRIORITEET)
     private String averageMarkPriority;
+    private BigDecimal wagMark;
+    @ClassifierRestriction(MainClassCode.PRIORITEET)
+    private String wagMarkPriority;
     private BigDecimal lastPeriodMark;
     @ClassifierRestriction(MainClassCode.PRIORITEET)
     private String lastPeriodMarkPriority;
+    private BigDecimal lastPeriodWagMark;
+    @ClassifierRestriction(MainClassCode.PRIORITEET)
+    private String lastPeriodWagMarkPriority;
     private BigDecimal curriculumCompletion;
     @ClassifierRestriction(MainClassCode.PRIORITEET)
     private String curriculumCompletionPriority;
@@ -58,6 +66,10 @@ public class ScholarshipTermForm {
     private Boolean isModuleGrade;
     private Boolean isApelGrade;
     private Boolean isJournalGrade;
+    private Boolean isNominalEnd;
+    private Boolean isNegative;
+    private Boolean isBeforeImmat;
+    private Boolean isSais;
     private Boolean isLastPeriodOutcomes;
     private Boolean isLastPeriodPeriodGrade;
     private Boolean isLastPeriodJournalFinalGrade;
@@ -417,6 +429,78 @@ public class ScholarshipTermForm {
 
     public void setLastPeriodGradeThru(LocalDate lastPeriodGradeThru) {
         this.lastPeriodGradeThru = lastPeriodGradeThru;
+    }
+
+    public String getScholarshipEhis() {
+        return scholarshipEhis;
+    }
+
+    public void setScholarshipEhis(String scholarshipEhis) {
+        this.scholarshipEhis = scholarshipEhis;
+    }
+
+    public BigDecimal getWagMark() {
+        return wagMark;
+    }
+
+    public void setWagMark(BigDecimal wagMark) {
+        this.wagMark = wagMark;
+    }
+
+    public String getWagMarkPriority() {
+        return wagMarkPriority;
+    }
+
+    public void setWagMarkPriority(String wagMarkPriority) {
+        this.wagMarkPriority = wagMarkPriority;
+    }
+
+    public BigDecimal getLastPeriodWagMark() {
+        return lastPeriodWagMark;
+    }
+
+    public void setLastPeriodWagMark(BigDecimal lastPeriodWagMark) {
+        this.lastPeriodWagMark = lastPeriodWagMark;
+    }
+
+    public String getLastPeriodWagMarkPriority() {
+        return lastPeriodWagMarkPriority;
+    }
+
+    public void setLastPeriodWagMarkPriority(String lastPeriodWagMarkPriority) {
+        this.lastPeriodWagMarkPriority = lastPeriodWagMarkPriority;
+    }
+
+    public Boolean getIsNominalEnd() {
+        return isNominalEnd;
+    }
+
+    public void setIsNominalEnd(Boolean isNominalEnd) {
+        this.isNominalEnd = isNominalEnd;
+    }
+
+    public Boolean getIsNegative() {
+        return isNegative;
+    }
+
+    public void setIsNegative(Boolean isNegative) {
+        this.isNegative = isNegative;
+    }
+
+    public Boolean getIsBeforeImmat() {
+        return isBeforeImmat;
+    }
+
+    public void setIsBeforeImmat(Boolean isBeforeImmat) {
+        this.isBeforeImmat = isBeforeImmat;
+    }
+
+    public Boolean getIsSais() {
+        return isSais;
+    }
+
+    public void setIsSais(Boolean isSais) {
+        this.isSais = isSais;
     }
 
 }

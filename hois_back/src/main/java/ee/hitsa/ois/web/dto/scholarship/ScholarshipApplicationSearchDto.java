@@ -13,6 +13,7 @@ public class ScholarshipApplicationSearchDto {
     private String studentGroup;
     private Long termId;
     private String termType;
+    private String termEhisType;
     private String termNameEt;
     private LocalDate applicationStart;
     private LocalDate applicationEnd;
@@ -22,7 +23,7 @@ public class ScholarshipApplicationSearchDto {
 
     public ScholarshipApplicationSearchDto(Long id, Long studentId, String studentName, String studentGroup, Long termId,
             String termType, String termNameEt, LocalDate applicationStart, LocalDate applicationEnd,
-            String applicationStatus, LocalDate inserted) {
+            String applicationStatus, LocalDate inserted, String ehisType) {
         this.id = id;
         this.studentId = studentId;
         this.studentName = studentName;
@@ -34,6 +35,7 @@ public class ScholarshipApplicationSearchDto {
         this.applicationEnd = applicationEnd;
         this.applicationStatus = applicationStatus;
         this.inserted = inserted;
+        this.termEhisType = ehisType;
     }
 
     public Long getId() {
@@ -82,6 +84,14 @@ public class ScholarshipApplicationSearchDto {
 
     public void setTermType(String termType) {
         this.termType = termType;
+    }
+
+    public String getTermEhisType() {
+        return termEhisType;
+    }
+
+    public void setTermEhisType(String termEhisType) {
+        this.termEhisType = termEhisType;
     }
 
     public String getTermNameEt() {

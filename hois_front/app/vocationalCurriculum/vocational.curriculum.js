@@ -20,6 +20,7 @@ angular.module('hitsaOis')
     $scope.maxStydyYears = {max: 100};
 
     $scope.STATUS = Curriculum.STATUS;
+    $scope.moduleOrderBy = Curriculum.curriculumModuleOrder;
     var CurriculumFileEndpoint;
 
     $scope.formState = {

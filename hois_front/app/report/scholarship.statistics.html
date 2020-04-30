@@ -7,7 +7,7 @@
           <md-input-container flex>
             <label class="textInput">{{'report.scholarships.types' | translate}}</label>
             <md-select ng-model="criteria.types" multiple>
-              <md-option ng-value="opt.code" ng-repeat="opt in types">
+              <md-option ng-value="opt.code" ng-repeat="opt in types | orderBy:'sorted'">
                 {{currentLanguageNameField(opt)}}
               </md-option>
             </md-select>

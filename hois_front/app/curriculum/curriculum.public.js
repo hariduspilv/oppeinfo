@@ -31,11 +31,12 @@ angular.module('hitsaOis')
       entityToForm(entity);
     }
 
-}).controller('CurriculumPublicVersionController', ['$scope', '$route', 'config',
-function ($scope, $route, config) {
+}).controller('CurriculumPublicVersionController', ['$scope', '$route', 'config', 'Curriculum',
+function ($scope, $route, config, Curriculum) {
   
   $scope.version = $route.current.locals.curriculumVersion;
   $scope.curriculum = $route.current.locals.curriculum;
+  $scope.moduleOrderBy = Curriculum.curriculumModuleOrder;
 
   $scope.years = [];
   $scope.mappedSubjects = {};

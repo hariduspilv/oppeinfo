@@ -58,6 +58,9 @@ public class CurriculumModuleForm extends VersionedCommand {
     private String assessmentsEt;
     @Size(max=20000)
     private String assessmentsEn;
+    @Min(0)
+    @Max(32767)
+    private Short orderNr;
     
     @Required
     private List<CurriculumModuleOutcomeDto> outcomes;
@@ -182,6 +185,14 @@ public class CurriculumModuleForm extends VersionedCommand {
         this.baseModule = baseModule;
     }
     
+    public Short getOrderNr() {
+        return orderNr;
+    }
+
+    public void setOrderNr(Short orderNr) {
+        this.orderNr = orderNr;
+    }
+
     public static class BaseModuleInfo {
         
         private Long id;

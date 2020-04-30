@@ -25,11 +25,14 @@
       <div flex ng-if="record.type === 'KASKKIRI_STIPTOET' || record.type === 'KASKKIRI_STIPTOETL'">
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.scholarshipType' | translate}}</label>
-          <hois-classifier-select ng-model="record.scholarshipType" name="scholarshipType" ng-change="scholarshipTypeChanged()" ng-disabled="formState.state !== 'CHOOSETYPE'" model-value-attr="code" main-classifier-code="STIPTOETUS" criteria="{higher: formState.school.higher ? true : undefined, vocational: formState.school.vocational ? true : undefined}" required></hois-classifier-select>
+          <hois-select ng-model="record.scholarshipType" values="formState.scholarshipTypes" value-property="code"
+            ng-change="scholarshipTypeChanged()" ng-disabled="formState.state !== 'CHOOSETYPE'" required
+            sorted-query="true" order-by-property="sorted"></hois-select>
         </md-input-container>
       </div>
 
-      <div flex ng-if="formState.state === 'CHOOSETYPE' && withoutInitialSelection.indexOf(record.type) === -1">
+      <div flex ng-if="formState.state === 'CHOOSETYPE' && (withoutInitialSelection.indexOf(record.type) === -1
+        && (record.type !== 'KASKKIRI_STIPTOET' || !record.scholarshipType || record.scholarshipType.indexOf('EHIS_STIPENDIUM_') === -1))">
         <div>&nbsp;</div>
         <md-table-container>
           <table md-table md-row-select multiple ng-model="formState.selectedStudents">

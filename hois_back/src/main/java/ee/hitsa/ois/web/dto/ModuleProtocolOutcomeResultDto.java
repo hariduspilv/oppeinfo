@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import ee.hitsa.ois.enums.MainClassCode;
@@ -7,31 +8,22 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 
 public class ModuleProtocolOutcomeResultDto {
 
-    private Long journalId;
     private Long curriculumModuleOutcomeId;
-    private LocalDateTime gradeInserted;
-    
     @ClassifierRestriction(MainClassCode.KUTSEHINDAMINE)
     private String grade;
+    private LocalDate gradeDate;
+    private LocalDateTime gradeInserted;
 
     public ModuleProtocolOutcomeResultDto() {
         
     }
 
-    public ModuleProtocolOutcomeResultDto(Long journalId, Long curriculumModuleOutcomeId, String grade,
+    public ModuleProtocolOutcomeResultDto(Long curriculumModuleOutcomeId, String grade, LocalDate gradeDate,
             LocalDateTime gradeInserted) {
-        this.journalId = journalId;
         this.curriculumModuleOutcomeId = curriculumModuleOutcomeId;
         this.grade = grade;
+        this.gradeDate = gradeDate;
         this.gradeInserted = gradeInserted;
-    }
-
-    public Long getJournalId() {
-        return journalId;
-    }
-
-    public void setJournalId(Long journalId) {
-        this.journalId = journalId;
     }
 
     public Long getCurriculumModuleOutcomeId() {
@@ -49,11 +41,19 @@ public class ModuleProtocolOutcomeResultDto {
     public void setGrade(String grade) {
         this.grade = grade;
     }
-    
+
+    public LocalDate getGradeDate() {
+        return gradeDate;
+    }
+
+    public void setGradeDate(LocalDate gradeDate) {
+        this.gradeDate = gradeDate;
+    }
+
     public LocalDateTime getGradeInserted() {
         return gradeInserted;
     }
-    
+
     public void setGradeInserted(LocalDateTime gradeInserted) {
         this.gradeInserted = gradeInserted;
     }

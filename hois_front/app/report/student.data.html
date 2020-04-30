@@ -1,0 +1,1640 @@
+<style>
+  .width-327 {
+    width: 327px;
+    padding-right: 23px;
+  }
+
+  .md-chips {
+    padding: 0 0 0 3px;
+  }
+
+  .width-300 {
+    width: 304px;
+    padding-right: 23px;
+  }
+
+  .width-300-autocomplete {
+    width: 304px;
+    padding-right: 23px;
+    padding-left: 2px
+  }
+
+  .width-300-md-select {
+    width: 300px;
+    padding-right: 27px;
+  }
+
+  .width-196 {
+    width: 196px;
+    margin-right: 25px;
+  }
+
+  .width-150 {
+    width: 150px;
+    padding-right: 27px;
+  }
+
+  .width-135 {
+    width: 135px;
+    padding-right: 30px;
+  }
+
+  .width-100 {
+    width: 100px;
+    margin-right: 27px;
+  }
+
+  .width-100-margin-4 {
+    width: 100px;
+    margin-right: 4px;
+  }
+
+  .checkbox-width-200 {
+    margin-top: 10px; 
+    padding-right: 27px;
+    width: 200px;
+    margin-right: 0px;
+  }
+
+  .checkbox-width-150 {
+    margin-top: 10px; 
+    padding-right: 27px;
+    width: 150px;
+    margin-right: 0px;
+  }
+
+  .margin-right-27 {
+    margin-right: 27px;
+  }
+</style>
+
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div ng-include="'report/student.data.navbar.html'"></div>
+  <div>&nbsp;</div>
+    <div flex>
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+        <form name="searchForm" ng-submit="loadResults()">
+          <div layout="row">
+            <div layout="row">
+              <md-input-container class="width-300">
+                <label>{{'report.studentData.queryType' | translate}}</label>
+                <md-select ng-model="formState.criteria.resultType" aria-label="{{'report.studentData.queryType' | translate}}" 
+                  required>
+                  <md-option ng-repeat="val in resultTypes" ng-value="val">
+                      {{('report.studentData.select.' + val) | translate}}
+                  </md-option>
+                </md-select>
+              </md-input-container>
+            </div>
+            <div layout="row">
+              <md-checkbox 
+                  ng-model="formState.criteria.withoutGuestStudents" class="checkbox-width-150"
+                  aria-label="{{'report.studentData.withoutGuestStudents' | translate}}">
+                  {{'report.studentData.withoutGuestStudents' | translate}}
+              </md-checkbox>
+            </div>
+            <div layout="row">
+                <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.nrShow" class="checkbox-width-150"
+                        aria-label="{{'report.studentData.nr' | translate}}">
+                        {{'report.studentData.nr' | translate}}
+                    </md-checkbox>
+                </md-input-container>
+            </div>
+          </div>
+
+          <hois-collapsable expanded="collapsable.personDataExpanded">
+            <hois-collapsable-header>
+              <span>{{'report.studentData.personData.label' | translate}}</span>
+            </hois-collapsable-header>
+            <div layout="column">
+              <div layout="row">
+                <div layout="row">
+                  <div style="width: 485px">
+                    <label class="textInput" style="font-size: 13px">{{'report.studentData.showInResults' | translate}}</label>
+                  </div>
+                </div>
+                <div layout="row" hide-md hide-sm hide-xs>
+                  <div style="width: 477px">
+                    <label class="textInput" style="font-size: 13px">{{'report.studentData.showInResults' | translate}}</label>
+                  </div>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.firstnameShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.firstname' | translate}}">
+                      {{'report.studentData.firstname' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.personData.firstname' | translate}}</label>
+                    <input ng-model="formState.criteria.firstname" type="text" md-maxlength="255">
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.lastnameShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.lastname' | translate}}">
+                      {{'report.studentData.lastname' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.personData.lastname' | translate}}</label>
+                    <input ng-model="formState.criteria.lastname" type="text" md-maxlength="255">
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.fullnameShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.fullname' | translate}}">
+                      {{'report.studentData.fullname' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300-md-select">
+                    <label>{{'report.studentData.personData.fullname' | translate}}</label>
+                    <md-select ng-model="formState.criteria.fullname">
+                      <md-option ng-value="true">{{'report.studentData.personData.lastnameFirstname' | translate}}</md-option>
+                      <md-option ng-value="false">{{'report.studentData.personData.firstnameLastname' | translate}}</md-option>
+                    </md-select>
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.sexShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.sex' | translate}}">
+                      {{'report.studentData.sex' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.personData.sex' | translate}}</label>
+                    <hois-classifier-select ng-model="formState.criteria.sex" name="sex" 
+                      only-valid ignore-preselected flex model-value-attr="code" main-classifier-code="SUGU" 
+                      aria-label="{{'report.studentData.personData.sex' | translate}}">
+                    </hois-classifier-select>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.idcodeShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.idcode' | translate}}">
+                      {{'report.studentData.idcode' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.personData.idcode' | translate}}</label>
+                    <input ng-model="formState.criteria.idcode" type="text" md-maxlength="255">
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.bankaccountShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.bankaccount' | translate}}">
+                      {{'report.studentData.bankaccount' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.personData.bankAccount' | translate}}</label>
+                    <input ng-model="formState.criteria.bankaccount" type="text" md-maxlength="255">
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.birthdateShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.birthdate' | translate}}">
+                      {{'report.studentData.birthdate' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container>
+                    <label>{{'report.studentData.personData.birthdateFrom' | translate}}</label>
+                    <md-datepicker ng-model="formState.criteria.birthdateFrom"></md-datepicker>
+                  </md-input-container>
+                  <md-input-container style="margin-right: 21px">
+                    <label>{{'report.studentData.personData.birthdateThru' | translate}}</label>
+                    <md-datepicker ng-model="formState.criteria.birthdateThru"></md-datepicker>
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.residenceCountryShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.residenceCountry' | translate}}">
+                      {{'report.studentData.residenceCountry' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <hois-autocomplete ng-model="formState.criteria.residenceCountry" name="residenceCountry"
+                    ha-search="countryAutocompleteSearch" ha-controller="directiveControllers" class="width-300-autocomplete"
+                    label="report.studentData.personData.residenceCountry" no-paging="true" multiple ha-attribute="code">
+                  </hois-autocomplete>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.citizenshipShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.citizenship' | translate}}">
+                      {{'report.studentData.citizenship' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <hois-autocomplete ng-model="formState.criteria.citizenship" name="citizenship"
+                    ha-search="countryAutocompleteSearch" ha-controller="directiveControllers" class="width-300-autocomplete"
+                    label="report.studentData.personData.citizenship" no-paging="true" multiple ha-attribute="code">
+                  </hois-autocomplete>
+                </div>
+              </div>
+            </div>
+          </hois-collapsable>
+
+          <hois-collapsable expanded="collapsable.studyDataExpanded">
+            <hois-collapsable-header>
+              <span>{{'report.studentData.studyData.label' | translate}}</span>
+            </hois-collapsable-header>
+            <div layout="column">
+              <div layout="row">
+                <div layout="row">
+                  <div style="width: 485px">
+                    <label class="textInput" style="font-size: 13px">{{'report.studentData.showInResults' | translate}}</label>
+                  </div>
+                </div>
+                <div layout="row" hide-md hide-sm hide-xs>
+                  <div style="width: 477px">
+                    <label class="textInput" style="font-size: 13px">{{'report.studentData.showInResults' | translate}}</label>
+                  </div>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.guestStudentShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.guestStudent' | translate}}">
+                      {{'report.studentData.guestStudent' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300-md-select">
+                    <label>{{'report.studentData.studyData.yesNo' | translate}}</label>
+                    <md-select ng-model="formState.criteria.guestStudent">
+                      <md-option md-option-empty></md-option>
+                      <md-option ng-value="true">{{'main.yes' | translate}}</md-option>
+                      <md-option ng-value="false">{{'main.no' | translate}}</md-option>
+                    </md-select>
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.foreignStudentShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.foreignStudent' | translate}}">
+                      {{'report.studentData.foreignStudent' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300-md-select">
+                    <label>{{'report.studentData.studyData.yesNo' | translate}}</label>
+                    <md-select ng-model="formState.criteria.foreignStudent">
+                      <md-option md-option-empty></md-option>
+                      <md-option ng-value="true">{{'main.yes' | translate}}</md-option>
+                      <md-option ng-value="false">{{'main.no' | translate}}</md-option>
+                    </md-select>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.cumLaudeShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.cumLaude' | translate}}">
+                      {{'report.studentData.cumLaude' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300-md-select">
+                    <label>{{'report.studentData.studyData.yesNo' | translate}}</label>
+                    <md-select ng-model="formState.criteria.cumLaude">
+                      <md-option md-option-empty></md-option>
+                      <md-option ng-value="true">{{'main.yes' | translate}}</md-option>
+                      <md-option ng-value="false">{{'main.no' | translate}}</md-option>
+                    </md-select>
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.immatDateShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.immatDate' | translate}}">
+                      {{'report.studentData.immatDate' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container>
+                    <label class="textInput">{{'report.studentData.studyData.immatFrom' | translate}}</label>
+                    <md-datepicker ng-model="formState.criteria.immatDateFrom"></md-datepicker>
+                  </md-input-container>
+                  <md-input-container>
+                    <label class="textInput">{{'report.studentData.studyData.immatThru' | translate}}</label>
+                    <md-datepicker ng-model="formState.criteria.immatDateThru"></md-datepicker>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.directiveConfirmDateShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.directiveConfirmDate' | translate}}">
+                      {{'report.studentData.directiveConfirmDate' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container>
+                    <label class="textInput">{{'report.studentData.studyData.directiveFrom' | translate}}</label>
+                    <md-datepicker ng-model="formState.criteria.directiveConfirmDateFrom"></md-datepicker>
+                  </md-input-container>
+                  <md-input-container style="margin-right: 21px">
+                    <label class="textInput">{{'report.studentData.studyData.directiveThru' | translate}}</label>
+                    <md-datepicker ng-model="formState.criteria.directiveConfirmDateThru"></md-datepicker>
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.finishedDateShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.finishedDate' | translate}}">
+                      {{'report.studentData.finishedDate' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container>
+                    <label class="textInput">{{'report.studentData.studyData.finishedFrom' | translate}}</label>
+                    <md-datepicker ng-model="formState.criteria.finishedDateFrom"></md-datepicker>
+                  </md-input-container>
+                  <md-input-container style="margin-right: 21px;">
+                    <label class="textInput">{{'report.studentData.studyData.finishedThru' | translate}}</label>
+                    <md-datepicker ng-model="formState.criteria.finishedDateThru"></md-datepicker>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.directiveTypesShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.directiveTypes' | translate}}">
+                      {{'report.studentData.directiveTypes' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.studyData.directiveType' | translate}}</label>
+                    <hois-classifier-select ng-model="formState.criteria.directiveTypes" name="directiveType" 
+                      only-valid ignore-preselected flex model-value-attr="code" main-classifier-code="KASKKIRI" 
+                      aria-label="{{'report.studentData.studyData.directiveType' | translate}}" multiple>
+                    </hois-classifier-select>
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.directiveReasonsShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.directiveReasons' | translate}}">
+                      {{'report.studentData.directiveReasons' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300" 
+                    ng-if="formState.criteria.directiveTypes !== undefined && 
+                    (formState.criteria.directiveTypes.indexOf('KASKKIRI_EKSMAT') !== -1 || 
+                    formState.criteria.directiveTypes.indexOf('KASKKIRI_AKAD') !== -1 ||
+                    formState.criteria.directiveTypes.indexOf('KASKKIRI_STIPTOETL') !== -1)">
+                    <label class="textInput">{{'report.studentData.studyData.directiveReason' | translate}}</label>
+                    <hois-classifier-select ng-model="formState.criteria.directiveReasons" name="directiveReason" 
+                      only-valid flex model-value-attr="code" multiple watch-codes
+                      main-classifier-codes="{{getDirectiveReasons()}}"
+                      aria-label="{{'report.studentData.studyData.directiveReason' | translate}}">
+                    </hois-classifier-select>
+                  </md-input-container>
+                  <div class="width-300-autocomplete" ng-if="formState.criteria.directiveTypes === undefined || 
+                    (formState.criteria.directiveTypes.indexOf('KASKKIRI_EKSMAT') === -1 && 
+                    formState.criteria.directiveTypes.indexOf('KASKKIRI_AKAD') === -1 &&
+                    formState.criteria.directiveTypes.indexOf('KASKKIRI_STIPTOETL') === -1)"></div>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.studentGroupsShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.studentGroups' | translate}}">
+                      {{'report.studentData.studentGroups' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <hois-autocomplete class="width-300-autocomplete" ng-model="formState.criteria.studentGroups" 
+                    ha-controller="directiveControllers" method="studentgroups" name="studentGroup" ha-attribute="id"
+                    label="report.studentData.studyData.studentGroup" multiple></hois-autocomplete>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.studentStatusesShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.studentStatuses' | translate}}">
+                      {{'report.studentData.studentStatuses' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.studyData.studentStatuses' | translate}}</label>
+                    <hois-classifier-select ng-model="formState.criteria.studentStatuses" name="directiveType" 
+                      only-valid ignore-preselected flex model-value-attr="code" main-classifier-code="OPPURSTAATUS" 
+                      aria-label="{{'report.studentData.studyData.studentStatuses' | translate}}" multiple>
+                    </hois-classifier-select>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.studyFormShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.studyForm' | translate}}">
+                      {{'report.studentData.studyForm' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.studyData.studyForm' | translate}}</label>
+                    <hois-classifier-select ng-model="formState.criteria.studyForm" name="directiveType" 
+                      only-valid ignore-preselected flex model-value-attr="code" multiple
+                      main-classifier-code="OPPEVORM" aria-label="{{'report.studentData.studyData.studyForm' | translate}}">
+                    </hois-classifier-select>
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.studyLoadShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.studyLoad' | translate}}">
+                      {{'report.studentData.studyLoad' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.studyData.studyLoad' | translate}}</label>
+                    <hois-classifier-select ng-model="formState.criteria.studyLoad" name="directiveType" 
+                      only-valid ignore-preselected flex model-value-attr="code" main-classifier-code="OPPEKOORMUS" 
+                      aria-label="{{'report.studentData.studyData.studyLoad' | translate}}" multiple>
+                    </hois-classifier-select>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.schoolDepartmentShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.schoolDepartment' | translate}}">
+                      {{'report.studentData.schoolDepartment' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <hois-autocomplete class="width-300-autocomplete" ng-model="formState.criteria.schoolDepartment" 
+                    ha-controller="directiveControllers" method="schooldepartments" name="schooldepartments" multiple 
+                    ha-attribute="id"
+                    label="report.studentData.studyData.schoolDepartment"></hois-autocomplete>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.curriculumShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.curriculum' | translate}}">
+                      {{'report.studentData.curriculum' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <hois-autocomplete class="width-300-autocomplete" ng-model="formState.criteria.curriculum" 
+                    ha-attribute="id"
+                    method="curriculumsauto" label="report.studentData.studyData.curriculum" multiple></hois-autocomplete>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.ehisCodeShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.ehisCode' | translate}}">
+                      {{'report.studentData.ehisCode' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.studyData.ehisCode' | translate}}</label>
+                    <input ng-model="formState.criteria.ehisCode" type="text" md-maxlength="255">
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.studyLevelShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.studyLevel' | translate}}">
+                      {{'report.studentData.studyLevel' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.studyData.studyLevel' | translate}}</label>
+                    <hois-classifier-select ng-model="formState.criteria.studyLevel" name="directiveType" 
+                      only-valid ignore-preselected flex model-value-attr="code" main-classifier-code="OPPEASTE" 
+                      aria-label="{{'report.studentData.studyData.studyLevel' | translate}}" multiple>
+                    </hois-classifier-select>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.specialityShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.speciality' | translate}}">
+                      {{'report.studentData.speciality' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <hois-autocomplete ng-model="formState.criteria.speciality" name="speciality"
+                    ha-search="specialityAutocompleteSearch" ha-controller="directiveControllers" class="width-300-autocomplete"
+                    label="report.studentData.studyData.speciality" no-paging="true" multiple ha-attribute="code">
+                  </hois-autocomplete>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.studyYearNumberShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.studyYearNumber' | translate}}">
+                      {{'report.studentData.studyYearNumber' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300-md-select">
+                    <label>{{'report.studentData.studyData.studyYear' | translate}}</label>
+                    <md-select ng-model="formState.criteria.studyYearNumber">
+                      <md-option md-option-empty></md-option>
+                      <md-option ng-value="1">1</md-option>
+                      <md-option ng-value="2">2</md-option>
+                      <md-option ng-value="3">3</md-option>
+                      <md-option ng-value="4">4</md-option>
+                      <md-option ng-value="5">5</md-option>
+                      <md-option ng-value="6">6</md-option>
+                      <md-option ng-value="7">7</md-option>
+                      <md-option ng-value="8">8</md-option>
+                      <md-option ng-value="9">9</md-option>
+                    </md-select>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.finShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.fin' | translate}}">
+                      {{'report.studentData.fin' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.studyData.fin' | translate}}</label>
+                    <hois-classifier-select ng-model="formState.criteria.fin" name="directiveType" only-valid ignore-preselected flex
+                        model-value-attr="code" main-classifier-code="FINTAPSUSTUS" multiple
+                        aria-label="{{'report.studentData.studyData.fin' | translate}}">
+                    </hois-classifier-select>
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.languageShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.language' | translate}}">
+                      {{'report.studentData.language' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.studyData.language' | translate}}</label>
+                    <hois-classifier-select ng-model="formState.criteria.language" name="directiveType" only-valid ignore-preselected flex
+                        model-value-attr="code" main-classifier-code="OPPEKEEL" multiple
+                        aria-label="{{'report.studentData.studyData.language' | translate}}">
+                    </hois-classifier-select>
+                  </md-input-container>
+                </div>
+              </div>
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.curriculumPercentageShow" class="checkbox-width-150" style="margin-top: 0px"
+                      aria-label="{{'report.studentData.studyData.curriculumPercentage' | translate}}">
+                      {{'report.studentData.studyData.curriculumPercentage' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-135">
+                    <label>{{'report.studentData.studyData.curriculumPercentageFrom' | translate}}</label>
+                    <input ng-model="formState.criteria.curriculumPercentageFrom" type="number" name="curriculumPercentageFrom" min="-100" 
+                    max="{{formState.criteria.curriculumPercentageThru ? formState.criteria.curriculumPercentageThru : 100}}" pattern="^(\-)?\d+(\.\d{1})?$">
+                    <div ng-messages="searchForm.curriculumPercentageFrom.$error" ng-show="searchForm.curriculumPercentageFrom.$dirty">
+                        <div ng-message="min">
+                        {{'main.messages.error.positive' | translate}}
+                        </div>
+                        <div ng-message="max">
+                          {{'main.messages.error.max' | translate: {max: (formState.criteria.studyData.curriculumPercentage.thru ? formState.criteria.studyData.curriculumPercentage.thru : 100) } }}
+                        </div>
+                        <div ng-message="pattern">
+                        {{'stateCurriculum.error.decimalPresision' | translate}}
+                        </div>
+                    </div>
+                  </md-input-container>
+                    <md-input-container class="width-135">
+                      <label>{{'report.studentData.studyData.curriculumPercentageThru' | translate}}</label>
+                      <input ng-model="formState.criteria.curriculumPercentageThru" type="number" name="curriculumPercentageThru" 
+                      min="{{formState.criteria.curriculumPercentageFrom ? formState.criteria.curriculumPercentageFrom : -100}}" max="100" pattern="^(\-)?\d+(\.\d{1})?$">
+                      <div ng-messages="searchForm.curriculumPercentageThru.$error" ng-show="searchForm.curriculumPercentageThru.$dirty">
+                          <div ng-message="min">
+                            {{'main.messages.error.min' | translate: {min: (formState.criteria.studyData.curriculumPercentage.from ? formState.criteria.studyData.curriculumPercentage.from : 0) } }}
+                          </div>
+                          <div ng-message="max">
+                            {{'main.messages.error.max' | translate: {max: 100} }}
+                          </div>
+                          <div ng-message="pattern">
+                          {{'stateCurriculum.error.decimalPresision' | translate}}
+                          </div>
+                      </div>
+                  </md-input-container>
+                </div>
+              </div>
+            </div>
+          </hois-collapsable>
+
+          <hois-collapsable expanded="collapsable.contactDataExpanded">
+            <hois-collapsable-header>
+              <span>{{'report.studentData.contactData.label' | translate}}</span>
+            </hois-collapsable-header>
+            <div layout="column">
+
+              <div layout="row">
+                <div layout="row">
+                  <div style="width: 480px">
+                    <label class="textInput" style="font-size: 13px">{{'report.studentData.showInResults' | translate}}</label>
+                  </div>
+                </div>
+                <div layout="row" hide-md hide-sm hide-xs>
+                  <div style="width: 477px">
+                    <label class="textInput" style="font-size: 13px">{{'report.studentData.showInResults' | translate}}</label>
+                  </div>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-checkbox ng-model="formState.criteria.addressShow" class="checkbox-width-150"
+                    aria-label="{{'report.studentData.address' | translate}}">
+                    {{'report.studentData.address' | translate}}
+                  </md-checkbox>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.contactData.address' | translate}}</label>
+                    <input ng-model="formState.criteria.address" type="text" md-maxlength="100">
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-checkbox ng-model="formState.criteria.phoneShow" class="checkbox-width-150"
+                    aria-label="{{'report.studentData.phone' | translate}}">
+                    {{'report.studentData.phone' | translate}}
+                  </md-checkbox>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.contactData.phone' | translate}}</label>
+                    <input ng-model="formState.criteria.phone" type="text" md-maxlength="100">
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-checkbox ng-model="formState.criteria.officialEmailShow" class="checkbox-width-150"
+                    aria-label="{{'report.studentData.officialEmail' | translate}}">
+                    {{'report.studentData.officialEmail' | translate}}
+                  </md-checkbox>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.contactData.officialEmail' | translate}}</label>
+                    <input ng-model="formState.criteria.officialEmail" type="text" md-maxlength="100">
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-checkbox ng-model="formState.criteria.personalEmailShow" class="checkbox-width-150"
+                    aria-label="{{'report.studentData.personalEmail' | translate}}">
+                    {{'report.studentData.personalEmail' | translate}}
+                  </md-checkbox>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.contactData.personalEmail' | translate}}</label>
+                    <input ng-model="formState.criteria.personalEmail" type="text" md-maxlength="100">
+                  </md-input-container>
+                </div>
+              </div>
+            </div>
+          </hois-collapsable>
+
+          <hois-collapsable expanded="collapsable.statisticsExpanded">
+            <hois-collapsable-header>
+              <span>{{'report.studentData.statistics.label' | translate}}</span>
+            </hois-collapsable-header>
+            <div layout="column">
+
+              <div layout="row">
+                <div style="width: 477px">
+                  <label class="textInput" style="font-size: 13px">{{'report.studentData.showInResults' | translate}}</label>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.eapShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.eap' | translate}}">
+                      {{'report.studentData.eap' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-100">
+                    <label>{{'report.studentData.comparation' | translate}}</label>
+                    <md-select ng-model="formState.criteria.eapSign" ng-required="hasValue(formState.criteria.eap)">
+                      <md-option ng-value="formState.equal">&#61;</md-option>
+                      <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                      <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                      <md-option ng-if="!hasValue(formState.criteria.eap)" md-option-empty></md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-input-container class="width-196">
+                    <label>{{'report.studentData.eap' | translate}}</label>
+                    <input ng-model="formState.criteria.eap" type="number" name="eap" min="0" max="1000" pattern="^\d+$">
+                    <div ng-messages="searchForm.eap.$error" ng-show="searchForm.eap.$dirty">
+                      <div ng-message="min">
+                        {{'main.messages.error.min' | translate: {min: 0} }}
+                      </div>
+                      <div ng-message="max">
+                        {{'main.messages.error.max' | translate: {max: 1000} }}
+                      </div>
+                      <div ng-message="pattern">
+                        {{'main.messages.error.integer' | translate}}
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.eapSumShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.eapSum' | translate}}">
+                      {{'report.studentData.eapSum' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-100">
+                    <label>{{'report.studentData.comparation' | translate}}</label>
+                    <md-select ng-model="formState.criteria.eapSumSign" ng-required="hasValue(formState.criteria.eapSum)">
+                      <md-option ng-value="formState.equal">&#61;</md-option>
+                      <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                      <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                      <md-option ng-if="!hasValue(formState.criteria.eapSum)" md-option-empty></md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-input-container class="width-196">
+                    <label>{{'report.studentData.eapSum' | translate}}</label>
+                    <input ng-model="formState.criteria.eapSum" type="number" name="eapSum" min="0" max="1000" pattern="^\d+$">
+                    <div ng-messages="searchForm.eapSum.$error" ng-show="searchForm.eapSum.$dirty">
+                      <div ng-message="min">
+                        {{'main.messages.error.min' | translate: {min: 0} }}
+                      </div>
+                      <div ng-message="max">
+                        {{'main.messages.error.max' | translate: {max: 1000} }}
+                      </div>
+                      <div ng-message="pattern">
+                        {{'main.messages.error.integer' | translate}}
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <div hide-gt-md style="width: 205px"></div>
+                  <md-input-container class="margin-right-27">
+                    <label class="textInput">{{'report.studentData.statistics.eapFrom' | translate}}</label>
+                    <md-datepicker ng-model="formState.criteria.eapSumFrom" ng-change="clearFields('eapSumPeriod')"
+                    ng-required="hasValue(formState.criteria.eapSum) && isEmpty(formState.criteria.eapSumPeriod) && isEmpty(formState.criteria.eapSumThru)"></md-datepicker>
+                  </md-input-container>
+                  <md-input-container>
+                    <label class="textInput">{{'report.studentData.statistics.eapThru' | translate}}</label>
+                    <md-datepicker ng-model="formState.criteria.eapSumThru" ng-change="clearFields('eapSumPeriod')"
+                    ng-required="hasValue(formState.criteria.eapSum) && isEmpty(formState.criteria.eapSumPeriod) && isEmpty(formState.criteria.eapSumFrom)"></md-datepicker>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <div style="width: 205px"></div>
+                  <md-input-container style="margin-right: 126px;">
+                    <md-checkbox ng-model="formState.criteria.eapSumApel"
+                      aria-label="{{'report.studentData.statistics.countApelRecords' | translate}}">
+                      {{'report.studentData.statistics.countApelRecords' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <div hide-gt-md style="width: 205px"></div>
+                  <md-input-container style="width: 327px">
+                    <label>{{'report.studentData.statistics.period' | translate}}</label>
+                    <hois-select ng-model="formState.criteria.eapSumPeriod" ng-change="clearFields('eapSumFrom', 'eapSumThru')"
+                      values="formState.studyPeriods" sorted-query="true" show-property="display"
+                      ng-required="hasValue(formState.criteria.eapSum) && isEmpty(formState.criteria.eapSumFrom) && isEmpty(formState.criteria.eapSumThru)"></hois-select>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.weightedAverageSumShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.weightedAverageSum' | translate}}">
+                      {{'report.studentData.weightedAverageSum' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-100">
+                    <label>{{'report.studentData.comparation' | translate}}</label>
+                    <md-select ng-model="formState.criteria.weightedAverageSumSign" ng-required="hasValue(formState.criteria.weightedAverageSum)">
+                      <md-option ng-value="formState.equal">&#61;</md-option>
+                      <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                      <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                      <md-option ng-if="!hasValue(formState.criteria.weightedAverageSum)" md-option-empty></md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-input-container class="width-196">
+                    <label>{{'report.studentData.weightedAverageSum' | translate}}</label>
+                    <input ng-model="formState.criteria.weightedAverageSum" type="number" name="weightedAverageSum" min="0" max="1000" pattern="^\d+(\.\d{1,2})?$">
+                    <div ng-messages="searchForm.weightedAverageSum.$error" ng-show="searchForm.weightedAverageSum.$dirty">
+                      <div ng-message="min">
+                        {{'main.messages.error.min' | translate: {min: 0} }}
+                      </div>
+                      <div ng-message="max">
+                        {{'main.messages.error.max' | translate: {max: 1000} }}
+                      </div>
+                      <div ng-message="pattern">
+                        {{'main.messages.error.doublePercision' | translate}}
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.weightedAverageShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.weightedAverage' | translate}}">
+                      {{'report.studentData.weightedAverage' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-100">
+                    <label>{{'report.studentData.comparation' | translate}}</label>
+                    <md-select ng-model="formState.criteria.weightedAverageSign" ng-required="hasValue(formState.criteria.weightedAverage)">
+                      <md-option ng-value="formState.equal">&#61;</md-option>
+                      <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                      <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                      <md-option ng-if="!hasValue(formState.criteria.weightedAverage)" md-option-empty></md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-input-container class="width-196">
+                    <label>{{'report.studentData.weightedAverage' | translate}}</label>
+                    <input ng-model="formState.criteria.weightedAverage" type="number" name="weightedAverage" min="0" max="1000" pattern="^\d+(\.\d{1,2})?$">
+                    <div ng-messages="searchForm.weightedAverage.$error" ng-show="searchForm.weightedAverageSum.$dirty">
+                      <div ng-message="min">
+                        {{'main.messages.error.min' | translate: {min: 0} }}
+                      </div>
+                      <div ng-message="max">
+                        {{'main.messages.error.max' | translate: {max: 1000} }}
+                      </div>
+                      <div ng-message="pattern">
+                        {{'main.messages.error.doublePercision' | translate}}
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+                <div layout="column">
+                  <div layout="row">
+                    <div hide-gt-md style="width: 205px"></div>
+                    <md-input-container class="margin-right-27">
+                      <label class="textInput">{{'report.studentData.statistics.weightedAverageFrom' | translate}}</label>
+                      <md-datepicker ng-model="formState.criteria.weightedAverageFrom" ng-change="clearFields('weightedAveragePeriod')"
+                      ng-required="hasValue(formState.criteria.weightedAverage) && isEmpty(formState.criteria.weightedAverageThru) && isEmpty(formState.criteria.weightedAveragePeriod)"></md-datepicker>
+                    </md-input-container>
+                    <md-input-container class="margin-right-27">
+                      <label class="textInput">{{'report.studentData.statistics.weightedAverageThru' | translate}}</label>
+                      <md-datepicker ng-model="formState.criteria.weightedAverageThru" ng-change="clearFields('weightedAveragePeriod')"
+                      ng-required="hasValue(formState.criteria.weightedAverage) && isEmpty(formState.criteria.weightedAverageFrom) && isEmpty(formState.criteria.weightedAveragePeriod)"></md-datepicker>
+                    </md-input-container>
+                  </div>
+                  <div layout="row">
+                    <div hide-gt-md style="width: 205px"></div>
+                    <md-input-container class="width-327">
+                      <label>{{'report.studentData.statistics.period' | translate}}</label>
+                      <hois-select ng-model="formState.criteria.weightedAveragePeriod" ng-change="clearFields('weightedAverageFrom', 'weightedAverageThru')"
+                        values="formState.studyPeriods" sorted-query="true" show-property="display"
+                        ng-required="hasValue(formState.criteria.weightedAverage) && isEmpty(formState.criteria.weightedAverageFrom) && isEmpty(formState.criteria.weightedAverageThru)"></hois-select>
+                    </md-input-container>
+                  </div>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row" ng-if="auth.higher">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.averageSumShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.averageSum' | translate}}" >
+                      {{'report.studentData.averageSum' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-100">
+                    <label>{{'report.studentData.comparation' | translate}}</label>
+                    <md-select ng-model="formState.criteria.averageSumSign" ng-required="hasValue(formState.criteria.averageSum)">
+                      <md-option ng-value="formState.equal">&#61;</md-option>
+                      <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                      <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                      <md-option ng-if="!hasValue(formState.criteria.averageSum)" md-option-empty></md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-input-container class="width-196">
+                    <label>{{'report.studentData.averageSum' | translate}}</label>
+                    <input ng-model="formState.criteria.averageSum" type="number" name="averageSum" min="0" max="1000" pattern="^\d+(\.\d{1,2})?$">
+                    <div ng-messages="searchForm.averageSum.$error" ng-show="searchForm.averageSum.$dirty">
+                      <div ng-message="min">
+                        {{'main.messages.error.min' | translate: {min: 0} }}
+                      </div>
+                      <div ng-message="max">
+                        {{'main.messages.error.max' | translate: {max: 1000} }}
+                      </div>
+                      <div ng-message="pattern">
+                        {{'main.messages.error.doublePercision' | translate}}
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row"  ng-if="auth.higher">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.averageShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.average' | translate}}">
+                      {{'report.studentData.average' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-100">
+                    <label>{{'report.studentData.comparation' | translate}}</label>
+                    <md-select ng-model="formState.criteria.averageSign" ng-required="hasValue(formState.criteria.average)">
+                      <md-option ng-value="formState.equal">&#61;</md-option>
+                      <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                      <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                      <md-option ng-if="!hasValue(formState.criteria.average)" md-option-empty></md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-input-container class="width-196">
+                    <label>{{'report.studentData.average' | translate}}</label>
+                    <input ng-model="formState.criteria.average" type="number" name="average" min="0" max="1000" pattern="^\d+(\.\d{1,2})?$">
+                    <div ng-messages="searchForm.average.$error" ng-show="searchForm.average.$dirty">
+                      <div ng-message="min">
+                        {{'main.messages.error.min' | translate: {min: 0} }}
+                      </div>
+                      <div ng-message="max">
+                        {{'main.messages.error.max' | translate: {max: 1000} }}
+                      </div>
+                      <div ng-message="pattern">
+                        {{'main.messages.error.doublePercision' | translate}}
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+                <div layout="column">
+                  <div layout="row">
+                    <div hide-gt-md style="width: 205px"></div>
+                    <md-input-container class="margin-right-27">
+                      <label class="textInput">{{'report.studentData.statistics.averageFrom' | translate}}</label>
+                      <md-datepicker ng-model="formState.criteria.averageFrom" ng-change="clearFields('averagePeriod')"
+                      ng-required="hasValue(formState.criteria.average) && isEmpty(formState.criteria.averageThru) && isEmpty(formState.criteria.averagePeriod)"></md-datepicker>
+                    </md-input-container>
+                    <md-input-container class="margin-right-27">
+                      <label class="textInput">{{'report.studentData.statistics.averageThru' | translate}}</label>
+                      <md-datepicker ng-model="formState.criteria.averageThru" ng-change="clearFields('averagePeriod')"
+                      ng-required="hasValue(formState.criteria.average) && isEmpty(formState.criteria.averageFrom) && isEmpty(formState.criteria.averagePeriod)"></md-datepicker>
+                    </md-input-container>
+                  </div>
+                  <div layout="row">
+                    <div hide-gt-md style="width: 205px"></div>
+                    <md-input-container style="width: 327px">
+                      <label>{{'report.studentData.statistics.period' | translate}}</label>
+                      <hois-select ng-model="formState.criteria.averagePeriod" ng-change="clearFields('averageThru', 'averageFrom')"
+                        values="formState.studyPeriods" sorted-query="true" show-property="display"
+                        ng-required="hasValue(formState.criteria.average) && isEmpty(formState.criteria.averageThru) && isEmpty(formState.criteria.averageFrom)"></hois-select>
+                    </md-input-container>
+                  </div>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row"  ng-if="auth.higher">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.debtSumShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.debtSum' | translate}}">
+                      {{'report.studentData.debtSum' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-100">
+                    <label>{{'report.studentData.comparation' | translate}}</label>
+                    <md-select ng-model="formState.criteria.debtSumSign" ng-required="hasValue(formState.criteria.debtSum)">
+                      <md-option ng-value="formState.equal">&#61;</md-option>
+                      <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                      <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                      <md-option ng-if="!hasValue(formState.criteria.debtSum)" md-option-empty></md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-input-container class="width-196">
+                    <label>{{'report.studentData.debtSum' | translate}}</label>
+                    <input ng-model="formState.criteria.debtSum" type="number" name="debtSum" min="0" max="1000" pattern="^\d+$">
+                    <div ng-messages="searchForm.debtSum.$error" ng-show="searchForm.debtSum.$dirty">
+                      <div ng-message="min">
+                        {{'main.messages.error.min' | translate: {min: 0} }}
+                      </div>
+                      <div ng-message="max">
+                        {{'main.messages.error.max' | translate: {max: 1000} }}
+                      </div>
+                      <div ng-message="pattern">
+                        {{'main.messages.error.integer' | translate}}
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row" ng-if="auth.higher">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.debtShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.debt' | translate}}">
+                      {{'report.studentData.debt' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-100">
+                    <label>{{'report.studentData.comparation' | translate}}</label>
+                    <md-select ng-model="formState.criteria.debtSign" ng-required="hasValue(formState.criteria.debt)">
+                      <md-option ng-value="formState.equal">&#61;</md-option>
+                      <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                      <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                      <md-option ng-if="!hasValue(formState.criteria.debt)" md-option-empty></md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-input-container class="width-196">
+                    <label>{{'report.studentData.debt' | translate}}</label>
+                    <input ng-model="formState.criteria.debt" type="number" name="debt" min="0" max="1000" pattern="^\d+$">
+                    <div ng-messages="searchForm.debt.$error" ng-show="searchForm.debt.$dirty">
+                      <div ng-message="min">
+                        {{'main.messages.error.min' | translate: {min: 0} }}
+                      </div>
+                      <div ng-message="max">
+                        {{'main.messages.error.max' | translate: {max: 1000} }}
+                      </div>
+                      <div ng-message="pattern">
+                        {{'main.messages.error.integer' | translate}}
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+                <div layout="column">
+                  <div layout="row">
+                    <div hide-gt-md style="width: 205px"></div>
+                    <md-input-container class="margin-right-27">
+                      <label class="textInput">{{'report.studentData.statistics.debtFrom' | translate}}</label>
+                      <md-datepicker ng-model="formState.criteria.debtFrom" ng-change="clearFields('debtPeriod')"
+                      ng-required="hasValue(formState.criteria.debt) && isEmpty(formState.criteria.debtThru) && isEmpty(formState.criteria.debtPeriod)"></md-datepicker>
+                    </md-input-container>
+                    <md-input-container class="margin-right-27">
+                      <label class="textInput">{{'report.studentData.statistics.debtThru' | translate}}</label>
+                      <md-datepicker ng-model="formState.criteria.debtThru" ng-change="clearFields('debtPeriod')"
+                      ng-required="hasValue(formState.criteria.debt) && isEmpty(formState.criteria.debtFrom) && isEmpty(formState.criteria.debtPeriod)"></md-datepicker>
+                    </md-input-container>
+                  </div>
+                  <div layout="row">
+                    <div hide-gt-md style="width: 205px"></div>
+                    <md-input-container style="width: 327px">
+                      <label>{{'report.studentData.statistics.period' | translate}}</label>
+                      <hois-select ng-model="formState.criteria.debtPeriod" ng-change="clearFields('debtFrom', 'debtThru')"
+                        values="formState.studyPeriods" sorted-query="true" show-property="display"
+                        ng-required="hasValue(formState.criteria.debt) && isEmpty(formState.criteria.debtFrom) && isEmpty(formState.criteria.debtThru)"></hois-select>
+                    </md-input-container>
+                  </div>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row" ng-if="auth.higher">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.debtPointsSumShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.debtPointsSum' | translate}}">
+                      {{'report.studentData.debtPointsSum' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-100">
+                    <label>{{'report.studentData.comparation' | translate}}</label>
+                    <md-select ng-model="formState.criteria.debtPointsSumSign" ng-required="hasValue(formState.criteria.debtPointsSum)">
+                      <md-option ng-value="formState.equal">&#61;</md-option>
+                      <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                      <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                      <md-option ng-if="!hasValue(formState.criteria.debtPointsSum)" md-option-empty></md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-input-container class="width-196">
+                    <label>{{'report.studentData.debtPointsSum' | translate}}</label>
+                    <input ng-model="formState.criteria.debtPointsSum" type="number" name="debtPointsSum" min="0" max="1000" pattern="^\d+$">
+                    <div ng-messages="searchForm.debtPointsSum.$error" ng-show="searchForm.debtPointsSum.$dirty">
+                      <div ng-message="min">
+                        {{'main.messages.error.min' | translate: {min: 0} }}
+                      </div>
+                      <div ng-message="max">
+                        {{'main.messages.error.max' | translate: {max: 1000} }}
+                      </div>
+                      <div ng-message="pattern">
+                        {{'main.messages.error.integer' | translate}}
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row" ng-if="auth.higher">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.debtPointsShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.debtPoints' | translate}}">
+                      {{'report.studentData.debtPoints' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-100">
+                    <label>{{'report.studentData.comparation' | translate}}</label>
+                    <md-select ng-model="formState.criteria.debtPointsSign" ng-required="hasValue(formState.criteria.debtPoints)">
+                      <md-option ng-value="formState.equal">&#61;</md-option>
+                      <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                      <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                      <md-option ng-if="!hasValue(formState.criteria.debtPoints)" md-option-empty></md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-input-container class="width-196">
+                    <label>{{'report.studentData.debtPoints' | translate}}</label>
+                    <input ng-model="formState.criteria.debtPoints" type="number" name="debtPoints" min="0" max="1000" pattern="^\d+$">
+                    <div ng-messages="searchForm.debtPoints.$error" ng-show="searchForm.debtPoints.$dirty">
+                      <div ng-message="min">
+                        {{'main.messages.error.min' | translate: {min: 0} }}
+                      </div>
+                      <div ng-message="max">
+                        {{'main.messages.error.max' | translate: {max: 1000} }}
+                      </div>
+                      <div ng-message="pattern">
+                        {{'main.messages.error.integer' | translate}}
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+                <div layout="column">
+                  <div layout="row">
+                    <div hide-gt-md style="width: 205px"></div>
+                    <md-input-container class="margin-right-27">
+                      <label class="textInput">{{'report.studentData.statistics.debtPointsFrom' | translate}}</label>
+                      <md-datepicker ng-model="formState.criteria.debtPointsFrom" ng-change="clearFields('debtPointsPeriod')"
+                      ng-required="hasValue(formState.criteria.debtPoints) && isEmpty(formState.criteria.debtPointsThru) && isEmpty(formState.criteria.debtPointsPeriod)"></md-datepicker>
+                    </md-input-container>
+                    <md-input-container class="margin-right-27">
+                      <label class="textInput">{{'report.studentData.statistics.debtPointsThru' | translate}}</label>
+                      <md-datepicker ng-model="formState.criteria.debtPointsThru" ng-change="clearFields('debtPointsPeriod')"
+                      ng-required="hasValue(formState.criteria.debtPoints) && isEmpty(formState.criteria.debtPointsFrom) && isEmpty(formState.criteria.debtPointsPeriod)"></md-datepicker>
+                    </md-input-container>
+                  </div>
+                  <div layout="row">
+                    <div hide-gt-md style="width: 205px"></div>
+                    <md-input-container style="width: 327px">
+                      <label>{{'report.studentData.statistics.period' | translate}}</label>
+                      <hois-select ng-model="formState.criteria.debtPointsPeriod" ng-change="clearFields('debtPointsFrom', 'debtPointsThru')"
+                        values="formState.studyPeriods" sorted-query="true" show-property="display"
+                        ng-required="hasValue(formState.criteria.debtPoints) && isEmpty(formState.criteria.debtPointsFrom) && isEmpty(formState.criteria.debtPointsThru)"></hois-select>
+                    </md-input-container>
+                  </div>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row" ng-if="auth.higher">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.declaredEapShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.declaredEap' | translate}}">
+                      {{'report.studentData.declaredEap' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-100">
+                    <label>{{'report.studentData.comparation' | translate}}</label>
+                    <md-select ng-model="formState.criteria.declaredEapSign" ng-required="hasValue(formState.criteria.declaredEap)">
+                      <md-option ng-value="formState.equal">&#61;</md-option>
+                      <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                      <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                      <md-option ng-if="!hasValue(formState.criteria.declaredEap)" md-option-empty></md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-input-container class="width-196">
+                    <label>{{'report.studentData.declaredEap' | translate}}</label>
+                    <input ng-model="formState.criteria.declaredEap" type="number" name="declaredEAP" min="0" max="1000" pattern="^\d+$">
+                    <div ng-messages="searchForm.declaredEAP.$error" ng-show="searchForm.declaredEAP.$dirty">
+                      <div ng-message="min">
+                        {{'main.messages.error.min' | translate: {min: 0} }}
+                      </div>
+                      <div ng-message="max">
+                        {{'main.messages.error.max' | translate: {max: 1000} }}
+                      </div>
+                      <div ng-message="pattern">
+                        {{'main.messages.error.integer' | translate}}
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+                <div layout="column">
+                  <div layout="row">
+                    <div hide-gt-md style="width: 205px"></div>
+                    <md-input-container class="margin-right-27">
+                      <label class="textInput">{{'report.studentData.statistics.declaredEapFrom' | translate}}</label>
+                      <md-datepicker ng-model="formState.criteria.declaredEapFrom" ng-change="clearFields('declaredEapPeriod')"
+                      ng-required="hasValue(formState.criteria.declaredEap) && isEmpty(formState.criteria.declaredEapThru) && isEmpty(formState.criteria.declaredEapPeriod)"></md-datepicker>
+                    </md-input-container>
+                    <md-input-container class="margin-right-27">
+                      <label class="textInput">{{'report.studentData.statistics.declaredEapThru' | translate}}</label>
+                      <md-datepicker ng-model="formState.criteria.declaredEapThru" ng-change="clearFields('declaredEapPeriod')"
+                      ng-required="hasValue(formState.criteria.declaredEap) && isEmpty(formState.criteria.declaredEapFrom) && isEmpty(formState.criteria.declaredEapPeriod)"></md-datepicker>
+                    </md-input-container>
+                  </div>
+                  <div layout="row">
+                    <div hide-gt-md style="width: 205px"></div>
+                    <md-input-container style="width: 327px">
+                      <label>{{'report.studentData.statistics.period' | translate}}</label>
+                      <hois-select ng-model="formState.criteria.declaredEapPeriod" ng-change="clearFields('declaredEapThru', 'declaredEapFrom')"
+                        values="formState.studyPeriods" sorted-query="true" show-property="display"
+                        ng-required="hasValue(formState.criteria.declaredEap) && isEmpty(formState.criteria.declaredEapThru) && isEmpty(formState.criteria.declaredEapFrom)"></hois-select>
+                    </md-input-container>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </hois-collapsable>
+
+          <hois-collapsable expanded="collapsable.addInfoExpanded">
+            <hois-collapsable-header>
+              <span>{{'report.studentData.addInfo.label' | translate}}</span>
+            </hois-collapsable-header>
+            <div layout="column">
+
+              <div layout="row">
+                <div layout="row">
+                  <div style="width: 477px">
+                    <label class="textInput" style="font-size: 13px">{{'report.studentData.showInResults' | translate}}</label>
+                  </div>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row" ng-if="auth.higher">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.activeResultShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.activeResult' | translate}}">
+                      {{'report.studentData.activeResult' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <hois-autocomplete ng-model="formState.criteria.activeResult" method="subjects" 
+                    name="activeResult" ha-controller="directiveControllers" class="width-300-autocomplete"
+                    label="report.studentData.addInfo.subject" ha-attribute="id" multiple></hois-autocomplete>
+                </div>
+                <div layout="row">
+                  <div hide-gt-md style="width: 204px"></div>
+                  <md-input-container class="width-150">
+                    <label>{{'report.studentData.addInfo.result' | translate}}</label>
+                    <md-select ng-model="formState.criteria.activeResultPositive">
+                      <md-option md-option-empty></md-option>
+                      <md-option ng-value="true">{{'report.studentData.addInfo.positive' | translate}}</md-option>
+                      <md-option ng-value="false">{{'report.studentData.addInfo.negative' | translate}}</md-option>
+                    </md-select>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row" ng-if="auth.higher">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.declaredSubjectShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.declaredSubject' | translate}}">
+                      {{'report.studentData.declaredSubject' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <hois-autocomplete ng-model="formState.criteria.declaredSubject" method="subjects" 
+                    name="declaredSubject" ha-controller="directiveControllers" class="width-300-autocomplete"
+                    label="report.studentData.addInfo.subject" ha-attribute="id" multiple></hois-autocomplete>
+                </div>
+                <div layout="row">
+                  <div hide-gt-md style="width: 204px"></div>
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.declaredSubjectRepetitive" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.repetitiveDeclaration' | translate}}">
+                      {{'report.studentData.repetitiveDeclaration' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row" ng-if="auth.higher">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.declarationConfirmationShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.declarationConfirmation' | translate}}">
+                      {{'report.studentData.declarationConfirmation' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container>
+                    <label>{{'report.studentData.addInfo.declarationConfirmationFrom' | translate}}</label>
+                    <md-datepicker ng-model="formState.criteria.declarationConfirmationFrom" 
+                    md-max-date="formState.criteria.declarationConfirmationThru"></md-datepicker>
+                  </md-input-container>
+                  <md-input-container>
+                    <label>{{'report.studentData.addInfo.declarationConfirmationThru' | translate}}</label>
+                    <md-datepicker ng-model="formState.criteria.declarationConfirmationThru" 
+                    md-min-date="formState.criteria.declarationConfirmationFrom"></md-datepicker>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.previousSchoolNameShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.previousSchoolName' | translate}}">
+                      {{'report.studentData.previousSchoolName' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label>{{'report.studentData.addInfo.previousSchoolName' | translate}}</label>
+                    <input ng-model="formState.criteria.previousSchoolName" type="text" md-maxlength="255">
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.completedSchoolYearShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.completedSchoolYear' | translate}}">
+                      {{'report.studentData.completedSchoolYear' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-100-margin-4">
+                    <label>{{'report.studentData.comparation' | translate}}</label>
+                    <md-select ng-model="formState.criteria.completedSchoolYearSign" ng-required="hasValue(formState.criteria.completedSchoolYear)">
+                      <md-option ng-value="formState.equal">&#61;</md-option>
+                      <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                      <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                      <md-option ng-if="!hasValue(formState.criteria.completedSchoolYear)" md-option-empty></md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-input-container class="width-196">
+                    <label>{{'report.studentData.completedSchoolYear' | translate}}</label>
+                    <input ng-model="formState.criteria.completedSchoolYear" type="number" name="completedSchoolYear" min="0" max="10000" pattern="^\d+$">
+                    <div ng-messages="searchForm.completedSchoolYear.$error" ng-show="searchForm.completedSchoolYear.$dirty">
+                      <div ng-message="min">
+                        {{'main.messages.error.min' | translate: {min: 0} }}
+                      </div>
+                      <div ng-message="max">
+                        {{'main.messages.error.max' | translate: {max: 10000} }}
+                      </div>
+                      <div ng-message="pattern">
+                        {{'main.messages.error.integer' | translate}}
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+              </div>
+            </div>
+          </hois-collapsable>
+          <hois-collapsable expanded="collapsable.isSortingExpanded">
+            <hois-collapsable-header>
+              <span>{{'report.studentData.sorting.label' | translate}}</span>
+            </hois-collapsable-header>
+            <div layout="column">
+              <div layout="column" layout-gt-md="row">
+                <div layout="column">
+                  <md-input-container class="width-300">
+                    <label>{{'report.studentData.sorting.pickColumn' | translate}}</label>
+                    <md-select ng-model="formState.criteria.orderField1" ng-click="updateOrderFields()">
+                      <md-option md-option-empty></md-option>
+                      <md-option ng-repeat="field in formState.orderFields1 | filter: filterOrderField(formState.criteria.orderField2, formState.criteria.orderField3)" ng-value="field.val">{{field.translation | translate}}</md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-checkbox ng-model="formState.criteria.orderField1Desc" class="checkbox-width-200"
+                    aria-label="{{'report.studentData.sorting.desc' | translate}}">
+                    {{'report.studentData.sorting.desc' | translate}}
+                  </md-checkbox>
+                </div>
+                <div layout="column">
+                  <md-input-container class="width-300">
+                    <label>{{'report.studentData.sorting.pickColumn' | translate}}</label>
+                    <md-select ng-model="formState.criteria.orderField2" ng-click="updateOrderFields()">
+                      <md-option md-option-empty></md-option>
+                      <md-option ng-repeat="field in formState.orderFields2 | filter: filterOrderField(formState.criteria.orderField1, formState.criteria.orderField3)" ng-value="field.val">{{field.translation | translate}}</md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-checkbox ng-model="formState.criteria.orderField2Desc" class="checkbox-width-200"
+                    aria-label="{{'report.studentData.sorting.desc' | translate}}">
+                    {{'report.studentData.sorting.desc' | translate}}
+                  </md-checkbox>
+                </div>
+                <div layout="column">
+                  <md-input-container class="width-300">
+                    <label>{{'report.studentData.sorting.pickColumn' | translate}}</label>
+                    <md-select ng-model="formState.criteria.orderField3" ng-click="updateOrderFields()">
+                      <md-option md-option-empty></md-option>
+                      <md-option ng-repeat="field in formState.orderFields3 | filter: filterOrderField(formState.criteria.orderField1, formState.criteria.orderField2)" ng-value="field.val">{{field.translation | translate}}</md-option>
+                    </md-select>
+                  </md-input-container>
+                  <md-checkbox ng-model="formState.criteria.orderField3Desc" class="checkbox-width-200"
+                    aria-label="{{'report.studentData.sorting.desc' | translate}}">
+                    {{'report.studentData.sorting.desc' | translate}}
+                  </md-checkbox>
+                </div>
+              </div>
+            </div>
+          </hois-collapsable>
+          </form>
+          <div layout-gt-md="row" layout="column">
+            <div layout="row" layout-xs="column">
+              <md-button ng-click="loadResults()" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+              <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+              <md-button ng-href="{{excelDL(formState.xlsUrl, criteria)}}" ng-disabled="!searched" target="_blank" class="md-raised">{{'report.excel' | translate}}</md-button>
+            </div>
+            <div layout="row">
+              <form name="queryForm">
+                <div ng-if="searched" layout="row" layout-xs="column">
+                  <md-input-container style="margin-left: 6px; width: 300px">
+                    <label>{{'report.studentData.query.name' | translate}}</label>
+                    <input ng-model="savedHeader.queryNameEt" type="text" name="queryName" md-maxlength="255" style="margin-bottom: 0px;">
+                  </md-input-container>
+                  <md-button class="md-raised" ng-click="saveQuery()">{{'report.studentData.query.save' | translate}}</md-button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </fieldset>
+      <div>&nbsp;</div>
+      <hois-collapsable expanded="collapsable.queryExpanded">
+        <hois-collapsable-header>
+          <span>{{'report.studentData.query.label' | translate}}</span>
+        </hois-collapsable-header>
+        <div layout="column">
+          <md-table-container flex="50" style="max-height: 200px">
+            <table md-table class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column>{{'report.studentData.query.name' | translate}}</th>
+                  <th md-column>{{'report.studentData.query.delete' | translate}}</th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="query in formState.savedQueries" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell><a ng-click="loadQueryToForm(query.id)">{{currentLanguageNameField(query)}}</a></td>
+                    <td md-cell>
+                      <a ng-click="deleteStudentQuery(query.id)" class="remove">&times;</a>
+                    </td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </div>
+      </hois-collapsable>
+    </div>
+  </div>
+  <div layout-padding>
+    <div flex>
+      <md-table-container resize-table search-criteria-height="350">
+        <table md-table md-progress="tabledata.$promise">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+            <tr md-row>
+              <th md-column ng-if="savedHeader.nrShow">{{'report.studentData.nr' | translate}}</th>
+              <th md-column ng-if="savedHeader.firstnameShow">{{'report.studentData.firstname' | translate}}</th>
+              <th md-column ng-if="savedHeader.lastnameShow">{{'report.studentData.lastname' | translate}}</th>
+              <th md-column ng-if="savedHeader.fullnameShow">{{'report.studentData.fullname' | translate}}</th>
+              <th md-column ng-if="savedHeader.sexShow">{{'report.studentData.sex' | translate}}</th>
+              <th md-column ng-if="savedHeader.idcodeShow">{{'report.studentData.idcode' | translate}}</th>
+              <th md-column ng-if="savedHeader.bankaccountShow">{{'report.studentData.bankaccount' | translate}}</th>
+              <th md-column ng-if="savedHeader.birthdateShow">{{'report.studentData.birthdate' | translate}}</th>
+              <th md-column ng-if="savedHeader.residenceCountryShow">{{'report.studentData.residenceCountry' | translate}}</th>
+              <th md-column ng-if="savedHeader.citizenshipShow">{{'report.studentData.citizenship' | translate}}</th>
+
+              <th md-column ng-if="savedHeader.guestStudentShow">{{'report.studentData.guestStudent' | translate}}</th>
+              <th md-column ng-if="savedHeader.foreignStudentShow">{{'report.studentData.foreignStudent' | translate}}</th>
+              <th md-column ng-if="savedHeader.cumLaudeShow">{{'report.studentData.cumLaude' | translate}}</th>
+              <th md-column ng-if="savedHeader.immatDateShow">{{'report.studentData.immatDate' | translate}}</th>
+              <th md-column ng-if="savedHeader.directiveConfirmDateShow">{{'report.studentData.directiveConfirmDate' | translate}}</th>
+              <th md-column ng-if="savedHeader.finishedDateShow">{{'report.studentData.finishedDate' | translate}}</th>
+              <th md-column ng-if="savedHeader.directiveTypesShow">{{'report.studentData.directiveTypes' | translate}}</th>
+              <th md-column ng-if="savedHeader.directiveReasonsShow">{{'report.studentData.directiveReasons' | translate}}</th>
+              <th md-column ng-if="savedHeader.studentGroupsShow">{{'report.studentData.studentGroups' | translate}}</th>
+              <th md-column ng-if="savedHeader.studentStatusesShow">{{'report.studentData.studentStatuses' | translate}}</th>
+              <th md-column ng-if="savedHeader.studyFormShow">{{'report.studentData.studyForm' | translate}}</th>
+              <th md-column ng-if="savedHeader.studyLoadShow">{{'report.studentData.studyLoad' | translate}}</th>
+              <th md-column ng-if="savedHeader.schoolDepartmentShow">{{'report.studentData.schoolDepartment' | translate}}</th>
+              <th md-column ng-if="savedHeader.curriculumShow">{{'report.studentData.curriculum' | translate}}</th>
+              <th md-column ng-if="savedHeader.ehisCodeShow">{{'report.studentData.ehisCode' | translate}}</th>
+              <th md-column ng-if="savedHeader.studyLevelShow">{{'report.studentData.studyLevel' | translate}}</th>
+              <th md-column ng-if="savedHeader.specialityShow">{{'report.studentData.speciality' | translate}}</th>
+              <th md-column ng-if="savedHeader.studyYearNumberShow">{{'report.studentData.studyYearNumber' | translate}}</th>
+              <th md-column ng-if="savedHeader.finShow">{{'report.studentData.fin' | translate}}</th>
+              <th md-column ng-if="savedHeader.languageShow">{{'report.studentData.language' | translate}}</th>
+              <th md-column ng-if="savedHeader.curriculumPercentageShow">{{'report.studentData.curriculumPercentage' | translate}}</th>
+
+              <th md-column ng-if="savedHeader.addressShow">{{'report.studentData.address' | translate}}</th>
+              <th md-column ng-if="savedHeader.phoneShow">{{'report.studentData.phone' | translate}}</th>
+              <th md-column ng-if="savedHeader.officialEmailShow">{{'report.studentData.officialEmail' | translate}}</th>
+              <th md-column ng-if="savedHeader.personalEmailShow">{{'report.studentData.personalEmail' | translate}}</th>
+
+              <th md-column ng-if="savedHeader.eapShow">{{'report.studentData.eap' | translate}}</th>
+              <th md-column ng-if="savedHeader.eapSumShow">{{'report.studentData.eapSum' | translate}}</th>
+              <th md-column ng-if="savedHeader.weightedAverageSumShow">{{'report.studentData.weightedAverageSum' | translate}}</th>
+              <th md-column ng-if="savedHeader.weightedAverageShow">{{'report.studentData.weightedAverage' | translate}}</th>
+              <th md-column ng-if="savedHeader.averageSumShow">{{'report.studentData.averageSum' | translate}}</th>
+              <th md-column ng-if="savedHeader.averageShow">{{'report.studentData.average' | translate}}</th>
+              <th md-column ng-if="savedHeader.debtSumShow">{{'report.studentData.debtSum' | translate}}</th>
+              <th md-column ng-if="savedHeader.debtShow">{{'report.studentData.debt' | translate}}</th>
+              <th md-column ng-if="savedHeader.debtPointsSumShow">{{'report.studentData.debtPointsSum' | translate}}</th>
+              <th md-column ng-if="savedHeader.debtPointsShow">{{'report.studentData.debtPoints' | translate}}</th>
+              <th md-column ng-if="savedHeader.declaredEapShow">{{'report.studentData.declaredEap' | translate}}</th>
+
+              <th md-column ng-if="savedHeader.activeResultShow">{{'report.studentData.activeResult' | translate}}</th>
+              <th md-column ng-if="savedHeader.activeResultShow">{{'report.studentData.subject' | translate}}</th>
+              <th md-column ng-if="savedHeader.declaredSubjectShow">{{'report.studentData.declaredSubject' | translate}}</th>
+              <th md-column ng-if="savedHeader.declarationConfirmationShow">{{'report.studentData.declarationConfirmation' | translate}}</th>
+              <th md-column ng-if="savedHeader.previousSchoolNameShow">{{'report.studentData.previousSchoolName' | translate}}</th>
+              <th md-column ng-if="savedHeader.completedSchoolYearShow">{{'report.studentData.completedSchoolYear' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell ng-if="savedHeader.nrShow">{{criteria.size * (criteria.page - 1) + $index + 1}}</td>
+              <td md-cell ng-if="savedHeader.firstnameShow">{{row.firstname}}</td>
+              <td md-cell ng-if="savedHeader.lastnameShow">{{row.lastname}}</td>
+              <td md-cell ng-if="savedHeader.fullnameShow">{{row.fullname}}</td>
+              <td md-cell ng-if="savedHeader.sexShow">{{currentLanguageNameField(row.sex)}}</td>
+              <td md-cell ng-if="savedHeader.idcodeShow">{{row.idcode}}</td>
+              <td md-cell ng-if="savedHeader.bankaccountShow">{{row.bankaccount}}</td>
+              <td md-cell ng-if="savedHeader.birthdateShow">{{row.birthdate | hoisDate}}</td>
+              <td md-cell ng-if="savedHeader.residenceCountryShow">{{currentLanguageNameField(row.residenceCountry)}}</td>
+              <td md-cell ng-if="savedHeader.citizenshipShow">{{currentLanguageNameField(row.citizenship)}}</td>
+
+              <td md-cell ng-if="savedHeader.guestStudentShow">{{row.guestStudent ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
+              <td md-cell ng-if="savedHeader.foreignStudentShow">{{row.foreignStudent ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
+              <td md-cell ng-if="savedHeader.cumLaudeShow">{{row.cumLaude ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
+              <td md-cell ng-if="savedHeader.immatDateShow">{{row.immatDate | hoisDate}}</td>
+              <td md-cell ng-if="savedHeader.directiveConfirmDateShow">{{row.directiveConfirmDate | hoisDate}}</td>
+              <td md-cell ng-if="savedHeader.finishedDateShow">{{row.finishedDate | hoisDate}}</td>
+              <td md-cell ng-if="savedHeader.directiveTypesShow">{{currentLanguageNameField(row.directiveTypes)}}</td>
+              <td md-cell ng-if="savedHeader.directiveReasonsShow">{{currentLanguageNameField(getDirectiveReason(row))}}</td>
+              <td md-cell ng-if="savedHeader.studentGroupsShow">{{currentLanguageNameField(row.studentGroups)}}</td>
+              <td md-cell ng-if="savedHeader.studentStatusesShow">{{currentLanguageNameField(row.studentStatuses)}}</td>
+              <td md-cell ng-if="savedHeader.studyFormShow">{{currentLanguageNameField(row.studyForm)}}</td>
+              <td md-cell ng-if="savedHeader.studyLoadShow">{{currentLanguageNameField(row.studyLoad)}}</td>
+              <td md-cell ng-if="savedHeader.schoolDepartmentShow">{{row.schoolDepartment}}</td>
+              <td md-cell ng-if="savedHeader.curriculumShow">{{currentLanguageNameField(row.curriculum)}}</td>
+              <td md-cell ng-if="savedHeader.ehisCodeShow">{{row.ehisCode}}</td>
+              <td md-cell ng-if="savedHeader.studyLevelShow">{{currentLanguageNameField(row.studyLevel)}}</td>
+              <td md-cell ng-if="savedHeader.specialityShow">{{currentLanguageNameField(row.speciality)}}</td>
+              <td md-cell ng-if="savedHeader.studyYearNumberShow">{{row.studyYearNumber}}</td>
+              <td md-cell ng-if="savedHeader.finShow">{{currentLanguageNameField(row.fin)}}</td>
+              <td md-cell ng-if="savedHeader.languageShow">{{currentLanguageNameField(row.language)}}</td>
+              <td md-cell ng-if="savedHeader.curriculumPercentageShow">{{row.curriculumPercentage ? row.curriculumPercentage : 0}}</td>
+              
+              <td md-cell ng-if="savedHeader.addressShow">{{row.address}}</td>
+              <td md-cell ng-if="savedHeader.phoneShow">{{row.phone}}</td>
+              <td md-cell ng-if="savedHeader.officialEmailShow">{{row.officialEmail}}</td>
+              <td md-cell ng-if="savedHeader.personalEmailShow">{{row.personalEmail}}</td>
+
+              <td md-cell ng-if="savedHeader.eapShow">{{row.eap}}</td>
+              <td md-cell ng-if="savedHeader.eapSumShow">{{row.eapSum ? row.eapSum : 0}}</td>
+              <td md-cell ng-if="savedHeader.weightedAverageSumShow">{{row.weightedAverageSum ? row.weightedAverageSum : 0}}</td>
+              <td md-cell ng-if="savedHeader.weightedAverageShow">{{row.weightedAverage ? row.weightedAverage : 0}}</td>
+              <td md-cell ng-if="savedHeader.averageSumShow">{{row.averageSum ? row.averageSum : 0}}</td>
+              <td md-cell ng-if="savedHeader.averageShow">{{row.average ? row.average : 0}}</td>
+              <td md-cell ng-if="savedHeader.debtSumShow">{{row.debtSum ? row.debtSum : 0}}</td>
+              <td md-cell ng-if="savedHeader.debtShow">{{row.debt ? row.debt : 0}}</td>
+              <td md-cell ng-if="savedHeader.debtPointsSumShow">{{row.debtPointsSum ? row.debtPointsSum : 0}}</td>
+              <td md-cell ng-if="savedHeader.debtPointsShow">{{row.debtPoints ? row.debtPoints : 0}}</td>
+              <td md-cell ng-if="savedHeader.declaredEapShow">{{row.declaredEap ? row.declaredEap : 0}}</td>
+
+              <td md-cell ng-if="savedHeader.activeResultShow">{{currentLanguageNameField(row.activeResult)}}</td>
+              <td md-cell ng-if="savedHeader.activeResultShow">{{currentLanguageNameField(row.activeResultSubject)}}</td>
+              <td md-cell ng-if="savedHeader.declaredSubjectShow">{{currentLanguageNameField(row.declaredSubject)}}</td>
+              <td md-cell ng-if="savedHeader.declarationConfirmationShow">{{row.declarationConfirmation | hoisDate}}</td>
+              <td md-cell ng-if="savedHeader.previousSchoolNameShow">{{row.previousSchoolName}}</td>
+              <td md-cell ng-if="savedHeader.completedSchoolYearShow">{{row.completedSchoolYear}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                           md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                           md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+    </div>
+  </div>
+  

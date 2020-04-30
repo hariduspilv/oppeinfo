@@ -96,7 +96,7 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
                 return $rootScope.currentLanguageNameField(a).localeCompare($rootScope.currentLanguageNameField(b));
               });
         }
-        return mappable.map(function(it) {return $scope.currentLanguageNameField(it);}).join(", ")
+        return mappable.map(function(it) {return $scope.currentLanguageNameField(it);}).join(", ");
     };
 
     $scope.$watch('criteria.curriculum', function() {

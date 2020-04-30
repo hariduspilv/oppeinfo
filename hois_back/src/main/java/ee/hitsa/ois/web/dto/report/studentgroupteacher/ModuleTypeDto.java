@@ -7,7 +7,7 @@ public class ModuleTypeDto {
 
     private String code;
     private List<ModuleDto> modules = new ArrayList<>();
-    private Long colspan;
+    private Long colspan = 0L;
     
     public String getCode() {
         return code;

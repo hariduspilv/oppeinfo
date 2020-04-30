@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -26,29 +27,41 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.FinalThesis;
+import ee.hitsa.ois.domain.FinalThesisSupervisor;
 import ee.hitsa.ois.domain.Job;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.WsEhisStudentLog;
+import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.domain.student.StudentSpecialNeed;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.FinalThesisStatus;
+import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.enums.ScholarshipType;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.StudyLoad;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.service.StudentResultHigherService;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentUtil;
+import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.dto.ForeignStudentDto;
 import ee.hois.xroad.ehis.generated.KhlAkadPuhkusAlgus;
 import ee.hois.xroad.ehis.generated.KhlEnnistamine;
 import ee.hois.xroad.ehis.generated.KhlErivajadusedArr;
+import ee.hois.xroad.ehis.generated.KhlJuhendamineArr;
+import ee.hois.xroad.ehis.generated.KhlJuhendamineType;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusLisa;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
 import ee.hois.xroad.ehis.generated.KhlLyhiAjaValisOppur;
@@ -60,9 +73,13 @@ import ee.hois.xroad.ehis.generated.KhlOppeasutus;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
 import ee.hois.xroad.ehis.generated.KhlOppeasutuseLopetamine;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusestValjaarvamine;
+import ee.hois.xroad.ehis.generated.KhlOppejoudIsikuandmedType;
+import ee.hois.xroad.ehis.generated.KhlOppejoudType;
 import ee.hois.xroad.ehis.generated.KhlOppekavaMuutus;
 import ee.hois.xroad.ehis.generated.KhlOppevormiMuutus;
 import ee.hois.xroad.ehis.generated.KhlOppur;
+import ee.hois.xroad.ehis.generated.KhlStipendium;
+import ee.hois.xroad.ehis.generated.KhlStipendiumArr;
 
 @Transactional
 @Service
@@ -79,6 +96,13 @@ public class EhisDirectiveStudentService extends EhisService {
         for (DirectiveStudent directiveStudent : directive.getStudents()) {
             if(Boolean.TRUE.equals(directiveStudent.getCanceled()) || (studentId != null && !studentId.equals(EntityUtil.getId(directiveStudent.getStudent())))) {
                 continue;
+            }
+            if (directiveStudent.getStudent() != null && !StudentUtil.isGuestStudent(directiveStudent.getStudent())) {
+                Curriculum curriculum = directiveStudent.getStudent().getCurriculumVersion().getCurriculum();
+                if (Boolean.TRUE.equals(curriculum.getJoint()) && curriculum.getJointMentor() != null
+                        && !directiveStudent.getStudent().getSchool().getEhisSchool().equals(curriculum.getJointMentor())) {
+                    continue;
+                }
             }
             try {
                 switch (directiveType) {
@@ -127,6 +151,20 @@ public class EhisDirectiveStudentService extends EhisService {
                             && !ClassifierUtil.COUNTRY_ESTONIA.equals(
                                     EntityUtil.getNullableCode(directiveStudent.getDirectiveStudent().getCountry()))) {
                         foreignStudy(directiveStudent);
+                    }
+                    break;
+                case KASKKIRI_STIPTOET:
+                    if (directiveStudent.getDirective().getScholarshipEhis() != null
+                        || ClassifierUtil.oneOf(directiveStudent.getDirective().getScholarshipType(), ScholarshipType.STIPTOETUS_DOKTOR,
+                                ScholarshipType.STIPTOETUS_ERIALA, ScholarshipType.STIPTOETUS_TULEMUS, ScholarshipType.STIPTOETUS_MUU)) {
+                        sendScholarship(directiveStudent);
+                    }
+                    break;
+                case KASKKIRI_STIPTOETL:
+                    if (directiveStudent.getDirective().getScholarshipEhis() != null
+                        || ClassifierUtil.oneOf(directiveStudent.getDirective().getScholarshipType(), ScholarshipType.STIPTOETUS_DOKTOR,
+                                ScholarshipType.STIPTOETUS_ERIALA, ScholarshipType.STIPTOETUS_TULEMUS, ScholarshipType.STIPTOETUS_MUU)) {
+                        sendScholarshipEnd(directiveStudent);
                     }
                     break;
                 case KASKKIRI_TUGI:
@@ -378,6 +416,96 @@ public class EhisDirectiveStudentService extends EhisService {
         } catch (Exception e) {
             return bindingException(directiveStudent.getDirective(), e);
         }
+    }
+    
+    public WsEhisStudentLog graduationFinalThesis(DirectiveStudent directiveStudent) {
+        try {
+            Student student = directiveStudent.getStudent();
+            KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+
+            KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+            khlKorgharidusMuuda.setJuhendamised(graduationFinalThesis(directiveStudent,
+                    !student.getFinalThesis().isEmpty() ? student.getFinalThesis().get(0) : null));
+            khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+
+            return makeRequest(directiveStudent.getDirective(), khlOppeasutusList);
+        } catch (Exception e) {
+            return bindingException(directiveStudent.getDirective(), e);
+        }
+    }
+    
+    private KhlJuhendamineArr graduationFinalThesis(DirectiveStudent ds, FinalThesis ft) {
+        if (ft == null) {
+            throw new HoisException(TranslateUtil.optionalTranslate("ehis.graduation.noFinalThesis", Language.ET));
+        }
+        if (!ClassifierUtil.oneOf(ft.getStatus(), FinalThesisStatus.LOPUTOO_STAATUS_K)) {
+            throw new HoisException(TranslateUtil.optionalTranslate("ehis.graduation.finalThesisIsNotConfirmed", Language.ET));
+        }
+        if (ft.getSupervisors().isEmpty()) {
+            throw new HoisException(TranslateUtil.optionalTranslate("ehis.graduation.noSupervisors", Language.ET));
+        }
+        if (ft.getCercses().isEmpty()) {
+            throw new HoisException(TranslateUtil.optionalTranslate("ehis.graduation.noCercsClassifiers", Language.ET));
+        }
+        
+        // First should be primary supervisor
+        List<FinalThesisSupervisor> supervisors = ft.getSupervisors().stream().sorted(new Comparator<FinalThesisSupervisor>() {
+            @Override
+            public int compare(FinalThesisSupervisor o1, FinalThesisSupervisor o2) {
+                return o1.getIsPrimary().compareTo(o2.getIsPrimary()) * -1;
+            }
+        }).collect(Collectors.toList());
+
+        KhlJuhendamineType khlJuhendamineType = new KhlJuhendamineType();
+        for (FinalThesisSupervisor supervisor : supervisors) {
+            KhlOppejoudType teacher = new KhlOppejoudType();
+            if (supervisor.getTeacher() != null && supervisor.getTeacher().getPerson() != null) {
+                Person person = supervisor.getTeacher().getPerson();
+                if (person.getIdcode() != null) {
+                    teacher.setIsikukood(person.getIdcode());
+                } else {
+                    KhlOppejoudIsikuandmedType personalData = new KhlOppejoudIsikuandmedType();
+                    personalData.setEesnimi(supervisor.getFirstname());
+                    personalData.setPerenimi(supervisor.getLastname());
+                    personalData.setKlSugu(ehisValue(person.getSex()));
+                    personalData.setSynniKp(date(person.getBirthdate()));
+                    teacher.setIsikuandmed(personalData);
+                }
+            } else {
+                if (supervisor.getIdcode() != null) {
+                    teacher.setIsikukood(supervisor.getIdcode());
+                } else {
+                    KhlOppejoudIsikuandmedType personalData = new KhlOppejoudIsikuandmedType();
+                    personalData.setEesnimi(supervisor.getFirstname());
+                    personalData.setPerenimi(supervisor.getLastname());
+                    personalData.setKlSugu(supervisor.getSex() != null ? ehisValue(supervisor.getSex()) : "M");
+                    personalData.setSynniKp(date(supervisor.getBirthdate()));
+                    teacher.setIsikuandmed(personalData);
+                }
+            }
+            teacher.setJuhendamiseAlgus(date(supervisor.getInserted().toLocalDate()));
+            khlJuhendamineType.getJuhendaja().add(teacher);
+        }
+        
+        khlJuhendamineType.setOppekava(new BigInteger(ds.getStudent().getCurriculumVersion().getCurriculum().getMerCode()));
+        khlJuhendamineType.setLoputooNimetusEesti(ft.getThemeEt());
+        khlJuhendamineType.setLoputooNimetusInglise(ft.getThemeEn());
+        if (ft.getLanguage() != null) {
+            khlJuhendamineType.setLoputooOriginaalkeel(ehisValue(ft.getLanguage()));
+            khlJuhendamineType.setNimetusOriginaalkeeles("et".equals(khlJuhendamineType.getLoputooOriginaalkeel()) ? ft.getThemeEt() : ft.getThemeEn());
+        } else {
+            khlJuhendamineType.setLoputooOriginaalkeel("en");
+            khlJuhendamineType.setNimetusOriginaalkeeles(ft.getThemeEn());
+        }
+        String code = ds.getStudent().getCurriculumVersion().getCurriculum().getDepartments().stream().findFirst().map(d -> d.getSchoolDepartment().getCode()).orElse(null);
+        khlJuhendamineType.setStruktyksuseId(code);
+        khlJuhendamineType.getKlTeaduseriala().addAll(ft.getCercses().stream().map(c -> ehisValue(c.getCercs()))
+                .filter(Objects::nonNull).distinct().collect(Collectors.toList()));
+
+        KhlJuhendamineArr juhendamised = new KhlJuhendamineArr();
+        juhendamised.setJuhendamine(khlJuhendamineType);
+        juhendamised.setMuutusKp(date(ds.getDirective().getConfirmDate()));
+        return juhendamised;
     }
 
     private void reinstatement(DirectiveStudent directiveStudent) {
@@ -734,6 +862,72 @@ public class EhisDirectiveStudentService extends EhisService {
                     .setParameter(1, mappedData.keySet()).getResultList().stream().collect(Collectors.toMap(s -> s, s -> mappedData.get(s.getId()), (o, n) -> o)));
         }
         return mappedStudents;
+    }
+    
+    private void sendScholarship(DirectiveStudent ds) {
+        Student student = ds.getStudent();
+        Directive directive = ds.getDirective();
+        ScholarshipApplication scholarshipApplication = ds.getScholarshipApplication();
+        
+        KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+        boolean isDoctoral = ClassifierUtil.equals(ScholarshipType.STIPTOETUS_DOKTOR, directive.getScholarshipType());
+        // Possible NPE student.getStudyStart, any problem with it?
+        LocalDate startDate = isDoctoral && student.getStudyStart() != null
+                && student.getStudyStart().isAfter(ds.getStartDate()) ? student.getStudyStart() : ds.getStartDate();
+        
+        KhlStipendium khlStipendium = new KhlStipendium();
+        khlStipendium.setKlStipendiumLiik(scholarshipApplication != null
+                ? ehisValue(scholarshipApplication.getScholarshipTerm().getScholarshipEhis())
+                : ehisValue(directive.getScholarshipEhis()));
+        khlStipendium.setStipendiumAlgusKp(date(startDate));
+        khlStipendium.setStipendiumLoppKp(date(ds.getEndDate()));
+        if (isDoctoral) {
+            khlStipendium.setDoktoranditoetusSumma(ds.getAmountPaid().toString());
+            khlStipendium.setViimaneDoktoranditoetuseValjamakseKp(date(ds.getEndDate()));
+        }
+        khlStipendium.setOppeasutuseKirjeId(String.format("%d_%d", directive.getId(), student.getId()));
+
+        KhlStipendiumArr khlStipendiumArr = new KhlStipendiumArr();
+        khlStipendiumArr.getStipendium().add(khlStipendium);
+        khlStipendiumArr.setMuutusKp(date(directive.getConfirmDate()));
+        KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+        khlKorgharidusMuuda.setStipendiumid(khlStipendiumArr);
+        khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+        makeRequest(directive, khlOppeasutusList);
+    }
+    
+    private void sendScholarshipEnd(DirectiveStudent ds) {
+        Student student = ds.getStudent();
+        Directive directive = ds.getDirective();
+        DirectiveStudent stipDirectiveStudent = ds.getDirectiveStudent();
+        Directive stipDirective = stipDirectiveStudent.getDirective();
+        ScholarshipApplication scholarshipApplication = stipDirectiveStudent.getScholarshipApplication();
+        
+        KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+        boolean isDoctoral = ClassifierUtil.equals(ScholarshipType.STIPTOETUS_DOKTOR, stipDirective.getScholarshipType());
+        LocalDate startDate = isDoctoral && student.getStudyStart() != null
+                && student.getStudyStart().isAfter(stipDirectiveStudent.getStartDate()) ? student.getStudyStart()
+                        : stipDirectiveStudent.getStartDate();
+        
+        KhlStipendium khlStipendium = new KhlStipendium();
+        khlStipendium.setKlStipendiumLiik(scholarshipApplication != null
+                ? ehisValue(scholarshipApplication.getScholarshipTerm().getScholarshipEhis())
+                : ehisValue(stipDirective.getScholarshipEhis()));
+        khlStipendium.setStipendiumAlgusKp(date(startDate)); // TODO
+        khlStipendium.setStipendiumLoppKp(date(directive.getConfirmDate()));
+        if (isDoctoral) {
+            khlStipendium.setDoktoranditoetusSumma(stipDirectiveStudent.getAmountPaid().toString());
+            khlStipendium.setViimaneDoktoranditoetuseValjamakseKp(date(directive.getConfirmDate()));
+        }
+        khlStipendium.setOppeasutuseKirjeId(String.format("%d_%d", stipDirective.getId(), student.getId()));
+
+        KhlStipendiumArr khlStipendiumArr = new KhlStipendiumArr();
+        khlStipendiumArr.getStipendium().add(khlStipendium);
+        khlStipendiumArr.setMuutusKp(date(directive.getConfirmDate()));
+        KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+        khlKorgharidusMuuda.setStipendiumid(khlStipendiumArr);
+        khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+        makeRequest(directive, khlOppeasutusList);
     }
     
     private StudentHistory getStudentHistory(Student student) {

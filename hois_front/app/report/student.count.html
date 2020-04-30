@@ -104,9 +104,9 @@
             <tr md-row>
               <th ng-if="criteria.resultType !== undefined && criteria.resultType !== 'COUNT_STAT_OVERALL'" 
                 md-order-by="{{getObjectOrderNumber()}}" md-column>
-                {{('report.studentCount.table.' + criteria.resultType + 
-                (criteria.resultType === 'COUNT_STAT_CURRICULA' ? (auth.higher ? '.higher' : '.vocational') : '')) | translate}}</th>
+                {{('report.studentCount.table.' + criteria.resultType) | translate}}</th>
               <!-- PER STATUS -->
+              <th md-column md-order-by="c.mer_code" ng-if="criteria.resultType === 'COUNT_STAT_CURRICULA'">{{'report.studentCount.table.htmCode' | translate}}</th>
               <th md-column md-order-by="2" 
                 ng-style="{'padding-left':(criteria.resultType !== undefined && criteria.resultType === 'COUNT_STAT_OVERALL') ? '23px' : '0px'}" 
                 ng-if="criteria.perStatus && !criteria.perSex">{{'report.studentCount.table.studying.label' | translate}}</th>
@@ -135,6 +135,7 @@
             <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
               <td ng-if="criteria.resultType !== undefined && criteria.resultType !== 'COUNT_STAT_OVERALL'" 
                 md-cell>{{currentLanguageNameField(row.object)}}</td>
+              <td md-cell ng-if="criteria.resultType === 'COUNT_STAT_CURRICULA'">{{row.htmCode}}</td>
               <!-- PER STATUS -->
               <td md-cell ng-if="criteria.perStatus && !criteria.perSex">{{row.studying}}</td>
               <td md-cell ng-if="criteria.perStatus && !criteria.perSex">{{row.academic}}</td>

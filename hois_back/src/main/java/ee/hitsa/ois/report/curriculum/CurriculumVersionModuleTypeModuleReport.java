@@ -12,11 +12,13 @@ import ee.hitsa.ois.util.TranslateUtil;
 public class CurriculumVersionModuleTypeModuleReport {
 
     private final String name;
+    private final Short orderNr;
     private Map<Short, BigDecimal> studyYearCredits = new HashMap<>();
     private final BigDecimal totalCredits;
 
     public CurriculumVersionModuleTypeModuleReport(CurriculumVersionOccupationModule occupationModule, List<Short> studyYears, Language lang) {
         name = TranslateUtil.name(occupationModule.getCurriculumModule(), lang);
+        orderNr = occupationModule.getCurriculumModule().getOrderNr();
         studyYearCredits = StreamUtil.toMap(om -> om.getStudyYearNumber(), om -> om.getCredits(), StreamUtil
                 .toFilteredList(om -> studyYears.contains(om.getStudyYearNumber()), occupationModule.getYearCapacities()));
         totalCredits = StreamUtil.sumBigDecimals(sy -> sy, studyYearCredits.values());
@@ -26,6 +28,10 @@ public class CurriculumVersionModuleTypeModuleReport {
         return name;
     }
     
+    public Short getOrderNr() {
+        return orderNr;
+    }
+
     public Map<Short, BigDecimal> getStudyYearCredits() {
         return studyYearCredits;
     }

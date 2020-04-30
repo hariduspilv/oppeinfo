@@ -75,7 +75,7 @@
                 </div>
               </div>
             </md-input-container>
-  
+
             <md-input-container flex-gt-sm="50" flex="100">
               <label>{{'module.studyYear' | translate}}</label>
               <md-select ng-model="occupationModuleTheme.studyYearNumber">
@@ -116,8 +116,11 @@
 
         <md-input-container flex>
           <label>{{'theme.connectionToStudyOutcome' | translate}}</label>
-          <md-select ng-model="occupationModuleTheme.outcomes" multiple ng-disabled="hasBaseModule">
-            <md-option ng-repeat="outcome in outcomes" ng-value="outcome.id" aria-label="{{currentLanguage() === 'en' ? outcome.outcomeEn : outcome.outcomeEt}}">{{currentLanguage() === 'en' ? outcome.outcomeEn : outcome.outcomeEt}}</md-option>
+          <md-select ng-model="occupationModuleTheme.outcomes" ng-change="outcomesChanged()" multiple ng-disabled="hasBaseModule">
+            <md-option ng-repeat="outcome in outcomes" ng-value="outcome.id"
+              aria-label="{{currentLanguage() === 'en' ? outcome.outcomeEn : outcome.outcomeEt}}">
+              {{currentLanguage() === 'en' ? outcome.outcomeEn : outcome.outcomeEt}}
+            </md-option>
           </md-select>
         </md-input-container>
 
@@ -129,7 +132,7 @@
               <div flex layout="row">
                 <span flex="30" class="common-label">{{'theme.assessmentType' | translate}}</span>
 
-                  <md-radio-group ng-model="occupationModuleTheme.assessment" layout="row" ng-disabled="hasBaseModule">
+                  <md-radio-group ng-model="occupationModuleTheme.assessment" layout="row" ng-disabled="hasBaseModule || occupationModuleTheme.moduleOutcomes">
                     <md-radio-button ng-repeat="option in assessments | orderBy: 'nameEt' track by option.code" ng-value="option.code"
                     aria-label="{{ currentLanguageNameField(option) }}">
                       {{ currentLanguageNameField(option) }}
@@ -141,6 +144,10 @@
 
               </div>
               <div>&nbsp;</div>
+
+              <md-checkbox ng-model="occupationModuleTheme.moduleOutcomes" ng-change="moduleOutcomesChanged()"
+                ng-disabled="!occupationModuleTheme.outcomes || occupationModuleTheme.outcomes.length === 0"
+                aria-label="is module outcomes">{{'module.themeGradedByOutcomes' | translate}}</md-checkbox>
 
               <md-input-container flex ng-show="occupationModuleTheme.assessment">
                 <label>{{'module.totalGradeDescription' | translate}}</label>

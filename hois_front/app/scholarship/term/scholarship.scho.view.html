@@ -3,9 +3,13 @@
     <form name="stipendForm">
       <div class="form-readonly">
         <div layout="row" flex>
-          <md-input-container flex>
+          <md-input-container flex="{{ formState.enableEhisType ? 45 : 100}}">
             <label class="textInput">{{formState.typeIsScholarship ? 'stipend.scholarshipType' : 'stipend.grantType' | translate}}</label>
             <hois-classifier-value ng-model="stipend.type" main-classifier-code="STIPTOETUS"></hois-classifier-value>
+          </md-input-container>
+          <md-input-container flex="50" flex-offset="5" ng-if="formState.enableEhisType">
+            <label class="textInput">{{'stipend.typeEhis' | translate}}</label>
+            <hois-classifier-value ng-model="stipend.scholarshipEhis" main-classifier-code="EHIS_STIPENDIUM"></hois-classifier-select>
           </md-input-container>
         </div>
         <div layout="row" flex>
@@ -134,6 +138,25 @@
               flex="50">
               {{'stipend.isAcademicLeave' | translate}}
             </md-checkbox>
+            <md-checkbox ng-model="stipend.isSais" aria-label="Is sais" flex="50" disabled>
+              {{'stipend.isSais' | translate}}
+            </md-checkbox>
+          </div>
+          <div layout="row" flex>
+            <md-checkbox ng-model="stipend.isApelGrade" aria-label="Is apel grade" flex="50" disabled>
+              {{'stipend.isApelGradeHigher' | translate}}
+            </md-checkbox>
+            <md-checkbox ng-model="stipend.isBeforeImmat" aria-label="Is before immat" flex="50" disabled>
+              {{'stipend.isBeforeImmat' | translate}}
+            </md-checkbox>
+          </div>
+          <div layout="row" flex>
+            <md-checkbox ng-model="stipend.isNegative" aria-label="Is negative" flex="50" disabled>
+              {{'stipend.isNegative' | translate}}
+            </md-checkbox>
+            <md-checkbox ng-if="stipend.type === 'STIPTOETUS_MUU'" ng-model="stipend.isNominalEnd" aria-label="Is nominal end" flex="50" disabled>
+              {{'stipend.isNominalEnd' | translate}}
+            </md-checkbox>
           </div>
 
           <div layout="row" flex>
@@ -147,6 +170,7 @@
             <div layout="row">
               <md-button class="md-raised md-primary" ng-if="canEdit" ng-click="changeStipend(stipend)">{{'main.button.edit' | translate}}</md-button>
               <md-button class="md-raised" ng-if="!stipend.isOpen && stipend.id && canEdit" ng-click="publish()">{{'main.button.publishtoStudents' | translate}}</md-button>
+              <md-button class="md-raised" ng-if="stipend.id" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
               <md-button class="md-raised" ng-click="back('#/scholarships/', stipendForm)">{{'main.button.back' | translate}}</md-button>
             </div>
           </div>

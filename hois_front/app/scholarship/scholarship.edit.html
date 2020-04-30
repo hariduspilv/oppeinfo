@@ -1,11 +1,17 @@
+<div ng-if="auth.higher && currentNavItem" ng-include="'scholarship/scholarship.navbar.html'"></div>
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
     <form name="stipendForm">
       <div layout="row" flex>
-        <md-input-container flex>
+        <md-input-container flex="{{ formState.enableEhisType ? 45 : 100}}">
           <label class="textInput">{{formState.typeIsScholarship ? 'stipend.scholarshipType' : 'stipend.grantType' | translate}}</label>
           <hois-classifier-select ng-model="stipend.type" name="type" ng-change="stipendTypeChanged()" model-value-attr="code" main-classifier-code="STIPTOETUS"
             ng-disabled="stipend.type" required show-only-values="formState.allowedStipendTypes"></hois-classifier-select>
+        </md-input-container>
+        <md-input-container flex="50" flex-offset="5" ng-if="formState.enableEhisType">
+          <label class="textInput">{{'stipend.typeEhis' | translate}}</label>
+          <hois-classifier-select ng-model="stipend.scholarshipEhis" name="scholarshipEhis" model-value-attr="code" main-classifier-code="EHIS_STIPENDIUM"
+            required show-only-values="formState.allowedEhisTypes" ng-disabled="formState.allowedEhisTypes.length === 1 && stipend.scholarshipEhis"></hois-classifier-select>
         </md-input-container>
       </div>
       <div ng-include="templateName"></div>

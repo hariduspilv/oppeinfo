@@ -59,8 +59,10 @@
           <thead md-head md-order="criteria.order" md-on-reorder="loadData">
             <tr md-row>
               <th ng-if="criteria.queryType !== undefined && criteria.queryType !== 'MOVEMENT_STAT_SUM'" md-column md-order-by="10">
-                {{('report.studentMovement.table.' + criteria.queryType + 
-                (criteria.queryType === 'MOVEMENT_STAT_CURRICULA' ? (auth.higher ? '.higher' : '.vocational') : '')) | translate}}</th>
+                {{('report.studentMovement.table.' + criteria.queryType) | translate}}</th>
+              <th md-column md-order-by="data.merCode" ng-if="criteria.queryType === 'MOVEMENT_STAT_CURRICULA'" ng-style="{'padding-left':(criteria.queryType !== undefined && criteria.queryType === 'MOVEMENT_STAT_SUM') ? '23px' : '0px'}">
+                <span class="limited-size-th-65">{{'report.studentMovement.table.htmCode' | translate}}</span>
+              </th>
               <th md-column md-order-by="1" ng-style="{'padding-left':(criteria.queryType !== undefined && criteria.queryType === 'MOVEMENT_STAT_SUM') ? '23px' : '0px'}">
                 <span class="limited-size-th-65">{{('report.studentMovement.table.studyFrom' | translate) + (criteria.from | hoisDate)}}</span>
               </th>
@@ -87,11 +89,12 @@
             <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
               <td ng-if="criteria.queryType !== undefined && criteria.queryType !== 'MOVEMENT_STAT_SUM'" 
                 md-cell>{{currentLanguageNameField(row.object)}}</td>
+              <td md-cell ng-if="criteria.queryType === 'MOVEMENT_STAT_CURRICULA'">{{row.htmCode}}</td>
               <td md-cell>{{row.studyingFrom}}</td>
-              <td md-cell>{{row.startedStudying}}</td>
-              <td md-cell>{{row.exmatOwnWish}}</td>
-              <td md-cell>{{row.exmatElse}}</td>
-              <td md-cell>{{row.completed}}</td>
+              <td md-cell>{{row.startedStudying !== 0 ? '+' + row.startedStudying : row.startedStudying}}</td>
+              <td md-cell>{{row.exmatOwnWish !== 0 ? '-' + row.exmatOwnWish : row.exmatOwnWish}}</td>
+              <td md-cell>{{row.exmatElse !== 0 ? '-' + row.exmatElse : row.exmatElse}}</td>
+              <td md-cell>{{row.completed !== 0 ? '-' + row.completed : row.completed}}</td>
               <td md-cell>{{row.studyingThru}}</td>
               <td md-cell>{{row.exmatPercentage}}</td>
               <td md-cell>{{row.completionPercentage}}</td>

@@ -1,7 +1,11 @@
 package ee.hitsa.ois.web.commandobject;
 
+import java.time.LocalDate;
+
 import javax.validation.constraints.NotNull;
 
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
 
@@ -20,6 +24,9 @@ public class FinalThesisSupervisorForm extends InsertedChangedVersionDto {
     private String email;
     private String phone;
     private String bankaccount;
+    private LocalDate birthdate;
+    @ClassifierRestriction(MainClassCode.SUGU)
+    private String sex;
     
     public Long getId() {
         return id;
@@ -107,6 +114,22 @@ public class FinalThesisSupervisorForm extends InsertedChangedVersionDto {
     
     public void setBankaccount(String bankaccount) {
         this.bankaccount = bankaccount;
+    }
+
+    public LocalDate getBirthdate() {
+        return birthdate;
+    }
+
+    public void setBirthdate(LocalDate birthdate) {
+        this.birthdate = birthdate;
+    }
+
+    public String getSex() {
+        return sex;
+    }
+
+    public void setSex(String sex) {
+        this.sex = sex;
     }
     
 }

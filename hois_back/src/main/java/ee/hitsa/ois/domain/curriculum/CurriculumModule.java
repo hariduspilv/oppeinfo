@@ -47,6 +47,7 @@ public class CurriculumModule extends BaseEntityWithId implements Translatable {
 	private Boolean isAdditional;
 	@ManyToOne(fetch = FetchType.LAZY)
 	private BaseModule baseModule;
+	private Short orderNr;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "curriculum_module_id", nullable = false, updatable = false)
@@ -197,5 +198,13 @@ public class CurriculumModule extends BaseEntityWithId implements Translatable {
 
     public void setBaseModule(BaseModule baseModule) {
         this.baseModule = baseModule;
+    }
+
+    public Short getOrderNr() {
+        return orderNr;
+    }
+
+    public void setOrderNr(Short orderNr) {
+        this.orderNr = orderNr;
     }
 }

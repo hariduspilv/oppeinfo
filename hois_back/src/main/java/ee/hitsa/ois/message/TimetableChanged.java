@@ -2,10 +2,14 @@ package ee.hitsa.ois.message;
 
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.util.StreamUtil;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class TimetableChanged extends StudentMessage {
 
@@ -13,23 +17,22 @@ public class TimetableChanged extends StudentMessage {
 
     private final String subjectCode;
     private final String subjectName;
-    private final LocalDateTime start;
-    private final LocalDateTime end;
+    private final List<TimetableEventTime> changedEvents;
 
     public TimetableChanged() {
         subjectCode = null;
         subjectName = null;
-        start = null;
-        end = null;
+        changedEvents = null;
     }
 
-    public TimetableChanged(Student student, Subject subject, String journalName, LocalDateTime start, LocalDateTime end) {
+    public TimetableChanged(Student student, Subject subject, String journalName,
+            List<TimetableEventTime> changedEvents) {
         super(student);
 
         subjectCode = subject != null ? subject.getCode() : "";
         subjectName = subject != null ? subject.getNameEt() : journalName;
-        this.start = start;
-        this.end = end;
+        changedEvents.sort(Comparator.comparing(TimetableEventTime::getStart));
+        this.changedEvents = changedEvents;
     }
 
     public String getOppeaineKood() {
@@ -41,9 +44,11 @@ public class TimetableChanged extends StudentMessage {
     }
 
     public String getSundmuseAeg() {
-        if (start == null || end == null) {
-            return null;
-        }
-        return DateUtils.date(start.toLocalDate()) + " " + start.format(TIME_FORMATTER) + " - " + end.format(TIME_FORMATTER);
+        return StreamUtil.nullSafeList(changedEvents).stream().map(this::eventTime).collect(Collectors.joining(", "));
+    }
+
+    private String eventTime(TimetableEventTime event) {
+        String date = DateUtils.date(event.getStart().toLocalDate());
+        return date + " " + event.getStart().format(TIME_FORMATTER) + " - " + event.getEnd().format(TIME_FORMATTER);
     }
 }

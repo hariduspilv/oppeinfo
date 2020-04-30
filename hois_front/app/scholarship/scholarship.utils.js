@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').factory('ScholarshipUtils', ['$filter', '$location', '$translate', 'dialogService',
-  function ($filter, $location, $translate, dialogService) {
+angular.module('hitsaOis').factory('ScholarshipUtils', ['$filter', '$location', '$translate', 'dialogService', '$rootScope', 'QueryUtils',
+  function ($filter, $location, $translate, dialogService, $rootScope, QueryUtils) {
 
     var baseUrl = '/scholarships';
 
@@ -55,6 +55,28 @@ angular.module('hitsaOis').factory('ScholarshipUtils', ['$filter', '$location', 
       },
       getScholarshipGroupTypes: function (group) {
         return STIPEND_TYPES[group];
+      },
+      getScholarshipSchoolTypes: function (all) {
+        return QueryUtils.endpoint('/scholarships/scholarshipTypes').query({all: !!all}, function (result) {
+          // Specific order is made for scholarship types
+          for (var i = 0; i < result.length; i++) {
+            if (result[i].code.indexOf("EHIS_STIPENDIUM_") !== -1) {
+              result[i].nameEt = $translate.instant('directive.scholarshipEhisTypeInSelect', {type: result[i].nameEt});
+              if (result[i].nameEn) {
+                result[i].nameEn = $translate.instant('directive.scholarshipEhisTypeInSelect', {type: result[i].nameEn});
+              }
+              if (result[i].nameRu) {
+                result[i].nameRu = $translate.instant('directive.scholarshipEhisTypeInSelect', {type: result[i].nameRu});
+              }
+              result[i].sorted = "9" + $rootScope.currentLanguageNameField(result[i]);
+            } else {
+              result[i].sorted = (result[i].code === 'STIPTOETUS_MUU' ? "1" : "0") + $rootScope.currentLanguageNameField(result[i]);
+            }
+          }
+        });
+      },
+      getScholarshipSchoolTypesAll: function () {
+        return this.getScholarshipSchoolTypes(true);
       },
       applicationPeriod: applicationPeriod
     };

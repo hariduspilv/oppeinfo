@@ -42,7 +42,6 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
-import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
@@ -52,7 +51,6 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalCapacity;
 import ee.hitsa.ois.domain.timetable.JournalCapacityType;
-import ee.hitsa.ois.domain.timetable.JournalEntry;
 import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalRoom;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
@@ -61,7 +59,6 @@ import ee.hitsa.ois.domain.timetable.LessonPlanModule;
 import ee.hitsa.ois.domain.timetable.TimetableObject;
 import ee.hitsa.ois.domain.timetable.TimetableObjectStudentGroup;
 import ee.hitsa.ois.enums.GroupProportion;
-import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.exception.AssertionFailedException;
@@ -462,13 +459,6 @@ public class LessonPlanService {
 
         if (Boolean.TRUE.equals(form.getCopyLessons())) {
             copyPreviousLessonPlanJournalLessons(journal, journalCopy, lessonPlan);
-        }
-
-        if (Boolean.TRUE.equals(journalCopy.getAddModuleOutcomes())) {
-            List<Long> curriculumVersionOmoduleThemeIds = StreamUtil.toMappedList(
-                    jt -> EntityUtil.getId(jt.getCurriculumVersionOccupationModuleTheme()),
-                    journalCopy.getJournalOccupationModuleThemes());
-            addJournalOutcomeEntries(journalCopy, curriculumVersionOmoduleThemeIds);
         }
         EntityUtil.save(journalCopy, em);
     }
@@ -997,7 +987,7 @@ public class LessonPlanService {
 
     private Journal saveJournal(Journal journal, LessonPlanJournalForm form, HoisUserDetails user, LessonPlanModule lessonPlanModule) {
         assertSameSchool(journal, lessonPlanModule.getLessonPlan().getSchool());
-        
+
         EntityUtil.setUsername(user.getUsername(), em);
 
         List<JournalCapacityType> capacityTypes = journal.getJournalCapacityTypes();
@@ -1062,7 +1052,7 @@ public class LessonPlanService {
             jct.setCapacityType(EntityUtil.validateClassifier(em.getReference(Classifier.class, ct), MainClassCode.MAHT));
             return jct;
         });
-        
+
         List<JournalRoom> journalRooms = journal.getJournalRooms();
         if(journalRooms == null) {
             journal.setJournalRooms(journalRooms = new ArrayList<>());
@@ -1073,7 +1063,7 @@ public class LessonPlanService {
             jr.setRoom(em.getReference(Room.class, jrf.getId()));
             return jr;
         });
-        
+
         List<JournalTeacher> teachers = journal.getJournalTeachers();
         if(teachers == null) {
             journal.setJournalTeachers(teachers = new ArrayList<>());
@@ -1126,23 +1116,25 @@ public class LessonPlanService {
                 fromForm.addAll(StreamUtil.toMappedList(cvomt -> new JournalOccupationModuleThemeHolder(journal, lessonPlanModuleForSave, cvomt), lpg.getCurriculumVersionOccupationModuleThemes()));
             }
         }
-        
+
         setJournalOccupationModuleThemes(journal, oldThemes, fromForm);
-        
-        setTimetableObjectStudentGroups(journal, form, lessonPlanModule);
-        
-        if (Boolean.TRUE.equals(form.getAddModuleOutcomes())) {
-            List<Long> curriculumVersionOmoduleThemeIds = form.getJournalOccupationModuleThemes();
-            if (form.getGroups() != null) {
-                for (LessonPlanGroupForm group : form.getGroups()) {
-                    curriculumVersionOmoduleThemeIds.addAll(group.getCurriculumVersionOccupationModuleThemes());
-                }
-            }
-            addJournalOutcomeEntries(journal, curriculumVersionOmoduleThemeIds);
-        } else if (journal.getId() != null) {
-            removeJournalOutcomeEntries(journal);
+
+        List<CurriculumVersionOccupationModuleTheme> curriculumModuleThemes = StreamUtil.toMappedList(
+                jot -> jot.getCurriculumVersionOccupationModuleTheme(), journal.getJournalOccupationModuleThemes());
+        long occupationBasedAssessmentThemes = curriculumModuleThemes.stream()
+                .filter(t -> Boolean.TRUE.equals(t.getModuleOutcomes())).count();
+
+        boolean addModuleOutcomes = occupationBasedAssessmentThemes > 0;
+        journal.setAddModuleOutcomes(Boolean.valueOf(addModuleOutcomes));
+
+        boolean occupationBasedAssessment = curriculumModuleThemes.size() == occupationBasedAssessmentThemes;
+        if (occupationBasedAssessment) {
+            journal.setAssessment(null);
+        } else if (form.getAssessment() == null) {
+            throw new ValidationFailedException("lessonplan.journal.assessmentRequired");
         }
-        
+
+        setTimetableObjectStudentGroups(journal, form, lessonPlanModule);
         return EntityUtil.save(journal, em);
     }
     
@@ -1205,84 +1197,6 @@ public class LessonPlanService {
                 }
             }
         }
-    }
-    
-    private void addJournalOutcomeEntries(Journal journal, List<Long> curriculumVersionOmoduleThemeIds) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_module_outcomes cmo "
-                + "join curriculum_version_omodule_outcomes cvoo on cmo.id = cvoo.curriculum_module_outcomes_id");
-        qb.requiredCriteria("cvoo.curriculum_version_omodule_theme_id in (:curriculumVersionOmoduleThemes)",
-                "curriculumVersionOmoduleThemes", curriculumVersionOmoduleThemeIds);
-
-        List<?> moduleOutcomesResult = qb.select("distinct cmo.id, cmo.outcome_et", em).getResultList();
-        Map<Long, String> moduleOutcomes = StreamUtil.toMap(r -> resultAsLong(r, 0), r -> resultAsString(r, 1), moduleOutcomesResult);
-        
-        Map<Long, JournalEntry> oldEntries = getOldJournalEntriesFromOutcomes(journal);
-        
-        moduleOutcomes.forEach((id, name) -> {
-            JournalEntry entry = oldEntries != null ? oldEntries.remove(id) : null;
-
-            if (entry == null) {
-                entry = new JournalEntry();
-            }
-            entry.setJournal(journal);
-            if (name != null && name.length() > 100) {
-                entry.setNameEt(name.substring(0, 99));
-            } else {
-                entry.setNameEt(name);
-            }
-            entry.setEntryType(em.getReference(Classifier.class, JournalEntryType.SISSEKANNE_O.name()));
-            entry.setCurriculumModuleOutcomes(em.getReference(CurriculumModuleOutcome.class, id));
-            journal.getJournalEntries().add(entry);
-        });
-        
-        // entries left over from previously connected group themes
-        if (oldEntries != null && !oldEntries.isEmpty()) {
-            removePreviouslyConnectedGroupThemeOutcomeEntries(journal, oldEntries);
-        }
-        
-    }
-    
-    private void removeJournalOutcomeEntries(Journal journal) {
-        Query q = em.createNativeQuery("select jes.id from journal_entry_student jes "
-                + "inner join journal_entry je on je.id = jes.journal_entry_id "
-                + "where jes.journal_entry_id in (select je.id from journal_entry je where je.entry_type_code = 'SISSEKANNE_O' and je.journal_id = ?1)");
-        q.setParameter(1, journal.getId());
-       
-        List<?> data = q.getResultList();
-        if (!data.isEmpty()) {
-            throw new ValidationFailedException("lessonplan.journal.outcomesReferenced");
-        }
-        
-        Map<Long, JournalEntry> oldEntries = getOldJournalEntriesFromOutcomes(journal);
-        oldEntries.forEach((id, entry) -> {
-            journal.getJournalEntries().remove(entry);
-        });
-    }
-    
-    private Map<Long, JournalEntry> getOldJournalEntriesFromOutcomes(Journal journal) {
-        if (journal.getId() != null) {
-            List<JournalEntry> data = em.createQuery("select je from JournalEntry je where je.journal = ?1 and je.entryType.code = ?2", JournalEntry.class)
-                    .setParameter(1, journal).setParameter(2, JournalEntryType.SISSEKANNE_O.name()).getResultList();
-            return StreamUtil.toMap(d -> d.getCurriculumModuleOutcomes().getId(), data);
-        }
-        return null;
-    }
-    
-    private void removePreviouslyConnectedGroupThemeOutcomeEntries(Journal journal, Map<Long, JournalEntry> oldEntries) {
-        Query q = em.createNativeQuery("select je.id from journal_entry je "
-                + "join journal_entry_student jes on je.id=jes.journal_entry_id "
-                + "where je.entry_type_code = 'SISSEKANNE_O' and je.journal_id = ?1 and jes.journal_entry_id in (?2)");
-        q.setParameter(1, journal.getId());
-        q.setParameter(2, StreamUtil.toMappedList(e -> e.getId(), oldEntries.values()));
-        
-        List<?> data = q.getResultList();
-        Set<Long> referencedEntries = StreamUtil.toMappedSet(d -> resultAsLong(d, 0), data);
-
-        oldEntries.forEach((id, entry) -> {
-            if (!referencedEntries.contains(EntityUtil.getId(entry))) {
-                journal.getJournalEntries().remove(entry);
-            }
-        });
     }
 
     private void createMissingPlansAndAdd(Collection<Long> newGroupIds, Map<Long, Long> lessonPlanIds, Long studyYearId, HoisUserDetails user) {

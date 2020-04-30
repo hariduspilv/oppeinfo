@@ -18,6 +18,7 @@ import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.PersonService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -76,7 +77,7 @@ public class PersonController {
         if (!EntityUtil.getId(person).equals(EntityUtil.getId(user.getPerson()))) {
             throw new AssertionFailedException("Person and user don't match");
         }
-        return personService.getUser(user);
+        return personService.getUser(userDetails, user);
     }
 
     @GetMapping("/{person:\\d+}/users")
@@ -94,6 +95,9 @@ public class PersonController {
             userForm.setSchool(new EntityConnectionCommand(user.getSchoolId()));
         }
         UserUtil.assertCanUpdateUser(userForm.getRole());
+        if (userForm.getRole().equals(Role.ROLL_A.name())) {
+            UserUtil.assertOneSchoolAdminPerSchoolUser(person, userForm.getSchool().getId());
+        }
         return getUser(user, person, personService.createUser(user, userForm, person));
     }
 
@@ -106,6 +110,9 @@ public class PersonController {
         if (!userDetails.isMainAdmin()) {
             UserUtil.assertSameSchool(userDetails, user.getSchool());
             userForm.setSchool(new EntityConnectionCommand(EntityUtil.getId(user.getSchool())));
+        }
+        if (userForm.getRole().equals(Role.ROLL_A.name())) {
+            UserUtil.assertOneSchoolAdminPerSchoolUser(person, userForm.getSchool().getId(), user);
         }
         return getUser(userDetails, person, personService.saveUser(userDetails, userForm, user));
     }

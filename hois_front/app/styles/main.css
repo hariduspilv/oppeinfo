@@ -16,6 +16,7 @@ padding-left:5px;
 border-left: 3px solid #1565C0;
 /*border-bottom: 2px solid #0000cc;*/
 /*border-top: 1px solid #0000ff;*/
+min-height: 42px;
 }
 
 .hois-collapse > div >
@@ -1382,6 +1383,10 @@ th.bordered[md-column] {
   color: red;
 }
 
+.goodResult {
+  color: green;
+}
+
 .protocolGradeSelect {
   margin: 0px;
   width: 10em;
@@ -2662,29 +2667,33 @@ label.ui-btn {
   text-align: center;
 }
 
-.curriculum-fulfillment-result div:nth-child(1) {
+.deep-orange-100 {
+  background: #FFCCBC !important;
+}
+
+.deep-orange-200 {
+  background: #FFAB91 !important;
+}
+
+.blue-100 {
+  background: #E3F2FD !important;
+}
+
+.curriculum-fulfillment-result > div:nth-child(1) {
   word-break: break-all;
-  width: 45%;
-  max-width: 45%;
 }
 
-.curriculum-fulfillment-result div:nth-child(2) {
-  display: flex;
+.curriculum-fulfillment-result > div:nth-child(2) {
   text-align: right;
-  width: 30%;
-  max-width: 30%;
 }
 
-@media (max-width: 960px) {
-  .curriculum-fulfillment-result div:nth-child(1) {
-    width: 100%;
-    max-width: 100%;
-  }
+.curriculum-fulfillment-result > div:nth-child(3) {
+  font-size: small;
+}
 
-  .curriculum-fulfillment-result div:nth-child(2) {
+@media (max-width: 1280px) {
+  .curriculum-fulfillment-result > div:nth-child(2) {
     text-align: left;
-    width: 100%;
-    max-width: 100%;
   }
 }
 
@@ -2757,11 +2766,16 @@ md-input-container label:not(.md-no-float):not(.md-container-ignore), md-input-c
   background: rgb(255, 87, 34) !important;
 }
 
+.apel-min-width {
+  min-width: 250px;
+}
+
 .log-entry-pre {
   line-height: 20px;
 }
 
-.questions div.questions-header {
+.questions div.questions-header,
+.underlined-header {
   padding: 4px 12px;
   border-bottom: 3px solid #0D47A1;
   color: #424242;

@@ -29,18 +29,19 @@
                     <tbody md-body>
                         <tr md-row ng-repeat="journal in year.journals | orderBy: 'nameEt'" ng-class-odd="'odd'" ng-class-even="'even'">
                             <td md-cell><a ng-href="/#/students/journals/{{journal.id}}">{{journal.nameEt}}</a></td>
-                            <td md-cell>    
-                                <span ng-repeat="result in journal.journalEntries | filter : {gradeValue: ''} | orderBy: ['!entryDate', '-entryDate']"
-                                ng-class="{good: result.entryType.code === 'SISSEKANNE_L' && resultIsPostive(result.gradeValue), 
-                                bad: result.entryType.code === 'SISSEKANNE_L' && !resultIsPostive(result.gradeValue),
+                            <td md-cell>
+                                <span ng-repeat="result in journal.journalEntries | filter : {grade: '!'}"
+                                ng-class="{good: isFinal(result.entryType.code) && gradeUtil.isPositive(result.grade.code),
+                                bad: isFinal(result.entryType.code) && !gradeUtil.isPositive(result.grade.code),
                                 bold: isTestButNotFinal(result.entryType.code)}">
-                                {{result.gradeValue}}
-                                <md-tooltip class="tooltip-multiline" ng-if="result.gradeValue">
-                                    {{result.gradeInserted | hoisDate}}
-                                    <span ng-if="result.entryType.code">, {{currentLanguageNameField(result.entryType)}}</span>
-                                    <span ng-if="result.addInfo && !result.isRemark">, {{result.addInfo}}</span>
-                                </md-tooltip>
-                            </span>
+                                    <span>{{result.grade.value}}</span>
+                                    <md-tooltip class="tooltip-multiline" ng-if="result.grade">
+                                        <span>{{result.gradeInserted | hoisDate}}</span>
+                                        <span ng-if="result.entryType.code">, {{currentLanguageNameField(result.entryType)}}</span>
+                                        <span ng-if="result.addInfo && !result.isRemark">, {{result.addInfo}}</span>
+                                        <span ng-if="result.entryType.code === 'SISSEKANNE_O'">, {{currentLanguageNameField(result)}}</span>
+                                    </md-tooltip>
+                                </span>
                             </td>
                             <td md-cell>{{currentLanguageNameField(journal.modules)}}</td>
                             <td md-cell>{{journal.teachers}}</td>
@@ -64,7 +65,7 @@
     font-weight: 500;
     font-size: 18px;
 }
-    
+
 .bad {
     color: red;
     font-weight: 500;

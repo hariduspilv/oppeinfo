@@ -1,22 +1,37 @@
-<hois-collapsable ng-repeat="module in higherResults.modules" expanded="false">
+<md-checkbox ng-model="formState.openAllCollapsables" ng-change="changeModulesExpandedStatus()" name="openAll">
+  {{'student.result.openAll' | translate}}
+</md-checkbox>
+
+<hois-collapsable ng-repeat="module in higherResults.modules" expanded="module.collapsableOpen">
   <!-- if there is no extra curriculum subjects module(KORGMOODUL_V) then module.id is set to -1 -->
   <hois-collapsable-header ng-if="module.id > -1">
-    <div layout="row">
-      <div flex="30">
+    <div layout="column" layout-gt-md="row" class="curriculum-fulfillment-result">
+      <div flex-gt-md="50">
         <span>{{currentLanguageNameField(module)}} {{module.totalCredits}} EAP</span>
         <span ng-if="module.type !== 'KORGMOODUL_M'">(<hois-classifier-value class="inline" ng-model="module.type" main-classifier-code="KORGMOODUL"></hois-classifier-value>)</span>
         <span ng-if="module.type === 'KORGMOODUL_M'">({{currentLanguage()=='et' ? module.typeNameEt : module.typeNameEn}})</span>
       </div>
-      <b ng-if="!module.isOk" flex-offset="10" md-colors="{color: 'accent'}">&nbsp;{{ module.totalDifference }}</b>
-      <i class="material-icons" flex-offset="10" md-colors="{color: 'green-600'}" ng-if="module.isOk">done</i>
+      <div flex-gt-md="15" flex-offset-gt-md="5" layout="row" layout-align-gt-md="center center">
+        <b ng-if="!module.isOk" flex-offset="10" md-colors="{color: 'accent'}">&nbsp;{{ module.totalDifference }}</b>
+        <i ng-if="module.isOk" flex-offset="10" md-colors="{color: 'green-600'}" class="material-icons">done</i>
+      </div>
+      <div flex-gt-md="30" flex-offset-gt-md="5" layout="row" layout-align-gt-md="center center">
+        <div ng-if="!module.isOk" layout="row" layout-align-gt-md="center center">
+          <div>{{'student.result.totalRequired' | translate}}: {{module.studyCredits}}&nbsp;&nbsp;</div>
+          <div>{{'student.result.totalSubmitted' | translate}}: {{module.creditsSubmitted}}&nbsp;&nbsp;</div>
+          <div>{{'student.result.difference' | translate}}: <span ng-class="{'red': module.difference < 0}">{{module.difference}}</span></div>
+        </div>
+      </div>
     </div>
   </hois-collapsable-header>
   <hois-collapsable-header ng-if="module.id === -1">
-      <div layout="row">
-        <div flex="30">
+      <div layout="column" layout-gt-md="row" class="curriculum-fulfillment-result">
+        <div flex-gt-md="50">
           <hois-classifier-value class="inline" ng-model="module.type" main-classifier-code="KORGMOODUL"></hois-classifier-value>
         </div>
-        <i class="material-icons" flex-offset="10" md-colors="{color: 'green-600'}" ng-if="module.isOk">done</i>
+        <div flex-gt-md="15" flex-offset-gt-md="5" layout="row" layout-align-gt-md="center center">
+          <i class="material-icons" flex-offset="10" md-colors="{color: 'green-600'}" ng-if="module.isOk">done</i>
+        </div>
       </div>
   </hois-collapsable-header>
   <md-table-container>
@@ -37,7 +52,7 @@
           <td md-cell>{{'student.result.higher.teacher' | translate}}</td>
           <td md-cell>{{'student.result.isOk' | translate}}</td>
         </tr>
-        <tr md-row ng-repeat-start="subjectResult in higherResults.subjectResults | filter: filterSubjectResultsByModule(module) 
+        <tr md-row ng-repeat-start="subjectResult in higherResults.subjectResults | filter: filterSubjectResultsByModule(module)
           | filter: {isOptional: false} | orderBy: 'subject.' + currentLanguageNameVariable()">
           <td md-cell>
             <span ng-if="subjectResult.isApelTransfer" class="apelAsterisk">*</span>
@@ -185,6 +200,10 @@
       </tbody>
     </table>
   </md-table-container>
+
+  <div>&nbsp;</div>
+  <md-checkbox ng-if="module.canMarkComplete && canViewModulesAsDone" ng-model="module.markedComplete" ng-change="changeModuleCompletion(module)"
+      ng-disabled="!canChangeModulesAsDone" name="markAsDone">{{'student.result.higher.markModuleComplete' | translate}}</md-checkbox>
 </hois-collapsable>
 
 <style>

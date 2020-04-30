@@ -1,0 +1,42 @@
+<table ng-if="record.moduleTypes.length > 0" class="tertiary-table student-group-teacher-table">
+  <thead>
+    <tr>
+      <th></th>
+      <th ng-if="record.showStudentProgress" colspan="3"></th>
+      <th ng-repeat="type in record.moduleTypes" colspan="{{type.colspan}}">
+        <hois-classifier-value ng-model="type.code" main-classifier-code="KUTSEMOODUL"></hois-classifier-value>
+      </th>
+    </tr>
+    <tr>
+      <th>{{'report.studentGroupTeacher.studentName' | translate}}</th>
+      <th ng-if="record.showStudentProgress">{{'report.studentGroupTeacher.curriculumFulfilled' | translate}}</th>
+      <th ng-if="record.showStudentProgress">{{'report.studentGroupTeacher.isCumLaude' | translate}}</th>
+      <th ng-if="record.showStudentProgress">{{'report.studentGroupTeacher.weightedAverageGrade' | translate}}</th>
+      <th ng-repeat="module in record.modules" colspan="{{module.colspan}}">
+        {{currentLanguageNameField(module) | hoisLimitTo: 10}}
+        <md-tooltip class="tooltip-multiline">{{currentLanguageNameField(module)}}</md-tooltip>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+      <td>
+        <span ng-include="'report/templates/studentgroup.teacher.student.name.column.html'"></span>
+      </td>
+      <td ng-if="record.showStudentProgress">
+        <span ng-include="'report/templates/studentgroup.teacher.student.curriculum.fulfillment.column.html'"></span>
+      </td>
+      <td ng-if="record.showStudentProgress">{{row.progress.isCumLaude ? 'main.yes' : 'main.no' | translate}}</td>
+      <td ng-if="record.showStudentProgress">{{row.progress.weightedAverageGrade}}</td>
+      <td ng-repeat="resultColumn in row.resultColumns"
+          ng-class="{'deep-orange-100': !resultColumn.intendedModule && (record.showStudentProgress || !resultColumn.moduleResult.grade)}">
+        <div>
+          <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.moduleResult.grade.code)}">{{resultColumn.moduleResult.grade.value}}</div>
+          <md-tooltip>
+            <span>{{resultColumn.moduleResult.gradeInserted ? (resultColumn.moduleResult.gradeInserted | hoisDate) : '-'}}</span>
+          </md-tooltip>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>

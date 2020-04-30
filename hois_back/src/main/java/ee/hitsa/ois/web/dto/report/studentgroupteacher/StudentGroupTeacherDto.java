@@ -14,7 +14,8 @@ public class StudentGroupTeacherDto {
     private Boolean showModuleGrade;
     private Boolean showAverageGrade;
     private Boolean showWeightedAverageGrade;
-    private Boolean showOnlyModuleGrades;
+    private Boolean showModuleResultTable;
+    private Boolean showStudentProgress;
 
     public List<ModuleTypeDto> getModuleTypes() {
         return moduleTypes;
@@ -80,12 +81,19 @@ public class StudentGroupTeacherDto {
         this.showWeightedAverageGrade = showWeightedAverageGrade;
     }
 
-    public Boolean getShowOnlyModuleGrades() {
-        return showOnlyModuleGrades;
+    public Boolean getShowModuleResultTable() {
+        return showModuleResultTable;
     }
 
-    public void setShowOnlyModuleGrades(Boolean showOnlyModuleGrades) {
-        this.showOnlyModuleGrades = showOnlyModuleGrades;
+    public void setShowModuleResultTable(Boolean showModuleResultTable) {
+        this.showModuleResultTable = showModuleResultTable;
     }
 
+    public Boolean getShowStudentProgress() {
+        return showStudentProgress;
+    }
+
+    public void setShowStudentProgress(Boolean showStudentProgress) {
+        this.showStudentProgress = showStudentProgress;
+    }
 }

@@ -6,12 +6,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import ee.hitsa.ois.util.TranslateUtil;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherSubjectResultDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherSubjectResultGradeDto;
@@ -22,26 +24,37 @@ public class CertificateStudentResult {
     private String subject;
     private String subjectEn;
     private String subjectCode;
-    private String module;
-    private String moduleEn;
+    private ClassifierDto moduleCode;
+    private AutocompleteResult module;
+    private Long occupationModuleId;
     private String theme;
+    private String outcome;
+    private String outcomeEn;
     private BigDecimal hours;
+    private BigDecimal moduleCredits;
     private String gradeValue;
     private String gradeName;
     private String gradeNameEn;
     private String date;
     private List<String> teachers;
     private String assessedBy;
+    private Boolean addResultOutcomes;
     private String outcomes;
     private String outcomesEn;
     private Boolean isActive;
+    private Short orderNr;
+    private Long curriculumId;
+    private String versionCode;
+    
+    private Boolean isHeader = Boolean.FALSE;
+    private Boolean isSameCurriculum = Boolean.FALSE;
 
     public static CertificateStudentResult of(StudentHigherSubjectResultDto dto) {
         CertificateStudentResult result = new CertificateStudentResult();
 
         SubjectSearchDto subject = dto.getSubject();
         result.setSubject(subject.getNameEt());
-        result.setSubjectEn(subject.getNameEn());
+        result.setSubjectEn(TranslateUtil.getNonNullableNameEn(subject));
         result.setHours(subject.getCredits());
         result.setSubjectCode(subject.getCode());
 
@@ -63,13 +76,25 @@ public class CertificateStudentResult {
         return result;
     }
 
-    public static CertificateStudentResult of(StudentVocationalResultModuleThemeDto dto, Map<String, Classifier> vocationalGrades) {
+    public static CertificateStudentResult of(StudentVocationalResultModuleThemeDto dto, Map<String, Classifier> vocationalGrades, Long studentCurriculumId) {
         CertificateStudentResult result = new CertificateStudentResult();
 
         result.setTheme(dto.getTheme() != null ? dto.getTheme().getNameEt() : null);
-        result.setModule(dto.getModule() != null ? dto.getModule().getNameEt() : null);
-        result.setModuleEn(dto.getModule() != null ? dto.getModule().getNameEn() : null);
+        result.setAddResultOutcomes(Boolean.valueOf(dto.getModule() != null && dto.getModule().getId() != null && dto.getOutcome() == null));
+        result.setOutcome(dto.getOutcome() != null ? dto.getOutcome().getNameEt() : null);
+        result.setOutcomeEn(dto.getOutcome() != null ? TranslateUtil.getNonNullableNameEn(dto.getOutcome()) : null);
+        result.setModule(dto.getModule() != null ? new AutocompleteResult(dto.getModule().getId(), dto.getModule().getNameEt(), TranslateUtil.getNonNullableNameEn(dto.getModule())) : null);
+        result.setModuleCode(dto.getModule() != null ? ClassifierDto.ofMin(dto.getModule().getModuleCode()) : null);
+        result.setOrderNr(dto.getModule() != null ? dto.getModule().getOrderNr() : null);
+        result.setVersionCode(dto.getModule() != null ? dto.getModule().getVersionCode() : null);
+        if (result.getVersionCode() == null) {
+            // in case of outcomes, it does not have any version code, so we put curriculum code instead
+            result.setVersionCode(dto.getCurriculum() != null ? dto.getCurriculum().getCode() : null);
+        }
         result.setHours(dto.getCredits());
+        result.setModuleCredits(dto.getModule() != null ? dto.getModule().getCredits() : null);
+        result.setOccupationModuleId(dto.getCurriculumVersionModuleId());
+        result.setCurriculumId(dto.getCurriculum() != null ? dto.getCurriculum().getId() : null);
 
         Classifier grade = vocationalGrades.get(dto.getGrade());
         result.setGradeName(grade != null ? grade.getNameEt() : null);
@@ -78,15 +103,17 @@ public class CertificateStudentResult {
         result.setDate(DateUtils.date(dto.getDate()));
         result.setAssessedBy(String.join(", ", StreamUtil.toMappedList(AutocompleteResult::getNameEt, dto.getTeachers().stream().filter(p->p.getNameEn()!=null).collect(Collectors.toList()))));
         if (StringUtils.isEmpty(result.getAssessedBy())) result.setAssessedBy(dto.getTeachersAsString());
+        
+        result.setIsSameCurriculum(studentCurriculumId != null ? Boolean.valueOf(studentCurriculumId.equals(result.getCurriculumId())) : Boolean.FALSE);
         return result;
     }
 
-    public String getModule() {
-        return module;
+    public ClassifierDto getModuleCode() {
+        return moduleCode;
     }
 
-    public void setModule(String module) {
-        this.module = module;
+    public void setModuleCode(ClassifierDto moduleCode) {
+        this.moduleCode = moduleCode;
     }
 
     public String getTheme() {
@@ -94,6 +121,22 @@ public class CertificateStudentResult {
     }
     public void setTheme(String theme) {
         this.theme = theme;
+    }
+
+    public String getOutcome() {
+        return outcome;
+    }
+
+    public void setOutcome(String outcome) {
+        this.outcome = outcome;
+    }
+
+    public String getOutcomeEn() {
+        return outcomeEn;
+    }
+
+    public void setOutcomeEn(String outcomeEn) {
+        this.outcomeEn = outcomeEn;
     }
 
     public String getAssessedBy() {
@@ -152,6 +195,14 @@ public class CertificateStudentResult {
         this.teachers = teachers;
     }
 
+    public Boolean getAddResultOutcomes() {
+        return addResultOutcomes;
+    }
+
+    public void setAddResultOutcomes(Boolean addResultOutcomes) {
+        this.addResultOutcomes = addResultOutcomes;
+    }
+
     public String getOutcomes() {
         return outcomes;
     }
@@ -200,12 +251,68 @@ public class CertificateStudentResult {
         this.outcomesEn = outcomesEn;
     }
 
-    public String getModuleEn() {
-        return moduleEn;
+    public Short getOrderNr() {
+        return orderNr;
     }
 
-    public void setModuleEn(String moduleEn) {
-        this.moduleEn = moduleEn;
+    public void setOrderNr(Short orderNr) {
+        this.orderNr = orderNr;
+    }
+
+    public String getVersionCode() {
+        return versionCode;
+    }
+
+    public void setVersionCode(String versionCode) {
+        this.versionCode = versionCode;
+    }
+
+    public AutocompleteResult getModule() {
+        return module;
+    }
+
+    public void setModule(AutocompleteResult module) {
+        this.module = module;
+    }
+
+    public Boolean getIsHeader() {
+        return isHeader;
+    }
+
+    public void setIsHeader(Boolean isHeader) {
+        this.isHeader = isHeader;
+    }
+
+    public Boolean getIsSameCurriculum() {
+        return isSameCurriculum;
+    }
+
+    public void setIsSameCurriculum(Boolean isSameCurriculum) {
+        this.isSameCurriculum = isSameCurriculum;
+    }
+
+    public BigDecimal getModuleCredits() {
+        return moduleCredits;
+    }
+
+    public void setModuleCredits(BigDecimal moduleCredits) {
+        this.moduleCredits = moduleCredits;
+    }
+
+    public Long getOccupationModuleId() {
+        return occupationModuleId;
+    }
+
+    public void setOccupationModuleId(Long occupationModuleId) {
+        this.occupationModuleId = occupationModuleId;
+    }
+
+    public Long getCurriculumId() {
+        return curriculumId;
+    }
+
+    public void setCurriculumId(Long curriculumId) {
+        this.curriculumId = curriculumId;
     }
 
 }

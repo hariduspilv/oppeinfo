@@ -1,6 +1,8 @@
 package ee.hitsa.ois.report.certificate;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.util.TranslateUtil;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class CerfificateReportCurriculum {
 
@@ -9,7 +11,8 @@ public class CerfificateReportCurriculum {
     private final String name;
     private final String nameEn;
     private final String code;
-    private final String studyLevel;
+    private final String merCode;
+    private final AutocompleteResult studyLevel;
     private final int nominalStudyYears;
     private final int nominalStudyMonths;
 
@@ -17,12 +20,13 @@ public class CerfificateReportCurriculum {
         name = curriculum.getNameEt();
         nameEn = curriculum.getNameEn();
         code = curriculum.getCode();
+        merCode = curriculum.getMerCode();
         nominalStudyYears = curriculum.getStudyPeriod().intValue() / MONTHS_IN_YEAR;
         nominalStudyMonths = curriculum.getStudyPeriod().intValue() % MONTHS_IN_YEAR;
-        studyLevel = curriculum.getOrigStudyLevel().getNameEt();
+        studyLevel = new AutocompleteResult(null, curriculum.getOrigStudyLevel().getNameEt(), TranslateUtil.getNonNullableNameEn(curriculum.getOrigStudyLevel()));
     }
 
-    public String getStudyLevel() {
+    public AutocompleteResult getStudyLevel() {
         return studyLevel;
     }
 
@@ -40,6 +44,10 @@ public class CerfificateReportCurriculum {
 
     public String getCode() {
         return code;
+    }
+
+    public String getMerCode() {
+        return merCode;
     }
 
     public String getNameEn() {

@@ -6,6 +6,7 @@ import java.time.LocalDate;
 public class ScholarshipApplicationRankingSearchDto extends ScholarshipApplicationBaseDto {
     private Long place;
     private String type;
+    private String typeEhis;
     private Long term;
     private String termNameEt;
     private String curriculumCode;
@@ -43,6 +44,14 @@ public class ScholarshipApplicationRankingSearchDto extends ScholarshipApplicati
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getTypeEhis() {
+        return typeEhis;
+    }
+
+    public void setTypeEhis(String typeEhis) {
+        this.typeEhis = typeEhis;
     }
 
     public Long getTerm() {

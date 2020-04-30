@@ -2,10 +2,12 @@ package ee.hitsa.ois.web.dto;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
@@ -19,14 +21,20 @@ public class UserDto extends UserForm {
     private Boolean higher;
     private Boolean vocational;
 
-    public static UserDto of(User user) {
+    public static UserDto of(HoisUserDetails hoisUser, User user) {
         UserDto dto = EntityUtil.bindToDto(user, new UserDto(), "curriculums");
         dto.person = EntityUtil.bindToDto(user.getPerson(), new PersonMinDto());
-        dto.person.setHasSchoolAdminRole(Boolean.valueOf(user.getPerson().getUsers().stream()
-                .filter(u -> user.getSchool() != null && u.getSchool() != null && user.getSchool().equals(u.getSchool()))
+        
+        dto.person.setSchoolAdminInSchools(user.getPerson().getUsers().stream()
+                //.filter(u -> user.getSchool() != null && u.getSchool() != null && user.getSchool().equals(u.getSchool()))
                 .filter(u -> !u.equals(user) && ClassifierUtil.equals(Role.ROLL_A, u.getRole()))
+                .filter(u -> (hoisUser.isSchoolAdmin() && hoisUser.getSchoolId().equals(EntityUtil.getNullableId(u.getSchool()))
+                            && !EntityUtil.getId(u).equals(EntityUtil.getNullableId(user)))
+                        || (hoisUser.isMainAdmin() && EntityUtil.getNullableId(u.getSchool()) != null))
                 .filter(u -> DateUtils.isValid(u.getValidFrom(), u.getValidThru()))
-                .findAny().isPresent()));
+                .map(u -> EntityUtil.getId(u.getSchool()))
+                .collect(Collectors.toSet()));
+        
         dto.setSchool(user.getSchool() != null ? AutocompleteResult.of(user.getSchool()) : null);
 
         Map<String, List<String>> rights = user.getUserRights().stream().collect(
@@ -86,7 +94,7 @@ public class UserDto extends UserForm {
         private Long id;
         private String idcode;
         private String fullname;
-        private Boolean hasSchoolAdminRole;
+        private Set<Long> schoolAdminInSchools;
 
         public Long getId() {
             return id;
@@ -112,12 +120,13 @@ public class UserDto extends UserForm {
             this.fullname = fullname;
         }
 
-        public Boolean getHasSchoolAdminRole() {
-            return hasSchoolAdminRole;
+        public Set<Long> getSchoolAdminInSchools() {
+            return schoolAdminInSchools;
         }
 
-        public void setHasSchoolAdminRole(Boolean hasSchoolAdminRole) {
-            this.hasSchoolAdminRole = hasSchoolAdminRole;
+        public void setSchoolAdminInSchools(Set<Long> schoolAdminInSchools) {
+            this.schoolAdminInSchools = schoolAdminInSchools;
         }
+
     }
 }

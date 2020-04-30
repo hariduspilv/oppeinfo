@@ -14,4 +14,6 @@ public enum HigherModuleType {
     KORGMOODUL_M;   // Custom module
 
     public static final List<String> FINAL_MODULES = EnumUtil.toNameList(KORGMOODUL_L, KORGMOODUL_F);
+
+    public static final List<String> CAN_MARK_AS_COMPLETE = EnumUtil.toNameList(KORGMOODUL_C, KORGMOODUL_P, KORGMOODUL_M);
 }

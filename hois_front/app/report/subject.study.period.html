@@ -1,0 +1,465 @@
+<style>
+    .width-327 {
+      width: 327px;
+      padding-right: 23px;
+    }
+  
+    .md-chips {
+      padding: 0 0 0 3px;
+    }
+  
+    .width-300 {
+      width: 304px;
+      padding-right: 23px;
+    }
+  
+    .width-300-autocomplete {
+      width: 304px;
+      padding-right: 23px;
+      padding-left: 2px
+    }
+  
+    .width-300-md-select {
+      width: 300px;
+      padding-right: 27px;
+    }
+  
+    .width-170 {
+      width: 170px;
+      margin-right: 25px;
+    }
+  
+    .width-150 {
+      width: 150px;
+      padding-right: 27px;
+    }
+  
+    .width-135 {
+      width: 135px;
+      padding-right: 30px;
+    }
+  
+    .width-100 {
+      width: 100px;
+      margin-right: 27px;
+    }
+  
+    .width-100-margin-4 {
+      width: 100px;
+      margin-right: 4px;
+    }
+  
+    .checkbox-width-200 {
+      margin-top: 10px; 
+      padding-right: 27px;
+      width: 200px;
+      margin-right: 0px;
+    }
+  
+    .checkbox-width-150 {
+      margin-top: 10px; 
+      padding-right: 27px;
+      width: 150px;
+      margin-right: 0px;
+    }
+  
+    .margin-right-27 {
+      margin-right: 27px;
+    }
+  </style>
+  
+  <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <div ng-include="'report/student.data.navbar.html'"></div>
+    <div>&nbsp;</div>
+      <div flex>
+        <fieldset>
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+          <form name="searchForm" ng-submit="loadResults()">
+            <div layout="column">
+                <div layout="row">
+                    <div style="width: 485px">
+                        <label class="textInput" style="font-size: 13px">{{'report.studentData.showInResults' | translate}}</label>
+                    </div>
+                </div>
+
+                <div layout="column" layout-gt-md="row">
+                    <div layout="row">
+                        <md-input-container>
+                            <md-checkbox ng-model="formState.criteria.nrShow" class="checkbox-width-150"
+                                aria-label="{{'report.subjectStudyPeriod.nr' | translate}}">
+                                {{'report.subjectStudyPeriod.nr' | translate}}
+                            </md-checkbox>
+                        </md-input-container>
+                    </div>
+                </div>
+                <hois-collapsable expanded="collapsable.subjectExpanded">
+                  <hois-collapsable-header>
+                    <span>{{'report.subjectStudyPeriod.subject' | translate}}</span>
+                  </hois-collapsable-header>
+                  <div>
+                    <div layout="row">
+                      <div style="width: 485px">
+                          <label class="textInput" style="font-size: 13px">{{'report.studentData.showInResults' | translate}}</label>
+                      </div>
+                    </div>
+                    <div layout="column" layout-gt-md="row">
+                        <div layout="row">
+                            <md-input-container>
+                                <md-checkbox ng-model="formState.criteria.subjectCodeShow" class="checkbox-width-150"
+                                aria-label="{{'report.subjectStudyPeriod.subjectCode' | translate}}">
+                                {{'report.subjectStudyPeriod.subjectCode' | translate}}
+                                </md-checkbox>
+                            </md-input-container>
+                            <md-input-container class="width-300">
+                                <label class="textInput">{{'report.subjectStudyPeriod.subjectCode' | translate}}</label>
+                                <input ng-model="formState.criteria.subjectCode" type="text" md-maxlength="255">
+                            </md-input-container>
+                        </div>
+                    </div>
+
+                    <div layout="column" layout-gt-md="row">
+                        <div layout="row">
+                            <md-input-container>
+                                <md-checkbox ng-model="formState.criteria.subjectEtShow" class="checkbox-width-150"
+                                aria-label="{{'report.subjectStudyPeriod.subjectEt' | translate}}">
+                                {{'report.subjectStudyPeriod.subjectEt' | translate}}
+                                </md-checkbox>
+                            </md-input-container>
+                            <hois-autocomplete label="report.subjectStudyPeriod.field.subjectEt" additional-query-params="{withCode: false}"
+                                ng-model="formState.criteria.subjectEt" class="width-300-autocomplete" ha-attribute="id"
+                                ha-controller="directiveControllers" method="subjects"></hois-autocomplete>
+                        </div>
+                    </div>
+
+                    <div layout="column" layout-gt-md="row">
+                        <div layout="row">
+                            <md-input-container>
+                                <md-checkbox ng-model="formState.criteria.subjectEnShow" class="checkbox-width-150"
+                                aria-label="{{'report.subjectStudyPeriod.subjectEn' | translate}}">
+                                {{'report.subjectStudyPeriod.subjectEn' | translate}}
+                                </md-checkbox>
+                            </md-input-container>
+                            <hois-autocomplete label="report.subjectStudyPeriod.field.subjectEn" display="nameEn"
+                                class="width-300-autocomplete" ng-model="formState.criteria.subjectEn" ha-attribute="id"
+                                ha-controller="directiveControllers" additional-query-params="{lang: 'EN', withCode: false}" method="subjects"></hois-autocomplete>
+                        </div>
+                    </div>
+
+                    <div layout="column" layout-gt-md="row">
+                        <div layout="row">
+                            <md-input-container>
+                                <md-checkbox ng-model="formState.criteria.curriculumShow" class="checkbox-width-150"
+                                    aria-label="{{'report.subjectStudyPeriod.curriculum' | translate}}">
+                                    {{'report.subjectStudyPeriod.curriculum' | translate}}
+                                </md-checkbox>
+                            </md-input-container>
+                            <hois-autocomplete class="width-300-autocomplete" ng-model="formState.criteria.curriculum" 
+                                ha-attribute="id" method="curriculumsauto" 
+                                label="report.subjectStudyPeriod.curriculum" multiple></hois-autocomplete>
+                        </div>
+                    </div>
+                  </div>
+                </hois-collapsable>
+  
+            <hois-collapsable expanded="collapsable.subjectStudyPeriodExpanded">
+              <hois-collapsable-header>
+                <span>{{'report.subjectStudyPeriod.label' | translate}}</span>
+              </hois-collapsable-header>
+              <div layout="column">
+
+                <div layout="row">
+                  <div layout="row">
+                    <div style="width: 485px">
+                      <label class="textInput" style="font-size: 13px">{{'report.studentData.showInResults' | translate}}</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div layout="column" layout-gt-md="row">
+                  <div layout="row">
+                    <md-input-container>
+                      <md-checkbox ng-model="formState.criteria.teacherShow" class="checkbox-width-150"
+                      aria-label="{{'report.subjectStudyPeriod.teacher' | translate}}">
+                      {{'report.subjectStudyPeriod.teacher' | translate}}
+                      </md-checkbox>
+                    </md-input-container>
+                    <hois-autocomplete label="report.subjectStudyPeriod.teacher" ng-model="formState.criteria.teacher"
+                      ha-attribute="id" ha-controller="directiveControllers" class="width-300-autocomplete"
+                      method="teachers"></hois-autocomplete>
+                  </div>
+                </div>
+  
+                <div layout="column" layout-gt-md="row">
+                    <div layout="row">
+                        <md-input-container>
+                          <md-checkbox ng-model="formState.criteria.studyYearShow" class="checkbox-width-150"
+                            aria-label="{{'report.subjectStudyPeriod.studyYear' | translate}}">
+                            {{'report.subjectStudyPeriod.studyYear' | translate}}
+                          </md-checkbox>
+                        </md-input-container>
+                        <md-input-container class="width-100">
+                          <label>{{'report.subjectStudyPeriod.comparation' | translate}}</label>
+                          <md-select ng-model="formState.criteria.studyYearSign" ng-required="hasValue(formState.criteria.studyYear)">
+                            <md-option ng-value="formState.equal">&#61;</md-option>
+                            <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                            <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                            <md-option ng-if="!hasValue(formState.criteria.studyYear)" md-option-empty></md-option>
+                          </md-select>
+                        </md-input-container>
+                        <md-input-container class="width-170">
+                            <label class="textInput">{{'report.subjectStudyPeriod.studyYear' | translate}}</label>
+                            <hois-classifier-select ng-model="formState.criteria.studyYear" model-value-attr="code" 
+                            main-classifier-code="OPPEAASTA"></hois-classifier-select>
+                        </md-input-container>
+                    </div>
+                </div>
+  
+                <div layout="column" layout-gt-md="row">
+                    <div layout="row">
+                        <md-input-container>
+                          <md-checkbox ng-model="formState.criteria.studyPeriodShow" class="checkbox-width-150"
+                            aria-label="{{'report.subjectStudyPeriod.studyPeriod' | translate}}">
+                            {{'report.subjectStudyPeriod.studyPeriod' | translate}}
+                          </md-checkbox>
+                        </md-input-container>
+                        <md-input-container class="width-300-md-select">
+                            <label class="textInput">{{'report.subjectStudyPeriod.studyPeriod' | translate}}</label>
+                            <hois-classifier-select ng-model="formState.criteria.studyPeriod" model-value-attr="code" 
+                            main-classifier-code="OPPEPERIOOD" multiple></hois-classifier-select>
+                        </md-input-container>
+                    </div>
+                </div>
+  
+                <div layout="column" layout-gt-md="row">
+                    <div layout="row">
+                        <md-input-container>
+                          <md-checkbox ng-model="formState.criteria.courseShow" class="checkbox-width-150"
+                            aria-label="{{'report.subjectStudyPeriod.course' | translate}}">
+                            {{'report.subjectStudyPeriod.course' | translate}}
+                          </md-checkbox>
+                        </md-input-container>
+                        <md-input-container class="width-300-md-select">
+                            <label>{{'report.subjectStudyPeriod.course' | translate}}</label>
+                            <md-select ng-model="formState.criteria.course" multiple>
+                                <md-option ng-value="1">1</md-option>
+                                <md-option ng-value="2">2</md-option>
+                                <md-option ng-value="3">3</md-option>
+                                <md-option ng-value="4">4</md-option>
+                                <md-option ng-value="5">5</md-option>
+                                <md-option ng-value="6">6</md-option>
+                                <md-option ng-value="7">7</md-option>
+                                <md-option ng-value="8">8</md-option>
+                                <md-option ng-value="9">9</md-option>
+                            </md-select>
+                        </md-input-container>
+                    </div>
+                </div>
+  
+                <div layout="column" layout-gt-md="row">
+                    <div layout="row">
+                        <md-input-container>
+                          <md-checkbox ng-model="formState.criteria.studentGroupShow" class="checkbox-width-150"
+                            aria-label="{{'report.subjectStudyPeriod.studentGroup' | translate}}">
+                            {{'report.subjectStudyPeriod.studentGroup' | translate}}
+                          </md-checkbox>
+                        </md-input-container>
+                        <hois-autocomplete class="width-300-autocomplete" ng-model="formState.criteria.studentGroup" 
+                          ha-controller="directiveControllers" method="studentgroups" name="studentGroup" ha-attribute="id"
+                          label="report.subjectStudyPeriod.studentGroup"></hois-autocomplete>
+                    </div>
+                </div>
+  
+                <div layout="column" layout-gt-md="row">
+                    <div layout="row">
+                        <md-input-container>
+                          <md-checkbox ng-model="formState.criteria.eapShow" class="checkbox-width-150"
+                            aria-label="{{'report.subjectStudyPeriod.eap' | translate}}">
+                            {{'report.subjectStudyPeriod.eap' | translate}}
+                          </md-checkbox>
+                        </md-input-container>
+                        <md-input-container class="width-100">
+                          <label>{{'report.subjectStudyPeriod.comparation' | translate}}</label>
+                          <md-select ng-model="formState.criteria.eapSign" ng-required="hasValue(formState.criteria.eap)">
+                            <md-option ng-value="formState.equal">&#61;</md-option>
+                            <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                            <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                            <md-option ng-if="!hasValue(formState.criteria.eap)" md-option-empty></md-option>
+                          </md-select>
+                        </md-input-container>
+                        <md-input-container class="width-170">
+                          <label>{{'report.subjectStudyPeriod.field.eap' | translate}}</label>
+                          <input ng-model="formState.criteria.eap" type="number" name="eap" min="0" max="1000" pattern="^\d+$">
+                          <div ng-messages="searchForm.eap.$error" ng-show="searchForm.eap.$dirty">
+                            <div ng-message="min">
+                              {{'main.messages.error.min' | translate: {min: 0} }}
+                            </div>
+                            <div ng-message="max">
+                              {{'main.messages.error.max' | translate: {max: 1000} }}
+                            </div>
+                            <div ng-message="pattern">
+                              {{'main.messages.error.integer' | translate}}
+                            </div>
+                          </div>
+                        </md-input-container>
+                    </div>
+                </div>
+  
+                <div layout="column" layout-gt-md="row">
+                    <div layout="row">
+                        <md-input-container>
+                          <md-checkbox ng-model="formState.criteria.optionalSubjectShow" class="checkbox-width-150"
+                            aria-label="{{'report.subjectStudyPeriod.optionalSubject' | translate}}">
+                            {{'report.subjectStudyPeriod.optionalSubject' | translate}}
+                          </md-checkbox>
+                        </md-input-container>
+                        <md-input-container class="width-300-md-select">
+                          <label>{{'report.subjectStudyPeriod.yesNo' | translate}}</label>
+                          <md-select ng-model="formState.criteria.optionalSubject">
+                            <md-option md-option-empty></md-option>
+                            <md-option ng-value="true">{{'main.yes' | translate}}</md-option>
+                            <md-option ng-value="false">{{'main.no' | translate}}</md-option>
+                          </md-select>
+                        </md-input-container>
+                    </div>
+                </div>
+  
+                <div layout="column" layout-gt-md="row">
+                    <div layout="row">
+                        <md-input-container>
+                            <md-checkbox ng-model="formState.criteria.moodleIdShow" class="checkbox-width-150"
+                            aria-label="{{'moodle.courseId' | translate}}">
+                            {{'moodle.courseId' | translate}}
+                            </md-checkbox>
+                        </md-input-container>
+                        <md-input-container class="width-300">
+                            <label class="textInput">{{'moodle.courseId' | translate}}</label>
+                            <input ng-model="formState.criteria.moodleId" type="number" name="moodleId" pattern="^\d+$">
+                        </md-input-container>
+                        <div ng-messages="searchForm.moodleId.$error" ng-show="searchForm.moodleId.$dirty">
+                          <div ng-message="pattern">
+                            {{'main.messages.error.integer' | translate}}
+                          </div>
+                        </div>
+                    </div>
+                </div>
+  
+                <div layout="column" layout-gt-md="row">
+                    <div layout="row">
+                        <md-input-container>
+                          <md-checkbox ng-model="formState.criteria.protocolShow" class="checkbox-width-150"
+                            aria-label="{{'report.subjectStudyPeriod.protocol' | translate}}">
+                            {{'report.subjectStudyPeriod.protocol' | translate}}
+                          </md-checkbox>
+                        </md-input-container>
+                        <md-input-container class="width-300-md-select">
+                          <label>{{'report.subjectStudyPeriod.yesNo' | translate}}</label>
+                          <md-select ng-model="formState.criteria.protocol">
+                            <md-option md-option-empty></md-option>
+                            <md-option ng-value="true">{{'main.yes' | translate}}</md-option>
+                            <md-option ng-value="false">{{'main.no' | translate}}</md-option>
+                          </md-select>
+                        </md-input-container>
+                    </div>
+                </div>
+              </div>
+            </hois-collapsable>
+            </div>
+          </form>
+
+            <div layout-gt-md="row" layout="column">
+              <div layout="row" layout-xs="column">
+                <md-button ng-click="loadResults()" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+                <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+                <md-button ng-href="{{excelDL(formState.xlsUrl, criteria)}}" ng-disabled="!searched" target="_blank" class="md-raised">{{'report.excel' | translate}}</md-button>
+              </div>
+              <div layout="row">
+                <form name="queryForm">
+                  <div ng-if="searched" layout="row" layout-xs="column">
+                    <md-input-container style="margin-left: 6px; width: 300px">
+                      <label>{{'report.studentData.query.name' | translate}}</label>
+                      <input ng-model="savedHeader.queryNameEt" type="text" name="queryName" md-maxlength="255" style="margin-bottom: 0px;">
+                    </md-input-container>
+                    <md-button class="md-raised" ng-click="saveQuery()">{{'report.studentData.query.save' | translate}}</md-button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+        </fieldset>
+        <div>&nbsp;</div>
+        <hois-collapsable expanded="collapsable.queryExpanded">
+          <hois-collapsable-header>
+            <span>{{'report.studentData.query.label' | translate}}</span>
+          </hois-collapsable-header>
+          <div layout="column">
+            <md-table-container flex="50" style="max-height: 200px">
+              <table md-table class="secondary-table">
+                <thead md-head>
+                  <tr md-row>
+                    <th md-column>{{'report.studentData.query.name' | translate}}</th>
+                    <th md-column>{{'report.studentData.query.delete' | translate}}</th>
+                  </tr>
+                </thead>
+                <tbody md-body>
+                  <tr md-row ng-repeat="query in formState.savedQueries" ng-class-odd="'odd'" ng-class-even="'even'">
+                      <td md-cell><a ng-click="loadQueryToForm(query.id)">{{currentLanguageNameField(query)}}</a></td>
+                      <td md-cell>
+                        <a ng-click="deleteStudentQuery(query.id)" class="remove">&times;</a>
+                      </td>
+                  </tr>
+                </tbody>
+              </table>
+            </md-table-container>
+          </div>
+        </hois-collapsable>
+      </div>
+    </div>
+    <div layout-padding>
+      <div flex>
+        <md-table-container resize-table search-criteria-height="350">
+          <table md-table md-progress="tabledata.$promise">
+            <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+              <tr md-row>
+                <th md-column ng-if="savedHeader.nrShow">{{'report.subjectStudyPeriod.nr' | translate}}</th>
+                <th md-column md-order-by="s.code" ng-if="savedHeader.subjectCodeShow">{{'report.subjectStudyPeriod.subjectCode' | translate}}</th>
+                <th md-column md-order-by="s.name_et" ng-if="savedHeader.subjectEtShow">{{'report.subjectStudyPeriod.subjectEt' | translate}}</th>
+                <th md-column md-order-by="s.name_en" ng-if="savedHeader.subjectEnShow">{{'report.subjectStudyPeriod.subjectEn' | translate}}</th>
+                <th md-column md-order-by="c.code || ' ' || {{'c.name_' + currentLanguage()}}" ng-if="savedHeader.curriculumShow">{{'report.subjectStudyPeriod.curriculum' | translate}}</th>
+                <th md-column md-order-by="teachers.name" ng-if="savedHeader.teacherShow">{{'report.subjectStudyPeriod.teacher' | translate}}</th>
+                <th md-column md-order-by="sy.year_code" ng-if="savedHeader.studyYearShow">{{'report.subjectStudyPeriod.studyYear' | translate}}</th>
+                <th md-column md-order-by="{{'sp.name_' + currentLanguage()}}" ng-if="savedHeader.studyPeriodShow">{{'report.subjectStudyPeriod.studyPeriod' | translate}}</th>
+                <th md-column md-order-by="groups.studentgroupcourses" ng-if="savedHeader.courseShow">{{'report.subjectStudyPeriod.course' | translate}}</th>
+                <th md-column md-order-by="groups.studentgroupcodes" ng-if="savedHeader.studentGroupShow">{{'report.subjectStudyPeriod.studentGroup' | translate}}</th>
+                <th md-column md-order-by="s.credits" ng-if="savedHeader.eapShow">{{'report.subjectStudyPeriod.eap' | translate}}</th>
+                <th md-column md-order-by="cvhs.is_optional" ng-if="savedHeader.optionalSubjectShow">{{'report.subjectStudyPeriod.optionalSubject' | translate}}</th>
+                <th md-column md-order-by="ssp.moodle_course_id" ng-if="savedHeader.moodleIdShow">{{'moodle.courseId' | translate}}</th>
+                <th md-column md-order-by="protocols.protocolnumbers" ng-if="savedHeader.protocolShow">{{'report.subjectStudyPeriod.protocol' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell ng-if="savedHeader.nrShow">{{criteria.size * (criteria.page - 1) + $index + 1}}</td>
+                <td md-cell ng-if="savedHeader.subjectCodeShow">{{row.subjectCode}}</td>
+                <td md-cell ng-if="savedHeader.subjectEtShow">{{row.subjectEt}}</td>
+                <td md-cell ng-if="savedHeader.subjectEnShow">{{row.subjectEn}}</td>
+                <td md-cell ng-if="savedHeader.curriculumShow">{{currentLanguageNameField(row.curriculum)}}</td>
+                <td md-cell ng-if="savedHeader.teacherShow">{{row.teacher}}</td>
+                <td md-cell ng-if="savedHeader.studyYearShow">{{currentLanguageNameField(row.studyYear)}}</td>
+                <td md-cell ng-if="savedHeader.studyPeriodShow">{{currentLanguageNameField(row.studyPeriod)}}</td>
+                <td md-cell ng-if="savedHeader.courseShow">{{row.course}}</td>
+                <td md-cell ng-if="savedHeader.studentGroupShow">{{row.studentGroup}}</td>
+                <td md-cell ng-if="savedHeader.eapShow">{{row.eap}}</td>
+                <td md-cell ng-if="savedHeader.optionalSubjectShow">{{currentLanguageNameField(row.optionalSubject)}}</td>
+                <td md-cell ng-if="savedHeader.moodleIdShow">{{row.moodleId}}</td>
+                <td md-cell ng-if="savedHeader.protocolShow">{{row.protocol}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+        <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                             md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                             md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+      </div>
+    </div>
+    

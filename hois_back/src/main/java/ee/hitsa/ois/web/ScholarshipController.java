@@ -6,11 +6,6 @@ import java.util.Map;
 
 import javax.validation.Valid;
 
-import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.web.commandobject.SearchCommand;
-import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationSearchCommand;
-import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationSearchDto;
-import ee.hitsa.ois.web.dto.scholarship.UnappliedScholarshipApplicationDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.ScholarshipService;
@@ -35,16 +31,21 @@ import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.ScholarshipUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationListSubmitForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationRankingSearchCommand;
+import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipApplicationSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipCommitteeSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipDecisionForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipSearchCommand;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipStudentApplicationForm;
 import ee.hitsa.ois.web.commandobject.scholarship.ScholarshipTermForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierDto;
+import ee.hitsa.ois.web.dto.ScholarshipNoApplicationDto;
 import ee.hitsa.ois.web.dto.ScholarshipTermApplicationRankingSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationDto;
+import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipApplicationStudentDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipDecisionDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipStudentRejectionDto;
@@ -52,6 +53,7 @@ import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermComplianceDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermSearchDto;
 import ee.hitsa.ois.web.dto.scholarship.ScholarshipTermStudentDto;
+import ee.hitsa.ois.web.dto.scholarship.UnappliedScholarshipApplicationDto;
 
 @RestController
 @RequestMapping("/scholarships")
@@ -301,4 +303,27 @@ public class ScholarshipController {
         return scholarshipService.unappliedScholarships(user);
     }
 
+    @GetMapping("/noApplication")
+    public ScholarshipNoApplicationDto getAllowedWithoutApplicationStipends(HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+        return scholarshipService.getAllowedWithoutApplicationStipends(user.getSchoolId());
+    }
+    
+    @PutMapping("/noApplication")
+    public ScholarshipNoApplicationDto updateAllowedWithoutApplicationStipends(HoisUserDetails user, @RequestBody ScholarshipNoApplicationDto form) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+        scholarshipService.updateAllowedWithoutApplicationStipends(user, form);
+        return getAllowedWithoutApplicationStipends(user);
+    }
+    
+    @PostMapping("/copy/{id:\\d+}")
+    public ScholarshipTermDto copyScholarshipTerm(HoisUserDetails user, @WithEntity ScholarshipTerm term) {
+        UserUtil.assertIsSchoolAdmin(user, term.getSchool(), Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_STIPTOETUS);
+        return get(user, scholarshipService.copy(term));
+    }
+    
+    @GetMapping("/scholarshipTypes")
+    public List<ClassifierDto> getScholarshipTypes(HoisUserDetails user, @RequestParam(name="all") boolean all) {
+        return scholarshipService.getSchoolScholarshipTypes(user.getSchoolId(), all);
+    }
 }

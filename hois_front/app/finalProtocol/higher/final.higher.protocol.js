@@ -103,6 +103,9 @@ function ($route, $location, $scope, $filter, $q, Classifier, HigherGradeUtil, P
       if (savedResult.grade !== row.grade) {
         $scope.finalProtocolForm.$setSubmitted();
         row.gradeHasChanged = true;
+        if (HigherGradeUtil.isPositive(row.grade) && !!row.finalThesisCurriculumGrade && !(row.curriculumGrade || {}).id) {
+          row.curriculumGrade = {id: row.finalThesisCurriculumGrade};
+        }
       } else {
         row.gradeHasChanged = false;
 

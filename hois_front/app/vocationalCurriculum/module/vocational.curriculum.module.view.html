@@ -39,9 +39,13 @@
             <hois-classifier-select name="module" ng-model="module.module" show-only-values="possibleTypes" main-classifier-code="KUTSEMOODUL"
               disabled model-value-attr="code"></hois-classifier-select>
           </md-input-container>
-          <md-input-container flex="10" flex-sm="50" flex-xs="50" flex-offset="5">
+          <md-input-container flex="10" flex-sm="25" flex-xs="25" flex-offset="5">
             <label>{{'module.credits' | translate}}</label>
             <input ng-model="module.credits" type="number" name="credits" readonly >
+          </md-input-container>
+          <md-input-container flex="10" flex-sm="20" flex-xs="20" flex-offset="5">
+            <label>{{'module.orderNr' | translate}}</label>
+            <input ng-model="module.orderNr" type="number" name="orderNr" readonly >
           </md-input-container>
         </div>
         <md-input-container flex>

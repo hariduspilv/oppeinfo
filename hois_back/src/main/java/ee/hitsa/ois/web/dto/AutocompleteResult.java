@@ -50,6 +50,7 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.util.Translatable;
+import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumResult;
@@ -72,10 +73,6 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
 
     public AutocompleteResult(Long id, Translatable data) {
         this(id, data.getNameEt(), data.getNameEn());
-    }
-
-    private static String getNonNullableNameEn(Translatable data) {
-        return data.getNameEn() != null ? data.getNameEn() : data.getNameEt();
     }
 
     @Override 
@@ -267,9 +264,9 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
     public static AutocompleteResult ofWithYear(StudyPeriod studyPeriod) {
         Classifier yearClassifier = studyPeriod.getStudyYear().getYear();
         String yearNameEt = yearClassifier.getNameEt();
-        String yearNameEn = getNonNullableNameEn(yearClassifier);
+        String yearNameEn = TranslateUtil.getNonNullableNameEn(yearClassifier);
         String periodNameEt = studyPeriod.getNameEt();
-        String periodNameEn = getNonNullableNameEn(studyPeriod);
+        String periodNameEn = TranslateUtil.getNonNullableNameEn(studyPeriod);
 
         return new AutocompleteResult(studyPeriod.getId(), yearNameEt + " " + periodNameEt,
                 yearNameEn + " " + periodNameEn);

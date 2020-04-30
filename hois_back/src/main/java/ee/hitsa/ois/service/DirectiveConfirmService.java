@@ -57,6 +57,7 @@ import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.DirectiveCancelType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.EhisStipendium;
 import ee.hitsa.ois.enums.JobType;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Role;
@@ -94,6 +95,7 @@ import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.ErrorForIcpField;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveConfirmForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.directive.DirectiveViewStudentDto;
+import ee.hitsa.ois.web.dto.directive.ExistingDirectiveStudentDto;
 import ee.hitsa.ois.web.dto.directive.ExistingIndividualCurriculumModuleDto;
 import ee.hitsa.ois.web.dto.directive.IndividualCurriculumModuleDto;
 
@@ -145,6 +147,11 @@ public class DirectiveConfirmService {
         }
         Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
         Map<Long, List<DirectiveStudent>> scholarships = findScholarships(directive);
+        Map<Long, ExistingDirectiveStudentDto> woApplicationScholarships = directiveService
+                .getExistingStudentStipendsWOApplicationDirectives(EntityUtil.getId(directive.getSchool()),
+                        EntityUtil.getNullableCode(directive.getScholarshipEhis()),
+                        directive.getStudents().stream().filter(ds -> ds.getStudent() != null)
+                                .map(ds -> EntityUtil.getId(ds.getStudent())).collect(Collectors.toSet()));
         Map<Long, List<IndividualCurriculumModuleDto>> individualCurriculumSuitableModules = individualCurriculumSuitableModules(directive);
         Map<Long, List<DirectiveStudent>> individualCurriculums = findIndividualCurriculums(directive);
         Map<Long, List<ScholarshipApplication>> scholarshipApplications = findScholarshipApplications(directive);
@@ -362,6 +369,23 @@ public class DirectiveConfirmService {
                     if (!formScholarshipAllowed) {
                         allErrors.add(new ErrorForField("directive.scholarshipNotAccepted",
                                 propertyPath(rowNum, "scholarshipApplication")));
+                    }
+                } else if (directive.getScholarshipEhis() != null) {
+                    if (ds.getBankAccount() == null) {
+                        allErrors.add(new ErrorForField(Required.MESSAGE, DirectiveConfirmService.propertyPath(rowNum, "bankAccount")));
+                    }
+                    if (!ClassifierUtil.equals(EhisStipendium.EHIS_STIPENDIUM_6, directive.getScholarshipEhis())) {
+                        ExistingDirectiveStudentDto existingDirectiveStudentDto = woApplicationScholarships
+                                .get(EntityUtil.getId(ds.getStudent()));
+                        if (existingDirectiveStudentDto != null
+                                && !existingDirectiveStudentDto.getId().equals(ds.getId())) {
+                            if (!(existingDirectiveStudentDto.getStartDate().isAfter(ds.getEndDate())
+                                    || existingDirectiveStudentDto.getEndDate().isBefore(ds.getStartDate()))) {
+                                allErrors.add(new ErrorForIcpField("stipendExists", propertyPath(rowNum, "student"), null,
+                                        existingDirectiveStudentDto.getStartDate(),
+                                        existingDirectiveStudentDto.getEndDate()));
+                            }
+                        }
                     }
                 } else {
                     allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "scholarshipApplication")));
@@ -921,7 +945,10 @@ public class DirectiveConfirmService {
                     + " where ds2.directive_id = :directiveId)", "directiveId", directive.getId());
         } else {
             // match academic leave period
-            qb.requiredCriteria("exists(select 1 from directive_student ds2 where ds2.directive_id = :directiveId and ds2.start_date <= case when ds.is_period then spe.end_date else ds.end_date end and ds2.end_date >= case when ds.is_period then sps.start_date else ds.start_date end)", "directiveId", directive.getId());
+            qb.requiredCriteria("exists(select 1 from directive_student ds2 where ds2.directive_id = :directiveId "
+                    + "and ds2.start_date <= case when ds.is_period then spe.end_date else ds.end_date end "
+                    + "and ds2.end_date >= case when ds.is_period then sps.start_date else ds.start_date end "
+                    + "and ds2.student_id = ds.student_id)", "directiveId", directive.getId());
         }
 
         List<?> data = qb.select("ds.student_id, case when ds.is_period then sps.start_date else ds.start_date end, "+
@@ -1046,14 +1073,15 @@ public class DirectiveConfirmService {
         }
 
         List<Long> studentIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudent()), directive.getStudents());
+        boolean isEhisType = directive.getScholarshipEhis() != null;
         List<DirectiveStudent> data = em.createQuery("select ds from DirectiveStudent ds " +
                 "where ds.canceled = false and ds.student.id in (?1) and ds.directive.type.code = ?2 " +
-                "and ds.directive.scholarshipType.code = ?3 and ds.directive.status.code = ?4 and ds.endDate >= CURRENT_DATE " +
+                "and ds.directive." + (isEhisType ? "scholarshipEhis" : "scholarshipType") + ".code = ?3 and ds.directive.status.code = ?4 and ds.endDate >= CURRENT_DATE " +
                 "and (not exists (select ds2 from DirectiveStudent ds2 where ds2.canceled = false and ds2.directive.type.code = ?5 and ds2.id = ds.id) " +
                 "or ds.id in (select ds3.id from DirectiveStudent ds3 where ds3.directive.id = ?6))", DirectiveStudent.class)
             .setParameter(1, studentIds)
             .setParameter(2, DirectiveType.KASKKIRI_STIPTOET.name())
-            .setParameter(3, EntityUtil.getNullableCode(directive.getScholarshipType()))
+            .setParameter(3, EntityUtil.getNullableCode(isEhisType ? directive.getScholarshipEhis() : directive.getScholarshipType()))
             .setParameter(4, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
             .setParameter(5, DirectiveType.KASKKIRI_STIPTOETL.name())
             .setParameter(6, EntityUtil.getId(directive))

@@ -1,6 +1,8 @@
-package ee.hitsa.ois.web.dto;
+package ee.hitsa.ois.web.dto.finalthesis;
 
 import java.time.LocalDate;
+
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class FinalThesisSearchDto {
     

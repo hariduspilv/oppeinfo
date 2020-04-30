@@ -8,7 +8,6 @@ public class ModuleProtocolJournalResultDto {
     private Long journalId;
     private String nameEt;
     private Integer capacity;
-    private Boolean journalHasOutcomes;
 
     @ClassifierRestriction(MainClassCode.KUTSEHINDAMINE)
     private String grade;
@@ -17,12 +16,11 @@ public class ModuleProtocolJournalResultDto {
 
     }
 
-    public ModuleProtocolJournalResultDto(Long journalId, String nameEt, Integer capacity, String grade, Boolean journalHasOutcomes) {
+    public ModuleProtocolJournalResultDto(Long journalId, String nameEt, Integer capacity, String grade) {
         this.journalId = journalId;
         this.nameEt = nameEt;
         this.capacity = capacity;
         this.grade = grade;
-        this.journalHasOutcomes = journalHasOutcomes;
     }
 
     public Long getJournalId() {
@@ -56,14 +54,5 @@ public class ModuleProtocolJournalResultDto {
     public void setCapacity(Integer capacity) {
         this.capacity = capacity;
     }
-
-    public Boolean getJournalHasOutcomes() {
-        return journalHasOutcomes;
-    }
-
-    public void setJournalHasOutcomes(Boolean journalHasOutcomes) {
-        this.journalHasOutcomes = journalHasOutcomes;
-    }
-    
 
 }

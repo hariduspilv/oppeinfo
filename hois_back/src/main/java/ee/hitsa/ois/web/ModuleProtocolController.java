@@ -90,11 +90,7 @@ public class ModuleProtocolController {
     @GetMapping("/{id:\\d+}")
     public ModuleProtocolDto get(HoisUserDetails user, @WithEntity Protocol protocol) {
         ModuleProtocolUtil.assertCanView(user, protocol);
-        ModuleProtocolDto dto = ModuleProtocolDto.of(protocol);
-        dto.setCanBeEdited(ModuleProtocolUtil.canEdit(user, protocol));
-        dto.setCanBeConfirmed(ModuleProtocolUtil.canConfirm(user, protocol));
-        dto.setCanBeDeleted(ModuleProtocolUtil.canDelete(user, protocol));
-        return dto;
+        return moduleProtocolService.get(user, protocol);
     }
 
     /**

@@ -2,7 +2,7 @@
   <span ng-style="{'font-style': row.otherCurriculumVersionModuleTheme ? 'italic' : 'normal'}">
     <span ng-if="moduleResultById[module.curriculumModule.id].themeResultById[row.id].isApelTransfer" class="apelAsterisk">*</span>
     <span>{{row.nameEt}}</span>
-    <span ng-if="moduleResultById[module.curriculumModule.id].themeResultById[row.id].isApelTransfer 
+    <span ng-if="moduleResultById[module.curriculumModule.id].themeResultById[row.id].isApelTransfer
         && !moduleResultById[module.curriculumModule.id].themeResultById[row.id].isFormalLearning">
       - {{'student.result.informal' | translate}}</span>
   </span>
@@ -12,7 +12,18 @@
   <span ng-class="{badResult: !gradeUtil.isPositive(moduleResultById[module.curriculumModule.id].themeResultById[row.id].grade.code)}">
     {{moduleResultById[module.curriculumModule.id].themeResultById[row.id].grade.value}}
   </span>
+  <span ng-if="row.moduleOutcomes && !moduleResultById[module.curriculumModule.id].themeResultById[row.id].grade">-</span>
 </td>
-<td md-cell>{{moduleResultById[module.curriculumModule.id].themeResultById[row.id].date | hoisDate}}</td>
-<td md-cell>{{displayTeachers(moduleResultById[module.curriculumModule.id].themeResultById[row.id].teachers)}}</td>
-<td md-cell>{{positiveThemeResult(moduleResultById[module.curriculumModule.id].themeResultById[row.id]) ? 'main.yes' : 'main.no' | translate}}</td>
+<td md-cell>
+  <span ng-if="!row.moduleOutcomes">
+    {{moduleResultById[module.curriculumModule.id].themeResultById[row.id].date | hoisDate}}
+  </span>
+</td>
+<td md-cell>
+  <span ng-if="!row.moduleOutcomes">
+    {{displayTeachers(moduleResultById[module.curriculumModule.id].themeResultById[row.id].teachers)}}
+  </span>
+</td>
+<td md-cell>
+  <span ng-if="row.isOk !== undefined">{{row.isOk ? 'main.yes' : 'main.no' | translate}}</span>
+</td>

@@ -103,10 +103,24 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
         }
       }
 
-      var existInOtherJournals =  themesThatExistInOtherJournals();
+      var connectedThemes = themesInJournal();
+      var existInOtherJournals = themesThatExistInOtherJournals(connectedThemes);
+      var occupationBasedAssessment = allThemesWithOccupationBasedAssessment(connectedThemes);
+      var assessmentWillBeRemoved = $scope.record.assessment !== null && $scope.record.assessment !== '' &&
+        occupationBasedAssessment;
+
+      var extraPrompts = [];
       if (existInOtherJournals.length > 0) {
+        extraPrompts.push('lessonplan.journal.themeExistInOtherJournalsConfirm');
+      }
+      if (assessmentWillBeRemoved) {
+        extraPrompts.push('lessonplan.journal.assessmentWillBeRemoved');
+      }
+
+      if (extraPrompts.length > 0) {
         dialogService.confirmDialog({
-          prompt: 'lessonplan.journal.themeExistInOtherJournalsConfirm',
+          prompt: 'lessonplan.journal.saveConfirm',
+          extraPrompts: extraPrompts,
           themes: existInOtherJournals.join(', ')
         }, function () {
           update();
@@ -145,30 +159,48 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       }
     }
 
-    function themesThatExistInOtherJournals() {
-      var existInOtherJournals = [];
+    function themesInJournal() {
+      var themes = [];
 
-      $scope.record.journalOccupationModuleThemes.forEach(function (themeId) {
+      ($scope.record.journalOccupationModuleThemes || []).forEach(function (themeId) {
         var theme = $scope.formState.themeMap[themeId];
-        if (theme.existsInOtherJournals) {
-          existInOtherJournals.push($scope.currentLanguageNameField(theme));
-        }
+        themes.push(theme);
       });
 
-      if ($scope.record.groups !== null) {
+      if ($scope.record.groups !== null && angular.isDefined($scope.record.groups)) {
         for (var groupIndex = 0; groupIndex < $scope.record.groups.length; groupIndex++) {
           var group = $scope.record.groups[groupIndex];
-          group.curriculumVersionOccupationModuleThemes.forEach(function (selectedThemeId) {
+          (group.curriculumVersionOccupationModuleThemes || []).forEach(function (selectedThemeId) {
             var theme = group.group.themes.filter(function (theme) {
               return theme.id === selectedThemeId;
             })[0];
-            if (theme.existsInOtherJournals) {
-              existInOtherJournals.push($scope.currentLanguageNameField(theme));
-            }
+            themes.push(theme);
           });
         }
       }
-      return existInOtherJournals;
+      return themes;
+    }
+
+    function themesThatExistInOtherJournals(themes) {
+      return themes.filter(function (theme) {
+        return theme.existsInOtherJournals;
+      }).map(function (theme) {
+        return $scope.currentLanguageNameField(theme);
+      });
+    }
+
+    $scope.occupationBasedAssessment = function () {
+      var connectedThemes = themesInJournal();
+      return allThemesWithOccupationBasedAssessment(connectedThemes);
+    };
+
+    function allThemesWithOccupationBasedAssessment(themes) {
+      for (var i = 0; i < themes.length; i++) {
+        if (angular.isDefined(themes[i]) && !themes[i].moduleOutcomes) {
+          return false;
+        }
+      }
+      return true;
     }
 
     $scope.filter = function (key, array) {

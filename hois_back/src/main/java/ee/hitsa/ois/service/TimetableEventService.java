@@ -246,7 +246,7 @@ public class TimetableEventService {
         modified = modified || roomsModified || teachersModified || studentGroupsModified;
         TimetableObject timetableObject = tet.getTimetableEvent().getTimetableObject();
         if (modified && timetableObject != null) {
-            timetableService.sendTimetableChangesMessages(timetableObject, tet.getStart(), tet.getEnd(),
+            timetableService.sendTimetableChangesMessages(timetableObject, Collections.singletonList(tet),
                     timetableObject.getTimetableObjectStudentGroups());
         }
         return tet.getTimetableEvent();
@@ -805,6 +805,8 @@ public class TimetableEventService {
             qb.filter("(te.is_personal = false or te.is_personal is null)");
         }
 
+        qb.filter("te.juhan_event_id is " + (Boolean.TRUE.equals(criteria.getJuhanEvent()) ? "not " : "") + "null");
+
         return qb;
     }
 
@@ -900,7 +902,7 @@ public class TimetableEventService {
         JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(criteria, user.getSchoolId()).sort(pageable);
         String select = "tet.id, coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(te.name, j.name_et, subj.name_en) as name_en,"
                     + " tet.start, tet.end, te.consider_break, tobj.id as single_event, t.id as timetableId, te.capacity_type_code,"
-                    + " te.is_personal, te.person_id, p.firstname, p.lastname, te.is_imported";
+                    + " te.is_personal, te.person_id, p.firstname, p.lastname, te.is_imported, te.juhan_event_id";
         // do not show exams, they are managed thru separate UI
         qb.filter("not exists(select 1 from subject_study_period_exam sspe2 where sspe2.timetable_event_id = tet.timetable_event_id)");
 
@@ -915,13 +917,9 @@ public class TimetableEventService {
                 AutocompleteResult person = new AutocompleteResult(resultAsLong(r, 10), personName, personName);
                 dto.setPerson(person);
             }
-            if (Boolean.TRUE.equals(dto.getIsPersonal())) {
-                dto.setCanEdit(Boolean.valueOf(UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PERSYNDMUS)));
-            } else {
-                dto.setCanEdit(Boolean.valueOf(UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_SYNDMUS)));
-            }
             Boolean isImported = resultAsBoolean(r, 13);
             dto.setIsImported(isImported != null ? isImported : Boolean.FALSE);
+            dto.setIsJuhanEvent(Boolean.valueOf(resultAsLong(r, 14) != null));
             return dto;
         });
         setRoomsTeachersAndGroupsForSearchDto(result.getContent(), criteria.getShowOnlySubstitutes());
@@ -1224,6 +1222,12 @@ public class TimetableEventService {
         TimetableEvent te = timetableEventTime.getTimetableEvent();
         te.getTimetableEventTimes().remove(timetableEventTime);
         EntityUtil.deleteEntity(timetableEventTime, em);
+        if (te.getTimetableObject() != null) {
+            timetableService.sendTimetableChangesMessages(te.getTimetableObject(),
+                    Collections.singletonList(timetableEventTime),
+                    te.getTimetableObject().getTimetableObjectStudentGroups());
+        }
+
         if(te.getTimetableEventTimes().isEmpty()) {
             EntityUtil.deleteEntity(te, em);
         }

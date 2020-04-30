@@ -1,0 +1,19 @@
+<span ng-if="row.progress.isCurriculumFulfilled" class="goodResult">
+  <span>{{'report.studentGroupTeacher.fulfilled' | translate}}</span>
+</span>
+<span ng-if="!row.progress.isCurriculumFulfilled" class="badResult">
+  <span>{{'report.studentGroupTeacher.notFulfilled' | translate}}</span>
+  <md-tooltip class="tooltip-multiline">
+    <div ng-if="!row.progress.isOccupationExamPassed">{{'report.studentGroupTeacher.occupationExamNotPassed' | translate}}</div>
+    <div ng-if="row.progress.missingCoreStudies > 0">
+      {{ 'report.studentGroupTeacher.missingCoreStudiesCredits' | translate: {credits: row.progress.missingCoreStudies} }}
+    </div>
+    <div ng-if="row.progress.missingGeneralStudies > 0">
+      {{ 'report.studentGroupTeacher.missingGeneralStudiesCredits' | translate: {credits: row.progress.missingGeneralStudies} }}
+    </div>
+    <div ng-if="row.progress.missingFreeChoice > 0">
+      {{ 'report.studentGroupTeacher.missingFreeChoiceCredits' | translate: {credits: row.progress.missingFreeChoice} }}
+    </div>
+  </md-tooltip>
+</span>
+

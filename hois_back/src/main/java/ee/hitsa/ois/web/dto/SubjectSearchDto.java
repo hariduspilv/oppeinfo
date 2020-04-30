@@ -6,8 +6,9 @@ import java.util.Set;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.Translatable;
 
-public class SubjectSearchDto {
+public class SubjectSearchDto implements Translatable {
     private Long id;
     private String code;
     private String nameEt;
@@ -42,6 +43,7 @@ public class SubjectSearchDto {
         this.code = code;
     }
 
+    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -50,6 +52,7 @@ public class SubjectSearchDto {
         this.nameEt = nameEt;
     }
 
+    @Override
     public String getNameEn() {
         return nameEn;
     }

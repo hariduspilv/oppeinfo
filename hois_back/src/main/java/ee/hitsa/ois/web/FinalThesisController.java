@@ -19,21 +19,24 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.FinalThesis;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.report.FinalThesisReport;
 import ee.hitsa.ois.service.FinalThesisService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.FinalThesisUtil;
 import ee.hitsa.ois.util.HttpUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.FinalThesisForm;
 import ee.hitsa.ois.web.commandobject.FinalThesisSearchCommand;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.FinalThesisDto;
-import ee.hitsa.ois.web.dto.FinalThesisSearchDto;
 import ee.hitsa.ois.web.dto.TeacherDto;
+import ee.hitsa.ois.web.dto.finalthesis.FinalThesisDto;
+import ee.hitsa.ois.web.dto.finalthesis.FinalThesisSearchDto;
+import ee.hitsa.ois.web.dto.finalthesis.FinalThesisStudentDto;
 
 @RestController
 @RequestMapping("/finalThesis")
@@ -79,6 +82,12 @@ public class FinalThesisController {
     @GetMapping("/students")
     public Page<AutocompleteResult> students(HoisUserDetails user, SearchCommand lookup) {
         return new PageImpl<>(finalThesisService.students(user, lookup));
+    }
+    
+    @GetMapping("/student/{id:\\d+}")
+    public FinalThesisStudentDto student(HoisUserDetails user, @WithEntity Student student) {
+        UserUtil.assertSameSchool(user, student.getSchool());
+        return finalThesisService.student(student);
     }
 
     @GetMapping("/teacher")

@@ -29,13 +29,14 @@
       {{currentLanguageNameField(journalEntryTypes['SISSEKANNE_R'])}}
     </span>
   </md-checkbox>
-  <md-checkbox ng-if="journal.moduleOutcomesAsEntries" ng-model="journalEntryTypes['SISSEKANNE_O']._selected"
+  <md-checkbox ng-if="journal.includesOutcomes" ng-model="journalEntryTypes['SISSEKANNE_O']._selected"
     ng-change="updateSelectedEntryTypes()" aria-label="SISSEKANNE_O">
     <span class="capacity-type-legend" md-colors="{background: getEntryColor('SISSEKANNE_O')}">
       {{currentLanguageNameField(journalEntryTypes['SISSEKANNE_O'])}}
     </span>
   </md-checkbox>
-  <md-checkbox ng-model="journalEntryTypes['SISSEKANNE_L']._selected" ng-change="updateSelectedEntryTypes()" aria-label="SISSEKANNE_L">
+  <md-checkbox ng-if="journal.assessment !== null" ng-model="journalEntryTypes['SISSEKANNE_L']._selected"
+    ng-change="updateSelectedEntryTypes()" aria-label="SISSEKANNE_L">
     <span class="capacity-type-legend" md-colors="{background: getEntryColor('SISSEKANNE_L')}">
       {{currentLanguageNameField(journalEntryTypes['SISSEKANNE_L'])}}
     </span>

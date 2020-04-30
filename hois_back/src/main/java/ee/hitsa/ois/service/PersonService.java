@@ -15,7 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -45,7 +44,6 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
-import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -166,13 +164,13 @@ public class PersonService {
         user.setValidFrom(LocalDate.now());
         if(hoisUser.isSchoolAdmin()) {
             user.setSchool(em.getReference(School.class, hoisUser.getSchoolId()));
-            UserDto dto = UserDto.of(user);
+            UserDto dto = UserDto.of(hoisUser, user);
             SchoolType type = schoolService.schoolType(hoisUser.getSchoolId());
             dto.setHigher(Boolean.valueOf(type.isHigher()));
             dto.setVocational(Boolean.valueOf(type.isVocational()));
             return dto;
         }
-        return UserDto.of(user);
+        return UserDto.of(hoisUser, user);
     }
 
     public Person create(PersonForm personForm) {
@@ -191,8 +189,8 @@ public class PersonService {
         return EntityUtil.save(person, em);
     }
 
-    public UserDto getUser(User user) {
-        UserDto dto = UserDto.of(user);
+    public UserDto getUser(HoisUserDetails hoisUser, User user) {
+        UserDto dto = UserDto.of(hoisUser, user);
         if (user.getSchool() != null) {
             SchoolType type = schoolService.schoolType(user.getSchool().getId());
             dto.setHigher(Boolean.valueOf(type.isHigher()));
@@ -303,12 +301,6 @@ public class PersonService {
     public User createUser(HoisUserDetails userDetails, UserForm userForm, Person person) {
         User user = new User();
         user.setPerson(person);
-        ValidationFailedException.throwIf(userForm.getRole().equals(Role.ROLL_A.name())
-                && person.getUsers().stream()
-                    .filter(u -> ClassifierUtil.equals(Role.ROLL_A, u.getRole()))
-                    .filter(u -> u.getSchool() != null && userForm.getSchool() != null && EntityUtil.getId(u.getSchool()).equals(userForm.getSchool().getId()))
-                    .filter(u -> DateUtils.isValid(u.getValidFrom(), u.getValidThru()))
-                    .findAny().isPresent(), "user.shouldBeUniqueAdmin");
         return saveUser(userDetails, userForm, user);
     }
 

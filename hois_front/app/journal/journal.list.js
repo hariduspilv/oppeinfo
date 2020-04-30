@@ -10,6 +10,7 @@ angular.module('hitsaOis').controller('JournalListController', function ($scope,
   $scope.directiveControllers = [];
 
   $scope.load = function() {
+    $scope.searchForm.$setSubmitted();
     if (!$scope.searchForm.$valid) {
       message.error('main.messages.form-has-errors');
       return false;
@@ -26,7 +27,7 @@ angular.module('hitsaOis').controller('JournalListController', function ($scope,
     dialogService.confirmDialog({prompt: 'journal.prompt.confirmAll'}, function() {
       QueryUtils.endpoint('/journals/confirmAll').put().$promise.then(function(response){
         message.info('journal.messages.allConfirmed', {numberOfConfirmedJournals: response.numberOfConfirmedJournals});
-        $scope.loadData();
+        $scope.load();
       });
     });
   };

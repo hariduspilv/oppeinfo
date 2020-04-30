@@ -10,8 +10,9 @@ public class StudentJournalEntryDto {
     private String entryType;
     private LocalDate entryDate;
     private String nameEt;
+    private String nameEn;
     private String content;
-    private String gradeValue;
+    private String grade;
     private LocalDateTime gradeInserted;
     private String gradeInsertedBy;
     private String addInfo;
@@ -27,7 +28,7 @@ public class StudentJournalEntryDto {
     public StudentJournalEntryDto() { }
 
     public StudentJournalEntryDto(Long id, Long journalId, String entryType, LocalDate entryDate, String nameEt, String content,
-            String gradeValue, LocalDateTime gradeInserted, String gradeInsertedBy, String addInfo, String homework,
+            String grade, LocalDateTime gradeInserted, String gradeInsertedBy, String addInfo, String homework,
             LocalDate homeworkDueDate, String absence, Boolean isRemark, LocalDateTime remarkInserted,
             String remarkInsertedBy) {
         this.id = id;
@@ -36,7 +37,7 @@ public class StudentJournalEntryDto {
         this.entryDate = entryDate;
         this.nameEt = nameEt;
         this.content = content;
-        this.gradeValue = gradeValue;
+        this.grade = grade;
         this.gradeInserted = gradeInserted;
         this.gradeInsertedBy = gradeInsertedBy;
         this.addInfo = addInfo;
@@ -88,6 +89,14 @@ public class StudentJournalEntryDto {
         this.nameEt = nameEt;
     }
 
+    public String getNameEn() {
+        return nameEn;
+    }
+
+    public void setNameEn(String nameEn) {
+        this.nameEn = nameEn;
+    }
+
     public String getContent() {
         return content;
     }
@@ -96,12 +105,12 @@ public class StudentJournalEntryDto {
         this.content = content;
     }
 
-    public String getGradeValue() {
-        return gradeValue;
+    public String getGrade() {
+        return grade;
     }
 
-    public void setGradeValue(String gradeValue) {
-        this.gradeValue = gradeValue;
+    public void setGrade(String grade) {
+        this.grade = grade;
     }
 
     public LocalDateTime getGradeInserted() {

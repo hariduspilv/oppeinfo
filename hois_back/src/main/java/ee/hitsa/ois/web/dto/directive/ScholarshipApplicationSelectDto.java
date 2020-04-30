@@ -11,6 +11,7 @@ public class ScholarshipApplicationSelectDto {
     private LocalDate endDate;
     private String bankAccount;
     private BigDecimal amountPaid;
+    private String scholarshipEhis;
 
     public Long getId() {
         return id;
@@ -58,6 +59,14 @@ public class ScholarshipApplicationSelectDto {
 
     public void setAmountPaid(BigDecimal amountPaid) {
         this.amountPaid = amountPaid;
+    }
+
+    public String getScholarshipEhis() {
+        return scholarshipEhis;
+    }
+
+    public void setScholarshipEhis(String scholarshipEhis) {
+        this.scholarshipEhis = scholarshipEhis;
     }
 
 }

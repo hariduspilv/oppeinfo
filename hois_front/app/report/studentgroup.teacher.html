@@ -5,11 +5,11 @@
       <form name="studentGroupTeacherReportForm" novalidate>
         <div layout="row" layout-sm="column" layout-xs="column">
           <hois-autocomplete ng-if="auth.isAdmin() || auth.isLeadingTeacher()" flex="45" flex-sm="100" flex-xs="100"
-            ng-model="formState.studentGroup" ha-controller="directiveControllers" md-selected-item-change="studentGroupChanged()" 
+            ng-model="formState.studentGroup" ha-controller="directiveControllers" md-selected-item-change="studentGroupChanged()"
             method="studentgroups" name="studentGroup" label="{{'report.studentGroupTeacher.studentGroup'}}"
             additional-query-params="{valid: true, higher: false, studentGroupTeacherId: teacherId, userId: auth.isLeadingTeacher() ? auth.user : null}" required>
           </hois-autocomplete>
-          
+
           <md-input-container ng-if="auth.isTeacher()" flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'report.studentGroupTeacher.studentGroup' | translate}}</label>
             <md-select ng-model="formState.studentGroup" ng-change="studentGroupChanged()" ng-model-options="{trackBy: '$value.id'}" required>
@@ -18,11 +18,11 @@
               </md-option>
             </md-select>
           </md-input-container>
-          
-          <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0" ng-model="formState.student" 
-            ng-disabled="!criteria.studentGroup" ha-controller="directiveControllers" md-selected-item-change="studentChanged()" method="students" name="student" 
+
+          <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0" ng-model="formState.student"
+            ng-disabled="!criteria.studentGroup" ha-controller="directiveControllers" md-selected-item-change="studentChanged()" method="students" name="student"
             label="{{'report.studentGroupTeacher.student'}}" additional-query-params="{studentGroup: criteria.studentGroup ? [criteria.studentGroup] : []}"></hois-autocomplete>
-        </div> 
+        </div>
 
         <div ng-show="formState.showAllParameters" layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
@@ -39,7 +39,7 @@
               </md-option>
             </md-select>
           </md-input-container>
-        </div>       
+        </div>
 
         <div ng-show="formState.showAllParameters" layout="row">
           <md-input-container>
@@ -53,7 +53,7 @@
         </div>
 
         <div ng-show="formState.showAllParameters" layout="row" layout-md="column" layout-sm="column" layout-xs="column">
-          <md-checkbox ng-repeat="entryType in entryTypes | orderBy: getEntryTypeOrderNr" ng-model="criteria.entryType[entryType.code]" 
+          <md-checkbox ng-repeat="entryType in entryTypes | orderBy: getEntryTypeOrderNr" ng-model="criteria.entryType[entryType.code]"
             ng-change="entryTypeChanged()" aria-label="{{'directive.student.foreign' | translate}}">
             <span ng-if="getEntryColor(entryType.code)" md-colors="{color: getEntryColor(entryType.code)}">{{currentLanguageNameField(entryType)}}</span>
             <span ng-if="!getEntryColor(entryType.code)">{{currentLanguageNameField(entryType)}}</span>
@@ -74,7 +74,7 @@
             aria-label="{{'report.studentGroupTeacher.journalsWithEntries' | translate}}">
             {{'report.studentGroupTeacher.journalsWithEntries' | translate}}
           </md-checkbox>
-          <md-checkbox ng-model="criteria.negativeResults" ng-change="negativeResultsChanged()" 
+          <md-checkbox ng-model="criteria.negativeResults" ng-change="negativeResultsChanged()"
             aria-label="{{'report.studentGroupTeacher.negativeResults' | translate}}">
             {{'report.studentGroupTeacher.negativeResults' | translate}}
           </md-checkbox>
@@ -87,9 +87,17 @@
         </div>
 
         <div ng-show="formState.showAllParameters">
-          <md-checkbox ng-model="criteria.onlyModuleGrades" ng-change="onlyModuleGradesChanged()" 
+          <md-checkbox ng-model="criteria.onlyModuleGrades" ng-disabled="criteria.allModules" ng-change="onlyModuleGradesChanged()"
             aria-label="{{'report.studentGroupTeacher.showOnlyModuleGrades' | translate}}">
             {{'report.studentGroupTeacher.showOnlyModuleGrades' | translate}}
+          </md-checkbox>
+          <md-checkbox ng-model="criteria.allModules" ng-disabled="criteria.allModulesAndOutcomes" ng-change="allModulesChanged()"
+             aria-label="{{'report.studentGroupTeacher.showAllModules' | translate}}">
+            {{'report.studentGroupTeacher.showAllModules' | translate}}
+          </md-checkbox>
+          <md-checkbox ng-model="criteria.allModulesAndOutcomes" ng-change="allModulesAndOutcomesChanged()"
+            aria-label="{{'report.studentGroupTeacher.showAllModulesAndOutcomes' | translate}}">
+            {{'report.studentGroupTeacher.showAllModulesAndOutcomes' | translate}}
           </md-checkbox>
         </div>
 
@@ -97,12 +105,14 @@
           <md-button class="md-raised md-primary" ng-click="search()">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
           <md-button ng-href="{{pdf(formState.pdfUrl, criteria)}}" class="md-button md-raised"
-            ng-disabled="!criteria.studentGroup || (!criteria.studyYear && !criteria.from)">{{'report.studentGroupTeacher.printPdf' | translate}}</md-button>
-          <md-button ng-href="{{excel(formState.xlsUrl, criteria)}}" class="md-button md-raised" 
-            ng-disabled="!criteria.studentGroup || (!criteria.studyYear && !criteria.from)">{{'report.studentGroupTeacher.printXls' | translate}}</md-button>
+            ng-disabled="!criteria.studentGroup || (!criteria.allModules && !criteria.studyYear && !criteria.from)">
+            {{'report.studentGroupTeacher.printPdf' | translate}}</md-button>
+          <md-button ng-href="{{excel(formState.xlsUrl, criteria)}}" class="md-button md-raised"
+            ng-disabled="!criteria.studentGroup || (!criteria.allModules && !criteria.studyYear && !criteria.from)">
+            {{'report.studentGroupTeacher.printXls' | translate}}</md-button>
           <md-button ng-href="{{pdf(formState.negativeResultsPdfUrl, criteria)}}" class="md-button md-raised"
             ng-disabled="!criteria.studentGroup || (!criteria.studyYear && !criteria.from)">{{'report.studentGroupTeacher.printNegativeResultsPdf' | translate}}</md-button>
-          <md-button ng-href="{{excel(formState.negativeResultsXlsUrl, criteria)}}" class="md-button md-raised" 
+          <md-button ng-href="{{excel(formState.negativeResultsXlsUrl, criteria)}}" class="md-button md-raised"
             ng-disabled="!criteria.studentGroup || (!criteria.studyYear && !criteria.from)">{{'report.studentGroupTeacher.printNegativeResultsXls' | translate}}</md-button>
           <a ng-click="toggleShowAllParameters()" style="margin-top: 20px">
             {{formState.showAllParameters ? ('main.button.lessParameters' | translate) : ('main.button.moreParameters' | translate)}}
@@ -129,8 +139,8 @@
   </div>
   <div flex class="student-group-teacher-container">
     <div class="container" fixed-column-table fixed-columns="1" resize-table search-criteria-height="{{formState.showAllParameters ? 550 : 350}}">
-      <div ng-if="!record.showOnlyModuleGrades" ng-include="'report/studentgroup.teacher.table.html'"></div>
-      <div ng-if="record.showOnlyModuleGrades" ng-include="'report/studentgroup.teacher.module.table.html'"></div>
+      <div ng-if="!record.showModuleResultTable" ng-include="'report/templates/studentgroup.teacher.table.html'"></div>
+      <div ng-if="record.showModuleResultTable" ng-include="'report/templates/studentgroup.teacher.module.table.html'"></div>
     </div>
   </div>
 </div>

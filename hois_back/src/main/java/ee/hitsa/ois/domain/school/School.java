@@ -1,7 +1,9 @@
 package ee.hitsa.ois.domain.school;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -17,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
+import ee.hitsa.ois.domain.ScholarshipNoApplication;
 import ee.hitsa.ois.util.Translatable;
 
 /**
@@ -88,6 +91,10 @@ public class School extends BaseEntityWithId implements Translatable {
     @JsonIgnore
     @OneToMany(mappedBy = "school", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudyYearScheduleLegend> studyYearScheduleLegends;
+    
+    @JsonIgnore
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "school", orphanRemoval = true)
+    private Set<ScholarshipNoApplication> scholarshipNoApplicationTypes;
 
     @Override
     public String getNameEt() {
@@ -356,6 +363,15 @@ public class School extends BaseEntityWithId implements Translatable {
 
     public void setTimetable(Classifier timetable) {
         this.timetable = timetable;
+    }
+
+    public Set<ScholarshipNoApplication> getScholarshipNoApplicationTypes() {
+        return scholarshipNoApplicationTypes != null ? scholarshipNoApplicationTypes : (scholarshipNoApplicationTypes = new HashSet<>());
+    }
+
+    public void setScholarshipNoApplicationTypes(Set<ScholarshipNoApplication> scholarshipNoApplicationTypes) {
+        getScholarshipNoApplicationTypes().clear();
+        getScholarshipNoApplicationTypes().addAll(scholarshipNoApplicationTypes);
     }
 
 }

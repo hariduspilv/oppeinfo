@@ -48,7 +48,7 @@
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row ng-repeat="student in record.students | filter: {subgroup: {id: controller.subgroup.id}} | orderBy: ['lastname', 'firstname']" ng-class-odd="'odd'" ng-class-even="'even'">
+          <tr md-row ng-repeat="student in record.students | filter: filterStudents(controller.subgroup) | orderBy: ['lastname', 'firstname']" ng-class-odd="'odd'" ng-class-even="'even'">
             <ng-form name="midtermTaskUnitForm">
               <td md-cell>{{$index + 1}}.</td>
               <td md-cell>

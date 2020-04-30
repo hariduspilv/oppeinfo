@@ -22,6 +22,7 @@ public class StudentCurriculumCompletion extends BaseTask {
     private BigDecimal credits;
     private BigDecimal creditsLastStudyPeriod;
     private BigDecimal creditsBeforeCurrentStudyPeriod;
+    private BigDecimal studyOptionalBacklog;
 
     public Student getStudent() {
         return student;
@@ -95,4 +96,11 @@ public class StudentCurriculumCompletion extends BaseTask {
         this.creditsBeforeCurrentStudyPeriod = creditsBeforeCurrentStudyPeriod;
     }
 
+    public BigDecimal getStudyOptionalBacklog() {
+        return studyOptionalBacklog;
+    }
+
+    public void setStudyOptionalBacklog(BigDecimal studyOptionalBacklog) {
+        this.studyOptionalBacklog = studyOptionalBacklog;
+    }
 }

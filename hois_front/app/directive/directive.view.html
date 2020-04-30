@@ -35,7 +35,7 @@
         <div layout="row" layout-sm="column" layout-xs="column" ng-if="record.type === 'KASKKIRI_STIPTOET' || record.type === 'KASKKIRI_STIPTOETL'">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'directive.scholarshipType' | translate}}</label>
-            <hois-classifier-value ng-model="record.scholarshipType" main-classifier-code="STIPTOETUS"></hois-classifier-value>
+            <hois-value value="currentLanguageNameField(record.scholarshipTypeObject)"></hois-value>
           </md-input-container>
         </div>
 

@@ -41,6 +41,7 @@ module.exports = function(config) {
       'bower_components/hwcrypto/hwcrypto-legacy.js',
       'bower_components/tinycolor/tinycolor.js',
       'bower_components/angularjs-color-picker/dist/angularjs-color-picker.js',
+      'bower_components/angular-inview/angular-inview.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       'app/scripts/**/*.js',

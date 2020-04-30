@@ -1,6 +1,7 @@
 package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
@@ -18,6 +19,9 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.web.dto.ModuleProtocolDto;
+import ee.hitsa.ois.web.dto.ModuleProtocolOutcomeResultDto;
+import ee.hitsa.ois.web.dto.ModuleProtocolStudentDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -181,6 +185,44 @@ public class ModuleProtocolService extends AbstractProtocolService {
         }
 
         return result;
+    }
+
+    public ModuleProtocolDto get(HoisUserDetails user, Protocol protocol) {
+        ModuleProtocolDto dto = ModuleProtocolDto.of(protocol);
+        setStudentOutcomeResults(dto);
+
+        dto.setCanBeEdited(ModuleProtocolUtil.canEdit(user, protocol));
+        dto.setCanBeConfirmed(ModuleProtocolUtil.canConfirm(user, protocol));
+        dto.setCanBeDeleted(ModuleProtocolUtil.canDelete(user, protocol));
+        return dto;
+    }
+
+    private void setStudentOutcomeResults(ModuleProtocolDto dto) {
+        List<Long> outcomeIds = StreamUtil.toMappedList(o -> o.getId(), dto.getProtocolVdata().getOutcomes());
+        List<Long> studentIds = StreamUtil.toMappedList(ps -> ps.getStudentId(), dto.getProtocolStudents());
+        if (!outcomeIds.isEmpty() && !studentIds.isEmpty()) {
+            Map<Long, List<ModuleProtocolOutcomeResultDto>> studentOutcomeResults = studentOutcomeResults(studentIds,
+                    outcomeIds);
+            for (ModuleProtocolStudentDto studentDto : dto.getProtocolStudents()) {
+                List<ModuleProtocolOutcomeResultDto> studentResults = studentOutcomeResults.get(studentDto.getStudentId());
+                if (studentResults != null) {
+                    studentDto.setOutcomeResults(studentResults);
+                }
+            }
+        }
+    }
+
+    private Map<Long, List<ModuleProtocolOutcomeResultDto>> studentOutcomeResults(List<Long> studentIds,
+            List<Long> outcomeIds) {
+        List<?> data = em.createNativeQuery("select scmor.student_id, scmor.curriculum_module_outcomes_id, "
+                + "scmor.grade_code, scmor.grade_date, scmor.grade_inserted from student_curriculum_module_outcomes_result scmor "
+                + "where scmor.student_id in (:studentIds) and scmor.curriculum_module_outcomes_id in (:outcomeIds)")
+                .setParameter("studentIds", studentIds)
+                .setParameter("outcomeIds", outcomeIds)
+                .getResultList();
+        return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                Collectors.mapping(r -> new ModuleProtocolOutcomeResultDto(resultAsLong(r, 1), resultAsString(r, 2),
+                        resultAsLocalDate(r, 3), resultAsLocalDateTime(r, 4)), Collectors.toList())));
     }
 
     public List<AutocompleteResult> occupationModules(HoisUserDetails user, Long curriculumVersionId) {

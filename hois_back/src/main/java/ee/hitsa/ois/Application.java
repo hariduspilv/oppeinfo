@@ -12,12 +12,14 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
 
+import ee.hitsa.ois.services.JuhanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.boot.autoconfigure.web.WebMvcRegistrationsAdapter;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -112,6 +114,11 @@ public class Application {
     @Bean
     public TaskScheduler taskScheduler() {
         return new ConcurrentTaskScheduler(); //single threaded by default
+    }
+
+    @Bean
+    public JuhanLogRequestFilterRegistration juhanLogRequestFilterRegistration() {
+        return new JuhanLogRequestFilterRegistration();
     }
 
     @Bean
@@ -246,4 +253,19 @@ public class Application {
             return new VersionedInvocableHandlerMethod(handlerMethod);
         }
     }
+
+    static class JuhanLogRequestFilterRegistration {
+        // injecting EntityManager and persisting log throws "No EntityManager with actual transaction available"
+        @Autowired
+        private JuhanService juhanService;
+
+        @Bean
+        public FilterRegistrationBean logFilter() {
+            FilterRegistrationBean registrationBean = new FilterRegistrationBean();
+            registrationBean.setFilter(new JuhanLogRequestFilter(juhanService));
+            registrationBean.addUrlPatterns("/juhan/*");
+            return registrationBean;
+        }
+    }
+
 }

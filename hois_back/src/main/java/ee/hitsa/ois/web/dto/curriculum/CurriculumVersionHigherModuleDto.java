@@ -34,6 +34,9 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
     @Size(max = 255)
     private String nameEn;
 
+    @Min(0)
+    @Max(32767)
+    private Short orderNr;
     private String objectivesEt;
     private String objectivesEn;
     private String outcomesEt;
@@ -145,6 +148,14 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
 
     public void setNameEn(String nameEn) {
         this.nameEn = nameEn;
+    }
+
+    public Short getOrderNr() {
+        return orderNr;
+    }
+
+    public void setOrderNr(Short orderNr) {
+        this.orderNr = orderNr;
     }
 
     public String getObjectivesEt() {

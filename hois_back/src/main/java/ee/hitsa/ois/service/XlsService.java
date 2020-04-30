@@ -255,6 +255,13 @@ public class XlsService {
             return TranslateUtil.name(data, lang);
         }
         
+        public Object optionalName(Object data) {
+            if (data instanceof Translatable) {
+                return TranslateUtil.name((Translatable)data, lang);
+            }
+            return data;
+        }
+        
         public Object nameAsObject(Translatable data) {
             return nameAsObject(data, lang);
         }

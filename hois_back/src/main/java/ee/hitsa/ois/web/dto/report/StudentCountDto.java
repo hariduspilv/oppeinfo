@@ -6,6 +6,8 @@ public class StudentCountDto {
     
     /** StudyLevel, student group, age group, curricula or course (not used when result type is overall) */
     private AutocompleteResult object;
+    /** Only when result type is curricula */
+    private String htmCode;
     /** Used only when per status is chosen (sum of male and female of that type) */
     private Long studying;
     private Long academic;
@@ -127,6 +129,14 @@ public class StudentCountDto {
 
     public void setFemale(Long female) {
         this.female = female;
+    }
+
+    public String getHtmCode() {
+        return htmCode;
+    }
+
+    public void setHtmCode(String htmCode) {
+        this.htmCode = htmCode;
     }
 
 }

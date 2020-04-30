@@ -214,10 +214,14 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
     if(!validationPassed()) {
       return false;
     }
-    $scope.practiceJournal.isHigher = $scope.formState.isHigher;
+    //$scope.practiceJournal.isHigher = $scope.formState.isHigher;
+    var sendBack = true;
+    if ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher() || $scope.auth.isTeacher()) {
+      sendBack = false;
+    }
     if (!isBeforeDaysAfterCanEdit($scope.practiceJournal)) {
-      dialogService.confirmDialog({prompt: 'practiceJournal.prompt.isAfterDaysAfterCanEditConfirm'}, function () {
-        confirmPracticeJournal(true);
+      dialogService.confirmDialog({prompt: 'practiceJournal.prompt.confirmConfirm'}, function () {
+        confirmPracticeJournal(sendBack);
       });
     } else {
       dialogService.confirmDialog({prompt: 'practiceJournal.prompt.confirmConfirm'}, function () {
@@ -247,7 +251,7 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
     if(!validationPassed()) {
       return false;
     }
-    $scope.practiceJournal.isHigher = $scope.formState.isHigher;
+    //$scope.practiceJournal.isHigher = $scope.formState.isHigher;
     dialogService.confirmDialog({prompt: 'practiceJournal.prompt.confirmOpen'}, function () {
       openPracticeJournal();
     });

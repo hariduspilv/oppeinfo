@@ -5,6 +5,7 @@
         <th md-column>{{'directive.student.order' | translate}}</th>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
         <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column>{{'directive.student.studentGroup' | translate}}</th>
         <th md-column>{{'directive.student.directive' | translate}}</th>
         <th md-column>{{'directive.student.stipStartDate' | translate}}</th>
         <th md-column>{{'directive.student.stipEndDate' | translate}}</th>
@@ -18,6 +19,7 @@
           <a class="md-primary" ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</a>
         </td>
         <td md-cell>{{::row.idcode}}</td>
+        <td md-cell>{{::currentLanguageNameField(row.studentGroupObject)}}</td>
         <td md-cell>
           <span ng-if="row.directiveStudentObject">
             {{::row.directiveStudentObject.directiveNr}} ({{::row.directiveStudentObject.scholarshipTermNameEt}}, {{::row.directiveStudentObject.confirmDate | hoisDate}})

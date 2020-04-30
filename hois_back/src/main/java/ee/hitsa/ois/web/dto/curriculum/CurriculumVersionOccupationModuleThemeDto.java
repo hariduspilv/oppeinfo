@@ -10,6 +10,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleOutcome;
 import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
@@ -59,13 +60,15 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
     private String grade4Description;
     @Size(max=10000)
     private String grade5Description;
-    private Set<Long> outcomes;
+    private Boolean moduleOutcomes;
 
+    private Set<Long> outcomes;
     @Valid
     private Set<CurriculumVersionOccupationModuleThemeCapacityDto> capacities;
     
     // used for curriculum fulfillment
     private Boolean otherCurriculumVersionModuleTheme;
+    private Set<CurriculumModuleOutcomeDto> curriculumModuleOutcomes;
 
     public static CurriculumVersionOccupationModuleThemeDto of(CurriculumVersionOccupationModuleTheme theme) {
         CurriculumVersionOccupationModuleThemeDto dto = EntityUtil.bindToDto(theme, new CurriculumVersionOccupationModuleThemeDto(),
@@ -94,6 +97,10 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
         dto.setNameEt(theme.getNameEt());
         dto.setCredits(theme.getCredits());
         dto.setModule(EntityUtil.getId(theme.getModule()));
+        dto.setModuleOutcomes(theme.getModuleOutcomes());
+        dto.setCurriculumModuleOutcomes(StreamUtil.toMappedSet(o -> CurriculumModuleOutcomeDto.of(o.getOutcome()),
+                theme.getOutcomes()));
+        dto.setAssessment(EntityUtil.getNullableCode(theme.getAssessment()));
         return dto;
     }
 
@@ -111,6 +118,14 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
 
     public void setNameEt(String nameEt) {
         this.nameEt = nameEt;
+    }
+
+    public Long getModule() {
+        return module;
+    }
+
+    public void setModule(Long module) {
+        this.module = module;
     }
 
     public BigDecimal getCredits() {
@@ -151,22 +166,6 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
 
     public void setStudyYearNumber(Short studyYearNumber) {
         this.studyYearNumber = studyYearNumber;
-    }
-
-    public Set<Long> getOutcomes() {
-        return outcomes != null ? outcomes : (new HashSet<>());
-    }
-
-    public void setOutcomes(Set<Long> outcomes) {
-        this.outcomes = outcomes;
-    }
-
-    public Set<CurriculumVersionOccupationModuleThemeCapacityDto> getCapacities() {
-        return capacities != null ? capacities : (capacities = new HashSet<>());
-    }
-
-    public void setCapacities(Set<CurriculumVersionOccupationModuleThemeCapacityDto> capacities) {
-        this.capacities = capacities;
     }
 
     public String getAssessment() {
@@ -217,12 +216,28 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
         this.grade5Description = grade5Description;
     }
 
-    public Long getModule() {
-        return module;
+    public Boolean getModuleOutcomes() {
+        return moduleOutcomes;
     }
 
-    public void setModule(Long module) {
-        this.module = module;
+    public void setModuleOutcomes(Boolean moduleOutcomes) {
+        this.moduleOutcomes = moduleOutcomes;
+    }
+
+    public Set<Long> getOutcomes() {
+        return outcomes != null ? outcomes : (new HashSet<>());
+    }
+
+    public void setOutcomes(Set<Long> outcomes) {
+        this.outcomes = outcomes;
+    }
+
+    public Set<CurriculumVersionOccupationModuleThemeCapacityDto> getCapacities() {
+        return capacities != null ? capacities : (capacities = new HashSet<>());
+    }
+
+    public void setCapacities(Set<CurriculumVersionOccupationModuleThemeCapacityDto> capacities) {
+        this.capacities = capacities;
     }
 
     public Boolean getOtherCurriculumVersionModuleTheme() {
@@ -231,5 +246,13 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
 
     public void setOtherCurriculumVersionModuleTheme(Boolean otherCurriculumVersionModuleTheme) {
         this.otherCurriculumVersionModuleTheme = otherCurriculumVersionModuleTheme;
+    }
+
+    public Set<CurriculumModuleOutcomeDto> getCurriculumModuleOutcomes() {
+        return curriculumModuleOutcomes != null ? curriculumModuleOutcomes : (curriculumModuleOutcomes = new HashSet<>());
+    }
+
+    public void setCurriculumModuleOutcomes(Set<CurriculumModuleOutcomeDto> curriculumModuleOutcomes) {
+        this.curriculumModuleOutcomes = curriculumModuleOutcomes;
     }
 }

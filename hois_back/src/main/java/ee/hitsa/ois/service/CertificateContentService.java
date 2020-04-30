@@ -1,16 +1,24 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.MissingFormatArgumentException;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -22,12 +30,15 @@ import javax.persistence.TypedQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.google.common.collect.Streams;
+
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriodEvent;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentCurriculumCompletion;
 import ee.hitsa.ois.enums.CertificateType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
@@ -38,21 +49,32 @@ import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.StudyPeriodEventType;
+import ee.hitsa.ois.report.ReportUtil;
+import ee.hitsa.ois.report.certificate.CertificateEvent;
+import ee.hitsa.ois.report.certificate.CertificateEventAcademicLeave;
+import ee.hitsa.ois.report.certificate.CertificateEventForeignStudy;
 import ee.hitsa.ois.report.certificate.CertificateReport;
+import ee.hitsa.ois.report.certificate.CertificateReportGrade;
 import ee.hitsa.ois.report.certificate.CertificateReportSession;
 import ee.hitsa.ois.report.certificate.CertificateReportStudent;
 import ee.hitsa.ois.report.certificate.CertificateStudentResult;
+import ee.hitsa.ois.report.certificate.CertificateStudentResultHeader;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
+import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.CertificateContentCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherSubjectResultDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultModuleThemeDto;
@@ -127,34 +149,139 @@ public class CertificateContentService {
         if(studyYear == null) {
             throw new ValidationFailedException("studyYear.missingCurrent");
         }
-        report.setStudyYear(studyYear.getYear().getNameEt());
-        setFinished(report, student, type);
-        setStudentResults(report, student, type, addOutcomes, showUncompleted);
-        if (type.equals(CertificateType.TOEND_LIIK_SOOR) && report.getStudent().isGuestStudent()) {
-            setAbroadProgramme(report, student);
-            if (report.getStudent() != null && report.getStudent().getResults() != null) {
-                boolean hasGrade = report.getStudent().getResults().stream().anyMatch(p -> p != null && p.getGradeName() != null);
-                if (hasGrade) setGradingSystem(report, student, isOnlyHigherSchool, isHigherSchool, showUncompleted, estonian);
-            }
-        }
-        setSessions(report, studyYear, type);
-        setLastSession(report, studyYear, type);
-        Map<String, Object> map = new HashMap<>();
-        map.put("content", report);
-        if (estonian != null) {
-            if (estonian.booleanValue()) {
-                map.put("lang", Language.ET);
-            } else {
-                map.put("lang", Language.EN);
-            }
-        }
+        
+        Language lang = estonian != null && !estonian.booleanValue() ? Language.EN : Language.ET;
         Boolean higher;
         if (report.getStudent().isGuestStudent()) {
             higher = directiveStudyLevel(student);
         } else {
             higher = Boolean.valueOf(StudentUtil.isHigher(student));
         }
+        
+        report.setStudyYear(studyYear.getYear().getNameEt());
+        setFinished(report, student, type);
+        setStudentResults(report, student, type, addOutcomes, showUncompleted);
+        if (type.equals(CertificateType.TOEND_LIIK_SOOR)) {
+            if (report.getStudent().isGuestStudent()) {
+                setAbroadProgramme(report, student);
+                if (report.getStudent() != null && (Boolean.TRUE.equals(higher) ? report.getStudent().getResults() != null : report.getStudent().getMappedResults() != null)) {
+                    boolean hasGrade = Boolean.TRUE.equals(higher) 
+                            ? report.getStudent().getResults().stream().anyMatch(p -> p != null && p.getGradeName() != null)
+                            : Streams.concat(report.getStudent().getMappedResults().values().stream().flatMap(e -> e.keySet().stream()),
+                                    report.getStudent().getMappedResults().values().stream().flatMap(e -> e.values().stream()).flatMap(e -> e.stream()))
+                            .anyMatch(p -> p != null && p.getGradeName() != null);
+                    if (hasGrade) setGradingSystem(report, student, isOnlyHigherSchool, isHigherSchool, showUncompleted, estonian);
+                }
+            }
+            if (Boolean.TRUE.equals(higher)) {
+                StudentCurriculumCompletion completion = studentService.getStudentCurriculumCompletion(student);
+                report.getStudent().setAverageMark(completion != null ? completion.getAverageMark().setScale(2, RoundingMode.DOWN) : null);
+                report.getStudent().setCreditsAll(StreamUtil.sumBigDecimals(r -> r.getHours(), report.getStudent().getResults()));
+                setGrades(report, student, lang);
+            }
+            setEvents(report, student, lang);
+        }
+        setSessions(report, studyYear, type);
+        setLastSession(report, studyYear, type);
+        Map<String, Object> map = new HashMap<>();
+        map.put("content", report);
+        map.put("lang", lang);
         return templateService.evaluateTemplate(getTemplateName((higher != null && higher.booleanValue()), type, estonian), map);
+    }
+
+    private void setGrades(CertificateReport report, Student student, Language lang) {
+        Boolean isLetterGrade = student.getSchool().getIsLetterGrade();
+        TypedQuery<Classifier> query = em.createQuery("select c from Classifier c where c.code in (?1) order by c.value desc", Classifier.class);
+        query.setParameter(1, HigherAssessment.GRADE_SYSTEM);
+        Map<String, Classifier> grades = query.getResultList().stream().collect(Collectors.toMap(g -> g.getCode(), g -> g, (o, n) -> o, LinkedHashMap::new));
+        grades.values().forEach(grade -> {
+            if (!ClassifierUtil.oneOf(grade, HigherAssessment.KORGHINDAMINE_0, HigherAssessment.KORGHINDAMINE_1,
+                    HigherAssessment.KORGHINDAMINE_2, HigherAssessment.KORGHINDAMINE_3,
+                    HigherAssessment.KORGHINDAMINE_4, HigherAssessment.KORGHINDAMINE_5)) {
+                return;
+            }
+            if (report.getGrades() == null) {
+                report.setGrades(new ArrayList<>());
+            }
+            CertificateReportGrade gradeReport = new CertificateReportGrade();
+            gradeReport.setValue(ReportUtil.gradeValue(grade, isLetterGrade, lang));
+            gradeReport.setShortDescription(Language.EN.equals(lang) ? TranslateUtil.getNonNullableNameEn(grade) : grade.getNameEt());
+            gradeReport.setDescription(TranslateUtil.optionalTranslate("report.certificate.grades." + grade.getCode(), lang));
+            report.getGrades().add(gradeReport);
+        });
+
+        try {
+            report.setGradesDescription(String.format(
+                    TranslateUtil.optionalTranslate("report.certificate.gradesDescription", lang),
+                    ReportUtil.gradeValue(grades.get(HigherAssessment.KORGHINDAMINE_1.name()), isLetterGrade, lang),
+                    ReportUtil.gradeValue(grades.get(HigherAssessment.KORGHINDAMINE_A.name()), isLetterGrade, lang)));
+        } catch (@SuppressWarnings("unused") MissingFormatArgumentException e) {}
+    }
+
+    private void setEvents(CertificateReport report, Student student, Language lang) {
+        List<CertificateEvent> events = new ArrayList<>();
+        events.addAll(findAcademicLeaves(student, lang));
+        events.addAll(findForeignStudy(student, lang));
+        events.sort(Comparator.comparing(CertificateEvent::getStart).thenComparing(CertificateEvent::getEnd, Comparator.nullsLast(Comparator.naturalOrder())));
+        report.getStudent().setEvents(events);
+    }
+    
+    private List<CertificateEventAcademicLeave> findAcademicLeaves(Student student, Language lang) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds "
+                + "join directive d on ds.directive_id = d.id "
+                + "left join study_period sps on ds.study_period_start_id = sps.id "
+                + "left join study_period spe on ds.study_period_end_id = spe.id "
+                + "left join (select ds2.directive_student_id, ds2.start_date "
+                    + "from directive_student ds2 "
+                    + "left join directive d2 on d2.id = ds2.directive_id "
+                    + "where d2.type_code = :directiveAkadk and d2.status_code = :directiveConfirmed and ds2.canceled = false ) "
+                + "AKADK on AKADK.directive_student_id = ds.id ");
+        
+        qb.requiredCriteria("ds.student_id = :studentId", "studentId", EntityUtil.getId(student));
+        qb.filter("ds.canceled = false");
+        qb.requiredCriteria("d.status_code = :directiveConfirmed", "directiveConfirmed", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+        qb.requiredCriteria("d.type_code = :directiveAkad", "directiveAkad", DirectiveType.KASKKIRI_AKAD);
+        qb.parameter("directiveAkadk", DirectiveType.KASKKIRI_AKADK.name());
+        qb.requiredCriteria(":now between coalesce(sps.start_date, ds.start_date) and "
+                + "coalesce(case when AKADK.start_date is null then null else cast(AKADK.start_date - interval '1 day' as date) end, spe.end_date, ds.end_date)", "now", LocalDate.now());
+        
+        List<?> results = qb.select("coalesce(sps.start_date, ds.start_date) e_start, "
+                + "coalesce(case when AKADK.start_date is null then null else cast(AKADK.start_date - interval '1 day' as date) end, spe.end_date, ds.end_date) e_end", em)
+                .getResultList();
+        
+        String name = Language.EN.equals(lang) ? "academic leave" : "akadeemilisel puhkusel";
+        return results.stream().map(r -> {
+            return new CertificateEventAcademicLeave(name, resultAsLocalDate(r, 0), resultAsLocalDate(r, 1));
+        }).collect(Collectors.toList());
+    }
+    
+    private List<CertificateEventForeignStudy> findForeignStudy(Student student, Language lang) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds "
+                + "join directive d on ds.directive_id = d.id "
+                + "left join study_period sps on ds.study_period_start_id = sps.id "
+                + "left join study_period spe on ds.study_period_end_id = spe.id "
+                + "left join (select ds2.directive_student_id, ds2.start_date "
+                    + "from directive_student ds2 "
+                    + "left join directive d2 on d2.id = ds2.directive_id "
+                    + "where d2.type_code = :directiveValiskatk and d2.status_code = :directiveConfirmed and ds2.canceled = false ) "
+                + "VALISKATK on VALISKATK.directive_student_id = ds.id ");
+        
+        qb.requiredCriteria("ds.student_id = :studentId", "studentId", EntityUtil.getId(student));
+        qb.filter("ds.canceled = false");
+        qb.requiredCriteria("d.status_code = :directiveConfirmed", "directiveConfirmed", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+        qb.requiredCriteria("d.type_code = :directiveValis", "directiveValis", DirectiveType.KASKKIRI_VALIS);
+        qb.parameter("directiveValiskatk", DirectiveType.KASKKIRI_VALISKATK.name());
+        qb.requiredCriteria(":now between coalesce(sps.start_date, ds.start_date) and "
+                + "coalesce(case when VALISKATK.start_date is null then null else cast(VALISKATK.start_date - interval '1 day' as date) end, spe.end_date, ds.end_date)", "now", LocalDate.now());
+        
+        List<?> results = qb.select("coalesce(sps.start_date, ds.start_date) e_start, "
+                + "coalesce(case when VALISKATK.start_date is null then null else cast(VALISKATK.start_date - interval '1 day' as date) end, spe.end_date, ds.end_date) e_end", em)
+                .getResultList();
+        
+        String name = Language.EN.equals(lang) ? "study abroad" : "välisõppes";
+        return results.stream().map(r -> {
+            return new CertificateEventForeignStudy(name, resultAsLocalDate(r, 0), resultAsLocalDate(r, 1));
+        }).collect(Collectors.toList());
     }
 
     private static void setAbroadProgramme(CertificateReport report, Student student) {
@@ -217,43 +344,154 @@ public class CertificateContentService {
 
     private void setStudentResults(CertificateReport report, Student student, CertificateType type, boolean addOutcomes, boolean showUncompleted) {
         if(CertificateType.TOEND_LIIK_SOOR.equals(type)) {
-            Boolean higher;
-            if (report.getStudent().isGuestStudent()) {
-                higher = directiveStudyLevel(student);
-            } else {
-                higher = Boolean.valueOf(StudentUtil.isHigher(student));
-            }
+            boolean higher = report.getStudent().isGuestStudent() ? directiveStudyLevel(student).booleanValue()
+                    : StudentUtil.isHigher(student);
             report.setAddOutcomes(Boolean.valueOf(addOutcomes));
-            report.getStudent().setResults((higher != null && higher.booleanValue()) ? 
-                    getHigherResults(student, addOutcomes, showUncompleted) : getVocationalResults(student, addOutcomes, showUncompleted));
+            if (higher) {
+                Entry<List<CertificateStudentResult>, List<AutocompleteResult>> entry = getHigherResults(student, addOutcomes, showUncompleted);
+                report.getStudent().setResults(entry.getKey());
+                report.getStudent().setApelSchools(entry.getValue());
+            } else {
+                report.getStudent().setMappedResults(getVocationalResults(student, addOutcomes, showUncompleted));
+            }
         }
     }
 
-    private List<CertificateStudentResult> getHigherResults(Student student, boolean addOutcomes, boolean showUncompleted) {
+    private Entry<List<CertificateStudentResult>, List<AutocompleteResult>> getHigherResults(Student student, boolean addOutcomes, boolean showUncompleted) {
         List<StudentHigherSubjectResultDto> list = studentResultHigherService.positiveHigherResults(student, showUncompleted);
-        List<CertificateStudentResult> results = StreamUtil.toMappedList(CertificateStudentResult::of, list);
+
+        Map<Long, AutocompleteResult> schoolsById = new LinkedHashMap<>();
+        Map<CertificateStudentResult, Long> result2School = new HashMap<>();
+        
+        List<CertificateStudentResult> results = new ArrayList<>();
+        list.stream().forEach(r -> {
+            CertificateStudentResult result = CertificateStudentResult.of(r);
+            results.add(result);
+            if (r.getSubject().getSchool() != null) {
+                AutocompleteResult school = r.getSubject().getSchool();
+                if (!schoolsById.containsKey(school.getId())) {
+                    schoolsById.put(school.getId(), new AutocompleteResult(null, school.getNameEt(), school.getNameEn()));
+                }
+                result2School.put(result, school.getId());
+            }
+        });
         if (addOutcomes) {
             addHigherOutcomes(list, results);
         }
         Collections.sort(results, StreamUtil.comparingWithNullsLast(CertificateStudentResult::getIsActive)
                 .thenComparing(StreamUtil.comparingWithNullsLast(r -> DateUtils.parseDate(r.getDate()))));
-        return results;
+        List<AutocompleteResult> apelSchools = new ArrayList<>();
+        results.forEach(r -> {
+            if (result2School.containsKey(r)) {
+                AutocompleteResult apelSchool = schoolsById.get(result2School.get(r));
+                if (apelSchool.getId() == null) {
+                    apelSchool.setId(Long.valueOf(apelSchools.size() + 1));
+                    apelSchools.add(apelSchool);
+                }
+                r.setSubject(r.getSubject() + " *" + apelSchool.getId());
+                r.setSubjectEn(r.getSubjectEn() + " *" + apelSchool.getId());
+            }
+        });
+        return new AbstractMap.SimpleEntry<>(results, apelSchools);
     }
 
-    private List<CertificateStudentResult> getVocationalResults(Student student, boolean addOutcomes, boolean showUncompleted) {
-        List<StudentVocationalResultModuleThemeDto> data = studentService.studentVocationalResults(student, showUncompleted);
+    private Map<CertificateStudentResultHeader, Map<CertificateStudentResult, List<CertificateStudentResult>>> getVocationalResults(Student student, boolean addOutcomes, boolean showUncompleted) {
+        List<StudentVocationalResultModuleThemeDto> data = studentService.studentVocationalResults(student,
+                showUncompleted, false);
         if (!showUncompleted) {
             data = StreamUtil.toFilteredList(
                     r -> OccupationalGrade.isPositive(r.getGrade()), data);
         }
         
         Map<String, Classifier> grades = getVocationalGrades();
-        List<CertificateStudentResult> results = StreamUtil.toMappedList(r -> CertificateStudentResult.of(r, grades), data);
+        Long curriculumId = student.getCurriculumVersion() != null ? student.getCurriculumVersion().getCurriculum().getId() : null;
+        String cvCode = student.getCurriculumVersion() != null ? student.getCurriculumVersion().getCode() : null;
+        List<CertificateStudentResult> results = StreamUtil.toMappedList(r -> CertificateStudentResult.of(r, grades, curriculumId), data);
         if (addOutcomes) {
             addVocationalOutcomes(data, results);
         }
-        Collections.sort(results, StreamUtil.comparingWithNullsLast(r -> DateUtils.parseDate(r.getDate())));
-        return results;
+        
+        // For apel it has a negative ID as it takes student_vocational_result.id * -1
+        LinkedHashMap<String, List<CertificateStudentResult>> mappedResultsById = results.stream()
+                .collect(
+                        Collectors.groupingBy(
+                                r -> String.format("%d-%d", r.getModule().getId(),
+                                        r.getIsSameCurriculum().booleanValue() ? Long.valueOf(0)
+                                                : r.getOccupationModuleId()),
+                                LinkedHashMap::new, Collectors.mapping(r -> r, Collectors.toList())));
+        
+        // Sort theme/outcome inside of module
+        mappedResultsById.values().forEach(v -> v.sort(Comparator.comparing(
+                    (CertificateStudentResult r) -> Boolean.valueOf(!(r.getOutcome() == null && r.getTheme() == null)))
+                    .thenComparing(StreamUtil.comparingWithNullsLast(r -> DateUtils.parseDate(r.getDate())))));
+
+        LinkedHashMap<CertificateStudentResult, List<CertificateStudentResult>> mappedResults = new LinkedHashMap<>();
+        ClassifierCache cache = new ClassifierCache(classifierService);
+        mappedResultsById.forEach((id, values) -> {
+            CertificateStudentResult header = null;
+            for (int i = 0; i < values.size(); i++) {
+                CertificateStudentResult v = values.get(i);
+                if (v.getOutcome() == null && v.getTheme() == null) {
+                    header = v;
+                    mappedResults.put(v, new ArrayList<>());
+                } else if (header != null) {
+                    mappedResults.get(header).add(v);
+                }
+                // If it is from the same curriculum then it should be considered from the same version.
+                if (v.getIsSameCurriculum().booleanValue()) {
+                    v.setVersionCode(cvCode);
+                }
+                if (v.getModuleCode() != null && v.getModuleCode().getCode() != null) {
+                    Classifier moduleCode = cache.getByCode(v.getModuleCode().getCode(), MainClassCode.KUTSEMOODUL);
+                    v.getModuleCode().setNameEt(moduleCode.getNameEt());
+                    v.getModuleCode().setNameEn(TranslateUtil.getNonNullableNameEn(moduleCode));
+                }
+            }
+            if (header == null) {
+                header = values.get(0);
+                header.setIsHeader(Boolean.TRUE);
+                mappedResults.put(header, values);
+            }
+        });
+        
+        // Sort modules
+        Comparator<Entry<CertificateStudentResult, List<CertificateStudentResult>>> comparator = Comparator
+                .comparing((Entry<CertificateStudentResult, List<CertificateStudentResult>> entry) -> entry.getKey().getIsSameCurriculum(), Comparator.reverseOrder())
+                .thenComparingInt(entry -> CurriculumUtil.vocationalModuleOrderNr(entry.getKey().getModuleCode().getCode()))
+                .thenComparing(StreamUtil.comparingWithNullsLast(entry -> entry.getKey().getOrderNr()))
+                .thenComparing(StreamUtil.comparingWithNullsLast(
+                        entry -> {
+                            return DateUtils.parseDate(entry.getKey().getDate() != null ? entry.getKey().getDate() : entry.getValue().get(0).getDate());
+                        }))
+                ;
+        
+        ArrayList<Entry<CertificateStudentResult, List<CertificateStudentResult>>> listOfEntries = new ArrayList<>(mappedResults.entrySet());
+        Collections.sort(listOfEntries, comparator);
+        
+        // "Extra curricular performances" header
+        CertificateStudentResultHeader extraCurricula = new CertificateStudentResultHeader("EXTRA", "Õppekavavälised sooritused", "Extra curricular performances");
+        LinkedHashMap<String, CertificateStudentResultHeader> categoriesByCode = new LinkedHashMap<>();
+        LinkedHashMap<CertificateStudentResultHeader, Map<CertificateStudentResult, List<CertificateStudentResult>>> resultsByCategories = new LinkedHashMap<>();
+        listOfEntries.forEach(entry -> {
+            mappedResults.put(entry.getKey(), entry.getValue());
+            if (entry.getKey().getIsSameCurriculum().booleanValue()) {
+                ClassifierDto moduleCode = entry.getKey().getModuleCode();
+                if (!categoriesByCode.containsKey(moduleCode.getCode())) {
+                    CertificateStudentResultHeader header = new CertificateStudentResultHeader(moduleCode.getCode(), moduleCode.getNameEt(), moduleCode.getNameEn());
+                    categoriesByCode.put(moduleCode.getCode(), header);
+                }
+                if (resultsByCategories.get(categoriesByCode.get(moduleCode.getCode())) == null) {
+                    resultsByCategories.put(categoriesByCode.get(moduleCode.getCode()), new LinkedHashMap<>());
+                }
+                resultsByCategories.get(categoriesByCode.get(moduleCode.getCode())).put(entry.getKey(), entry.getValue());
+            } else {
+                if (resultsByCategories.get(extraCurricula) == null) {
+                    resultsByCategories.put(extraCurricula, new LinkedHashMap<>());
+                }
+                resultsByCategories.get(extraCurricula).put(entry.getKey(), entry.getValue());
+            }
+        });
+        return resultsByCategories;
     }
 
     private void addHigherOutcomes(List<StudentHigherSubjectResultDto> data, List<CertificateStudentResult> results) {
@@ -275,7 +513,7 @@ public class CertificateContentService {
                 Optional<AutocompleteResult> outcome = subjectOutcomes.stream().filter(p -> subject.getId().equals(p.getId())).findFirst();
                 if (outcome.isPresent()) {
                     result.setOutcomes(outcome.get().getNameEt());
-                    result.setOutcomesEn(outcome.get().getNameEn());
+                    result.setOutcomesEn(TranslateUtil.getNonNullableNameEn(outcome.get()));
                 }
             }
         }
@@ -331,7 +569,7 @@ public class CertificateContentService {
                         .map(p -> curriculumModuleOutcomes.stream().filter(s -> p.equals(s.getId())).findFirst().get())
                         .collect(Collectors.toList());
                 result.setOutcomes(outcomes.stream().map(p -> p.getNameEt()).collect(Collectors.joining(", ")));
-                result.setOutcomesEn(outcomes.stream().map(p -> p.getNameEn()).collect(Collectors.joining(", ")));
+                result.setOutcomesEn(outcomes.stream().map(p -> TranslateUtil.getNonNullableNameEn(p)).collect(Collectors.joining(", ")));
             }
         }
     }
@@ -359,10 +597,9 @@ public class CertificateContentService {
         if (moduleIds.isEmpty()) {
             return result;
         }
-        List<?> rows = em.createNativeQuery("select cvom.id as cvom_id, cmo.id as cmo_id"
-                + " from curriculum_version_omodule cvom"
-                + " join curriculum_module_outcomes cmo on cmo.curriculum_module_id = cvom.curriculum_module_id"
-                + " where cvom.id in ?1"
+        List<?> rows = em.createNativeQuery("select cmo.curriculum_module_id, cmo.id as cmo_id"
+                + " from curriculum_module_outcomes cmo"
+                + " where cmo.curriculum_module_id in ?1"
                 + " order by cmo.order_nr")
             .setParameter(1, moduleIds)
             .getResultList();
@@ -382,7 +619,7 @@ public class CertificateContentService {
         if (!moduleIds.isEmpty()) {
             sql += "select cmo.id"
                 + " from curriculum_module_outcomes cmo"
-                + " where cmo.curriculum_module_id in (select curriculum_module_id from curriculum_version_omodule where id in ?1)";
+                + " where cmo.curriculum_module_id in (?1)";
             if (!themeIds.isEmpty()) {
                 sql += " union";
             }

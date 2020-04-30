@@ -1,0 +1,15 @@
+<div>
+  <i>
+    <span ng-if="row.status === 'OPPURSTAATUS_A'">{{'student.statuses.academicLeaveShort' | translate}}</span>
+    <span ng-if="row.status === 'OPPURSTAATUS_L'">{{'student.statuses.finishedShort' | translate}}</span>
+    <span ng-if="row.status === 'OPPURSTAATUS_K'">{{'student.statuses.exmatriculatedShort' | translate}}</span>
+    <span ng-if="row.isIndividualCurriculum">
+      <span ng-if="row.status !== 'OPPURSTAATUS_O' && row.status !== 'OPPURSTAATUS_V'">, </span>
+      <span>{{'student.statuses.individualCurriculumShort' | translate}}</span>
+    </span>
+  </i>
+  <span>{{row.fullname}}</span>
+  <a ng-if="row.remarks.length > 0" ng-click="openRemarkDialog(row)">
+    <md-icon class="md-icon-button">message</md-icon>
+  </a>
+</div>

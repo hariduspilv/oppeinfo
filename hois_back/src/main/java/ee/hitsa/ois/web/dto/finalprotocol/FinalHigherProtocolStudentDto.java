@@ -21,6 +21,7 @@ public class FinalHigherProtocolStudentDto extends HigherProtocolStudentDto {
     @ClassifierRestriction(MainClassCode.OPPURSTAATUS)
     private String status;
     private CurriculumGradeDto curriculumGrade;
+    private Long finalThesisCurriculumGrade;
     private List<FinalProtocolStudentOccupationDto> curriculumOccupations = new ArrayList<>();
     
     public static FinalHigherProtocolStudentDto of(ProtocolStudent protocolStudent) {
@@ -32,6 +33,9 @@ public class FinalHigherProtocolStudentDto extends HigherProtocolStudentDto {
         dto.setStatus(EntityUtil.getCode(student.getStatus()));
         dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);
         dto.setCurriculumGrade(protocolStudent.getCurriculumGrade() != null ? CurriculumGradeDto.of(protocolStudent.getCurriculumGrade()) : null);
+        if (!protocolStudent.getStudent().getFinalThesis().isEmpty()) {
+            dto.setFinalThesisCurriculumGrade(EntityUtil.getNullableId(protocolStudent.getStudent().getFinalThesis().get(0).getCurriculumGrade()));
+        }
         
         if (protocolStudent.getProtocolStudentOccupations() != null) {
             protocolStudent.getProtocolStudentOccupations().forEach(oc -> {
@@ -81,6 +85,14 @@ public class FinalHigherProtocolStudentDto extends HigherProtocolStudentDto {
         this.curriculumGrade = curriculumGrade;
     }
     
+    public Long getFinalThesisCurriculumGrade() {
+        return finalThesisCurriculumGrade;
+    }
+
+    public void setFinalThesisCurriculumGrade(Long finalThesisCurriculumGrade) {
+        this.finalThesisCurriculumGrade = finalThesisCurriculumGrade;
+    }
+
     public List<FinalProtocolStudentOccupationDto> getCurriculumOccupations() {
         return curriculumOccupations;
     }

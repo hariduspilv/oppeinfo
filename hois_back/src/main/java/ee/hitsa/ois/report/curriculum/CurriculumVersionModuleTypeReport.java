@@ -20,7 +20,11 @@ public class CurriculumVersionModuleTypeReport {
     public CurriculumVersionModuleTypeReport(String code, List<CurriculumVersionOccupationModule> occupationModules, List<Short> studyYears, Language lang) {
         this.code = code;
         modules = StreamUtil.toMappedList(m -> new CurriculumVersionModuleTypeModuleReport(m, studyYears, lang), occupationModules);
-        modules.sort(Comparator.comparing(CurriculumVersionModuleTypeModuleReport::getName));
+        modules.sort(Comparator
+                .comparing(CurriculumVersionModuleTypeModuleReport::getOrderNr,
+                        Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(Comparator.comparing(CurriculumVersionModuleTypeModuleReport::getName,
+                        String.CASE_INSENSITIVE_ORDER)));
         
         if (!studyYears.isEmpty()) {
             for (Short year : studyYears) {

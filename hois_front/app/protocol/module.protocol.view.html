@@ -20,7 +20,7 @@
                         </md-tooltip>
                       </div>
                     </th>
-                    <th md-column ng-if="formState.showOutcomes && formState.outcomesAsEntries" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
+                    <th md-column ng-if="formState.showOutcomes && formState.hasOutcomes" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
                       <div>
                         {{'moduleProtocol.outcome' | translate}}{{outcome.orderNr + 1}}
                         <md-tooltip>{{outcome.nameEt}}</md-tooltip>
@@ -51,7 +51,7 @@
                       <span ng-if="!$last">/</span>
                     </span>
                   </td>
-                  <td md-cell ng-if="formState.showOutcomes && formState.outcomesAsEntries" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
+                  <td md-cell ng-if="formState.showOutcomes && formState.hasOutcomes" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
                     <span ng-if="protocolStudentOutcomeResults[row.id] && protocolStudentOutcomeResults[row.id][outcome.id]">
                       <span ng-class="{badResult: !gradeUtil.isPositive(protocolStudentOutcomeResults[row.id][outcome.id].code)}">{{protocolStudentOutcomeResults[row.id][outcome.id].value}}</span>
                     </span>
@@ -79,7 +79,7 @@
       <fieldset>
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'moduleProtocol.studyOutcomes' | translate}}</legend>
         <div ng-repeat="outcome in protocol.protocolVdata.outcomes | orderBy: 'orderNr'" flex class="md-body-1">
-          <div>{{currentLanguageNameField(outcome)}}</div>
+          <div>{{outcome.orderNr + 1}}. {{currentLanguageNameField(outcome)}}</div>
         </div>
       </fieldset>
     </div>

@@ -6,12 +6,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumResult;
 
 public class StudentVocationalResultModuleThemeDto {
 
     private Long curriculumVersionModuleId;
-    private AutocompleteResult module;
+    private CurriculumModuleResult module;
     private AutocompleteResult theme;
+    private AutocompleteResult outcome;
+    private CurriculumResult curriculum;
     private BigDecimal credits;
     private String grade;
     private LocalDate date;
@@ -32,11 +35,11 @@ public class StudentVocationalResultModuleThemeDto {
         this.curriculumVersionModuleId = curriculumVersionModuleId;
     }
 
-    public AutocompleteResult getModule() {
+    public CurriculumModuleResult getModule() {
         return module;
     }
 
-    public void setModule(AutocompleteResult module) {
+    public void setModule(CurriculumModuleResult module) {
         this.module = module;
     }
 
@@ -46,6 +49,22 @@ public class StudentVocationalResultModuleThemeDto {
 
     public void setTheme(AutocompleteResult theme) {
         this.theme = theme;
+    }
+
+    public AutocompleteResult getOutcome() {
+        return outcome;
+    }
+
+    public void setOutcome(AutocompleteResult outcome) {
+        this.outcome = outcome;
+    }
+
+    public CurriculumResult getCurriculum() {
+        return curriculum;
+    }
+
+    public void setCurriculum(CurriculumResult curriculum) {
+        this.curriculum = curriculum;
     }
 
     public BigDecimal getCredits() {
@@ -134,5 +153,57 @@ public class StudentVocationalResultModuleThemeDto {
 
     public void setTeachersAsString(String teachersAsString) {
         this.teachersAsString = teachersAsString;
+    }
+    
+    public static class CurriculumModuleResult extends AutocompleteResult {
+
+        private String moduleCode;
+        private String versionCode;
+        private Short orderNr;
+        private BigDecimal credits;
+        
+        public CurriculumModuleResult(AutocompleteResult result) {
+            super(result.getId(), result.getNameEt(), result.getNameEn());
+        }
+        
+        public CurriculumModuleResult(Long id, String nameEt, String nameEn, String moduleCode, String versionCode, Short orderNr, BigDecimal credits) {
+            super(id, nameEt, nameEn);
+            this.moduleCode = moduleCode;
+            this.versionCode = versionCode;
+            this.orderNr = orderNr;
+            this.credits = credits;
+        }
+
+        public String getModuleCode() {
+            return moduleCode;
+        }
+
+        public void setModuleCode(String moduleCode) {
+            this.moduleCode = moduleCode;
+        }
+
+        public String getVersionCode() {
+            return versionCode;
+        }
+
+        public void setVersionCode(String versionCode) {
+            this.versionCode = versionCode;
+        }
+
+        public Short getOrderNr() {
+            return orderNr;
+        }
+
+        public void setOrderNr(Short orderNr) {
+            this.orderNr = orderNr;
+        }
+
+        public BigDecimal getCredits() {
+            return credits;
+        }
+
+        public void setCredits(BigDecimal credits) {
+            this.credits = credits;
+        }
     }
 }

@@ -28,7 +28,7 @@
                   <label>EKAP</label>
                   <input ng-model="occupationModuleTheme.credits" name="credits" type="number" readonly>
                 </md-input-container>
-  
+
                 <md-input-container flex-gt-sm="50" flex="100">
                   <label>{{'main.hour' | translate}}</label>
                   <input ng-model="occupationModuleTheme.hours" name="hours" type="number" readonly>
@@ -96,6 +96,10 @@
 
                 </div>
                 <div>&nbsp;</div>
+
+                <md-checkbox ng-model="occupationModuleTheme.moduleOutcomes" aria-label="is module outcomes" disabled>
+                  {{'module.themeGradedByOutcomes' | translate}}
+                </md-checkbox>
 
                 <md-input-container flex ng-show="occupationModuleTheme.assessment">
                   <label>{{'module.totalGradeDescription' | translate}}</label>

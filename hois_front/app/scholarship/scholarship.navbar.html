@@ -1,0 +1,10 @@
+<md-content>
+  <md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" hois-navbar-overflowed>
+    <md-nav-item md-nav-href="#/scholarships/scholarships?_menu"
+      name="scholarship.stipend">{{'stipend.navbar.stipSettings' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.doctoral" md-nav-href="#/scholarships?_menu"
+      name="scholarship.drStipend">{{'stipend.navbar.drSettings' | translate}}</md-nav-item>
+    <md-nav-item md-nav-href="#/scholarships/others"
+      name="scholarship.others">{{'stipend.navbar.others' | translate}}</md-nav-item>
+  </md-nav-bar>
+</md-content>

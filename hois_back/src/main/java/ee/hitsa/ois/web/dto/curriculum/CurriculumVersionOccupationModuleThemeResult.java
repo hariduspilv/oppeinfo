@@ -16,6 +16,7 @@ public class CurriculumVersionOccupationModuleThemeResult extends AutocompleteRe
     private Short studyYearNumber;
     private Map<String, Short> capacities = new HashMap<>();
     private Boolean existsInOtherJournals;
+    private Boolean moduleOutcomes;
 
     public CurriculumVersionOccupationModuleThemeResult (CurriculumVersionOccupationModuleTheme cvomt) {
         super(cvomt.getId(), cvomt.getNameEt(), cvomt.getNameEt());
@@ -24,6 +25,7 @@ public class CurriculumVersionOccupationModuleThemeResult extends AutocompleteRe
         for(CurriculumVersionOccupationModuleThemeCapacity cap : cvomt.getCapacities()) {
             capacities.put(EntityUtil.getCode(cap.getCapacityType()), cap.getHours());
         }
+        moduleOutcomes = cvomt.getModuleOutcomes();
     }
 
     public CurriculumVersionOccupationModuleThemeResult(Long id, String nameEt, String nameEn, BigDecimal credits, Long moduleId) {
@@ -78,4 +80,11 @@ public class CurriculumVersionOccupationModuleThemeResult extends AutocompleteRe
         this.existsInOtherJournals = existsInOtherJournals;
     }
 
+    public Boolean getModuleOutcomes() {
+        return moduleOutcomes;
+    }
+
+    public void setModuleOutcomes(Boolean moduleOutcomes) {
+        this.moduleOutcomes = moduleOutcomes;
+    }
 }

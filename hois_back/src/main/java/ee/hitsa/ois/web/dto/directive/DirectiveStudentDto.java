@@ -445,6 +445,10 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getId() : null);
             dto.setStudentGroupObject(student.getStudentGroup() != null ? AutocompleteResult.of(student.getStudentGroup()) : null);
             break;
+        case KASKKIRI_STIPTOET:
+        case KASKKIRI_STIPTOETL:
+            dto.setStudentGroupObject(student.getStudentGroup() != null ? AutocompleteResult.of(student.getStudentGroup()) : null);
+            break;
         case KASKKIRI_TUGILOPP:
             dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getId() : null);
             dto.setStudentGroupObject(student.getStudentGroup() != null ? AutocompleteResult.of(student.getStudentGroup()) : null);

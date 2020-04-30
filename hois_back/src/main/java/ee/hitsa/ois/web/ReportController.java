@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletResponse;
@@ -10,10 +11,14 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.domain.report.SchoolQuery;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.Permission;
@@ -37,24 +42,32 @@ import ee.hitsa.ois.web.commandobject.report.ForeignStudentStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.GuestStudentStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.IndividualCurriculumStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.ScholarshipStatisticsCommand;
+import ee.hitsa.ois.web.commandobject.report.SchoolQueryCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentCountCommand;
+import ee.hitsa.ois.web.commandobject.report.StudentDataCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentGroupTeacherCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentMovementCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsByPeriodCommand;
 import ee.hitsa.ois.web.commandobject.report.StudentStatisticsCommand;
+import ee.hitsa.ois.web.commandobject.report.SubjectStudyPeriodDataCommand;
 import ee.hitsa.ois.web.commandobject.report.TeacherDetailLoadCommand;
 import ee.hitsa.ois.web.commandobject.report.TeacherLoadCommand;
 import ee.hitsa.ois.web.commandobject.report.VotaCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.report.CurriculumCompletionDto;
 import ee.hitsa.ois.web.dto.report.CurriculumSubjectsDto;
 import ee.hitsa.ois.web.dto.report.ForeignStudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.GuestStudentStatisticsDto;
 import ee.hitsa.ois.web.dto.report.IndividualCurriculumSatisticsDto;
+import ee.hitsa.ois.web.dto.report.ReportStudentDataDto;
 import ee.hitsa.ois.web.dto.report.StudentCountDto;
+import ee.hitsa.ois.web.dto.report.StudentQueryDto;
 import ee.hitsa.ois.web.dto.report.StudentMovementDto;
 import ee.hitsa.ois.web.dto.report.StudentSearchDto;
 import ee.hitsa.ois.web.dto.report.StudentStatisticsDto;
+import ee.hitsa.ois.web.dto.report.SubjectStudyPeriodDataDto;
+import ee.hitsa.ois.web.dto.report.SubjectStudyPeriodQueryDto;
 import ee.hitsa.ois.web.dto.report.TeacherLoadDto;
 import ee.hitsa.ois.web.dto.report.VotaDto;
 import ee.hitsa.ois.web.dto.report.studentgroupteacher.StudentGroupTeacherDto;
@@ -113,9 +126,69 @@ public class ReportController {
     }
     
     @GetMapping("/students/count.xls")
-    public void studentsAsExcel(HoisUserDetails user, @Valid StudentCountCommand criteria, HttpServletResponse response) throws IOException {
+    public void studentsCountAsExcel(HoisUserDetails user, @Valid StudentCountCommand criteria, HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
         HttpUtil.xls(response, "studentscount.xls", reportService.studentsCountAsExcel(user, criteria));
+    }
+    
+    @GetMapping("/students/data")
+    public Page<ReportStudentDataDto> studentsData(HoisUserDetails user, StudentDataCommand criteria, Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        return reportService.studentData(user, criteria, pageable);
+    }
+    
+    @GetMapping("/subjectStudyPeriod/data")
+    public Page<SubjectStudyPeriodDataDto> subjectStudyPeriodData(HoisUserDetails user, SubjectStudyPeriodDataCommand criteria, Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        return reportService.subjectStudyPeriodData(user, criteria, pageable);
+    }
+    
+    @PostMapping("/students/data/query/save")
+    public void saveQuery(HoisUserDetails user, @RequestBody @Valid StudentDataCommand criteria) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PARING);
+        reportService.saveQuery(user, criteria);
+    }
+    
+    @PostMapping("/subjectStudyPeriod/data/query/save")
+    public void saveQuery(HoisUserDetails user, @RequestBody @Valid SubjectStudyPeriodDataCommand criteria) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PARING);
+        reportService.saveQuery(user, criteria);
+    }
+    
+    @GetMapping("/students/data/query/savedStudentQueries")
+    public List<AutocompleteResult> savedStudentQueries(HoisUserDetails user, SchoolQueryCommand command) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PARING);
+        return reportService.savedStudentQueries(user, command);
+    }
+    
+    @DeleteMapping("/students/data/query/{id:\\d+}")
+    public void deleteQuery(HoisUserDetails user, @WithEntity SchoolQuery schoolQuery) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PARING);
+        reportService.deleteQuery(user, schoolQuery);
+    }
+    
+    @GetMapping("/students/data/query/{id:\\d+}")
+    public Object getStudentQuery(HoisUserDetails user, @WithEntity SchoolQuery schoolQuery) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PARING);
+        return reportService.getQuery(schoolQuery, StudentQueryDto.class);
+    }
+    
+    @GetMapping("/subjectStudyPeriod/data/query/{id:\\d+}")
+    public Object getSubjectStudyPeriodQuery(HoisUserDetails user, @WithEntity SchoolQuery schoolQuery) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PARING);
+        return reportService.getQuery(schoolQuery, SubjectStudyPeriodQueryDto.class);
+    }
+    
+    @GetMapping("/students/data.xls")
+    public void studentsDataAsExcel(HoisUserDetails user, @Valid StudentDataCommand criteria, HttpServletResponse response, Pageable pageable) throws IOException {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        HttpUtil.xls(response, "studentsdata.xls", reportService.studentsDataAsExcel(user, criteria, pageable));
+    }
+    
+    @GetMapping("/subjectStudyPeriod/data.xls")
+    public void subjectStudyPeriodDataAsExcel(HoisUserDetails user, @Valid SubjectStudyPeriodDataCommand criteria, HttpServletResponse response, Pageable pageable) throws IOException {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        HttpUtil.xls(response, "subjectstudyperioddata.xls", reportService.subjectStudyPeriodDataAsExcel(user, criteria, pageable));
     }
 
     @GetMapping("/students/statistics")

@@ -155,6 +155,9 @@ public abstract class JpaQueryUtil {
 
     public static BigDecimal resultAsDecimal(Object row, int index) {
         Object value = getValue(row, index);
+        if (value instanceof Double) {
+            return BigDecimal.valueOf(((Double) value).doubleValue());
+        }
         return (BigDecimal)value;
     }
     

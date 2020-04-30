@@ -37,6 +37,7 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId implements T
     @Size(max = 255)
     private String nameEn;
 
+    private Short orderNr;
     private String objectivesEt;
     private String objectivesEn;
     private String outcomesEt;
@@ -110,6 +111,14 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId implements T
 
     public void setNameEn(String nameEn) {
         this.nameEn = nameEn;
+    }
+
+    public Short getOrderNr() {
+        return orderNr;
+    }
+
+    public void setOrderNr(Short orderNr) {
+        this.orderNr = orderNr;
     }
 
     public String getObjectivesEt() {
