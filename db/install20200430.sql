@@ -1138,7 +1138,7 @@ begin
 						where jesh.grade_code is not null
 						order by 2, 1, 7, 4 desc nulls last, 5  desc nulls last, 6		  )
 	loop
-		if o_id!=r.curriculum_module_outcomes_id and s_id!=r.student_id then
+		if o_id!=r.curriculum_module_outcomes_id or s_id!=r.student_id then
 			c_id:=0;
 			insert into student_curriculum_module_outcomes_result(
 									student_id, curriculum_module_outcomes_id, grade_Code, grade_date,grade_inserted, 
