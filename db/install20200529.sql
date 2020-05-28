@@ -1,4 +1,4 @@
-\c tahvel_20200518
+\c hois
 
 alter table scholarship_application add column wag_mark numeric (5,2);
 alter table scholarship_application add column last_period_wag_mark numeric (5,2);
