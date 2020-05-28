@@ -23,6 +23,7 @@ public class StudentCurriculumCompletion extends BaseTask {
     private BigDecimal creditsLastStudyPeriod;
     private BigDecimal creditsBeforeCurrentStudyPeriod;
     private BigDecimal studyOptionalBacklog;
+    private Boolean isModulesOk;
 
     public Student getStudent() {
         return student;
@@ -102,5 +103,17 @@ public class StudentCurriculumCompletion extends BaseTask {
 
     public void setStudyOptionalBacklog(BigDecimal studyOptionalBacklog) {
         this.studyOptionalBacklog = studyOptionalBacklog;
+    }
+
+    public Boolean getIsModulesOk() {
+        return isModulesOk;
+    }
+
+    public void setIsModulesOk(Boolean isModulesOk) {
+        this.isModulesOk = isModulesOk;
+    }
+
+    public Boolean isCurriculumFulfilled() {
+        return Boolean.valueOf(BigDecimal.ZERO.setScale(1).equals(studyBacklog) && Boolean.TRUE.equals(isModulesOk));
     }
 }

@@ -7,20 +7,43 @@
         <label>{{'curriculum.nameEt' | translate}}</label>
         <hois-value value="curriculum.nameEt"></hois-value>
       </md-input-container>
-      <md-input-container flex-gt-sm="45" flex-offset-gt-xs="5">
+      <md-input-container flex-gt-sm="45" flex-offset-gt-sm="5">
         <label>{{'curriculum.nameEn' | translate}}</label>
         <hois-value value="curriculum.nameEn"></hois-value>
       </md-input-container>
     </div>
+    
+    <div layout="column" layout-gt-sm="row" ng-if="!curriculum.higher">
+      <md-input-container flex-gt-sm="50">
+        <label>{{'curriculum.isJoint' | translate}}</label>
+        <hois-value value="curriculum.joint ? 'main.yes' : 'main.no' | translate"></hois-value>
+      </md-input-container>
+      <md-input-container flex-gt-sm="45" flex-offset-gt-sm="5">
+        <label>{{'curriculum.occupationIsAcquired' | translate}}</label>
+        <hois-value value="curriculum.occupation ? 'main.yes' : 'main.no' | translate"></hois-value>
+      </md-input-container>
+    </div>
 
     <div layout="row" layout-sm="column" layout-xs="column" flex>
-      <md-input-container flex-gt-sm="50">
+      <md-input-container flex-gt-sm="25">
         <label>{{'curriculum.code' | translate}}</label>
         <hois-value value="curriculum.code"></hois-value>
       </md-input-container>
-      <md-input-container flex-gt-sm="45" flex-offset-gt-xs="5">
+      <md-input-container flex-gt-sm="25">
         <label>{{'curriculum.merCode' | translate}}</label>
         <hois-value value="curriculum.merCode"></hois-value>
+      </md-input-container>
+      <md-input-container ng-if="curriculum.higher" flex-gt-sm="45" flex-offset-gt-sm="5">
+        <label>{{'curriculum.studyPeriod' | translate}} {{'main.years' | translate}}/{{'main.months' | translate}}</label>
+        <hois-value value="curriculum.studyPeriodYears + '/' + curriculum.studyPeriodMonths"></hois-value>
+      </md-input-container>
+      <md-input-container ng-if="!curriculum.higher" flex-gt-sm="20" flex-offset-gt-sm="5">
+        <label>{{'curriculum.studyPeriod' | translate}} {{'main.years' | translate}}/{{'main.months' | translate}}</label>
+        <hois-value value="curriculum.studyPeriodYears + '/' + curriculum.studyPeriodMonths"></hois-value>
+      </md-input-container>
+      <md-input-container ng-if="!curriculum.higher" flex-gt-sm="25">
+        <label>{{'curriculum.consecution.label' | translate}}</label>
+        <hois-value value="curriculum.consecution"></hois-value>
       </md-input-container>
     </div>
 
@@ -33,41 +56,284 @@
         <label>{{'student.studyLevel' | translate}}</label>
         <hois-value value="curriculum.origStudyLevel"></hois-value>
       </md-input-container>
-      <md-input-container ng-if="curriculum.higher" flex-gt-sm="45" flex-offset-gt-xs="5">
-        <label>{{'curriculum.studyPeriod' | translate}} {{'main.years' | translate}}/{{'main.months' | translate}}</label>
-        <hois-value value="curriculum.studyPeriodYears + '/' + curriculum.studyPeriodMonths"></hois-value>
-      </md-input-container>
-      <md-input-container ng-if="!curriculum.higher" flex-gt-sm="20" flex-offset-gt-xs="5">
-        <label>{{'curriculum.studyPeriod' | translate}} {{'main.years' | translate}}/{{'main.months' | translate}}</label>
-        <hois-value value="curriculum.studyPeriodYears + '/' + curriculum.studyPeriodMonths"></hois-value>
-      </md-input-container>
-      <md-input-container ng-if="!curriculum.higher" flex-gt-sm="25">
-        <label>{{'curriculum.consecution.label' | translate}}</label>
-        <hois-value value="curriculum.consecution"></hois-value>
+      <md-input-container flex-gt-sm="45" flex-offset-gt-sm="5">
+        <label>{{'curriculum.studyLanguage' | translate}}</label>
+        <hois-value value="(curriculum.studyLanguages | orderBy).join(', ')"></hois-value>
       </md-input-container>
     </div>
 
-    <div>&nbsp;</div>
-    <div layout="column">
-      <md-input-container flex>
-        <label>{{'curriculum.studyOutcomes' | translate}}</label>
-        <hois-value value="currentLanguage() === 'en' ? curriculum.outcomesEn : curriculum.outcomesEt"></hois-value>
+    <div layout="column" layout-gt-sm="row">
+      <md-input-container flex-gt-sm="50">
+        <label>{{'curriculum.ekrLevel' | translate}}</label>
+        <hois-value value="curriculum.ekrLevel"></hois-value>
       </md-input-container>
-      <md-input-container flex>
-        <label>{{'curriculum.admissionRequirements' | translate}}</label>
-        <hois-value value="currentLanguage() === 'en' ? curriculum.admissionRequirementsEn : curriculum.admissionRequirementsEt"></hois-value>
-      </md-input-container>
-      <md-input-container flex>
-        <label>{{'curriculum.graduationRequirements' | translate}}</label>
-        <hois-value value="currentLanguage() === 'en' ? curriculum.graduationRequirementsEn : curriculum.graduationRequirementsEt"></hois-value>
+      <md-input-container flex-gt-sm="45" flex-offset-gt-sm="5">
+        <label>{{'curriculum.educationLevel' | translate}}</label>
+        <hois-value value="curriculum.educationLevel"></hois-value>
       </md-input-container>
     </div>
     
-    <md-input-container flex>
-      <label>{{'public.url' | translate}}</label>
-      <hois-value value="publicUrl"></hois-value>
-    </md-input-container>
+    <div layout="row" layout-sm="column" layout-xs="column" flex ng-if="curriculum.higher">
+      <md-input-container flex-gt-sm="25">
+        <label>{{'curriculum.curriculumGroup' | translate}}</label>
+        <hois-value value="curriculum.group"></hois-value>
+      </md-input-container>
+      <md-input-container flex-gt-sm="25">
+        <label>{{'curriculum.group' | translate}}</label>
+        <hois-value value="curriculum.iscedClass"></hois-value>
+      </md-input-container>
+      <md-input-container flex-gt-sm="45" flex-offset-gt-sm="5">
+        <label>{{'curriculum.areaOfStudy' | translate}}</label>
+        <hois-value value="curriculum.areaOfStudy"></hois-value>
+      </md-input-container>
+    </div>
+
+    <div layout="row" layout-sm="column" layout-xs="column" flex ng-if="!curriculum.higher">
+      <md-input-container flex-gt-sm="25">
+        <label>{{'curriculum.areaOfStudy' | translate}}</label>
+        <hois-value value="curriculum.areaOfStudy"></hois-value>
+      </md-input-container>
+      <md-input-container flex-gt-sm="25">
+        <label>{{'curriculum.fieldOfStudy' | translate}}</label>
+        <hois-value value="curriculum.fieldOfStudy"></hois-value>
+      </md-input-container>
+      <md-input-container flex-gt-sm="45" flex-offset-gt-sm="5">
+        <label>{{'curriculum.group' | translate}}</label>
+        <hois-value value="curriculum.iscedClass"></hois-value>
+      </md-input-container>
+    </div>
+
+    <div layout="row" layout-sm="column" layout-xs="column" flex ng-if="!curriculum.higher">
+      <md-input-container flex-gt-sm="50">
+        <label>{{'curriculum.studyForm' | translate}}</label>
+        <hois-value value="curriculum.studyForms.join(', ')"></hois-value>
+      </md-input-container>
+      <md-input-container flex-gt-sm="45" flex-offset-gt-sm="5">
+        <label>{{'curriculum.structuralUnitResponsible' | translate}}</label>
+        <hois-value value="curriculum.departments.join(', ')"></hois-value>
+      </md-input-container>
+    </div>
+
+    <hois-collapsable expanded="false">
+      <hois-collapsable-header>
+          <span>{{'curriculum.commonData' | translate}}</span>
+      </hois-collapsable-header>
+
+      <div layout="column">
+        <md-input-container flex ng-if="curriculum.higher">
+          <label>{{'curriculum.objectives' | translate}}</label>
+          <hois-value value="currentLanguage() === 'en' ? curriculum.objectivesEn : curriculum.objectivesEt"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'curriculum.studyOutcomes' | translate}}</label>
+          <hois-value value="currentLanguage() === 'en' ? curriculum.outcomesEn : curriculum.outcomesEt"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'curriculum.admissionRequirements' | translate}}</label>
+          <hois-value value="currentLanguage() === 'en' ? curriculum.admissionRequirementsEn : curriculum.admissionRequirementsEt"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'curriculum.graduationRequirements' | translate}}</label>
+          <hois-value value="currentLanguage() === 'en' ? curriculum.graduationRequirementsEn : curriculum.graduationRequirementsEt"></hois-value>
+        </md-input-container>
+        <md-input-container flex ng-if="curriculum.higher">
+          <label>{{'curriculum.optionalStudyDescription' | translate}}</label>
+          <hois-value value="curriculum.optionalStudyDescription"></hois-value>
+        </md-input-container>
+        <md-input-container flex ng-if="curriculum.higher">
+          <label>{{'curriculum.addInfo' | translate}}</label>
+          <hois-value value="curriculum.addInfo"></hois-value>
+        </md-input-container>
+        <md-input-container flex ng-if="curriculum.higher">
+          <label>{{'curriculum.otherLanguages' | translate}}</label>
+          <hois-value value="curriculum.otherLanguages"></hois-value>
+        </md-input-container>
+      
+        <md-input-container flex ng-if="curriculum.higher">
+          <label>{{'public.url' | translate}}</label>
+          <hois-value value="publicUrl"></hois-value>
+        </md-input-container>
+      </div>
+    </hois-collapsable>
+
+    <hois-collapsable expanded="false" ng-if="curriculum.higher">
+      <hois-collapsable-header>
+          <span>{{'curriculum.diplomaInfo' | translate}}</span>
+      </hois-collapsable-header>
+
+      <div layout="column">
+        <md-input-container flex>
+          <label>{{'curriculum.final51' | translate}}</label>
+          <hois-value value="currentLanguage() === 'en' ? curriculum.finalEn51 : curriculum.final51"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'curriculum.final52' | translate}}</label>
+          <hois-value value="currentLanguage() === 'en' ? curriculum.finalEn52 : curriculum.final52"></hois-value>
+        </md-input-container>
+      </div>
+    </hois-collapsable>
+
+    <hois-collapsable expanded="false" ng-if="curriculum.higher" class="no-margin">
+      <hois-collapsable-header>
+          <span>{{'curriculum.address' | translate}}</span>
+      </hois-collapsable-header>
+
+      <div layout="column">
+        <div layout="row" class="occupation-row align-center" ng-repeat="address in curriculum.address | orderBy" ng-class-odd="'odd'" ng-class-even="'even'">
+          <div>
+            {{address}}
+          </div>
+        </div>
+      </div>
+    </hois-collapsable>
+
+    <hois-collapsable expanded="false" ng-if="curriculum.higher" class="no-margin">
+      <hois-collapsable-header>
+          <span>{{'curriculum.specialty.specialties' | translate}}</span>
+      </hois-collapsable-header>
+
+      <div layout="column">
+        <div layout="row" class="occupation-row align-center" ng-repeat="speciality in curriculum.specialities | orderBy: currentLanguageNameField" ng-class-odd="'odd'" ng-class-even="'even'">
+          <div>
+            {{currentLanguageNameField(speciality)}}
+          </div>
+        </div>
+      </div>
+    </hois-collapsable>
+
+    <hois-collapsable expanded="false" ng-if="!curriculum.higher" class="no-margin">
+      <hois-collapsable-header>
+          <span>{{'curriculum.modulesTought' | translate}}</span>
+      </hois-collapsable-header>
+  
+      <div layout="column">
+        <!--MODULES WITHOUT OCCUPATIONS-->
+        <div class="occupation-header align-center">
+          <span>{{'module.modulesWithoutPartOccupationOccuaptionSpecialization' | translate}}</span>
+        </div>
+        <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutEmptyModules" class="lowerBorder">
+          <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
+              <div flex="5">&nbsp;</div>
+              <div flex="20" flex-xs="35" style="word-wrap: break-word">{{currentLanguageNameField(type)}} ({{getTotalCredits(curriculum.modules | filter: filterEmptyModulesByType(type.code))}} EKAP)</div>
+              <div layout="column" flex="75" flex-xs="60">
+                  <div flex="100" ng-repeat="module in curriculum.modules | filter: filterEmptyModulesByType(type.code) | orderBy: moduleOrderBy() track by $index"
+                      layout="row" class="align-center occupation-module-row" ng-class-odd="'odd'" ng-class-even="'even'">
+                      <a flex="50" flex-xs="70" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
+                      <span flex="10" flex-xs="30">{{module.credits}}&nbsp; EKAP</span>
+                  </div>
+              </div>
+          </div>
+        </div>
+
+         <!--KUTSETE/OSAKUTSETE MOODULID-->
+        <div ng-repeat="occupation in curriculum.occupations | orderBy: ['occupation', '-validThru', '-validFrom']" layout="column">
+          <div class="occupation-header align-center">
+            <span ng-show="curriculum.occupation">
+              {{'stateCurriculum.enter.occupation.occupation' | translate}} {{$index + 1}}:&nbsp; {{ occupation.occupation }}
+            </span>
+            <span ng-show="!curriculum.occupation">
+              {{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}:&nbsp; {{ occupation.occupation }}
+            </span>
+          </div>
+          <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(occupation.code, curriculum.modules)" class="lowerBorder">
+            <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
+              <div flex="5">&nbsp;</div>
+              <div flex="20" style="word-wrap: break-word">{{currentLanguageNameField(type)}} ({{getTotalCredits(curriculum.modules | filter: filterModulesByType(type.code, occupation.code))}} EKAP)</div>
+              <div layout="column" flex="75">
+                <div flex="100" ng-repeat="module in curriculum.modules | filter: filterModulesByType(type.code, occupation.code) | orderBy: moduleOrderBy() track by $index"
+                  layout="row" class="align-center occupation-module-row" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <a flex="50" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
+                  <span flex="10">{{module.credits}}&nbsp; EKAP</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!--OSAKUTSETE MOODULID-->
+          <div ng-repeat = "partOccupation in occupation.partOccupations | orderBy: [partOccupation, '-validThru', '-validFrom']" layout="column">
+            <div class="occupation-header2 align-center">
+              <span>
+                {{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}: {{currentLanguageNameField(partOccupation)}}
+              </span>
+            </div>
+            <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(partOccupation.code, curriculum.modules)" class="lowerBorder">
+              <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
+                <div flex="5">&nbsp;</div>
+                <div flex="20" style="word-wrap: break-word">{{currentLanguageNameField(type)}} ({{getTotalCredits(curriculum.modules | filter: filterModulesByType(type.code, partOccupation.code))}} EKAP)</div>
+                <div layout="column" flex="75">
+                    <div flex="100" ng-repeat="module in curriculum.modules | filter: filterModulesByType(type.code, partOccupation.code) | orderBy: moduleOrderBy() track by $index"
+                        layout="row" class="align-center occupation-module-row" ng-class-odd="'odd'" ng-class-even="'even'">
+                        <a flex="50" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
+                        <span flex="10">{{module.credits}}&nbsp; EKAP</span>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!--SPETSKUTSETE MOODULID-->
+          <div ng-repeat = "speciality in occupation.specialityCodes | orderBy: [currentLanguageNameField, '-validThru', '-validFrom']" layout="column">
+            <div class="occupation-header2 align-center">
+              <span>
+                {{'stateCurriculum.enter.occupation.specialty' | translate}} {{$index + 1}}: {{currentLanguageNameField(speciality)}}
+              </span>
+            </div>
+            <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(speciality.code, curriculum.modules)" class="lowerBorder">
+              <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
+                <div flex="5">&nbsp;</div>
+                <div flex="20" style="word-wrap: break-word">{{currentLanguageNameField(type)}} ({{getTotalCredits(curriculum.modules | filter: filterModulesByType(type.code, speciality.code))}} EKAP)</div>
+                <div layout="column" flex="75">
+                  <div flex="100" ng-repeat="module in curriculum.modules | filter: filterModulesByType(type.code, speciality.code) | orderBy: moduleOrderBy() track by $index"
+                    layout="row" class="align-center occupation-module-row" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <a flex="50" style="word-wrap: break-word" ng-click="openViewModuleDialog(module)" href="">{{module.baseModule ? '* ' : ''}}{{currentLanguageNameField(module)}}</a>
+                    <span flex="10">{{module.credits}}&nbsp; EKAP</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </hois-collapsable>
+  
+    <hois-collapsable expanded="false" ng-if="!curriculum.higher">
+      <hois-collapsable-header>
+          <span>{{'curriculum.additionalInfo' | translate}}</span>
+      </hois-collapsable-header>
+  
+      <div layout="column">
+        <md-input-container flex>
+          <label>{{'curriculum.optionalStudyCredits' | translate}}</label>
+          <hois-value value="curriculum.optionalStudyCredits"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'curriculum.practiceDescription' | translate}}</label>
+          <hois-value value="curriculum.practiceDescription"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'curriculum.finalExamShortDescription' | translate}}</label>
+          <hois-value value="curriculum.finalExamDescription"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'curriculum.optionalStudyOpportunities' | translate}}</label>
+          <hois-value value="curriculum.optionalStudyDescription"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'main.notes' | translate}}</label>
+          <hois-value value="curriculum.description"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'public.url' | translate}}</label>
+          <hois-value value="publicUrl"></hois-value>
+        </md-input-container>
+      </div>
+    </hois-collapsable>
   </fieldset>
+  
+  <div layout="row" ng-if="!curriculum.higher">
+    <a href="{{curriculumPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="curriculumPdfUrl">{{'main.button.printGeneral' | translate}}</a>
+    <a href="{{curriculumModulesPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="curriculumModulesPdfUrl">{{'main.button.printModules' | translate}}</a>
+  </div>
 
   <span ng-if="curriculum.versions.length > 0">
     <div>&nbsp;</div>
@@ -97,3 +363,15 @@
     <md-button ng-click="back('#/curriculums/')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>
+
+<style>
+  .occupation-row {
+    min-height: 38px;
+  }
+  .no-margin > div.hois-collapse {
+    margin: 0;
+  }
+  .lowerBorder {
+    border-bottom: solid 1px #E0E0E0;
+  }
+</style>

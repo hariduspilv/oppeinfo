@@ -13,6 +13,10 @@ public class SupplementDto {
     private List<FormDto> formsEn;
     private List<FormDto> freeExtraForms;
     
+    private Boolean isDiplomaDuplicate;
+    private Boolean isSupplementDuplicate;
+    private Boolean isSupplementEnDuplicate;
+    
     public String getFullname() {
         return fullname;
     }
@@ -67,6 +71,27 @@ public class SupplementDto {
     }
     public void setFreeExtraForms(List<FormDto> freeExtraForms) {
         this.freeExtraForms = freeExtraForms;
+    }
+    
+    public Boolean getIsDiplomaDuplicate() {
+        return isDiplomaDuplicate;
+    }
+    public void setIsDiplomaDuplicate(Boolean isDiplomaDuplicate) {
+        this.isDiplomaDuplicate = isDiplomaDuplicate;
+    }
+    
+    public Boolean getIsSupplementDuplicate() {
+        return isSupplementDuplicate;
+    }
+    public void setIsSupplementDuplicate(Boolean isSupplementDuplicate) {
+        this.isSupplementDuplicate = isSupplementDuplicate;
+    }
+    
+    public Boolean getIsSupplementEnDuplicate() {
+        return isSupplementEnDuplicate;
+    }
+    public void setIsSupplementEnDuplicate(Boolean isSupplementEnDuplicate) {
+        this.isSupplementEnDuplicate = isSupplementEnDuplicate;
     }
     
 }

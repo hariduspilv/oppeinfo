@@ -74,17 +74,20 @@
                 </md-select>
             </md-input-container>
             <div layout="row" ng-if="record.type === 'TOEND_LIIK_SOOR'">
-                <md-input-container ng-if="!record.id">
-                    <md-checkbox ng-model="record.addOutcomes" ng-change="addOutcomesChanged()">{{'certificate.addOutcomes' | translate}}</md-checkbox>
+              <md-input-container ng-if="!record.id && isHigher">
+                <md-checkbox ng-model="record.showModules" ng-change="reloadContent()">{{'certificate.showModules' | translate}}</md-checkbox>
+              </md-input-container>
+                <md-input-container ng-if="!record.id" flex-offset="{{isHigher ? 5 : 0}}">
+                    <md-checkbox ng-model="record.addOutcomes" ng-change="reloadContent()">{{'certificate.addOutcomes' | translate}}</md-checkbox>
                 </md-input-container>
-                <md-input-container ng-if="!record.id && studentType === 'OPPUR_K'">
-                    <md-checkbox ng-model="record.showUncompleted" ng-change="addOutcomesChanged()">
+                <md-input-container ng-if="!record.id && studentType === 'OPPUR_K'" flex-offset="5">
+                    <md-checkbox ng-model="record.showUncompleted" ng-change="reloadContent()">
                         {{auth.higher ? ('certificate.showUncompletedSubjects' | translate) : ('certificate.showUncompletedJournals' | translate)}}
                     </md-checkbox>
                 </md-input-container>
             </div>
             <div layout="row" ng-if="!record.id && record.type === 'TOEND_LIIK_SOOR' && studentType === 'OPPUR_K'">
-                <md-radio-group layout-gt-sm="row" ng-model="record.estonian" ng-change="addOutcomesChanged()">
+                <md-radio-group layout-gt-sm="row" ng-model="record.estonian" ng-change="reloadContent()">
                     <md-radio-button ng-value="true" aria-label="estonian">
                         {{'document.estonian' | translate}}
                     </md-radio-button>

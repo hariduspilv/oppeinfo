@@ -17,8 +17,8 @@ public class StudentHigherSubjectResultDto {
 
     private Long id;
     private SubjectSearchDto subject;
-    private List<StudentHigherSubjectResultGradeDto> grades = new ArrayList<>();
-    private StudentHigherSubjectResultGradeDto lastGrade;
+    private List<StudentHigherResultGradeDto> grades = new ArrayList<>();
+    private StudentHigherResultGradeDto lastGrade;
     private Long electiveModule;
     private AutocompleteResult higherModule;
     private Boolean isOptional;
@@ -54,7 +54,7 @@ public class StudentHigherSubjectResultDto {
 
     public void calculateIsOk(boolean showUncompleted) {
         if(grades != null && !grades.isEmpty()) {
-            Collections.sort(grades, StreamUtil.comparingWithNullsLast(StudentHigherSubjectResultGradeDto::getIsActive));
+            Collections.sort(grades, StreamUtil.comparingWithNullsLast(StudentHigherResultGradeDto::getIsActive));
             lastGrade = calculateLastGrade(showUncompleted);
             isOk = Boolean.valueOf((lastGrade.getGrade() != null && HigherAssessment.isPositive(lastGrade.getGrade())) || showUncompleted);
         } else {
@@ -62,9 +62,9 @@ public class StudentHigherSubjectResultDto {
         }
     }
 
-    private StudentHigherSubjectResultGradeDto calculateLastGrade(boolean showUncompleted) {
+    private StudentHigherResultGradeDto calculateLastGrade(boolean showUncompleted) {
         for(int i = grades.size() - 1; i >= 0; i--) {
-            StudentHigherSubjectResultGradeDto grade = grades.get(i);
+            StudentHigherResultGradeDto grade = grades.get(i);
             if(HigherAssessment.KORGHINDAMINE_MI.name().equals(grade.getGrade()) && i != 0 && !showUncompleted) {
                 continue;
             }
@@ -97,11 +97,11 @@ public class StudentHigherSubjectResultDto {
         this.higherModule = higherModule;
     }
 
-    public List<StudentHigherSubjectResultGradeDto> getGrades() {
+    public List<StudentHigherResultGradeDto> getGrades() {
         return grades;
     }
 
-    public void setGrades(List<StudentHigherSubjectResultGradeDto> grades) {
+    public void setGrades(List<StudentHigherResultGradeDto> grades) {
         this.grades = grades;
     }
 
@@ -145,11 +145,11 @@ public class StudentHigherSubjectResultDto {
         this.isExtraCurriculum = isExtraCurriculum;
     }
 
-    public StudentHigherSubjectResultGradeDto getLastGrade() {
+    public StudentHigherResultGradeDto getLastGrade() {
         return lastGrade;
     }
 
-    public void setLastGrade(StudentHigherSubjectResultGradeDto lastGrade) {
+    public void setLastGrade(StudentHigherResultGradeDto lastGrade) {
         this.lastGrade = lastGrade;
     }
 

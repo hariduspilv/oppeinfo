@@ -7,14 +7,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
-import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
-import ee.hitsa.ois.enums.HigherModuleType;
 import org.springframework.security.access.AccessDeniedException;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
@@ -28,6 +27,7 @@ import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.Role;
@@ -100,7 +100,7 @@ public abstract class UserUtil {
     }
 
     public static boolean canCancelDirective(HoisUserDetails user, Directive directive) {
-        return !ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType()) && !ClassifierUtil.equals(DirectiveType.KASKKIRI_VALISKATK, directive.getType())
+        return !ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_TYHIST, DirectiveType.KASKKIRI_VALISKATK, DirectiveType.KASKKIRI_DUPLIKAAT)
             && ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD, directive.getStatus())
             && isSchoolAdmin(user, directive.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KASKKIRI);
     }
@@ -154,7 +154,7 @@ public abstract class UserUtil {
                         && hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_TUGITEENUS));
     }
     
-    public static boolean canViewStudentSupportServices(HoisUserDetails user, Student student, StudentSupportService service) {
+    public static boolean canViewStudentSupportService(HoisUserDetails user, Student student, StudentSupportService service) {
         if (!student.equals(service.getStudent())) {
             return false;
         }
@@ -170,6 +170,9 @@ public abstract class UserUtil {
         return false;
     }
 
+    public static boolean canEditStudentSupportService(HoisUserDetails user, Student student, StudentSupportService service) {
+        return canEditStudentSupportServices(user, student) && !Boolean.TRUE.equals(service.getEhis());
+    }
 
     public static boolean canEditStudentSupportServices(HoisUserDetails user, Student student) {
         return isSchoolAdmin(user, student.getSchool())
@@ -256,7 +259,7 @@ public abstract class UserUtil {
     private static boolean canMarkStudentModuleComplete(HoisUserDetails user, Student student,
             CurriculumVersionHigherModule module) {
         return canChangeModuleCompletion(user, student)
-                && HigherModuleType.CAN_MARK_AS_COMPLETE.contains(EntityUtil.getCode(module.getType()));
+                && !HigherModuleType.CAN_NOT_MARK_AS_COMPLETE.contains(EntityUtil.getCode(module.getType()));
     }
 
     private static boolean canRemoveModuleCompletion(HoisUserDetails user, Student student) {
@@ -632,20 +635,28 @@ public abstract class UserUtil {
     }
 
     public static void assertCanViewStudentSupportServices(HoisUserDetails user, Student student) {
-        throwAccessDeniedIf(!canViewStudentSupportServices(user, student), "main.messages.error.nopermission");
+        throwAccessDeniedIf(!canViewStudentSupportServices(user, student));
     }
 
     public static void assertCanViewPrivateStudentSupportServices(HoisUserDetails user, Student student) {
-        throwAccessDeniedIf(!canViewPrivateStudentSupportServices(user, student), "main.messages.error.nopermission");
+        throwAccessDeniedIf(!canViewPrivateStudentSupportServices(user, student));
     }
 
-    public static void assertCanViewStudentSupportServices(HoisUserDetails user, Student student,
+    public static void assertCanViewStudentSupportService(HoisUserDetails user, Student student,
             StudentSupportService service) {
-        throwAccessDeniedIf(!canViewStudentSupportServices(user, student, service), "main.messages.error.nopermission");
+        throwAccessDeniedIf(!canViewStudentSupportService(user, student, service));
     }
 
     public static void assertCanEditStudentSupportServices(HoisUserDetails user, Student student) {
-        throwAccessDeniedIf(!canEditStudentSupportServices(user, student), "main.messages.error.nopermission");
+        throwAccessDeniedIf(!canEditStudentSupportServices(user, student));
+    }
+
+    public static void assertCanEditStudentSupportService(HoisUserDetails user, Student student, StudentSupportService service) {
+        throwAccessDeniedIf(!canEditStudentSupportService(user, student, service));
+    }
+
+    public static void assertCanDeleteStudentSupportService(HoisUserDetails user, Student student, StudentSupportService service) {
+        throwAccessDeniedIf(!canEditStudentSupportService(user, student, service));
     }
 
     public static void assertCanMarkStudentModuleComplete(HoisUserDetails user, Student student,

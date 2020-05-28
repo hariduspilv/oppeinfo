@@ -58,14 +58,14 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$route', '$
       if ($scope.formState.allowedStipendTypes.indexOf('STIPTOETUS_DOKTOR') !== -1) {
         $scope.currentNavItem = 'scholarship.drStipend';
       } else if (ArrayUtils.intersect($scope.formState.allowedStipendTypes, ['STIPTOETUS_ERIALA', 'STIPTOETUS_MUU', 'STIPTOETUS_TULEMUS'])) {
-        $scope.currentNavItem = 'scholarship.stipend'
+        $scope.currentNavItem = 'scholarship.stipend';
       }
       $scope.formState.enableEhisType = enabledEhisTypeFor.indexOf(result.type) !== -1;
       $scope.stipend = result;
       $scope.stipendTypeChanged();
       $scope.applicationEndChanged();
       $scope.stipendForm.$setPristine();
-      DataUtils.convertStringToDates($scope.stipend, ['applicationStart', 'applicationEnd', 'paymentStart', 'paymentEnd', 
+      DataUtils.convertStringToDates($scope.stipend, ['applicationStart', 'applicationEnd', 'paymentStart', 'paymentEnd',
         'lastPeriodGradeFrom', 'lastPeriodGradeThru', 'studyStartPeriodStart', 'studyStartPeriodEnd']);
     }
 
@@ -82,11 +82,11 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$route', '$
       }
       $scope.stipend.courses = ['KURSUS_1', 'KURSUS_2', 'KURSUS_3', 'KURSUS_4'];
       $scope.missingCurriculums = true;
-      
+
       if ($scope.formState.allowedStipendTypes.indexOf('STIPTOETUS_DOKTOR') !== -1) {
         $scope.currentNavItem = 'scholarship.drStipend';
       } else if (ArrayUtils.intersect($scope.formState.allowedStipendTypes, ['STIPTOETUS_ERIALA', 'STIPTOETUS_MUU', 'STIPTOETUS_TULEMUS'])) {
-        $scope.currentNavItem = 'scholarship.stipend'
+        $scope.currentNavItem = 'scholarship.stipend';
       }
     }
 
@@ -133,7 +133,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$route', '$
         var stipendCurriculumIds = $scope.stipend.curriculums.map(function (it) {
           return it.id;
         });
-        
+
         for (var i = 0; i < curriculums.length; i++) {
           var curriculum = curriculums[i];
           if (stipendCurriculumIds.indexOf(curriculum.id) === -1) {
@@ -170,7 +170,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$route', '$
         }).catch(angular.noop);
       });
     };
-    
+
     $scope.copy = function () {
       if (!formIsValid()) {
         return;
@@ -181,7 +181,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$route', '$
           $location.url(baseUrl + '/' + result.id + '/edit');
         });
       }).catch(angular.noop);
-    }
+    };
 
     $scope.delete = function () {
       var deleteType, url;
@@ -239,13 +239,13 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$route', '$
       var otherValues = [$scope.stipend.averageMarkPriority, $scope.stipend.lastPeriodMarkPriority, $scope.stipend.curriculumCompletionPriority,
         $scope.stipend.maxAbsencesPriority, $scope.stipend.lastPeriodWagMarkPriority];
       return otherValues.indexOf(value.code) === -1;
-    }
-    
+    };
+
     $scope.lastPeriodWagMarkPriorityFilter = function (value) {
       var otherValues = [$scope.stipend.averageMarkPriority, $scope.stipend.lastPeriodMarkPriority, $scope.stipend.curriculumCompletionPriority,
         $scope.stipend.maxAbsencesPriority, $scope.stipend.wagMarkPriority];
       return otherValues.indexOf(value.code) === -1;
-    }
+    };
 
     function setEhisStipendiumValues(type) {
       if (!type) {
@@ -253,7 +253,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$route', '$
         return;
       }
       switch (type) {
-        case 'STIPTOETUS_TULEMUS': 
+        case 'STIPTOETUS_TULEMUS':
           $scope.formState.allowedEhisTypes = ['EHIS_STIPENDIUM_2'];
           setDefaultEhisStupendium('EHIS_STIPENDIUM_2');
           break;
@@ -308,7 +308,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$route', '$
       if (result.type === 'STIPTOETUS_DOKTOR') {
         $scope.currentNavItem = 'scholarship.drStipend';
       } else if (['STIPTOETUS_ERIALA', 'STIPTOETUS_MUU', 'STIPTOETUS_TULEMUS'].indexOf(result.type) !== -1) {
-        $scope.currentNavItem = 'scholarship.stipend'
+        $scope.currentNavItem = 'scholarship.stipend';
       }
 
       QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query(function (studyPeriods) {
@@ -337,7 +337,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$route', '$
         message.info('main.messages.create.success');
         $location.url(baseUrl + '/' + result.id + '/edit');
       });
-    }
+    };
 
     if (id) {
       $scope.stipend = Endpoint.get({id: id}, afterLoad);

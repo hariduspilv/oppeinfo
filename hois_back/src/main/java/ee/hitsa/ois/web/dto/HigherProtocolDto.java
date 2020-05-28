@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.protocol.Protocol;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HigherProtocolUtil;
@@ -19,6 +20,7 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
     private String protocolType;
     private String status;
     private SubjectStudyPeriodMidtermTaskDto subjectStudyPeriodMidtermTaskDto;
+    private HigherProtocolModuleDto moduleDto;
     private OisFileViewDto oisFile;
     private Boolean canBeEdited;
     private Boolean canBeConfirmed;
@@ -48,17 +50,24 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
         dto.setStatus(EntityUtil.getCode(protocol.getStatus()));
         dto.setFinalDate(protocol.getFinalDate());
 
-        Map<Long, DeclarationSubject> dsByStudentId = protocol.getProtocolHdata().getSubjectStudyPeriod().getDeclarationSubjects().stream()
-                .collect(Collectors.toMap(ds -> ds.getDeclaration().getStudent().getId(), ds -> ds, (o, n) -> o));
-        
-        dto.setProtocolStudents(StreamUtil.toMappedSet(ps -> HigherProtocolStudentDto.ofWithSubgroups(ps, dsByStudentId.get(ps.getStudent().getId())), protocol.getProtocolStudents()));
+        SubjectStudyPeriod subjectStudyPeriod = protocol.getProtocolHdata().getSubjectStudyPeriod();
+        if (subjectStudyPeriod != null) {
+            Map<Long, DeclarationSubject> dsByStudentId = protocol.getProtocolHdata().getSubjectStudyPeriod()
+                    .getDeclarationSubjects().stream()
+                    .collect(Collectors.toMap(ds -> ds.getDeclaration().getStudent().getId(), ds -> ds, (o, n) -> o));
+            dto.setProtocolStudents(StreamUtil.toMappedSet(ps -> HigherProtocolStudentDto.ofWithSubgroups(ps,
+                    dsByStudentId.get(ps.getStudent().getId())), protocol.getProtocolStudents()));
 
-        Set<Long> studetnIds = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
-        dto.setSubjectStudyPeriodMidtermTaskDto(SubjectStudyPeriodMidtermTaskDto.ofForProtocol(studetnIds,
-                protocol.getProtocolHdata().getSubjectStudyPeriod()));
+            Set<Long> studentIds = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
+            dto.setSubjectStudyPeriodMidtermTaskDto(SubjectStudyPeriodMidtermTaskDto.ofForProtocol(studentIds,
+                    subjectStudyPeriod));
+        } else {
+            dto.setModuleDto(HigherProtocolModuleDto.of(protocol.getProtocolHdata()));
+            dto.setProtocolStudents(StreamUtil.toMappedSet(HigherProtocolStudentDto::of, protocol.getProtocolStudents()));
+        }
 
         if (protocol.getOisFile() != null) {
-        	dto.setOisFile(OisFileViewDto.of(protocol.getOisFile()));
+            dto.setOisFile(OisFileViewDto.of(protocol.getOisFile()));
         }
 
         dto.setCanBeEdited(Boolean.valueOf(HigherProtocolUtil.canChange(user, protocol)));
@@ -106,6 +115,14 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
 
     public void setSubjectStudyPeriodMidtermTaskDto(SubjectStudyPeriodMidtermTaskDto subjectStudyPeriodMidtermTaskDto) {
         this.subjectStudyPeriodMidtermTaskDto = subjectStudyPeriodMidtermTaskDto;
+    }
+
+    public HigherProtocolModuleDto getModuleDto() {
+        return moduleDto;
+    }
+
+    public void setModuleDto(HigherProtocolModuleDto moduleDto) {
+        this.moduleDto = moduleDto;
     }
 
     public OisFileViewDto getOisFile() {

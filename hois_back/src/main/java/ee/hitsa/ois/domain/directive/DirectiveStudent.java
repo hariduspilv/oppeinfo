@@ -15,12 +15,15 @@ import javax.persistence.OneToOne;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Form;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.apelapplication.ApelSchool;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.diploma.Diploma;
+import ee.hitsa.ois.domain.diploma.DiplomaSupplement;
 import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.student.Student;
@@ -32,12 +35,14 @@ import ee.hitsa.ois.validation.Conditional;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.DirectiveValidation.Akad;
 import ee.hitsa.ois.validation.DirectiveValidation.Akadk;
+import ee.hitsa.ois.validation.DirectiveValidation.Duplikaat;
 import ee.hitsa.ois.validation.DirectiveValidation.Eksmat;
 import ee.hitsa.ois.validation.DirectiveValidation.Ennist;
 import ee.hitsa.ois.validation.DirectiveValidation.Finm;
 import ee.hitsa.ois.validation.DirectiveValidation.Immat;
 import ee.hitsa.ois.validation.DirectiveValidation.Indok;
 import ee.hitsa.ois.validation.DirectiveValidation.Indoklop;
+import ee.hitsa.ois.validation.DirectiveValidation.Kylalis;
 import ee.hitsa.ois.validation.DirectiveValidation.Lopet;
 import ee.hitsa.ois.validation.DirectiveValidation.Okava;
 import ee.hitsa.ois.validation.DirectiveValidation.Okoorm;
@@ -48,7 +53,6 @@ import ee.hitsa.ois.validation.DirectiveValidation.Tugi;
 import ee.hitsa.ois.validation.DirectiveValidation.Tugilopp;
 import ee.hitsa.ois.validation.DirectiveValidation.Valis;
 import ee.hitsa.ois.validation.DirectiveValidation.Valiskatk;
-import ee.hitsa.ois.validation.DirectiveValidation.Kylalis;
 import ee.hitsa.ois.validation.PeriodRange;
 import ee.hitsa.ois.validation.Required;
 
@@ -153,14 +157,25 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @Required(groups = {Indoklop.class, Stiptoetl.class, Tugilopp.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private DirectiveStudent directiveStudent;
+    @Required(groups = Duplikaat.class)
     private String addInfo;
     private Boolean isAbsence;
     @ManyToOne(fetch = FetchType.LAZY) // Immat is checked by hand (only higher)
     private Classifier dormitory;
     private String ehisId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Diploma diploma;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private DiplomaSupplement diplomaSupplement;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private DiplomaSupplement diplomaSupplementEn;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Form diplomaForm;
 
     @OneToOne(mappedBy = "directiveStudent")
     private StudentAbsence studentAbsence;
+    @OneToMany(mappedBy = "directiveStudent", orphanRemoval = true, cascade = CascadeType.ALL)
+    private List<DirectiveStudentDuplicateForm> forms;
 
     public Directive getDirective() {
         return directive;
@@ -525,6 +540,47 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
 
     public void setEhisId(String ehisId) {
         this.ehisId = ehisId;
+    }
+
+    public Diploma getDiploma() {
+        return diploma;
+    }
+
+    public void setDiploma(Diploma diploma) {
+        this.diploma = diploma;
+    }
+
+    public DiplomaSupplement getDiplomaSupplement() {
+        return diplomaSupplement;
+    }
+
+    public void setDiplomaSupplement(DiplomaSupplement diplomaSupplement) {
+        this.diplomaSupplement = diplomaSupplement;
+    }
+
+    public DiplomaSupplement getDiplomaSupplementEn() {
+        return diplomaSupplementEn;
+    }
+
+    public void setDiplomaSupplementEn(DiplomaSupplement diplomaSupplementEn) {
+        this.diplomaSupplementEn = diplomaSupplementEn;
+    }
+
+    public Form getDiplomaForm() {
+        return diplomaForm;
+    }
+
+    public void setDiplomaForm(Form diplomaForm) {
+        this.diplomaForm = diplomaForm;
+    }
+
+    public List<DirectiveStudentDuplicateForm> getForms() {
+        return forms != null ? forms : (forms = new ArrayList<>());
+    }
+
+    public void setForms(List<DirectiveStudentDuplicateForm> forms) {
+        getForms().clear();
+        getForms().addAll(forms);
     }
 
 }

@@ -22,24 +22,30 @@
           <hois-value value="stipend.amountPaid"></hois-value>
         </md-input-container>
       </div>
-      <div layout="row" flex>
-        <md-input-container flex="45">
+      <div layout="column" flex="45">
+        <md-input-container>
           <label class="textInput">{{'stipend.studyLoad' | translate}}</label>
           <hois-classifier-value ng-model="stipend.studyLoads" main-classifier-code="OPPEKOORMUS" multiple></hois-classifier-value>
         </md-input-container>
-        <md-input-container flex="50" flex-offset="5">
+        <md-input-container ng-if="isNumber(stipend.averageMark)">
           <label class="textInput">{{'stipend.averageMark' | translate}}</label>
           <hois-value value="stipend.averageMark"></hois-value>
         </md-input-container>
-      </div>
-      <div layout="row" flex>
-        <md-input-container flex="45">
-          <label class="textInput">{{'stipend.curriculumCompletion' | translate}}</label>
-          <hois-value value="stipend.curriculumCompletion"></hois-value>
+        <md-input-container ng-if="isNumber(stipend.wagMark)">
+          <label class="textInput">{{'stipend.wagMark' | translate}}</label>
+          <hois-value value="stipend.wagMark"></hois-value>
         </md-input-container>
-        <md-input-container flex="50" flex-offset="5">
+        <md-input-container ng-if="isNumber(stipend.lastPeriodMark)">
           <label class="textInput">{{'stipend.lastPeriodMark' | translate}}</label>
           <hois-value value="stipend.lastPeriodMark"></hois-value>
+        </md-input-container>
+        <md-input-container ng-if="isNumber(stipend.lastPeriodWagMark)">
+          <label class="textInput">{{'stipend.lastPeriodWagMark' | translate}}</label>
+          <hois-value value="stipend.lastPeriodWagMark"></hois-value>
+        </md-input-container>
+        <md-input-container ng-if="isNumber(stipend.curriculumCompletion)">
+          <label class="textInput">{{'stipend.curriculumCompletion' | translate}}</label>
+          <hois-value value="stipend.curriculumCompletion"></hois-value>
         </md-input-container>
       </div>
       <div layout="row">
@@ -86,18 +92,26 @@
     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{isStudent() ? 'stipend.student.myData' : 'stipend.student.studentData' | translate}}</legend>
 
     <div class="form-readonly ois-form-layout-padding">
-      <div layout="row" flex>
-        <md-input-container flex="45" ng-if="!application.useSaisPoints">
-          <label class="textInput">{{'stipend.averageMark' | translate}}</label>
-          <hois-value value="application.averageMark"></hois-value>
-        </md-input-container>
-        <md-input-container flex="45" ng-if="application.useSaisPoints">
+      <div layout="column" flex="45">
+        <md-input-container ng-if="application.useSaisPoints">
           <label class="textInput">{{'stipend.saisPoints' | translate}}</label>
           <hois-value value="application.saisPoints"></hois-value>
         </md-input-container>
-        <md-input-container flex="50" flex-offset="5">
+        <md-input-container ng-if="!application.useSaisPoints && (isNumber(stipend.averageMark) || isNumber(application.averageMark))">
+          <label class="textInput">{{'stipend.averageMark' | translate}}</label>
+          <hois-value value="application.averageMark"></hois-value>
+        </md-input-container>
+        <md-input-container ng-if="!application.useSaisPoints && (isNumber(stipend.wagMark) || isNumber(application.wagMark))">
+          <label>{{'stipend.wagMark' | translate}}</label>
+          <hois-value value="application.wagMark"></hois-value>
+        </md-input-container>
+        <md-input-container ng-if="!application.useSaisPoints && (isNumber(stipend.lastPeriodMark) || isNumber(application.lastPeriodMark))">
           <label>{{'stipend.lastPeriodMark' | translate}}</label>
           <hois-value value="application.lastPeriodMark"></hois-value>
+        </md-input-container>
+        <md-input-container ng-if="!application.useSaisPoints && (isNumber(stipend.lastPeriodWagMark) || isNumber(application.lastPeriodWagMark))">
+          <label>{{'stipend.lastPeriodWagMark' | translate}}</label>
+          <hois-value value="application.lastPeriodWagMark"></hois-value>
         </md-input-container>
       </div>
       <div layout="row" flex>

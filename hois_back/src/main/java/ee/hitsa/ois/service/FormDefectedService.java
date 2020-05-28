@@ -74,7 +74,9 @@ public class FormDefectedService {
     }
 
     private void setDefected(Diploma diploma) {
-        diploma.setStatus(documentStatus);
+        if (!ClassifierUtil.equals(DocumentStatus.LOPUDOK_STAATUS_C, diploma.getStatus())) {
+            diploma.setStatus(documentStatus);
+        }
         EntityUtil.save(diploma, em);
         em.createQuery("select ds from DiplomaSupplement ds where ds.diploma = ?1", DiplomaSupplement.class)
                 .setParameter(1, diploma)
@@ -83,10 +85,12 @@ public class FormDefectedService {
     }
 
     private void setDefected(DiplomaSupplement diplomaSupplement) {
-        if (diplomaSupplement.getStatus() != null) {
+        if (diplomaSupplement.getStatus() != null
+                && !ClassifierUtil.equals(DocumentStatus.LOPUDOK_STAATUS_C, diplomaSupplement.getStatus())) {
             diplomaSupplement.setStatus(documentStatus);
         }
-        if (diplomaSupplement.getStatusEn() != null) {
+        if (diplomaSupplement.getStatusEn() != null
+                && !ClassifierUtil.equals(DocumentStatus.LOPUDOK_STAATUS_C, diplomaSupplement.getStatusEn())) {
             diplomaSupplement.setStatusEn(documentStatus);
         }
         EntityUtil.save(diplomaSupplement, em);

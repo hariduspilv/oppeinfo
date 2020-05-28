@@ -46,14 +46,14 @@ public class StudentResultCardService {
     private static final String STUDENT_INFO_SELECT = "s.id student_id, s.status_code, "
             + "p.idcode, p.birthdate, p.firstname, p.lastname, "
             + "c.name_et, c.code, c.credits, sfc.name_et study_form_code, slc.name_et language_code, "
-            + "(select string_agg(f.full_code, ', ') from diploma d join form f on f.id = d.form_id "
-            + "where d.student_id = s.id and d.status_code in ('LOPUDOK_STAATUS_T', 'LOPUDOK_STAATUS_V')) diploma_nrs, "
-            + "(select string_agg(full_code, ', ') from ( "
-            + "select f2.full_code, case when f2.type_code = 'LOPUBLANKETT_HIN' then 1 else 2 end ordernr from diploma_supplement ds "
+            + "(select string_agg(case when d.is_duplicate then f.full_code || ' (dupl)' else f.full_code end, ', ' order by d.diploma_id asc nulls first, f.numeral) from diploma d join form f on f.id = d.form_id "
+            + "where d.student_id = s.id and d.status_code in ('LOPUDOK_STAATUS_T', 'LOPUDOK_STAATUS_V', 'LOPUDOK_STAATUS_C')) diploma_nrs, "
+            + "(select string_agg(case when nrs.is_duplicate then nrs.full_code || ' (dupl)' else nrs.full_code end, ', ') from ( "
+            + "select f2.full_code, ds.is_duplicate or ds.is_duplicate_en as is_duplicate, case when f2.type_code = 'LOPUBLANKETT_HIN' then 1 else 2 end ordernr from diploma_supplement ds "
             + "join diploma_supplement_form dsf on dsf.diploma_supplement_id = ds.id "
             + "join form f2 on f2.id = dsf.form_id "
-            + "where ds.student_id = s.id and ds.status_code in ('LOPUDOK_STAATUS_T', 'LOPUDOK_STAATUS_V') "
-            + "order by ordernr) nrs) supplement_nrs";
+            + "where ds.student_id = s.id and ds.status_code in ('LOPUDOK_STAATUS_T', 'LOPUDOK_STAATUS_V', 'LOPUDOK_STAATUS_C') "
+            + "order by ordernr, ds.diploma_supplement_id asc nulls first, ds.id asc, f2.numeral) nrs) supplement_nrs";
 
     @Autowired
     private EntityManager em;

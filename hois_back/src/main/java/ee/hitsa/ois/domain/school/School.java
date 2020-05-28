@@ -74,6 +74,7 @@ public class School extends BaseEntityWithId implements Translatable {
     private Boolean isLetterGrade = Boolean.FALSE;
     private Boolean isWithoutEkis = Boolean.FALSE;
     private Boolean isStudentTerms = Boolean.FALSE;
+    private Boolean isHmodules = Boolean.FALSE;
     private String contractText;
     @JsonIgnore
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -363,6 +364,14 @@ public class School extends BaseEntityWithId implements Translatable {
 
     public void setTimetable(Classifier timetable) {
         this.timetable = timetable;
+    }
+
+    public Boolean getIsHmodules() {
+        return isHmodules;
+    }
+
+    public void setIsHmodules(Boolean isHmodules) {
+        this.isHmodules = isHmodules;
     }
 
     public Set<ScholarshipNoApplication> getScholarshipNoApplicationTypes() {

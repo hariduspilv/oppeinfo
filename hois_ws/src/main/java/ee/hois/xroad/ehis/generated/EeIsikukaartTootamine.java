@@ -22,6 +22,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
+ *         &lt;element name="id" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="liik" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oppeasutus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oppeasutusId" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
@@ -50,6 +51,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "eeIsikukaartTootamine", propOrder = {
+    "id",
     "liik",
     "oppeasutus",
     "oppeasutusId",
@@ -71,6 +73,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 })
 public class EeIsikukaartTootamine {
 
+    protected String id;
     @XmlElement(required = true)
     protected String liik;
     @XmlElement(required = true)
@@ -96,6 +99,30 @@ public class EeIsikukaartTootamine {
     protected List<EeIsikukaartOppeaine> oppeaine;
     protected String haridustase;
     protected String lapsehooldusPuhkus;
+
+    /**
+     * Gets the value of the id property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * Sets the value of the id property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setId(String value) {
+        this.id = value;
+    }
 
     /**
      * Gets the value of the liik property.

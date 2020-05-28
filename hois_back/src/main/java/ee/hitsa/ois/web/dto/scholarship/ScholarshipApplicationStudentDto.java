@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.scholarship;
 
+import ee.hitsa.ois.web.dto.AutocompleteResult;
+
 import java.time.LocalDate;
 
 public class ScholarshipApplicationStudentDto extends ScholarshipApplicationBaseDto {
@@ -10,6 +12,7 @@ public class ScholarshipApplicationStudentDto extends ScholarshipApplicationBase
     private String rejectComment;
     private Boolean needsConfirm;
     private String termName;
+    private AutocompleteResult termStudyPeriod;
     private Boolean canApply;
 
     public Long getTermId() {
@@ -66,6 +69,14 @@ public class ScholarshipApplicationStudentDto extends ScholarshipApplicationBase
 
     public void setTermName(String termName) {
         this.termName = termName;
+    }
+
+    public AutocompleteResult getTermStudyPeriod() {
+        return termStudyPeriod;
+    }
+
+    public void setTermStudyPeriod(AutocompleteResult termStudyPeriod) {
+        this.termStudyPeriod = termStudyPeriod;
     }
 
     public Boolean getCanApply() {

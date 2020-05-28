@@ -29,7 +29,8 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
   var initial = {
     teacherId: teacherId,
     studyContentType: 'OPPETOOSISU_T',
-    status: 'AINEPROGRAMM_STAATUS_L'
+    status: 'AINEPROGRAMM_STAATUS_L',
+    isLetterGrade: !!$scope.auth && !!$scope.auth.school ? $scope.auth.school.letterGrades : undefined
   };
   
   var mappedGrades = {};
@@ -44,7 +45,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     if (!mappedGrades[code]) {
       return "";
     }
-    return $filter('hoisHigherGrade')(mappedGrades[code], $scope.auth.school.letterGrades);
+    return $filter('hoisHigherGrade')(mappedGrades[code], ($scope.subjectProgram || {}).isLetterGrade);
   };
 
   $rootScope.removeLastUrlFromHistory(function(url){

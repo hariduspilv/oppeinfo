@@ -40,6 +40,7 @@ public class CertificateForm extends VersionedCommand {
     private String type;
     @Required(groups = {StudentIsSet.class})
     private Long student;
+    private Boolean showModules;
     private Boolean addOutcomes;
     private Boolean estonian;
     private Boolean showUncompleted;
@@ -122,6 +123,14 @@ public class CertificateForm extends VersionedCommand {
 
     public void setStudent(Long student) {
         this.student = student;
+    }
+
+    public Boolean getShowModules() {
+        return showModules;
+    }
+
+    public void setShowModules(Boolean showModules) {
+        this.showModules = showModules;
     }
 
     public Boolean getAddOutcomes() {

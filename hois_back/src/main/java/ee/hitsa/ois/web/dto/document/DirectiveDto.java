@@ -8,6 +8,7 @@ public class DirectiveDto {
     private String number;
     private LocalDate date;
     private String status;
+    private Boolean duplicate = Boolean.FALSE;
     
     public Long getId() {
         return id;
@@ -35,6 +36,13 @@ public class DirectiveDto {
     }
     public void setStatus(String status) {
         this.status = status;
+    }
+    
+    public Boolean getDuplicate() {
+        return duplicate;
+    }
+    public void setDuplicate(Boolean duplicate) {
+        this.duplicate = duplicate;
     }
     
 }

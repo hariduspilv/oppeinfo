@@ -60,6 +60,12 @@ public class Diploma extends BaseEntityWithId {
     private String curriculumGradeNameEn;
     private String city;
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
+    private Diploma diploma;
+    @Column(name = "is_duplicate")
+    private Boolean duplicate;
+    
     public School getSchool() {
         return school;
     }
@@ -247,6 +253,20 @@ public class Diploma extends BaseEntityWithId {
     }
     public void setCity(String city) {
         this.city = city;
+    }
+    
+    public Diploma getDiploma() {
+        return diploma;
+    }
+    public void setDiploma(Diploma diploma) {
+        this.diploma = diploma;
+    }
+    
+    public Boolean getDuplicate() {
+        return duplicate;
+    }
+    public void setDuplicate(Boolean duplicate) {
+        this.duplicate = duplicate;
     }
     
 }

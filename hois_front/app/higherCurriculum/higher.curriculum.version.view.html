@@ -57,8 +57,8 @@
                 <hois-classifier-value ng-value="'OPPEPERIOOD_K'" main-classifier-code="OPPEPERIOOD"></hois-classifier-value>
               </th>
             </thead>
-            <tbody ng-repeat="module in version.modules | filter: {minorSpeciality: false} | filter: filterModulesBySpeciality(spectiality) | orderBy: moduleOrderBy()">
-              <tr class="occupation-header">
+            <tbody ng-repeat="module in version.modules | filter: {minorSpeciality: false} | filter: filterModulesBySpeciality(spectiality) | orderBy: moduleOrderBy(typeOrder, currentLanguageNameField)">
+              <tr class="occupation-header" md-colors="module.isGrade && schoolModuleGrades ? {background: 'blue-50'} : ''">
                 <td colspan="6">
                   <a href="" ng-click="openAddModuleDialog(module)" flex="70">
                     {{'curriculum.module' | translate}} {{currentLanguageNameField(module)}} {{module.totalCredits}} EAP
@@ -72,7 +72,8 @@
                   {{'subject.mandatory' | translate}}
                 </td>
               </tr>
-              <tr class="higher-curriculum-subject-row" ng-repeat="subject in module.subjects | filter: {optional: false} | orderBy: currentLanguageNameField()">
+              <tr class="higher-curriculum-subject-row" md-colors="!module.isGrade && schoolModuleGrades ? {background: 'blue-50'} : ''"
+                ng-repeat="subject in module.subjects | filter: {optional: false} | orderBy: currentLanguageNameField()">
                 <td>{{currentLanguageNameField(subject)}}</td>
                 <td>{{subject.code}}</td>
                 <td>{{subject.credits}}</td>
@@ -91,7 +92,7 @@
                   {{'subject.optional' | translate}}
                 </td>
               </tr>
-              <tr class="higher-curriculum-subject-row" 
+              <tr class="higher-curriculum-subject-row" md-colors="!module.isGrade && schoolModuleGrades ? {background: 'blue-50'} : ''"
                 ng-repeat="subject in module.subjects | filter: {optional: true} | orderBy: currentLanguageNameField()">
                 <td>{{currentLanguageNameField(subject)}}</td>
                 <td>{{subject.code}}</td>
@@ -130,8 +131,8 @@
               <hois-classifier-value ng-value="'OPPEPERIOOD_K'" main-classifier-code="OPPEPERIOOD"></hois-classifier-value>
             </th>
           </thead>
-          <tbody ng-repeat="module in version.modules | filter: {minorSpeciality: true} | orderBy: currentLanguageNameField() | orderBy: moduleOrderBy()">
-            <tr class="occupation-header">
+          <tbody ng-repeat="module in version.modules | filter: {minorSpeciality: true} | orderBy: moduleOrderBy()">
+            <tr class="occupation-header" md-colors="module.isGrade && schoolModuleGrades ? {background: 'blue-50'} : ''">
               <td colspan="6">
                 <a href="" ng-click="openAddMinorSpecialtyDialog(module)" flex="70">
                   <span>{{'curriculum.minorSpecialty.minorSpecialty' | translate}} {{currentLanguageNameField(module)}} {{module.totalCredits}} EAP</span>
@@ -143,7 +144,8 @@
                 {{'subject.mandatory' | translate}}
               </td>
             </tr>
-            <tr class="higher-curriculum-subject-row" ng-repeat="subject in module.subjects | filter: {optional: false} | orderBy: currentLanguageNameField()">
+            <tr class="higher-curriculum-subject-row" md-colors="!module.isGrade && schoolModuleGrades ? {background: 'blue-50'} : ''"
+              ng-repeat="subject in module.subjects | filter: {optional: false} | orderBy: currentLanguageNameField()">
               <td>{{currentLanguageNameField(subject)}}</td>
               <td>{{subject.code}}</td>
               <td>{{subject.credits}}</td>
@@ -162,7 +164,7 @@
                 {{'subject.optional' | translate}}
               </td>
             </tr>
-            <tr class="higher-curriculum-subject-row" 
+            <tr class="higher-curriculum-subject-row" md-colors="!module.isGrade && schoolModuleGrades ? {background: 'blue-50'} : ''"
               ng-repeat="subject in module.subjects | filter: {optional: true} | orderBy: currentLanguageNameField()">
               <td>{{currentLanguageNameField(subject)}}</td>
               <td>{{subject.code}}</td>

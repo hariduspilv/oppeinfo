@@ -12,6 +12,7 @@ public class CertificateContentCommand {
     @Required
     @ClassifierRestriction(MainClassCode.TOEND_LIIK)
     private String type;
+    private Boolean showModules;
     private Boolean addOutcomes;
     private Boolean estonian;
     private Boolean showUncompleted;
@@ -46,6 +47,14 @@ public class CertificateContentCommand {
 
     public void setOtherIdcode(String otherIdcode) {
         this.otherIdcode = otherIdcode;
+    }
+
+    public Boolean getShowModules() {
+        return showModules;
+    }
+
+    public void setShowModules(Boolean showModules) {
+        this.showModules = showModules;
     }
 
     public Boolean getAddOutcomes() {

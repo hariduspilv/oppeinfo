@@ -3,12 +3,41 @@
 angular.module('hitsaOis').controller('HigherProtocolNewController', function ($route, $location, $scope, ArrayUtils, Classifier, QueryUtils, message) {
   $scope.auth = $route.current.locals.auth;
   var baseUrl = "/higherProtocols";
+  $scope.moduleProtocols = 'moduleProtocol' in $route.current.params;
+  if ($scope.moduleProtocols && !$scope.auth.school.hmodules) {
+    message.error('main.messages.error.nopermission');
+    $scope.back("#/");
+  }
+
+  $scope.curriculumVersionChanged = function () {
+    $scope.record.curriculumVersionHmodule = undefined;
+    $scope.record.students = [];
+    $scope.students = [];
+
+    if ($scope.record.curriculumVersion) {
+      QueryUtils.endpoint('/autocomplete/curriculumversionhmodules').query({
+        curriculumVersion: $scope.record.curriculumVersion,
+        isGrade: true
+      }).$promise.then(function (modules) {
+        $scope.modules = modules;
+      });
+    }
+  };
+
+  $scope.moduleChanged = function() {
+    if ($scope.record.curriculumVersionHmodule) {
+      QueryUtils.endpoint(baseUrl + "/moduleProtocol/students").query($scope.record).$promise.then(function (response) {
+        $scope.record.students = [];
+        $scope.students = response;
+      });
+    }
+  };
 
   if ($scope.auth.isTeacher()) {
-    $scope.$watch('studyPeriod', function () {
-      if (angular.isDefined($scope.studyPeriod)) {
+    $scope.$watch('record.studyPeriod', function () {
+      if (angular.isDefined($scope.record.studyPeriod)) {
         QueryUtils.endpoint('/higherProtocols/subjectStudyPeriods').query({
-          studyPeriodId: $scope.studyPeriod
+          studyPeriodId: $scope.record.studyPeriod
         }).$promise.then(function (subjectStudyPeriods) {
           $scope.subjectStudyPeriods = subjectStudyPeriods;
         });

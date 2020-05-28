@@ -5,7 +5,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class CurriculumModuleOutcomeResult extends AutocompleteResult {
 
     private Long orderNr;
-    
+
     public CurriculumModuleOutcomeResult(Long id, String nameEt, String nameEn, Long orderNr) {
         super(id, nameEt, nameEn);
         this.orderNr = orderNr;
@@ -18,4 +18,5 @@ public class CurriculumModuleOutcomeResult extends AutocompleteResult {
     public void setOrderNr(Long orderNr) {
         this.orderNr = orderNr;
     }
+
 }

@@ -338,8 +338,8 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
         if (full) {
             String name = committee.getNameEt() == null ? "-" : committee.getNameEt();
             String members = StreamUtil.nullSafeList(committee.getMembers()).stream()
-                    .filter(member -> member.getPerson() != null)
-                    .map(member -> member.getPerson().getFullname())
+                    .filter(member -> member.getMemberName() != null || member.getPerson() != null)
+                    .map(member -> member.getPerson() != null ? member.getPerson().getFullname() : member.getMemberName())
                     .sorted()
                     .collect(Collectors.joining(", "));
             String fullName;

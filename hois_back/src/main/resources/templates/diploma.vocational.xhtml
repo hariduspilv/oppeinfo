@@ -8,12 +8,15 @@
     </style>
   </head>
   <body>
-    {% for diploma in content %}
+    {% for diploma in content.diplomas %}
     {% if loop.index == 0 %}
     <div class="diploma">
     {% else %}
     <div class="diploma page-break-before">
     {% endif %}
+    	{% if diploma.duplicate %}
+    	<div style="float: right; text-transform: uppercase;">{{ "diploma.duplicate" | translate }}</div>
+    	{% endif %}
         &nbsp;
         <div class="diploma-cumlaude">
         {% if diploma.isCumLaude and diploma.type.code == "LOPUBLANKETT_KK" %}
@@ -38,19 +41,32 @@
             <div>{{ "diploma.given" | translate }} {{ "diploma.partoccupation" | translate }} {{ diploma.partoccupationText }}</div>
             {% endif %}
         </div>
+        {% set dip = (content.origDiplomas[diploma.id] is not empty ? content.origDiplomas[diploma.id] : diploma) %}
         <div class="diploma-directive">
             <div>{{ "diploma.directiveNr" | translate }}
-            {% if diploma.directive.directiveNr != null and not diploma.directive.directiveNr.empty %}
-            {{ diploma.directive.directiveNr }},
+            {% if dip.directive.directiveNr != null and not dip.directive.directiveNr.empty %}
+            {{ dip.directive.directiveNr }},
             {% else %}
             X,
             {% endif %}
-            {% if diploma.directive.confirmDate != null %}
-            {{ diploma.directive.confirmDate | hoisDate}}
+            {% if dip.directive.confirmDate != null %}
+            {{ dip.directive.confirmDate | hoisDate}}
             {% else %}
             XX.XX.XXXX
             {% endif %}
             </div>
+	    	{% if diploma.duplicate %}
+            <div>
+	            {% if diploma.directive.confirmDate is not empty %}
+	            	{{ "diploma.duplicateGiven" | translate }} {{ diploma.directive.confirmDate | hoisDate}}
+	            {% endif %}
+            </div>
+            <div>
+	    		{% if dip is not empty and dip.form is not empty %}
+					{{ "diploma.numberVocational" | translate }} {{ dip.form.fullcode }}
+				{% endif %}
+            </div>
+            {% endif %}
         </div>
         <div class="diploma-signers">
             <div class="diploma-signer-left">

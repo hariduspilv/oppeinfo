@@ -1,6 +1,7 @@
 
 package ee.hois.xroad.ehis.generated;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +23,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
  *         &lt;element name="muutusKp" type="{http://www.w3.org/2001/XMLSchema}date" minOccurs="0"/&gt;
- *         &lt;element name="kaugusOppeasutusest" type="{http://www.w3.org/2001/XMLSchema}positiveInteger" minOccurs="0"/&gt;
+ *         &lt;element name="kaugusOppeasutusest" type="{http://www.w3.org/2001/XMLSchema}decimal" minOccurs="0"/&gt;
  *         &lt;element name="oppeasutusFil" type="{http://www.w3.org/2001/XMLSchema}integer" minOccurs="0"/&gt;
  *         &lt;element name="opilaskoduKool" type="{http://www.w3.org/2001/XMLSchema}integer" minOccurs="0"/&gt;
  *         &lt;element name="klOpilaskoduFin" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
@@ -52,8 +53,7 @@ public class YhlTeisAndMuutus {
 
     @XmlSchemaType(name = "date")
     protected XMLGregorianCalendar muutusKp;
-    @XmlSchemaType(name = "positiveInteger")
-    protected BigInteger kaugusOppeasutusest;
+    protected BigDecimal kaugusOppeasutusest;
     protected BigInteger oppeasutusFil;
     protected BigInteger opilaskoduKool;
     protected String klOpilaskoduFin;
@@ -90,10 +90,10 @@ public class YhlTeisAndMuutus {
      * 
      * @return
      *     possible object is
-     *     {@link BigInteger }
+     *     {@link BigDecimal }
      *     
      */
-    public BigInteger getKaugusOppeasutusest() {
+    public BigDecimal getKaugusOppeasutusest() {
         return kaugusOppeasutusest;
     }
 
@@ -102,10 +102,10 @@ public class YhlTeisAndMuutus {
      * 
      * @param value
      *     allowed object is
-     *     {@link BigInteger }
+     *     {@link BigDecimal }
      *     
      */
-    public void setKaugusOppeasutusest(BigInteger value) {
+    public void setKaugusOppeasutusest(BigDecimal value) {
         this.kaugusOppeasutusest = value;
     }
 

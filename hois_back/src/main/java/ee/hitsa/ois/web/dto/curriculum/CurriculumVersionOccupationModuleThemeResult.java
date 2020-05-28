@@ -14,6 +14,7 @@ public class CurriculumVersionOccupationModuleThemeResult extends AutocompleteRe
     private Long moduleId;
     private BigDecimal credits;
     private Short studyYearNumber;
+    private String assessment;
     private Map<String, Short> capacities = new HashMap<>();
     private Boolean existsInOtherJournals;
     private Boolean moduleOutcomes;
@@ -22,21 +23,24 @@ public class CurriculumVersionOccupationModuleThemeResult extends AutocompleteRe
         super(cvomt.getId(), cvomt.getNameEt(), cvomt.getNameEt());
         moduleId = EntityUtil.getId(cvomt.getModule());
         studyYearNumber = cvomt.getStudyYearNumber();
+        assessment = EntityUtil.getNullableCode(cvomt.getAssessment());
         for(CurriculumVersionOccupationModuleThemeCapacity cap : cvomt.getCapacities()) {
             capacities.put(EntityUtil.getCode(cap.getCapacityType()), cap.getHours());
         }
         moduleOutcomes = cvomt.getModuleOutcomes();
     }
 
-    public CurriculumVersionOccupationModuleThemeResult(Long id, String nameEt, String nameEn, BigDecimal credits, Long moduleId) {
+    public CurriculumVersionOccupationModuleThemeResult(Long id, String nameEt, String nameEn, BigDecimal credits,
+            String assessment, Long moduleId) {
         super(id, nameEt, nameEn);
         this.moduleId = moduleId;
         this.credits = credits;
+        this.assessment = assessment;
     }
 
     public CurriculumVersionOccupationModuleThemeResult(Long id, String nameEt, String nameEn, BigDecimal credits,
-            Short studyYearNumber, Long moduleId) {
-        this(id, nameEt, nameEn, credits, moduleId);
+            String assessment, Short studyYearNumber, Long moduleId) {
+        this(id, nameEt, nameEn, credits, assessment, moduleId);
         this.studyYearNumber = studyYearNumber;
     }
 
@@ -54,6 +58,14 @@ public class CurriculumVersionOccupationModuleThemeResult extends AutocompleteRe
 
     public void setStudyYearNumber(Short studyYearNumber) {
         this.studyYearNumber = studyYearNumber;
+    }
+
+    public String getAssessment() {
+        return assessment;
+    }
+
+    public void setAssessment(String assessment) {
+        this.assessment = assessment;
     }
 
     public Map<String, Short> getCapacities() {

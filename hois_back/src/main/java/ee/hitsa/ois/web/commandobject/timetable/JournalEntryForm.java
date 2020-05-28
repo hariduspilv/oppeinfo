@@ -32,7 +32,7 @@ public class JournalEntryForm {
 
     @NotNull(groups = {Lesson.class})
     @Min(1)
-    @Max(100)
+    @Max(Short.MAX_VALUE)
     private Long lessons;
     @Size(max=10000)
     private String content;

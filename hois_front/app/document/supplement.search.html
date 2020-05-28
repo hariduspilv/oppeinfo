@@ -22,7 +22,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{isHigher ? 'document.diplomaStatus' : 'document.diplomaStatusVocational' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.diplomaStatus" main-classifier-code="LOPUDOK_STAATUS" model-value-attr="code"></hois-classifier-select>
+            <hois-classifier-select ng-model="criteria.diplomaStatus" main-classifier-code="LOPUDOK_STAATUS" model-value-attr="code" filter-values="['LOPUDOK_STAATUS_C']"></hois-classifier-select>
           </md-input-container>
 
           <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">

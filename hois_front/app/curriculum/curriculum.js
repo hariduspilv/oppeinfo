@@ -75,15 +75,30 @@ angular.module('hitsaOis')
       return cModule.orderNr === undefined || cModule.orderNr === null ? SHORT_MAX_VALUE : cModule.orderNr; // undefined and null place at the end
     }
 
+    /**
+     * OrderBy for modules
+     * 
+     * @param defaultOrder - Function or Array[Function] or String. Can be undefined
+     */
     Curriculum.curriculumModuleOrder = function (defaultOrder) {
-      if (angular.isFunction(defaultOrder)) {
-        return [orderCurriculumModuleByOrderNr, defaultOrder];
+      if (angular.isFunction(defaultOrder) || (angular.isArray(defaultOrder) && angular.isFunction(defaultOrder[0]))) {
+        return [orderCurriculumModuleByOrderNr].concat(defaultOrder);
       } else if (!!defaultOrder) {
         return [orderCurriculumModuleByOrderNr, function (module) {
           return module[defaultOrder];
         }];
       }
       return [orderCurriculumModuleByOrderNr, $rootScope.currentLanguageNameField];
+    };
+
+    var higherModuleTypeOrder = Object.freeze({
+      KORGMOODUL_V: 1,   // Unschooling
+      KORGMOODUL_F: 2,   // Final exam
+      KORGMOODUL_L: 3    // Final thesis
+    });
+
+    Curriculum.higherModuleTypeOrder = function (type) {
+      return higherModuleTypeOrder[type] === undefined ? 0 : higherModuleTypeOrder[type];
     }
 
     return Curriculum;

@@ -8,7 +8,7 @@
 - {{ content.student.studyEnd != null ? content.student.studyEnd : "määramata"}} 
  õppekaval {{ content.student.curriculum.name }}
  (kood {{ content.student.curriculum.code }}) 
- ja tema õppevorm oli {{ content.student.studyForm != null ? content.student.studyForm : "määramata"}}. 
+ ja tema õppevorm oli {{ content.student.studyForm != null ? (content.student.studyForm | name) : "määramata"}}.
  <br>
 Õpilane lõpetas kooli (lõputunnistuse nr: <b>{{ content.student.diplomaNr }}</b>). 
 Talle on omistatud kraad: <b>{{ content.student.curriculumGradeNameEt }}</b>.

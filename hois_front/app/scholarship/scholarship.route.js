@@ -211,6 +211,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         translationLoaded: function ($translate) {
           return $translate.onReady();
+        },
+        scholarship: function () {
+          return true;
         }
       },
       data: {

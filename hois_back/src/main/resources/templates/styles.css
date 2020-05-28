@@ -86,4 +86,13 @@ li > ul{
     margin-right: auto;
 }
 
+.protocol-header-small {
+    text-align: center;
+    font-size: 8px;
+}
+
+.protocol-header-big {
+    text-align: center;
+    font-size: 10px;
+}
 

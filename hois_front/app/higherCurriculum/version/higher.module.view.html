@@ -123,6 +123,11 @@
         <input name="totalCredits" ng-model="data.totalCredits" type="number" readonly>
       </md-input-container>
 
+      <md-input-container class="md-block" ng-if="schoolModuleGrades">
+        <md-checkbox ng-model="data.isGrade" name="isGrade" disabled>
+            {{'module.isGrade' | translate}}
+        </md-checkbox>
+      </md-input-container>
       <span flex></span>
     </div>
   </div>

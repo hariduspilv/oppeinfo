@@ -14,6 +14,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+import ee.hitsa.ois.enums.Language;
 import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
@@ -116,22 +117,8 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
             }
             dto.setYearCapacities(capacities);
         } else {
-            List<String> higherModuleTypeOrder = EnumUtil.toNameList(
-                    HigherModuleType.KORGMOODUL_C,   // Optional subjects
-                    HigherModuleType.KORGMOODUL_P,   // Internship
-                    HigherModuleType.KORGMOODUL_M,   // Custom module
-                    HigherModuleType.KORGMOODUL_V,   // Unschooling
-                    HigherModuleType.KORGMOODUL_F,   // Final exam
-                    HigherModuleType.KORGMOODUL_L    // Final thesis
-                    );
-            Set<CurriculumVersionHigherModuleDto> modules = StreamUtil.toMappedSet(CurriculumVersionHigherModuleDto::of, version.getModules());
-            List<CurriculumVersionHigherModuleDto> sortedModules = modules.stream()
-                    .sorted(Comparator
-                            .comparing(CurriculumVersionHigherModuleDto::getType, 
-                                    Comparator.nullsLast((p, v) -> Integer.compare(higherModuleTypeOrder.indexOf(p), higherModuleTypeOrder.indexOf(v))))
-                            .thenComparing(CurriculumVersionHigherModuleDto::getNameEt, String.CASE_INSENSITIVE_ORDER))
-                    .collect(Collectors.toList());
-            dto.setModules(sortedModules);
+            List<CurriculumVersionHigherModuleDto> modules = StreamUtil.toMappedList(CurriculumVersionHigherModuleDto::of,version.getModules());
+            dto.setModules(modules.stream().sorted(CurriculumUtil.higherModuleComparator(Language.ET)).collect(Collectors.toList()));
             dto.setSpecialitiesReferenceNumbers(StreamUtil.toMappedSet(s -> EntityUtil.getId(s.getCurriculumSpeciality()), version.getSpecialities()));
         }
         if (version.getCurriculumStudyForm() != null) {

@@ -16,6 +16,7 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
+import ee.hitsa.ois.validation.DirectiveValidation.Duplikaat;
 import ee.hitsa.ois.validation.DirectiveValidation.Immat;
 import ee.hitsa.ois.validation.DirectiveValidation.Kylalis;
 import ee.hitsa.ois.validation.DirectiveValidation.Muu;
@@ -213,6 +214,10 @@ public class DirectiveForm extends VersionedCommand {
         private Long directiveStudent;
         @ClassifierRestriction(MainClassCode.YHISELAMU)
         private String dormitory;
+        
+        private Boolean diplomaChk;
+        private Boolean diplomaSupplementChk;
+        private Boolean diplomaSupplementEnChk;
 
         public Long getId() {
             return id;
@@ -580,6 +585,30 @@ public class DirectiveForm extends VersionedCommand {
 
         public void setApelSchoolId(Long apelSchoolId) {
             this.apelSchoolId = apelSchoolId;
+        }
+
+        public Boolean getDiplomaChk() {
+            return diplomaChk;
+        }
+
+        public void setDiplomaChk(Boolean diplomaChk) {
+            this.diplomaChk = diplomaChk;
+        }
+
+        public Boolean getDiplomaSupplementChk() {
+            return diplomaSupplementChk;
+        }
+
+        public void setDiplomaSupplementChk(Boolean diplomaSupplementChk) {
+            this.diplomaSupplementChk = diplomaSupplementChk;
+        }
+
+        public Boolean getDiplomaSupplementEnChk() {
+            return diplomaSupplementEnChk;
+        }
+
+        public void setDiplomaSupplementEnChk(Boolean diplomaSupplementEnChk) {
+            this.diplomaSupplementEnChk = diplomaSupplementEnChk;
         }
 
     }

@@ -48,6 +48,7 @@ import ee.hitsa.ois.service.StudentResultCardService;
 import ee.hitsa.ois.service.StudentResultHigherService;
 import ee.hitsa.ois.service.StudentService;
 import ee.hitsa.ois.service.SupportServiceService;
+import ee.hitsa.ois.service.ehis.EhisInnoveService;
 import ee.hitsa.ois.service.ehis.EhisStudentService;
 import ee.hitsa.ois.service.ehis.EhisStudentService.ExportStudentsRequest;
 import ee.hitsa.ois.service.rr.PopulationRegisterService;
@@ -70,6 +71,7 @@ import ee.hitsa.ois.web.commandobject.student.StudentSupportServiceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSupportServicePrintCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.EhisStudentExportRequestDto;
+import ee.hitsa.ois.web.dto.EhisStudentReport;
 import ee.hitsa.ois.web.dto.FutureStatusResponse;
 import ee.hitsa.ois.web.dto.StudentSupportServiceDto;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
@@ -97,6 +99,8 @@ public class StudentController {
     private StudentService studentService;
     @Autowired
     private EhisStudentService ehisStudentService;
+    @Autowired
+    private EhisInnoveService ehisInnoveService;
     @Autowired
     private StudentResultHigherService studentResultHigherService;
     @Autowired
@@ -272,7 +276,7 @@ public class StudentController {
     
     @GetMapping("/{id:\\d+}/supportservice/{serviceId:\\d+}")
     public StudentSupportServiceDto getSupportService(HoisUserDetails user, @WithEntity Student student, @WithEntity("serviceId") StudentSupportService service) {
-        UserUtil.assertCanViewStudentSupportServices(user, student, service);
+        UserUtil.assertCanViewStudentSupportService(user, student, service);
         return supportServiceService.get(service);
     }
     
@@ -285,14 +289,23 @@ public class StudentController {
     @PutMapping("/{id:\\d+}/supportservice/{serviceId:\\d+}")
     public StudentSupportServiceDto updateSupportService(HoisUserDetails user, @WithEntity Student student,
             @WithEntity("serviceId") StudentSupportService service, @RequestBody @Valid StudentSupportServiceForm form) {
-        UserUtil.assertCanEditStudentSupportServices(user, student);
+        UserUtil.assertCanEditStudentSupportService(user, student, service);
         return supportServiceService.get(supportServiceService.update(service, form));
     }
     
     @DeleteMapping("/{id:\\d+}/supportservice/{serviceId:\\d+}")
     public void deleteSupportService(HoisUserDetails user, @WithEntity Student student, @WithEntity("serviceId") StudentSupportService service) {
-        UserUtil.assertCanEditStudentSupportServices(user, student);
+        UserUtil.assertCanDeleteStudentSupportService(user, student, service);
         supportServiceService.delete(service);
+    }
+    
+    @GetMapping("/innoveHistory/{id:\\d+}")
+    public EhisStudentReport innoveHistory(HoisUserDetails user, @WithEntity Student student) {
+        UserUtil.throwAccessDeniedIf(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_TUGITEENUS)
+                || !StudentUtil.canBeEdited(student));
+        EhisStudentReport report = new EhisStudentReport();
+        report.fill(student, ehisInnoveService.innoveHistory(student));
+        return report;
     }
 
     @PostMapping("/ehisStudentExport")

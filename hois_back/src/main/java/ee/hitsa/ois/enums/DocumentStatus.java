@@ -6,5 +6,7 @@ public enum DocumentStatus {
     /** Trükitud */
     LOPUDOK_STAATUS_T,
     /** Väljastatud */
-    LOPUDOK_STAATUS_V
+    LOPUDOK_STAATUS_V,
+    /** Tühistatud */
+    LOPUDOK_STAATUS_C
 }

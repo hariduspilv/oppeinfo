@@ -41,7 +41,8 @@ angular.module('hitsaOis').controller('ScholarshipApplicationNewController', ['$
           if (termCompliance.fullyComplies) {
             $location.url(baseUrl + '/' + $scope.application.termId + '/application/' + student.id + '?_noback');
           } else {
-            message.error('stipend.messages.error.studentDoesntComply');
+            message.error($scope.scholarshipType ? 'stipend.messages.error.studentDoesntComplyScholarship' :
+              'stipend.messages.error.studentDoesntComplyGrant');
             $scope.termCompliance = termCompliance;
           }
         });

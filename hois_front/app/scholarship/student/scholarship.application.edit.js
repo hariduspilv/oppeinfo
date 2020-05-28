@@ -155,6 +155,7 @@ angular.module('hitsaOis').controller('StudentScholarshipApplicationEditControll
           } else {
             message.warn('stipend.messages.applicationSaved');
             loadApplication();
+            form.$setPristine();
           }
         });
       }

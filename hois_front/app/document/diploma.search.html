@@ -46,6 +46,7 @@
             <th md-column md-order-by="p.idcode">{{'document.idcode' | translate}}</th>
             <th md-column md-order-by="c.mer_code">{{'document.search.merCode' | translate}}</th>
             <th md-column md-order-by="c.name_et">{{'document.search.curriculum' | translate}}</th>
+            <th md-column md-order-by="s.study_end">{{'document.search.studyEnd' | translate}}</th>
             <th md-column>{{'document.search.type' | translate}}</th>
             <th md-column>{{'document.search.diplomaStatus' | translate}}</th>
             <th md-column>{{'document.search.diplomaNr' | translate}}</th>
@@ -61,13 +62,29 @@
             <td md-cell>{{::row.idcode}}</td>
             <td md-cell>{{::row.merCode}}</td>
             <td md-cell>{{::row.curriculum}}</td>
+            <td md-cell>{{::row.studyEnd | hoisDate}}</td>
             <td md-cell>{{currentLanguageNameField(row.type)}}</td>
             <td md-cell>{{currentLanguageNameField(row.diplomaStatus)}}</td>
-            <td md-cell><a ng-href="{{formState.pdfBaseUrl}}/{{::row.diplomaId}}/diploma.pdf">{{::row.diplomaNr}}</a></td>
+            <td md-cell>
+              <span ng-repeat="doc in ::row.diplomaNrs" style="display: block;">
+                <span ng-if="$first && !doc.defected"><a ng-href="{{formState.pdfBaseUrl}}/{{::row.diplomaId}}/diploma.pdf">{{doc.fullCode}}</a> {{doc.duplicate ? '(dupl)': ''}}</span>
+                <span ng-if="!$first || doc.defected" ng-style="!$first || doc.defected ? {'text-decoration': 'line-through'} : ''">{{doc.fullCode}} {{doc.duplicate ? '(dupl)' : ''}}</span>
+              </span>
+            </td>
             <td md-cell>{{currentLanguageNameField(row.supplementStatus)}}</td>
-            <td md-cell><a ng-href="{{formState.pdfBaseUrl}}/{{::row.supplementId}}/supplement.pdf">{{::row.supplementNr}}</a></td>
+            <td md-cell>
+              <span ng-repeat="doc in ::row.supplementNrs" style="display: block;">
+                <span ng-if="$first && !doc.defected"><a ng-href="{{formState.pdfBaseUrl}}/{{::row.supplementId}}/supplement.pdf">{{doc.fullCode}}</a> {{doc.duplicate ? '(dupl)': ''}}</span>
+                <span ng-if="!$first || doc.defected" ng-style="!$first || doc.defected ? {'text-decoration': 'line-through'} : ''">{{doc.fullCode}} {{doc.duplicate ? '(dupl)' : ''}}</span>
+              </span>
+            </td>
             <td md-cell ng-if="auth.higher">{{currentLanguageNameField(row.supplementStatusEn)}}</td>
-            <td md-cell ng-if="auth.higher"><a ng-href="{{formState.pdfBaseUrl}}/{{::row.supplementId}}/supplement.pdf?lang=EN">{{::row.supplementNrEn}}</a></td>
+            <td md-cell ng-if="auth.higher">
+              <span ng-repeat="doc in ::row.supplementNrsEn" style="display: block;">
+                <span ng-if="$first && !doc.defected"><a ng-href="{{formState.pdfBaseUrl}}/{{::row.supplementIdEn}}/supplement.pdf?lang=EN">{{doc.fullCode}}</a> {{doc.duplicate ? '(dupl)': ''}}</span>
+                <span ng-if="!$first || doc.defected" ng-style="!$first || doc.defected ? {'text-decoration': 'line-through'} : ''">{{doc.fullCode}} {{doc.duplicate ? '(dupl)' : ''}}</span>
+              </span>
+            </td>
           </tr>
         </tbody>
       </table>

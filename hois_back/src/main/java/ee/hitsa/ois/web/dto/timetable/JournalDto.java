@@ -39,6 +39,7 @@ public class JournalDto {
     private Boolean hasJournalStudents;
     private List<AutocompleteResult> journalRooms = new ArrayList<>();
     private Boolean includesOutcomes;
+    private Boolean finalEntryAllowed;
     private String assessment;
     private Boolean isDistinctiveAssessment;
     private Long moodleCourseId;
@@ -98,7 +99,6 @@ public class JournalDto {
                 r.getRoom().getCode(), r.getRoom().getCode()), journal.getJournalRooms()));
 
         dto.setHasJournalStudents(Boolean.valueOf(!journal.getJournalStudents().isEmpty()));
-        dto.setIncludesOutcomes(journal.getAddModuleOutcomes());
         dto.setAssessment(EntityUtil.getNullableCode(journal.getAssessment()));
         dto.setIsDistinctiveAssessment(Boolean.valueOf(VocationalGradeType.KUTSEHINDAMISVIIS_E.name().equals(dto.getAssessment())));
         return dto;
@@ -230,6 +230,14 @@ public class JournalDto {
 
     public void setIncludesOutcomes(Boolean includesOutcomes) {
         this.includesOutcomes = includesOutcomes;
+    }
+
+    public Boolean getFinalEntryAllowed() {
+        return finalEntryAllowed;
+    }
+
+    public void setFinalEntryAllowed(Boolean finalEntryAllowed) {
+        this.finalEntryAllowed = finalEntryAllowed;
     }
 
     public String getAssessment() {

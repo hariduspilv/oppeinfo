@@ -48,6 +48,7 @@ public class EhisLogService {
     private static final String STUDENT_QUERY = "laeKorgharidus";
     private static final String TEACHER_QUERY_HIGHER = "laeOppejoud";
     private static final String TEACHER_QUERY_VOCATIONAL = "laePedagoogid";
+    private static final String INNOVE_HISTORY_QUERY = "innoveAjalugu";
 
     @Autowired
     protected EntityManager em;
@@ -69,6 +70,7 @@ public class EhisLogService {
             logentryClass = WsEhisCurriculumLog.class;
             break;
         case STUDENT_QUERY:
+        case INNOVE_HISTORY_QUERY:
             logentryClass = WsEhisStudentLog.class;
             break;
         case TEACHER_QUERY_HIGHER:
@@ -132,6 +134,11 @@ public class EhisLogService {
         if(messageType == null || TEACHER_QUERY_VOCATIONAL.equals(messageType)) {
             qb = laeOppejoudQuery(schoolId, false, criteria);
             from.add(qb.querySql("tl.id, cast('"+TEACHER_QUERY_VOCATIONAL+"' as text) as ws_name, tl.inserted, tl.inserted_by, tl.has_xtee_errors, tl.has_other_errors, tl.log_txt, cast(null as text) as directive_nr, cast(null as text) as name_et, cast(null as text) as name_en", false));
+            parameters.putAll(qb.queryParameters());
+        }
+        if (messageType == null || INNOVE_HISTORY_QUERY.equals(messageType)) {
+            qb = innoveAjaluguQuery(schoolId, criteria);
+            from.add(qb.querySql("sl.id, cast('"+INNOVE_HISTORY_QUERY+"' as text) as ws_name, sl.inserted, sl.inserted_by, sl.has_xtee_errors, sl.has_other_errors, sl.log_txt, cast(null as text) as directive_nr, cast(null as text) as name_et, cast(null as text) as name_en", false));
             parameters.putAll(qb.queryParameters());
         }
 
@@ -216,6 +223,21 @@ public class EhisLogService {
 
         if (Boolean.TRUE.equals(command.getErrors())) {
             qb.filter("(cl.has_xtee_errors = true or cl.has_other_errors = true)");
+        }
+
+        return qb;
+    }
+    
+    private static JpaNativeQueryBuilder innoveAjaluguQuery(Long schoolId, EhisLogCommand command) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from ws_ehis_student_log sl");
+
+        qb.requiredCriteria("sl.ws_name = :innoveHistoryWsName", "innoveHistoryWsName", "ehis.innoveAjalugu"); // TODO PSF variable
+        qb.requiredCriteria("sl.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalCriteria("sl.inserted >= :startFrom", "startFrom", command.getFrom(), d -> LocalDateTime.of(d, LocalTime.MIN));
+        qb.optionalCriteria("sl.inserted <= :startThru", "startThru", command.getThru(), d -> LocalDateTime.of(d, LocalTime.MAX));
+
+        if (Boolean.TRUE.equals(command.getErrors())) {
+            qb.filter("(sl.has_xtee_errors = true or sl.has_other_errors = true)");
         }
 
         return qb;

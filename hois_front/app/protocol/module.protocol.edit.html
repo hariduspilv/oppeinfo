@@ -15,6 +15,7 @@
                       </md-checkbox>
                     </md-input-container>
                   </th>
+                  <th md-column>{{'main.order' | translate}}</th>
                   <th md-column>{{'student.label' | translate}}</th>
                   <th md-column>{{'student.studentGroup' | translate}}</th>
                   <th md-column>{{'student.idcode' | translate}}</th>
@@ -39,7 +40,7 @@
                 </tr>
               </thead>
               <tbody md-body>
-                <tr md-row ng-repeat="row in protocol.protocolStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'"
+                <tr md-row ng-repeat="row in protocol.protocolStudents | orderBy: 'fullname' track by $index" ng-class-odd="'odd'" ng-class-even="'even'"
                   md-select="row.id" md-select-id="row.id">
                   <td md-cell ng-if="formState.canEditProtocol">
                     <md-input-container>
@@ -47,6 +48,7 @@
                       </md-checkbox>
                     </md-input-container>
                   </td>
+                  <td md-cell>{{$index + 1}}.</td>
                   <td md-cell>{{row.fullname}}</td>
                   <td md-cell>{{row.studentGroup}}</td>
                   <td md-cell>{{row.idcode}}</td>

@@ -241,6 +241,11 @@ public class AutocompleteController {
     public Page<OccupiedAutocompleteResult> teachers(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
         return asPage(autocompleteService.teachers(user.getSchoolId(), lookup, true));
     }
+    
+    @GetMapping("/studentGroupTeachers")
+    public List<AutocompleteResult> studentGroupTeachers(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
+        return autocompleteService.studentGroupTeachers(user.getSchoolId(), lookup);
+    }
 
     @GetMapping("/teachersList")
     public List<OccupiedAutocompleteResult> teachersAsList(HoisUserDetails user, TeacherAutocompleteCommand lookup) {

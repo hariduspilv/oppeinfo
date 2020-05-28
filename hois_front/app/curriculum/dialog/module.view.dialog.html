@@ -1,0 +1,132 @@
+<md-dialog aria-label="module add dialog" flex="60" flex-sm="80" flex-xs="100" class="form-readonly">
+  <form ng-cloak name="dialogForm">
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2 flex>{{"module.viewToughtModule" | translate}}</h2>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <fieldset tabindex="1" ng-if="module.canHaveOccupations">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">
+            {{module.occupation ? 'module.occupationPartOccupationSpecialize' : 'module.partOccupation' | translate}}
+          </legend>
+
+          <div layout="column">
+            <div ng-repeat="speciality in item.specialities" layout="row">
+              <div flex="5">&nbsp;</div>
+              <md-checkbox ng-model="specialitiesSelected[speciality.code]" aria-label="{{currentLanguageNameField(speciality)}}" disabled>
+                {{currentLanguageNameField(speciality)}}
+              </md-checkbox>
+            </div>
+          </div>
+
+          <div layout="column">
+            <div ng-repeat="item in module.curriculumOccupations | orderBy: 'occupation'">
+              <md-checkbox ng-model="occupationsSelected[item.code]" disabled>
+                <hois-classifier-value ng-model="item.code" main-classifier-codes="KUTSE,OSAKUTSE" class="inline"></hois-classifier-value>
+              </md-checkbox>
+              <div layout="column">
+                <div ng-repeat="partOccupation in item.partOccupations | orderBy" flex layout="row">
+                  <div flex="5">&nbsp;</div>
+                  <md-checkbox ng-model="occupationsSelected[partOccupation.code]" disabled>
+                    <hois-classifier-value ng-model="partOccupation" main-classifier-code="OSAKUTSE" class="inline"></hois-classifier-value>
+                    ({{'stateCurriculum.enter.occupation.partial' | translate}})
+                  </md-checkbox>
+                </div>
+              </div>
+
+              <div layout="column">
+                <div ng-repeat="speciality in item.specialityCodes | orderBy" layout="row">
+                  <div flex="5">&nbsp;</div>
+                  <md-checkbox ng-model="specialitiesSelected[speciality.code]" disabled>
+                    <hois-classifier-value ng-model="speciality" main-classifier-code="SPETSKUTSE" class="inline"></hois-classifier-value>
+                    ({{'stateCurriculum.enter.occupation.specialty' | translate}})
+                  </md-checkbox>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+        </fieldset>
+
+        <div>&nbsp;</div>
+        <div layout="row" flex>
+          <md-input-container flex="45">
+            <label>{{'module.type' | translate}}</label>
+            <hois-classifier-value name="module" ng-model="module.module" main-classifier-code="KUTSEMOODUL"></hois-classifier-value>
+          </md-input-container>
+          <md-input-container flex="10" flex-offset="5">
+            <label>{{'module.credits' | translate}}</label>
+            <hois-value value="module.credits.toString()"></hois-value>
+          </md-input-container>
+          <md-input-container flex="10" flex-sm="20" flex-xs="20" flex-offset="5">
+            <label>{{'module.orderNr' | translate}}</label>
+            <hois-value value="module.orderNr"></hois-value>
+          </md-input-container>
+        </div>
+        <md-input-container flex>
+          <label>{{'module.nameEt' | translate}}</label>
+          <hois-value value="module.nameEt"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'module.nameEn' | translate}}</label>
+          <hois-value value="module.nameEn"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'module.objectivesEt' | translate}}</label>
+          <hois-value value="module.objectivesEt" class="scrollable"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'module.objectivesEn' | translate}}</label>
+          <hois-value value="module.objectivesEt" class="scrollable"></hois-value>
+        </md-input-container>
+
+        <fieldset tabindex="1">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.studyOutcome' | translate}}</legend>
+          <div layout="column">
+            <div ng-repeat="item in module.outcomes | orderBy: 'orderNr'" class="occupation-row align-center" layout="row" flex>
+              <div flex="45">
+                <p class="scrollable">{{item.outcomeEt}}</p>
+              </div>
+              <div flex="50" flex-offset="5">
+                <p class="scrollable">{{item.outcomeEn}}</p>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <div>&nbsp;</div>
+        <md-input-container flex>
+          <label>{{'stateCurriculum.enter.module.criteriaEt' | translate}}</label>
+          <hois-value value="module.assessmentsEt" class="scrollable"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'stateCurriculum.enter.module.criteriaEn' | translate}}</label>
+          <hois-value value="module.assessmentsEn" class="scrollable"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'module.competencesAquired' | translate}}</label>
+          <hois-value value="module.competences.join(', ')"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <md-checkbox ng-model="module.practice" disabled>{{'module.practice' | translate}}</md-checkbox>
+        </md-input-container>
+        <md-input-container>
+          <md-checkbox ng-model="module.isAdditional" aria-label="{{'stateCurriculum.enter.module.isAdditional' | translate}}" disabled>
+            {{'stateCurriculum.enter.module.isAdditional' | translate}}
+          </md-checkbox>
+        </md-input-container>
+      </div>
+    </md-dialog-content>
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

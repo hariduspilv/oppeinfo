@@ -1,5 +1,5 @@
 <md-dialog aria-label="add entry dialog" flex="80">
-  
+
   <form name="dialogForm" ng-submit="loadData()" novalidate ng-cloak>
     <md-toolbar>
       <div class="md-toolbar-tools">
@@ -26,7 +26,7 @@
           <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container ng-if="journalEntry.entryType !== 'SISSEKANNE_O'" flex="45">
               <label>{{'journal.entry.type' | translate}}</label>
-              <hois-classifier-select ng-model="journalEntry.entryType" model-value-attr="code" main-classifier-code="SISSEKANNE" required 
+              <hois-classifier-select ng-model="journalEntry.entryType" model-value-attr="code" main-classifier-code="SISSEKANNE" required
                 ng-change="setJournalEntryTypeChanged(journalEntry.entryType)" filter-values="forbiddenEntryTypes"></hois-classifier-select>
             </md-input-container>
             <md-input-container ng-if="journalEntry.entryType === 'SISSEKANNE_O'" flex="45">
@@ -67,8 +67,17 @@
             </md-input-container>
             <md-input-container flex="20" flex-offset="5">
               <label>{{'journal.entry.lessons' | translate}}</label>
-              <hois-select ng-model="journalEntry.lessons" values="lessons" ng-change="lessonsChanged()"
-                ng-required="journalEntry.entryType === 'SISSEKANNE_T'"></hois-select>
+              <input ng-model="journalEntry.lessons" ng-change="lessonsChanged()" ng-model-options="{ debounce: 500 }"
+                name="lessons" aria-label="lessons" type="number" ng-min="1" ng-max="maxLessons" step="1"
+                ng-required="journalEntry.entryType === 'SISSEKANNE_T'">
+              <div ng-messages="dialogForm.lessons.$error">
+                <div ng-message="min">
+                  {{'main.messages.error.min' | translate: {min: 1} }}
+                </div>
+                <div ng-message="max">
+                  {{'main.messages.error.max' | translate: {max: maxLessons} }}
+                </div>
+              </div>
             </md-input-container>
           </div>
           <div layout="row" layout-sm="column" layout-xs="column">
@@ -122,7 +131,7 @@
                     </td>
                     <td md-cell>
                       <md-input-container>
-                        <md-checkbox class="journal-lesson-absence" ng-model="journalEntryStudents[row.id].isLessonAbsence" 
+                        <md-checkbox class="journal-lesson-absence" ng-model="journalEntryStudents[row.id].isLessonAbsence"
                           aria-label="{{'journal.showAbsenceLessons' | translate}}" ng-change="journalEntryStudentChanged(row)" ng-disabled="!row.canEdit"></md-checkbox>
                         <md-tooltip>{{'journal.showAbsenceLessons' | translate}}</md-tooltip>
                       </md-input-container>
@@ -155,7 +164,7 @@
                         </div>
                       </span>
 
-                      <span layout="row" ng-if="journalEntryStudents[row.id].isLessonAbsence" ng-repeat="lesson in [].constructor(journalEntry.lessons) track by $index">
+                      <span layout="row" ng-if="journalEntryStudents[row.id].isLessonAbsence" ng-repeat="lesson in lessonAbsenceList() track by $index">
                         <div layout="row" layout-align="space-between start" style="width: 150px; min-width: 150px;">
                           <md-input-container layout="row" layout-align="start center" flex class="journal-absence-container">
                             <md-checkbox ng-if="lessonAbsenceCheckboxShown(row, 'PUUDUMINE_H', lessonNr)"
@@ -188,7 +197,7 @@
                       </span>
                     </td>
                     <td md-cell>
-                      <span ng-if="!journalEntryStudents[row.id].removeStudentHistory" 
+                      <span ng-if="!journalEntryStudents[row.id].removeStudentHistory"
                         ng-repeat="gradeHistory in journalEntryStudents[row.id].journalEntryStudentHistories | orderBy: 'gradeInserted'">
                         {{gradeHistory.grade.value}}
                         <span ng-if="gradeHistory.grade.value && !$last">/</span>
@@ -196,7 +205,7 @@
                       &nbsp;
                       <span ng-if="row.canEdit && !(row.apelTransferredFinalResult && journalEntry.entryType === 'SISSEKANNE_L') && !(journalEntry.moodleGradeItemId && journalEntry.entryType !== 'SISSEKANNE_L')">
                         <md-input-container>
-                          <hois-select ng-if="gradeInputAsSelect" ng-model="journalEntryStudents[row.id].grade" values="grades" show-property="value" 
+                          <hois-select ng-if="gradeInputAsSelect" ng-model="journalEntryStudents[row.id].grade" values="grades" show-property="value"
                             hide-values="hideInvalid" value-property="code" ng-change="journalEntryStudentChanged(row)" aria-label="grade"></hois-select>
                           <input ng-if="!gradeInputAsSelect" ng-model="journalEntryStudents[row.id].gradeValue" style="width: 75px;"
                             ng-change="journalEntryStudentChanged(row)" type="text" ng-pattern="gradeInputRegex" aria-label="grade">
@@ -208,14 +217,14 @@
                       </span>
                       <span ng-if="!row.canEdit || (row.apelTransferredFinalResult && journalEntry.entryType === 'SISSEKANNE_L') || (journalEntry.moodleGradeItemId && journalEntry.entryType !== 'SISSEKANNE_L')">
                         <md-input-container>
-                          <hois-select ng-model="journalEntryStudents[row.id].grade" values="grades" show-property="value" 
+                          <hois-select ng-model="journalEntryStudents[row.id].grade" values="grades" show-property="value"
                             hide-values="hideInvalid" value-property="code" aria-label="grade" disabled></hois-select>
                         </md-input-container>
                       </span>
                     </td>
                     <td md-cell>
                       <md-input-container class="journal-add-info-input">
-                        <input type="text" ng-model="journalEntryStudents[row.id].addInfo" md-maxlength="1000" ng-change="journalEntryStudentChanged(row)" 
+                        <input type="text" ng-model="journalEntryStudents[row.id].addInfo" md-maxlength="1000" ng-change="journalEntryStudentChanged(row)"
                         ng-required="journalEntryStudents[row.id].isRemark" aria-label="additional info" ng-disabled="!row.canEdit">
                       </md-input-container>
                     </td>

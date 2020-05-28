@@ -11,7 +11,7 @@
       <div layout="row">
         <md-input-container flex="40" flex-sm="100" flex-xs="100" class="readonly">
           <label>{{'document.diplomaNr' | translate}}</label>
-          <hois-value value="record.diplomaNr"></hois-value>
+          <hois-value value="(!!record.diplomaNr ? record.diplomaNr : '') + (record.isDiplomaDuplicate ? ' (' + ('document.duplicate' | translate) +')' : '')"></hois-value>
         </md-input-container>
       </div>
 
@@ -48,10 +48,13 @@
         </div>
       </div>
       <fieldset>
-        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'document.estonian' | translate}}</legend>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">
+          {{'document.estonian' | translate}}
+          <span ng-if="record.isSupplementDuplicate">({{'document.duplicate' | translate}})</span>
+        </legend>
         <br>
         
-        <div layout="row" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && record.supplementStatus !== 'LOPUDOK_STAATUS_T'">
+        <div layout="row" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && ['LOPUDOK_STAATUS_T'].indexOf(record.supplementStatus) === -1">
           <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <label>{{'document.freeForms' | translate}}</label>
             <input type="number" ng-model="formData.numeral" min="0" required>
@@ -59,7 +62,7 @@
           <hois-free-forms value="record.forms"></hois-free-forms>
         </div>
       
-        <div layout="row" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && record.supplementStatus !== 'LOPUDOK_STAATUS_T'">
+        <div layout="row" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && ['LOPUDOK_STAATUS_T'].indexOf(record.supplementStatus) === -1">
           <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <label>{{'document.freeExtraForms' | translate}}</label>
             <input type="number" ng-model="formData.additionalNumeral" min="0">
@@ -67,14 +70,14 @@
           <hois-free-forms value="record.freeExtraForms"></hois-free-forms>
         </div>
         
-        <div layout="row" ng-if="record.supplementStatus === 'LOPUDOK_STAATUS_T'">
+        <div layout="row" ng-if="['LOPUDOK_STAATUS_T'].indexOf(record.supplementStatus) !== -1">
           <md-input-container flex="40" flex-sm="100" flex-xs="100" class="readonly">
             <label>{{'document.supplementStatus' | translate}}</label>
             <hois-classifier-value ng-model="record.supplementStatus" main-classifier-code="LOPUDOK_STAATUS" model-value-attr="code"></hois-classifier-value>
           </md-input-container>
         </div>
       
-        <div layout="row" ng-if="record.supplementStatus === 'LOPUDOK_STAATUS_T'">
+        <div layout="row" ng-if="['LOPUDOK_STAATUS_T'].indexOf(record.supplementStatus) !== -1">
           <md-input-container flex="40" flex-sm="100" flex-xs="100" class="readonly">
             <label>{{'document.usedForms' | translate}}</label>
             <hois-value value="record.forms.join(', ')"></hois-value>
@@ -90,7 +93,10 @@
       <div>&nbsp;</div>
 
       <fieldset>
-        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'document.english' | translate}}</legend>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">
+          {{'document.english' | translate}}
+          <span ng-if="record.isSupplementEnDuplicate">({{'document.duplicate' | translate}})</span>
+        </legend>
         <br>
         
         <div layout="row" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && record.supplementStatusEn !== 'LOPUDOK_STAATUS_T'">

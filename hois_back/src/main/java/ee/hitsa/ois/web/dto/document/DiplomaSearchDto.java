@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.document;
 
+import java.time.LocalDate;
+import java.util.List;
 
 public class DiplomaSearchDto {
 
@@ -10,15 +12,23 @@ public class DiplomaSearchDto {
     private String idcode;
     private String merCode;
     private String curriculum;
+    private LocalDate studyEnd;
     private String type;
     private Long diplomaId;
     private String diplomaStatus;
     private String diplomaNr;
+    private String diplomaCancelledNr;
+    private List<Document> diplomaNrs;
     private Long supplementId;
+    private Long supplementIdEn;
     private String supplementStatus;
     private String supplementNr;
+    private String supplementCancelledNr;
+    private List<Document> supplementNrs;
     private String supplementStatusEn;
     private String supplementNrEn;
+    private String supplementCancelledNrEn;
+    private List<Document> supplementNrsEn;
     
     public Long getStudentId() {
         return studentId;
@@ -62,6 +72,12 @@ public class DiplomaSearchDto {
     public void setCurriculum(String curriculum) {
         this.curriculum = curriculum;
     }
+    public LocalDate getStudyEnd() {
+        return studyEnd;
+    }
+    public void setStudyEnd(LocalDate studyEnd) {
+        this.studyEnd = studyEnd;
+    }
     public String getType() {
         return type;
     }
@@ -86,11 +102,23 @@ public class DiplomaSearchDto {
     public void setDiplomaNr(String diplomaNr) {
         this.diplomaNr = diplomaNr;
     }
+    public List<Document> getDiplomaNrs() {
+        return diplomaNrs;
+    }
+    public void setDiplomaNrs(List<Document> diplomaNrs) {
+        this.diplomaNrs = diplomaNrs;
+    }
     public Long getSupplementId() {
         return supplementId;
     }
     public void setSupplementId(Long supplementId) {
         this.supplementId = supplementId;
+    }
+    public Long getSupplementIdEn() {
+        return supplementIdEn;
+    }
+    public void setSupplementIdEn(Long supplementIdEn) {
+        this.supplementIdEn = supplementIdEn;
     }
     public String getSupplementStatus() {
         return supplementStatus;
@@ -98,11 +126,11 @@ public class DiplomaSearchDto {
     public void setSupplementStatus(String supplementStatus) {
         this.supplementStatus = supplementStatus;
     }
-    public String getSupplementNr() {
-        return supplementNr;
+    public List<Document> getSupplementNrs() {
+        return supplementNrs;
     }
-    public void setSupplementNr(String supplementNr) {
-        this.supplementNr = supplementNr;
+    public void setSupplementNrs(List<Document> supplementNrs) {
+        this.supplementNrs = supplementNrs;
     }
     public String getSupplementStatusEn() {
         return supplementStatusEn;
@@ -110,11 +138,71 @@ public class DiplomaSearchDto {
     public void setSupplementStatusEn(String supplementStatusEn) {
         this.supplementStatusEn = supplementStatusEn;
     }
+    public List<Document> getSupplementNrsEn() {
+        return supplementNrsEn;
+    }
+    public void setSupplementNrsEn(List<Document> supplementNrsEn) {
+        this.supplementNrsEn = supplementNrsEn;
+    }
+    public String getSupplementNr() {
+        return supplementNr;
+    }
+    public void setSupplementNr(String supplementNr) {
+        this.supplementNr = supplementNr;
+    }
     public String getSupplementNrEn() {
         return supplementNrEn;
     }
     public void setSupplementNrEn(String supplementNrEn) {
         this.supplementNrEn = supplementNrEn;
     }
-    
+    public String getDiplomaCancelledNr() {
+        return diplomaCancelledNr;
+    }
+    public void setDiplomaCancelledNr(String diplomaCancelledNr) {
+        this.diplomaCancelledNr = diplomaCancelledNr;
+    }
+    public String getSupplementCancelledNr() {
+        return supplementCancelledNr;
+    }
+    public void setSupplementCancelledNr(String supplementCancelledNr) {
+        this.supplementCancelledNr = supplementCancelledNr;
+    }
+    public String getSupplementCancelledNrEn() {
+        return supplementCancelledNrEn;
+    }
+    public void setSupplementCancelledNrEn(String supplementCancelledNrEn) {
+        this.supplementCancelledNrEn = supplementCancelledNrEn;
+    }
+
+    public static class Document {
+        
+        private Boolean duplicate;
+        private Boolean defected;
+        private String fullCode;
+
+        public Boolean getDuplicate() {
+            return duplicate;
+        }
+
+        public void setDuplicate(Boolean duplicate) {
+            this.duplicate = duplicate;
+        }
+
+        public Boolean getDefected() {
+            return defected;
+        }
+
+        public void setDefected(Boolean defected) {
+            this.defected = defected;
+        }
+
+        public String getFullCode() {
+            return fullCode;
+        }
+
+        public void setFullCode(String fullCode) {
+            this.fullCode = fullCode;
+        }
+    }
 }

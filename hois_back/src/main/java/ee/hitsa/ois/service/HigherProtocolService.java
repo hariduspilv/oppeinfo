@@ -1,13 +1,16 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -16,19 +19,27 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
+import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.enums.CurriculumVersionStatus;
+import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.util.CurriculumUtil;
+import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.ProtocolUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
+import ee.hitsa.ois.web.dto.HigherProtocolModuleDto;
+import ee.hitsa.ois.web.dto.HigherProtocolModuleSubjectDto;
+import ee.hitsa.ois.web.dto.HigherProtocolModuleSubjectResultDto;
+import ee.hitsa.ois.web.dto.SubjectStudyPeriodMidtermTaskDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.protocol.ProtocolHdata;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
@@ -36,7 +47,6 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodExamStudent;
-import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.enums.DeclarationStatus;
 import ee.hitsa.ois.enums.ExamType;
 import ee.hitsa.ois.enums.HigherAssessment;
@@ -45,7 +55,6 @@ import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.ProtocolType;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.report.HigherProtocolReport;
-import ee.hitsa.ois.repository.ProtocolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
@@ -87,81 +96,56 @@ public class HigherProtocolService extends AbstractProtocolService {
             + "join declaration_subject ds on d.id = ds.declaration_id "
             + "left join curriculum_version_hmodule cvh on cvh.id = ds.curriculum_version_hmodule_id";
 
-    @Autowired
-    private ProtocolRepository protocolRepository;
-    @Autowired
-    private SchoolService schoolService;
-
     public Page<HigherProtocolSearchDto> search(HoisUserDetails user, HigherProtocolSearchCommand criteria,
             Pageable pageable) {
-        Page<Protocol> protocols = protocolRepository.findAll((root, query, cb) -> {
+        JpaQueryBuilder<Protocol> qb = new JpaQueryBuilder<>(Protocol.class, "p",
+                "join p.protocolHdata phd "
+                + "left join phd.subjectStudyPeriod ssp "
+                + "left join ssp.studyPeriod sp "
+                + "left join ssp.subject s "
+                + "left join phd.curriculumVersionHmodule cvh "
+                + "left join cvh.curriculumVersion.curriculum cvh_c")
+                .sort(pageable);
 
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("isFinal"), Boolean.FALSE));
-            filters.add(cb.equal(root.get("isVocational"), Boolean.FALSE));
-            filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
+        qb.requiredCriteria("p.isFinal = :isFinal", "isFinal", Boolean.FALSE);
+        qb.requiredCriteria("p.isVocational = :isVocational", "isVocational", Boolean.FALSE);
+        qb.requiredCriteria("p.school.id = :schoolId", "schoolId", user.getSchoolId());
 
-            if (user.isLeadingTeacher()) {
-                Subquery<Long> targetQuery = query.subquery(Long.class);
-                Root<CurriculumVersionHigherModuleSubject> targetRoot = targetQuery
-                        .from(CurriculumVersionHigherModuleSubject.class);
-                targetQuery = targetQuery.select(targetRoot.get("subject").get("id"))
-                        .where(targetRoot.get("module").get("curriculumVersion").get("curriculum").get("id")
-                                .in(user.getCurriculumIds()));
-                filters.add(root.get("protocolHdata").get("subjectStudyPeriod").get("subject").get("id").in(targetQuery));
-            }
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("(exists (select 1 from s.curriculumVersionHigherModuleSubjects cvhms "
+                    + "where cvhms.subject.id = s.id and cvhms.module.curriculumVersion.curriculum.id in (:curriculumIds)) "
+                    + "or cvh_c.id in (:curriculumIds))", "curriculumIds", user.getCurriculumIds());
+        }
 
-            filters.add(cb.equal(root.get("protocolHdata").get("subjectStudyPeriod")
-                    .get("studyPeriod").get("id"), criteria.getStudyPeriod()));
+        qb.optionalCriteria("(ssp.id is not null and exists (select 1 from ssp.teachers sspt "
+                + "where sspt.teacher.id = :teacherId) or phd.teacher.id = :teacherId)", "teacherId",
+                user.isTeacher() ? user.getTeacherId() : criteria.getTeacher());
 
-            if(criteria.getStatus() != null) {
-                filters.add(cb.equal(root.get("status").get("code"), criteria.getStatus()));
-            }
-            if(criteria.getProtocolNr() != null) {
-                filters.add(cb.equal(root.get("protocolNr"), criteria.getProtocolNr()));
-            }
-            if(criteria.getSubject() != null) {
-                List<Predicate> subjectFilters = new ArrayList<>();
-                propertyContains(() -> root.get("protocolHdata").get("subjectStudyPeriod").get("subject").get("code"),
-                        cb, criteria.getSubject(), subjectFilters::add);
-                propertyContains(() -> root.get("protocolHdata").get("subjectStudyPeriod").get("subject").get("nameEt"),
-                        cb, criteria.getSubject(), subjectFilters::add);
-                propertyContains(() -> root.get("protocolHdata").get("subjectStudyPeriod").get("subject").get("nameEn"),
-                        cb, criteria.getSubject(), subjectFilters::add);
-                filters.add(cb.or(subjectFilters.toArray(new Predicate[subjectFilters.size()])));
-            }
-            if(user.isTeacher()) {
-                Subquery<Long> targetQuery = query.subquery(Long.class);
-                Root<SubjectStudyPeriodTeacher> targetRoot = targetQuery.from(SubjectStudyPeriodTeacher.class);
-                targetQuery = targetQuery.select(targetRoot.get("subjectStudyPeriod").get("id"))
-                        .where(cb.equal(targetRoot.get("teacher").get("id"), user.getTeacherId()));
-                filters.add(root.get("protocolHdata").get("subjectStudyPeriod").get("id").in(targetQuery));
-            } else {
-                if(criteria.getTeacher() != null) {
-                    Subquery<Long> targetQuery = query.subquery(Long.class);
-                    Root<SubjectStudyPeriodTeacher> targetRoot = targetQuery.from(SubjectStudyPeriodTeacher.class);
-                    targetQuery = targetQuery.select(targetRoot.get("subjectStudyPeriod").get("id"))
-                            .where(cb.equal(targetRoot.get("teacher").get("id"), criteria.getTeacher()));
-                    filters.add(root.get("protocolHdata").get("subjectStudyPeriod").get("id").in(targetQuery));
-                }
-            }
+        if (criteria.getStudyPeriod() != null) {
+            StudyPeriod studyPeriod = em.getReference(StudyPeriod.class, criteria.getStudyPeriod());
+            qb.requiredCriteria("((sp.id is null and p.inserted >= :spStart and p.inserted <= :spEnd) or sp.id = :spId)",
+                    "spId", criteria.getStudyPeriod());
+            qb.parameter("spStart", DateUtils.firstMomentOfDay(studyPeriod.getStartDate()));
+            qb.parameter("spEnd", DateUtils.lastMomentOfDay(studyPeriod.getEndDate()));
+        }
 
-            if(criteria.getInsertedFrom() != null) {
-                filters.add(cb.greaterThanOrEqualTo(root.get("inserted"), DateUtils.firstMomentOfDay(criteria.getInsertedFrom())));
-            }
-            if(criteria.getInsertedThru() != null) {
-                filters.add(cb.lessThanOrEqualTo(root.get("inserted"), DateUtils.lastMomentOfDay(criteria.getInsertedThru())));
-            }
-            if(criteria.getConfirmDateFrom() != null) {
-                filters.add(cb.greaterThanOrEqualTo(root.get("confirmDate"), criteria.getConfirmDateFrom()));
-            }
-            if(criteria.getConfirmDateThru() != null) {
-                filters.add(cb.lessThanOrEqualTo(root.get("confirmDate"), criteria.getConfirmDateThru()));
-            }
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable);
+        qb.optionalCriteria("p.status.code = :protocolStatus", "protocolStatus", criteria.getStatus());
+        qb.optionalCriteria("p.protocolNr = :protocolNr", "protocolNr", criteria.getProtocolNr());
+        qb.optionalContains(Arrays.asList("s.code", "s.nameEt", "s.nameEn", "cvh.nameEt", "cvh.nameEn"),
+                "subjectModule", criteria.getSubjectModule());
 
-        return protocols.map(p -> HigherProtocolSearchDto.ofWithUserRithts(p, user));
+        qb.optionalCriteria("p.inserted >= :insertedFrom", "insertedFrom", criteria.getInsertedFrom(),
+                DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("p.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(),
+                DateUtils::lastMomentOfDay);
+        qb.optionalCriteria("p.confirmDate >= :confirmedFrom", "confirmedFrom", criteria.getConfirmDateFrom());
+        qb.optionalCriteria("p.confirmDate <= :confirmedThru", "confirmedThru", criteria.getConfirmDateThru());
+
+        if (Boolean.TRUE.equals(criteria.getShowOnlyModuleProtocols())) {
+            qb.filter("cvh.id is not null");
+        }
+
+        return JpaQueryUtil.pagingResult(qb, em, pageable).map(p -> HigherProtocolSearchDto.ofWithUserRithts(p, user));
     }
 
     public HigherProtocolDto create(HoisUserDetails user, HigherProtocolCreateForm form) {
@@ -174,7 +158,11 @@ public class HigherProtocolService extends AbstractProtocolService {
 
         ProtocolHdata protocolHData = new ProtocolHdata();
         protocolHData.setType(em.getReference(Classifier.class, form.getProtocolType()));
-        protocolHData.setSubjectStudyPeriod(em.getReference(SubjectStudyPeriod.class, form.getSubjectStudyPeriod()));
+        protocolHData.setSubjectStudyPeriod(EntityUtil.getOptionalOne(SubjectStudyPeriod.class,
+                form.getSubjectStudyPeriod(), em));
+        protocolHData.setCurriculumVersionHmodule(EntityUtil.getOptionalOne(CurriculumVersionHigherModule.class,
+                form.getCurriculumVersionHmodule(), em));
+        protocolHData.setTeacher(EntityUtil.getOptionalOne(Teacher.class, form.getTeacher(), em));
         protocolHData.setProtocol(protocol);
         protocol.setProtocolHdata(protocolHData);
 
@@ -323,10 +311,30 @@ public class HigherProtocolService extends AbstractProtocolService {
                 .select("ssp.id, s.code, s.name_et, s.name_en, s.credits, string_agg(distinct p.firstname || ' ' || p.lastname, ', ') as teachers", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             String teacherNames = resultAsString(r, 5) != null ? " - " + resultAsString(r, 5) : "";
-            String nameEt = SubjectUtil.subjectName(resultAsString(r, 1), resultAsString(r, 2), JpaQueryUtil.resultAsDecimal(r, 4)) + teacherNames;
-            String nameEn = SubjectUtil.subjectName(resultAsString(r, 1), resultAsString(r, 3), JpaQueryUtil.resultAsDecimal(r, 4)) + teacherNames;
+            String nameEt = SubjectUtil.subjectName(resultAsString(r, 1), resultAsString(r, 2), resultAsDecimal(r, 4)) + teacherNames;
+            String nameEn = SubjectUtil.subjectName(resultAsString(r, 1), resultAsString(r, 3), resultAsDecimal(r, 4)) + teacherNames;
             return new AutocompleteResult(resultAsLong(r, 0), nameEt, nameEn);
         }, data);
+    }
+
+    public Page<AutocompleteResult> getModuleProtocolCurriculumVersions(HoisUserDetails user, SearchCommand lookup,
+            Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_version cv "
+                + "join curriculum c on cv.curriculum_id = c.id");
+
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("cv.status_code != :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C);
+        qb.requiredCriteria("c.is_higher = :higher", "higher", Boolean.TRUE);
+        qb.optionalContains(Arrays.asList("cv.code", "cv.code || ' ' || c.name_et", "cv.code || ' ' || c.name_en"),
+                "name", lookup.getName());
+        qb.filter("exists (select 1 from curriculum_version_hmodule cvh where cvh.curriculum_version_id = cv.id "
+                + "and cvh.is_grade = true and cvh.is_minor_speciality = false)");
+
+        qb.sort(Language.EN.equals(lookup.getLang()) ? "cv.code, c.name_et" : "cv.code, c.name_en");
+        return JpaQueryUtil.pagingResult(qb, "cv.id, cv.code, c.name_et, c.name_en", em, pageable).map(r ->
+            new AutocompleteResult(resultAsLong(r, 0), CurriculumUtil.versionName(
+                    resultAsString(r, 1), resultAsString(r, 2)), CurriculumUtil.versionName(resultAsString(r, 1),
+                    resultAsString(r, 3))));
     }
 
     public List<StudentSearchDto> getStudents(Long schoolId, HigherProtocolStudentSearchCommand criteria) {
@@ -365,23 +373,84 @@ public class HigherProtocolService extends AbstractProtocolService {
 
         qb.sort("p.firstname, p.lastname");
         List<?> result = qb.select(STUDENT_SELECT, em).getResultList();
+        return StreamUtil.toMappedList(this::mapStudent, result);
+    }
+
+    public List<StudentSearchDto> getModuleProtocolStudents(Long schoolId, Long curriculumVersionHmodule) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s "
+                + "join person p on p.id = s.person_id "
+                + "left join student_group sg on sg.id = s.student_group_id "
+                + "join curriculum_version cv on cv.id = s.curriculum_version_id "
+                + "join curriculum c on c.id = cv.curriculum_id "
+                + "join curriculum_version_hmodule cvhm2 on cvhm2.curriculum_version_id = cv.id ");
+
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("cvhm2.id = :moduleId", "moduleId", curriculumVersionHmodule);
+        qb.requiredCriteria("s.status_code in :activeStatuses", "activeStatuses",
+                StudentStatus.STUDENT_STATUS_ACTIVE);
+
+        qb.filter("(coalesce(s.curriculum_speciality_id, 0) = 0 or coalesce(s.curriculum_speciality_id, 0) > 0 "
+                + "and exists(select 1 from curriculum_version_hmodule_speciality hs "
+                + "join curriculum_version_speciality cvs on hs.curriculum_version_speciality_id = cvs.id "
+                + "where hs.curriculum_version_hmodule_id = cvhm2.id and "
+                + "cvs.curriculum_speciality_id = s.curriculum_speciality_id))");
+
+        qb.requiredCriteria("not exists (select 1 from protocol_student ps "
+                + "join protocol p on p.id = ps.protocol_id "
+                + "join protocol_hdata phd on phd.protocol_id = p.id "
+                + "where ps.student_id = s.id and phd.curriculum_version_hmodule_id = cvhm2.id "
+                + "and (grade_code is null or grade_code in (:positiveGrades)) "
+                + "union all "
+                + "select 1 from student_higher_result shr2 "
+                + "where shr2.student_id = s.id and shr2.is_active = true and shr2.is_module = true "
+                + "and shr2.curriculum_version_hmodule_id = cvhm2.id and shr2.grade_code in (:positiveGrades))",
+                "positiveGrades", HigherAssessment.GRADE_POSITIVE);
+
+        qb.sort("p.firstname, p.lastname");
+        String select = STUDENT_SELECT + ", ((select cvhm.compulsory_study_credits <= sum(case when coalesce(shrm.is_optional, shr.is_optional) = false then shr.credits else 0 end) "
+                + "and cvhm.optional_study_credits <= sum(case when coalesce(shrm.is_optional, shr.is_optional) then shr.credits else 0 end) "
+                + "from student_higher_result shr "
+                + "left join student_higher_result_module shrm on shrm.student_higher_result_id = shr.id "
+                + "join curriculum_version_hmodule cvhm on cvhm.id = coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id) "
+                + "where shr.student_id = s.id and cvhm.id = :moduleId and shr.grade_code in (:positiveGrades) "
+                + "group by cvhm.id) "
+                + "or exists (select 1 from student_curriculum_completion_hmodule scch "
+                + "where scch.student_id = s.id and scch.curriculum_version_hmodule_id = :moduleId)) module_fulfilled";
+        List<?> result = qb.select(select, em).getResultList();
         return StreamUtil.toMappedList(r -> {
-            StudentSearchDto dto = new StudentSearchDto();
-            dto.setId(resultAsLong(r, 0));
-            dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2),
-                    resultAsString(r, 5)));
-            dto.setStudentGroup(new AutocompleteResult(null, resultAsString(r, 3), resultAsString(r, 3)));
-            dto.setCurriculum(new AutocompleteResult(null, resultAsString(r, 4), resultAsString(r, 4)));
+            StudentSearchDto dto = mapStudent(r);
+            dto.setCanSelect(resultAsBoolean(r, 6));
             return dto;
         }, result);
     }
 
-    public List<ProtocolStudentResultDto> calculateGrades(ProtocolCalculateCommand command) {
+    public StudentSearchDto mapStudent(Object result) {
+        StudentSearchDto dto = new StudentSearchDto();
+        dto.setId(resultAsLong(result, 0));
+        dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(result, 1), resultAsString(result, 2),
+                resultAsString(result, 5)));
+        dto.setStudentGroup(new AutocompleteResult(null, resultAsString(result, 3), resultAsString(result, 3)));
+        dto.setCurriculum(new AutocompleteResult(null, resultAsString(result, 4), resultAsString(result, 4)));
+        return dto;
+    }
+
+    public List<ProtocolStudentResultDto> calculateGrades(Protocol protocol, ProtocolCalculateCommand command) {
         List<ProtocolStudentResultDto> calculatedResults = new ArrayList<>();
-        for(Long protocolStudentId : command.getProtocolStudents()) {
-            ProtocolStudent ps = em.getReference(ProtocolStudent.class, protocolStudentId);
-            HigherAssessment grade = HigherProtocolGradeUtil.calculateGrade(ps);
-            calculatedResults.add(new ProtocolStudentResultDto(protocolStudentId, grade));
+
+        if (protocol.getProtocolHdata().getSubjectStudyPeriod() != null) {
+            for (Long protocolStudentId : command.getProtocolStudents()) {
+                ProtocolStudent ps = em.getReference(ProtocolStudent.class, protocolStudentId);
+                HigherAssessment grade = HigherProtocolGradeUtil.calculateGrade(ps);
+                calculatedResults.add(new ProtocolStudentResultDto(protocolStudentId, grade));
+            }
+        } else {
+            Map<Long, List<HigherProtocolModuleSubjectResultDto>> results = studentSubjectResults(protocol.getId(),
+                    command.getProtocolStudents(), true);
+            for(Long protocolStudentId : command.getProtocolStudents()) {
+                List<HigherProtocolModuleSubjectResultDto> studentResults = results.get(protocolStudentId);
+                HigherAssessment grade = calculateModuleProtocolGrade(studentResults);
+                calculatedResults.add(new ProtocolStudentResultDto(protocolStudentId, grade));
+            }
         }
         return calculatedResults;
     }
@@ -389,12 +458,20 @@ public class HigherProtocolService extends AbstractProtocolService {
     public HigherProtocolDto get(HoisUserDetails user, Protocol protocol) {
         HigherProtocolDto dto = HigherProtocolDto.ofWithUserRights(user, protocol);
 
+        Map<Long, List<HigherProtocolModuleSubjectResultDto>> subjectResults = new HashMap<>();
         Map<Long, List<ProtocolPracticeJournalResultDto>> practiceResults = new HashMap<>();
-        if(Boolean.TRUE.equals(dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getIsPracticeSubject())) {
-            practiceResults = studentPracticeResults(dto);
+        List<Long> studentsWithNewerProtocols = studentsWithNewerProtocols(protocol);
+
+        if (dto.getSubjectStudyPeriodMidtermTaskDto() != null) {
+            SubjectStudyPeriodMidtermTaskDto sspMidtermTaskDto = dto.getSubjectStudyPeriodMidtermTaskDto();
+            if (Boolean.TRUE.equals(sspMidtermTaskDto.getSubjectStudyPeriod().getIsPracticeSubject())) {
+                practiceResults = studentPracticeResults(dto);
+            }
+        } else {
+            subjectResults = studentSubjectResults(protocol.getId(), null, false);
+            setModuleDtoSubjects(dto);
         }
 
-        List<Long> studentsWithNewerProtocols = studentsWithNewerProtocols(protocol);
         for (HigherProtocolStudentDto protocolStudent : dto.getProtocolStudents()) {
             Long studentId = protocolStudent.getStudent().getId();
 
@@ -402,9 +479,13 @@ public class HigherProtocolService extends AbstractProtocolService {
                 protocolStudent.setCanBeDeleted(Boolean.FALSE);
                 protocolStudent.setCanChangeGrade(Boolean.FALSE);
             }
-            List<ProtocolPracticeJournalResultDto> studentResults = practiceResults.get(studentId);
-            if (studentResults != null) {
-                protocolStudent.setPracticeJournalResults(studentResults);
+            List<ProtocolPracticeJournalResultDto> studentPracticeResults = practiceResults.get(studentId);
+            if (studentPracticeResults != null) {
+                protocolStudent.setPracticeJournalResults(studentPracticeResults);
+            }
+            List<HigherProtocolModuleSubjectResultDto> subjectStudentResults = subjectResults.get(protocolStudent.getId());
+            if (subjectStudentResults != null) {
+                protocolStudent.setSubjectResults(subjectStudentResults);
             }
         }
         return dto;
@@ -440,7 +521,8 @@ public class HigherProtocolService extends AbstractProtocolService {
         qb.filter("exists (select 1 from protocol p2 "
                 + "join protocol_student ps2 on ps2.protocol_id = p2.id "
                 + "join protocol_hdata hdata2 on p2.id = hdata2.protocol_id "
-                + "where p.id < p2.id and hdata.subject_study_period_id = hdata2.subject_study_period_id "
+                + "where p.id < p2.id and (hdata.subject_study_period_id = hdata2.subject_study_period_id "
+                + "or hdata.curriculum_version_hmodule_id = hdata2.curriculum_version_hmodule_id) "
                 + "and ps.student_id = ps2.student_id)");
 
         List<?> data = qb.select("ps.student_id", em).getResultList();
@@ -458,8 +540,106 @@ public class HigherProtocolService extends AbstractProtocolService {
 
     public HigherProtocolReport higherProtocolReport(Protocol protocol) {
         School school = protocol.getSchool();
-        Boolean isHigherSchool = Boolean.valueOf(schoolService.schoolType(EntityUtil.getId(school)).isHigher());
-        return new HigherProtocolReport(protocol, isHigherSchool, school.getIsLetterGrade());
+        return new HigherProtocolReport(protocol, school.getIsLetterGrade());
+    }
+
+    private void setModuleDtoSubjects(HigherProtocolDto dto) {
+        HigherProtocolModuleDto module = dto.getModuleDto();
+        Long moduleId = module.getModule().getId();
+        Set<Long> studentIds = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
+
+        Map<String, Object> parameters = new HashMap<>();
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject s "
+                + "join curriculum_version_hmodule_subject cvhs on cvhs.subject_id = s.id");
+        qb.requiredCriteria("cvhs.curriculum_version_hmodule_id = :moduleId", "moduleId", moduleId);
+
+        String moduleSubjects = qb.querySql("s.id subject_id, s.code, s.name_et, s.name_en, s.credits, "
+                + "null shr_id, cvhs.is_optional, true module_subject", false);
+        parameters.putAll(qb.queryParameters());
+
+        String resultSubjects = null;
+        if (!studentIds.isEmpty()) {
+            qb = new JpaNativeQueryBuilder("from student_higher_result shr "
+                    + "left join student_higher_result_module shrm on shrm.student_higher_result_id = shr.id");
+
+            qb.requiredCriteria("coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id) = :moduleId",
+                    "moduleId", moduleId);
+            qb.requiredCriteria("shr.student_id in (:studentIds)", "studentIds", studentIds);
+            qb.requiredCriteria("shr.is_active = :isActive", "isActive", Boolean.TRUE);
+            qb.requiredCriteria("shr.is_module = :isModule", "isModule", Boolean.FALSE);
+            qb.filter("(shr.subject_id is null or shr.subject_id not in "
+                    + "(select cvhs.subject_id from curriculum_version_hmodule_subject cvhs "
+                    + "where cvhs.curriculum_version_hmodule_id = :moduleId))");
+
+            resultSubjects = qb.querySql("shr.subject_id, coalesce(shr.subject_code, "
+                    + "substring(shr.subject_name_et from 0 for 8)) code, shr.subject_name_et, shr.subject_name_en, "
+                    + "shr.credits, shr.id shr_id, coalesce(shrm.is_optional, shr.is_optional), false module_subject", false);
+            parameters.putAll(qb.queryParameters());
+        }
+
+        String from = "from (" + moduleSubjects + (resultSubjects != null ? " union all " + resultSubjects : "") + ") as r";
+        qb = new JpaNativeQueryBuilder(from).sort("module_subject desc, subject_id nulls last, is_optional desc, code");
+        List<?> data = qb.select("*", em, parameters).getResultList();
+
+        List<HigherProtocolModuleSubjectDto> subjects = StreamUtil.toMappedList(r -> {
+            HigherProtocolModuleSubjectDto subject = new HigherProtocolModuleSubjectDto();
+            subject.setId(resultAsLong(r, 0));
+            subject.setCode(resultAsString(r, 1));
+            subject.setNameEt(resultAsString(r, 2));
+            subject.setNameEn(resultAsString(r, 3));
+            subject.setCredits(resultAsDecimal(r, 4));
+            subject.setStudentHigherResultId(resultAsLong(r, 5));
+            return subject;
+        }, data);
+        dto.getModuleDto().setSubjects(subjects);
+    }
+
+    private Map<Long, List<HigherProtocolModuleSubjectResultDto>> studentSubjectResults(Long protocolId,
+            Set<Long> protocolStudents, boolean positiveGrades) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from protocol p"
+                + " join protocol_hdata phd on phd.protocol_id = p.id"
+                + " join protocol_student ps on ps.protocol_id = p.id"
+                + " join student_higher_result shr on shr.student_id = ps.student_id"
+                + " left join student_higher_result_module shrm on shrm.student_higher_result_id = shr.id"
+                + " join curriculum_version_hmodule cvhm on cvhm.id = phd.curriculum_version_hmodule_id and"
+                + " cvhm.id = coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id)");
+        qb.requiredCriteria("p.id = :protocolId", "protocolId", protocolId);
+        qb.requiredCriteria("shr.is_active = :isActive", "isActive", Boolean.TRUE);
+        qb.requiredCriteria("shr.is_module = :isModule", "isModule", Boolean.FALSE);
+        qb.optionalCriteria("ps.id in (:protocolStudenttIds)", "protocolStudenttIds", protocolStudents);
+        if (positiveGrades) {
+            qb.requiredCriteria("shr.grade_code in (:positiveGrades)", "positiveGrades", HigherAssessment.GRADE_POSITIVE);
+        }
+
+        List<?> data = qb.select("ps.id ps_id, shr.id shr_id, shr.subject_id, shr.credits, shr.grade_code,"
+                + " shr.apel_application_record_id", em).getResultList();
+        return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                Collectors.mapping(r -> new HigherProtocolModuleSubjectResultDto(resultAsLong(r, 1), resultAsLong(r, 2),
+                        resultAsDecimal(r, 3), resultAsString(r, 4), resultAsLong(r, 5)), Collectors.toList())));
+    }
+
+    private HigherAssessment calculateModuleProtocolGrade(List<HigherProtocolModuleSubjectResultDto> studentResults) {
+        if (studentResults != null) {
+            List<HigherAssessment> results = StreamUtil.toMappedList(r -> HigherAssessment.valueOf(r.getGrade()),
+                    studentResults);
+            boolean includesDistinctiveResults = results.stream().anyMatch(r -> Boolean.TRUE.equals(r.getIsDistinctive()));
+            if (!includesDistinctiveResults) {
+                return HigherAssessment.KORGHINDAMINE_A;
+            }
+
+            BigDecimal totalCredits = BigDecimal.ZERO;
+            BigDecimal wagCredits = BigDecimal.ZERO;
+            for (HigherProtocolModuleSubjectResultDto result : studentResults) {
+                HigherAssessment resultGrade = HigherAssessment.valueOf(result.getGrade());
+                if (resultGrade.getIsDistinctive()) {
+                    totalCredits = totalCredits.add(result.getCredits());
+                    wagCredits = wagCredits.add(BigDecimal.valueOf(resultGrade.getMark()).multiply(result.getCredits()));
+                }
+            }
+            BigDecimal wagMark = wagCredits.divide(totalCredits, 0, BigDecimal.ROUND_HALF_UP);
+            return HigherAssessment.valueOf(MainClassCode.KORGHINDAMINE.name() + "_" + wagMark.intValue());
+        }
+        return HigherAssessment.KORGHINDAMINE_0;
     }
 
 }

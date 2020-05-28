@@ -27,12 +27,25 @@
       var id = $route.current.params.id;
       var baseUrl = '/teachers';
       var Endpoint = QueryUtils.endpoint(baseUrl);
+      var teacherSavedOccupationId;
       var TeacherPositionEhisEndpoint = QueryUtils.endpoint('/teachers/' + id + '/ehisPositions');
       var EmailGeneratorEndpoint = QueryUtils.endpoint('/school/generateEmail', {post: {method: 'POST'}});
 
       var school = $scope.auth.school;
       var onlyHigherSchool = school && school.higher && !school.vocational;
       $scope.occupations = QueryUtils.endpoint('/school/teacheroccupations/all').query();
+      $scope.orderOccupations = function (occupation) {
+        if ($scope.currentLanguage() === 'en') {
+          return occupation.occupationEn || occupation.occupationEt;
+        }
+        return occupation.occupationEt;
+      }
+      $scope.filterOccupations = function (occupation) {
+        if (teacherSavedOccupationId === occupation.id) {
+          return true;
+        }
+        return occupation.isValid;
+      }
 
       function afterLoad() {
         setIsVocationalOrIsHigher($scope, $translate);
@@ -46,6 +59,7 @@
         $scope.isHigher = $scope.teacher.isHigher;
         DataUtils.convertStringToDates($scope.teacher.person, ['birthdate']);
         $scope.formState = {person: true, id: true};
+        teacherSavedOccupationId = $scope.teacher.teacherOccupation.id;
       }
 
       $scope.lookupFailure = function () {
@@ -453,7 +467,7 @@
     $scope.updateData = function () {
       QueryUtils.endpoint('/teachers/' + id + '/rtip').save().$promise.then(function () {
         $scope.loadData();
-        message.info("teacher.rtipUpdateOperation.success");
+        message.info("main.messages.dataUpdated");
       });
     };
 
@@ -500,7 +514,7 @@
     $scope.updateData = function () {
       QueryUtils.endpoint('/teachers/' + id + '/rtip').save().$promise.then(function () {
         $scope.loadData();
-        message.info("teacher.rtipUpdateOperation.success");
+        message.info("main.messages.dataUpdated");
       });
     };
 

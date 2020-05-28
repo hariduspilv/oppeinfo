@@ -11,7 +11,7 @@
       <div layout="row">
         <md-input-container flex="40" flex-sm="100" flex-xs="100" class="readonly">
           <label>{{'document.diplomaNrVocational' | translate}}</label>
-          <hois-value value="record.diplomaNr"></hois-value>
+          <hois-value value="(!!record.diplomaNr ? record.diplomaNr : '') + (record.isDiplomaDuplicate ? ' (' + ('document.duplicate' | translate) +')' : '')"></hois-value>
         </md-input-container>
       </div>
 
@@ -21,6 +21,8 @@
           <hois-classifier-value ng-model="record.diplomaStatus" main-classifier-code="LOPUDOK_STAATUS" model-value-attr="code"></hois-classifier-value>
         </md-input-container>
       </div>
+      
+      <h3 ng-if="record.isSupplementDuplicate" style="margin-left: 4px">{{'document.duplicate' | translate}}</h3>
 
       <div layout="row" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T'">
         <md-input-container flex="20" flex-sm="100" flex-xs="100">

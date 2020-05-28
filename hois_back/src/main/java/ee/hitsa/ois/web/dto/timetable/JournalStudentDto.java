@@ -6,6 +6,7 @@ import java.util.List;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -21,6 +22,7 @@ public class JournalStudentDto {
     private String lastname;
     private String fullname;
     private String studentGroup;
+    private Long curriculumId;
     private String curriculum;
     private Boolean isMoodleRegistered;
     private String status;
@@ -35,12 +37,13 @@ public class JournalStudentDto {
     }
 
     public JournalStudentDto(Long studentId, String firstname, String lastname, String studentGroup,
-            String curriculumVersionCode, String curriculumNameEt, String status) {
+            Long curriculumId, String curriculumVersionCode, String curriculumNameEt, String status) {
         this.studentId = studentId;
         this.firstname = firstname;
         this.lastname = lastname;
         this.fullname = PersonUtil.fullname(firstname, lastname);
         this.studentGroup = studentGroup;
+        this.curriculumId = curriculumId;
         this.curriculum = CurriculumUtil.versionName(curriculumVersionCode, curriculumNameEt);
         this.status = status;
         this.canView = Boolean.TRUE;
@@ -56,12 +59,14 @@ public class JournalStudentDto {
         dto.setLastname(person.getLastname());
         dto.setFullname(PersonUtil.fullname(student));
 
-        if (student.getStudentGroup() != null) {
-            dto.setStudentGroup(student.getStudentGroup().getCode());
+        StudentGroup studentGroup = student.getStudentGroup();
+        if (studentGroup != null) {
+            dto.setStudentGroup(studentGroup.getCode());
         }
 
         if (student.getCurriculumVersion() != null) {
             CurriculumVersion cv = student.getCurriculumVersion();
+            dto.setCurriculumId(EntityUtil.getId(cv.getCurriculum()));
             dto.setCurriculum(CurriculumUtil.versionName(cv.getCode(), cv.getCurriculum().getNameEt()));
         }
 
@@ -125,6 +130,14 @@ public class JournalStudentDto {
 
     public void setStudentGroup(String studentGroup) {
         this.studentGroup = studentGroup;
+    }
+
+    public Long getCurriculumId() {
+        return curriculumId;
+    }
+
+    public void setCurriculumId(Long curriculumId) {
+        this.curriculumId = curriculumId;
     }
 
     public String getCurriculum() {

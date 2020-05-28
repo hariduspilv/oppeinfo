@@ -97,7 +97,7 @@
             <hois-table-data-master>
               <hois-classifier-select ng-model="row.citizenship" name="students[{{$index}}].citizenship" model-value-attr="code"
                 criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
-                main-classifier-code="RIIK" aria-label="{{'directive.student.citizenship' | translate}}"></hois-classifier-select>
+                main-classifier-code="RIIK" aria-label="{{'directive.student.citizenship' | translate}}" ng-change="changedCitizenship(row)"></hois-classifier-select>
             </hois-table-data-master>
             <hois-table-data-detail>
               <div class="invalid" ng-messages="directiveForm['students['+$index+'].citizenship'].$error">

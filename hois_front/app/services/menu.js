@@ -5,7 +5,7 @@ angular.module('hitsaOis')
 
     var sections = [];
 
-    function getAdminSections() {
+    function getAdminSections(authenticatedUser) {
       sections.push({
         name: 'main.menu.academicCalendar.label',
         type: 'link',
@@ -418,9 +418,19 @@ angular.module('hitsaOis')
             icon: 'perm_data_setting'
           },
           {
+            name: authenticatedUser.higher && authenticatedUser.vocational ? 
+                'main.menu.reports.educationalSuccessVocational' 
+              : 'main.menu.reports.educationalSuccess',
+            url: '/reports/students/educationalSuccess?_menu',
+            icon:'blur_circular',
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
             name: 'main.menu.reports.studentstatistics',
-            url: "/reports/students/statistics?_menu",
-            icon:"blur_circular"
+            url: '/reports/students/statistics?_menu',
+            icon:'blur_circular'
           },
           {
             name: 'main.menu.reports.gueststudentstatistics',
@@ -1468,6 +1478,16 @@ angular.module('hitsaOis')
             icon: 'perm_data_setting'
           },
           {
+            name: authenticatedUser.higher && authenticatedUser.vocational ? 
+                'main.menu.reports.educationalSuccessVocational' 
+              : 'main.menu.reports.educationalSuccess',
+            url: '/reports/students/educationalSuccess?_menu',
+            icon:'blur_circular',
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
             name: 'main.menu.reports.studentstatistics',
             url: '/reports/students/statistics?_menu',
             icon: 'blur_circular'
@@ -2182,7 +2202,7 @@ angular.module('hitsaOis')
           getAdminSections(authenticatedUser);
           break;
         case "ROLL_P":
-          getMainAdminSections();
+          getMainAdminSections(authenticatedUser);
           break;
         case "ROLL_J":
           getLeadingTeacherSections(authenticatedUser);

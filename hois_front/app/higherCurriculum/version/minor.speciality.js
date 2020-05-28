@@ -16,6 +16,7 @@ angular.module('hitsaOis')
     $scope.studyYears = [];
     $scope.backToEditForm = '#/higherCurriculum/' + curriculumId + '/version/' + versionId + '/edit';
     $scope.backToViewForm = '#/higherCurriculum/' + curriculumId + '/version/' + versionId + '/view';
+    $scope.schoolModuleGrades = !!($route.current.locals.auth.school || {}).hmodules;
 
     $scope.formState = {
       readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1
@@ -126,6 +127,9 @@ angular.module('hitsaOis')
     };
 
     $scope.addSubject = function () {
+      if (!$scope.data.selectedSubject) {
+        return;
+      }
       var newSubject = angular.copy($scope.data.selectedSubject);
       newSubject.optional = false;
       $scope.data.subjects.push(newSubject);

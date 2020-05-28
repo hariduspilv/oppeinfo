@@ -224,7 +224,7 @@ public abstract class JpaQueryUtil {
         return value == null || StringUtils.isEmpty(value) ? Collections.emptyList() : Arrays.asList(value.split(delimeter));
     }
 
-    private static Object getValue(Object row, int index) {
+    public static Object getValue(Object row, int index) {
         Object value = row;
         if (value instanceof Object[]) {
             value = ((Object[])value)[index];

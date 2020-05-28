@@ -93,6 +93,12 @@
       </md-checkbox>
     </md-input-container>
 
+    <md-input-container class="md-block" ng-if="school.type.higher">
+      <md-checkbox ng-model="school.isHmodules" name="isHmodules">
+          {{'school.isHmodules' | translate}}
+      </md-checkbox>
+    </md-input-container>
+
     <div class="custom-radio" layout-gt-sm="row" layout="column" layout-align="start start" layout-align-gt-sm="start center">
       <span class="common-label" style="margin-right: 1em;">{{'school.studentPhotoAdd' | translate}}:</span>
       <md-radio-group layout-gt-xs="row" ng-model="school.studentPhotoAdd" name="studentPhotoAdd" required>

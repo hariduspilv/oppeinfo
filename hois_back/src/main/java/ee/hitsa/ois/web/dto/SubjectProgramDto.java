@@ -23,11 +23,13 @@ public class SubjectProgramDto extends SubjectProgramForm {
     private LocalDateTime confirmed;
     private String confirmedBy;
     private Set<Long> supervisorIds;
+    private Boolean isLetterGrade;
     
     public static SubjectProgramDto of(SubjectProgram program) {
         SubjectProgramDto dto = EntityUtil.bindToDto(program, new SubjectProgramDto(), "subjectStudyPerioudTeacher", "studyContents");
         dto.setSubjectStudyPeriodTeacher(SubjectStudyPeriodTeacherDto.of(program.getSubjectStudyPeriodTeacher()));
         dto.setStudyContents(StreamUtil.toMappedSet(SubjectProgramStudyContentDto::of, program.getStudyContents()));
+        dto.setIsLetterGrade(program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject().getSchool().getIsLetterGrade());
         return dto;
     }
 
@@ -107,6 +109,14 @@ public class SubjectProgramDto extends SubjectProgramForm {
 
     public void setSupervisorIds(Set<Long> supervisorIds) {
         this.supervisorIds = supervisorIds;
+    }
+
+    public Boolean getIsLetterGrade() {
+        return isLetterGrade;
+    }
+
+    public void setIsLetterGrade(Boolean isLetterGrade) {
+        this.isLetterGrade = isLetterGrade;
     }
     
 }

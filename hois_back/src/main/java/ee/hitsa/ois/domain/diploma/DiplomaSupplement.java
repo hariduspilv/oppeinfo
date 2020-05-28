@@ -101,8 +101,16 @@ public class DiplomaSupplement extends BaseEntityWithId {
     private LocalDate printed;
     private Integer pgNrEt;
     private Integer pgNrEn;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private DiplomaSupplement diplomaSupplement;
+    @Column(name = "is_duplicate")
+    private Boolean duplicate;
+    @Column(name = "is_duplicate_en")
+    private Boolean duplicateEn;
     @OneToMany(mappedBy = "diplomaSupplement", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DiplomaSupplementStudyResult> studyResults;
+    @OneToMany(mappedBy = "diplomaSupplement")
+    private List<DiplomaSupplement> duplicateSupplements;
     
     public Diploma getDiploma() {
         return diploma;
@@ -477,12 +485,44 @@ public class DiplomaSupplement extends BaseEntityWithId {
         this.pgNrEn = pgNrEn;
     }
     
+    public DiplomaSupplement getDiplomaSupplement() {
+        return diplomaSupplement;
+    }
+
+    public void setDiplomaSupplement(DiplomaSupplement diplomaSupplement) {
+        this.diplomaSupplement = diplomaSupplement;
+    }
+
+    public Boolean getDuplicate() {
+        return duplicate;
+    }
+
+    public void setDuplicate(Boolean duplicate) {
+        this.duplicate = duplicate;
+    }
+
+    public Boolean getDuplicateEn() {
+        return duplicateEn;
+    }
+
+    public void setDuplicateEn(Boolean duplicateEn) {
+        this.duplicateEn = duplicateEn;
+    }
+
     public List<DiplomaSupplementStudyResult> getStudyResults() {
         return studyResults != null ? studyResults : (studyResults = new ArrayList<>());
     }
     
     public void setStudyResults(List<DiplomaSupplementStudyResult> studyResults) {
         this.studyResults = studyResults;
+    }
+    
+    public List<DiplomaSupplement> getDuplicateSupplements() {
+        return duplicateSupplements != null ? duplicateSupplements : (duplicateSupplements = new ArrayList<>());
+    }
+    public void setDuplicateSupplements(List<DiplomaSupplement> duplicateSupplements) {
+        getDuplicateSupplements().clear();
+        getDuplicateSupplements().addAll(duplicateSupplements);
     }
     
 }

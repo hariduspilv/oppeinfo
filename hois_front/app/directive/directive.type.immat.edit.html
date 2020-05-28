@@ -72,7 +72,7 @@
         <td md-cell hois-table-data>
           <hois-table-data-master>
             <md-datepicker ng-if="!row._found && !row.idcode" ng-model="row.birthdate" name="students[{{$index}}].birthdate"></md-datepicker>
-            <hois-value ng-if="row._found || row.idcode" value="row.birthdate | hoisDate" name="students[{{$index}}].birthdate"></hois-value>
+            <md-datepicker ng-if="row._found || row.idcode" ng-model="row.birthdate" name="students[{{$index}}].birthdate" disabled></md-datepicker>
           </hois-table-data-master>
           <hois-table-data-detail>
             <div class="invalid" ng-messages="directiveForm['students['+$index+'].birthdate'].$error">
@@ -85,7 +85,7 @@
             <hois-classifier-select ng-if="!row._found && !row.idcode" ng-model="row.sex" name="students[{{$index}}].sex"
               criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
               model-value-attr="code" main-classifier-code="SUGU" aria-label="{{'directive.student.sex' | translate}}"></hois-classifier-select>
-            <hois-classifier-value ng-if="row._found || row.idcode" ng-model="row.sex" main-classifier-code="SUGU"></hois-classifier-value>
+            <hois-classifier-value ng-if="row._found || row.idcode" ng-model="row.sex" main-classifier-code="SUGU" name="students[{{$index}}].sex"></hois-classifier-value>
           </hois-table-data-master>
           <hois-table-data-detail>
             <div class="invalid" ng-messages="directiveForm['students['+$index+'].sex'].$error">
@@ -97,7 +97,8 @@
           <hois-table-data-master>
             <hois-classifier-select ng-model="row.citizenship" name="students[{{$index}}].citizenship" model-value-attr="code"
               criteria="{vocational: formState.school.vocational ? true : undefined, higher: formState.school.higher ? true : undefined}" only-valid ignore-preselected
-              main-classifier-code="RIIK" aria-label="{{'directive.student.citizenship' | translate}}"></hois-classifier-select>
+              main-classifier-code="RIIK" aria-label="{{'directive.student.citizenship' | translate}}"
+              ng-change="changedCitizenship(row)"></hois-classifier-select>
           </hois-table-data-master>
           <hois-table-data-detail>
             <div class="invalid" ng-messages="directiveForm['students['+$index+'].citizenship'].$error">

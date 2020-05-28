@@ -3,6 +3,7 @@ package ee.hitsa.ois.domain.student;
 import java.time.LocalDate;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -27,6 +28,8 @@ public class StudentSupportService extends BaseEntityWithId {
     private Classifier validity;
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private OisFile oisFile;
+    @Column(name = "is_ehis")
+    private Boolean ehis;
 
     public LocalDate getEntryDate() {
         return entryDate;
@@ -82,5 +85,13 @@ public class StudentSupportService extends BaseEntityWithId {
 
     public void setOisFile(OisFile oisFile) {
         this.oisFile = oisFile;
+    }
+
+    public Boolean getEhis() {
+        return ehis;
+    }
+
+    public void setEhis(Boolean ehis) {
+        this.ehis = ehis;
     }
 }

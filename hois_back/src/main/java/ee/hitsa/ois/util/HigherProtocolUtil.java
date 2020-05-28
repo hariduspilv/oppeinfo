@@ -3,6 +3,8 @@ package ee.hitsa.ois.util;
 import java.util.Set;
 
 import ee.hitsa.ois.domain.protocol.Protocol;
+import ee.hitsa.ois.domain.protocol.ProtocolHdata;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.exception.AssertionFailedException;
@@ -23,15 +25,36 @@ public abstract class HigherProtocolUtil {
         if (!UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PROTOKOLL)) {
             return false;
         }
-        return UserUtil.isSchoolAdmin(user, protocol.getSchool()) || UserUtil.isTeacher(user, protocol.getSchool())
-                || UserUtil.isLeadingTeacher(user, protocol.getProtocolHdata().getSubjectStudyPeriod().getSubject());
+        if (UserUtil.isSchoolAdmin(user, protocol.getSchool())) {
+            return true;
+        }
+        if (UserUtil.isTeacher(user, protocol.getSchool())) {
+            SubjectStudyPeriod subjectStudyPeriod = protocol.getProtocolHdata().getSubjectStudyPeriod();
+            if (subjectStudyPeriod != null) {
+                return subjectStudyPeriod.getTeachers().stream()
+                        .anyMatch(t -> EntityUtil.getId(t.getTeacher()).equals(user.getTeacherId()));
+            } else {
+                return user.getTeacherId().equals(EntityUtil.getNullableId(protocol.getProtocolHdata().getTeacher()));
+            }
+        }
+        if (UserUtil.isLeadingTeacher(user, protocol.getSchool())) {
+            ProtocolHdata data = protocol.getProtocolHdata();
+            if (data.getSubjectStudyPeriod() != null) {
+                return UserUtil.isLeadingTeacher(user, protocol.getProtocolHdata().getSubjectStudyPeriod().getSubject());
+            } else {
+                return UserUtil.isLeadingTeacher(user, EntityUtil.getId(protocol.getProtocolHdata()
+                        .getCurriculumVersionHmodule().getCurriculumVersion().getCurriculum()));
+            }
+        }
+        return false;
+
     }
 
-    private static boolean canCreate(HoisUserDetails user) {
+    private static boolean canCreate(HoisUserDetails user, Long subjectStudyPeriod) {
         if(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PROTOKOLL)) {
             return false;
         }
-        return user.isSchoolAdmin() || user.isTeacher();
+        return user.isSchoolAdmin() || (user.isTeacher() && subjectStudyPeriod != null);
     }
 
     public static boolean canChange(HoisUserDetails user, Protocol protocol) {
@@ -42,7 +65,8 @@ public abstract class HigherProtocolUtil {
             return true;
         }
         if(UserUtil.isTeacher(user, protocol.getSchool())) {
-            return !ProtocolUtil.confirmed(protocol);
+            ProtocolHdata data = protocol.getProtocolHdata();
+            return EntityUtil.getNullableId(data.getSubjectStudyPeriod()) != null && !ProtocolUtil.confirmed(protocol);
         }
         return false;
     }
@@ -55,8 +79,12 @@ public abstract class HigherProtocolUtil {
             return true;
         }
         if(UserUtil.isTeacher(user, protocol.getSchool())) {
-            return protocol.getProtocolHdata().getSubjectStudyPeriod().getTeachers().stream().anyMatch(t -> Boolean.TRUE.equals(t.getIsSignatory()) && 
-                    EntityUtil.getId(t.getTeacher()).equals(user.getTeacherId()));
+            SubjectStudyPeriod subjectStudyPeriod = protocol.getProtocolHdata().getSubjectStudyPeriod();
+            if (subjectStudyPeriod != null) {
+                return subjectStudyPeriod.getTeachers().stream().anyMatch(t -> Boolean.TRUE.equals(t.getIsSignatory()) &&
+                        EntityUtil.getId(t.getTeacher()).equals(user.getTeacherId()));
+            }
+            return false;
         }
         return false;
     }
@@ -77,8 +105,8 @@ public abstract class HigherProtocolUtil {
         }
     }
 
-    public static void assertCanCreate(HoisUserDetails user) {
-        if(!canCreate(user)) {
+    public static void assertCanCreate(HoisUserDetails user, Long subjectStudyPeriod) {
+        if(!canCreate(user, subjectStudyPeriod)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }

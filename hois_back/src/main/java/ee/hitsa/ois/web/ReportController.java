@@ -10,6 +10,7 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +28,7 @@ import ee.hitsa.ois.report.ReportUtil;
 import ee.hitsa.ois.report.studentgroupteacher.NegativeResultsReport;
 import ee.hitsa.ois.report.studentgroupteacher.StudentGroupTeacherReport;
 import ee.hitsa.ois.service.ClassifierService;
+import ee.hitsa.ois.service.EducationalSuccessReportService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.ReportService;
 import ee.hitsa.ois.service.StudentGroupTeacherReportService;
@@ -36,8 +38,10 @@ import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
+import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumCompletionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumSubjectsCommand;
+import ee.hitsa.ois.web.commandobject.report.EducationalSuccessCommand;
 import ee.hitsa.ois.web.commandobject.report.ForeignStudentStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.GuestStudentStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.report.IndividualCurriculumStatisticsCommand;
@@ -55,6 +59,7 @@ import ee.hitsa.ois.web.commandobject.report.TeacherDetailLoadCommand;
 import ee.hitsa.ois.web.commandobject.report.TeacherLoadCommand;
 import ee.hitsa.ois.web.commandobject.report.VotaCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.report.CurriculumCompletionDto;
 import ee.hitsa.ois.web.dto.report.CurriculumSubjectsDto;
 import ee.hitsa.ois.web.dto.report.ForeignStudentStatisticsDto;
@@ -82,6 +87,8 @@ public class ReportController {
     private ReportService reportService;
     @Autowired
     private StudentGroupTeacherReportService studentGroupTeacherReportService;
+    @Autowired
+    private EducationalSuccessReportService educationalSuccessTeacherReportService;
     @Autowired
     private TeacherDetailLoadService teacherDetailLoadService;
     @Autowired
@@ -190,6 +197,25 @@ public class ReportController {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
         HttpUtil.xls(response, "subjectstudyperioddata.xls", reportService.subjectStudyPeriodDataAsExcel(user, criteria, pageable));
     }
+    
+    @GetMapping("/students/educationalSuccess")
+    public Page<Object> educationalSuccess(HoisUserDetails user, @Valid EducationalSuccessCommand criteria,
+            Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        return educationalSuccessTeacherReportService.educationalSuccess(user, criteria, pageable);
+    }
+    
+    @GetMapping("/students/educationalSuccess/students")
+    public Page<AutocompleteResult> educationalSuccess(HoisUserDetails user, StudentAutocompleteCommand lookup) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        return new PageImpl<>(educationalSuccessTeacherReportService.students(user.getSchoolId(), lookup));
+    }
+    
+    @GetMapping("/students/educationalSuccess.xls")
+    public void subjectStudyPeriodDataAsExcel(HoisUserDetails user, @Valid EducationalSuccessCommand criteria, HttpServletResponse response, Pageable pageable) throws IOException {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        HttpUtil.xls(response, "educationalSuccess.xls", educationalSuccessTeacherReportService.educationalSuccessAsExcel(user, criteria, pageable));
+    }
 
     @GetMapping("/students/statistics")
     public Page<StudentStatisticsDto> studentStatistics(HoisUserDetails user, @Valid StudentStatisticsCommand criteria,
@@ -203,6 +229,12 @@ public class ReportController {
             Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
         return reportService.foreignStudentStatistics(user, criteria, pageable);
+    }
+    
+    @GetMapping("/educationalLevels")
+    public List<ClassifierSelection> educationalLevels(HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        return reportService.educationalLevels(user);
     }
     
     @GetMapping("/foreignstudents/statistics/foreignstudentstatistics.xls")

@@ -10,13 +10,13 @@
   </head>
 
   <body>
-    <p align="center" style="font-size: 8px;">{{ content.school }}</p>
-    <p align="center" style="font-size: 8px;">{{ "report.final.protocol.protocolNr" | translate }} {{ content.protocolNr }}</p>
+    <p class="protocol-header-small">{{ content.school }}</p>
+    <p class="protocol-header-small">{{ "report.final.protocol.protocolNr" | translate }} {{ content.protocolNr }}</p>
 
     <br/><br/>
 
-    <p align="center" style="font-size: 10px;">{{ content.subject }} {{ content.subjectCode }}</p>
-    <p align="center" style="font-size: 10px;">{{ content.credits }} {{ "report.final.protocol.higherCredits" | translate  }}</p>
+    <p class="protocol-header-big">{{ content.subject }} {{ content.subjectCode }}</p>
+    <p class="protocol-header-big">{{ content.credits }} {{ "report.final.protocol.higherCredits" | translate  }}</p>
 
     <br/>
 

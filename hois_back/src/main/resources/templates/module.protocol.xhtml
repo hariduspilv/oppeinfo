@@ -8,12 +8,12 @@
     </style>
   </head>
   <body>
-    <p align="center" style="font-size: 8px;">{{ content.school }}</p>
-    <p align="center" style="font-size: 8px;">{{ "report.module.protocol.protocolNr" | translate }} {{ content.protocolNr }}</p>
+    <p class="protocol-header-small">{{ content.school }}</p>
+    <p class="protocol-header-small">{{ "report.module.protocol.protocolNr" | translate }} {{ content.protocolNr }}</p>
 
     <br/><br/>
 
-    <p align="center" style="font-size: 10px;">{{ content.curriculumModule }} ({{ content.curriculumVersion }}), 
+    <p class="protocol-header-big">{{ content.curriculumModule }} ({{ content.curriculumVersion }}),
       {{ content.credits }} {{ "report.module.protocol.vocationalCredits" | translate }}</p>
 
     <br/>
@@ -28,7 +28,7 @@
     <p>{{ "report.module.protocol.assessment" | translate  }}: {{ content.assessmentType }}</p>
 
     <br/><br/>
-    
+
     <table class="reporttable">
       <tr>
         <td class="label">{{ "report.module.protocol.student.nr" | translate }}</td>

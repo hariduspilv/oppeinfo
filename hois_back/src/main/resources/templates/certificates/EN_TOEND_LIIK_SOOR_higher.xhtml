@@ -7,9 +7,11 @@
 		during {{ content.student.studyStart != null ? content.student.studyStart : "unspecified" }} to {{ content.student.studyEnd != null ? content.student.studyEnd : "unspecified" }}.
 	{% endif %}
 </p>
+{% if content.student.curriculum != null %}
 <p>
-	Curriculum: {{ content.student.curriculum != null ? content.student.curriculum.nameEn + " (" + (content.student.curriculum.merCode != null ? content.student.curriculum.merCode  : "-") + ")" : "-" }}
+	Curriculum: {{ content.student.curriculum.nameEn + " (" + (content.student.curriculum.merCode != null ? content.student.curriculum.merCode  : "-") + ")" }}
 </p>
+{% endif %}
 {% if not content.student.isGuestStudent %}
 <p>
 	Level of education: {{ content.student.curriculum != null ? (content.student.curriculum.studyLevel | name) : "-" }}
@@ -33,6 +35,57 @@
 	As part of studies student has passed
 </p>
 
+{% if content.student.mappedResults != null and content.student.mappedResults.isEmpty() == false %}
+<table class="widerTable">
+	<thead>
+		<tr>
+			<th>{{ "report.certificate.nr" | translate }}</th>
+			<th>{{ "report.certificate.moduleSubject" | translate }}</th>
+			<th>{{ "report.certificate.subject.code" | translate }}</th>
+			<th>{{ "report.certificate.credits.higher" | translate }}</th>
+			<th colspan="2">{{ "report.certificate.grade" | translate }}</th>
+			<th>{{ "report.certificate.date" | translate }}</th>
+			<th>{{ "report.certificate.teacherHigher" | translate }}</th>
+		</tr>
+	</thead>
+	{% set counter = 0 %}
+	<tbody>
+		{% for category in content.student.mappedResults %}
+			{% for result in category.value %}
+				<tr>
+					<td></td>
+					<td>
+						{% if result.key.module.id > -1 %}
+						<b>{{ result.key.module | name }}</b>
+						{% else %}
+						<b>{{ "report.certificate.freeChoiceModule" | translate }}</b>
+						{% endif %}
+					</td>
+					<td></td>
+					<td><b>{{ result.key.moduleCredits }}</b></td>
+					<td><b>{{ result.key.gradeValue }}</b></td>
+					<td><b>{{ result.key.gradeName }}</b></td>
+					<td><b>{{ result.key.date }}</b></td>
+					<td><b>{{ result.key.assessedBy }}</b></td>
+				</tr>
+				{% for subjectResult in result.value %}
+					{% set counter = counter + 1 %}
+					<tr>
+						<td style="vertical-align: top;">{{ counter }}</td>
+						<td>{{ subjectResult.subject }}</td>
+						<td>{{ subjectResult.subjectCode }}</td>
+						<td>{{ subjectResult.hours }}</td>
+						<td>{{ subjectResult.gradeValue }}</td>
+						<td>{{ subjectResult.gradeName }}</td>
+						<td>{{ subjectResult.date }}</td>
+						<td>{{ subjectResult.assessedBy }}</td>
+					</tr>
+				{% endfor %}
+			{% endfor %}
+		{% endfor %}
+	</tbody>
+</table>
+{% else %}
 <table class="widerTable">
 	<thead>
 		<tr>
@@ -42,13 +95,7 @@
 			<th>{{ "report.certificate.credits.higher" | translate }}</th>
 			<th colspan="2">{{ "report.certificate.grade" | translate }}</th>
 			<th>{{ "report.certificate.date" | translate }}</th>
-			<th>
-				{% if content.isHigherSchool %}
-					{{ "report.certificate.teacherHigher" | translate }}
-				{% else %}
-					{{ "report.certificate.teacherVocational" | translate }}
-				{% endif %}
-			</th>
+			<th>{{ "report.certificate.teacherHigher" | translate }}</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -65,8 +112,9 @@
 		</tr>
 		{% endfor %}
 	</tbody>
-
 </table>
+{% endif %}
+
 <p>
 Total: {{ content.student.creditsAll != null ? content.student.creditsAll : '0' }} EAP<br>
 Weighted average grade: {{ content.student.averageMark != null ? content.student.averageMark : '-' }}

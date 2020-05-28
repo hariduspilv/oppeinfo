@@ -43,8 +43,10 @@ import ee.hitsa.ois.domain.application.ApplicationSupportService;
 import ee.hitsa.ois.domain.application.ApplicationSupportServiceModule;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.diploma.DiplomaSupplement;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.directive.DirectiveStudentDuplicateForm;
 import ee.hitsa.ois.domain.directive.DirectiveStudentModule;
 import ee.hitsa.ois.domain.sais.SaisApplicationGraduatedSchool;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
@@ -57,7 +59,9 @@ import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.DirectiveCancelType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.DocumentStatus;
 import ee.hitsa.ois.enums.EhisStipendium;
+import ee.hitsa.ois.enums.FormStatus;
 import ee.hitsa.ois.enums.JobType;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Role;
@@ -733,6 +737,69 @@ public class DirectiveConfirmService {
         case KASKKIRI_AKADK:
             duration = ChronoUnit.DAYS.between(DateUtils.periodStart(academicLeave), directiveStudent.getStartDate());
             student.setNominalStudyEnd(student.getNominalStudyEnd().minusDays(duration));
+            break;
+        case KASKKIRI_DUPLIKAAT:
+            if (directiveStudent.getDiploma() != null) {
+                directiveStudent.getDiploma().setStatus(em.getReference(Classifier.class, DocumentStatus.LOPUDOK_STAATUS_C.name()));
+                
+                // Remove supplement which is not printed yet
+                List<DiplomaSupplement> supplements = em.createQuery("select ds from DiplomaSupplement ds"
+                        + " where ds.diploma.id = ?1 and (ds.status.code = ?2 or ds.statusEn.code = ?2)", DiplomaSupplement.class)
+                        .setParameter(1, directiveStudent.getDiploma().getId())
+                        .setParameter(2, DocumentStatus.LOPUDOK_STAATUS_K.name())
+                        .getResultList();
+                for (DiplomaSupplement supplement : supplements) {
+                    if (ClassifierUtil.equals(DocumentStatus.LOPUDOK_STAATUS_K, supplement.getStatus())) {
+                        supplement.setStatus(null);
+                        supplement.setDuplicate(null);
+                    }
+                    if (ClassifierUtil.equals(DocumentStatus.LOPUDOK_STAATUS_K, supplement.getStatusEn())) {
+                        supplement.setStatusEn(null);
+                        supplement.setDuplicateEn(null);
+                    }
+                    // delete if there is no need in this
+                    if (supplement.getStatus() == null && supplement.getStatusEn() == null) {
+                        EntityUtil.deleteEntity(supplement, em);
+                    }
+                }
+            }
+            if (directiveStudent.getDiplomaForm() != null) {
+                directiveStudent.getDiplomaForm().setStatus(em.getReference(Classifier.class, FormStatus.LOPUBLANKETT_STAATUS_R.name()));
+                directiveStudent.getDiplomaForm().setDefected(confirmDate);
+                directiveStudent.getDiplomaForm().setDefectReason(directiveStudent.getAddInfo());
+                directiveStudent.getDiplomaForm().setDefectedBy(directiveStudent.getDirective().getConfirmer());
+            }
+
+            List<DirectiveStudentDuplicateForm> forms = new ArrayList<>();
+            List<DirectiveStudentDuplicateForm> formsEn = new ArrayList<>();
+            
+            directiveStudent.getForms().forEach(f -> (Boolean.TRUE.equals(f.getEn()) ? formsEn : forms).add(f));
+            if (directiveStudent.getDiplomaSupplement() != null) {
+                directiveStudent.getDiplomaSupplement().setStatus(em.getReference(Classifier.class, DocumentStatus.LOPUDOK_STAATUS_C.name()));
+                forms.forEach(dsForm -> {
+                    dsForm.getForm().setStatus(em.getReference(Classifier.class, FormStatus.LOPUBLANKETT_STAATUS_R.name()));
+                    dsForm.getForm().setDefected(confirmDate);
+                    dsForm.getForm().setDefectReason(directiveStudent.getAddInfo());
+                    dsForm.getForm().setDefectedBy(directiveStudent.getDirective().getConfirmer());
+                });
+                if (ClassifierUtil.equals(DocumentStatus.LOPUDOK_STAATUS_K, directiveStudent.getDiplomaSupplement().getStatusEn())) {
+                    directiveStudent.getDiplomaSupplement().setStatusEn(null);
+                    directiveStudent.getDiplomaSupplement().setDuplicateEn(null);
+                }
+            }
+            if (directiveStudent.getDiplomaSupplementEn() != null) {
+                directiveStudent.getDiplomaSupplementEn().setStatusEn(em.getReference(Classifier.class, DocumentStatus.LOPUDOK_STAATUS_C.name()));
+                formsEn.forEach(dsForm -> {
+                    dsForm.getForm().setStatus(em.getReference(Classifier.class, FormStatus.LOPUBLANKETT_STAATUS_R.name()));
+                    dsForm.getForm().setDefected(confirmDate);
+                    dsForm.getForm().setDefectReason(directiveStudent.getAddInfo());
+                    dsForm.getForm().setDefectedBy(directiveStudent.getDirective().getConfirmer());
+                });
+                if (ClassifierUtil.equals(DocumentStatus.LOPUDOK_STAATUS_K, directiveStudent.getDiplomaSupplementEn().getStatus())) {
+                    directiveStudent.getDiplomaSupplementEn().setStatus(null);
+                    directiveStudent.getDiplomaSupplementEn().setDuplicate(null);
+                }
+            }
             break;
         case KASKKIRI_EKSMAT:
             // FIXME correct field for Õppuri eksmatrikuleerimise kuupäev?

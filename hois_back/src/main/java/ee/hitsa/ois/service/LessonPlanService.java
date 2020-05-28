@@ -30,6 +30,7 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.util.JournalUtil;
 import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1119,18 +1120,11 @@ public class LessonPlanService {
 
         setJournalOccupationModuleThemes(journal, oldThemes, fromForm);
 
-        List<CurriculumVersionOccupationModuleTheme> curriculumModuleThemes = StreamUtil.toMappedList(
-                jot -> jot.getCurriculumVersionOccupationModuleTheme(), journal.getJournalOccupationModuleThemes());
-        long occupationBasedAssessmentThemes = curriculumModuleThemes.stream()
-                .filter(t -> Boolean.TRUE.equals(t.getModuleOutcomes())).count();
 
-        boolean addModuleOutcomes = occupationBasedAssessmentThemes > 0;
-        journal.setAddModuleOutcomes(Boolean.valueOf(addModuleOutcomes));
-
-        boolean occupationBasedAssessment = curriculumModuleThemes.size() == occupationBasedAssessmentThemes;
-        if (occupationBasedAssessment) {
-            journal.setAssessment(null);
-        } else if (form.getAssessment() == null) {
+        List<CurriculumVersionOccupationModuleTheme> cvomThemes = JournalUtil.journalCurriculumModuleThemes(journal);
+        boolean themeWithNoAssessment = cvomThemes.stream().anyMatch(t -> t.getAssessment() == null);
+        boolean outcomeBasedAssessment = JournalUtil.allThemesAssessedByOutcomes(cvomThemes);
+        if (!themeWithNoAssessment && !outcomeBasedAssessment && form.getAssessment() == null) {
             throw new ValidationFailedException("lessonplan.journal.assessmentRequired");
         }
 

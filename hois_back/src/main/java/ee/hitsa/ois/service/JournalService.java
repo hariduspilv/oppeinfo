@@ -202,7 +202,7 @@ public class JournalService {
             + "left join curriculum c on cm.curriculum_id = c.id "
             + "left join classifier mcl on cm.module_code = mcl.code";
 
-    private static final String STUDENT_JOURNAL_SELECT = "j.id, j.name_et, j.study_year_id, sy.year_code, j.add_module_outcomes, "
+    private static final String STUDENT_JOURNAL_SELECT = "j.id, j.name_et, j.study_year_id, sy.year_code, "
             + "string_agg(distinct p.firstname || ' ' || p.lastname, ', ') as teachers, "
             + "string_agg(distinct cm.name_et || ' - ' || mcl.name_et || ' (' || c.code || ')', ', ') as module_et, "
             + "string_agg(distinct cm.name_en || ' - ' || mcl.name_en || ' (' || c.code || ')', ', ') as module_en";
@@ -211,7 +211,8 @@ public class JournalService {
             + "join journal_omodule_theme jot on jot.journal_id = j.id "
             + "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id "
             + "join curriculum_version_omodule_outcomes cvoo on cvoo.curriculum_version_omodule_theme_id = cvot.id "
-            + "join curriculum_module_outcomes cmo on cmo.id = cvoo.curriculum_module_outcomes_id";
+            + "join curriculum_module_outcomes cmo on cmo.id = cvoo.curriculum_module_outcomes_id "
+            + "join curriculum_module cm on cm.id = cmo.curriculum_module_id";
 
     public Page<JournalSearchDto> search(HoisUserDetails user, JournalSearchCommand command, Pageable pageable) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(JOURNAL_LIST_FROM).sort(pageable);
@@ -295,6 +296,8 @@ public class JournalService {
         dto.setCanViewReview(Boolean.valueOf(JournalUtil.hasPermissionToViewReview(user, journal)));
         dto.setCanReview(Boolean.valueOf(JournalUtil.hasPermissionToReview(user, journal)));
         dto.setCanConnectStudyMaterials(Boolean.valueOf(StudyMaterialUserRights.canEditJournal(user, journal)));
+        dto.setIncludesOutcomes(Boolean.valueOf(!journalOutcomeIds(journal.getId()).isEmpty()));
+        dto.setFinalEntryAllowed(Boolean.valueOf(finalEntryAllowed(journal)));
         dto.setLessonHours(usedHours(journal));
         setStudentIndividualCurriculums(dto);
 
@@ -307,16 +310,21 @@ public class JournalService {
     }
 
     public boolean canAddFinalEntry(Journal journal) {
-        if (EntityUtil.getNullableCode(journal.getAssessment()) != null) {
-            boolean hasNoFinalEntry = em.createNativeQuery("select 1 from journal j " +
+        if (finalEntryAllowed(journal)) {
+            // no final entry already added
+            return em.createNativeQuery("select 1 from journal j " +
                     "join journal_entry je on je.journal_id = j.id " +
                     "where j.id = :journalId and je.entry_type_code = :entryCode")
                     .setParameter("journalId", journal.getId())
                     .setParameter("entryCode", JournalEntryType.SISSEKANNE_L.name())
                     .setMaxResults(1).getResultList().isEmpty();
-            return hasNoFinalEntry;
         }
         return false;
+    }
+
+    public boolean finalEntryAllowed(Journal journal) {
+        boolean noAssessment = EntityUtil.getNullableCode(journal.getAssessment()) == null;
+        return !noAssessment && !JournalUtil.allThemesAssessedByOutcomes(journal);
     }
 
     private static JpaNativeQueryBuilder indokIndividualCurriculums(Long journalId) {
@@ -561,12 +569,12 @@ public class JournalService {
         qb.parameter("applicationType", ApplicationType.AVALDUS_LIIK_RAKKAVA.name());
         qb.parameter("applicationStatus", ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name());
 
-        List<?> data = qb.select("s.id s_id, p.firstname, p.lastname, sg.code sg_code, cv.code cv_code, "
+        List<?> data = qb.select("s.id s_id, p.firstname, p.lastname, sg.code sg_code, c.id c_id, cv.code cv_code, "
                 + "c.name_et c_name_et, c.name_en c_name_en, s.status_code", em).getResultList();
 
         return StreamUtil.toMappedList(r -> new JournalStudentDto(resultAsLong(r, 0), resultAsString(r, 1),
-                resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4), resultAsString(r, 5),
-                resultAsString(r, 7)), data);
+                resultAsString(r, 2), resultAsString(r, 3), resultAsLong(r, 4), resultAsString(r, 5),
+                resultAsString(r, 6), resultAsString(r, 8)), data);
     }
 
     public Journal saveEndDate(Journal journal, JournalEndDateCommand command) {
@@ -600,8 +608,8 @@ public class JournalService {
                     t -> t.getCurriculumVersionOccupationModuleTheme(), journal.getJournalOccupationModuleThemes());
             Set<Long> themeIds = StreamUtil.toMappedSet(t -> EntityUtil.getId(t), themes);
             Set<Long> omoduleIds = StreamUtil.toMappedSet(t -> EntityUtil.getId(t.getModule()), themes);
-            journalStudentApelResults = !command.getStudents().isEmpty() ? journalStudentApelResults(omoduleIds,
-                    themeIds, StreamUtil.toMappedSet(r -> r, command.getStudents())) : new HashMap<>();
+            Set<Long> students = StreamUtil.toMappedSet(r -> r, command.getStudents());
+            journalStudentApelResults = journalStudentApelResults(omoduleIds, themeIds, students);
         }
         
         for (Long student : command.getStudents()) {
@@ -993,22 +1001,21 @@ public class JournalService {
             result.add(journalEntryByDateDto);
         }
 
-        if (Boolean.TRUE.equals(journal.getAddModuleOutcomes())) {
-            List<CurriculumModuleOutcome> journalOutcomes = journalOutcomes(journal.getId());
-            Map<Long, List<JournalSearchDto>> outcomeOtherJournals = outcomeOtherJournals(journal.getId(),
-                StreamUtil.toMappedList(CurriculumModuleOutcome::getId, journalOutcomes));
-            int outcomeWithoutOrderNr = 0;
-            for (CurriculumModuleOutcome outcome : journalOutcomes) {
-                JournalEntryByDateDto outcomeDto = new JournalEntryByDateDto();
-                setOutcomeEntryBaseData(outcomeDto, outcome, outcomeWithoutOrderNr);
-                List<StudentCurriculumModuleOutcomesResultDto> outcomeResults = journalOutcomeResultDtos(null, journal, outcome);
-                outcomeDto.setStudentOutcomeResults(StreamUtil.toMap(StudentCurriculumModuleOutcomesResultForm::getStudentId,
-                        outcomeResults));
-                outcomeDto.setOtherJournals(outcomeOtherJournals.get(outcome.getId()));
-                result.add(outcomeDto);
-            }
-            JournalUtil.setOutcomeEntriesUnqiueOrderNrs(result);
+        List<CurriculumModuleOutcome> journalOutcomes = journalOutcomes(journal.getId());
+        Map<Long, List<JournalSearchDto>> outcomeOtherJournals = outcomeOtherJournals(journal.getId(),
+            StreamUtil.toMappedList(CurriculumModuleOutcome::getId, journalOutcomes));
+        int outcomeWithoutOrderNr = 0;
+        for (CurriculumModuleOutcome outcome : journalOutcomes) {
+            JournalEntryByDateDto outcomeDto = new JournalEntryByDateDto();
+            setOutcomeEntryBaseData(outcomeDto, outcome, outcomeWithoutOrderNr);
+            List<StudentCurriculumModuleOutcomesResultDto> outcomeResults = journalOutcomeResultDtos(null, journal, outcome);
+            outcomeDto.setStudentOutcomeResults(StreamUtil.toMap(StudentCurriculumModuleOutcomesResultForm::getStudentId,
+                    outcomeResults));
+            outcomeDto.setOtherJournals(outcomeOtherJournals.get(outcome.getId()));
+            result.add(outcomeDto);
         }
+        JournalUtil.setOutcomeEntriesUnqiueOrderNrs(result);
+
         JournalUtil.orderJournalEntriesByDate(result);
         return result;
     }
@@ -1048,16 +1055,19 @@ public class JournalService {
     }
 
     private List<CurriculumModuleOutcome> journalOutcomes(Long journalId) {
-        JpaNativeQueryBuilder qb = journalOutcomesQb(journalId);
-        List<?> data = qb.select("cmo.id", em).getResultList();
-        List<Long> outcomeIds = StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
-
+        List<Long> outcomeIds = journalOutcomeIds(journalId);
         if (!outcomeIds.isEmpty()) {
             return em.createQuery("select cmo from CurriculumModuleOutcome cmo "
                     + "where cmo.id in (?1)", CurriculumModuleOutcome.class)
                     .setParameter(1, outcomeIds).getResultList();
         }
         return new ArrayList<>();
+    }
+
+    private List<Long> journalOutcomeIds(Long journalId) {
+        JpaNativeQueryBuilder qb = journalOutcomesQb(journalId);
+        List<?> data = qb.select("cmo.id", em).getResultList();
+        return StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
     }
 
     private Map<Long, List<JournalSearchDto>> outcomeOtherJournals(Long journalId, List<Long> outcomeIds) {
@@ -1071,7 +1081,7 @@ public class JournalService {
             JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
             qb.requiredCriteria("j.id != :journalId", "journalId", journalId);
             qb.requiredCriteria("cmo.id in (:outcomeIds)", "outcomeIds", outcomeIds);
-            qb.filter("j.add_module_outcomes = true");
+            qb.filter("(cvot.is_module_outcomes = true or j.add_module_outcomes = true)");
             qb.groupBy("cmo.id, j.id, sy.id");
             qb.sort("j.name_et");
 
@@ -1111,10 +1121,20 @@ public class JournalService {
 
     public Page<CurriculumModuleOutcomeResult> journalTableOutcomes(Long journalId, Pageable pageable) {
         JpaNativeQueryBuilder qb = journalOutcomesQb(journalId);
-        Page<CurriculumModuleOutcomeResult> page = JpaQueryUtil.pagingResult(
-                qb, "cmo.id, cmo.outcome_et, cmo.outcome_en, cmo.order_nr", em, pageable).map(
-                        r -> new CurriculumModuleOutcomeResult(resultAsLong(r, 0), resultAsString(r, 1),
-                                resultAsString(r, 2), resultAsLong(r, 3)));
+        String select = "cmo.id, cmo.outcome_et, cmo.outcome_en, cmo.order_nr, "
+                + "(select string_agg(distinct sg.code, ', ' order by sg.code) from journal_student js "
+                + "join student s on s.id = js.student_id join student_group sg on sg.id = s.student_group_id "
+                + "where js.journal_id = j.id and sg.curriculum_id = cm.curriculum_id) connected_groups";
+
+        Page<CurriculumModuleOutcomeResult> page = JpaQueryUtil.pagingResult(qb, select, em, pageable).map(
+                r -> {
+                    String studentGroups = resultAsString(r, 4);
+                    studentGroups = studentGroups != null ? " (" + studentGroups + ")" : "";
+                    String nameEt = resultAsString(r, 1) + studentGroups;
+                    String nameEn = resultAsString(r, 2);
+                    nameEn = nameEn != null ? nameEn + studentGroups : nameEt;
+                    return new CurriculumModuleOutcomeResult(resultAsLong(r, 0), nameEt, nameEn, resultAsLong(r, 3));
+                });
         List<Long> assignedOrderNrs = new ArrayList<>();
         for (CurriculumModuleOutcomeResult dto : page.getContent()) {
             dto.setOrderNr(JournalUtil.uniqueOrderNr(dto.getOrderNr(), assignedOrderNrs));
@@ -1125,7 +1145,8 @@ public class JournalService {
     private JpaNativeQueryBuilder journalOutcomesQb(Long journalId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(JOURNAL_OUTCOMES_FROM);
         qb.requiredCriteria("j.id = :journalId", "journalId", journalId);
-        qb.filter("cvot.is_module_outcomes = true");
+        qb.filter("(cvot.is_module_outcomes = true or j.add_module_outcomes = true)");
+        qb.groupBy("j.id, cmo.id, cm.curriculum_id");
         qb.sort("cmo.curriculum_module_id, cmo.order_nr");
         return qb;
     }
@@ -1135,8 +1156,25 @@ public class JournalService {
         dto.setId(outcome.getId());
         dto.setNameEt(outcome.getOutcomeEt());
         dto.setNameEn(outcome.getOutcomeEn());
+        dto.setCurriculumId(EntityUtil.getId(outcome.getCurriculumModule().getCurriculum()));
+        dto.setConnectedStudentGroups(journalOutcomeStudentGroups(journal, outcome));
         dto.setOutcomeStudents(journalOutcomeResultDtos(user, journal, outcome));
         return dto;
+    }
+
+    private List<AutocompleteResult> journalOutcomeStudentGroups(Journal journal, CurriculumModuleOutcome outcome) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_student js "
+                + "join student s on s.id = js.student_id "
+                + "join student_group sg on sg.id = s.student_group_id "
+                + "join curriculum c on c.id = sg.curriculum_id "
+                + "join curriculum_module cm on cm.curriculum_id = c.id "
+                + "join curriculum_module_outcomes cmo on cmo.curriculum_module_id = cm.id");
+        qb.requiredCriteria("js.journal_id = :journalId", "journalId", journal.getId());
+        qb.requiredCriteria("cmo.id = :outcomeId", "outcomeId", outcome.getId());
+        qb.sort("sg.code");
+        List<?> data = qb.select("distinct sg.id, sg.code", em).getResultList();
+        return StreamUtil.toMappedList(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1),
+                resultAsString(r, 1)), data);
     }
 
     private List<StudentCurriculumModuleOutcomesResultDto> journalOutcomeResultDtos(HoisUserDetails user,
@@ -1304,6 +1342,10 @@ public class JournalService {
 
     private Map<Long, List<JournalStudentApelResultDto>> journalStudentApelResults(Set<Long> omoduleIds,
             Set<Long> themeIds, Set<Long> students) {
+        if (omoduleIds.isEmpty() || themeIds.isEmpty() || students.isEmpty()) {
+            return new HashMap<>();
+        }
+
         String informalApelResults = "select aa.student_id, " +
             "case when aai.curriculum_version_omodule_theme_id is not null then false else true end as module, " +
             "case when aai.curriculum_version_omodule_theme_id is not null then cm.name_et || ' - ' || mcl.name_et || '/' || cvot.name_et " + 
@@ -1447,23 +1489,21 @@ public class JournalService {
         JournalXlsDto dto = JournalXlsDto.of(journal);
         dto.setLessonHours(usedHours(journal));
 
-        if (Boolean.TRUE.equals(journal.getAddModuleOutcomes())) {
-            List<CurriculumModuleOutcome> journalOutcomes = journalOutcomes(journal.getId());
-            int outcomeWithoutOrderNr = 0;
-            for (CurriculumModuleOutcome outcome : journalOutcomes) {
-                JournalEntryByDateXlsDto outcomeDto = new JournalEntryByDateXlsDto();
-                setOutcomeEntryBaseData(outcomeDto, outcome, outcomeWithoutOrderNr);
+        List<CurriculumModuleOutcome> journalOutcomes = journalOutcomes(journal.getId());
+        int outcomeWithoutOrderNr = 0;
+        for (CurriculumModuleOutcome outcome : journalOutcomes) {
+            JournalEntryByDateXlsDto outcomeDto = new JournalEntryByDateXlsDto();
+            setOutcomeEntryBaseData(outcomeDto, outcome, outcomeWithoutOrderNr);
 
-                List<StudentCurriculumModuleOutcomesResult> results = journalOutcomeResults(journal.getId(), outcome.getId());
-                if (!results.isEmpty()) {
-                    outcomeDto.setStudentOutcomeResults(results.stream().filter(r -> r.getGrade() != null)
-                            .collect(Collectors.toMap(r -> EntityUtil.getId(r.getStudent()),
-                                    r -> r.getGrade().getValue())));
-                }
-                dto.getOutcomeEntries().add(outcomeDto);
+            List<StudentCurriculumModuleOutcomesResult> results = journalOutcomeResults(journal.getId(), outcome.getId());
+            if (!results.isEmpty()) {
+                outcomeDto.setStudentOutcomeResults(results.stream().filter(r -> r.getGrade() != null)
+                        .collect(Collectors.toMap(r -> EntityUtil.getId(r.getStudent()),
+                                r -> r.getGrade().getValue())));
             }
-            JournalUtil.setOutcomeEntriesUnqiueOrderNrs(dto.getOutcomeEntries());
+            dto.getOutcomeEntries().add(outcomeDto);
         }
+        JournalUtil.setOutcomeEntriesUnqiueOrderNrs(dto.getOutcomeEntries());
         
         SchoolType type = schoolService.schoolType(EntityUtil.getId(journal.getSchool()));
         dto.setIsHigherSchool(Boolean.valueOf(type.isHigher()));
@@ -1573,9 +1613,8 @@ public class JournalService {
             dto.setNameEt(resultAsString(r, 1));
             dto.setStudyYearId(resultAsLong(r, 2));
             dto.setYearCode(resultAsString(r, 3));
-            dto.setIncludesOutcomes(resultAsBoolean(r, 4));
-            dto.setTeachers(resultAsString(r, 5));
-            dto.setModules(new AutocompleteResult(null, resultAsString(r, 6), resultAsString(r, 7)));
+            dto.setTeachers(resultAsString(r, 4));
+            dto.setModules(new AutocompleteResult(null, resultAsString(r, 5), resultAsString(r, 6)));
             
             Map<String, Long> absences = new HashMap<>();
             for (Absence absence : Absence.values()) {
@@ -1705,9 +1744,8 @@ public class JournalService {
         dto.setNameEt(resultAsString(result, 1));
         dto.setStudyYearId(resultAsLong(result, 2));
         dto.setYearCode(resultAsString(result, 3));
-        dto.setIncludesOutcomes(resultAsBoolean(result, 4));
-        dto.setTeachers(resultAsString(result, 5));
-        dto.setModules(new AutocompleteResult(null, resultAsString(result, 6), resultAsString(result, 7)));
+        dto.setTeachers(resultAsString(result, 4));
+        dto.setModules(new AutocompleteResult(null, resultAsString(result, 5), resultAsString(result, 6)));
         return getStudentJournalWithEntries(studentId, dto);
     }
 
@@ -1915,7 +1953,7 @@ public class JournalService {
                 + " scmor.grade_code, scmor.grade_inserted, scmor.add_info from student_curriculum_module_outcomes_result scmor"
                 + " join curriculum_module_outcomes cmo on cmo.id = scmor.curriculum_module_outcomes_id"
                 + " where scmor.student_id = ?2 and scmor.grade_code is not null)"
-            + " as results order by grade_inserted desc limit 10")
+            + " as results order by grade_inserted desc nulls last limit 10")
             .setParameter(1, studyYear.getId())
             .setParameter(2, studentId)
             .getResultList();

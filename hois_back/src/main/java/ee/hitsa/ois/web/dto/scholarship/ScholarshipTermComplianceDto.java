@@ -14,12 +14,14 @@ public class ScholarshipTermComplianceDto {
     private boolean nominalStudyEnd;
     private boolean studyBacklog;
     private boolean averageMark;
+    private boolean wagMark;
     private boolean lastPeriodMark;
+    private boolean lastPeriodWagMark;
     private boolean curriculumCompletion;
     private boolean absences;
     private boolean fullyComplies;
 
-    public boolean isOnAcademicLeave() {
+    public boolean getOnAcademicLeave() {
         return onAcademicLeave;
     }
 
@@ -27,7 +29,7 @@ public class ScholarshipTermComplianceDto {
         this.onAcademicLeave = onAcademicLeave;
     }
 
-    public boolean isStudentGroup() {
+    public boolean getStudentGroup() {
         return studentGroup;
     }
 
@@ -35,7 +37,7 @@ public class ScholarshipTermComplianceDto {
         this.studentGroup = studentGroup;
     }
 
-    public boolean isAcademicLeaveDirectives() {
+    public boolean getAcademicLeaveDirectives() {
         return academicLeaveDirectives;
     }
 
@@ -43,7 +45,7 @@ public class ScholarshipTermComplianceDto {
         this.academicLeaveDirectives = academicLeaveDirectives;
     }
 
-    public boolean isExmatriculationDirectives() {
+    public boolean getExmatriculationDirectives() {
         return exmatriculationDirectives;
     }
 
@@ -51,7 +53,7 @@ public class ScholarshipTermComplianceDto {
         this.exmatriculationDirectives = exmatriculationDirectives;
     }
 
-    public boolean getIsCourse() {
+    public boolean getCourse() {
         return course;
     }
 
@@ -59,7 +61,7 @@ public class ScholarshipTermComplianceDto {
         this.course = course;
     }
 
-    public boolean getIsStudyLoad() {
+    public boolean getStudyLoad() {
         return studyLoad;
     }
 
@@ -67,7 +69,7 @@ public class ScholarshipTermComplianceDto {
         this.studyLoad = studyLoad;
     }
 
-    public boolean getIsStudyForm() {
+    public boolean getStudyForm() {
         return studyForm;
     }
 
@@ -75,7 +77,7 @@ public class ScholarshipTermComplianceDto {
         this.studyForm = studyForm;
     }
 
-    public boolean getIsCurriculum() {
+    public boolean getCurriculum() {
         return curriculum;
     }
 
@@ -83,7 +85,7 @@ public class ScholarshipTermComplianceDto {
         this.curriculum = curriculum;
     }
 
-    public boolean getIsStudyStartPeriod() {
+    public boolean getStudyStartPeriod() {
         return studyStartPeriod;
     }
 
@@ -91,7 +93,7 @@ public class ScholarshipTermComplianceDto {
         this.studyStartPeriod = studyStartPeriod;
     }
 
-    public boolean getIsNominalStudyEnd() {
+    public boolean getNominalStudyEnd() {
         return nominalStudyEnd;
     }
 
@@ -99,7 +101,7 @@ public class ScholarshipTermComplianceDto {
         this.nominalStudyEnd = nominalStudyEnd;
     }
 
-    public boolean isStudyBacklog() {
+    public boolean getStudyBacklog() {
         return studyBacklog;
     }
 
@@ -107,7 +109,7 @@ public class ScholarshipTermComplianceDto {
         this.studyBacklog = studyBacklog;
     }
 
-    public boolean isAverageMark() {
+    public boolean getAverageMark() {
         return averageMark;
     }
 
@@ -115,7 +117,15 @@ public class ScholarshipTermComplianceDto {
         this.averageMark = averageMark;
     }
 
-    public boolean getIsLastPeriodMark() {
+    public boolean getWagMark() {
+        return wagMark;
+    }
+
+    public void setWagMark(boolean wagMark) {
+        this.wagMark = wagMark;
+    }
+
+    public boolean getLastPeriodMark() {
         return lastPeriodMark;
     }
 
@@ -123,7 +133,15 @@ public class ScholarshipTermComplianceDto {
         this.lastPeriodMark = lastPeriodMark;
     }
 
-    public boolean getIsCurriculumCompletion() {
+    public boolean getLastPeriodWagMark() {
+        return lastPeriodWagMark;
+    }
+
+    public void setLastPeriodWagMark(boolean lastPeriodWagMark) {
+        this.lastPeriodWagMark = lastPeriodWagMark;
+    }
+
+    public boolean getCurriculumCompletion() {
         return curriculumCompletion;
     }
 
@@ -131,7 +149,7 @@ public class ScholarshipTermComplianceDto {
         this.curriculumCompletion = curriculumCompletion;
     }
 
-    public boolean getIsAbsences() {
+    public boolean getAbsences() {
         return absences;
     }
 
@@ -146,6 +164,7 @@ public class ScholarshipTermComplianceDto {
     public void setFullyComplies() {
         this.fullyComplies = !onAcademicLeave && !studentGroup && !academicLeaveDirectives && !exmatriculationDirectives
                 && !course && !studyLoad && !studyForm && !curriculum && !studyStartPeriod && !nominalStudyEnd
-                && !studyBacklog && !averageMark && !lastPeriodMark && !curriculumCompletion && !absences;
+                && !studyBacklog && !averageMark && !wagMark && !lastPeriodMark && !lastPeriodWagMark
+                && !curriculumCompletion && !absences;
     }
 }

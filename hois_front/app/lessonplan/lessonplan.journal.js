@@ -105,16 +105,10 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
 
       var connectedThemes = themesInJournal();
       var existInOtherJournals = themesThatExistInOtherJournals(connectedThemes);
-      var occupationBasedAssessment = allThemesWithOccupationBasedAssessment(connectedThemes);
-      var assessmentWillBeRemoved = $scope.record.assessment !== null && $scope.record.assessment !== '' &&
-        occupationBasedAssessment;
 
       var extraPrompts = [];
       if (existInOtherJournals.length > 0) {
         extraPrompts.push('lessonplan.journal.themeExistInOtherJournalsConfirm');
-      }
-      if (assessmentWillBeRemoved) {
-        extraPrompts.push('lessonplan.journal.assessmentWillBeRemoved');
       }
 
       if (extraPrompts.length > 0) {
@@ -189,10 +183,19 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
       });
     }
 
-    $scope.occupationBasedAssessment = function () {
+    $scope.assessmentRequired = function () {
       var connectedThemes = themesInJournal();
-      return allThemesWithOccupationBasedAssessment(connectedThemes);
+      return allThemesAssessed(connectedThemes) && !allThemesWithOccupationBasedAssessment(connectedThemes);
     };
+
+    function allThemesAssessed(themes) {
+      for (var i = 0; i < themes.length; i++) {
+        if (angular.isDefined(themes[i]) && themes[i].assessment === null) {
+          return false;
+        }
+      }
+      return true;
+    }
 
     function allThemesWithOccupationBasedAssessment(themes) {
       for (var i = 0; i < themes.length; i++) {

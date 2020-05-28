@@ -37,7 +37,7 @@
               </span>
               <md-button ng-if="!stipend.canApply && !stipend.alreadyApplied" flex class="md-icon-button" ng-click="scholarshipTermCompliances(stipend)">
                 <md-icon md-colors="{color: 'default-warn'}" md-font-set="material-icons">warning</md-icon>
-                <md-tooltip>{{'stipend.messages.error.studentDoesntComply' | translate}}</md-tooltip>
+                <md-tooltip>{{'stipend.messages.error.studentDoesntComplyGrant' | translate}}</md-tooltip>
               </md-button>
               <span ng-if="stipend.alreadyApplied">{{'stipend.student.alreadyApplied' | translate}}</span>
             </td>

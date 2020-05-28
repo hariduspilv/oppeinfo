@@ -17,7 +17,7 @@
         <div flex="30" flex-sm="100" flex-xs="100">
           <md-input-container style="width: 100%">
             <label>{{'stipend.committee' | translate}}</label>
-            <hois-select ng-model="protocol.committee" values="committees" ng-change="selectedCommitteeChanged()" 
+            <hois-select ng-model="protocol.committee" values="committees" ng-change="selectedCommitteeChanged()"
               ng-disabled="!formState.canEditProtocol"></hois-select>
           </md-input-container>
         </div>
@@ -52,7 +52,7 @@
             <table md-table md-progress="protocol.$promise" multiple="true">
               <thead md-head>
                 <tr md-row>
-                  <th md-column>{{'finalProtocol.id' | translate}}</th>
+                  <th md-column>{{'main.order' | translate}}</th>
                   <th md-column>{{'student.label' | translate}}</th>
                   <th md-column>{{'finalProtocol.studentGroup' | translate}}</th>
                   <th md-column>{{'student.idcode' | translate}}</th>
@@ -65,7 +65,7 @@
               </thead>
               <tbody md-body>
                 <tr md-row ng-repeat="row in protocol.protocolStudents | orderBy: 'fullname' track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
-                  <td md-cell>{{$index + 1}}</td>
+                  <td md-cell>{{$index + 1}}.</td>
                   <td md-cell>{{row.fullname}}</td>
                   <td md-cell>{{row.studentGroup}}</td>
                   <td md-cell>{{row.idcode}}</td>
@@ -83,11 +83,11 @@
                     </span>
                   </td>
                   <td md-cell ng-repeat="grade in protocol.curriculumGrades">
-                    <md-checkbox ng-click="setCurriculumGrade(row, grade.id)" ng-checked="grade.id === row.curriculumGrade.id" 
+                    <md-checkbox ng-click="setCurriculumGrade(row, grade.id)" ng-checked="grade.id === row.curriculumGrade.id"
                       ng-disabled="!formState.canEditProtocol" aria-label="{{currentLanguageNameField(grade)}}"></md-checkbox>
                   </td>
                   <td md-cell ng-repeat="occupation in protocol.occupations">
-                    <md-checkbox ng-model="row.occupations[occupation.code].granted" aria-label="{{occupation.code}}" 
+                    <md-checkbox ng-model="row.occupations[occupation.code].granted" aria-label="{{occupation.code}}"
                       ng-disabled="!formState.canEditProtocol || !row.canGrantOccupation" ng-change="setOccupation(row, occupation.code)"></md-checkbox>
                       {{row.occupations[occupation.code].certificateNr}}
                   </td>

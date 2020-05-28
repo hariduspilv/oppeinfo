@@ -57,6 +57,7 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId implements T
     @NotNull
     @Column(name="is_minor_speciality")
     private Boolean minorSpeciality;
+    private Boolean isGrade;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier type;
@@ -199,6 +200,14 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId implements T
 
     public void setType(Classifier type) {
         this.type = type;
+    }
+
+    public Boolean getIsGrade() {
+        return isGrade;
+    }
+
+    public void setIsGrade(Boolean isGrade) {
+        this.isGrade = isGrade;
     }
 
     public Set<CurriculumVersionHigherModuleSubject> getSubjects() {

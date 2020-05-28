@@ -1,5 +1,14 @@
 'use strict';
 
+function calculateSubjectCredits(subjects) {
+  if (!subjects) {
+    return 0;
+  }
+  return subjects.reduce(function (acc, subject) {
+    return acc + subject.subject.credits;
+  }, 0);
+}
+
 angular.module('hitsaOis').controller('DeclarationEditController', 
 ['$scope', 'dialogService', 'QueryUtils', 'message', 'ArrayUtils', '$route', '$location', 'DataUtils', 'FormUtils', 
 function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $location, DataUtils, FormUtils) {
@@ -12,6 +21,7 @@ function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $locat
   $scope.auth = $route.current.locals.auth;
   $scope.addCurriculumSubjectForm = false;
   $scope.addExtraCurriculumSubjectFrom = false;
+  $scope.calculateAll = calculateSubjectCredits;
 
   if($scope.auth.isStudent()) {
     QueryUtils.endpoint('/declarations/hasPrevious').search().$promise.then(function(response){
@@ -204,6 +214,7 @@ function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $locat
     CURRENT: 1,
     AFTER: 2
   });
+  $scope.calculateAll = calculateSubjectCredits;
 
   if($scope.auth.isStudent()) {
     QueryUtils.endpoint('/declarations/hasPrevious').search().$promise.then(function(response){

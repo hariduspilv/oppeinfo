@@ -16,6 +16,13 @@
         </md-input-container>
       </div>
 
+      <div ng-if="curriculum.higher" layout="row">
+        <md-input-container flex>
+          <label>{{'curriculum.specialty.specialties' | translate}}</label>
+          <hois-value value="currentLanguageNameField(version.specialities, '\n')"></hois-value>
+        </md-input-container>
+      </div>
+
       <div ng-if="!curriculum.higher" layout="row">
         <md-input-container flex="50" flex-xs="100">
           <label>{{'curriculum.public.studyForm' | translate}}</label>
@@ -85,7 +92,7 @@
             </thead>
             <tbody md-body>
               <tr md-row ng-repeat="subject in mandatorySubjects">
-                <td md-cell>{{currentLanguageNameField(subject.subject)}}</td>
+                <td md-cell><a ng-href="#/subject/public/{{subject.subject.id}}">{{currentLanguageNameField(subject.subject)}}</a></td>
                 <td md-cell>{{subject.subject.credits}}</td>
                 <td md-cell>{{subject.subject.assessment}}</td>
                 <td md-cell>{{subject.studyYearNumber}}</td>
@@ -117,7 +124,7 @@
             </thead>
             <tbody md-body>
               <tr md-row ng-repeat="subject in optionalSubjects">
-                <td md-cell>{{currentLanguageNameField(subject.subject)}}</td>
+                <td md-cell><a ng-href="#/subject/public/{{subject.subject.id}}">{{currentLanguageNameField(subject.subject)}}</a></td>
                 <td md-cell>{{subject.subject.credits}}</td>
                 <td md-cell>{{subject.subject.assessment}}</td>
                 <td md-cell>{{subject.studyYearNumber}}</td>
@@ -138,10 +145,64 @@
       <hois-collapsable ng-repeat="module in version.occupationModules | orderBy: moduleOrderBy()" expanded="false" label="currentLanguageNameField(module) + ' ' + module.totalCredits + ' ' + ('curriculum.public.vocationalCreditsUnit' | translate)">
         <div layout="column">
           <md-input-container flex>
+            <label>{{'module.requirements' | translate}}</label>
+            <hois-value value="module.requirementsEt"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'module.assessments' | translate}}</label>
+            <hois-value value="module.assessmentsEt"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'module.learningMethods' | translate}}</label>
+            <hois-value value="module.learningMethodsEt"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'module.assessmentMethodsAndTasks' | translate}}</label>
+            <hois-value value="module.assessmentMethodsEt"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'module.independentStudyDescription' | translate}}</label>
+            <hois-value value="module.independentStudyEt"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'module.studyMaterials' | translate}}</label>
+            <hois-value value="module.studyMaterials"></hois-value>
+          </md-input-container>
+        </div>
+
+        <md-container ng-if="module.assessment" class="assessment" layout="column">
+          <div class="assessment-header">
+            {{'module.gradeFormation' | translate}}
+          </div>
+          <md-input-container flex>
             <label>{{'curriculum.public.assessment' | translate}}</label>
             <hois-value value="module.assessment"></hois-value>
           </md-input-container>
-        </div>
+          <md-input-container flex>
+            <label>{{'module.totalGradeDescription' | translate}}</label>
+            <hois-value value="module.totalGradeDescription"></hois-value>
+          </md-input-container>
+          <div ng-if="module.assessmentCode === 'KUTSEHINDAMISVIIS_E'" layout="column">
+            <md-input-container flex>
+              <label>{{'module.grade3Description' | translate}}</label>
+              <hois-value value="module.grade3Description"></hois-value>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'module.grade4Description' | translate}}</label>
+              <hois-value value="module.grade4Description"></hois-value>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'module.grade5Description' | translate}}</label>
+              <hois-value value="module.grade5Description"></hois-value>
+            </md-input-container>
+          </div>
+          <div ng-if="module.assessmentCode === 'KUTSEHINDAMISVIIS_M'" layout="column">
+            <md-input-container flex>
+              <label>{{'module.gradeADescription' | translate}}</label>
+              <hois-value value="module.passDescription"></hois-value>
+            </md-input-container>
+          </div>
+        </md-container>
 
         <md-table-container>
           <table ng-if="module.themes.length > 0" md-table class="secondary-table">
@@ -157,7 +218,7 @@
             </thead>
             <tbody md-body>
               <tr md-row ng-repeat="theme in module.themes">
-                <td md-cell>{{theme.nameEt}}</td>
+                <td md-cell><a ng-click="openViewThemeDialog(theme)">{{theme.nameEt}}</a></td>
                 <td md-cell>{{theme.hours}}/{{theme.credits}}</td>
                 <td md-cell>{{theme.assessment}}</td>
               </tr>
@@ -189,7 +250,7 @@
             </td>
           </tr>
           <tr class="higher-curriculum-subject-row" ng-repeat="subject in mappedSubjects[year] | filter: {autumn: true} | orderBy: currentLanguageNameField | hoisUnique: 'subjectId'">
-            <td>{{currentLanguageNameField(subject.subject)}}</td>
+            <td><a ng-href="#/subject/public/{{subject.subject.id}}">{{currentLanguageNameField(subject.subject)}}</a></td>
             <td>{{subject.subject.code}}</td>
             <td>{{subject.subject.credits}}</td>
             <td>{{subject.assessment}}</td>
@@ -201,7 +262,7 @@
             </td>
           </tr>
           <tr class="higher-curriculum-subject-row" ng-repeat="subject in mappedSubjects[year] | filter: {spring: true} | orderBy: currentLanguageNameField | hoisUnique: 'subjectId'">
-            <td>{{currentLanguageNameField(subject.subject)}}</td>
+            <td><a ng-href="#/subject/public/{{subject.subject.id}}">{{currentLanguageNameField(subject.subject)}}</a></td>
             <td>{{subject.subject.code}}</td>
             <td>{{subject.subject.credits}}</td>
             <td>{{subject.assessment}}</td>
@@ -212,6 +273,8 @@
     </md-table-container>
   </hois-collapsable>
   <div layout="row">
+    <a href="{{curriculumVersionPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="version.id && !curriculum.higher">{{'module.implementationPlan.print' | translate}}</a>
+    <a href="{{curriculumVersionModulesPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="version.id && !curriculum.higher">{{'module.implementationPlan.printModules' | translate}}</a>
     <md-button ng-click="back('#/curriculums/')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>
@@ -253,6 +316,7 @@ table.custom-table tr.sub-header1 {
 
 table.custom-table tr.sub-header1 td:first-child {
   padding-left: 1.5em !important;
+  color: rgba(0,0,0,0.87);
 }
 
 table.custom-table tr {
@@ -261,5 +325,18 @@ table.custom-table tr {
 
 table.custom-table td md-checkbox {
   margin: auto;
+}
+
+md-container.assessment {
+  margin-top: -18px;
+}
+
+md-container.assessment > div.assessment-header {
+  padding: 14px 24px;
+  color: rgba(0,0,0,0.87);
+  background-color: #E0E0E0;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 18px;
 }
 </style>

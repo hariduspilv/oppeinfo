@@ -26,7 +26,7 @@ public class ExistingDirectiveStudentDto {
         if (application != null) {
             dto.setScholarshipApplicationId(application.getId());
             dto.setScholarshipTermNameEt(application.getScholarshipTerm().getNameEt());
-        } else {
+        } else if (directiveStudent.getDirective().getScholarshipEhis() != null) {
             dto.setScholarshipTermNameEt("Muu - " + directiveStudent.getDirective().getScholarshipEhis().getNameEt());
         }
         dto.setStartDate(DateUtils.periodStart(directiveStudent));

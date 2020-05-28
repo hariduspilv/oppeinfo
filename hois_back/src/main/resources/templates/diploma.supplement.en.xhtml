@@ -11,6 +11,9 @@
     <div id="footer">
         <span id="pagenumber"/>/<span id="pagecount"/>
     </div>
+   	{% if content.duplicate %}
+   	<div style="float: right; text-transform: uppercase; font-weight: bold;">{{ "diploma.duplicate" | translate }}</div>
+   	{% endif %}
     <div class="padding-top"></div>
     <div class="school-name">{{ content.schoolName }}</div>
     <div class="school-name-en">{{ content.schoolNameEn }}</div>
@@ -88,8 +91,13 @@
     <table class="study-results margin-top">
         <thead class="page-break-after-avoid">
             <tr>
-                <th>{% if content.showSubjectCode %}{{ "diploma.curriculumAndResults.results.subjectCode" | translate }}{% endif %}</th>
-                <th>{{ "diploma.curriculumAndResults.results.subject" | translate }}</th>
+                <th>
+                    {% if content.modulesGraded %}
+                    {{ "diploma.curriculumAndResults.results.subjectModule" | translate }}
+                    {% else %}
+                    {{ "diploma.curriculumAndResults.results.subject" | translate }}
+                    {% endif %}
+                </th>
                 <th>{{ "diploma.curriculumAndResults.results.credits" | translate }}</th>
                 <th>{{ "diploma.curriculumAndResults.results.date" | translate }}</th>
                 <th>{{ "diploma.curriculumAndResults.results.result" | translate }}</th>
@@ -99,8 +107,7 @@
         <tbody>
         {% for result in content.studyResults %}
             <tr>
-                <td>{{ result.subjectCode }}</td>
-                <td>{{ result.name }}</td>
+                <td>{{ result.subjectCode != null ? result.subjectCode + " " : "" }}{{ result.name }}</td>
                 <td class="study-results-credits">{{ result.credits }}</td>
                 <td class="study-results-date">{{ result.gradeDate | hoisDate }}</td>
                 <td class="study-results-grade">
@@ -195,7 +202,7 @@
             </tbody>
         </table>
     </div>
-    <div>{{ "diploma.curriculumAndResults.evaluationDescription.additional" | translate }}</div>
+    <div>{{ "diploma.curriculumAndResults.evaluationDescription.additional" | translate | replace({'%grade%': content.isLetterGrades ? 'E' : 1}) }}</div>
     <h1>5. {{ "diploma.qualificationRights" | translate }}</h1>
     <table class="general-info">
         <tbody>

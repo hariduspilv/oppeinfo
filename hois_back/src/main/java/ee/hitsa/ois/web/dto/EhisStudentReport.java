@@ -24,7 +24,7 @@ public class EhisStudentReport {
     private Boolean error;
     private String message;
 
-    protected void fill(Student student, WsEhisStudentLog log) {
+    public /*protected*/ void fill(Student student, WsEhisStudentLog log) {
         setStudentId(student.getId());
         setName(student.getPerson().getFullname());
         setIdcode(student.getPerson().getIdcode());

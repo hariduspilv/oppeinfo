@@ -3,6 +3,7 @@
 angular.module('hitsaOis').controller('StudentScholarshipController', ['$filter', '$route', '$scope', '$translate', '$q', 'Classifier', 'ScholarshipUtils', 'QueryUtils', 'dialogService',
   function ($filter, $route, $scope, $translate, $q, Classifier, ScholarshipUtils, QueryUtils, dialogService) {
     var baseUrl = '/scholarships';
+    var scholarship = $route.current.locals.scholarship;
     var drGrant = $route.current.locals.drGrant;
     var clMapper = Classifier.valuemapper({
       type: 'STIPTOETUS', status: 'STIPTOETUS_STAATUS'
@@ -23,7 +24,7 @@ angular.module('hitsaOis').controller('StudentScholarshipController', ['$filter'
           });
           possible.application = match;
           possible.canApply = possible.termCompliance.fullyComplies ? !angular.isDefined(match) : false;
-          possible.alreadyApplied = !angular.isDefined(match) ? false : true;
+          possible.alreadyApplied = angular.isDefined(match);
           possible.period = ScholarshipUtils.applicationPeriod(possible, $filter, $translate);
         });
       });
@@ -38,6 +39,7 @@ angular.module('hitsaOis').controller('StudentScholarshipController', ['$filter'
     $scope.scholarshipTermCompliances = function (stipend) {
       dialogService.showDialog('scholarship/templates/scholarship.term.compliance.dialog.html', function (dialogScope) {
         dialogScope.stipend = stipend;
+        dialogScope.typeIsScholarship = scholarship;
       });
     };
   }

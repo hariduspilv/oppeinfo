@@ -46,8 +46,8 @@
                 </div>
             </div>
             <div layout="row" layout-xs="column">
-                <hois-autocomplete flex ha-controller="directiveControllers" ng-model="hiddenCriteria.curriculum" method="curriculums" name="curriculum"
-                additional-query-params="{}" label="report.foreignStudent.curriculum" md-selected-item-change="queryForDepartments()"></hois-autocomplete>
+                <hois-autocomplete flex ha-controller="directiveControllers" ng-model="hiddenCriteria.curriculum" 
+                method="curriculums" name="curriculum" label="report.foreignStudent.curriculum"></hois-autocomplete>
                 <hois-autocomplete flex ha-controller="directiveControllers" ng-model="hiddenCriteria.curriculumVersion" method="curriculumversions" name="curriculumVersion"
                 additional-query-params="{curriculumId: hiddenCriteria.curriculum.id}" label="report.foreignStudent.curriculumVersion" flex-offset="5" flex-offset-xs="0"></hois-autocomplete>
             </div>
@@ -58,8 +58,8 @@
                 </md-input-container>
                 <md-input-container flex flex-offset="5">
                   <label>{{'curriculum.educationLevel' | translate}}</label>
-                  <hois-classifier-select ng-model="criteria.educationLevel" main-classifier-code="HARIDUSTASE" watch-model="hiddenCriteria.curriculum.origStudyLevel"
-                    filter-values connect-main-classifier-code="HARIDUSTASE" model-value-attr="code"></hois-classifier-select>
+                  <hois-classifier-select ng-model="criteria.educationLevel" main-classifier-code="HARIDUSTASE"
+                    only-valid show-only-values="educationLevelOptions" model-value-attr="code"></hois-classifier-select>
                 </md-input-container>
             </div>
             <div layout="row">

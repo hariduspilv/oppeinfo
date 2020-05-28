@@ -513,12 +513,6 @@ angular.module('hitsaOis')
             }
           };
 
-          dialogScope.moduleOutcomesChanged = function () {
-            if (dialogScope.occupationModuleTheme.moduleOutcomes) {
-              dialogScope.occupationModuleTheme.assessment = null;
-            }
-          };
-
           dialogScope.saveTheme = function () {
             var submittedDialogScope = dialogScope;
             if (!validateTheme(submittedDialogScope)) {

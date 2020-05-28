@@ -98,7 +98,7 @@
   <div>&nbsp;</div>
 
   <fieldset tabindex="1" ng-if="termCompliance && !termCompliance.fullyComplies">
-    <legend md-colors="{color: 'default-warn'}" class="md-title-small">{{'stipend.messages.error.studentDoesntComply' | translate}}</legend>
+    <legend md-colors="{color: 'default-warn'}" class="md-title-small">{{'stipend.messages.error.studentDoesntComplyGrant' | translate}}</legend>
     <div flex ng-include="'scholarship/templates/scholarship.term.compliance.list.html'"></div>
   </fieldset>
 
@@ -195,7 +195,8 @@
           <div layout="row" layout-xs="column">
             <md-button class="md-raised md-primary" ng-if="application.canApply" ng-click="update(applicationForm)">{{'main.button.save' | translate}}</md-button>
             <md-button class="md-raised md-primary" ng-if="application.canApply" ng-click="apply(applicationForm)">{{'main.button.submit' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="back('#/scholarships/myData/grants', applicationForm)">{{'main.button.back' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="back(isStudent() ? '#/scholarships/myData/grants' : '#/scholarships/applications/grants', applicationForm)">
+              {{'main.button.back' | translate}}</md-button>
           </div>
 
         </form>

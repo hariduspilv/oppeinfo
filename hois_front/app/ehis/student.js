@@ -11,6 +11,7 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', '$rout
   var DORMITORY = 'DORMITORY';
   var FOREIGN_STUDY = 'FOREIGN_STUDY';
   var GRADUATION = 'GRADUATION';
+  var DUPLICATE = 'DUPLICATE';
   var VOTA = 'VOTA';
   var SPECIAL_NEEDS = 'SPECIAL_NEEDS';
   var GUEST_STUDENTS = 'GUEST_STUDENTS';
@@ -20,6 +21,7 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', '$rout
     {type: CURRICULA_FULFILMENT, translate: $translate.instant('ehis.student.CURRICULA_FULFILMENT')},
     {type: DORMITORY, translate: $translate.instant('ehis.student.DORMITORY')},
     {type: GRADUATION, translate: $translate.instant('ehis.student.GRADUATION')},
+    {type: DUPLICATE, translate: $translate.instant('ehis.student.DUPLICATE')},
     {type: VOTA, translate: $translate.instant('ehis.student.VOTA')},
     {type: SPECIAL_NEEDS, translate: $translate.instant('ehis.student.SPECIAL_NEEDS')},
   ];
@@ -29,7 +31,7 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', '$rout
     $scope.dataTypes.push({type: FOREIGN_STUDY, translate: $translate.instant('ehis.student.FOREIGN_STUDY')});
   }
 
-  $scope.displayDates = [COURSE_CHANGE, DORMITORY, FOREIGN_STUDY, GRADUATION, VOTA, SPECIAL_NEEDS, GUEST_STUDENTS];
+  $scope.displayDates = [COURSE_CHANGE, DORMITORY, FOREIGN_STUDY, GRADUATION, DUPLICATE, VOTA, SPECIAL_NEEDS, GUEST_STUDENTS];
   $scope.criteria = {from: new Date(), thru: new Date()};
 
   $scope.dataTypeChanged = function() {

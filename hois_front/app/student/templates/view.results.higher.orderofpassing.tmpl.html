@@ -13,30 +13,38 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="subjectResult in higherResults.subjectResults | orderBy: 'lastGrade.gradeDate'" ng-if="subjectResult.lastGrade !== null && subjectResult.lastGrade.gradeValue !== null">
+      <tr ng-if="row.lastGrade !== null" md-row ng-repeat="row in higherResults.allResults | orderBy: 'lastGrade.gradeDate'">
         <td md-cell>
-          <span ng-if="subjectResult.isApelTransfer" class="apelAsterisk">*</span>
-          <span>{{currentLanguageNameField(subjectResult.subject)}}</span>
-          <span ng-if="!subjectResult.isFormalLearning && subjectResult.isApelTransfer"> - {{'student.result.informal' | translate}}</span>
+          <span ng-if="row.isModule" class="bold">{{currentLanguageNameField(row.module)}}</span>
+          <span ng-if="!row.isModule">
+            <span ng-if="row.isApelTransfer" class="apelAsterisk">*</span>
+            <span>{{currentLanguageNameField(row.subject)}}</span>
+            <span ng-if="!row.isFormalLearning && row.isApelTransfer"> - {{'student.result.informal' | translate}}</span>
+          </span>
         </td>
-        <td md-cell>{{subjectResult.subject.code}}</td>
-        <td md-cell ng-if="!student.isGuestStudent">{{currentLanguageNameField(subjectResult.higherModule)}}</td>
-        <td md-cell ng-if="!student.isGuestStudent">{{subjectResult.isOptional ? 'main.no' : 'main.yes' | translate}}</td>
-        <td md-cell>{{subjectResult.subject.credits}}</td>
+        <td md-cell>{{row.subject.code}}</td>
+        <td md-cell ng-if="!student.isGuestStudent">{{currentLanguageNameField(row.higherModule)}}</td>
+        <td md-cell ng-if="!student.isGuestStudent">
+          <span ng-if="!row.isModule">{{row.isOptional ? 'main.no' : 'main.yes' | translate}}</span>
+        </td>
         <td md-cell>
-          <table>
+          <span ng-if="row.isModule" class="bold">{{row.module.credits}}</span>
+          <span ng-if="!row.isModule">{{row.subject.credits}}</span>
+        </td>
+        <td md-cell>
+          <table ng-class="{'bold': row.isModule}">
             <tr class="one-row">
-              <td ng-repeat="result in subjectResult.grades | orderBy: ['isActive', 'gradeDate']">
+              <td ng-repeat="result in row.grades | orderBy: ['isActive', 'gradeDate']">
                 <span ng-if="$index !== 0">/</span>
                 <span ng-class="{badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade | hoisHigherGrade: auth.school.letterGrades}}</span>
               </td>
             </tr>
           </table>
         </td>
-        <td md-cell>{{subjectResult.lastGrade.gradeDate | hoisDate}}</td>
+        <td md-cell ng-class="{'bold': row.isModule}">{{row.lastGrade.gradeDate | hoisDate}}</td>
         <td md-cell>
-          <table>
-            <tr ng-repeat="teacher in subjectResult.lastGrade.teachers | orderBy">
+          <table ng-class="{'bold': row.isModule}">
+            <tr ng-repeat="teacher in row.lastGrade.teachers | orderBy">
               <td>{{teacher}}</td>
             </tr>
           </table>

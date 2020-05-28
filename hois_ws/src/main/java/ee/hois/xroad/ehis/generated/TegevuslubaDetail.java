@@ -27,6 +27,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="tyyp" type="{http://www.w3.org/2001/XMLSchema}int"/&gt;
  *         &lt;element name="klLiik" type="{http://www.w3.org/2001/XMLSchema}integer"/&gt;
  *         &lt;element name="klStaatus" type="{http://www.w3.org/2001/XMLSchema}integer" minOccurs="0"/&gt;
+ *         &lt;element name="menetlejaKommentaar" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="nimetus" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="laagriNimetus" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="kohtadeArvLaagris" type="{http://www.w3.org/2001/XMLSchema}integer" minOccurs="0"/&gt;
@@ -62,6 +63,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "tyyp",
     "klLiik",
     "klStaatus",
+    "menetlejaKommentaar",
     "nimetus",
     "laagriNimetus",
     "kohtadeArvLaagris",
@@ -92,6 +94,7 @@ public class TegevuslubaDetail {
     @XmlElement(required = true)
     protected BigInteger klLiik;
     protected BigInteger klStaatus;
+    protected String menetlejaKommentaar;
     protected String nimetus;
     protected String laagriNimetus;
     @XmlElementRef(name = "kohtadeArvLaagris", type = JAXBElement.class, required = false)
@@ -226,6 +229,30 @@ public class TegevuslubaDetail {
      */
     public void setKlStaatus(BigInteger value) {
         this.klStaatus = value;
+    }
+
+    /**
+     * Gets the value of the menetlejaKommentaar property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getMenetlejaKommentaar() {
+        return menetlejaKommentaar;
+    }
+
+    /**
+     * Sets the value of the menetlejaKommentaar property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setMenetlejaKommentaar(String value) {
+        this.menetlejaKommentaar = value;
     }
 
     /**

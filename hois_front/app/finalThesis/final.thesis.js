@@ -139,15 +139,14 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
 
         dialogScope.preventSave = function () {
           dialogScope.preventBtn = true;
-
-        }
+        };
 
         dialogScope.wrongIdcode = function (response) {
           if (response.status === 404) {
             dialogScope.changedIdcode();
           }
           dialogScope.preventBtn = false;
-        }
+        };
   
       }, function (submittedDialogScope) {
         var modifiedSupervisor = submittedDialogScope.supervisor;
@@ -257,7 +256,7 @@ angular.module('hitsaOis').controller('FinalThesisEditController', function ($lo
     for (var i = 0; i < $scope.thesis.cercses.length; i++) {
       if (i !== index && $scope.thesis.cercses[i].cercs === value) {
         $scope.thesis.cercses[index].cercs = undefined;
-        message.error('finalThesis.error.duplicateCercs')
+        message.error('finalThesis.error.duplicateCercs');
         return;
       }
     }

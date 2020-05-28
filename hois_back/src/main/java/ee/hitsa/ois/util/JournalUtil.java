@@ -9,9 +9,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResult;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudent;
+import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.enums.JournalEntryType;
@@ -267,5 +269,20 @@ public abstract class JournalUtil {
             }
             return 0;
         });
+    }
+
+    public static List<CurriculumVersionOccupationModuleTheme> journalCurriculumModuleThemes(Journal journal) {
+        return StreamUtil.toMappedList(JournalOccupationModuleTheme::getCurriculumVersionOccupationModuleTheme,
+                journal.getJournalOccupationModuleThemes());
+    }
+
+    public static boolean allThemesAssessedByOutcomes(Journal journal) {
+        return allThemesAssessedByOutcomes(journalCurriculumModuleThemes(journal));
+    }
+
+    public static boolean allThemesAssessedByOutcomes(List<CurriculumVersionOccupationModuleTheme> themes) {
+        long outcomeBasedAssessmentThemes = themes.stream()
+                .filter(t -> Boolean.TRUE.equals(t.getModuleOutcomes())).count();
+        return themes.size() == outcomeBasedAssessmentThemes;
     }
 }

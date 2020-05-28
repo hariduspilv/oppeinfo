@@ -10,6 +10,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.util.JpaQueryBuilder;
+import ee.hitsa.ois.util.StudentUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -157,9 +160,11 @@ public class CertificateService {
             SchoolType schoolType = schoolService.schoolType(user.getSchoolId());
             boolean isHigherSchool = schoolType.isHigher();
             boolean isOnlyHigherSchool = schoolType.isHigher() && !schoolType.isVocational();
+            Language lang = Boolean.FALSE.equals(form.getEstonian()) ? Language.EN : Language.ET;
             certificate.setContent(certificateContentService.generate(certificate.getStudent(),
-                    CertificateType.valueOf(form.getType()), Boolean.TRUE.equals(form.getAddOutcomes()),
-                    isHigherSchool, Boolean.TRUE.equals(form.getShowUncompleted()), form.getEstonian(), isOnlyHigherSchool));
+                    CertificateType.valueOf(form.getType()), Boolean.TRUE.equals(form.getShowModules()),
+                    Boolean.TRUE.equals(form.getAddOutcomes()), Boolean.TRUE.equals(form.getShowUncompleted()),
+                    isHigherSchool, isOnlyHigherSchool, lang));
         }
         return save(user, certificate, form);
     }
@@ -202,42 +207,44 @@ public class CertificateService {
     /**
      * Lookup student for certificate
      *
-     * @param user
-     * @param id
-     * @param idcode
+     * @param command
      * @return null if idcode is null or person with given idcode is not found
      * @throws EntityNotFoundException when id is not null and student is not found
      */
     public StudentSearchDto otherStudent(HoisUserDetails user, OtherStudentCommand command) throws HoisException {
-        
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s join person p on s.person_id = p.id");
-        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
-        if(user.isRepresentative()) {
+        JpaQueryBuilder<Student> qb = new JpaQueryBuilder<>(Student.class, "s", "join s.person p");
+        qb.requiredCriteria("s.school.id = :schoolId", "schoolId", user.getSchoolId());
+
+        if (user.isRepresentative()) {
             // check it has rights to see given student
-            qb.requiredCriteria("s.id in (select sr.student_id from student_representative sr where sr.person_id = :personId and sr.is_student_visible = true)", "personId", user.getPersonId());
+            qb.requiredCriteria("s.id in (select sr.student.id from StudentRepresentative sr"
+                    + " where sr.person.id = :personId and sr.isStudentVisible = true)",
+                    "personId", user.getPersonId());
         }
-        if(command.getId() != null) {
+        if (command.getId() != null) {
             qb.requiredCriteria("s.id = :id", "id", command.getId());
+        } else if (!StringUtils.hasText(command.getIdcode())) {
+            qb.requiredCriteria("s.person.idcode = :idcode", "idcode", command.getIdcode());
         } else {
-            if(!StringUtils.hasText(command.getIdcode())) {
-                return null;
-            }
-
-            qb.requiredCriteria("p.idcode = :idcode", "idcode", command.getIdcode());
+            return null;
         }
 
-        List<?> students = qb.select("s.id, p.idcode, p.firstname, p.lastname, s.status_code, s.type_code", em).setMaxResults(1).getResultList();
-        if(!students.isEmpty()) {
-            Object student = students.get(0);
+        List<Student> students = qb.select(em).setMaxResults(1).getResultList();
+        if (!students.isEmpty()) {
+            Student student = students.get(0);
+            Person person = student.getPerson();
             StudentSearchDto dto = new StudentSearchDto();
-            dto.setId(resultAsLong(student, 0));
-            dto.setIdcode(resultAsString(student, 1));
-            dto.setFullname(PersonUtil.fullname(resultAsString(student, 2), resultAsString(student, 3)));
-            dto.setStatus(resultAsString(student, 4));
-            dto.setType(resultAsString(student, 5));
-            if (Boolean.TRUE.equals(command.getHideGuestStudents()) && StudentType.OPPUR_K.name().equals(dto.getType())) throw new HoisException("student.error.cannotBeGuestStudent");
+            dto.setId(student.getId());
+            dto.setIdcode(person.getIdcode());
+            dto.setFullname(PersonUtil.fullname(person));
+            dto.setStatus(EntityUtil.getCode(student.getStatus()));
+            dto.setType(EntityUtil.getCode(student.getType()));
+            dto.setHigher(StudentUtil.isHigher(student));
+            if (Boolean.TRUE.equals(command.getHideGuestStudents()) && StudentType.OPPUR_K.name().equals(dto.getType())) {
+                throw new HoisException("student.error.cannotBeGuestStudent");
+            }
             return dto;
-        } else if(command.getId() != null) {
+        } else if (command.getId() != null) {
             throw new EntityNotFoundException();
         }
 

@@ -51,9 +51,9 @@
                 <th md-column >{{'ehis.student.name' | translate}}</th>
                 <th md-column >{{'ehis.student.idcode' | translate}}</th>
                 <th md-column >{{'ehis.student.curriculum' | translate}}</th>
-                <th md-column ng-if="criteria.dataType === 'GRADUATION'">{{'ehis.student.docNr' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'GRADUATION' || criteria.dataType === 'DUPLICATE'">{{'ehis.student.docNr' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'GRADUATION'">{{'ehis.student.cumLaude' | translate}}</th>
-                <th md-column ng-if="criteria.dataType === 'GRADUATION'">{{'ehis.student.academicNr' | translate}}</th>
+                <th md-column ng-if="criteria.dataType === 'GRADUATION' || criteria.dataType === 'DUPLICATE'">{{'ehis.student.academicNr' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'COURSE_CHANGE'">{{'ehis.student.newCourse' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'COURSE_CHANGE'">{{'ehis.student.changeDate' | translate}}</th>
                 <th md-column ng-if="criteria.dataType === 'CURRICULA_FULFILMENT'">{{'ehis.student.percentage' | translate}}</th>
@@ -85,9 +85,9 @@
                 <td md-cell><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.name}}</a></td>
                 <td md-cell>{{::row.idcode}}</td>
                 <td md-cell>{{::row.curriculum}}</td>
-                <td md-cell ng-if="criteria.dataType === 'GRADUATION'">{{::row.docNr}}</td>
+                <td md-cell ng-if="criteria.dataType === 'GRADUATION' || criteria.dataType === 'DUPLICATE'">{{::row.docNr}}</td>
                 <td md-cell ng-if="criteria.dataType === 'GRADUATION'">{{row.cumLaude ? 'main.yes' : 'main.no' | translate}}</td>
-                <td md-cell ng-if="criteria.dataType === 'GRADUATION'">
+                <td md-cell ng-if="criteria.dataType === 'GRADUATION' || criteria.dataType === 'DUPLICATE'">
                   {{::row.academicNr}}
                   <span ng-if="row.extraNr && row.extraNr.length > 0">
                     ({{'ehis.student.extraNr' | translate}}: {{row.extraNr.join(', ')}})

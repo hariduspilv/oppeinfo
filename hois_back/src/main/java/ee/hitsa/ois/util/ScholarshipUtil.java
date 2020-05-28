@@ -2,7 +2,9 @@ package ee.hitsa.ois.util;
 
 import java.time.LocalDate;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.ScholarshipType;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -16,6 +18,14 @@ import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 
 public class ScholarshipUtil {
+
+    public static boolean isScholarship(ScholarshipTerm term) {
+        return isScholarship(EntityUtil.getCode(term.getType()));
+    }
+
+    public static boolean isScholarship(String type) {
+        return ScholarshipType.SCHOLARSHIPS.contains(type);
+    }
 
     public static void assertCanSearchApplications(HoisUserDetails user) {
         UserUtil.assertIsSchoolAdminOrLeadingTeacherOrTeacher(user);

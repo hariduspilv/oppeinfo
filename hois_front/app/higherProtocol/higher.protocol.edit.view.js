@@ -16,6 +16,12 @@ function ($route, $filter, $location, $scope, $q, Classifier, HigherGradeUtil, Q
     $scope.grades = HigherGradeUtil.orderedGrades($scope.grades);
   });
 
+  $scope.filterStudents = function(subgroup) {
+    return function (student) {
+      return (angular.isUndefined(subgroup) || subgroup === '') || student.subgroup.id === subgroup.id;
+    };
+  };
+
   $scope.gradeSelectShownValue = function (grade) {
     return HigherGradeUtil.gradeSelectShownValue(grade, $scope.auth.school.letterGrades);
   };
@@ -50,17 +56,30 @@ function ($route, $filter, $location, $scope, $q, Classifier, HigherGradeUtil, Q
           student = clMapper.objectmapper(student);
         }
         student.practiceJournalResults.forEach(function (result) {
-          result = clMapper.objectmapper(result);
+          clMapper.objectmapper(result);
         });
-      });
 
+        var subjectResults = {};
+        var otherSubjectResults = {}; // results with no subjectId coming from apel application
+        student.subjectResults.forEach(function (result) {
+          if (result.subjectId !== null) {
+            subjectResults[result.subjectId] = clMapper.objectmapper(result);
+          } else {
+            otherSubjectResults[result.studentHigherResultId] = clMapper.objectmapper(result);
+          }
+        });
+        student.mappedResults = {subjectResults: subjectResults, otherSubjectResults: otherSubjectResults};
+      });
       $scope.savedStudents = angular.copy($scope.record.protocolStudents);
 
-      $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks = midtermTaskUtil.getSortedMidtermTasks($scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks);
+      if ($scope.record.subjectStudyPeriodMidtermTaskDto !== null) {
+        $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks = midtermTaskUtil.getSortedMidtermTasks(
+          $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks);
+        addEmptyStudentResults();// TODO add to MidtermTaskUtil
 
-      addEmptyStudentResults();// TODO add to MidtermTaskUtil
-
-      midtermTaskUtil.sortStudentResults($scope.record.subjectStudyPeriodMidtermTaskDto.studentResults, $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks);
+        midtermTaskUtil.sortStudentResults($scope.record.subjectStudyPeriodMidtermTaskDto.studentResults,
+          $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks);
+      }
 
       $scope.getUrl = oisFileService.getUrl;
       $scope.formState = {};
@@ -70,8 +89,8 @@ function ($route, $filter, $location, $scope, $q, Classifier, HigherGradeUtil, Q
       $scope.formState.canDeleteStudents = ProtocolUtils.canAddDeleteStudents($scope.auth, $scope.record);
       $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.record);
       $scope.formState.canCalculate = $scope.record.protocolType === 'PROTOKOLLI_LIIK_P' && $scope.formState.canEditProtocol &&
-        !$scope.record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject &&
-        $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks.length > 0;
+        (($scope.record.subjectStudyPeriodMidtermTaskDto !== null && !$scope.record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject &&
+          $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks.length > 0) || $scope.record.moduleDto != null);
       $scope.formState.isConfirmed = $scope.record.status === 'PROTOKOLL_STAATUS_K';
       resolveDeferredIfExists();
     }).catch(function () {

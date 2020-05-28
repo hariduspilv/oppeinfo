@@ -2,6 +2,7 @@ package ee.hitsa.ois.web.dto.scholarship;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.constraints.Size;
@@ -182,7 +183,7 @@ public class ScholarshipApplicationDto extends ScholarshipApplicationBaseDto {
     }
 
     public List<ScholarshipFileDto> getFiles() {
-        return files;
+        return files != null ? files : new ArrayList<>();
     }
 
     public void setFiles(List<ScholarshipFileDto> files) {

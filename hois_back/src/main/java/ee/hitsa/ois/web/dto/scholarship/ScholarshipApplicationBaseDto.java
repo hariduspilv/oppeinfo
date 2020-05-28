@@ -7,7 +7,10 @@ public class ScholarshipApplicationBaseDto {
     private Long id;
     private Long student;
     private BigDecimal averageMark;
+    private BigDecimal wagMark;
     private BigDecimal lastPeriodMark;
+    private BigDecimal lastPeriodWagMark;
+    private Boolean isSais;
     private BigDecimal saisPoints;
     private BigDecimal curriculumCompletion;
     private Long absences;
@@ -39,12 +42,36 @@ public class ScholarshipApplicationBaseDto {
         this.averageMark = averageMark;
     }
 
+    public BigDecimal getWagMark() {
+        return wagMark;
+    }
+
+    public void setWagMark(BigDecimal wagMark) {
+        this.wagMark = wagMark;
+    }
+
     public BigDecimal getLastPeriodMark() {
         return lastPeriodMark;
     }
 
     public void setLastPeriodMark(BigDecimal lastPeriodMark) {
         this.lastPeriodMark = lastPeriodMark;
+    }
+
+    public BigDecimal getLastPeriodWagMark() {
+        return lastPeriodWagMark;
+    }
+
+    public void setLastPeriodWagMark(BigDecimal lastPeriodWagMark) {
+        this.lastPeriodWagMark = lastPeriodWagMark;
+    }
+
+    public Boolean getIsSais() {
+        return isSais;
+    }
+
+    public void setIsSais(Boolean isSais) {
+        this.isSais = isSais;
     }
 
     public BigDecimal getSaisPoints() {

@@ -303,8 +303,9 @@ public class StudentGroupService {
         qb.requiredCriteria("cv.curriculum_id = :curriculum", "curriculum", criteria.getCurriculum());
         qb.optionalCriteria("s.curriculum_version_id = :curriculumVersion", "curriculumVersion", criteria.getCurriculumVersion());
         qb.optionalCriteria("(s.student_group_id is null or s.student_group_id != :studentGroup)", "studentGroup", criteria.getId());
-        qb.optionalCriteria("s.language_code = :language", "language", criteria.getLanguage());
-        qb.optionalCriteria("s.study_form_code = :studyForm", "studyForm", criteria.getStudyForm());
+        // guest student doesn't need to be related to language and study form
+        qb.optionalCriteria("case when s.type_code = '" + StudentType.OPPUR_K.name() + "' then true else s.language_code = :language end", "language", criteria.getLanguage());
+        qb.optionalCriteria("case when s.type_code = '" + StudentType.OPPUR_K.name() + "' then true else s.study_form_code = :studyForm end", "studyForm", criteria.getStudyForm());
 
         List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode, cv.id as cv_id, cv.code, c.name_et, c.name_en, s.status_code, s.type_code as studentType", em).getResultList();
         return StreamUtil.toMappedList(r -> {
@@ -373,7 +374,6 @@ public class StudentGroupService {
         qb.optionalCriteria("cv.curriculum_id = :curriculum", "curriculum", criteria.getCurriculum());
         qb.optionalCriteria("s.curriculum_version_id = :curriculumVersion", "curriculumVersion", criteria.getCurriculumVersion());
         qb.optionalCriteria("(s.student_group_id is null or s.student_group_id != :studentGroup)", "studentGroup", criteria.getId());
-        qb.optionalCriteria("s.study_form_code = :studyForm", "studyForm", criteria.getStudyForm());
 
         List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode, cv.id as cv_id, cv.code, c.name_et, c.name_en, s.status_code, s.type_code as studentType", em).getResultList();
         return StreamUtil.toMappedList(r -> {

@@ -1,6 +1,7 @@
 package ee.hitsa.ois.util;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.Set;
 
 import ee.hitsa.ois.domain.Classifier;
@@ -14,11 +15,14 @@ import ee.hitsa.ois.enums.CurriculumEhisStatus;
 import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
+import ee.hitsa.ois.enums.HigherModuleType;
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleDto;
 
 public abstract class CurriculumUtil {
 
@@ -142,6 +146,15 @@ public abstract class CurriculumUtil {
     public static boolean canHaveOccupations(Curriculum curriculum) {
         return isVocational(curriculum) && 
                 !ClassifierUtil.equals(CurriculumDraft.OPPEKAVA_LOOMISE_VIIS_TOOANDJA, curriculum.getDraft());
+    }
+
+    public static Comparator<CurriculumVersionHigherModuleDto> higherModuleComparator(Language lang) {
+        return StreamUtil.comparingWithNullsLast(CurriculumVersionHigherModuleDto::getOrderNr)
+                .thenComparing(m -> {
+                        HigherModuleType type = EnumUtil.valueOf(HigherModuleType.class, m.getType());
+                        return type != null ? type.getOrder() : null;
+                    },  Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(m -> Language.EN.equals(lang) ? m.getNameEn() : m.getNameEt(), String.CASE_INSENSITIVE_ORDER);
     }
 
     /**

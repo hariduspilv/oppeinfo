@@ -11,6 +11,7 @@ angular.module('hitsaOis').controller('EhisLogsController', ['$mdDialog', '$rout
     }
     if(school.vocational) {
       $scope.messageTypes.push('laePedagoogid');
+      $scope.messageTypes.push('innoveAjalugu');
     }
     $scope.messageTypesWithTeacher = ['laeOppejoud', 'laePedagoogid'];
 

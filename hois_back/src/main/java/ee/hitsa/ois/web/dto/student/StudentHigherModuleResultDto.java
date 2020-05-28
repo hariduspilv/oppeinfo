@@ -21,6 +21,8 @@ public class StudentHigherModuleResultDto extends CurriculumVersionHigherModuleD
     private Boolean isOk;
     private Long electiveModulesCompleted;
     private List<StudentHigherElectiveModuleResultDto> electiveModulesResults;
+    private List<StudentHigherResultGradeDto> grades = new ArrayList<>();
+    private StudentHigherResultGradeDto lastGrade;
 
     private Boolean canMarkComplete;
 
@@ -28,7 +30,8 @@ public class StudentHigherModuleResultDto extends CurriculumVersionHigherModuleD
         StudentHigherModuleResultDto dto = EntityUtil.bindToDto(higherModule, new StudentHigherModuleResultDto(),
                 "electiveModules", "specialities", "subjects");
         dto.setElectiveModulesResults(StreamUtil.toMappedList(StudentHigherElectiveModuleResultDto::of, higherModule.getElectiveModules()));
-        dto.setCanMarkComplete(HigherModuleType.CAN_MARK_AS_COMPLETE.contains(EntityUtil.getCode(higherModule.getType())));
+        dto.setCanMarkComplete(Boolean.valueOf(!HigherModuleType.CAN_NOT_MARK_AS_COMPLETE.contains
+                (EntityUtil.getCode(higherModule.getType()))));
         return dto;
     }
 
@@ -120,6 +123,22 @@ public class StudentHigherModuleResultDto extends CurriculumVersionHigherModuleD
 
     public void setTotalDifference(BigDecimal totalDifference) {
         this.totalDifference = totalDifference;
+    }
+
+    public List<StudentHigherResultGradeDto> getGrades() {
+        return grades;
+    }
+
+    public void setGrades(List<StudentHigherResultGradeDto> grades) {
+        this.grades = grades;
+    }
+
+    public StudentHigherResultGradeDto getLastGrade() {
+        return lastGrade;
+    }
+
+    public void setLastGrade(StudentHigherResultGradeDto lastGrade) {
+        this.lastGrade = lastGrade;
     }
 
     public Boolean getCanMarkComplete() {

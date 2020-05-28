@@ -10,6 +10,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.PrimaryKeyJoinColumn;
 
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 
@@ -44,6 +46,12 @@ public class ProtocolHdata extends BaseEntity {
     
     @ManyToOne(fetch = FetchType.LAZY)
     private Subject finalSubject;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private CurriculumVersionHigherModule curriculumVersionHmodule;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Teacher teacher;
 
     public Protocol getProtocol() {
         return protocol;
@@ -84,5 +92,20 @@ public class ProtocolHdata extends BaseEntity {
     public void setFinalSubject(Subject finalSubject) {
         this.finalSubject = finalSubject;
     }
-    
+
+    public CurriculumVersionHigherModule getCurriculumVersionHmodule() {
+        return curriculumVersionHmodule;
+    }
+
+    public void setCurriculumVersionHmodule(CurriculumVersionHigherModule curriculumVersionHmodule) {
+        this.curriculumVersionHmodule = curriculumVersionHmodule;
+    }
+
+    public Teacher getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(Teacher teacher) {
+        this.teacher = teacher;
+    }
 }

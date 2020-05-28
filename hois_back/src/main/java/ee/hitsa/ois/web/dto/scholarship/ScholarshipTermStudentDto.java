@@ -12,7 +12,9 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
     private Long applicationId;
     private BigDecimal averageMark;
+    private BigDecimal wagMark;
     private BigDecimal lastPeriodMark;
+    private BigDecimal lastPeriodWagMark;
     private BigDecimal curriculumCompletion;
     private Long maxAbsences;
     private String addInfo;
@@ -72,12 +74,28 @@ public class ScholarshipTermStudentDto extends ScholarshipTermSearchDto {
         this.averageMark = averageMark;
     }
 
+    public BigDecimal getWagMark() {
+        return wagMark;
+    }
+
+    public void setWagMark(BigDecimal wagMark) {
+        this.wagMark = wagMark;
+    }
+
     public BigDecimal getLastPeriodMark() {
         return lastPeriodMark;
     }
 
     public void setLastPeriodMark(BigDecimal lastPeriodMark) {
         this.lastPeriodMark = lastPeriodMark;
+    }
+
+    public BigDecimal getLastPeriodWagMark() {
+        return lastPeriodWagMark;
+    }
+
+    public void setLastPeriodWagMark(BigDecimal lastPeriodWagMark) {
+        this.lastPeriodWagMark = lastPeriodWagMark;
     }
 
     public BigDecimal getCurriculumCompletion() {

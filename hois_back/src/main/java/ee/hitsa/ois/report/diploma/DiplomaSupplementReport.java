@@ -12,12 +12,14 @@ import ee.hitsa.ois.enums.Language;
 public class DiplomaSupplementReport extends DiplomaSupplementResultReport {
 
     private final Language lang;
+    private final Boolean duplicate; 
     
     private final String diplomaNr;
     private final List<String> additionalNrs;
     private final Boolean showSubjectCode;
     private final Boolean showTeacher;
     private final Boolean isLetterGrades;
+    private final Boolean modulesGraded;
     private final String schoolName;
     private final String schoolNameEn;
     private final String firstname;
@@ -54,21 +56,24 @@ public class DiplomaSupplementReport extends DiplomaSupplementResultReport {
     private final LocalDate printed;
 
     public DiplomaSupplementReport(DiplomaSupplement diplomaSupplement, List<String> additionalNrs) {
-        this(diplomaSupplement, additionalNrs, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Language.ET);
+        this(diplomaSupplement, additionalNrs, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Language.ET);
     }
 
     public DiplomaSupplementReport(DiplomaSupplement diplomaSupplement, List<String> additionalNrs, 
-            Boolean showSubjectCode, Boolean showTeacher, Boolean isLetterGrades, Language lang) {
+            Boolean showSubjectCode, Boolean showTeacher, Boolean isLetterGrades, Boolean modulesGraded,
+            Language lang) {
         this.lang = lang;
         
         Diploma diploma = diplomaSupplement.getDiploma();
         Form diplomaForm = diploma != null ? diploma.getForm() : null;
         this.diplomaNr = diplomaForm != null ? diplomaForm.getFullCode() : "XXXXXX";
+        this.duplicate = Language.EN.equals(lang) ? diplomaSupplement.getDuplicateEn() : diplomaSupplement.getDuplicate();
         
         this.additionalNrs = additionalNrs;
         this.showSubjectCode = showSubjectCode;
         this.showTeacher = showTeacher;
         this.isLetterGrades = isLetterGrades;
+        this.modulesGraded = modulesGraded;
         this.schoolName = diplomaSupplement.getSchoolNameEt();
         this.schoolNameEn = diplomaSupplement.getSchoolNameEn();
         this.firstname = diplomaSupplement.getFirstname();
@@ -129,6 +134,10 @@ public class DiplomaSupplementReport extends DiplomaSupplementResultReport {
         return lang;
     }
 
+    public Boolean getDuplicate() {
+        return duplicate;
+    }
+
     public String getDiplomaNr() {
         return diplomaNr;
     }
@@ -151,6 +160,10 @@ public class DiplomaSupplementReport extends DiplomaSupplementResultReport {
 
     public Boolean getIsLetterGrades() {
         return isLetterGrades;
+    }
+
+    public Boolean getModulesGraded() {
+        return modulesGraded;
     }
 
     public String getSchoolNameEn() {

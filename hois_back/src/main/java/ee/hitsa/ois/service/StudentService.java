@@ -648,7 +648,7 @@ public class StudentService {
             if (completion != null) {
                 dto.setCredits(completion.getCredits());
                 dto.setKkh(completion.getAverageMark());
-                dto.setIsCurriculumFulfilled(Boolean.valueOf(BigDecimal.ZERO.setScale(1).equals(completion.getStudyBacklog())));
+                dto.setIsCurriculumFulfilled(completion.isCurriculumFulfilled());
             } else {
                 dto.setCredits(BigDecimal.ZERO);
                 dto.setKkh(BigDecimal.ZERO);
@@ -1559,7 +1559,7 @@ public class StudentService {
     public Page<StudentSupportServiceDto> supportServices(Student student, Pageable pageable, boolean showPrivate) {
         HashMap<String, Object> params = new HashMap<>();
         return JpaQueryUtil.pagingResult(supportServicesQB(student, params, pageable, showPrivate),
-                "id, entry_date, title, \"content\", validity_code, is_public, ois_file_id, submitter, artificial, ending_id", params, em, pageable)
+                "id, entry_date, title, \"content\", validity_code, is_public, ois_file_id, submitter, artificial, ending_id, ehis", params, em, pageable)
                 .map(r -> new StudentSupportServiceDto(r, EntityUtil.getOptionalOne(OisFile.class, resultAsLong(r, 6), em)));
     }
 
@@ -1569,7 +1569,7 @@ public class StudentService {
         qb.optionalCriteria("entry_date >= :from", "from", from);
         qb.optionalCriteria("entry_date <= :thru", "thru", thru);
         qb.sort("entry_date desc");
-        List<?> results = qb.select("id, entry_date, title, \"content\", validity_code, is_public, ois_file_id, submitter, artificial, ending_id", em, params).getResultList();
+        List<?> results = qb.select("id, entry_date, title, \"content\", validity_code, is_public, ois_file_id, submitter, artificial, ending_id, ehis", em, params).getResultList();
         return StreamUtil.toMappedList(r -> new StudentSupportServiceDto(r, EntityUtil.getOptionalOne(OisFile.class, resultAsLong(r, 6), em)), results);
     }
     
@@ -1604,14 +1604,14 @@ public class StudentService {
         JpaNativeQueryBuilder qb = studentSupportServices(student);
         String supportServicesQuery = qb.querySql("sss.id as id, sss.entry_date as entry_date, sss.name_et as title,"
                 + "sss.\"content\" as \"content\", sss.validity_code as validity_code, sss.is_public as is_public,"
-                + "sss.ois_file_id as ois_file_id, sss.changed_by as submitter, false as artificial, null as ending_id", false);
+                + "sss.ois_file_id as ois_file_id, sss.changed_by as submitter, false as artificial, null as ending_id, sss.is_ehis as ehis", false);
         parameters.putAll(qb.queryParameters());
 
         qb = directiveSupportServices(student); 
         String directiveServicesQuery = qb.querySql("d.id as id, d.confirm_date as entry_date, null as title, "
                 + "string_agg( ass.support_service_code, ';' order by ass.support_service_code) as \"content\", "
                 + "case when coalesce ( ds2.start_date, ds.end_date) >= current_date then 'TUGIKEHTIV_K' else 'TUGIKEHTIV_L' end as validity_code, "
-                + "false as is_public, null as ois_file_id, sub.submitter as submitter, true as artificial, d2.id as ending_id", false);
+                + "false as is_public, null as ois_file_id, sub.submitter as submitter, true as artificial, d2.id as ending_id, false as ehis", false);
         parameters.putAll(qb.queryParameters());
 
         qb = new JpaNativeQueryBuilder("from (" + supportServicesQuery + " union all " + directiveServicesQuery + ") as support_services");

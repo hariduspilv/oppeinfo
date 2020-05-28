@@ -57,6 +57,8 @@ public class Student extends StudentBase {
     private List<StudentSpecialNeed> specialNeeds;
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DirectiveStudent> directiveStudents;
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StudentSupportService> supportServices;
 
     public Person getPerson() {
         return person;
@@ -193,6 +195,15 @@ public class Student extends StudentBase {
 
     public void setDirectiveStudents(List<DirectiveStudent> directiveStudents) {
         this.directiveStudents = directiveStudents;
+    }
+
+    public List<StudentSupportService> getSupportServices() {
+        return supportServices != null ? supportServices : (supportServices = new ArrayList<>());
+    }
+
+    public void setSupportServices(List<StudentSupportService> supportServices) {
+        getSupportServices().clear();
+        getSupportServices().addAll(supportServices);
     }
     
 }

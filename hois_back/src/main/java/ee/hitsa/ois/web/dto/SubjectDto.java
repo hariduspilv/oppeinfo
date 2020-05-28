@@ -99,7 +99,11 @@ public class SubjectDto extends SubjectForm {
         dto.setPrograms(StreamUtil.nullSafeSet(subject.getSubjectStudyPeriods()).stream()
                 .flatMap(peroid -> peroid.getTeachers().stream())
                 .flatMap(teacher -> teacher.getSubjectPrograms().stream())
-                .filter(p -> !isPublic || ClassifierUtil.equals(SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, p.getStatus()))
+                .filter(p -> !isPublic
+                        // if public for all then completed and confirmed programs allowed
+                        || (Boolean.TRUE.equals(p.getPublicAll()) && ClassifierUtil.oneOf(p.getStatus(), SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, SubjectProgramStatus.AINEPROGRAMM_STAATUS_V))
+                        // otherwise if confirmed
+                        || (ClassifierUtil.oneOf(p.getStatus(), SubjectProgramStatus.AINEPROGRAMM_STAATUS_K)))
                 .map(AutocompleteResult::of).collect(Collectors.toSet()));
 
         return dto;

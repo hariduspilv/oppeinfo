@@ -2,7 +2,7 @@
   <form name="dialogForm" novalidate ng-cloak>
   <md-toolbar class="md-warn">
       <div class="md-toolbar-tools">
-        <h2>{{'stipend.messages.error.studentDoesntComply' | translate}}</h2>
+        <h2>{{typeIsScholarship ? 'stipend.messages.error.studentDoesntComplyScholarship' : 'stipend.messages.error.studentDoesntComplyGrant' | translate}}</h2>
         <span flex></span>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon md-font-set="material-icons">close</md-icon>
@@ -15,13 +15,13 @@
         <div class="form-readonly">
           <div layout="row" flex>
             <md-input-container flex>
-              <label class="textInput">{{formState.typeIsScholarship ? 'stipend.scholarshipType' : 'stipend.grantType' | translate}}</label>
+              <label class="textInput">{{typeIsScholarship ? 'stipend.scholarshipType' : 'stipend.grantType' | translate}}</label>
               <hois-classifier-value ng-model="stipend.type" main-classifier-code="STIPTOETUS"></hois-classifier-value>
             </md-input-container>
           </div>
           <div layout="row" flex>
             <md-input-container flex>
-              <label class="textInput">{{formState.typeIsScholarship ? 'stipend.scholarshipName' : 'stipend.grantName' | translate}}</label>
+              <label class="textInput">{{typeIsScholarship ? 'stipend.scholarshipName' : 'stipend.grantName' | translate}}</label>
               <hois-value value="stipend.nameEt"></hois-value>
             </md-input-container>
           </div>

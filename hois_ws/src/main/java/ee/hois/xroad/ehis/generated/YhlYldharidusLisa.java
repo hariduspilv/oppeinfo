@@ -1,6 +1,7 @@
 
 package ee.hois.xroad.ehis.generated;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -34,7 +35,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="klKlassLiik" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="voorkeeled" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}yhlVoorkeeled" minOccurs="0"/&gt;
  *         &lt;element name="lisaandmed" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}yhlLisaandmed" minOccurs="0"/&gt;
- *         &lt;element name="kaugusOppeasutusest" type="{http://www.w3.org/2001/XMLSchema}positiveInteger" minOccurs="0"/&gt;
+ *         &lt;element name="kaugusOppeasutusest" type="{http://www.w3.org/2001/XMLSchema}decimal" minOccurs="0"/&gt;
  *         &lt;element name="oppeasutusFil" type="{http://www.w3.org/2001/XMLSchema}integer" minOccurs="0"/&gt;
  *         &lt;element name="opilaskoduKool" type="{http://www.w3.org/2001/XMLSchema}integer" minOccurs="0"/&gt;
  *         &lt;element name="omandabHaridKinnipidamisasutuses" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}ehisBoolean" minOccurs="0"/&gt;
@@ -112,8 +113,7 @@ public class YhlYldharidusLisa {
     protected String klKlassLiik;
     protected YhlVoorkeeled voorkeeled;
     protected YhlLisaandmed lisaandmed;
-    @XmlSchemaType(name = "positiveInteger")
-    protected BigInteger kaugusOppeasutusest;
+    protected BigDecimal kaugusOppeasutusest;
     protected BigInteger oppeasutusFil;
     protected BigInteger opilaskoduKool;
     protected String omandabHaridKinnipidamisasutuses;
@@ -469,10 +469,10 @@ public class YhlYldharidusLisa {
      * 
      * @return
      *     possible object is
-     *     {@link BigInteger }
+     *     {@link BigDecimal }
      *     
      */
-    public BigInteger getKaugusOppeasutusest() {
+    public BigDecimal getKaugusOppeasutusest() {
         return kaugusOppeasutusest;
     }
 
@@ -481,10 +481,10 @@ public class YhlYldharidusLisa {
      * 
      * @param value
      *     allowed object is
-     *     {@link BigInteger }
+     *     {@link BigDecimal }
      *     
      */
-    public void setKaugusOppeasutusest(BigInteger value) {
+    public void setKaugusOppeasutusest(BigDecimal value) {
         this.kaugusOppeasutusest = value;
     }
 

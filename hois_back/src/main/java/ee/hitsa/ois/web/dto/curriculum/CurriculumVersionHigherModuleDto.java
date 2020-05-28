@@ -63,6 +63,7 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
     private Short electiveModulesNumber;
     @NotNull
     private Boolean minorSpeciality;
+    private Boolean isGrade;
     @Required
     @ClassifierRestriction(MainClassCode.KORGMOODUL)
     private String type;
@@ -244,6 +245,14 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
 
     public void setMinorSpeciality(Boolean minorSpeciality) {
         this.minorSpeciality = minorSpeciality;
+    }
+
+    public Boolean getIsGrade() {
+        return isGrade;
+    }
+
+    public void setIsGrade(Boolean isGrade) {
+        this.isGrade = isGrade;
     }
 
     public String getType() {

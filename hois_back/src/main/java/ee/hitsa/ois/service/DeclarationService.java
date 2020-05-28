@@ -99,7 +99,13 @@ public class DeclarationService {
     private static final String DECLARATION_SELECT = " distinct d.id as d_id, s.id as sId, "
             + "p.firstname, p.lastname, p.idcode, cv.id as cv_id, cv.code as cv_code, "
             + "sg.id as sgId, sg.code as sg_code, d.inserted, d.status_code, d.confirm_date, "
-            + "sp.id, sp.name_et, sp.name_en, status.name_et as status_name_et, status.name_en as status_name_en ";
+            + "sp.id, sp.name_et, sp.name_en, status.name_et as status_name_et, status.name_en as status_name_en, s.type_code, "
+            + "coalesce((select sum(s.credits) "
+                + "from declaration_subject ds "
+                + "join subject_study_period ssp on ssp.id = ds.subject_study_period_id "
+                + "join subject s on ssp.subject_id = s.id "
+                + "where ds.declaration_id = d.id "
+            + "), 0) credits ";
     private static final String DECLARATION_FROM = "from declaration d "
             + "join student s on s.id = d.student_id "
             + "join person p on p.id = s.person_id "
@@ -207,7 +213,7 @@ public class DeclarationService {
 
             StudentSearchDto studentDto = new StudentSearchDto();
             studentDto.setId(resultAsLong(r, 1));
-            studentDto.setFullname(PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)));
+            studentDto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 17)));
             studentDto.setIdcode(resultAsString(r, 4));
             studentDto.setCurriculumVersion(
                     new AutocompleteResult(resultAsLong(r, 5), resultAsString(r, 6), resultAsString(r, 6)));
@@ -219,6 +225,7 @@ public class DeclarationService {
             dto.setStatus(resultAsString(r, 10));
             dto.setConfirmDate(resultAsLocalDate(r, 11));
             dto.setCanBeChanged(Boolean.valueOf(DeclarationUtil.canChangeDeclarationFromSearchForm(user, dto)));
+            dto.setCredits(resultAsDecimal(r, 18));
             return dto;
         });
     }

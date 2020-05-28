@@ -58,6 +58,7 @@ import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.dto.ForeignStudentDto;
 import ee.hois.xroad.ehis.generated.KhlAkadPuhkusAlgus;
+import ee.hois.xroad.ehis.generated.KhlDuplikaadiValjastamine;
 import ee.hois.xroad.ehis.generated.KhlEnnistamine;
 import ee.hois.xroad.ehis.generated.KhlErivajadusedArr;
 import ee.hois.xroad.ehis.generated.KhlJuhendamineArr;
@@ -348,6 +349,51 @@ public class EhisDirectiveStudentService extends EhisService {
 
         makeRequest(directive, khlOppeasutusList);
     }
+    
+    private static KhlOiendType createOiend(String docNr, List<String> extraNr) {
+        KhlOiendType oiend = new KhlOiendType();
+        oiend.setOiendiNr(docNr);
+        if (extraNr != null) {
+            int size = extraNr.size();
+            if (size > 0) {
+                oiend.setLisaleht1Nr(extraNr.get(0));
+            }
+            if (size > 1) {
+                oiend.setLisaleht2Nr(extraNr.get(1));
+            }
+            if (size > 2) {
+                oiend.setLisaleht3Nr(extraNr.get(2));
+            }
+            if (size > 3) {
+                oiend.setLisaleht4Nr(extraNr.get(3));
+            }
+        }
+        return oiend;
+    }
+    
+    public WsEhisStudentLog duplicateChanged(DirectiveStudent directiveStudent, String docNr, 
+            String academicNr, List<String> extraNr, String academicNrEn, List<String> extraNrEn) {
+        try {
+            Student student = directiveStudent.getStudent();
+            KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student, khlOppeasutus -> khlOppeasutus.getOppur().add(getKhlOppurDuplikaadiMuutmine(student, true)));
+            
+            KhlDuplikaadiValjastamine khlDuplikaadiValjastamine = new KhlDuplikaadiValjastamine();
+            khlDuplikaadiValjastamine.setMuutusKp(date(directiveStudent.getDirective().getConfirmDate()));
+            khlDuplikaadiValjastamine.setLopudokumendiNr(docNr);
+            if (academicNr != null) {
+                khlDuplikaadiValjastamine.setEestikeelneAkademOiend(createOiend(academicNr, extraNr));
+            }
+            if (academicNrEn != null) {
+                khlDuplikaadiValjastamine.setInglisekeelneAkademOiend(createOiend(academicNrEn, extraNrEn));
+            }
+            
+            khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getDuplikaadiMuutmine().setDuplikaat(khlDuplikaadiValjastamine);
+
+            return makeRequest(directiveStudent.getDirective(), khlOppeasutusList);
+        } catch (Exception e) {
+            return bindingException(directiveStudent.getDirective(), e);
+        }
+    }
 
     WsEhisStudentLog graduation(DirectiveStudent directiveStudent, String docNr, 
             String academicNr, List<String> extraNr, String academicNrEn, List<String> extraNrEn) {
@@ -358,47 +404,13 @@ public class EhisDirectiveStudentService extends EhisService {
             KhlOppeasutuseLopetamine oppeasutuseLopetamine = new KhlOppeasutuseLopetamine();
             oppeasutuseLopetamine.setMuutusKp(date(LocalDate.now()));
             oppeasutuseLopetamine.setLopudokumendiNr(docNr);
-            KhlOiendType oiend = new KhlOiendType();
-            oiend.setOiendiNr(academicNr);
-            if (extraNr != null) {
-                int size = extraNr.size();
-                if (size > 0) {
-                    oiend.setLisaleht1Nr(extraNr.get(0));
-                }
-                if (size > 1) {
-                    oiend.setLisaleht2Nr(extraNr.get(1));
-                }
-                if (size > 2) {
-                    oiend.setLisaleht3Nr(extraNr.get(2));
-                }
-                if (size > 3) {
-                    oiend.setLisaleht4Nr(extraNr.get(3));
-                }
-            }
-            oppeasutuseLopetamine.setEestikeelneAkademOiend(oiend);
+            oppeasutuseLopetamine.setEestikeelneAkademOiend(createOiend(academicNr, extraNr));
             
             if (academicNrEn != null) {
                 KhlOppeasutuseLopetamine oppeasutuseLopetamineEn = new KhlOppeasutuseLopetamine();
                 oppeasutuseLopetamineEn.setMuutusKp(date(LocalDate.now()));
                 oppeasutuseLopetamineEn.setLopudokumendiNr(docNr);
-                KhlOiendType oiendEn = new KhlOiendType();
-                oiendEn.setOiendiNr(academicNrEn);
-                if (extraNrEn != null) {
-                    int size = extraNrEn.size();
-                    if (size > 0) {
-                        oiendEn.setLisaleht1Nr(extraNrEn.get(0));
-                    }
-                    if (size > 1) {
-                        oiendEn.setLisaleht2Nr(extraNrEn.get(1));
-                    }
-                    if (size > 2) {
-                        oiendEn.setLisaleht3Nr(extraNrEn.get(2));
-                    }
-                    if (size > 3) {
-                        oiendEn.setLisaleht4Nr(extraNrEn.get(3));
-                    }
-                }
-                oppeasutuseLopetamine.setInglisekeelneAkademOiend(oiendEn);
+                oppeasutuseLopetamine.setInglisekeelneAkademOiend(createOiend(academicNrEn, extraNrEn));
             }
             oppeasutuseLopetamine.setCumLaude(yesNo(directiveStudent.getIsCumLaude()));
             
@@ -826,6 +838,9 @@ public class EhisDirectiveStudentService extends EhisService {
     }
 
     private Map<Student, List<String>> getStudentsWithSupportServiceDirectives(Collection<Long> studentIds, LocalDate date) {
+        if (studentIds == null || studentIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
         Query q = em.createNativeQuery("select s.id, string_agg(distinct ass_cl.ehis_value, ';') as ass_values "
                 + "from student s "
                 + "join directive_student ds on ds.student_id = s.id "
@@ -836,19 +851,15 @@ public class EhisDirectiveStudentService extends EhisService {
                 + "left join directive d2 on d2.id = ds2.directive_id and d2.type_code = ?3 and d2.status_code = ?4 "
                 + "join classifier ass_cl on ass_cl.code = ass.support_service_code "
                 + "where s.status_code in ?1 and d.type_code = ?2 and d.status_code = ?4 and ass_cl.ehis_value is not null " // TUGITEENUS should have ehis_value to be sent.
-                + "and ds.canceled = false and ds.start_date <= ?6 and coalesce ( ds2.start_date, ds.end_date ) >= ?5 "
-                + (studentIds != null && !studentIds.isEmpty() ? "and s.id in ?7 " : "")
+                + "and ds.canceled = false and ds.start_date <= ?6 and coalesce ( ds2.start_date, ds.end_date ) >= ?5 and s.id in ?7 "
                 + "group by s.id")
         .setParameter(1, StudentStatus.STUDENT_STATUS_ACTIVE)
         .setParameter(2, DirectiveType.KASKKIRI_TUGI.name())
         .setParameter(3, DirectiveType.KASKKIRI_TUGILOPP.name())
         .setParameter(4, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
         .setParameter(5, JpaQueryUtil.parameterAsTimestamp(DateUtils.firstMomentOfDay(date)))
-        .setParameter(6, JpaQueryUtil.parameterAsTimestamp(DateUtils.lastMomentOfDay(date)));
-        
-        if (studentIds != null && !studentIds.isEmpty()) {
-            q.setParameter(7, studentIds);
-        }
+        .setParameter(6, JpaQueryUtil.parameterAsTimestamp(DateUtils.lastMomentOfDay(date)))
+        .setParameter(7, studentIds);
         
         List<?> data = q.getResultList();
 

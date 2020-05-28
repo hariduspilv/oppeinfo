@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
  *         &lt;element name="isikuandmed" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}eeIsikukaartIsikuandmed"/&gt;
+ *         &lt;element name="gdprlog" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}eeIsikukaartGdprlog" maxOccurs="unbounded" minOccurs="0"/&gt;
  *         &lt;element name="oping" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}eeIsikukaartOping" maxOccurs="unbounded" minOccurs="0"/&gt;
  *         &lt;element name="tootamine" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}eeIsikukaartTootamine" maxOccurs="unbounded" minOccurs="0"/&gt;
  *         &lt;element name="taiendkoolitus" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}eeIsikukaartTaiendkoolitus" maxOccurs="unbounded" minOccurs="0"/&gt;
@@ -37,6 +38,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "eeIsikukaartBean", propOrder = {
     "isikuandmed",
+    "gdprlog",
     "oping",
     "tootamine",
     "taiendkoolitus",
@@ -48,6 +50,7 @@ public class EeIsikukaartBean {
 
     @XmlElement(required = true)
     protected EeIsikukaartIsikuandmed isikuandmed;
+    protected List<EeIsikukaartGdprlog> gdprlog;
     protected List<EeIsikukaartOping> oping;
     protected List<EeIsikukaartTootamine> tootamine;
     protected List<EeIsikukaartTaiendkoolitus> taiendkoolitus;
@@ -77,6 +80,35 @@ public class EeIsikukaartBean {
      */
     public void setIsikuandmed(EeIsikukaartIsikuandmed value) {
         this.isikuandmed = value;
+    }
+
+    /**
+     * Gets the value of the gdprlog property.
+     * 
+     * <p>
+     * This accessor method returns a reference to the live list,
+     * not a snapshot. Therefore any modification you make to the
+     * returned list will be present inside the JAXB object.
+     * This is why there is not a <CODE>set</CODE> method for the gdprlog property.
+     * 
+     * <p>
+     * For example, to add a new item, do as follows:
+     * <pre>
+     *    getGdprlog().add(newItem);
+     * </pre>
+     * 
+     * 
+     * <p>
+     * Objects of the following type(s) are allowed in the list
+     * {@link EeIsikukaartGdprlog }
+     * 
+     * 
+     */
+    public List<EeIsikukaartGdprlog> getGdprlog() {
+        if (gdprlog == null) {
+            gdprlog = new ArrayList<EeIsikukaartGdprlog>();
+        }
+        return this.gdprlog;
     }
 
     /**

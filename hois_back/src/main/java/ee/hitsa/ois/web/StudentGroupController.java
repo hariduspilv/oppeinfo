@@ -102,7 +102,7 @@ public class StudentGroupController {
     @GetMapping("/findstudents")
     public List<StudentGroupStudentDto> searchStudents(HoisUserDetails user, @Valid StudentGroupSearchStudentsCommand criteria) {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPERYHM);
-        if (criteria.getIsGuest() != null && Boolean.TRUE.equals(criteria.getIsGuest())) {
+        if (Boolean.TRUE.equals(criteria.getIsGuest())) {
             return studentGroupService.searchGuestStudents(user.getSchoolId(), criteria);
         }
         return studentGroupService.searchStudents(user.getSchoolId(), criteria);

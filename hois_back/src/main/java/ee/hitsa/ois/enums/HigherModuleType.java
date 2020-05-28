@@ -5,15 +5,23 @@ import java.util.List;
 import ee.hitsa.ois.util.EnumUtil;
 
 public enum HigherModuleType {
-    
-    KORGMOODUL_C,   // Optional subjects
-    KORGMOODUL_L,   // Final thesis
-    KORGMOODUL_V,   // Unschooling
-    KORGMOODUL_P,   // Internship
-    KORGMOODUL_F,   // Final exam
-    KORGMOODUL_M;   // Custom module
+
+    KORGMOODUL_L(3L),   // Final thesis
+    KORGMOODUL_V(1L),   // Free choice
+    KORGMOODUL_P(null),   // Internship
+    KORGMOODUL_F(2L),   // Final exam
+    KORGMOODUL_M(null);   // Custom module
 
     public static final List<String> FINAL_MODULES = EnumUtil.toNameList(KORGMOODUL_L, KORGMOODUL_F);
+    public static final List<String> CAN_NOT_MARK_AS_COMPLETE = EnumUtil.toNameList(KORGMOODUL_V, KORGMOODUL_L, KORGMOODUL_F);
 
-    public static final List<String> CAN_MARK_AS_COMPLETE = EnumUtil.toNameList(KORGMOODUL_C, KORGMOODUL_P, KORGMOODUL_M);
+    private final Long order;
+
+    private HigherModuleType(Long order) {
+        this.order = order;
+    }
+
+    public Long getOrder() {
+        return order;
+    }
 }

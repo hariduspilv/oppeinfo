@@ -87,11 +87,11 @@ public class CertificateRtfReport {
                         .replaceAll("<th colspan=\"(\\d+)\">", "<fo:table-cell number-columns-spanned=\"$1\" margin=\"0.02in\" display-align=\"center\"><fo:block>")
                         .replaceAll("</th>", "</fo:block></fo:table-cell>")
                         .replaceAll("<td style=\"text-align: (left|right|center|justify);\">", "<fo:table-cell margin=\"0.02in\" display-align=\"center\" text-align=\"$1\"><fo:block>")
-                        .replaceAll("<td style=\"vertical-align: top;\">", "<fo:table-cell margin=\"0.02in\" display-align=\"before\"><fo:block>")
                         .replaceAll("<td>", "<fo:table-cell margin=\"0.02in\" display-align=\"center\"><fo:block>").replaceAll("</td>", "</fo:block></fo:table-cell>")
                         ;
             }
             result = result
+                    .replaceAll("<td style=\"vertical-align: top;\">", "<fo:table-cell margin=\"0.02in\" display-align=\"before\"><fo:block>")
                     .replaceAll("<thead>", "<fo:table-body text-align=\"center\" font-weight=\"bold\">").replaceAll("</thead>", "</fo:table-body>")
                     .replaceAll("<tbody>", "<fo:table-body>").replaceAll("</tbody>", "</fo:table-body>")
                     .replaceAll("<tr>", "<fo:table-row keep-together.within-page=\"always\">").replaceAll("</tr>", "</fo:table-row>")

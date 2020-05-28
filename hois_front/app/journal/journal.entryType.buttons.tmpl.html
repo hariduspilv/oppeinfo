@@ -35,7 +35,7 @@
       {{currentLanguageNameField(journalEntryTypes['SISSEKANNE_O'])}}
     </span>
   </md-checkbox>
-  <md-checkbox ng-if="journal.assessment !== null" ng-model="journalEntryTypes['SISSEKANNE_L']._selected"
+  <md-checkbox ng-if="journal.finalEntryAllowed" ng-model="journalEntryTypes['SISSEKANNE_L']._selected"
     ng-change="updateSelectedEntryTypes()" aria-label="SISSEKANNE_L">
     <span class="capacity-type-legend" md-colors="{background: getEntryColor('SISSEKANNE_L')}">
       {{currentLanguageNameField(journalEntryTypes['SISSEKANNE_L'])}}

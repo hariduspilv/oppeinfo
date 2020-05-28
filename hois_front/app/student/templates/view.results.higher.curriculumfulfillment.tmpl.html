@@ -7,16 +7,32 @@
   <hois-collapsable-header ng-if="module.id > -1">
     <div layout="column" layout-gt-md="row" class="curriculum-fulfillment-result">
       <div flex-gt-md="50">
+        <span ng-if="module.isGrade">
+          <md-icon md-font-set="material-icons">forward_5</md-icon>
+          <md-tooltip>{{'student.result.higher.moduleIsGraded' | translate}}</md-tooltip>
+        </span>
         <span>{{currentLanguageNameField(module)}} {{module.totalCredits}} EAP</span>
         <span ng-if="module.type !== 'KORGMOODUL_M'">(<hois-classifier-value class="inline" ng-model="module.type" main-classifier-code="KORGMOODUL"></hois-classifier-value>)</span>
         <span ng-if="module.type === 'KORGMOODUL_M'">({{currentLanguage()=='et' ? module.typeNameEt : module.typeNameEn}})</span>
       </div>
       <div flex-gt-md="15" flex-offset-gt-md="5" layout="row" layout-align-gt-md="center center">
-        <b ng-if="!module.isOk" flex-offset="10" md-colors="{color: 'accent'}">&nbsp;{{ module.totalDifference }}</b>
-        <i ng-if="module.isOk" flex-offset="10" md-colors="{color: 'green-600'}" class="material-icons">done</i>
+        <div ng-if="module.lastGrade">
+          <span ng-class="gradeUtil.isPositive(module.lastGrade.grade.code) ? 'goodResult' : 'badResult'">{{module.lastGrade.grade | hoisHigherGrade: auth.school.letterGrades}}</span>
+        </div>
+        <div ng-if="!module.lastGrade">
+          <b ng-if="!module.isOk" md-colors="{color: 'accent'}">&nbsp;{{ module.totalDifference }}</b>
+          <b ng-if="module.isOk && module.isGrade" md-colors="{color: 'accent'}">{{'student.result.higher.notGraded' | translate}}</b>
+          <i ng-if="module.isOk && !module.isGrade" md-colors="{color: 'green-600'}" class="material-icons">done</i>
+        </div>
       </div>
-      <div flex-gt-md="30" flex-offset-gt-md="5" layout="row" layout-align-gt-md="center center">
-        <div ng-if="!module.isOk" layout="row" layout-align-gt-md="center center">
+      <div flex-gt-md="30" flex-offset-gt-md="5" layout="row">
+        <div ng-if="module.lastGrade" layout="row" layout-align="space-between center" style="width: 230px;">
+          <div>{{module.lastGrade.gradeDate | hoisDate}}</div>
+          <div>
+            <span ng-repeat="teacher in module.lastGrade.teachers">{{teacher}}</span>
+          </div>
+        </div>
+        <div ng-if="!module.lastGrade && !module.isOk" layout="row" layout-align="none center">
           <div>{{'student.result.totalRequired' | translate}}: {{module.studyCredits}}&nbsp;&nbsp;</div>
           <div>{{'student.result.totalSubmitted' | translate}}: {{module.creditsSubmitted}}&nbsp;&nbsp;</div>
           <div>{{'student.result.difference' | translate}}: <span ng-class="{'red': module.difference < 0}">{{module.difference}}</span></div>
@@ -30,8 +46,11 @@
           <hois-classifier-value class="inline" ng-model="module.type" main-classifier-code="KORGMOODUL"></hois-classifier-value>
         </div>
         <div flex-gt-md="15" flex-offset-gt-md="5" layout="row" layout-align-gt-md="center center">
-          <i class="material-icons" flex-offset="10" md-colors="{color: 'green-600'}" ng-if="module.isOk">done</i>
+          <div>
+            <i class="material-icons" flex-offset="10" md-colors="{color: 'green-600'}" ng-if="module.isOk">done</i>
+          </div>
         </div>
+        <div flex-gt-md="30" flex-offset-gt-md="5" layout="row" layout-align-gt-md="center center"></div>
       </div>
   </hois-collapsable-header>
   <md-table-container>

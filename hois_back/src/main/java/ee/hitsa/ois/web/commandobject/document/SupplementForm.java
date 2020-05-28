@@ -6,7 +6,7 @@ public class SupplementForm {
 
     private Long signer1Id;
     private Long signer2Id;
-    private Language lang;
+    private Language lang = Language.ET;
     private Boolean showSubjectCode;
     private Boolean showTeacher;
     private Long numeral;

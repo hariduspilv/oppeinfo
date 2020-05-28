@@ -10,7 +10,7 @@
         </md-input-container>
       </div>
 
-      <div flex ng-if="(record.type === 'KASKKIRI_LOPET' || record.type === 'KASKKIRI_KYLALIS') && formState.school.higher && formState.school.vocational">
+      <div flex ng-if="(record.type === 'KASKKIRI_LOPET' || record.type === 'KASKKIRI_KYLALIS' || record.type === 'KASKKIRI_DUPLIKAAT') && formState.school.higher && formState.school.vocational">
         <md-input-container class="md-block">
           <md-radio-group layout-gt-sm="row" ng-model="record.isHigher" ng-change="directiveTypeChanged()" required name="isHigher" ng-disabled="formState.state !== 'CHOOSETYPE'">
             <md-radio-button ng-value="false">{{'directive.vocational' | translate}}</md-radio-button>

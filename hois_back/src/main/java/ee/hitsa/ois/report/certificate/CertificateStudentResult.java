@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.util.TranslateUtil;
+import ee.hitsa.ois.web.dto.student.StudentHigherModuleResultDto;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
@@ -16,7 +17,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherSubjectResultDto;
-import ee.hitsa.ois.web.dto.student.StudentHigherSubjectResultGradeDto;
+import ee.hitsa.ois.web.dto.student.StudentHigherResultGradeDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultModuleThemeDto;
 
 public class CertificateStudentResult {
@@ -41,7 +42,6 @@ public class CertificateStudentResult {
     private Boolean addResultOutcomes;
     private String outcomes;
     private String outcomesEn;
-    private Boolean isActive;
     private Short orderNr;
     private Long curriculumId;
     private String versionCode;
@@ -57,14 +57,14 @@ public class CertificateStudentResult {
         result.setSubjectEn(TranslateUtil.getNonNullableNameEn(subject));
         result.setHours(subject.getCredits());
         result.setSubjectCode(subject.getCode());
+        result.setModule(dto.getHigherModule());
 
-        StudentHigherSubjectResultGradeDto grade = dto.getLastGrade();
+        StudentHigherResultGradeDto grade = dto.getLastGrade();
         if (grade != null) {
             result.setGradeName(grade.getGradeNameEt());
             result.setGradeNameEn(grade.getGradeNameEn());
             result.setGradeValue(grade.getGradeValue());
             result.setDate(DateUtils.date(grade.getGradeDate()));
-            result.setIsActive(grade.getIsActive());
             List<String> teachers = grade.getTeachers();
             if (teachers.contains(null)) {
                 teachers.removeAll(Collections.singleton(null));
@@ -72,6 +72,23 @@ public class CertificateStudentResult {
             result.setAssessedBy(String.join(", ", StreamUtil.nullSafeList(teachers)));
         } else {
             result.setAssessedBy(dto.getAllTeachers());
+        }
+        return result;
+    }
+
+    public static CertificateStudentResult of(StudentHigherModuleResultDto dto) {
+        CertificateStudentResult result = new CertificateStudentResult();
+        result.setModule(new AutocompleteResult(dto.getId(), dto.getNameEt(), dto.getNameEn()));
+        result.setIsHeader(Boolean.TRUE);
+        result.setModuleCredits(dto.getTotalCredits());
+
+        StudentHigherResultGradeDto grade = dto.getLastGrade();
+        if (grade != null) {
+            result.setGradeName(grade.getGradeNameEt());
+            result.setGradeNameEn(grade.getGradeNameEn());
+            result.setGradeValue(grade.getGradeValue());
+            result.setDate(DateUtils.date(grade.getGradeDate()));
+            result.setAssessedBy(String.join(", ", StreamUtil.nullSafeList(grade.getTeachers())));
         }
         return result;
     }
@@ -209,14 +226,6 @@ public class CertificateStudentResult {
 
     public void setOutcomes(String outcomes) {
         this.outcomes = outcomes;
-    }
-
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
     }
 
     public String getSubjectCode() {

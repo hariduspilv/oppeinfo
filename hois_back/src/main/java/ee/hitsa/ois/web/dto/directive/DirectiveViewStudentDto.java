@@ -85,6 +85,8 @@ public class DirectiveViewStudentDto {
     private List<AutocompleteResult> supportServices;
     private List<AutocompleteResult> supportModules;
     private String dormitory;
+    
+    private DiplomaStudentDto diplomaDto;
 
     public Long getStudent() {
         return student;
@@ -550,6 +552,14 @@ public class DirectiveViewStudentDto {
         this.apelSchool = apelSchool;
     }
 
+    public DiplomaStudentDto getDiplomaDto() {
+        return diplomaDto;
+    }
+
+    public void setDiplomaDto(DiplomaStudentDto diplomaDto) {
+        this.diplomaDto = diplomaDto;
+    }
+
     public static DirectiveViewStudentDto of(DirectiveStudent directiveStudent) {
         DirectiveViewStudentDto dto = EntityUtil.bindToDto(directiveStudent, new DirectiveViewStudentDto(), "occupations");
         StudentBase student = directiveStudent.getStudent();
@@ -590,6 +600,9 @@ public class DirectiveViewStudentDto {
             dto.setApplicationEndDate(application != null ? application.getEndDate() : null);
             dto.setApplicationStudyPeriodStart(application != null && application.getStudyPeriodStart() != null ? AutocompleteResult.of(application.getStudyPeriodStart()) : null);
             dto.setApplicationStudyPeriodEnd(application != null && application.getStudyPeriodEnd() != null ? AutocompleteResult.of(application.getStudyPeriodEnd()) : null);
+            break;
+        case KASKKIRI_DUPLIKAAT:
+            dto.setDiplomaDto(DiplomaStudentDto.fill(directiveStudent));
             break;
         case KASKKIRI_ENNIST:
             if (student != null) {

@@ -19,6 +19,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
+ *         &lt;element name="id" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="haridustase" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oppeasutus" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="oppAlgus" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
@@ -53,6 +54,7 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "eeIsikukaartOping", propOrder = {
+    "id",
     "haridustase",
     "oppeasutus",
     "oppAlgus",
@@ -80,6 +82,7 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class EeIsikukaartOping {
 
+    protected String id;
     @XmlElement(required = true)
     protected String haridustase;
     @XmlElement(required = true)
@@ -106,6 +109,30 @@ public class EeIsikukaartOping {
     protected String staatus;
     protected String tunnistusDiplom;
     protected List<EeIsikukaartOpingKutseEelkoolitus> kutseKoolitus;
+
+    /**
+     * Gets the value of the id property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * Sets the value of the id property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setId(String value) {
+        this.id = value;
+    }
 
     /**
      * Gets the value of the haridustase property.

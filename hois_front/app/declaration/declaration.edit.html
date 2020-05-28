@@ -162,7 +162,8 @@
               <th md-column>{{'declaration.subject' | translate}}</th>
               <th md-column>{{'declaration.teacher' | translate}}</th>
               <th md-column>{{'declaration.subgroup' | translate}}</th>
-              <th md-column>{{'declaration.eap_assessment' | translate}}</th>
+              <th md-column>{{'declaration.eap' | translate}}</th>
+              <th md-column>{{'declaration.assessment' | translate}}</th>
               <th md-column>{{'declaration.module_isRequired' | translate}}</th>
               <th md-column>{{'declaration.prerequisites' | translate}}</th>
               <th md-column>{{'studyMaterial.label' | translate}}</th>
@@ -189,7 +190,8 @@
                 </table>
               </td>
               <td md-cell>{{subject.subgroup != null ? currentLanguageNameField(subject.subgroup) : '-'}}</td>
-              <td md-cell>{{subject.subject.credits}} / {{subject.subject.assessment}}</td>
+              <td md-cell>{{subject.subject.credits}}</td>
+              <td md-cell>{{subject.subject.assessment}}</td>
               <td md-cell>{{subject.module != null ? currentLanguageNameField(subject.module) : ' - '}} / {{subject.isOptional ? 'main.no' : 'main.yes' | translate}}</td>
               <td md-cell>
                 <span ng-show="!hasPrerequisites(subject)"> - </span>
@@ -201,6 +203,12 @@
               <td md-cell>
                 <a ng-if="!subject.isAssessed" class="remove nomargin" ng-click="removeSubject(subject)">&times;</a>
               </td>
+            </tr>
+            <tr md-row class="border-top-line" style="font-weight: bold;">
+              <td md-cell>{{'main.OF' | translate}}</td>
+              <td md-cell colspan="2"></td>
+              <td md-cell>{{calculateAll(declaration.subjects)}} {{'declaration.eap' | translate}}</td>
+              <td md-cell colspan="5"></td>
             </tr>
           </tbody>
         </table>
@@ -243,5 +251,9 @@
       margin-right: 20px;
       display:block;
     }
+  }
+
+  tr.border-top-line, tr.border-top-line > td {
+    border-top: 1px solid #525252 !important;
   }
 </style>

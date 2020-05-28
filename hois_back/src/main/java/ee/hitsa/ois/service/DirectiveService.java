@@ -2,6 +2,7 @@ package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_AKAD;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_AKADK;
+import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_DUPLIKAAT;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_EKSMAT;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_ENNIST;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_FINM;
@@ -28,6 +29,7 @@ import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_VALIS;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_VALISKATK;
 import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_A;
 import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_K;
+import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_L;
 import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_O;
 import static ee.hitsa.ois.enums.StudentStatus.OPPURSTAATUS_V;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
@@ -36,12 +38,14 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsStringList;
 
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -71,6 +75,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Form;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.apelapplication.ApelSchool;
@@ -78,9 +83,12 @@ import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
+import ee.hitsa.ois.domain.diploma.Diploma;
+import ee.hitsa.ois.domain.diploma.DiplomaSupplement;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.directive.DirectiveStudentDuplicateForm;
 import ee.hitsa.ois.domain.directive.DirectiveStudentModule;
 import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
@@ -92,7 +100,10 @@ import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.DocumentStatus;
 import ee.hitsa.ois.enums.EhisStipendium;
+import ee.hitsa.ois.enums.FormStatus;
+import ee.hitsa.ois.enums.FormType;
 import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.MessageType;
@@ -139,6 +150,7 @@ import ee.hitsa.ois.web.commandobject.directive.DirectiveForm.DirectiveFormStude
 import ee.hitsa.ois.web.commandobject.directive.DirectiveSearchCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveStudentSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.directive.DiplomaStudentDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveCoordinatorDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveDto.DirectiveCancelDto;
@@ -178,6 +190,41 @@ public class DirectiveService {
             "d.id, d.headline, d.directive_nr, d.type_code, d.status_code, d.inserted, d.confirm_date";
     private static final String DIRECTIVE_LIST_FROM =
             "from directive d inner join classifier type on d.type_code=type.code inner join classifier status on d.status_code=status.code";
+    private static final String DIPLOMA_STUDENT_FROM = "from directive_student ds "
+            + "join directive d on d.id = ds.directive_id "
+            + "join diploma dip on dip.directive_id = ds.directive_id and dip.student_id = ds.student_id "
+            + "join form dip_f on dip_f.id = dip.form_id "
+            + "left join ( "
+                + "select "
+                    + "sup.diploma_id diploma_id, "
+                    + "(array_remove(array_agg(sup.id order by sup.diploma_supplement_id desc nulls last, sup.id desc), null))[1] as sup_id, "
+                    + "(array_remove(array_agg(sup.is_duplicate order by sup.diploma_supplement_id desc nulls last, sup.id desc), null))[1] as duplicate, "
+                    + "string_agg(sup_f.id\\:\\:varchar, ';') form_id, "
+                    + "string_agg(sup_f.full_code, ', ' order by sup.diploma_supplement_id desc nulls last, sup.id desc, sup_f.type_code, sup_f.numeral) as form "
+                + "from diploma_supplement sup join diploma_supplement_form dsf on "
+                + "dsf.diploma_supplement_id = sup.id "
+                + "join form sup_f on sup_f.id = dsf.form_id "
+                + "where sup.status_code in (:diplomaStatus) and sup_f.status_code = :formStatus "
+                    + "and sup_f.type_code in (:allowedFormTypes) and dsf.is_english is not true "
+                + "group by sup.diploma_id "
+            + ") supl on supl.diploma_id = dip.id "
+            + "left join ( "
+                + "select "
+                    + "sup.diploma_id diploma_id, "
+                    + "(array_remove(array_agg(sup.id order by sup.diploma_supplement_id desc nulls last, sup.id desc), null))[1] as sup_id, "
+                    + "(array_remove(array_agg(sup.is_duplicate_en order by sup.diploma_supplement_id desc nulls last, sup.id desc), null))[1] as duplicate, "
+                    + "string_agg(sup_f.id\\:\\:varchar, ';') form_id, "
+                    + "string_agg(sup_f.full_code, ', ' order by sup.diploma_supplement_id desc nulls last, sup.id desc, sup_f.type_code, sup_f.numeral) as form "
+                + "from diploma_supplement sup join diploma_supplement_form dsf on "
+                + "dsf.diploma_supplement_id = sup.id "
+                + "join form sup_f on sup_f.id = dsf.form_id "
+                + "where sup.status_en_code in (:diplomaStatus) and sup_f.status_code = :formStatus "
+                    + "and sup_f.type_code in (:allowedFormTypes) and dsf.is_english "
+                + "group by sup.diploma_id "
+            + ") supl_en on supl_en.diploma_id = dip.id ";
+    private static final String DIPLOMA_STUDENT_SELECT = "ds.student_id, dip.id, supl.sup_id, supl_en.sup_id as sup_en_id, dip_f.id form_id, "
+            + "supl.form_id as sup_f_id, supl_en.form_id as sup_en_f_id, dip_f.full_code, supl.form as sup_f, supl_en.form as sup_en_f, "
+            + "supl.duplicate as sup_dupl, supl_en.duplicate as sup_en_dupl, dip.is_duplicate";
 
     // maximum number of students returned by search for one directive
     private static final int STUDENTS_MAX = 100;
@@ -190,6 +237,7 @@ public class DirectiveService {
     static {
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_AKAD, EnumUtil.toNameList(OPPURSTAATUS_O));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_AKADK, EnumUtil.toNameList(OPPURSTAATUS_A));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_DUPLIKAAT, EnumUtil.toNameList(OPPURSTAATUS_L));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_EKSMAT, EnumUtil.toNameList(OPPURSTAATUS_O, OPPURSTAATUS_V));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_ENNIST, EnumUtil.toNameList(OPPURSTAATUS_K));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_FINM, EnumUtil.toNameList(OPPURSTAATUS_O));
@@ -259,10 +307,30 @@ public class DirectiveService {
                 setOccupations(dto);
             } else if (REVOCATION_DIRECTIVE_TYPES.contains(directiveType)) {
                 setExistingDirectiveStudents(dto, directiveType);
+            } else if (KASKKIRI_DUPLIKAAT.equals(directiveType)) {
+                setDiplomaDto(EntityUtil.getId(directive.getSchool()), dto);
             }
         }
         dto.setCanEditDirective(Boolean.valueOf(UserUtil.canEditDirective(user, directive)));
         return dto;
+    }
+
+    private void setDiplomaDto(Long schoolId, DirectiveDto dto) {
+        Set<Long> studentIds = dto.getStudents().stream().map(ds -> ds.getStudent()).collect(Collectors.toSet());
+        Map<Long, DiplomaStudentDto> studentDiplomas = studentDiplomas(schoolId, studentIds);
+        dto.getStudents().forEach(ds -> {
+            if (ds instanceof DirectiveStudentDto) {
+                DirectiveStudentDto dsDto = (DirectiveStudentDto) ds;
+                if (!studentDiplomas.containsKey(dsDto.getStudent())) {
+                    return;
+                }
+                if (dsDto.getDiplomaDto() != null) {
+                    dsDto.getDiplomaDto().fill(studentDiplomas.get(dsDto.getStudent()));
+                } else {
+                    dsDto.setDiplomaDto(studentDiplomas.get(dsDto.getStudent()));
+                }
+            } 
+        });
     }
 
     private void setExistingDirectiveStudents(DirectiveDto dto, DirectiveType directiveType) {
@@ -518,7 +586,7 @@ public class DirectiveService {
                 String idcode = dfs.getIdcode();
                 String foreignIdcode = dfs.getForeignIdcode();
                 if (!StringUtils.hasText(idcode) && ClassifierUtil.COUNTRY_ESTONIA.equals(dfs.getCitizenship())) {
-                    errors.add(new ErrorForField(Required.MESSAGE, DirectiveConfirmService.propertyPath(rowNum, "idcode")));
+                    errors.add(new ErrorForField("estonianIdcode2", DirectiveConfirmService.propertyPath(rowNum, "idcode")));
                 }
                 String citizenshipCode = dfs.getCitizenship();
                 Long curriculumVersionId = dfs.getCurriculumVersion();
@@ -666,6 +734,9 @@ public class DirectiveService {
                     studentService.cumLaudes(fetchedStudentIds, isHigher) : Collections.emptySet();
             Set<Long> studentsWithCertificate = !fetchedStudentIds.isEmpty() && KASKKIRI_LOPET.equals(directiveType) ?
                     occupationCertificates(fetchedStudentIds) : Collections.emptySet();
+            Map<Long, DiplomaStudentDto> studentDiplomas = KASKKIRI_DUPLIKAAT.equals(directiveType) ?
+                    studentDiplomas(EntityUtil.getId(directive.getSchool()), fetchedStudentIds) : Collections.emptyMap();
+                    
             List<DirectiveStudent> messagesToStudents = new ArrayList<>();
             for(DirectiveFormStudent formStudent : StreamUtil.nullSafeList(form.getStudents())) {
                 Long directiveStudentId = formStudent.getId();
@@ -707,6 +778,73 @@ public class DirectiveService {
                     break;
                 case KASKKIRI_AKAD:
                     adjustPeriod(directiveStudent);
+                    break;
+                case KASKKIRI_DUPLIKAAT:
+                    if (!studentDiplomas.containsKey(formStudent.getStudent())) {
+                        throw new ValidationFailedException("directive.diplomaDataNotExists");
+                    }
+                    // LOPET data
+                    directiveStudent.setCurriculumVersion(student.getCurriculumVersion());
+                    directiveStudent.setIsCumLaude(Boolean.valueOf(cumLaude.contains(studentId)));
+                    directiveStudent.setCurriculumGrade(getCurriculumGrade(studentId));
+                    directiveStudent.setIsOccupationExamPassed(Boolean.valueOf(studentsWithCertificate.contains(studentId)));
+                    
+                    if (!Boolean.TRUE.equals(formStudent.getDiplomaChk())
+                            && !Boolean.TRUE.equals(formStudent.getDiplomaSupplementChk())
+                            && !Boolean.TRUE.equals(formStudent.getDiplomaSupplementEnChk())) {
+                        // if no checkbox has been set then throw an error. Additional check in case if front check fails
+                        throw new ValidationFailedException("directive.studentAtLeastOneCheckbox");
+                    }
+                    
+                    // DUPLIKAAT data
+                    DiplomaStudentDto diplomaDto = studentDiplomas.get(formStudent.getStudent());
+                    if (Boolean.TRUE.equals(formStudent.getDiplomaChk())) {
+                        if (directiveStudent.getDiploma() == null) {
+                            directiveStudent.setDiploma(em.getReference(Diploma.class, diplomaDto.getDiploma()));
+                            directiveStudent.setDiplomaForm(em.getReference(Form.class, diplomaDto.getDiplomaForm()));
+                        }
+                    } else {
+                        directiveStudent.setDiploma(null);
+                        directiveStudent.setDiplomaForm(null);
+                    }
+                    
+                    Set<Long> existingFormIds = directiveStudent.getForms().stream().map(dsForm -> EntityUtil.getId(dsForm.getForm())).collect(Collectors.toSet());
+                    if (Boolean.TRUE.equals(formStudent.getDiplomaSupplementChk()) && diplomaDto.getDiplomaSupplement() != null) {
+                        if (!diplomaDto.getDiplomaSupplement().equals(EntityUtil.getNullableId(directiveStudent.getDiplomaSupplement()))) {
+                            directiveStudent.setDiplomaSupplement(em.getReference(DiplomaSupplement.class, diplomaDto.getDiplomaSupplement()));
+                            for (Long formId : diplomaDto.getDiplomaSupplementForms()) {
+                                if (existingFormIds.contains(formId)) {
+                                    continue;
+                                }
+                                DirectiveStudentDuplicateForm dsForm = new DirectiveStudentDuplicateForm();
+                                dsForm.setDirectiveStudent(directiveStudent);
+                                dsForm.setForm(em.getReference(Form.class, formId));
+                                dsForm.setEn(Boolean.FALSE);
+                                directiveStudent.getForms().add(dsForm);
+                            }
+                        }
+                    } else {
+                        directiveStudent.setDiplomaSupplement(null);
+                        directiveStudent.getForms().removeIf(dsForm -> Boolean.FALSE.equals(dsForm.getEn()));
+                    }
+                    if (Boolean.TRUE.equals(formStudent.getDiplomaSupplementEnChk()) && diplomaDto.getDiplomaSupplementEn() != null) {
+                        if (!diplomaDto.getDiplomaSupplementEn().equals(EntityUtil.getNullableId(directiveStudent.getDiplomaSupplementEn()))) {
+                            directiveStudent.setDiplomaSupplementEn(em.getReference(DiplomaSupplement.class, diplomaDto.getDiplomaSupplementEn()));
+                            for (Long formId : diplomaDto.getDiplomaSupplementFormsEn()) {
+                                if (existingFormIds.contains(formId)) {
+                                    continue;
+                                }
+                                DirectiveStudentDuplicateForm dsForm = new DirectiveStudentDuplicateForm();
+                                dsForm.setDirectiveStudent(directiveStudent);
+                                dsForm.setForm(em.getReference(Form.class, formId));
+                                dsForm.setEn(Boolean.TRUE);
+                                directiveStudent.getForms().add(dsForm);
+                            }
+                        }
+                    } else {
+                        directiveStudent.setDiplomaSupplementEn(null);
+                        directiveStudent.getForms().removeIf(dsForm -> Boolean.TRUE.equals(dsForm.getEn()));
+                    }
                     break;
                 case KASKKIRI_INDOK:
                     bindDirectiveStudentModules(directiveStudent, formStudent);
@@ -950,7 +1088,7 @@ public class DirectiveService {
             }
             return DirectiveStudentDto.of(student, directiveType);
         }, students);
-        if(KASKKIRI_LOPET.equals(directiveType)) {
+        if(KASKKIRI_LOPET.equals(directiveType) || KASKKIRI_DUPLIKAAT.equals(directiveType)) {
             Set<Long> fetchedStudentIds = StreamUtil.toMappedSet(DirectiveStudentDto::getStudent, result);
             if (!fetchedStudentIds.isEmpty()) {
                 boolean isHigher = cmd.getIsHigher().booleanValue();
@@ -966,6 +1104,14 @@ public class DirectiveService {
                     dto.setIsOccupationExamPassed(Boolean.valueOf(studentsWithCertificate.contains(studentId)));
                 }
                 setStudentOccupations(result, fetchedStudentIds, isHigher);
+            }
+            if (KASKKIRI_DUPLIKAAT.equals(directiveType)) {
+                Map<Long, DiplomaStudentDto> studentDiplomas = studentDiplomas(schoolId, studentIds);
+                for (DirectiveStudentDto dto : result) {
+                    if (studentDiplomas.containsKey(dto.getStudent())) {
+                        dto.setDiplomaDto(studentDiplomas.get(dto.getStudent()));
+                    }
+                }
             }
         } else if (KASKKIRI_STIPTOET.equals(directiveType)) {
             Map<Long, List<ScholarshipApplicationSelectDto>> scholarshipApplications = studentScholarshipApplications(
@@ -1253,6 +1399,50 @@ public class DirectiveService {
         }, Collectors.toList())));
     }
 
+    private Map<Long, DiplomaStudentDto> studentDiplomas(Long schoolId, Collection<Long> studentIds) {
+        if (studentIds == null || studentIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(DIPLOMA_STUDENT_FROM);
+        qb.parameter("allowedFormTypes", EnumUtil.toNameList(
+                // vocational
+                FormType.LOPUBLANKETT_HIN, FormType.LOPUBLANKETT_HINL,
+                // higher
+                FormType.LOPUBLANKETT_R, FormType.LOPUBLANKETT_DS, FormType.LOPUBLANKETT_S));
+        
+        qb.filter("ds.canceled = false");
+        qb.requiredCriteria("d.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("d.type_code in (:directiveType)", "directiveType", EnumUtil.toNameList(DirectiveType.KASKKIRI_LOPET, DirectiveType.KASKKIRI_DUPLIKAAT));
+        qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+        qb.requiredCriteria("dip.status_code in (:diplomaStatus)", "diplomaStatus", EnumUtil.toNameList(DocumentStatus.LOPUDOK_STAATUS_T, DocumentStatus.LOPUDOK_STAATUS_V));
+        qb.requiredCriteria("dip_f.status_code = :formStatus", "formStatus", FormStatus.LOPUBLANKETT_STAATUS_T);
+        
+        qb.requiredCriteria("ds.student_id in (:studentIds)", "studentIds", studentIds);
+        
+        List<?> results = qb.select(DIPLOMA_STUDENT_SELECT, em).getResultList();
+        return results.stream().map(r -> {
+            DiplomaStudentDto dto = new DiplomaStudentDto();
+            dto.setStudent(resultAsLong(r, 0));
+            
+            dto.setDiploma(resultAsLong(r, 1));
+            dto.setDiplomaFullCode(resultAsString(r, 7));
+            dto.setDiplomaForm(resultAsLong(r, 4));
+            dto.setDuplicate(resultAsBoolean(r, 12));
+            
+            dto.setDiplomaSupplement(resultAsLong(r, 2));
+            dto.setDiplomaSupplementFullCode(resultAsString(r, 8));
+            dto.setDiplomaSupplementForms(resultAsStringList(r, 5, ";").stream().map(Long::valueOf).collect(Collectors.toSet()));
+            dto.setSupplementDuplicate(resultAsBoolean(r, 10));
+            
+            dto.setDiplomaSupplementEn(resultAsLong(r, 3));
+            dto.setDiplomaSupplementFullCodeEn(resultAsString(r, 9));
+            dto.setDiplomaSupplementFormsEn(resultAsStringList(r, 6, ";").stream().map(Long::valueOf).collect(Collectors.toSet()));
+            dto.setSupplementEnDuplicate(resultAsBoolean(r, 11));
+            return dto;
+        }).collect(Collectors.toMap(DiplomaStudentDto::getStudent, dto -> dto, (o, n) -> o));
+    }
+    
     /**
      * Search students for adding into directive
      *
@@ -1335,6 +1525,17 @@ public class DirectiveService {
             // nominal study end not passed
             qb.requiredCriteria("s.nominal_study_end > :now", "now", LocalDate.now());
             break;
+        case KASKKIRI_DUPLIKAAT:
+            // TODO place values as parameters
+            qb.filter("exists(select 1 "
+                    + "from directive_student ds "
+                    + "join directive d on d.id = ds.directive_id "
+                    + "join diploma dip on dip.directive_id = ds.directive_id and dip.student_id = ds.student_id "
+                    + "join form dip_f on dip_f.id = dip.form_id "
+                    + "where ds.canceled = false and d.school_id = :schoolId and ds.student_id = s.id "
+                    + "and d.type_code in ('KASKKIRI_LOPET', 'KASKKIRI_DUPLIKAAT') and d.status_code = 'KASKKIRI_STAATUS_KINNITATUD' "
+                    + "and dip.status_code not in ('LOPUDOK_STAATUS_K', 'LOPUDOK_STAATUS_C') and dip_f.status_code = 'LOPUBLANKETT_STAATUS_T')");
+            break;
         case KASKKIRI_EKSMAT:
             // no confirmed scholarship
             qb.requiredCriteria("not exists(select a.id from directive_student ds join directive d on ds.directive_id = d.id join scholarship_application a on ds.scholarship_application_id = a.id join scholarship_term t on a.scholarship_term_id = t.id " +
@@ -1358,7 +1559,7 @@ public class DirectiveService {
             qb.parameter("existingLopDirective", DirectiveType.KASKKIRI_INDOKLOP.name());
             break;
         case KASKKIRI_LOPET:
-            qb.filter("scc.study_backlog = 0");
+            qb.filter("scc.study_backlog = 0 and scc.is_modules_ok = true");
             break;
         case KASKKIRI_OKOORM:
             qb.filter("c.is_higher = true");
@@ -1781,7 +1982,10 @@ public class DirectiveService {
             app.setStatus(em.getReference(Classifier.class, ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
             EntityUtil.save(app, em);
         }
-        DirectiveUtil.cancelFormsAndDocuments(user.getUsername(), directiveStudent, em);
+        
+        if (!ClassifierUtil.equals(DirectiveType.KASKKIRI_DUPLIKAAT, directiveStudent.getDirective().getType())) {
+            DirectiveUtil.cancelFormsAndDocuments(user.getUsername(), directiveStudent, em);
+        }
     }
 
     private List<StudentGroup> findValidStudentGroups(Long schoolId, boolean withoutGuestGroups) {

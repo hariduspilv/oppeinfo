@@ -26,6 +26,7 @@ public class StudentSupportServiceForm {
     private Boolean isPublic;
     private OisFileCommand file;
     private String entrySubmitter;
+    private Boolean ehis = Boolean.FALSE;
 
     public Long getId() {
         return id;
@@ -89,5 +90,13 @@ public class StudentSupportServiceForm {
 
     public void setEntrySubmitter(String entrySubmitter) {
         this.entrySubmitter = entrySubmitter;
+    }
+
+    public Boolean getEhis() {
+        return ehis;
+    }
+
+    public void setEhis(Boolean ehis) {
+        this.ehis = ehis;
     }
 }

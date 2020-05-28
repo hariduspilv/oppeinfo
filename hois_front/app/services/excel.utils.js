@@ -9,11 +9,17 @@ angular.module('hitsaOis').factory('ExcelUtils', function (QueryUtils, $http, bu
      * Max timeout set by browser is 2 min
      * Polling to be added
     */
-    factory.get = function(url, name) {
+    factory.get = function(url, name, scope) {
+        if (scope) {
+            QueryUtils.loadingWheel(scope, true);
+        }
         $http.get(url, {
             responseType: 'arraybuffer'
         }).then(function(res) {
             factory.downloadResponse(res, name);
+            if (scope) {
+                QueryUtils.loadingWheel(scope, false);
+            }
         });
     };
     

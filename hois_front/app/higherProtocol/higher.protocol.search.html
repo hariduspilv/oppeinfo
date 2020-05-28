@@ -7,7 +7,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="50" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'higherProtocol.studyPeriod' | translate}}</label>
-            <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required autofocus sorted-query="true"></hois-select>
+            <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" autofocus sorted-query="true"></hois-select>
           </md-input-container>
           <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
             <label class="textInput">{{'higherProtocol.number' | translate}}</label>
@@ -21,9 +21,8 @@
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="50" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'higherProtocol.subject' | translate}}</label>
-            <input type="text" ng-model="criteria.subject" style="padding-right: 4px;width: 100%">
-            <!-- <hois-select ng-model="criteria.subject" type="subject" criteria="{higher: true}"></hois-select> -->
+            <label class="textInput">{{(moduleProtocols ? 'higherProtocol.subjectModule' : 'higherProtocol.subject') | translate}}</label>
+            <input type="text" ng-model="criteria.subjectModule" style="padding-right: 4px;width: 100%">
           </md-input-container>
           <md-input-container ng-show="auth.isAdmin() || auth.isLeadingTeacher()" flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
             <label class="textInput">{{'higherProtocol.teacher' | translate}}</label>
@@ -65,10 +64,20 @@
             </div>
           </div>
         </div>
+
+        <div ng-if="moduleProtocols" layout="row">
+          <md-input-container flex>
+            <md-checkbox ng-model="criteria.showOnlyModuleProtocols" aria-label="{{'higherProtocol.showOnlyModuleProtocols' | translate}}">
+              {{'higherProtocol.showOnlyModuleProtocols' | translate}}</md-checkbox>
+          </md-input-container>
+        </div>
+
         <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
           <md-button class="md-raised" ng-href="#/higherProtocols/new" ng-if="formState.canCreate">{{'main.button.create' | translate}}</md-button>
+          <md-button class="md-raised" ng-href="#/higherProtocols/new?moduleProtocol" ng-if="formState.canCreateModuleProtocol">
+            {{'higherProtocol.addNewModuleProtocol' | translate}}</md-button>
         </div>
       </form>
     </fieldset>
@@ -80,15 +89,17 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="protocolNr">{{'higherProtocol.number' | translate}}</th>
-            <th md-column md-order-by="protocolHdata.type.{{currentLanguageNameField()}}">{{'higherProtocol.type' | translate}}</th>
-            <th md-column md-order-by="protocolHdata.subjectStudyPeriod.subject.{{currentLanguageNameField()}}">{{'higherProtocol.subject' | translate}}</th>
+            <th md-column md-order-by="p.protocolNr">{{'higherProtocol.number' | translate}}</th>
+            <th md-column md-order-by="phd.type.{{currentLanguageNameField()}}">{{'higherProtocol.type' | translate}}</th>
+            <th md-column md-order-by="coalesce(s.{{currentLanguageNameField()}}, cvh.{{currentLanguageNameField()}})">
+              {{(moduleProtocols ? 'higherProtocol.subjectModule' : 'higherProtocol.subject') | translate}}
+            </th>
             <th md-column>{{'higherProtocol.teacher' | translate}}</th>
-            <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'main.status' | translate}}</th>
-            <th md-column md-order-by="inserted">{{'higherProtocol.insertedDate' | translate}}</th>
-            <th md-column md-order-by="finalDate">{{'higherProtocol.protocolDate' | translate}}</th>
-            <th md-column md-order-by="confirmDate">{{'higherProtocol.confirmedDate' | translate}}</th>
-            <th md-column md-order-by="confirmer">{{'higherProtocol.confirmer' | translate}}</th>
+            <th md-column md-order-by="p.status.{{currentLanguageNameField()}}">{{'main.status' | translate}}</th>
+            <th md-column md-order-by="p.inserted">{{'higherProtocol.insertedDate' | translate}}</th>
+            <th md-column md-order-by="p.finalDate">{{'higherProtocol.protocolDate' | translate}}</th>
+            <th md-column md-order-by="p.confirmDate">{{'higherProtocol.confirmedDate' | translate}}</th>
+            <th md-column md-order-by="p.confirmer">{{'higherProtocol.confirmer' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
@@ -96,7 +107,10 @@
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell><a ng-href="#/higherProtocols/{{::row.id}}/view">{{::row.protocolNr}}</a></td>
             <td md-cell>{{currentLanguageNameField(row.protocolType)}}</td>
-            <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
+            <td md-cell>
+              <span ng-if="row.subject">{{currentLanguageNameField(row.subject)}}</span>
+              <span ng-if="row.module">{{currentLanguageNameField(row.module)}}</span>
+            </td>
             <td md-cell>
               <table>
                 <tr ng-repeat="teacher in row.teachers | orderBy">

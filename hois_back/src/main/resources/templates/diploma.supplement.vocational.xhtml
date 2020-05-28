@@ -11,6 +11,9 @@
     <div id="footer">
         <span id="pagenumber"/>/<span id="pagecount"/>
     </div>
+   	{% if content.duplicate %}
+   	<div style="float: right; text-transform: uppercase; font-weight: bold;">{{ "diploma.duplicate" | translate }}</div>
+   	{% endif %}
     <div class="padding-top"></div>
     <div class="general-info">
         <div class="diploma-nr">{{ content.diplomaNr }}</div>

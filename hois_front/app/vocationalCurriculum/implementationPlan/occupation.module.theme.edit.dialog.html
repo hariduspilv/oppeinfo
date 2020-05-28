@@ -132,7 +132,7 @@
               <div flex layout="row">
                 <span flex="30" class="common-label">{{'theme.assessmentType' | translate}}</span>
 
-                  <md-radio-group ng-model="occupationModuleTheme.assessment" layout="row" ng-disabled="hasBaseModule || occupationModuleTheme.moduleOutcomes">
+                  <md-radio-group ng-model="occupationModuleTheme.assessment" layout="row" ng-disabled="hasBaseModule">
                     <md-radio-button ng-repeat="option in assessments | orderBy: 'nameEt' track by option.code" ng-value="option.code"
                     aria-label="{{ currentLanguageNameField(option) }}">
                       {{ currentLanguageNameField(option) }}
@@ -145,9 +145,9 @@
               </div>
               <div>&nbsp;</div>
 
-              <md-checkbox ng-model="occupationModuleTheme.moduleOutcomes" ng-change="moduleOutcomesChanged()"
+              <md-checkbox ng-model="occupationModuleTheme.moduleOutcomes"
                 ng-disabled="!occupationModuleTheme.outcomes || occupationModuleTheme.outcomes.length === 0"
-                aria-label="is module outcomes">{{'module.themeGradedByOutcomes' | translate}}</md-checkbox>
+                aria-label="is module outcomes">{{'module.gradedByOutcomes' | translate}}</md-checkbox>
 
               <md-input-container flex ng-show="occupationModuleTheme.assessment">
                 <label>{{'module.totalGradeDescription' | translate}}</label>

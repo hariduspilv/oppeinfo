@@ -14,6 +14,9 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   var STUDENT_ROW_HEIGHT = 33;
   var STUDENT_ROW_WITH_INPUT_HEIGHT = 49;
   var ACCEPTED_ABSENCES = ['PUUDUMINE_V', 'PUUDUMINE_PR'];
+  var NORMAL_MAX_LESSONS = 99;
+  var INDIVIDUAL_STUDY_MAX_LESSONS = 9999;
+  var ABSENCE_MAX_LESSONS = 30;
 
   $scope.formState = {
     gradeInputAsSelect: true,
@@ -323,6 +326,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       dialogScope.grades = $scope.grades;
       dialogScope.gradeInputRegex = $scope.gradeInputRegex;
       dialogScope.hideInvalid = $scope.hideInvalid;
+      dialogScope.maxLessons = NORMAL_MAX_LESSONS;
 
       dialogScope.entryDateChanged = function () {
         getStudentsWithAcceptedAbsences(true);
@@ -362,7 +366,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
               if (studentAbsences.lessons) {
                 var overlappingLessonAbsence = false;
                 var firstLessonNr = dialogScope.journalEntry.startLessonNr || 1;
-                var lastLessonNr = firstLessonNr + ((dialogScope.journalEntry.lessons || 1) - 1);
+                var lastLessonNr = firstLessonNr + lessonAbsencesCount() - 1;
 
                 studentAbsences.lessons.forEach(function (lessonNr) {
                   if (!overlappingLessonAbsence) {
@@ -576,6 +580,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
           dialogScope.selectedCapacityTypes[it] = true;
         });
         dialogScope.canDeleteEntries = canDeleteEntries();
+        setMaxLessons(dialogScope.journalEntry.entryType);
       }
 
       setForbiddenTypes(dialogScope, editEntity);
@@ -697,6 +702,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         if (entryType === 'SISSEKANNE_L') {
           setApelTransferredResultAsFinalResult();
         }
+        setMaxLessons(entryType);
       };
 
       function setJournalEntryDefaultName(entryType) {
@@ -714,6 +720,19 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         });
       }
 
+      function setMaxLessons(entryType) {
+        dialogScope.maxLessons = ['SISSEKANNE_I', 'SISSEKANNE_P'].indexOf(entryType) !== -1 ?
+          INDIVIDUAL_STUDY_MAX_LESSONS : NORMAL_MAX_LESSONS;
+      }
+
+      dialogScope.lessonAbsenceList = function() {
+        return [].constructor(lessonAbsencesCount());
+      };
+
+      function lessonAbsencesCount() {
+        return dialogScope.journalEntry.lessons ? Math.min(dialogScope.journalEntry.lessons, ABSENCE_MAX_LESSONS) : 1;
+      }
+
       dialogScope.removeStudentHistory = function (row) {
         var entryStudent = dialogScope.journalEntryStudents[row.id];
         entryStudent.journalStudent = row.id;
@@ -726,13 +745,20 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       };
 
       dialogScope.saveEntry = function () {
-        var lessons = dialogScope.journalEntry.lessons || 1;
+        var lessons = lessonAbsencesCount();
 
-        // create lesson absences when there is an overlap
         dialogScope.journalStudents.forEach(function(js) {
           if (StudentUtil.isActive(js.status)) {
             var entryStudent = dialogScope.journalEntryStudents[js.id];
 
+            // remove absences that were added when lessons count was higher than it is now
+            angular.forEach(entryStudent.lessonAbsences, function (lessonAbsence) {
+              if (lessonAbsence.lessonNr > lessons) {
+                dialogScope.journalEntryStudentAbsenceChanged(js, null, null, lessonAbsence.lessonNr);
+              }
+            });
+
+            // create lesson absences when there is an overlap
             if (!entryStudent.isLessonAbsence && entryStudent.hasOverlappingLessonAbsence && entryStudent.absence === 'PUUDUMINE_V') {
               for (var i = 1; i <= lessons; i++) {
                 if (!angular.isObject(entryStudent.lessonAbsences[i])) {
@@ -1040,6 +1066,12 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   function showOutcomeDialog(outcome) {
     dialogService.showDialog('journal/outcome.dialog.html', function (dialogScope) {
       dialogScope.outcome = outcome;
+      if (outcome.connectedStudentGroups.length !== 0) {
+        var connectedStudentGroups = outcome.connectedStudentGroups.map(function (sg) {
+          return $scope.currentLanguageNameField(sg);
+        }).join(', ');
+        dialogScope.studentGroups = ' (' + connectedStudentGroups + ')';
+      }
       dialogScope.gradeInputAsSelect = $scope.formState.gradeInputAsSelect;
       dialogScope.grades = $scope.grades;
       dialogScope.gradeInputRegex = $scope.gradeInputRegex;
@@ -1050,7 +1082,11 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
       dialogScope.journalOccupationStudents = [];
       dialogScope.journalStudents.forEach(function (it) {
-        dialogScope.journalOccupationStudents[it.studentId] = { studentId: it.studentId, canEdit: true };
+        dialogScope.journalOccupationStudents[it.studentId] = {
+          studentId: it.studentId,
+          canEdit: true,
+          isCurriculumOutcome: it.curriculumId === outcome.curriculumId
+        };
       });
 
       outcome.outcomeStudents.forEach(function (it) {
@@ -1059,6 +1095,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
           classifierMapper.objectmapper(resultHistory);
         });
 
+        it.isCurriculumOutcome = (dialogScope.journalOccupationStudents[it.studentId] === undefined ? false : dialogScope.journalOccupationStudents[it.studentId].isCurriculumOutcome);
         dialogScope.journalOccupationStudents[it.studentId] = it;
       });
 

@@ -9,6 +9,10 @@
 		    margin: 70px;
 		}
 		
+		body {
+			margin-bottom: 0;
+		}
+		
 		body, h2 {
 			font-size: 12pt;
 		}
@@ -84,8 +88,8 @@
 		{% for entry in content.services %}
 		<tr>
 			<td>{{entry.entryDate.toString() | date(existingFormat='yyyy-MM-dd', format='dd.MM.yyyy')}}</td>
-			<td>{{entry.title}}</td>
-			<td>
+			<td class="break-long-words">{{entry.title}}</td>
+			<td class="break-long-words">
 			{% if entry.contentArr is not empty %}
 				<ul style="padding-left: 30px !important;">
 				{% for classifier in entry.contentArr %}

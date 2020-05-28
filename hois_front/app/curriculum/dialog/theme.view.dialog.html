@@ -1,0 +1,137 @@
+<md-dialog aria-label="vocational curriculum implementation plan module theme add dialog" flex="60" flex-sm="80" flex-xs="100" class="form-readonly">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2 flex>{{"module.viewingTheme" | translate}}</h2>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <div class="ois-form-layout-padding" layout="column" ng-cloak>
+        <md-input-container>
+          <label>{{'theme.name' | translate}}</label>
+          <hois-value value="occupationModuleTheme.nameEt"></hois-value>
+        </md-input-container>
+
+        <div layout="column" layout-gt-md="row">
+          <div layout="column" layout-gt-sm="row" flex-gt-md="50" flex="100">
+            <div flex-gt-sm="40" flex="100" style="font-size: 13px; color: rgba(0, 0, 0, 0.87);">
+              {{'theme.capacityAndUnit' | translate}}
+            </div>
+            <br>
+            <div layout="row" flex-gt-sm="60" flex="100">
+              <md-input-container flex-gt-sm="50" flex="100">
+                <label>EKAP</label>
+                <hois-value value="occupationModuleTheme.credits"></hois-value>
+              </md-input-container>
+
+              <md-input-container flex-gt-sm="50" flex="100">
+                <label>{{'main.hour' | translate}}</label>
+                <hois-value value="occupationModuleTheme.hours"></hois-value>
+              </md-input-container>
+            </div>
+          </div>
+          <div layout="row" flex-gt-md="50" flex="100">
+            <md-input-container flex-gt-sm="50" flex="100">
+              <label>{{'theme.proportionInModule' | translate}}</label>
+              <hois-value value="occupationModuleTheme.proportion"></hois-value>
+            </md-input-container>
+
+            <md-input-container flex-gt-sm="50" flex="100">
+              <label>{{'module.studyYear' | translate}}</label>
+              <hois-value value="occupationModuleTheme.studyYearNumber"></hois-value>
+            </md-input-container>
+          </div>
+        </div>
+        <div flex>
+          <fieldset tabindex="1">
+            <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'theme.capacityDistribution' | translate}}</legend>
+            <table flex class="module-capacities">
+              <tr style="padding-bottom:1em" flex class="secondary-table-header">
+                <td></th>
+                <td>{{'module.capacity' | translate}}</th>
+                <td>{{'module.contactStudy' | translate}}</th>
+              </tr>
+              <tr ng-repeat="item in occupationModuleTheme.capacities | orderBy: 'capacityType' track by $index" class="secondary-table-row">
+                <td>{{item.capacityType}}</td>
+                <td>{{item.hours}}</td>
+                <td>{{item.contact ? 'main.yes' : 'main.no' | translate}}</td>
+              </tr>
+            </table>
+          </fieldset>
+        </div>
+        <div>&nbsp;</div>
+
+        <md-input-container flex>
+          <label>{{'module.subthemes' | translate}}</label>
+          <hois-value value="occupationModuleTheme.subthemes"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex>
+          <label>{{'theme.connectionToStudyOutcome' | translate}}</label>
+          <hois-value value="(occupationModuleTheme.outcomes | orderBy).join('\n')"></hois-value>
+        </md-input-container>
+
+        <div flex>
+          <fieldset tabindex="2">
+            <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.themeGradeFormation' | translate}}</legend>
+            <div layout="column" style="overflow: auto">
+              <div flex layout="row">
+                <span flex="30" class="common-label">{{'theme.assessmentType' | translate}}</span>
+                <md-radio-group ng-model="occupationModuleTheme.assessmentCode" layout="row" disabled style="margin-top: 2px">
+                  <md-radio-button ng-repeat="option in assessments | orderBy: 'nameEt' track by option.code" ng-value="option.code"
+                  aria-label="{{ currentLanguageNameField(option) }}">
+                    {{ currentLanguageNameField(option) }}
+                  </md-radio-button>
+                  <md-radio-button ng-value="null" aria-label="{{'module.noAssessment' | translate}}">
+                    {{'module.noAssessment' | translate}}
+                  </md-radio-button>
+                </md-radio-group>
+              </div>
+              <div>&nbsp;</div>
+
+              <md-input-container>
+                <label>{{'module.gradedByOutcomes' | translate}}</label>
+                <hois-value value="occupationModuleTheme.moduleOutcomes ? 'main.yes' : 'main.no' | translate"></hois-value>
+              </md-input-container>
+
+              <md-input-container flex ng-show="occupationModuleTheme.assessment">
+                <label>{{'module.totalGradeDescription' | translate}}</label>
+                <hois-value value="occupationModuleTheme.totalGradeDescription"></hois-value>
+              </md-input-container>
+              <div ng-show="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_E'" layout="column" flex>
+                <md-input-container flex>
+                  <label>{{'module.grade3Description' | translate}}</label>
+                  <hois-value value="occupationModuleTheme.grade3Description"></hois-value>
+                </md-input-container>
+                <md-input-container flex>
+                  <label>{{'module.grade4Description' | translate}}</label>
+                  <hois-value value="occupationModuleTheme.grade4Description"></hois-value>
+                </md-input-container>
+                <md-input-container flex>
+                  <label>{{'module.grade5Description' | translate}}</label>
+                  <hois-value value="occupationModuleTheme.grade5Description"></hois-value>
+                </md-input-container>
+              </div>
+              <div ng-show="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_M'" layout="column" flex>
+                <md-input-container flex>
+                  <label>{{'module.gradeADescription' | translate}}</label>
+                  <hois-value value="occupationModuleTheme.passDescription"></hois-value>
+                </md-input-container>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+        <div>&nbsp;</div>
+      </div>
+    </md-dialog-content>
+
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

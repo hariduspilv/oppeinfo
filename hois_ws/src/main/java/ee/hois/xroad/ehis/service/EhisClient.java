@@ -10,6 +10,8 @@ import ee.hois.soap.SoapHandler;
 import ee.hois.soap.SoapUtil;
 import ee.hois.xroad.ehis.generated.EhisPortType;
 import ee.hois.xroad.ehis.generated.EhisService;
+import ee.hois.xroad.ehis.generated.InnoveAjalugu;
+import ee.hois.xroad.ehis.generated.InnoveAjaluguResponse;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
 import ee.hois.xroad.ehis.generated.LaeKorgharidus;
 import ee.hois.xroad.ehis.generated.LaeKorgharidusResponse;
@@ -91,6 +93,19 @@ public class EhisClient {
             return new EhisOisOppekavaStaatusResponse(ctx, resp.getInfoteated().getInfoteade());
         });
         return result != null ? result : new EhisOisOppekavaStaatusResponse(ctx, null);
+    }
+    
+    public EhisInnoveAjaluguResponse innoveAjalugu(XRoadHeaderV4 header, InnoveAjalugu innoveAjalugu) {
+        EhisPortType port = initializePort(header);
+        LogContext ctx = ctx(port);
+        
+        EhisInnoveAjaluguResponse result = SoapUtil.withExceptionHandler(ctx, () -> {
+            InnoveAjaluguResponse response = port.innoveAjalugu(innoveAjalugu);
+            
+            return new EhisInnoveAjaluguResponse(ctx, response);
+        });
+        
+        return result != null ? result : new EhisInnoveAjaluguResponse(ctx, null);
     }
 
     private EhisPortType initializePort(XRoadHeaderV4 header) {

@@ -189,6 +189,11 @@
           </div>
         </md-input-container>
 
+        <md-input-container class="md-block" ng-if="schoolModuleGrades">
+          <md-checkbox ng-model="data.isGrade" name="isGrade">
+              {{'module.isGrade' | translate}}
+          </md-checkbox>
+        </md-input-container>
         <span flex></span>
       </div>
     </div>

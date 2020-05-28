@@ -972,7 +972,7 @@ table.nowrap-first td:first-child {
 
 .occupation-header
 {
-	background-color:#E0E0E0!important;
+	background-color:#E0E0E0 ;
 	color: rgba(0,0,0,0.87)!important;
 	font-weight:normal!important;
   font-size:13px;
@@ -1384,7 +1384,7 @@ th.bordered[md-column] {
 }
 
 .goodResult {
-  color: green;
+  color: #4CAF50;
 }
 
 .protocolGradeSelect {

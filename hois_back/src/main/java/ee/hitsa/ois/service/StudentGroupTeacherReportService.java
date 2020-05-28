@@ -170,13 +170,15 @@ public class StudentGroupTeacherReportService {
             moduleIds.addAll(allResults.map(StudentResultDto::getModuleId).collect(Collectors.toSet()));
             moduleIds.addAll(curriculumVersionModules);
 
-            modules = curriculumModules(criteria.getStudentGroup(), moduleIds);
             Map<Long, List<CurriculumModuleOutcomeResult>> outcomesByModules = new HashMap<>();
-            if (Boolean.TRUE.equals(criteria.getAllModulesAndOutcomes())) {
-                outcomesByModules = progressReportOutcomes(moduleIds);
+            if (!moduleIds.isEmpty()) {
+                modules = curriculumModules(criteria.getStudentGroup(), moduleIds);
+                if (Boolean.TRUE.equals(criteria.getAllModulesAndOutcomes())) {
+                    outcomesByModules = progressReportOutcomes(moduleIds);
+                }
+                setModulesData(modules, new HashMap<>(), new HashMap<>(), new HashMap<>(), outcomesByModules,
+                        criteria.getModuleGrade());
             }
-            setModulesData(modules, new HashMap<>(), new HashMap<>(), new HashMap<>(),
-                    outcomesByModules, criteria.getModuleGrade());
 
             moduleTypes = moduleTypes(modules);
             resultColumns = resultColumns(criteria, modules);
@@ -210,11 +212,11 @@ public class StudentGroupTeacherReportService {
                 studentIds, false);
         Set<Long> cumLaudes = studentService.cumLaudes(studentIds, false);
 
-        List<?> data = em.createNativeQuery("select scc.student_id, scc.study_backlog, scc.average_mark" +
+        List<?> data = em.createNativeQuery("select scc.student_id, (scc.study_backlog = 0 and scc.is_modules_ok = true) fulfilled, scc.average_mark" +
                 " from student_curriculum_completion scc where scc.student_id in (:studentIds)")
                 .setParameter("studentIds", studentIds)
                 .getResultList();
-        Map<Long, BigDecimal> backlogs = StreamUtil.toMap(r -> resultAsLong(r, 0), r -> resultAsDecimal(r, 1), data);
+        Map<Long, Boolean> curriculumFulfilled = StreamUtil.toMap(r -> resultAsLong(r, 0), r -> resultAsBoolean(r, 1), data);
         Map<Long, BigDecimal> weighedAverageMarks = StreamUtil.toMap(r -> resultAsLong(r, 0), r -> resultAsDecimal(r, 2), data);
         Set<Long> studentsThatHavePassedOccupationExam = studentsThatHavePassedOccupationExam(studentIds);
 
@@ -229,7 +231,7 @@ public class StudentGroupTeacherReportService {
             }
             progress.setIsOccupationExamPassed(Boolean.valueOf(studentsThatHavePassedOccupationExam.contains(student.getId())));
             progress.setIsCumLaude(Boolean.valueOf(cumLaudes.contains(student.getId())));
-            progress.setIsCurriculumFulfilled(BigDecimal.ZERO.compareTo(backlogs.get(student.getId())) == 0);
+            progress.setIsCurriculumFulfilled(curriculumFulfilled.get(student.getId()));
             progress.setWeightedAverageGrade(weighedAverageMarks.get(student.getId()));
             student.setProgress(progress);
         }
@@ -804,14 +806,14 @@ public class StudentGroupTeacherReportService {
         qb.filter("(jes.absence_code is not null or jesla.absence_code is not null)");
 
         qb.optionalCriteria("j.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
-        qb.optionalCriteria("coalesce(je.entry_date, jes.absence_inserted) >= :entryFrom", "entryFrom",
+        qb.optionalCriteria("coalesce(je.entry_date, jes.absence_inserted, jesla.absence_inserted) >= :entryFrom", "entryFrom",
                 criteria.getFrom(), DateUtils::firstMomentOfDay);
-        qb.optionalCriteria("coalesce(je.entry_date, jes.absence_inserted) <= :entryThru", "entryThru",
+        qb.optionalCriteria("coalesce(je.entry_date, jes.absence_inserted, jesla.absence_inserted) <= :entryThru", "entryThru",
                 criteria.getThru(), DateUtils::lastMomentOfDay);
 
         if (criteria.getStudyPeriod() != null) {
-            qb.filter("coalesce(je.entry_date, jes.absence_inserted) >= :studyPeriodStart "
-                    + "and coalesce(je.entry_date, jes.absence_inserted) <= :studyPeriodEnd");
+            qb.filter("coalesce(je.entry_date, jes.absence_inserted, jesla.absence_inserted) >= :studyPeriodStart "
+                    + "and coalesce(je.entry_date, jes.absence_inserted, jesla.absence_inserted) <= :studyPeriodEnd");
             qb.parameter("studyPeriodStart", DateUtils.firstMomentOfDay(criteria.getStudyPeriodStart()));
             qb.parameter("studyPeriodEnd", DateUtils.lastMomentOfDay(criteria.getStudyPeriodEnd()));
         }

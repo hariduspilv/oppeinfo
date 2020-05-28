@@ -6,6 +6,7 @@ public enum EhisStudentDataType {
     DORMITORY,
     FOREIGN_STUDY,
     GRADUATION,
+    DUPLICATE,
     VOTA,
     SPECIAL_NEEDS,
     GUEST_STUDENTS

@@ -22,15 +22,14 @@ import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo;
-import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
-import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.ErrorForField;
 import ee.hitsa.ois.web.commandobject.juhan.JuhanEventForm;
 import ee.hitsa.ois.web.commandobject.juhan.JuhanEventRoomForm;
 import ee.hitsa.ois.web.commandobject.juhan.JuhanEventTeacherForm;
 import ee.hitsa.ois.web.commandobject.juhan.JuhanRoomCommand;
 import ee.hitsa.ois.web.commandobject.juhan.JuhanTeacherCommand;
 import ee.hitsa.ois.web.dto.BusyTimeDto;
+import ee.hitsa.ois.web.dto.juhan.JuhanBuildingDto;
+import ee.hitsa.ois.web.dto.juhan.JuhanRoomDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -64,8 +63,7 @@ public class JuhanService {
 
     public ResponseEntity<Map<String, Object>> teacher(Long schoolId, JuhanTeacherCommand criteria) {
         if (criteria.getIdcode() != null && criteria.getUqcode() != null) {
-            ErrorInfo info = ErrorInfo.of("Teacher can't be found by both idcode and uqcode");
-            return new ResponseEntity(info, HttpStatus.PRECONDITION_FAILED);
+            throw new ValidationFailedException("Teacher can't be found by both idcode and uqcode");
         }
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from teacher t join person p on p.id = t.person_id");
         qb.requiredCriteria("t.school_id = :schoolId", "schoolId", schoolId);
@@ -83,8 +81,11 @@ public class JuhanService {
         Map<String, Object> result = new HashMap<>();
         result.put("result", resultOk ? OK : FAIL);
         if (resultOk) {
-            result.put("isBusy", Boolean.valueOf(!busyTimes.isEmpty()));
-            result.put("busyTimes", busyTimes);
+            boolean isBusy = !busyTimes.isEmpty();
+            result.put("isBusy", Boolean.valueOf(isBusy));
+            if (isBusy) {
+                result.put("busyTimes", busyTimes);
+            }
         }
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
@@ -111,23 +112,8 @@ public class JuhanService {
 
         qb.sort("b.code, b.name");
         List<?> data = qb.select("b.id, b.code, b.name, b.address_ads_oid, b.address", em).getResultList();
-        List<Map<String, Object>> buildings = StreamUtil.toMappedList(r -> {
-            Map<String, Object> building = new HashMap<>();
-            building.put("id", resultAsLong(r, 0));
-            building.put("code", resultAsString(r, 1));
-            building.put("name", resultAsString(r, 2));
-
-            String addressOid = resultAsString(r, 3);
-            if (addressOid != null) {
-                building.put("addressOid", addressOid);
-            }
-            String address = resultAsString(r, 4);
-            if (address != null) {
-                building.put("address", address);
-            }
-
-            return building;
-        }, data);
+        List<JuhanBuildingDto> buildings = StreamUtil.toMappedList(r -> new JuhanBuildingDto(resultAsLong(r, 0),
+                resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4)), data);
 
         boolean resultOk = !buildings.isEmpty();
         Map<String, Object> result = new HashMap<>();
@@ -145,13 +131,13 @@ public class JuhanService {
 
         qb.sort("b.code, r.code, r.name");
         List<?> data = qb.select("r.id r_id, r.code, r.name", em).getResultList();
-        Map<Long, Map<String, Object>> rooms = StreamUtil.toMap(r -> resultAsLong(r, 0), r -> {
-            Map<String, Object> room = new HashMap<>();
-            room.put("id", resultAsLong(r, 0));
+        Map<Long, JuhanRoomDto> rooms = StreamUtil.toMap(r -> resultAsLong(r, 0), r -> {
+            JuhanRoomDto room = new JuhanRoomDto();
+            room.setId(resultAsLong(r, 0));
             String code = resultAsString(r, 1);
-            room.put("code", resultAsString(r, 1));
+            room.setCode(code);
             String name = resultAsString(r, 2);
-            room.put("name", name != null ? name : code);
+            room.setName(name != null ? name : code);
             return room;
         }, data);
 
@@ -168,7 +154,7 @@ public class JuhanService {
         return result;
     }
 
-    private void setRoomBusyTimes(JuhanRoomCommand criteria, Map<Long, Map<String, Object>> rooms) {
+    private void setRoomBusyTimes(JuhanRoomCommand criteria, Map<Long, JuhanRoomDto> rooms) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event te "
                 + "join timetable_event_time tem on te.id = tem.timetable_event_id "
                 + "join timetable_event_room ter on tem.id = ter.timetable_event_time_id");
@@ -183,13 +169,13 @@ public class JuhanService {
                         DateUtils.toISOString(resultAsLocalDateTime(r, 2))), Collectors.toList())));
 
         for (Long roomId : rooms.keySet()) {
-            Map<String, Object> room = rooms.get(roomId);
+            JuhanRoomDto room = rooms.get(roomId);
             List<BusyTimeDto> roomBusyTimes = busyTimes.get(roomId);
             if (roomBusyTimes != null) {
-                room.put("isBusy", Boolean.TRUE);
-                room.put("busyTimes", roomBusyTimes);
+                room.setIsBusy(Boolean.TRUE);
+                room.setBusyTimes(roomBusyTimes);
             } else {
-                room.put("isBusy", Boolean.FALSE);
+                room.setIsBusy(Boolean.FALSE);
             }
         }
     }
@@ -205,20 +191,19 @@ public class JuhanService {
             if (te != null && eventForm.getTeachers().isEmpty() && eventForm.getRooms().isEmpty()) {
                 EntityUtil.deleteEntity(te, em);
             } else {
-                List<Error> allErrors = new ArrayList<>();
+                List<String> requiredFields = new ArrayList<>();
                 if (eventForm.getEventName() == null) {
-                    allErrors.add(new ErrorForField(Required.MESSAGE, "eventName"));
+                    requiredFields.add("eventName");
                 }
                 if (eventForm.getEventStart() == null) {
-                    allErrors.add(new ErrorForField(Required.MESSAGE, "eventStart"));
+                    requiredFields.add("eventStart");
                 }
                 if (eventForm.getEventEnd() == null) {
-                    allErrors.add(new ErrorForField(Required.MESSAGE, "eventEnd"));
+                    requiredFields.add("eventEnd");
                 }
 
-                if(!allErrors.isEmpty()) {
-                    ErrorInfo info = ErrorInfo.of(allErrors);
-                    return new ResponseEntity(info, HttpStatus.PRECONDITION_FAILED);
+                if(!requiredFields.isEmpty()) {
+                    return new ResponseEntity<>(errorResponse(requiredFields), HttpStatus.PRECONDITION_FAILED);
                 }
 
                 if (te == null) {
@@ -347,6 +332,17 @@ public class JuhanService {
             throw new ValidationFailedException("Event rooms don't belong to school");
         }
         return rooms;
+    }
+
+    private Map<String, Object> errorResponse(List<String> requiredFields) {
+        List<Map<String, String>> errors = new ArrayList<>();
+        for (String field : requiredFields) {
+            Map<String, String> error = new HashMap<>();
+            error.put("code", Required.MESSAGE);
+            error.put("field", field);
+            errors.add(error);
+        }
+        return Collections.singletonMap("_errors", errors);
     }
 
     private String maximumSubstring(String field, int maxLength) {

@@ -8,6 +8,7 @@ public enum DirectiveType {
 
     KASKKIRI_AKAD(null, DirectiveValidation.Akad.class),
     KASKKIRI_AKADK(null, DirectiveValidation.Akadk.class),
+    KASKKIRI_DUPLIKAAT(null, DirectiveValidation.Duplikaat.class),
     KASKKIRI_EKSMAT(StudentStatus.OPPURSTAATUS_K, DirectiveValidation.Eksmat.class),
     KASKKIRI_ENNIST(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Ennist.class, "studentGroup", "nominalStudyEnd"),
     KASKKIRI_FINM(null, DirectiveValidation.Finm.class, "fin", "finSpecific"),

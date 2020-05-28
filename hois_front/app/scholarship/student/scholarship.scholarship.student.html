@@ -6,32 +6,26 @@
       <table md-table class="secondary-table">
         <thead md-head>
           <tr md-row>
+            <th md-column>{{'stipend.name' | translate}}</th>
             <th md-column>{{'stipend.type' | translate}}</th>
             <th md-column>{{'stipend.applicationPeriod' | translate}}</th>
-            <th md-column>{{'stipend.places' | translate}}</th>
-            <th md-column>{{'stipend.student.averageMark' | translate}}</th>
-            <th md-column>{{'stipend.student.lastPeriodMark' | translate}}</th>
-            <th md-column>{{'stipend.student.curriculumCompletion' | translate}}</th>
             <th md-column>&nbsp;</th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="stipend in possibleStipends" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <a ng-click="scholarshipTerms(stipend)">{{currentLanguageNameField(stipend.type)}}</a>
+              <a ng-click="scholarshipTerms(stipend)">{{currentLanguageNameField(stipend)}}</a>
             </td>
+            <td md-cell>{{currentLanguageNameField(stipend.type)}}</td>
             <td md-cell>{{stipend.period}}</td>
-            <td md-cell>{{stipend.places ? stipend.places : '-'}}</td>
-            <td md-cell>{{stipend.averageMark ? stipend.averageMark : '-'}}</td>
-            <td md-cell>{{stipend.lastPeriodMark ? stipend.lastPeriodMark : '-'}}</td>
-            <td md-cell>{{stipend.curriculumCompletion ? stipend.curriculumCompletion : '-'}}</td>
             <td md-cell>
               <span ng-if="stipend.canApply">
                 <a href="#/scholarships/{{stipend.id}}/application">{{'stipend.student.apply' | translate}}</a>
               </span>
               <md-button ng-if="!stipend.canApply && !stipend.alreadyApplied" flex class="md-icon-button" ng-click="scholarshipTermCompliances(stipend)">
                 <md-icon md-colors="{color: 'default-warn'}" md-font-set="material-icons">warning</md-icon>
-                <md-tooltip>{{'stipend.messages.error.studentDoesntComply' | translate}}</md-tooltip>
+                <md-tooltip>{{'stipend.messages.error.studentDoesntComplyScholarship' | translate}}</md-tooltip>
               </md-button>
               <span ng-if="stipend.alreadyApplied">{{'stipend.student.alreadyApplied' | translate}}</span>
             </td>
@@ -49,10 +43,9 @@
       <table md-table class="secondary-table">
         <thead md-head>
           <tr md-row>
+            <th md-column>{{'stipend.name' | translate}}</th>
             <th md-column>{{'stipend.type' | translate}}</th>
-            <th md-column>{{'stipend.student.averageMark' | translate}}</th>
-            <th md-column>{{'stipend.student.lastPeriodMark' | translate}}</th>
-            <th md-column>{{'stipend.student.curriculumCompletion' | translate}}</th>
+            <th md-column>{{'stipend.studyPeriod' | translate}}</th>
             <th md-column>{{'stipend.student.status' | translate}}</th>
             <th md-column>{{'stipend.student.decisionDate' | translate}}</th>
             <th md-column>&nbsp;</th>
@@ -61,12 +54,11 @@
         <tbody md-body>
           <tr md-row ng-repeat="stipend in studentStipends" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <a ng-if="!stipend.canApply" href="#/scholarships/applications/{{stipend.id}}">{{currentLanguageNameField(stipend.type)}}</a>
-              <a ng-if="stipend.canApply" href="#/scholarships/{{stipend.termId}}/application">{{currentLanguageNameField(stipend.type)}}</a>
+              <a ng-if="!stipend.canApply" href="#/scholarships/applications/{{stipend.id}}">{{stipend.termName}}</a>
+              <a ng-if="stipend.canApply" href="#/scholarships/{{stipend.termId}}/application">{{stipend.termName}}</a>
             </td>
-            <td md-cell>{{stipend.averageMark ? stipend.averageMark : '-'}}</td>
-            <td md-cell>{{stipend.lastPeriodMark ? stipend.lastPeriodMark : '-'}}</td>
-            <td md-cell>{{stipend.curriculumCompletion ? stipend.curriculumCompletion : '-'}}</td>
+            <td md-cell>{{currentLanguageNameField(stipend.type)}}</td>
+            <td md-cell>{{currentLanguageNameField(stipend.termStudyPeriod)}}</td>
             <td md-cell>{{currentLanguageNameField(stipend.status)}}
               <md-tooltip ng-if="['STIPTOETUS_STAATUS_L', 'STIPTOETUS_STAATUS_T'].indexOf(stipend.status.code) !== -1  && stipend.rejectComment">{{stipend.rejectComment}}</md-tooltip>
             </td>

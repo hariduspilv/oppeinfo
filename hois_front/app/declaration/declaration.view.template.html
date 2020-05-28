@@ -58,7 +58,8 @@
             <th md-column>{{'declaration.subject' | translate}}</th>
             <th md-column>{{'declaration.teacher' | translate}}</th>
             <th md-column>{{'declaration.subgroup' | translate}}</th>
-            <th md-column>{{'declaration.eap_assessment' | translate}}</th>
+            <th md-column>{{'declaration.eap' | translate}}</th>
+            <th md-column>{{'declaration.assessment' | translate}}</th>
             <th md-column ng-if="!isGuestStudent">{{'declaration.module_isRequired' | translate}}</th>
             <th md-column>{{'declaration.prerequisites' | translate}}</th>
             <th md-column>{{'studyMaterial.label' | translate}}</th>
@@ -84,7 +85,8 @@
               </table>
             </td>
             <td md-cell>{{subject.subgroup != null ? currentLanguageNameField(subject.subgroup) : '-'}}</td>
-            <td md-cell>{{subject.subject.credits}} / {{subject.subject.assessment}}</td>
+            <td md-cell>{{subject.subject.credits}}</td>
+            <td md-cell>{{subject.subject.assessment}}</td>
             <td md-cell ng-if="!isGuestStudent">{{subject.module != null ? currentLanguageNameField(subject.module) : ' - '}} / {{subject.isOptional ? 'main.no' : 'main.yes' | translate}}</td>
             <td md-cell>
               <span ng-show="!hasPrerequisites(subject)"> - </span>
@@ -93,6 +95,12 @@
               </span>
             </td>
             <td md-cell><a ng-href="/#/declaration/studyMaterial/higher/{{subject.subjectStudyPeriod}}/view">{{'studyMaterial.openfolder' | translate}}</a></td>
+          </tr>
+          <tr md-row class="border-top-line" style="font-weight: bold;">
+            <td md-cell>{{'main.OF' | translate}}</td>
+            <td md-cell colspan="2"></td>
+            <td md-cell>{{calculateAll(wrapper.declaration.subjects)}} {{'declaration.eap' | translate}}</td>
+            <td md-cell colspan="4"></td>
           </tr>
         </tbody>
       </table>
@@ -148,3 +156,9 @@
     </div>
   </div>
 </fieldset>
+
+<style>
+  tr.border-top-line, tr.border-top-line > td {
+    border-top: 1px solid #525252 !important;
+  }
+</style>

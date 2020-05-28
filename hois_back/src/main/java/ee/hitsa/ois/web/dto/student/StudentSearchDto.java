@@ -17,6 +17,7 @@ public class StudentSearchDto {
     private String status;
     private String type;
     private Long personId;
+    private Boolean canSelect = Boolean.TRUE;
 
     public Long getId() {
         return id;
@@ -120,5 +121,13 @@ public class StudentSearchDto {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public Boolean getCanSelect() {
+        return canSelect;
+    }
+
+    public void setCanSelect(Boolean canSelect) {
+        this.canSelect = canSelect;
     }
 }

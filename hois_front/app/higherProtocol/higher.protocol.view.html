@@ -1,40 +1,59 @@
 <div class="ois-form-layout-padding" ng-cloak>
+
   <div class="form-readonly">
     <div layout="row" layout-sm="column" layout-xs="column">
-      <md-input-container flex="20" flex-sm="100" flex-xs="100">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
         <label>{{'higherProtocol.number' | translate}}</label>
         <hois-value value="record.protocolNr"></hois-value>
       </md-input-container>
-      <md-input-container flex flex-sm="100" flex-xs="100">
-        <label>{{'higherProtocol.subject' | translate}}</label>
-        <hois-value value="currentLanguageNameField(record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.subject)"></hois-value>
-      </md-input-container>
-      <md-input-container flex="30" flex-sm="100" flex-xs="100">
-        <label>{{'higherProtocol.studyPeriod' | translate}}</label>
-        <hois-value value="currentLanguageNameField(record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.studyPeriod)"></hois-value>
-      </md-input-container>
-    </div>
-    <div layout="row" layout-sm="column" layout-xs="column">
-      <md-input-container flex="20" flex-sm="100" flex-xs="100">
+      <md-input-container ng-if="record.subjectStudyPeriodMidtermTaskDto" flex="50" flex-sm="100" flex-xs="100">
         <label>{{'higherProtocol.type' | translate}}</label>
         <hois-classifier-value ng-model="record.protocolType" main-classifier-code="PROTOKOLLI_LIIK"></hois-classifier-value>
       </md-input-container>
-      <md-input-container flex flex-sm="100" flex-xs="100">
-        <label>{{'higherProtocol.teacher' | translate}}</label>
-        <hois-value value="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.teachers.join(', ')"></hois-value>
+      <md-input-container ng-if="record.moduleDto" flex="50" flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.module' | translate}}</label>
+        <hois-value value="currentLanguageNameField(record.moduleDto.module)"></hois-value>
       </md-input-container>
-      <md-input-container flex="30" flex-sm="100" flex-xs="100">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
         <label>{{'higherProtocol.status' | translate}}</label>
         <hois-classifier-value ng-model="record.status" main-classifier-code="PROTOKOLL_STAATUS"></hois-classifier-value>
       </md-input-container>
     </div>
-    <div layout="row" layout-sm="column" layout-xs="column" ng-if="record.protocolType === 'PROTOKOLLI_LIIK_P'">
-      <md-input-container flex="20" flex-sm="100" flex-xs="100">
+
+    <div ng-if="record.subjectStudyPeriodMidtermTaskDto" layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.studyPeriod' | translate}}</label>
+        <hois-value value="currentLanguageNameField(record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.studyPeriod)"></hois-value>
+      </md-input-container>
+      <md-input-container flex="50" flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.subject' | translate}}</label>
+        <hois-value value="currentLanguageNameField(record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.subject)"></hois-value>
+      </md-input-container>
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.teacher' | translate}}</label>
+        <hois-value value="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.teachers.join(', ')"></hois-value>
+      </md-input-container>
+    </div>
+
+    <div layout="row" layout-sm="column" layout-xs="column" ng-if="record.subjectStudyPeriodMidtermTaskDto && record.protocolType === 'PROTOKOLLI_LIIK_P'">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.protocolDate' | translate}}</label>
+        <hois-value value="record.finalDate | hoisDate"></hois-value>
+      </md-input-container>
+    </div>
+
+    <div ng-if="record.moduleDto" layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.teacher' | translate}}</label>
+        <hois-value value="record.moduleDto.teacher"></hois-value>
+      </md-input-container>
+      <md-input-container ng-if="record.protocolType === 'PROTOKOLLI_LIIK_P'" flex="50" flex-sm="100" flex-xs="100">
         <label>{{'higherProtocol.protocolDate' | translate}}</label>
         <hois-value value="record.finalDate | hoisDate"></hois-value>
       </md-input-container>
     </div>
   </div>
+
   <div style="height: 10px;"></div>
   <div ng-if="record.subjectStudyPeriodMidtermTaskDto.subgroups.length > 0" layout="row" layout-align="space-between end"
        style="margin-top: -15px;margin-bottom: 5px;">
@@ -60,6 +79,7 @@
       <table md-table>
         <thead md-head>
           <tr md-row>
+            <th md-column>{{'main.order' | translate}}</th>
             <th md-column>{{'higherProtocol.student' | translate}}</th>
             <th md-column>{{'higherProtocol.studentGroup' | translate}}</th>
             <th md-column ng-if="record.subjectStudyPeriodMidtermTaskDto.subgroups.length > 0">{{'higherProtocol.subgroup' | translate}}</th>
@@ -68,13 +88,19 @@
             <th md-column ng-repeat="midtermTask in record.subjectStudyPeriodMidtermTaskDto.midtermTasks">
               {{getMidtermTaskHeader(midtermTask)}}
             </th>
+            <th md-column ng-repeat="subject in record.moduleDto.subjects">
+              <span>{{subject.code}}</span>
+              <md-tooltip class="tooltip-multiline">{{currentLanguageNameField(subject)}}</md-tooltip>
+            </th>
             <th md-column>{{'higherProtocol.finalGrade' | translate}}</th>
             <th md-column ng-if="record.status.code === 'PROTOKOLL_STAATUS_K'" style="min-width: 250px;">{{'higherProtocol.changeReason' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row ng-if="!record.subgroup.id || record.subgroup.id === student.subgroup.id" ng-repeat="student in record.protocolStudents | orderBy: 'student.nameEt'" ng-class-odd="'odd'" ng-class-even="'even'">
+          <tr md-row ng-repeat="student in record.protocolStudents | filter: filterStudents(record.subgroup) | orderBy: 'student.nameEt'"
+              ng-class-odd="'odd'" ng-class-even="'even'">
             <ng-form name="higherProtocolStudentForm">
+              <td md-cell>{{$index + 1}}.</td>
               <td md-cell>
                 <i>
                   <span ng-if="student.studentStatus === 'OPPURSTAATUS_A'">{{'student.statuses.academicLeaveShort' | translate}}</span>
@@ -97,6 +123,18 @@
               <td md-cell ng-repeat="result in record.subjectStudyPeriodMidtermTaskDto.studentResults | filter: filterStudentResults(student)">
                 <span ng-if="!result.isText">{{result.points}}</span>
                 <span ng-if="result.isText">{{result.pointsTxt}}</span>
+              </td>
+              <td md-cell ng-repeat="subject in record.moduleDto.subjects" style="min-width: 100px;">
+                <span ng-if="subject.id">
+                  <span ng-if="student.mappedResults.subjectResults[subject.id].isApelTransfer" class="apelAsterisk">*</span>
+                  <span ng-class="{badResult: !gradeUtil.isPositive(student.mappedResults.subjectResults[subject.id].grade.code)}">
+                    {{student.mappedResults.subjectResults[subject.id].grade | hoisHigherGrade: letterGrades}}</span>
+                </span>
+                <span ng-if="!subject.id">
+                  <span ng-if="student.mappedResults.otherSubjectResults[subject.studentHigherResultId].isApelTransfer" class="apelAsterisk">*</span>
+                  <span ng-class="{badResult: !gradeUtil.isPositive(student.mappedResults.otherSubjectResults[subject.studentHigherResultId].grade.code)}">
+                    {{student.mappedResults.otherSubjectResults[subject.studentHigherResultId].grade | hoisHigherGrade: letterGrades}}</span>
+                </span>
               </td>
               <td md-cell>
                 <span ng-class="{badResult: !gradeUtil.isPositive(student.grade.code)}">{{student.grade | hoisHigherGrade: letterGrades}}</span>

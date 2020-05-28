@@ -1,4 +1,4 @@
-VERSIOON:  1.6.1/20200430
+VERSIOON:  1.7.0/20200529
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -10,24 +10,24 @@ README.md - tarne ja installeerimise kirjeldus
 /hois_html - rakenduse genereeritud html-id
 
 
-EELDUS: ver. 1.6.0/20200327
+EELDUS: ver. 1.6.1/20200430
 ------------------------------------------------------
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20200430.sql
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20200529.sql
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
 
 Andmebaasi installeerimiseks:
-1. käivitada install20200430.sql skript, nt
+1. käivitada install20200529.sql skript, nt
    
-   psql -h devhois -f install20200430.sql 2>&1 | tee log.txt
+   psql -h devhois -f install20200529.sql 2>&1 | tee log.txt
    
    , kus
    
    -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install20200430.sql - install faili nimi
+   -f install20200529.sql - install faili nimi
    log.txt - andmebaasi installeerimise logi fail
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
@@ -56,34 +56,6 @@ RAKENDUSE INSTALLEERIMINE:
 	NB! valede parameetrite puhul rakendus töötab pisut aeglasemalt ja konsool annab vigu:
 		OPTIONS https://bdr.plumbr.io/api/browser/data/xhr?accountId=PLUMBR_ACCOUNT_ID 401
 		Failed to load https://bdr.plumbr.io/api/browser/data/xhr?accountId=PLUMBR_ACCOUNT_ID: Response for preflight does not have HTTP ok status.
-	5. Täiendusõppe infosüsteemiga JUHAN liidestamiseks muuta nginx serveris proxy_backend.conf ning sarnaselt EKISega lisada sinna järgmised read
-		location /api {
-			allow all;
-			deny all;
-			proxy_pass http://backend/hois_back/juhan;
-		}
-		
-		Lõpptulemus näeb umbes selline välja
-		server {
-			listen       80;
-			listen       [::]:80;
-			server_name  devhois2;
-			location /hois_back/services/ekis {
-				allow all;
-				# deny all;
-				proxy_pass http://backend/hois_back/services/ekis;
-			}
-			location /api {
-				allow all;
-				# deny all;
-				proxy_pass http://backend/hois_back/juhan;
-			}
-			location / {
-				return 301 https://$host$request_uri;
-			} 
-		}
-		
-		NB! allow all tuleks asendada JUHANI serveri IP aadressiga
 
 		
 

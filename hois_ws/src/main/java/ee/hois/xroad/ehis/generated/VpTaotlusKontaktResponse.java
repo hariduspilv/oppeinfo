@@ -22,6 +22,8 @@ import javax.xml.bind.annotation.XmlType;
  *       &lt;sequence&gt;
  *         &lt;element name="taotlejaIsikukood" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="taotluseId" type="{http://www.w3.org/2001/XMLSchema}long"/&gt;
+ *         &lt;element name="kontoOmanikuNimi" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="kontonumber" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="hoiatusDto" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}HoiatusDto" minOccurs="0"/&gt;
  *         &lt;element name="failiOigsuseKinnitusKuva" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
  *       &lt;/sequence&gt;
@@ -36,6 +38,8 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "", propOrder = {
     "taotlejaIsikukood",
     "taotluseId",
+    "kontoOmanikuNimi",
+    "kontonumber",
     "hoiatusDto",
     "failiOigsuseKinnitusKuva"
 })
@@ -45,6 +49,10 @@ public class VpTaotlusKontaktResponse {
     @XmlElement(required = true)
     protected String taotlejaIsikukood;
     protected long taotluseId;
+    @XmlElement(required = true)
+    protected String kontoOmanikuNimi;
+    @XmlElement(required = true)
+    protected String kontonumber;
     @XmlElementRef(name = "hoiatusDto", type = JAXBElement.class, required = false)
     protected JAXBElement<HoiatusDto> hoiatusDto;
     protected boolean failiOigsuseKinnitusKuva;
@@ -87,6 +95,54 @@ public class VpTaotlusKontaktResponse {
      */
     public void setTaotluseId(long value) {
         this.taotluseId = value;
+    }
+
+    /**
+     * Gets the value of the kontoOmanikuNimi property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getKontoOmanikuNimi() {
+        return kontoOmanikuNimi;
+    }
+
+    /**
+     * Sets the value of the kontoOmanikuNimi property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setKontoOmanikuNimi(String value) {
+        this.kontoOmanikuNimi = value;
+    }
+
+    /**
+     * Gets the value of the kontonumber property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getKontonumber() {
+        return kontonumber;
+    }
+
+    /**
+     * Sets the value of the kontonumber property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setKontonumber(String value) {
+        this.kontonumber = value;
     }
 
     /**

@@ -67,6 +67,10 @@ public class ScholarshipApplication extends BaseEntityWithId {
     @JoinColumn(nullable = true)
     private ScholarshipDecision scholarshipDecision;
 
+    private BigDecimal wagMark;
+    private BigDecimal lastPeriodWagMark;
+    private Boolean isSais;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "scholarshipApplication")
     private List<ScholarshipApplicationFile> scholarshipApplicationFiles = new ArrayList<>();
 
@@ -305,22 +309,6 @@ public class ScholarshipApplication extends BaseEntityWithId {
         this.compensationFrequency = compensationFrequency;
     }
 
-    public List<ScholarshipApplicationFile> getScholarshipApplicationFiles() {
-        return scholarshipApplicationFiles;
-    }
-
-    public void setScholarshipApplicationFiles(List<ScholarshipApplicationFile> scholarshipApplicationFiles) {
-        this.scholarshipApplicationFiles = scholarshipApplicationFiles;
-    }
-
-    public List<ScholarshipApplicationFamily> getScholarshipApplicationFamilies() {
-        return scholarshipApplicationFamilies;
-    }
-
-    public void setScholarshipApplicationFamilies(List<ScholarshipApplicationFamily> scholarshipApplicationFamilies) {
-        this.scholarshipApplicationFamilies = scholarshipApplicationFamilies;
-    }
-
     public String getRejectComment() {
         return rejectComment;
     }
@@ -337,4 +325,43 @@ public class ScholarshipApplication extends BaseEntityWithId {
         this.scholarshipDecision = scholarshipDecision;
     }
 
+    public BigDecimal getWagMark() {
+        return wagMark;
+    }
+
+    public void setWagMark(BigDecimal wagMark) {
+        this.wagMark = wagMark;
+    }
+
+    public BigDecimal getLastPeriodWagMark() {
+        return lastPeriodWagMark;
+    }
+
+    public void setLastPeriodWagMark(BigDecimal lastPeriodWagMark) {
+        this.lastPeriodWagMark = lastPeriodWagMark;
+    }
+
+    public Boolean getIsSais() {
+        return isSais;
+    }
+
+    public void setIsSais(Boolean isSais) {
+        this.isSais = isSais;
+    }
+
+    public List<ScholarshipApplicationFile> getScholarshipApplicationFiles() {
+        return scholarshipApplicationFiles;
+    }
+
+    public void setScholarshipApplicationFiles(List<ScholarshipApplicationFile> scholarshipApplicationFiles) {
+        this.scholarshipApplicationFiles = scholarshipApplicationFiles;
+    }
+
+    public List<ScholarshipApplicationFamily> getScholarshipApplicationFamilies() {
+        return scholarshipApplicationFamilies;
+    }
+
+    public void setScholarshipApplicationFamilies(List<ScholarshipApplicationFamily> scholarshipApplicationFamilies) {
+        this.scholarshipApplicationFamilies = scholarshipApplicationFamilies;
+    }
 }

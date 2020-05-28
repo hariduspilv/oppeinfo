@@ -111,8 +111,8 @@
             <md-input-container class="md-block" flex="25" flex-sm="100" flex-xs="100">
               <label>{{'teacher.occupation.label' | translate}}</label>
               <md-select ng-model="teacher.teacherOccupation.id" required>
-                <md-option></md-option>
-                <md-option ng-repeat="occupation in occupations" ng-value="occupation.id">
+                <!--md-option></md-option-->
+                <md-option ng-repeat="occupation in occupations | filter: filterOccupations | orderBy: orderOccupations" ng-value="occupation.id">
                   {{currentLanguage()==='en' ? (occupation.occupationEn || occupation.occupationEt) : occupation.occupationEt}}
                 </md-option>
               </md-select>

@@ -26,6 +26,7 @@ public class StudentSupportServiceDto {
     
     /** FALSE - real StudentSupportService. TRUE - any other support service */
     private Boolean isArtificial = Boolean.FALSE;
+    private Boolean ehis;
     
     private Long endingDirectiveId;
     
@@ -45,6 +46,7 @@ public class StudentSupportServiceDto {
         entrySubmitter = Boolean.FALSE.equals(isArtificial) ? PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(record, 7)) : resultAsString(record, 7);
         
         endingDirectiveId = resultAsLong(record, 9);
+        ehis = resultAsBoolean(record, 10);
     }
     
     public static StudentSupportServiceDto of(StudentSupportService supportService) {
@@ -133,5 +135,13 @@ public class StudentSupportServiceDto {
 
     public void setEndingDirectiveId(Long endingDirectiveId) {
         this.endingDirectiveId = endingDirectiveId;
+    }
+
+    public Boolean getEhis() {
+        return ehis;
+    }
+
+    public void setEhis(Boolean ehis) {
+        this.ehis = ehis;
     }
 }

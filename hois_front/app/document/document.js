@@ -247,12 +247,25 @@ angular.module('hitsaOis').controller('DiplomaSearchController', ['$scope', '$ro
         return $scope.record.supplementStatus && $scope.record.supplementStatus !== 'LOPUDOK_STAATUS_K';
       }
     }
+
+    function isDefected(lang) {
+      if (lang === 'EN') {
+        return $scope.record.supplementStatusEn === 'LOPUDOK_STAATUS_C';
+      } else {
+        return $scope.record.supplementStatus === 'LOPUDOK_STAATUS_C';
+      }
+    }
+
     function canPrint() {
+      if ($scope.record.diplomaStatus === 'LOPUDOK_STAATUS_C') {
+        return false;
+      }
       if (!$scope.contentData.signer1Id || ($scope.isHigher && !$scope.contentData.signer2Id)) {
         return false;
       }
       return true;
     }
+
     $scope.updatePdfUrl = function() {
       if (!canPrint()) {
         $scope.viewPdfUrl = undefined;
@@ -260,8 +273,8 @@ angular.module('hitsaOis').controller('DiplomaSearchController', ['$scope', '$ro
         return;
       }
       var url = config.apiUrl + baseUrl + '/supplement/' + id + '/print/view.pdf?' + $httpParamSerializer($scope.contentData);
-      $scope.viewPdfUrl = isPrinted('ET') ? undefined : url;
-      $scope.viewPdfUrlEn = isPrinted('EN') ? undefined : (url + '&lang=EN');
+      $scope.viewPdfUrl = isPrinted('ET') && !isDefected('ET') ? undefined : url;
+      $scope.viewPdfUrlEn = isPrinted('EN') && !isDefected('EN') ? undefined : (url + '&lang=EN');
     };
 
     function getPrintParams(lang) {
@@ -313,14 +326,14 @@ angular.module('hitsaOis').controller('DiplomaSearchController', ['$scope', '$ro
         });
       }).$promise.catch(angular.noop);
     };
-  }]).factory('DocumentUtils', ['$rootScope', '$filter',
-  function ($rootScope, $filter) {
+  }]).factory('DocumentUtils', ['$rootScope', '$filter', '$translate',
+  function ($rootScope, $filter, $translate) {
     return {
       mapDirectiveDisplay: function(directives) {
         var hoisDateFilter = $filter('hoisDate');
         directives.forEach(function(directive) {
           directive.display = (directive.number || '-') + '/' + hoisDateFilter(directive.date) + 
-            '/' + $rootScope.currentLanguageNameField(directive.status);
+            '/' + $rootScope.currentLanguageNameField(directive.status) + (directive.duplicate ? ' (' + $translate.instant('document.duplicateLowerCase') + ')' : '');
         });
       },
       mapSignerDisplay: function(signers) {

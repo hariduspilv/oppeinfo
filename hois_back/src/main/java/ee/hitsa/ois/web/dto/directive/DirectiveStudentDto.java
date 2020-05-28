@@ -42,7 +42,6 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private Boolean isCumLaude;
     private Boolean isOccupationExamPassed;
     private AutocompleteResult curriculumGrade;
-    private String bankAccount;
     private Boolean applicationIsPeriod;
     private LocalDate studentNominalStudyEnd;
     private LocalDate applicationStartDate;
@@ -60,6 +59,8 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     
     private List<AutocompleteResult> supportServices;
     private List<AutocompleteResult> supportModules;
+    
+    private DiplomaStudentDto diplomaDto;
 
     public String getFullname() {
         return fullname;
@@ -139,14 +140,6 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
 
     public void setCurriculumGrade(AutocompleteResult curriculumGrade) {
         this.curriculumGrade = curriculumGrade;
-    }
-
-    public String getBankAccount() {
-        return bankAccount;
-    }
-
-    public void setBankAccount(String bankAccount) {
-        this.bankAccount = bankAccount;
     }
 
     public Boolean getApplicationIsPeriod() {
@@ -269,6 +262,14 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         this.supportModules = supportModules;
     }
 
+    public DiplomaStudentDto getDiplomaDto() {
+        return diplomaDto;
+    }
+
+    public void setDiplomaDto(DiplomaStudentDto diplomaDto) {
+        this.diplomaDto = diplomaDto;
+    }
+
     public static DirectiveStudentDto of(Application application, DirectiveType directiveType) {
         DirectiveStudentDto dto = of(application.getStudent(), directiveType);
         dto.setApplication(application.getId());
@@ -361,6 +362,12 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         dto.setModules(StreamUtil.nullSafeList(directiveStudent.getModules()).stream()
                 .map(m -> DirectiveFormStudentModule.of(m)).collect(Collectors.toList()));
         dto.setDirectiveStudent(EntityUtil.getNullableId(directiveStudent.getDirectiveStudent()));
+        if (DirectiveType.KASKKIRI_DUPLIKAAT.equals(directiveType)) {
+            dto.setDiplomaDto(DiplomaStudentDto.fill(directiveStudent));
+            dto.setDiplomaChk(Boolean.valueOf(directiveStudent.getDiploma() != null));
+            dto.setDiplomaSupplementChk(Boolean.valueOf(directiveStudent.getDiplomaSupplement() != null));
+            dto.setDiplomaSupplementEnChk(Boolean.valueOf(directiveStudent.getDiplomaSupplementEn() != null));
+        }
         return EntityUtil.bindToDto(directiveStudent, dto, "occupations", "modules", "directiveStudent");
     }
 

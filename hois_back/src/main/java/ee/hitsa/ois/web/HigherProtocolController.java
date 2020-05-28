@@ -9,6 +9,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
+import ee.hitsa.ois.web.commandobject.SearchCommand;
 import org.digidoc4j.Container;
 import org.digidoc4j.DataToSign;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,7 +94,7 @@ public class HigherProtocolController {
 
     @PostMapping
     public HigherProtocolDto create(HoisUserDetails user, @NotNull @Valid @RequestBody HigherProtocolCreateForm form) {
-        HigherProtocolUtil.assertCanCreate(user);
+        HigherProtocolUtil.assertCanCreate(user, form.getSubjectStudyPeriod());
         HigherProtocolUtil.assertStudentsAdded(form);
         return higherProtocolService.create(user, form);
     }
@@ -115,18 +116,29 @@ public class HigherProtocolController {
         higherProtocolService.delete(user, protocol);
     }
 
-
     @GetMapping("/subjectStudyPeriods")
     public List<AutocompleteResult> getSubjectStudyPeriods(HoisUserDetails user, SubjectStudyPeriodCommand lookup) {
-        HigherProtocolUtil.assertCanCreate(user);
+        HigherProtocolUtil.assertCanCreate(user, lookup.getStudyPeriodId());
         return higherProtocolService.getSubjectStudyPeriods(user, lookup);
+    }
+
+    @GetMapping("/curriculumVersions")
+    public Page<AutocompleteResult> getModuleProtocolCurriculumVersions(HoisUserDetails user, SearchCommand lookup,
+            Pageable pageable) {
+        return higherProtocolService.getModuleProtocolCurriculumVersions(user, lookup, pageable);
     }
 
     @GetMapping("/students")
     public List<StudentSearchDto> getStudents(HoisUserDetails user,
             @Valid HigherProtocolStudentSearchCommand criteria) {
-        HigherProtocolUtil.assertCanCreate(user);
+        HigherProtocolUtil.assertCanCreate(user, criteria.getSubjectStudyPeriod());
         return higherProtocolService.getStudents(user.getSchoolId(), criteria);
+    }
+
+    @GetMapping("/moduleProtocol/students")
+    public List<StudentSearchDto> getModuleProtocolStudents(HoisUserDetails user, @RequestParam Long curriculumVersionHmodule) {
+        HigherProtocolUtil.assertCanCreate(user, null);
+        return higherProtocolService.getModuleProtocolStudents(user.getSchoolId(), curriculumVersionHmodule);
     }
 
     @DeleteMapping("/{id:\\d+}/removeStudent/{studentId:\\d+}")
@@ -223,9 +235,9 @@ public class HigherProtocolController {
     }
 
     @GetMapping("/{id:\\d+}/calculate")
-    public List<ProtocolStudentResultDto> calculateGrades(HoisUserDetails user,
-            @NotNull @Valid ProtocolCalculateCommand command, @WithEntity Protocol protocol) {
+    public List<ProtocolStudentResultDto> calculateGrades(HoisUserDetails user, @WithEntity Protocol protocol,
+            @NotNull @Valid ProtocolCalculateCommand command) {
         HigherProtocolUtil.assertCanChange(user, protocol);
-        return higherProtocolService.calculateGrades(command);
+        return higherProtocolService.calculateGrades(protocol, command);
     }
 }

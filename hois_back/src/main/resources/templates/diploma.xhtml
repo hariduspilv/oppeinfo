@@ -8,12 +8,15 @@
     </style>
   </head>
   <body>
-    {% for diploma in content %}
+    {% for diploma in content.diplomas %}
     {% if loop.index == 0 %}
     <div class="diploma">
     {% else %}
     <div class="diploma page-break-before">
     {% endif %}
+    	{% if diploma.duplicate %}
+    	<div style="float: right; text-transform: uppercase;">{{ "diploma.duplicate" | translate }}</div>
+    	{% endif %}
         &nbsp;
         <div class="diploma-cumlaude">
         {% if diploma.isCumLaude %}
@@ -46,11 +49,25 @@
         </div>
         <div class="diploma-city">
             {{ diploma.city }}
-            {% if diploma.directive.confirmDate is not empty %}
-                {{ diploma.directive.confirmDate.dayOfMonth }}.
-                {{ ("diploma.month." + diploma.directive.confirmDate.monthValue) | translate }}
-                {{ diploma.directive.confirmDate.year }}. {{ "diploma.year" | translate }}
+            {% set dip = (content.origDiplomas[diploma.id] is not empty ? content.origDiplomas[diploma.id] : diploma) %}
+            {% if dip.directive.confirmDate is not empty %}
+                {{ dip.directive.confirmDate.dayOfMonth }}.
+                {{ ("diploma.month." + dip.directive.confirmDate.monthValue) | translate }}
+                {{ dip.directive.confirmDate.year }}. {{ "diploma.year" | translate }}
             {% endif %}
+            <br/>
+	    	{% if diploma.duplicate %}
+	            {% if diploma.directive.confirmDate is not empty %}
+	            	{{ "diploma.duplicateGiven" | translate }}
+	                {{ diploma.directive.confirmDate.dayOfMonth }}.
+	                {{ ("diploma.month." + diploma.directive.confirmDate.monthValue) | translate }}
+	                {{ diploma.directive.confirmDate.year }}. {{ "diploma.year" | translate }}
+	            {% endif %}
+	            <br/>
+	    		{% if dip is not empty and dip.form is not empty %}
+					{{ "diploma.numberHigher" | translate }} {{ dip.form.fullcode }}
+				{% endif %}
+	    	{% endif %}
         </div>
     </div>
     {% endfor %}

@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="tyyp" type="{http://www.w3.org/2001/XMLSchema}int"/&gt;
  *         &lt;element name="liik" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="menetlusStaatus" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="menetlejaKommentaar" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="loaNumber" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="loomiseKp" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="tyhistamiseKp" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
@@ -41,6 +42,7 @@ import javax.xml.bind.annotation.XmlType;
     "tyyp",
     "liik",
     "menetlusStaatus",
+    "menetlejaKommentaar",
     "loaNumber",
     "loomiseKp",
     "tyhistamiseKp",
@@ -54,6 +56,7 @@ public class Tegevusluba {
     @XmlElement(required = true)
     protected String liik;
     protected String menetlusStaatus;
+    protected String menetlejaKommentaar;
     protected String loaNumber;
     protected String loomiseKp;
     protected String tyhistamiseKp;
@@ -146,6 +149,30 @@ public class Tegevusluba {
      */
     public void setMenetlusStaatus(String value) {
         this.menetlusStaatus = value;
+    }
+
+    /**
+     * Gets the value of the menetlejaKommentaar property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getMenetlejaKommentaar() {
+        return menetlejaKommentaar;
+    }
+
+    /**
+     * Sets the value of the menetlejaKommentaar property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setMenetlejaKommentaar(String value) {
+        this.menetlejaKommentaar = value;
     }
 
     /**

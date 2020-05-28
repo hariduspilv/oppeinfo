@@ -1,0 +1,460 @@
+<style>
+    .md-chips .md-chip-input-container {
+      min-width: unset;
+    }
+    .md-table .md-table .md-row:first-child .md-cell {
+      border-top: none;
+    }
+    .width-305 {
+      width: 305px;
+    }
+    .width-305-input {
+      width: 310px;
+    }
+    .width-305-autocomplete {
+      width: 313px;
+    }
+    .width-305-autocomplete-multiple {
+      width: 313px;
+      padding-right: 2px;
+      padding-left: 2px;
+    }
+  </style>
+  <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+      <div flex>
+        <fieldset>
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+          <form name="searchForm" ng-submit="searchForm.$valid && loadResults()" ng-model-options="{allowInvalid: true}">
+            <div layout-gt-sm="row" layout="column">
+              <div layout="row">
+                <md-input-container flex>
+                  <label>{{'report.studentSuccess.statisticsType' | translate}}</label>
+                  <md-select ng-model="criteria.queryType" class="width-305" aria-label="{{'report.studentSuccess.statisticsType' | translate}}" ng-change="clearSortAndTable() && preselectFrom()" required>
+                    <md-option ng-repeat="val in formState.statisticsTypes" ng-value="val">
+                      {{('report.studentSuccess.select.' + val) | translate}}
+                    </md-option>
+                  </md-select>
+                </md-input-container>
+              </div>
+              <div layout="row" flex-offset-gt-sm="5">
+                <md-input-container style="padding-right: 7px" ng-if="criteria.queryType !== 'EDUCATIONAL_SUCCESS_BEST_RESULTS'">
+                    <label>{{'report.studentSuccess.from' | translate}}</label>
+                    <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" 
+                    ng-required="criteria.queryType === 'EDUCATIONAL_SUCCESS_STUDY_DIRECTOR_REPORT'"
+                    hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                </md-input-container>
+                <md-input-container style="padding-right: 41px">
+                    <label>{{'report.studentSuccess.thru' | translate}}</label>
+                    <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from" ng-init="setToday()" required
+                    hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                </md-input-container>
+              </div>
+            </div>
+            <div ng-if="criteria.queryType !== 'EDUCATIONAL_SUCCESS_STUDY_DIRECTOR_REPORT'" layout="column">
+              <div layout-gt-sm="row" layout="column">
+                <div layout="row" class="width-305-autocomplete">
+                  <hois-autocomplete flex ha-controller="directiveControllers" ng-model="criteria.student" ha-attribute="id" 
+                    additional-query-params="{showStudentGroup: true, higher: false, showGuestStudent: true}" 
+                    url="/reports/students/educationalSuccess/students" style="width: 100%"
+                    name="student" label="report.studentSuccess.student"></hois-autocomplete>
+                </div>
+                <div layout="row" flex-offset-gt-sm="5" class="width-305-autocomplete-multiple">
+                  <hois-autocomplete ng-model="criteria.studentGroup" name="studentGroup" ha-attribute="id" multiple
+                    additional-query-params="{higher: false}" style="width: 100%"
+                    ha-controller="directiveControllers" method="studentgroups" label="report.studentSuccess.studentGroup"></hois-autocomplete>
+                </div>
+              </div>
+              <div layout-gt-sm="row" layout="column">
+                <div layout="row" class="width-305-autocomplete-multiple">
+                  <hois-autocomplete ng-model="criteria.curriculum" ha-attribute="id"
+                    additional-query-params="{higher: false}" style="width: 100%"
+                    method="curriculumsauto" label="report.studentSuccess.curriculum" multiple></hois-autocomplete>
+                </div>
+                <div layout="row" flex-offset-gt-sm="5" class="width-305-autocomplete-multiple">
+                  <hois-autocomplete ng-model="criteria.studentGroupTeacher" name="speciality"
+                    method="studentGroupTeachers" ha-controller="directiveControllers"
+                    additional-query-params="{vocational: true}" style="width: 100%;"
+                    label="report.studentSuccess.studentGroupTeacher" no-paging="true" multiple ha-attribute="id">
+                  </hois-autocomplete>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div>
+                <label style="font-size: 13px; padding-right: 10px; font-weight: 500;">{{'report.studentSuccess.gradeType' | translate}}: </label>
+                <md-checkbox  style="margin-top: 10px;" ng-repeat="entryType in entryTypes" ng-model="entryType.selected" 
+                  aria-label="{{'directive.student.foreign' | translate}}">
+                  <span ng-if="getEntryColor(entryType.label)" md-colors="{color: getEntryColor(entryType.label)}">{{('report.studentSuccess.' + entryType.label) | translate}}</span>
+                  <span ng-if="!getEntryColor(entryType.label)">{{('report.studentSuccess.' + entryType.label) | translate}}</span>
+                </md-checkbox>
+              </div>
+            </div>
+            <div layout="column">
+              <div layout="row" class="width-305-autocomplete">
+                <hois-autocomplete label="report.studentSuccess.teacher" ng-model="criteria.teacher"
+                  ng-if="criteria.queryType === 'EDUCATIONAL_SUCCESS_HAS_DEBT' || criteria.queryType === 'EDUCATIONAL_SUCCESS_NO_DEBT'"
+                  additional-query-params="{vocational: true}" style="width: 100%;"
+                  ha-attribute="id" ha-controller="directiveControllers" method="teachers"></hois-autocomplete>
+              </div>
+              <div layout="row" ng-if="criteria.queryType === 'EDUCATIONAL_SUCCESS_HAS_DEBT'">
+                <md-input-container style="width: 100px">
+                  <label>{{'report.studentSuccess.comparison' | translate}}</label>
+                  <md-select ng-model="criteria.debtSign" ng-required="hasValue(criteria.debt)">
+                    <md-option md-option-empty ng-if="isEmpty(criteria.debt)"></md-option>
+                    <md-option ng-value="formState.equal">&#61;</md-option>
+                    <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                    <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                  </md-select>
+                </md-input-container>
+                <md-input-container flex style="margin-left: 30px;">
+                  <label>{{'report.studentSuccess.debt' | translate}}</label>
+                  <input ng-model="criteria.debt" type="number" name="debt" min="0" max="1000" pattern="^\d+?$" style="width: 175px">
+                  <div ng-messages="searchForm.debt.$error" ng-show="searchForm.debt.$dirty">
+                    <div ng-message="min">
+                      {{'main.messages.error.min' | translate: {min: 0} }}
+                    </div>
+                    <div ng-message="max">
+                      {{'main.messages.error.max' | translate: {max: 1000} }}
+                    </div>
+                    <div ng-message="pattern">
+                      {{'main.messages.error.number' | translate}}
+                    </div>
+                  </div>
+                </md-input-container>
+              </div>
+              <div ng-if="criteria.queryType === 'EDUCATIONAL_SUCCESS_RESULTS'" layout="column">
+                <div>
+                  <div>
+                    <label style="font-size: 13px;font-weight: 500;">{{'report.studentSuccess.countableGrades' | translate}}:</label>
+                    <md-checkbox ng-repeat="grade in grades" style="margin-top: 10px;" ng-model="grade.selected"
+                      aria-label="{{grade.label | translate}}">
+                      <span>{{grade.value}}</span>
+                    </md-checkbox>
+                  </div>
+                </div>
+                <div>
+                  <md-radio-group layout="row" ng-model="formState.perGroup" ng-change="clearOrder()" ng-init="formState.perGroup = true" style="margin-bottom: 5px;">
+                    <md-radio-button ng-value="true" aria-label="{{'report.studentSuccess.perStudentGroup' | translate}}">
+                        {{'report.studentSuccess.perStudentGroup' | translate}}
+                    </md-radio-button>
+                    <md-radio-button ng-value="false" aria-label="{{'report.studentSuccess.perStudent' | translate}}">
+                        {{'report.studentSuccess.perStudent' | translate}}
+                    </md-radio-button>
+                  </md-radio-group>
+                </div>
+              </div>
+              <div ng-if="criteria.queryType === 'EDUCATIONAL_SUCCESS_BEST_RESULTS'">
+                <div layout-gt-sm="row" layout="column">
+                  <div layout="row">
+                    <md-input-container style="width: 100px">
+                      <label>{{'report.studentSuccess.comparison' | translate}}</label>
+                      <md-select ng-model="criteria.weightedAverageSign" ng-required="hasValue(criteria.weightedAverage)">
+                        <md-option ng-value="formState.equal">&#61;</md-option>
+                        <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                        <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                        <md-option md-option-empty ng-if="isEmpty(criteria.weightedAverage)"></md-option>
+                      </md-select>
+                    </md-input-container>
+                    <md-input-container style="margin-left: 30px; width: 175px">
+                      <label>{{'report.studentSuccess.weightedAverage' | translate}}</label>
+                      <input ng-model="criteria.weightedAverage" type="number" name="weightedAverage" min="0" max="999"
+                        pattern="^\d+(\.\d{1,2})?$">
+                      <div ng-messages="searchForm.weightedAverage.$error" ng-show="searchForm.weightedAverage.$dirty">
+                        <div ng-message="min">
+                          {{'main.messages.error.min' | translate: {min: 0} }}
+                        </div>
+                        <div ng-message="max">
+                          {{'main.messages.error.max' | translate: {max: 999} }}
+                        </div>
+                        <div ng-message="pattern">
+                          {{'main.messages.error.doublePercision' | translate}}
+                        </div>
+                      </div>
+                    </md-input-container>
+                  </div>
+                  <div layout="row" flex-offset-gt-sm="5">
+                    <md-input-container style="width: 100px">
+                      <label>{{'report.studentSuccess.comparison' | translate}}</label>
+                      <md-select ng-model="criteria.moduleFourSign" ng-required="hasValue(criteria.moduleFour)">
+                        <md-option ng-value="formState.equal">&#61;</md-option>
+                        <md-option ng-value="formState.biggerThan">&gt;</md-option>
+                        <md-option ng-value="formState.smallerThan">&lt;</md-option>
+                        <md-option md-option-empty ng-if="isEmpty(criteria.moduleFour)"></md-option>
+                      </md-select>
+                    </md-input-container>
+                    <md-input-container style="margin-left: 30px; width: 175px">
+                      <label>{{'report.studentSuccess.moduleFour' | translate}}</label>
+                      <input ng-model="criteria.moduleFour" type="number" name="moduleFour" min="0" max="99"
+                        pattern="^\d+(\.\d{1,2})?$">
+                      <div ng-messages="searchForm.moduleFour.$error" ng-show="searchForm.moduleFour.$dirty">
+                        <div ng-message="min">
+                          {{'main.messages.error.min' | translate: {min: 0} }}
+                        </div>
+                        <div ng-message="max">
+                          {{'main.messages.error.max' | translate: {max: 99} }}
+                        </div>
+                        <div ng-message="pattern">
+                          {{'main.messages.error.doublePercision' | translate}}
+                        </div>
+                      </div>
+                    </md-input-container>
+                  </div>
+                </div>
+                <div layout-gt-sm="row" layout="column">
+                  <div layout="row">
+                    <md-input-container class="width-305-input">
+                      <label>{{'report.studentSuccess.absence' | translate}}</label>
+                      <input ng-model="criteria.absence" type="number" name="absence" min="0" max="999"
+                        pattern="^\d+?$">
+                      <div ng-messages="searchForm.absence.$error" ng-show="searchForm.absence.$dirty">
+                        <div ng-message="min">
+                          {{'main.messages.error.min' | translate: {min: 0} }}
+                        </div>
+                        <div ng-message="max">
+                          {{'main.messages.error.max' | translate: {max: 999} }}
+                        </div>
+                        <div ng-message="pattern">
+                          {{'main.messages.error.number' | translate}}
+                        </div>
+                      </div>
+                    </md-input-container>
+                  </div>
+                  <div layout="row" flex-offset-gt-sm="5">
+                    <md-input-container class="width-305-input">
+                      <label>{{'report.studentSuccess.causelessAbsence' | translate}}</label>
+                      <input ng-model="criteria.causelessAbsence" type="number" name="causelessAbsence" min="0" max="999" 
+                        pattern="^\d+?$">
+                      <div ng-messages="searchForm.causelessAbsence.$error" ng-show="searchForm.causelessAbsence.$dirty">
+                        <div ng-message="min">
+                          {{'main.messages.error.min' | translate: {min: 0} }}
+                        </div>
+                        <div ng-message="max">
+                          {{'main.messages.error.max' | translate: {max: 999} }}
+                        </div>
+                        <div ng-message="pattern">
+                          {{'main.messages.error.number' | translate}}
+                        </div>
+                      </div>
+                    </md-input-container>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div layout="row" layout-xs="column">
+              <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+              <md-button class="md-raised" ng-click="initEntryTypes() && clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+              <md-button ng-click="toExcel()" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</md-button>
+            </div>
+            <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+          </form>
+        </fieldset>
+      </div>
+    </div>
+    <div layout-padding>
+      <div flex ng-if="criteria.queryType === 'EDUCATIONAL_SUCCESS_HAS_DEBT'">
+        <md-table-container resize-table search-criteria-height="350">
+          <table md-table md-progress="tabledata.$promise">
+            <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+              <tr md-row>
+                <th md-column>{{'report.studentSuccess.nr' | translate}}</th>
+                <th md-column md-order-by="p.firstname, p.lastname">{{'report.studentSuccess.studentName' | translate}}</th>
+                <th md-column md-order-by="sg.code">{{'report.studentSuccess.studentGroup' | translate}}</th>
+                <th md-column md-order-by="amount">{{'report.studentSuccess.debts' | translate}}</th>
+                <th md-column style="text-align: center;">{{'report.studentSuccess.debtObjects' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{criteria.size * (criteria.page - 1) + $index + 1}}</td>
+                <td md-cell md-order-by="p.firstname, p.lastname">{{currentLanguageNameField(row.student)}}</td>
+                <td md-cell md-order-by="sg.code">{{currentLanguageNameField(row.studentGroup)}}</td>
+                <td md-cell>{{row.debts}}</td>
+                <td md-cell>
+                  <md-table-container resize-table search-criteria-height="350">
+                    <table md-table md-progress="tabledata.$promise">
+                      <tbody md-body>
+                        <tr md-row ng-repeat="module in row.modules" ng-style="{'font-weight': module.isModule ? 'bold' : 'none'}">
+                          <td md-cell>
+                            <div style="width: 300px; overflow-wrap: break-word;">
+                              {{currentLanguageNameField(module.module)}}
+                            </div>
+                          </td>
+                          <td md-cell>
+                            <div style="width: 70px; overflow-wrap: break-word;">
+                              {{module.studyYear}}
+                            </div>
+                          </td>
+                          <td md-cell>
+                            <div style="width: 100px; overflow-wrap: break-word;">
+                              {{currentLanguageNameField(module.resultType)}}
+                            </div>
+                          </td>
+                          <td md-cell>
+                            <div style="width: 50px; overflow-wrap: break-word;">
+                              {{module.grade}}
+                            </div>
+                          </td>
+                          <td md-cell>
+                            <div style="width: 100px; overflow-wrap: break-word;">
+                              {{module.teachers}}
+                            </div>
+                          </td>
+                          <td md-cell>
+                            <div style="width: 70px; overflow-wrap: break-word;">
+                              {{module.gradeDate | hoisDate}}
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </md-table-container>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+        <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                             md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                             md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+      </div>
+
+      <div flex ng-if="criteria.queryType === 'EDUCATIONAL_SUCCESS_NO_DEBT'">
+        <md-table-container resize-table search-criteria-height="350">
+          <table md-table md-progress="tabledata.$promise">
+            <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+              <tr md-row>
+                <th md-column>{{'report.studentSuccess.nr' | translate}}</th>
+                <th md-column md-order-by="p.firstname, p.lastname">{{'report.studentSuccess.studentName' | translate}}</th>
+                <th md-column md-order-by="sg.code">{{'report.studentSuccess.studentGroup' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{criteria.size * (criteria.page - 1) + $index + 1}}</td>
+                <td md-cell>{{currentLanguageNameField(row.student)}}</td>
+                <td md-cell>{{currentLanguageNameField(row.studentGroup)}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+        <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                             md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                             md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+      </div>
+
+      <div flex ng-if="criteria.queryType === 'EDUCATIONAL_SUCCESS_RESULTS' && !criteria.perGroup">
+        <md-table-container resize-table search-criteria-height="350">
+          <table md-table md-progress="tabledata.$promise">
+            <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+              <tr md-row>
+                <th md-column>{{'report.studentSuccess.nr' | translate}}</th>
+                <th md-column md-order-by="p.firstname, p.lastname">{{'report.studentSuccess.studentName' | translate}}</th>
+                <th md-column md-order-by="sg.code">{{'report.studentSuccess.studentGroup' | translate}}</th>
+                <th md-column >{{'report.studentSuccess.gradeAmount' | translate}}</th>
+                <th md-column >{{'report.studentSuccess.educationalDebts' | translate}}</th>
+                <th md-column >{{'report.studentSuccess.educationalSuccess' | translate}}</th>
+                <th md-column >{{'report.studentSuccess.weightedAverage' | translate}}</th>
+                <th md-column >{{'report.studentSuccess.average' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{criteria.size * (criteria.page - 1) + $index + 1}}</td>
+                <td md-cell>{{currentLanguageNameField(row.student)}}</td>
+                <td md-cell>{{row.studentGroup}}</td>
+                <td md-cell>{{row.gradeAmount}}</td>
+                <td md-cell>{{row.debts}}</td>
+                <td md-cell>{{row.educationalSuccess}}%</td>
+                <td md-cell>{{row.weightedAverage}}</td>
+                <td md-cell>{{row.average}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+        <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                             md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                             md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+      </div>
+
+      <div flex ng-if="criteria.queryType === 'EDUCATIONAL_SUCCESS_RESULTS' && !!criteria.perGroup">
+        <md-table-container resize-table search-criteria-height="350">
+          <table md-table md-progress="tabledata.$promise">
+            <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+              <tr md-row>
+                <th md-column>{{'report.studentSuccess.nr' | translate}}</th>
+                <th md-column md-order-by="sg.code">{{'report.studentSuccess.studentGroup' | translate}}</th>
+                <th md-column >{{'report.studentSuccess.studentAmount' | translate}}</th>
+                <th md-column >{{'report.studentSuccess.gradeAmount' | translate}}</th>
+                <th md-column >{{'report.studentSuccess.educationalDebts' | translate}}</th>
+                <th md-column >{{'report.studentSuccess.educationalSuccess' | translate}}</th>
+                <th md-column >{{'report.studentSuccess.studentAverage' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{criteria.size * (criteria.page - 1) + $index + 1}}</td>
+                <td md-cell>{{currentLanguageNameField(row.studentGroup)}}</td>
+                <td md-cell>{{row.students}}</td>
+                <td md-cell>{{row.gradeCount}}</td>
+                <td md-cell>{{row.debts}}</td>
+                <td md-cell>{{row.educationalSuccess}}%</td>
+                <td md-cell>{{row.average}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+        <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                             md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                             md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+      </div>
+      <div flex ng-if="criteria.queryType === 'EDUCATIONAL_SUCCESS_STUDY_DIRECTOR_REPORT'">
+        <md-table-container resize-table search-criteria-height="350">
+          <table md-table md-progress="tabledata.$promise">
+            <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+              <tr md-row>
+                <th md-column>{{(auth.higher && auth.vocational ? 'report.studentSuccess.hybridHeader' : 'report.studentSuccess.header') | translate}}</th>
+                <th md-column>{{'report.studentSuccess.data' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'" ng-style="{'font-weight': row.bold ? '600' : '400'}">
+                <td md-cell ng-style="{'padding-left': row.bold ? '0em' : '5em'}">{{row.header | translate}}</td>
+                <td md-cell style="white-space: pre-line">{{row.data}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+      <div flex ng-if="criteria.queryType === 'EDUCATIONAL_SUCCESS_BEST_RESULTS'">
+        <md-table-container resize-table search-criteria-height="350">
+          <table md-table md-progress="tabledata.$promise">
+            <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+              <tr md-row>
+                <th md-column>{{'report.studentSuccess.nr' | translate}}</th>
+                <th md-column>{{'report.studentSuccess.studentName' | translate}}</th>
+                <th md-column>{{'report.studentSuccess.studentGroup' | translate}}</th>
+                <th md-column>{{'report.studentSuccess.weightedAverage' | translate}}</th>
+                <th md-column>{{'report.studentSuccess.moduleGradeFour' | translate}}</th>
+                <th md-column>{{'report.studentSuccess.absences' | translate}}</th>
+                <th md-column>{{'report.studentSuccess.absencesP' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{criteria.size * (criteria.page - 1) + $index + 1}}</td>
+                <td md-cell>{{currentLanguageNameField(row.student)}}</td>
+                <td md-cell>{{row.studentGroup}}</td>
+                <td md-cell>{{row.average}}</td>
+                <td md-cell>{{row.moduleGradeFour}}</td>
+                <td md-cell>{{row.absences}}</td>
+                <td md-cell>{{row.absencesP}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+        <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                             md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                             md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+      </div>
+    </div>
+    

@@ -203,6 +203,7 @@ angular.module('hitsaOis').controller('ScholarshipApplicationRankingController',
       dialogService.showDialog('scholarship/templates/scholarship.term.compliance.dialog.html', function (dialogScope) {
         dialogScope.stipend = application;
         dialogScope.stipend.nameEt = application.termNameEt;
+        dialogScope.typeIsScholarship = $scope.scholarshipType === 'scholarships';
       });
     };
 
@@ -353,7 +354,7 @@ function ($scope, $location, $q, message, QueryUtils, $route, Classifier, dialog
     compensationFrequency: 'STIPTOETUS_HYVITAMINE',
     compensationReason: 'STIPTOETUS_HYVITAMINE_POHJUS'
   });
-  
+
   $scope.isNumber = angular.isNumber;
 
   $scope.decision = Endpoint.get({id: id}, function (result) {

@@ -171,12 +171,12 @@ function ($q, $scope, $route, QueryUtils, DataUtils) {
   };
 
   $scope.staticState.queryTypes = ["MOVEMENT_STAT_SUM",
-                                "MOVEMENT_STAT_CURRICULUM_GROUP",
-                                "MOVEMENT_STAT_STRUCTURAL_UNIT",
-                                "MOVEMENT_STAT_CURRICULA",
-                                "MOVEMENT_STAT_STUDENT_GROUP",
-                                "MOVEMENT_STAT_COURSE",
-                                "MOVEMENT_STAT_STUDY_LEVEL"];
+                                  "MOVEMENT_STAT_CURRICULUM_GROUP",
+                                  "MOVEMENT_STAT_STRUCTURAL_UNIT",
+                                  "MOVEMENT_STAT_CURRICULA",
+                                  "MOVEMENT_STAT_STUDENT_GROUP",
+                                  "MOVEMENT_STAT_COURSE",
+                                  "MOVEMENT_STAT_STUDY_LEVEL"];
 
   function initCriteria() {
     $scope.formState.queryType = 'MOVEMENT_STAT_SUM';
@@ -609,6 +609,161 @@ function ($q, $scope, $route, Classifier, QueryUtils, message, FormUtils, $rootS
     });
   };
 }
+])
+.controller('ReportStudentEducationalSuccessController', ['$q', '$scope', '$route', 'QueryUtils', 'DataUtils', 'Classifier', 'message', 'FormUtils', 'ExcelUtils', '$rootScope',
+function ($q, $scope, $route, QueryUtils, DataUtils, Classifier, message, FormUtils, ExcelUtils, $rootScope) {
+  $scope.auth = $route.current.locals.auth;
+  $scope.initEntryTypes = function() {
+    $scope.entryTypes = [
+      {label:"SISSEKANNE_H", selected: true},
+      {label:"SISSEKANNE_R", selected: true},
+      {label:"SISSEKANNE_L", selected: true},
+      {label:"SISSEKANNE_O", selected: true},
+      {label:"SISSEKANNE_M", selected: true}
+    ];
+    return true;
+  }
+
+  function initFormstate() {
+    $scope.formState = {
+      xlsUrl: 'reports/students/educationalSuccess.xls',
+      biggerThan: '>',
+      smallerThan: '<',
+      equal: '=',
+      studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(),
+      statisticsTypes: ["EDUCATIONAL_SUCCESS_HAS_DEBT",
+                        "EDUCATIONAL_SUCCESS_NO_DEBT",
+                        "EDUCATIONAL_SUCCESS_RESULTS",
+                        "EDUCATIONAL_SUCCESS_STUDY_DIRECTOR_REPORT",
+                        "EDUCATIONAL_SUCCESS_BEST_RESULTS"]
+    };
+    $scope.initEntryTypes();
+  }
+
+  initFormstate();
+
+  $scope.entryTypeColors = {
+    'SISSEKANNE_H': 'green-300',
+    'SISSEKANNE_R': 'indigo-300',
+    'SISSEKANNE_O': 'teal-300',
+    'SISSEKANNE_L': 'pink-300'
+  };
+
+  $scope.grades = Classifier.queryForDropdown({mainClassCode: 'KUTSEHINDAMINE', order: 'value'}, defaultSelect);
+
+  function defaultSelect(response) {
+    var selectedGrades = ['KUTSEHINDAMINE_3', 'KUTSEHINDAMINE_4', 'KUTSEHINDAMINE_5', 'KUTSEHINDAMINE_A'];
+    response.forEach(function(grade) {
+      if (selectedGrades.indexOf(grade.code) !== -1) {
+        grade.selected = true;
+      }
+    });
+  }
+
+  $scope.getEntryColor = function (type) {
+    return $scope.entryTypeColors[type];
+  };
+
+  $scope.hasValue = function(field) {
+    return field !== undefined && field !== null && field !== "";
+  };
+
+  $scope.isEmpty = function(field) {
+    return field === undefined || field === null || field === "";
+  };
+
+  QueryUtils.createQueryForm($scope, '/reports/students/educationalSuccess', {}, null, true);
+
+  $scope.setToday = function() {
+    $scope.criteria.thru = new Date();
+  }
+
+  $scope.preselectFrom = function() {
+    $scope.setToday();
+    if ($scope.criteria.queryType === 'EDUCATIONAL_SUCCESS_STUDY_DIRECTOR_REPORT') {
+      $scope.formState.studyYears.$promise.then(function () {
+          var sy = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyYears);
+          DataUtils.convertStringToDates(sy, ['from', 'thru']);
+          if (sy) {
+            $scope.criteria.from = sy ? sy.startDate : null;
+          }
+      });
+    } else {
+      $scope.criteria.from = null;
+    }
+  }
+
+  $scope.clearSortAndTable = function() {
+    var savedType = $scope.criteria.queryType;
+    $scope.initEntryTypes();
+    $scope.clearCriteria();
+    entryTypeToCriteria();
+    gradeToCriteria();
+    $scope.criteria.order = undefined;
+    $scope.tabledata.content = [];
+    $scope.criteria.queryType = savedType;
+    $scope.criteria.perGroup = true;
+    return true;
+  };
+
+  $scope.clearOrder = function() {
+    $scope.criteria.order = undefined;
+  };
+
+  function entryTypeToCriteria() {
+    $scope.criteria.gradeType = [];
+    $scope.entryTypes.forEach(function(entryType) {
+      if (entryType.selected) {
+        $scope.criteria.gradeType.push(entryType.label);
+      }
+    });
+  }
+
+  function gradeToCriteria() {
+    $scope.criteria.countableGrades = [];
+    $scope.grades.forEach(function(grade) {
+      if (grade.selected) {
+        $scope.criteria.countableGrades.push(grade.code);
+      }
+    });
+  }
+  
+  $scope.toExcel = function () {
+    FormUtils.withValidForm($scope.searchForm, function () {
+      $scope.criteria.perGroup = $scope.formState.perGroup;
+      entryTypeToCriteria();
+      gradeToCriteria();
+      if ($scope.criteria.countableGrades.length === 0 && $scope.criteria.queryType === 'EDUCATIONAL_SUCCESS_RESULTS') {
+        message.error('report.studentSuccess.error.countableGrades');
+        return;
+      }
+      if ($scope.criteria.gradeType.length === 0) {
+        message.error('report.studentSuccess.error.gradeType');
+        return;
+      }
+      ExcelUtils.get($rootScope.excel('reports/students/educationalSuccess.xls', $scope.criteria), 'educationalSuccess', $scope);
+    });
+  }
+
+  $scope.loadResults = function() {
+    $scope.criteria.perGroup = $scope.formState.perGroup;
+    entryTypeToCriteria();
+    gradeToCriteria();
+    if ($scope.criteria.countableGrades.length === 0 && $scope.criteria.queryType === 'EDUCATIONAL_SUCCESS_RESULTS') {
+      message.error('report.studentSuccess.error.countableGrades');
+      return;
+    }
+    if ($scope.criteria.gradeType.length === 0) {
+      message.error('report.studentSuccess.error.gradeType');
+      return;
+    }
+    // reset page when searching
+    $scope.criteria.page = 1;
+    $scope.tabledata.content = [];
+
+    $scope.loadData();
+  };
+}
 ]).controller('ReportStudentStatisticsController', ['$route', '$scope', 'Classifier', 'QueryUtils', 'message',
   function ($route, $scope, Classifier, QueryUtils, message) {
     $scope.auth = $route.current.locals.auth;
@@ -666,8 +821,27 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
   var clMapper = Classifier.valuemapper({homeCountry: 'RIIK', programme: 'VALISKOOL_PROGRAMM'});
   QueryUtils.createQueryForm($scope, '/reports/gueststudents/statistics', {order: 'p.lastname,p.firstname'}, clMapper.objectmapper);
 
-  /** Load departments when curriculum changes */
-  $scope.queryForDepartments = function() {
+  function loadEducationLevelOptions() {
+    QueryUtils.endpoint('/reports/educationalLevels').query().$promise.then(function(response){
+      $scope.educationLevelOptions = response;
+    });
+  }
+
+  loadEducationLevelOptions();
+
+  function filterEducationOptions() {
+    $scope.educationLevelOptions = $scope.educationLevelOptions.filter(function(educationLevel) {
+      if ($scope.hiddenCriteria.curriculumObj.origStudyLevel !== undefined && 
+        $scope.hiddenCriteria.curriculumObj.origStudyLevel !== null &&
+        $scope.hiddenCriteria.curriculumObj.origStudyLevel.endsWith(educationLevel.value2)) {
+        return true;
+      }
+      return false;
+    })
+  }
+
+  /** Load departments and educationLevelOptions when curriculum changes */
+  $scope.$watch('hiddenCriteria.curriculumObj', function() {
     // Check if I can remove curriculum version from field
     if ($scope.hiddenCriteria.curriculumVersionObj &&
        ($scope.hiddenCriteria.curriculumObj || {}).id !== $scope.hiddenCriteria.curriculumVersionObj.curriculum) {
@@ -676,11 +850,13 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
     if (angular.isObject($scope.hiddenCriteria.curriculumObj) && $scope.hiddenCriteria.curriculumObj.id !== undefined) {
       $scope.criteria.curriculum = $scope.hiddenCriteria.curriculumObj.id;
       $scope.formState.departments = QueryUtils.endpoint('/autocomplete/curriculumdepartments').query({id: $scope.criteria.curriculum});
+      filterEducationOptions();
     } else {
       $scope.criteria.curriculum = undefined;
       $scope.formState.departments = QueryUtils.endpoint('/autocomplete/curriculumdepartments').query();
+      loadEducationLevelOptions();
     }
-  };
+  });
 
   $scope.$watch('hiddenCriteria.curriculumVersionObj', function (newV, oldV) {
     if (newV === oldV) {
@@ -702,7 +878,8 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
   $scope.auth = $route.current.locals.auth;
   $scope.formState = {
     departments: QueryUtils.endpoint('/autocomplete/curriculumdepartments').query(),
-    xlsUrl: 'reports/foreignstudents/statistics/foreignstudentstatistics.xls'
+    xlsUrl: 'reports/foreignstudents/statistics/foreignstudentstatistics.xls',
+    educationLevelCriteria: getEducationLevelCriteria()
   };
   var clMapper = Classifier.valuemapper({
     educationLevel: 'HARIDUSTASE',
@@ -712,8 +889,41 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
   });
   QueryUtils.createQueryForm($scope, '/reports/foreignstudents/statistics', {order: 'p.lastname,p.firstname'}, clMapper.objectmapper);
 
+  function loadEducationLevelOptions() {
+    QueryUtils.endpoint('/reports/educationalLevels').query().$promise.then(function(response){
+      $scope.educationLevelOptions = response;
+    });
+  }
+
+  loadEducationLevelOptions();
+
+  function filterEducationOptions() {
+    $scope.educationLevelOptions = $scope.educationLevelOptions.filter(function(educationLevel) {
+      if ($scope.hiddenCriteria.curriculum.origStudyLevel !== undefined && 
+        $scope.hiddenCriteria.curriculum.origStudyLevel !== null &&
+        $scope.hiddenCriteria.curriculum.origStudyLevel.endsWith(educationLevel.value2)) {
+        return true;
+      }
+      return false;
+    })
+  }
+
+  function getEducationLevelCriteria() {
+    var params = {};
+    if ($scope.auth.higher && $scope.auth.vocational) {
+      return params;
+    }
+    if ($scope.auth.higher) {
+      params.higher = true;
+    }
+    if ($scope.auth.vocational) {
+      params.higher = false;
+    }
+    return params;
+  }
+
   /** Load departments when curriculum changes */
-  $scope.queryForDepartments = function() {
+  $scope.$watch('hiddenCriteria.curriculum', function() {
     // Check if I can remove curriculum version from field
     if ($scope.hiddenCriteria.curriculumVersion &&
        ($scope.hiddenCriteria.curriculum || {}).id !== $scope.hiddenCriteria.curriculumVersion.curriculum) {
@@ -728,11 +938,13 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
             $scope.criteria.department = null;
           }
       });
+      filterEducationOptions();
     } else {
       $scope.criteria.curriculum = undefined;
       $scope.formState.departments = QueryUtils.endpoint('/autocomplete/curriculumdepartments').query();
+      loadEducationLevelOptions();
     }
-  };
+  });
 
   function isCurriculumDepartment(selectedDepartment, curriculumDepartments) {
     var departmentIds = (curriculumDepartments || []).map(function (department) { return department.id; });

@@ -283,7 +283,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
         curriculumModulesById[it.curriculumModule.id] = it;
 
         // filter replaced themes that do not have a grade
-        it.themes.filter(function (theme) {
+        it.themes = it.themes.filter(function (theme) {
           var moduleResult = moduleResultById[it.curriculumModule.id];
           var themeResult = moduleResult ? moduleResult.themeResultById[theme.id] : undefined;
           return it.replacedThemes.indexOf(theme.id) === -1 || angular.isDefined(themeResult);
@@ -394,6 +394,11 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
         moduleOutcomes.push(outcome.id);
       });
     });
+    module.otherCurriculumVersionModuleThemes.forEach(function (theme) {
+      theme.curriculumModuleOutcomes.forEach(function (outcome) {
+        moduleOutcomes.push(outcome.id);
+      });
+    });
     return moduleOutcomes;
   }
 
@@ -479,17 +484,24 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
   function setModuleSubmittedCreditsAndBacklogs(module) {
     var moduleResult = $scope.moduleResultById[module.curriculumModule.id];
     module.themes.forEach(function (theme) {
-      var themeResult = angular.isDefined(moduleResult) ? moduleResult.themeResultById[theme.id] : undefined;
-      if (isThemeGraded(theme, themeResult)) {
-        var outcomeResults = angular.isDefined(moduleResult) ? moduleResult.outcomeResultById : undefined;
-        theme.isOk = isThemeOk(theme, themeResult, outcomeResults);
-      }
-
-      if (theme.isOk) {
-        moduleResult.totalSubmitted += theme.credits;
-      }
+      setThemeIsOk(moduleResult, theme);
+    });
+    module.otherCurriculumVersionModuleThemes.forEach(function (theme) {
+      setThemeIsOk(moduleResult, theme);
     });
     module.moduleBacklog = (moduleResult ? moduleResult.totalSubmitted : 0) - module.curriculumModule.credits;
+  }
+
+  function setThemeIsOk(moduleResult, theme) {
+    var themeResult = angular.isDefined(moduleResult) ? moduleResult.themeResultById[theme.id] : undefined;
+    if (isThemeGraded(theme, themeResult)) {
+      var outcomeResults = angular.isDefined(moduleResult) ? moduleResult.outcomeResultById : undefined;
+      theme.isOk = isThemeOk(theme, themeResult, outcomeResults);
+    }
+
+    if (theme.isOk) {
+      moduleResult.totalSubmitted += theme.credits;
+    }
   }
 
   // 'isOk' column value should not be shown if theme has no assessment, is not graded by outcomes
@@ -551,7 +563,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
     $scope.studentId = ($scope.auth.isStudent() || $scope.auth.isParent()) ? $scope.auth.student : $route.current.params.id;
     $scope.auth = $route.current.locals.auth;
     $scope.gradeUtil = HigherGradeUtil;
-    var clMapper = Classifier.valuemapper({ grade: 'KORGHINDAMINE'});
+    var clMapper = Classifier.valuemapper({ grade: 'KORGHINDAMINE' });
 
     var studentIsActive = StudentUtil.isActive($scope.student.status);
     $scope.canChangeStudentModules = ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher()) && studentIsActive &&
@@ -572,19 +584,36 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
 
     function loadHigherResults(expandedModules) {
       QueryUtils.endpoint('/students/' + $scope.studentId + '/higherResults').get().$promise.then(function (response) {
+        var allResults = [];
+
         response.modules.forEach(function (module) {
           module.markedComplete = module.studentCurriculumCompletionHigherModule !== null;
           module.studyCredits = module.compulsoryStudyCredits + module.optionalStudyCredits;
           module.creditsSubmitted = module.mandatoryCreditsSubmitted + module.optionalCreditsSubmitted;
           module.difference = (module.mandatoryDifference < 0 ? module.mandatoryDifference : 0) +
             (module.optionalDifference < 0 ? module.optionalDifference : 0);
+          module.grades.forEach(function (grade) {
+            clMapper.objectmapper(grade);
+          });
+          if (module.grades.length > 0) {
+            clMapper.objectmapper(module.lastGrade);
+            var moduleResult = {
+              module: {id: module.id, nameEt: module.nameEt, nameEn: module.nameEn, credits: module.totalCredits},
+              isModule: true,
+              grades: module.grades,
+              lastGrade: module.lastGrade
+            };
+            allResults.push(moduleResult);
+          }
         });
         response.subjectResults.forEach(function (result) {
           result.grades.forEach(function (grade) {
             clMapper.objectmapper(grade);
           });
+          allResults.push(result);
         });
         $scope.higherResults = response;
+        $scope.higherResults.allResults = allResults;
         $scope.student.higherResults = $scope.higherResults;
         $scope.student.higherResults.modules.sort(moduleComparator);
         changeModulesExpandedStatus(expandedModules);
@@ -661,16 +690,14 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       };
     };
 
-    $scope.filterSubjectResultsByStudyPeriod = function (studyPeriod) {
-      return function (subjectResult) {
-        return subjectResult.lastGrade && subjectResult.lastGrade.gradeValue && studyPeriod.id === subjectResult.lastGrade.studyPeriod;
+    $scope.filterResultsByStudyPeriod = function (studyPeriod) {
+      return function (result) {
+        return result.lastGrade && studyPeriod.id === result.lastGrade.studyPeriod;
       };
     };
 
-    var moduleOrder = ['KORGMOODUL_C',   // Optional subjects
-                       'KORGMOODUL_P',   // Internship
-                       'KORGMOODUL_M',   // Custom module
-                       'KORGMOODUL_V',   // Unschooling
+    // every other type comes before those
+    var moduleOrder = ['KORGMOODUL_V',   // Free choice
                        'KORGMOODUL_F',   // Final exam
                        'KORGMOODUL_L'];    // Final thesis
 
@@ -1064,6 +1091,8 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       $scope.isArray = angular.isArray;
       $scope.getUrl = oisFileService.getUrl;
 
+      $scope.innoveHistory = innoveHistory;
+
       $scope.editService = function(service) {
         dialogService.showDialog("student/templates/edit.service.dialog.html", function (dialogScope) {
           if (!service) {
@@ -1157,6 +1186,21 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       };
 
       $scope.loadSupportServices();
+
+      function innoveHistory() {
+        QueryUtils.loadingWheel($scope, true);
+        QueryUtils.endpoint('/students/innoveHistory').get({id: $scope.studentId}, function (result) {
+          if (result.error) {
+            message.error(result.message);
+          } else {
+            message.info('main.messages.dataUpdated');
+          }
+          QueryUtils.loadingWheel($scope, false);
+          $scope.loadSupportServices();
+        }, function () {
+          QueryUtils.loadingWheel($scope, false);
+        });
+      }
     }]).controller('StudentSearchController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils',
     function ($q, $route, $scope, Classifier, QueryUtils) {
       $scope.auth = $route.current.locals.auth;

@@ -100,6 +100,7 @@ import ee.hitsa.ois.web.commandobject.report.SubjectStudyPeriodDataCommand;
 import ee.hitsa.ois.web.commandobject.report.TeacherLoadCommand;
 import ee.hitsa.ois.web.commandobject.report.VotaCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
 import ee.hitsa.ois.web.dto.report.ClassifierResult;
 import ee.hitsa.ois.web.dto.report.CurriculumCompletionDto;
@@ -133,6 +134,8 @@ public class ReportService {
     private StudyYearService studyYearService;
     @Autowired
     private ClassifierService classifierService;
+    @Autowired
+    private AutocompleteService autocompleteService;
 
     private static final String DATA_TRANSFER_ROWS = "DATA_TRANSFER_PROCESS";
 
@@ -2998,5 +3001,52 @@ public class ReportService {
         data.put("header", header);
         data.put("criteria", criteria);
         return xlsService.generate("subjectstudyperioddata.xls", data);
+    }
+
+    public List<ClassifierSelection> educationalLevels(HoisUserDetails user) {
+        SchoolType type = schoolService.schoolType(user.getSchoolId());
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from classifier_connect cc join "
+                + "classifier c1 on c1.code = cc.classifier_code join "
+                + "classifier c2 on c2.code = cc.connect_classifier_code");
+        
+        qb.requiredCriteria("cc.main_classifier_code = :mainClassCode", "mainClassCode", MainClassCode.HARIDUSTASE.name());
+        
+        List<?> data = qb.select("c2.code, c2.name_et, c2.name_en, c2.name_ru, c2.valid, c2.is_higher, c2.is_vocational"
+                + ", c2.main_class_code, c2.value, c2.valid_from, c2.valid_thru, c2.extraval1, c2.extraval2, c1.value as childCode", em).getResultList();
+        List<ClassifierSelection> result = StreamUtil.toMappedList(r -> {
+            ClassifierSelection c = new ClassifierSelection(resultAsString(r, 0), resultAsString(r, 1),
+                    resultAsString(r, 2), resultAsString(r, 3), resultAsBoolean(r, 4), resultAsBoolean(r, 5),
+                    resultAsBoolean(r, 6), resultAsString(r, 7), resultAsString(r, 8), resultAsString(r, 13),
+                    resultAsLocalDate(r, 9), resultAsLocalDate(r, 10), resultAsString(r, 11), resultAsString(r, 12));
+            return c;
+        }, data);
+        
+        if (type.isHigher() && !type.isVocational()) {
+            result = result.stream().filter(p -> p.getValue2() != null).filter(p -> {
+                try {
+                    Integer number = Integer.valueOf(p.getValue2());
+                    if (number.intValue() > 500) {
+                        return true;
+                    }
+                    return false;
+            } catch(@SuppressWarnings("unused") Exception e) {
+                return false;
+            }
+        }).collect(Collectors.toList());
+        } else if (type.isVocational() && !type.isHigher()) {
+            result = result.stream().filter(p -> p.getValue2() != null).filter(p -> {
+                try {
+                    Integer number = Integer.valueOf(p.getValue2());
+                    if (number.intValue() < 500) {
+                        return true;
+                    }
+                    return false;
+            } catch(@SuppressWarnings("unused") Exception e) {
+                return false;
+            }
+        }).collect(Collectors.toList());
+        }
+
+        return ClassifierUtil.sort(Collections.singletonList(MainClassCode.HARIDUSTASE.name()), result);
     }
 }

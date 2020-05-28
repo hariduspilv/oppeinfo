@@ -58,6 +58,7 @@ import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -282,7 +283,8 @@ public class ExamService {
     private List<ExamDto.ExamStudent> registrations(HoisUserDetails user, SubjectStudyPeriodExam exam) {
         Long examId = EntityUtil.getId(exam);
 
-        List<?> data = em.createNativeQuery("select ds.id, s.id as s_id, p.firstname, p.lastname, cv.code, c.name_et, c.name_en, sg.code as sg_code, sspes.inserted, sspes.id as es_id " +
+        List<?> data = em.createNativeQuery("select ds.id, s.id as s_id, p.firstname, p.lastname, cv.code, c.name_et, c.name_en, " +
+                "sg.code as sg_code, sspes.inserted, sspes.id as es_id, s.type_code as studentType " +
                 "from subject_study_period_exam_student sspes " +
                 "join declaration_subject ds on sspes.declaration_subject_id = ds.id " +
                 "join declaration d on ds.declaration_id = d.id " +
@@ -338,7 +340,8 @@ public class ExamService {
             throw new AssertionFailedException("Unknown exam type");
         }
 
-        List<?> data = qb.select("ds.id, s.id as s_id, p.firstname, p.lastname, cv.code, c.name_et, c.name_en, sg.code as sg_code, cast(null as date) as inserted, cast(null as int) as es_id", em).getResultList();
+        List<?> data = qb.select("ds.id, s.id as s_id, p.firstname, p.lastname, cv.code, c.name_et, c.name_en, "
+                + "sg.code as sg_code, cast(null as date) as inserted, cast(null as int) as es_id, s.type_code", em).getResultList();
         return studentsForExam(exam, data, Collections.emptyMap());
     }
 
@@ -694,7 +697,7 @@ public class ExamService {
             ExamDto.ExamStudent dto = new ExamDto.ExamStudent();
             dto.setId(resultAsLong(r, 0));
             dto.setStudentId(resultAsLong(r, 1));
-            dto.setFullname(PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)));
+            dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 10)));
             String curriculumVersionCode = resultAsString(r, 4);
             dto.setCurriculumVersion(new AutocompleteResult(null,
                     CurriculumUtil.versionName(curriculumVersionCode, resultAsString(r, 5)),

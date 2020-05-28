@@ -26,6 +26,7 @@ public class HigherProtocolStudentDto extends VersionedCommand implements Protoc
     @ClassifierRestriction(MainClassCode.KORGHINDAMINE)
     private String grade;
     private List<ProtocolPracticeJournalResultDto> practiceJournalResults = new ArrayList<>();
+    private List<HigherProtocolModuleSubjectResultDto> subjectResults = new ArrayList<>();
     private Long studentId;
     private AutocompleteResult student;
     private String studentGroup;
@@ -72,6 +73,14 @@ public class HigherProtocolStudentDto extends VersionedCommand implements Protoc
 
     public void setPracticeJournalResults(List<ProtocolPracticeJournalResultDto> practiceJournalResults) {
         this.practiceJournalResults = practiceJournalResults;
+    }
+
+    public List<HigherProtocolModuleSubjectResultDto> getSubjectResults() {
+        return subjectResults;
+    }
+
+    public void setSubjectResults(List<HigherProtocolModuleSubjectResultDto> subjectResults) {
+        this.subjectResults = subjectResults;
     }
 
     public Long getId() {

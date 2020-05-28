@@ -2,7 +2,7 @@
 {{ content.school }} tõendab, et <b>{{ content.student.firstname }} {{ content.student.lastname }} 
 (ik {{ content.student.idcode }})</b> õpib {{ content.studyYear }} õppeaastal meie õppeasutuses{{content.student.curriculum != null ? " õppekaval " + content.student.curriculum.name + " (kood " + content.student.curriculum.code + ")." : "."}} 
 <br>
-Õppevorm on {{ content.student.studyForm != null ? content.student.studyForm : "määramata"}}. 
+Õppevorm on {{ content.student.studyForm != null ? (content.student.studyForm | name) : "määramata"}}.
  
 
 {% if content.student.curriculum != null %} 

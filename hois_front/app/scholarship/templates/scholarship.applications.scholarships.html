@@ -17,7 +17,9 @@
         <th md-column>{{'stipend.student.idCode' | translate}}</th>
         <th md-column>{{'stipend.studentGroup' | translate}}</th>
         <th md-column>{{'stipend.student.averageMark' | translate}}</th>
+        <th md-column>{{'stipend.student.wagMark' | translate}}</th>
         <th md-column>{{'stipend.student.lastPeriodMark' | translate}}</th>
+        <th md-column>{{'stipend.student.lastPeriodWagMark' | translate}}</th>
         <th md-column>{{'stipend.student.credits' | translate}}</th>
         <th md-column>{{'stipend.hasDirective' | translate}}</th>
         <th md-column>{{'stipend.decision.label' | translate}}</th>
@@ -54,10 +56,21 @@
         <td md-cell>{{application.idcode ? application.idcode : '-'}}</td>
         <td md-cell>{{application.studentGroup ? application.studentGroup : '-'}}</td>
         <td md-cell>
-          {{isNumber(application.saisPoints) ? application.saisPoints : application.averageMark ? application.averageMark : '-'}}
-          <span class="scholarship-sais" ng-show="isNumber(application.saisPoints)"> S</span>
+          {{isNumber(application.averageMark) ? application.averageMark : '-'}}
+          <span class="scholarship-sais" ng-show="application.isSais"> S</span>
         </td>
-        <td md-cell>{{application.lastPeriodMark ? application.lastPeriodMark : '-'}}</td>
+        <td md-cell>
+          {{isNumber(application.wagMark) ? application.wagMark : '-'}}
+          <span class="scholarship-sais" ng-show="application.isSais"> S</span>
+        </td>
+        <td md-cell>
+          {{isNumber(application.lastPeriodMark) ? application.lastPeriodMark : '-'}}
+          <span class="scholarship-sais" ng-show="application.isSais"> S</span>
+        </td>
+        <td md-cell>
+          {{isNumber(application.lastPeriodWagMark) ? application.lastPeriodWagMark : '-'}}
+          <span class="scholarship-sais" ng-show="application.isSais"> S</span>
+        </td>
         <td md-cell>{{isNumber(application.credits) ? application.credits : '-'}}</td>
         <td md-cell>{{application.hasDirective ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
         <td md-cell>

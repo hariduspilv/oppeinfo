@@ -840,7 +840,7 @@ public class ApelApplicationService {
         Set<Long> subjectsWithPositiveResultsIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
 
         if (listsHaveCommonIds(replacedIds, subjectsWithPositiveResultsIds)) {
-            throw new ValidationFailedException("apel.error.subjectHasBeenPreviouslyTransferred");
+            throw new ValidationFailedException("apel.error.subjectHasPositiveGrade");
         }
     }
 
@@ -852,7 +852,7 @@ public class ApelApplicationService {
         Set<Long> previouslyTransferredIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
 
         if (listsHaveCommonIds(replacedIds, previouslyTransferredIds)) {
-            throw new ValidationFailedException("apel.error.moduleHasBeenPreviouslyTransferred");
+            throw new ValidationFailedException("apel.error.moduleHasPositiveGrade");
         }
     }
 

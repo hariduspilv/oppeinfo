@@ -56,7 +56,7 @@ function ($q, $route, $scope, $timeout, ArrayUtils, Classifier, MidtermTaskUtil,
       });
     });
     $scope.record.students.forEach(function (student) {
-      var savedSubgroupId = student.subgroup !== null ? student.subgroup.id : null
+      var savedSubgroupId = student.subgroup !== null ? student.subgroup.id : null;
       student.savedSubgroup = savedSubgroupId; // used for filtering students
       student.previousSubgroup = savedSubgroupId; // used for calculating subgroup places
       // TODO add to MidtermTaskUtil

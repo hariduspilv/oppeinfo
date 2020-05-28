@@ -4,6 +4,7 @@ import java.lang.invoke.MethodHandles;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.function.Consumer;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
@@ -33,6 +34,7 @@ import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hois.soap.LogContext;
+import ee.hois.xroad.ehis.generated.KhlDuplikaadiMuutmine;
 import ee.hois.xroad.ehis.generated.KhlIsikuandmedLisa;
 import ee.hois.xroad.ehis.generated.KhlLisamine;
 import ee.hois.xroad.ehis.generated.KhlMuutmine;
@@ -113,6 +115,10 @@ public abstract class EhisService {
     }
 
     protected static KhlOppeasutusList getKhlOppeasutusList(Student student) {
+        return getKhlOppeasutusList(student, khlOppeasutus -> khlOppeasutus.getOppur().add(getKhlOppurMuutmine(student, true)));
+    }
+    
+    protected static KhlOppeasutusList getKhlOppeasutusList(Student student, Consumer<KhlOppeasutus> oppeasutusConsumer) {
         if (!StudentUtil.isGuestStudent(student)) {
             Curriculum curriculum = student.getCurriculumVersion().getCurriculum();
             if (Boolean.TRUE.equals(curriculum.getJoint()) && curriculum.getJointMentor() != null
@@ -128,7 +134,7 @@ public abstract class EhisService {
         // FIXME strings are allowed values too
         khlOppeasutus.setKoolId(koolId != null ? new BigInteger(koolId) : null);
 
-        khlOppeasutus.getOppur().add(getKhlOppurMuutmine(student, true));
+        oppeasutusConsumer.accept(khlOppeasutus);
         khlOppeasutusList.getOppeasutus().add(khlOppeasutus);
         return khlOppeasutusList;
     }
@@ -160,6 +166,25 @@ public abstract class EhisService {
             muutmine.setOppekava(requiredCurriculumCode(student));
         }
         khlOppur.setMuutmine(muutmine);
+        return khlOppur;
+    }
+    
+    protected static KhlOppur getKhlOppurDuplikaadiMuutmine(Student student, boolean setOppekava) {
+        KhlOppur khlOppur = new KhlOppur();
+        KhlDuplikaadiMuutmine muutmine = new KhlDuplikaadiMuutmine();
+        Person person = student.getPerson();
+
+        String personId = getPersonId(person);
+        muutmine.setIsikukood(personId);
+
+        if (person.getIdcode() == null) {
+            muutmine.setKlIsikukoodRiik(BIRTH_DATE_ENTERED);
+        }
+
+        if (setOppekava) {
+            muutmine.setOppekava(requiredCurriculumCode(student));
+        }
+        khlOppur.setDuplikaadiMuutmine(muutmine);
         return khlOppur;
     }
 
@@ -268,9 +293,13 @@ public abstract class EhisService {
     }
 
     protected WsEhisStudentLog bindingException(Student student, Exception e) {
+        return bindingException(student, e, LAE_KORGHARIDUS_SERVICE);
+    }
+    
+    protected WsEhisStudentLog bindingException(Student student, Exception e, String wsName) {
         WsEhisStudentLog studentLog = baseBindingException(e);
         studentLog.setSchool(student.getSchool());
-        LogContext logContext = new LogContext(null, LAE_KORGHARIDUS_SERVICE);
+        LogContext logContext = new LogContext(null, wsName);
         logContext.setError(e);
         return ehisLogService.insert(logContext, studentLog);
     }

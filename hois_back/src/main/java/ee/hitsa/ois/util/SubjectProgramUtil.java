@@ -37,8 +37,9 @@ public class SubjectProgramUtil {
     }
 
     public boolean canView(HoisUserDetails user, SubjectProgram program) {
-        boolean isConfirmed = ClassifierUtil.equals(SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, program.getStatus());
-        if (isConfirmed && Boolean.TRUE.equals(program.getPublicAll())) {
+        boolean isConfirmed = ClassifierUtil.oneOf(program.getStatus(), SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, SubjectProgramStatus.AINEPROGRAMM_STAATUS_V);
+        boolean isCompleted = ClassifierUtil.oneOf(program.getStatus(), SubjectProgramStatus.AINEPROGRAMM_STAATUS_K);
+        if ((isConfirmed || isCompleted) && Boolean.TRUE.equals(program.getPublicAll())) {
             return true;
         }
         if (isConfirmed && Boolean.TRUE.equals(program.getPublicHois())) {

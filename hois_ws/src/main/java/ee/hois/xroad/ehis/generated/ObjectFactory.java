@@ -478,6 +478,22 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link VpTaotlusDokumentV2 }
+     * 
+     */
+    public VpTaotlusDokumentV2 createVpTaotlusDokumentV2() {
+        return new VpTaotlusDokumentV2();
+    }
+
+    /**
+     * Create an instance of {@link VpTaotlusDokumentV2Response }
+     * 
+     */
+    public VpTaotlusDokumentV2Response createVpTaotlusDokumentV2Response() {
+        return new VpTaotlusDokumentV2Response();
+    }
+
+    /**
      * Create an instance of {@link EeIsikukaart }
      * 
      */
@@ -2374,6 +2390,14 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link EeIsikukaartGdprlog }
+     * 
+     */
+    public EeIsikukaartGdprlog createEeIsikukaartGdprlog() {
+        return new EeIsikukaartGdprlog();
+    }
+
+    /**
      * Create an instance of {@link EeIsikukaartIsikuandmed }
      * 
      */
@@ -2870,6 +2894,14 @@ public class ObjectFactory {
     }
 
     /**
+     * Create an instance of {@link KhlDuplikaadiMuutmine }
+     * 
+     */
+    public KhlDuplikaadiMuutmine createKhlDuplikaadiMuutmine() {
+        return new KhlDuplikaadiMuutmine();
+    }
+
+    /**
      * Create an instance of {@link KhlKorgharidusMuuda }
      * 
      */
@@ -2923,6 +2955,14 @@ public class ObjectFactory {
      */
     public KhlOppeasutuseLopetamine createKhlOppeasutuseLopetamine() {
         return new KhlOppeasutuseLopetamine();
+    }
+
+    /**
+     * Create an instance of {@link KhlDuplikaadiValjastamine }
+     * 
+     */
+    public KhlDuplikaadiValjastamine createKhlDuplikaadiValjastamine() {
+        return new KhlDuplikaadiValjastamine();
     }
 
     /**

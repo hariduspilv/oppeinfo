@@ -18,11 +18,13 @@ import ee.hitsa.ois.domain.BaseEntity;
 import ee.hitsa.ois.domain.BaseLog;
 import ee.hitsa.ois.domain.BaseTask;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumAddress;
 import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
 import ee.hitsa.ois.domain.curriculum.CurriculumJointPartner;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleCompetence;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOccupation;
+import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.curriculum.CurriculumOccupation;
 import ee.hitsa.ois.domain.curriculum.CurriculumOccupationSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
@@ -44,8 +46,11 @@ import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgramStudyContent;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.CurriculumVersionYearCapacitiesUtil;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.util.TranslateUtil;
@@ -57,6 +62,7 @@ public class PublicDataMapper {
     private static final Map<String, Function<Curriculum, ?>> CURRICULUM = new LinkedHashMap<>();
     private static final Map<String, Function<CurriculumJointPartner, ?>> CURRICULUM_JOINT_PARTNER = new LinkedHashMap<>();
     private static final Map<String, Function<CurriculumModule, ?>> CURRICULUM_MODULE = new LinkedHashMap<>();
+    private static final Map<String, Function<CurriculumModuleOutcome, ?>> CURRICULUM_MODULE_OUTCOME = new LinkedHashMap<>();
     private static final Map<String, Function<CurriculumOccupation, ?>> CURRICULUM_OCCUPATION = new LinkedHashMap<>();
     private static final Map<String, Function<CurriculumSpeciality, ?>> CURRICULUM_SPECIALITY = new LinkedHashMap<>();
     private static final Map<String, Function<CurriculumVersion, ?>> CURRICULUM_VERSION = new LinkedHashMap<>();
@@ -88,6 +94,9 @@ public class PublicDataMapper {
         }
         if (o instanceof CurriculumModule) {
             return map((CurriculumModule)o, CURRICULUM_MODULE);
+        }
+        if (o instanceof CurriculumModuleOutcome) {
+            return map((CurriculumModuleOutcome)o, CURRICULUM_MODULE_OUTCOME);
         }
         if (o instanceof CurriculumOccupation) {
             return map((CurriculumOccupation)o, CURRICULUM_OCCUPATION);
@@ -123,8 +132,7 @@ public class PublicDataMapper {
             return map((CurriculumVersionOccupationModuleYearCapacity)o, CURRICULUM_VERSION_OCCUPATION_MODULE_YEAR_CAPACITY);
         }
         if (o instanceof CurriculumVersionSpeciality) {
-            // TODO
-            return null;
+            return map(((CurriculumVersionSpeciality)o).getCurriculumSpeciality(), CURRICULUM_SPECIALITY);
         }
         if (o instanceof Subject) {
             return map((Subject)o, SUBJECT);
@@ -226,7 +234,12 @@ public class PublicDataMapper {
         CURRICULUM.put("jointMentor", Curriculum::getJointMentor);
         CURRICULUM.put("consecution", Curriculum::getConsecution);
         CURRICULUM.put("origStudyLevel", Curriculum::getOrigStudyLevel);
+        CURRICULUM.put("ekrLevel", c -> ClassifierUtil.parentFor(c.getOrigStudyLevel(), MainClassCode.EKR).orElse(null));
+        CURRICULUM.put("educationLevel", c -> ClassifierUtil.parentFor(c.getOrigStudyLevel(), MainClassCode.HARIDUSTASE).orElse(null));
         CURRICULUM.put("iscedClass", Curriculum::getIscedClass);
+        CURRICULUM.put("fieldOfStudy", c -> ClassifierUtil.parentFor(c.getIscedClass(), MainClassCode.ISCED_SUUN).orElse(null));
+        CURRICULUM.put("areaOfStudy", c -> ClassifierUtil.parentFor(c.getIscedClass(), MainClassCode.ISCED_SUUN)
+                .map(cl -> ClassifierUtil.parentFor(cl, MainClassCode.ISCED_VALD).orElse(null)).orElse(null));
         CURRICULUM.put("school", Curriculum::getSchool);
         CURRICULUM.put("draft", Curriculum::getDraft);
         CURRICULUM.put("studyLanguages", c -> StreamUtil.toMappedList(CurriculumStudyLanguage::getStudyLang, c.getStudyLanguages()));
@@ -242,6 +255,11 @@ public class PublicDataMapper {
                 .collect(Collectors.toList()));
         CURRICULUM.put("occupations", Curriculum::getOccupations);
         CURRICULUM.put("versions", c -> StreamUtil.toFilteredList(CurriculumUtil::isCurriculumVersionConfirmed, c.getVersions()));
+        CURRICULUM.put("address", c -> StreamUtil.toMappedList(CurriculumAddress::getAddress, c.getAddresses()));
+        CURRICULUM.put("final51", Curriculum::getFinal51);
+        CURRICULUM.put("finalEn51", Curriculum::getFinalEn51);
+        CURRICULUM.put("final52", Curriculum::getFinal52);
+        CURRICULUM.put("finalEn52", Curriculum::getFinalEn52);
 
         CURRICULUM_JOINT_PARTNER.put("abroad", CurriculumJointPartner::isAbroad);
         CURRICULUM_JOINT_PARTNER.put("contractEt", CurriculumJointPartner::getContractEt);
@@ -252,8 +270,10 @@ public class PublicDataMapper {
         CURRICULUM_JOINT_PARTNER.put("ehisSchool", CurriculumJointPartner::getEhisSchool);
 
         CURRICULUM_MODULE.put("module", CurriculumModule::getModule);
+        CURRICULUM_MODULE.put("moduleCode", cm -> cm.getModule().getCode());
         CURRICULUM_MODULE.put("nameEt", CurriculumModule::getNameEt);
         CURRICULUM_MODULE.put("nameEn", CurriculumModule::getNameEn);
+        CURRICULUM_MODULE.put("orderNr", CurriculumModule::getOrderNr);
         CURRICULUM_MODULE.put("credits", CurriculumModule::getCredits);
         CURRICULUM_MODULE.put("objectivesEt", CurriculumModule::getObjectivesEt);
         CURRICULUM_MODULE.put("objectivesEn", CurriculumModule::getObjectivesEn);
@@ -262,12 +282,23 @@ public class PublicDataMapper {
         CURRICULUM_MODULE.put("practice", CurriculumModule::getPractice);
         CURRICULUM_MODULE.put("isAdditional", CurriculumModule::getIsAdditional);
         CURRICULUM_MODULE.put("occupations", c -> StreamUtil.toMappedList(CurriculumModuleOccupation::getOccupation, c.getOccupations()));
+        CURRICULUM_MODULE.put("occupationCodes", c -> StreamUtil.toMappedList(cmo -> cmo.getOccupation().getCode(), c.getOccupations()));
         CURRICULUM_MODULE.put("competences", c -> StreamUtil.toMappedList(CurriculumModuleCompetence::getCompetence, c.getCompetences()));
-        CURRICULUM_MODULE.put("outcomes", c -> StreamUtil.toMappedList(AutocompleteResult::of, c.getOutcomes()));
+        CURRICULUM_MODULE.put("outcomes", c -> c.getOutcomes());
+        CURRICULUM_MODULE.put("canHaveOccupations", cm -> Boolean.valueOf(CurriculumUtil.canHaveOccupations(cm.getCurriculum())));
 
+        CURRICULUM_MODULE_OUTCOME.put("orderNr", CurriculumModuleOutcome::getOrderNr);
+        CURRICULUM_MODULE_OUTCOME.put("outcomeEt", CurriculumModuleOutcome::getOutcomeEt);
+        CURRICULUM_MODULE_OUTCOME.put("outcomeEn", CurriculumModuleOutcome::getOutcomeEn);
+        
         CURRICULUM_OCCUPATION.put("occupation", CurriculumOccupation::getOccupation);
+        CURRICULUM_OCCUPATION.put("code", co -> co.getOccupation().getCode());
+        CURRICULUM_OCCUPATION.put("validFrom", co -> co.getOccupation().getValidFrom());
+        CURRICULUM_OCCUPATION.put("validThru", co -> co.getOccupation().getValidThru());
         CURRICULUM_OCCUPATION.put("occupationGrant", CurriculumOccupation::getOccupationGrant);
+        CURRICULUM_OCCUPATION.put("partOccupations", CurriculumUtil::getPartOccupationsCodes);
         CURRICULUM_OCCUPATION.put("specialities", co -> StreamUtil.toMappedList(CurriculumOccupationSpeciality::getSpeciality, co.getSpecialities()));
+        CURRICULUM_OCCUPATION.put("specialityCodes", co -> StreamUtil.toMappedList(s -> s.getSpeciality().getCode(), co.getSpecialities()));
 
         CURRICULUM_SPECIALITY.put("nameEt", CurriculumSpeciality::getNameEt);
         CURRICULUM_SPECIALITY.put("nameEn", CurriculumSpeciality::getNameEn);
@@ -344,6 +375,7 @@ public class PublicDataMapper {
         CURRICULUM_VERSION_OCCUPATION_MODULE.put("learningMethodsEt", CurriculumVersionOccupationModule::getLearningMethodsEt);
         CURRICULUM_VERSION_OCCUPATION_MODULE.put("assessmentMethodsEt", CurriculumVersionOccupationModule::getAssessmentMethodsEt);
         CURRICULUM_VERSION_OCCUPATION_MODULE.put("assessment", CurriculumVersionOccupationModule::getAssessment);
+        CURRICULUM_VERSION_OCCUPATION_MODULE.put("assessmentCode", cvom -> cvom.getAssessment().getCode());
         CURRICULUM_VERSION_OCCUPATION_MODULE.put("totalGradeDescription", CurriculumVersionOccupationModule::getTotalGradeDescription);
         CURRICULUM_VERSION_OCCUPATION_MODULE.put("passDescription", CurriculumVersionOccupationModule::getPassDescription);
         CURRICULUM_VERSION_OCCUPATION_MODULE.put("grade3Description", CurriculumVersionOccupationModule::getGrade3Description);
@@ -369,6 +401,7 @@ public class PublicDataMapper {
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("subthemes", CurriculumVersionOccupationModuleTheme::getSubthemes);
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("studyYearNumber", CurriculumVersionOccupationModuleTheme::getStudyYearNumber);
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("assessment", CurriculumVersionOccupationModuleTheme::getAssessment);
+        CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("assessmentCode", t -> EntityUtil.getNullableCode(t.getAssessment()));
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("totalGradeDescription", CurriculumVersionOccupationModuleTheme::getTotalGradeDescription);
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("passDescription", CurriculumVersionOccupationModuleTheme::getPassDescription);
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("grade3Description", CurriculumVersionOccupationModuleTheme::getGrade3Description);
@@ -376,6 +409,7 @@ public class PublicDataMapper {
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("grade5Description", CurriculumVersionOccupationModuleTheme::getGrade5Description);
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("outcomes", c -> c.getOutcomes().stream().map(o -> o.getOutcome()).map(AutocompleteResult::of).collect(Collectors.toList()));
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("capacities", CurriculumVersionOccupationModuleTheme::getCapacities);
+        CURRICULUM_VERSION_OCCUPATION_MODULE_THEME.put("moduleOutcomes", CurriculumVersionOccupationModuleTheme::getModuleOutcomes);
 
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME_CAPACITY.put("capacityType", CurriculumVersionOccupationModuleThemeCapacity::getCapacityType);
         CURRICULUM_VERSION_OCCUPATION_MODULE_THEME_CAPACITY.put("hours", CurriculumVersionOccupationModuleThemeCapacity::getHours);
@@ -426,6 +460,8 @@ public class PublicDataMapper {
         SUBJECT_PROGRAM.put("studyDescription", SubjectProgram::getStudyDescription);
         SUBJECT_PROGRAM.put("studyLiterature", SubjectProgram::getStudyLiterature);
         SUBJECT_PROGRAM.put("subjectStudyPeriodTeacher", p -> p.getSubjectStudyPeriodTeacher());
+        SUBJECT_PROGRAM.put("addInfo", SubjectProgram::getAddInfo);
+        SUBJECT_PROGRAM.put("isLetterGrade", p -> p.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject().getSchool().getIsLetterGrade());
 
         SUBJECT_STUDY_PERIOD_TEACHER.put("id", sspt -> sspt.getTeacher().getId());
         SUBJECT_STUDY_PERIOD_TEACHER.put("name", sspt -> sspt.getTeacher().getPerson().getFullname());

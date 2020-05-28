@@ -1,0 +1,78 @@
+<md-table-container>
+  <table md-table class="secondary-table">
+    <thead md-head>
+      <tr md-row>
+        <th md-column>{{'directive.student.order' | translate}}</th>
+        <th md-column>{{'directive.student.fullname' | translate}}</th>
+        <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column>{{'document.search.diplomaNr' | translate}}</th>
+        <th md-column>{{'document.search.supplementNr' | translate}}</th>
+        <th md-column ng-if="formState.school.higher">{{'document.search.supplementNrEn' | translate}}</th>
+        <th md-column style="min-width:400px;">{{'directive.student.reason' | translate}} *</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody md-body>
+      <tr md-row hois-table-row ng-repeat-start="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>{{$index + 1}}.</td>
+        <td md-cell>{{::row.fullname}}</td>
+        <td md-cell>{{::row.idcode}}</td>
+        <td md-cell>
+          <md-checkbox ng-model="row.diplomaChk" aria-label="{{'directive.student.diploma' | translate}}" style="width: 100%;"
+            ng-change="diplomaChkChanged(row)">
+            {{::row.diplomaDto.diplomaFullCode}}{{::row.diplomaDto.duplicate ? ' (dupl)': ''}}
+          </md-checkbox>
+        </td>
+        <td md-cell>
+          <md-checkbox ng-model="row.diplomaSupplementChk" aria-label="{{'directive.student.diploma' | translate}}"
+            ng-if="row.diplomaDto.diplomaSupplement" ng-disabled="row.diplomaChk" style="width: 100%;">
+            {{::row.diplomaDto.diplomaSupplementFullCode}}{{::row.diplomaDto.supplementDuplicate ? ' (dupl)': ''}}
+          </md-checkbox>
+        </td>
+        <td md-cell ng-if="formState.school.higher">
+          <md-checkbox ng-model="row.diplomaSupplementEnChk" aria-label="{{'directive.student.diploma' | translate}}"
+            ng-if="row.diplomaDto.diplomaSupplementEn" ng-disabled="row.diplomaChk" style="width: 100%;">
+            {{::row.diplomaDto.diplomaSupplementFullCodeEn}}{{::row.diplomaDto.supplementEnDuplicate ? ' (dupl)': ''}}
+          </md-checkbox>
+        </td>
+        <td md-cell hois-table-data>
+          <hois-table-data-master>
+            <md-input-container style="width:100%;">
+              <textarea name="students[{{$index}}].addInfo" ng-model="row.addInfo" md-maxlength="4000" max-rows="5"
+                ng-model-options="{allowInvalid: true}" aria-label="{{'directive.student.reason' | translate}}"></textarea>
+            </md-input-container>
+          </hois-table-data-master>
+          <hois-table-data-detail>
+            <div class="invalid" ng-messages="directiveForm['students['+$index+'].addInfo'].$error">
+              <p ng-message="required">{{'main.required' | translate}}</p>
+              <p ng-message="serverside">
+                <p ng-repeat="err in directiveForm['students['+$index+'].addInfo'].$serverError">{{'main.messages.error.' + err.code | translate}}</p>
+              </p>
+            </div>
+          </hois-table-data-detail>
+        </td>
+        <td md-cell>
+          <a ng-click="deleteStudent(row)" md-no-ink  class="remove">&times;</a>
+        </td>
+      </tr>
+      <tr ng-repeat-end ng-class-odd="'odd'" ng-class-even="'even'">
+        <td></td>
+        <td colspan="7">
+          <input ng-model="row.dummyVar" type="hidden" name="students[{{$index}}].checkboxes"
+            ng-required="!row.diplomaChk && !row.diplomaSupplementChk && !row.diplomaSupplementEnChk"/>
+          <div class="invalid" ng-if="directiveForm['students['+$index+'].checkboxes'].$error.required && directiveForm.$submitted">
+            <p class="md-body-1">
+              {{'directive.studentAtLeastOneCheckbox' | translate}}
+            </p>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</md-table-container>
+
+<style>
+  table.md-table td > md-checkbox .md-label {
+    white-space: nowrap;
+  }
+</style>

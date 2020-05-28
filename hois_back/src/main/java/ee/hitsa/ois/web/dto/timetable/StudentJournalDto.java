@@ -11,7 +11,6 @@ public class StudentJournalDto {
     private String nameEt;
     private Long studyYearId;
     private String yearCode;
-    private Boolean includesOutcomes;
     private Map<String, Long> absences;
     private String teachers;
     private AutocompleteResult modules;
@@ -47,14 +46,6 @@ public class StudentJournalDto {
     
     public void setYearCode(String yearCode) {
         this.yearCode = yearCode;
-    }
-
-    public Boolean getIncludesOutcomes() {
-        return includesOutcomes;
-    }
-
-    public void setIncludesOutcomes(Boolean includesOutcomes) {
-        this.includesOutcomes = includesOutcomes;
     }
 
     public Map<String, Long> getAbsences() {

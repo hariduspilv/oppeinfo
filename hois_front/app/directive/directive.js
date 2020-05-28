@@ -56,8 +56,8 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     }
 
     function setScholarshipEditable() {
-        $scope.formState.scholarshipEditable = ['STIPTOETUS_ERI', 'STIPTOETUS_SOIDU', 'STIPTOETUS_DOKTOR'].indexOf($scope.record.scholarshipType) !== -1
-          || !!$scope.record.scholarshipEhis;
+        $scope.formState.scholarshipEditable = ['STIPTOETUS_ERI', 'STIPTOETUS_SOIDU', 'STIPTOETUS_DOKTOR'].indexOf($scope.record.scholarshipType) !== -1 ||
+         !!$scope.record.scholarshipEhis;
     }
 
     function setTemplateUrl() {
@@ -341,6 +341,14 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       }
     }
 
+    function ignoreCtrlName(type, name) {
+      switch (type) {
+        case 'KASKKIRI_DUPLIKAAT':
+          return /^students\[\d+\].checkboxes$/.test(name);
+      }
+      return false;
+    }
+
     function clearCtrlError(ctrl, name) {
       ctrl.$serverError = undefined;
       ctrl.$setValidity(name, null);
@@ -355,7 +363,11 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       if(invalidCtrls) {
         Object.keys(invalidCtrls).forEach(function(name) {
           var ctrls = invalidCtrls[name].slice();
-            ctrls.forEach(function(ctrl) { clearCtrlError(ctrl, name); });
+          ctrls.forEach(function(ctrl) {
+            if (!ignoreCtrlName($scope.record.type, ctrl.$name)) {
+              clearCtrlError(ctrl, name);
+            }
+          });
         });
       }
     }
@@ -393,7 +405,7 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       var data = {type: $scope.record.type};
       if(data.type === 'KASKKIRI_EKSMAT') {
         data.application = true;
-      } else if(data.type === 'KASKKIRI_LOPET' || data.type === 'KASKKIRI_KYLALIS') {
+      } else if(data.type === 'KASKKIRI_LOPET' || data.type === 'KASKKIRI_KYLALIS' || data.type === 'KASKKIRI_DUPLIKAAT') {
         if (!angular.isDefined($scope.record.isHigher)) {
           var school = $scope.formState.school;
           if (school.higher && school.vocational) {
@@ -554,6 +566,14 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         clickOutsideToClose: false
       });
     };
+
+    $scope.changedCitizenship = function (row) {
+      if (row.citizenship === 'RIIK_EST' && row._foreign === true) {
+        row._foreign = false;
+        row.foreignIdcode = undefined;
+        $scope.foreignChanged(row);
+      }
+    }
 
     $scope.foreignChanged = function(row) {
       checkHasForeignStudent();
@@ -863,6 +883,17 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
         $scope.record.students[studentIndex].modules = modules;
       });
     };
+
+    $scope.diplomaChkChanged = function (row) {
+      if (row.diplomaChk) {
+        if (row.diplomaDto.diplomaSupplement) {
+          row.diplomaSupplementChk = true;
+        }
+        if (row.diplomaDto.diplomaSupplementEn && $scope.formState.school.higher) {
+          row.diplomaSupplementEnChk = true;
+        }
+      }
+    }
 
     /**
      * Compares dates and return the highest.

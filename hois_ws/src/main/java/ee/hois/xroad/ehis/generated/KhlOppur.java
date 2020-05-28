@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlType;
  *           &lt;element name="muutmine" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}khlMuutmine"/&gt;
  *           &lt;element name="muutmineId" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}khlMuutmineIdList"/&gt;
  *           &lt;element name="muutmineIsikukood" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}khlMuutmineIsikukood"/&gt;
+ *           &lt;element name="duplikaadiMuutmine" type="{http://producers.ehis.xtee.riik.ee/producer/ehis}khlDuplikaadiMuutmine"/&gt;
  *         &lt;/choice&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
@@ -35,7 +36,8 @@ import javax.xml.bind.annotation.XmlType;
     "lisamine",
     "muutmine",
     "muutmineId",
-    "muutmineIsikukood"
+    "muutmineIsikukood",
+    "duplikaadiMuutmine"
 })
 public class KhlOppur {
 
@@ -43,6 +45,7 @@ public class KhlOppur {
     protected KhlMuutmine muutmine;
     protected KhlMuutmineIdList muutmineId;
     protected KhlMuutmineIsikukood muutmineIsikukood;
+    protected KhlDuplikaadiMuutmine duplikaadiMuutmine;
 
     /**
      * Gets the value of the lisamine property.
@@ -138,6 +141,30 @@ public class KhlOppur {
      */
     public void setMuutmineIsikukood(KhlMuutmineIsikukood value) {
         this.muutmineIsikukood = value;
+    }
+
+    /**
+     * Gets the value of the duplikaadiMuutmine property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link KhlDuplikaadiMuutmine }
+     *     
+     */
+    public KhlDuplikaadiMuutmine getDuplikaadiMuutmine() {
+        return duplikaadiMuutmine;
+    }
+
+    /**
+     * Sets the value of the duplikaadiMuutmine property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link KhlDuplikaadiMuutmine }
+     *     
+     */
+    public void setDuplikaadiMuutmine(KhlDuplikaadiMuutmine value) {
+        this.duplikaadiMuutmine = value;
     }
 
 }

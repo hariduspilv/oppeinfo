@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -18,6 +19,7 @@ public class DeclarationDto {
     private Short course;
     private StudentSearchDto student;
     private String status;
+    private BigDecimal credits;
     private LocalDateTime inserted;
     private LocalDate confirmDate;
     private String confirmer;
@@ -113,6 +115,14 @@ public class DeclarationDto {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public BigDecimal getCredits() {
+        return credits;
+    }
+
+    public void setCredits(BigDecimal credits) {
+        this.credits = credits;
     }
 
     public LocalDateTime getInserted() {

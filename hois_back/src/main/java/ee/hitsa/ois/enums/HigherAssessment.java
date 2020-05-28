@@ -23,10 +23,10 @@ public enum HigherAssessment {
     
     public static final List<String> GRADE_POSITIVE = EnumUtil.toNameList(KORGHINDAMINE_5, KORGHINDAMINE_4,
             KORGHINDAMINE_3, KORGHINDAMINE_2, KORGHINDAMINE_1, KORGHINDAMINE_A);
-    
-    public static final List<String> GRADE_SYSTEM = EnumUtil.toNameList(KORGHINDAMINE_5, KORGHINDAMINE_4,
-            KORGHINDAMINE_3, KORGHINDAMINE_2, KORGHINDAMINE_1, KORGHINDAMINE_0, KORGHINDAMINE_A, KORGHINDAMINE_M);
- 
+
+    public static final List<String> GRADE_DISTINCTIVE = EnumUtil.toNameList(KORGHINDAMINE_5, KORGHINDAMINE_4,
+            KORGHINDAMINE_3, KORGHINDAMINE_2, KORGHINDAMINE_1, KORGHINDAMINE_0);
+
     private HigherAssessment(Boolean isDistinctive, Boolean isPositive, Short mark) {
         this.isDistinctive = isDistinctive;
         this.isPositive = isPositive;
@@ -53,7 +53,7 @@ public enum HigherAssessment {
         }
         return false;
     }
-    
+
     public static Short getGradeMark(String grade) {
         for (HigherAssessment ha : values()) {
             if (ha.name().equals(grade)) {

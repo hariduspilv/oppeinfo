@@ -56,6 +56,7 @@ public class SchoolForm extends VersionedCommand {
     private Boolean isLetterGrade;
     private Boolean isWithoutEkis;
     private Boolean isStudentTerms;
+    private Boolean isHmodules;
     @Required
     @ClassifierRestriction(MainClassCode.FOTOLISA)
     private String studentPhotoAdd;
@@ -310,6 +311,14 @@ public class SchoolForm extends VersionedCommand {
 
     public void setFinalEn62(String finalEn62) {
         this.finalEn62 = finalEn62;
+    }
+
+    public Boolean getIsHmodules() {
+        return isHmodules;
+    }
+
+    public void setIsHmodules(Boolean isHmodules) {
+        this.isHmodules = isHmodules;
     }
     
 }

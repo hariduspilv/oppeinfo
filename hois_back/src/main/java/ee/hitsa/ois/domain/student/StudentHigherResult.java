@@ -93,6 +93,7 @@ public class StudentHigherResult {
     private StudentHigherResultModule changedModule;
 
     private Boolean isActive;
+    private Boolean isModule;
 
     public Long getId() {
         return id;
@@ -268,6 +269,14 @@ public class StudentHigherResult {
 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public Boolean getIsModule() {
+        return isModule;
+    }
+
+    public void setIsModule(Boolean isModule) {
+        this.isModule = isModule;
     }
 
 }

@@ -37,7 +37,7 @@ angular.module('hitsaOis')
     }
     $q.all(clMapper.promises).then($scope.loadData);
   }
-]).controller('CertificateStudentOrderController', ['$scope', 'Classifier', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$rootScope', 'CertificateUtil', 'ArrayUtils', 
+]).controller('CertificateStudentOrderController', ['$scope', 'Classifier', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$rootScope', 'CertificateUtil', 'ArrayUtils',
   function ($scope, Classifier, QueryUtils, $route, $location, dialogService, message, $rootScope, CertificateUtil, ArrayUtils) {
 
     var baseUrl = '/certificate';
@@ -70,13 +70,16 @@ angular.module('hitsaOis')
     }
 
     function loadContent() {
-      QueryUtils.endpoint(baseUrl + '/content').search({
-        type: $scope.record.type,
-        addOutcomes: $scope.record.addOutcomes,
-        estonian: $scope.record.estonian,
-        english: $scope.record.english,
-        showUncompleted: $scope.record.showUncompleted
-      }).$promise.then(function(response) {
+      var command = {
+        type: $scope.record.type
+      };
+      if (CertificateUtil.isResultsCertificate($scope.record)) {
+        command.addOutcomes = $scope.record.addOutcomes;
+        command.showModules = $scope.record.showModules;
+        command.showUncompleted = $scope.record.showUncompleted;
+        command.estonian = $scope.record.estonian;
+      }
+      QueryUtils.endpoint(baseUrl + '/content').search(command).$promise.then(function(response) {
         $scope.record.content = response.content;
         setReadonlyContent($scope.record.content);
       }).catch(angular.noop);
@@ -91,8 +94,8 @@ angular.module('hitsaOis')
       loadContent();
     }
 
-    $scope.addOutcomesChanged = function() {
-      if($scope.record.type) {
+    $scope.reloadContent = function() {
+      if ($scope.record.type) {
         loadContent();
       }
     };
@@ -196,6 +199,8 @@ angular.module('hitsaOis')
          $scope.record.otherIdcode = response.idcode;
          $scope.otherFound = true;
          $scope.studentType = response.type;
+         $scope.isHigher = response.higher;
+         $scope.record.showModules = response.higher && $scope.auth.school.hmodules;
          $scope.forbiddenTypes = CertificateUtil.getForbiddenTypes(response.status);
          return response;
       }).catch(angular.noop);
@@ -209,18 +214,19 @@ angular.module('hitsaOis')
       }
       $scope.record.content = null;
       if($scope.record.type && ($scope.record.student || $scope.record.otherIdcode && $scope.isOtherCertificate() && $scope.otherFound)) {
-        QueryUtils.endpoint(baseUrl + '/content').search(
-          { 
-            estonian: $scope.record.estonian,
-            english: $scope.record.english,
-            showUncompleted: $scope.record.showUncompleted,
-            student: $scope.record.student,
-            type: $scope.record.type,
-            otherIdcode: $scope.record.otherIdcode,
-            otherName: $scope.record.otherName,
-            addOutcomes: $scope.record.addOutcomes
-          }
-        ).$promise.then(function(response) {
+        var command = {
+          type: $scope.record.type,
+          student: $scope.record.student,
+          otherIdcode: $scope.record.otherIdcode,
+          otherName: $scope.record.otherName
+        };
+        if (CertificateUtil.isResultsCertificate($scope.record)) {
+          command.addOutcomes = $scope.record.addOutcomes;
+          command.showModules = $scope.record.showModules;
+          command.showUncompleted = $scope.record.showUncompleted;
+          command.estonian = $scope.record.estonian;
+        }
+        QueryUtils.endpoint(baseUrl + '/content').search(command).$promise.then(function(response) {
           $scope.record.content = response.content;
           if(!$scope.contentEditable()) {
             setReadonlyContent($scope.record.content);
@@ -236,6 +242,7 @@ angular.module('hitsaOis')
       } else {
         $scope.record.estonian = undefined;
       }
+      $scope.record.showUncompleted = undefined;
       $scope.student = undefined;
       $scope.record.student = undefined;
       $scope.record.content = undefined;
@@ -248,10 +255,15 @@ angular.module('hitsaOis')
       if(!$scope.record.student) {
         $scope.forbiddenTypes = [];
       } else {
+        if (CertificateUtil.isResultsCertificate($scope.record)) {
+          $scope.record.estonian = true;
+        } else {
+          $scope.record.estonian = undefined;
+        }
+        $scope.record.showUncompleted = undefined;
         loadContent();
       }
     });
-
 
     $scope.$watch('record.otherIdcode', function(){
       if($scope.record.otherIdcode) {
@@ -268,7 +280,7 @@ angular.module('hitsaOis')
       }
     });
 
-    $scope.addOutcomesChanged = function() {
+    $scope.reloadContent = function() {
       if($scope.record.student) {
         setTypeName();
         $timeout(loadContent, 1000);
@@ -368,7 +380,7 @@ angular.module('hitsaOis')
       if ($scope.record.type) {
         var typeClassifier = $scope.typeMap[$scope.record.type];
         if (angular.isDefined($scope.record.estonian) && !$scope.record.estonian) {
-          $scope.record.headline = typeClassifier.nameEn != null ? typeClassifier.nameEn : typeClassifier.nameEt;
+          $scope.record.headline = typeClassifier.nameEn !== null ? typeClassifier.nameEn : typeClassifier.nameEt;
         } else {
           $scope.record.headline = typeClassifier.nameEt;
         }
@@ -454,10 +466,14 @@ angular.module('hitsaOis')
           $scope.record.otherName = result.fullname;
           $scope.otherFound = true;
           $scope.student = {id: result.id, nameEt: result.fullname, nameEn: result.fullname, status: result.status};
+          $scope.isHigher = response.higher;
+          $scope.record.showModules = response.higher && $scope.auth.school.hmodules;
           $scope.forbiddenTypes = CertificateUtil.getForbiddenTypes(result.status);
         } else {
           changedByOtherIdCodeChange = true;
           $scope.student = null;
+          $scope.isHigher = null;
+          $scope.record.showModules = null;
           $scope.forbiddenTypes = [];
           if(result && result.fullname) {
             $scope.record.otherName = result.fullname;
@@ -571,7 +587,7 @@ angular.module('hitsaOis')
       }
     },
     getGuestStudentForbiddenTypes : function() {
-      return [CertificateType.TOEND_LIIK_MUU, CertificateType.TOEND_LIIK_KONTAKT, 
+      return [CertificateType.TOEND_LIIK_MUU, CertificateType.TOEND_LIIK_KONTAKT,
         CertificateType.TOEND_LIIK_LOPET, CertificateType.TOEND_LIIK_SESS];
     }
   };

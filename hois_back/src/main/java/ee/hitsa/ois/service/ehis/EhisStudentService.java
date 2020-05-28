@@ -63,6 +63,7 @@ import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -163,13 +164,14 @@ public class EhisStudentService extends EhisService {
         case DORMITORY: return dormitoryChanges(schoolId, ehisStudentForm, wrapper, maxRequests);
         case FOREIGN_STUDY: return foreignStudy(schoolId, ehisStudentForm, wrapper, maxRequests);
         case GRADUATION: return graduation(schoolId, ehisStudentForm, wrapper, maxRequests);
+        case DUPLICATE: return duplicate(schoolId, ehisStudentForm, wrapper, maxRequests);
         case VOTA: return vota(schoolId, ehisStudentForm, wrapper, maxRequests);
         case SPECIAL_NEEDS: return specialNeeds(schoolId, ehisStudentForm, wrapper, maxRequests);
         case GUEST_STUDENTS: return guestStudents(schoolId, ehisStudentForm, wrapper, maxRequests);
         default: throw new AssertionFailedException("Unknown datatype");
         }
     }
-    
+
     private Queue<? extends EhisStudentReport> guestStudents(Long schoolId, EhisStudentForm ehisStudentForm,
             AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
         ConcurrentLinkedQueue<EhisStudentReport> reports = new ConcurrentLinkedQueue<>();
@@ -358,22 +360,35 @@ public class EhisStudentService extends EhisService {
         Query extraQuery = em.createNativeQuery("select f.full_code"
                 + " from form f"
                 + " join diploma_supplement_form dsf on dsf.form_id = f.id"
-                + " where dsf.diploma_supplement_id = ?1 and f.status_code = ?2 and f.type_code in (?3) and (dsf.is_english is not true)"
+                + " join diploma_supplement sup on sup.id = dsf.diploma_supplement_id"
+                + " where dsf.diploma_supplement_id = ?1 and f.type_code in (?3) and (dsf.is_english is not true)"
+                + " and case"
+                    + " when sup.status_code = ?4 then f.status_code = ?5"
+                    + " else f.status_code = ?2 end"
                 + " order by f.numeral")
                 .setParameter(2, FormStatus.LOPUBLANKETT_STAATUS_T.name())
-                .setParameter(3, Arrays.asList(FormType.LOPUBLANKETT_HINL.name(), FormType.LOPUBLANKETT_S.name()));
+                .setParameter(3, Arrays.asList(FormType.LOPUBLANKETT_HINL.name(), FormType.LOPUBLANKETT_S.name()))
+                .setParameter(4, DocumentStatus.LOPUDOK_STAATUS_C.name())
+                .setParameter(5, FormStatus.LOPUBLANKETT_STAATUS_R.name());
         Query extraQueryEn = em.createNativeQuery("select f.full_code"
                 + " from form f"
                 + " join diploma_supplement_form dsf on dsf.form_id = f.id"
-                + " where dsf.diploma_supplement_id = ?1 and f.status_code = ?2 and f.type_code in (?3) and (dsf.is_english is true)"
+                + " join diploma_supplement sup on sup.id = dsf.diploma_supplement_id"
+                + " where dsf.diploma_supplement_id = ?1 and f.type_code in (?3) and (dsf.is_english is true)"
+                + " and case"
+                    + " when sup.status_en_code = ?4 then f.status_code = ?5"
+                    + " else f.status_code = ?2 end"
                 + " order by f.numeral")
                 .setParameter(2, FormStatus.LOPUBLANKETT_STAATUS_T.name())
-                .setParameter(3, Arrays.asList(FormType.LOPUBLANKETT_S.name()));
+                .setParameter(3, Arrays.asList(FormType.LOPUBLANKETT_S.name()))
+                .setParameter(4, DocumentStatus.LOPUDOK_STAATUS_C.name())
+                .setParameter(5, FormStatus.LOPUBLANKETT_STAATUS_R.name());
         List<?> result = em.createNativeQuery("select ds.id, dip_f.full_code as dip_code, sup_f.full_code as sup_code, sup.id as sup_id,"
                 + " (select sup_f_en.full_code from diploma_supplement_form dsf_en"
                 + " join form sup_f_en on sup_f_en.id = dsf_en.form_id"
                 + " where dsf_en.diploma_supplement_id = sup.id and dsf_en.is_english"
-                + " and sup_f_en.status_code = ?7 and sup_f_en.type_code = ?9 ) as sup_en_code"
+                + " and sup.status_en_code != ?6 and case when sup.status_en_code = ?11 then sup_f.status_code = ?12 else sup_f_en.status_code = ?7 end"
+                + " and sup_f_en.type_code = ?9 ) as sup_en_code"
                 + " from directive_student ds"
                 + " join student s on s.id = ds.student_id"
                 + " join directive d on d.id = ds.directive_id"
@@ -385,8 +400,10 @@ public class EhisStudentService extends EhisService {
                 + " where ds.canceled = false and d.school_id = ?1"
                 + " and d.type_code = ?2 and d.status_code = ?3"
                 + " and d.confirm_date >= ?4 and d.confirm_date <= ?5"
-                + " and dip.status_code != ?6 and dip_f.status_code = ?7"
-                + " and sup.status_code != ?6 and sup_f.status_code = ?7"
+                + " and dip.status_code != ?6 and case when dip.status_code = ?11 then dip_f.status_code = ?12 else dip_f.status_code = ?7 end"
+                + " and sup.status_code != ?6 and case when sup.status_code = ?11 then sup_f.status_code = ?12 else sup_f.status_code = ?7 end"
+                // Only non-duplicate rows
+                + " and dip.is_duplicate is not true and sup.is_duplicate is not true and sup.is_duplicate_en is not true"
                 + " and sup_f.type_code in (?8) and s.type_code != ?10"
                 + " and not (" + SQL_WHERE_CURRICULUM_JOINTMENTOR + ")")
                 .setParameter(1, schoolId)
@@ -399,6 +416,8 @@ public class EhisStudentService extends EhisService {
                 .setParameter(8, Arrays.asList(FormType.LOPUBLANKETT_HIN.name(), FormType.LOPUBLANKETT_R.name()))
                 .setParameter(9, FormType.LOPUBLANKETT_DS.name())
                 .setParameter(10, StudentType.OPPUR_K.name())
+                .setParameter(11, DocumentStatus.LOPUDOK_STAATUS_C.name())
+                .setParameter(12, FormStatus.LOPUBLANKETT_STAATUS_R.name())
                 .getResultList();
         maxRequests.set(result.size());
         for (Object r : result) {
@@ -430,6 +449,125 @@ public class EhisStudentService extends EhisService {
             graduations.add(new EhisStudentReport.Graduation(directiveStudent, log, docNr, academicNr, extraNr, academicNrEn, extraNrEn));
         }
         return graduations;
+    }
+
+    private Queue<? extends EhisStudentReport> duplicate(Long schoolId, EhisStudentForm ehisStudentForm,
+            AtomicReference<Queue<? extends EhisStudentReport>> wrapper, AtomicInteger maxRequests) {
+        Queue<EhisStudentReport.Graduation> duplications = new ConcurrentLinkedQueue<>();
+        wrapper.set(duplications);
+        Query diplomaFormQuery = em.createNativeQuery("select f.full_code"
+                + " from diploma dip"
+                + " join form f on f.id = dip.form_id"
+                + " where dip.id = ?1 and f.status_code = ?2")
+                .setParameter(2, FormStatus.LOPUBLANKETT_STAATUS_T.name());
+        Query extraQuery = em.createNativeQuery("select f.full_code"
+                + " from form f"
+                + " join diploma_supplement_form dsf on dsf.form_id = f.id"
+                + " where dsf.diploma_supplement_id = ?1 and f.status_code = ?2 and f.type_code in (?3) and (dsf.is_english is not true)"
+                + " order by f.numeral")
+                .setParameter(2, FormStatus.LOPUBLANKETT_STAATUS_T.name())
+                .setParameter(3, Arrays.asList(FormType.LOPUBLANKETT_HINL.name(), FormType.LOPUBLANKETT_S.name()));
+        Query extraQueryEn = em.createNativeQuery("select f.full_code"
+                + " from form f"
+                + " join diploma_supplement_form dsf on dsf.form_id = f.id"
+                + " where dsf.diploma_supplement_id = ?1 and f.status_code = ?2 and f.type_code in (?3) and (dsf.is_english is true)"
+                + " order by f.numeral")
+                .setParameter(2, FormStatus.LOPUBLANKETT_STAATUS_T.name())
+                .setParameter(3, Arrays.asList(FormType.LOPUBLANKETT_S.name()));
+        List<?> result = em.createNativeQuery("select ds.id, coalesce(dip.dip_id, sup.dip_id, sup_en.dip_id) dip_send"
+                + ", sup.sup_id sup_send, sup.form sup_form, sup_en.sup_id sup_en_send, sup_en.form sup_en_form"
+                + " from directive_student ds"
+                + " join student s on s.id = ds.student_id"
+                + " join directive d on d.id = ds.directive_id"
+                + " left join ("
+                    + " select"
+                        + " dip.diploma_id as def_dip,"
+                        + " (array_remove(array_agg(dip.id order by dip.id desc), null))[1] as dip_id"
+                    + " from diploma dip"
+                    + " join form f on f.id = dip.form_id"
+                    + " where dip.status_code not in ?1 and f.status_code = ?8"
+                    + " group by dip.diploma_id"
+                + " ) dip on dip.def_dip = ds.diploma_id"
+                + " left join ("
+                    + " select"
+                        + " sup.diploma_supplement_id as def_sup,"
+                        + " (array_remove(array_agg(sup.id order by sup.id desc), null))[1] as sup_id,"
+                        + " (array_remove(array_agg(f.full_code order by sup.id desc), null))[1] as form,"
+                        + " (array_remove(array_agg(sup.diploma_id order by sup.id desc), null))[1] as dip_id"
+                    + " from diploma_supplement sup"
+                    + " join diploma_supplement_form dsf on dsf.diploma_supplement_id = sup.id"
+                    + " join form f on f.id = dsf.form_id"
+                    + " where sup.status_code not in ?1"
+                        + " and f.status_code = ?8"
+                        + " and dsf.is_english is not true"
+                        + " and f.type_code in (?9)"
+                    + " group by sup.diploma_supplement_id"
+                + " ) sup on sup.def_sup = ds.diploma_supplement_id"
+                + " left join ("
+                    + " select"
+                        + " sup.diploma_supplement_id as def_sup,"
+                        + " (array_remove(array_agg(sup.id order by sup.id desc), null))[1] as sup_id,"
+                        + " (array_remove(array_agg(f.full_code order by sup.id desc), null))[1] as form,"
+                        + " (array_remove(array_agg(sup.diploma_id order by sup.id desc), null))[1] as dip_id"
+                    + " from diploma_supplement sup"
+                    + " join diploma_supplement_form dsf on dsf.diploma_supplement_id = sup.id"
+                    + " join form f on f.id = dsf.form_id"
+                    + " where sup.status_en_code not in ?1"
+                        + " and f.status_code = ?8"
+                        + " and dsf.is_english is true"
+                        + " and f.type_code in (?10)"
+                    + " group by sup.diploma_supplement_id"
+                + " ) sup_en on sup_en.def_sup = ds.diploma_supplement_en_id "
+                + " where d.school_id = ?2 and ds.canceled = false"
+                + " and d.type_code = ?3"
+                + " and d.status_code = ?4"
+                + " and d.confirm_date >= ?5 and d.confirm_date <= ?6"
+                + " and coalesce(dip.dip_id, sup.dip_id, sup_en.dip_id) is not null"
+                + " and (ds.diploma_supplement_id is null or sup.sup_id is not null)"
+                + " and (ds.diploma_supplement_en_id is null or sup_en.sup_id is not null)"
+                + " and (ds.diploma_id is null or sup.sup_id is not null or sup_en.sup_id is not null)"
+                + " and s.type_code != ?7"
+                + " and not (" + SQL_WHERE_CURRICULUM_JOINTMENTOR + ")"
+                + " order by d.confirm_date asc")
+                .setParameter(1, EnumUtil.toNameList(DocumentStatus.LOPUDOK_STAATUS_K, DocumentStatus.LOPUDOK_STAATUS_C))
+                .setParameter(2, schoolId)
+                .setParameter(3, DirectiveType.KASKKIRI_DUPLIKAAT.name())
+                .setParameter(4, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
+                .setParameter(5, JpaQueryUtil.parameterAsTimestamp(ehisStudentForm.getFrom()))
+                .setParameter(6, JpaQueryUtil.parameterAsTimestamp(ehisStudentForm.getThru()))
+                .setParameter(7, StudentType.OPPUR_K.name())
+                .setParameter(8, FormStatus.LOPUBLANKETT_STAATUS_T.name())
+                .setParameter(9, EnumUtil.toNameList(FormType.LOPUBLANKETT_HIN, FormType.LOPUBLANKETT_R))
+                .setParameter(10, EnumUtil.toNameList(FormType.LOPUBLANKETT_DS))
+                .getResultList();
+        maxRequests.set(result.size());
+        for (Object r : result) {
+            if (Thread.interrupted()) { // Break in case if operation has been cancelled
+                break;
+            }
+            DirectiveStudent directiveStudent = em.getReference(DirectiveStudent.class, resultAsLong(r, 0));
+            Long dipId = resultAsLong(r, 1);
+            Long supId = resultAsLong(r, 2);
+            String supForm = resultAsString(r, 3);
+            Long supEnId = resultAsLong(r, 4);
+            String supEnForm = resultAsString(r, 5);
+            List<?> foundForm = diplomaFormQuery.setParameter(1, dipId).getResultList();
+            if (foundForm.isEmpty()) {
+                continue;
+            }
+            String docNr = foundForm.stream().map(f -> resultAsString(f, 0)).findAny().get();
+            List<?> extraResult = supId == null ? Collections.emptyList() : extraQuery
+                    .setParameter(1, supId)
+                    .getResultList();
+            List<?> extraResultEn = supEnId == null ? Collections.emptyList() : extraQueryEn
+                    .setParameter(1, supEnId)
+                    .getResultList();
+            List<String> extraNr = StreamUtil.toMappedList(er -> resultAsString(er, 0), extraResult);
+            List<String> extraNrEn = StreamUtil.toMappedList(er -> resultAsString(er, 0), extraResultEn);
+            WsEhisStudentLog log = ehisDirectiveStudentService.duplicateChanged(directiveStudent, docNr, supForm, extraNr, supEnForm, extraNrEn);
+            duplications.add(new EhisStudentReport.Graduation(directiveStudent, log, docNr, supForm, extraNr, supEnForm, extraNrEn));
+        }
+        return duplications;
     }
 
     private Queue<EhisStudentReport.ForeignStudy> foreignStudy(Long schoolId, EhisStudentForm ehisStudentForm, 
@@ -617,7 +755,7 @@ public class EhisStudentService extends EhisService {
                 + "from student_group_year_transfer sgyf "
                 + "join student_group sg on sg.id = sgyf.student_group_id "
                 + "join student s on s.student_group_id = sg.id "
-                + "where s.school_id = ?1 and s.status_code in ?2 and sgyf.changed >= ?3 and sgyf.changed <= ?4 "
+                + "where s.school_id = ?1 and sgyf.is_transfered and s.status_code in ?2 and sgyf.changed >= ?3 and sgyf.changed <= ?4 "
                 + "and s.type_code != ?5 and not (" + SQL_WHERE_CURRICULUM_JOINTMENTOR + ") "
                 + "order by sgyf.changed asc ")
                 .setParameter(1, schoolId)

@@ -487,25 +487,24 @@ public class AutocompleteService {
         }
         return result;
     }
-    
+
     public List<CurriculumVersionHigherModuleResult> curriculumVersionHigherModules(HoisUserDetails user,
             CurriculumVersionHigherModuleAutocompleteCommand lookup) {
-        String from = "from curriculum_version_hmodule cvh "
-                + "inner join curriculum_version cv on cvh.curriculum_version_id = cv.id "
-                + "inner join curriculum c on c.id = cv.curriculum_id";
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_version_hmodule cvh "
+                + "join curriculum_version cv on cvh.curriculum_version_id = cv.id "
+                + "join curriculum c on c.id = cv.curriculum_id");
 
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
-
-        qb.requiredCriteria("cvh.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
-                lookup.getCurriculumVersion());
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
-        qb.optionalContains("cv.status_code",  "statusCode", lookup.getCurriculumVersionStatusCode());
+        qb.optionalCriteria("cvh.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
+                lookup.getCurriculumVersion());
+
+        if (Boolean.TRUE.equals(lookup.getIsGrade())) {
+            qb.filter("cvh.is_grade = true and cvh.is_minor_speciality = false");
+        }
 
         List<?> data = qb.select("cvh.id, cvh.name_et, cvh.name_en, cvh.type_code", em).getResultList();
-        return StreamUtil.toMappedList(r -> {
-            return new CurriculumVersionHigherModuleResult(resultAsLong(r, 0), resultAsString(r, 1),
-                    resultAsString(r, 2), resultAsString(r, 3));
-        }, data);
+        return StreamUtil.toMappedList(r -> new CurriculumVersionHigherModuleResult(resultAsLong(r, 0),
+                resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3)), data);
     }
   
     public List<CurriculumVersionOccupationModuleResult> curriculumVersionOccupationModules(HoisUserDetails user,
@@ -604,8 +603,8 @@ public class AutocompleteService {
                     CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
         }
 
-        List<?> data = qb.select("cvot.id, cvot.name_et, cvot.credits, cvot.study_year_number, cvo.id module_id", em)
-                .getResultList();
+        List<?> data = qb.select("cvot.id, cvot.name_et, cvot.credits, cvot.study_year_number,"
+                + " cvot.assessment_code, cvo.id module_id", em).getResultList();
 
         List<CurriculumVersionOccupationModuleThemeResult> results = StreamUtil.toMappedList(r -> {
             String name = resultAsString(r, 1);
@@ -614,7 +613,7 @@ public class AutocompleteService {
                 name += " (" + studyYearNumber + ". õa)";
             }
             return new CurriculumVersionOccupationModuleThemeResult(resultAsLong(r, 0), name, name,
-                    resultAsDecimal(r, 2), studyYearNumber, resultAsLong(r, 4));
+                    resultAsDecimal(r, 2),  resultAsString(r, 4), studyYearNumber, resultAsLong(r, 5));
         }, data);
 
         if (Boolean.TRUE.equals(lookup.getExistInOtherJournals()) && lookup.getStudentGroupId() != null) {
@@ -976,7 +975,7 @@ public class AutocompleteService {
         }
     }
 
-    private List<?> studentResults(Long schoolId, StudentAutocompleteCommand lookup) {
+    public List<?> studentResults(Long schoolId, StudentAutocompleteCommand lookup) {
         String from = "from student s inner join person p on s.person_id = p.id";
         if (Boolean.TRUE.equals(lookup.getShowStudentGroup())) {
             from += " left join student_group sg on s.student_group_id = sg.id";
@@ -1037,10 +1036,15 @@ public class AutocompleteService {
                     + ") else false end))");
         }
         if (Boolean.FALSE.equals(lookup.getHigher())) {
-            qb.filter("exists (select c.id from curriculum c "
+            qb.filter("(exists (select c.id from curriculum c "
                     + "join curriculum_version cv on cv.curriculum_id = c.id "
                     + "where cv.id = s.curriculum_version_id "
-                    + "and c.is_higher = false )");
+                    + "and c.is_higher = false ) "
+                    + "or (case when s.curriculum_version_id is null then "
+                    // v at the end means vocational and is there to make this directive naming differ from other directives in this query
+                    + "exists (select dv.id from directive dv join directive_student dsv on dsv.directive_id = dv.id "
+                    + "where dv.is_higher != true and dv.type_code = 'KASKKIRI_KYLALIS' and dv.school_id = s.school_id and s.type_code = 'OPPUR_K'"
+                    + ") else false end))");
         }
         if (Boolean.TRUE.equals(lookup.getFinishing())) {
             qb.requiredCriteria("exists (select 1 from directive_student ds"
@@ -1684,7 +1688,7 @@ public class AutocompleteService {
     public List<AutocompleteResult> committees(Long schoolId, CommitteeAutocompleteCommand command) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from committee c "
                 + "join committee_member cm on c.id = cm.committee_id "
-                + "join person p on cm.person_id = p.id");
+                + "left join person p on cm.person_id = p.id");
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         qb.requiredCriteria("c.type_code = :typeCode", "typeCode", command.getType());
         qb.optionalCriteria("c.id = :committeeId", "committeeId", command.getId());
@@ -1708,7 +1712,7 @@ public class AutocompleteService {
         qb.groupBy("c.id");
         qb.sort("c.name_et");
         List<?> data = qb.select(
-                "c.id, c.name_et, array_to_string(array_agg(p.firstname || ' ' || p.lastname), ', ') as members", em)
+                "c.id, c.name_et, array_to_string(array_agg(coalesce(cm.member_name, p.firstname || ' ' || p.lastname)), ', ') as members", em)
                 .getResultList();
         
         Set<AutocompleteResult> committees = StreamUtil.toMappedSet(r -> {
@@ -1894,6 +1898,26 @@ public class AutocompleteService {
             String nameEt = PollService.getSubjectNameWithTeacher(resultAsString(r, 1), code, teachers);
             String nameEn = PollService.getSubjectNameWithTeacher(resultAsString(r, 2), code, teachers);
             return new LiteralResult(resultAsLong(r, 0), nameEt, nameEn, resultAsString(r, 1));
+        }, data);
+    }
+
+    public List<AutocompleteResult> studentGroupTeachers(Long schoolId, TeacherAutocompleteCommand lookup) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
+                "from student_group sg "
+                + "join teacher t on t.id = sg.teacher_id "
+                + "join person p on t.person_id = p.id").sort("p.lastname", "p.firstname");
+
+        qb.requiredCriteria("t.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalCriteria("t.id = :tId", "tId", lookup.getId());
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"),  "name", lookup.getName());
+        qb.optionalCriteria("t.is_higher = :higher", "higher", lookup.getHigher());
+        qb.optionalCriteria("t.is_vocational = :vocational", "vocational", lookup.getVocational());
+        qb.groupBy("t.id, p.firstname, p.lastname");
+        List<?> data = qb.select("t.id, p.firstname, p.lastname", em).getResultList();
+        
+        return StreamUtil.toMappedList(r -> {
+            String name = PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2));
+            return new AutocompleteResult(resultAsLong(r, 0), name, name);
         }, data);
     }
     

@@ -12,6 +12,13 @@
             </div>
           </div>
 
+          <div>&nbsp;</div>
+          <div flex>
+            <md-checkbox ng-model="record.addModuleOutcomes" aria-label="{{'lessonplan.journal.addModuleOutcomes' | translate}}">
+              {{'lessonplan.journal.addModuleOutcomes' | translate}}
+            </md-checkbox>
+          </div>
+
           <div layout="row" flex="100" flex-sm="100" flex-xs="100">
             <md-input-container flex>
               <label class="textInput">{{'lessonplan.journal.theme' | translate}}</label>
@@ -46,7 +53,7 @@
               <label class="textInput">{{'lessonplan.journal.assessment' | translate}}</label>
               <hois-classifier-select flex="100" flex-sm="100" flex-xs="100" ng-model="record.assessment"
                 main-classifier-code="KUTSEHINDAMISVIIS" model-value-attr="code" name="assessment"
-                ng-required="!occupationBasedAssessment()"></hois-classifier-select>
+                ng-required="assessmentRequired()"></hois-classifier-select>
             </md-input-container>
           </div>
 

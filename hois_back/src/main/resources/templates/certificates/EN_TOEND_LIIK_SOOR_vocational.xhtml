@@ -7,9 +7,11 @@
 		during {{ content.student.studyStart != null ? content.student.studyStart : "unspecified" }} to {{ content.student.studyEnd != null ? content.student.studyEnd : "unspecified" }}.
 	{% endif %}
 </p>
+{% if content.student.curriculum != null %}
 <p>
-	Curriculum: {{ content.student.curriculum != null ? content.student.curriculum.nameEn + " (" + (content.student.curriculum.merCode != null ? content.student.curriculum.merCode  : "-") + ")" : "-" }}
+	Curriculum: {{ content.student.curriculum.nameEn + " (" + (content.student.curriculum.merCode != null ? content.student.curriculum.merCode  : "-") + ")" }}
 </p>
+{% endif %}
 {% if not content.student.isGuestStudent %}
 <p>
 	Level of education: {{ content.student.curriculum != null ? (content.student.curriculum.studyLevel | name) : "-" }}

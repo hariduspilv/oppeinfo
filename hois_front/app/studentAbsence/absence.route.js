@@ -14,7 +14,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       }
     })
-    .when('/groupAbsences/:today?', {
+    .when('/groupAbsences', {
       templateUrl: 'studentAbsence/absence.group.html',
       controller: 'StudentGroupAbsenceController',
       controllerAs: 'controller',

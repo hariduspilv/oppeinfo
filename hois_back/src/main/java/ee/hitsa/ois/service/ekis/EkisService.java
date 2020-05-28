@@ -8,6 +8,7 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -44,6 +45,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.directive.DirectiveStudentDuplicateForm;
 import ee.hitsa.ois.domain.enterprise.Enterprise;
 import ee.hitsa.ois.domain.scholarship.ScholarshipApplication;
 import ee.hitsa.ois.domain.school.School;
@@ -56,6 +58,7 @@ import ee.hitsa.ois.enums.CertificateType;
 import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.DocumentStatus;
 import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.ProtocolStatus;
@@ -410,6 +413,25 @@ public class EkisService {
             break;
         case KASKKIRI_AKADK:
             content.setEndDate(date(ds.getStartDate()));
+            break;
+        case KASKKIRI_DUPLIKAAT:
+            List<String> codes = new ArrayList<>();
+            if (ds.getDiplomaForm() != null) {
+                codes.add(ds.getDiplomaForm().getFullCode());
+            }
+
+            List<DirectiveStudentDuplicateForm> forms = new ArrayList<>();
+            List<DirectiveStudentDuplicateForm> formsEn = new ArrayList<>();
+            ds.getForms().forEach(f -> (Boolean.TRUE.equals(f.getEn()) ? formsEn : forms).add(f));
+            
+            if (ds.getDiplomaSupplement() != null) {
+                forms.forEach(dsForm -> codes.add(dsForm.getForm().getFullCode()));
+            }
+            if (ds.getDiplomaSupplementEn() != null) {
+                formsEn.forEach(dsForm -> codes.add(dsForm.getForm().getFullCode()));
+            }
+            
+            content.setReason(String.join(", ", codes) + "???" + ds.getAddInfo());
             break;
         case KASKKIRI_EKSMAT:
             content.setReason(name(ds.getReason()));

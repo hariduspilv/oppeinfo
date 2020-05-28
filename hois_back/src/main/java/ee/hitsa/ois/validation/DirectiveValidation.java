@@ -7,6 +7,7 @@ public interface DirectiveValidation {
 
     interface Akad extends DirectiveValidation { }
     interface Akadk extends DirectiveValidation { }
+    interface Duplikaat extends DirectiveValidation { }
     interface Eksmat extends DirectiveValidation { }
     interface Ennist extends DirectiveValidation { }
     interface Finm extends DirectiveValidation { }
