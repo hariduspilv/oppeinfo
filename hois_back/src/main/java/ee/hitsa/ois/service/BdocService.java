@@ -6,30 +6,40 @@ import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.Base64;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-import javax.persistence.EntityManager;
-import javax.xml.soap.Detail;
-import javax.xml.soap.SOAPFault;
-import javax.xml.ws.soap.SOAPFaultException;
+import javax.xml.bind.DatatypeConverter;
 
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
+import ee.hitsa.ois.bdoc.MobileIdSigningSession;
+import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.sk.mid.MidClient;
+import ee.sk.mid.MidDisplayTextFormat;
+import ee.sk.mid.MidHashToSign;
+import ee.sk.mid.MidHashType;
+import ee.sk.mid.MidLanguage;
+import ee.sk.mid.MidSignature;
+import ee.sk.mid.exception.MidNotMidClientException;
+import ee.sk.mid.rest.dao.MidSessionStatus;
+import ee.sk.mid.rest.dao.request.MidCertificateRequest;
+import ee.sk.mid.rest.dao.request.MidSignatureRequest;
+import ee.sk.mid.rest.dao.response.MidCertificateChoiceResponse;
+import ee.sk.mid.rest.dao.response.MidSignatureResponse;
+import eu.europa.esig.dss.x509.ocsp.OCSPSource;
 import org.digidoc4j.Configuration;
 import org.digidoc4j.Container;
 import org.digidoc4j.ContainerBuilder;
 import org.digidoc4j.DataFile;
 import org.digidoc4j.DataToSign;
 import org.digidoc4j.DigestAlgorithm;
+import org.digidoc4j.OCSPSourceBuilder;
 import org.digidoc4j.Signature;
 import org.digidoc4j.SignatureBuilder;
+import org.digidoc4j.SignatureProfile;
 import org.digidoc4j.TSLCertificateSource;
-import org.digidoc4j.impl.bdoc.SKCommonCertificateVerifier;
-import org.digidoc4j.impl.bdoc.ocsp.OcspSourceBuilder;
-import org.digidoc4j.impl.bdoc.ocsp.SKOnlineOCSPSource;
-import org.digidoc4j.impl.bdoc.tsl.LazyCertificatePool;
+import org.digidoc4j.impl.asic.SKCommonCertificateVerifier;
+import org.digidoc4j.impl.asic.tsl.LazyCertificatePool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,21 +47,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 
-import ee.hitsa.ois.bdoc.MobileIdSession;
 import ee.hitsa.ois.bdoc.UnsignedBdocContainer;
-import ee.hitsa.ois.config.MobileIdProperties;
 import ee.hitsa.ois.domain.OisFile;
-import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.exception.HoisException;
-import ee.hois.soap.dds.service.AddDataFileRequest;
-import ee.hois.soap.dds.service.AddDataFileResponse;
-import ee.hois.soap.dds.service.CreateSignedDocResponse;
-import ee.hois.soap.dds.service.DigiDocServiceClient;
-import ee.hois.soap.dds.service.GetSignedDocResponse;
-import ee.hois.soap.dds.service.GetStatusInfoResponse;
-import ee.hois.soap.dds.service.MobileSignRequest;
-import ee.hois.soap.dds.service.MobileSignResponse;
-import ee.hois.soap.dds.service.StartSessionResponse;
 import eu.europa.esig.dss.validation.CertificateVerifier;
 import eu.europa.esig.dss.validation.OCSPCertificateVerifier;
 import eu.europa.esig.dss.x509.CertificateToken;
@@ -61,19 +59,18 @@ import eu.europa.esig.dss.x509.RevocationToken;
 public class BdocService {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    private static final String BDOC_MIME_TYPE = "application/vnd.etsi.asic-e+zip";
 
     @Value("${hois.digidoc4j.testMode:#{null}}")
     private Boolean isTestMode;
+    @Value("${mobileid.signDisplayText}")
+    private String signDisplayText;
+    @Value("${mobileid.signDisplayTextEn}")
+    private String signDisplayTextEn;
 
     private Configuration configuration;
 
     @Autowired
-    private EntityManager em;
-    @Autowired
-    private DigiDocServiceClient ddsClient;
-    @Autowired
-    private MobileIdProperties properties;
+    private MidClient client;
 
     @PostConstruct
     public void postConstruct() {
@@ -94,12 +91,12 @@ public class BdocService {
         X509Certificate cert509 = null;
 
         try {
-            byte[] certEntryBytes = Hex.decodeHex(certificateInHex.toCharArray());
+            byte[] certEntryBytes = DatatypeConverter.parseHexBinary(certificateInHex);
             in = new ByteArrayInputStream(certEntryBytes);
             CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
             cert509 = (X509Certificate) certFactory.generateCertificate(in);
         } catch (Exception ex) {
-            log.error("BDOC PREPARE SIGNATURE ERROR: "+ex.getMessage());	
+            log.error("BDOC PREPARE SIGNATURE ERROR: "+ex.getMessage());
             ex.printStackTrace();
         } finally {
             if (in != null) {
@@ -117,6 +114,7 @@ public class BdocService {
         DataToSign dataToSign = SignatureBuilder.aSignature(container)
                 .withSignatureDigestAlgorithm(DigestAlgorithm.SHA256)
                 .withSigningCertificate(cert509)
+                .withSignatureProfile(SignatureProfile.LT)
                 .buildDataToSign();
         
         UnsignedBdocContainer unsignedBdocContainer = new UnsignedBdocContainer();
@@ -126,8 +124,9 @@ public class BdocService {
         return unsignedBdocContainer;
     }
 
-    private static InputStream getSignedBdoc(Container container, DataToSign dataToSign, String signatureInHex) throws DecoderException {
-        Signature signature = dataToSign.finalize(Hex.decodeHex(signatureInHex.toCharArray()));
+    private static InputStream getSignedBdoc(Container container, DataToSign dataToSign, String signatureInHex) {
+        byte[] signatureBytes = DatatypeConverter.parseHexBinary(signatureInHex);
+        Signature signature = dataToSign.finalize(signatureBytes);
         log.info("BDOC signature OK");
         container.addSignature(signature);
         log.info("BDOC signature added to container");
@@ -137,8 +136,8 @@ public class BdocService {
     public OisFile getSignedBdoc(Container container, DataToSign dataToSign, String signature, String fileNamePrefix) {
         try(InputStream bdocInputStream = getSignedBdoc(container, dataToSign, signature)) {
             OisFile bdoc = new OisFile();
-            bdoc.setFname(fileNamePrefix + ".bdoc");
-            bdoc.setFtype(BDOC_MIME_TYPE);
+            bdoc.setFname(fileNamePrefix + ".asice");
+            bdoc.setFtype(Container.DocumentType.ASICE.toString());
             bdoc.setFdata(StreamUtils.copyToByteArray(bdocInputStream));
             return bdoc;
         } catch (Exception e) {
@@ -162,7 +161,7 @@ public class BdocService {
     }
 
     private RevocationToken doOcspCheck(X509Certificate certificate) {
-        SKOnlineOCSPSource ocspSource = OcspSourceBuilder.anOcspSource().withConfiguration(configuration).build();
+        OCSPSource ocspSource = OCSPSourceBuilder.anOcspSource().withConfiguration(configuration).build();
         CertificateVerifier certificateVerifier = getCertificateVerifier(ocspSource);
         LazyCertificatePool lazyCertificatePool = new LazyCertificatePool(certificateVerifier.getTrustedCertSource());
 
@@ -176,7 +175,7 @@ public class BdocService {
         return ocspCertificateVerifier.check(certificateToken);
     }
 
-    private CertificateVerifier getCertificateVerifier(SKOnlineOCSPSource ocspSource) {
+    private CertificateVerifier getCertificateVerifier(OCSPSource ocspSource) {
         //org.digidoc4j.impl.bdoc.xades.XadesValidationDssFacade
         CertificateVerifier certificateVerifier = new SKCommonCertificateVerifier();
         certificateVerifier.setOcspSource(ocspSource);
@@ -186,102 +185,78 @@ public class BdocService {
         certificateVerifier.setSignatureCRLSource(null); //Disable CRL checks
         return certificateVerifier;
     }
-    
-    public MobileIdSession mobileSign(String fileName, String mimeType, byte[] file, Long personId) {
-        MobileIdSession session = new MobileIdSession();
-        try {
-            StartSessionResponse sessionResponse = ddsClient.startSession(properties.getEndpoint());
-            if (!DigiDocServiceClient.RESPONSE_SUCCESS.equals(sessionResponse.getStatus())) {
-                log.warn("Failed to create mobile signing session: {}", sessionResponse.getStatus());
-                return session;
-            }
-            session.setSesscode(sessionResponse.getSesscode());
-            CreateSignedDocResponse containerResponse = ddsClient.createSignedDoc(session.getSesscode(), properties.getEndpoint());
-            if (!DigiDocServiceClient.RESPONSE_SUCCESS.equals(containerResponse.getStatus())) {
-                log.warn("Failed to create mobile signing container: {}", containerResponse.getStatus());
-                return session;
-            }
-            AddDataFileRequest addFileRequest = new AddDataFileRequest();
-            addFileRequest.setSesscode(session.getSesscode());
-            addFileRequest.setFileName(fileName);
-            addFileRequest.setMimeType(mimeType);
-            addFileRequest.setSize(file.length);
-            addFileRequest.setContent(Base64.getEncoder().encodeToString(file));
-            AddDataFileResponse addFileResponse = ddsClient.addDataFile(addFileRequest, properties.getEndpoint());
-            if (!DigiDocServiceClient.RESPONSE_SUCCESS.equals(addFileResponse.getStatus())) {
-                log.warn("Failed to add data file for mobile signing: {}", addFileResponse.getStatus());
-                return session;
-            }
-            MobileSignRequest signRequest = new MobileSignRequest();
-            signRequest.setSesscode(session.getSesscode());
-            signRequest.setSignersCountry("EE");
-            Person person = em.getReference(Person.class, personId);
-            signRequest.setSignerIDCode(person.getIdcode());
-            signRequest.setServiceName(properties.getServiceName());
-            signRequest.setAdditionalDataToBeDisplayed(properties.getMessageToDisplay());
-            signRequest.setLanguage("EST");
-            signRequest.setMessagingMode("asynchClientServer");
-            signRequest.setReturnDocInfo(false);
-            signRequest.setReturnDocData(false);
-            MobileSignResponse signResponse = ddsClient.mobileSign(signRequest, properties.getEndpoint());
-            if (!DigiDocServiceClient.RESPONSE_SUCCESS.equals(signResponse.getStatus()) || !"0".equals(signResponse.getStatusCode())) {
-                log.warn("Failed mobile sign: {} {}", signResponse.getStatus(), signResponse.getStatusCode());
-                return session;
-            }
-            session.setChallengeID(signResponse.getChallengeID());
-        } catch (SOAPFaultException e) {
-            logFault(e.getFault());
-        }
+
+    public MobileIdSigningSession mobileIdSignatureRequest(String idcode, String mobileNumber, DataFile dataFile,
+            Language lang) {
+        Container container = ContainerBuilder.aContainer()
+                .withConfiguration(configuration)
+                .withDataFile(dataFile)
+                .build();
+
+        X509Certificate certificate = getMobileIdCertificate(idcode, mobileNumber);
+        DataToSign dataToSign = SignatureBuilder.aSignature(container)
+                .withSigningCertificate(certificate)
+                .withSignatureDigestAlgorithm(DigestAlgorithm.SHA256)
+                .withSignatureProfile(SignatureProfile.LT)
+                .buildDataToSign();
+
+        MidHashToSign hashToSign = MidHashToSign.newBuilder()
+                .withDataToHash(dataToSign.getDataToSign())
+                .withHashType(MidHashType.SHA256)
+                .build();
+
+        MidSignatureRequest signatureRequest = MidSignatureRequest.newBuilder()
+                .withNationalIdentityNumber(idcode)
+                .withPhoneNumber(mobileNumber)
+                .withHashToSign(hashToSign)
+                .withLanguage(Language.EN.equals(lang) ? MidLanguage.ENG : MidLanguage.EST)
+                .withDisplayText(Language.EN.equals(lang) ? signDisplayTextEn : signDisplayText)
+                .withDisplayTextFormat(MidDisplayTextFormat.GSM7)
+                .build();
+
+        MidSignatureResponse response = client.getMobileIdConnector().sign(signatureRequest);
+
+        MobileIdSigningSession session = new MobileIdSigningSession(response.getSessionID(), dataToSign, container);
+        session.setVerificationCode(hashToSign.calculateVerificationCode());
         return session;
     }
-    
-    public static boolean closeMobileSession(String statusCode) {
-        return !"OUTSTANDING_TRANSACTION".equals(statusCode) && !"SIGNATURE".equals(statusCode);
-    }
-    
-    public String mobileSignStatus(Integer sesscode) {
+
+    public X509Certificate getMobileIdCertificate(String idcode, String mobileNumber) {
+        MidCertificateRequest request = MidCertificateRequest.newBuilder()
+                .withPhoneNumber(mobileNumber)
+                .withNationalIdentityNumber(idcode)
+                .build();
+
         try {
-            GetStatusInfoResponse response = ddsClient.getStatusInfo(sesscode, properties.getEndpoint());
-            if (closeMobileSession(response.getStatusCode())) {
-                try {
-                    ddsClient.closeSession(sesscode, properties.getEndpoint());
-                } catch (SOAPFaultException e) {
-                    logFault(e.getFault());
-                }
-            }
-            return response.getStatusCode();
-        } catch (SOAPFaultException e) {
-            logFault(e.getFault());
-            return null;
+            MidCertificateChoiceResponse response = client.getMobileIdConnector().getCertificate(request);
+            return client.createMobileIdCertificate(response);
+        } catch (MidNotMidClientException e) {
+            log.info(e.getMessage());
+            throw new ValidationFailedException("main.login.mobileid.notMobileIdUser");
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            throw new ValidationFailedException("main.messages.error.mobileIdSignFailed");
         }
     }
 
-    public OisFile getMobileSignedBdoc(Integer sesscode, String fileNamePrefix) {
+    public OisFile mobileIdSign(MobileIdSigningSession session, String fileNamePrefix) {
         try {
-            GetSignedDocResponse response = ddsClient.getSignedDoc(sesscode, properties.getEndpoint());
-            if (!DigiDocServiceClient.RESPONSE_SUCCESS.equals(response.getStatus()) || response.getSignedDocData() == null) {
-                log.warn("Failed to get signed document: {}", response.getStatus());
-                return null;
-            }
-            try {
-                ddsClient.closeSession(sesscode, properties.getEndpoint());
-            } catch (SOAPFaultException e) {
-                logFault(e.getFault());
-            }
+            MidSessionStatus sessionStatus = client.getSessionStatusPoller()
+                    .fetchFinalSignatureSessionStatus(session.getSessionID());
+
+            MidSignature mobileIdSignature = client.createMobileIdSignature(sessionStatus);
+
+            Signature signature = session.getDataToSign().finalize(mobileIdSignature.getValue());
+            session.getContainer().addSignature(signature);
+
             OisFile bdoc = new OisFile();
-            bdoc.setFname(fileNamePrefix + ".bdoc");
-            bdoc.setFtype(BDOC_MIME_TYPE);
-            bdoc.setFdata(Base64.getDecoder().decode(response.getSignedDocData().replaceAll("\\s", "")));
+            bdoc.setFname(fileNamePrefix + ".asice");
+            bdoc.setFtype(Container.DocumentType.ASICE.toString());
+            bdoc.setFdata(StreamUtils.copyToByteArray(session.getContainer().saveAsStream()));
             return bdoc;
-        } catch (SOAPFaultException e) {
-            logFault(e.getFault());
-            return null;
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            throw new ValidationFailedException("main.messages.error.mobileIdSignFailed");
         }
     }
-
-    private static void logFault(SOAPFault fault) {
-        Detail detail = fault.getDetail();
-        log.info("SOAPFault {} detail message: {}", fault.getFaultString(), (detail != null ? detail.getTextContent() : ""));
-    }
-    
 }

@@ -1147,7 +1147,7 @@ angular.module('hitsaOis')
       });
     }
 
-    function getLeadingTeacherSections() {
+    function getLeadingTeacherSections(authenticatedUser) {
       sections.push({
         name: 'main.menu.academicCalendar.label',
         type: 'link',

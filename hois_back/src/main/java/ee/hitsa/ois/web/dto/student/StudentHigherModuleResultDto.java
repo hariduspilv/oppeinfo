@@ -9,9 +9,11 @@ import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 
 public class StudentHigherModuleResultDto extends CurriculumVersionHigherModuleDto {
 
+    private CurriculumVersionResult curriculumVersionObject;
     private BigDecimal mandatoryCreditsSubmitted;
     private BigDecimal optionalCreditsSubmitted;
     private BigDecimal mandatoryDifference;
@@ -32,6 +34,7 @@ public class StudentHigherModuleResultDto extends CurriculumVersionHigherModuleD
         dto.setElectiveModulesResults(StreamUtil.toMappedList(StudentHigherElectiveModuleResultDto::of, higherModule.getElectiveModules()));
         dto.setCanMarkComplete(Boolean.valueOf(!HigherModuleType.CAN_NOT_MARK_AS_COMPLETE.contains
                 (EntityUtil.getCode(higherModule.getType()))));
+        dto.setCurriculumVersionObject(new CurriculumVersionResult(higherModule.getCurriculumVersion()));
         return dto;
     }
 
@@ -51,6 +54,14 @@ public class StudentHigherModuleResultDto extends CurriculumVersionHigherModuleD
     public void calculateIsOk() {
         electiveModulesCompleted = Long.valueOf(electiveModulesResults.stream().filter(e -> Boolean.TRUE.equals(e.getIsOk())).count());
         isOk = Boolean.valueOf(BigDecimal.ZERO.compareTo(totalDifference) <= 0 && electiveModulesCompleted.compareTo(Long.valueOf(getElectiveModulesNumber().longValue())) >= 0);
+    }
+
+    public CurriculumVersionResult getCurriculumVersionObject() {
+        return curriculumVersionObject;
+    }
+
+    public void setCurriculumVersionObject(CurriculumVersionResult curriculumVersionObject) {
+        this.curriculumVersionObject = curriculumVersionObject;
     }
 
     public List<StudentHigherElectiveModuleResultDto> getElectiveModulesResults() {

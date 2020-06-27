@@ -30,6 +30,7 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
     private Long studentId;
     private Long teacherId;
     private LoginMethod loginMethod;
+    private String idcode;
     private String mobileNumber;
     private List<Long> curriculumIds;
 
@@ -43,6 +44,7 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
         this.teacherId = EntityUtil.getNullableId(user.getTeacher());
         this.curriculumIds = StreamUtil.toMappedList(uc -> EntityUtil.getId(uc.getCurriculum()),
                 user.getUserCurriculums());
+        this.idcode = user.getPerson().getIdcode();
     }
 
     private static Collection<? extends GrantedAuthority> getAuthorities(List<String> roles) {
@@ -99,6 +101,14 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
 
     public void setLoginMethod(LoginMethod loginMethod) {
         this.loginMethod = loginMethod;
+    }
+
+    public String getIdcode() {
+        return idcode;
+    }
+
+    public void setIdcode(String idcode) {
+        this.idcode = idcode;
     }
 
     public String getMobileNumber() {

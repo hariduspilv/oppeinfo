@@ -272,21 +272,11 @@ public class DeclarationService {
     }
     
     private Map<Long, String> studentSubjectResults(Long studentId) {
-        Query q = em.createNativeQuery("select distinct shr.subject_id, shr.grade, shr.grade_date " + 
-                "from student_higher_result shr " +
-                "where shr.student_id = ?1 " +
-                "order by shr.grade_date desc");
-        q.setParameter(1, studentId);
-        
-        List<?> data = q.getResultList();
-        Map<Long, String> results = new HashMap<>();
-        
-        for (Object r : data) {
-            if (results.get(resultAsLong(r, 0)) == null) {
-                results.put(resultAsLong(r, 0), resultAsString(r, 1));
-            }
-        }
-        return results;
+        List<?> data = em.createNativeQuery("select shr.subject_id, shr.grade_code from student_higher_result shr " +
+                "where shr.student_id = ?1 and shr.is_active = true")
+                .setParameter(1, studentId)
+                .getResultList();
+        return data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> resultAsString(r, 1), (o, n) -> o));
     }
 
     public boolean canCreate(HoisUserDetails user, Long studentId) {

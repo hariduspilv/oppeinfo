@@ -8,10 +8,12 @@ public class StudentHigherResultDto {
     private List<StudentHigherModuleResultDto> modules;
     private List<StudentHigherSubjectResultDto> subjectResults;
     private List<StudentHigherStudyPeriodResultDto> studyPeriodResults;
+    private List<StudentHigherModuleResultDto> extraCurriculumModuleResults;
     private BigDecimal averageGrade;
     private Boolean isCurriculumFulfilled;
     private BigDecimal creditsSubmitted;
     private BigDecimal creditsSubmittedConsidered;
+    private BigDecimal fulfillmentPercentage;
 
     public List<StudentHigherStudyPeriodResultDto> getStudyPeriodResults() {
         return studyPeriodResults;
@@ -67,5 +69,21 @@ public class StudentHigherResultDto {
 
     public void setSubjectResults(List<StudentHigherSubjectResultDto> subjectResults) {
         this.subjectResults = subjectResults;
+    }
+
+    public BigDecimal getFulfillmentPercentage() {
+        return fulfillmentPercentage;
+    }
+
+    public void setFulfillmentPercentage(BigDecimal fulfillmentPercentage) {
+        this.fulfillmentPercentage = fulfillmentPercentage;
+    }
+
+    public List<StudentHigherModuleResultDto> getExtraCurriculumModuleResults() {
+        return extraCurriculumModuleResults;
+    }
+
+    public void setExtraCurriculumModuleResults(List<StudentHigherModuleResultDto> extraCurriculumModuleResults) {
+        this.extraCurriculumModuleResults = extraCurriculumModuleResults;
     }
 }

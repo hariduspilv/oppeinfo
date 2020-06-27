@@ -2,54 +2,46 @@ package ee.hitsa.ois.service.security;
 
 public class MobileIdSession {
 
-    private Integer errorCode;
-    
-    private Integer sesscode;
-    private String userIDCode;
-    private String userGivenname;
-    private String userSurname;
-    private String challengeID;
+    private String idcode;
+    private String verificationCode;
+    private String mobileNumber;
+    private String authenticationHash;
 
-    public Integer getErrorCode() {
-        return errorCode;
-    }
-    public void setErrorCode(Integer errorCode) {
-        this.errorCode = errorCode;
-    }
-    
-    public Integer getSesscode() {
-        return sesscode;
-    }
-    public void setSesscode(Integer sesscode) {
-        this.sesscode = sesscode;
+    public MobileIdSession(String idcode, String mobileNumber, String authenticationHash) {
+        this.idcode = idcode;
+        this.mobileNumber = mobileNumber;
+        this.authenticationHash = authenticationHash;
     }
 
-    public String getUserIDCode() {
-        return userIDCode;
+    public String getIdcode() {
+        return idcode;
     }
-    public void setUserIDCode(String userIDCode) {
-        this.userIDCode = userIDCode;
+
+    public void setIdcode(String idcode) {
+        this.idcode = idcode;
     }
-    
-    public String getUserGivenname() {
-        return userGivenname;
+
+    public String getVerificationCode() {
+        return verificationCode;
     }
-    public void setUserGivenname(String userGivenname) {
-        this.userGivenname = userGivenname;
+
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
     }
-    
-    public String getUserSurname() {
-        return userSurname;
+
+    public String getMobileNumber() {
+        return mobileNumber;
     }
-    public void setUserSurname(String userSurname) {
-        this.userSurname = userSurname;
+
+    public void setMobileNumber(String mobileNumber) {
+        this.mobileNumber = mobileNumber;
     }
-    
-    public String getChallengeID() {
-        return challengeID;
+
+    public String getAuthenticationHash() {
+        return authenticationHash;
     }
-    public void setChallengeID(String challengeID) {
-        this.challengeID = challengeID;
+
+    public void setAuthenticationHash(String authenticationHash) {
+        this.authenticationHash = authenticationHash;
     }
-    
 }

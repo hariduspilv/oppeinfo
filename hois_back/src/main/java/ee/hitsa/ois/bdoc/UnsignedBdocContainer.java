@@ -2,9 +2,12 @@ package ee.hitsa.ois.bdoc;
 
 import java.io.Serializable;
 
-import org.apache.commons.codec.binary.Hex;
+import eu.europa.esig.dss.DSSUtils;
+import eu.europa.esig.dss.DigestAlgorithm;
 import org.digidoc4j.Container;
 import org.digidoc4j.DataToSign;
+
+import javax.xml.bind.DatatypeConverter;
 
 public class UnsignedBdocContainer implements Serializable {
 
@@ -28,7 +31,7 @@ public class UnsignedBdocContainer implements Serializable {
     }
 
     public String getDigestToSign() {
-        return Hex.encodeHexString(getDataToSign().getDigestToSign());
+        return DatatypeConverter.printHexBinary(DSSUtils.digest(DigestAlgorithm.SHA256, getDataToSign().getDataToSign()));
     }
 
 }

@@ -34,6 +34,8 @@ public class DiplomaSupplement extends BaseEntityWithId {
     private LocalDate birthdate;
     private String curriculumNameEt;
     private String curriculumNameEn;
+    private String specialityEt;
+    private String specialityEn;
     private String merCode;
     private String ekr;
     private BigDecimal credits;
@@ -181,7 +183,23 @@ public class DiplomaSupplement extends BaseEntityWithId {
     public void setCurriculumNameEn(String curriculumNameEn) {
         this.curriculumNameEn = curriculumNameEn;
     }
-    
+
+    public String getSpecialityEt() {
+        return specialityEt;
+    }
+
+    public void setSpecialityEt(String specialityEt) {
+        this.specialityEt = specialityEt;
+    }
+
+    public String getSpecialityEn() {
+        return specialityEn;
+    }
+
+    public void setSpecialityEn(String specialityEn) {
+        this.specialityEn = specialityEn;
+    }
+
     public String getMerCode() {
         return merCode;
     }

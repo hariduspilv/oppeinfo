@@ -56,7 +56,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user").permitAll()
                 .antMatchers("/ldap").permitAll()
                 .antMatchers("/mIdLogin").permitAll()
-                .antMatchers("/mIdStatus").permitAll()
+                .antMatchers("/mIdAuthentication").permitAll()
                 .antMatchers("/SingleSignOnService").permitAll()
                 .antMatchers("/taraLogin").permitAll()
                 .antMatchers("/taraCallback").permitAll()

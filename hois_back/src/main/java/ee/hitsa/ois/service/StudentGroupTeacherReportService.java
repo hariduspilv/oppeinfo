@@ -1483,12 +1483,14 @@ public class StudentGroupTeacherReportService {
         qb.optionalCriteria("je.entry_type_code in (:entryTypeCodes)", "entryTypeCodes", criteria.getEntryTypes());
         qb.optionalCriteria("jes.grade_code not in (:positiveGrades)", "positiveGrades",
                 OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
-        qb.optionalCriteria("je.entry_date >= :entryFrom", "entryFrom", criteria.getFrom(),
-                DateUtils::firstMomentOfDay);
-        qb.optionalCriteria("je.entry_date <= :entryThru", "entryThru", criteria.getThru(), DateUtils::lastMomentOfDay);
+        qb.optionalCriteria("coalesce(je.entry_date, jes.grade_inserted) >= :entryFrom", "entryFrom",
+                criteria.getFrom(), DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("coalesce(je.entry_date, jes.grade_inserted) <= :entryThru", "entryThru",
+                criteria.getThru(), DateUtils::lastMomentOfDay);
 
         if (criteria.getStudyPeriod() != null) {
-            qb.filter("je.entry_date >= :studyPeriodStart and je.entry_date <= :studyPeriodEnd");
+            qb.filter("coalesce(je.entry_date, jes.grade_inserted) >= :studyPeriodStart "
+                    + "and coalesce(je.entry_date, jes.grade_inserted) <= :studyPeriodEnd");
             qb.parameter("studyPeriodStart", DateUtils.firstMomentOfDay(criteria.getStudyPeriodStart()));
             qb.parameter("studyPeriodEnd", DateUtils.lastMomentOfDay(criteria.getStudyPeriodEnd()));
         }
@@ -1552,7 +1554,7 @@ public class StudentGroupTeacherReportService {
         qb.optionalCriteria("scmor.grade_inserted <= :thru", "thru", criteria.getThru(), DateUtils::lastMomentOfDay);
 
         if (criteria.getStudyPeriod() != null) {
-            qb.filter("scmor.grade_date >= :studyPeriodStart and je.entry_date <= :studyPeriodEnd");
+            qb.filter("scmor.grade_date >= :studyPeriodStart and scmor.grade_date <= :studyPeriodEnd");
             qb.parameter("studyPeriodStart", DateUtils.firstMomentOfDay(criteria.getStudyPeriodStart()));
             qb.parameter("studyPeriodEnd", DateUtils.lastMomentOfDay(criteria.getStudyPeriodEnd()));
         }

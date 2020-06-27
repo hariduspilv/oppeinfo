@@ -57,6 +57,10 @@ public class SchoolForm extends VersionedCommand {
     private Boolean isWithoutEkis;
     private Boolean isStudentTerms;
     private Boolean isHmodules;
+    private Boolean isNotPublic;
+    private Boolean isNotPublicTimetable;
+    private Boolean isNotPublicCurriculum;
+    private Boolean isNotPublicSubject;
     @Required
     @ClassifierRestriction(MainClassCode.FOTOLISA)
     private String studentPhotoAdd;
@@ -320,5 +324,36 @@ public class SchoolForm extends VersionedCommand {
     public void setIsHmodules(Boolean isHmodules) {
         this.isHmodules = isHmodules;
     }
-    
+
+    public Boolean getIsNotPublic() {
+        return isNotPublic;
+    }
+
+    public void setIsNotPublic(Boolean isNotPublic) {
+        this.isNotPublic = isNotPublic;
+    }
+
+    public Boolean getIsNotPublicTimetable() {
+        return isNotPublicTimetable;
+    }
+
+    public void setIsNotPublicTimetable(Boolean isNotPublicTimetable) {
+        this.isNotPublicTimetable = isNotPublicTimetable;
+    }
+
+    public Boolean getIsNotPublicCurriculum() {
+        return isNotPublicCurriculum;
+    }
+
+    public void setIsNotPublicCurriculum(Boolean isNotPublicCurriculum) {
+        this.isNotPublicCurriculum = isNotPublicCurriculum;
+    }
+
+    public Boolean getIsNotPublicSubject() {
+        return isNotPublicSubject;
+    }
+
+    public void setIsNotPublicSubject(Boolean isNotPublicSubject) {
+        this.isNotPublicSubject = isNotPublicSubject;
+    }
 }

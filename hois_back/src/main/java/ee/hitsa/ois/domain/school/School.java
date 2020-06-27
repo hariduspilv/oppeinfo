@@ -75,6 +75,10 @@ public class School extends BaseEntityWithId implements Translatable {
     private Boolean isWithoutEkis = Boolean.FALSE;
     private Boolean isStudentTerms = Boolean.FALSE;
     private Boolean isHmodules = Boolean.FALSE;
+    private Boolean isNotPublic = Boolean.FALSE;
+    private Boolean isNotPublicTimetable = Boolean.FALSE;
+    private Boolean isNotPublicCurriculum = Boolean.FALSE;
+    private Boolean isNotPublicSubject = Boolean.FALSE;
     private String contractText;
     @JsonIgnore
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -372,6 +376,38 @@ public class School extends BaseEntityWithId implements Translatable {
 
     public void setIsHmodules(Boolean isHmodules) {
         this.isHmodules = isHmodules;
+    }
+
+    public Boolean getIsNotPublic() {
+        return isNotPublic;
+    }
+
+    public void setIsNotPublic(Boolean isNotPublic) {
+        this.isNotPublic = isNotPublic;
+    }
+
+    public Boolean getIsNotPublicTimetable() {
+        return isNotPublicTimetable;
+    }
+
+    public void setIsNotPublicTimetable(Boolean isNotPublicTimetable) {
+        this.isNotPublicTimetable = isNotPublicTimetable;
+    }
+
+    public Boolean getIsNotPublicCurriculum() {
+        return isNotPublicCurriculum;
+    }
+
+    public void setIsNotPublicCurriculum(Boolean isNotPublicCurriculum) {
+        this.isNotPublicCurriculum = isNotPublicCurriculum;
+    }
+
+    public Boolean getIsNotPublicSubject() {
+        return isNotPublicSubject;
+    }
+
+    public void setIsNotPublicSubject(Boolean isNotPublicSubject) {
+        this.isNotPublicSubject = isNotPublicSubject;
     }
 
     public Set<ScholarshipNoApplication> getScholarshipNoApplicationTypes() {

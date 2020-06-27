@@ -51,7 +51,7 @@
 
     <div layout="row">
       <a ng-href="{{viewPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="viewPdfUrl">{{'document.button.showPdf' | translate}}</a>
-      <md-button ng-click="print()" class="md-raised md-primary" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && viewPdfUrl">{{'main.button.print' | translate}}</md-button>
+      <md-button ng-click="print()" class="md-raised md-primary" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && viewPdfUrl && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_HINNETELEHT_TRUKKIMINE')">{{'main.button.print' | translate}}</md-button>
       <md-button ng-click="back('#/documents/supplements/vocational')" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>
   </div>

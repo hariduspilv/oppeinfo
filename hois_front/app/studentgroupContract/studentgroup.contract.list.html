@@ -64,7 +64,7 @@
                       <md-button ng-if="row.status.code!=='LEPING_STAATUS_S' || !isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')" md-no-ink class="md-primary change-button" 
                         ng-href="#/contracts/{{::row.id}}/view?_noback">{{'main.button.view' | translate}}</md-button>
                     </div>
-                    <div ng-if="row.student.id && row.active">
+                    <div ng-if="row.student.id && row.active && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')">
                       <md-button md-no-ink class="md-primary change-button"
                         ng-href="#/contracts/{{::row.student.id}}/new?_noback">{{'main.button.create' | translate}}</md-button>
                     </div>
@@ -80,9 +80,10 @@
     </div>
     <div layout="row" layout-xs="column">
       <md-button md-no-ink class="md-raised" ng-href="#/contracts/new/{{::criteria.studentGroup}}?_menu" 
-      ng-if="!auth.higher && criteria.studentGroup && tabledata.content.length > 0"
+      ng-if="!auth.higher && criteria.studentGroup && tabledata.content.length > 0 && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')"
       >{{'contract.addToSeveral' | translate}}</md-button>
-      <md-button md-no-ink class="md-raised" ng-click="sendToEkis()" ng-if="tabledata.content && !auth.school.withoutEkis">
+      <md-button md-no-ink class="md-raised" ng-click="sendToEkis()" 
+        ng-if="tabledata.content && !auth.school.withoutEkis && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_LEPING')">
         {{'contract.sendToEkis' | translate}}
       </md-button>
     </div> 

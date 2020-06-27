@@ -12,6 +12,13 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import ee.hitsa.ois.auth.MobileIdAuthenticationToken;
+import ee.hitsa.ois.service.security.MobileIdLoginService;
+import ee.hitsa.ois.service.security.MobileIdSession;
+import ee.hitsa.ois.service.security.MobileIdSessionResponse;
+import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.sk.mid.MidAuthenticationIdentity;
+import ee.sk.mid.MidAuthenticationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,10 +50,6 @@ import ee.hitsa.ois.service.security.HarIdService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
 import ee.hitsa.ois.service.security.LdapService;
-import ee.hitsa.ois.service.security.MobileIdLoginService;
-import ee.hitsa.ois.service.security.MobileIdSession;
-import ee.hitsa.ois.service.security.MobileIdSessionResponse;
-import ee.hitsa.ois.service.security.MobileIdStatus;
 import ee.hitsa.ois.service.security.TaraService;
 import ee.hitsa.ois.util.EntityUtil;
 import io.jsonwebtoken.Claims;
@@ -116,53 +119,49 @@ public class AuthenticationController {
     @PostMapping("/mIdLogin")
     public MobileIdSessionResponse mIdLogin(@RequestBody Map<String, String> json, HttpServletResponse response) {
         String mobileNumber = json.get("mobileNumber");
-        MobileIdSession session = mobileIdService.login(mobileNumber);
+        String idcode = json.get("idcode");
+        MobileIdSession session = mobileIdService.startAuthentication(idcode, mobileNumber);
+
         MobileIdSessionResponse result = new MobileIdSessionResponse();
-        if (session.getErrorCode() != null) {
-            result.setErrorCode(MobileIdLoginService.NOT_MOBILE_ID_USER_ERROR.equals(session.getErrorCode())
-                    ? MobileIdLoginService.NOT_MOBILE_ID_USER_ERROR : MobileIdLoginService.GENERAL_ERROR);
-            return result;
-        }
         String token = Jwts.builder()
-                .setSubject(session.getUserIDCode())
+                .setSubject(idcode)
+                .claim(hoisJwtProperties.getClaimIdcode(), idcode)
                 .claim(hoisJwtProperties.getClaimMobileNumber(), mobileNumber)
-                .claim(hoisJwtProperties.getClaimSesscode(), session.getSesscode())
-                .claim(hoisJwtProperties.getClaimGivenname(), session.getUserGivenname())
-                .claim(hoisJwtProperties.getClaimSurname(), session.getUserSurname())
+                .claim(hoisJwtProperties.getClaimAuthHash(), session.getAuthenticationHash())
                 .setExpiration(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(4)))
                 .signWith(SignatureAlgorithm.HS512, hoisJwtProperties.getSecret())
                 .compact();
         addJwtHeader(response, token);
-        result.setChallengeID(session.getChallengeID());
+        result.setChallengeID(session.getVerificationCode());
         return result;
     }
 
-    @RequestMapping("/mIdStatus")
-    public MobileIdStatus mIdStatus(HttpServletRequest request) {
+    @RequestMapping("/mIdAuthentication")
+    public void mIdAuthentication(HttpServletRequest request, Language lang) {
         Claims claims = (Claims) request.getAttribute(Claims.class.getName());
         if (claims == null) {
-            MobileIdStatus status = new MobileIdStatus();
-            status.setStatus("NOT_AUTHORIZED");
-            return status;
+            throw new ValidationFailedException("main.login.error");
         }
-        Integer sesscode = (Integer) claims.get(hoisJwtProperties.getClaimSesscode());
-        MobileIdStatus status = mobileIdService.status(sesscode.intValue());
-        if ("USER_AUTHENTICATED".equals(status.getStatus())) {
-            String idcode = claims.getSubject();
-            String mobileNumber = (String) claims.get(hoisJwtProperties.getClaimMobileNumber());
-            String lastname = (String) claims.get(hoisJwtProperties.getClaimSurname());
-            String firstname = (String) claims.get(hoisJwtProperties.getClaimGivenname());
-            userService.createPersonUserIfNecessary(idcode, lastname, firstname);
-            String username = claims.getSubject();
-            HoisUserDetails hoisUserDetails = userDetailsService.loadUserByUsername(username);
-            EstonianIdCardAuthenticationToken token = new EstonianIdCardAuthenticationToken(hoisUserDetails); // TODO create and use mobile-id token ?
+
+        String idcode = (String) claims.get(hoisJwtProperties.getClaimIdcode());
+        String mobileNumber = (String) claims.get(hoisJwtProperties.getClaimMobileNumber());
+        String authenticationHash = (String) claims.get(hoisJwtProperties.getClaimAuthHash());
+
+        MobileIdSession session = new MobileIdSession(idcode, mobileNumber, authenticationHash);
+        MidAuthenticationResult authenticationResult = mobileIdService.authenticate(session, lang);
+
+        if (authenticationResult.isValid()) {
+            MidAuthenticationIdentity identity = authenticationResult.getAuthenticationIdentity();
+            userService.createPersonUserIfNecessary(identity.getIdentityCode(), identity.getSurName(),
+                    identity.getGivenName());
+            HoisUserDetails hoisUserDetails = userDetailsService.loadUserByUsername(identity.getIdentityCode());
+            MobileIdAuthenticationToken token = new MobileIdAuthenticationToken(hoisUserDetails);
             hoisUserDetails.setLoginMethod(LoginMethod.LOGIN_TYPE_M);
             hoisUserDetails.setMobileNumber(mobileNumber);
             token.setDetails(hoisUserDetails);
             token.setAuthenticated(true);
             SecurityContextHolder.getContext().setAuthentication(token);
         }
-        return status;
     }
 
     @RequestMapping("/taraLogin")

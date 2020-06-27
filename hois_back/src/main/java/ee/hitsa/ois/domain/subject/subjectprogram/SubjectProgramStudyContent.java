@@ -8,6 +8,8 @@ import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.teacher.Teacher;
 
 @Entity
 public class SubjectProgramStudyContent extends BaseEntityWithId {
@@ -18,6 +20,12 @@ public class SubjectProgramStudyContent extends BaseEntityWithId {
     private LocalDate studyDt;
     @Column(nullable=false)
     private String studyInfo;
+    private String capacity;
+    @ManyToOne(fetch=FetchType.LAZY)
+    private Teacher teacher;
+    @ManyToOne(fetch=FetchType.LAZY)
+    private Classifier capacityType;
+    private Long orderNr;
     
     public SubjectProgram getSubjectProgram() {
         return subjectProgram;
@@ -42,5 +50,29 @@ public class SubjectProgramStudyContent extends BaseEntityWithId {
     }
     public void setStudyInfo(String studyInfo) {
         this.studyInfo = studyInfo;
+    }
+    public String getCapacity() {
+        return capacity;
+    }
+    public void setCapacity(String capacity) {
+        this.capacity = capacity;
+    }
+    public Teacher getTeacher() {
+        return teacher;
+    }
+    public void setTeacher(Teacher teacher) {
+        this.teacher = teacher;
+    }
+    public Long getOrderNr() {
+        return orderNr;
+    }
+    public void setOrderNr(Long orderNr) {
+        this.orderNr = orderNr;
+    }
+    public Classifier getCapacityType() {
+        return capacityType;
+    }
+    public void setCapacityType(Classifier capacityType) {
+        this.capacityType = capacityType;
     }
 }

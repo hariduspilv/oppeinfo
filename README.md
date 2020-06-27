@@ -1,4 +1,4 @@
-VERSIOON:  1.7.0/20200529
+VERSIOON:  2.0.0/20200626
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -10,24 +10,24 @@ README.md - tarne ja installeerimise kirjeldus
 /hois_html - rakenduse genereeritud html-id
 
 
-EELDUS: ver. 1.6.1/20200430
+EELDUS: ver. 1.7.0/20200529
 ------------------------------------------------------
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20200529.sql
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20200626.sql
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
 
 Andmebaasi installeerimiseks:
-1. käivitada install20200529.sql skript, nt
+1. käivitada install20200626.sql skript, nt
    
-   psql -h devhois -f install20200529.sql 2>&1 | tee log.txt
+   psql -h devhois -f install20200626.sql 2>&1 | tee log.txt
    
    , kus
    
    -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install20200529.sql - install faili nimi
+   -f install20200626.sql - install faili nimi
    log.txt - andmebaasi installeerimise logi fail
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
@@ -37,8 +37,20 @@ Andmebaasi installeerimiseks:
 RAKENDUSE INSTALLEERIMINE:
 ------------------------------------------------------
 1. Backendi paigaldamiseks
-	1. Teisendada kaasa pandud hois_back.jar /opt/hois kausta
-	2. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
+	1. Teisendada Fujitsu Laotajas asuv hois_back.jar /opt/hois kausta
+	2. Lisada application.properties mobiil-ID sisselogimiseks vajalikud parameetrid
+	
+	mobileid.relyingPartyUuid=00000000-0000-0000-0000-000000000000
+	mobileid.relyingPartyName=DEMO
+	mobileid.applicationProviderHost=https://tsp.demo.sk.ee/mid-api
+	mobileid.pollingTimeoutSeconds=60
+	mobileid.authDisplayText=hois test
+	mobileid.authDisplayTextEn=hois test en
+	mobileid.signDisplayText=hois test sign
+	mobileid.signDisplayTextEn=hois test sign en
+
+	
+	3. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
 	
 2. Frontendi paigaldamiseks
 	1. Kustutada vanad html jms failid: käivitada käsk "rm -Rf /opt/hois/html/*" (nginxist vana seisu tühjendamiseks)

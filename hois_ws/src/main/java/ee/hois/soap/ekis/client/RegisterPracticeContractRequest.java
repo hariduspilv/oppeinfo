@@ -16,6 +16,22 @@ public class RegisterPracticeContractRequest {
     private String stEkap;
     private String stHours;
     private String stModule;
+    private String stPostcode;
+    private String schTutorFirstName;
+    private String schTutorLastName;
+    private String schTutorEmail;
+    private String schTutorPhone;
+    private String orgTutor2Name;
+    private String orgTutor2Tel;
+    private String orgTutor2Email;
+    private String orgTutor3Name;
+    private String orgTutor3Tel;
+    private String orgTutor3Email;
+    private String stPhone;
+    private String stResidenceCountry;
+    private String stAddress;
+    private String stAddressAds;
+    private String stAddressAdsOid;
     private String orgName;
     private String orgCode;
     private String orgContactName;
@@ -262,5 +278,133 @@ public class RegisterPracticeContractRequest {
 
     public void setAim(String aim) {
         this.aim = aim;
+    }
+
+    public String getStPostcode() {
+        return stPostcode;
+    }
+
+    public void setStPostcode(String stPostcode) {
+        this.stPostcode = stPostcode;
+    }
+
+    public String getSchTutorFirstName() {
+        return schTutorFirstName;
+    }
+
+    public void setSchTutorFirstName(String schTutorFirstName) {
+        this.schTutorFirstName = schTutorFirstName;
+    }
+
+    public String getSchTutorLastName() {
+        return schTutorLastName;
+    }
+
+    public void setSchTutorLastName(String schTutorLastName) {
+        this.schTutorLastName = schTutorLastName;
+    }
+
+    public String getSchTutorEmail() {
+        return schTutorEmail;
+    }
+
+    public void setSchTutorEmail(String schTutorEmail) {
+        this.schTutorEmail = schTutorEmail;
+    }
+
+    public String getSchTutorPhone() {
+        return schTutorPhone;
+    }
+
+    public void setSchTutorPhone(String schTutorPhone) {
+        this.schTutorPhone = schTutorPhone;
+    }
+
+    public String getOrgTutor2Name() {
+        return orgTutor2Name;
+    }
+
+    public void setOrgTutor2Name(String orgTutor2Name) {
+        this.orgTutor2Name = orgTutor2Name;
+    }
+
+    public String getOrgTutor2Tel() {
+        return orgTutor2Tel;
+    }
+
+    public void setOrgTutor2Tel(String orgTutor2Tel) {
+        this.orgTutor2Tel = orgTutor2Tel;
+    }
+
+    public String getOrgTutor2Email() {
+        return orgTutor2Email;
+    }
+
+    public void setOrgTutor2Email(String orgTutor2Email) {
+        this.orgTutor2Email = orgTutor2Email;
+    }
+
+    public String getOrgTutor3Name() {
+        return orgTutor3Name;
+    }
+
+    public void setOrgTutor3Name(String orgTutor3Name) {
+        this.orgTutor3Name = orgTutor3Name;
+    }
+
+    public String getOrgTutor3Tel() {
+        return orgTutor3Tel;
+    }
+
+    public void setOrgTutor3Tel(String orgTutor3Tel) {
+        this.orgTutor3Tel = orgTutor3Tel;
+    }
+
+    public String getOrgTutor3Email() {
+        return orgTutor3Email;
+    }
+
+    public void setOrgTutor3Email(String orgTutor3Email) {
+        this.orgTutor3Email = orgTutor3Email;
+    }
+
+    public String getStPhone() {
+        return stPhone;
+    }
+
+    public void setStPhone(String stPhone) {
+        this.stPhone = stPhone;
+    }
+
+    public String getStResidenceCountry() {
+        return stResidenceCountry;
+    }
+
+    public void setStResidenceCountry(String stResidenceCountry) {
+        this.stResidenceCountry = stResidenceCountry;
+    }
+
+    public String getStAddress() {
+        return stAddress;
+    }
+
+    public void setStAddress(String stAddress) {
+        this.stAddress = stAddress;
+    }
+
+    public String getStAddressAds() {
+        return stAddressAds;
+    }
+
+    public void setStAddressAds(String stAddressAds) {
+        this.stAddressAds = stAddressAds;
+    }
+
+    public String getStAddressAdsOid() {
+        return stAddressAdsOid;
+    }
+
+    public void setStAddressAdsOid(String stAddressAdsOid) {
+        this.stAddressAdsOid = stAddressAdsOid;
     }
 }

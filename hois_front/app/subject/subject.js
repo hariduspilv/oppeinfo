@@ -205,23 +205,30 @@ angular.module('hitsaOis')
       });
       $scope.publicUrl = config.apiUrl + '/public/subject/' + id + '?format=json';
   }])
-  .controller('SubjectListController', ['$q', '$scope', '$route', 'Classifier', 'QueryUtils',
-    function ($q, $scope, $route, Classifier, QueryUtils) {
+  .controller('SubjectListController', ['$q', '$scope', '$route', 'Classifier', 'School', 'QueryUtils',
+    function ($q, $scope, $route, Classifier, School, QueryUtils) {
+      $scope.auth = $route.current.locals.auth;
       $scope.isPublic = $route.current.locals.params && $route.current.locals.params.isPublic;
 
       var clMapper = Classifier.valuemapper({status: 'AINESTAATUS', assessment: 'HINDAMISVIIS', languages: 'OPPEKEEL'});
-      QueryUtils.createQueryForm($scope, $scope.isPublic ? '/public/subjectsearch' : '/subject', 
+      QueryUtils.createQueryForm($scope, $scope.isPublic ? '/public/subjectsearch' : '/subject',
         {order: $scope.currentLanguage() === 'en' ? 'nameEn' : 'nameEt'}, clMapper.objectmapper);
-      
+
       $q.all(clMapper.promises).then($scope.loadData);
-      
+
       $scope.subjectLanguages = function (row) {
         return row.map($scope.currentLanguageNameField).join(', ');
       };
-      
+
       $scope.formState = {};
 
       if ($scope.isPublic) {
+        School.getAll().$promise.then(function (schools) {
+          $scope.formState.schools = schools.filter(function (school) {
+            return !school.isNotPublicSubject;
+          });
+        });
+
         $scope.$watch('criteria.schoolId', function(newSchoolId) {
           if (newSchoolId) {
             $scope.curricula = QueryUtils.endpoint('/public/curriculumversions').query({schoolId: newSchoolId});

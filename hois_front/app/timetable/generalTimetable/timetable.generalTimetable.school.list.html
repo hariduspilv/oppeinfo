@@ -1,6 +1,6 @@
 <div layout-padding class="schoolList">
   <md-grid-list md-cols="1" md-cols-sm="2" md-cols-md="3" md-cols-gt-md="6" md-row-height-gt-md="1:1" md-row-height="4:3" md-gutter="24px" md-gutter-gt-sm="24px">
-     <md-grid-tile ng-repeat="school in schools" md-colspan="1">
+     <md-grid-tile ng-repeat="school in schools | orderBy: currentLanguageNameField()" md-colspan="1">
       <button class="schoolTileButton" ng-click="openSchoolGeneralTimetable(school.id)">
         <img class="schoolTileImage" ng-src="data:image/JPEG;base64,{{school.logo}}" on-error-src="images/HITSA_innov_logo_03.png">
         <md-grid-tile-footer class="schoolTileFooter">

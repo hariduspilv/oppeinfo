@@ -1,7 +1,6 @@
 package ee.hitsa.ois.web.commandobject.subject;
 
-import java.util.Set;
-
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -41,7 +40,7 @@ public class SubjectProgramForm extends VersionedCommand {
     @ClassifierRestriction(MainClassCode.OPPETOOSISU)
     private String studyContentType;
     private String studyDescription; // if StudyContentType.OPPETOOSISU_T
-    private Set<SubjectProgramStudyContentDto> studyContents;
+    private List<SubjectProgramStudyContentDto> studyContents;
     
     public Long getTeacherId() {
         return teacherId;
@@ -148,7 +147,7 @@ public class SubjectProgramForm extends VersionedCommand {
     /**
      * @return the studyContents
      */
-    public Set<SubjectProgramStudyContentDto> getStudyContents() {
+    public List<SubjectProgramStudyContentDto> getStudyContents() {
         return studyContents;
     }
     public String getPassDescription() {
@@ -214,7 +213,7 @@ public class SubjectProgramForm extends VersionedCommand {
     /**
      * @param studyContents the studyContents to set
      */
-    public void setStudyContents(Set<SubjectProgramStudyContentDto> studyContents) {
+    public void setStudyContents(List<SubjectProgramStudyContentDto> studyContents) {
         this.studyContents = studyContents;
     }
     public Long getSubjectId() {

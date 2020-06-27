@@ -125,7 +125,7 @@
 	  	</p>
   	{% endif %}
   	<br/>
-  	<p>
+  	<p style="word-wrap: break-word;">
   		<b>{{'report.subjectprogram.studyDescription' | translate}}: </b>
   	{% if content.program.studyContentType.code != "OPPETOOSISU_T" %}
 	</p>
@@ -133,11 +133,21 @@
 	  		<tr>
 	  			<th style="width: 1%; white-space: nowrap;">{{ content.program.studyContentType.code == "OPPETOOSISU_N" ? 'report.subjectprogram.week' | translate : 'report.subjectprogram.day' | translate }}</th>
 	  			<th style="width: 99%">{{'report.subjectprogram.description' | translate}}</th>
+				<th style="width: 1%">{{'report.subjectprogram.capacity' | translate}}</th>
+				<th style="width: 1%">{{'report.subjectprogram.capacityType' | translate}}</th>
+				<th style="width: 1%">{{'report.subjectprogram.teacher' | translate}}</th>
 	  		</tr>
 	  		{% for studyContent in content.studyContents %}
 		  		<tr>
 		  			<td style="width: 1%; white-space: nowrap;"><b>{{content.program.studyContentType.code == "OPPETOOSISU_N" ? studyContent.weekNr : studyContent.studyDt.toString() | date(existingFormat='yyyy-MM-dd', format='dd.MM.yyyy') }}</b></td>
-		  			<td>{{ studyContent.studyInfo }}</td>
+		  			<td style="word-wrap: break-word;">{{ studyContent.studyInfo }}</td>
+					<td>{{ studyContent.capacity }}</td>
+					<td>{% if studyContent.capacityType is not null %}
+							{% if lang == "ET" %} {{ studyContent.capacityType.nameEt }} {% endif %}
+							{% if lang == "EN" %} {{ studyContent.capacityType.nameEn }} {% endif %}
+						{% endif %}
+					</td>
+					<td>{% if studyContent.teacher is not null %}{{ studyContent.teacher.person.firstname }} {{ studyContent.teacher.person.lastname }}{% endif %}</td>
 		  		</tr>
 		  	{% endfor %}
 	  	</table>

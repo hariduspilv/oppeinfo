@@ -15,7 +15,10 @@
           </tr>
           <tr md-row ng-repeat="row in higherResults.allResults | filter: filterResultsByStudyPeriod(studyPeriodResult.studyPeriod) | orderBy: 'lastGrade.gradeDate'">
             <td md-cell>
-              <span ng-if="row.isModule" class="bold">{{currentLanguageNameField(row.module)}}</span>
+              <span ng-if="row.isModule" class="bold">
+                <span>{{currentLanguageNameField(row.module)}}</span>
+                <span ng-if="row.module.curriculumVersion">({{currentLanguageNameField(row.module.curriculumVersion)}})</span>
+              </span>
               <span ng-if="!row.isModule">
                 <span ng-if="row.isApelTransfer" class="apelAsterisk">*</span>
                 <span>{{currentLanguageNameField(row.subject)}}</span>

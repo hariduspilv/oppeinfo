@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
+import ee.hitsa.ois.auth.LoginMethod;
 import org.springframework.security.access.AccessDeniedException;
 
 import ee.hitsa.ois.domain.Person;
@@ -432,6 +433,10 @@ public abstract class UserUtil {
     public static boolean isActiveUser(User user) {
         LocalDate now = LocalDate.now();
         return (user.getValidFrom() == null || !user.getValidFrom().isAfter(now)) && (user.getValidThru() == null || !user.getValidThru().isBefore(now));
+    }
+
+    public static boolean isOAuthLoginType(HoisUserDetails user) {
+        return EnumUtil.toNameList(LoginMethod.LOGIN_TYPE_T, LoginMethod.LOGIN_TYPE_H).contains(user.getLoginMethod().name());
     }
 
     public static void assertSameSchool(HoisUserDetails user, School school) {

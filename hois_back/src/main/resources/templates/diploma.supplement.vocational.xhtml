@@ -49,7 +49,7 @@
     <div>{{ content.outcomes }}</div>
     
     <div class="margin-top page-break-after-avoid"><span class="label">{{ "diploma.studyResults" | translate }}: </span></div>
-    <table class="study-results margin-top">
+    <table class="study-results margin-top2">
         <thead class="page-break-after-avoid">
             <tr>
                 <th class="center">{{ "diploma.results.orderNr" | translate }}</th>
@@ -70,8 +70,8 @@
         </tbody>
     </table>
     {% if content.finalResults is not empty %}
-    <div class="margin-top page-break-after-avoid"><span class="label">{{ "diploma.examResults" | translate }}: </span></div>
-    <table class="study-results margin-top">
+    <div class="margin-top2 page-break-after-avoid"><span class="label">{{ "diploma.examResults" | translate }}: </span></div>
+    <table class="study-results margin-top2">
         <tbody>
         {% for result in content.finalResults %}
             <tr>
@@ -88,7 +88,7 @@
         </tbody>
     </table>
     {% endif %}
-    <table class="study-results margin-top">
+    <table class="study-results margin-top2">
         <tbody>
             <tr>
                 <td>{{ "diploma.totalSubjectCredits" | translate }}</td>
@@ -108,7 +108,7 @@
         {{ apel.name }}
     </div>
     {% endfor %}
-    <div class="page-break-avoid margin-top">
+    <div class="page-break-avoid margin-top2">
         <div><span class="label">{{ "diploma.evaluationDescription" | translate }}: </span></div>
         <table class="evaluation-description">
             <thead>
@@ -142,7 +142,7 @@
             </tbody>
         </table>
     </div>
-    <div class="page-break-avoid margin-top">
+    <div class="page-break-avoid margin-top2">
         <div class="font-size-9">{{ "diploma.criteriaDescription" | translate }}</div>
         <div class="diploma-signers">
             <div class="diploma-signer-left">

@@ -92,6 +92,7 @@ public class StudentQueryDto extends SchoolQueryDto {
     private Boolean studyLevelShow;
     
     private List<ClassifierResult> speciality;
+    private List<AutocompleteResult> specialityHigher;
     private Boolean specialityShow;
     
     private Long studyYearNumber;
@@ -1046,6 +1047,12 @@ public class StudentQueryDto extends SchoolQueryDto {
     }
     public void setNrShow(Boolean nrShow) {
         this.nrShow = nrShow;
+    }
+    public List<AutocompleteResult> getSpecialityHigher() {
+        return specialityHigher;
+    }
+    public void setSpecialityHigher(List<AutocompleteResult> specialityHigher) {
+        this.specialityHigher = specialityHigher;
     }
 
 }

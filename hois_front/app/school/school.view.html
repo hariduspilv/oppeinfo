@@ -69,7 +69,7 @@
       <label class="textInput">{{'school.isLetterGrade' | translate}}</label>
       <hois-value value="school.isLetterGrade ? 'main.yes' : 'main.no' | translate"></hois-value>
     </md-input-container>
-    
+
     <md-input-container class="md-block">
       <label class="textInput">{{'school.isWithoutEkis' | translate}}</label>
       <hois-value value="school.isWithoutEkis ? 'school.notUsing' : 'school.using' | translate"></hois-value>
@@ -86,6 +86,11 @@
     </md-input-container>
 
     <md-input-container class="md-block">
+      <label class="textInput">{{'school.isNotPublic.label' | translate}}</label>
+      <hois-value value="(school.isNotPublicSettings).join(', ')"></hois-value>
+    </md-input-container>
+
+    <md-input-container class="md-block">
       <label class="textInput">{{'school.studentPhotoAdd' | translate}}</label>
       <hois-classifier-value ng-model="school.studentPhotoAdd" main-classifier-code="FOTOLISA"></hois-classifier-value>
     </md-input-container>
@@ -94,7 +99,7 @@
       <label class="textInput">{{'school.timetable' | translate}}</label>
       <hois-classifier-value ng-model="school.timetable" main-classifier-code="TIMETABLE"></hois-classifier-value>
     </md-input-container>
-  
+
     <md-input-container class="md-block">
       <label class="textInput">{{'school.adUrl' | translate}}</label>
       <hois-value value="school.adUrl"></hois-value>

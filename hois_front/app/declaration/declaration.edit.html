@@ -62,7 +62,7 @@
             <hois-value value="declaration.confirmer"></hois-value>
         </md-input-container>
       </div>
-      <div ng-show="declaration.canBeSetConfirmed" layout="row" layout-xs="column">
+      <div ng-show="declaration.canBeChanged" layout="row" layout-xs="column">
         <md-button ng-if="!isGuestStudent || hasCurriculum" class="md-raised" ng-click="openAddCurriculumSubject()">{{'declaration.addCurriculumSubject' | translate}}</md-button>
         <md-button class="md-raised" ng-click="openAddExtraCurriculumSubject()">
       {{(isGuestStudent && !hasCurriculum ? 'declaration.addSubject' : 'declaration.addExtraCurriculumSubject') | translate}}</md-button>
@@ -207,7 +207,7 @@
             <tr md-row class="border-top-line" style="font-weight: bold;">
               <td md-cell>{{'main.OF' | translate}}</td>
               <td md-cell colspan="2"></td>
-              <td md-cell>{{calculateAll(declaration.subjects)}} {{'declaration.eap' | translate}}</td>
+              <td md-cell>{{calculateAll(declaration.subjects) | hoisNumber: 1}} {{'declaration.eap' | translate}}</td>
               <td md-cell colspan="5"></td>
             </tr>
           </tbody>

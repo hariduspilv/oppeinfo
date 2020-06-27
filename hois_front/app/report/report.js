@@ -85,6 +85,10 @@ function ($q, $scope, $route, Classifier, QueryUtils) {
         return "sg.course";
       case 'COUNT_STAT_ISCED_VALD':
         return "c_connected.name_et, c_connected.name_en";
+      case 'COUNT_STAT_MUNICIPALITY':
+        return "c_municipality.name_et, c_municipality.name_en";
+      case 'COUNT_STAT_COUNTY':
+        return "c_county.name_et, c_county.name_en";
       default:
         break;
       }
@@ -112,7 +116,9 @@ function ($q, $scope, $route, Classifier, QueryUtils) {
                         "COUNT_STAT_AGE",
                         "COUNT_STAT_CURRICULA",
                         "COUNT_STAT_COURSE",
-                        "COUNT_STAT_ISCED_VALD"];
+                        "COUNT_STAT_ISCED_VALD",
+                        "COUNT_STAT_COUNTY",
+                        "COUNT_STAT_MUNICIPALITY"];
 
   function initCriteria() {
     $scope.formState.studentTypes = ['OPPUR_T', 'OPPUR_K'];
@@ -152,8 +158,8 @@ function ($q, $scope, $route, QueryUtils, DataUtils) {
   $scope.staticState.studyYears.$promise.then(function () {
     if (!$scope.formState.from && !$scope.formState.thru) {
       var sy = DataUtils.getCurrentStudyYearOrPeriod($scope.staticState.studyYears);
-      DataUtils.convertStringToDates(sy, ['from', 'thru']);
       if (sy) {
+        DataUtils.convertStringToDates(sy, ['from', 'thru']);
         $scope.formState.from = sy ? sy.startDate : null;
         $scope.formState.thru = sy ? sy.endDate : null;
       }
@@ -192,7 +198,9 @@ function ($q, $scope, $route, QueryUtils, DataUtils) {
   };
 
   $q.all([$scope.staticState.studyYears.$promise]).then(function() {
-    $scope.loadResults();
+    if (!!$scope.formState.from && !!$scope.formState.thru) {
+      $scope.loadResults();
+    }
   });
 }
 ]).controller('ReportStudentDataController', ['$q', '$scope', '$route', 'Classifier', 'QueryUtils', 'classifierAutocomplete', 'message', 'FormUtils', '$translate', '$rootScope', 'dialogService',
@@ -202,7 +210,7 @@ function ($q, $scope, $route, Classifier, QueryUtils, classifierAutocomplete, me
   $scope.savedHeader = {};
   var clMapper = Classifier.valuemapper({sex: 'SUGU', residenceCountry: 'RIIK', citizenship: 'RIIK', 
     directiveTypes: 'KASKKIRI', stiptoetlReason: 'KASKKIRI_STIPTOETL_POHJUS', fin: 'FINTAPSUSTUS', 
-    exmatReason: 'EKSMAT_POHJUS', akadReason: 'AKADPUHKUS_POHJUS', speciality: 'SPETSKUTSE', 
+    exmatReason: 'EKSMAT_POHJUS', akadReason: 'AKADPUHKUS_POHJUS',
     studentStatuses: 'OPPURSTAATUS', studyForm: 'OPPEVORM', studyLoad: 'OPPEKOORMUS', studyLevel: 'OPPEASTE', 
     language: 'OPPEKEEL', activeResult: 'KORGHINDAMINE'});
     
@@ -402,10 +410,6 @@ function ($q, $scope, $route, Classifier, QueryUtils, classifierAutocomplete, me
 
   $scope.countryAutocompleteSearch = function(queryText) {
     return classifierAutocomplete.searchByName(queryText, 'RIIK');
-  };
-
-  $scope.specialityAutocompleteSearch = function(queryText) {
-    return classifierAutocomplete.searchByName(queryText, 'SPETSKUTSE', {valid: true});
   };
 
   $scope.clearCriteria = function() {
@@ -699,6 +703,7 @@ function ($q, $scope, $route, QueryUtils, DataUtils, Classifier, message, FormUt
     $scope.clearCriteria();
     entryTypeToCriteria();
     gradeToCriteria();
+    gradeToFormState();
     $scope.criteria.order = undefined;
     $scope.tabledata.content = [];
     $scope.criteria.queryType = savedType;
@@ -721,9 +726,20 @@ function ($q, $scope, $route, QueryUtils, DataUtils, Classifier, message, FormUt
 
   function gradeToCriteria() {
     $scope.criteria.countableGrades = [];
+    $scope.criteria.countableGradeValues = [];
     $scope.grades.forEach(function(grade) {
       if (grade.selected) {
         $scope.criteria.countableGrades.push(grade.code);
+        $scope.criteria.countableGradeValues.push(grade.value);
+      }
+    });
+  }
+
+  function gradeToFormState() {
+    $scope.formState.countableGrades = [];
+    $scope.grades.forEach(function(grade) {
+      if (grade.selected) {
+        $scope.formState.countableGrades.push(grade.value);
       }
     });
   }
@@ -741,6 +757,7 @@ function ($q, $scope, $route, QueryUtils, DataUtils, Classifier, message, FormUt
         message.error('report.studentSuccess.error.gradeType');
         return;
       }
+      gradeToFormState();
       ExcelUtils.get($rootScope.excel('reports/students/educationalSuccess.xls', $scope.criteria), 'educationalSuccess', $scope);
     });
   }
@@ -760,7 +777,7 @@ function ($q, $scope, $route, QueryUtils, DataUtils, Classifier, message, FormUt
     // reset page when searching
     $scope.criteria.page = 1;
     $scope.tabledata.content = [];
-
+    gradeToFormState();
     $scope.loadData();
   };
 }

@@ -1,9 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('LoginController', function (message, $rootScope, $scope, AuthService, AUTH_EVENTS, $location, config, $mdDialog, $timeout, ArrayUtils, PUBLIC_ROUTES, $route, QueryUtils) {
-
-    var NOT_MOBILE_ID_USER_ERROR = 301;
+  .controller('LoginController', function ($location, $mdDialog, $rootScope, $route, $scope, message, AUTH_EVENTS, PUBLIC_ROUTES, ArrayUtils, AuthService, QueryUtils, config, resourceErrorHandler) {
 
     function setLoggedInVisuals(authenticatedUser) {
       if (angular.isObject(authenticatedUser) && ['ROLL_V', 'ROLL_X'].indexOf(authenticatedUser.roleCode) === -1) {
@@ -12,7 +10,7 @@ angular.module('hitsaOis')
         });
       }
 
-      if (angular.isObject(authenticatedUser) && angular.isObject(authenticatedUser.school) && 
+      if (angular.isObject(authenticatedUser) && angular.isObject(authenticatedUser.school) &&
           authenticatedUser.school.logo) {
         $rootScope.state.logo = 'data:image/JPEG;base64,' + authenticatedUser.school.logo;
       } else {
@@ -94,41 +92,25 @@ angular.module('hitsaOis')
 
     function successfulMobileId(response) {
       $scope.jwt = response.jwt;
-      if (response.data.errorCode === NOT_MOBILE_ID_USER_ERROR) {
-        failedAuthentication();
-        $scope.showMessage('main.login.mobileid.notMobileIdUser');
-      } else if (response.data.errorCode) {
-        failedAuthentication();
-      } else if (response.data.challengeID) {
-        $scope.showMobileId(response.data.challengeID);
-        $scope.mobileIdPolls = 0;
-        $timeout(pollMobileIdStatus, config.mobileIdInitialDelay);
+      if (response.data.challengeID) {
+        $scope.showMobileId(response.data.challengeID, response.jwt);
       } else {
         failedAuthentication();
       }
     }
 
-    function successfulMobileIdStatus(response) {
-      if (response.status === 'USER_AUTHENTICATED') {
-        $scope.hideDialog = false;
-        $mdDialog.hide();
-        AuthService.login().then(successfulAuthentication, failedAuthentication);
-      } else if (response.status === 'OUTSTANDING_TRANSACTION') {
-        $scope.mobileIdPolls++;
-        if ($scope.mobileIdPolls < config.mobileIdMaxPolls) {
-          $timeout(pollMobileIdStatus, config.mobileIdPollInterval);
-        }
-      } else {
-        console.log('mobileIdStatus: '+response.status);
-        $mdDialog.hide();
-        failedAuthentication();
-      }
+    function successfulMobileIdAuthentication() {
+      $scope.hideDialog = false;
+      $mdDialog.hide();
+      AuthService.login().then(successfulAuthentication, failedAuthentication);
     }
 
-    function pollMobileIdStatus() {
-      AuthService.pollMobileIdStatus($scope.jwt).then(successfulMobileIdStatus, failedAuthentication);
+    function failedMobileIdAuthentication(response) {
+      $rootScope.$broadcast(AUTH_EVENTS.loginFailed);
+      $mdDialog.hide();
+      resourceErrorHandler.responseError(response).catch(angular.noop);
     }
-    
+
     var authenticate = function() {
       $scope.hideDialog = false;
       var token = $location.search()._code;
@@ -144,8 +126,8 @@ angular.module('hitsaOis')
       AuthService.loginLdap(credentials).then(successfulAuthentication, failedAuthentication);
     };
 
-    var authenticateMobileId = function(mobilenumber) {
-      AuthService.loginMobileId(mobilenumber).then(successfulMobileId, failedAuthentication);
+    var authenticateMobileId = function(idcode, mobilenumber) {
+      AuthService.loginMobileId(idcode, mobilenumber).then(successfulMobileId, failedAuthentication);
     };
 
     authenticate();
@@ -187,14 +169,14 @@ angular.module('hitsaOis')
           if ($localStorage.ldapschool) {
             $scope.credentials.school = $localStorage.ldapschool;
           }
-          $scope.mobilenumber = '372';
+          $scope.mobilenumber = '+372';
           $scope.cancel = function() {
             $mdDialog.hide();
           };
           $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
           $scope.login = function () {
             $scope.userLoginForm.$setSubmitted();
-            if ($scope.userLoginForm.$valid && $scope.credentials.school && 
+            if ($scope.userLoginForm.$valid && $scope.credentials.school &&
               $scope.credentials.username && $scope.credentials.password) {
               $localStorage.ldapschool = $scope.credentials.school;
               authenticateUser($scope.credentials);
@@ -202,8 +184,8 @@ angular.module('hitsaOis')
           };
           $scope.idCardLoginUrl = config.idCardLoginUrl;
           $scope.mIdLogin = function () {
-            if ($scope.mobilenumber) {
-              authenticateMobileId($scope.mobilenumber);
+            if ($scope.idcode && $scope.mobilenumber) {
+              authenticateMobileId($scope.idcode, $scope.mobilenumber);
             }
           };
           $scope.taraLoginUrl = config.apiUrl + '/taraLogin' + ($rootScope.currentLanguage() === 'en' ? '?lang=EN': '');
@@ -215,10 +197,11 @@ angular.module('hitsaOis')
       });
     };
 
-    $scope.showMobileId = function (challengeID) {
+    $scope.showMobileId = function (challengeID, jwt) {
       $mdDialog.show({
         controller: function ($scope) {
           $scope.challengeID = challengeID;
+          AuthService.mobileIdAuthenticate(jwt).then(successfulMobileIdAuthentication, failedMobileIdAuthentication);
         },
         templateUrl: 'login/m-id.login.dialog.html',
         parent: angular.element(document.body),

@@ -8,7 +8,13 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
+import ee.hitsa.ois.bdoc.MobileIdSigningSession;
+import ee.hitsa.ois.domain.OisFile;
+import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.dto.EntityMobileSignDto;
 import org.digidoc4j.Container;
+import org.digidoc4j.DataFile;
 import org.digidoc4j.DataToSign;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,9 +30,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.bdoc.MobileIdSession;
 import ee.hitsa.ois.bdoc.UnsignedBdocContainer;
-import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.report.FinalProtocolReport;
@@ -34,19 +38,16 @@ import ee.hitsa.ois.service.BdocService;
 import ee.hitsa.ois.service.FinalHigherProtocolService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.service.security.MobileIdStatus;
 import ee.hitsa.ois.util.FinalProtocolUtil;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.commandobject.finalprotocol.FinalHigherProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.finalprotocol.FinalHigherProtocolSaveForm;
 import ee.hitsa.ois.web.commandobject.finalprotocol.FinalHigherProtocolSearchCommand;
 import ee.hitsa.ois.web.commandobject.finalprotocol.FinalHigherProtocolSignForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.EntityMobileSignDto;
 import ee.hitsa.ois.web.dto.EntitySignDto;
 import ee.hitsa.ois.web.dto.HigherProtocolSearchDto;
 import ee.hitsa.ois.web.dto.finalprotocol.FinalHigherProtocolDto;
@@ -58,7 +59,7 @@ public class FinalHigherProtocolController {
 
     private static final String BDOC_TO_SIGN = "higherFinalProtocolBdocContainerToSign";
     private static final String BDOC_CONT = "higherFinalProtocolBdocContainer";
-    private static final String MOBILE_SESSCODE = "higherFinalProtocolBdocMobileSesscode";
+    private static final String MOBILE_SESSIONID = "higherFinalProtocolBdocMobileSessionId";
 
     @Autowired
     private FinalHigherProtocolService finalProtocolService;
@@ -190,50 +191,48 @@ public class FinalHigherProtocolController {
         return get(user, finalProtocolService.confirm(user, protocol, null));
     }
 
-    @PostMapping("/{id:\\d+}/mobileSignToConfirm")
-    public EntityMobileSignDto mobileSignToConfirm(HoisUserDetails user,
+    @PostMapping("/{id:\\d+}/mobileIdSignatureRequest")
+    public EntityMobileSignDto mobileIdSignatureRequest(HoisUserDetails user,
             @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
-            @Valid @RequestBody FinalHigherProtocolSignForm protocolSaveForm, HttpSession httpSession) {
+            @Valid @RequestBody FinalHigherProtocolSignForm protocolSaveForm,
+            HttpSession httpSession, Language lang) {
         FinalProtocolUtil.assertCanConfirm(user, protocol);
         Protocol savedProtocol = finalProtocolService.save(protocol, protocolSaveForm);
         FinalProtocolUtil.assertCurriculumGradesInput(protocol);
 
         Boolean isLetterGrades = protocol.getSchool().getIsLetterGrade();
-        byte[] pdfData = pdfService.generate(FinalProtocolReport.HIGHER_TEMPLATE_NAME,
+        byte[] pdfData = pdfService.generate(FinalProtocolReport.VOCATIONAL_TEMPLATE_NAME,
                 new FinalProtocolReport(savedProtocol, isLetterGrades));
-        MobileIdSession session = bdocService.mobileSign("lopueksami_protokoll.pdf", MediaType.APPLICATION_PDF_VALUE,
-                pdfData, user.getPersonId());
 
-        httpSession.setAttribute(MOBILE_SESSCODE, session.getSesscode());
-        return EntityMobileSignDto.of(savedProtocol, session.getChallengeID());
+        DataFile dataFile = new DataFile(pdfData, "lopueksami_protokoll.pdf", MediaType.APPLICATION_PDF_VALUE);
+        String mobileNumber = UserUtil.isOAuthLoginType(user) ? protocolSaveForm.getSignerMobileNumber()
+                : user.getMobileNumber();
+        MobileIdSigningSession session = bdocService.mobileIdSignatureRequest(user.getIdcode(), mobileNumber,
+                dataFile, lang);
+        httpSession.setAttribute(MOBILE_SESSIONID, session.getSessionID());
+        httpSession.setAttribute(BDOC_TO_SIGN, session.getDataToSign());
+        httpSession.setAttribute(BDOC_CONT, session.getContainer());
+        return EntityMobileSignDto.of(protocol, session.getVerificationCode());
     }
 
-    @RequestMapping("/{id:\\d+}/mobileSignStatus")
-    public MobileIdStatus mobileSignStatus(HttpSession httpSession) {
-        MobileIdStatus response = new MobileIdStatus();
-        Integer sesscode = (Integer) httpSession.getAttribute(MOBILE_SESSCODE);
-        if (sesscode != null) {
-            String statusCode = bdocService.mobileSignStatus(sesscode);
-            response.setStatus(statusCode);
-            if (BdocService.closeMobileSession(statusCode)) {
-                httpSession.removeAttribute(MOBILE_SESSCODE);
-            }
-        }
-        return response;
-    }
+    @PostMapping("/{id:\\d+}/mobileIdSign")
+    public FinalHigherProtocolDto mobileIdSign(HoisUserDetails user,
+           @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
+           @SuppressWarnings("unused") @RequestBody VersionedCommand version, HttpSession httpSession) {
+        String sessionID = (String) httpSession.getAttribute(MOBILE_SESSIONID);
+        DataToSign dataToSign = (DataToSign) httpSession.getAttribute(BDOC_TO_SIGN);
+        Container container = (Container) httpSession.getAttribute(BDOC_CONT);
 
-    @PostMapping("/{id:\\d+}/mobileSignFinalize")
-    public FinalHigherProtocolDto mobileSignFinalize(HoisUserDetails user, 
-            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
-            @SuppressWarnings("unused") @RequestBody VersionedCommand version, HttpSession httpSession) {
-        Integer sesscode = (Integer) httpSession.getAttribute(MOBILE_SESSCODE);
-        if (sesscode != null) {
-            OisFile signedBdoc = bdocService.getMobileSignedBdoc(sesscode, "protokoll");
+        if (sessionID != null) {
+            MobileIdSigningSession session = new MobileIdSigningSession(sessionID, dataToSign, container);
+            OisFile signedBdoc = bdocService.mobileIdSign(session, "protokoll");
             if (signedBdoc != null) {
                 protocol.setOisFile(signedBdoc);
                 protocol = finalProtocolService.confirm(user, protocol, null);
             }
-            httpSession.removeAttribute(MOBILE_SESSCODE);
+            httpSession.removeAttribute(MOBILE_SESSIONID);
+            httpSession.removeAttribute(BDOC_TO_SIGN);
+            httpSession.removeAttribute(BDOC_CONT);
         }
         return get(user, protocol);
     }

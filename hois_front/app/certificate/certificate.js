@@ -138,6 +138,7 @@ angular.module('hitsaOis')
     var CompleteEndpoit = QueryUtils.endpoint(baseUrl + '/complete');
     var id = $route.current.params.id;
     var changedByOtherIdCodeChange = false;
+    $scope.formState = {};
     $scope.forbiddenTypes = [];
     $scope.auth = $route.current.locals.auth;
 
@@ -161,7 +162,7 @@ angular.module('hitsaOis')
       if($scope.record.student) {
         getStudent().then(function(response){
           var name = response.fullname;
-          $scope.student = {id: response.id, nameEt: name, nameEn: name};
+          $scope.formState.student = {id: response.id, nameEt: name, nameEn: name};
         });
       }
       if(!$scope.contentEditable()) {
@@ -194,15 +195,19 @@ angular.module('hitsaOis')
     }
 
     function getStudent() {
+      var type = $scope.record.type;
       return QueryUtils.endpoint(baseUrl + '/otherStudent').search({id: $scope.record.student}).$promise.then(function(response) {
-         $scope.record.otherName = response.fullname;
-         $scope.record.otherIdcode = response.idcode;
-         $scope.otherFound = true;
-         $scope.studentType = response.type;
-         $scope.isHigher = response.higher;
-         $scope.record.showModules = response.higher && $scope.auth.school.hmodules;
-         $scope.forbiddenTypes = CertificateUtil.getForbiddenTypes(response.status);
-         return response;
+        // set data only if type hasn't changed while query was executed
+        if (type === $scope.record.type) {
+          $scope.record.otherName = response.fullname;
+          $scope.record.otherIdcode = response.idcode;
+          $scope.otherFound = true;
+          $scope.studentType = response.type;
+          $scope.isHigher = response.higher;
+          $scope.record.showModules = response.higher && $scope.auth.school.hmodules;
+          $scope.forbiddenTypes = CertificateUtil.getForbiddenTypes(response.status);
+          return response;
+        }
       }).catch(angular.noop);
     }
 
@@ -212,27 +217,35 @@ angular.module('hitsaOis')
       if($scope.record.id) {
         return;
       }
-      $scope.record.content = null;
+      var command = {
+        type: $scope.record.type,
+        student: $scope.record.student,
+        otherIdcode: $scope.record.otherIdcode,
+        otherName: $scope.record.otherName
+      };
+      if (!angular.equals(command, $scope.lastCommand)) {
+        $scope.record.content = null;
+      }
       if($scope.record.type && ($scope.record.student || $scope.record.otherIdcode && $scope.isOtherCertificate() && $scope.otherFound)) {
-        var command = {
-          type: $scope.record.type,
-          student: $scope.record.student,
-          otherIdcode: $scope.record.otherIdcode,
-          otherName: $scope.record.otherName
-        };
         if (CertificateUtil.isResultsCertificate($scope.record)) {
           command.addOutcomes = $scope.record.addOutcomes;
           command.showModules = $scope.record.showModules;
           command.showUncompleted = $scope.record.showUncompleted;
           command.estonian = $scope.record.estonian;
         }
-        QueryUtils.endpoint(baseUrl + '/content').search(command).$promise.then(function(response) {
-          $scope.record.content = response.content;
-          if(!$scope.contentEditable()) {
-            setReadonlyContent($scope.record.content);
-          }
-        }).catch(angular.noop);
+        if (!angular.equals(command, $scope.lastCommand)) {
+          QueryUtils.endpoint(baseUrl + '/content').search(command).$promise.then(function(response) {
+            // set content only if type hasn't changed while query was executed
+            if (command.type === $scope.record.type) {
+              $scope.record.content = response.content;
+              if(!$scope.contentEditable()) {
+                setReadonlyContent($scope.record.content);
+              }
+            }
+          }).catch(angular.noop);
+        }
       }
+      $scope.lastCommand = command;
     }
 
     $scope.$watch('record.type', function() {
@@ -243,9 +256,11 @@ angular.module('hitsaOis')
         $scope.record.estonian = undefined;
       }
       $scope.record.showUncompleted = undefined;
-      $scope.student = undefined;
+      $scope.formState.student = undefined;
       $scope.record.student = undefined;
       $scope.record.content = undefined;
+      $scope.record.otherName = undefined;
+      $scope.record.otherIdcode = undefined;
       if(!$scope.contentEditable()) {
         setReadonlyContent("");
       }
@@ -261,13 +276,14 @@ angular.module('hitsaOis')
           $scope.record.estonian = undefined;
         }
         $scope.record.showUncompleted = undefined;
+        setTypeName();
         loadContent();
       }
     });
 
     $scope.$watch('record.otherIdcode', function(){
       if($scope.record.otherIdcode) {
-        $timeout(loadContent, 1000);
+        loadContent();
       }
       if($scope.record && $scope.record.otherIdcode && $scope.certificateEditForm.idcode && $scope.certificateEditForm.idcode.$valid) {
         $scope.getNameByIdcode();
@@ -276,14 +292,14 @@ angular.module('hitsaOis')
 
     $scope.$watch('record.otherName', function(){
       if($scope.record.otherName && $scope.record.otherIdcode) {
-        $timeout(loadContent, 1000);
+        loadContent();
       }
     });
 
     $scope.reloadContent = function() {
       if($scope.record.student) {
         setTypeName();
-        $timeout(loadContent, 1000);
+        loadContent();
       }
     };
 
@@ -308,10 +324,10 @@ angular.module('hitsaOis')
     };
 
     $scope.studentChanged = function() {
-      if($scope.student && $scope.record.student !== $scope.student.id) {
-        $scope.record.student = $scope.student.id;
+      if($scope.formState.student && $scope.record.student !== $scope.formState.student.id) {
+        $scope.record.student = $scope.formState.student.id;
         getStudent();
-      } else if(!$scope.student) {
+      } else if(!$scope.formState.student) {
         $scope.record.student = null;
         $scope.otherFound = false;
         if(!changedByOtherIdCodeChange) {
@@ -465,13 +481,13 @@ angular.module('hitsaOis')
           $scope.record.student = result.id;
           $scope.record.otherName = result.fullname;
           $scope.otherFound = true;
-          $scope.student = {id: result.id, nameEt: result.fullname, nameEn: result.fullname, status: result.status};
-          $scope.isHigher = response.higher;
-          $scope.record.showModules = response.higher && $scope.auth.school.hmodules;
+          $scope.formState.student = {id: result.id, nameEt: result.fullname, nameEn: result.fullname, status: result.status};
+          $scope.isHigher = result.higher;
+          $scope.record.showModules = result.higher && $scope.auth.school.hmodules;
           $scope.forbiddenTypes = CertificateUtil.getForbiddenTypes(result.status);
         } else {
           changedByOtherIdCodeChange = true;
-          $scope.student = null;
+          $scope.formState.student = null;
           $scope.isHigher = null;
           $scope.record.showModules = null;
           $scope.forbiddenTypes = [];
@@ -480,11 +496,15 @@ angular.module('hitsaOis')
             $scope.otherFound = true;
           } else {
             $scope.otherFound = false;
+            $scope.record.student = null;
           }
         }
+        loadContent();
       }).catch(function(error) {
-        $scope.record.otherIdcode = undefined;
-        message.error(error.data._errors[0].code);
+        if (error.data) {
+          $scope.record.otherIdcode = undefined;
+          message.error(error.data._errors[0].code);
+        }
       });
     };
   }

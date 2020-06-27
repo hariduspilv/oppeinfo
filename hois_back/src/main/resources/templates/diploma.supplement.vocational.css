@@ -1,10 +1,14 @@
 @page {
-    size: A4;
+    size: A4 portrait;
     margin: 60pt;
     @bottom-right {
         content: element(footer);
     }
 }
+
+/*div {
+	border-bottom: 1px solid transparent;
+}*/
 
 html {
     font-family: Garamond;
@@ -70,6 +74,9 @@ div.diploma-nr {
 }
 .margin-top {
     margin-top: 10pt;
+}
+.margin-top2 {
+    margin-top: 8pt;
 }
 .diploma-signers {
     margin-top: 50pt;

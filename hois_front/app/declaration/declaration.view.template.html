@@ -99,20 +99,19 @@
           <tr md-row class="border-top-line" style="font-weight: bold;">
             <td md-cell>{{'main.OF' | translate}}</td>
             <td md-cell colspan="2"></td>
-            <td md-cell>{{calculateAll(wrapper.declaration.subjects)}} {{'declaration.eap' | translate}}</td>
+            <td md-cell>{{calculateAll(wrapper.declaration.subjects) | hoisNumber: 1}} {{'declaration.eap' | translate}}</td>
             <td md-cell colspan="4"></td>
           </tr>
         </tbody>
       </table>
     </md-table-container>
-    <br ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')"
-      ng-show="wrapper.declaration.canBeChanged || wrapper.declaration.canBeSetConfirmed || wrapper.declaration.canBeSetUnconfirmed">
+    <br ng-if="wrapper.declaration.canBeChanged || wrapper.declaration.canBeSetConfirmed || wrapper.declaration.canBeSetUnconfirmed">
     <div layout="row">
-      <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" ng-show="wrapper.declaration.canBeChanged" class="md-raised md-primary"
+      <md-button ng-if="wrapper.declaration.canBeChanged" class="md-raised md-primary"
         ng-href="#/declarations/{{wrapper.declaration.id}}/edit">{{'main.button.change' | translate}}</md-button>
-      <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" ng-show="wrapper.declaration.canBeSetConfirmed" class="md-raised"
+      <md-button ng-if="wrapper.declaration.canBeSetConfirmed" class="md-raised"
         ng-click="confirm(wrapper.formState.isNextPeriod)">{{'declaration.confirm' | translate}}</md-button>
-      <md-button ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" ng-show="wrapper.declaration.canBeSetUnconfirmed" class="md-raised"
+      <md-button ng-if="wrapper.declaration.canBeSetUnconfirmed" class="md-raised"
         ng-click="removeConfirmation(wrapper.formState.isNextPeriod)">{{'declaration.removeConfirmation' | translate}}</md-button>
     </div>
   </div>

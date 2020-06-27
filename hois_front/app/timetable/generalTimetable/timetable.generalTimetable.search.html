@@ -1,6 +1,13 @@
-<div ng-include="'timetable/generalTimetable/timetable.generalTimetable.navbar.html'"></div>
+<div ng-if="isForbidden" layout-margin>
+  <hois-whiteframe-warning md-color="'accent'">
+    <span>{{'main.messages.error.onlyForLoggedInUsers' | translate}}</span>
+  </hois-whiteframe-warning>
 
-<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <md-button ng-click="back('#/timetables/')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+</div>
+<div ng-if="!isForbidden" ng-include="'timetable/generalTimetable/timetable.generalTimetable.navbar.html'"></div>
+
+<div ng-if="!isForbidden" class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
     <fieldset>
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
@@ -38,8 +45,8 @@
 
           <md-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0"
             md-search-text="studentGroupSearchText"
-            md-selected-item="criteria.studentGroupObject"  
-            md-items="item in parameterSearch(studentGroupSearchText, formState.studentGroups)" 
+            md-selected-item="criteria.studentGroupObject"
+            md-items="item in parameterSearch(studentGroupSearchText, formState.studentGroups)"
             md-item-text="currentLanguageNameField(item)"
             md-selected-item-change="selectedStudentGroupChanged(item)"
             md-min-length="1"
@@ -70,8 +77,8 @@
 
           <md-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0"
             md-search-text="subjectSearchText"
-            md-selected-item="criteria.subjectObject"  
-            md-items="item in parameterSearch(subjectSearchText, formState.subjects)" 
+            md-selected-item="criteria.subjectObject"
+            md-items="item in parameterSearch(subjectSearchText, formState.subjects)"
             md-item-text="currentLanguageNameField(item)"
             md-selected-item-change="selectedSubjectChanged(item)"
             md-min-length="1"
@@ -83,7 +90,7 @@
             </md-item-template>
           </md-autocomplete>
         </div>
-        
+
         <div layout="row">
           <md-button ng-click="search()" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearSearchParameters()">{{'main.button.clear' | translate}}</md-button>

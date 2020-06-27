@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
@@ -32,6 +33,7 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
@@ -223,13 +225,22 @@ public class CertificateService {
         }
         if (command.getId() != null) {
             qb.requiredCriteria("s.id = :id", "id", command.getId());
-        } else if (!StringUtils.hasText(command.getIdcode())) {
+        } else if (StringUtils.hasText(command.getIdcode())) {
             qb.requiredCriteria("s.person.idcode = :idcode", "idcode", command.getIdcode());
         } else {
             return null;
         }
 
-        List<Student> students = qb.select(em).setMaxResults(1).getResultList();
+        List<Student> students = qb.select(em).getResultList();
+        // if there is a guest student and regular student with the same idcode,
+        // filter out the guest student
+        // if after filtering the list is empty, all students were guest students
+        if (Boolean.TRUE.equals(command.getHideGuestStudents()) && !students.isEmpty()) {
+            students = students.stream().filter(p -> !ClassifierUtil.equals(StudentType.OPPUR_K, p.getType())).collect(Collectors.toList());
+            if (students.isEmpty()) {
+                throw new HoisException("student.error.cannotBeGuestStudent");
+            }
+        }
         if (!students.isEmpty()) {
             Student student = students.get(0);
             Person person = student.getPerson();
@@ -239,10 +250,7 @@ public class CertificateService {
             dto.setFullname(PersonUtil.fullname(person));
             dto.setStatus(EntityUtil.getCode(student.getStatus()));
             dto.setType(EntityUtil.getCode(student.getType()));
-            dto.setHigher(StudentUtil.isHigher(student));
-            if (Boolean.TRUE.equals(command.getHideGuestStudents()) && StudentType.OPPUR_K.name().equals(dto.getType())) {
-                throw new HoisException("student.error.cannotBeGuestStudent");
-            }
+            dto.setHigher(Boolean.valueOf(StudentUtil.isHigher(student)));
             return dto;
         } else if (command.getId() != null) {
             throw new EntityNotFoundException();

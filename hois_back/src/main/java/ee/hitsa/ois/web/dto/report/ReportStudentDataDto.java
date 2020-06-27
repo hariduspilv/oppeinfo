@@ -43,7 +43,7 @@ public class ReportStudentDataDto {
     private AutocompleteResult curriculum;
     private String ehisCode;
     private String studyLevel;
-    private String speciality;
+    private AutocompleteResult speciality;
     private Long studyYearNumber;
     private String fin;
     private String language;
@@ -118,36 +118,36 @@ public class ReportStudentDataDto {
         this.curriculum = new AutocompleteResult(resultAsLong(r, 23), resultAsString(r, 24), resultAsString(r, 25));
         this.ehisCode = resultAsString(r, 26);
         this.studyLevel = resultAsString(r, 27);
-        this.speciality = resultAsString(r, 28);
-        this.studyYearNumber = resultAsLong(r, 29);
-        this.fin = resultAsString(r, 30);
-        this.language = resultAsString(r, 31);
-        this.curriculumPercentage = resultAsDecimal(r, 32);
-        this.address = resultAsString(r, 33);
-        this.phone = resultAsString(r, 34);
-        this.officialEmail = resultAsString(r, 35);
-        this.personalEmail = resultAsString(r, 36);
-        this.eap = resultAsDecimal(r, 37);
-        this.weightedAverageSum = resultAsDecimal(r, 38);
-        this.eapSum = resultAsDecimal(r, 39);
-        this.weightedAverage = resultAsDecimal(r, 40);
-        this.averageSum = resultAsDecimal(r, 41);
-        this.average = resultAsDecimal(r, 42);
-        this.debtSum = resultAsLong(r, 43);
-        this.debt = resultAsLong(r, 44);
-        this.debtPointsSum = resultAsLong(r, 45);
-        this.debtPoints = resultAsLong(r, 46);
-        this.declaredEap = resultAsLong(r, 47);
-        this.activeResult = resultAsString(r, 48);
-        if (resultAsLong(r, 49) != null) {
-            this.activeResultSubject = new AutocompleteResult(null, resultAsString(r, 50), resultAsString(r, 51));
+        this.speciality = new AutocompleteResult(null, resultAsString(r, 28), resultAsString(r, 29));
+        this.studyYearNumber = resultAsLong(r, 30);
+        this.fin = resultAsString(r, 31);
+        this.language = resultAsString(r, 32);
+        this.curriculumPercentage = resultAsDecimal(r, 33);
+        this.address = resultAsString(r, 34);
+        this.phone = resultAsString(r, 35);
+        this.officialEmail = resultAsString(r, 36);
+        this.personalEmail = resultAsString(r, 37);
+        this.eap = resultAsDecimal(r, 38);
+        this.weightedAverageSum = resultAsDecimal(r, 39);
+        this.eapSum = resultAsDecimal(r, 40);
+        this.weightedAverage = resultAsDecimal(r, 41);
+        this.averageSum = resultAsDecimal(r, 42);
+        this.average = resultAsDecimal(r, 43);
+        this.debtSum = resultAsLong(r, 44);
+        this.debt = resultAsLong(r, 45);
+        this.debtPointsSum = resultAsLong(r, 46);
+        this.debtPoints = resultAsLong(r, 47);
+        this.declaredEap = resultAsLong(r, 48);
+        this.activeResult = resultAsString(r, 49);
+        if (resultAsLong(r, 50) != null) {
+            this.activeResultSubject = new AutocompleteResult(null, resultAsString(r, 51), resultAsString(r, 52));
         }
-        if (resultAsLong(r, 52) != null) {
-            this.declaredSubject = new AutocompleteResult(null, resultAsString(r, 53), resultAsString(r, 54));
+        if (resultAsLong(r, 53) != null) {
+            this.declaredSubject = new AutocompleteResult(null, resultAsString(r, 54), resultAsString(r, 55));
         }
-        this.declarationConfirmation = resultAsLocalDate(r, 55);
-        this.previousSchoolName = resultAsString(r, 56);
-        this.completedSchoolYear = resultAsLong(r, 57);
+        this.declarationConfirmation = resultAsLocalDate(r, 56);
+        this.previousSchoolName = resultAsString(r, 57);
+        this.completedSchoolYear = resultAsLong(r, 58);
     }
 
     public String getFirstname() {
@@ -308,14 +308,6 @@ public class ReportStudentDataDto {
 
     public void setStudyLevel(String studyLevel) {
         this.studyLevel = studyLevel;
-    }
-
-    public String getSpeciality() {
-        return speciality;
-    }
-
-    public void setSpeciality(String speciality) {
-        this.speciality = speciality;
     }
 
     public Long getStudyYearNumber() {
@@ -596,5 +588,13 @@ public class ReportStudentDataDto {
 
     public void setNr(Integer nr) {
         this.nr = nr;
+    }
+
+    public AutocompleteResult getSpeciality() {
+        return speciality;
+    }
+
+    public void setSpeciality(AutocompleteResult speciality) {
+        this.speciality = speciality;
     }
 }

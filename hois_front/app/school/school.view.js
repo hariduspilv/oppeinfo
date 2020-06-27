@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SchoolViewController', ['$route', '$scope', 'oisFileService', 'Classifier', 'QueryUtils',
-  function ($route, $scope, oisFileService, Classifier, QueryUtils) {
+angular.module('hitsaOis').controller('SchoolViewController', ['$route', '$scope', '$translate', 'oisFileService', 'Classifier', 'QueryUtils',
+  function ($route, $scope, $translate, oisFileService, Classifier, QueryUtils) {
     var id = $route.current.params.id;
 
     $scope.school = QueryUtils.endpoint('/school').get({id: id}, function() {
@@ -18,6 +18,20 @@ angular.module('hitsaOis').controller('SchoolViewController', ['$route', '$scope
           $scope.school.regNr = result.value2;
         });
       }
+      var isNotPublicSettings = [];
+      if ($scope.school.isNotPublic) {
+        isNotPublicSettings.push($translate.instant('school.isNotPublic.academicCalendar'));
+      }
+      if ($scope.school.isNotPublicTimetable) {
+        isNotPublicSettings.push($translate.instant('school.isNotPublic.timetable'));
+      }
+      if ($scope.school.isNotPublicCurriculum) {
+        isNotPublicSettings.push($translate.instant('school.isNotPublic.curriculums'));
+      }
+      if ($scope.school.isNotPublicSubject) {
+        isNotPublicSettings.push($translate.instant('school.isNotPublic.subjects'));
+      }
+      $scope.school.isNotPublicSettings = isNotPublicSettings;
     });
   }
 ]);

@@ -1,20 +1,35 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('CurriculumPublicListController', ['$scope', 'Classifier', 'DataUtils', 'QueryUtils', '$q', '$route',
-  function ($scope, Classifier, DataUtils, QueryUtils, $q, $route) {
+  .controller('CurriculumPublicListController', ['$route', '$scope', '$q', 'Classifier', 'DataUtils', 'School', 'QueryUtils',
+  function ($route, $scope, $q, Classifier, DataUtils, School, QueryUtils) {
     var schoolId = $route.current.params.schoolId;
+
+    $scope.formState = {};
+    School.getAll().$promise.then(function (schools) {
+      $scope.formState.schools = schools.filter(function (school) {
+        return !school.isNotPublicCurriculum;
+      });
+    });
 
     var clMapper = Classifier.valuemapper({origStudyLevel: 'OPPEASTE', status: 'OPPEKAVA_STAATUS'});
     QueryUtils.createQueryForm($scope, '/public/curriculumsearch', {schoolId: schoolId, order: $scope.currentLanguageNameField()}, clMapper.objectmapper);
 
-    $q.all(clMapper.promises).then($scope.loadData);
-    DataUtils.convertStringToDates($scope.criteria, ['validFrom', 'validThru']);
-
     if (schoolId) {
       $scope.criteria.school = schoolId;
     }
-    
+
+    if (angular.isDefined(schoolId)) {
+      QueryUtils.endpoint('/public/schoolSettings').get({schoolId: schoolId}).$promise.then(function (result) {
+        $scope.isForbidden = result.isTimetableNotPublic;
+        if (!$scope.isForbidden) {
+          $q.all(clMapper.promises).then($scope.loadData);
+        }
+      });
+    } else {
+      $scope.isForbidden = false;
+      $q.all(clMapper.promises).then($scope.loadData);
+    }
   }])
   .controller('CurriculumPublicController', function ($scope, $route, config, Classifier, ArrayUtils, Curriculum, $q, dialogService) {
     var clMapper = Classifier.valuemapper({ partOccupations: 'OSAKUTSE', specialityCodes: 'SPETSKUTSE'});
@@ -63,7 +78,7 @@ angular.module('hitsaOis')
           return module1.moduleCode === typeCode && ArrayUtils.includes(moduleOccupations, occupationCode);
       };
     };
-    
+
     $scope.getTotalCredits = function (modules) {
       return modules.reduce(function (sum, module) {
         return sum + module.credits;
@@ -111,7 +126,7 @@ angular.module('hitsaOis')
       $scope.curriculumPdfUrl = config.apiUrl + '/public/print/curriculum/' + curriculum.id + '/general.pdf';
       $scope.curriculumModulesPdfUrl = config.apiUrl + '/public/print/curriculum/' + curriculum.id + '/modules.pdf';
     }
-    
+
     var entity = $route.current.locals.entity;
     if (angular.isDefined(entity)) {
       $scope.publicUrl = config.apiUrl + '/public/curriculum/' + entity.id + '?format=json';
@@ -122,7 +137,7 @@ angular.module('hitsaOis')
 
 }).controller('CurriculumPublicVersionController', ['$scope', '$route', 'config', 'Curriculum', 'dialogService', 'QueryUtils', 'Classifier',
 function ($scope, $route, config, Curriculum, dialogService, QueryUtils, Classifier) {
-  
+
   $scope.version = $route.current.locals.curriculumVersion;
   $scope.curriculum = $route.current.locals.curriculum;
   $scope.moduleOrderBy = Curriculum.curriculumModuleOrder;
@@ -149,11 +164,11 @@ function ($scope, $route, config, Curriculum, dialogService, QueryUtils, Classif
         }
       }
     });
-  
+
     $scope.curriculumVersionPdfUrl = config.apiUrl + '/public/print/curriculumVersion/' + $scope.version.id + '/general.pdf';
     $scope.curriculumVersionModulesPdfUrl = config.apiUrl + '/public/print/curriculumVersion/' + $scope.version.id + '/modules.pdf';
   });
-  
+
   $scope.openViewThemeDialog = function (theme) {
     dialogService.showDialog('curriculum/dialog/theme.view.dialog.html',
       function (dialogScope) {

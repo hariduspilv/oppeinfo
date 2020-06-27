@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -1520,6 +1521,7 @@ public class StudentService {
             if (UserUtil.isSameSchool(user, student.getSchool()) && StudentUtil.isActive(student) 
                     && !Objects.equals(EntityUtil.getNullableId(student.getCurriculumSpeciality()), studentSpec.getSpeciality().getId())) {
                 student.setCurriculumSpeciality(studentSpec.getSpeciality().getId() == null ? null : em.getReference(CurriculumSpeciality.class, studentSpec.getSpeciality().getId()));
+                saveWithHistory(student);
             } else {
                 studentSpec.getSpeciality().setId(EntityUtil.getNullableId(student.getCurriculumSpeciality()));
             }
@@ -1673,8 +1675,9 @@ public class StudentService {
                 + " join protocol_student ps on ps.student_id = scc.student_id"
                 + " join protocol p on p.id = ps.protocol_id"
                 + " where scc.student_id in ?1 and scc.average_mark >= 4.6 and p.status_code = ?2"
-                + " and ((p.is_final = true and p.is_final_thesis = false and ps.grade_code = ?3)"
-                + " or exists(select 1 from protocol_student_occupation pso where pso.protocol_student_id = ps.id))"
+				+ " and (p.is_final = true and ps.grade_code = ?3)"
+                //+ " and ((p.is_final = true and p.is_final_thesis = false and ps.grade_code = ?3)"
+                //+ " or exists(select 1 from protocol_student_occupation pso where pso.protocol_student_id = ps.id))"
                 + " and exists(select 1 from student s join curriculum_version cv on s.curriculum_version_id = cv.id"
                 + " join curriculum c on cv.curriculum_id = c.id and c.is_higher = true"
                 + " where s.id = scc.student_id)")
@@ -1686,7 +1689,10 @@ public class StudentService {
     }
 
     private Set<Long> vocationalCumLaudes(Set<Long> studentIds) {
-        List<?> data = em.createNativeQuery("select scc.student_id from student_curriculum_completion scc"
+        Set<Long> cumLaudeStudents = new HashSet<>();
+
+        List<?> data = em.createNativeQuery("select scc.student_id, exists(select 1 from protocol_student_occupation pso where pso.protocol_student_id = ps.id)"
+                + " from student_curriculum_completion scc"
                 + " join protocol_student ps on ps.student_id = scc.student_id"
                 + " join protocol p on p.id = ps.protocol_id"
                 + " where scc.student_id in ?1 and scc.average_mark >= 4.6 and p.status_code = ?2"
@@ -1695,50 +1701,76 @@ public class StudentService {
                 + " and exists(select 1 from student s join curriculum_version cv on s.curriculum_version_id = cv.id"
                 + " join curriculum c on cv.curriculum_id = c.id"
                 + " join classifier_connect cc on c.orig_study_level_code = cc.classifier_code and cc.connect_classifier_code = ?4"
-                + " where s.id = scc.student_id)"
-                + " and not exists(select 1 from student_vocational_result svr3 where svr3.student_id = scc.student_id"
-                + " and svr3.grade_code = ?5)")
+                + " where s.id = scc.student_id)")
                 .setParameter(1, studentIds)
                 .setParameter(2, ProtocolStatus.PROTOKOLL_STAATUS_K.name())
                 .setParameter(3, OccupationalGrade.KUTSEHINDAMINE_5.name())
                 .setParameter(4, FormType.LOPUBLANKETT_KK.name())
-                .setParameter(5, OccupationalGrade.KUTSEHINDAMINE_3.name())
                 .getResultList();
 
-        Set<Long> studentsMeetingCriteria = data.stream().map(r -> resultAsLong(r, 0)).collect(Collectors.toSet());
+        Map<Long, Boolean> studentsMeetingCriteria = StreamUtil.toMap(r -> resultAsLong(r, 0),
+                r -> resultAsBoolean(r, 1), data);
         if (!studentsMeetingCriteria.isEmpty()) {
-            Set<Long> filteredStudentIds = studentsMeetingCriteria;
-            Map<Long, StudentVocationalStudyProgrammeDto> studyProgrammes = studyProgrammesWithEarnedCredits(
-                    filteredStudentIds, true);
+            Set<Long> extraChecksNeeded = studentsMeetingCriteria.entrySet().stream()
+                    .filter(s -> Boolean.TRUE.equals(s.getValue()))
+                    .map(Map.Entry::getKey).collect(Collectors.toSet());
 
-            for (Long studentId : filteredStudentIds) {
-                StudentVocationalStudyProgrammeDto studentStudyProgramme = studyProgrammes.get(studentId);
-                if (studentStudyProgramme == null) {
-                    studentsMeetingCriteria.remove(studentId);
-                    continue;
-                }
-
-                BigDecimal studentGeneralCredits = studentStudyProgramme.getEarnedGeneralStudies();
-                BigDecimal programmeGeneralCredits = studentStudyProgramme.getGeneralStudies();
-                if (BigDecimal.ZERO.compareTo(programmeGeneralCredits) != 0
-                        && studentGeneralCredits.divide(programmeGeneralCredits, 3, RoundingMode.DOWN)
-                        .compareTo(DISTINCTIVE_GRADES_CRITERIA) == -1) {
-                    studentsMeetingCriteria.remove(studentId);
-                    continue;
-                }
-
-                BigDecimal programmeCoreAndFreeCredits = studentStudyProgramme.getCoreStudies()
-                        .add(studentStudyProgramme.getFreeChoice());
-                BigDecimal studentCoreAndFreeCredits = studentStudyProgramme.getEarnedCoreStudies()
-                        .add(studentStudyProgramme.getEarnedFreeChoice());
-                if (BigDecimal.ZERO.compareTo(programmeCoreAndFreeCredits) != 0
-                        && studentCoreAndFreeCredits.divide(programmeCoreAndFreeCredits, 3, RoundingMode.DOWN)
-                        .compareTo(DISTINCTIVE_GRADES_CRITERIA) == -1) {
-                    studentsMeetingCriteria.remove(studentId);
-                }
+            cumLaudeStudents.addAll(studentsMeetingCriteria.keySet().stream()
+                    .filter(r -> !extraChecksNeeded.contains(r))
+                    .collect(Collectors.toSet()));
+            if (!extraChecksNeeded.isEmpty()) {
+                cumLaudeStudents.addAll(studentMatchingExtraChecks(extraChecksNeeded));
             }
         }
-        return studentsMeetingCriteria;
+        return cumLaudeStudents;
+    }
+
+    private Set<Long> studentMatchingExtraChecks(Set<Long> studentIds) {
+        Set<Long> suitableStudents = new HashSet<>();
+
+        Set<Long> unsuitableResults = studentsWithUnsuitableResults(studentIds);
+        Map<Long, StudentVocationalStudyProgrammeDto> studyProgrammes = studyProgrammesWithEarnedCredits(studentIds, true);
+        for (Long studentId : studentIds) {
+            if (unsuitableResults.contains(studentId)) {
+                continue;
+            }
+
+            StudentVocationalStudyProgrammeDto studentStudyProgramme = studyProgrammes.get(studentId);
+            if (studentStudyProgramme == null) {
+                continue;
+            }
+
+            // at least 50% of general studies graded by distinctive grades
+            BigDecimal studentGeneralCredits = studentStudyProgramme.getEarnedGeneralStudies();
+            BigDecimal programmeGeneralCredits = studentStudyProgramme.getGeneralStudies();
+            if (BigDecimal.ZERO.compareTo(programmeGeneralCredits) != 0
+                    && studentGeneralCredits.divide(programmeGeneralCredits, 3, RoundingMode.DOWN)
+                    .compareTo(DISTINCTIVE_GRADES_CRITERIA) < 0) {
+                continue;
+            }
+
+            // at least 50% of core + free choice studies graded by distinctive grades
+            BigDecimal programmeCoreAndFreeCredits = studentStudyProgramme.getCoreStudies()
+                    .add(studentStudyProgramme.getFreeChoice());
+            BigDecimal studentCoreAndFreeCredits = studentStudyProgramme.getEarnedCoreStudies()
+                    .add(studentStudyProgramme.getEarnedFreeChoice());
+            if (BigDecimal.ZERO.compareTo(programmeCoreAndFreeCredits) != 0
+                    && studentCoreAndFreeCredits.divide(programmeCoreAndFreeCredits, 3, RoundingMode.DOWN)
+                    .compareTo(DISTINCTIVE_GRADES_CRITERIA) < 0) {
+                continue;
+            }
+            suitableStudents.add(studentId);
+        }
+        return suitableStudents;
+    }
+
+    private Set<Long> studentsWithUnsuitableResults(Set<Long> studentIds) {
+        List<?> data = em.createNativeQuery("select svr.student_id from student_vocational_result svr"
+                + " where svr.student_id in ?1 and svr.grade_code = ?2")
+                .setParameter(1, studentIds)
+                .setParameter(2, OccupationalGrade.KUTSEHINDAMINE_3.name())
+                .getResultList();
+        return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
     }
 
     public Map<Long, StudentVocationalStudyProgrammeDto> studyProgrammesWithEarnedCredits(Set<Long> studentIds,
@@ -1769,10 +1801,10 @@ public class StudentService {
                 + " and svr.curriculum_version_omodule_id = cmm.id or cmm.id=any(svr.arr_modules))");
         qb.requiredCriteria("svr.student_id in (:studentIds)", "studentIds", studentIds);
         List<String> grades = OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE;
-        if (onlyDistinctiveGrades) {
-            grades.remove(OccupationalGrade.KUTSEHINDAMINE_A.name());
-        }
         qb.requiredCriteria("svr.grade_code in (:positiveGrades)", "positiveGrades", grades);
+        if (onlyDistinctiveGrades) {
+            qb.requiredCriteria("svr.grade_code != :notDistinctive", "notDistinctive", OccupationalGrade.KUTSEHINDAMINE_A);
+        }
         qb.filter("cmm.curriculum_module_id in (select cm.id as m_id from curriculum_version cv"
                 + " join curriculum_version_omodule cvo on cv.id=cvo.curriculum_version_id"
                 + " join curriculum_module cm on cvo.curriculum_module_id=cm.id and cv.curriculum_id=cm.curriculum_id"

@@ -159,6 +159,12 @@ public class SubjectService {
             if(user == null || !SubjectUserRights.canViewAllSubjects(user)) {
                 subjectSearchCommand.setStatus(Collections.singletonList(SubjectStatus.AINESTAATUS_K.name()));
             }
+            if (user == null) {
+                filters.add(cb.notEqual(root.get("school").get("isNotPublicSubject"), Boolean.TRUE));
+            } else {
+                filters.add(cb.or(cb.notEqual(root.get("school").get("isNotPublicSubject"), Boolean.TRUE),
+                        cb.equal(root.get("school").get("id"), user.getSchoolId())));
+            }
             if (!CollectionUtils.isEmpty(subjectSearchCommand.getStatus())) {
                 filters.add(root.get("status").get("code").in(subjectSearchCommand.getStatus()));
             }

@@ -747,14 +747,17 @@ public class AutocompleteService {
 
         qb.optionalCriteria("s.id = :schoolId", "schoolId", lookup.getId());
 
-        List<?> data = qb.select("s.id, s.code, s.name_et, s.name_en, s.email", em).getResultList();
+        List<?> data = qb.select("s.id, s.code, s.name_et, s.name_en, s.email, s.is_not_public,"
+                + " s.is_not_public_timetable, s.is_not_public_curriculum, s.is_not_public_subject", em)
+                .getResultList();
         return StreamUtil.toMappedList(r -> {
-            return new SchoolWithoutLogo(
-                    resultAsLong(r, 0),
-                    resultAsString(r, 1),
-                    resultAsString(r, 2),
-                    resultAsString(r, 3),
-                    resultAsString(r, 4));
+            SchoolWithoutLogo dto = new SchoolWithoutLogo(resultAsLong(r, 0), resultAsString(r, 1),
+                    resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4));
+            dto.setIsNotPublic(Boolean.TRUE.equals(resultAsBoolean(r, 5)));
+            dto.setIsNotPublicTimetable(Boolean.TRUE.equals(resultAsBoolean(r, 6)));
+            dto.setIsNotPublicCurriculum(Boolean.TRUE.equals(resultAsBoolean(r, 7)));
+            dto.setIsNotPublicSubject(Boolean.TRUE.equals(resultAsBoolean(r, 8)));
+            return dto;
         }, data);
     }
 
@@ -763,10 +766,18 @@ public class AutocompleteService {
 
         qb.optionalCriteria("s.id = :schoolId", "schoolId", lookup.getId());
 
-        List<?> data = qb.select("s.id, s.code, s.name_et, s.name_en, s.email", em).getResultList();
+        List<?> data = qb.select("s.id, s.code, s.name_et, s.name_en, s.email, s.is_not_public,"
+                + " s.is_not_public_timetable, s.is_not_public_curriculum, s.is_not_public_subject", em)
+                .getResultList();
         
         return StreamUtil.toMappedList(r -> {
-            SchoolWithoutLogo dto = new SchoolWithoutLogo(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4));
+            SchoolWithoutLogo dto = new SchoolWithoutLogo(resultAsLong(r, 0), resultAsString(r, 1),
+                    resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4));
+            dto.setIsNotPublic(Boolean.TRUE.equals(resultAsBoolean(r, 5)));
+            dto.setIsNotPublicTimetable(Boolean.TRUE.equals(resultAsBoolean(r, 6)));
+            dto.setIsNotPublicCurriculum(Boolean.TRUE.equals(resultAsBoolean(r, 7)));
+            dto.setIsNotPublicSubject(Boolean.TRUE.equals(resultAsBoolean(r, 8)));
+
             SchoolType type = schoolService.schoolType(dto.getId());
             dto.setVocational(Boolean.valueOf(type.isVocational()));
             dto.setHigher(Boolean.valueOf(type.isHigher()));
@@ -1762,6 +1773,9 @@ public class AutocompleteService {
                 "left join curriculum_version cv on cv.id = cvs.curriculum_version_id ").groupBy("cs.id, c.id");
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("c.id = :cId", "cId", lookup.getCurriculum());
+        if (Boolean.TRUE.equals(lookup.getFilter())) {
+            qb.optionalContains(Arrays.asList("cs.name_et", "cs.name_en"), "specialityName", lookup.getName());
+        }
         qb.optionalCriteria("cv.id = :cvId", "cvId", lookup.getCurriculumVersion());
         if (user.isStudent() || user.isRepresentative()) {
             qb.requiredCriteria("cv.id in (select s.curriculum_version_id from student s where s.id = :studentId)", "studentId", user.getStudentId());

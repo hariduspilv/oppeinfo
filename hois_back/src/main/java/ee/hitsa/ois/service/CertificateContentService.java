@@ -209,7 +209,7 @@ public class CertificateContentService {
     private void setGrades(CertificateReport report, Student student, Language lang) {
         Boolean isLetterGrade = student.getSchool().getIsLetterGrade();
         TypedQuery<Classifier> query = em.createQuery("select c from Classifier c where c.code in (?1) order by c.value desc", Classifier.class);
-        query.setParameter(1, EnumUtil.toNameList(HigherAssessment.values()));
+        query.setParameter(1, HigherAssessment.GRADE_SYSTEM);
         Map<String, Classifier> grades = query.getResultList().stream().collect(Collectors.toMap(g -> g.getCode(), g -> g, (o, n) -> o, LinkedHashMap::new));
         grades.values().forEach(grade -> {
             if (!ClassifierUtil.oneOf(grade, HigherAssessment.KORGHINDAMINE_0, HigherAssessment.KORGHINDAMINE_1,
@@ -323,10 +323,9 @@ public class CertificateContentService {
         }
         TypedQuery<Classifier> query = em.createQuery("select c from Classifier c where c.code in (?1) order by c.value desc", Classifier.class);
         if (isHigherSchool) {
-            query.setParameter(1, showUncompleted ? EnumUtil.toNameList(HigherAssessment.values())
-                    : HigherAssessment.GRADE_POSITIVE);
+            query.setParameter(1, showUncompleted ? HigherAssessment.GRADE_SYSTEM : HigherAssessment.GRADE_POSITIVE);
         } else {
-            query.setParameter(1, showUncompleted ? EnumUtil.toNameList(OccupationalGrade.values())
+            query.setParameter(1, showUncompleted ? OccupationalGrade.OCCUPATIONAL_GRADE_SYSTEM
                     : OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
         }
         List<Classifier> grades = query.getResultList();

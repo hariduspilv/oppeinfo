@@ -99,6 +99,33 @@
       </md-checkbox>
     </md-input-container>
 
+    <div layout-gt-md="row" layout="column">
+      <span class="common-label" style="margin-right: 1em; margin-top: 5px;">{{'school.isNotPublic.label' | translate}}:</span>
+      <md-input-container class="md-block" style="margin-left: 1em;">
+        <md-checkbox ng-model="school.isNotPublic" name="isNotPublic">
+          {{'school.isNotPublic.academicCalendar' | translate}}
+        </md-checkbox>
+      </md-input-container>
+
+      <md-input-container class="md-block" style="margin-left: 1em;">
+        <md-checkbox ng-model="school.isNotPublicTimetable" name="isNotPublicTimetable">
+          {{'school.isNotPublic.timetable' | translate}}
+        </md-checkbox>
+      </md-input-container>
+
+      <md-input-container class="md-block" style="margin-left: 1em;">
+        <md-checkbox ng-model="school.isNotPublicCurriculum" name="isNotPublicCurriculum">
+          {{'school.isNotPublic.curriculums' | translate}}
+        </md-checkbox>
+      </md-input-container>
+
+      <md-input-container ng-if="school.type.higher" class="md-block" style="margin-left: 1em;">
+        <md-checkbox ng-model="school.isNotPublicSubject" name="isNotPublicSubject">
+          {{'school.isNotPublic.subjects' | translate}}
+        </md-checkbox>
+      </md-input-container>
+    </div>
+
     <div class="custom-radio" layout-gt-sm="row" layout="column" layout-align="start start" layout-align-gt-sm="start center">
       <span class="common-label" style="margin-right: 1em;">{{'school.studentPhotoAdd' | translate}}:</span>
       <md-radio-group layout-gt-xs="row" ng-model="school.studentPhotoAdd" name="studentPhotoAdd" required>

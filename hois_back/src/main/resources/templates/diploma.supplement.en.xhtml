@@ -14,10 +14,10 @@
    	{% if content.duplicate %}
    	<div style="float: right; text-transform: uppercase; font-weight: bold;">{{ "diploma.duplicate" | translate }}</div>
    	{% endif %}
-    <div class="padding-top"></div>
+    <div class="padding-top-en"></div>
     <div class="school-name">{{ content.schoolName }}</div>
     <div class="school-name-en">{{ content.schoolNameEn }}</div>
-    <div class="diploma-nr">
+    <div class="diploma-nr-en">
         {{ "diploma.diplomaNr" | translate }} {{ content.diplomaNr }}{% if content.additionalNrs is not empty %}, {{ "diploma.additionalPages" | translate }} {{ content.additionalNrs | join(', ') }}{% endif %}
     </div>
     <div class="supplement-description">{{ "diploma.supplementDescription" | translate }}</div>
@@ -42,6 +42,9 @@
                 <td>
                     {{ content.curriculumName }} ({{ "diploma.code" | translate }} {{ content.merCode }})
                     <br/>{{ "diploma.qualification.curriculum.ehis" | translate }} {{ content.curriculumMerRegDate | hoisDate }}
+                    {% if content.specialityName is not empty %}
+                        <br/>{{ content.specialityName }} ({{ "diploma.qualification.curriculum.speciality" | translate }})
+                    {% endif %}
                 </td>
             </tr>
             <tr>
@@ -119,10 +122,9 @@
         {% for result in content.finalThesis %}
             <tr>
                 <td class="label">{{ "diploma.curriculumAndResults.results.finalThesis" | translate }}:</td>
-                <td colspan="5">{{ result.name }}</td>
+                <td colspan="4">{{ result.name }}</td>
             </tr>
             <tr>
-                <td></td>
                 <td></td>
                 <td class="study-results-credits">{{ result.credits }}</td>
                 <td class="study-results-date">{{ result.gradeDate | hoisDate }}</td>
@@ -137,8 +139,7 @@
                 <td class="label">{{ "diploma.curriculumAndResults.results.finalExam" | translate }}:</td>
             </tr>
             <tr>
-                <td>{{ result.subjectCode }}</td>
-                <td>{{ result.name }}</td>
+                <td>{{ result.subjectCode != null ? result.subjectCode + " " : "" }}{{ result.name }}</td>
                 <td class="study-results-credits">{{ result.credits }}</td>
                 <td class="study-results-date">{{ result.gradeDate | hoisDate }}</td>
                 <td class="study-results-grade">
@@ -245,76 +246,7 @@
         </tbody>
     </table>
     <h1>8. {{ "diploma.higherDescription" | translate }}</h1>
-    <h2>OVERALL ORGANISATION</h2>
-    <p>Higher education in Estonia is regulated by the following legislation: the Republic of Estonia Education Act, the Universities Act, the Private Schools Act, the Institutions of Professional Higher Education Act, the Vocational Education Institutions Act, and the Standard of Higher Education.</p>
-    <p>As of academic year 2002/2003, the higher education system comprises three cycles, following the Bachelor-MasterPhD model of the European Higher Education Area</p>
-    <table class="higher-desc" cellspacing="10">
-        <tbody>
-            <tr>
-                <td colspan="3">
-                    <div class="bold">Doctoral programmes</div>
-                    <div>180-240 ECTS credits</div>
-                    <div>(3-4 years)</div>
-                </td>
-            </tr>
-            <tr>
-                <td rowspan="2">
-                    <div class="bold">Integrated Bachelor's and Master's programmes</div>
-                    <div>300-360 ECTS credits</div>
-                    <div>(5-6 years)</div>
-                </td>
-                <td colspan="2">
-                    <div class="bold">Master's programmes</div>
-                    <div>60-120 ECTS credits</div>
-                    <div>(1-2 years)</div>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <div class="bold">Bachelor's programmes</div>
-                    <div>180-240 ECTS credits</div>
-                    <div>(3-4 years)</div>
-                </td>
-                <td>
-                    <div class="bold">Professional higher education programmes</div>
-                    <div>180-270 ECTS credits</div>
-                    <div>(3-4.5 years)</div>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <div class="bold">Secondary education</div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-    <p>Universities provide professional higher education, bachelor's, master's and doctoral programmes. Professional higher education institutions and some vocational education institutions provide professional higher education. A professional higher education institution may also provide master's programmes. In terms of ownership, institutions are divided into state, public and private institutions.</p>
-    <h2>RECOGNITION OF QUALIFICATIONS</h2>
-    <p>As of 1 January 2012, higher education programmes may be provided only if the quality of the respective study programme group has been assessed and the Government of the Republic has granted a license to provide instruction in the respective group. Annex 3 to Regulation no. 178 of the Government of the Republic of 18 December 2008 "Standard of Higher Education" sets out the study programme groups and cycles of higher education where educational institutions have the right to provide instruction. The right to provide instruction involves the right to issue national diplomas.</p>
-    <h2>QUALITY ASSESSMENT</h2>
-    <p>Since 2009, higher education quality has been assessed by <span class="italic">Eesti Kõrghariduse Kvaliteediagentuur</span> (Estonian Higher Education Quality Agency), an independent agency.</p>
-    <h3>Quality assessment of study programme groups</h3>
-    <p>Since 2010, the quality of study programme groups has been assessed instead of the former assessment of study programmes. Quality assessment involves assessment of the compliance of study programmes, teaching and studyrelated development efforts based thereon with legislation, national and international standards and developments the study programme, study programme development, availability of resources, the study process, teaching staff and students are assessed).</p>
-    <p>Quality assessment takes place once every seven years, unless the Agency has established a term of up to three years based on the results of quality assessment. The result of quality assessment is a decision made by the Assessment Council of the Agency.</p>
-    <h3>Institutional accreditation</h3>
-    <p>Institutional accreditation focuses on the internal quality assurance system of the educational institution and the functionality thereof, incl. the fulfilment of the tasks, duties and functions of the educational institution, the compliance of the management system with the goals and development plan of the higher education institution.</p>
-    <p>Higher education institutions are required to undergo institutional accreditation once every seven years, but if the Agency has detected any defects in the previous accreditation, it may grant a term of up to three years and during the term the educational institution must undergo the institutional accreditation again. The decision on institutional accreditation will be made by the Assessment Council of the Agency.</p>
-    <h2>ADMISSION REQUIREMENTS</h2>
-    <p>The requirement for access to higher education is secondary education, certified by <span class="italic">Gümnaasiumi lõputunnistus</span> (Upper Secondary School Leaving Certificate), <span class="italic">Lõputunnistus kutsekeskhariduse omandamise kohta</span> (Certificate of Vocational Secondary Education) the corresponding qualifications of earlier education systems, and foreign qualifications giving access to higher education. The <span class="italic">Gümnaasiumi lõputunnistus</span> is issued after 12 years of schooling (9 years of basic education and 3 years of general upper secondary education). In order to complete general upper secondary education it is necessary to take national examinations certified with the national examination certificate.</p>
-    <p>A higher education institution may introduce further admission requirements, such as entrance examinations, minimum scores of national examinations, interviews, etc.</p>
-    <h2>CREDIT SYSTEM</h2>
-    <p>Student workload is measured in credits. As of academic year 2009/2010, the European Credit Transfer and Accumulation System (ECTS) has officially been in use. One ECTS credit corresponds to 26 hours of work by a student. The workload of one academic year is 1560 hours, which corresponds to 60 ECTS credits.</p>
-    <h2>HIGHER EDUCATION PROGRAMMES AND QUALIFICATIONS</h2>
-    <h3>Professional Higher Education Programmes</h3>
-    <p>Professional higher education is higher education of the first cycle, the purpose of which is to acquire the competencies necessary for working in a certain profession or for continuing studies at the master's level. The nominal duration of programmes is 3 to 4 years (180-240 ECTS credits). Midwifery studies and specialised nursing studies last 4.5 years (270 ECTS credits). The qualification awarded upon completion of the programme is <span class="italic">rakenduskõrghariduse diplom</span> (Diploma of Professional Higher Education) (a grayish-blue diploma form marked E). The qualification gives access to master's programmes.</p>
-    <h3>Bachelor's Programmes</h3>
-    <p>Bachelor's programmes are first-cycle higher education programmes. The purpose of bachelor studies is to broaden the scope of general education, to develop the basic knowledge and skills required for a certain field of study necessary for continuing at the master's level or for access to the labour market. The nominal duration of the programmes is generally 3 years (180 ECTS credits). As an exception, it may be up to 4 years (240 ECTS credits). The qualification awarded upon completion of the programme is <span class="italic">bakalaureus</span> (bachelor's degree) (a greenish-yellow diploma form marked L). The qualification gives access to master's programmes.</p>
-    <h3>Master's Programmes</h3>
-    <p>Master's programmes are second-cycle higher education programmes. The purpose of master's level studies is to develop the knowledge and skills required for a certain field of study and to acquire the necessary competences in order to enter the labour market or to continue studies at the doctoral level. The access requirement is a first-cycle higher education qualification. The nominal duration of the programmes is 1 to 2 years (60-120 ECTS credits), but with the firstcycle studies it is at least five years (300 ECTS credits). The qualification awarded upon completion of a master's degree programme is <span class="italic">magister</span> (master's degree) (a silvery diploma form marked M). The qualification gives access to doctoral programmes.</p>
-    <h3>Integrated Bachelor's and Master's Programmes</h3>
-    <p>Integrated bachelor's and master's programmes comprise both basic and specialised studies. Such long-cycle programmes are offered in the fields of medicine, veterinary medicine, pharmacy, dentistry, architecture, civil engineering, and class-teacher training. The nominal duration of programmes in medicine and veterinary  medicine is 6 years (360 ECTS credits). The nominal duration of other programmes is 5 years (300 ECTS credits).</p>
-    <p>The graduates receive a qualification (a silvery diploma form marked M) certifying the completion of the integrated study programme. The graduates of a pharmacy, architecture, civil engineering and class teacher training programme are awarded a degree of <span class="italic">magister</span> (master's degree). The graduates of a medicine, dentistry and veterinary medicine programme are awarded <span class="italic">arstikraad</span> (Degree in Medicine), <span class="italic">hambaarstikraad</span> (Degree in Dentistry) or <span class="italic">loomaarstikraad</span> (Degree in Veterinary Medicine). The qualifications give access to doctoral programmes.</p>
-    <h3>Doctoral Programmes</h3>
-    <p>Doctoral programmes represent the third cycle of higher education, the purpose of which is to acquire knowledge and skills necessary for independent research, development or professional creative work. The access requirement for doctoral studies is a degree of <span class="italic">magister</span> (master's degree) or corresponding qualifications. The nominal duration of programme is 3 to 4 years (180-240 ECTS credits). The qualification awarded upon completion of doctoral studies is <span class="italic">doktor</span> (doctorate degree) (a golden diploma form marked O). A doctorate degree is a research degree obtained after the completion and public defence of a dissertation based on independent scientific research or creative work</p>
+    <div>{{ "diploma.higherDescription.url" | translate }} </div>
+    <div class="bold">https://www.hm.ee/en/activities/higher-education</div>
   </body>
 </html>

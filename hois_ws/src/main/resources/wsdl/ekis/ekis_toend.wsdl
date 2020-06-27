@@ -121,13 +121,61 @@
 		<part name="end_date" type="xsd:string"/>
 		<part name="school_tutor_id" type="xsd:string"/>
 		<part name="place" type="xsd:string"/>
-		<!--NEW ELEMENTS -->
 		<part name="outcomes" type="xsd:string"/>
-        <part name="aim" type="xsd:string"/>
+		<part name="aim" type="xsd:string"/>
+		<!-- õppija postiiindeks -->
+		<part name="st_postcode" type="xsd:string"/>
+		<!-- õppeasutuse juhendaja eesnimi -->
+		<part name="sch_tutor_first_name" type="xsd:string"/>
+		<!--  õppeasutuse juhendaja perekonnanimi-->
+		<part name="sch_tutor_last_name" type="xsd:string"/>
+		<!--  õppeasutuse juhendaja email-->
+		<part name="sch_tutor_email" type="xsd:string"/>
+		<!--  õppeasutuse juhendaja telefon -->
+		<part name="sch_tutor_phone" type="xsd:string"/>
+		<!-- ettevõtte juhendaja 2 nimi -->
+		<part name="org_tutor2_name" type="xsd:string"/>
+		<!-- ettevõtte juhendaja 2 telefon -->
+		<part name="org_tutor2_tel" type="xsd:string"/>
+		<!-- ettevõtte juhendaja 2 email -->
+		<part name="org_tutor2_email" type="xsd:string"/>
+		<!-- ettevõtte juhendaja 3 nimi -->
+		<part name="org_tutor3_name" type="xsd:string"/>
+		<!-- ettevõtte juhendaja 3 telefon -->
+		<part name="org_tutor3_tel" type="xsd:string"/>
+		<!-- ettevõtte juhendaja 2 email -->
+		<part name="org_tutor3_email" type="xsd:string"/>
+		<!-- õppija telefon -->
+		<part name="st_phone" type="xsd:string"/>
+		<!-- õppija riik -->
+		<part name="st_residence_country" type="xsd:string"/>
+		<!-- õppija aadress tekstina -->
+		<part name="st_address" type="xsd:string"/>
+		<!-- õppija ADS aadress -->
+		<part name="st_address_ads" type="xsd:string"/>
+		<!-- õppija aadress ADS OID -->
+		<part name="st_address_ads_oid" type="xsd:string"/>
+		<!-- Tahvel 2 NEW ELEMENTS END -->
 	</message>
+	<!-- Tahvel 2 NEW ELEMENTS START -->
+	<message name="cancelPracticeContractRequest">
+		<part name="q_guid" type="xsd:string"/>
+		<part name="ois_id" type="xsd:string"/>
+		<part name="wd_id" type="xsd:int"/>
+		<part name="reason_type" type="xsd:string"/>
+		<part name="reason_text" type="xsd:string"/>
+		<part name="cancel_user_firstname" type="xsd:string"/>
+		<part name="cancel_user_lastname" type="xsd:string"/>
+	</message>	
+	<!-- Tahvel 2 NEW ELEMENTS END -->
 	<message name="registerPracticeContractResponse">
 		<part name="return" type="tns:answer"/>
 	</message>
+	<!-- Tahvel 2 NEW ELEMENTS START -->
+	<message name="cancelPracticeContractResponse">
+		<part name="return" type="tns:answer"/>
+	</message>
+	<!-- Tahvel 2 NEW ELEMENTS END -->
 	<portType name="wdoisPortType">
 		<operation name="registerCertificate">
 			<input message="tns:registerCertificateRequest"/>
@@ -145,6 +193,12 @@
 			<input message="tns:registerPracticeContractRequest"/>
 			<output message="tns:registerPracticeContractResponse"/>
 		</operation>
+		<!-- Tahvel 2 NEW ELEMENTS START -->
+		<operation name="cancelPracticeContract">
+			<input message="tns:cancelPracticeContractRequest"/>
+			<output message="tns:cancelPracticeContractResponse"/>
+		</operation>
+		<!-- Tahvel 2 NEW ELEMENTS END -->
 	</portType>
 	<binding name="wdoisBinding" type="tns:wdoisPortType">
 		<soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
@@ -184,10 +238,22 @@
 				<soap:body use="literal" namespace="urn:ekis" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</output>
 		</operation>
+		<!-- Tahvel 2 NEW ELEMENTS START -->
+		<!-- lepingu tühistamine -->
+		<operation name="cancelPracticeContract">
+			<soap:operation soapAction="" style="rpc"/>
+			<input>
+				<soap:body use="literal" namespace="urn:ekis" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+			</input>
+			<output>
+				<soap:body use="literal" namespace="urn:ekis" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+			</output>
+		</operation>
+		<!-- Tahvel 2 NEW ELEMENTS END -->
 	</binding>
 	<service name="wdois">
 		<port name="wdoisPort" binding="tns:wdoisBinding">
-			<soap:address location="https://kis-test.hm.ee/?page=ois2_toend"/>
+			<soap:address location="https://test.ekis.ee/?page=ois2_toend"/>
 		</port>
 	</service>
 </definitions>

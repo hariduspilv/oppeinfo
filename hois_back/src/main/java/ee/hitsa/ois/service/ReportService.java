@@ -13,6 +13,7 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,6 +33,7 @@ import javax.xml.ws.Holder;
 
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.report.SchoolQuery;
 import ee.hitsa.ois.domain.report.SchoolQueryCriteria;
 import ee.hitsa.ois.domain.school.School;
@@ -80,6 +82,7 @@ import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.TranslateUtil;
+import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumCompletionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumSubjectsCommand;
@@ -100,6 +103,7 @@ import ee.hitsa.ois.web.commandobject.report.SubjectStudyPeriodDataCommand;
 import ee.hitsa.ois.web.commandobject.report.TeacherLoadCommand;
 import ee.hitsa.ois.web.commandobject.report.VotaCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.StudentOccupationCertificateDto;
 import ee.hitsa.ois.web.dto.report.ClassifierResult;
@@ -125,6 +129,8 @@ import ee.hitsa.ois.web.dto.report.VotaDto;
 public class ReportService {
 
     @Autowired
+    private AutocompleteService autocompleteService;
+    @Autowired
     private EntityManager em;
     @Autowired
     private XlsService xlsService;
@@ -134,8 +140,6 @@ public class ReportService {
     private StudyYearService studyYearService;
     @Autowired
     private ClassifierService classifierService;
-    @Autowired
-    private AutocompleteService autocompleteService;
 
     private static final String DATA_TRANSFER_ROWS = "DATA_TRANSFER_PROCESS";
 
@@ -298,7 +302,13 @@ public class ReportService {
                         + "order by cd.curriculum_id, sd.name_et) SD2 on SD2.curriculum_id = cv.curriculum_id"
                         + ") SD1 on SD1.version_id = cv.id and :resultType = '" + StudentCountType.COUNT_STAT_STRUCTURAL_UNIT.name() + "' "
                 + "left join student_group sg on coalesce(SH1.student_group_id, s.student_group_id) = sg.id "
-                + "left join classifier oslc on oslc.code = c.orig_study_level_code").sort(pageable);
+                + "left join classifier oslc on oslc.code = c.orig_study_level_code "
+                + "left join classifier c_county on c_county.main_class_code = 'EHAK' "
+                    + "and substring(c_county.value, 1, 2) = '00' "
+                    + "and substring(c_county.value, 3, 2) = substring(p.address_ads, 1, 2) "
+                + "left join classifier c_municipality on c_municipality.main_class_code = 'EHAK' "
+                    + "and substring(c_municipality.value, 1, 1) = '0' "
+                    + "and substring(c_municipality.value, 2, 3) = substring(p.address_ads, 3, 3)").sort(pageable);
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.filter(":resultType = :resultType");
         qb.parameter("resultType", criteria.getResultType());
@@ -758,6 +768,20 @@ public class ReportService {
                 qb.sort("c_connected.name_et, c_connected.name_et");
             }
             break;
+        case COUNT_STAT_COUNTY:
+            groupByList.add("c_county.code, c_county.name_et, c_county.name_et");
+            select.add("null, c_county.name_et as countyEt, c_county.name_et as countyEn");
+            if (pageable.getSort() == null) {
+                qb.sort("c_county.name_et, c_county.name_en");
+            }
+            break;
+        case COUNT_STAT_MUNICIPALITY:
+            groupByList.add("c_municipality.code, c_municipality.name_et, c_municipality.name_et");
+            select.add("null, c_municipality.name_et as municipalityEt, c_municipality.name_et as municipalityEn");
+            if (pageable.getSort() == null) {
+                qb.sort("c_municipality.name_et, c_municipality.name_en");
+            }
+            break;
         default:
             break;
         }
@@ -859,6 +883,10 @@ public class ReportService {
                 dto.setObject(new AutocompleteResult(null, "Ilma õppekavata", "Without curricula"));
             } else if (StudentCountType.COUNT_STAT_ISCED_VALD.name().equals(criteria.getResultType())) {
                 dto.setObject(new AutocompleteResult(null, "Ilma valdkonnata", "Without field"));
+            } else if (StudentCountType.COUNT_STAT_COUNTY.name().equals(criteria.getResultType())) {
+                dto.setObject(new AutocompleteResult(null, "Ilma maakonnata", "Without county"));
+            } else if (StudentCountType.COUNT_STAT_MUNICIPALITY.name().equals(criteria.getResultType())) {
+                dto.setObject(new AutocompleteResult(null, "Ilma linna/vallata", "Without municipality"));
             }
         }
     }
@@ -1988,6 +2016,8 @@ public class ReportService {
                 + "left join student_group sg on s.student_group_id = sg.id "
                 + "left join curriculum_version cv on s.curriculum_version_id = cv.id "
                 + "left join curriculum c on cv.curriculum_id = c.id "
+                + "left join curriculum_speciality cs1 on cs1.id = s.curriculum_speciality_id and c.is_higher = true "
+                + "left join classifier cs2 on cs2.code = sg.speciality_code and c.is_higher != true "
                 + "left join school_department sd1 on (cv.school_department_id is not null and sd1.id = cv.school_department_id) "
                 + "left join student_curriculum_completion scc on scc.student_id = s.id "
                 + "left join (select cd.curriculum_id, string_agg(sd.id\\:\\:text, ', ') as ids, string_agg(sd.name_et, ', ') as nameEt "
@@ -2071,7 +2101,7 @@ public class ReportService {
                                  + (Boolean.TRUE.equals(criteria.getDirectiveReasonsShow()) ? "D1.reason_code as directive_reasons, " : "null as directive_reasons, ")
                                  + "sg.id as studentGroupId, sg.code as student_groups, s.status_code as student_statuses, s.study_form_code as study_form, s.study_load_code as study_load, coalesce(sd1.name_et, sd2.nameEt) as school_department, "
                                  + "c.id as curriculumId, c.code || ' ' || c.name_et as curriculum_et, c.code || ' ' || c.name_en as curriculum_en, "
-                                 + "c.mer_code as ehis_code, c.orig_study_level_code as study_level, sg.speciality_code as speciality, sg.course as study_year_nr, "
+                                 + "c.mer_code as ehis_code, c.orig_study_level_code as study_level, coalesce(cs1.name_et, cs2.name_et) as speciality, coalesce(cs1.name_en, cs2.name_en) as specialityEn, sg.course as study_year_nr, "
                                  + "s.fin_specific_code as fin, s.language_code as language, "
                                  + "case when round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) is null then 0 else round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) end as curriculum_percentage, ";
         
@@ -2551,7 +2581,15 @@ public class ReportService {
         qb.optionalCriteria("c.id in (:curriculumIds)", "curriculumIds", criteria.getCurriculum());
         qb.optionalContains("c.mer_code", "ehisCode", criteria.getEhisCode());
         qb.optionalCriteria("c.orig_study_level_code in (:studyLevels)", "studyLevels", criteria.getStudyLevel());
-        qb.optionalCriteria("sg.speciality_code in (:specialityCodes)", "specialityCodes", criteria.getSpeciality());
+        if (criteria.getSpecialityHigher() != null && criteria.getSpeciality() != null) {
+            qb.filter("(s.curriculum_speciality_id in (:specialityIds) "
+                    + "or sg.speciality_code in (:specialityCodes))");
+            qb.parameter("specialityIds", criteria.getSpecialityHigher());
+            qb.parameter("specialityCodes", criteria.getSpeciality());
+        } else {
+            qb.optionalCriteria("s.curriculum_speciality_id in (:specialityIds)", "specialityIds", criteria.getSpecialityHigher());
+            qb.optionalCriteria("sg.speciality_code in (:specialityCodes)", "specialityCodes", criteria.getSpeciality());
+        }
         qb.optionalCriteria("sg.course = :studyYearNumber", "studyYearNumber", criteria.getStudyYearNumber());
         qb.optionalCriteria("s.fin_specific_code in (:finCodes)", "finCodes", criteria.getFin());
         qb.optionalCriteria("s.language_code in (:studyLanguages)", "studyLanguages", criteria.getLanguage());
@@ -2756,7 +2794,7 @@ public class ReportService {
                 }
                 if (existingMethods.size() != 0) schoolQueryCriterias.add(schoolQueryCriteria);
                 // fields that are saved as separate objects
-                methodNames = Arrays.asList(mainMethod + "From", mainMethod + "Thru", mainMethod + "Period", mainMethod + "Apel", mainMethod + "Repetitive", mainMethod + "Positive");
+                methodNames = Arrays.asList(mainMethod + "From", mainMethod + "Thru", mainMethod + "Period", mainMethod + "Apel", mainMethod + "Repetitive", mainMethod + "Positive", mainMethod + "Higher");
                 existingMethods = new ArrayList<>();
                 for (String method : methodNames) {
                     try {
@@ -2977,6 +3015,8 @@ public class ReportService {
                                     autocompleteValues = longValues.stream().map(p -> AutocompleteResult.of(em.getReference(Curriculum.class, p))).collect(Collectors.toList());
                                 } else if ("ActiveResult".equals(criteriaCode) || "DeclaredSubject".equals(criteriaCode)) {
                                     autocompleteValues = longValues.stream().map(p -> AutocompleteResult.of(em.getReference(Subject.class, p))).collect(Collectors.toList());
+                                } else if ("SpecialityHigher".equals(criteriaCode)) {
+                                    autocompleteValues = longValues.stream().map(p -> AutocompleteResult.of(em.getReference(CurriculumSpeciality.class, p))).collect(Collectors.toList());
                                 }
                                 classMethod.invoke(command, autocompleteValues);
                             }
@@ -3048,5 +3088,27 @@ public class ReportService {
         }
 
         return ClassifierUtil.sort(Collections.singletonList(MainClassCode.HARIDUSTASE.name()), result);
+    }
+
+    public List<ClassifierDto> occupationalSpecialities(ClassifierSearchCommand classifierSearchCommand) {
+        List<ClassifierDto> dtos = StreamUtil.toMappedList(ClassifierDto::of, autocompleteService.classifierForAutocomplete(classifierSearchCommand));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.YYYY");
+        for (ClassifierDto dto : dtos) {
+            boolean hasValidDates = dto.getValidFrom() != null || dto.getValidThru() != null;
+            if (!hasValidDates) {
+                dto.setNameEt(dto.getNameEt() + " (sisestatud " + formatter.format(dto.getInserted()) + ", " + (Boolean.TRUE.equals(dto.getValid()) ? "Kehtiv" : "Kehtetu") + ")");
+                dto.setNameEn(dto.getNameEn() + " (inserted " + formatter.format(dto.getInserted()) + ", " + (Boolean.TRUE.equals(dto.getValid()) ? "Valid" : "Not valid") + ")");
+            } else {
+                dto.setNameEt(dto.getNameEt() + " (" 
+                        + (dto.getValidFrom() != null ? formatter.format(dto.getValidFrom()) : "... ") 
+                        + " - " + (dto.getValidThru() != null ? formatter.format(dto.getValidThru()) : "... ") 
+                        + ", " + (Boolean.TRUE.equals(dto.getValid()) ? "Kehtiv" : "Kehtetu") + ")");
+                dto.setNameEn(dto.getNameEn() + " (" 
+                        + (dto.getValidFrom() != null ? formatter.format(dto.getValidFrom()) : "... ") 
+                        + " - " + (dto.getValidThru() != null ? formatter.format(dto.getValidThru()) : "... ") 
+                        + ", " + (Boolean.TRUE.equals(dto.getValid()) ? "Valid" : "Not Valid") + ")");
+            }
+        }
+        return dtos;
     }
 }

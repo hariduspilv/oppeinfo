@@ -130,7 +130,9 @@
         "time": "Vigane kellaaeg",
         "InvalidEstonianIdCode": "Isikukood ei vasta standardile",
         "step": "Liiga palju kohti peale koma",
-        "hourMin": "Ei vasta formaadile tt:mm"
+        "hourMin": "Ei vasta formaadile tt:mm",
+        "onlyForLoggedInUsers": "Andmed on nähtavad ainult õppeasutuse sisseloginud kasutajatele",
+        "dataNotFound": "Andmeid ei leitud"
       },
       "form-has-errors": "Vormil on vigu",
       "record": {
@@ -162,6 +164,7 @@
       },
       "mobileid": {
         "title": "Mobiil-ID",
+        "idcode": "Isikukood",
         "mobilenumber": "Mobiilinumber",
         "notMobileIdUser": "See number ei ole Mobiil-ID kasutaja",
         "instructions": "Toimige palun telefonile ilmuvate juhiste kohaselt. Enne PIN-koodi sisestamist veenduge, et telefoni ekraanil olev kontrollkood on sama, mis allpool näidatud. Peale edukat isikutuvastust suunatakse teid automaatselt järgmisele lehele."
@@ -1130,10 +1133,15 @@
       "otherOutcomes": "Muud õpiväljundid",
       "supplementPreview": "Hindamislehe eelvaade",
       "higher": {
+        "modulesNotTakenIntoAccount": "Õppekavas mittearvestatavad moodulid",
         "curriculumVersion": "Õppekava versioon",
         "consideredCredits": "Kokku / õppekava täitmisel arvesse võetud EAP",
         "mandatorySubjects": "Kohustuslikud ained",
         "optionalSubjects": "Valikained",
+        "withoutStudyYear": "Ilma õppeaastata",
+        "autumnSemester": "Sügissemester",
+        "springSemester": "Kevadsemester",
+        "curriculumCompletion": "Õppekava täidetus",
         "subject": "Õppeaine",
         "subjectCode": "Ainekood",
         "credits": "EAP",
@@ -1142,6 +1150,7 @@
         "date": "Kuupäev",
         "teacher": "Õppejõud",
         "module": "Moodul",
+        "status": "Staatus",
         "moduleIsGraded": "Moodul hinnatakse",
         "notGraded": "Hindamata",
         "electiveModules": "Valikmoodulid",
@@ -1151,9 +1160,18 @@
         "supplementPreview": "Akadeemilise õiendi eelvaade",
         "supplementPreviewEn": "Akadeemilise õiendi i.k. eelvaade",
         "isOptional": "Valikaine",
+        "freeChoice": "Vabaõpe",
         "markModuleComplete": "Märgi moodul täidetuks",
         "markModuleCompleteConfirm": "Kas oled kindel, et soovid mooduli täidetuks märkida?",
-        "removeModuleCompletionConfirm": "Kas oled kindel, et soovid mooduli täidetuks märkimise eemaldada?"
+        "removeModuleCompletionConfirm": "Kas oled kindel, et soovid mooduli täidetuks märkimise eemaldada?",
+        "progressStatus": {
+          "positive": "Positiivne sooritus",
+          "negative": "Negatiivne sooritus",
+          "declared": "Deklareeritud",
+          "prerequisitesCompleted": "Eeldusaine sooritamata",
+          "notTaughtThisSemester": "Sel semestril ei õpetata",
+          "taughtThisSemester": "Õpetatakse"
+        }
       }
     },
     "resultcard": {
@@ -1367,6 +1385,13 @@
     "final62": "Täiendava info allikad",
     "finalSchoolTypeEn": "Õppeasutuse tüüp i.k.",
     "finalEn62": "Täiendava info allikad i.k.",
+    "isNotPublic": {
+      "label": "Ära näita avalikus vaates",
+      "academicCalendar": "Akadeemiline kalender",
+      "timetable": "Tunniplaan",
+      "curriculums": "Õppekavad",
+      "subjects": "Õppeained"
+    },
     "logo": {
       "notSelected": "Logo on valimata",
       "selectLogo": "Vali logo",
@@ -2766,7 +2791,7 @@
   "subjectProgram": {
     "label": "Aineprogramm",
     "creditsAndHours": "Õppeaine maht EAP/tunnid",
-    "syllabus": "Ainekava",
+    "syllabus": "Aineprogramm",
     "subjectName": "Õppeaine nimetus",
     "copySubjectProgram": "Kopeeri varasemast aineprogrammist",
     "independentStudy": "Iseseisva töö kirjeldus",
@@ -2775,7 +2800,10 @@
     "studyContent": "Õppetöö sisu",
     "date": "Kuupäev",
     "week": "Nädal",
+    "credits": "Maht",
+    "studyType": "Õppetöö liik",
     "description": "Kirjeldus",
+    "teacher": "Õppejõud",
     "assessmentCriteria": "Hindamiskriteeriumid",
     "gradeNDescription": "\"{{N}}\" saamise tingimus",
     "publicLevel": "Avalikustamise tase",
@@ -3863,7 +3891,8 @@
   "protocol": {
     "confirmLabel": "Protokolli kinnitamine",
     "idcard": "ID-kaart",
-    "mobileid": "Mobiil-ID"
+    "mobileid": "Mobiil-ID",
+    "mobilenumber": "Mobiilinumber"
   },
   "moduleProtocol": {
     "addProtocol": "Lisa protokoll",
@@ -4332,7 +4361,7 @@
       "nr": "Jrk nr",
       "debts": "Võlgu",
       "debtObjects": "Võlad",
-      "gradeAmount": "Hinded <valitud hinded, eraldatud komaga>",
+      "gradeAmount": "Hinded",
       "educationalDebts": "Õppevõlad",
       "educationalSuccess": "Õppeedukus",
       "average": "Keskmine hinne",
@@ -4408,7 +4437,9 @@
         "COUNT_STAT_AGE": "Vanuse lõikes",
         "COUNT_STAT_CURRICULA": "Õppekavade lõikes",
         "COUNT_STAT_COURSE": "Kursuste lõikes",
-        "COUNT_STAT_ISCED_VALD": "Valdkondade lõikes"
+        "COUNT_STAT_ISCED_VALD": "Valdkondade lõikes",
+        "COUNT_STAT_MUNICIPALITY": "Linnade/valdade lõikes",
+        "COUNT_STAT_COUNTY": "Maakondade lõikes"
       },
       "table": {
         "htmCode": "HTM kood",
@@ -4445,7 +4476,9 @@
         "COUNT_STAT_AGE": "Vanusegrupp",
         "COUNT_STAT_COURSE": "Kursus",
         "COUNT_STAT_CURRICULA": "Õppekava",
-        "COUNT_STAT_ISCED_VALD": "Valdkond"
+        "COUNT_STAT_ISCED_VALD": "Valdkond",
+        "COUNT_STAT_MUNICIPALITY": "Linn/vald",
+        "COUNT_STAT_COUNTY": "Maakond"
       },
       "detail": {
         "label": "Statistika detailsus",
@@ -4600,6 +4633,8 @@
         "ehisCode": "EHIS kood",
         "studyLevel": "Õppetase",
         "speciality": "Spetsialiseerumine",
+        "specialityVocational": "Spetsialiseerumine (kutse)",
+        "specialityHigher": "Spetsialiseerumine (kõrge)",
         "studyYear": "Õppeaasta/kursus",
         "fin": "Rahastamine",
         "language": "Õppekeel",

@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
@@ -15,11 +14,14 @@ import javax.transaction.Transactional;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.timetable.Journal;
+import ee.hitsa.ois.util.SubjectUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.subject.SubjectSearchCommand;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.studymaterial.JournalDto;
 import ee.hitsa.ois.web.dto.studymaterial.StudyMaterialSearchDto;
+import ee.hitsa.ois.web.dto.timetable.SchoolPublicDataSettingsDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -41,7 +43,6 @@ import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSearchCommand;
 import ee.hitsa.ois.web.dto.AcademicCalendarDto;
 import ee.hitsa.ois.web.dto.PublicDataMapper;
@@ -69,11 +70,20 @@ public class PublicDataService {
     @Autowired
     private SubjectService subjectService;
 
-    // TODO: forbidden school public data
-    private static final Long FORBIDDEN_SCHOOL_ID = Long.valueOf(26);
+    public SchoolPublicDataSettingsDto schoolPublicSettings(Long schoolId) {
+        School school = em.getReference(School.class, schoolId);
+
+        SchoolPublicDataSettingsDto dto = new SchoolPublicDataSettingsDto();
+        dto.setIsAcademicCalendarNotPublic(Boolean.TRUE.equals(school.getIsNotPublic()));
+        dto.setIsTimetableNotPublic(Boolean.TRUE.equals(school.getIsNotPublicTimetable()));
+        dto.setIsCurriculumNotPublic(Boolean.TRUE.equals(school.getIsNotPublicCurriculum()));
+        dto.setIsSubjectNotPublic(Boolean.TRUE.equals(school.getIsNotPublicSubject()));
+        return dto;
+    }
 
     public AcademicCalendarDto academicCalendar(Long schoolId) {
-        if (isForbiddenSchool(schoolId)) {
+        School school = EntityUtil.getOptionalOne(School.class, schoolId, em);
+        if (school != null && Boolean.TRUE.equals(school.getIsNotPublic())) {
             return null;
         }
         return academicCalendarService.academicCalendar(schoolId);
@@ -88,10 +98,10 @@ public class PublicDataService {
     public Object curriculumVersion(Long curriculumId, Long curriculumVersionId) {
         CurriculumVersion curriculumVersion = em.getReference(CurriculumVersion.class, curriculumVersionId);
         if(curriculumId == null || !curriculumId.equals(EntityUtil.getId(curriculumVersion.getCurriculum()))) {
-            throw new EntityNotFoundException();
+            throw new ValidationFailedException("main.messages.error.dataNotFound");
         }
         if(!CurriculumUtil.isCurriculumVersionConfirmed(curriculumVersion)) {
-            throw new EntityNotFoundException();
+            throw new ValidationFailedException("main.messages.error.dataNotFound");
         }
         return new PublicDataMapper(Language.ET).map(curriculumVersion);
     }
@@ -103,9 +113,9 @@ public class PublicDataService {
     }
 
     private static void assertVisibleToPublic(Curriculum curriculum) {
-        if(isForbiddenSchool(EntityUtil.getId(curriculum.getSchool()))
+        if(Boolean.TRUE.equals(curriculum.getSchool().getIsNotPublicCurriculum())
                 || !ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, curriculum.getStatus())) {
-            throw new EntityNotFoundException();
+            throw new ValidationFailedException("main.messages.error.dataNotFound");
         }
     }
 
@@ -123,8 +133,7 @@ public class PublicDataService {
 
             // only confirmed
             filters.add(cb.equal(root.get("status").get("code"), CurriculumStatus.OPPEKAVA_STAATUS_K.name()));
-            // TODO: forbidden school public data
-            filters.add(cb.notEqual(root.get("school").get("id"), FORBIDDEN_SCHOOL_ID));
+            filters.add(cb.notEqual(root.get("school").get("isNotPublicCurriculum"), Boolean.TRUE));
 
             String nameField = Language.EN.equals(criteria.getLang()) ? "nameEn" : "nameEt";
             propertyContains(() -> root.get(nameField), cb, criteria.getName(), filters::add);
@@ -151,15 +160,21 @@ public class PublicDataService {
         return dto;
     }
 
+    private static void assertVisibleToPublic(StateCurriculum stateCurriculum) {
+        if(!ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, stateCurriculum.getStatus())) {
+            throw new ValidationFailedException("main.messages.error.dataNotFound");
+        }
+    }
+
     public List<SchoolDepartmentResult> schoolDepartments(Long schoolId) {
-        if (isForbiddenSchool(schoolId)) {
+        if (!schoolSubjectsPublic(schoolId)) {
             return Collections.emptyList();
         }
         return autocompleteService.schoolDepartments(schoolId);
     }
 
     public List<CurriculumVersionResult> curriculumVersions(Long schoolId) {
-        if (isForbiddenSchool(schoolId)) {
+        if (!schoolSubjectsPublic(schoolId)) {
             return Collections.emptyList();
         }
         CurriculumVersionAutocompleteCommand lookup = new CurriculumVersionAutocompleteCommand();
@@ -169,16 +184,10 @@ public class PublicDataService {
     }
 
     public Page<SubjectSearchDto> searchSubjects(SubjectSearchCommand subjectSearchCommand, Pageable pageable) {
-        if (isForbiddenSchool(subjectSearchCommand.getSchoolId())) {
+        if (subjectSearchCommand.getSchoolId() != null && !schoolSubjectsPublic(subjectSearchCommand.getSchoolId())) {
             return new PageImpl<>(Collections.emptyList());
         }
         return subjectService.search(null, subjectSearchCommand, pageable);
-    }
-
-    private static void assertVisibleToPublic(StateCurriculum stateCurriculum) {
-        if(!ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, stateCurriculum.getStatus())) {
-            throw new EntityNotFoundException();
-        }
     }
 
     public SubjectDto subjectView(Subject subject) {
@@ -190,9 +199,24 @@ public class PublicDataService {
                 .getResultList());
     }
 
-    private static void assertVisibleToPublic(Subject subject) {
-        if (isForbiddenSchool(EntityUtil.getId(subject.getSchool())) || !SubjectUtil.isActive(subject)) {
-            throw new EntityNotFoundException();
+    public SubjectStudyPeriodDto subjectStudyPeriod(SubjectStudyPeriod subjectStudyPeriod) {
+        assertVisibleToPublic(subjectStudyPeriod.getSubject());
+        return studyMaterialService.getSubjectStudyPeriod(null, subjectStudyPeriod);
+    }
+
+    public List<StudyMaterialSearchDto> subjectStudyPeriodMaterials(SubjectStudyPeriod subjectStudyPeriod) {
+        assertVisibleToPublic(subjectStudyPeriod.getSubject());
+        return studyMaterialService.materials(null, null, subjectStudyPeriod);
+    }
+
+    private boolean schoolSubjectsPublic(Long schoolId) {
+        School school = EntityUtil.getOptionalOne(School.class, schoolId, em);
+        return school != null && !Boolean.TRUE.equals(school.getIsNotPublicSubject());
+    }
+
+    private void assertVisibleToPublic(Subject subject) {
+        if (Boolean.TRUE.equals(subject.getSchool().getIsNotPublicSubject()) || !SubjectUtil.isActive(subject)) {
+            throw new ValidationFailedException("main.messages.error.dataNotFound");
         }
     }
 
@@ -206,33 +230,13 @@ public class PublicDataService {
         return studyMaterialService.materials(null, journal, null);
     }
 
-    public SubjectStudyPeriodDto subjectStudyPeriod(SubjectStudyPeriod subjectStudyPeriod) {
-        assertVisibleToPublic(subjectStudyPeriod.getSubject());
-        return studyMaterialService.getSubjectStudyPeriod(null, subjectStudyPeriod);
-    }
-
-    public List<StudyMaterialSearchDto> subjectStudyPeriodMaterials(SubjectStudyPeriod subjectStudyPeriod) {
-        assertVisibleToPublic(subjectStudyPeriod.getSubject());
-        return studyMaterialService.materials(null, null, subjectStudyPeriod);
-    }
-
     private static void assertVisibleToPublic(Journal journal) {
-        if (isForbiddenSchool(journal.getSchool())) {
-            throw new EntityNotFoundException();
+        if (Boolean.TRUE.equals(journal.getSchool().getIsNotPublicTimetable())) {
+            throw new ValidationFailedException("main.messages.error.dataNotFound");
         }
     }
 
     public Object subjectProgram(SubjectProgram program) {
         return new PublicDataMapper(Language.ET).map(program);
     }
-
-    // TODO: forbidden school public data
-    private static boolean isForbiddenSchool(Long schoolId) {
-        return FORBIDDEN_SCHOOL_ID.equals(schoolId);
-    }
-
-    private static boolean isForbiddenSchool(School school) {
-        return isForbiddenSchool(EntityUtil.getId(school));
-    }
-
 }

@@ -91,7 +91,7 @@ angular.module('hitsaOis').directive('hoisSelect', function ($rootScope, Curricu
           var endpointUrl;
           switch (attrs.type) {
             case 'school':
-              scope.options = School.getAll();
+              scope.options = School.getAll(scope.criteria);
               break;
             case 'curriculumversion':
               scope.options = Curriculum.queryVersions(scope.criteria);

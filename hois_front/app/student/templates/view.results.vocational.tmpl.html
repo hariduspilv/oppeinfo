@@ -40,7 +40,7 @@
             <label>{{'student.result.curriculumCredits' | translate}}</label>
             <hois-value value="student.curriculumCredits != null ? student.curriculumCredits + ' EKAP' : ''"></hois-value>
           </md-input-container>
-          <md-input-container flex="15" flex-offset="isGuestStudent ? '0' : '5'" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="15" flex-offset="{{student.isGuestStudent ? 0 : 5}}" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.result.totalCredits' | translate}}</label>
             <hois-value value="student.credits != null ? student.credits + ' EKAP' : ''"></hois-value>
           </md-input-container>

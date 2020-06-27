@@ -118,7 +118,7 @@
                 </div>
             </div>
             <div layout="row" layout-xs="column">
-                <md-button flex-xs="100" ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && !confirmedOrEnded()" ng-href="#/poll/questions/{{::criteria.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+                <md-button flex-xs="100" ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && !confirmedOrEnded() && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KYSITLUS')" ng-href="#/poll/questions/{{::criteria.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
                 <md-button flex-xs="100" ng-if="(auth.isAdmin() || auth.isLeadingTeacher())" ng-click="test()" class="md-raised">{{'poll.test' | translate}}</md-button>
                 <md-button flex-xs="100" ng-if="(auth.isAdmin() || auth.isLeadingTeacher())" ng-click="back('#/poll')" class="md-raised">{{'main.button.back' | translate}}</md-button>
             </div>

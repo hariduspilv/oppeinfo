@@ -32,6 +32,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.enums.HigherAssessment;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,6 +119,8 @@ public class DocumentService {
 
     @Autowired
     private EntityManager em;
+    @Autowired
+    private StudentResultHigherService studentResultHigherService;
     @Autowired
     private PdfService pdfService;
     @Autowired
@@ -819,6 +822,7 @@ public class DocumentService {
         
         updateSupplementHigher(supplement, student, estonianFields, englishFields, form.getShowSubjectCode(), form.getShowTeacher(),
                 directiveStudent.getCurriculumGrade(), form.getLang());
+		supplement.setPrinted(directive.getConfirmDate());		
         
         if (estonianFields && englishFields) {
             supplement.setDiploma(diploma);
@@ -874,7 +878,7 @@ public class DocumentService {
                 supplement.setAverageMark(completion.getAverageMark());
             }
             supplement.setStudyPeriod(curriculum.getStudyPeriod());
-            supplement.setPrinted(LocalDate.now());
+            //supplement.setPrinted(LocalDate.now());
             setStudyResultsHigher(supplement, studentId);
         }
         // Some fields have non-null contraint, status field is checked inside
@@ -890,17 +894,19 @@ public class DocumentService {
             Boolean showSubjectCode, Boolean showTeacher, CurriculumGrade curriculumGrade, Classifier studyLanguage, boolean fillStatus) {
         School school = student.getSchool();
         Curriculum curriculum = student.getCurriculumVersion().getCurriculum();
+        CurriculumSpeciality speciality = getStudentCurriculumSpeciality(student, curriculum);
         Classifier studyLoad = student.getStudyLoad();
         Classifier status = em.getReference(Classifier.class, DocumentStatus.LOPUDOK_STAATUS_K.name());
         
         supplement.setCurriculumNameEt(curriculum.getNameEt());
+        supplement.setSpecialityEt(speciality != null ? speciality.getNameEt() : null);
         supplement.setStudyLanguageNameEt(toNullableLowerCase(studyLanguage.getNameEt()));
         supplement.setSchoolType(school.getFinalSchoolType());
         if (studyLoad != null) {
             supplement.setStudyLoadNameEt(toNullableLowerCase(studyLoad.getNameEt()));
         }
         supplement.setOutcomesEt(curriculum.getOutcomesEt());
-        supplement.setCurriculumCompletion(getCurriculumCompletion(student.getCurriculumVersion(), Language.ET));
+        supplement.setCurriculumCompletion(getCurriculumCompletion(student, Language.ET));
         if (PROFESSIONAL_DIPLOMA_STUDY_LEVEL.equals(EntityUtil.getCode(curriculum.getOrigStudyLevel()))) {
             supplement.setFinal21(TranslateUtil.translate(PROFESSIONAL_DIPLOMA_KEY, Language.ET));
         } else {
@@ -927,18 +933,20 @@ public class DocumentService {
             Boolean showSubjectCode, Boolean showTeacher, CurriculumGrade curriculumGrade, Classifier studyLanguage) {
         School school = student.getSchool();
         Curriculum curriculum = student.getCurriculumVersion().getCurriculum();
+        CurriculumSpeciality speciality = getStudentCurriculumSpeciality(student, curriculum);
         Classifier studyLoad = student.getStudyLoad();
         Classifier status = em.getReference(Classifier.class, DocumentStatus.LOPUDOK_STAATUS_K.name());
         
         supplement.setSchoolNameEn(school.getNameEn());
         supplement.setCurriculumNameEn(curriculum.getNameEn());
+        supplement.setSpecialityEn(speciality != null ? speciality.getNameEn() : null);
         supplement.setStudyLanguageNameEn(studyLanguage.getNameEn());
         supplement.setSchoolTypeEn(school.getFinalSchoolTypeEn());
         if (studyLoad != null) {
             supplement.setStudyLoadNameEn(toNullableLowerCase(studyLoad.getNameEn()));
         }
         supplement.setOutcomesEn(curriculum.getOutcomesEn());
-        supplement.setCurriculumCompletionEn(getCurriculumCompletion(student.getCurriculumVersion(), Language.EN));
+        supplement.setCurriculumCompletionEn(getCurriculumCompletion(student, Language.EN));
         if (PROFESSIONAL_DIPLOMA_STUDY_LEVEL.equals(EntityUtil.getCode(curriculum.getOrigStudyLevel()))) {
             supplement.setFinalEn21(TranslateUtil.translate(PROFESSIONAL_DIPLOMA_KEY, Language.ET) + "\n" +
                     TranslateUtil.translate(PROFESSIONAL_DIPLOMA_KEY, Language.EN));
@@ -960,6 +968,14 @@ public class DocumentService {
                 Language.EN)));
     }
 
+    private CurriculumSpeciality getStudentCurriculumSpeciality(Student student, Curriculum studentCurriculum) {
+        CurriculumSpeciality speciality = student.getCurriculumSpeciality();
+        if (speciality != null && EntityUtil.getId(studentCurriculum).equals(EntityUtil.getId(speciality.getCurriculum()))) {
+            return speciality;
+        }
+        return null;
+    }
+
     private StudentCurriculumCompletion getStudentCurriculumCompletion(Student student) {
         List<StudentCurriculumCompletion> result = em.createQuery("select scc from StudentCurriculumCompletion scc where scc.student = ?1",
                 StudentCurriculumCompletion.class)
@@ -968,23 +984,21 @@ public class DocumentService {
         return result.isEmpty() ? null : result.get(0);
     }
     
-    private static String getCurriculumCompletion(CurriculumVersion curriculumVersion, Language lang) {
+    private String getCurriculumCompletion(Student student, Language lang) {
         Map<String, BigDecimal> moduleCredits = new HashMap<>();
-        for (CurriculumVersionHigherModule module : curriculumVersion.getModules()) {
-            if (!Boolean.TRUE.equals(module.getMinorSpeciality())) {
-                Classifier type = module.getType();
-                String name = ClassifierUtil.equals(HigherModuleType.KORGMOODUL_M, type) ?
-                        getModuleName(module.getTypeNameEt(), module.getTypeNameEn(), lang) :
-                            getModuleName(type.getNameEt(), type.getNameEn(), lang);
-                moduleCredits.put(name, moduleCredits.computeIfAbsent(name, k -> BigDecimal.valueOf(0))
-                        .add(module.getTotalCredits()));
-            }
+        for (CurriculumVersionHigherModule module : studentResultHigherService.getStudentModules(student)) {
+            Classifier type = module.getType();
+            String name = ClassifierUtil.equals(HigherModuleType.KORGMOODUL_M, type) ?
+                    getModuleName(module.getTypeNameEt(), module.getTypeNameEn(), lang) :
+                        getModuleName(type.getNameEt(), type.getNameEn(), lang);
+            moduleCredits.put(name, moduleCredits.computeIfAbsent(name, k -> BigDecimal.valueOf(0))
+                    .add(module.getTotalCredits()));
         }
         return moduleCredits.entrySet().stream()
-                .map(e -> e.getKey() + " " + e.getValue() + " EAP")
+                .map(e -> e.getKey() + " " + e.getValue() + (Language.EN.equals(lang) ? "" : " EAP"))
                 .collect(Collectors.joining(", "));
     }
-    
+
     private static String getModuleName(String nameEt, String nameEn, Language lang) {
         return Language.EN.equals(lang) ? StringUtils.defaultIfEmpty(nameEn, nameEt) : nameEt;
     }
@@ -1000,8 +1014,7 @@ public class DocumentService {
                 + " ft.theme_et,ft.theme_en"
                 + " from student_higher_result sv"
                 + " join ("
-                + " select coalesce(svm.curriculum_version_hmodule_id,sv.curriculum_version_hmodule_id) as curriculum_version_hmodule_id, "
-                + "   first_value(sv.id) over(partition by student_id, coalesce(svm.curriculum_version_hmodule_id,sv.curriculum_version_hmodule_id) order by sv.grade_date desc,sv.grade desc) as id"
+                + " select coalesce(svm.curriculum_version_hmodule_id, sv.curriculum_version_hmodule_id) as curriculum_version_hmodule_id, sv.id"
                 + " from student_higher_result sv"
                 + " left join student_higher_result_module svm on sv.id=svm.student_higher_result_id"
                 + " where sv.student_id = ?1 and sv.is_active = true and grade_code in (?2)"
@@ -1016,7 +1029,8 @@ public class DocumentService {
                 + " left join (apel_school aps join classifier apc on apc.code = aps.country_code) on sv.apel_school_id=aps.id"
                 + " left join final_thesis ft on ft.student_id = sv.student_id"
                 + " left join (protocol_student ps join protocol pp on ps.protocol_id=pp.id) on ps.id=sv.protocol_student_id"
-                + " where sv.is_module = true or not exists (select 1 from student_higher_result shr where shr.is_module = true"
+                + " where sv.is_module = true or not exists (select 1 from student_higher_result shr"
+                + " where shr.is_module = true and shr.is_active = true and shr.student_id = sv.student_id"
                 + " and grade_code in (?2) and shr.curriculum_version_hmodule_id = x.curriculum_version_hmodule_id)"
                 + " order by sv.grade_date asc")
                 .setParameter(1, studentId)
@@ -1049,7 +1063,7 @@ public class DocumentService {
                 // school name should be in the original language, in its absences in English
                 if (ClassifierUtil.COUNTRY_ESTONIA.equals(resultAsString(r, 13))) {
                     studyResult.setApelSchoolNameEt(apelSchoolNameEt);
-                    studyResult.setApelSchoolNameEn(apelSchoolNameEt);
+                    studyResult.setApelSchoolNameEn(apelSchoolNameEn);
                 } else {
                     // in query: coalesce(aps.name_en, aps.name_et)
                     studyResult.setApelSchoolNameEt(apelSchoolNameEn + " (" + resultAsString(r, 14) + ")");
@@ -1174,8 +1188,7 @@ public class DocumentService {
                 + " occup.name_et as occup_name_et, partoccup.name_et as partoccup_name_et, speciality.name_et as speciality_name_et"
                 + " from student_vocational_result sv"
                 + " join ("
-                + " select coalesce(svm.curriculum_version_omodule_id,sv.curriculum_version_omodule_id) as curriculum_version_omodule_id, "
-                + "   first_value(sv.id) over(partition by student_id, coalesce(svm.curriculum_version_omodule_id,sv.curriculum_version_omodule_id) order by sv.grade_date desc,sv.grade desc) as id,"
+                + " select distinct cm.curriculum_module_id, first_value(sv.id) over (partition by student_id, cm.curriculum_module_id order by sv.grade_date desc, sv.grade desc) as id,"
                 + " cmm.module_code as md"
                 + " from student_vocational_result sv"
                 + " left join student_vocational_result_omodule svm on sv.id=svm.student_vocational_result_id"

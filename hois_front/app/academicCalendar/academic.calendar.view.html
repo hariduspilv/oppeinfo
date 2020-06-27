@@ -1,4 +1,11 @@
-<div layout-padding>
+<div ng-if="isForbidden" layout-margin>
+  <hois-whiteframe-warning md-color="'accent'">
+    <span>{{'main.messages.error.onlyForLoggedInUsers' | translate}}</span>
+  </hois-whiteframe-warning>
+
+  <md-button ng-click="back('#/academicCalendars/')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+</div>
+<div layout-padding ng-if="!isForbidden">
     <div flex ng-if="data.events.length > 0">
         <h2 class="md-title">
             <span ng-if="schoolId">{{currentLanguageNameField(data.school)}}</span>
@@ -47,7 +54,7 @@
         </md-whiteframe>
     </div>
 
-    <div ng-if="!schoolSpecific" layout="row">
+    <div ng-if="directRoute" layout="row">
         <md-button ng-click="back('#/academicCalendars/')" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>
 </div>

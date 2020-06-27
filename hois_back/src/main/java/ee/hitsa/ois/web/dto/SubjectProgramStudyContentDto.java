@@ -16,15 +16,16 @@ public class SubjectProgramStudyContentDto extends VersionedCommand {
     private LocalDate studyDt;
     @NotBlank
     private String studyInfo;
+    private AutocompleteResult teacher;
+    private String capacity;
+    private Long orderNr;
+    private String capacityType;
+    
     
     public static SubjectProgramStudyContentDto of(SubjectProgramStudyContent content) {
         SubjectProgramStudyContentDto dto = new SubjectProgramStudyContentDto();
-        dto.setId(content.getId());
         dto.setSubjectProgramId(EntityUtil.getId(content.getSubjectProgram()));
-        dto.setWeekNr(content.getWeekNr());
-        dto.setStudyDt(content.getStudyDt());
-        dto.setStudyInfo(content.getStudyInfo());
-        return dto;
+        return EntityUtil.bindToDto(content, dto);
     }
     
     public Long getId() {
@@ -56,5 +57,37 @@ public class SubjectProgramStudyContentDto extends VersionedCommand {
     }
     public void setStudyInfo(String studyInfo) {
         this.studyInfo = studyInfo;
+    }
+
+    public String getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(String capacity) {
+        this.capacity = capacity;
+    }
+
+    public Long getOrderNr() {
+        return orderNr;
+    }
+
+    public void setOrderNr(Long orderNr) {
+        this.orderNr = orderNr;
+    }
+
+    public String getCapacityType() {
+        return capacityType;
+    }
+
+    public void setCapacityType(String capacityType) {
+        this.capacityType = capacityType;
+    }
+
+    public AutocompleteResult getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(AutocompleteResult teacher) {
+        this.teacher = teacher;
     }
 }

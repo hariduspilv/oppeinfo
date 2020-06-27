@@ -17,6 +17,7 @@ import javax.validation.Valid;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.student.StudentCurriculumCompletionHigherModule;
+import ee.hitsa.ois.web.dto.student.StudentHigherProgressDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -420,6 +421,12 @@ public class StudentController {
             @WithEntity("moduleCompletionId") StudentCurriculumCompletionHigherModule moduleCompletion) {
         UserUtil.assertCanRemoveModuleCompletion(user, student);
         studentResultHigherService.removeModuleCompletion(user, moduleCompletion);
+    }
+
+    @GetMapping("/{id:\\d+}/progress")
+    public StudentHigherProgressDto progress(HoisUserDetails user, @WithEntity Student student) {
+        UserUtil.assertCanViewStudentSpecificData(user, student);
+        return studentResultHigherService.progress(student);
     }
 
     /**

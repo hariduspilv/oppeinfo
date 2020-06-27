@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis')
   .constant('config', {
-    'apiUrl': 'https://localhost:9000/hois_back',
+    'apiUrl': 'http://localhost:9000/hois_back',
     'idCardLoginUrl': 'https://idlogin.devhois',
     'mobileIdInitialDelay': 5000,
     'mobileIdPollInterval': 4000,

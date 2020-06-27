@@ -826,6 +826,9 @@ public class DirectiveConfirmService {
             student.setStudyEnd(confirmDate);
             userService.disableUser(student, LocalDate.now().minusDays(1));
             break;
+        case KASKKIRI_OKAVA:
+            student.setCurriculumSpeciality(null);
+            break;
         case KASKKIRI_OTEGEVUS:
             if (Boolean.TRUE.equals(directiveStudent.getIsAbsence())) {
                 studentAbsenceService.createDirectiveAbsence(directiveStudent);
@@ -905,6 +908,9 @@ public class DirectiveConfirmService {
                         break;
                     case KASKKIRI_VALIS:
                         student.setStatus(original.getStatus());
+                        break;
+                    case KASKKIRI_OKAVA:
+                        student.setCurriculumSpeciality(original.getCurriculumSpeciality());
                         break;
                     case KASKKIRI_OTEGEVUS:
                         StudentAbsence absence = ds.getStudentAbsence();

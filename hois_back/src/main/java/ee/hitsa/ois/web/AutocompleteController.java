@@ -6,6 +6,7 @@ import java.util.Set;
 
 import javax.validation.Valid;
 
+import ee.hitsa.ois.web.commandobject.SchoolSearchCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -180,7 +181,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/schools")
-    public List<SchoolWithoutLogo> schools(SearchCommand lookup) {
+    public List<SchoolWithoutLogo> schools(SchoolSearchCommand lookup) {
         return autocompleteService.schools(lookup);
     }
     

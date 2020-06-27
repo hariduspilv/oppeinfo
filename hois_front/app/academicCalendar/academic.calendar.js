@@ -4,13 +4,32 @@ angular.module('hitsaOis').controller('AcademicCalendarController', ['$scope', '
   function($scope, $route, QueryUtils) {
     $scope.auth = $route.current.locals.auth;
 
-    $scope.schoolSpecific = angular.isUndefined($route.current.params.schoolId);
-    if ($scope.auth === undefined || !$scope.auth.school) {
-      $scope.schoolId = $route.current.params.schoolId;
-      $scope.data = QueryUtils.endpoint('/public/academicCalendar/' + $scope.schoolId).search();
-    } else {
-      $scope.schoolId = $scope.auth.school.id;
-      $scope.data = QueryUtils.endpoint('/academicCalendar/' + $scope.schoolId).search();
+    $scope.directRoute = angular.isDefined($route.current.params.schoolId);
+    var schoolAuthenticatedUser = false;
+    if ($scope.directRoute) {
+      $scope.schoolId = parseInt($route.current.params.schoolId, 10);
+    }
+    if (angular.isDefined($scope.auth) && angular.isDefined($scope.auth.school) && $scope.auth.school !== null) {
+      if (angular.isUndefined($scope.schoolId)) {
+        $scope.schoolId = $scope.auth.school.id;
+        schoolAuthenticatedUser = true;
+      } else {
+        schoolAuthenticatedUser = $scope.auth.school.id === $scope.schoolId;
+      }
+    }
+
+    if (angular.isDefined($scope.schoolId)) {
+      if (!schoolAuthenticatedUser) {
+        QueryUtils.endpoint('/public/schoolSettings').get({schoolId: $scope.schoolId}).$promise.then(function (result) {
+          $scope.isForbidden = result.isAcademicCalendarNotPublic;
+          if (!result.isForbidden) {
+            $scope.data = QueryUtils.endpoint('/public/academicCalendar/' + $scope.schoolId).search();
+          }
+        });
+      } else {
+        $scope.data = QueryUtils.endpoint('/academicCalendar/' + $scope.schoolId).search();
+        $scope.isForbidden = false;
+      }
     }
   }
 ]).controller('AcademicCalendarSchoolListController', ['$scope', 'School', '$location',

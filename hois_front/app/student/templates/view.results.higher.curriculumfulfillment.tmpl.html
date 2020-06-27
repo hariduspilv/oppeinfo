@@ -225,6 +225,52 @@
       ng-disabled="!canChangeModulesAsDone" name="markAsDone">{{'student.result.higher.markModuleComplete' | translate}}</md-checkbox>
 </hois-collapsable>
 
+
+<hois-collapsable ng-if="higherResults.extraCurriculumModuleResults.length > 0" expanded="formState.extraCurriculumModuleResultsCollapsableOpen">
+  <hois-collapsable-header>
+    <div layout="column" layout-gt-md="row" class="curriculum-fulfillment-result">
+      <div flex-gt-md="50">
+        <td md-cell>{{'student.result.higher.modulesNotTakenIntoAccount' | translate}}</td>
+      </div>
+    </div>
+  </hois-collapsable-header>
+  <md-table-container>
+    <table md-table>
+      <tbody md-body>
+        <tr md-row class="secondary-table-header">
+          <td md-cell>{{'student.result.higher.module' | translate}}</td>
+          <td md-cell>{{'student.result.higher.credits' | translate}}</td>
+          <td md-cell>{{'student.result.higher.grade' | translate}}</td>
+          <td md-cell>{{'student.result.higher.date' | translate}}</td>
+          <td md-cell>{{'student.result.higher.teacher' | translate}}</td>
+        </tr>
+        <tr md-row ng-repeat="module in higherResults.extraCurriculumModuleResults | orderBy: ['curriculumVersionObject.' + currentLanguageNameVariable(), currentLanguageNameVariable()]">
+          <td md-cell>{{currentLanguageNameField(module)}} ({{currentLanguageNameField(module.curriculumVersionObject)}})</td>
+          <td md-cell>{{module.totalCredits}}</td>
+          <td md-cell>
+            <table>
+              <tr class="one-row">
+                <td ng-repeat="result in module.grades | orderBy: ['isActive', 'gradeDate']">
+                  <span ng-if="$index !== 0">/</span>
+                  <span ng-class="{badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade | hoisHigherGrade: auth.school.letterGrades}}</span>
+                </td>
+              </tr>
+            </table>
+          </td>
+          <td md-cell>{{module.lastGrade.gradeDate | hoisDate}}</td>
+          <td md-cell>
+            <table>
+              <tr ng-repeat="teacher in module.lastGrade.teachers | orderBy">
+                <td>{{teacher}}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </md-table-container>
+</hois-collapsable>
+
 <style>
   .inline {
     display: inline;

@@ -7,10 +7,15 @@ public class SchoolWithoutLogo {
     private final String nameEt;
     private final String nameEn;
     private final String email;
-    
+
     private Boolean higher;
     private Boolean vocational;
     private Boolean doctoral;
+
+    private Boolean isNotPublic;
+    private Boolean isNotPublicTimetable;
+    private Boolean isNotPublicCurriculum;
+    private Boolean isNotPublicSubject;
 
     public SchoolWithoutLogo(Long id, String code, String nameEt, String nameEn, String email) {
         this.id = id;
@@ -62,5 +67,37 @@ public class SchoolWithoutLogo {
 
     public void setDoctoral(Boolean doctoral) {
         this.doctoral = doctoral;
+    }
+
+    public Boolean getIsNotPublic() {
+        return isNotPublic;
+    }
+
+    public void setIsNotPublic(Boolean isNotPublic) {
+        this.isNotPublic = isNotPublic;
+    }
+
+    public Boolean getIsNotPublicTimetable() {
+        return isNotPublicTimetable;
+    }
+
+    public void setIsNotPublicTimetable(Boolean isNotPublicTimetable) {
+        this.isNotPublicTimetable = isNotPublicTimetable;
+    }
+
+    public Boolean getIsNotPublicCurriculum() {
+        return isNotPublicCurriculum;
+    }
+
+    public void setIsNotPublicCurriculum(Boolean isNotPublicCurriculum) {
+        this.isNotPublicCurriculum = isNotPublicCurriculum;
+    }
+
+    public Boolean getIsNotPublicSubject() {
+        return isNotPublicSubject;
+    }
+
+    public void setIsNotPublicSubject(Boolean isNotPublicSubject) {
+        this.isNotPublicSubject = isNotPublicSubject;
     }
 }

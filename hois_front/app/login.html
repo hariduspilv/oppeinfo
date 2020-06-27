@@ -118,11 +118,11 @@ html {
         <div id="password-tab">
           <form action="?" method="post" onsubmit="return submitUserLogin()">
             <table>
-            <tr> <td><span data-lang-key="school">Kool</span>:</td> 
+            <tr> <td><span data-lang-key="school">Kool</span>:</td>
               <td><select id="school" name="school" required></select></td> </tr>
-            <tr> <td><span data-lang-key="username">Kasutajanimi</span>:</td> 
+            <tr> <td><span data-lang-key="username">Kasutajanimi</span>:</td>
               <td><input type="text" id="username" name="username" required></td> </tr>
-            <tr> <td><span data-lang-key="password">Parool</span>:</td> 
+            <tr> <td><span data-lang-key="password">Parool</span>:</td>
               <td><input type="password" id="password" name="password" required></td> </tr>
             <tr> <td> </td> <td><button type="submit" data-lang-key="logIn">Logi sisse</button></td> 	</tr>
             </table>
@@ -136,8 +136,14 @@ html {
         <div id="mobileid-tab" style="display: none;">
           <form action="?" method="post" onsubmit="return submitMobileIdLogin()">
             <table>
-            <tr> <td><span data-lang-key="mobilenumber">Mobiilinumber</span>:</td> 
-              <td><input type="text" id="mobilenumber" name="mobilenumber" value="372" required></td> </tr>
+              <tr>
+                <td><span data-lang-key="idcode">Isikukood</span>:</td>
+                <td><input type="text" id="idcode" name="idcode" required></td>
+              </tr>
+            <tr>
+              <td><span data-lang-key="mobilenumber">Mobiilinumber</span>:</td>
+              <td><input type="text" id="mobilenumber" name="mobilenumber" value="+372" required></td>
+            </tr>
             <tr> <td> </td> <td><button type="submit" data-lang-key="logIn">Logi sisse</button></td> 	</tr>
             </table>
           </form>
@@ -165,6 +171,7 @@ var i18n = {
     'school': 'Kool',
     'username': 'Kasutajanimi',
     'password': 'Parool',
+    'idcode': 'Isikukood',
     'mobilenumber': 'Mobiilinumber',
     'mobileinstructions': 'Toimige palun telefonile ilmuvate juhiste kohaselt. Enne PIN-koodi sisestamist veenduge, et telefoni ekraanil olev kontrollkood on sama, mis allpool näidatud. Peale edukat isikutuvastust suunatakse teid automaatselt järgmisele lehele.',
     'logIn': 'Logi sisse'
@@ -176,6 +183,7 @@ var i18n = {
     'school': 'School',
     'username': 'Username',
     'password': 'Password',
+    'idcode': 'Personal code',
     'mobilenumber': 'Mobile number',
     'mobileinstructions': 'Please check the number on your phone screen to be same as below.',
     'logIn': 'Log in'
@@ -249,40 +257,26 @@ function submitIdCardLogin() {
   return false;
 }
 function submitMobileIdLogin() {
+  var idcode = document.getElementById("idcode").value;
   var mobilenumber = document.getElementById("mobilenumber").value;
-  if (!mobilenumber) {
+  if (!idcode || !mobilenumber) {
     return false;
   }
   clearError();
-  doHttpPost('/mIdLogin', {mobileNumber: mobilenumber}, function(response, request) {
+  doHttpPost('/mIdLogin', {idcode: idcode, mobileNumber: mobilenumber}, function(response, request) {
     jwt_token = request.getResponseHeader(JWT_TOKEN_HEADER);
-    if (response.errorCode === NOT_MOBILE_ID_USER_ERROR) {
-      loginFailed();
-      showError('See number ei ole Mobiil-ID kasutaja');
-    } else if (response.errorCode) {
-      loginFailed();
-    } else if (response.challengeID) {
+    if (response.challengeID) {
       document.getElementById("mobile-id-message").innerHTML = '<p>' + translate('mobileinstructions') + '</p>'+
         '<h1>' + response.challengeID + '</h1>';
-      setTimeout(pollMobileIdStatus, 5000);
+      mobileIdAuthenticate();
     } else {
       loginFailed();
     }
   }, loginFailed);
   return false;
 }
-function successfulMobileIdStatus(response) {
-  if (response.status === 'USER_AUTHENTICATED') {
-    navigateToSso();
-  } else if (response.status === 'OUTSTANDING_TRANSACTION') {
-    setTimeout(pollMobileIdStatus, 4000);
-  } else {
-    console.log('mobileIdStatus: '+response.status);
-    loginFailed();
-  }
-}
-function pollMobileIdStatus() {
-  doHttpGet('/mIdStatus', {name: JWT_TOKEN_HEADER, value: jwt_token}, successfulMobileIdStatus, loginFailed);
+function mobileIdAuthenticate() {
+  doHttpGet('/mIdAuthentication', {name: JWT_TOKEN_HEADER, value: jwt_token}, navigateToSso, loginFailed);
 }
 function submitLdapLogin(credentials) {
   doHttpPost('/ldap', credentials, navigateToSso, loginFailed);
@@ -303,7 +297,7 @@ function doHttpGet(path, header, resolve, reject) {
   request.onreadystatechange = function () {
     if(request.readyState === XMLHttpRequest.DONE) {
       if(request.status === 200) {
-        resolve(JSON.parse(request.responseText));
+        resolve(request.responseText !== "" ? JSON.parse(request.responseText) : {});
       } else {
         reject();
       }
@@ -322,7 +316,7 @@ function doHttpPost(path, params, resolve, reject) {
   request.onreadystatechange = function () {
     if(request.readyState === XMLHttpRequest.DONE) {
       if(request.status === 200) {
-        resolve(JSON.parse(request.responseText), request);
+        resolve(request.responseText !== "" ? JSON.parse(request.responseText) : {}, request);
       } else {
         reject();
       }

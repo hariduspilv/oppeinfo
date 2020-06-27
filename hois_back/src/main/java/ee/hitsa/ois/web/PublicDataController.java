@@ -2,10 +2,12 @@ package ee.hitsa.ois.web;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import ee.hitsa.ois.web.dto.timetable.SchoolPublicDataSettingsDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -77,6 +79,11 @@ public class PublicDataController {
     private SchoolService schoolService;
     @Value("${hois.frontend.baseUrl}")
     private String frontendBaseUrl;
+
+    @GetMapping("/schoolSettings")
+    public SchoolPublicDataSettingsDto schoolSettings(Long schoolId) {
+        return publicDataService.schoolPublicSettings(schoolId);
+    }
 
     @GetMapping("/academicCalendar/{schoolId:\\d+}")
     public AcademicCalendarDto academicCalendar(@PathVariable("schoolId") Long schoolId) {

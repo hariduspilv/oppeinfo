@@ -1,0 +1,42 @@
+<div layout="row">
+  <div layout="row" layout-align="start" layout-sm="column" layout-xs="column" flex="100">
+    <span class="capacity-type-legend" md-colors="{background: progressStatus.positive}">{{'student.result.higher.progressStatus.positive' | translate}}</span>
+    <span class="capacity-type-legend" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0"
+      md-colors="{background: progressStatus.negative}">{{'student.result.higher.progressStatus.negative' | translate}}</span>
+    <span class="capacity-type-legend" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0"
+      md-colors="{background: progressStatus.declared}">{{'student.result.higher.progressStatus.declared' | translate}}</span>
+    <span class="capacity-type-legend" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0"
+      md-colors="{background: progressStatus.prerequisitesCompleted}">{{'student.result.higher.progressStatus.prerequisitesCompleted' | translate}}</span>
+    <span class="capacity-type-legend" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0"
+      md-colors="{background: progressStatus.notTaughtThisSemester}">{{'student.result.higher.progressStatus.notTaughtThisSemester' | translate}}</span>
+    <span class="capacity-type-legend" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0"
+      md-colors="{background: progressStatus.taughtThisSemester}">{{'student.result.higher.progressStatus.taughtThisSemester' | translate}}</span>
+  </div>
+</div>
+<div>&nbsp;</div>
+
+<md-table-container ng-repeat="year in years" class="student-progress">
+  <table md-table>
+    <thead md-head>
+      <tr md-row>
+        <th md-column colspan="6">
+          <span ng-if="year.studyYearNumber">{{year.studyYearNumber}}. {{'student.result.studyYear' | translate}}</span>
+          <span ng-if="!year.studyYearNumber">{{'student.result.higher.withoutStudyYear' | translate}}</span>
+        </th>
+      </tr>
+    </thead>
+    <tbody md-body ng-repeat="period in year.periods | orderBy: '-autumn'"
+      ng-include="'student/templates/view.results.higher.progress.period.tmpl.html'"></tbody>
+  </table>
+</md-table-container>
+
+<md-table-container ng-if="extraCurriculumResults.subjects.length > 0" class="student-progress">
+  <table md-table>
+    <thead md-head>
+      <tr md-row>
+        <th md-column colspan="6">{{'student.result.otherModuleResults' | translate}}</th>
+      </tr>
+    </thead>
+    <tbody md-body ng-include="'student/templates/view.results.higher.progress.period.tmpl.html'" ng-repeat="period in [extraCurriculumResults]"></tbody>
+  </table>
+</md-table-container>

@@ -84,6 +84,9 @@ public class SubjectProgramReport {
             @Override
             public int compare(SubjectProgramStudyContent o1, SubjectProgramStudyContent o2) {
                 if (ClassifierUtil.equals(StudyContentType.OPPETOOSISU_N, program.getStudyContentType())) {
+                    if (o1.getOrderNr() != null && o2.getOrderNr() != null) {
+                        return o1.getOrderNr().compareTo(o2.getOrderNr());
+                    }
                     String regex = "^\\d+(\\-\\d+)?$";
                     if (o1.getWeekNr() == o2.getWeekNr()) {
                         return 0;

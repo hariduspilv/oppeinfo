@@ -1,0 +1,34 @@
+<td md-cell>
+  <a ng-if="subject.id" ng-href="/#/subject/{{subject.id}}">{{currentLanguageNameField(subject)}}</a>
+  <span ng-if="!subject.id">{{currentLanguageNameField(subject)}}</span>
+</td>
+<td md-cell>
+  <a ng-if="subject.id" ng-href="/#/subject/{{subject.id}}">{{subject.code}}</a>
+  <span ng-if="!subject.id">{{subject.code}}</span>
+</td>
+<td md-cell>
+  <span ng-if="subject.replacedModule && subject.replacedModule.id !== subject.module.id">
+    <a ng-href="/#/higherCurriculum/{{subject.replacedModule.curriculumId}}/version/{{subject.replacedModule.curriculumVersionId}}/module/{{subject.replacedModule.id}}/view">
+      {{currentLanguageNameField(subject.replacedModule)}}</a>
+    <span ng-if="subject.isOptionalChanged && subject.replacedModuleOptional">({{'student.result.higher.isOptional' | translate}})</span>
+    <span ng-if="subject.isOptionalChanged && !subject.replacedModuleOptional">({{'student.result.higher.required' | translate}})</span>
+    <span> / </span>
+  </span>
+  <a ng-if="subject.module" ng-href="/#/higherCurriculum/{{subject.module.curriculumId}}/version/{{subject.module.curriculumVersionId}}/module/{{subject.module.id}}/view">
+    {{currentLanguageNameField(subject.module)}}</a>
+  <span ng-if="subject.replacedModule && subject.replacedModule.id === subject.module.id">
+    <span ng-if="subject.isOptionalChanged && subject.replacedModuleOptional">({{'student.result.higher.isOptional' | translate}})</span>
+    <span ng-if="subject.isOptionalChanged && !subject.replacedModuleOptional">({{'student.result.higher.required' | translate}})</span>
+  </span>
+  <span ng-if="!subject.module.id">{{'student.result.higher.freeChoice' | translate}}</span>
+</td>
+<td md-cell>{{subject.credits}}</td>
+<td md-cell>
+  <a ng-if="subject.resultLink" ng-href="{{subject.resultLink}}">{{subject.grade | hoisHigherGrade: auth.school.letterGrades}}</a>
+  <a ng-if="subject.replacedApplicationLink" ng-href="{{subject.replacedApplicationLink}}" class="apelAsterisk">*</a>
+  <span ng-if="!subject.resultLink && !subject.replacedApplicationLink">
+    <span ng-if="subject.grade">{{subject.grade | hoisHigherGrade: auth.school.letterGrades}}</span>
+    <span ng-if="subject.replacedApelApplicationId" class="apelAsterisk">*</span>
+  </span>
+</td>
+<td md-cell md-colors="{background: subject.color}"></td>

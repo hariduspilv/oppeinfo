@@ -27,6 +27,7 @@ public class EducationalSuccessCommand {
     // false means query is per student
     private Boolean perGroup;
     private List<String> countableGrades;
+    private List<String> countableGradeValues;
     
     private String weightedAverageSign;
     private BigDecimal weightedAverage;
@@ -150,6 +151,12 @@ public class EducationalSuccessCommand {
     }
     public void setCurriculum(List<Long> curriculum) {
         this.curriculum = curriculum;
+    }
+    public List<String> getCountableGradeValues() {
+        return countableGradeValues;
+    }
+    public void setCountableGradeValues(List<String> countableGradeValues) {
+        this.countableGradeValues = countableGradeValues;
     }
     
 }

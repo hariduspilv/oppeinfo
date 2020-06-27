@@ -228,19 +228,23 @@ public class SubjectProgramService {
         return EntityUtil.save(program, em);
     }
 
-    private void updateStudyContents(SubjectProgram program, Set<SubjectProgramStudyContentDto> studyContents) {
+    private void updateStudyContents(SubjectProgram program, List<SubjectProgramStudyContentDto> studyContents) {
         EntityUtil.bindEntityCollection(program.getStudyContents(), SubjectProgramStudyContent::getId,
                 studyContents, SubjectProgramStudyContentDto::getId,
                 dto -> createStudyContent(program, dto), this::updateStudyContent);
     }
     
     private void updateStudyContent(SubjectProgramStudyContentDto dto, SubjectProgramStudyContent content) {
+        content.setTeacher(EntityUtil.getOptionalOne(Teacher.class, dto.getTeacher(), em));
+        content.setCapacityType(EntityUtil.getOptionalOne(dto.getCapacityType(), em));
         EntityUtil.bindToEntity(dto, content, classifierRepository);
     }
     
-    private static SubjectProgramStudyContent createStudyContent(SubjectProgram program, SubjectProgramStudyContentDto dto) {
+    private SubjectProgramStudyContent createStudyContent(SubjectProgram program, SubjectProgramStudyContentDto dto) {
         SubjectProgramStudyContent entity = new SubjectProgramStudyContent();
         entity.setSubjectProgram(program);
+        entity.setTeacher(EntityUtil.getOptionalOne(Teacher.class, dto.getTeacher(), em));
+        entity.setCapacityType(EntityUtil.getOptionalOne(dto.getCapacityType(), em));
         return EntityUtil.bindToEntity(dto, entity);
     }
     

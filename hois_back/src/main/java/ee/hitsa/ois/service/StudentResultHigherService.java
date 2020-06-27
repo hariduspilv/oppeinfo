@@ -4,12 +4,15 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,7 +25,14 @@ import javax.transaction.Transactional;
 
 import ee.hitsa.ois.domain.student.StudentCurriculumCompletion;
 import ee.hitsa.ois.domain.student.StudentCurriculumCompletionHigherModule;
+import ee.hitsa.ois.enums.SubjectConnection;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.EnumUtil;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleResult;
+import ee.hitsa.ois.web.dto.student.StudentHigherProgressDto;
+import ee.hitsa.ois.web.dto.student.StudentHigherProgressPeriodDto;
+import ee.hitsa.ois.web.dto.student.StudentHigherProgressSubjectDto;
+import ee.hitsa.ois.web.dto.student.StudentHigherProgressYearDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -57,10 +67,17 @@ import ee.hitsa.ois.web.dto.student.SubjectResultReplacedSubjectDto;
 @Service
 public class StudentResultHigherService {
 
+    private static final String REPLACED_SUBJECTS_FROM = "from student_higher_result shr "
+            + "join apel_application_record aar on shr.apel_application_record_id = aar.id "
+            + "join apel_application_formal_replaced_subject_or_module aafrs on aafrs.apel_application_record_id = aar.id "
+            + "join subject s on s.id = aafrs.subject_id";
+
     @Autowired
     private EntityManager em;
     @Autowired
     private StudentService studentService;
+    @Autowired
+    private StudyYearService studyYearService;
 
     public StudentHigherResultDto positiveHigherResults(Student student, boolean showModules,
             boolean showUncompleted) {
@@ -114,29 +131,38 @@ public class StudentResultHigherService {
 
         StudentHigherResultDto dto = new StudentHigherResultDto();
         dto.setModules(mergedModules);
+        setExtraCurriculumModuleResults(dto, moduleResults);
         dto.setSubjectResults(mergedSubjects);
         setExtraCurriculumSubjects(dto);
-        calculateModulesCompletion(dto, completion, modulesMarkedComplete(student), moduleResults.keySet());
+        calculateModulesCompletion(dto, completion, modulesMarkedComplete(student));
         dto.setCreditsSubmitted(completion.getCredits());
         dto.setCreditsSubmittedConsidered(curriculumCredits.add(completion.getStudyBacklog()));
         dto.setAverageGrade(completion.getAverageMark());
         dto.setIsCurriculumFulfilled(completion.isCurriculumFulfilled());
+        dto.setFulfillmentPercentage(getCurriculumFulfillmentPercentage(curriculumCredits,
+                dto.getCreditsSubmittedConsidered()));
         setStudyPeriodResults(dto);
         return dto;
     }
 
-    private List<CurriculumVersionHigherModule> getStudentModules(Student student) {
+    public List<CurriculumVersionHigherModule> getStudentModules(Student student) {
         JpaNativeQueryBuilder qb = studentModulesQueryBuilder(student);
         List<?> data = qb.select("cvhm.id", em).getResultList();
 
         List<CurriculumVersionHigherModule> modules = new ArrayList<>();
         if (!data.isEmpty()) {
-            modules = em.createQuery("select cvhm from CurriculumVersionHigherModule cvhm where cvhm.id in (?1)",
-                            CurriculumVersionHigherModule.class)
-                    .setParameter(1, StreamUtil.toMappedList(r -> resultAsLong(r, 0), data))
-                    .getResultList();
+            modules = curriculumVersionHigherModules(StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data));
         }
         return modules;
+    }
+
+    private List<CurriculumVersionHigherModule> curriculumVersionHigherModules(Set<Long> moduleIds) {
+        return em.createQuery("select cvhm from CurriculumVersionHigherModule cvhm "
+                        + "join fetch cvhm.curriculumVersion cv "
+                        + "join fetch cv.curriculum c "
+                        + "where cvhm.id in (?1)", CurriculumVersionHigherModule.class)
+                .setParameter(1, moduleIds)
+                .getResultList();
     }
 
     public JpaNativeQueryBuilder studentModulesQueryBuilder(Student student) {
@@ -159,6 +185,13 @@ public class StudentResultHigherService {
         return qb;
     }
 
+    private BigDecimal getCurriculumFulfillmentPercentage(BigDecimal curriculumCredits, BigDecimal submittedCredits) {
+        if (curriculumCredits != null && BigDecimal.ZERO.compareTo(curriculumCredits) != 0) {
+            return submittedCredits.multiply(BigDecimal.valueOf(100)).divide(curriculumCredits, 1, RoundingMode.DOWN);
+        }
+        return null;
+    }
+
     public Long getTotalPositiveGradeCredits(Student student) {
         String query = "from student_higher_result shr ";
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(query);
@@ -168,6 +201,17 @@ public class StudentResultHigherService {
 
         List<?> rows = qb.select("sum(shr.credits)", em).getResultList();
         return resultAsLong(rows.get(0), 0);
+    }
+
+    private void setExtraCurriculumModuleResults(StudentHigherResultDto dto,
+            Map<Long, List<StudentHigherResultGradeDto>> moduleResults) {
+        List<StudentHigherModuleResultDto> extraCurriculumModuleResults = new ArrayList<>();
+        if (!moduleResults.isEmpty()) {
+            Set<Long> moduleIds = moduleResults.keySet();
+            List<CurriculumVersionHigherModule> extraCurriculumModules = curriculumVersionHigherModules(moduleIds);
+            extraCurriculumModuleResults = mergeModuleAndResults(extraCurriculumModules, moduleResults, false);
+        }
+        dto.setExtraCurriculumModuleResults(extraCurriculumModuleResults);
     }
 
     private static void setExtraCurriculumSubjects(StudentHigherResultDto dto) {
@@ -322,10 +366,7 @@ public class StudentResultHigherService {
     private void setResultReplacedSubjects(List<StudentHigherSubjectResultDto> studentResults) {
         Map<Long, StudentHigherSubjectResultDto> resultMap = StreamUtil.toMap(sr -> sr.getId(), studentResults);
         if (!resultMap.isEmpty()) {
-            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_higher_result shr "
-                    + "join apel_application_record aar on shr.apel_application_record_id = aar.id "
-                    + "join apel_application_formal_replaced_subject_or_module aafrs on aafrs.apel_application_record_id = aar.id "
-                    + "join subject s on s.id = aafrs.subject_id");
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(REPLACED_SUBJECTS_FROM);
             qb.requiredCriteria("shr.id in (:resultIds)", "resultIds", resultMap.keySet());
 
             List<?> data = qb.select("shr.id, s.id s_id, s.name_et s_name_et, s.name_en s_name_en, "
@@ -499,7 +540,7 @@ public class StudentResultHigherService {
         List<StudentHigherModuleResultDto> moduleDtos = StreamUtil.toMappedList(StudentHigherModuleResultDto::of, modules);
 
         for (StudentHigherModuleResultDto module : moduleDtos) {
-            List<StudentHigherResultGradeDto> moduleResults = studentResults.get(module.getId());
+            List<StudentHigherResultGradeDto> moduleResults = studentResults.remove(module.getId());
             if (moduleResults != null) {
                 module.setGrades(moduleResults);
                 StudentHigherResultGradeDto lastGrade = moduleResults.get(0);
@@ -512,7 +553,7 @@ public class StudentResultHigherService {
     }
 
     private static void calculateModulesCompletion(StudentHigherResultDto dto, StudentCurriculumCompletion completion,
-            Map<Long, StudentCurriculumCompletionHigherModule> modulesMarkedComplete, Set<Long> gradedModules) {
+            Map<Long, StudentCurriculumCompletionHigherModule> modulesMarkedComplete) {
         for(StudentHigherModuleResultDto module : dto.getModules()) {
             Long moduleId = module.getId();
             List<StudentHigherSubjectResultDto> modulesPositiveResults = filterModulesPositiveResults(moduleId, dto.getSubjectResults());
@@ -522,7 +563,7 @@ public class StudentResultHigherService {
             module.setOptionalDifference(module.getOptionalCreditsSubmitted().subtract(module.getOptionalStudyCredits()));
             module.setTotalDifference(calculateTotalDifference(module));
             calculateElectiveModulesCompletion(dto.getSubjectResults(), module);
-            if (gradedModules.contains(moduleId)) {
+            if (module.getLastGrade() != null) {
                 // already graded modules 'marked as complete' can't be changed
                 module.setCanMarkComplete(Boolean.FALSE);
             } else if (modulesMarkedComplete.containsKey(moduleId)) {
@@ -725,5 +766,258 @@ public class StudentResultHigherService {
     public void removeModuleCompletion(HoisUserDetails user, StudentCurriculumCompletionHigherModule moduleCompletion) {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(moduleCompletion, em);
+    }
+
+    public StudentHigherProgressDto progress(Student student) {
+        List<CurriculumVersionHigherModule> modules = getStudentModules(student);
+        List<StudentHigherProgressSubjectDto> subjects = progressSubjects(student, modules);
+
+        StudentHigherProgressDto progress = new StudentHigherProgressDto();
+        progress.setYears(progressYearDtos(subjects));
+        progress.setExtraCurriculumResults(progressPeriodDto(null, null, progressExtraCurriculumResults(student, subjects)));
+        return progress;
+    }
+
+    private List<StudentHigherProgressYearDto> progressYearDtos(List<StudentHigherProgressSubjectDto> subjects) {
+        List<StudentHigherProgressYearDto> years = new ArrayList<>();
+        if (!subjects.isEmpty()) {
+            Map<Short, Map<Boolean, List<StudentHigherProgressSubjectDto>>> mappedYears = new LinkedHashMap<>();
+            for (StudentHigherProgressSubjectDto subject : subjects) {
+                Short yearNr = subject.getStudyYearNumber();
+                if (!mappedYears.containsKey(yearNr)) {
+                    Map<Boolean, List<StudentHigherProgressSubjectDto>> mappedPeriods = new LinkedHashMap<>();
+                    mappedPeriods.put(Boolean.TRUE, new ArrayList<>());
+                    mappedPeriods.put(Boolean.FALSE, new ArrayList<>());
+                    mappedPeriods.put(null, new ArrayList<>());
+                    mappedYears.put(yearNr, mappedPeriods);
+                }
+                if (Boolean.TRUE.equals(subject.getAutumn())) {
+                    mappedYears.get(yearNr).get(Boolean.TRUE).add(subject);
+                }
+                if (Boolean.TRUE.equals(subject.getSpring())) {
+                    mappedYears.get(yearNr).get(Boolean.FALSE).add(subject);
+                }
+                if (!Boolean.TRUE.equals(subject.getAutumn()) && !Boolean.TRUE.equals(subject.getSpring())) {
+                    mappedYears.get(yearNr).get(null).add(subject);
+                }
+            }
+
+            for (Map.Entry<Short, Map<Boolean, List<StudentHigherProgressSubjectDto>>> year : mappedYears.entrySet()) {
+                Map<Boolean, List<StudentHigherProgressSubjectDto>> yearPeriods = year.getValue();
+                StudentHigherProgressYearDto yearDto = new StudentHigherProgressYearDto();
+                yearDto.setStudyYearNumber(year.getKey());
+                for (Map.Entry<Boolean, List<StudentHigherProgressSubjectDto>> period : yearPeriods.entrySet()) {
+                    if (!period.getValue().isEmpty()) {
+                        yearDto.getPeriods().add(progressPeriodDto(year.getKey(), period.getKey(), period.getValue()));
+                    }
+                }
+                years.add(yearDto);
+            }
+        }
+        return years;
+    }
+
+    private StudentHigherProgressPeriodDto progressPeriodDto(Short studyYearNumber, Boolean isAutumn,
+            List<StudentHigherProgressSubjectDto> subjects) {
+        StudentHigherProgressPeriodDto dto = new StudentHigherProgressPeriodDto();
+        dto.setStudyYearNumber(studyYearNumber);
+        dto.setAutumn(Boolean.TRUE.equals(isAutumn));
+        dto.setSpring(Boolean.FALSE.equals(isAutumn));
+        dto.setSubjects(subjects);
+        setPeriodStatistics(dto, subjects);
+        return dto;
+    }
+
+    private static void setPeriodStatistics(StudentHigherProgressPeriodDto dto,
+            List<StudentHigherProgressSubjectDto> subjects) {
+        BigDecimal totalCredits = BigDecimal.ZERO;
+        BigDecimal avgNumerator = BigDecimal.ZERO;
+        BigDecimal avgDenominator = BigDecimal.ZERO;
+
+        for (StudentHigherProgressSubjectDto subject : subjects) {
+            if (subject.getGrade() != null) {
+                HigherAssessment grade = HigherAssessment.valueOf(subject.getGrade());
+                if (grade.getIsPositive()) {
+                    BigDecimal credits = subject.getCredits();
+                    totalCredits = totalCredits.add(subject.getCredits());
+
+                    if (Boolean.TRUE.equals(grade.getIsDistinctive())) {
+                        BigDecimal gradeMark = BigDecimal.valueOf(grade.getMark().longValue());
+                        avgNumerator = avgNumerator.add(gradeMark.multiply(credits));
+                        avgDenominator = avgDenominator.add(credits);
+                    }
+                }
+            }
+        }
+        dto.setTotal(totalCredits);
+        if (BigDecimal.ZERO.compareTo(avgDenominator) != 0) {
+            dto.setAverageGrade(avgNumerator.divide(avgDenominator, 3, BigDecimal.ROUND_HALF_UP));
+        }
+    }
+
+    private List<StudentHigherProgressSubjectDto> progressSubjects(Student student, List<CurriculumVersionHigherModule> modules) {
+        if (modules.isEmpty()) {
+            return new ArrayList<>();
+        }
+        Long currentStudyPeriod = studyYearService.getCurrentStudyPeriod(EntityUtil.getId(student.getSchool()));
+        Map<String, Object> parameters = new HashMap<>();
+
+        // 'prerequisites' subquery
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject subj2 "
+                + "join subject_connect subjc on subjc.primary_subject_id = subj2.id "
+                + "left join student_higher_result shr2 on shr2.student_id = s.id "
+                    + "and shr2.subject_id = subjc.connect_subject_id and shr2.is_active = true");
+        qb.requiredCriteria("subjc.connection_code in (:prerequisites)", "prerequisites",
+                EnumUtil.toNameList(SubjectConnection.AINESEOS_EK, SubjectConnection.AINESEOS_EV));
+        qb.requiredCriteria("(shr2.id is null or shr2.grade_code not in (:positiveGrades))", "positiveGrades",
+                HigherAssessment.GRADE_POSITIVE);
+        qb.filter("subj2.id = subj.id");
+
+        parameters.putAll(qb.queryParameters());
+        String prerequisites = qb.querySql("1", false);
+
+        String taughtThisSemester = null;
+        String declared = null;
+        if (currentStudyPeriod != null) {
+            // 'is subject taught in current semester' subquery
+            qb = new JpaNativeQueryBuilder("from subject_study_period ssp "
+                    + "join subject_study_period_student_group sspsg on sspsg.subject_study_period_id = ssp.id");
+            qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", currentStudyPeriod);
+            qb.filter("ssp.subject_id = subj.id and sspsg.student_group_id = s.student_group_id");
+
+            parameters.putAll(qb.queryParameters());
+            taughtThisSemester = qb.querySql("1", false);
+
+            // 'is subject declared' subquery
+            qb = new JpaNativeQueryBuilder("from declaration d "
+                    + "join declaration_subject ds on ds.declaration_id = d.id "
+                    + "join subject_study_period ssp2 on ssp2.id = ds.subject_study_period_id");
+            qb.requiredCriteria("d.status_code = :declarationStatus", "declarationStatus",
+                    DeclarationStatus.OPINGUKAVA_STAATUS_K);
+            qb.requiredCriteria("d.study_period_id = :studyPeriodId", "studyPeriodId", currentStudyPeriod);
+            qb.filter("d.student_id = s.id and ssp2.subject_id = subj.id");
+
+            parameters.putAll(qb.queryParameters());
+            declared = qb.querySql("1", false);
+        }
+
+
+        qb =  new JpaNativeQueryBuilder("from curriculum_version_hmodule_subject cvhs "
+                + "join subject subj on subj.id = cvhs.subject_id "
+                + "join curriculum_version_hmodule cvh on cvh.id = cvhs.curriculum_version_hmodule_id "
+                + "join curriculum_version cv on cv.id = cvh.curriculum_version_id "
+                + "join student s on s.id = :studentId "
+                + "left join student_higher_result shr on shr.student_id = s.id "
+                    + "and shr.subject_id = subj.id and shr.is_active = true "
+                + "left join protocol_student ps on ps.id = shr.protocol_student_id "
+                + "left join protocol p on p.id = ps.protocol_id "
+                + "left join apel_application_record aar on aar.id = shr.apel_application_record_id "
+                + "left join student_higher_result_module shrm on shrm.student_higher_result_id = shr.id "
+                + "left join curriculum_version_hmodule shrm_cvh on shrm_cvh.id = shrm.curriculum_version_hmodule_id "
+                + "left join curriculum_version shrm_cv on shrm_cv.id = shrm_cvh.curriculum_version_id ");
+        qb.requiredCriteria("cvh.id in (:moduleIds)", "moduleIds", StreamUtil.toMappedList(EntityUtil::getId, modules));
+        qb.parameter("studentId", student.getId());
+
+        qb.sort("cvhs.study_year_number, subj.code");
+        String select = "subj.id subj_id, subj.code, subj.name_et subj_name_et, subj.name_en subj_name_en, "
+                + "subj.credits, cvhs.is_optional, cvhs.study_year_number, cvhs.is_autumn, cvhs.is_spring, "
+                + "cvh.id cvh_id, cvh.name_et cvh_name_et, cvh.name_en cvh_name_en, cvh.type_code, cv.id cv_id, cv.curriculum_id, "
+                + "shrm_cvh.id shrm_cvh_id, shrm_cvh.name_et shrm_cvh_name_et, shrm_cvh.name_en shrm_cvh_name_en, "
+                + "shrm_cvh.type_code shrm_cvh_type_code, shrm_cv.id shrm_cvh_cv_id, shrm_cv.curriculum_id shrm_cv_curriculum_id, "
+                + "shrm.is_optional shrm_is_optional, shr.id shr_id, shr.grade_code, p.id protocol_id, p.is_final, aar.apel_application_id, "
+                + "not exists (" + prerequisites + ") prerequisites, "
+                + (taughtThisSemester != null ? "exists (" + taughtThisSemester + ")" : "false") + " taught_this_semester, "
+                + (declared != null ? "exists (" + declared + ")" : "false") + " declared";
+        List<?> data = qb.select(select, em, parameters).getResultList();
+
+        Map<Long, Long> replacedSubjectApplications = replacedSubjectApplications(student);
+        return StreamUtil.toMappedList(r -> {
+            StudentHigherProgressSubjectDto dto = new StudentHigherProgressSubjectDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setCode(resultAsString(r, 1));
+            dto.setNameEt(resultAsString(r, 2));
+            dto.setNameEn(resultAsString(r, 3));
+            dto.setCredits(resultAsDecimal(r, 4));
+            dto.setOptional(resultAsBoolean(r, 5));
+            dto.setStudyYearNumber(resultAsShort(r, 6));
+            dto.setAutumn(resultAsBoolean(r, 7));
+            dto.setSpring(resultAsBoolean(r, 8));
+            dto.setModule(new CurriculumVersionHigherModuleResult(resultAsLong(r, 9), resultAsString(r, 10),
+                    resultAsString(r, 11), resultAsString(r, 12), resultAsLong(r, 13), resultAsLong(r, 14)));
+            if (resultAsLong(r, 15) != null) {
+                dto.setReplacedModule(new CurriculumVersionHigherModuleResult(resultAsLong(r, 15), resultAsString(r, 16),
+                        resultAsString(r, 17), resultAsString(r, 18), resultAsLong(r, 19), resultAsLong(r, 20)));
+                dto.setReplacedModuleOptional(resultAsBoolean(r, 21));
+            }
+            dto.setResultId(resultAsLong(r, 22));
+            dto.setGrade(resultAsString(r, 23));
+            dto.setProtocolId(resultAsLong(r, 24));
+            dto.setIsFinalProtocol(resultAsBoolean(r, 25));
+            dto.setApelApplicationId(resultAsLong(r, 26));
+            dto.setPrerequisitesCompleted(resultAsBoolean(r, 27));
+            dto.setTaughtThisSemester(resultAsBoolean(r, 28));
+            dto.setDeclared(resultAsBoolean(r, 29));
+            dto.setReplacedApelApplicationId(replacedSubjectApplications.get(dto.getId()));
+            return dto;
+        }, data);
+    }
+
+    private Map<Long, Long> replacedSubjectApplications(Student student) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(REPLACED_SUBJECTS_FROM);
+        qb.requiredCriteria("shr.student_id = :studentId", "studentId", student.getId());
+        qb.filter("shr.is_active = true");
+
+        List<?> data = qb.select("s.id, aar.apel_application_id", em).getResultList();
+        return data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> resultAsLong(r, 1), (o, n) -> o));
+    }
+
+    private List<StudentHigherProgressSubjectDto> progressExtraCurriculumResults(Student student,
+            List<StudentHigherProgressSubjectDto> curriculumSubjects) {
+        List<Long> curriculumResultIds = curriculumSubjects.stream().filter(s -> s.getResultId() != null)
+                .map(StudentHigherProgressSubjectDto::getResultId).collect(Collectors.toList());
+
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_higher_result shr "
+                + "left join curriculum_version_hmodule cvh on cvh.id = shr.curriculum_version_hmodule_id "
+                + "left join curriculum_version cv on cv.id = cvh.curriculum_version_id "
+                + "left join protocol_student ps on ps.id = shr.protocol_student_id "
+                + "left join protocol p on p.id = ps.protocol_id "
+                + "left join apel_application_record aar on aar.id = shr.apel_application_record_id "
+                + "left join student_higher_result_module shrm on shrm.student_higher_result_id = shr.id "
+                + "left join curriculum_version_hmodule shrm_cvh on shrm_cvh.id = shrm.curriculum_version_hmodule_id "
+                + "left join curriculum_version shrm_cv on shrm_cv.id = shrm_cvh.curriculum_version_id");
+        qb.requiredCriteria("shr.student_id = :studentId", "studentId", student.getId());
+        qb.optionalCriteria("shr.id not in (:resultIds)", "resultIds", curriculumResultIds);
+        qb.filter("shr.is_active = true and shr.is_module = false");
+
+        String select = "shr.subject_id, shr.subject_code, shr.subject_name_et, shr.subject_name_en, shr.credits, shr.is_optional, "
+                + "cvh.id cvh_id, cvh.name_et cvh_name_et, cvh.name_en cvh_name_en, cvh.type_code, cv.id cv_id, cv.curriculum_id, "
+                + "shrm_cvh.id shrm_cvh_id, shrm_cvh.name_et shrm_cvh_name_et, shrm_cvh.name_en shrm_cvh_name_en, "
+                + "shrm_cvh.type_code shrm_cvh_type_code, shrm_cv.id shrm_cv_id, shrm_cv.curriculum_id shrm_cv_curriculum_id, "
+                + "shrm.is_optional shrm_is_optional, shr.id shr_id, shr.grade_code, ps.protocol_id, p.is_final, "
+                + "aar.apel_application_id";
+        List<?> data = qb.select(select, em).getResultList();
+
+        return StreamUtil.toMappedList(r -> {
+            StudentHigherProgressSubjectDto dto = new StudentHigherProgressSubjectDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setCode(resultAsString(r, 1));
+            dto.setNameEt(resultAsString(r, 2));
+            dto.setNameEn(resultAsString(r, 3));
+            dto.setCredits(resultAsDecimal(r, 4));
+            dto.setOptional(resultAsBoolean(r, 5));
+            dto.setModule(new CurriculumVersionHigherModuleResult(resultAsLong(r, 6), resultAsString(r, 7),
+                    resultAsString(r, 8), resultAsString(r, 9), resultAsLong(r, 10), resultAsLong(r, 11)));
+            if (resultAsLong(r, 12) != null) {
+                dto.setReplacedModule(new CurriculumVersionHigherModuleResult(resultAsLong(r, 12), resultAsString(r, 13),
+                        resultAsString(r, 14), resultAsString(r, 15), resultAsLong(r, 16), resultAsLong(r, 17)));
+                dto.setReplacedModuleOptional(resultAsBoolean(r, 18));
+            }
+            dto.setResultId(resultAsLong(r, 19));
+            dto.setGrade(resultAsString(r, 20));
+            dto.setProtocolId(resultAsLong(r, 21));
+            dto.setIsFinalProtocol(resultAsBoolean(r, 22));
+            dto.setApelApplicationId(resultAsLong(r, 23));
+            return dto;
+        }, data);
     }
 }

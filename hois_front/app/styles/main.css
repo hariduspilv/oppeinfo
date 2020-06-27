@@ -2823,3 +2823,11 @@ table.questions-secondary-table.secondary-table td:not(:first-child) {
     padding-left: 12px !important;
     border-left: 1px solid #e0e0e0;
 }
+
+.student-progress > table.md-table > thead.md-head > tr.md-row > th {
+  background-color: #EEEEEE;
+  border-left: 3px solid #1565C0;
+  color: #424242;
+  font-weight: 500;
+  font-size: 16px;
+}

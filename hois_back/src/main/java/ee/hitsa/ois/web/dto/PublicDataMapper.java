@@ -455,7 +455,21 @@ public class PublicDataMapper {
         SUBJECT_PROGRAM.put("grade4Description", SubjectProgram::getGrade4Description);
         SUBJECT_PROGRAM.put("grade5Description", SubjectProgram::getGrade5Description);
         SUBJECT_PROGRAM.put("independentStudy", SubjectProgram::getIndependentStudy);
-        SUBJECT_PROGRAM.put("studyContents", SubjectProgram::getStudyContents);
+        SUBJECT_PROGRAM.put("studyContents", p -> StreamUtil.nullSafeSet(p.getStudyContents()).stream().sorted(
+                // dates are sorted in frontend
+                (s1, s2) -> {
+                    Long orderNr1 = s1.getOrderNr();
+                    Long orderNr2 = s2.getOrderNr();
+                    if (orderNr1 != null && orderNr2 != null) {
+                        return orderNr1.compareTo(orderNr2);
+                    }
+                    String weekNr1 = s1.getWeekNr();
+                    String weekNr2 = s2.getWeekNr();
+                    if (weekNr1 != null && weekNr2 != null) {
+                        return weekNr1.compareTo(weekNr2);
+                    }
+                    return 0;
+                }).collect(Collectors.toList()));
         SUBJECT_PROGRAM.put("studyContentType", p -> p.getStudyContentType().getCode());
         SUBJECT_PROGRAM.put("studyDescription", SubjectProgram::getStudyDescription);
         SUBJECT_PROGRAM.put("studyLiterature", SubjectProgram::getStudyLiterature);
@@ -470,5 +484,9 @@ public class PublicDataMapper {
         SUBJECT_PROGRAM_STUDY_CONTENT.put("weekNr", SubjectProgramStudyContent::getWeekNr);
         SUBJECT_PROGRAM_STUDY_CONTENT.put("studyDt", SubjectProgramStudyContent::getStudyDt);
         SUBJECT_PROGRAM_STUDY_CONTENT.put("studyInfo", SubjectProgramStudyContent::getStudyInfo);
+        SUBJECT_PROGRAM_STUDY_CONTENT.put("capacityType", p -> EntityUtil.getNullableCode(p.getCapacityType()));
+        SUBJECT_PROGRAM_STUDY_CONTENT.put("capacity", SubjectProgramStudyContent::getCapacity);
+        SUBJECT_PROGRAM_STUDY_CONTENT.put("orderNr", SubjectProgramStudyContent::getOrderNr);
+        SUBJECT_PROGRAM_STUDY_CONTENT.put("teacher", p -> p.getTeacher() != null ? AutocompleteResult.of(p.getTeacher()) : null);
     }
 }

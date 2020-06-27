@@ -4,6 +4,7 @@ public class SpecialitiesAutocompleteCommand extends SearchCommand {
 
     private Long curriculum;
     private Long curriculumVersion;
+    private Boolean filter;
     
     public Long getCurriculum() {
         return curriculum;
@@ -19,5 +20,13 @@ public class SpecialitiesAutocompleteCommand extends SearchCommand {
     
     public void setCurriculumVersion(Long curriculumVersion) {
         this.curriculumVersion = curriculumVersion;
+    }
+
+    public Boolean getFilter() {
+        return filter;
+    }
+
+    public void setFilter(Boolean filter) {
+        this.filter = filter;
     }
 }

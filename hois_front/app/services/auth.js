@@ -55,17 +55,18 @@ angular.module('hitsaOis')
         });
     };
 
-    authService.loginMobileId = function (mobileNumber) {
-      return $http.post(config.apiUrl + '/mIdLogin', {mobileNumber:mobileNumber})
+    authService.loginMobileId = function (idcode, mobileNumber) {
+      return $http.post(config.apiUrl + '/mIdLogin', {idcode: idcode, mobileNumber:mobileNumber})
         .then(function (mIdLoginResult) {
           return {data: mIdLoginResult.data, jwt: mIdLoginResult.headers(JWT_TOKEN_HEADER)};
         });
     };
 
-    authService.pollMobileIdStatus = function (jwt) {
+    authService.mobileIdAuthenticate = function (jwt) {
       var headers = {};
       headers[JWT_TOKEN_HEADER] = jwt;
-      return $http.get(config.apiUrl + '/mIdStatus', {headers : headers})
+      var url = config.apiUrl + '/mIdAuthentication?lang=' + $rootScope.currentLanguage().toUpperCase();
+      return $http.get(url, {headers : headers})
         .then(function (mIdStatusResult) {
           return mIdStatusResult.data;
         });

@@ -47,7 +47,10 @@ html {
 }
 
 .padding-top {
-    height: 60pt;
+    height: 80pt;
+}
+.padding-top-en {
+    height: 70pt;
 }
 .school-name {
 	font-size: 18pt;
@@ -65,7 +68,14 @@ html {
 div.diploma-nr {
     font-size: 12pt;
     font-weight: bold;
-	margin-top: 50pt;
+	margin-top: 90pt;
+	text-align: center;
+	width: 100%;
+}
+div.diploma-nr-en {
+    font-size: 12pt;
+    font-weight: bold;
+	margin-top: 60pt;
 	text-align: center;
 	width: 100%;
 }
@@ -100,6 +110,9 @@ table.general-info td:last-child {
 table.study-results th {
     text-align: center;
     vertical-align: top;
+}
+table.study-results th:last-child {
+    text-align: left;
 }
 table.study-results td {
     vertical-align: top;

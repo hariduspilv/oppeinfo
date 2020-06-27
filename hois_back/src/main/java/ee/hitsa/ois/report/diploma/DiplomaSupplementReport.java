@@ -27,6 +27,7 @@ public class DiplomaSupplementReport extends DiplomaSupplementResultReport {
     private final String idcode;
     private final LocalDate birthdate;
     private final String curriculumName;
+    private final String specialityName;
     private final String merCode;
     private final String ekr;
     private final BigDecimal credits;
@@ -95,6 +96,7 @@ public class DiplomaSupplementReport extends DiplomaSupplementResultReport {
         this.printed = diplomaSupplement.getPrinted();
         if (Language.EN.equals(lang)) {
             this.curriculumName = diplomaSupplement.getCurriculumNameEn();
+            this.specialityName = diplomaSupplement.getSpecialityEn();
             this.studyLoadName = diplomaSupplement.getStudyLoadNameEn();
             this.studyFormName = diplomaSupplement.getStudyFormNameEn();
             this.studyLanguageName = diplomaSupplement.getStudyLanguageNameEn();
@@ -112,6 +114,7 @@ public class DiplomaSupplementReport extends DiplomaSupplementResultReport {
             this.signer2Position = diplomaSupplement.getSigner2PositionEn();
         } else {
             this.curriculumName = diplomaSupplement.getCurriculumNameEt();
+            this.specialityName = diplomaSupplement.getSpecialityEt();
             this.studyLoadName = diplomaSupplement.getStudyLoadNameEt();
             this.studyFormName = diplomaSupplement.getStudyFormNameEt();
             this.studyLanguageName = diplomaSupplement.getStudyLanguageNameEt();
@@ -188,6 +191,10 @@ public class DiplomaSupplementReport extends DiplomaSupplementResultReport {
 
     public String getCurriculumName() {
         return curriculumName;
+    }
+
+    public String getSpecialityName() {
+        return specialityName;
     }
 
     public String getMerCode() {

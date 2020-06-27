@@ -1,0 +1,39 @@
+<tr ng-if="period.autumn || period.spring" md-row class="hois-collapse">
+  <td md-cell colspan="6" class="bold">
+    <span ng-if="period.autumn">{{'student.result.higher.autumnSemester' | translate}}</span>
+    <span ng-if="period.spring">{{'student.result.higher.springSemester' | translate}}</span>
+  </td>
+</tr>
+
+<tr ng-if="containsMandatorySubjects(period.subjects)" md-row>
+  <td md-cell colspan="6" class="sub-header1">{{'student.result.higher.mandatorySubjects' | translate}}:</td>
+</tr>
+<tr ng-if="containsMandatorySubjects(period.subjects)" md-row class="secondary-table-header">
+  <td md-cell style="width: 30%">{{'student.result.higher.subject' | translate}}</td>
+  <td md-cell style="width: 15%">{{'student.result.higher.subjectCode' | translate}}</td>
+  <td md-cell style="width: 40%">{{'student.result.higher.module' | translate}}</td>
+  <td md-cell style="width: 5%">{{'student.result.higher.credits' | translate}}</td>
+  <td md-cell style="width: 5%">{{'student.result.higher.grade' | translate}}</td>
+  <td md-cell style="width: 5%">{{'student.result.higher.status' | translate}}</td>
+</tr>
+<tr md-row ng-repeat="subject in period.subjects  | filter: {optional: false} | orderBy: currentLanguageNameField()"
+    ng-include="'student/templates/view.results.higher.progress.subject.tmpl.html'"></tr>
+
+<tr ng-if="containsOptionalSubjects(period.subjects)" md-row>
+  <td md-cell colspan="6" class="sub-header1">{{'student.result.higher.optionalSubjects' | translate}}:</td>
+</tr>
+<tr ng-if="containsOptionalSubjects(period.subjects)" md-row class="secondary-table-header">
+  <td md-cell style="width: 30%">{{'student.result.higher.subject' | translate}}</td>
+  <td md-cell style="width: 15%">{{'student.result.higher.subjectCode' | translate}}</td>
+  <td md-cell style="width: 40%">{{'student.result.higher.module' | translate}}</td>
+  <td md-cell style="width: 5%">{{'student.result.higher.credits' | translate}}</td>
+  <td md-cell style="width: 5%">{{'student.result.higher.grade' | translate}}</td>
+  <td md-cell style="width: 5%">{{'student.result.higher.status' | translate}}</td>
+</tr>
+<tr md-row ng-repeat="subject in period.subjects  | filter: {optional: true} | orderBy: currentLanguageNameField()"
+    ng-include="'student/templates/view.results.higher.progress.subject.tmpl.html'"></tr>
+
+<tr md-row class="secondary-table-header">
+  <td md-cell>{{'student.result.higher.overallCredits' | translate}}: {{period.total}}</td>
+  <td md-cell colspan="5">{{'student.result.kkh' | translate}}: {{period.averageGrade}}</td>
+</tr>

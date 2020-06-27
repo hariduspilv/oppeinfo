@@ -257,8 +257,8 @@
             <thead md-head md-order="criteria.order" md-on-reorder="loadData">
               <tr md-row>
                 <th md-column>{{'report.studentSuccess.nr' | translate}}</th>
-                <th md-column md-order-by="p.firstname, p.lastname">{{'report.studentSuccess.studentName' | translate}}</th>
-                <th md-column md-order-by="sg.code">{{'report.studentSuccess.studentGroup' | translate}}</th>
+                <th md-column md-order-by="p.lastname, p.firstname">{{'report.studentSuccess.studentName' | translate}}</th>
+                <th md-column md-order-by="sg.code, p.lastname, p.firstname">{{'report.studentSuccess.studentGroup' | translate}}</th>
                 <th md-column md-order-by="amount">{{'report.studentSuccess.debts' | translate}}</th>
                 <th md-column style="text-align: center;">{{'report.studentSuccess.debtObjects' | translate}}</th>
               </tr>
@@ -266,8 +266,8 @@
             <tbody md-body>
               <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{criteria.size * (criteria.page - 1) + $index + 1}}</td>
-                <td md-cell md-order-by="p.firstname, p.lastname">{{currentLanguageNameField(row.student)}}</td>
-                <td md-cell md-order-by="sg.code">{{currentLanguageNameField(row.studentGroup)}}</td>
+                <td md-cell>{{currentLanguageNameField(row.student)}}</td>
+                <td md-cell>{{currentLanguageNameField(row.studentGroup)}}</td>
                 <td md-cell>{{row.debts}}</td>
                 <td md-cell>
                   <md-table-container resize-table search-criteria-height="350">
@@ -275,7 +275,7 @@
                       <tbody md-body>
                         <tr md-row ng-repeat="module in row.modules" ng-style="{'font-weight': module.isModule ? 'bold' : 'none'}">
                           <td md-cell>
-                            <div style="width: 300px; overflow-wrap: break-word;">
+                            <div style="width: 450px; overflow-wrap: break-word;white-space: pre-line;">
                               {{currentLanguageNameField(module.module)}}
                             </div>
                           </td>
@@ -290,7 +290,7 @@
                             </div>
                           </td>
                           <td md-cell>
-                            <div style="width: 50px; overflow-wrap: break-word;">
+                            <div style="width: 30px; overflow-wrap: break-word;">
                               {{module.grade}}
                             </div>
                           </td>
@@ -324,8 +324,8 @@
             <thead md-head md-order="criteria.order" md-on-reorder="loadData">
               <tr md-row>
                 <th md-column>{{'report.studentSuccess.nr' | translate}}</th>
-                <th md-column md-order-by="p.firstname, p.lastname">{{'report.studentSuccess.studentName' | translate}}</th>
-                <th md-column md-order-by="sg.code">{{'report.studentSuccess.studentGroup' | translate}}</th>
+                <th md-column md-order-by="p.lastname, p.firstname">{{'report.studentSuccess.studentName' | translate}}</th>
+                <th md-column md-order-by="sg.code, p.lastname, p.firstname">{{'report.studentSuccess.studentGroup' | translate}}</th>
               </tr>
             </thead>
             <tbody md-body>
@@ -348,13 +348,13 @@
             <thead md-head md-order="criteria.order" md-on-reorder="loadData">
               <tr md-row>
                 <th md-column>{{'report.studentSuccess.nr' | translate}}</th>
-                <th md-column md-order-by="p.firstname, p.lastname">{{'report.studentSuccess.studentName' | translate}}</th>
-                <th md-column md-order-by="sg.code">{{'report.studentSuccess.studentGroup' | translate}}</th>
-                <th md-column >{{'report.studentSuccess.gradeAmount' | translate}}</th>
-                <th md-column >{{'report.studentSuccess.educationalDebts' | translate}}</th>
-                <th md-column >{{'report.studentSuccess.educationalSuccess' | translate}}</th>
-                <th md-column >{{'report.studentSuccess.weightedAverage' | translate}}</th>
-                <th md-column >{{'report.studentSuccess.average' | translate}}</th>
+                <th md-column md-order-by="p.lastname, p.firstname">{{'report.studentSuccess.studentName' | translate}}</th>
+                <th md-column md-order-by="sg.code, p.lastname, p.firstname">{{'report.studentSuccess.studentGroup' | translate}}</th>
+                <th md-column md-order-by="5">{{('report.studentSuccess.gradeAmount' | translate) + ' ' + formState.countableGrades.toString()}}</th>
+                <th md-column md-order-by="6">{{'report.studentSuccess.educationalDebts' | translate}}</th>
+                <th md-column>{{'report.studentSuccess.educationalSuccess' | translate}}</th>
+                <th md-column md-order-by="9">{{'report.studentSuccess.weightedAverage' | translate}}</th>
+                <th md-column>{{'report.studentSuccess.average' | translate}}</th>
               </tr>
             </thead>
             <tbody md-body>
@@ -383,11 +383,11 @@
               <tr md-row>
                 <th md-column>{{'report.studentSuccess.nr' | translate}}</th>
                 <th md-column md-order-by="sg.code">{{'report.studentSuccess.studentGroup' | translate}}</th>
-                <th md-column >{{'report.studentSuccess.studentAmount' | translate}}</th>
-                <th md-column >{{'report.studentSuccess.gradeAmount' | translate}}</th>
-                <th md-column >{{'report.studentSuccess.educationalDebts' | translate}}</th>
-                <th md-column >{{'report.studentSuccess.educationalSuccess' | translate}}</th>
-                <th md-column >{{'report.studentSuccess.studentAverage' | translate}}</th>
+                <th md-column md-order-by="3">{{'report.studentSuccess.studentAmount' | translate}}</th>
+                <th md-column md-order-by="4">{{('report.studentSuccess.gradeAmount' | translate) + ' ' + formState.countableGrades.toString()}}</th>
+                <th md-column md-order-by="5">{{'report.studentSuccess.educationalDebts' | translate}}</th>
+                <th md-column>{{'report.studentSuccess.educationalSuccess' | translate}}</th>
+                <th md-column md-order-by="10">{{'report.studentSuccess.studentAverage' | translate}}</th>
               </tr>
             </thead>
             <tbody md-body>
@@ -431,12 +431,12 @@
             <thead md-head md-order="criteria.order" md-on-reorder="loadData">
               <tr md-row>
                 <th md-column>{{'report.studentSuccess.nr' | translate}}</th>
-                <th md-column>{{'report.studentSuccess.studentName' | translate}}</th>
-                <th md-column>{{'report.studentSuccess.studentGroup' | translate}}</th>
-                <th md-column>{{'report.studentSuccess.weightedAverage' | translate}}</th>
-                <th md-column>{{'report.studentSuccess.moduleGradeFour' | translate}}</th>
-                <th md-column>{{'report.studentSuccess.absences' | translate}}</th>
-                <th md-column>{{'report.studentSuccess.absencesP' | translate}}</th>
+                <th md-column md-order-by="p.lastname, p.firstname">{{'report.studentSuccess.studentName' | translate}}</th>
+                <th md-column md-order-by="sg.code, p.lastname, p.firstname">{{'report.studentSuccess.studentGroup' | translate}}</th>
+                <th md-column md-order-by="5, p.lastname, p.firstname">{{'report.studentSuccess.weightedAverage' | translate}}</th>
+                <th md-column md-order-by="6">{{'report.studentSuccess.moduleGradeFour' | translate}}</th>
+                <th md-column md-order-by="7">{{'report.studentSuccess.absences' | translate}}</th>
+                <th md-column md-order-by="8">{{'report.studentSuccess.absencesP' | translate}}</th>
               </tr>
             </thead>
             <tbody md-body>

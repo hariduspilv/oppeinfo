@@ -1,0 +1,41 @@
+<md-dialog aria-label="tara protocol confirm dialog" flex="20">
+  <form name="dialogForm" novalidate ng-cloak ng-submit="dialogForm.$valid && submit()">
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{'protocol.confirmLabel' | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <div class="md-dialog-content">
+        <div layout="row">
+          <md-input-container flex>
+            <md-radio-group layout-gt-sm="row" ng-model="formState.signType">
+              <md-radio-button ng-value="'IDCARD'" aria-label="{{'protocol.idcard' | translate}}">
+                {{'protocol.idcard' | translate}}
+              </md-radio-button>
+              <md-radio-button ng-value="'MOBILE_ID'" aria-label="{{'protocol.mobileid' | translate}}">
+                {{'protocol.mobileid' | translate}}
+              </md-radio-button>
+            </md-radio-group>
+          </md-input-container>
+        </div>
+        <div>&nbsp;</div>
+        <div ng-if="formState.signType === 'MOBILE_ID'" layout="row" flex>
+          <md-input-container class="md-block" flex>
+            <label flex>{{'protocol.mobilenumber' | translate}}</label>
+            <input type="text" flex class="form-control" name="mobileNumber" ng-model="formState.mobileNumber" required/>
+          </md-input-container>
+        </div>
+      </div>
+    </md-dialog-content>
+
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button type="submit" class="md-raised md-primary">{{'main.button.confirm' | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

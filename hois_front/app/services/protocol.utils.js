@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('ProtocolUtils', function ($mdDialog, $timeout, $rootScope, $window, QueryUtils, config, dialogService, message) {
+  .factory('ProtocolUtils', function ($mdDialog, $timeout, $rootScope, $window, QueryUtils, config, dialogService, message, resourceErrorHandler) {
     var protocolUtils = {};
     var CONFIRM_LOGIN_TYPES = ['LOGIN_TYPE_I', 'LOGIN_TYPE_M', 'LOGIN_TYPE_T', 'LOGIN_TYPE_H'];
 
@@ -9,25 +9,19 @@ angular.module('hitsaOis')
       if (auth.loginMethod === 'LOGIN_TYPE_I') {
         protocolUtils.idcardSignBeforeConfirm(endpoint, data, confirmMessage, callback, failCallback);
       } else if (auth.loginMethod === 'LOGIN_TYPE_M') {
-        protocolUtils.mobileSignBeforeConfirm(endpoint, data, confirmMessage, callback, failCallback);
+        protocolUtils.mobileIdSignatureRequest(endpoint, data, confirmMessage, callback, failCallback);
       } else if (auth.loginMethod === 'LOGIN_TYPE_T' || auth.loginMethod === 'LOGIN_TYPE_H') {
-        dialogService.showDialog('components/tara.protocol.confirm.dialog.html', function (dialogScope) {
-          dialogScope.signType = null;
-
-          dialogScope.idcard = function () {
-            dialogScope.signType = 'IDCARD';
-            dialogScope.submit();
-          };
-
-          dialogScope.mobileid = function () {
-            dialogScope.signType = 'MOBILE_ID';
-            dialogScope.submit();
+        dialogService.showDialog('components/oauth.protocol.confirm.dialog.html', function (dialogScope) {
+          dialogScope.formState = {
+            signType: null,
+            mobileNumber: '+372'
           };
         }, function (submittedDialogScope) {
-          if (submittedDialogScope.signType === 'IDCARD') {
+          if (submittedDialogScope.formState.signType === 'IDCARD') {
             protocolUtils.idcardSignBeforeConfirm(endpoint, data, confirmMessage, callback, failCallback);
-          } else if (submittedDialogScope.signType === 'MOBILE_ID') {
-            protocolUtils.mobileSignBeforeConfirm(endpoint, data, confirmMessage, callback, failCallback);
+          } else if (submittedDialogScope.formState.signType === 'MOBILE_ID') {
+            data.signerMobileNumber = submittedDialogScope.formState.mobileNumber;
+            protocolUtils.mobileIdSignatureRequest(endpoint, data, confirmMessage, callback, failCallback);
           }
         }, function () {
           message.error('main.messages.error.signingCancelled');
@@ -69,22 +63,22 @@ angular.module('hitsaOis')
       });
     };
 
-    protocolUtils.mobileSignBeforeConfirm = function (endpoint, data, confirmMessage, callback, failCallback) {
-      QueryUtils.endpoint(endpoint + '/mobileSignToConfirm').save(data, function (result) {
+    protocolUtils.mobileIdSignatureRequest = function (endpoint, data, confirmMessage, callback, failCallback) {
+      var url = endpoint + '/mobileIdSignatureRequest?lang=' + $rootScope.currentLanguage().toUpperCase();
+      QueryUtils.endpoint(url).save(data, function (result) {
         if (result.challengeID) {
           $rootScope.signVersion = result.version;
           $mdDialog.show({
             controller: function ($scope) {
               $scope.challengeID = result.challengeID;
             },
-            templateUrl: 'finalProtocol/templates/final.protocol.mobile.sign.dialog.html',
+            templateUrl: 'components/protocol.mobile.sign.dialog.html',
             parent: angular.element(document.body),
             clickOutsideToClose: false
           });
-          $rootScope.mobileIdPolls = 0;
-          $timeout(pollMobileSignStatus(endpoint, confirmMessage, callback, failCallback), config.mobileIdInitialDelay);
+          mobileIdSign(endpoint, confirmMessage, callback, failCallback);
         } else {
-          message.error('main.messages.error.mobileIdSignFailed');
+          resourceErrorHandler.responseError(result).catch(angular.noop);
           if (angular.isFunction(failCallback)) {
             failCallback();
           }
@@ -92,37 +86,19 @@ angular.module('hitsaOis')
       });
     };
 
-    function pollMobileSignStatus(endpoint, confirmMessage, callback, failCallback) {
-      QueryUtils.endpoint(endpoint + '/mobileSignStatus').get(
-        function (response) {
-          if (response.status === 'SIGNATURE') {
-            $mdDialog.hide();
-            QueryUtils.endpoint(endpoint + '/mobileSignFinalize').save({
-              version: $rootScope.signVersion
-            }, function (result) {
-              message.info(confirmMessage);
-              callback(result);
-            }, function (reason) {
-              if (angular.isFunction(failCallback)) {
-                failCallback(reason);
-              }
-            });
-          } else if (response.status === 'OUTSTANDING_TRANSACTION') {
-            $rootScope.mobileIdPolls++;
-            if ($rootScope.mobileIdPolls < config.mobileIdMaxPolls) {
-              $timeout(function () {
-                pollMobileSignStatus(endpoint, confirmMessage, callback);
-              }, config.mobileIdPollInterval);
-            }
-          } else {
-            $mdDialog.hide();
-            message.error('main.messages.error.mobileIdSignFailed');
-            if (angular.isFunction(failCallback)) {
-              failCallback();
-            }
-          }
+    function mobileIdSign(endpoint, confirmMessage, callback, failCallback) {
+      QueryUtils.endpoint(endpoint + '/mobileIdSign').save({
+        version: $rootScope.signVersion
+      }, function (result) {
+        message.info(confirmMessage);
+        callback(result);
+        $mdDialog.hide();
+      }, function (reason) {
+        if (angular.isFunction(failCallback)) {
+          failCallback(reason);
         }
-      );
+        $timeout($mdDialog.hide, 500);
+      });
     }
 
     protocolUtils.canEditProtocol = function (auth, protocol) {

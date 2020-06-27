@@ -79,7 +79,8 @@ public class EkisClient {
         LogContext ctx = ctx(port);
 
         Answer result = SoapUtil.withExceptionHandler(ctx, () -> {
-            return port.registerPracticeContract(request.getQguid(), request.getEhisId(),
+            return port.registerPracticeContract(request.getQguid(), 
+                    request.getEhisId(),
                     request.getOisId(),
                     request.getManager(), optional(request.getStIdCode()),
                     request.getStFirstNames(), request.getStLastName(),
@@ -93,7 +94,23 @@ public class EkisClient {
                     optional(request.getOrgTutorEmail()), optional(request.getProgramme()),
                     request.getStartDate(), optional(request.getEndDate()),
                     request.getSchoolTutorId(), request.getPlace(),
-                    optional(request.getOutcomes()), optional(request.getAim()));
+                    optional(request.getOutcomes()), optional(request.getAim()), 
+                    optional(request.getStPostcode()), 
+                    request.getSchTutorFirstName(), 
+                    request.getSchTutorLastName(), 
+                    optional(request.getSchTutorEmail()), 
+                    optional(request.getSchTutorPhone()), 
+                    optional(request.getOrgTutor2Name()), 
+                    optional(request.getOrgTutor2Tel()), 
+                    optional(request.getOrgTutor2Email()),
+                    optional(request.getOrgTutor3Name()), 
+                    optional(request.getOrgTutor3Tel()), 
+                    optional(request.getOrgTutor3Email()),
+                    optional(request.getStPhone()),
+                    optional(request.getStResidenceCountry()), 
+                    optional(request.getStAddress()), 
+                    optional(request.getStAddressAds()), 
+                    optional(request.getStAddressAdsOid()));
         });
         return new RegisterPracticeContractResponse(ctx, result);
     }

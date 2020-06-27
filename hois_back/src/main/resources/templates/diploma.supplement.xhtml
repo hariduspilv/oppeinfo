@@ -47,6 +47,9 @@
                 <td>
                     {{ content.curriculumName }} ({{ "diploma.code" | translate }} {{ content.merCode }})
                     <br/>{{ "diploma.qualification.curriculum.ehis" | translate }} {{ content.curriculumMerRegDate | hoisDate }}
+                    {% if content.specialityName is not empty %}
+                        <br/>{{ content.specialityName }} ({{ "diploma.qualification.curriculum.speciality" | translate }})
+                    {% endif %}
                 </td>
             </tr>
             <tr>
@@ -115,10 +118,9 @@
         {% for result in content.finalThesis %}
             <tr>
                 <td class="label">{{ "diploma.curriculumAndResults.results.finalThesis" | translate }}:</td>
-                <td colspan="5">{{ result.name }}</td>
+                <td colspan="4">{{ result.name }}</td>
             </tr>
             <tr>
-                <td></td>
                 <td></td>
                 <td class="study-results-credits">{{ result.credits }}</td>
                 <td class="study-results-date">{{ result.gradeDate | hoisDate }}</td>
@@ -133,8 +135,7 @@
                 <td class="label">{{ "diploma.curriculumAndResults.results.finalExam" | translate }}:</td>
             </tr>
             <tr>
-                <td>{{ result.subjectCode }}</td>
-                <td>{{ result.name }}</td>
+                <td>{{ result.subjectCode != null ? result.subjectCode + " " : "" }}{{ result.name }}</td>
                 <td class="study-results-credits">{{ result.credits }}</td>
                 <td class="study-results-date">{{ result.gradeDate | hoisDate }}</td>
                 <td class="study-results-grade">

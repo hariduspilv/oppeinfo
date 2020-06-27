@@ -12,6 +12,20 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     public: "public"
   });
 
+  $scope.swapCriteria = function(index1, index2) {
+    var temp = $scope.studyContentWk[index1];
+    $scope.studyContentWk[index1] = $scope.studyContentWk[index2];
+    $scope.studyContentWk[index2] = temp;
+    temp = $scope.studyContentWk[index1].orderNr;
+    $scope.studyContentWk[index1].orderNr = $scope.studyContentWk[index2].orderNr;
+    $scope.studyContentWk[index2].orderNr = temp;
+    $scope.subjectProgramForm.$setDirty();
+  };
+
+  $scope.isString = function(possibleString) {
+    return angular.isString(possibleString);
+  }
+
   $scope.auth = $route.current.locals.auth;
   var subjectId = $route.current.params.subjectId;
   var subjectStudyPeriodId = $route.current.params.subjectStudyPeriodId;
@@ -113,6 +127,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     return true;
   }
 
+  /*
   var weekRegex = /^\d+(\-\d+)?$/;
   function compareWeek(week1, week2) {
     if (week1 === week2) {
@@ -134,6 +149,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     }
     return week1.localeCompare(week2);
   }
+  */
 
   function dtoToModel(response) {
     $scope.studyContentWk = [];
@@ -148,8 +164,11 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
       });
     } else if (response.studyContentType === 'OPPETOOSISU_N') {
       $scope.studyContentWk = response.studyContents;
-      $scope.studyContentWk.sort(function (w1, w2) {
-        return compareWeek(w1.weekNr, w2.weekNr);
+      // old contents should start using orderNr for week
+      $scope.studyContentWk.forEach(function(contentWk) {
+        if (contentWk.orderNr === null || contentWk.orderNr === undefined) {
+          contentWk.orderNr = $scope.studyContentWk.indexOf(contentWk) + 1;
+        }
       });
     }
     $scope.isSupervisor = ArrayUtils.includes(response.supervisorIds || [], $scope.userTeacherId);
@@ -202,18 +221,22 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
   }
 
   $scope.addStudyContentDt = function () {
+    var listLength = $scope.studyContentDt.length;
     $scope.studyContentDt.push({
       id: null,
       studyDt: null,
-      studyInfo: null
+      studyInfo: null,
+      orderNr: listLength + 1
     });
   };
 
   $scope.addStudyContentWk = function () {
+    var listLength = $scope.studyContentWk.length;
     $scope.studyContentWk.push({
       id: null,
       weekNr: null,
-      studyInfo: null
+      studyInfo: null,
+      orderNr: listLength + 1
     });
   };
 

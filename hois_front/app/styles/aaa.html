@@ -1,0 +1,405 @@
+<html>
+<head>
+<style type='text/css'>
+table {
+  table-layout: fixed;
+  border-spacing: 0px;
+}
+
+td, th {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.tr_shaded:nth-child(even) {
+  background: #e0e0e0;
+}
+
+.tr_shaded:nth-child(odd) {
+  background: #ffffff;
+}
+
+.scrolly_table {
+  white-space: nowrap;
+  overflow: auto;
+}
+
+/* The frozen cells will each get two class names,
+   making it easier for me to select all of them or
+   only a subset.  All frozen cells will be "fixed",
+   the corner will also be in class "freeze", and the
+   row and column headers will be "horizontal" and
+   "vertical" respectively. */
+.fixed.freeze {
+  z-index: 10;
+  position: relative;
+}
+
+.fixed.freeze_vertical {
+  z-index: 5;
+  position: relative;
+}
+
+.fixed.freeze_horizontal {
+  z-index: 1;
+  position: relative;
+}
+</style>
+</head>
+<!--style>
+	/*the following html and body rule sets are required only if using a % width or height*/
+/*html {
+  width: 100%;
+  height: 100%;
+}*/
+body {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0 20px 0 20px;
+  text-align: center;
+  background: white;
+}
+.scrollingtable {
+  box-sizing: border-box;
+  display: inline-block;
+  vertical-align: middle;
+  overflow: hidden;
+  width: auto; /*if you want a fixed width, set it here, else set to auto*/
+  min-width: 0/*100%*/; /*if you want a % width, set it here, else set to 0*/
+  height: 188px/*100%*/; /*set table height here; can be fixed value or %*/
+  min-height: 0/*104px*/; /*if using % height, make this large enough to fit scrollbar arrows + caption + thead*/
+  font-family: Verdana, Tahoma, sans-serif;
+  font-size: 15px;
+  line-height: 20px;
+  padding: 20px 0 20px 0; /*need enough padding to make room for caption*/
+  text-align: left;
+}
+.scrollingtable * {box-sizing: border-box;}
+.scrollingtable > div {
+  position: relative;
+  border-top: 1px solid black;
+  height: 100%;
+  padding-top: 20px; /*this determines column header height*/
+}
+.scrollingtable > div:before {
+  top: 0;
+  background: cornflowerblue; /*header row background color*/
+}
+.scrollingtable > div:before,
+.scrollingtable > div > div:after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  left: 0;
+}
+.scrollingtable > div > div {
+  min-height: 0/*43px*/; /*if using % height, make this large enough to fit scrollbar arrows*/
+  max-height: 100%;
+  overflow: scroll/*auto*/; /*set to auto if using fixed or % width; else scroll*/
+  overflow-x: hidden;
+  border: 1px solid black; /*border around table body*/
+}
+.scrollingtable > div > div:after {background: white;} /*match page background color*/
+.scrollingtable > div > div > table {
+  width: 100%;
+  border-spacing: 0;
+  margin-top: -20px; /*inverse of column header height*/
+  /*margin-right: 17px;*/ /*uncomment if using % width*/
+}
+.scrollingtable > div > div > table > caption {
+  position: absolute;
+  top: -20px; /*inverse of caption height*/
+  margin-top: -1px; /*inverse of border-width*/
+  width: 100%;
+  font-weight: bold;
+  text-align: center;
+}
+.scrollingtable > div > div > table > * > tr > * {padding: 0;}
+.scrollingtable > div > div > table > thead {
+  vertical-align: bottom;
+  white-space: nowrap;
+  text-align: center;
+}
+.scrollingtable > div > div > table > thead > tr > * > div {
+  display: inline-block;
+  padding: 0 6px 0 6px; /*header cell padding*/
+}
+.scrollingtable > div > div > table > thead > tr > :first-child:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px; /*match column header height*/
+  border-left: 1px solid black; /*leftmost header border*/
+}
+.scrollingtable > div > div > table > thead > tr > * > div[label]:before,
+.scrollingtable > div > div > table > thead > tr > * > div > div:first-child,
+.scrollingtable > div > div > table > thead > tr > * + :before {
+  position: absolute;
+  top: 0;
+  white-space: pre-wrap;
+  color: white; /*header row font color*/
+}
+.scrollingtable > div > div > table > thead > tr > * > div[label]:before,
+.scrollingtable > div > div > table > thead > tr > * > div[label]:after {content: attr(label);}
+.scrollingtable > div > div > table > thead > tr > * + :before {
+  content: "";
+  display: block;
+  min-height: 20px; /*match column header height*/
+  padding-top: 1px;
+  border-left: 1px solid black; /*borders between header cells*/
+}
+.scrollingtable .scrollbarhead {float: right;}
+.scrollingtable .scrollbarhead:before {
+  position: absolute;
+  width: 100px;
+  top: -1px; /*inverse border-width*/
+  background: white; /*match page background color*/
+}
+.scrollingtable > div > div > table > tbody > tr:after {
+  content: "";
+  display: table-cell;
+  position: relative;
+  padding: 0;
+  border-top: 1px solid black;
+  top: -1px; /*inverse of border width*/
+}
+.scrollingtable > div > div > table > tbody {vertical-align: top;}
+.scrollingtable > div > div > table > tbody > tr {background: white;}
+.scrollingtable > div > div > table > tbody > tr > * {
+  border-bottom: 1px solid black;
+  padding: 0 6px 0 6px;
+  height: 20px; /*match column header height*/
+}
+.scrollingtable > div > div > table > tbody:last-of-type > tr:last-child > * {border-bottom: none;}
+.scrollingtable > div > div > table > tbody > tr:nth-child(even) {background: gainsboro;} /*alternate row color*/
+.scrollingtable > div > div > table > tbody > tr > * + * {border-left: 1px solid black;} /*borders between body cells*/
+</style-->
+<body>
+<!--div class="scrollingtable">
+  <div>
+    <div>
+      <table>
+        <caption>Top Caption</caption>
+        <thead>
+          <tr>
+            <th><div label="Column 1"></div></th>
+            <th><div label="Column 2"></div></th>
+            <th><div label="Column 3"></div></th>
+            <th>
+              <div><div>Column 4</div><div>Column 4</div></div>
+            </th>
+            <th class="scrollbarhead"></th> 
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Lorem ipsum</td><td>Dolor</td><td>Sit</td><td>Amet consectetur</td></tr>
+          <tr><td>Lorem ipsum</td><td>Dolor</td><td>Sit</td><td>Amet consectetur</td></tr>
+          <tr><td>Lorem ipsum</td><td>Dolor</td><td>Sit</td><td>Amet consectetur</td></tr>
+          <tr><td>Lorem ipsum</td><td>Dolor</td><td>Sit</td><td>Amet consectetur</td></tr>
+          <tr><td>Lorem ipsum</td><td>Dolor Dolor Dolor Dolor</td><td>Sit</td><td>Amet consectetur</td></tr>
+          <tr><td>Lorem ipsum</td><td>Dolor</td><td>Sit</td><td>Amet consectetur</td></tr>
+          <tr><td>Lorem ipsum</td><td>Dolor</td><td>Sit</td><td>Amet consectetur</td></tr>
+          <tr><td>Lorem ipsum</td><td>Dolor</td><td>Sit</td><td>Amet consectetur</td></tr>
+          <tr><td>Lorem ipsum</td><td>Dolor</td><td>Sit</td><td>Amet consectetur</td></tr>
+          <tr><td>Lorem ipsum</td><td>Dolor</td><td>Sit</td><td>Amet consectetur</td></tr>
+          <tr><td>Lorem ipsum</td><td>Dolor</td><td>Sit</td><td>Amet consectetur</td></tr>
+          <tr><td>Lorem ipsum</td><td>Dolor</td><td>Sit</td><td>Amet consectetur</td></tr>
+        </tbody>
+      </table>
+    </div>
+    Faux bottom caption
+  </div>
+</div-->
+
+
+<p>Here are a couple of tables.  One:</p>
+
+<div id="scrolling_table_1" class="scrolly_table" style="max-width:500px; max-height:200px">
+<table>
+  <tr>
+    <th style="background-color:white" class="fixed freeze">Corner</th>
+    <th style="background-color:white" class="fixed freeze_vertical">Col header</th>
+    <th style="background-color:white" class="fixed freeze_vertical">Col header</th>
+    <th style="background-color:white" class="fixed freeze_vertical">Col header</th>
+    <th style="background-color:white" class="fixed freeze_vertical">Col header</th>
+  </tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+</table>
+</div>
+
+<p>And now two:</p>
+
+<div id="scrolling_table_2" class="scrolly_table scrolling_table_2" style="max-width:500px; max-height:200px">
+<table>
+  <tr>
+    <th style="background-color:white" class="fixed freeze">Corner</th>
+    <th style="background-color:white" class="fixed freeze_vertical">Col header</th>
+    <th style="background-color:white" class="fixed freeze_vertical">Col header</th>
+    <th style="background-color:white" class="fixed freeze_vertical">Col header</th>
+    <th style="background-color:white" class="fixed freeze_vertical">Col header</th>
+  </tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+  <tr class="tr_shaded"><td class="fixed freeze_horizontal">Row header</td><td>asdf asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td><td>asdf asdf asdf asdf asdf asdf </td></tr>
+</table>
+</div>
+<script>
+function freeze_pane_listener(what_is_this, table_class) {
+  // Wrapping a function so that the listener can be defined
+  // in a loop over a set of scrolling table id's.
+  // Cf. http://stackoverflow.com/questions/750486/javascript-closure-inside-loops-simple-practical-example
+  
+  return function() {
+    var i;
+    var translate_y = "translate(0," + what_is_this.scrollTop + "px)";
+    var translate_x = "translate(" + what_is_this.scrollLeft + "px,0px)";
+    var translate_xy = "translate(" + what_is_this.scrollLeft + "px," + what_is_this.scrollTop + "px)";
+    
+    var fixed_vertical_elts = document.getElementsByClassName(table_class + " freeze_vertical");
+    var fixed_horizontal_elts = document.getElementsByClassName(table_class + " freeze_horizontal");
+    var fixed_both_elts = document.getElementsByClassName(table_class + " freeze");
+    
+    // The webkitTransforms are for a set of ancient smartphones/browsers,
+    // one of which I have, so I code it for myself:
+    for (i = 0; i < fixed_horizontal_elts.length; i++) {
+      fixed_horizontal_elts[i].style.webkitTransform = translate_x;
+      fixed_horizontal_elts[i].style.transform = translate_x;
+    }
+
+    for (i = 0; i < fixed_vertical_elts.length; i++) {
+       fixed_vertical_elts[i].style.webkitTransform = translate_y;
+       fixed_vertical_elts[i].style.transform = translate_y;
+    }
+
+    for (i = 0; i < fixed_both_elts.length; i++) {
+       fixed_both_elts[i].style.webkitTransform = translate_xy;
+       fixed_both_elts[i].style.transform = translate_xy;
+    }
+  }
+}
+
+function even_odd_color(i) {
+  if (i % 2 == 0) {
+    return "#e0e0e0";
+  } else {
+    return "#ffffff";
+  }
+}
+
+function parent_id(wanted_node_name, elt) {
+  // Function to work up the DOM until it reaches
+  // an element of type wanted_node_name, and return
+  // that element's id.
+  
+  var wanted_parent = parent_elt(wanted_node_name, elt);
+  
+  if ((wanted_parent == undefined) || (wanted_parent.nodeName == null)) {
+    // Sad trombone noise.
+    return "";
+  } else {
+    return wanted_parent.id;
+  }
+}
+
+function parent_elt(wanted_node_name, elt) {
+  // Function to work up the DOM until it reaches 
+  // an element of type wanted_node_name, and return
+  // that element.
+  
+  var this_parent = elt.parentElement;
+  if ((this_parent == undefined) || (this_parent.nodeName == null)) {
+    // Sad trombone noise.
+    return null;
+  } else if (this_parent.nodeName == wanted_node_name) {
+    // Found it:
+    return this_parent;
+  } else {
+    // Recurse:
+    return parent_elt(wanted_node_name, this_parent);
+  }
+}
+
+var i, parent_div_id, parent_tr, table_i, scroll_div;
+var scrolling_table_div_ids = ["scrolling_table_1", "scrolling_table_2"];
+
+// This array will let us keep track of even/odd rows:
+var scrolling_table_tr_counters = [];
+for (i = 0; i < scrolling_table_div_ids.length; i++) {
+  scrolling_table_tr_counters.push(0);
+}
+
+// Append the parent div id to the class of each frozen element:
+var fixed_elements = document.getElementsByClassName("fixed");
+for (i = 0; i < fixed_elements.length; i++) {
+  fixed_elements[i].className += " " + parent_id("DIV", fixed_elements[i]);
+}
+
+// Set background colours of row headers, alternating according to 
+// even_odd_color(), which should have the same values as those
+// defined in the CSS for the tr_shaded class.
+var fixed_horizontal_elements = document.getElementsByClassName("freeze_horizontal");
+for (i = 0; i < fixed_horizontal_elements.length; i++) {
+  parent_div_id = parent_id("DIV", fixed_horizontal_elements[i]);
+  table_i = scrolling_table_div_ids.indexOf(parent_div_id);
+  
+  if (table_i >= 0) {
+    parent_tr = parent_elt("TR", fixed_horizontal_elements[i]);
+    
+    if (parent_tr.className.match("tr_shaded")) {
+      fixed_horizontal_elements[i].style.backgroundColor = even_odd_color(scrolling_table_tr_counters[table_i]);
+      scrolling_table_tr_counters[table_i]++;
+    }
+  }
+}
+
+// Add event listeners.
+for (i = 0; i < scrolling_table_div_ids.length; i++) {
+  scroll_div = document.getElementById(scrolling_table_div_ids[i]);
+  scroll_div.addEventListener("scroll", freeze_pane_listener(scroll_div, scrolling_table_div_ids[i]));
+}
+</script>
+</body>
+</html>

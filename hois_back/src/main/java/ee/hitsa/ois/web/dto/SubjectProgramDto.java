@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Set;
 
 import javax.validation.constraints.NotNull;
@@ -28,7 +29,20 @@ public class SubjectProgramDto extends SubjectProgramForm {
     public static SubjectProgramDto of(SubjectProgram program) {
         SubjectProgramDto dto = EntityUtil.bindToDto(program, new SubjectProgramDto(), "subjectStudyPerioudTeacher", "studyContents");
         dto.setSubjectStudyPeriodTeacher(SubjectStudyPeriodTeacherDto.of(program.getSubjectStudyPeriodTeacher()));
-        dto.setStudyContents(StreamUtil.toMappedSet(SubjectProgramStudyContentDto::of, program.getStudyContents()));
+        dto.setStudyContents(StreamUtil.toMappedList(SubjectProgramStudyContentDto::of, program.getStudyContents()));
+        Collections.sort(dto.getStudyContents(), (s1, s2) -> {
+            Long orderNr1 = s1.getOrderNr();
+            Long orderNr2 = s2.getOrderNr();
+            if (orderNr1 != null && orderNr2 != null) {
+                return orderNr1.compareTo(orderNr2);
+            }
+            String weekNr1 = s1.getWeekNr();
+            String weekNr2 = s2.getWeekNr();
+            if (weekNr1 != null && weekNr2 != null) {
+                return weekNr1.compareTo(weekNr2);
+            }
+            return 0;
+        });
         dto.setIsLetterGrade(program.getSubjectStudyPeriodTeacher().getSubjectStudyPeriod().getSubject().getSchool().getIsLetterGrade());
         return dto;
     }

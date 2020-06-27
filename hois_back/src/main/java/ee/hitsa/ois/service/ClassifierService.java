@@ -107,5 +107,6 @@ public class ClassifierService {
         POSSIBLE_CONNECTIONS.put("ISCED_RYHM", Arrays.asList("ISCED_SUUN","OPPEKAVAGRUPP"));
         POSSIBLE_CONNECTIONS.put("ISCED_SUUN", Arrays.asList("ISCED_VALD"));
         POSSIBLE_CONNECTIONS.put("KOMPETENTS", Arrays.asList("OSAKUTSE", "SPETSKUTSE", "KUTSE"));
+        POSSIBLE_CONNECTIONS.put("EHAK", Arrays.asList("EHAK"));
     }
 }

@@ -2,6 +2,7 @@ package ee.hitsa.ois.util;
 
 import javax.persistence.EntityManager;
 
+import ee.hitsa.ois.domain.school.School;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,8 @@ import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.SubjectProgramStatus;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
+
+import java.util.List;
 
 @Component
 public class SubjectProgramUtil {
@@ -37,6 +40,11 @@ public class SubjectProgramUtil {
     }
 
     public boolean canView(HoisUserDetails user, SubjectProgram program) {
+        School school = subjectProgramSchool(program);
+        if (Boolean.TRUE.equals(school.getIsNotPublicSubject()) && !school.getId().equals(user.getSchoolId())) {
+            throw new ValidationFailedException("main.messages.error.dataNotFound");
+        }
+
         boolean isConfirmed = ClassifierUtil.oneOf(program.getStatus(), SubjectProgramStatus.AINEPROGRAMM_STAATUS_K, SubjectProgramStatus.AINEPROGRAMM_STAATUS_V);
         boolean isCompleted = ClassifierUtil.oneOf(program.getStatus(), SubjectProgramStatus.AINEPROGRAMM_STAATUS_K);
         if ((isConfirmed || isCompleted) && Boolean.TRUE.equals(program.getPublicAll())) {
@@ -88,6 +96,14 @@ public class SubjectProgramUtil {
             return false;
         }
         return true;
+    }
+
+    private School subjectProgramSchool(SubjectProgram program) {
+        List<School> schools = em.createQuery("select sp.subjectStudyPeriodTeacher.subjectStudyPeriod.subject.school " +
+                "from SubjectProgram sp where sp.id = :programId", School.class)
+                .setParameter("programId", program.getId())
+                .setMaxResults(1).getResultList();
+        return schools.get(0);
     }
 
     public void assertCanView(HoisUserDetails user, SubjectProgram program) {

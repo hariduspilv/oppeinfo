@@ -3,6 +3,7 @@ package ee.hitsa.ois.report.certificate;
 import java.util.Arrays;
 
 import ee.hitsa.ois.domain.Certificate;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.CertificateType;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.StudentUtil;
@@ -20,7 +21,11 @@ public class CertificateRtfReport {
     public CertificateRtfReport(Certificate certificate) {
         this.certificate = certificate;
         this.contentEditable = Boolean.valueOf(isContentEditable(EnumUtil.valueOf(CertificateType.class, certificate.getType())));
-        Boolean higher = Boolean.valueOf(StudentUtil.isHigher(certificate.getStudent()));
+        Student student = certificate.getStudent();
+        Boolean higher = null;
+        if (student != null) {
+            higher = Boolean.valueOf(StudentUtil.isHigher(student));
+        }
         this.content = convertHtmlToXslFo(certificate.getContent(), EnumUtil.valueOf(CertificateType.class, certificate.getType()), higher);
     }
     

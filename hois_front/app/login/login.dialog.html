@@ -23,6 +23,10 @@
         <md-content class="md-padding">
           <form name="mobileIdLoginForm">
             <md-input-container class="md-block">
+              <label flex>{{ 'main.login.mobileid.idcode' | translate }}</label>
+              <input type="text" flex class="form-control" name="idcode" ng-model="idcode" minlength="11" md-maxlength="11" required/>
+            </md-input-container>
+            <md-input-container class="md-block">
               <label flex>{{ 'main.login.mobileid.mobilenumber' | translate }}</label>
               <input type="text" flex class="form-control" name="mobilenumber" ng-model="mobilenumber" required/>
             </md-input-container>

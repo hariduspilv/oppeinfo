@@ -1,7 +1,6 @@
 package ee.hitsa.ois.web.dto.student;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
@@ -54,35 +53,20 @@ public class StudentHigherSubjectResultDto {
 
     public void calculateIsOk(boolean showUncompleted) {
         if(grades != null && !grades.isEmpty()) {
-            Collections.sort(grades, StreamUtil.comparingWithNullsLast(StudentHigherResultGradeDto::getIsActive));
-            lastGrade = calculateLastGrade(showUncompleted);
+            grades.sort(StreamUtil.comparingWithNullsLast(StudentHigherResultGradeDto::getIsActive).reversed());
+            lastGrade = grades.get(0);
             isOk = Boolean.valueOf((lastGrade.getGrade() != null && HigherAssessment.isPositive(lastGrade.getGrade())) || showUncompleted);
         } else {
             isOk = this.isAddedFromDirective == null ? Boolean.FALSE : this.isAddedFromDirective;
         }
     }
 
-    private StudentHigherResultGradeDto calculateLastGrade(boolean showUncompleted) {
-        for(int i = grades.size() - 1; i >= 0; i--) {
-            StudentHigherResultGradeDto grade = grades.get(i);
-            if(HigherAssessment.KORGHINDAMINE_MI.name().equals(grade.getGrade()) && i != 0 && !showUncompleted) {
-                continue;
-            }
-            return grades.get(i);
-        }
-        return null;
-    }
-    
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public boolean hasResult() {
-        return this.getLastGrade() != null;
     }
 
     public static AutocompleteResult getHigherModuleDto(CurriculumVersionHigherModule module) {

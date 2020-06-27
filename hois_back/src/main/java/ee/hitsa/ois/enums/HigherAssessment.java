@@ -20,6 +20,9 @@ public enum HigherAssessment {
     private final Boolean isPositive;
     // grade as number, used for calculating average grade
     private final Short mark;
+
+    public static final List<String> GRADE_SYSTEM = EnumUtil.toNameList(KORGHINDAMINE_5, KORGHINDAMINE_4,
+            KORGHINDAMINE_3, KORGHINDAMINE_2, KORGHINDAMINE_1, KORGHINDAMINE_0, KORGHINDAMINE_A, KORGHINDAMINE_M);
     
     public static final List<String> GRADE_POSITIVE = EnumUtil.toNameList(KORGHINDAMINE_5, KORGHINDAMINE_4,
             KORGHINDAMINE_3, KORGHINDAMINE_2, KORGHINDAMINE_1, KORGHINDAMINE_A);

@@ -7,7 +7,7 @@
         <div layout="row" ng-if="isPublic">
           <md-input-container flex>
             <label>{{'school.label' | translate}}</label>
-            <hois-select ng-model="criteria.schoolId" type="school"></hois-select>
+            <hois-select ng-model="criteria.schoolId" values="formState.schools"></hois-select>
           </md-input-container>
         </div>
         <div layout="row">

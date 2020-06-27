@@ -1,4 +1,11 @@
 <style>
+  .md-autocomplete-suggestions li {
+    white-space: normal;
+    height: auto !important;
+    line-height: 15px !important;
+    margin-bottom: 8px;
+  }
+
   .width-327 {
     width: 327px;
     padding-right: 23px;
@@ -548,10 +555,18 @@
                       {{'report.studentData.speciality' | translate}}
                     </md-checkbox>
                   </md-input-container>
-                  <hois-autocomplete ng-model="formState.criteria.speciality" name="speciality"
-                    ha-search="specialityAutocompleteSearch" ha-controller="directiveControllers" class="width-300-autocomplete"
-                    label="report.studentData.studyData.speciality" no-paging="true" multiple ha-attribute="code">
-                  </hois-autocomplete>
+                  <div layout="column">
+                    <hois-autocomplete ng-model="formState.criteria.specialityHigher" name="speciality" ng-if="auth.higher"
+                      method="highspecialities" ha-controller="directiveControllers" class="width-300-autocomplete"
+                      label="{{auth.higher && auth.vocational ? 'report.studentData.studyData.specialityHigher' : 'report.studentData.studyData.speciality'}}" 
+                      no-paging="true" multiple ha-attribute="id" additional-query-params="{filter: true}">
+                    </hois-autocomplete>
+                    <hois-autocomplete ng-model="formState.criteria.speciality" name="speciality" ng-if="auth.vocational"
+                      url="/reports/getPossibleParentClassifiers" ha-controller="directiveControllers" class="width-300-autocomplete"
+                      additional-query-params="{mainClassCode: 'SPETSKUTSE'}"
+                      label="{{auth.higher && auth.vocational ? 'report.studentData.studyData.specialityVocational' : 'report.studentData.studyData.speciality'}}" no-paging="true" multiple ha-attribute="code">
+                    </hois-autocomplete>
+                  </div>
                 </div>
                 <div layout="row">
                   <md-input-container>
@@ -1464,8 +1479,8 @@
               <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
               <md-button ng-href="{{excelDL(formState.xlsUrl, criteria)}}" ng-disabled="!searched" target="_blank" class="md-raised">{{'report.excel' | translate}}</md-button>
             </div>
-            <div layout="row">
-              <form name="queryForm">
+            <form name="queryForm">
+              <div layout="row" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_PARING')">
                 <div ng-if="searched" layout="row" layout-xs="column">
                   <md-input-container style="margin-left: 6px; width: 300px">
                     <label>{{'report.studentData.query.name' | translate}}</label>
@@ -1473,8 +1488,8 @@
                   </md-input-container>
                   <md-button class="md-raised" ng-click="saveQuery()">{{'report.studentData.query.save' | translate}}</md-button>
                 </div>
-              </form>
-            </div>
+              </div>
+            </form>
           </div>
           <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </fieldset>
@@ -1489,13 +1504,13 @@
               <thead md-head>
                 <tr md-row>
                   <th md-column>{{'report.studentData.query.name' | translate}}</th>
-                  <th md-column>{{'report.studentData.query.delete' | translate}}</th>
+                  <th md-column ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_PARING')">{{'report.studentData.query.delete' | translate}}</th>
                 </tr>
               </thead>
               <tbody md-body>
                 <tr md-row ng-repeat="query in formState.savedQueries" ng-class-odd="'odd'" ng-class-even="'even'">
                     <td md-cell><a ng-click="loadQueryToForm(query.id)">{{currentLanguageNameField(query)}}</a></td>
-                    <td md-cell>
+                    <td md-cell ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_PARING')">
                       <a ng-click="deleteStudentQuery(query.id)" class="remove">&times;</a>
                     </td>
                 </tr>

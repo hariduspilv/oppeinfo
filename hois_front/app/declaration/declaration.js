@@ -9,12 +9,14 @@ function calculateSubjectCredits(subjects) {
   }, 0);
 }
 
-angular.module('hitsaOis').controller('DeclarationEditController', 
-['$scope', 'dialogService', 'QueryUtils', 'message', 'ArrayUtils', '$route', '$location', 'DataUtils', 'FormUtils', 
-function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $location, DataUtils, FormUtils) {
+angular.module('hitsaOis').controller('DeclarationEditController',
+['$location', '$scope', '$route', 'ArrayUtils', 'Classifier', 'DataUtils', 'FormUtils', 'QueryUtils', 'dialogService', 'message',
+function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtils, QueryUtils, dialogService, message) {
 
   var SubjectEndpoint = QueryUtils.endpoint('/declarations/subject');
   var ConfirmEndPoint = QueryUtils.endpoint('/declarations/confirm');
+
+  var clMapper = Classifier.valuemapper({grade: 'KORGHINDAMINE'});
 
   var id = $route.current.params.id;
   $scope.formState = {};
@@ -32,7 +34,7 @@ function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $locat
 
   if(id) {
     $scope.declaration = QueryUtils.endpoint('/declarations').get({id: id}, function(response){
-      $scope.isGuestStudent = response.student.type === 'OPPUR_K';
+      afterLoad(response);
       $scope.hasCurriculum = response.student.curriculumVersion !== null;
       // We need declaration period to show
       QueryUtils.endpoint('/declarations/declarationPeriod').get({id: response.id}).$promise.then(function(response){
@@ -47,7 +49,7 @@ function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $locat
     });
   } else {
     $scope.declaration = QueryUtils.endpoint('/declarations/current').get({}, function(response){
-      $scope.isGuestStudent = response.student.type === 'OPPUR_K';
+      afterLoad(response);
       // We need declaration period to show
       QueryUtils.endpoint('/declarations/isDeclarationPeriod').search().$promise.then(function(response){
         $scope.formState.isDeclarationPeriod = response.isDeclarationPeriod;
@@ -57,6 +59,18 @@ function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $locat
         if (response.declarationPeriodEnd) {
           $scope.formState.declarationPeriodEnd = new Date(response.declarationPeriodEnd);
         }
+      });
+    });
+  }
+
+  function afterLoad(declaration) {
+    $scope.isGuestStudent = declaration.student.type === 'OPPUR_K';
+    (declaration.subjects || []).forEach(function (subject) {
+      subject.mandatoryPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
+        clMapper.objectmapper(prerequisiteSubject);
+      });
+      subject.recommendedPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
+        clMapper.objectmapper(prerequisiteSubject);
       });
     });
   }
@@ -97,8 +111,8 @@ function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $locat
     $scope.tabledata.content = resultData.content;
     $scope.tabledata.totalElements = resultData.totalElements;
   };
-  $scope.criteria = { order: 'cvhm.' + $scope.currentLanguageNameField() + 
-                              ', s.' + $scope.currentLanguageNameField() + 
+  $scope.criteria = { order: 'cvhm.' + $scope.currentLanguageNameField() +
+                              ', s.' + $scope.currentLanguageNameField() +
                               ', s.code, teachers.teacher', size: 10, page: 1};
 
   $scope.openAddCurriculumSubject = function () {
@@ -191,6 +205,7 @@ function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $locat
   $scope.seePrerequisites = function(subject) {
       var DialogController = function (scope) {
         scope.subject = subject;
+        scope.letterGrades = $scope.auth.school.letterGrades;
       };
 
       dialogService.showDialog('declaration/declaration.subject.prerequisites.html', DialogController,
@@ -198,12 +213,15 @@ function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $locat
       });
   };
 
-}]).controller('DeclarationViewController', ['$scope', 'dialogService', 'QueryUtils', 'message', 'ArrayUtils', '$route', '$location', function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $location) {
+}]).controller('DeclarationViewController', ['$location', '$route', '$scope', 'ArrayUtils', 'Classifier', 'QueryUtils', 'dialogService', 'message',
+  function ($location, $route, $scope, ArrayUtils, Classifier, QueryUtils, dialogService, message) {
 
   var id = $route.current.params.id;
   $scope.currentDeclarationPage = $location.path() === '/declaration/current/view';
   $scope.auth = $route.current.locals.auth;
   var ConfirmEndPoint = QueryUtils.endpoint('/declarations/confirm');
+
+  var clMapper = Classifier.valuemapper({grade: 'KORGHINDAMINE'});
 
   var currentWrapper = new DeclarationWrapper(undefined, {isNextPeriod: false});
   var nextWrapper = new DeclarationWrapper(undefined, {isNextPeriod: true});
@@ -224,7 +242,7 @@ function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $locat
 
   /**
    * Sets declaration and formState
-   * 
+   *
    * @param {DeclarationWrapper} wrapper
    * @param {boolean} next if true then looks for next period declaration.
    */
@@ -233,10 +251,11 @@ function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $locat
       if(!response.id) {
         wrapper.formState.noDeclaration = true;
       } else {
+        afterLoad(response);
         wrapper.declaration = response;
         wrapper.formState.declaration = true;
       }
-      
+
       // We need declaration period to show
       QueryUtils.endpoint('/declarations/isDeclarationPeriod?next=' + !!next).search().$promise.then(function(response){
         wrapper.formState.type = response.isDeclarationPeriod ? $scope.DECLARATION_PERIOD_TYPE.CURRENT : undefined;
@@ -271,6 +290,7 @@ function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $locat
 
   if(id) {
     currentWrapper.declaration = QueryUtils.endpoint('/declarations').get({id: id}, function(response){
+      afterLoad(response);
       currentWrapper.formState.declaration = true;
       $scope.isGuestStudent = response.student.type === 'OPPUR_K';
       $scope.currentNavItem = response.isPrevious ? 'previous' : 'current';
@@ -280,6 +300,17 @@ function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $locat
     $scope.currentNavItem = 'current';
     getDeclarationDataWithoutId(currentWrapper);
     getDeclarationDataWithoutId(nextWrapper, true);
+  }
+
+  function afterLoad(declaration) {
+    (declaration.subjects || []).forEach(function (subject) {
+      subject.mandatoryPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
+        clMapper.objectmapper(prerequisiteSubject);
+      });
+      subject.recommendedPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
+        clMapper.objectmapper(prerequisiteSubject);
+      });
+    });
   }
 
   $scope.addDeclaration = function(next) {
@@ -354,7 +385,7 @@ function ($scope, dialogService, QueryUtils, message, ArrayUtils, $route, $locat
     promises.push($scope.curriculumVersions.$promise);
 
     $scope.formState = {canCreate: auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA') !== -1 };
-    
+
     $scope.searchCurriculumVersions = function (text) {
       return DataUtils.filterArrayByText($scope.curriculumVersions, text, function (obj, regex) {
         return regex.test($scope.currentLanguageNameField(obj).toUpperCase());

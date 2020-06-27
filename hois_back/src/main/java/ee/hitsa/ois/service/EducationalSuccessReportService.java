@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.enums.DirectiveStatus;
@@ -93,7 +94,7 @@ public class EducationalSuccessReportService {
                 + "left join student_group sg on "
                     + "case when ((s.study_start <= :thruDate or s.study_start is null) and (s.study_end > :thruDate or s.study_end is null) and s.status_code in (:activeStatus)) "
                     + "then s.student_group_id else sh.student_group_id end = sg.id "
-                    + "join person p on p.id = s.person_id "
+                + "join person p on p.id = s.person_id "
                 + "left join student_curriculum_completion scc on scc.student_id = s.id "
                 + "left join (select count(svr.id) as count, svr.student_id "
                     + "from student_vocational_result svr "
@@ -176,7 +177,7 @@ public class EducationalSuccessReportService {
         qb.parameter("positiveGrades", EnumUtil.toNameList(OccupationalGrade.KUTSEHINDAMINE_4, OccupationalGrade.KUTSEHINDAMINE_5
                 , OccupationalGrade.KUTSEHINDAMINE_A));
         String SELECT = "s.id, p.firstname, p.lastname, sg.code, scc.average_mark, coalesce(modules.count, 0), coalesce(absences.totalAbsences, 0) as absences, coalesce(absencesP.totalAbsences, 0) as absencesP";
-        qb.sort("scc.average_mark desc");
+        qb.sort(pageable.getSort() != null ? pageable.getSort() : new Sort(new String[] {"scc.average_mark desc, p.lastname, p.firstname"}));
 
         return JpaQueryUtil.pagingResult(qb, SELECT, em, pageable).map(r -> {
             BestResultStudentResultDto dto = new BestResultStudentResultDto(r);
@@ -407,19 +408,6 @@ public class EducationalSuccessReportService {
                         + "left join curriculum_version cv on cv.id = sh.curriculum_version_id "
                         + "left join curriculum c on c.id = cv.curriculum_id "
                         + "where sh.student_id = s.id "
-                        + "and (cast(sh.valid_from as date) < :fromDate or sh.valid_from is null) "
-                        + "and (cast(sh.valid_thru as date) > :fromDate or sh.valid_thru is null) "
-                        // data transer generated student history should be ignored
-                        + "and sh.inserted_by != 'DATA_TRANSFER_PROCESS' and upper(sh.inserted_by) not like upper('%andmete%kanne%') "
-                        + "and (c.is_higher = false "
-                        + "or exists(select 1 from directive_student ds join directive d on d.id = ds.directive_id "
-                            + "where ds.canceled != true and d.type_code = '" + DirectiveType.KASKKIRI_KYLALIS.name() + "' and ds.student_id = s.id and d.is_higher != true "
-                            + ")) "
-                        + "and sh.status_code in (:activeStatus)) "
-                    + "and exists(select 1 from student_history sh "
-                        + "left join curriculum_version cv on cv.id = sh.curriculum_version_id "
-                        + "left join curriculum c on c.id = cv.curriculum_id "
-                        + "where sh.student_id = s.id "
                         // data transer generated student history should be ignored
                         + "and sh.inserted_by != 'DATA_TRANSFER_PROCESS' and upper(sh.inserted_by) not like upper('%andmete%kanne%') "
                         + "and (cast(sh.valid_from as date) <= :thruDate or sh.valid_from is null) "
@@ -435,23 +423,11 @@ public class EducationalSuccessReportService {
                         + "and d.status_code = '" + DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name() + "' "
                         + "and ds.canceled != true "
                         + "and d.confirm_date between :fromDate and :thruDate) "
+                    + "and s.school_id = :schoolId "
                 + "union "
                 + "select 'report.studentSuccess.director.studentExmatB' as header, count(distinct s.id)\\:\\:text as data, false as bold, 10 as orderNr "
                 + "from student s "
                 + "where exists(select 1 from student_history sh "
-                        + "left join curriculum_version cv on cv.id = sh.curriculum_version_id "
-                        + "left join curriculum c on c.id = cv.curriculum_id "
-                        + "where sh.student_id = s.id "
-                        + "and (cast(sh.valid_from as date) < :fromDate or sh.valid_from is null) "
-                        + "and (cast(sh.valid_thru as date) > :fromDate or sh.valid_thru is null) "
-                        // data transer generated student history should be ignored
-                        + "and sh.inserted_by != 'DATA_TRANSFER_PROCESS' and upper(sh.inserted_by) not like upper('%andmete%kanne%') "
-                        + "and (c.is_higher = false "
-                        + "or exists(select 1 from directive_student ds join directive d on d.id = ds.directive_id "
-                            + "where ds.canceled != true and d.type_code = '" + DirectiveType.KASKKIRI_KYLALIS.name() + "' and ds.student_id = s.id and d.is_higher != true "
-                            + ")) "
-                        + "and sh.status_code in (:activeStatus)) "
-                    + "and exists(select 1 from student_history sh "
                         + "left join curriculum_version cv on cv.id = sh.curriculum_version_id "
                         + "left join curriculum c on c.id = cv.curriculum_id "
                         + "where sh.student_id = s.id "
@@ -471,6 +447,7 @@ public class EducationalSuccessReportService {
                         + "and ds.canceled != true "
                         + "and d.confirm_date between :fromDate and :thruDate "
                         + "and ds.reason_code = '" + ExmatriculationReason.EKSMAT_POHJUS_B.name() + "') "
+                    + "and s.school_id = :schoolId "
                 + "union "
                 + "select 'report.studentSuccess.director.studentGroupCount' as header, count(distinct sg.id)\\:\\:text as data, true as bold, 11 as orderNr "
                 + "from student_group sg "
@@ -1341,12 +1318,12 @@ public class EducationalSuccessReportService {
                     + "case when ((s.study_start <= :dateThru or s.study_start is null) and (s.study_end > :dateThru or s.study_end is null) and s.status_code in (:activeStatus)) "
                     + "then s.student_group_id else sh.student_group_id end = sg.id "
                 + "join person p on p.id = s.person_id "
+                // for KKH
+                + "left join student_curriculum_completion scc on scc.student_id = s.id "
                 + "left join (select svr.student_id, sum(case when 'SISSEKANNE_M' in (:gradeTypes) then 1 else 0 end) as amount, "
                 + "sum(case when svr.grade_code in (:countableGrades) and 'SISSEKANNE_M' in (:gradeTypes) then 1 else 0 end) as countableGrades, "
                 + "sum(case when svr.grade_code not in (:positiveGrades) and 'SISSEKANNE_M' in (:gradeTypes) then 1 else 0 end) as debts, "
-                + "sum(case when svr.grade_code in (:positiveGrades) and 'SISSEKANNE_M' in (:gradeTypes) then 1 else 0 end) as positiveGrades, "
-                + "sum(case when svr.grade_mark in (3, 4, 5) then svr.grade_mark * credits else 0 end) as multipliedGrades, "
-                + "sum(case when svr.grade_mark in (3, 4, 5) then svr.credits else 0 end) as addedCredits "
+                + "sum(case when svr.grade_code in (:positiveGrades) and 'SISSEKANNE_M' in (:gradeTypes) then 1 else 0 end) as positiveGrades "
                     + "from student_vocational_result svr "
                     + "where svr.grade_code is not null "
                     + (criteria.getFrom() != null ? "and svr.grade_date >= :dateFrom " : "")
@@ -1377,7 +1354,7 @@ public class EducationalSuccessReportService {
                     + (criteria.getThru() != null ? "and scmor.grade_date <= :dateThru " : "")
                     + "group by scmor.student_id) outcomes on outcomes.student_id = s.id and 'SISSEKANNE_O' in (:gradeTypes)";
     
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable.getSort() != null ? pageable.getSort() : new Sort(new String[] {"p.lastname, p.firstname"}));
         
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("s.id = :studentId", "studentId", criteria.getStudent());
@@ -1418,7 +1395,7 @@ public class EducationalSuccessReportService {
                 + "(case when svr.amount is not null then svr.amount else 0 end + "
                     + "case when journalStudent.amount is not null then journalStudent.amount else 0 end + "
                     + "case when outcomes.amount is not null then outcomes.amount else 0 end) as allGrades, "
-                + "case when svr.addedCredits > 0 then floor(svr.multipliedGrades*100/svr.addedCredits)/100 else 0 end as weightedAverage, "
+                + "scc.average_mark as weightedAverage, "
                 + "journalStudent.gradeCodes as journalGradeCodes,"
                 + "outcomes.gradeCodes";
 
@@ -1487,7 +1464,7 @@ public class EducationalSuccessReportService {
                     + (criteria.getThru() != null ? "and scmor.grade_date <= :dateThru " : "")
                     + "group by scmor.student_id) outcomes on outcomes.student_id = s.id and 'SISSEKANNE_O' in (:gradeTypes)";
     
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable.getSort() != null ? pageable.getSort() : new Sort(new String[] {"sg.code"}));
         
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("s.id = :studentId", "studentId", criteria.getStudent());
@@ -1575,9 +1552,12 @@ public class EducationalSuccessReportService {
                     + "join journal_entry je on je.journal_id = j.id "
                     + "join journal_entry_student jes on jes.journal_entry_id = je.id and jes.journal_student_id = js.id "
                     + "where jes.grade_code not in (:positiveGrades) "
-                    + (criteria.getFrom() != null ? "and coalesce(je.entry_date, jes.grade_inserted) >= :dateFrom " : "")
-                    + (criteria.getThru() != null ? "and coalesce(je.entry_date, jes.grade_inserted) <= :dateThru " : "")
-                    + (criteria.getTeacher() != null ? "and exists(select 1 from journal_teacher jt where jt.teacher_id = :teacherId and jt.journal_id = j.id) " : "")
+                    + (criteria.getFrom() != null ? "and coalesce(je.entry_date, cast(jes.grade_inserted as date)) >= :dateFrom " : "")
+                    + (criteria.getThru() != null ? "and coalesce(je.entry_date, cast(jes.grade_inserted as date)) <= :dateThru " : "")
+                    + (criteria.getTeacher() != null ? "and exists(select 1 from teacher t "
+                            + "join person p on p.id = t.person_id "
+                            + "where p.firstname || ' ' || p.lastname || ' (' || p.idcode || ')' = coalesce(jes.grade_inserted_by, jes.changed_by, jes.inserted_by) "
+                            + "and t.id = :teacherId) " : "")
                     + (criteria.getGradeType() != null && !criteria.getGradeType().isEmpty() ? "and je.entry_type_code in (:gradeTypes) " : "")
                     + "group by js.student_id) journalStudent on journalStudent.student_id = s.id "
                 + "left join (select scmor.student_id, count(scmor.id) as amount, string_agg(scmor.id\\:\\:text, ', ') as ids "
@@ -1587,9 +1567,20 @@ public class EducationalSuccessReportService {
                     + (criteria.getThru() != null ? "and scmor.grade_date <= :dateThru " : "")
                     + (criteria.getTeacher() != null ? "and scmor.grade_inserted_teacher_id = :teacherId " : "")
                     + (criteria.getGradeType() != null && !criteria.getGradeType().isEmpty() ? "and 'SISSEKANNE_O' in (:gradeTypes) " : "")
-                    + "group by scmor.student_id) outcomes on outcomes.student_id = s.id";
+                    + "group by scmor.student_id) outcomes on outcomes.student_id = s.id "
+                + "left join (select pj.student_id, count(pj.id) as amount, string_agg(pj.id\\:\\:text, ', ') as ids  "
+                    + "from practice_journal pj "
+                    + "join practice_journal_module_subject pjms on pj.id = pjms.practice_journal_id "
+                    + "join curriculum_version_omodule cvo on pjms.curriculum_version_omodule_id = cvo.id "
+                    + "where pj.grade_code is not null "
+                    + "and pj.grade_code not in (:positiveGrades) "
+                    + (criteria.getFrom() != null ? "and pj.grade_inserted >= :dateFrom " : "")
+                    + (criteria.getThru() != null ? "and pj.grade_inserted <= :dateThru " : "")
+                    + (criteria.getTeacher() != null ? "and pj.teacher_id = :teacherId " : "")
+                    + (criteria.getGradeType() != null && !criteria.getGradeType().isEmpty() ? "and 'SISSEKANNE_L' in (:gradeTypes) " : "")
+                    + "group by pj.student_id) practiceJournals on practiceJournals.student_id = s.id";
     
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable.getSort() != null ? pageable.getSort() : new Sort(new String[] {"p.lastname, p.firstname"}));
         
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("s.id = :studentId", "studentId", criteria.getStudent());
@@ -1602,16 +1593,17 @@ public class EducationalSuccessReportService {
                 + "))");
         qb.optionalCriteria("(case when svr.amount is not null then svr.amount else 0 end + "
                 + "case when journalStudent.amount is not null then journalStudent.amount else 0 end + "
-                + "case when outcomes.amount is not null then outcomes.amount else 0 end) "
+                + "case when outcomes.amount is not null then outcomes.amount else 0 end + "
+                + "case when practiceJournals.amount is not null then practiceJournals.amount else 0 end) "
                 + criteria.getDebtSign() + " :debtAmount", "debtAmount", criteria.getDebt());
         qb.filter("(sh.id is not null "
                 + "or "
                 + "((s.study_start <= :dateThru or s.study_start is null) and (s.study_end > :dateThru or s.study_end is null) and s.status_code in (:activeStatus)))");
         qb.parameter("activeStatus", StudentStatus.STUDENT_STATUS_ACTIVE);
         if (hasDebt) {
-            qb.filter("(svr.student_id is not null or journalStudent.student_id is not null or outcomes.student_id is not null)");
+            qb.filter("(svr.student_id is not null or journalStudent.student_id is not null or outcomes.student_id is not null or practiceJournals.student_id is not null)");
         } else {
-            qb.filter("(svr.student_id is null and journalStudent.student_id is null and outcomes.student_id is null)");
+            qb.filter("(svr.student_id is null and journalStudent.student_id is null and outcomes.student_id is null and practiceJournals.student_id is null)");
         }
         qb.parameter("positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
         if (criteria.getFrom() != null) {
@@ -1629,8 +1621,9 @@ public class EducationalSuccessReportService {
         String SELECT = "s.id as studentId, p.firstname, p.lastname, sg.id as groupId, sg.code, "
                 + "(case when svr.amount is not null then svr.amount else 0 end + "
                 + "case when journalStudent.amount is not null then journalStudent.amount else 0 end + "
-                + "case when outcomes.amount is not null then outcomes.amount else 0 end) as amount, "
-                + "svr.ids as moduleIds, journalStudent.ids as journalIds, outcomes.ids as outcomeIds";
+                + "case when outcomes.amount is not null then outcomes.amount else 0 end + "
+                + "case when practiceJournals.amount is not null then practiceJournals.amount else 0 end) as amount, "
+                + "svr.ids as moduleIds, journalStudent.ids as journalIds, outcomes.ids as outcomeIds, practiceJournals.ids as practiceJournalIds";
         
         Page<Object> page = JpaQueryUtil.pagingResult(qb, SELECT, em, pageable).map(r -> {
             EducationalSuccessDebtDto dto = new EducationalSuccessDebtDto(r);
@@ -1661,30 +1654,42 @@ public class EducationalSuccessReportService {
                     + ") modules on modules.studentId = s.id "
                 + "where s.id in (:studentIds) "
                 + "union "
-                + "select coalesce(je.entry_date, jes.grade_inserted) as gradeDate, c.name_et as studyYear, j.name_et as nameEt, j.name_et as nameEn, "
-                + "string_agg(p.firstname || ' ' || p.lastname, ', ') as teachers, entryType.name_et as typeEt, entryType.name_en as typeEn, false as isModule, "
+                + "select coalesce(je.entry_date, jes.grade_inserted) as gradeDate, c.name_et as studyYear, "
+                + "string_agg(distinct cm.name_et ||' / ' || cvot.name_et ||' / ' || j.name_et, '\n') as nameEt, "
+                + "string_agg(distinct cm.name_en ||' / ' || cvot.name_et ||' / ' || j.name_et, '\n') as nameEn, "
+                + "split_part(coalesce(jes.grade_inserted_by, jes.changed_by, jes.inserted_by), '(', 1) as teachers, entryType.name_et as typeEt, entryType.name_en as typeEn, false as isModule, "
                 + "c_grade.value as gradeValue, js.student_id as studentId "
                     + "from journal j "
                     + "join journal_student js on js.journal_id = j.id "
+                    + "join student s on js.student_id = s.id "
                     + "join journal_entry je on je.journal_id = j.id "
                     + "join journal_entry_student jes on js.id = jes.journal_student_id and je.id = jes.journal_entry_id "
+                    + "left join (select lpm.id, lp.student_group_id, jot.journal_id "
+                        + "from journal_omodule_theme jot "
+                        + "join lesson_plan_module lpm on jot.lesson_plan_module_id = lpm.id "
+                        + "join lesson_plan lp on lpm.lesson_plan_id = lp.id "
+                        + ") lessonPlans on lessonPlans.journal_id = j.id and lessonPlans.student_group_id = s.student_group_id "
+                    + "left join journal_omodule_theme jot on jot.journal_id = j.id and (case when lessonPlans.id is not null then jot.lesson_plan_module_id = lessonPlans.id else true end) "
+                    + "left join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id "
+                    + "left join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id "
+                    + "left join curriculum_module cm on cm.id = cvo.curriculum_module_id "
                     + "left join study_year sy on j.study_year_id = sy.id "
                     + "left join classifier c on c.code = sy.year_code "
-                    + "left join journal_teacher jt on jt.journal_id = j.id "
-                    + "left join teacher t on jt.teacher_id = t.id "
-                    + "left join person p on t.person_id = p.id "
                     + "left join classifier entryType on entryType.code = je.entry_type_code "
                     + "left join classifier c_grade on c_grade.code = jes.grade_code "
                     + "where js.student_id in (:studentIds) "
                     + "and jes.grade_code not in (:positiveGrades) "
-                    + (criteria.getFrom() != null ? "and coalesce(je.entry_date, jes.grade_inserted) >= :dateFrom " : "")
-                    + (criteria.getThru() != null ? "and coalesce(je.entry_date, jes.grade_inserted) <= :dateThru " : "")
-                    + (criteria.getTeacher() != null ? "and exists(select 1 from journal_teacher jt where jt.teacher_id = :teacherId and jt.journal_id = j.id) " : "")
+                    + (criteria.getFrom() != null ? "and coalesce(je.entry_date, cast(jes.grade_inserted as date)) >= :dateFrom " : "")
+                    + (criteria.getThru() != null ? "and coalesce(je.entry_date, cast(jes.grade_inserted as date)) <= :dateThru " : "")
+                    + (criteria.getTeacher() != null ? "and exists(select 1 from teacher t "
+                            + "join person p on p.id = t.person_id "
+                            + "where p.firstname || ' ' || p.lastname || ' (' || p.idcode || ')' = coalesce(jes.grade_inserted_by, jes.changed_by, jes.inserted_by) "
+                            + "and t.id = :teacherId) " : "")
                     + (criteria.getGradeType() != null && !criteria.getGradeType().isEmpty() ? "and je.entry_type_code in (:gradeTypes) " : "")
-                    + "group by js.student_id, coalesce(je.entry_date, jes.grade_inserted), c.name_et, j.name_et, entryType.name_et, entryType.name_en, false, "
-                    + "c_grade.value, js.student_id "
+                    + "group by js.student_id, coalesce(je.entry_date, jes.grade_inserted), c.name_et, j.name_et, entryType.name_et, entryType.name_en, c_grade.value, jes.id "
                 + "union "
-                + "select scmor.grade_inserted as gradeDate, null as studyYear, cm.name_et as nameEt, cm.name_et as nameEn, p.firstname || ' ' || p.lastname as teachers, "
+                + "select scmor.grade_inserted as gradeDate, null as studyYear, "
+                + "cm.name_et as nameEt, cm.name_en as nameEn, p.firstname || ' ' || p.lastname as teachers, "
                 + "'Õpiväljund' as typeEt, 'Outcome' as typeEn, false as isModule, c_grade.value as gradeValue, scmor.student_id as studentId "
                     + "from student_curriculum_module_outcomes_result scmor "
                     + "left join curriculum_module_outcomes cmo on cmo.id = scmor.curriculum_module_outcomes_id "
@@ -1697,7 +1702,31 @@ public class EducationalSuccessReportService {
                     + (criteria.getThru() != null ? "and scmor.grade_date <= :dateThru " : "")
                     + (criteria.getTeacher() != null ? "and scmor.grade_inserted_teacher_id = :teacherId " : "")
                     + (criteria.getGradeType() != null && !criteria.getGradeType().isEmpty() ? "and 'SISSEKANNE_O' in (:gradeTypes) " : "")
-                    + "and scmor.student_id in (:studentIds)");
+                    + "and scmor.student_id in (:studentIds) "
+                + "union "
+                + "select pj.grade_inserted as gradeDate, c.name_et as studyYear, "
+                + "case when cvot.name_et is not null then cm.name_et || ' / ' || cvot.name_et else cm.name_et end || ' / Praktika päevik' as nameEt, "
+                + "case when cvot.name_et is not null then cm.name_et || ' / ' || cvot.name_et else cm.name_et end || ' / Practice journal' as nameEn, "
+                + "p.firstname || ' ' || p.lastname as teachers, "
+                + "'Lõpptulemus' as typeEt, 'Final result' as typeEn, false as isModule, "
+                + "c_grade.value as gradeValue, pj.student_id as studentId "
+                    + "from practice_journal pj "
+                    + "join practice_journal_module_subject pjms on pj.id = pjms.practice_journal_id "
+                    + "join curriculum_version_omodule cvo on pjms.curriculum_version_omodule_id = cvo.id "
+                    + "join curriculum_module cm on cm.id = cvo.curriculum_module_id "
+                    + "left join curriculum_version_omodule_theme cvot on cvot.id = pjms.curriculum_version_omodule_theme_id "
+                    + "left join teacher t on t.id = pj.teacher_id "
+                    + "left join person p on p.id = t.person_id "
+                    + "left join study_year sy on pj.study_year_id = sy.id "
+                    + "left join classifier c on c.code = sy.year_code "
+                    + "left join classifier c_grade on c_grade.code = pj.grade_code "
+                    + "where pj.grade_code is not null "
+                    + "and pj.grade_code not in (:positiveGrades) "
+                    + (criteria.getFrom() != null ? "and pj.grade_inserted >= :dateFrom " : "")
+                    + (criteria.getThru() != null ? "and pj.grade_inserted <= :dateThru " : "")
+                    + (criteria.getTeacher() != null ? "and pj.teacher_id = :teacherId " : "")
+                    + (criteria.getGradeType() != null && !criteria.getGradeType().isEmpty() ? "and 'SISSEKANNE_L' in (:gradeTypes) " : "")
+                    + "and pj.student_id in (:studentIds)");
 
         qb.parameter("studentIds", studentIds);
         qb.parameter("positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
@@ -1713,6 +1742,7 @@ public class EducationalSuccessReportService {
         if (criteria.getGradeType() != null && !criteria.getGradeType().isEmpty()) {
             qb.parameter("gradeTypes", criteria.getGradeType());
         }
+        qb.sort("3, 4");
         List<?> data = qb
                 .select("gradeDate, studyYear, nameEt, nameEn, teachers, typeEt, typeEn, isModule, gradeValue, studentId",
                         em)

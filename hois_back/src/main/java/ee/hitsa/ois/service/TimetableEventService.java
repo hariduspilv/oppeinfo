@@ -554,7 +554,7 @@ public class TimetableEventService {
                 .equals(EntityUtil.getCode(school.getTimetable()));
         if (person != null) {
             if (Role.ROLL_O.name().equals(person.getRole())) {
-                hideOtherTeachersSingleEventsData(events, person.getRoleId(), ascImportedTimetables);
+                hideTeachersSingleEventsData(events, person.getRoleId(), ascImportedTimetables);
             } else if (Role.ROLL_T.name().equals(person.getRole())) {
                 hideStudentSingleEventsData(events, person.getRoleId(), ascImportedTimetables);
             } else {
@@ -562,11 +562,13 @@ public class TimetableEventService {
             }
         } else {
             HoisUserDetails user = TimetableService.userFromPrincipal();
-            if (user != null && user.getSchoolId().equals(school.getId())) {
+            if (user != null && school.getId().equals(user.getSchoolId())) {
                 if (user.isSchoolAdmin()) {
-                    hideOtherAdminsSingleEventsData(events, user, ascImportedTimetables);
+                    hideAdminsSingleEventsData(events, user, ascImportedTimetables);
+                } else if (user.isLeadingTeacher()) {
+                    hideLeadingTeachersSingleEventsData(events, user, ascImportedTimetables);
                 } else if (user.isTeacher()) {
-                    hideOtherTeachersSingleEventsData(events, user.getTeacherId(),ascImportedTimetables);
+                    hideTeachersSingleEventsData(events, user.getTeacherId(), ascImportedTimetables);
                 } else if (user.isStudent() || user.isRepresentative()) {
                     hideStudentSingleEventsData(events, user.getStudentId(), ascImportedTimetables);
                 } else {
@@ -588,7 +590,7 @@ public class TimetableEventService {
 
     // if admin doesn't have TEEMAOIGUS_SYNDMUS view right then other teacher's
     // personal events should be hidden
-    private static void hideOtherAdminsSingleEventsData(List<TimetableEventSearchDto> events, HoisUserDetails user,
+    private static void hideAdminsSingleEventsData(List<TimetableEventSearchDto> events, HoisUserDetails user,
             boolean ascImportedTimetables) {
         if (!UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_SYNDMUS)) {
             for (TimetableEventSearchDto event : events) {
@@ -599,7 +601,16 @@ public class TimetableEventService {
         }
     }
 
-    private static void hideOtherTeachersSingleEventsData(List<TimetableEventSearchDto> events, Long teacherId,
+    private static void hideLeadingTeachersSingleEventsData(List<TimetableEventSearchDto> events, HoisUserDetails user,
+            boolean ascImportedTimetables) {
+        for (TimetableEventSearchDto event : events) {
+            if (event.getPerson() != null && !user.getPersonId().equals(event.getPerson().getId())) {
+                hideSingleEventData(event, ascImportedTimetables);
+            }
+        }
+    }
+
+    private static void hideTeachersSingleEventsData(List<TimetableEventSearchDto> events, Long teacherId,
             boolean ascImportedTimetables) {
         for (TimetableEventSearchDto event : events) {
             if (Boolean.TRUE.equals(event.getSingleEvent()) && !isTeachersEvent(event.getTeachers(), teacherId)) {

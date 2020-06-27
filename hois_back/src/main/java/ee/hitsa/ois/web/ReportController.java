@@ -38,6 +38,7 @@ import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
+import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumCompletionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumSubjectsCommand;
@@ -59,6 +60,7 @@ import ee.hitsa.ois.web.commandobject.report.TeacherDetailLoadCommand;
 import ee.hitsa.ois.web.commandobject.report.TeacherLoadCommand;
 import ee.hitsa.ois.web.commandobject.report.VotaCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.report.CurriculumCompletionDto;
 import ee.hitsa.ois.web.dto.report.CurriculumSubjectsDto;
@@ -164,7 +166,7 @@ public class ReportController {
     
     @GetMapping("/students/data/query/savedStudentQueries")
     public List<AutocompleteResult> savedStudentQueries(HoisUserDetails user, SchoolQueryCommand command) {
-        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PARING);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
         return reportService.savedStudentQueries(user, command);
     }
     
@@ -176,13 +178,13 @@ public class ReportController {
     
     @GetMapping("/students/data/query/{id:\\d+}")
     public Object getStudentQuery(HoisUserDetails user, @WithEntity SchoolQuery schoolQuery) {
-        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PARING);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
         return reportService.getQuery(schoolQuery, StudentQueryDto.class);
     }
     
     @GetMapping("/subjectStudyPeriod/data/query/{id:\\d+}")
     public Object getSubjectStudyPeriodQuery(HoisUserDetails user, @WithEntity SchoolQuery schoolQuery) {
-        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PARING);
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
         return reportService.getQuery(schoolQuery, SubjectStudyPeriodQueryDto.class);
     }
     
@@ -455,6 +457,11 @@ public class ReportController {
         ReportUtil.assertCanViewIndividualCurriculumStatistics(user);
         HttpUtil.xls(response, "individualcurriculumstatistics.xls",
                 reportService.individualCurriculumStatisticsAsExcel(user, criteria));
+    }
+    
+    @GetMapping("/getPossibleParentClassifiers")
+    public List<ClassifierDto> classifierForAutocomplete(ClassifierSearchCommand classifierSearchCommand) {
+        return reportService.occupationalSpecialities(classifierSearchCommand);
     }
 
 }

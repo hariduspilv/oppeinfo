@@ -153,8 +153,6 @@ import ee.hitsa.ois.xml.exportTimetable.TimePeriods;
 public class TimetableService {
 
     private static final long LESSON_LENGTH = 45;
-    // TODO: forbidden school public data
-    private static final Long FORBIDDEN_SCHOOL_ID = Long.valueOf(26);
 
     @Autowired
     private AutocompleteService autocompleteService;
@@ -2076,6 +2074,9 @@ public class TimetableService {
     }
 
     public List<StudyYearSearchDto> timetableStudyYears(Long schoolId) {
+        if (!allowedToViewSchoolTimetable(schoolId)) {
+            return Collections.emptyList();
+        }
         List<?> data = em.createNativeQuery("select c.code, c.name_et, c.name_en, sy.id, sy.start_date, sy.end_date, 0 as count from"
                 + " (select id from study_year sy where sy.school_id = :schoolId and"
                 + " ((sy.start_date <= :now and sy.end_date >= :now) or (sy.start_date - interval '2 month') <= :now and sy.end_date >= :now)"
@@ -2114,6 +2115,9 @@ public class TimetableService {
     }
 
     public List<TimetableStudyYearWeekDto> timetableStudyYearWeeks(StudyYear studyYear, Student student) {
+        if (!allowedToViewSchoolTimetable(studyYear.getSchool())) {
+            return Collections.emptyList();
+        }
         Long studyYearId = studyYear.getId();
         LocalDate start = studyYear.getStartDate();
         LocalDate end = studyYear.getEndDate();
@@ -2260,11 +2264,15 @@ public class TimetableService {
         return null;
     }
 
-    // TODO: forbidden school public data
+    boolean allowedToViewSchoolTimetable(Long schoolId) {
+        School school = EntityUtil.getOptionalOne(School.class, schoolId, em);
+        return school != null && allowedToViewSchoolTimetable(school);
+    }
+
     static boolean allowedToViewSchoolTimetable(School school) {
-        if (FORBIDDEN_SCHOOL_ID.equals(school.getId())) {
+        if (Boolean.TRUE.equals(school.getIsNotPublicTimetable())) {
             HoisUserDetails user = userFromPrincipal();
-            return user != null && user.getSchoolId().equals(school.getId());
+            return user != null && EntityUtil.getId(school).equals(user.getSchoolId());
         }
         return true;
     }

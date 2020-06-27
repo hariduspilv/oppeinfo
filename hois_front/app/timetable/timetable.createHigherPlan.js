@@ -433,6 +433,8 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$
           var studentGroupIds = matchingCapacities.map(function (it) {
             return it.studentGroup.id;
           });
+          // event's groups might not be in subject study period anymore
+          studentGroupIds = studentGroupIds.concat(currentEvent.objectStudentGroups);
 
           changedGroups = result.studentGroups.filter(function (it) {
             return studentGroupIds.indexOf(it.id) !== -1;

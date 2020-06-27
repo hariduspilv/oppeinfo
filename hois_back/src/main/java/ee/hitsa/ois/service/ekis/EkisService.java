@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -58,7 +59,6 @@ import ee.hitsa.ois.enums.CertificateType;
 import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
-import ee.hitsa.ois.enums.DocumentStatus;
 import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.ProtocolStatus;
@@ -234,9 +234,31 @@ public class EkisService {
 
         Student student = contract.getStudent();
         Person person = student.getPerson();
+        Teacher tutor = contract.getTeacher();
         String idcode = null;
         boolean higher = StudentUtil.isHigher(student);
         boolean guestStudent = StudentUtil.isGuestStudent(student);
+        
+        if (tutor != null) {
+            Person tutorPerson = tutor.getPerson();
+            if (tutorPerson != null) {
+                request.setSchTutorFirstName(tutorPerson.getFirstname());
+                request.setSchTutorLastName(tutorPerson.getLastname());
+                request.setSchoolTutorId(tutorPerson.getIdcode());
+                String schTutorPhone = tutor.getPhone();
+                if (schTutorPhone != null) {
+                    request.setSchTutorPhone(schTutorPhone);
+                } else {
+                    request.setSchTutorPhone(tutorPerson.getPhone());
+                }
+                String schTutorEmail = tutor.getEmail();
+                if (schTutorEmail != null) {
+                    request.setSchTutorEmail(schTutorEmail);
+                } else {
+                    request.setSchTutorEmail(tutorPerson.getEmail());
+                }
+            }
+        }
         
         if(StringUtils.hasText(person.getIdcode())) {
             idcode = person.getIdcode();
@@ -246,6 +268,15 @@ public class EkisService {
         request.setStIdCode(idcode);
         request.setStFirstNames(person.getFirstname());
         request.setStLastName(person.getLastname());
+        request.setStPhone(person.getPhone());
+        request.setStPostcode(person.getPostcode());
+        request.setStAddress(person.getAddress());
+        request.setStAddressAds(person.getAddressAds());
+        request.setStAddressAdsOid(person.getAddressAdsOid());
+        Classifier residenceCountry = person.getResidenceCountry();
+        if (residenceCountry != null) {
+            request.setStResidenceCountry(residenceCountry.getNameEt());
+        }
         String studentEmail = student.getEmail();
         if (studentEmail == null) {
             throw new ValidationFailedException("contract.messages.sendToEkis.error.studentEmailMissing");
@@ -278,14 +309,18 @@ public class EkisService {
         request.setStCourse(course);
         
         List<ContractModuleSubject> moduleSubjects = contract.getModuleSubjects();
-        request.setStEkap(StreamUtil.sumBigDecimals(ContractModuleSubject::getCredits, moduleSubjects).toString());
-        request.setStHours(Integer.toString(moduleSubjects.stream().map(ContractModuleSubject::getHours)
-                .mapToInt(Short::intValue).sum()));
         Stream<String> moduleStream = null;
         Stream<String> aimStream = null;
         Stream<String> outcomesStream = null;
         if (higher) {
             moduleStream = moduleSubjects.stream().map(ms -> ms.getSubject().getNameEt());
+            Comparator<ContractModuleSubject> contractModuleSubjectComparator = 
+                    (ContractModuleSubject o1, ContractModuleSubject o2) -> {
+                        String o1String = o1.getSubject().getNameEt();
+                        String o2String = o2.getSubject().getNameEt();
+                        return o1String.compareTo(o2String);
+                    };
+            Collections.sort(moduleSubjects, contractModuleSubjectComparator);
             aimStream = moduleSubjects.stream().map(ms -> {
                 if (ms.getSubject() == null) return null;
                 return ms.getSubject().getObjectivesEt();
@@ -300,6 +335,15 @@ public class EkisService {
                         ms.getTheme() != null ? ms.getTheme().getNameEt() : null);
                 return names.stream().filter(r -> r != null).collect(Collectors.joining(", "));
             });
+            Comparator<ContractModuleSubject> contractModuleSubjectComparator = 
+                    (ContractModuleSubject o1, ContractModuleSubject o2) -> {
+                        String o1String = Arrays.asList(o1.getModule().getCurriculumModule().getNameEt(), 
+                                o1.getTheme() != null ? o1.getTheme().getNameEt() : null).stream().filter(r -> r != null).collect(Collectors.joining(", "));
+                        String o2String = Arrays.asList(o2.getModule().getCurriculumModule().getNameEt(), 
+                                o2.getTheme() != null ? o2.getTheme().getNameEt() : null).stream().filter(r -> r != null).collect(Collectors.joining(", "));
+                        return o1String.compareTo(o2String);
+                    };
+            Collections.sort(moduleSubjects, contractModuleSubjectComparator);
             aimStream = moduleSubjects.stream().map(ms -> ms.getModule().getCurriculumModule().getObjectivesEt());
             outcomesStream = moduleSubjects.stream().map(ms -> {
                 if (ms.getModule() == null 
@@ -310,7 +354,9 @@ public class EkisService {
                 return outcomes.stream().filter(r -> r != null).collect(Collectors.joining(", "));
             });
         }
-        request.setStModule(moduleStream.sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.joining(", ")));
+        request.setStModule(moduleStream.sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.joining(" &&& ")));
+        request.setStEkap(moduleSubjects.stream().filter(p -> p.getCredits() != null).map(p -> p.getCredits().toString()).collect(Collectors.joining(" &&& ")));
+        request.setStHours(moduleSubjects.stream().filter(p -> p.getHours() != null).map(p -> p.getHours().toString()).collect(Collectors.joining(" &&& ")));
         Enterprise enterprise = contract.getEnterprise();
         request.setOrgName(enterprise.getName());
         request.setOrgCode(enterprise.getRegCode());
@@ -318,15 +364,32 @@ public class EkisService {
         request.setOrgTel(contract.getContactPersonPhone());
         request.setOrgEmail(contract.getContactPersonEmail());
         List<ContractSupervisor> supervisors = contract.getContractSupervisors();
-        request.setOrgTutorName(String.join(",", supervisors.stream().map(p->p.getSupervisorName()).filter(p->p != null).collect(Collectors.toList())));
-        request.setOrgTutorTel(String.join(",", supervisors.stream().map(p->p.getSupervisorPhone()).filter(p->p != null).collect(Collectors.toList())));
-        request.setOrgTutorEmail(String.join(",", supervisors.stream().map(p->p.getSupervisorEmail()).filter(p->p != null).collect(Collectors.toList())));
+        Comparator<ContractSupervisor> contractSupervisorComparator = 
+                (ContractSupervisor o1, ContractSupervisor o2) -> o1.getInserted().compareTo(o2.getInserted());
+        Collections.sort(supervisors, contractSupervisorComparator);
+        if (supervisors.size() > 0) {
+            ContractSupervisor orgTutor = supervisors.get(0);
+            request.setOrgTutorName(orgTutor.getSupervisorName());
+            request.setOrgTutorTel(orgTutor.getSupervisorPhone());
+            request.setOrgTutorEmail(orgTutor.getSupervisorEmail());
+        }
+        if (supervisors.size() > 1) {
+            ContractSupervisor orgTutor = supervisors.get(1);
+            request.setOrgTutor2Name(orgTutor.getSupervisorName());
+            request.setOrgTutor2Tel(orgTutor.getSupervisorPhone());
+            request.setOrgTutor2Email(orgTutor.getSupervisorEmail());
+        }
+        if (supervisors.size() > 2) {
+            ContractSupervisor orgTutor = supervisors.get(2);
+            request.setOrgTutor3Name(orgTutor.getSupervisorName());
+            request.setOrgTutor3Tel(orgTutor.getSupervisorPhone());
+            request.setOrgTutor3Email(orgTutor.getSupervisorEmail());
+        }
         request.setProgramme(contract.getPracticePlan());
         request.setOutcomes(outcomesStream.filter(p -> p != null).collect(Collectors.joining(", ")));
         request.setAim(aimStream.filter(p -> p != null).collect(Collectors.joining(", ")));
         request.setStartDate(date(contract.getStartDate()));
         request.setEndDate(date(contract.getEndDate()));
-        request.setSchoolTutorId(contract.getContractCoordinator() != null ? contract.getContractCoordinator().getIdcode() : null);
         request.setPlace(contract.getPracticePlace());
         if (request.getPlace() == null) {
             if (contract.getIsPracticeSchool() != null && contract.getIsPracticeSchool().booleanValue()) {

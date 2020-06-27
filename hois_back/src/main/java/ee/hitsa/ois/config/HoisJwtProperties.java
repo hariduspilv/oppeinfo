@@ -20,13 +20,11 @@ public class HoisJwtProperties {
     @Required
     private String claimLoginMethod = "loginMethod";
     @Required
+    private String claimIdcode = "idcode";
+    @Required
     private String claimMobileNumber = "mobileNumber";
     @Required
-    private String claimSesscode = "sesscode";
-    @Required
-    private String claimGivenname = "givenname";
-    @Required
-    private String claimSurname = "surname";
+    private String claimAuthHash = "authHash";
 
     public String getSecret() {
         return secret;
@@ -59,7 +57,15 @@ public class HoisJwtProperties {
     public void setClaimLoginMethod(String claimLoginMethod) {
         this.claimLoginMethod = claimLoginMethod;
     }
-    
+
+    public String getClaimIdcode() {
+        return claimIdcode;
+    }
+
+    public void setClaimIdcode(String claimIdcode) {
+        this.claimIdcode = claimIdcode;
+    }
+
     public String getClaimMobileNumber() {
         return claimMobileNumber;
     }
@@ -68,27 +74,12 @@ public class HoisJwtProperties {
         this.claimMobileNumber = claimMobileNumber;
     }
 
-    public String getClaimSesscode() {
-        return claimSesscode;
+    public String getClaimAuthHash() {
+        return claimAuthHash;
     }
 
-    public void setClaimSesscode(String claimSesscode) {
-        this.claimSesscode = claimSesscode;
+    public void setClaimAuthHash(String claimAuthHash) {
+        this.claimAuthHash = claimAuthHash;
     }
 
-    public String getClaimGivenname() {
-        return claimGivenname;
-    }
-
-    public void setClaimGivenname(String claimGivenname) {
-        this.claimGivenname = claimGivenname;
-    }
-
-    public String getClaimSurname() {
-        return claimSurname;
-    }
-
-    public void setClaimSurname(String claimSurname) {
-        this.claimSurname = claimSurname;
-    }
 }

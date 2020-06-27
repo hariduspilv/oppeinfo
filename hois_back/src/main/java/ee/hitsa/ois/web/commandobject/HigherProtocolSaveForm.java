@@ -8,11 +8,11 @@ import javax.validation.Valid;
 import ee.hitsa.ois.web.dto.HigherProtocolStudentDto;
 
 public class HigherProtocolSaveForm extends VersionedCommand {
-    
-    private LocalDate finalDate;
 
     @Valid
     private Set<HigherProtocolStudentDto> protocolStudents;
+    private LocalDate finalDate;
+    private String signerMobileNumber;
 
     public Set<HigherProtocolStudentDto> getProtocolStudents() {
         return protocolStudents;
@@ -28,5 +28,13 @@ public class HigherProtocolSaveForm extends VersionedCommand {
 
     public void setFinalDate(LocalDate finalDate) {
         this.finalDate = finalDate;
+    }
+
+    public String getSignerMobileNumber() {
+        return signerMobileNumber;
+    }
+
+    public void setSignerMobileNumber(String signerMobileNumber) {
+        this.signerMobileNumber = signerMobileNumber;
     }
 }

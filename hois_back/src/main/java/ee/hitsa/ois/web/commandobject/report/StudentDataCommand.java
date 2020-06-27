@@ -90,6 +90,7 @@ public class StudentDataCommand extends QuerySaveCommand {
     private List<String> studyLevel;
     private Boolean studyLevelShow;
     
+    private List<Long> specialityHigher;
     private List<String> speciality;
     private Boolean specialityShow;
     
@@ -315,12 +316,6 @@ public class StudentDataCommand extends QuerySaveCommand {
     }
     public void setEhisCode(String ehisCode) {
         this.ehisCode = ehisCode;
-    }
-    public List<String> getSpeciality() {
-        return speciality;
-    }
-    public void setSpeciality(List<String> speciality) {
-        this.speciality = speciality;
     }
     public List<String> getFin() {
         return fin;
@@ -1152,6 +1147,18 @@ public class StudentDataCommand extends QuerySaveCommand {
     }
     public void setNrShow(Boolean nrShow) {
         this.nrShow = nrShow;
+    }
+    public List<Long> getSpecialityHigher() {
+        return specialityHigher;
+    }
+    public void setSpecialityHigher(List<Long> specialityHigher) {
+        this.specialityHigher = specialityHigher;
+    }
+    public List<String> getSpeciality() {
+        return speciality;
+    }
+    public void setSpeciality(List<String> speciality) {
+        this.speciality = speciality;
     }
 
 }

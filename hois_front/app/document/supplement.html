@@ -85,7 +85,7 @@
         </div>
         
         <a ng-href="{{viewPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="viewPdfUrl">{{'document.button.showPdf' | translate}}</a>
-        <md-button ng-click="print()" class="md-raised md-primary" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && viewPdfUrl">
+        <md-button ng-click="print()" class="md-raised md-primary" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && viewPdfUrl && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_HINNETELEHT_TRUKKIMINE')">
           {{'main.button.print' | translate}}
         </md-button>
       </fieldset>
@@ -130,7 +130,7 @@
         </div>
         
         <a ng-href="{{viewPdfUrlEn}}" target="_blank" class="md-button md-raised" ng-if="viewPdfUrlEn">{{'document.button.showPdf' | translate}}</a>
-        <md-button ng-click="print('EN')" class="md-raised md-primary" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && viewPdfUrlEn">
+        <md-button ng-click="print('EN')" class="md-raised md-primary" ng-if="record.diplomaStatus === 'LOPUDOK_STAATUS_T' && viewPdfUrlEn && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_HINNETELEHT_TRUKKIMINE')">
           {{'main.button.print' | translate}}
         </md-button>
       </fieldset>

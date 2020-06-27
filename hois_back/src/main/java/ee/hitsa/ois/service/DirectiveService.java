@@ -441,6 +441,9 @@ public class DirectiveService {
 
         boolean canCancel = UserUtil.canCancelDirective(user, directive);
         if(canCancel) {
+            if (ClassifierUtil.equals(DirectiveType.KASKKIRI_VALIS, directive.getType())) {
+                canCancel = areValisStudentStudyStartsInFuture(directive);
+            }
             // verify there are cancellable students still on the directive
             if(changedStudentsForCancel(directive).size() == directive.getStudents().size()) {
                 canCancel = false;
@@ -450,6 +453,15 @@ public class DirectiveService {
         dto.setUserCanConfirm(Boolean.valueOf(userCanConfirm(user, directive)));
         dto.setUserCanEdit(Boolean.valueOf(UserUtil.canEditDirective(user, directive)));
         return dto;
+    }
+
+    private static boolean areValisStudentStudyStartsInFuture(Directive directive) {
+        List<DirectiveStudent> students = directive.getStudents();
+        LocalDate now = LocalDate.now();
+        if (students != null && students.size() != 0) {
+            return students.stream().allMatch(p -> now.isBefore(p.getStartDate()));
+        }
+        return true;
     }
 
     private void setViewOccupations(DirectiveViewDto dto) {
