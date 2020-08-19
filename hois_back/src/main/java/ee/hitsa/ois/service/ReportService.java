@@ -2996,7 +2996,29 @@ public class ReportService {
                             if (classType.equals(ClassifierResult.class)) {
                                 String classifierName = stringValues.get(0);
                                 List<Classifier> classifiers = stringValues.stream().map(p -> classifierCache.getByCode(p, MainClassCode.valueOf(classifierName.split("\\_")[0]))).collect(Collectors.toList());
-                                List<ClassifierResult> classifierResults = classifiers.stream().map(p -> ClassifierResult.of(p)).collect(Collectors.toList());
+                                List<ClassifierResult> classifierResults = classifiers.stream().map(p -> {
+                                    String nameEt = p.getNameEt();
+                                    String nameEn = p.getNameEn();
+                                    if ("Speciality".equals(criteriaCode)) {
+                                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.YYYY");
+                                        boolean hasValidDates = p.getValidFrom() != null || p.getValidThru() != null;
+                                        if (!hasValidDates) {
+                                            nameEt = nameEt + " (sisestatud " + formatter.format(p.getInserted()) + ", " + (p.isValid() ? "Kehtiv" : "Kehtetu") + ")";
+                                            nameEn = nameEn + " (inserted " + formatter.format(p.getInserted()) + ", " + (p.isValid() ? "Valid" : "Not valid") + ")";
+                                        } else {
+                                            nameEt = nameEt + " (" 
+                                                    + (p.getValidFrom() != null ? formatter.format(p.getValidFrom()) : "... ") 
+                                                    + " - " + (p.getValidThru() != null ? formatter.format(p.getValidThru()) : "... ") 
+                                                    + ", " + (p.isValid() ? "Kehtiv" : "Kehtetu") + ")";
+                                            nameEn = nameEn + " (" 
+                                                    + (p.getValidFrom() != null ? formatter.format(p.getValidFrom()) : "... ") 
+                                                    + " - " + (p.getValidThru() != null ? formatter.format(p.getValidThru()) : "... ") 
+                                                    + ", " + (p.isValid() ? "Valid" : "Not Valid") + ")";
+                                        }
+                                    }
+                                    ClassifierResult dto = new ClassifierResult(null, nameEt, nameEn, p.getCode());
+                                    return dto;
+                                }).collect(Collectors.toList());
                                 classMethod.invoke(command, classifierResults);
                             } else if (classType.equals(Long.class)) {
                                 List<Long> longValues = stringValues.stream().map(Long::valueOf).collect(Collectors.toList());

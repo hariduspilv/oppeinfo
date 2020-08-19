@@ -1,6 +1,7 @@
 package ee.hitsa.ois.service.security;
 
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.util.AuthUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.sk.mid.MidAuthentication;
 import ee.sk.mid.MidAuthenticationHashToSign;
@@ -36,8 +37,9 @@ public class MobileIdLoginService {
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public MobileIdSession startAuthentication(String idcode, String mobileNumber) {
-        MidAuthenticationHashToSign authenticationHash = MidAuthenticationHashToSign.generateRandomHashOfDefaultType();
+        mobileNumber = AuthUtil.validateMobileNumber(mobileNumber);
 
+        MidAuthenticationHashToSign authenticationHash = MidAuthenticationHashToSign.generateRandomHashOfDefaultType();
         MobileIdSession session = new MobileIdSession(idcode, mobileNumber, authenticationHash.getHashInBase64());
         session.setVerificationCode(authenticationHash.calculateVerificationCode());
         return session;

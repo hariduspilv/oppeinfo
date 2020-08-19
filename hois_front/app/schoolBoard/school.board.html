@@ -1,0 +1,50 @@
+<div ng-cloak ng-include="'schoolBoard/school.board.header.html'"></div>
+<div layout-padding>
+  <div flex>
+    <md-grid-list md-cols="3" md-cols-sm="2" md-cols-xs="1" md-row-height="4:3" md-gutter="24px">
+      <md-grid-tile md-colors="{background: colors.currentLessons}">
+        <button class="grid-tile-button school-board-button" ng-click="openLink(baseUrl + '/currentEvents')">
+          <md-icon>notifications_active</md-icon>
+          <div>{{'schoolBoard.currentLessons.label' | translate}}</div>
+        </button>
+      </md-grid-tile>
+
+      <md-grid-tile md-colors="{background: colors.groupTimetables}">
+        <button class="grid-tile-button school-board-button" ng-click="openLink(baseUrl + '/group')">
+          <md-icon>group</md-icon>
+          <div>{{'schoolBoard.groupTimetable' | translate}}</div>
+        </button>
+      </md-grid-tile>
+
+      <md-grid-tile md-colors="{background: colors.teacherTimetables}">
+        <button class="grid-tile-button school-board-button" ng-click="openLink(baseUrl + '/teacher')">
+          <md-icon class="reversed">people</md-icon>
+          <div>{{'schoolBoard.teacherTimetable' + (school.higher ? 'Higher' : 'Vocational') | translate}}</div>
+        </button>
+      </md-grid-tile>
+
+      <md-grid-tile md-colors="{background: colors.currentLessonsPerRooms}">
+        <button class="grid-tile-button school-board-button" ng-click="openLink(baseUrl + '/roomsWithCurrentEvents')">
+          <md-icon>domain</md-icon>
+          <md-icon>notifications_active</md-icon>
+          <div>{{'schoolBoard.currentLessons.perRoomsLabel' | translate}}</div>
+        </button>
+      </md-grid-tile>
+
+      <md-grid-tile md-colors="{background: colors.roomTimetables}">
+        <button class="grid-tile-button school-board-button" ng-click="openLink(baseUrl + '/room')">
+          <md-icon>domain</md-icon>
+          <div>{{'schoolBoard.roomTimetable' | translate}}</div>
+        </button>
+      </md-grid-tile>
+
+      <md-grid-tile md-colors="{background: colors.freeRooms}">
+        <button class="grid-tile-button school-board-button-dark" ng-click="openLink(baseUrl + '/freeRooms/current')">
+          <md-icon>domain</md-icon>
+          <md-icon>hourglass_empty</md-icon>
+          <div>{{'schoolBoard.freeRooms.label' | translate}}</div>
+        </button>
+      </md-grid-tile>
+    </md-grid-list>
+  </div>
+</div>

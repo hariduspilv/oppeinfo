@@ -92,7 +92,11 @@
             <span ng-if="!row.canViewStudent">{{::row.student.nameEt}}</span>
           </td>
           <td md-cell>{{::row.studentGroup}}</td>
-          <td md-cell><a ng-href="#/applications/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a></td>
+          <td md-cell ng-if="auth.isAdmin() && row.type.code === 'AVALDUS_LIIK_TUGI' && !isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS') && !row.isConnectedByCommittee">
+            {{currentLanguageNameField(row.type)}}
+          </td>
+          <td md-cell ng-if="!(auth.isAdmin() && row.type.code === 'AVALDUS_LIIK_TUGI' && !isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS') && !row.isConnectedByCommittee)">
+            <a ng-href="#/applications/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a></td>
           <td md-cell>
             {{currentLanguageNameField(row.status)}}
             <md-tooltip ng-if="row.status.code === 'AVALDUS_STAATUS_TAGASI' && row.rejectReason">{{row.rejectReason}}</md-tooltip>
@@ -101,7 +105,8 @@
           <td md-cell>{{row.submitted | hoisDateTime}}</td>
           <td md-cell>
             <md-button ng-if="((row.status.code === 'AVALDUS_STAATUS_KOOST') || ((row.status.code === 'AVALDUS_STAATUS_YLEVAAT' || row.status.code === 'AVALDUS_STAATUS_ESIT') && auth.isAdmin()))
-            && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS') && row.canEditStudent"
+            && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS') && row.canEditStudent 
+            && !(auth.isAdmin() && row.type.code === 'AVALDUS_LIIK_TUGI' && !isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS') && !row.isConnectedByCommittee)"
               md-no-ink class="md-primary change-button" ng-href="#/applications/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
           </td>
         </tr>

@@ -45,7 +45,8 @@
         showStudyMaterials: event.showStudyMaterials,
         capacityType: event.capacityType,
         left: 0,
-        width: 100
+        width: 100,
+        isExam: event.isExam
       });
     }
 
@@ -101,7 +102,6 @@
         }
       }
 
-      //kui minutid sätitud, vaatame nüüd objektid üle
       for (minute in minutes) {
         for(var x=0; x < minutes[minute].length; x++)
         {
@@ -136,21 +136,25 @@
     var week = ['dayMon', 'dayTue', 'dayWed', 'dayThu', 'dayFri', 'daySat', 'daySun'];
 
     for (var i = 0; i < week.length; i++) {
+      var isToday = moment().format("DD.MM.YYYY") === moment(scope.shownWeek.start).add(i, "days").format("DD.MM.YYYY");
       weekColumns.push({
         name: week[i],
         column: i + 1,
         events: [],
         date: moment(scope.shownWeek.start).add(i, "days").toDate(),
-        today: (moment().format("DD.MM.YYYY") === moment(scope.shownWeek.start).add(i, "days").format("DD.MM.YYYY") ? true : false)
+        today: isToday,
+        expanded: isToday
       });
     }
     scope.weekColumns = weekColumns;
   }
 
-  function changeTimetableParameters(scope, weekIndex) {
+  function changeTimetableParameters(scope, weekIndex, changeState) {
     scope.weekIndex = weekIndex;
     scope.shownWeek = scope.weeks[weekIndex];
-    scope.generalTimetableUtils.changeState({ weekIndex: weekIndex }, scope.schoolId);
+    if (changeState) {
+      scope.generalTimetableUtils.changeState({ weekIndex: weekIndex }, scope.schoolId);
+    }
   }
 
   function fillTimetable(scope, timetableEvents) {
@@ -200,10 +204,102 @@
   function getEventColor(capacityTypes, eventCapacityType) {
     for (var i = 0; i < capacityTypes.length; i++) {
       if (capacityTypes[i].code === eventCapacityType) {
-        return capacityTypes[i].color;
+        if (capacityTypes[i].extraval1 === null) {
+          return '#FFFFFF';
+        }
+        return capacityTypes[i].extraval1;
       }
     }
-    return 'primary-100-0.8';
+    return '#BBDEFB';
+  }
+
+  function timetableEventsRequest(scope, QueryUtils, url, fillTimetable) {
+    QueryUtils.loadingWheel(scope, true);
+    QueryUtils.endpoint(url).search(timetableCriteria(scope, true)).$promise.then(function (result) {
+      QueryUtils.loadingWheel(scope, false);
+      scope.$parent.personalUrl = result.personalUrl;
+      scope.shownStudyPeriods = result.studyPeriods;
+      scope.shownTimetableCurriculum = result.generalTimetableCurriculum;
+      scope.isHigher = result.isHigher;
+      switch (scope.timetableType) {
+        case 'person':
+          scope.shownPerson = {
+            firstname: result.firstname,
+            lastname: result.lastname,
+            isHigher: result.isHigher
+          };
+          scope.schoolId = result.schoolId;
+          break;
+        case 'student':
+          scope.shownStudent = {
+            firstname: result.firstname,
+            lastname: result.lastname,
+            isHigher: result.isHigher
+          };
+          break;
+        case 'teacher':
+          scope.shownTeacher = {
+            firstname: result.firstname,
+            lastname: result.lastname
+          };
+          break;
+        case 'room':
+          scope.shownRoom = {
+            roomCode: result.roomCode,
+            buildingCode: result.buildingCode
+          };
+          break;
+      }
+
+      fillTimetable(scope, result.timetableEvents);
+    });
+  }
+
+
+  function timetableCriteria(scope, weekTimetable) {
+    var criteria = {};
+    switch (scope.timetableType) {
+      case 'student':
+        criteria.student = scope.criteria.studentId;
+        break;
+      case 'group':
+        criteria.studentGroups = [scope.criteria.groupId];
+        break;
+      case 'teacher':
+        criteria.teachers = [scope.criteria.teacherId];
+        break;
+      case 'room':
+        criteria.room = scope.criteria.roomId;
+        break;
+      case 'search':
+        if (scope.criteria.teacherObject) {
+          criteria.teachers = [scope.criteria.teacherObject.id];
+        }
+        if (scope.criteria.studentGroupObject) {
+          criteria.studentGroups = [scope.criteria.studentGroupObject.id];
+        }
+        if (scope.criteria.roomObject) {
+          criteria.room = scope.criteria.roomObject.id;
+        }
+        if (scope.criteria.subjectObject) {
+          criteria.journalOrSubjectId = scope.criteria.subjectObject.id;
+        }
+        break;
+    }
+
+    if (weekTimetable) {
+      criteria = angular.extend(criteria, {
+        from: scope.shownWeek.start,
+        thru: scope.shownWeek.end
+      });
+    } else {
+      criteria = angular.extend(criteria, {
+        from: scope.weeks[0].start,
+        thru: scope.weeks[scope.weeks.length - 1].end,
+        lang: scope.currentLanguage()
+      });
+    }
+    return criteria;
   }
 
   angular.module('hitsaOis').controller('TimetableWeekViewController', ['$location', '$route', '$scope', '$q', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
@@ -211,9 +307,18 @@
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.auth = $route.current.locals.auth;
 
+      $scope.getEventTextColor = function(eventCapacityType) {
+        for (var i = 0; i < $scope.capacityTypes.length; i++) {
+          if ($scope.capacityTypes[i].code === eventCapacityType) {
+            return $scope.capacityTypes[i].extraval2;
+          }
+        }
+        return '#000000';
+      }
+
       if ($route.current.params.schoolId) {
         $scope.schoolId = parseInt($route.current.params.schoolId, 10);
-      } else if ($scope.auth) {
+      } else if (angular.isDefined($scope.auth) && angular.isDefined($scope.auth.school) && $scope.auth.school !== null) {
         $scope.schoolId = $scope.auth.school.id;
       }
       var capacityTypesPromise = getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
@@ -314,13 +419,13 @@
       }
 
       $scope.previousWeek = function (previousWeekIndex) {
-        changeTimetableParameters($scope, previousWeekIndex);
+        changeTimetableParameters($scope, previousWeekIndex, true);
         getPreviousAndNextWeek($scope);
         showWeekTimetable();
       };
 
       $scope.nextWeek = function (nextWeekIndex) {
-        changeTimetableParameters($scope, nextWeekIndex);
+        changeTimetableParameters($scope, nextWeekIndex, true);
         getPreviousAndNextWeek($scope);
         showWeekTimetable();
       };
@@ -335,115 +440,95 @@
               $scope.typeId + '/' + $scope.studyYearId + '/' + selectedWeek.weekNr);
             }
           } else {
-            changeTimetableParameters($scope, selectedWeek.weekNr);
+            changeTimetableParameters($scope, selectedWeek.weekNr, true);
             getPreviousAndNextWeek($scope);
             showWeekTimetable();
           }
         }
       };
 
-      $scope.getEventColor = function (eventCapacityType) {
+      $scope.getEventColor = function (eventCapacityType, event) {
+        if (event !== undefined && event.isExam) {
+          return '#F8BBD0';
+        }
         return getEventColor($scope.capacityTypes, eventCapacityType);
       };
 
       function showWeekTimetable() {
         $scope.timetableEvents = null;
         if ($scope.shownWeek && ($scope.encodedPerson || $scope.timetableSearch || (!$scope.timetableSearch && $scope.criteria[$scope.typeParam]))) {
-          QueryUtils.loadingWheel($scope, true);
-          QueryUtils.endpoint(timetableEventsEndpoint).search(timetableCriteria(true))
-            .$promise.then(function (result) {
-              QueryUtils.loadingWheel($scope, false);
-              $scope.$parent.personalUrl = result.personalUrl;
-              $scope.shownStudyPeriods = result.studyPeriods;
-              $scope.shownTimetableCurriculum = result.generalTimetableCurriculum;
-
-              switch ($scope.timetableType) {
-                case 'person':
-                  $scope.shownPerson = {
-                    firstname: result.firstname,
-                    lastname: result.lastname,
-                    isHigher: result.isHigher
-                  };
-                  $scope.schoolId = result.schoolId;
-                  break;
-                case 'student':
-                  $scope.shownStudent = {
-                    firstname: result.firstname,
-                    lastname: result.lastname,
-                    isHigher: result.isHigher
-                  };
-                  break;
-                case 'teacher':
-                  $scope.shownTeacher = {
-                    firstname: result.firstname,
-                    lastname: result.lastname
-                  };
-                  break;
-                case 'room':
-                  $scope.shownRoom = {
-                    roomCode: result.roomCode,
-                    buildingCode: result.buildingCode
-                  };
-                  break;
-              }
-
-              fillTimetable($scope, result.timetableEvents);
-            });
+          timetableEventsRequest($scope, QueryUtils, timetableEventsEndpoint, fillTimetable);
         }
-      }
-
-      function timetableCriteria(weekTimetable) {
-        var criteria = {};
-        switch ($scope.timetableType) {
-          case 'student':
-            criteria.student = $scope.criteria.studentId;
-            break;
-          case 'group':
-            criteria.studentGroups = [$scope.criteria.groupId];
-            break;
-          case 'teacher':
-            criteria.teachers = [$scope.criteria.teacherId];
-            break;
-          case 'room':
-            criteria.room = $scope.criteria.roomId;
-            break;
-          case 'search':
-            if ($scope.criteria.teacherObject) {
-              criteria.teachers = [$scope.criteria.teacherObject.id];
-            }
-            if ($scope.criteria.studentGroupObject) {
-              criteria.studentGroups = [$scope.criteria.studentGroupObject.id];
-            }
-            if ($scope.criteria.roomObject) {
-              criteria.room = $scope.criteria.roomObject.id;
-            }
-            if ($scope.criteria.subjectObject) {
-              criteria.journalOrSubjectId = $scope.criteria.subjectObject.id;
-            }
-            break;
-        }
-
-        if (weekTimetable) {
-          criteria = angular.extend(criteria, {
-            from: $scope.shownWeek.start,
-            thru: $scope.shownWeek.end
-          });
-        } else {
-          criteria = angular.extend(criteria, {
-            from: $scope.weeks[0].start,
-            thru: $scope.weeks[$scope.weeks.length - 1].end,
-            lang: $scope.currentLanguage()
-          });
-        }
-        return criteria;
       }
 
       $scope.generateCalendar = function () {
-        QueryUtils.endpoint(timetableEventsCalendarEndpoint).search(timetableCriteria(false)).$promise.then(function (result) {
+        QueryUtils.endpoint(timetableEventsCalendarEndpoint).search(timetableCriteria($scope, false)).$promise.then(function (result) {
           saveCalendar(result);
         });
       };
 
+    }
+  ]).controller('SchoolBoardTimetableWeekViewController', ['$q', '$rootScope', '$route', '$scope', '$timeout', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
+    function($q, $rootScope, $route, $scope, $timeout, Classifier, GeneralTimetableUtils, QueryUtils) {
+      $scope.generalTimetableUtils = new GeneralTimetableUtils();
+
+      $scope.schoolId = $route.current.params.schoolId;
+      $scope.timetableType = $route.current.params.type;
+      $scope.typeId = $route.current.params.typeId;
+
+      $scope.hideLinks = true;
+      $scope.hideWeekSelect = true;
+      $scope.hideWeekStepButtons = $scope.timetableType !== 'group';
+
+      $scope.typeParam = $scope.timetableType + 'Id';
+      $scope.criteria = {};
+      $scope.criteria[$scope.typeParam] = $route.current.params.typeId;
+
+      var timetableEventsEndpoint = '/schoolBoard/' + $scope.schoolId + '/timetableBy' +
+        $scope.timetableType.charAt(0).toUpperCase() + $scope.timetableType.slice(1);
+
+      var capacityTypesPromise = getCapacityTypes($scope, Classifier).then(function (capacityTypes) {
+        $scope.capacityTypes = capacityTypes;
+      });
+      $scope.weeksPromise = QueryUtils.endpoint('/schoolBoard/:schoolIdentifier/timetableStudyYearWeeks/').query({
+        schoolIdentifier: $scope.schoolId
+      });
+
+      $q.all([capacityTypesPromise, $scope.weeksPromise.$promise]).then(function (result) {
+        $scope.weeks = result[1];
+        $scope.weekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
+        $scope.shownWeek = $scope.weeks[$scope.weekIndex];
+        getPreviousAndNextWeek($scope);
+        showWeekTimetable();
+      });
+
+      function showWeekTimetable() {
+        $scope.timetableEvents = null;
+        if ($scope.shownWeek) {
+          timetableEventsRequest($scope, QueryUtils, timetableEventsEndpoint, fillTimetable);
+        }
+      }
+
+      $scope.previousWeek = function (previousWeekIndex) {
+        changeTimetableParameters($scope, previousWeekIndex, true);
+        getPreviousAndNextWeek($scope);
+        showWeekTimetable();
+        $scope.$emit('resetReturnToSchoolBoard');
+      };
+
+      $scope.nextWeek = function (nextWeekIndex) {
+        changeTimetableParameters($scope, nextWeekIndex, true);
+        getPreviousAndNextWeek($scope);
+        showWeekTimetable();
+        $scope.$emit('resetReturnToSchoolBoard');
+      };
+
+      $scope.getEventColor = function (eventCapacityType, event) {
+        if (event !== undefined && event.isExam) {
+          return '#F8BBD0';
+        }
+        return getEventColor($scope.capacityTypes, eventCapacityType);
+      };
     }
   ]);
 }());

@@ -30,11 +30,14 @@ import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 import javax.validation.Validator;
 
+import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResult;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResultHistory;
+import ee.hitsa.ois.enums.ApelApplicationStatus;
 import ee.hitsa.ois.web.commandobject.timetable.JournalOutcomeForm;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
+import ee.hitsa.ois.web.dto.timetable.JournalAutomaticAddStudentsResult;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateBaseDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateXlsDto;
 import ee.hitsa.ois.web.dto.timetable.JournalOutcomeDto;
@@ -186,7 +189,8 @@ public class JournalService {
             "string_agg(distinct p.firstname || ' ' || p.lastname, ', ') as teachers, " +
             "string_agg(distinct cm.name_et || ' - ' || cl.name_et || ' (' || cv.code || ')', ', ') as modules_et, " +
             "string_agg(distinct cm.name_en || ' - ' || cl.name_en || ' (' || cv.code || ')', ', ') as modules_en, " +
-            "j.status_code, string_agg(distinct c.code, ', '), j.is_review_ok, j.review_date";
+            "j.status_code, string_agg(distinct c.code, ', '), j.is_review_ok, j.review_date, " +
+            "(select count(js.id) from journal_student js where js.journal_id = j.id) nr_of_students";
 
     private static final String STUDENT_JOURNAL_FROM = "from journal_student js "
             + "join journal j on j.id = js.journal_id "
@@ -238,7 +242,7 @@ public class JournalService {
                         "join lesson_plan_module lpm on jot.lesson_plan_module_id=lpm.id " + 
                         "join lesson_plan lp on lpm.lesson_plan_id=lp.id " + 
                         "join student_group sg on lp.student_group_id=sg.id " +
-                        "left join journal_teacher jt on j.id=jt.journal_id " + 
+                        "left join journal_teacher jt on j.id=jt.journal_id " +
                         "where lpm.teacher_id=" + command.getTeacher() + " or sg.teacher_id=" + command.getTeacher() +
                         " or jt.teacher_id=" + command.getTeacher() + ")");
             }
@@ -283,6 +287,7 @@ public class JournalService {
             Journal journal = em.getReference(Journal.class, resultAsLong(r, 0));
             dto.setPlannedHours(Integer.valueOf(journal.getJournalCapacities().stream().mapToInt(it -> it.getHours() == null ? 0 : it.getHours().intValue()).sum()));
             dto.setUsedHours(Integer.valueOf(journal.getJournalEntries().stream().mapToInt(it -> it.getLessons() == null ? 0 : it.getLessons().intValue()).sum()));
+            dto.setStudentCount(resultAsLong(r, 10));
             dto.setCanEdit(Boolean.valueOf(JournalUtil.hasPermissionToChange(user, journal)));
             return dto;
         });
@@ -527,54 +532,109 @@ public class JournalService {
     }
 
     public List<JournalStudentDto> suitedStudents(HoisUserDetails user, Long journalId) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s "
-                + "join person p on s.person_id = p.id "
-                + "left join student_group sg on s.student_group_id = sg.id "
-                + "join curriculum_version cv on s.curriculum_version_id = cv.id "
-                + "join curriculum c on cv.curriculum_id = c.id");
+        JpaNativeQueryBuilder qb = suitedStudentsQb(user);
+        qb.requiredCriteria("j.id = :journalId", "journalId", journalId);
+
+        List<?> data = qb.select("s.id", em).getResultList();
+        Set<Long> studentIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
+
+        if (!studentIds.isEmpty()) {
+            qb = new JpaNativeQueryBuilder("from student s "
+                    + "join person p on s.person_id = p.id "
+                    + "left join student_group sg on s.student_group_id = sg.id "
+                    + "join curriculum_version cv on s.curriculum_version_id = cv.id "
+                    + "join curriculum c on cv.curriculum_id = c.id");
+            qb.requiredCriteria("s.id in (:studentIds)", "studentIds", studentIds);
+
+            data = qb.select("s.id s_id, p.firstname, p.lastname, sg.code sg_code, c.id c_id, cv.code cv_code, "
+                    + "c.name_et c_name_et, c.name_en c_name_en, s.status_code", em).getResultList();
+
+            return StreamUtil.toMappedList(r -> new JournalStudentDto(resultAsLong(r, 0), resultAsString(r, 1),
+                    resultAsString(r, 2), resultAsString(r, 3), resultAsLong(r, 4), resultAsString(r, 5),
+                    resultAsString(r, 6), resultAsString(r, 8)), data);
+        }
+        return new ArrayList<>();
+    }
+
+    private JpaNativeQueryBuilder suitedStudentsQb(HoisUserDetails user) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j "
+                + "join journal_omodule_theme jot on jot.journal_id = j.id "
+                + "join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id "
+                + "join lesson_plan lp on lp.id = lpm.lesson_plan_id "
+                + "join student_group sg on sg.id = lp.student_group_id "
+                + "join student s on s.student_group_id = sg.id "
+                + "join curriculum_version_omodule cvo on cvo.curriculum_version_id = s.curriculum_version_id "
+                    + "and cvo.id = lpm.curriculum_version_omodule_id "
+                + "join curriculum_version_omodule_theme cvot on cvot.curriculum_version_omodule_id = cvo.id "
+                    + "and cvot.id = jot.curriculum_version_omodule_theme_id "
+                + "join curriculum_version cv on cv.id = cvo.curriculum_version_id");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
-        if (user.isLeadingTeacher()) {
-            qb.requiredCriteria("c.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
-        }
         qb.requiredCriteria("s.status_code in (:activeStudents)", "activeStudents",
                 StudentStatus.STUDENT_STATUS_ACTIVE);
-
-        qb.filter("exists (select lp.student_group_id from lesson_plan lp "
-                + "join lesson_plan_module lpm on lpm.lesson_plan_id = lp.id "
-                + "join journal_omodule_theme jot on jot.lesson_plan_module_id = lpm.id "
-                + "join journal j on j.id = jot.journal_id "
-                + "where j.id = :journalId and lp.student_group_id = s.student_group_id)");
-        qb.parameter("journalId", journalId);
+        if (user.isLeadingTeacher()) {
+            qb.requiredCriteria("cv.curriculum_id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
+        } else if (user.isTeacher()) {
+            qb.requiredCriteria("exists (select jt.id from journal_teacher jt "
+                    + "where jt.journal_id = j.id and jt.teacher_id = :teacherId and jt.is_filler = true)",
+                    "teacherId", user.getTeacherId());
+        }
 
         // who has no positive result in given module
+        qb.filter("s.id not in (select js.student_id from journal_student js where js.journal_id = j.id)");
         qb.filter("s.id not in (select svr.student_id from student_vocational_result svr "
-                + "join curriculum_version_omodule cvo on cvo.id = svr.curriculum_version_omodule_id "
-                + "join curriculum_module cm on cm.id = cvo.curriculum_module_id "
-                + "where svr.grade_code in (:positiveGrades) "
-                + "and cm.id in (select cvo2.curriculum_module_id from journal j2 "
-                    + "join journal_omodule_theme jot2 on jot2.journal_id = j2.id "
-                    + "join curriculum_version_omodule_theme cvot on cvot.id = jot2.curriculum_version_omodule_theme_id "
-                    + "join curriculum_version_omodule cvo2 on cvo2.id = cvot.curriculum_version_omodule_id "
-                    + "where j2.id = :journalId))");
+                + "join curriculum_version_omodule cvo2 on cvo2.id = svr.curriculum_version_omodule_id "
+                    + "or cvo2.id = any(svr.arr_modules) "
+                + "join curriculum_module cm on cm.id = cvo2.curriculum_module_id "
+                + "where svr.grade_code in (:positiveGrades)"
+                    + "and cm.id in (select cvo3.curriculum_module_id from curriculum_version_omodule_theme cvot3 "
+                    + "join curriculum_version_omodule cvo3 on cvo3.id = cvot3.curriculum_version_omodule_id "
+                    + "where cvot3.id = cvot.id))");
         qb.parameter("positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
 
         // who has not replaced theme in RAKKAVA application
-        qb.filter("s.id not in (select a.student_id from journal j3 "
-                + "join journal_omodule_theme jot3 on jot3.journal_id = j3.id "
-                + "join application_omodule_theme aot on aot.curriculum_version_omodule_theme_id = jot3.curriculum_version_omodule_theme_id "
+        qb.filter("s.id not in (select a.student_id from application_omodule_theme aot "
                 + "join application a on a.id = aot.application_id "
-                + "where j3.id = :journalId and a.student_id = s.id and aot.is_old = false "
-                + "and a.type_code = :applicationType and a.status_code = :applicationStatus)");
+                + "where a.student_id = s.id and a.type_code = :applicationType and a.status_code = :applicationStatus "
+                    + "and aot.curriculum_version_omodule_theme_id = jot.curriculum_version_omodule_theme_id)");
         qb.parameter("applicationType", ApplicationType.AVALDUS_LIIK_RAKKAVA.name());
         qb.parameter("applicationStatus", ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name());
 
-        List<?> data = qb.select("s.id s_id, p.firstname, p.lastname, sg.code sg_code, c.id c_id, cv.code cv_code, "
-                + "c.name_et c_name_et, c.name_en c_name_en, s.status_code", em).getResultList();
+        // themes has no positive grade and is not replaced in apel application
+        qb.filter("s.id not in ( "
+                + "select js2.student_id from journal j2 "
+                    + "join journal_omodule_theme jot2 on jot2.journal_id = j2.id "
+                    + "join journal_student js2 on js2.journal_id = j2.id and js2.student_id = s.id "
+                    + "join journal_entry je on je.journal_id = j2.id and je.entry_type_code = :finalEntry "
+                    + "join journal_entry_student jes on jes.journal_entry_id = je.id and jes.journal_student_id = js2.id "
+                    + "where jes.grade_code in (:positiveGrades) "
+                    + "and jot2.curriculum_version_omodule_theme_id = cvot.id "
+                + "union all "
+                + "select aa.student_id from apel_application aa "
+                    + "join apel_application_record aar on aar.apel_application_id = aa.id "
+                    + "join apel_application_informal_subject_or_module aai on aai.apel_application_record_id = aar.id "
+                    + "where aa.status_code = :apelStatus and aa.student_id = s.id and aai.transfer "
+                    + "and aai.curriculum_version_omodule_theme_id = cvot.id "
+                + "union all "
+                + "select aa2.student_id from apel_application aa2 "
+                    + "join apel_application_record aar2 on aar2.apel_application_id = aa2.id "
+                    + "join apel_application_formal_subject_or_module aaf on aaf.apel_application_record_id = aar2.id "
+                    + "join apel_application_formal_replaced_subject_or_module aarf on aarf.apel_application_record_id = aar2.id "
+                    + "where aa2.status_code = :apelStatus and aa2.student_id = s.id and aaf.transfer "
+                    + "and aarf.curriculum_version_omodule_theme_id = cvot.id)");
+        qb.parameter("finalEntry", JournalEntryType.SISSEKANNE_L.name());
+        qb.parameter("apelStatus", ApelApplicationStatus.VOTA_STAATUS_C.name());
 
-        return StreamUtil.toMappedList(r -> new JournalStudentDto(resultAsLong(r, 0), resultAsString(r, 1),
-                resultAsString(r, 2), resultAsString(r, 3), resultAsLong(r, 4), resultAsString(r, 5),
-                resultAsString(r, 6), resultAsString(r, 8)), data);
+        // has no positive results in all of the connected outcomes when theme is graded by them
+        qb.filter("(coalesce(cvot.is_module_outcomes, false) = false or cvot.is_module_outcomes "
+                + "and (select count(cmo.id) != count(scmor.id) from curriculum_version_omodule_theme cvot4 "
+                    + "join curriculum_version_omodule_outcomes cvoo on cvoo.curriculum_version_omodule_theme_id = cvot4.id "
+                    + "join curriculum_module_outcomes cmo on cmo.id = cvoo.curriculum_module_outcomes_id "
+                    + "left join student_curriculum_module_outcomes_result scmor on scmor.student_id = s.id "
+                    + "and scmor.curriculum_module_outcomes_id = cmo.id "
+                    + "and scmor.grade_code in (:positiveGrades) "
+                    + "where cvot4.id = jot.curriculum_version_omodule_theme_id))");
+        return qb;
     }
 
     public Journal saveEndDate(Journal journal, JournalEndDateCommand command) {
@@ -1990,6 +2050,50 @@ public class JournalService {
         q.setParameter("finalResult", JournalEntryType.SISSEKANNE_L.name());
         
         return Integer.valueOf(q.executeUpdate());
+    }
+
+    public JournalAutomaticAddStudentsResult addAllSuitableStudents(HoisUserDetails user, Long studyYearId) {
+        List<Journal> journals = em.createQuery("select j from Journal j "
+                + "where j.studyYear.id = ?1 and j.addStudents = true and j.status.code = ?2", Journal.class)
+                .setParameter(1, studyYearId)
+                .setParameter(2, JournalStatus.PAEVIK_STAATUS_T.name())
+                .getResultList();
+
+        if (!journals.isEmpty()) {
+            Map<Long, Journal> journalsById = StreamUtil.toMap(BaseEntityWithId::getId, journals);
+            JpaNativeQueryBuilder qb = suitedStudentsQb(user);
+            qb.requiredCriteria("j.id in (:journalIds)", "journalIds", journalsById.keySet());
+            List<?> data = qb.select("j.id j_id, s.id s_id", em).getResultList();
+
+            Set<Long> studentIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 1), data);
+            Map<Long, Set<Long>> studentsByJournals = data.stream().collect(
+                    Collectors.groupingBy(r -> resultAsLong(r, 0),
+                    Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toSet())));
+
+            if (!studentIds.isEmpty()) {
+                List<Student> students = em.createQuery("select s from Student s where s.id in ?1", Student.class)
+                        .setParameter(1, studentIds)
+                        .getResultList();
+                Map<Long, Student> studentsById = StreamUtil.toMap(BaseEntityWithId::getId, students);
+
+                for (Long journalId : studentsByJournals.keySet()) {
+                    Journal journal = journalsById.get(journalId);
+                    Set<Long> journalStudentIds = studentsByJournals.get(journalId);
+                    for (Long studentId : journalStudentIds) {
+                        JournalStudent js = new JournalStudent();
+                        js.setJournal(journal);
+                        js.setStudent(studentsById.get(studentId));
+                        journal.getJournalStudents().add(js);
+                    }
+                    EntityUtil.save(journal, em);
+                }
+            }
+
+            long numberOfAddedStudents = studentsByJournals.entrySet().stream().flatMap(r -> r.getValue().stream()).count();
+            return new JournalAutomaticAddStudentsResult(Long.valueOf(studentsByJournals.keySet().size()),
+                    Long.valueOf(numberOfAddedStudents));
+        }
+        return new JournalAutomaticAddStudentsResult(Long.valueOf(0), Long.valueOf(0));
     }
 
 }

@@ -34,7 +34,7 @@
                 <span ng-if="journalEntry.moodleGradeItemId"><md-icon md-font-set="material-icons">school</md-icon></span>
                 <span class="pointer" style="text-decoration: underline;">
                   <span ng-click="editJournalEntry(journalEntry.id)">
-                    <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_L'">{{'journal.finalResult' | translate}} {{journalEntry.entryDate ? ' - ' + (journalEntry.entryDate | hoisDayMonth) : ''}}</span>
+                    <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_L'">{{'journal.finalResult' | translate}} {{journalEntry.entryDate ? ' - ' + (journalEntry.entryDate | hoisDateShortYear) : ''}}</span>
                     <span ng-if="journalEntry.entryType.code !== 'SISSEKANNE_L'">{{journalEntry.entryDate ? (journalEntry.entryDate | hoisDayMonth) : '-'}}</span>
                   </span>
                 </span>

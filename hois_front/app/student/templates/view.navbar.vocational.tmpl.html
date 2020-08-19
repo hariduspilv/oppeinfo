@@ -3,7 +3,7 @@
     <md-nav-item md-nav-href="#/students/{{::studentId}}/main?_noback" name="student.main">{{'student.main' | translate}}</md-nav-item>
     <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/results?_noback"
       name="student.results">{{'student.results' | translate}}</md-nav-item>
-    <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/absences?_noback"
+    <md-nav-item ng-if="student.userCanViewStudentSpecificData && !auth.school.notAbsence" md-nav-href="#/students/{{::studentId}}/absences?_noback"
       name="student.absences">{{'student.absences' | translate}}</md-nav-item>
     <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/documents?_noback"
       name="student.documents">{{'student.documents' | translate}}</md-nav-item>

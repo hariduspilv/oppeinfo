@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import javax.validation.Valid;
 
+import ee.hitsa.ois.service.DirectiveConfirmInternalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -59,6 +60,8 @@ public class DirectiveController {
 
     @Autowired
     private DirectiveConfirmService directiveConfirmService;
+    @Autowired
+    private DirectiveConfirmInternalService directiveConfirmInternalService;
     @Autowired
     private DirectiveService directiveService;
     @Autowired
@@ -130,7 +133,7 @@ public class DirectiveController {
         UserUtil.assertIsSchoolAdmin(user, directive.getSchool(), Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_KASKKIRI_EKISETA);
         // start requests after save has been successful
         jobService.directiveConfirmed(EntityUtil.getId(
-                directiveConfirmService.confirmedByUser(user.getUsername(), directive, LocalDate.now(), form)));
+                directiveConfirmInternalService.confirmedByUser(user.getUsername(), directive, LocalDate.now(), form)));
         return get(user, directive);
     }
 

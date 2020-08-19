@@ -1,0 +1,63 @@
+<md-dialog aria-label="fotobox request result" flex="60" flex-sm="100" flex-xs="100">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2>{{'student.photoBox.requestResult.label' | translate}}</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-font-set="material-icons">close</md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <div class="md-dialog-content">
+      <div ng-if="successfulRequests.length > 0">
+        <p md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'student.photoBox.requestResult.success' | translate}}</p>
+        <md-table-container>
+          <table md-table>
+            <thead md-head>
+              <tr md-row>
+                <th md-column width="10%">{{'main.order' | translate}}</th>
+                <th md-column width="60%">{{'student.name' | translate}}</th>
+                <th md-column width="30%">{{'student.idcode' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in successfulRequests | orderBy: ['lastname', 'firstname']" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{$index + 1}}</td>
+                <td md-cell>{{row.firstname + ' ' + row.lastname}}</td>
+                <td md-cell>{{row.usercode}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+
+      <div ng-if="failedRequests.length > 0">
+        <p md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'student.photoBox.requestResult.failed' | translate}}</p>
+        <md-table-container>
+          <table md-table>
+            <thead md-head>
+              <tr md-row>
+                <th md-column width="10%">{{'main.order' | translate}}</th>
+                <th md-column width="60%">{{'student.name' | translate}}</th>
+                <th md-column width="30%">{{'student.idcode' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in failedRequests | orderBy: ['lastname', 'firstname']" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{$index + 1}}</td>
+                <td md-cell>{{row.firstname + ' ' + row.lastname}}</td>
+                <td md-cell>{{row.usercode}}</td></td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+    </div>
+  </md-dialog-content>
+
+  <md-dialog-actions layout="row" layout-align="start center">
+    <md-button ng-click="cancel()" class="md-raised">{{'main.button.close' | translate}}</md-button>
+  </md-dialog-actions>
+</md-dialog>

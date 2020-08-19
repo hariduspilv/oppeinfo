@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.domain.DeclarationSubject;
+import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.enums.Permission;
@@ -35,6 +36,7 @@ import ee.hitsa.ois.web.commandobject.DeclarationSubjectForm;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.DeclarationAutofillResponseDto;
 import ee.hitsa.ois.web.dto.DeclarationDto;
 import ee.hitsa.ois.web.dto.DeclarationSubjectDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
@@ -162,6 +164,12 @@ public class DeclarationController {
         Map<String, Object> response = new HashMap<>();
         response.put("numberOfNewlyConfirmedDeclarations", numberOfNewlyConfirmedDeclarations);
         return response;
+    }
+    
+    @PutMapping("/addSubjectsToDeclaration/{id:\\d+}")
+    public DeclarationAutofillResponseDto addSubjectsToDeclaration(HoisUserDetails user, @WithEntity StudyPeriod studyPeriod) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPINGUKAVA);
+        return declarationService.addSubjectsToDeclaration(studyPeriod, user.getSchoolId());
     }
 
     @PutMapping("/removeConfirm/{id:\\d+}")

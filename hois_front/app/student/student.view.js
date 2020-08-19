@@ -164,6 +164,24 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
         QueryUtils.loadingWheel($scope, false);
       });
     };
+
+    $scope.requestPhotoBoxPhoto = function () {
+      dialogService.confirmDialog({ prompt: 'student.photoBox.updateConfirm' }, function () {
+        QueryUtils.loadingWheel($scope, true);
+        QueryUtils.endpoint(baseUrl + '/:id/requestStudentPhoto').search({id: studentId}, function (result) {
+          if (angular.isDefined(result.fdata)) {
+            $scope.student.photo = result;
+            $scope.student.imageUrl = oisFileService.getUrl($scope.student.photo, 'student');
+            message.info('student.photoBox.success');
+          } else {
+            message.error('student.photoBox.notFound');
+          }
+          QueryUtils.loadingWheel($scope, false);
+        }, function() {
+          QueryUtils.loadingWheel($scope, false);
+        });
+      });
+    };
   }
 ]).controller('StudentViewResultsController', ['$route', '$scope', '$localStorage', 'QueryUtils', 'config', 'StudentUtil',
 function ($route, $scope, $localStorage, QueryUtils, config, StudentUtil) {
@@ -587,6 +605,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
     function loadHigherResults(expandedModules) {
       QueryUtils.endpoint('/students/' + $scope.studentId + '/higherResults').get().$promise.then(function (response) {
         var allResults = [];
+        var replacedSubjectsByModule = {};
 
         response.modules.forEach(function (module) {
           module.markedComplete = module.studentCurriculumCompletionHigherModule !== null;
@@ -613,6 +632,15 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
             clMapper.objectmapper(grade);
           });
           allResults.push(result);
+
+          if (result.replacedSubjects.length > 0) {
+            if (!angular.isObject(replacedSubjectsByModule[result.higherModule.id])) {
+              replacedSubjectsByModule[result.higherModule.id] = [];
+            }
+            result.replacedSubjects.forEach(function (replacedSubject) {
+              replacedSubjectsByModule[result.higherModule.id].push(replacedSubject.id);
+            });
+          }
         });
         response.extraCurriculumModuleResults.forEach(function (module) {
           module.grades.forEach(function (grade) {
@@ -639,6 +667,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
         $scope.higherResults.allResults = allResults;
         $scope.student.higherResults = $scope.higherResults;
         $scope.student.higherResults.modules.sort(moduleComparator);
+        $scope.replacedSubjectsByModule = replacedSubjectsByModule;
         changeModulesExpandedStatus(expandedModules);
       });
     }
@@ -710,9 +739,14 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
 
     $scope.filterSubjectResultsByModule = function (higherModule) {
       return function (subjectResult) {
-        return higherModule.id === subjectResult.higherModule.id;
+        return higherModule.id === subjectResult.higherModule.id && !nongradedReplacedSubject(higherModule, subjectResult);
       };
     };
+
+    function nongradedReplacedSubject(higherModule, subjectResult) {
+      return subjectResult.grades.length === 0 && angular.isObject($scope.replacedSubjectsByModule[higherModule.id]) &&
+        $scope.replacedSubjectsByModule[higherModule.id].indexOf(subjectResult.subject.id) !== -1;
+    }
 
     $scope.filterResultsByStudyPeriod = function (studyPeriod) {
       return function (result) {
@@ -957,7 +991,8 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
     $scope.canChangeApplication = function (application) {
       return AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS) &&
         $scope.student && $scope.student.userCanEditStudent && (application.status.code === 'AVALDUS_STAATUS_KOOST' ||
-        (application.status.code === 'AVALDUS_STAATUS_YLEVAAT' && ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher())));
+        (application.status.code === 'AVALDUS_STAATUS_YLEVAAT' && ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher())))
+        && !($scope.auth.isAdmin() && application.type.code === 'AVALDUS_LIIK_TUGI' && !AuthService.isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS') && !application.isConnectedByCommittee);
     };
 
     $scope.canViewContract = function () {
@@ -1082,13 +1117,15 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
         });
       });
     };
-  }]).controller('StudentAbsencesController', ['$mdDialog', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils',
-    function ($mdDialog, $route, $scope, dialogService, message, DataUtils, QueryUtils) {
+  }]).controller('StudentAbsencesController', ['$mdDialog', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils', '$location', '$q',
+    function ($mdDialog, $route, $scope, dialogService, message, DataUtils, QueryUtils, $location, $q) {
       $scope.auth = $route.current.locals.auth;
       $scope.studentId = $route.current.params.id;
-      QueryUtils.endpoint('/students').get({ id: $scope.studentId }).$promise.then(function (response) {
-        $scope.student = response;
-      });
+      $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
+      if ($scope.auth.school.notAbsence) {
+        message.error('main.messages.error.nopermission');
+        return $location.path('');
+      }
       $scope.currentNavItem = 'student.absences';
 
       $scope.absencesCriteria = { size: 20, page: 1, order: 'validFrom, validThru' };
@@ -1309,8 +1346,8 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
           QueryUtils.loadingWheel($scope, false);
         });
       }
-    }]).controller('StudentSearchController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils',
-    function ($q, $route, $scope, Classifier, QueryUtils) {
+    }]).controller('StudentSearchController', ['$q', '$route', '$scope', '$translate', 'Classifier', 'PollingService', 'QueryUtils', 'busyHandler', 'dialogService', 'message',
+    function ($q, $route, $scope, $translate, Classifier, PollingService, QueryUtils, busyHandler, dialogService, message) {
       $scope.auth = $route.current.locals.auth;
 
       var clMapping = $route.current.locals.clMapping;
@@ -1334,4 +1371,51 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
           c.clear();
         });
       };
+
+      $scope.requestPhotoBoxPhotos = function () {
+        QueryUtils.endpoint('/students/studentsWithoutPhoto').get(function (result) {
+          if (result.count > 0) {
+            dialogService.confirmDialog({ prompt: 'student.photoBox.requestConfirm', studentCount: result.count }, function () {
+              QueryUtils.loadingWheel($scope, true, false, $translate.instant('student.photoBox.requestInProgress'), true);
+              sendRequest();
+            });
+          } else {
+            message.error('student.photoBox.noStudentsWithoutPhotos');
+          }
+        });
+      };
+
+      function sendRequest() {
+        PollingService.sendRequest({
+          url: '/students/studentsWithoutPhotoRequest',
+          pollUrl: '/students/studentsWithoutPhotoRequestStatus',
+          successCallback: function (pollResult) {
+            busyHandler.setProgress(100);
+            QueryUtils.loadingWheel($scope, false);
+            dialogService.showDialog('student/templates/photobox.result.dialog.html', function (dialogScope) {
+              dialogScope.successfulRequests = [];
+              dialogScope.failedRequests = [];
+              pollResult.result.forEach(function (student) {
+                if (student.success) {
+                  dialogScope.successfulRequests.push(student);
+                } else {
+                  dialogScope.failedRequests.push(student);
+                }
+              });
+            });
+          },
+          failCallback: function (pollResult) {
+            if (pollResult) {
+              message.error('student.photoBox.requestResult.failure');
+            }
+            QueryUtils.loadingWheel($scope, false);
+          },
+          updateProgress: function (pollResult) {
+            if (pollResult) {
+              busyHandler.setProgress(Math.round(pollResult.progress * 100));
+            }
+          }
+        });
+      }
+
     }]);

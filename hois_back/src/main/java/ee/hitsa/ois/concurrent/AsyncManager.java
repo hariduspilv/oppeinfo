@@ -20,7 +20,11 @@ import ee.hitsa.ois.web.dto.FutureStatusResponse;
 public class AsyncManager {
     
     private static final int EXPIRATION_MINUTES = 60;
-    
+
+    public String generateKey(HoisUserDetails user) {
+        return generateKey(user.getUsername());
+    }
+
     /**
      * UUIDv4
      * The number of random version 4 UUIDs which need to be generated in order
@@ -28,12 +32,16 @@ public class AsyncManager {
      * 
      * @return UUID value
      */
-    public String generateKey(HoisUserDetails user) {
-        return UUID.randomUUID().toString() + "-" + user.getUsername().hashCode();
+    public String generateKey(String username) {
+        return UUID.randomUUID().toString() + "-" + username.hashCode();
     }
     
     public <R> void createRequest(HoisUserDetails user, Integer type, String key, AsyncRequest<R> request) {
-        AsyncMemoryManager.add(type, user.getSchoolId(), key, request);
+        createRequest(type, user.getSchoolId(), key, request);
+    }
+
+    public <R> void createRequest(Integer type, Long schoolId, String key, AsyncRequest<R> request) {
+        AsyncMemoryManager.add(type, schoolId, key, request);
     }
 
     @Async

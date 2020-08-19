@@ -22,9 +22,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
+import ee.hitsa.ois.service.fotobox.FotoBoxService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.PropertyAccessor;
@@ -60,7 +62,6 @@ import ee.hitsa.ois.enums.DirectiveCancelType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.DocumentStatus;
-import ee.hitsa.ois.enums.EhisStipendium;
 import ee.hitsa.ois.enums.FormStatus;
 import ee.hitsa.ois.enums.JobType;
 import ee.hitsa.ois.enums.MessageType;
@@ -86,7 +87,6 @@ import ee.hitsa.ois.util.DirectiveUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
-import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
@@ -96,7 +96,6 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.ErrorForField;
 import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.ErrorForIcpField;
-import ee.hitsa.ois.web.commandobject.directive.DirectiveConfirmForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.directive.DirectiveViewStudentDto;
 import ee.hitsa.ois.web.dto.directive.ExistingDirectiveStudentDto;
@@ -135,6 +134,8 @@ public class DirectiveConfirmService {
     private PersonService personService;
     @Autowired
     private SchoolService schoolService;
+    @Autowired
+    private FotoBoxService fotoBoxService;
 
     private static final String ABSENCE_REJECT_DIRECTIVE_CANCELED = "Käskkiri tühistatud";
 
@@ -151,9 +152,8 @@ public class DirectiveConfirmService {
         }
         Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
         Map<Long, List<DirectiveStudent>> scholarships = findScholarships(directive);
-        Map<Long, ExistingDirectiveStudentDto> woApplicationScholarships = directiveService
-                .getExistingStudentStipendsWOApplicationDirectives(EntityUtil.getId(directive.getSchool()),
-                        EntityUtil.getNullableCode(directive.getScholarshipEhis()),
+        Map<Long, List<ExistingDirectiveStudentDto>> woApplicationScholarships = directiveService
+                .getExistingStudentStipendsWOApplicationDirectives(directive,
                         directive.getStudents().stream().filter(ds -> ds.getStudent() != null)
                                 .map(ds -> EntityUtil.getId(ds.getStudent())).collect(Collectors.toSet()));
         Map<Long, List<IndividualCurriculumModuleDto>> individualCurriculumSuitableModules = individualCurriculumSuitableModules(directive);
@@ -378,16 +378,14 @@ public class DirectiveConfirmService {
                     if (ds.getBankAccount() == null) {
                         allErrors.add(new ErrorForField(Required.MESSAGE, DirectiveConfirmService.propertyPath(rowNum, "bankAccount")));
                     }
-                    if (!ClassifierUtil.equals(EhisStipendium.EHIS_STIPENDIUM_6, directive.getScholarshipEhis())) {
-                        ExistingDirectiveStudentDto existingDirectiveStudentDto = woApplicationScholarships
-                                .get(EntityUtil.getId(ds.getStudent()));
-                        if (existingDirectiveStudentDto != null
-                                && !existingDirectiveStudentDto.getId().equals(ds.getId())) {
-                            if (!(existingDirectiveStudentDto.getStartDate().isAfter(ds.getEndDate())
-                                    || existingDirectiveStudentDto.getEndDate().isBefore(ds.getStartDate()))) {
+                    List<ExistingDirectiveStudentDto> studentExistingDirectives = woApplicationScholarships
+                            .get(EntityUtil.getId(ds.getStudent()));
+                    if (studentExistingDirectives != null) {
+                        for (ExistingDirectiveStudentDto existingDirective : studentExistingDirectives) {
+                            if (DateUtils.periodsOverlap(ds.getStartDate(), ds.getEndDate(),
+                                    existingDirective.getStartDate(), existingDirective.getEndDate())) {
                                 allErrors.add(new ErrorForIcpField("stipendExists", propertyPath(rowNum, "student"), null,
-                                        existingDirectiveStudentDto.getStartDate(),
-                                        existingDirectiveStudentDto.getEndDate()));
+                                        existingDirective.getStartDate(), existingDirective.getEndDate()));
                             }
                         }
                     }
@@ -554,24 +552,6 @@ public class DirectiveConfirmService {
         return EntityUtil.save(directive, em);
     }
 
-    public Directive confirmedByEkis(long directiveId, String directiveNr, LocalDate confirmDate, String preamble, long wdId,
-            String signerIdCode, String signerName) {
-        //TODO veahaldus
-        //• ÕISi käskkiri ei leitud – ÕISist ei leita vastava vastava OIS_ID ja WD_ID-ga käskkirja
-        //• Vale staatus – kinnitada saab ainult „kinnitamisel“ staatusega käskkirja. „Koostamisel“ ja „Kinnitatud“ käskkirju kinnitada ei saa.
-        //• Üldine veateade – üldine viga salvestamisel, nt liiga lühike andmeväli, vale andmetüüp vms
-        Directive directive = findDirective(directiveId, wdId);
-        directive.setDirectiveNr(directiveNr);
-        directive.setPreamble(preamble);
-        return confirm(PersonUtil.fullnameAndIdcode(signerName, signerIdCode), directive, confirmDate);
-    }
-
-    public Directive confirmedByUser(String confirmer, Directive directive, LocalDate confirmDate, DirectiveConfirmForm form) {
-        directive.setDirectiveNr(form.getDirectiveNr());
-        directive.setPreamble(form.getPreamble());
-        return confirm(confirmer, directive, confirmDate);
-    }
-
     /**
      * Check if preconditions are ok for confirming directive
      *
@@ -632,6 +612,13 @@ public class DirectiveConfirmService {
     }
 
     public Directive confirm(String confirmer, Directive directive, LocalDate confirmDate) {
+        DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
+        directive = confirmDirectiveChanges(confirmer, directive, confirmDate);
+        return directive;
+    }
+
+    @Transactional(TxType.REQUIRES_NEW)
+    public Directive confirmDirectiveChanges(String confirmer, Directive directive, LocalDate confirmDate) {
         AssertionFailedException.throwIf(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL, directive.getStatus()), "Invalid directive status");
         AssertionFailedException.throwIf(ClassifierUtil.equals(DirectiveType.KASKKIRI_TUGI, directive.getType())
                 && directive.getStudents().stream().filter(ds -> !StudentUtil.hasSpecialNeeds(ds.getStudent())).findAny().isPresent(), "Student without special needs");
@@ -656,7 +643,9 @@ public class DirectiveConfirmService {
                 updateStudentData(directiveType, ds, studentStatus, student != null ? academicLeaves.get(student.getId()) : null);
             }
         }
-        return EntityUtil.save(directive, em);
+        directive = EntityUtil.save(directive, em);
+        em.flush();
+        return directive;
     }
 
     public void updateStudentStatus(Job job) {

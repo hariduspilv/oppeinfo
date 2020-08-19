@@ -9,8 +9,8 @@ public class TimetableByTeacherDto extends TimetableByDto {
     private String personalUrl;
 
     public TimetableByTeacherDto(String studyPeriods, List<TimetableEventSearchDto> timetableEvents, Long teacherId,
-            String firstname, String lastname) {
-        super(studyPeriods, timetableEvents);
+            String firstname, String lastname, Boolean isHigher) {
+        super(studyPeriods, timetableEvents, isHigher);
         this.teacherId = teacherId;
         this.firstname = firstname;
         this.lastname = lastname;

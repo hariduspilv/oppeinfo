@@ -13,6 +13,7 @@ import javax.xml.bind.DatatypeConverter;
 
 import ee.hitsa.ois.bdoc.MobileIdSigningSession;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.util.AuthUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.sk.mid.MidClient;
 import ee.sk.mid.MidDisplayTextFormat;
@@ -188,6 +189,8 @@ public class BdocService {
 
     public MobileIdSigningSession mobileIdSignatureRequest(String idcode, String mobileNumber, DataFile dataFile,
             Language lang) {
+        mobileNumber = AuthUtil.validateMobileNumber(mobileNumber);
+
         Container container = ContainerBuilder.aContainer()
                 .withConfiguration(configuration)
                 .withDataFile(dataFile)

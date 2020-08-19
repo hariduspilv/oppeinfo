@@ -2,7 +2,6 @@ package ee.hitsa.ois.web;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -17,8 +16,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
@@ -88,6 +89,11 @@ public class PublicDataController {
     @GetMapping("/academicCalendar/{schoolId:\\d+}")
     public AcademicCalendarDto academicCalendar(@PathVariable("schoolId") Long schoolId) {
         return publicDataService.academicCalendar(schoolId);
+    }
+    
+    @GetMapping("/academicCalendar/{schoolId:\\d+}/{studyYearId:\\d+}")
+    public AcademicCalendarDto academicCalendar(@WithEntity("schoolId") School school, @WithEntity("studyYearId") StudyYear studyYear) {
+        return publicDataService.academicCalendar(school, studyYear);
     }
 
     @GetMapping("/curriculum/{id:\\d+}")

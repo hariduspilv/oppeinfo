@@ -15,7 +15,8 @@ public abstract class StudentAbsenceUtil {
         return (UserUtil.isAdultStudent(user, student) || (UserUtil.isStudentAndDoNotNeedRepresentative(user, student) && Boolean.TRUE.equals(student.getSchool().getIsMinorStudentAbsence())) ||
                 ((UserUtil.isSchoolAdmin(user, student.getSchool()) || UserUtil.isStudentGroupTeacher(user, student)) && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PUUDUMINE)) ||
                 UserUtil.isStudentRepresentative(user, student))
-                && StudentUtil.canBeEdited(student);
+                && StudentUtil.canBeEdited(student)
+                && !Boolean.TRUE.equals(student.getSchool().getIsNotAbsence());
     }
 
     public static boolean canEdit(HoisUserDetails user, StudentAbsence absence) {
@@ -24,7 +25,8 @@ public abstract class StudentAbsenceUtil {
                 (UserUtil.isAdultStudent(user, student) || (UserUtil.isStudentAndDoNotNeedRepresentative(user, student) && Boolean.TRUE.equals(student.getSchool().getIsMinorStudentAbsence())) ||
                 ((UserUtil.isSchoolAdmin(user, student.getSchool()) || UserUtil.isStudentGroupTeacher(user, student)) && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PUUDUMINE)) ||
                 UserUtil.isStudentRepresentative(user, student)) 
-                && StudentUtil.canBeEdited(student);
+                && StudentUtil.canBeEdited(student)
+                && !Boolean.TRUE.equals(student.getSchool().getIsNotAbsence());
     }
 
     /**

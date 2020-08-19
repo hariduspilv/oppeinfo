@@ -461,6 +461,11 @@ function ($scope, QueryUtils, $route, DataUtils, Classifier, message, $q) {
   $scope.clearCriteriaBefore = function () {
     $scope.clearCriteria();
     preselectCurrentStudyYearOrPeriod();
+    if ($scope.auth.isAdmin() && $scope.myData && $scope.teacher) {
+      $scope.teacher.$promise.then(function (response) {
+        $scope.criteria.teacher = { id: response.id };
+      });
+    }
   };
 
   $scope.load = function() {

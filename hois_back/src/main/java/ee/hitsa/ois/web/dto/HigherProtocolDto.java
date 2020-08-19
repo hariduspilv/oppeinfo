@@ -25,6 +25,7 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
     private Boolean canBeEdited;
     private Boolean canBeConfirmed;
     private Boolean canBeDeleted;
+    private String assessmentCode;
 
     public static HigherProtocolDto ofWithIdOnly(Protocol protocol) {
         HigherProtocolDto dto = new HigherProtocolDto();
@@ -155,6 +156,14 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
 
     public void setCanBeDeleted(Boolean canBeDeleted) {
         this.canBeDeleted = canBeDeleted;
+    }
+
+    public String getAssessmentCode() {
+        return assessmentCode;
+    }
+
+    public void setAssessmentCode(String assessmentCode) {
+        this.assessmentCode = assessmentCode;
     }
 
 }

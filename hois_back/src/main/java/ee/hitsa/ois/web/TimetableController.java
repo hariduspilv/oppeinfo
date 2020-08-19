@@ -205,8 +205,8 @@ public class TimetableController {
     }
 
     @GetMapping("/timetableStudyYears/{school:\\d+}")
-    public List<StudyYearSearchDto> timetableStudyYears(@PathVariable("school") Long schoolId) {
-        return timetableService.timetableStudyYears(schoolId);
+    public List<StudyYearSearchDto> timetableStudyYears(@WithEntity("school") School school) {
+        return timetableService.timetableStudyYears(school);
     }
 
     @GetMapping("/timetableStudyYears/person")

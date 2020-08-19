@@ -188,6 +188,11 @@ public class Person extends BaseEntityWithId {
         return PersonUtil.fullname(firstname, lastname);
     }
 
+    @Transient
+    public String getUsercode() {
+        return idcode != null ? idcode : uniqueCode;
+    }
+
     public String getUniqueCode() {
         return uniqueCode;
     }

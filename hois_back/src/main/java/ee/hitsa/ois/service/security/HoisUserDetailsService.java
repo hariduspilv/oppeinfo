@@ -102,7 +102,7 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
             authenticatedSchool = new AuthenticatedSchool(school.getId(), type.isHigher(), type.isVocational(),
                     type.isDoctoral(), school.getIsLetterGrade() != null ? school.getIsLetterGrade().booleanValue() : false,
                     EntityUtil.getCode(school.getEhisSchool()), school.getIsWithoutEkis() != null ? school.getIsWithoutEkis().booleanValue() : false,
-                    Boolean.TRUE.equals(school.getIsHmodules()));
+                    Boolean.TRUE.equals(school.getIsHmodules()), Boolean.TRUE.equals(school.getIsNotAbsence()));
             OisFile logo = school.getLogo();
             if (logo != null) {
                 authenticatedSchool.setLogo(logo.getFdata());

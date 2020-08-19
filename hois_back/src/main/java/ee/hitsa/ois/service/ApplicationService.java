@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
@@ -55,7 +56,6 @@ import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.enums.AcademicLeaveReason;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
-import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.JournalEntryType;
@@ -113,8 +113,9 @@ public class ApplicationService {
             "left join student_group sg on student.student_group_id = sg.id " +
             "inner join person person on student.person_id = person.id inner join classifier type on a.type_code = type.code " +
             "inner join classifier status on a.status_code = status.code";
-    private static final String APPLICATION_SELECT = "a.id, a.type_code, a.status_code, a.inserted, "+
-            "a.submitted, a.student_id, person.firstname, person.lastname, a.reject_reason, student.type_code as studentType, sg.code as groupCode";
+    private static final String APPLICATION_SELECT = "a.id, a.type_code, a.status_code, a.inserted, "
+            + "a.submitted, a.student_id, person.firstname, person.lastname, a.reject_reason, student.type_code as studentType, "
+            + "sg.code as groupCode, exists(select 1 from committee_member cm where cm.committee_id = a.committee_id and cm.person_id = :personId)";
 
     @Autowired
     private AutomaticMessageService automaticMessageService;
@@ -149,7 +150,6 @@ public class ApplicationService {
                     + "where cv.id = student.curriculum_version_id and uc.user_id = :userId) "
                     + "or exists(select 1 from committee_member cm where cm.committee_id = a.committee_id "
                     + "and cm.person_id = :personId))", "userId", user.getUserId());
-            qb.parameter("personId", user.getPersonId());
         }
 
         qb.optionalCriteria("a.type_code in (:type)", "type", criteria.getType());
@@ -168,7 +168,7 @@ public class ApplicationService {
         
         if (user.isSchoolAdmin()) {
             if (Boolean.TRUE.equals(criteria.getConnectedByCommittee())) {
-                qb.requiredCriteria("exists(select 1 from committee_member cm where cm.committee_id = a.committee_id and cm.person_id = :personId)", "personId", user.getPersonId());
+                qb.filter("exists(select 1 from committee_member cm where cm.committee_id = a.committee_id and cm.person_id = :personId)");
             }
         } else if (user.isTeacher()) {
             if (Boolean.TRUE.equals(criteria.getConnectedByCommittee())) {
@@ -177,6 +177,8 @@ public class ApplicationService {
                 qb.parameter("teacherId", user.getTeacherId());
             }
         }
+        qb.filter(":personId = :personId");
+        qb.parameter("personId", user.getPersonId());
 
         Page<ApplicationSearchDto> applications = JpaQueryUtil.pagingResult(qb, APPLICATION_SELECT, em, pageable).map(r -> {
             ApplicationSearchDto dto = new ApplicationSearchDto();
@@ -190,6 +192,7 @@ public class ApplicationService {
             dto.setStudent(new AutocompleteResult(studentId, name, name));
             dto.setRejectReason(resultAsString(r, 8));
             dto.setStudentGroup(resultAsString(r, 10));
+            dto.setIsConnectedByCommittee(resultAsBoolean(r, 11));
             return dto;
         });
         setApplicationSearchDtoRights(user, applications.getContent());
@@ -553,14 +556,14 @@ public class ApplicationService {
         ApplicationStatus oldStatus = EnumUtil.valueOf(ApplicationStatus.class, application.getStatus());
         if (updateStatus) {
             application = setSeenBySchoolAdmin(user, application);
-            ApplicationDto dto = ApplicationDto.of(application);
+            ApplicationDto dto = ApplicationDto.of(application, user);
             if (oldStatus != null && oldStatus.equals(ApplicationStatus.AVALDUS_STAATUS_ESIT) && !oldStatus.equals(EnumUtil.valueOf(ApplicationStatus.class, application.getStatus()))) {
                 dto.setHasBeenSeenByAdmin(Boolean.TRUE);
             }
             setUserRights(user, application, dto);
             return dto;
         }
-        ApplicationDto dto = ApplicationDto.of(application);
+        ApplicationDto dto = ApplicationDto.of(application, user);
         setUserRights(user, application, dto);
         return dto;
     }
@@ -575,7 +578,6 @@ public class ApplicationService {
     }
 
     private boolean canEditPlannedSubjects(HoisUserDetails user, Application application) {
-        // TODO Auto-generated method stub
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds"
                 + " join student s on ds.student_id = s.id"
                 + " join directive d on d.id = ds.directive_id"
@@ -807,8 +809,6 @@ public class ApplicationService {
                 + " join classifier mcl on cm.module_code = mcl.code");
 
         qb.requiredCriteria("s.id = :studentId", "studentId", EntityUtil.getId(student));
-        qb.requiredCriteria("cm.module_code in (:moduleCodes)", "moduleCodes",
-                EnumUtil.toNameList(CurriculumModuleType.KUTSEMOODUL_P, CurriculumModuleType.KUTSEMOODUL_Y));
 
         qb.filter("(not exists (select 1 from student_vocational_result svr"
                 + " where svr.curriculum_version_omodule_id = cvo.id and svr.student_id = :studentId"

@@ -64,6 +64,9 @@
               <a ng-click="changeStudyYear(sy)" ng-style="{'font-weight': criteria.studyYearId === sy.id ? 'bold' : 'normal'}">{{currentLanguageNameField(sy)}}</a>
               <span>&nbsp;</span>
             </span>
+            <span ng-if="schoolBoardUrl" style="float: right;">
+              <a ng-href="{{schoolBoardUrl}}">{{'timetable.schoolBoard' | translate}}</a>
+            </span>
           </div>
         </md-input-container>
       </div>

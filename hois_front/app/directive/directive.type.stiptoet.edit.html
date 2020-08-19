@@ -66,14 +66,14 @@
           <hois-table-data-detail>
             <div class="invalid" ng-messages="directiveForm['students['+$index+'].amountPaid'].$error" ng-show="directiveForm['students['+$index+'].amountPaid'].$dirty">
               <div ng-message="max">
-                {{'curriculum.error.max9999' | translate}}
+                {{'main.messages.error.numberRange' | translate: {min: 0, max: 9999} }}
               </div>
               <div ng-message="min">
-                {{'main.messages.error.min' | translate: {min: 0} }}
+                {{'main.messages.error.numberRange' | translate: {min: 0, max: 9999} }}
               </div>
             </div>
             <div class="invalid" ng-show="directiveForm['students['+$index+'].amountPaid'].$error.required">
-              {{'main.required' | translate}}
+              {{'main.messages.error.numberRange' | translate: {min: 0, max: 9999} }}
             </div>
           </hois-table-data-detail>
         </td>

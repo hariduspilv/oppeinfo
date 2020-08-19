@@ -21,12 +21,13 @@ public class HigherProtocolSearchDto {
     private AutocompleteResult subject;
     private AutocompleteResult module;
     private List<String> teachers;
+    private List<String> studentGroups;
     private LocalDate inserted;
     private LocalDate confirmDate;
     private String confirmer;
     private Boolean canChange;
     
-    public static HigherProtocolSearchDto ofWithUserRithts(Protocol protocol, HoisUserDetails user) {
+    public static HigherProtocolSearchDto ofWithUserRights(Protocol protocol, HoisUserDetails user) {
         HigherProtocolSearchDto dto = new HigherProtocolSearchDto();
         EntityUtil.bindToDto(protocol, dto, "confirmer");
         dto.setProtocolType(EntityUtil.getCode(protocol.getProtocolHdata().getType()));
@@ -141,5 +142,13 @@ public class HigherProtocolSearchDto {
 
     public void setConfirmer(String confirmer) {
         this.confirmer = confirmer;
+    }
+
+    public List<String> getStudentGroups() {
+        return studentGroups;
+    }
+
+    public void setStudentGroups(List<String> studentGroups) {
+        this.studentGroups = studentGroups;
     }
 }

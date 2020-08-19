@@ -9,6 +9,13 @@
 
     // FIXME: oppesuund is lost when returning to page
 
+    $scope.formState = {
+      showAllParameters: false
+    }
+
+    $scope.toggleShowAllParameters = function () {
+      $scope.formState.showAllParameters = !$scope.formState.showAllParameters;
+    };
 
     if (!$scope.criteria.status) {
       $scope.criteria.status = ['OPPEKAVA_STAATUS_M', 'OPPEKAVA_STAATUS_S', 'OPPEKAVA_STAATUS_K'];

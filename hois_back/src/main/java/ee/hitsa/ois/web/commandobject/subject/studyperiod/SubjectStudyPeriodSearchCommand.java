@@ -9,6 +9,8 @@ public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     
     private EntityConnectionCommand subjectObject;
     private EntityConnectionCommand teacherObject;
+    private EntityConnectionCommand studentGroupObject;
+    private EntityConnectionCommand curriculumObject;
     private List<Long> studyPeriods;
     private Long studentGroup;
     private Long student;
@@ -84,5 +86,17 @@ public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     }
     public void setProgramStatus(String programStatus) {
         this.programStatus = programStatus;
+    }
+    public EntityConnectionCommand getStudentGroupObject() {
+        return studentGroupObject;
+    }
+    public void setStudentGroupObject(EntityConnectionCommand studentGroupObject) {
+        this.studentGroupObject = studentGroupObject;
+    }
+    public EntityConnectionCommand getCurriculumObject() {
+        return curriculumObject;
+    }
+    public void setCurriculumObject(EntityConnectionCommand curriculumObject) {
+        this.curriculumObject = curriculumObject;
     }
 }

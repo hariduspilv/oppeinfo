@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -19,7 +20,9 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
@@ -55,7 +58,7 @@ public class SubjectStudyPeriodDeclarationService {
             + "(select ds.id "
             + "from declaration_subject ds "
             + "join declaration d on d.id = ds.declaration_id "
-            + "join subject_study_period ssp on ssp.id = ds.subject_study_period_id "
+            + "join subject_study_period ssp on ssp.id = ds.subject_study_period_id and ssp.study_period_id = :studyPeriodId "
             + "where d.student_id = s.id "
             + "and ssp.subject_id = :subjectId)";
         
@@ -77,25 +80,26 @@ public class SubjectStudyPeriodDeclarationService {
 
     private static final String STUDENT_IS_STUDYING = " s.status_code = '" + StudentStatus.OPPURSTAATUS_O.name() + "' ";
 
-    public void addToDeclarations(SubjectStudyPeriod subjectStudyPeriod) {
+    public List<Long> addToDeclarations(SubjectStudyPeriod subjectStudyPeriod, boolean isMandatory) {
         List<Long> studentsWithDeclaration = new ArrayList<>();
         List<Long> studentsWithoutDeclaration = new ArrayList<>();
 
         if(addToDeclarationsByStudentGroup(subjectStudyPeriod)) {
-            studentsWithDeclaration = getStudentsByGroupWithDeclaration(subjectStudyPeriod);
-            studentsWithoutDeclaration = getStudentsByGroupWithoutDeclaration(subjectStudyPeriod);
+            studentsWithDeclaration = getStudentsByGroupWithDeclaration(subjectStudyPeriod, isMandatory);
+            studentsWithoutDeclaration = getStudentsByGroupWithoutDeclaration(subjectStudyPeriod, isMandatory);
         } else if(addToDeclarationsByCurriculum(subjectStudyPeriod)) {
             studentsWithDeclaration = studentsWithDeclaration(subjectStudyPeriod);
             studentsWithoutDeclaration = studentsWithoutDeclaration(subjectStudyPeriod);
         }
-        addSubjectToDeclations(subjectStudyPeriod, studentsWithDeclaration, studentsWithoutDeclaration);
+        addSubjectToDeclarations(subjectStudyPeriod, studentsWithDeclaration, studentsWithoutDeclaration);
+        return Stream.of(studentsWithDeclaration, studentsWithoutDeclaration).flatMap(p -> p.stream()).collect(Collectors.toList());
     }
 
-    private static boolean addToDeclarationsByStudentGroup(SubjectStudyPeriod subjectStudyPeriod) {
+    public static boolean addToDeclarationsByStudentGroup(SubjectStudyPeriod subjectStudyPeriod) {
         return ClassifierUtil.equals(DeclarationType.DEKLARATSIOON_KOIK, subjectStudyPeriod.getDeclarationType());
     }
 
-    private static boolean addToDeclarationsByCurriculum(SubjectStudyPeriod subjectStudyPeriod) {
+    public static boolean addToDeclarationsByCurriculum(SubjectStudyPeriod subjectStudyPeriod) {
         return ClassifierUtil.equals(DeclarationType.DEKLARATSIOON_LISA, subjectStudyPeriod.getDeclarationType());
     }
 
@@ -133,7 +137,7 @@ public class SubjectStudyPeriodDeclarationService {
         return StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
     }
 
-    private List<Long> getStudentsByGroupWithDeclaration(SubjectStudyPeriod subjectStudyPeriod) {
+    private List<Long> getStudentsByGroupWithDeclaration(SubjectStudyPeriod subjectStudyPeriod, boolean isMandatory) {
         Long schoolId = EntityUtil.getId(subjectStudyPeriod.getSubject().getSchool());
         Long studyPeriod = EntityUtil.getId(subjectStudyPeriod.getStudyPeriod());
         Long subjectId = EntityUtil.getId(subjectStudyPeriod.getSubject());
@@ -145,13 +149,16 @@ public class SubjectStudyPeriodDeclarationService {
         qb.requiredCriteria(DECLARATION_EXISTS, "studyPeriodId", studyPeriod);
         qb.requiredCriteria(NOT_DECLARED_IN_CURRENT_TERM, "subjectId", subjectId);
         qb.requiredCriteria(NO_POSITIVE_RESULT, "subjectId", subjectId);
+        if (isMandatory) {
+            qb.requiredCriteria(SUBJECT_IS_MANDATORY, "subjectId", subjectId);
+        }
         qb.filter(STUDENT_IS_STUDYING);
 
         List<?> data = qb.select("s.id", em).getResultList();
         return StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
     }
 
-    private List<Long> getStudentsByGroupWithoutDeclaration(SubjectStudyPeriod subjectStudyPeriod) {
+    private List<Long> getStudentsByGroupWithoutDeclaration(SubjectStudyPeriod subjectStudyPeriod, boolean isMandatory) {
         Long schoolId = EntityUtil.getId(subjectStudyPeriod.getSubject().getSchool());
         Long studyPeriod = EntityUtil.getId(subjectStudyPeriod.getStudyPeriod());
         Long subjectId = EntityUtil.getId(subjectStudyPeriod.getSubject());
@@ -163,13 +170,16 @@ public class SubjectStudyPeriodDeclarationService {
         qb.requiredCriteria(DECLARATION_DOES_NOT_EXIST, "studyPeriodId", studyPeriod);
         qb.requiredCriteria(NOT_DECLARED_IN_CURRENT_TERM, "subjectId", subjectId);
         qb.requiredCriteria(NO_POSITIVE_RESULT, "subjectId", subjectId);
+        if (isMandatory) {
+            qb.requiredCriteria(SUBJECT_IS_MANDATORY, "subjectId", subjectId);
+        }
         qb.filter(STUDENT_IS_STUDYING);
 
         List<?> data = qb.select("s.id", em).getResultList();
         return StreamUtil.toMappedList(r -> resultAsLong(r, 0), data);
     }
 
-    private void addSubjectToDeclations(SubjectStudyPeriod subjectStudyPeriod, List<Long> studentsWithDeclaration,
+    private void addSubjectToDeclarations(SubjectStudyPeriod subjectStudyPeriod, List<Long> studentsWithDeclaration,
             List<Long> studentsWithoutDeclaration) {
 
         List<Declaration> declarations = new ArrayList<>();
@@ -195,7 +205,24 @@ public class SubjectStudyPeriodDeclarationService {
             ds.setDeclaration(declaration);
             ds.setSubjectStudyPeriod(subjectStudyPeriod);
             ds.setModule(getHigherModuleOfSubject(declaration, subjectStudyPeriod));
-            ds.setIsOptional(Boolean.FALSE);
+            ds.setIsOptional(Boolean.TRUE);
+            // set mandatory if subject is in students curriculum version and optional = false
+            Student student = declaration.getStudent();
+            CurriculumVersion cv = student.getCurriculumVersion();
+            if (cv != null) {
+                List<CurriculumVersionHigherModuleSubject> cvhms = em.createQuery("select cvhms "
+                        + "from CurriculumVersionHigherModuleSubject cvhms "
+                        + "where cvhms.optional is false "
+                        + "and cvhms.module.curriculumVersion.id = ?1 "
+                        + "and cvhms.subject.id = ?2", CurriculumVersionHigherModuleSubject.class)
+                        .setParameter(1, EntityUtil.getId(cv))
+                        .setParameter(2, EntityUtil.getId(subjectStudyPeriod.getSubject()))
+                        .getResultList();
+                // found curriculum version subject that is mandatory
+                if (!cvhms.isEmpty()) {
+                    ds.setIsOptional(Boolean.FALSE);
+                }
+            }
             while (subgroup != null && subgroup.getDeclarationSubjects().size() >= subgroup.getPlaces().intValue()) {
                 subgroup = sortedSubgroupsByCode.pollFirst();
             }

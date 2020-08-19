@@ -46,12 +46,14 @@
       <tr>
         <td class="label">{{ "report.higher.protocol.student.nr" | translate }}</td>
         <td class="label">{{ "report.higher.protocol.student.name" | translate }}</td>
+		<td class="label">{{ "report.higher.protocol.student.studentgroup" | translate }}</td>
         <td class="label">{{ "report.higher.protocol.student.grade" | translate }}</td>
       </tr>
       {% for student in content.protocolStudents %}
         <tr>
           <td>{{ loop.index + 1 }}.</td>
           <td>{{ student.fullname }}</td>
+		  <td>{{ student.studentgroup }}</td>
           <td>{{ student.grade }}</td>
         </tr>
       {% endfor %}

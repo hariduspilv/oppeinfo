@@ -21,6 +21,7 @@ public class HigherProtocolSearchCommand {
     private LocalDate insertedFrom;
     private LocalDate insertedThru;
     private Boolean showOnlyModuleProtocols;
+    private EntityConnectionCommand studentGroup;
 
     public Long getStudyPeriod() {
         return studyPeriod;
@@ -100,5 +101,13 @@ public class HigherProtocolSearchCommand {
 
     public void setShowOnlyModuleProtocols(Boolean showOnlyModuleProtocols) {
         this.showOnlyModuleProtocols = showOnlyModuleProtocols;
+    }
+
+    public EntityConnectionCommand getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(EntityConnectionCommand studentGroup) {
+        this.studentGroup = studentGroup;
     }
 }

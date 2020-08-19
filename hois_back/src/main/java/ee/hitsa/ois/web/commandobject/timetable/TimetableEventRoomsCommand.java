@@ -21,7 +21,8 @@ public class TimetableEventRoomsCommand {
     private LocalTime startTime;
     @DateTimeFormat(iso=ISO.DATE_TIME)
     private LocalTime endTime;
-    
+
+    private Boolean isDormitory;
     private Boolean isFreeRoom;
     private Boolean isBusyRoom;
     private Boolean isPartlyBusyRoom;
@@ -76,6 +77,14 @@ public class TimetableEventRoomsCommand {
 
     public void setEndTime(LocalTime endTime) {
         this.endTime = endTime;
+    }
+
+    public Boolean getIsDormitory() {
+        return isDormitory;
+    }
+
+    public void setIsDormitory(Boolean isDormitory) {
+        this.isDormitory = isDormitory;
     }
 
     public Boolean getIsFreeRoom() {

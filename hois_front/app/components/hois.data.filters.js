@@ -16,9 +16,13 @@ angular.module('hitsaOis').filter('hoisHigherGrade', function ($rootScope, Highe
 }).filter('hoisLimitTo', function ($filter) {
   return function (input, limit, conditional) {
     if (angular.isDefined(conditional)) {
-      return input && input.length > limit && conditional ? $filter('limitTo')(input, limit) + '...' : input;
+      return input && input.length > limit && conditional ? 
+        (angular.isArray(input) ? $filter('limitTo')(input, limit).join(', ') + '...' : $filter('limitTo')(input, limit) + '...') :
+        (angular.isArray(input) ? input.join(', ') : input);
     }
-    return input && input.length > limit ? $filter('limitTo')(input, limit) + '...' : input;
+    return input && input.length > limit ? 
+    (angular.isArray(input) ? $filter('limitTo')(input, limit).join(', ') + '...' : $filter('limitTo')(input, limit) + '...') :
+    (angular.isArray(input) ? input.join(', ') : input);
   };
 }).filter('hoisNumber', function ($filter) {
   return function (input, decimals) {

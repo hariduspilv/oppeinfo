@@ -3,168 +3,179 @@
   <form name="searchForm" layout="column" ng-cloak ng-submit="searchForm.$valid && loadData()" class="nomargin" ng-model-options="{allowInvalid: true}">
     <fieldset tabindex="1">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
-      <div layout="row" layout-sm="column" layout-xs="column"  ng-if="!auth.school">
-          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label>{{'curriculum.name' | translate}}</label>
+          <input ng-model="criteria.name" type="text" md-maxlength="255">
+        </md-input-container>
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'curriculum.code' | translate}}</label>
+          <input ng-model="criteria.code" type="text" md-maxlength="100">
+        </md-input-container>
+        <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'curriculum.merCode' | translate}}</label>
+          <input ng-model="criteria.merCode" type="text" md-maxlength="100">
+        </md-input-container>
+      </div>
+      <div ng-show="formState.showAllParameters">
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="!auth.school">
+            <md-input-container flex="45" flex-sm="100" flex-xs="100">
               <label>{{'school.label' | translate}}</label>
               <hois-select ng-model="criteria.school" type="school" multiple></hois-select>
+            </md-input-container>
+            <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'curriculum.studyLanguage2' | translate}}</label>
+              <hois-classifier-select ng-model="criteria.studyLanguage" multiple main-classifier-code="OPPEKEEL" model-value-attr="code"></hois-classifier-select>
           </md-input-container>
-          <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column" class="top-margin" ng-if="!auth.school">
+          <md-input-container flex="45" flex-sm="100">
             <label>{{'curriculum.studyLevel' | translate}}</label>
             <hois-classifier-select ng-model="criteria.studyLevel" multiple main-classifier-code="OPPEASTE" model-value-attr="code"></hois-classifier-select>
           </md-input-container>
-      </div>
-      <div layout="row" layout-sm="column" layout-xs="column"  ng-if="auth.school">
-          <md-input-container flex="45" flex-sm="100" flex-xs="100">
-            <label>{{'curriculum.studyLevel' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.studyLevel" multiple main-classifier-code="OPPEASTE" model-value-attr="code" show-only-values="studyLevelOptions" ></hois-classifier-select>
-          </md-input-container>
-      </div>
-      <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
-          <md-input-container flex="45" flex-sm="100" flex-xs="100">
-              <label>{{'curriculum.name' | translate}}</label>
-              <input ng-model="criteria.name" type="text" md-maxlength="255">
-          </md-input-container>
           <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'curriculum.ekrLevel' | translate}}</label>
+              <hois-classifier-select ng-model="criteria.ekrLevel" multiple main-classifier-code="EKR" model-value-attr="code"></hois-classifier-select>
+          </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="auth.school">
+            <md-input-container flex="45" flex-sm="100" flex-xs="100">
+              <label>{{'curriculum.studyLevel' | translate}}</label>
+              <hois-classifier-select ng-model="criteria.studyLevel" multiple main-classifier-code="OPPEASTE" model-value-attr="code" show-only-values="studyLevelOptions" ></hois-classifier-select>
+            </md-input-container>
+            <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'curriculum.ekrLevel' | translate}}</label>
                 <hois-classifier-select ng-model="criteria.ekrLevel" multiple main-classifier-code="EKR" model-value-attr="code"></hois-classifier-select>
-          </md-input-container>
-      </div>
-      <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex="45" flex-sm="100" flex-xs="100">
-              <label>{{'curriculum.code' | translate}}</label>
-              <input ng-model="criteria.code" type="text" md-maxlength="100">
-          </md-input-container>
-          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-              <label>{{'curriculum.merCode' | translate}}</label>
-              <input ng-model="criteria.merCode" type="text" md-maxlength="100">
-          </md-input-container>
-      </div>
-      <div layout="row" layout-sm="column" layout-xs="column" ng-if="school.higher && school.vocational">
-            <md-input-container flex="20" flex-sm="100" flex-xs="100">
-                <label>{{'curriculum.curriculumGroup' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.curriculumGroup" model-value-attr="code" main-classifier-code="OPPEKAVAGRUPP"  ng-disabled="criteria.iscedClassCode && criteria.iscedClassCode.length > 0"></hois-classifier-select>
             </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="school.higher && school.vocational">
+              <md-input-container flex="20" flex-sm="100" flex-xs="100">
+                  <label>{{'curriculum.curriculumGroup' | translate}}</label>
+                  <hois-classifier-select ng-model="criteria.curriculumGroup" model-value-attr="code" main-classifier-code="OPPEKAVAGRUPP"  ng-disabled="criteria.iscedClassCode && criteria.iscedClassCode.length > 0"></hois-classifier-select>
+              </md-input-container>
 
-            <md-input-container  flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                <label>{{'curriculum.areaOfStudy' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.iscedVald" model-value-attr="code" main-classifier-code="ISCED_VALD" show-only-values="areasOfStudy"></hois-classifier-select>
-            </md-input-container>
+              <md-input-container  flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'curriculum.areaOfStudy' | translate}}</label>
+                  <hois-classifier-select ng-model="criteria.iscedVald" model-value-attr="code" main-classifier-code="ISCED_VALD" show-only-values="areasOfStudy"></hois-classifier-select>
+              </md-input-container>
 
-            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                <label>{{'curriculum.fieldOfStudy' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.iscedSuun" model-value-attr="code" main-classifier-code="ISCED_SUUN" watch-model="criteria.iscedVald"
-                  filter-values search-from-connect connect-main-classifier-code="ISCED_VALD" multiple></hois-classifier-select>
-            </md-input-container>
+              <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'curriculum.fieldOfStudy' | translate}}</label>
+                  <hois-classifier-select ng-model="criteria.iscedSuun" model-value-attr="code" main-classifier-code="ISCED_SUUN" watch-model="criteria.iscedVald"
+                    filter-values search-from-connect connect-main-classifier-code="ISCED_VALD" multiple></hois-classifier-select>
+              </md-input-container>
 
-            <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                <label>{{'curriculum.group' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.iscedClassCode" model-value-attr="code" main-classifier-code="ISCED_RYHM" watch-model="criteria.iscedSuun"
-                  filter-values search-from-connect connect-main-classifier-code="ISCED_SUUN" multiple ng-disabled="criteria.curriculumGroup"></hois-classifier-select>
-            </md-input-container>
-      </div>
-      <div layout="row" layout-sm="column" layout-xs="column" ng-if="school.vocational && !school.higher">
-            <md-input-container flex="30" flex-sm="100" flex-xs="100">
-                <label>{{'curriculum.areaOfStudy' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.iscedVald" model-value-attr="code" main-classifier-code="ISCED_VALD" criteria="{vocational: true}"></hois-classifier-select>
-            </md-input-container>
+              <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'curriculum.group' | translate}}</label>
+                  <hois-classifier-select ng-model="criteria.iscedClassCode" model-value-attr="code" main-classifier-code="ISCED_RYHM" watch-model="criteria.iscedSuun"
+                    filter-values search-from-connect connect-main-classifier-code="ISCED_SUUN" multiple ng-disabled="criteria.curriculumGroup"></hois-classifier-select>
+              </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="school.vocational && !school.higher">
+              <md-input-container flex="30" flex-sm="100" flex-xs="100">
+                  <label>{{'curriculum.areaOfStudy' | translate}}</label>
+                  <hois-classifier-select ng-model="criteria.iscedVald" model-value-attr="code" main-classifier-code="ISCED_VALD" criteria="{vocational: true}"></hois-classifier-select>
+              </md-input-container>
 
-            <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                <label>{{'curriculum.fieldOfStudy' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.iscedSuun" model-value-attr="code" main-classifier-code="ISCED_SUUN" watch-model="criteria.iscedVald"
-                  filter-values search-from-connect connect-main-classifier-code="ISCED_VALD" multiple criteria="{vocational: true}"></hois-classifier-select>
-            </md-input-container>
+              <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'curriculum.fieldOfStudy' | translate}}</label>
+                  <hois-classifier-select ng-model="criteria.iscedSuun" model-value-attr="code" main-classifier-code="ISCED_SUUN" watch-model="criteria.iscedVald"
+                    filter-values search-from-connect connect-main-classifier-code="ISCED_VALD" multiple criteria="{vocational: true}"></hois-classifier-select>
+              </md-input-container>
 
-            <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                <label>{{'curriculum.group' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.iscedClassCode" model-value-attr="code" main-classifier-code="ISCED_RYHM" watch-model="criteria.iscedSuun"
-                  filter-values search-from-connect connect-main-classifier-code="ISCED_SUUN" multiple criteria="{vocational: true}"></hois-classifier-select>
-            </md-input-container>
-      </div>
-      <div layout="row" layout-sm="column" layout-xs="column" ng-if="school.higher && !school.vocational">
+              <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'curriculum.group' | translate}}</label>
+                  <hois-classifier-select ng-model="criteria.iscedClassCode" model-value-attr="code" main-classifier-code="ISCED_RYHM" watch-model="criteria.iscedSuun"
+                    filter-values search-from-connect connect-main-classifier-code="ISCED_SUUN" multiple criteria="{vocational: true}"></hois-classifier-select>
+              </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="school.higher && !school.vocational">
 
-             <md-input-container flex="30" flex-sm="100" flex-xs="100">
-                <label>{{'curriculum.curriculumGroup' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.curriculumGroup" model-value-attr="code" main-classifier-code="OPPEKAVAGRUPP" multiple criteria="{higher: true}"></hois-classifier-select>
-            </md-input-container>
+              <md-input-container flex="30" flex-sm="100" flex-xs="100">
+                  <label>{{'curriculum.curriculumGroup' | translate}}</label>
+                  <hois-classifier-select ng-model="criteria.curriculumGroup" model-value-attr="code" main-classifier-code="OPPEKAVAGRUPP" multiple criteria="{higher: true}"></hois-classifier-select>
+              </md-input-container>
 
-            <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                <label>{{'curriculum.areaOfStudy' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.iscedVald" model-value-attr="code" main-classifier-code="ISCED_VALD" criteria="{higher: true}" show-only-values="areasOfStudy"></hois-classifier-select>
-            </md-input-container>
+              <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'curriculum.areaOfStudy' | translate}}</label>
+                  <hois-classifier-select ng-model="criteria.iscedVald" model-value-attr="code" main-classifier-code="ISCED_VALD" criteria="{higher: true}" show-only-values="areasOfStudy"></hois-classifier-select>
+              </md-input-container>
 
-            <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                <label>{{'curriculum.fieldOfStudy' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.iscedSuun" model-value-attr="code" main-classifier-code="ISCED_SUUN" watch-model="criteria.iscedVald"
-                  filter-values search-from-connect connect-main-classifier-code="ISCED_VALD" multiple criteria="{higher: true}"></hois-classifier-select>
+              <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'curriculum.fieldOfStudy' | translate}}</label>
+                  <hois-classifier-select ng-model="criteria.iscedSuun" model-value-attr="code" main-classifier-code="ISCED_SUUN" watch-model="criteria.iscedVald"
+                    filter-values search-from-connect connect-main-classifier-code="ISCED_VALD" multiple criteria="{higher: true}"></hois-classifier-select>
+              </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column" >
+        <div layout="column" flex="45">
+          <label class="common-label">
+            <span ng-if="school.vocational && !school.higher">{{'curriculum.creditsRangeEkap' | translate}}</span>
+            <span ng-if="!school.vocational && school.higher">{{'curriculum.creditsRangeEap' | translate}}</span>
+            <span ng-if="school.vocational && school.higher || !school.vocational && !school.higher">{{'curriculum.creditsEapEkap' | translate}}</span>
+          </label>
+          <div layout="row" layout-sm="column" layout-xs="column" >
+            <md-input-container flex="45" flex-sm="100" flex-xs="100" class="">
+              <label>{{'main.from' | translate}}</label>
+              <input ng-model="criteria.creditsMin" type="number">
             </md-input-container>
-      </div>
-      <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
-          <md-input-container flex="100" flex-sm="100" flex-xs="100">
+            <md-input-container flex="45" flex-sm="100" flex-xs="100"  flex-offset="10" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'main.thru' | translate}}</label>
+              <input ng-model="criteria.creditsMax" type="number">
+            </md-input-container>
+          </div>
+        </div>
+        <div layout="column" flex="50" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label class="common-label">{{'main.validityPeriod' | translate}}</label>
+          <div layout="row" layout-sm="column" layout-xs="column" >
+            <md-input-container flex-sm="100" flex-xs="100">
+              <label>{{'main.from' | translate}}</label>
+              <md-datepicker ng-model="criteria.validFrom" md-max-date="criteria.validThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+            </md-input-container>
+            <md-input-container flex-sm="100" flex-xs="100">
+              <label>{{'main.thru' | translate}}</label>
+              <md-datepicker ng-model="criteria.validThru" md-min-date="criteria.validFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+            </md-input-container>
+          </div>
+        </div>
+
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="canView">
+            <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                <label>{{'main.status' | translate}}</label>
+                <hois-classifier-select ng-model="criteria.status" multiple main-classifier-code="OPPEKAVA_STAATUS" model-value-attr="code"></hois-classifier-select>
+                  </md-input-container>
+            <md-input-container flex="50" flex-sm="100" flex-xs="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                <label>{{'curriculum.ehisStatus' | translate}}</label>
+                  <hois-classifier-select ng-model="criteria.ehisStatus" multiple main-classifier-code="OPPEKAVA_EHIS_STAATUS" model-value-attr="code"></hois-classifier-select>
+            </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column"  class="top-margin" ng-if="auth.school">
+            <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                <label>{{'school.department.department' | translate}}</label>
+                <hois-school-department-select ng-model="criteria.department" multiple></hois-school-department-select>
+            </md-input-container>
+            <md-input-container flex="50" flex-sm="100" flex-xs="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'curriculum.studyLanguage2' | translate}}</label>
                 <hois-classifier-select ng-model="criteria.studyLanguage" multiple main-classifier-code="OPPEKEEL" model-value-attr="code"></hois-classifier-select>
           </md-input-container>
-      </div>
-      <div layout="row" layout-sm="column" layout-xs="column" >
-		<div layout="column" flex="45">
-      <label class="common-label">
-        <span ng-if="school.vocational && !school.higher">{{'curriculum.creditsRangeEkap' | translate}}</span>
-        <span ng-if="!school.vocational && school.higher">{{'curriculum.creditsRangeEap' | translate}}</span>
-        <span ng-if="school.vocational && school.higher || !school.vocational && !school.higher">{{'curriculum.creditsEapEkap' | translate}}</span>
-      </label>
-		  <div layout="row" layout-sm="column" layout-xs="column" >
-			  <md-input-container flex="45" flex-sm="100" flex-xs="100" class="">
-				  <label>{{'main.from' | translate}}</label>
-				  <input ng-model="criteria.creditsMin" type="number">
-			  </md-input-container>
-			  <md-input-container flex="45" flex-sm="100" flex-xs="100"  flex-offset="10" flex-offset-xs="0" flex-offset-sm="0">
-				  <label>{{'main.thru' | translate}}</label>
-				  <input ng-model="criteria.creditsMax" type="number">
-			  </md-input-container>
-		  </div>
-		</div>
-		<div layout="column" flex="50" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <label class="common-label">{{'main.validityPeriod' | translate}}</label>
-		  <div layout="row" layout-sm="column" layout-xs="column" >
-			  <md-input-container flex-sm="100" flex-xs="100">
-				  <label>{{'main.from' | translate}}</label>
-				  <md-datepicker ng-model="criteria.validFrom" md-max-date="criteria.validThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
-			  </md-input-container>
-			  <md-input-container flex-sm="100" flex-xs="100">
-				  <label>{{'main.thru' | translate}}</label>
-				  <md-datepicker ng-model="criteria.validThru" md-min-date="criteria.validFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
-			  </md-input-container>
-		   </div>
-		</div>
-
-      </div>
-      <div layout="row" layout-sm="column" layout-xs="column" ng-if="canView">
-          <md-input-container flex="45" flex-sm="100" flex-xs="100">
-              <label>{{'main.status' | translate}}</label>
-               <hois-classifier-select ng-model="criteria.status" multiple main-classifier-code="OPPEKAVA_STAATUS" model-value-attr="code"></hois-classifier-select>
-                </md-input-container>
-          <md-input-container flex="50" flex-sm="100" flex-xs="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-              <label>{{'curriculum.ehisStatus' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.ehisStatus" multiple main-classifier-code="OPPEKAVA_EHIS_STAATUS" model-value-attr="code"></hois-classifier-select>
-          </md-input-container>
-      </div>
-      <div layout="row" layout-sm="column" layout-xs="column"  class="top-margin" ng-if="auth.school">
-          <md-input-container flex="100" flex-sm="100" flex-xs="100">
-              <label>{{'school.department.department' | translate}}</label>
-              <hois-school-department-select ng-model="criteria.department" multiple></hois-school-department-select>
-          </md-input-container>
-      </div>
-	  <div layout="row" layout-sm="column" layout-xs="column"  class="top-margin">
-            <md-checkbox
-                  ng-model="criteria.isJoint"
-                  aria-label="Is vocational">
-              {{'curriculum.isJoint' | translate}}
-              </md-checkbox>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column"  class="top-margin">
+          <md-checkbox
+            ng-model="criteria.isJoint"
+            aria-label="Is vocational">
+            {{'curriculum.isJoint' | translate}}
+          </md-checkbox>
+        </div>
       </div>
       <div layout="row" layout-xs="column">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
           <md-button class="md-raised" ng-if="auth.school.vocational && canCreate" ng-href="#/vocationalCurriculum/new">{{'main.button.insertVocationalCurriculum' | translate}}</md-button>
           <md-button class="md-raised" ng-if="auth.school.higher && canCreate" ng-href="#/higherCurriculum/new">{{'main.button.insertHigherCurriculum' | translate}}</md-button>
+          <a ng-click="toggleShowAllParameters()" style="margin-top: 20px">
+            {{formState.showAllParameters ? ('main.button.lessParameters' | translate) : ('main.button.moreParameters' | translate)}}
+          </a>
       </div>
 	  </fieldset>
   </form>

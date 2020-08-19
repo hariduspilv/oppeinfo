@@ -73,6 +73,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET, "/classifier/parents/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/curriculumVersion/schoolDepartments/curriculum/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/generalmessages/showsitemessages").permitAll()
+                .antMatchers(HttpMethod.GET, "/schoolBoard/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/timetables/timetableStudyYears/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/timetables/timetableStudyYearWeeks/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/timetables/group/**").permitAll()

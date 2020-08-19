@@ -1,12 +1,22 @@
 'use strict';
 
-angular.module('hitsaOis').controller('JournalListController', function ($scope, $route, QueryUtils, Classifier, $q, dialogService, message) {
+angular.module('hitsaOis').controller('JournalListController', function ($q, $route, $scope, USER_ROLES, AuthService, Classifier, QueryUtils, dialogService, message) {
   $scope.auth = $route.current.locals.auth;
   $scope.search = {};
   var clMapper = Classifier.valuemapper({ status: 'PAEVIK_STAATUS' });
   var promises = clMapper.promises;
 
-  $scope.formState = {};
+  $scope.studyYears = QueryUtils.endpoint('/autocomplete/studyYears').query(function (result) {
+    $scope.studyYearMap = result.reduce(function(mapped, studyYear) {
+      mapped[studyYear.id] = studyYear;
+      return mapped;
+    }, {});
+  });
+
+  $scope.formState = {
+    canAddStudents: ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher() || $scope.auth.isTeacher()) &&
+      AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_PAEVIK)
+  };
   $scope.directiveControllers = [];
 
   $scope.load = function() {
@@ -32,6 +42,21 @@ angular.module('hitsaOis').controller('JournalListController', function ($scope,
     });
   };
 
+  $scope.addStudents = function() {
+    dialogService.confirmDialog({prompt: 'journal.prompt.addStudents', studyYear: $scope.studyYearMap[$scope.criteria.studyYear].nameEt}, function() {
+		QueryUtils.loadingWheel($scope, true);
+      QueryUtils.endpoint('/journals/addAllSuitableStudents').get({ studyYearId: $scope.criteria.studyYear }).$promise.then(function (response) {
+		  QueryUtils.loadingWheel($scope, false);
+        if (response.numberOfAddedStudents > 0) {
+          message.info('journal.messages.studentsAdded', {numberOfJournals: response.numberOfJournals,
+            numberOfAddedStudents: response.numberOfAddedStudents});
+          $scope.load();
+        } else {
+          message.warn('journal.messages.noStudentsAdded');
+        }
+      });
+    });
+  };
 
   var order = $scope.currentLanguage() === 'et' ? '2, 5, 3' : '2, 6, 3';
   QueryUtils.createQueryForm($scope, '/journals', {order: order}, clMapper.objectmapper);

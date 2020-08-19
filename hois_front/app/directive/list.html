@@ -74,7 +74,10 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>
+            <td md-cell ng-if="auth.isAdmin() && (row.type.code === 'KASKKIRI_TUGI' || row.type.code === 'KASKKIRI_TUGILOPP') && !isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS')">
+              {{::row.headline}}
+            </td>
+            <td md-cell ng-if="!(auth.isAdmin() && (row.type.code === 'KASKKIRI_TUGI' || row.type.code === 'KASKKIRI_TUGILOPP') && !isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS'))">
               <a md-class="md-primary change-button" ng-href="#/directives/{{::row.id}}/view">{{::row.headline}}</a>
             </td>
             <td md-cell>{{::row.directiveNr}}</td>
@@ -83,7 +86,8 @@
             <td md-cell>{{::row.inserted | hoisDate}}</td>
             <td md-cell>{{::row.confirmDate | hoisDate}}</td>
             <td md-cell>
-              <md-button ng-if="row.status.code === 'KASKKIRI_STAATUS_KOOSTAMISEL' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASKKIRI')" 
+              <md-button ng-if="row.status.code === 'KASKKIRI_STAATUS_KOOSTAMISEL' && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_KASKKIRI') &&
+              !(auth.isAdmin() && (row.type.code === 'KASKKIRI_TUGI' || row.type.code === 'KASKKIRI_TUGILOPP') && !isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS'))" 
                 md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>

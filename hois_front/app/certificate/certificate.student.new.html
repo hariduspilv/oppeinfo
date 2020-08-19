@@ -26,7 +26,7 @@
                     </md-checkbox>
                 </md-input-container>
             </div>
-            <div layout="row" ng-if="!record.id && record.type === 'TOEND_LIIK_SOOR' && studentType === 'OPPUR_K'">
+            <div layout="row" ng-if="!record.id && record.type === 'TOEND_LIIK_SOOR'">
                 <md-radio-group layout-gt-sm="row" ng-model="record.estonian" ng-change="reloadContent()">
                     <md-radio-button ng-value="true" aria-label="estonian">
                         {{'document.estonian' | translate}}

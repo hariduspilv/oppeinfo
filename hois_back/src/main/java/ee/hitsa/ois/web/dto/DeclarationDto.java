@@ -28,6 +28,7 @@ public class DeclarationDto {
     private Boolean canBeSetUnconfirmed;
     private Boolean canBeSetConfirmed;
     private Boolean isPrevious;
+    private Boolean isStudentDeclarationDelete;
 
     public static DeclarationDto of(Declaration declaration) {
         DeclarationDto dto = new DeclarationDto();
@@ -50,6 +51,7 @@ public class DeclarationDto {
         }
         dto.setStudent(student);
         dto.setIsPrevious(Boolean.valueOf(declaration.getStudyPeriod().getEndDate().isBefore(LocalDate.now())));
+        dto.setIsStudentDeclarationDelete(declaration.getStudent().getSchool().getIsStudentDeclarationDelete());
         return dto;
     }
 
@@ -163,5 +165,13 @@ public class DeclarationDto {
 
     public void setIsPrevious(Boolean isPrevious) {
         this.isPrevious = isPrevious;
+    }
+
+    public Boolean getIsStudentDeclarationDelete() {
+        return isStudentDeclarationDelete;
+    }
+
+    public void setIsStudentDeclarationDelete(Boolean isStudentDeclarationDelete) {
+        this.isStudentDeclarationDelete = isStudentDeclarationDelete;
     }
 }

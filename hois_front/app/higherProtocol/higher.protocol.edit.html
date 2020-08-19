@@ -50,13 +50,20 @@
 
   <form layout="column" name="higherProtocolForm">
 
-    <div layout="column" style="margin-top: -15px;">
-      <div layout="row">
-        <md-input-container flex="10" flex-lg="20" flex-md="20" flex-sm="100" flex-xs="100"
-          ng-if="record.protocolType === 'PROTOKOLLI_LIIK_P'">
-          <label class="required">{{'higherProtocol.protocolDate' | translate}}</label>
-          <md-datepicker ng-model="record.finalDate" name="finalDate"></md-datepicker>
-        </md-input-container>
+    <div layout="column">
+      <div layout="row" layout-xs="column">
+        <div layout="row" class="form-readonly" flex="25" flex-sm="100" flex-xs="100" ng-if="record.subjectStudyPeriodMidtermTaskDto">
+          <md-input-container flex="100">
+            <label>{{'higherProtocol.assessment' | translate}}</label>
+            <hois-classifier-value ng-model="record.assessmentCode" main-classifier-code="HINDAMISVIIS"></hois-classifier-value>
+          </md-input-container>
+        </div>
+        <div layout="row" flex="50" flex-sm="100" flex-xs="100" style="margin-top: -21px;">
+          <md-input-container ng-if="record.protocolType === 'PROTOKOLLI_LIIK_P'">
+            <label class="required">{{'higherProtocol.protocolDate' | translate}}</label>
+            <md-datepicker ng-model="record.finalDate" name="finalDate"></md-datepicker>
+          </md-input-container>
+        </div>
       </div>
       <div style="height: 10px;"></div>
       <div layout="row" layout-align="space-between end">

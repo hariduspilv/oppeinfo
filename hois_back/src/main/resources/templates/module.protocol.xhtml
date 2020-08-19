@@ -33,12 +33,14 @@
       <tr>
         <td class="label">{{ "report.module.protocol.student.nr" | translate }}</td>
         <td class="label">{{ "report.module.protocol.student.name" | translate }}</td>
+		<td class="label">{{ "report.module.protocol.student.studentgroup" | translate }}</td>
         <td class="label">{{ "report.module.protocol.module.grade" | translate }}</td>
       </tr>
       {% for student in content.protocolStudents %}
       <tr>
         <td>{{ loop.index + 1 }}.</td>
         <td>{{ student.fullname }}</td>
+		<td>{{ student.studentgroup }}</td>
         <td>
           {{ student.grade }}
           

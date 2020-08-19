@@ -1,0 +1,16 @@
+<div ng-cloak ng-include="'schoolBoard/school.board.header.html'"></div>
+<div layout-padding ng-cloak>
+  <div flex>
+    <md-grid-list md-cols="6" md-cols-sm="4" md-cols-xs="2" md-row-height="4:3" md-gutter="24px">
+      <md-grid-tile ng-repeat="timetable in types" md-colors="{background: typeColor}">
+        <button class="grid-tile-button school-board-type-button" ng-click="openTimetable(timetable)">
+          <span ng-if="type === 'group'">{{timetable.groupCode}}</span>
+          <span ng-if="type === 'teacher'">{{timetable.lastname + ', ' + timetable.firstname}}</span>
+          <span ng-if="type === 'room'">{{timetable.code}}</span>
+        </button>
+      </md-grid-tile>
+    </md-grid-list>
+
+    <md-button ng-click="back('#/schoolBoard/' + schoolId)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

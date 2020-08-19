@@ -105,7 +105,7 @@ public class SubjectStudyPeriodService {
             moodleService.validateMoodleCourseId(context, subjectStudyPeriod, subjectStudyPeriod.getMoodleCourseId());
         }
         subjectStudyPeriod = EntityUtil.save(subjectStudyPeriod, em);
-        subjectStudyPeriodDeclarationService.addToDeclarations(subjectStudyPeriod);
+        subjectStudyPeriodDeclarationService.addToDeclarations(subjectStudyPeriod, false);
         return subjectStudyPeriod;
     }
 

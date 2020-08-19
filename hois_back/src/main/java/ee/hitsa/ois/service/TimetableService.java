@@ -169,12 +169,8 @@ public class TimetableService {
 
     @Value("${hois.frontend.baseUrl}")
     private String frontendBaseUrl;
-    private static String encryptionKey;
-
-    @Value("${file.cypher.key}")
-    public void setEncryptionKey(String keyFromProps) {
-        encryptionKey = keyFromProps;
-    }
+    @Value("${timetable.cypher.key}")
+    private String encryptionKey;
 
     private static final List<String> PUBLIC_TIMETABLES = EnumUtil.toNameList(TimetableStatus.TUNNIPLAAN_STAATUS_P);
     private static final List<String> TEACHER_TIMETABLES = EnumUtil
@@ -2054,14 +2050,14 @@ public class TimetableService {
     }
 
     List<String> shownStatusCodes() {
-        return shownStatusCodes(null);
+        return shownStatusCodes(null, false);
     }
 
-    List<String> shownStatusCodes(TimetablePersonHolder person) {
+    List<String> shownStatusCodes(TimetablePersonHolder person, boolean ignoreUser) {
         if (person != null) {
             return Role.ROLL_O.name().equals(person.getRole()) ? TEACHER_TIMETABLES : PUBLIC_TIMETABLES;
         } else {
-            HoisUserDetails user = userFromPrincipal();
+            HoisUserDetails user = !ignoreUser ? userFromPrincipal() : null;
             if (user != null) {
                 if (user.isMainAdmin() || user.isSchoolAdmin() || user.isLeadingTeacher()) {
                     return ALL_TIMETABLES;
@@ -2073,10 +2069,14 @@ public class TimetableService {
         }
     }
 
-    public List<StudyYearSearchDto> timetableStudyYears(Long schoolId) {
-        if (!allowedToViewSchoolTimetable(schoolId)) {
+    public List<StudyYearSearchDto> timetableStudyYears(School school) {
+        if (!allowedToViewSchoolTimetable(school)) {
             return Collections.emptyList();
         }
+        return studyYears(school.getId());
+    }
+
+    private List<StudyYearSearchDto> studyYears(Long schoolId) {
         List<?> data = em.createNativeQuery("select c.code, c.name_et, c.name_en, sy.id, sy.start_date, sy.end_date, 0 as count from"
                 + " (select id from study_year sy where sy.school_id = :schoolId and"
                 + " ((sy.start_date <= :now and sy.end_date >= :now) or (sy.start_date - interval '2 month') <= :now and sy.end_date >= :now)"
@@ -2096,10 +2096,10 @@ public class TimetableService {
         if (person != null) {
             if (Role.ROLL_O.name().equals(person.getRole())) {
                 Teacher teacher = em.getReference(Teacher.class, person.getRoleId());
-                return timetableStudyYears(EntityUtil.getId(teacher.getSchool()));
+                return studyYears(EntityUtil.getId(teacher.getSchool()));
             } else if (Role.ROLL_T.name().equals(person.getRole())) {
                 Student student = em.getReference(Student.class, person.getRoleId());
-                return timetableStudyYears(EntityUtil.getId(student.getSchool()));
+                return studyYears(EntityUtil.getId(student.getSchool()));
             }
         }
         return null;
@@ -2111,13 +2111,17 @@ public class TimetableService {
         if (person != null && Role.ROLL_T.name().equals(person.getRole())) {
             student = em.getReference(Student.class, person.getRoleId());
         }
-        return timetableStudyYearWeeks(studyYear, student);
+        return studyYearWeeks(studyYear, student);
     }
 
     public List<TimetableStudyYearWeekDto> timetableStudyYearWeeks(StudyYear studyYear, Student student) {
         if (!allowedToViewSchoolTimetable(studyYear.getSchool())) {
             return Collections.emptyList();
         }
+        return studyYearWeeks(studyYear, student);
+    }
+
+    public List<TimetableStudyYearWeekDto> studyYearWeeks(StudyYear studyYear, Student student) {
         Long studyYearId = studyYear.getId();
         LocalDate start = studyYear.getStartDate();
         LocalDate end = studyYear.getEndDate();
@@ -2262,11 +2266,6 @@ public class TimetableService {
             return HoisUserDetails.fromPrincipal(principal);
         }
         return null;
-    }
-
-    boolean allowedToViewSchoolTimetable(Long schoolId) {
-        School school = EntityUtil.getOptionalOne(School.class, schoolId, em);
-        return school != null && allowedToViewSchoolTimetable(school);
     }
 
     static boolean allowedToViewSchoolTimetable(School school) {
@@ -2882,7 +2881,7 @@ public class TimetableService {
         return frontendBaseUrl + "timetable/personalGeneralTimetable/" + param;
     }
 
-    private static String getPersonalUrlParam(Role role, Long id) {
+    private String getPersonalUrlParam(Role role, Long id) {
         byte[] encryptedId = CryptoUtil.encrypt(encryptionKey, role.name() + ";" + id);
         try {
             return Base64.encodeBase64URLSafeString(encryptedId);

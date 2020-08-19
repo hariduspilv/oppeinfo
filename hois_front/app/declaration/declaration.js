@@ -34,6 +34,10 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
 
   if(id) {
     $scope.declaration = QueryUtils.endpoint('/declarations').get({id: id}, function(response){
+      if($scope.auth.isStudent() && response.isPrevious) {
+        message.error('main.messages.error.nopermission');
+        $scope.back("#/");
+      }
       afterLoad(response);
       $scope.hasCurriculum = response.student.curriculumVersion !== null;
       // We need declaration period to show
@@ -49,6 +53,10 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
     });
   } else {
     $scope.declaration = QueryUtils.endpoint('/declarations/current').get({}, function(response){
+      if ($scope.auth.isStudent() && !response.canBeChanged) {
+        message.error('main.messages.error.nopermission');
+        $scope.back("#/");
+      }
       afterLoad(response);
       // We need declaration period to show
       QueryUtils.endpoint('/declarations/isDeclarationPeriod').search().$promise.then(function(response){
@@ -367,7 +375,7 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
 
 }]).controller('DeclarationSearchController', ['$scope', '$route', '$q', '$timeout', 'Classifier', 'DataUtils', 'QueryUtils', 'message', 'dialogService', 'USER_ROLES', 'AuthService',
   function ($scope, $route, $q, $timeout, Classifier, DataUtils, QueryUtils, message, dialogService, USER_ROLES, AuthService) {
-    var auth = $route.current.locals.auth;
+    $scope.auth = $route.current.locals.auth;
     $scope.canConfirm = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_K_TEEMAOIGUS_OPINGUKAVA);
     var clMapper = Classifier.valuemapper({status: 'OPINGUKAVA_STAATUS'});
     QueryUtils.createQueryForm($scope, '/declarations', {order: 'dId'}, clMapper.objectmapper);
@@ -384,7 +392,7 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
     promises.push($scope.studyPeriods.$promise);
     promises.push($scope.curriculumVersions.$promise);
 
-    $scope.formState = {canCreate: auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA') !== -1 };
+    $scope.formState = {canCreate: $scope.auth.authorizedRoles.indexOf('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA') !== -1 };
 
     $scope.searchCurriculumVersions = function (text) {
       return DataUtils.filterArrayByText($scope.curriculumVersions, text, function (obj, regex) {
@@ -423,6 +431,26 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
         });
       });
     };
+
+    $scope.addSubjectsToDeclaration = function() {
+      var currentStudyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods);
+      if (!currentStudyPeriod) {
+        message.error('studyYear.studyPeriod.missingCurrent');
+        return;
+      }
+      dialogService.confirmDialog({prompt: 'declaration.prompt.addSubjectsToDeclaration'}, function() {
+        var EndPoint = QueryUtils.endpoint('/declarations/addSubjectsToDeclaration');
+        new EndPoint(currentStudyPeriod).$update().then(function(response) {
+          if (response.subjectStudyPeriods !== null && response.subjectStudyPeriods.length > 0) {
+            dialogService.showDialog('declaration/declaration.autofill.dialog.html', function (dialogScope) {
+              dialogScope.response = response;
+            }, null);
+          }
+          message.info('declaration.message.addedSubjectsToDeclaration', {numberOfNewlyAddedSubjectStudyPeriods: response.changedDeclarations});
+          $scope.loadData();
+        });
+      });
+    }
 
     $scope.showUncomposed = function() {
       var DialogController = function (scope) {

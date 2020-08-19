@@ -37,6 +37,10 @@
 
     <div layout="row" layout-sm="column" layout-xs="column" ng-if="record.subjectStudyPeriodMidtermTaskDto && record.protocolType === 'PROTOKOLLI_LIIK_P'">
       <md-input-container flex="25" flex-sm="100" flex-xs="100">
+        <label>{{'higherProtocol.assessment' | translate}}</label>
+        <hois-classifier-value ng-model="record.assessmentCode" main-classifier-code="HINDAMISVIIS"></hois-classifier-value>
+      </md-input-container>
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
         <label>{{'higherProtocol.protocolDate' | translate}}</label>
         <hois-value value="record.finalDate | hoisDate"></hois-value>
       </md-input-container>

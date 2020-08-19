@@ -13,6 +13,7 @@ import javax.validation.Valid;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.web.commandobject.timetable.JournalOutcomeForm;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
+import ee.hitsa.ois.web.dto.timetable.JournalAutomaticAddStudentsResult;
 import ee.hitsa.ois.web.dto.timetable.JournalOutcomeDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -297,6 +298,12 @@ public class JournalController {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(user.getSchoolId());
         JournalUtil.assertCanConfirmAll(user, studyYear);
         return Collections.singletonMap("numberOfConfirmedJournals", journalService.confirmAll(user));
+    }
+
+    @GetMapping("/addAllSuitableStudents")
+    public JournalAutomaticAddStudentsResult addAllSuitableStudents(HoisUserDetails user, @RequestParam("studyYearId") Long studyYear) {
+        JournalUtil.asserCanAddAllSuitableStudents(user);
+        return journalService.addAllSuitableStudents(user, studyYear);
     }
 
     /**

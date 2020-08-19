@@ -9,6 +9,7 @@ import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.enums.SupportServiceType;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApplicationUtil;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DirectiveUtil;
@@ -76,6 +77,7 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     private Boolean canViewStudent;
     private Boolean canEditStudent;
     private Boolean hasSpecialNeed;
+    private Boolean isConnectedByCommittee;
     
     /** TUGI application specific */
     private Boolean canRemoveConfirmation;
@@ -86,7 +88,7 @@ public class ApplicationDto extends InsertedChangedVersionDto {
 
     private Boolean hasBeenSeenByAdmin;
 
-    public static ApplicationDto of(Application application) {
+    public static ApplicationDto of(Application application, HoisUserDetails user) {
         ApplicationDto dto = EntityUtil.bindToDto(application, new ApplicationDto(), "files", "plannedSubjects", "validAcademicLeave", "studentGroup", "supportServices");
         dto.setFiles(StreamUtil.toMappedSet(ApplicationFileDto::of, application.getFiles()));
         dto.setPlannedSubjects(StreamUtil.toMappedSet(ApplicationPlannedSubjectDto::of, application.getPlannedSubjects()));
@@ -100,6 +102,11 @@ public class ApplicationDto extends InsertedChangedVersionDto {
         }
         if (application.getCommittee() != null) {
             dto.setCommittee(AutocompleteResult.of(application.getCommittee(), true));
+            if (application.getCommittee().getMembers() != null) {
+                dto.setIsConnectedByCommittee(
+                        Boolean.valueOf(application.getCommittee().getMembers()
+                                .stream().anyMatch(p -> user.getPersonId()!= null && user.getPersonId().equals(EntityUtil.getNullableId(p.getPerson())))));
+            }
         }
         dto.setSupportServices(StreamUtil.toMappedSet(s -> ClassifierDto.of(s.getSupportService()), application.getSupportServices()));
         dto.setSupportModules(application.getSupportServices().stream()
@@ -556,6 +563,14 @@ public class ApplicationDto extends InsertedChangedVersionDto {
 
     public void setCanEditPlannedSubjects(Boolean canEditPlannedSubjects) {
         this.canEditPlannedSubjects = canEditPlannedSubjects;
+    }
+
+    public Boolean getIsConnectedByCommittee() {
+        return isConnectedByCommittee;
+    }
+
+    public void setIsConnectedByCommittee(Boolean isConnectedByCommittee) {
+        this.isConnectedByCommittee = isConnectedByCommittee;
     }
 
 

@@ -20,6 +20,7 @@ public class SubjectStudyPeriodSearchDto {
     private String subjectProgramStatus;
     private Integer subgroups;
     private BigDecimal credits;
+    private String studentgroups;
 
     private Boolean canEdit;
 
@@ -141,5 +142,13 @@ public class SubjectStudyPeriodSearchDto {
 
     public void setCanEdit(Boolean canEdit) {
         this.canEdit = canEdit;
+    }
+
+    public String getStudentgroups() {
+        return studentgroups;
+    }
+
+    public void setStudentgroups(String studentgroups) {
+        this.studentgroups = studentgroups;
     }
 }

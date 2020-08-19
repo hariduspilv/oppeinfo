@@ -446,12 +446,14 @@ public class StudentService {
      * @param pageable
      * @return
      */
-    public Page<StudentApplicationDto> applications(Long studentId, Pageable pageable) {
+    public Page<StudentApplicationDto> applications(Long studentId, Pageable pageable, HoisUserDetails user) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from application a join classifier type on type.code = a.type_code "+
                 "join classifier status on status.code = a.status_code").sort(pageable);
-
+        qb.filter(":personId = :personId");
+        qb.parameter("personId", user.getPersonId());
         qb.requiredCriteria("a.student_id = :studentId", "studentId", studentId);
-        return JpaQueryUtil.pagingResult(qb, "a.id, a.type_code, a.inserted, a.status_code, case when a.status_code = 'AVALDUS_STAATUS_KINNITATUD' then a.changed else null end, a.submitted, a.reject_reason", em, pageable).map(r -> {
+        return JpaQueryUtil.pagingResult(qb, "a.id, a.type_code, a.inserted, a.status_code, case when a.status_code = 'AVALDUS_STAATUS_KINNITATUD' then a.changed else null end, "
+                + "a.submitted, a.reject_reason, exists(select 1 from committee_member cm where cm.committee_id = a.committee_id and cm.person_id = :personId)", em, pageable).map(r -> {
             StudentApplicationDto dto = new StudentApplicationDto();
             dto.setId(resultAsLong(r, 0));
             dto.setType(resultAsString(r, 1));
@@ -460,6 +462,7 @@ public class StudentService {
             dto.setConfirmDate(resultAsLocalDateTime(r, 4));
             dto.setSubmitted(resultAsLocalDateTime(r, 5));
             dto.setRejectReason(resultAsString(r, 6));
+            dto.setIsConnectedByCommittee(resultAsBoolean(r, 7));
             return dto;
         });
     }
@@ -637,6 +640,7 @@ public class StudentService {
         dto.setUserIsLeadingTeacher(Boolean.valueOf(UserUtil.isLeadingTeacher(user, student)));
         dto.setUserCanViewStudentSpecificData(Boolean.valueOf(UserUtil.canViewStudentSpecificData(user, student)));
         dto.setUserCanUpdateRR(Boolean.valueOf(UserUtil.canUpdateStudentRR(user, student)));
+        dto.setUserCanRequestPhotoBoxPhoto(Boolean.valueOf(UserUtil.canRequestStudentFotoBoxPhoto(user, student)));
         dto.setUserCanViewStudentSupportServices(Boolean.valueOf(UserUtil.canViewStudentSupportServices(user, student)));
         dto.setUserCanViewPrivateStudentSupportServices(Boolean.valueOf(UserUtil.canViewPrivateStudentSupportServices(user, student)));
         dto.setStudentCanAddPhoto(Boolean.valueOf(StudentUtil.canStudentEditPhoto(student)));
@@ -662,7 +666,10 @@ public class StudentService {
         } else {
             dto.setStudyCompany(null);
             if (student.getCurriculumSpeciality() != null) {
+                dto.setCurriculumIncludesSpecialities(Boolean.TRUE);
                 dto.setCurriculumSpeciality(AutocompleteResult.of(student.getCurriculumSpeciality()));
+            } else {
+                dto.setCurriculumIncludesSpecialities(Boolean.valueOf(getCurriculumVersionIncludesSpecialities(student)));
             }
         }
         dto.setOccupationCertificates(occupationCertificates(student));
@@ -679,11 +686,21 @@ public class StudentService {
 
     public StudentCurriculumCompletion getStudentCurriculumCompletion(Student student) {
         List<StudentCurriculumCompletion> result = em.createQuery("select scc"
-                + " from StudentCurriculumCompletion scc where scc.student = ?1", 
+                + " from StudentCurriculumCompletion scc where scc.student.id = ?1",
                 StudentCurriculumCompletion.class)
-                .setParameter(1, student)
+                .setParameter(1, student.getId())
                 .getResultList();
         return result.isEmpty() ? null : result.get(0);
+    }
+
+    private boolean getCurriculumVersionIncludesSpecialities(Student student) {
+        List<?> data = em.createNativeQuery("select 1 from curriculum_version_speciality cvs"
+                + " join curriculum_version cv on cv.id = cvs.curriculum_version_id"
+                + " join student s on s.curriculum_version_id = cv.id"
+                + " where s.id = ?1")
+                .setParameter(1, student.getId())
+                .getResultList();
+        return !data.isEmpty() && data.size() > 1;
     }
 
     private void setStudentIndividualCurriculum(StudentViewDto studentDto) {

@@ -1,4 +1,4 @@
-VERSIOON:  2.0.0/20200626
+VERSIOON:  2.1.0/20200819
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -10,24 +10,24 @@ README.md - tarne ja installeerimise kirjeldus
 /hois_html - rakenduse genereeritud html-id
 
 
-EELDUS: ver. 1.7.0/20200529
+EELDUS: ver. 2.0.0/20200626
 ------------------------------------------------------
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20200626.sql
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20200819.sql
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
 
 Andmebaasi installeerimiseks:
-1. käivitada install20200626.sql skript, nt
+1. käivitada install20200819.sql skript, nt
    
-   psql -h devhois -f install20200626.sql 2>&1 | tee log.txt
+   psql -h devhois -f install20200819.sql 2>&1 | tee log.txt
    
    , kus
    
    -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install20200626.sql - install faili nimi
+   -f install20200819.sql - install faili nimi
    log.txt - andmebaasi installeerimise logi fail
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
@@ -40,14 +40,10 @@ RAKENDUSE INSTALLEERIMINE:
 	1. Teisendada Fujitsu Laotajas asuv hois_back.jar /opt/hois kausta
 	2. Lisada application.properties mobiil-ID sisselogimiseks vajalikud parameetrid
 	
-	mobileid.relyingPartyUuid=00000000-0000-0000-0000-000000000000
-	mobileid.relyingPartyName=DEMO
-	mobileid.applicationProviderHost=https://tsp.demo.sk.ee/mid-api
-	mobileid.pollingTimeoutSeconds=60
-	mobileid.authDisplayText=hois test
-	mobileid.authDisplayTextEn=hois test en
-	mobileid.signDisplayText=hois test sign
-	mobileid.signDisplayTextEn=hois test sign en
+	# fotobox configuration
+	fotobox.endpoint=https://fotoboxtest.hitsa.ee/api/v1/images
+	fotobox.usercodesPerRequestCount=100
+
 
 	
 	3. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
@@ -62,6 +58,8 @@ RAKENDUSE INSTALLEERIMINE:
 		mobileIdInitialDelay - mobiil-ID sisselogimisel mitme millisekundi pärast esimest korda küsitakse (nt 5000)
 		mobileIdPollInterval - mobiil-ID sisselogimisel pollimise intervaal millisekundites (nt 4000)
 		mobileIdMaxPolls - mobiil-ID sisselogimisel mitu korda maksimaalselt pollitakse, nt 15
+		schoolBoardRedirectInSeconds - infokioski tagasi suunamise timeout sekundites
+		schoolBoardRefreshInSeconds - infokioski hetke tundide värskendamise aeg sekundites 
 	4. Muuta /opt/hois/html/index.html õigeks:
 		PLUMBR_ACCOUNT_ID  - Plumbr account'i id
 		PLUMBR_APP_NAME - Plumbp rakenduse nimi

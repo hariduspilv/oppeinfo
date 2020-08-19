@@ -2,9 +2,11 @@
 
 angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '$mdDialog', '$q', '$route',
  '$scope', 'dialogService', 'message', 'resourceErrorHandler', 'Classifier', 'Curriculum', 'DataUtils', 'FormUtils',
- 'QueryUtils', 'Session', '$rootScope', 'ArrayUtils', '$timeout', '$translate', 'ScholarshipUtils',
+ 'QueryUtils', 'Session', '$rootScope', 'ArrayUtils', '$timeout', '$translate', 'ScholarshipUtils', 'AuthService',
   function ($location, $mdDialog, $q, $route, $scope, dialogService, message, resourceErrorHandler, 
-    Classifier, Curriculum, DataUtils, FormUtils, QueryUtils, Session, $rootScope, ArrayUtils, $timeout, $translate, ScholarshipUtils) {
+    Classifier, Curriculum, DataUtils, FormUtils, QueryUtils, Session, $rootScope, ArrayUtils, $timeout, 
+    $translate, ScholarshipUtils, AuthService) {
+    $scope.auth = $route.current.locals.auth;
     var id = $route.current.params.id;
     var canceledDirective = $route.current.params.canceledDirective;
     var baseUrl = '/directives';
@@ -43,7 +45,6 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     if(!$scope.formState.school.higher) {
       $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
       $scope.formState.excludedTypes.push('KASKKIRI_OVORM');
-      $scope.formState.excludedTypes.push('KASKKIRI_MUU');
     }
     if(!$scope.formState.school.vocational) {
       $scope.formState.excludedTypes.push('KASKKIRI_INDOK');
@@ -51,6 +52,10 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       $scope.formState.excludedTypes.push('KASKKIRI_KIITUS');
       $scope.formState.excludedTypes.push('KASKKIRI_NOOMI');
       $scope.formState.excludedTypes.push('KASKKIRI_OTEGEVUS');
+      $scope.formState.excludedTypes.push('KASKKIRI_TUGI');
+      $scope.formState.excludedTypes.push('KASKKIRI_TUGILOPP');
+    }
+    if($scope.auth.isAdmin() && !AuthService.isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS')) {
       $scope.formState.excludedTypes.push('KASKKIRI_TUGI');
       $scope.formState.excludedTypes.push('KASKKIRI_TUGILOPP');
     }
@@ -355,10 +360,6 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     }
 
     function clearErrors() {
-      if ($scope.record.type === 'KASKKIRI_STIPTOET' && $scope.record.scholarshipType.indexOf('EHIS_STIPENDIUM_') !== -1) {
-        return; // Skip this one as everything should be filled before save
-      }
-
       var invalidCtrls = $scope.directiveForm.$error;
       if(invalidCtrls) {
         Object.keys(invalidCtrls).forEach(function(name) {
@@ -915,10 +916,11 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       $scope.formState.scholarshipTypes = ScholarshipUtils.getScholarshipSchoolTypes();
     }
   }
-]).controller('DirectiveViewController', ['$location', '$route', '$scope', '$q', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'FormUtils', 'Session', 'ScholarshipUtils',
-  function ($location, $route, $scope, $q, dialogService, message, Classifier, QueryUtils, FormUtils, Session, ScholarshipUtils) {
+]).controller('DirectiveViewController', ['$location', '$route', '$scope', '$q', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'FormUtils', 'Session', 'ScholarshipUtils', 'AuthService',
+  function ($location, $route, $scope, $q, dialogService, message, Classifier, QueryUtils, FormUtils, Session, ScholarshipUtils, AuthService) {
     var id = $route.current.params.id;
     var baseUrl = '/directives';
+    $scope.auth = $route.current.locals.auth;
     var clMapper = Classifier.valuemapper({status: 'KASKKIRI_STAATUS'});
 
     $scope.formState = {school: Session.school || {}};
@@ -940,6 +942,11 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
     $scope.record = QueryUtils.endpoint(baseUrl + '/:id/view').search({id: id});
 
     $scope.record.$promise.then(function() {
+      if ($scope.auth.isAdmin() && ($scope.record.type === 'KASKKIRI_TUGI' || $scope.record.type === 'KASKKIRI_TUGILOPP')
+        && !AuthService.isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS')) {
+        message.error('main.messages.error.nopermission');
+        $scope.back("#/");
+      }
       var templateId = $scope.record.type === 'KASKKIRI_TYHIST' ? $scope.record.canceledDirectiveType.substr(9).toLowerCase() : ($scope.record.type ? $scope.record.type.substr(9).toLowerCase() : 'unknown');
       $scope.formState.templateUrl = 'directive/directive.type.'+templateId+'.view.html';
       clMapper.objectmapper($scope.record.cancelingDirectives || []);
@@ -1042,14 +1049,13 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
       });
     }
   }
-]).controller('DirectiveListController', ['$q', '$scope', 'Classifier', 'QueryUtils', 'Session',
-  function ($q, $scope, Classifier, QueryUtils, Session) {
-
+]).controller('DirectiveListController', ['$q', '$scope', 'Classifier', 'QueryUtils', 'Session', '$route',
+  function ($q, $scope, Classifier, QueryUtils, Session, $route) {
+    $scope.auth = $route.current.locals.auth;
     $scope.formState = {excludedTypes: [], school: Session.school || {}};
     if(!$scope.formState.school.higher) {
       $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
       $scope.formState.excludedTypes.push('KASKKIRI_OVORM');
-      $scope.formState.excludedTypes.push('KASKKIRI_MUU');
     }
     if(!$scope.formState.school.vocational) {
       $scope.formState.excludedTypes.push('KASKKIRI_INDOK');

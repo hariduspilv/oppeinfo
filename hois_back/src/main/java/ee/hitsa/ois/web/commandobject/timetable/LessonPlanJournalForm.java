@@ -48,6 +48,7 @@ public class LessonPlanJournalForm extends VersionedCommand {
     
     private List<AutocompleteResult> journalRooms;
     private Boolean addModuleOutcomes;
+    private Boolean addStudents;
 
     public Long getLessonPlan() {
         return lessonPlan;
@@ -152,6 +153,14 @@ public class LessonPlanJournalForm extends VersionedCommand {
 
     public void setAddModuleOutcomes(Boolean addModuleOutcomes) {
         this.addModuleOutcomes = addModuleOutcomes;
+    }
+
+    public Boolean getAddStudents() {
+        return addStudents;
+    }
+
+    public void setAddStudents(Boolean addStudents) {
+        this.addStudents = addStudents;
     }
 
     public static class LessonPlanGroupForm {

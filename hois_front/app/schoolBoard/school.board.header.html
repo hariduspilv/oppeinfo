@@ -1,0 +1,22 @@
+<md-toolbar class="md-whiteframe-glow-z1 hois_header mobileColumnLayout" layout="row" layout-align="start center">
+  <div layout="row" flex>
+    <div layout="column" layout-align="none" layout-align-xs="end center">
+      <img ng-if="school.logo" class="logo" ng-src="{{school.logo}}"/>
+    </div>
+    <div class="docs-toolbar-tools" tabIndex="-1" layout-align="start center">
+      <div class="md-toolbar-tools fill-height" style="height: 100%" layout="row" flex>
+        <h1 md-colors="{color: 'background-900'}" style="margin-top: -2px" class="md-display-2">
+          <span>{{currentLanguageNameField(school)}}</span>
+          <span hide-sm hide-xs>
+            <md-icon md-colors="{color: 'background-900'}" style="margin-top: -2px">chevron_right</md-icon>
+            <span>{{'schoolBoard.label' | translate}}</span>
+            <span ng-if="currentSection">
+              <md-icon md-colors="{color: 'background-900'}" style="margin-top: -2px">chevron_right</md-icon>
+              <span>{{currentSection | translate}}</span>
+            </span>
+          </span>
+        </h1>
+      </div>
+    </div>
+  </div>
+</md-toolbar>

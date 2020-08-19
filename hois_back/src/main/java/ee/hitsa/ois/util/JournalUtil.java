@@ -157,6 +157,11 @@ public abstract class JournalUtil {
         return false;
     }
 
+    public static boolean canAddAllSuitableStudents(HoisUserDetails user) {
+        return (user.isSchoolAdmin() || user.isLeadingTeacher() || user.isTeacher()) &&
+                UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PAEVIK);
+    }
+
     public static void assertCanView(HoisUserDetails user) {
         if(!hasPermissionToView(user)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
@@ -215,6 +220,10 @@ public abstract class JournalUtil {
         if(!canEditOutcomeGrade(user, result)) {
             throw new ValidationFailedException("journal.messages.changingOutcomeResultNotAllowed");
         }
+    }
+
+    public static void asserCanAddAllSuitableStudents(HoisUserDetails user) {
+        UserUtil.throwAccessDeniedIf(!canAddAllSuitableStudents(user));
     }
 
     public static void setOutcomeEntriesUnqiueOrderNrs(List<? extends JournalEntryByDateBaseDto> entries) {

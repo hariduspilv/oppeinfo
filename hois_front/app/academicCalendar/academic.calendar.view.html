@@ -12,6 +12,15 @@
             <hois-classifier-value ng-model="data.yearCode" main-classifier-code="OPPEAASTA"></hois-classifier-value>
             {{'academicCalendar.studyYear' | translate}}
         </h2>
+        <div layout="row" flex>
+            <label class="textInput">{{'academicCalendar.studyYearSelect' | translate}}</label>
+            <div class="md-body-1 hois-value" style="padding-left: 10px;">
+            <span ng-repeat="sy in formState.studyYears | orderBy: 'startDate'">
+                <a ng-click="changeStudyYear(sy)" ng-style="{'font-weight': formState.studyYear.id === sy.id ? 'bold' : 'normal'}">{{currentLanguageNameField(sy)}}</a>
+                <span>&nbsp;</span>
+            </span>
+            </div>
+        </div>
         <md-table-container>
             <table md-table md-progress="endpoint.$promise">
                 <thead md-head>

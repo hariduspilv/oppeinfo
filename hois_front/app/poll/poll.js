@@ -602,15 +602,113 @@
         }
     }
 
-    function test(dialogService, criteria, QueryUtils, oisFileService, formState) {
+    function loadThemes(scope, dialogScope, QueryUtils, criteria, dialogService, oisFileService, formState) {
+        QueryUtils.loadingWheel(scope, true);
+        QueryUtils.endpoint("/poll/themes").get({id: dialogScope.criteria.id}).$promise.then(function (data) {
+            angular.extend(dialogScope.criteria, data);
+            if (criteria.higher) {
+                dialogScope.criteria.subjects = [{id: -1, nameEt: "õppeaine kood - Õppeaine nimetus (X EAP)", nameEn: "subject code - subject name (X EAP)"}];
+                dialogScope.criteria.journals = [];
+                dialogScope.criteria.teacher = {id: -1, nameEt: "Õppejõud", nameEn: "Teacher"};
+            } else {
+                dialogScope.criteria.subjects = [];
+                dialogScope.criteria.journals = [{id: -1, nameEt: "päevik (õpperühm)", nameEn: "journal (student group)"}];
+                dialogScope.criteria.teacher = {id: -1, nameEt: "Õpetaja", nameEn: "Teacher"};
+            }
+            markImages(dialogScope.criteria.themes);
+            QueryUtils.loadingWheel(scope, false);
+            var repetitiveThemes = dialogScope.criteria.themes.filter(function (theme) {
+                return theme.isRepetitive;
+            });
+            dialogScope.hasSubjectOrJournal = ((dialogScope.criteria.subjects !== null && dialogScope.criteria.subjects.length !== 0) ||
+                                              (dialogScope.criteria.journals !== null && dialogScope.criteria.journals.length !== 0)) && repetitiveThemes.length !== 0;
+            // Map journals or subjects with repedetive themes
+            dialogScope.formState.themeBySubjectOrJournalId = {};
+            if (!data.isThemePageable && data.type === 'KYSITLUS_O') {
+                if (angular.isDefined(dialogScope.criteria.journals) && dialogScope.criteria.journals.length !== 0 && repetitiveThemes.length !== 0) {
+                    dialogScope.formState.themeBySubjectOrJournalId = 
+                    mapItems(dialogScope.formState.themeBySubjectOrJournalId, dialogScope.criteria.journals, repetitiveThemes, true);
+                }
+                if (angular.isDefined(dialogScope.criteria.subjects) && dialogScope.criteria.subjects.length !== 0 && repetitiveThemes.length !== 0) {
+                    dialogScope.formState.themeBySubjectOrJournalId = 
+                    mapItems(dialogScope.formState.themeBySubjectOrJournalId, dialogScope.criteria.subjects, repetitiveThemes, false);
+                }
+                dialogScope.criteria.themes.forEach(function (theme) {
+                    if (!theme.isRepetitive) {
+                        if (dialogScope.formState.themeBySubjectOrJournalId[null] === undefined) {
+                            dialogScope.formState.themeBySubjectOrJournalId[null] = [];
+                        }
+                        dialogScope.formState.themeBySubjectOrJournalId[null].push(theme);
+                    }
+                });
+                if (dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.foreword !== null) {
+                    dialogScope.showForeword = true;
+                } else {
+                    Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0].show = true;
+                }
+            } else if (data.isThemePageable && data.type === 'KYSITLUS_O'){
+                var placeHolderList = [];
+                dialogScope.criteria.journals.forEach(function (journal) {
+                    repetitiveThemes.forEach(function (theme) {
+                        theme.journal = angular.copy(journal);
+                    });
+                    placeHolderList.push.apply(placeHolderList, angular.copy(repetitiveThemes));
+                });
+                repetitiveThemes.forEach(function (theme) {
+                    theme.journal = null;
+                });
+                if (dialogScope.criteria.subjects !== null) {
+                    dialogScope.criteria.subjects.forEach(function (subject) {
+                        repetitiveThemes.forEach(function (theme) {
+                            theme.subject = angular.copy(subject);
+                        });
+                        placeHolderList.push.apply(placeHolderList, angular.copy(repetitiveThemes));
+                    });
+                }
+                placeHolderList.push.apply(placeHolderList, dialogScope.criteria.themes.filter(function (theme) {
+                    return !theme.isRepetitive;
+                }));
+                dialogScope.criteria.themes = placeHolderList;
+                if (dialogScope.criteria.themes.length !== 0) {
+                    if (dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.foreword !== null) {
+                        dialogScope.showForeword = true;
+                    } else {
+                        dialogScope.criteria.themes[0].show = true;
+                    }
+                }
+            } else {
+                if (dialogScope.criteria.themes.length !== 0) {
+                    if (dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.foreword !== null) {
+                        dialogScope.showForeword = true;
+                    } else {
+                        dialogScope.criteria.themes[0].show = true;
+                    }
+                }
+            }
+            showThemeDialog(dialogService, criteria, dialogScope, formState, oisFileService);
+        });
+    };
+
+    function mapItems(itemById, list, repetitiveThemes, journal) {
+        list.forEach(function (item) {
+            if (itemById[item.id] === undefined) {
+                itemById[item.id] = [];
+                if (journal) {
+                    itemById[item.id].journal = item;
+                } else {
+                    itemById[item.id].subject = item;
+                }
+            }
+            itemById[item.id].push.apply(itemById[item.id], angular.copy(repetitiveThemes));
+        });
+        return itemById;
+    }
+
+    function showThemeDialog(dialogService, criteria, savedScope, formState, oisFileService) {
         dialogService.showDialog(criteria.isThemePageable ? 'poll/poll.test.by.theme.dialog.html' : 
         ((criteria.type === 'KYSITLUS_O' || (formState !== undefined && formState.type === 'KYSITLUS_O')) ? 'poll/poll.test.by.subjectOrJournal.dialog.html' : 
         'poll/poll.test.dialog.html'), function (dialogScope) {
-            dialogScope.formState = {};
-            dialogScope.criteria = {};
-            dialogScope.criteria.id = criteria.id;
-            dialogScope.criteria.foreword = criteria.foreword;
-            dialogScope.criteria.afterword = criteria.afterword;
+            angular.extend(dialogScope, savedScope);
     
             dialogScope.previousSubjectOrJournal = function(index) {
                 if (index === 0) {
@@ -654,21 +752,6 @@
                 }
               };
 
-            function mapItems(itemById, list, repetitiveThemes, journal) {
-                list.forEach(function (item) {
-                    if (itemById[item.id] === undefined) {
-                        itemById[item.id] = [];
-                        if (journal) {
-                            itemById[item.id].journal = item;
-                        } else {
-                            itemById[item.id].subject = item;
-                        }
-                    }
-                    itemById[item.id].push.apply(itemById[item.id], angular.copy(repetitiveThemes));
-                });
-                return itemById;
-            }
-
             dialogScope.deselectOther = function(question, theme) {
                 if (formState.type === 'KYSITLUS_V') {
                     if (question.answers[0].chosen) {
@@ -679,92 +762,6 @@
                         });
                     }
                 }
-            };
-
-            dialogScope.refresh = function() {
-                QueryUtils.loadingWheel(dialogScope, true, true);
-                QueryUtils.endpoint("/poll/themes").get({id: dialogScope.criteria.id}).$promise.then(function (data) {
-                    angular.extend(dialogScope.criteria, data);
-                    if (criteria.higher) {
-                        dialogScope.criteria.subjects = [{id: -1, nameEt: "õppeaine kood - Õppeaine nimetus (X EAP)", nameEn: "subject code - subject name (X EAP)"}];
-                        dialogScope.criteria.journals = [];
-                        dialogScope.criteria.teacher = {id: -1, nameEt: "Õppejõud", nameEn: "Teacher"};
-                    } else {
-                        dialogScope.criteria.subjects = [];
-                        dialogScope.criteria.journals = [{id: -1, nameEt: "päevik (õpperühm)", nameEn: "journal (student group)"}];
-                        dialogScope.criteria.teacher = {id: -1, nameEt: "Õpetaja", nameEn: "Teacher"};
-                    }
-                    markImages(dialogScope.criteria.themes);
-                    QueryUtils.loadingWheel(dialogScope, false, true);
-                    var repetitiveThemes = dialogScope.criteria.themes.filter(function (theme) {
-                        return theme.isRepetitive;
-                    });
-                    dialogScope.hasSubjectOrJournal = ((dialogScope.criteria.subjects !== null && dialogScope.criteria.subjects.length !== 0) ||
-                                                      (dialogScope.criteria.journals !== null && dialogScope.criteria.journals.length !== 0)) && repetitiveThemes.length !== 0;
-                    // Map journals or subjects with repedetive themes
-                    dialogScope.formState.themeBySubjectOrJournalId = {};
-                    if (!data.isThemePageable && data.type === 'KYSITLUS_O') {
-                        if (angular.isDefined(dialogScope.criteria.journals) && dialogScope.criteria.journals.length !== 0 && repetitiveThemes.length !== 0) {
-                            dialogScope.formState.themeBySubjectOrJournalId = 
-                            mapItems(dialogScope.formState.themeBySubjectOrJournalId, dialogScope.criteria.journals, repetitiveThemes, true);
-                        }
-                        if (angular.isDefined(dialogScope.criteria.subjects) && dialogScope.criteria.subjects.length !== 0 && repetitiveThemes.length !== 0) {
-                            dialogScope.formState.themeBySubjectOrJournalId = 
-                            mapItems(dialogScope.formState.themeBySubjectOrJournalId, dialogScope.criteria.subjects, repetitiveThemes, false);
-                        }
-                        dialogScope.criteria.themes.forEach(function (theme) {
-                            if (!theme.isRepetitive) {
-                                if (dialogScope.formState.themeBySubjectOrJournalId[null] === undefined) {
-                                    dialogScope.formState.themeBySubjectOrJournalId[null] = [];
-                                }
-                                dialogScope.formState.themeBySubjectOrJournalId[null].push(theme);
-                            }
-                        });
-                        if (dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.foreword !== null) {
-                            dialogScope.showForeword = true;
-                        } else {
-                            Object.values(dialogScope.formState.themeBySubjectOrJournalId)[0].show = true;
-                        }
-                    } else if (data.isThemePageable && data.type === 'KYSITLUS_O'){
-                        var placeHolderList = [];
-                        dialogScope.criteria.journals.forEach(function (journal) {
-                            repetitiveThemes.forEach(function (theme) {
-                                theme.journal = angular.copy(journal);
-                            });
-                            placeHolderList.push.apply(placeHolderList, angular.copy(repetitiveThemes));
-                        });
-                        repetitiveThemes.forEach(function (theme) {
-                            theme.journal = null;
-                        });
-                        if (dialogScope.criteria.subjects !== null) {
-                            dialogScope.criteria.subjects.forEach(function (subject) {
-                                repetitiveThemes.forEach(function (theme) {
-                                    theme.subject = angular.copy(subject);
-                                });
-                                placeHolderList.push.apply(placeHolderList, angular.copy(repetitiveThemes));
-                            });
-                        }
-                        placeHolderList.push.apply(placeHolderList, dialogScope.criteria.themes.filter(function (theme) {
-                            return !theme.isRepetitive;
-                        }));
-                        dialogScope.criteria.themes = placeHolderList;
-                        if (dialogScope.criteria.themes.length !== 0) {
-                            if (dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.foreword !== null) {
-                                dialogScope.showForeword = true;
-                            } else {
-                                dialogScope.criteria.themes[0].show = true;
-                            }
-                        }
-                    } else {
-                        if (dialogScope.criteria.themes.length !== 0) {
-                            if (dialogScope.criteria.type === 'KYSITLUS_O' && dialogScope.criteria.foreword !== null) {
-                                dialogScope.showForeword = true;
-                            } else {
-                                dialogScope.criteria.themes[0].show = true;
-                            }
-                        }
-                    }
-                });
             };
 
             dialogScope.previousTheme = function(index) {
@@ -797,12 +794,20 @@
                 question.radio1 = null;
             };
 
-            dialogScope.refresh();
-
             dialogScope.getUrl = function(photo) {
                 return oisFileService.getUrl(photo, 'pollThemeQuestionFile');
             };
         }, null, null, true);
+    }
+
+    function test(scope, dialogService, criteria, QueryUtils, oisFileService, formState) {
+        var savedScope = {};
+        savedScope.formState = {};
+        savedScope.criteria = {};
+        savedScope.criteria.id = criteria.id;
+        savedScope.criteria.foreword = criteria.foreword;
+        savedScope.criteria.afterword = criteria.afterword;
+        loadThemes(scope, savedScope, QueryUtils, criteria, dialogService, oisFileService, formState);
     }
 
     function checkErrorsFromThemes(themes) {
@@ -940,7 +945,7 @@
         };
 
         $scope.test = function(row) {
-            test(dialogService, row, QueryUtils, oisFileService, {type: row.typeCode.code});
+            test($scope, dialogService, row, QueryUtils, oisFileService, {type: row.typeCode.code});
         };
 
         $scope.refresh = function() {
@@ -1473,7 +1478,7 @@
 
         $scope.test = function () {
             $scope.criteria.higher = $scope.auth.higher;
-            test(dialogService, $scope.criteria, QueryUtils, oisFileService, $scope.formState);
+            test($scope, dialogService, $scope.criteria, QueryUtils, oisFileService, $scope.formState);
         };
 
         $scope.swapTheme = function(index1, index2) {
@@ -2081,7 +2086,7 @@
 
         $scope.test = function() {
             $scope.criteria.higher = $scope.auth.higher;
-            test(dialogService, $scope.criteria, QueryUtils, oisFileService, $scope.formState);
+            test($scope, dialogService, $scope.criteria, QueryUtils, oisFileService, $scope.formState);
         };
 
         $scope.checkReminder = function () {

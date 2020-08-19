@@ -69,33 +69,47 @@
       <input ng-model="school.rtipSchoolCode" name="rtipSchoolCode" type="text" md-maxlength="10">
     </md-input-container>
 
-    <md-input-container class="md-block">
-      <md-checkbox ng-model="school.isMinorStudentAbsence" name="isMinorStudentAbsence">
+    <div layout="row" layout-xs="column">
+      <md-input-container class="md-block">
+        <md-checkbox ng-model="school.isNotAbsence" name="isNotAbsence">
+          {{'school.isNotAbsence' | translate}}
+        </md-checkbox>
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <md-checkbox ng-model="school.isMinorStudentAbsence" name="isMinorStudentAbsence" ng-disabled="school.isNotAbsence">
           {{'school.isMinorStudentAbsence' | translate}}
-      </md-checkbox>
-    </md-input-container>
+        </md-checkbox>
+      </md-input-container>
+    </div>
 
     <md-input-container ng-if="school.type.higher" class="md-block">
       <md-checkbox ng-model="school.isLetterGrade" name="isLetterGrade">
-          {{'school.isLetterGrade' | translate}}
+        {{'school.isLetterGrade' | translate}}
       </md-checkbox>
     </md-input-container>
 
     <md-input-container class="md-block">
       <md-checkbox ng-model="school.isWithoutEkis" name="isWithoutEkis">
-          {{'school.isWithoutEkis' | translate}}
+        {{'school.isWithoutEkis' | translate}}
       </md-checkbox>
-    </md-input-container>
+    </md-input-container> 
 
     <md-input-container class="md-block">
       <md-checkbox ng-model="school.isStudentTerms" name="isStudentTerms">
-          {{'school.isStudentTerms' | translate}}
+        {{'school.isStudentTerms' | translate}}
       </md-checkbox>
     </md-input-container>
 
     <md-input-container class="md-block" ng-if="school.type.higher">
       <md-checkbox ng-model="school.isHmodules" name="isHmodules">
           {{'school.isHmodules' | translate}}
+      </md-checkbox>
+    </md-input-container>
+
+    <md-input-container class="md-block" ng-if="school.type.higher">
+      <md-checkbox ng-model="school.isStudentDeclarationDelete" name="isStudentDeclarationDelete">
+          {{'school.isStudentDeclarationDelete' | translate}}
       </md-checkbox>
     </md-input-container>
 

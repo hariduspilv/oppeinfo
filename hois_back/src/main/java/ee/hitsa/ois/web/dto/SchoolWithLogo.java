@@ -1,5 +1,8 @@
 package ee.hitsa.ois.web.dto;
 
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.util.EntityUtil;
+
 public class SchoolWithLogo extends SchoolWithoutLogo {
     
     private Long oisFileId;
@@ -8,6 +11,11 @@ public class SchoolWithLogo extends SchoolWithoutLogo {
     public SchoolWithLogo(Long id, String code, String nameEt, String nameEn, String email, Long oisFileId) {
         super(id, code, nameEt, nameEn, email);
         this.oisFileId = oisFileId;
+    }
+
+    public SchoolWithLogo(School school) {
+        super(school);
+        this.oisFileId = EntityUtil.getNullableId(school.getLogo());
     }
 
     public Long getOisFileId() {

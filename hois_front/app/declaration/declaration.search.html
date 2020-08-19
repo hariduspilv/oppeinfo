@@ -65,14 +65,17 @@
           </div>
         </div>
 
-        <div layout="row">
+        <div layout="row" layout-xs="column">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
           <md-button class="md-raised" ng-if="formState.canCreate" ng-href="#/declarations/new">{{'main.button.create' | translate}}</md-button>
         </div>
-        <div layout="row">
+        <div>
           <md-button class="md-raised" ng-click="showUncomposed()">{{'declaration.showUncomposed' | translate}}</md-button>
           <md-button class="md-raised" ng-if="canConfirm" ng-click="confirmAll()">{{'declaration.confirmAll' | translate}}</md-button>
+          <!-- formState.canCreate checks declaration changing right -->
+          <md-button class="md-raised" ng-if="auth.isAdmin() && formState.canCreate" ng-click="addSubjectsToDeclaration()">
+            {{'declaration.addSubjectsToDeclaration' | translate}}</md-button>
         </div>
 
       </form>

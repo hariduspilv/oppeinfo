@@ -58,15 +58,19 @@
        * If column has ngIf directive then on true value it will initialize (controller and scope of directive) hoisTableData.
        * But on false value it will not trigger anything. So we have to check it somehow.
        * Maybe any better idea?
+       *
+       * @since 10.08.2020
+       * MutationObserver helps to check childList. $watch cannot help in this situation
        */
+      var obs = new MutationObserver(redrawIfNeeds);
+      obs.observe(element[0], {
+        childList: true
+      })
       function redrawIfNeeds() {
         if (ctrl.data && ctrl.data.length !== element[0].querySelectorAll('td').length) {
           ctrl.orderRedraw();
         }
-        $timeout(redrawIfNeeds, 200);
       }
-
-      $timeout(redrawIfNeeds, 200);
     }
   }
 
@@ -289,7 +293,7 @@
     }
   }
 
-  
+
   HoisTableData.$inject = [];
   function HoisTableData() {
     var directive = {
@@ -311,11 +315,11 @@
         template: '<td class="hois-table-data" ng-transclude="master"></td>'
     };
     return directive;
-    
+
     function link(scope, _element, _attrs, ctrl, transclude) {
       var tdCtrl = ctrl[0];
       var trCtrl = ctrl[1];
-      
+
       // Using scope.$parent we are giving parent parameters (at least from ngRepeat) to be used inside these elements (detail and between)
       transclude(scope.$parent, function (between) {
         tdCtrl._between = between.wrap(angular.element(document.createElement('td'))).parent();

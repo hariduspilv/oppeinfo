@@ -1,0 +1,14 @@
+<div ng-cloak ng-include="'schoolBoard/school.board.header.html'"></div>
+<div layout-padding ng-cloak>
+  <div flex>
+    <md-grid-list md-cols="6" md-cols-sm="4" md-cols-xs="2" md-row-height="4:3" md-gutter="24px">
+      <md-grid-tile ng-repeat="room in rooms" md-colors="{background: colors.currentLessonsPerRooms}">
+        <button class="grid-tile-button school-board-type-button" ng-click="openRoom(room)">
+          {{room.code}}
+        </button>
+      </md-grid-tile>
+    </md-grid-list>
+
+    <md-button ng-click="back('#/schoolBoard/' + schoolId)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

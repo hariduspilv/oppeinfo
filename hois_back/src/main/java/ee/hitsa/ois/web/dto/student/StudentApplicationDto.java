@@ -11,6 +11,7 @@ public class StudentApplicationDto {
     private LocalDateTime confirmDate;
     private LocalDateTime submitted;
     private String rejectReason;
+    private Boolean isConnectedByCommittee;
 
     public Long getId() {
         return id;
@@ -66,5 +67,13 @@ public class StudentApplicationDto {
 
     public void setRejectReason(String rejectReason) {
         this.rejectReason = rejectReason;
+    }
+
+    public Boolean getIsConnectedByCommittee() {
+        return isConnectedByCommittee;
+    }
+
+    public void setIsConnectedByCommittee(Boolean isConnectedByCommittee) {
+        this.isConnectedByCommittee = isConnectedByCommittee;
     }
 }

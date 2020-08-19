@@ -79,7 +79,7 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column md-order-by="r_code">{{'lessonplan.rooms.room' | translate}}</th>
-            <th md-column md-order-by="b_name">{{'lessonplan.rooms.building' | translate}}</th>
+            <th md-column md-order-by="b_code || ' - ' || b_name">{{'lessonplan.rooms.building' | translate}}</th>
             <th md-column md-order-by="s_date, e_date">{{'lessonplan.rooms.date' | translate}}</th>
             <th md-column><span style="white-space: pre-line; display: inline-block;">{{'lessonplan.rooms.time' | translate}}</span></th>
             <th md-column md-order-by="seats"><span style="white-space: pre-line; display: inline-block;">{{'lessonplan.rooms.places' | translate}}</span></th>
@@ -92,8 +92,8 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'"
             md-colors="::(criteria.isFreeRoom && row.times.length > 0 ? {background: 'accent-50' } : null)">
-            <td md-cell>{{::row.room}}</td>
-            <td md-cell>{{::row.building}}</td>
+            <td md-cell>{{::row.roomCode}}</td>
+            <td md-cell>{{::row.buildingCode}} - {{::row.buildingName}}</td>
             <td md-cell><a ng-if="::canAddEvent(row)" ng-href="{{event(row)}}">{{::row.startDate | hoisDate}}</a><span ng-if="::!canAddEvent(row)">{{::row.startDate | hoisDate}}</span></td>
             <td md-cell><span ng-repeat="time in row.times track by $index" style="display: block;">{{::time}}</span></td>
             <td md-cell>{{::row.places}}</td>

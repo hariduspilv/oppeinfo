@@ -24,7 +24,7 @@
           if (weeks && weeks.length > 0) {
             return currentTime < moment(weeks[0].start).startOf('day') ? 0 : weeks.length - 1;
           }
-        }
+        };
 
         this.getStudyYearId = function (schoolId, studyYears) {
           // if state has studyYear and it is included in given studyYears then return that
@@ -200,6 +200,13 @@
         }
       } else {
         $location.url('/timetables');
+      }
+
+      if (angular.isDefined($scope.auth) && $scope.auth.isAdmin()) {
+        QueryUtils.endpoint('/schoolBoard/:schoolId').get({schoolId: $scope.schoolId}).$promise.then(function (result) {
+          $scope.schoolBoardUrl = result.url;
+          console.log($scope.schoolBoardUrl);
+        });
       }
 
       QueryUtils.endpoint('/timetables/timetableStudyYears/:schoolId').query({schoolId: $scope.schoolId}).$promise.then(function (result) {

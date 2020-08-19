@@ -370,7 +370,7 @@ angular.module('hitsaOis')
 // ------------ Occupations and suboccupations
 
     $scope.querySearch = function(queryText) {
-      return classifierAutocomplete.searchByName(queryText, 'KUTSE');
+      return classifierAutocomplete.searchByName(queryText, 'KUTSE', {valid: true});
     };
 
     $scope.addOcupation = function(item) {

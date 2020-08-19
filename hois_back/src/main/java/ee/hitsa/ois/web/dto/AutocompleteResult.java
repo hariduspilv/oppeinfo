@@ -7,6 +7,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.User;
@@ -107,6 +108,11 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
 
     public static AutocompleteResult of(BaseModuleOutcomes outcome) {
         return new AutocompleteResult(outcome.getId(), outcome.getOutcomeEt(), outcome.getOutcomeEn());
+    }
+
+    public static AutocompleteResult of(Room room) {
+        String code = room.getBuilding().getCode() + "-" + room.getCode();
+        return new AutocompleteResult(room.getId(), code, code);
     }
 
     public static AutocompleteResult of(Building building) {

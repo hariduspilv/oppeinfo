@@ -60,10 +60,17 @@
       <hois-value value="school.rtipSchoolCode"></hois-value>
     </md-input-container>
 
-    <md-input-container class="md-block">
-      <label class="textInput">{{'school.isMinorStudentAbsence' | translate}}</label>
-      <hois-value value="school.isMinorStudentAbsence ? 'main.yes' : 'main.no' | translate"></hois-value>
-    </md-input-container>
+    <div layout="row" layout-xs="column">
+      <md-input-container class="md-block" flex>
+        <label class="textInput">{{'school.isNotAbsence' | translate}}</label>
+        <hois-value value="school.isNotAbsence ? 'main.yes' : 'main.no' | translate"></hois-value>
+      </md-input-container>
+
+      <md-input-container class="md-block" flex>
+        <label class="textInput">{{'school.isMinorStudentAbsence' | translate}}</label>
+        <hois-value value="school.isMinorStudentAbsence ? 'main.yes' : 'main.no' | translate"></hois-value>
+      </md-input-container>
+    </div>
 
     <md-input-container ng-if="school.type.higher" class="md-block">
       <label class="textInput">{{'school.isLetterGrade' | translate}}</label>
@@ -83,6 +90,11 @@
     <md-input-container class="md-block" ng-if="school.type.higher">
       <label class="textInput">{{'school.isHmodules' | translate}}</label>
       <hois-value value="school.isHmodules ? 'main.yes' : 'main.no' | translate"></hois-value>
+    </md-input-container>
+
+    <md-input-container class="md-block" ng-if="school.type.higher">
+      <label class="textInput">{{'school.isStudentDeclarationDelete' | translate}}</label>
+      <hois-value value="school.isStudentDeclarationDelete ? 'main.yes' : 'main.no' | translate"></hois-value>
     </md-input-container>
 
     <md-input-container class="md-block">

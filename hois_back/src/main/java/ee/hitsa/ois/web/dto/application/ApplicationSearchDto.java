@@ -18,6 +18,7 @@ public class ApplicationSearchDto {
     private LocalDateTime submitted;
     private Boolean canViewStudent;
     private Boolean canEditStudent;
+    private Boolean isConnectedByCommittee;
 
     public static ApplicationSearchDto of(Application application) {
         ApplicationSearchDto dto = EntityUtil.bindToDto(application, new ApplicationSearchDto());
@@ -102,6 +103,14 @@ public class ApplicationSearchDto {
 
     public void setStudentGroup(String studentGroup) {
         this.studentGroup = studentGroup;
+    }
+
+    public Boolean getIsConnectedByCommittee() {
+        return isConnectedByCommittee;
+    }
+
+    public void setIsConnectedByCommittee(Boolean isConnectedByCommittee) {
+        this.isConnectedByCommittee = isConnectedByCommittee;
     }
 
 }

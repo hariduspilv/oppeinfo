@@ -8,8 +8,8 @@
             <label class="textInput">{{'journal.studyYear' | translate}}</label>
             <hois-select ng-model="criteria.studyYear" type="studyyear" select-current-study-year required autofocus></hois-select>
           </md-input-container>
-          
-          <hois-autocomplete flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" 
+
+          <hois-autocomplete flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
            ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups"
            label="{{'journal.studentGroup'}}" additional-query-params="{higher: false, userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
         </div>
@@ -53,6 +53,7 @@
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearSearch()">{{'main.button.clear' | translate}}</md-button>
           <md-button ng-if="formState.canConfirmAll" ng-click="confirmAll()" class="md-raised">{{'journal.confirmAllJournals' | translate}}</md-button>
+          <md-button ng-if="formState.canAddStudents" ng-click="addStudents()" ng-disabled="!criteria.studyYear" class="md-raised">{{'journal.automaticAddStudents' | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>
@@ -69,6 +70,7 @@
             <th md-column md-order-by="3">{{'journal.label' | translate}}</th>
             <th md-column md-order-by="4">{{auth.higher ? ('journal.teachersHigher' | translate) : ('journal.teachersVocational' | translate)}}</th>
             <th md-column md-order-by="{{currentLanguage() === 'et' ? 5 : 6}}">{{'journal.modules' | translate}}</th>
+            <th md-column md-order-by="11">{{'journal.studentCount' | translate}}</th>
             <th md-column>{{'journal.plannedAndEnteredLessonsCount1' | translate}}<br>{{'journal.plannedAndEnteredLessonsCount2' | translate}}</th>
             <th md-column md-order-by="7">{{'main.status' | translate}}</th>
             <th md-column md-order-by="8">{{'curriculum.code' | translate}}</th>
@@ -86,6 +88,7 @@
             </td>
             <td md-cell>{{row.teachers}}</td>
             <td md-cell>{{currentLanguageNameField(row.modules)}}</td>
+            <td md-cell>{{row.studentCount}}</td>
             <td md-cell>{{row.plannedHours}}/{{row.usedHours}}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
             <td md-cell>{{row.curriculums}}</td>

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
@@ -15,6 +16,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.Dormitory;
 import ee.hitsa.ois.enums.FinSource;
 import ee.hitsa.ois.enums.FinSpecific;
+import ee.hitsa.ois.enums.StudyLevel;
 import ee.hitsa.ois.enums.StudyLoad;
 import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -385,9 +387,18 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         boolean higher = SaisAdmissionUtil.isHigher(application.getSaisAdmission());
         FinSpecific s;
         if(FinSource.isFree(dto.getFin())) {
-            s = higher ? FinSpecific.FINTAPSUSTUS_Y : FinSpecific.FINTAPSUSTUS_R;
+            s = higher ? FinSpecific.FINTAPSUSTUS_A : FinSpecific.FINTAPSUSTUS_R;
         } else {
             s = higher ? FinSpecific.FINTAPSUSTUS_X : FinSpecific.FINTAPSUSTUS_T;
+        }
+        // doctors
+        Classifier studyLevel = application.getSaisAdmission().getStudyLevel();
+        if (studyLevel != null && higher && ClassifierUtil.oneOf(studyLevel, StudyLevel.OPPEASTE_732, StudyLevel.OPPEASTE_734)) {
+            if(FinSource.isFree(dto.getFin())) {
+                s = FinSpecific.FINTAPSUSTUS_Y;
+            } else {
+                s = FinSpecific.FINTAPSUSTUS_X;
+            }
         }
         dto.setFinSpecific(s.name());
         dto.setDormitory(CurriculumUtil.isVocational(cv.getCurriculum()) ? Dormitory.YHISELAMU_E.name() : null);

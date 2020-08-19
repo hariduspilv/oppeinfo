@@ -110,7 +110,7 @@ public class TimetableEventController {
 
     @GetMapping("/timetableByGroup/{school:\\d+}")
     public TimetableByGroupDto groupTimetableForWeek(@WithEntity("school") School school, @Valid TimetableEventSearchCommand criteria) {
-        return timetableEventService.groupTimetable(criteria, school);
+        return timetableEventService.groupTimetable(criteria, school, true);
     }
 
     @GetMapping("/timetableByGroup/{school:\\d+}/calendar")
@@ -133,7 +133,7 @@ public class TimetableEventController {
 
     @GetMapping("/timetableByRoom/{school:\\d+}")
     public TimetableByRoomDto roomTimetableForWeek(@WithEntity("school") School school, @Valid TimetableEventSearchCommand criteria) {
-        return timetableEventService.roomTimetable(criteria, school);
+        return timetableEventService.roomTimetable(criteria, school, true);
     }
 
     @GetMapping("/timetableByRoom/{school:\\d+}/calendar")

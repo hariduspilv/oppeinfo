@@ -116,6 +116,12 @@ public class HigherProtocolService extends AbstractProtocolService {
                     + "where cvhms.subject.id = s.id and cvhms.module.curriculumVersion.curriculum.id in (:curriculumIds)) "
                     + "or cvh_c.id in (:curriculumIds))", "curriculumIds", user.getCurriculumIds());
         }
+        
+        if (criteria.getStudentGroup() != null) {
+            qb.optionalCriteria("exists (select 1 from p.protocolStudents ps " + 
+                    " where ps.student.studentGroup.id = :studentGroupId)", "studentGroupId",
+                    criteria.getStudentGroup().getId());
+        }
 
         qb.optionalCriteria("(ssp.id is not null and exists (select 1 from ssp.teachers sspt "
                 + "where sspt.teacher.id = :teacherId) or phd.teacher.id = :teacherId)", "teacherId",
@@ -144,8 +150,32 @@ public class HigherProtocolService extends AbstractProtocolService {
         if (Boolean.TRUE.equals(criteria.getShowOnlyModuleProtocols())) {
             qb.filter("cvh.id is not null");
         }
+        Page<HigherProtocolSearchDto> page = JpaQueryUtil.pagingResult(qb, em, pageable).map(p -> HigherProtocolSearchDto.ofWithUserRights(p, user));
+        List<Long> protocolIds = page.getContent().stream().map(p -> p.getId()).collect(Collectors.toList());
+        Map<Long, List<String>> studentGroups = getProtocolStudentGroups(protocolIds);
+        return page.map(r -> {
+            r.setStudentGroups(studentGroups.get(r.getId()));
+            return r;
+        });
+    }
 
-        return JpaQueryUtil.pagingResult(qb, em, pageable).map(p -> HigherProtocolSearchDto.ofWithUserRithts(p, user));
+    private Map<Long, List<String>> getProtocolStudentGroups(List<Long> protocolIds) {
+        if(protocolIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<?> data = em.createNativeQuery("select distinct p.id as protocolId, sg.code "
+                + "from protocol p "
+                + "join protocol_student ps on ps.protocol_id = p.id "
+                + "join student s on s.id = ps.student_id "
+                + "join student_group sg on sg.id = s.student_group_id "
+                + "where p.id in (?1)")
+            .setParameter(1, protocolIds)
+            .getResultList();
+        return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                Collectors.mapping(r -> {
+                    return resultAsString(r, 1);
+                }, Collectors.toList())));
     }
 
     public HigherProtocolDto create(HoisUserDetails user, HigherProtocolCreateForm form) {
@@ -305,6 +335,9 @@ public class HigherProtocolService extends AbstractProtocolService {
                 + "where sspt.subject_study_period_id = ssp.id and sspt.teacher_id = :teacherId)",
                 "teacherId", user.getTeacherId());
         qb.optionalContains("s.name_et", "name", lookup.getName());
+        qb.optionalCriteria("exists (select 1 from subject_study_period_student_group sspsg "
+                + "where sspsg.subject_study_period_id = ssp.id "
+                + "and sspsg.student_group_id = :studentGroupId)", "studentGroupId", lookup.getStudentGroupId());
         
         List<?> data = qb.groupBy("ssp.id, s.code, s.name_et, s.name_en, s.credits")
                 .sort("s.name_et, s.name_en, teachers, s.code")
@@ -348,6 +381,7 @@ public class HigherProtocolService extends AbstractProtocolService {
                 "subjectStudyPeriodId", criteria.getSubjectStudyPeriod());
         qb.requiredCriteria("(cvh.id is null or cvh.type_code not in (:finalModuleTypes))", "finalModuleTypes",
                 HigherModuleType.FINAL_MODULES);
+        qb.optionalCriteria("sg.id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
 
         boolean repeating = ProtocolType.PROTOKOLLI_LIIK_K.name().equals(criteria.getProtocolType());
         if(repeating) {
@@ -457,7 +491,10 @@ public class HigherProtocolService extends AbstractProtocolService {
 
     public HigherProtocolDto get(HoisUserDetails user, Protocol protocol) {
         HigherProtocolDto dto = HigherProtocolDto.ofWithUserRights(user, protocol);
-
+        SubjectStudyPeriod subjectStudyPeriod = protocol.getProtocolHdata().getSubjectStudyPeriod();
+        if (subjectStudyPeriod != null) {
+            dto.setAssessmentCode(EntityUtil.getNullableCode(subjectStudyPeriod.getSubject().getAssessment()));
+        }
         Map<Long, List<HigherProtocolModuleSubjectResultDto>> subjectResults = new HashMap<>();
         Map<Long, List<ProtocolPracticeJournalResultDto>> practiceResults = new HashMap<>();
         List<Long> studentsWithNewerProtocols = studentsWithNewerProtocols(protocol);

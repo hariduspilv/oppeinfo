@@ -28,9 +28,10 @@
             <label>{{'student.result.higher.curriculumVersion' | translate}}</label>
             <hois-value value="currentLanguageNameField(student.curriculumVersion)"></hois-value>
           </md-input-container>
-          <md-input-container ng-if="student.curriculumSpeciality" flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container ng-if="student.curriculumIncludesSpecialities || student.curriculumSpeciality" flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.curriculumSpeciality' | translate}}</label>
-            <hois-value value="currentLanguageNameField(student.curriculumSpeciality)"></hois-value>
+            <hois-value ng-if="student.curriculumSpeciality" value="currentLanguageNameField(student.curriculumSpeciality)"></hois-value>
+            <hois-value ng-if="!student.curriculumSpeciality" value="'student.result.higher.notSelected' | translate" class="invalid"></hois-value>
           </md-input-container>
           <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.studyForm' | translate}}</label>

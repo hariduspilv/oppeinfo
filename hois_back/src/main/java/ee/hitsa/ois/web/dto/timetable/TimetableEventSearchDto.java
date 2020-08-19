@@ -30,6 +30,8 @@ public class TimetableEventSearchDto {
     private AutocompleteResult person;
     private Boolean isImported;
     private Boolean isJuhanEvent;
+    private Boolean isExam;
+    private Boolean isOngoing;
 
     public TimetableEventSearchDto(Long id, Long journalId, Long subjectStudyPeriodId, String nameEt, String nameEn,
             LocalDate date, LocalTime timeStart, LocalTime timeEnd, Boolean considerBreak, Boolean singleEvent,
@@ -224,5 +226,21 @@ public class TimetableEventSearchDto {
 
     public void setIsJuhanEvent(Boolean isJuhanEvent) {
         this.isJuhanEvent = isJuhanEvent;
+    }
+
+    public Boolean getIsExam() {
+        return isExam;
+    }
+
+    public void setIsExam(Boolean isExam) {
+        this.isExam = isExam;
+    }
+
+    public Boolean getIsOngoing() {
+        return isOngoing;
+    }
+
+    public void setIsOngoing(Boolean isOngoing) {
+        this.isOngoing = isOngoing;
     }
 }

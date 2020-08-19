@@ -201,7 +201,8 @@
               </td>
               <td md-cell><a ng-href="/#/declaration/studyMaterial/higher/{{subject.subjectStudyPeriod}}/view">{{'studyMaterial.openfolder' | translate}}</a></td>
               <td md-cell>
-                <a ng-if="!subject.isAssessed" class="remove nomargin" ng-click="removeSubject(subject)">&times;</a>
+                <a ng-if="!subject.isAssessed && (!auth.isStudent() || (subject.isOptional || (!subject.isOptional && declaration.isStudentDeclarationDelete)))" 
+                  class="remove nomargin" ng-click="removeSubject(subject)">&times;</a>
               </td>
             </tr>
             <tr md-row class="border-top-line" style="font-weight: bold;">

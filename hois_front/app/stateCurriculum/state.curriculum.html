@@ -118,11 +118,11 @@
         <legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: stateCurriculumForm.$submitted && stateCurriculum.occupations.length === 0 && strictValidation()}">{{'stateCurriculum.enter.occupation.acquiredMany' | translate}}&nbsp;*</legend>
 
         <md-autocomplete name="occupationInput" md-selected-item="occupation" md-search-text="queryText" md-items="item in querySearch(queryText, connection.code)"
-          md-item-text="currentLanguageNameField(item)" md-min-length="0" placeholder="{{'stateCurriculum.enter.occupation.add' | translate}}"
+          md-item-text="item | hoisValidDates" md-min-length="0" placeholder="{{'stateCurriculum.enter.occupation.add' | translate}}"
           ng-model="queryText" md-no-cache class="small-margin" md-selected-item-change="addOcupation(occupation)">
 
           <md-item-template>
-            <span md-highlight-text="queryText" md-highlight-flags="^i">{{currentLanguageNameField(item)}}</span>
+            <span md-highlight-text="queryText" md-highlight-flags="^i">{{item | hoisValidDates}}</span>
           </md-item-template>
 
           <md-not-found>
@@ -145,7 +145,7 @@
               <tr md-row ng-repeat="occupation in stateCurriculum.occupations | orderBy" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{$index + 1}}</td>
                 <td md-cell>
-                  <hois-classifier-value ng-model="occupation" main-classifier-code="KUTSE"></hois-classifier-value>
+                  <hois-classifier-value ng-model="occupation" show-date main-classifier-code="KUTSE"></hois-classifier-value>
                 </td>
                 <td md-cell><span ng-repeat="subOccupation in subOccupations[occupation] | filter:{ mainClassCode: 'OSAKUTSE'}"><span ng-if="$index > 0">; </span>{{currentLanguageNameField(subOccupation)}}
                   </span>

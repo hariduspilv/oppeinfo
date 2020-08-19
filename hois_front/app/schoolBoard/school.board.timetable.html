@@ -1,0 +1,10 @@
+<div ng-cloak ng-include="'schoolBoard/school.board.header.html'"></div>
+<div layout-padding ng-cloak>
+  <div flex>
+    <div ng-controller="SchoolBoardTimetableWeekViewController">
+      <div ng-include="'timetable/generalTimetable/timetable.week.view.html'"></div>
+    </div>
+
+    <md-button ng-click="back('#/schoolBoard/' + schoolId)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

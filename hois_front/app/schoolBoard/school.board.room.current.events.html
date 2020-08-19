@@ -1,0 +1,45 @@
+<div layout-padding ng-cloak ng-class="{'school-board-school-events': showSchoolEvents}">
+  <div flex>
+    <div flex layout="row" layout-align="center center" class="school-board-header" md-colors="{color: headerColor, 'border-color': headerColor}">
+      <span>{{'main.day.' + weekday | translate}}</span>
+      <span>&nbsp;{{currentDate | hoisDate}}</span>
+      <span>, {{room.nameEt}}</span>
+    </div>
+
+    <md-table-container>
+      <table md-table>
+        <thead md-head>
+          <tr md-row md-colors="{background: headerColor}">
+            <th md-column></th>
+            <th md-column>{{'schoolBoard.currentLessons.time' | translate}}</th>
+            <th md-column>{{'schoolBoard.currentLessons.name' | translate}}</th>
+            <th md-column>{{'schoolBoard.currentLessons.' + (school.higher ? 'teachersHigher' : 'teachersVocational') | translate}}</th>
+            <th md-column>{{'schoolBoard.currentLessons.studentGroups' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in events" ng-class="{'school-board-occupied': !row.publicEvent}" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <md-icon ng-if="row.isOngoing" md-font-set="material-icons" md-colors="{color: 'pink-500'}">pause_circle_filled</md-icon>
+              <md-icon ng-if="!row.isOngoing" md-font-set="material-icons" md-colors="{color: 'green-600'}">play_circle_filled</md-icon>
+            </td>
+            <td md-cell class="one-row">{{::row.timeStart | hoisTime}}-{{::row.timeEnd | hoisTime}}</td>
+            <td md-cell>
+              <span ng-if="row.publicEvent">{{row.nameEt}}</span>
+              <span ng-if="!row.publicEvent">{{'schoolBoard.currentLessons.occupied' | translate}}</span>
+            </td>
+            <td md-cell>
+              <span ng-repeat="teacher in row.teachers">{{::teacher.name}}{{$last ? "" : ", "}}</span>
+            </td>
+            <td md-cell>
+              <span ng-repeat="group in row.studentGroups">{{::group.code}}{{$last ? "" : ", "}}</span>
+              <span ng-repeat="subgroup in row.subgroups track by $index">{{subgroup.code}}{{$last ? '' : ', '}}</span>
+            </td>
+            <td md-cell>{{currentLanguageNameField(row.capacityType)}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </div>
+</div>

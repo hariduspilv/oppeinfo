@@ -41,4 +41,8 @@ angular.module('hitsaOis').filter('hoisDate', function ($filter) {
   return function (input) {
     return $filter('date')(input, 'yyyy');
   };
+}).filter('hoisDateShortYear', function ($filter) {
+  return function (input) {
+    return $filter('date')(input, 'dd.MM.yy');
+  };
 });

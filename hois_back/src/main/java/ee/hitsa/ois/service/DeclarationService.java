@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +60,7 @@ import ee.hitsa.ois.enums.StudyPeriodEventType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ProtocolStudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodDeclarationService;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.DeclarationUtil;
@@ -75,11 +77,13 @@ import ee.hitsa.ois.web.commandobject.DeclarationSubjectForm;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.DeclarationAutofillResponseDto;
 import ee.hitsa.ois.web.dto.DeclarationDto;
 import ee.hitsa.ois.web.dto.DeclarationSubjectDto;
 import ee.hitsa.ois.web.dto.PrerequisiteSubjectDto;
 import ee.hitsa.ois.web.dto.StudyPeriodEventDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
+import ee.hitsa.ois.web.dto.SubjectStudyPeriodSearchDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodSubgroupDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 
@@ -93,6 +97,8 @@ public class DeclarationService {
     private EntityManager em;
     @Autowired
     private ProtocolStudentRepository protocolStudentRepository;
+    @Autowired
+    private SubjectStudyPeriodDeclarationService subjectStudyPeriodDeclarationService;
     
     private static final String DECLARATION_PERIOD_EVENT_TYPE = "SYNDMUS_DEKP";
 
@@ -841,5 +847,33 @@ public class DeclarationService {
                     new AutocompleteResult(resultAsLong(r, 6), resultAsString(r, 7), resultAsString(r, 7)));
             return dto;
         });
+    }
+
+    public DeclarationAutofillResponseDto addSubjectsToDeclaration(StudyPeriod studyPeriod, Long schoolId) {
+        DeclarationAutofillResponseDto dto = new DeclarationAutofillResponseDto();
+        Set<Long> studentIdsTotal = new HashSet<>();
+        List<SubjectStudyPeriodSearchDto> subjectStudyPeriodsResponse = new ArrayList<>();
+        List<SubjectStudyPeriod> subjectStudyPeriods = em.createQuery("select ssp from SubjectStudyPeriod ssp "
+                + "where ssp.studyPeriod.id = ?1 "
+                + "and ssp.subject.school.id = ?2", SubjectStudyPeriod.class)
+                .setParameter(1, EntityUtil.getId(studyPeriod))
+                .setParameter(2, schoolId).getResultList();
+        for (SubjectStudyPeriod subjectStudyPeriod : subjectStudyPeriods) {
+            if (SubjectStudyPeriodDeclarationService.addToDeclarationsByStudentGroup(subjectStudyPeriod) || SubjectStudyPeriodDeclarationService.addToDeclarationsByCurriculum(subjectStudyPeriod)) {
+                List<Long> studentIds = subjectStudyPeriodDeclarationService.addToDeclarations(subjectStudyPeriod, true);
+                // adding to set keeps unique IDs, makes IDs countable
+                studentIdsTotal.addAll(studentIds);
+            } else if (subjectStudyPeriod.getDeclarationType() == null) {
+                SubjectStudyPeriodSearchDto ssp = new SubjectStudyPeriodSearchDto();
+                ssp.setTeachers(PersonUtil.sorted(subjectStudyPeriod.getTeachers().stream().map(t -> t.getTeacher().getPerson())));
+                ssp.setId(EntityUtil.getId(subjectStudyPeriod));
+                ssp.setSubject(AutocompleteResult.of(subjectStudyPeriod.getSubject()));
+                ssp.setStudyPeriod(AutocompleteResult.ofWithYear(subjectStudyPeriod.getStudyPeriod()));
+                subjectStudyPeriodsResponse.add(ssp);
+            }
+        }
+        dto.setSubjectStudyPeriods(subjectStudyPeriodsResponse);
+        dto.setChangedDeclarations(Long.valueOf(studentIdsTotal.size()));
+        return dto;
     }
 }

@@ -44,6 +44,7 @@ public class Journal extends BaseEntityWithId {
     private String untisCode;
     @Column(name = "is_capacity_diff")
     private Boolean capacityDiff;
+    private Boolean addStudents;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
@@ -164,6 +165,30 @@ public class Journal extends BaseEntityWithId {
         this.reviewInfo = reviewInfo;
     }
 
+    public String getUntisCode() {
+        return untisCode;
+    }
+
+    public void setUntisCode(String untisCode) {
+        this.untisCode = untisCode;
+    }
+
+    public Boolean getCapacityDiff() {
+        return capacityDiff;
+    }
+
+    public void setCapacityDiff(Boolean capacityDiff) {
+        this.capacityDiff = capacityDiff;
+    }
+
+    public Boolean getAddStudents() {
+        return addStudents;
+    }
+
+    public void setAddStudents(Boolean addStudents) {
+        this.addStudents = addStudents;
+    }
+
     public List<JournalTeacher> getJournalTeachers() {
         return journalTeachers != null ?  journalTeachers : (journalTeachers = new ArrayList<>());
     }
@@ -226,22 +251,6 @@ public class Journal extends BaseEntityWithId {
 
     public void setAddModuleOutcomes(Boolean addModuleOutcomes) {
         this.addModuleOutcomes = addModuleOutcomes;
-    }
-
-	public String getUntisCode() {
-		return untisCode;
-	}
-
-	public void setUntisCode(String untisCode) {
-		this.untisCode = untisCode;
-	}
-    
-    public Boolean getCapacityDiff() {
-        return capacityDiff;
-    }
-
-    public void setCapacityDiff(Boolean capacityDiff) {
-        this.capacityDiff = capacityDiff;
     }
 
 }

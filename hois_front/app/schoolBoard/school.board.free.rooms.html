@@ -1,0 +1,43 @@
+<div ng-cloak ng-include="'schoolBoard/school.board.header.html'"></div>
+<div ng-cloak ng-include="'schoolBoard/school.board.free.rooms.navbar.html'"></div>
+<div layout-padding ng-cloak>
+  <div flex>
+    <div>{{currentDate | hoisDateTimeMin}}</div>
+    <div>&nbsp;</div>
+
+    <md-table-container>
+      <table md-table md-progress="rooms.$promise">
+        <thead md-head>
+          <tr md-row>
+            <th md-column>{{'schoolBoard.freeRooms.room' | translate}}</th>
+            <th md-column>{{'schoolBoard.freeRooms.roomName' | translate}}</th>
+            <th md-column>{{'schoolBoard.freeRooms.places' | translate}}</th>
+            <th md-column>{{'schoolBoard.freeRooms.equipment' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in rooms.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <a ng-href="/#/schoolBoard/{{::schoolId}}/room/{{::row.id}}">{{::row.buildingCode}} - {{::row.roomCode}}</a>
+            </td>
+            <td md-cell>{{::row.roomName}}</td>
+            <td md-cell>{{::row.places}}</td>
+            <td md-cell>
+              <table>
+                <tr ng-repeat="device in row.equipment">
+                  <td><hois-classifier-value ng-model="device.equipment" main-classifier-code="SEADMED"></hois-classifier-value></td>
+                  <td>{{::device.equipmentCount}}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+
+    <md-table-pagination md-limit="criteria.size" md-page="criteria.page" md-total="{{rooms.totalElements}}"
+      md-on-paginate="loadRooms" md-label="{of: '{{'main.of' | translate}}'}"></md-table-pagination>
+
+    <md-button ng-href="#/schoolBoard/{{schoolId}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

@@ -9,6 +9,7 @@ import javax.jws.HandlerChain;
 import javax.jws.WebService;
 import javax.persistence.EntityManager;
 
+import ee.hitsa.ois.service.DirectiveConfirmInternalService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +57,8 @@ public class EkisSoapService implements EkisTahvelPort {
     @Autowired
     private DirectiveConfirmService directiveConfirmService;
     @Autowired
+    private DirectiveConfirmInternalService directiveConfirmInternalService;
+    @Autowired
     private JobService jobService;
 
     @Override
@@ -86,7 +89,7 @@ public class EkisSoapService implements EkisTahvelPort {
         log.info("EkisSoapService: enforceDirective");
         LocalDate directiveDate = DateUtils.toLocalDate(request.getDirectiveDate());
         Directive directive = withExceptionHandler(() -> {
-            Directive d = directiveConfirmService.confirmedByEkis(request.getOisDirectiveId(), request.getDirectiveNumber(), directiveDate,
+            Directive d = directiveConfirmInternalService.confirmedByEkis(request.getOisDirectiveId(), request.getDirectiveNumber(), directiveDate,
                     request.getPreamble(), request.getWdDirectiveId(), request.getSignerIDCode(), request.getSignerName());
             jobService.directiveConfirmed(EntityUtil.getId(d));
             return d;

@@ -54,6 +54,27 @@ public class SubjectStudyPeriodSearchService {
             + "from subject_study_period_teacher sspt "
             + "where sspt.teacher_id = :teacherId "
             + "and sspt.subject_study_period_id = ssp.id)";
+    
+    private static final String FILTER_BY_STUDENT_GROUP_ID = "exists"
+            + "(select spsg.id " 
+            + "from subject_study_period_student_group spsg "
+            + "where spsg.student_group_id = :studentGroupId "
+            + "and spsg.subject_study_period_id = ssp.id)";
+    
+    private static final String FILTER_BY_CURRICULUM_ID = "(exists"
+            + "(select spsg.id " 
+            + "from subject_study_period_student_group spsg "
+            + "join student_group sg on spsg.student_group_id = sg.id "
+            + "where sg.curriculum_id = :curriculumId "
+            + "and spsg.subject_study_period_id = ssp.id) "
+            + "or exists"
+            + "(select c.id "
+            + "from curriculum c "
+            + "join curriculum_version cv on cv.curriculum_id = c.id "
+            + "join curriculum_version_hmodule cvh on cvh.curriculum_version_id = cv.id "
+            + "join curriculum_version_hmodule_subject cvhs on cvhs.curriculum_version_hmodule_id = cvh.id "
+            + "where cvhs.subject_id = s.id "
+            + "and c.id = :curriculumId))";
 
     private static final String FILTER_BY_DECLARED_STUDENT_ID = "exists("
             + "select * "
@@ -110,6 +131,12 @@ public class SubjectStudyPeriodSearchService {
         if (criteria.getTeacherObject() != null) {
             qb.requiredCriteria(FILTER_BY_TEACHER_ID, "teacherId", criteria.getTeacherObject().getId());
         }
+        if (criteria.getStudentGroupObject() != null) {
+            qb.requiredCriteria(FILTER_BY_STUDENT_GROUP_ID, "studentGroupId", criteria.getStudentGroupObject().getId());
+        }
+        if (criteria.getCurriculumObject() != null) {
+            qb.requiredCriteria(FILTER_BY_CURRICULUM_ID, "curriculumId", criteria.getCurriculumObject().getId());
+        }
         qb.optionalCriteria("s.id = :subjectId", "subjectId", criteria.getSubjectObject());
         qb.optionalCriteria("sp.id in (:studyPeriods)", "studyPeriods", criteria.getStudyPeriods());
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
@@ -126,6 +153,7 @@ public class SubjectStudyPeriodSearchService {
         List<Long> sspIds = StreamUtil.toMappedList(r -> resultAsLong(r, 0), results.getContent());
         Map<Long, List<SubjectProgramResult>> teachersAndPrograms = teachersAndProgramsForSubjectStudyPeriods(sspIds);
         Map<Long, Integer> subgroupCount = subgroupsQueryForSubjectStudyPeriods(sspIds);
+        Map<Long, String> studentgroups = studentgroupsQueryForSubjectStudyPeriods(sspIds);
         Long currentStudyPeriod = studyYearService.getCurrentStudyPeriod(user.getSchoolId());
         return results.map(r -> {
             SubjectStudyPeriodSearchDto dto = new SubjectStudyPeriodSearchDto();
@@ -146,6 +174,7 @@ public class SubjectStudyPeriodSearchService {
                 }
             }
             dto.setSubgroups(subgroupCount.get(dto.getId()));
+            dto.setStudentgroups(studentgroups.get(dto.getId()));
             dto.setCanEdit(Boolean.valueOf(SubjectStudyPeriodUtil.canUpdateSearchResult(user,
                     dto.getStudyPeriod().getId(), currentStudyPeriod)));
             return dto;
@@ -200,5 +229,22 @@ public class SubjectStudyPeriodSearchService {
             .getResultList();
         
         return results.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> resultAsInteger(r, 1), (o, n) -> o));
+    }
+    
+    private Map<Long, String> studentgroupsQueryForSubjectStudyPeriods(List<Long> subjectStudyPeriods) {
+        if (subjectStudyPeriods.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        
+        List<?> results = em.createNativeQuery("select ssp.id, string_agg(sg.code, ', ' order by sg.code) "
+                + "from subject_study_period ssp "
+                + "join subject_study_period_student_group spsg on spsg.subject_study_period_id = ssp.id "
+                + "join student_group sg on spsg.student_group_id = sg.id "
+                + "where ssp.id in ?1 "
+                + "group by ssp.id")
+            .setParameter(1, subjectStudyPeriods)
+            .getResultList();
+        
+        return results.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> resultAsString(r, 1), (o, n) -> o));
     }
 }

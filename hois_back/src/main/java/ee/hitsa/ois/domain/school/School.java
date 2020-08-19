@@ -79,6 +79,8 @@ public class School extends BaseEntityWithId implements Translatable {
     private Boolean isNotPublicTimetable = Boolean.FALSE;
     private Boolean isNotPublicCurriculum = Boolean.FALSE;
     private Boolean isNotPublicSubject = Boolean.FALSE;
+    private Boolean isNotAbsence = Boolean.FALSE;
+    private Boolean isStudentDeclarationDelete = Boolean.TRUE;
     private String contractText;
     @JsonIgnore
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -417,6 +419,22 @@ public class School extends BaseEntityWithId implements Translatable {
     public void setScholarshipNoApplicationTypes(Set<ScholarshipNoApplication> scholarshipNoApplicationTypes) {
         getScholarshipNoApplicationTypes().clear();
         getScholarshipNoApplicationTypes().addAll(scholarshipNoApplicationTypes);
+    }
+
+    public Boolean getIsNotAbsence() {
+        return isNotAbsence;
+    }
+
+    public void setIsNotAbsence(Boolean isNotAbsence) {
+        this.isNotAbsence = isNotAbsence;
+    }
+
+    public Boolean getIsStudentDeclarationDelete() {
+        return isStudentDeclarationDelete;
+    }
+
+    public void setIsStudentDeclarationDelete(Boolean isStudentDeclarationDelete) {
+        this.isStudentDeclarationDelete = isStudentDeclarationDelete;
     }
 
 }

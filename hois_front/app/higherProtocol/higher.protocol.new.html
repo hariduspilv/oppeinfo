@@ -18,7 +18,7 @@
       </div>
 
       <div ng-if="!moduleProtocols">
-        <div layout="row" layout-sm="column" layout-xs="column">
+        <div layout="row" layout-xs="column">
           <div layout="row">
             <md-input-container style="width: 340px;" flex-sm="100">
               <label class="textInput">{{'higherProtocol.studyPeriod' | translate}}</label>
@@ -26,29 +26,39 @@
                 sorted-query="true" preselect-current required></hois-select>
             </md-input-container>
           </div>
-          <div layout="row" flex="100">
-            <hois-autocomplete ng-if="auth.isAdmin()" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0" flex="100"
-              ng-model="record.subjectStudyPeriod" url="/higherProtocols/subjectStudyPeriods"
-              additional-query-params="{studyPeriodId: record.studyPeriod}"
-              label="higherProtocol.subject" required no-paging="true" ha-attribute="id">
+          <div layout="row" style="max-width: 344px;" flex="100" flex-offset="5" flex-offset-xs="0">
+            <hois-autocomplete style="width: 100%"
+                               additional-query-params="{valid: true}"
+                               ng-model="record.studentGroup" ha-controller="directiveControllers"
+                               method="studentgroups" name="studentGroup" label="{{'student.studentGroup'}}"></hois-autocomplete>
+          </div>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <div layout="column">
+            <div>&nbsp;</div>
+            <div layout="row">
+              <label style="width: 100px;" class="common-label">{{'higherProtocol.type' | translate}}</label>
+              <md-input-container>
+                <md-radio-group layout="row" class="md-primary" ng-model="record.protocolType">
+                  <md-radio-button value="PROTOKOLLI_LIIK_P" aria-label="{{currentLanguageNameField(protocolTypes['PROTOKOLLI_LIIK_P'])}}">
+                    {{currentLanguageNameField(protocolTypes['PROTOKOLLI_LIIK_P'])}}</md-radio-button>
+                  <md-radio-button value="PROTOKOLLI_LIIK_K" aria-label="{{currentLanguageNameField(protocolTypes['PROTOKOLLI_LIIK_K'])}}">
+                    {{currentLanguageNameField(protocolTypes['PROTOKOLLI_LIIK_K'])}}</md-radio-button>
+                </md-radio-group>
+              </md-input-container>
+            </div>
+          </div>
+          <div layout="row" flex="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
+            <hois-autocomplete ng-if="auth.isAdmin()" flex
+                               ng-model="record.subjectStudyPeriod" url="/higherProtocols/subjectStudyPeriods"
+                               additional-query-params="{studyPeriodId: record.studyPeriod, studentGroupId: record.studentGroup.id}"
+                               label="higherProtocol.subject" required no-paging="true" ha-attribute="id">
             </hois-autocomplete>
-            <md-input-container ng-if="auth.isTeacher()" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0" flex="100">
+            <md-input-container ng-if="auth.isTeacher()" flex>
               <label class="textInput">{{'higherProtocol.subject' | translate}}</label>
               <hois-select ng-model="record.subjectStudyPeriod" values="subjectStudyPeriods" required></hois-select>
             </md-input-container>
           </div>
-        </div>
-        <div>&nbsp;</div>
-        <div layout="row">
-          <label style="width: 100px;" class="common-label">{{'higherProtocol.type' | translate}}</label>
-          <md-input-container>
-            <md-radio-group layout="row" class="md-primary" ng-model="record.protocolType">
-              <md-radio-button value="PROTOKOLLI_LIIK_P" aria-label="{{currentLanguageNameField(protocolTypes['PROTOKOLLI_LIIK_P'])}}">
-                {{currentLanguageNameField(protocolTypes['PROTOKOLLI_LIIK_P'])}}</md-radio-button>
-              <md-radio-button value="PROTOKOLLI_LIIK_K" aria-label="{{currentLanguageNameField(protocolTypes['PROTOKOLLI_LIIK_K'])}}">
-                {{currentLanguageNameField(protocolTypes['PROTOKOLLI_LIIK_K'])}}</md-radio-button>
-            </md-radio-group>
-          </md-input-container>
         </div>
       </div>
 

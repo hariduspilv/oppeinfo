@@ -37,6 +37,7 @@ angular.module('hitsaOis')
 
     function openPage() {
       //$scope.closeMenu();
+      $scope.showNavigation = path().indexOf('/schoolBoard') === -1;
 
       if (self.autoFocusContent) {
         focusMainContent();

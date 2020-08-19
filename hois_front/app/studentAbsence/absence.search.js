@@ -1,13 +1,18 @@
 'use strict';
 
 angular.module('hitsaOis').controller('StudentAbsenceController',
-  ['$route', '$scope', '$timeout', 'ArrayUtils', 'DataUtils', 'QueryUtils', 'dialogService', 'message', function ($route, $scope, $timeout, ArrayUtils, DataUtils, QueryUtils, dialogService, message) {
+  ['$route', '$scope', '$timeout', 'ArrayUtils', 'DataUtils', 'QueryUtils', 'dialogService', 'message', '$location',
+    function ($route, $scope, $timeout, ArrayUtils, DataUtils, QueryUtils, dialogService, message, $location) {
     // same constant that is in journal.edit.js
     var LESSONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
 
     QueryUtils.createQueryForm($scope, '/absences', {order: '-sa.inserted', status: 'isNotAccepted'});
     DataUtils.convertStringToDates($scope.criteria, ['validFrom', 'validThru']);
     $scope.auth = $route.current.locals.auth;
+    if ($scope.auth.school.notAbsence) {
+      message.error('main.messages.error.nopermission');
+      return $location.path('');
+    }
     $scope.statusChanged = statusChanged;
 
     statusChanged();

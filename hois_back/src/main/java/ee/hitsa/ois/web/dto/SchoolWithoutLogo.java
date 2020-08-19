@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
+import ee.hitsa.ois.domain.school.School;
+
 public class SchoolWithoutLogo {
 
     private final Long id;
@@ -23,6 +25,19 @@ public class SchoolWithoutLogo {
         this.nameEt = nameEt;
         this.nameEn = nameEn;
         this.email = email;
+    }
+
+    public SchoolWithoutLogo(School school) {
+        this.id = school.getId();
+        this.code = school.getCode();
+        this.nameEt = school.getNameEt();
+        this.nameEn = school.getNameEn();
+        this.email = school.getEmail();
+
+        this.isNotPublic = school.getIsNotPublic();
+        this.isNotPublicTimetable = school.getIsNotPublicTimetable();
+        this.isNotPublicCurriculum = school.getIsNotPublicCurriculum();
+        this.isNotPublicSubject = school.getIsNotPublicSubject();
     }
 
     public Long getId() {

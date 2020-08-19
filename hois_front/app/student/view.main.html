@@ -51,6 +51,10 @@
       <div flex="30">
         <img ng-if="student.photo" flex="60" style="display: block; margin-left: auto; margin-right: auto; padding-bottom: 13px;"
         ng-src="{{student.imageUrl}}">
+        <div layout="row" layout-align="center center">
+          <md-button ng-if="student.userCanRequestPhotoBoxPhoto" ng-click="requestPhotoBoxPhoto()"
+             class="md-raised">{{'student.photoBox.update' | translate}}</md-button>
+        </div>
       </div>
     </div>
 
@@ -76,9 +80,10 @@
             <label class="textInput">{{'studentGroup.speciality' | translate}}</label>
             <hois-classifier-value ng-model="student.speciality" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
           </md-input-container>
-          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!student.isVocational && student.curriculumSpeciality">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!student.isVocational && (student.curriculumIncludesSpecialities || student.curriculumSpeciality)">
             <label>{{'student.curriculumSpeciality' | translate}}</label>
-            <hois-value value="currentLanguageNameField(student.curriculumSpeciality)"></hois-value>
+            <hois-value ng-if="student.curriculumSpeciality" value="currentLanguageNameField(student.curriculumSpeciality)"></hois-value>
+            <hois-value ng-if="!student.curriculumSpeciality" value="'student.result.higher.notSelected' | translate" class="invalid"></hois-value>
           </md-input-container>
         </div>
 
@@ -335,7 +340,7 @@
     </div>
 
     <div class="top-margin">
-      <hois-collapsable label="('student.specialNeeds' | translate)" ng-if="(student.userIsSchoolAdmin || student.userIsStudentGroupTeacher) && !student.isGuestStudent">
+      <hois-collapsable label="('student.specialNeeds' | translate)" ng-if="(student.userIsSchoolAdmin || student.userIsLeadingTeacher || student.userIsStudentGroupTeacher || auth.isStudent() || auth.isParent()) && !student.isGuestStudent">
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="35" flex-sm="100" flex-xs="100">
@@ -395,9 +400,9 @@
       </hois-collapsable>
     </div>
 
-    <md-button ng-href="#/students/{{student.id}}/edit" ng-if="student.userCanEditStudent"
+    <md-button ng-if="student.userCanEditStudent" ng-href="#/students/{{student.id}}/edit"
       class="md-primary md-raised">{{'main.button.change' | translate}}</md-button>
-    <md-button ng-click="updatePersonData() && student.person.idcode" ng-if="student.userCanUpdateRR"
+    <md-button ng-if="student.userCanUpdateRR && student.person.idcode" ng-click="updatePersonData()"
       class="md-raised">{{'rr.operations.updateStudentData.button' | translate}}</md-button>
     <md-button ng-if="!auth.isStudent() && !auth.isParent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>

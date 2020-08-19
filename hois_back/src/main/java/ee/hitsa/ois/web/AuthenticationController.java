@@ -125,8 +125,8 @@ public class AuthenticationController {
         MobileIdSessionResponse result = new MobileIdSessionResponse();
         String token = Jwts.builder()
                 .setSubject(idcode)
-                .claim(hoisJwtProperties.getClaimIdcode(), idcode)
-                .claim(hoisJwtProperties.getClaimMobileNumber(), mobileNumber)
+                .claim(hoisJwtProperties.getClaimIdcode(), session.getIdcode())
+                .claim(hoisJwtProperties.getClaimMobileNumber(), session.getMobileNumber())
                 .claim(hoisJwtProperties.getClaimAuthHash(), session.getAuthenticationHash())
                 .setExpiration(new Date(System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(4)))
                 .signWith(SignatureAlgorithm.HS512, hoisJwtProperties.getSecret())

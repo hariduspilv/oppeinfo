@@ -108,7 +108,9 @@ public abstract class UserUtil {
 
     public static boolean canEditDirective(HoisUserDetails user, Directive directive) {
         return ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, directive.getStatus())
-            && isSchoolAdmin(user, directive.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KASKKIRI);
+            && isSchoolAdmin(user, directive.getSchool()) && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KASKKIRI)
+            && !((ClassifierUtil.equals(DirectiveType.KASKKIRI_TUGI, directive.getType()) || ClassifierUtil.equals(DirectiveType.KASKKIRI_TUGILOPP, directive.getType()))
+            && !hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_TUGITEENUS));
     }
 
     public static boolean canViewStudent(HoisUserDetails user, Student student) {
@@ -142,6 +144,15 @@ public abstract class UserUtil {
                 isStudentRepresentative(user, student) ||
                 (isStudent(user, student) && StudentUtil.isAdultAndDoNotNeedRepresentative(student))
                 );
+    }
+
+    public static boolean canRequestFotoBoxPhotos(HoisUserDetails user) {
+        return user.isSchoolAdmin() && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR);
+    }
+
+    public static boolean canRequestStudentFotoBoxPhoto(HoisUserDetails user, Student student) {
+        return StudentUtil.isActive(student) && isSchoolAdmin(user, student.getSchool())
+                && hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR);
     }
 
     public static boolean canViewStudentSupportServices(HoisUserDetails user, Student student) {

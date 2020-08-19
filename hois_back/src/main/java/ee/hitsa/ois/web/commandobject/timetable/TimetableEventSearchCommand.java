@@ -28,6 +28,7 @@ public class TimetableEventSearchCommand {
     private Long user;
     private Boolean leadingTeacherEvents;
     private TimetablePersonHolder person; // for personal timetables accessed by encoded url
+    private Boolean schoolBoard;
 
     public String getName() {
         return name;
@@ -197,4 +198,11 @@ public class TimetableEventSearchCommand {
         this.person = person;
     }
 
+    public Boolean getSchoolBoard() {
+        return schoolBoard;
+    }
+
+    public void setSchoolBoard(Boolean schoolBoard) {
+        this.schoolBoard = schoolBoard;
+    }
 }

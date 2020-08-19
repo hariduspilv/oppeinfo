@@ -34,6 +34,16 @@
           </md-select>
         </md-input-container>
       </div>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <div flex="45" flex-sm="100" flex-xs="100">
+          <hois-autocomplete ng-model="criteria.studentGroupObject" ha-controller="directiveControllers"
+            method="studentgroups" name="studentGroup" label="{{'student.studentGroup'}}"></hois-autocomplete>
+        </div>
+        <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <hois-autocomplete ha-controller="directiveControllers" ng-model="criteria.curriculumObject" 
+            method="curriculums" name="curriculum" label="subjectStudyPeriod.curriculum"></hois-autocomplete>
+        </div>
+      </div>
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
@@ -53,6 +63,7 @@
             <th md-column>{{'subjectStudyPeriod.eap' | translate}}</th>
             <th md-column md-order-by="sp.{{currentLanguageNameField()}}">{{'subjectStudyPeriod.studyPeriod' | translate}}</th>
             <th md-column md-order-by="declared_students">{{'subjectStudyPeriod.declaredStudentsNumber' | translate}}</th>
+            <th md-column>{{'subjectStudyPeriod.studentgroup' | translate}}</th>
             <th md-column>{{'subjectStudyPeriod.subgroupsNumber' | translate}}</th>
             <th md-column>{{'subjectProgram.label' | translate}}</th>
             <th md-column></th>
@@ -71,6 +82,7 @@
             <td md-cell>{{::row.credits}}</td>
             <td md-cell>{{currentLanguageNameField(row.studyPeriod)}}</td>
             <td md-cell><a href="#/subjectStudyPeriods/{{::row.id}}/midtermTasks/studentResults">{{::row.studentsNumber}}</a></td>
+            <td md-cell>{{::row.studentgroups}}</td>
             <td md-cell>{{::row.subgroups}}</td>
             <td md-cell ng-if="auth.isTeacher()">
               <p class="nomargin">

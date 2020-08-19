@@ -8,8 +8,10 @@ import ee.hitsa.ois.web.commandobject.RoomForm.RoomEquipmentCommand;
 public class TimetableEventRoomSearchDto {
 
     private Long id;
-    private String room;
-    private String building;
+    private String roomCode;
+    private String roomName;
+    private String buildingCode;
+    private String buildingName;
     private LocalDate startDate;
     private LocalDate endDate;
     private List<String> times;
@@ -26,20 +28,36 @@ public class TimetableEventRoomSearchDto {
         this.id = id;
     }
 
-    public String getRoom() {
-        return room;
+    public String getRoomCode() {
+        return roomCode;
     }
 
-    public void setRoom(String room) {
-        this.room = room;
+    public void setRoomCode(String roomCode) {
+        this.roomCode = roomCode;
     }
 
-    public String getBuilding() {
-        return building;
+    public String getRoomName() {
+        return roomName;
     }
 
-    public void setBuilding(String building) {
-        this.building = building;
+    public void setRoomName(String roomName) {
+        this.roomName = roomName;
+    }
+
+    public String getBuildingCode() {
+        return buildingCode;
+    }
+
+    public void setBuildingCode(String buildingCode) {
+        this.buildingCode = buildingCode;
+    }
+
+    public String getBuildingName() {
+        return buildingName;
+    }
+
+    public void setBuildingName(String buildingName) {
+        this.buildingName = buildingName;
     }
 
     public LocalDate getStartDate() {

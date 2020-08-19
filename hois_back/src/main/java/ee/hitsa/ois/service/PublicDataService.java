@@ -29,6 +29,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
@@ -87,6 +88,10 @@ public class PublicDataService {
             return null;
         }
         return academicCalendarService.academicCalendar(schoolId);
+    }
+    
+    public AcademicCalendarDto academicCalendar(School school, StudyYear studyYear) {
+        return academicCalendarService.academicCalendar(EntityUtil.getId(school), studyYear);
     }
 
     public Object curriculum(Long curriculumId) {

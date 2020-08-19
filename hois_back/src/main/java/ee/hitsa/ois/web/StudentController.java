@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,8 @@ import javax.validation.Valid;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.student.StudentCurriculumCompletionHigherModule;
+import ee.hitsa.ois.service.fotobox.FotoBoxService;
+import ee.hitsa.ois.web.commandobject.OisFileCommand;
 import ee.hitsa.ois.web.dto.student.StudentHigherProgressDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -116,6 +119,8 @@ public class StudentController {
     private EntityManager em;
     @Autowired
     private AsyncManager asyncManager;
+    @Autowired
+    private FotoBoxService fotoBoxService;
 
     @GetMapping
     public Page<StudentSearchDto> search(HoisUserDetails user, @Valid StudentSearchCommand criteria,
@@ -217,7 +222,7 @@ public class StudentController {
     @GetMapping("/{id:\\d+}/applications")
     public Page<StudentApplicationDto> applications(HoisUserDetails user, @WithEntity Student student, Pageable pageable) {
         UserUtil.assertCanViewStudentSpecificData(user, student);
-        return studentService.applications(EntityUtil.getId(student), pageable);
+        return studentService.applications(EntityUtil.getId(student), pageable, user);
     }
 
     @GetMapping("/{id:\\d+}/directives")
@@ -427,6 +432,31 @@ public class StudentController {
     public StudentHigherProgressDto progress(HoisUserDetails user, @WithEntity Student student) {
         UserUtil.assertCanViewStudentSpecificData(user, student);
         return studentResultHigherService.progress(student);
+    }
+
+    @GetMapping("/{id:\\d+}/requestStudentPhoto")
+    public OisFileCommand requestStudentPhoto(HoisUserDetails user, @WithEntity Student student) throws IOException {
+        UserUtil.throwAccessDeniedIf(!UserUtil.canRequestStudentFotoBoxPhoto(user, student));
+        return fotoBoxService.requestStudentPhoto(user, student);
+    }
+
+    @GetMapping("/studentsWithoutPhoto")
+    public Map<String, Object> studentsWithoutPhoto(HoisUserDetails user) {
+        UserUtil.throwAccessDeniedIf(!UserUtil.canRequestFotoBoxPhotos(user));
+        return Collections.singletonMap("count", fotoBoxService.studentsWithoutPhoto(user.getSchoolId()));
+    }
+
+    @PostMapping("/studentsWithoutPhotoRequest")
+    public Map<String, Object> studentsWithoutPhotoRequest(HoisUserDetails user) {
+        UserUtil.throwAccessDeniedIf(!UserUtil.canRequestFotoBoxPhotos(user));
+        String requestHash = fotoBoxService.studentsWithoutPhotoAsyncRequest(user.getSchoolId(), user.getUsername());
+        return Collections.singletonMap("key", requestHash);
+    }
+
+    @GetMapping("/studentsWithoutPhotoRequestStatus")
+    public FutureStatusResponse studentsWithoutPhotoRequestStatus(HoisUserDetails user, @RequestParam String key) {
+        assertIsSchoolAdmin(user);
+        return asyncManager.getState(user, AsyncMemoryManager.FOTOBOX, key, true);
     }
 
     /**

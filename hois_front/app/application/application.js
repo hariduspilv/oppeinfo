@@ -15,6 +15,9 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
   $scope.isView = $route.current.locals.isView;
   $scope.now = new Date();
   $scope.formState = {};
+  if ($scope.auth.isAdmin() && !AuthService.isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS')) {
+    $scope.formState.excludedTypes = ["AVALDUS_LIIK_TUGI"];
+  }
 
   function entityToForm(savedApplication) {
     DataUtils.convertStringToDates(savedApplication, ['startDate', 'endDate']);
@@ -39,6 +42,12 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     entity.$promise.then(function (response) {
       if (!$scope.isView) {
         if (!canChange(response)) {
+          message.error('main.messages.error.nopermission');
+          $scope.back("#/");
+        }
+      } else {
+        if ($scope.auth.isAdmin() && 
+          response.type === 'AVALDUS_LIIK_TUGI' && !AuthService.isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS') && !response.isConnectedByCommittee) {
           message.error('main.messages.error.nopermission');
           $scope.back("#/");
         }
@@ -77,7 +86,10 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     } else if (application.status === 'AVALDUS_STAATUS_KINNITATUD') {
       confirmedApplicationPerm = application.type === 'AVALDUS_LIIK_RAKKAVA' && application.canChangeThemeReplacements;
     }
-
+    if (($scope.auth.isAdmin() && 
+      application.type === 'AVALDUS_LIIK_TUGI' && !AuthService.isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS') && !application.isConnectedByCommittee)) {
+      return false;
+    }
     return application.canEditStudent && (createdApplicationPerm || reviewApplicationPerm || confirmedApplicationPerm);
   }
 

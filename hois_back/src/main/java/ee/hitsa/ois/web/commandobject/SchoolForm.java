@@ -61,6 +61,8 @@ public class SchoolForm extends VersionedCommand {
     private Boolean isNotPublicTimetable;
     private Boolean isNotPublicCurriculum;
     private Boolean isNotPublicSubject;
+    private Boolean isNotAbsence;
+    private Boolean isStudentDeclarationDelete;
     @Required
     @ClassifierRestriction(MainClassCode.FOTOLISA)
     private String studentPhotoAdd;
@@ -355,5 +357,21 @@ public class SchoolForm extends VersionedCommand {
 
     public void setIsNotPublicSubject(Boolean isNotPublicSubject) {
         this.isNotPublicSubject = isNotPublicSubject;
+    }
+
+    public Boolean getIsNotAbsence() {
+        return isNotAbsence;
+    }
+
+    public void setIsNotAbsence(Boolean isNotAbsence) {
+        this.isNotAbsence = isNotAbsence;
+    }
+
+    public Boolean getIsStudentDeclarationDelete() {
+        return isStudentDeclarationDelete;
+    }
+
+    public void setIsStudentDeclarationDelete(Boolean isStudentDeclarationDelete) {
+        this.isStudentDeclarationDelete = isStudentDeclarationDelete;
     }
 }

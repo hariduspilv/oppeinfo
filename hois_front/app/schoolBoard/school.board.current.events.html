@@ -1,0 +1,47 @@
+<div layout-padding ng-cloak class="school-board-school-events">
+  <div flex>
+    <div flex layout="row" layout-align="center center" class="school-board-header" md-colors="{color: headerColor, 'border-color': headerColor}">
+      <span>{{'main.day.' + weekday | translate}}</span>
+      <span>&nbsp;{{currentDate | hoisDate}}</span>
+    </div>
+
+    <md-table-container>
+      <table md-table>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in events" ng-class="{'school-board-occupied': !row.publicEvent}" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <md-icon ng-if="row.isOngoing" md-font-set="material-icons" md-colors="{color: 'pink-500'}">pause_circle_filled</md-icon>
+              <md-icon ng-if="!row.isOngoing" md-font-set="material-icons" md-colors="{color: 'green-600'}">play_circle_filled</md-icon>
+            </td>
+            <td md-cell class="one-row">
+              <strong>{{::row.timeStart | hoisTime}}-{{::row.timeEnd | hoisTime}}</strong>
+            </td>
+            <td md-cell>
+              <span>
+                <span ng-if="row.publicEvent">{{row.nameEt}}</span>
+                <span ng-if="!row.publicEvent">{{'schoolBoard.currentLessons.occupied' | translate}}</span>
+              </span>
+              <span>
+                <i ng-repeat="teacher in row.teachers">{{::teacher.name}}{{$last ? "" : ", "}}</i>
+              </span>
+              <span ng-if="row.studentGroups.length > 0">
+                [<span ng-repeat="group in row.studentGroups">{{::group.code}}{{$last ? "" : ", "}}</span>]
+              </span>
+              <span ng-if="row.subgroups.length > 0">
+                [<span ng-repeat="subgroup in row.subgroups track by $index">{{subgroup.code}}{{$last ? '' : ', '}}</span>]
+              </span>
+              <span class="school-board-capacity-type">{{currentLanguageNameField(row.capacityType)}}</span>
+              <strong style="float: right;">
+                <span ng-repeat="room in row.rooms">
+                    <span ng-if="room.id">{{::room.buildingCode}}-{{::room.roomCode}}</span>
+                    <span ng-if="!room.id">{{::room.roomCode}}</span>
+                    {{$last ? "" : ", "}}
+                </span>
+              </strong>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </div>
+</div>

@@ -107,7 +107,7 @@
               <tr md-row ng-repeat="occupation in stateCurriculum.occupations | orderBy" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{$index + 1}}</td>
                 <td md-cell>
-                  <hois-classifier-value ng-model="occupation" main-classifier-code="KUTSE"></hois-classifier-value>
+                  <hois-classifier-value ng-model="occupation" show-date main-classifier-code="KUTSE"></hois-classifier-value>
                 </td>
                 <td md-cell><span ng-repeat="subOccupation in subOccupations[occupation] | filter:{ mainClassCode: 'OSAKUTSE'}"><span ng-if="$index > 0">; </span>{{currentLanguageNameField(subOccupation)}}
                   </span>

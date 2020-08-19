@@ -48,6 +48,7 @@ public class StudentViewDto extends StudentForm {
     private Boolean userIsStudentGroupTeacher;
     private Boolean userCanViewStudentSpecificData;
     private Boolean userCanUpdateRR;
+    private Boolean userCanRequestPhotoBoxPhoto;
     private Boolean userCanViewStudentSupportServices;
     private Boolean userCanViewPrivateStudentSupportServices;
     private Boolean studentCanAddPhoto;
@@ -55,6 +56,7 @@ public class StudentViewDto extends StudentForm {
     private BigDecimal credits;
     private BigDecimal kkh;
     private Boolean isCurriculumFulfilled;
+    private Boolean curriculumIncludesSpecialities;
     private Boolean hasRemarksPastSevenDays;
     private Boolean individualCurriculum = Boolean.FALSE;
     private LocalDate individualCurriculumStart;
@@ -283,6 +285,14 @@ public class StudentViewDto extends StudentForm {
         this.userCanUpdateRR = userCanUpdateRR;
     }
 
+    public Boolean getUserCanRequestPhotoBoxPhoto() {
+        return userCanRequestPhotoBoxPhoto;
+    }
+
+    public void setUserCanRequestPhotoBoxPhoto(Boolean userCanRequestPhotoBoxPhoto) {
+        this.userCanRequestPhotoBoxPhoto = userCanRequestPhotoBoxPhoto;
+    }
+
     public Boolean getUserCanViewStudentSupportServices() {
         return userCanViewStudentSupportServices;
     }
@@ -337,6 +347,14 @@ public class StudentViewDto extends StudentForm {
 
     public void setIsCurriculumFulfilled(Boolean isCurriculumFulfilled) {
         this.isCurriculumFulfilled = isCurriculumFulfilled;
+    }
+
+    public Boolean getCurriculumIncludesSpecialities() {
+        return curriculumIncludesSpecialities;
+    }
+
+    public void setCurriculumIncludesSpecialities(Boolean curriculumIncludesSpecialities) {
+        this.curriculumIncludesSpecialities = curriculumIncludesSpecialities;
     }
 
     public Boolean getHasRemarksPastSevenDays() {

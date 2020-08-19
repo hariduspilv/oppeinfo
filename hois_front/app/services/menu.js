@@ -78,7 +78,8 @@ angular.module('hitsaOis')
             icon: "announcement",
             studyLevel: {
               vocational: true
-            }
+            },
+            absenceAllowed: true
           },
           {
             name: 'main.menu.study.groupAbsences',
@@ -107,10 +108,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.student.studentCard',
             url: "/studentCards?_menu",
-            icon: "announcement",
-            studyLevel: {
-              vocational: true
-            }
+            icon: "announcement"
           },
           {
             name: 'main.menu.student.boardingSchool',
@@ -868,7 +866,8 @@ angular.module('hitsaOis')
             icon: "announcement",
             studyLevel: {
               vocational: true
-            }
+            },
+            absenceAllowed: true
           },
           {
             name: 'main.menu.study.groupAbsences',
@@ -1212,7 +1211,8 @@ angular.module('hitsaOis')
             icon: "announcement",
             studyLevel: {
               vocational: true
-            }
+            },
+            absenceAllowed: true
           },
           {
             name: 'main.menu.study.groupAbsences',
@@ -1233,10 +1233,7 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.student.studentCard',
             url: "/studentCards?_menu",
-            icon: "announcement",
-            studyLevel: {
-              vocational: true
-            }
+            icon: "announcement"
           },
           {
             name: 'main.menu.student.boardingSchool',
@@ -2125,6 +2122,10 @@ angular.module('hitsaOis')
         return true;
     }
 
+    function isSchoolAbsenceDisabled(section, authenticatedUser) {
+      return section.absenceAllowed && authenticatedUser.school.notAbsence;
+    }
+
     function isStudentGroupTeacher(section, authenticatedUser) {
       return section.studentGroupTeacher && authenticatedUser.teacherGroupIds.length > 0;
     }
@@ -2157,6 +2158,10 @@ angular.module('hitsaOis')
         return;
       }
 
+      if (angular.isDefined(section.absenceAllowed) && isSchoolAbsenceDisabled(section, authenticatedUser)) {
+        return;
+      }
+
       menu.push({
         name: getSectionName(section, authenticatedUser),
         type: section.type,
@@ -2174,6 +2179,10 @@ angular.module('hitsaOis')
       }
 
       if (angular.isDefined(section.studentGroupTeacher) && !isStudentGroupTeacher(section, authenticatedUser)) {
+        return;
+      }
+
+      if (angular.isDefined(section.absenceAllowed) && isSchoolAbsenceDisabled(section, authenticatedUser)) {
         return;
       }
 

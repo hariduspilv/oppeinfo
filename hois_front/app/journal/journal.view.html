@@ -143,7 +143,7 @@
                 md-colors="{background: getEntryColor(journalEntry.entryType.code)}" ng-repeat="journalEntry in journal.journalEntriesByDate">
                 <span ng-if="journalEntry.moodleGradeItemId"><md-icon md-font-set="material-icons">school</md-icon></span>
                 <span>
-                  <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_L'">{{'journal.finalResult' | translate}} {{journalEntry.entryDate ? ' - ' + (journalEntry.entryDate | hoisDayMonth) : ''}}</span>
+                  <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_L'">{{'journal.finalResult' | translate}} {{journalEntry.entryDate ? ' - ' + (journalEntry.entryDate | hoisDateShortYear) : ''}}</span>
                   <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_O'">{{'journal.outcome' | translate}}{{journalEntry.outcomeOrderNr + 1}}</span>
                   <span ng-if="journalEntry.entryType.code !== 'SISSEKANNE_L' && journalEntry.entryType.code !== 'SISSEKANNE_O'">{{journalEntry.entryDate  ? (journalEntry.entryDate | hoisDayMonth) : '-'}}</span>
                   <md-tooltip class="tooltip-multiline">
