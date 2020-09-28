@@ -1,10 +1,11 @@
+<div ng-cloak ng-if="student && student.isVocational===false" ng-include="'student/templates/view.navbar.higher.tmpl.html'"></div>
+<div layout-padding ng-if="student" ng-include="'student/templates/view.student.header.html'"></div>
 <div ng-cloak ng-include="'declaration/declaration.navbar.html'"></div>
-
 <div layout-padding>
   <div ng-include="'declaration/declaration.view.template.html'" ng-repeat="wrapper in declarations | filter: {hide: false}" style="padding-bottom: 16px;"></div>
   <div layout="row">
-    <md-button ng-if="!auth.isStudent()" class="md-raised md-default" ng-click="back('#/declarations')" style="margin-top: 0;">{{'main.button.back' | translate}}</md-button>
-    <md-button ng-if="auth.isStudent() && !currentDeclarationPage" class="md-raised md-default" ng-click="back('#/declaration/current/view')" style="margin-top: 0;">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-if="!auth.isStudent() && !inStudentData" class="md-raised md-default" ng-click="back('#/declarations')" style="margin-top: 0;">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-if="auth.isStudent() && (!currentDeclarationPage || fromStudentData) && !inStudentData" class="md-raised md-default" ng-click="back('#/declaration/current/view')" style="margin-top: 0;">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>
 

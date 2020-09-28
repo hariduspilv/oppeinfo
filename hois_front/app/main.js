@@ -145,6 +145,14 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
       });
     });
 
+    $rootScope.frontendBaseUrl = function () {
+      return new $window.URL($location.absUrl()).origin;
+    };
+
+    $rootScope.apiUrl = function () {
+      return config.apiUrl;
+    };
+
     $rootScope.currentLanguage = function() {
       return $scope.currentLanguage();  
     };

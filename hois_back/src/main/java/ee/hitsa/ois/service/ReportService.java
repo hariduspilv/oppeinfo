@@ -2085,7 +2085,7 @@ public class ReportService {
         String PERSON_DATA_SELECT = "s.id, p.firstname, p.lastname, p.sex_code as sex, coalesce(p.idcode, p.foreign_idcode) as idCode, "
                 + "p.bankaccount, p.birthdate, p.residence_country_code as residence_country, p.citizenship_code as citizenship, ";
         
-        String STUDY_DATA_SELECT = "case when s.type_code = '" + StudentType.OPPUR_K.name() + "' then true else false end as guest_student, "
+        String STUDY_DATA_SELECT = "s.type_code as student_type, "
                                  + "case when s.status_code = '" + StudentStatus.OPPURSTAATUS_V.name() + "' then true else false end as foreign_student, "
                                  + (Boolean.TRUE.equals(criteria.getCumLaudeShow()) ? "exists(select 1 from directive d "
                                          + "join directive_student ds on ds.directive_id = d.id "

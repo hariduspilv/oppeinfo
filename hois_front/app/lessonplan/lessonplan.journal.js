@@ -9,7 +9,8 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
     var lessonPlanModule = $route.current.params.lessonPlanModule;
     var baseUrl = '/lessonplans/journals';
     $scope.formState = {
-      capacityTypes: QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({journalId: id, isHigher: false, isTimetable: true})
+      capacityTypes: QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({journalId: id, isHigher: false, isTimetable: true}),
+      groupProportions: Classifier.queryForDropdown({ mainClassCode: 'PAEVIK_GRUPI_JAOTUS' })
     };
 
     $scope.record = QueryUtils.endpoint(baseUrl).get({
@@ -408,6 +409,17 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
         $scope.record.groups.splice(groupIndex, 1);
       }
       $scope.journalForm.$setDirty();
+    };
+
+    $scope.openSubJournal = function (subJournal) {
+      var url = '/lessonplans/journals/' + subJournal.id +'/edit?lessonPlanModule=' + $scope.lessonPlanModule;
+      if (angular.isDefined($scope.journalForm) && $scope.journalForm.$dirty === true) {
+        dialogService.confirmDialog({prompt: 'main.messages.confirmFormDataNotSaved'}, function () {
+          $location.url(url);
+        });
+      } else {
+        $location.url(url);
+      }
     };
   }
 ]);

@@ -43,6 +43,7 @@
             });
         }
     }
+    $scope.studyLevelOptions = true;
     getListOfStudyLevels();
 
 

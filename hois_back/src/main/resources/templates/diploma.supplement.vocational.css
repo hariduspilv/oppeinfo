@@ -52,7 +52,8 @@ div.diploma-nr {
     font-size: 16pt;
     font-weight: bold;
     margin-left: 55%;
-    padding-bottom: 22pt;
+    padding-top: 12pt; 
+    padding-bottom: 10pt;
 }
 .study-results {
     width: 100%;

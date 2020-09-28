@@ -4,12 +4,13 @@
   <div ng-show="studyYears">
     <div>&nbsp;</div>
     <div class="form-readonly" layout="row" layout-sm="column" layout-xs="column" layout-margin>
-      <md-input-container ng-if="personalUrl" flex="45" flex-sm="100" flex-xs="100">
+      <md-input-container ng-if="personalParam" flex="45" flex-sm="100" flex-xs="100">
         <label>{{'timetable.search.personalUrl' | translate}}</label>
-        <hois-value value="personalUrl" href-value="personalUrl"></hois-value>
+        <hois-value value="frontendBaseUrl() + '/#/timetable/personalGeneralTimetable/' + personalParam"
+          href-value="'#/timetable/personalGeneralTimetable/' + personalParam"></hois-value>
       </md-input-container>
 
-      <md-input-container flex="50" flex-sm="100" flex-offset="{{personalUrl ? 5 : 50}}" flex-offset-xs="0" flex-offset-sm="0">
+      <md-input-container flex="50" flex-sm="100" flex-offset="{{personalParam ? 5 : 50}}" flex-offset-xs="0" flex-offset-sm="0">
         <label class="textInput">{{'timetable.search.studyYear' | translate}}</label>
         <div class="md-body-1 hois-value">
           <span ng-repeat="sy in studyYears | orderBy: 'startDate'">

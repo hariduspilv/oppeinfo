@@ -15,6 +15,8 @@
       name="student.rr">{{'rr.student.tabLabel' | translate}}</md-nav-item>
     <md-nav-item ng-if="student.userCanViewStudentSupportServices" md-nav-href="#/students/{{::studentId}}/supportService?_noback"
       name="student.supportService">{{'student.supportService.label' | translate}}</md-nav-item>
+    <md-nav-item ng-if="student.userCanViewStudentAddInfo" md-nav-href="#/students/{{::studentId}}/addInfo?_noback"
+      name="student.addInfo">{{'student.addInfo' | translate}}</md-nav-item>
   </md-nav-bar>
 </md-content>
 <!-- <md-tabs hide-xs class="horizontal-menu" md-border-bottom md-stretch-tabs="never">
@@ -95,6 +97,8 @@
     ng-href="#/students/{{::studentId}}/rr?_noback" name="student.rr">{{'rr.student.tabLabel' | translate}}</md-button>
   <md-button class="md-raised" ng-if="student.userCanViewStudentSupportServices" ng-class="{'md-accent': currentNavItem === 'student.supportService'}"
     ng-href="#/students/{{::studentId}}/supportService?_noback" name="student.supportService">{{'student.supportService.label' | translate}}</md-button>
+  <md-button ng-if="student.userCanViewStudentAddInfo" ng-href="#/students/{{::studentId}}/addInfo?_noback"
+    name="student.addInfo">{{'student.addInfo' | translate}}</md-button>
 </div>
 
 <!-- <style>

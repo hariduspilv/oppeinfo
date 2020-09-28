@@ -10,7 +10,7 @@
         </md-input-container>
       </div>
 
-      <div flex ng-if="(record.type === 'KASKKIRI_LOPET' || record.type === 'KASKKIRI_KYLALIS' || record.type === 'KASKKIRI_DUPLIKAAT') && formState.school.higher && formState.school.vocational">
+      <div flex ng-if="(record.type === 'KASKKIRI_LOPET' || record.type === 'KASKKIRI_KYLALIS' || record.type === 'KASKKIRI_DUPLIKAAT' || record.type === 'KASKKIRI_EKSTERN') && formState.school.higher && formState.school.vocational">
         <md-input-container class="md-block">
           <md-radio-group layout-gt-sm="row" ng-model="record.isHigher" ng-change="directiveTypeChanged()" required name="isHigher" ng-disabled="formState.state !== 'CHOOSETYPE'">
             <md-radio-button ng-value="false">{{'directive.vocational' | translate}}</md-radio-button>
@@ -139,6 +139,7 @@
           <fieldset>
             <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'directive.studentList' | translate}}</legend>
             <md-button class="md-raised" ng-click="addStudents()" ng-if="record.type !== 'KASKKIRI_TYHIST' && record.type !== 'KASKKIRI_IMMATV'">{{'directive.addStudents' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="pickStudents({type: record.type, directive: id}, record.students, true)" ng-if="record.type === 'KASKKIRI_EKSTERN'">{{'directive.pickStudents' | translate}}</md-button>
             <div class="template" ng-include="formState.templateUrl" flex></div>
           </fieldset>
         </md-table-container>

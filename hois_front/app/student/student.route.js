@@ -77,9 +77,49 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         translationLoaded: function($translate) { return $translate.onReady(); } ,
         auth: function (AuthResolver) { return AuthResolver.resolve(); },
       }
+    }).when('/students/:id/declaration', {
+      templateUrl: 'declaration/declaration.view.html',
+        controller: 'DeclarationViewController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+        },
+        data: {
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA]
+        }
+    }).when('/students/:id/declaration/previous', {
+      templateUrl: 'declaration/declaration.student.search.html',
+        controller: 'DeclarationStudentSearchController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+        },
+        data: {
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA]
+        }
     }).when('/students/:id/supportService', {
       templateUrl: 'student/view.supportservice.html',
       controller: 'StudentViewSupportServiceController',
+      controllerAs: 'controller',
+      data: authorizedRoles,
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+      }
+    }).when('/students/:id/addInfo', {
+      templateUrl: 'student/view.addInfo.html',
+      controller: 'StudentAddInfoController',
+      controllerAs: 'controller',
+      data: authorizedRoles,
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+      }
+    }).when('/students/:id/addInfo/edit', {
+      templateUrl: 'student/edit.addInfo.html',
+      controller: 'StudentAddInfoController',
       controllerAs: 'controller',
       data: authorizedRoles,
       resolve: {

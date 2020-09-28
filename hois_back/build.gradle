@@ -71,7 +71,10 @@ dependencies {
 	compile('org.postgresql:postgresql')
     compile('com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.11')
     compile('com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.8.11')
-    compile('org.apache.xmlgraphics:fop:2.2')
+    compile('org.apache.xmlgraphics:fop:2.2') {
+		//Xalan can't be used with digidoc4j
+		exclude group: 'xalan'
+	}
     compile('org.xhtmlrenderer:flying-saucer-pdf:9.1.12') {
         //because of digidoc4j libraries conflicts
         exclude group: 'org.bouncycastle', module: 'bctsp-jdk14'
@@ -82,10 +85,11 @@ dependencies {
 	compile('org.jxls:jxls:2.4.3')
 	compile('org.jxls:jxls-poi:1.0.14')
 	compile('io.jsonwebtoken:jjwt:0.9.0')
-	compile('org.digidoc4j:digidoc4j:1.0.7.2')
+	compile('org.digidoc4j:digidoc4j:3.3.0')
 	compile(':hois_ws')
 	compile 'org.springframework.security:spring-security-jwt'
 	compile 'com.auth0:jwks-rsa:0.8.1'
+	compile 'ee.sk.mid:mid-rest-java-client:1.1'
 
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 	testCompile('com.h2database:h2')

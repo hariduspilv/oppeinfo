@@ -1,0 +1,117 @@
+<md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="education level selection">
+  <md-nav-item ng-if="auth.school.higher" md-nav-click="switchSchemaType('higher')" name="educationLevel.higher">
+    {{'schoolGradingSchema.educationLevels.higher' | translate}}</md-nav-item>
+  <md-nav-item ng-if="auth.school.vocational" md-nav-click="switchSchemaType('vocational')" name="educationLevel.vocational">
+    {{'schoolGradingSchema.educationLevels.vocational' | translate}}</md-nav-item>
+  <md-nav-item ng-if="auth.school.secondary" md-nav-click="switchSchemaType('secondary')" name="educationLevel.secondary">
+    {{'schoolGradingSchema.educationLevels.secondary' | translate}}</md-nav-item>
+  <md-nav-item ng-if="auth.school.basic" md-nav-click="switchSchemaType('basic')" name="educationLevel.basic">
+    {{'schoolGradingSchema.educationLevels.basic' | translate}}</md-nav-item>
+</md-nav-bar>
+
+<div layout="column" layout-padding>
+  <div flex>
+    <md-button ng-if="schemaType" ng-click="addGradingSchema()" class="md-raised">{{'schoolGradingSchema.addGradingSchema' | translate}}</md-button>
+
+    <fieldset ng-if="gradingSchema">
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'schoolGradingSchema.label' | translate}}</legend>
+      <form layout="column" name="formState.gradingSchemaForm" ng-submit="formState.gradingSchemaForm.$valid && save()" novalidate class="nomargin">
+        <md-input-container flex="20" flex-sm="100" flex-xs="100">
+          <label>{{'schoolGradingSchema.studyYears' | translate}}</label>
+          <hois-select ng-model="gradingSchema.studyYears" values="formState.studyYears" filter-values="formState.studyYearsInUse" required multiple></hois-select>
+        </md-input-container>
+
+        <div>&nbsp;</div>
+        <div layout="row" flex>
+          <md-input-container class="md-block" flex="15" flex-md="30" flex-sm="100" flex-xs="100">
+            <md-checkbox ng-model="gradingSchema.isVerbal" aria-label="{{'schoolGradingSchema.verbalAssessmentAllowed' | translate}}"
+              ng-change="isVerbalChanged()">{{'schoolGradingSchema.verbalAssessmentAllowed' | translate}}</md-checkbox>
+          </md-input-container>
+          <md-input-container class="md-block" flex="15" flex-md="30" flex-sm="100" flex-xs="100">
+            <md-checkbox ng-model="gradingSchema.isGrade" aria-label="{{'schoolGradingSchema.showStudentMark' | translate}}"
+              ng-disabled="!gradingSchema.isVerbal">{{'schoolGradingSchema.showStudentMark' | translate}}</md-checkbox>
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-button class="md-primary" ng-click="addNewRow()">{{'main.button.addNewRow' | translate}}</md-button>
+        </div>
+        <md-table-container>
+          <table md-table>
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{'schoolGradingSchema.gradingSchemaRows.grade' | translate}}</th>
+                <th md-column>{{'schoolGradingSchema.gradingSchemaRows.gradeEn' | translate}}</th>
+                <th md-column>{{'schoolGradingSchema.gradingSchemaRows.gradeReal' | translate}}</th>
+                <th md-column>{{'schoolGradingSchema.gradingSchemaRows.validity' | translate}}</th>
+                <th md-column></th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in gradingSchema.gradingSchemaRows" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>
+                  <md-input-container>
+                    <input ng-model="row.grade" type="text" md-maxlength="100" aria-label="{{'schoolGradingSchema.gradingSchemaRows.grade' | translate}}" required>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <input ng-model="row.gradeEn" type="text" md-maxlength="100" aria-label="{{'schoolGradingSchema.gradingSchemaRows.gradeEn' | translate}}">
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <hois-select ng-model="row.gradeReal" values="grades" show-property="value" value-property="code"
+                      aria-label="{{'schoolGradingSchema.gradingSchemaRows.gradeReal' | translate}}" required></hois-select>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="row.isValid" aria-label="{{'schoolGradingSchema.validity' | translate}}"></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <a ng-if="!row.inUse" class="remove nomargin" ng-click="removeRow(row)">&times;</a>
+                  <span ng-if="row.inUse">{{'schoolGradingSchema.gradingSchemaRows.alreadyInUse' | translate}}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-button class="md-primary md-raised" type="submit">{{'main.button.save' | translate}}</md-button>
+          <md-button ng-click="deleteGradingSchema()" class="md-raised">{{'schoolGradingSchema.deleteGradingSchema' | translate}}</md-button>
+        </div>
+      </form>
+    </fieldset>
+
+    <div>&nbsp;</div>
+    <fieldset ng-if="otherGradingSchemas.length > 0">
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'schoolGradingSchema.otherGradingSchemas' | translate}}</legend>
+      <md-table-container>
+        <table md-table>
+          <tbody md-body>
+            <tr md-row ng-repeat="gradingSchema in otherGradingSchemas" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>
+                <a ng-click="openGradingSchemaDialog(gradingSchema)">
+                  <span>{{'schoolGradingSchema.label' | translate}}</span>
+                  <span>
+                    <span ng-repeat="sy in gradingSchema.studyYearObjects | orderBy: 'startDate'">
+                      <span ng-if="$first">(</span>
+                      <span>{{currentLanguageNameField(sy)}}</span><span ng-if="!$last">, </span>
+                      <span ng-if="$last">)</span>
+                    </span>
+                  </span>
+                </a>
+              </td>
+              <td md-cell>
+                <md-button class="md-primary" ng-click="editGradingSchema(gradingSchema)">{{'main.button.edit' | translate}}</md-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </fieldset>
+  </div>
+</div>

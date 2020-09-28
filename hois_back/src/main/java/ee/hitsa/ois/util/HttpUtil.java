@@ -33,6 +33,7 @@ public abstract class HttpUtil {
     public static final String TEXT_CSV_UTF8 = "text/csv; Charset=UTF-8";
     public static final String APPLICATION_ZIP = "application/zip";
     public static final String APPLICATION_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    public static final String TEXT_CALENDAR = "text/calendar";
     
     private static final byte[] UTF8_BOM = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 
@@ -66,9 +67,13 @@ public abstract class HttpUtil {
     public static void xml(HttpServletResponse response, String filename, byte[] xml) throws IOException {
         file(response, filename, APPLICATION_XML, xml);
     }
-    
+
     public static void rtf(HttpServletResponse response, String filename, byte[] rtf) throws IOException {
         file(response, filename, APPLICATION_RTF, rtf);
+    }
+
+    public static void ical(HttpServletResponse response, String filename, byte[] ical) throws IOException {
+        file(response, filename, TEXT_CALENDAR, ical);
     }
     
     /**

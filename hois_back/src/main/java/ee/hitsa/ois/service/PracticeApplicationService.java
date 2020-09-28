@@ -194,7 +194,7 @@ public class PracticeApplicationService {
             PracticeApplicationSearchDto dto = new PracticeApplicationSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setStudentId(resultAsLong(r, 1));
-            dto.setStudentName(PersonUtil.fullnameOptionalGuest(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 14)));
+            dto.setStudentName(PersonUtil.fullnameTypeSpecific(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 14)));
             dto.setStudentGroup(resultAsString(r, 4));
             dto.setStatus(resultAsString(r, 5));
             dto.setSubmitDate(resultAsLocalDate(r, 6));

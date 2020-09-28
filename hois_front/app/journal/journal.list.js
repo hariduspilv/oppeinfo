@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('JournalListController', function ($q, $route, $scope, USER_ROLES, AuthService, Classifier, QueryUtils, dialogService, message) {
+angular.module('hitsaOis').controller('JournalListController', function ($q, $route, $scope, $translate, USER_ROLES, AuthService, Classifier, PollingService, QueryUtils, busyHandler, dialogService, message) {
   $scope.auth = $route.current.locals.auth;
   $scope.search = {};
   var clMapper = Classifier.valuemapper({ status: 'PAEVIK_STAATUS' });
@@ -44,15 +44,39 @@ angular.module('hitsaOis').controller('JournalListController', function ($q, $ro
 
   $scope.addStudents = function() {
     dialogService.confirmDialog({prompt: 'journal.prompt.addStudents', studyYear: $scope.studyYearMap[$scope.criteria.studyYear].nameEt}, function() {
-		QueryUtils.loadingWheel($scope, true);
-      QueryUtils.endpoint('/journals/addAllSuitableStudents').get({ studyYearId: $scope.criteria.studyYear }).$promise.then(function (response) {
-		  QueryUtils.loadingWheel($scope, false);
-        if (response.numberOfAddedStudents > 0) {
-          message.info('journal.messages.studentsAdded', {numberOfJournals: response.numberOfJournals,
-            numberOfAddedStudents: response.numberOfAddedStudents});
-          $scope.load();
-        } else {
-          message.warn('journal.messages.noStudentsAdded');
+      QueryUtils.loadingWheel($scope, true, false, $translate.instant('journal.messages.requestInProgress'), true);
+      PollingService.sendRequest({
+        url: '/journals/addAllSuitableStudentsRequest',
+        data: { studyYearId: $scope.criteria.studyYear },
+        pollUrl: '/journals/addAllSuitableStudentsStatus',
+        successCallback: function (pollResult) {
+          busyHandler.setProgress(100);
+          var journalCount = 0, studentCount = 0;
+          for (var i = 0; i < pollResult.result.length; i++) {
+            var addedStudents = pollResult.result[i].addedStudents;
+            if (addedStudents > 0) {
+              journalCount++;
+              studentCount += addedStudents;
+            }
+          }
+          if (studentCount > 0) {
+            message.info('journal.messages.studentsAdded', {numberOfJournals: journalCount, numberOfAddedStudents: studentCount});
+            $scope.load();
+          } else {
+            message.warn('journal.messages.noStudentsAdded');
+          }
+          QueryUtils.loadingWheel($scope, false);
+        },
+        failCallback: function (pollResult) {
+          if (pollResult) {
+            message.error('journal.messages.failure');
+          }
+          QueryUtils.loadingWheel($scope, false);
+        },
+        updateProgress: function (pollResult) {
+          if (pollResult) {
+            busyHandler.setProgress(Math.round(pollResult.progress * 100));
+          }
         }
       });
     });

@@ -4,6 +4,7 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.apelapplication.ApelApplication;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import ee.hitsa.ois.domain.teacher.Teacher;
 
 import javax.persistence.*;
@@ -32,12 +33,15 @@ public class StudentCurriculumModuleOutcomesResult extends BaseEntityWithId {
     private String addInfo;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
     private Teacher gradeInsertedTeacher;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
     private ApelApplication apelApplication;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private GradingSchemaRow gradingSchemaRow;
+
+    private String verbalGrade;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "student_curriculum_module_outcomes_result_id", nullable = false, updatable = false)
@@ -113,6 +117,22 @@ public class StudentCurriculumModuleOutcomesResult extends BaseEntityWithId {
 
     public void setApelApplication(ApelApplication apelApplication) {
         this.apelApplication = apelApplication;
+    }
+
+    public GradingSchemaRow getGradingSchemaRow() {
+        return gradingSchemaRow;
+    }
+
+    public void setGradingSchemaRow(GradingSchemaRow gradingSchemaRow) {
+        this.gradingSchemaRow = gradingSchemaRow;
+    }
+
+    public String getVerbalGrade() {
+        return verbalGrade;
+    }
+
+    public void setVerbalGrade(String verbalGrade) {
+        this.verbalGrade = verbalGrade;
     }
 
     public Set<StudentCurriculumModuleOutcomesResultHistory> getHistory() {

@@ -176,6 +176,9 @@ angular.module('hitsaOis')
       if (isStudentInType(currentUser, 'OPPUR_K')() && $route.current.data.guestStudentForbidden) {
         return false;
       }
+      if (isStudentInType(currentUser, 'OPPUR_E')() && $route.current.data.externalStudentForbidden) {
+        return false;
+      }
       var authorizedRoles = $route.current.data.authorizedRoles;
       return AuthService.isAuthorized(authorizedRoles);
     }
@@ -275,6 +278,7 @@ angular.module('hitsaOis')
       this.timeoutInSeconds = user.sessionTimeoutInSeconds;
       this.teacherGroupIds = user.teacherGroupIds;
       this.committees = user.committees || [];
+      this.inApplicationCommittee = user.inApplicationCommittee;
       this.curriculums = user.curriculums || [];
       this.mustAgreeWithToS = user.mustAgreeWithToS;
       this.hasSchoolRole = user.hasSchoolRole;
@@ -295,6 +299,7 @@ angular.module('hitsaOis')
       this.curriculums = [];
       this.mustAgreeWithToS = undefined;
       this.hasSchoolRole = undefined;
+      this.inApplicationCommittee = undefined;
     };
   })
   .constant('USER_ROLES', {
@@ -317,6 +322,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_V_TEEMAOIGUS_EKSAM: 'ROLE_OIGUS_V_TEEMAOIGUS_EKSAM',	//Eksamid
     ROLE_OIGUS_V_TEEMAOIGUS_ESINDAVALDUS: 'ROLE_OIGUS_V_TEEMAOIGUS_ESINDAVALDUS',	//Esindajate avaldused
     ROLE_OIGUS_V_TEEMAOIGUS_ETTEVOTE: 'ROLE_OIGUS_V_TEEMAOIGUS_ETTEVOTE', //Ettevõtted
+    ROLE_OIGUS_V_TEEMAOIGUS_HINDAMISSYSTEEM: 'ROLE_OIGUS_V_TEEMAOIGUS_HINDAMISSYSTEEM',	//Hindamissüsteemid
     ROLE_OIGUS_V_TEEMAOIGUS_HINNETELEHT: 'ROLE_OIGUS_V_TEEMAOIGUS_HINNETELEHT',	//Akad. õiendid/hinnetelehed
     ROLE_OIGUS_V_TEEMAOIGUS_HINNETELEHT_TRUKKIMINE: 'ROLE_OIGUS_V_TEEMAOIGUS_HINNETELEHT_TRUKKIMINE',
     ROLE_OIGUS_V_TEEMAOIGUS_HOONERUUM: 'ROLE_OIGUS_V_TEEMAOIGUS_HOONERUUM',	//Hooned/ruumid
@@ -396,6 +402,7 @@ angular.module('hitsaOis')
     ROLE_OIGUS_M_TEEMAOIGUS_EKSAM: 'ROLE_OIGUS_M_TEEMAOIGUS_EKSAM',	//Eksamid
     ROLE_OIGUS_M_TEEMAOIGUS_ESINDAVALDUS: 'ROLE_OIGUS_M_TEEMAOIGUS_ESINDAVALDUS',	//Esindajate avaldused
     ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE: 'ROLE_OIGUS_M_TEEMAOIGUS_ETTEVOTE', //Ettevõtted
+    ROLE_OIGUS_M_TEEMAOIGUS_HINDAMISSYSTEEM: 'ROLE_OIGUS_M_TEEMAOIGUS_HINDAMISSYSTEEM',	//Hindamissüsteemid
     ROLE_OIGUS_M_TEEMAOIGUS_HINNETELEHT: 'ROLE_OIGUS_M_TEEMAOIGUS_HINNETELEHT',	//Akad. õiendid/hinnetelehed
     ROLE_OIGUS_M_TEEMAOIGUS_HINNETELEHT_TRUKKIMINE: 'ROLE_OIGUS_M_TEEMAOIGUS_HINNETELEHT_TRUKKIMINE',
     ROLE_OIGUS_M_TEEMAOIGUS_HOONERUUM: 'ROLE_OIGUS_M_TEEMAOIGUS_HOONERUUM',	//Hooned/ruumid

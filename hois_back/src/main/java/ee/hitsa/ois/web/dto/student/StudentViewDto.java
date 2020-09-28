@@ -26,6 +26,7 @@ public class StudentViewDto extends StudentForm {
     private String status;
     private Long curriculum;
     private AutocompleteResult curriculumVersion;
+    private AutocompleteResult curriculumObject;
     private AutocompleteResult studentGroup;
     private String speciality;
     private Short course;
@@ -39,6 +40,7 @@ public class StudentViewDto extends StudentForm {
     private LocalDate studyEnd;
     private String studyForm;
     private String studyLoad;
+    private String studyLevel;
     private String fin;
     private Boolean isVocational;
     private Boolean userCanEditStudent;
@@ -51,10 +53,12 @@ public class StudentViewDto extends StudentForm {
     private Boolean userCanRequestPhotoBoxPhoto;
     private Boolean userCanViewStudentSupportServices;
     private Boolean userCanViewPrivateStudentSupportServices;
+    private Boolean userCanViewStudentAddInfo;
     private Boolean studentCanAddPhoto;
     private BigDecimal curriculumCredits;
     private BigDecimal credits;
     private BigDecimal kkh;
+    private BigDecimal apelApplicationCredits;
     private Boolean isCurriculumFulfilled;
     private Boolean curriculumIncludesSpecialities;
     private Boolean hasRemarksPastSevenDays;
@@ -68,6 +72,8 @@ public class StudentViewDto extends StudentForm {
     private String type;
     private List<StudentOccupationCertificateDto> occupationCertificates;
     private List<StudentDormitoryHistoryDto> dormitoryHistory;
+    private BigDecimal fulfillmentPercentage;
+    private String addInfo;
 
     public Long getId() {
         return id;
@@ -438,7 +444,7 @@ public class StudentViewDto extends StudentForm {
     }
 
     public static StudentViewDto of(Student student) {
-        StudentViewDto dto = EntityUtil.bindToDto(student, new StudentViewDto(), "specialNeeds");
+        StudentViewDto dto = EntityUtil.bindToDto(student, new StudentViewDto(), "specialNeeds", "studentLanguages");
 
         // header
         OisFile photo = student.getPhoto();
@@ -529,5 +535,53 @@ public class StudentViewDto extends StudentForm {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public AutocompleteResult getCurriculumObject() {
+        return curriculumObject;
+    }
+
+    public void setCurriculumObject(AutocompleteResult curriculumObject) {
+        this.curriculumObject = curriculumObject;
+    }
+
+    public String getStudyLevel() {
+        return studyLevel;
+    }
+
+    public void setStudyLevel(String studyLevel) {
+        this.studyLevel = studyLevel;
+    }
+
+    public BigDecimal getFulfillmentPercentage() {
+        return fulfillmentPercentage;
+    }
+
+    public void setFulfillmentPercentage(BigDecimal fulfillmentPercentage) {
+        this.fulfillmentPercentage = fulfillmentPercentage;
+    }
+
+    public BigDecimal getApelApplicationCredits() {
+        return apelApplicationCredits;
+    }
+
+    public void setApelApplicationCredits(BigDecimal apelApplicationCredits) {
+        this.apelApplicationCredits = apelApplicationCredits;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
+    }
+
+    public Boolean getUserCanViewStudentAddInfo() {
+        return userCanViewStudentAddInfo;
+    }
+
+    public void setUserCanViewStudentAddInfo(Boolean userCanViewStudentAddInfo) {
+        this.userCanViewStudentAddInfo = userCanViewStudentAddInfo;
     }
 }

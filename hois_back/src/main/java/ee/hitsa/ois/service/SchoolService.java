@@ -1,13 +1,17 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.enums.EducationLevel;
+import ee.hitsa.ois.util.StreamUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,7 +27,6 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -137,18 +140,37 @@ public class SchoolService {
     }
 
     public SchoolType schoolType(Long schoolId) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("");
-        qb.parameter("school", schoolId);
-        Object type = qb.select(
-            "case when exists(select 1 from classifier c inner join school_study_level ssl on ssl.school_id = :school and ssl.study_level_code = c.code and c.value ~ '^[5-9].*$') " +
-                    "then true else false end as higher, " +
-            "case when exists(select 1 from classifier c inner join school_study_level ssl on ssl.school_id = :school and ssl.study_level_code = c.code and c.value ~ '^[0-4].*$') " +
-                    "then true else false end as vocational, " +
-            "case when exists(select 1 from classifier c inner join school_study_level ssl on ssl.school_id = :school and ssl.study_level_code = c.code and c.value ~ '^7.*$') " +
-                    "then true else false end as doctoral", em).getSingleResult();
+        List<?> data = em.createNativeQuery("select clc.connect_classifier_code from school s " +
+                "join school_study_level ssl on ssl.school_id = s.id " +
+                "join classifier cl on cl.code = ssl.study_level_code " +
+                "join classifier_connect clc on clc.classifier_code = cl.code " +
+                "where s.id = :school")
+                .setParameter("school", schoolId)
+                .getResultList();
+        Set<String> educationLevels = StreamUtil.toMappedSet(r -> resultAsString(r, 0), data);
 
-        return new SchoolType(resultAsBoolean(type, 0).booleanValue(), resultAsBoolean(type, 1).booleanValue(),
-                resultAsBoolean(type, 2).booleanValue());
+        return new SchoolType(!Collections.disjoint(EducationLevel.BASIC, educationLevels),
+                !Collections.disjoint(EducationLevel.SECONDARY, educationLevels),
+                !Collections.disjoint(EducationLevel.VOCATIONAL, educationLevels),
+                !Collections.disjoint(EducationLevel.HIGHER, educationLevels),
+                !Collections.disjoint(EducationLevel.DOCTOR, educationLevels));
+    }
+    
+    public static SchoolType schoolType(Long schoolId, EntityManager em) {
+        List<?> data = em.createNativeQuery("select clc.connect_classifier_code from school s " +
+                "join school_study_level ssl on ssl.school_id = s.id " +
+                "join classifier cl on cl.code = ssl.study_level_code " +
+                "join classifier_connect clc on clc.classifier_code = cl.code " +
+                "where s.id = :school")
+                .setParameter("school", schoolId)
+                .getResultList();
+        Set<String> educationLevels = StreamUtil.toMappedSet(r -> resultAsString(r, 0), data);
+
+        return new SchoolType(!Collections.disjoint(EducationLevel.BASIC, educationLevels),
+                !Collections.disjoint(EducationLevel.SECONDARY, educationLevels),
+                !Collections.disjoint(EducationLevel.VOCATIONAL, educationLevels),
+                !Collections.disjoint(EducationLevel.HIGHER, educationLevels),
+                !Collections.disjoint(EducationLevel.DOCTOR, educationLevels));
     }
     
     /**
@@ -161,27 +183,38 @@ public class SchoolService {
     }
 
     public static class SchoolType {
-        private final boolean higher;
+        private final boolean basic;
+        private final boolean secondary;
         private final boolean vocational;
+        private final boolean higher;
         private final boolean doctoral;
 
-        public SchoolType(boolean higher, boolean vocational, boolean doctoral) {
-            this.higher = higher;
+        public SchoolType(boolean basic, boolean secondary, boolean vocational, boolean higher, boolean doctoral) {
+            this.basic = basic;
+            this.secondary = secondary;
             this.vocational = vocational;
+            this.higher = higher;
             this.doctoral = doctoral;
         }
 
-        public boolean isHigher() {
-            return higher;
+        public boolean isBasic() {
+            return basic;
+        }
+
+        public boolean isSecondary() {
+            return secondary;
         }
 
         public boolean isVocational() {
             return vocational;
         }
 
+        public boolean isHigher() {
+            return higher;
+        }
+
         public boolean isDoctoral() {
             return doctoral;
         }
-        
     }
 }

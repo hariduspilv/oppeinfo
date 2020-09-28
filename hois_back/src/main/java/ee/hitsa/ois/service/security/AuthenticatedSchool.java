@@ -5,6 +5,8 @@ import java.io.Serializable;
 public class AuthenticatedSchool implements Serializable {
 
     private final Long id;
+    private final boolean basic;
+    private final boolean secondary;
     private final boolean vocational;
     private final boolean higher;
     private final boolean doctoral;
@@ -15,11 +17,14 @@ public class AuthenticatedSchool implements Serializable {
     private final String ehisSchool;
     private byte[] logo;
 
-    public AuthenticatedSchool(Long id, boolean higher, boolean vocational, boolean doctoral, boolean letterGrades,
-            String ehisSchool, boolean withoutEkis, boolean hmodules, boolean isNotAbsence) {
+    public AuthenticatedSchool(Long id, boolean basic, boolean secondary, boolean vocational, boolean higher,
+            boolean doctoral, boolean letterGrades, String ehisSchool, boolean withoutEkis, boolean hmodules,
+            boolean isNotAbsence) {
         this.id = id;
-        this.higher = higher;
+        this.basic = basic;
+        this.secondary = secondary;
         this.vocational = vocational;
+        this.higher = higher;
         this.doctoral = doctoral;
         this.letterGrades = letterGrades;
         this.ehisSchool = ehisSchool;
@@ -30,6 +35,14 @@ public class AuthenticatedSchool implements Serializable {
 
     public Long getId() {
         return id;
+    }
+
+    public boolean isBasic() {
+        return basic;
+    }
+
+    public boolean isSecondary() {
+        return secondary;
     }
 
     public boolean isVocational() {

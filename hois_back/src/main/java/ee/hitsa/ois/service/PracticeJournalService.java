@@ -175,7 +175,7 @@ public class PracticeJournalService {
             dto.setCanReopen(
                     Boolean.valueOf(PracticeJournalUserRights.canReopen(user, studentStatus)));
             
-            String studentName = PersonUtil.fullnameOptionalGuest(resultAsString(r, 6), resultAsString(r, 7), resultAsString(r, 28));
+            String studentName = PersonUtil.fullnameTypeSpecific(resultAsString(r, 6), resultAsString(r, 7), resultAsString(r, 28));
             dto.setStudent(new AutocompleteResult(resultAsLong(r, 5), studentName, studentName));
             dto.setStudentGroup(resultAsString(r, 8));
 

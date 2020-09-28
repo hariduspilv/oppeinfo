@@ -17,6 +17,7 @@ public class ApelApplicationSearchDto {
     private LocalDate confirmed;
     private Boolean canEdit;
     private Boolean canReview;
+    private Boolean canView;
     
     public static ApelApplicationSearchDto of(Application application) {
         ApelApplicationSearchDto dto = EntityUtil.bindToDto(application, new ApelApplicationSearchDto());
@@ -93,5 +94,13 @@ public class ApelApplicationSearchDto {
 
     public void setStudentGroup(String studentGroup) {
         this.studentGroup = studentGroup;
+    }
+
+    public Boolean getCanView() {
+        return canView;
+    }
+
+    public void setCanView(Boolean canView) {
+        this.canView = canView;
     }
 }

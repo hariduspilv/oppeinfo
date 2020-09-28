@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApplicationUtil;
@@ -78,6 +80,7 @@ public class ApplicationDto extends InsertedChangedVersionDto {
     private Boolean canEditStudent;
     private Boolean hasSpecialNeed;
     private Boolean isConnectedByCommittee;
+    private Boolean isConnectedByStudentGroup;
     
     /** TUGI application specific */
     private Boolean canRemoveConfirmation;
@@ -108,15 +111,23 @@ public class ApplicationDto extends InsertedChangedVersionDto {
                                 .stream().anyMatch(p -> user.getPersonId()!= null && user.getPersonId().equals(EntityUtil.getNullableId(p.getPerson())))));
             }
         }
+        Student applicationStudent = application.getStudent();
+        if (applicationStudent != null) {
+            StudentGroup studentGroup = applicationStudent.getStudentGroup();
+            if (user.getTeacherId() != null && user.isTeacher() && studentGroup != null 
+                    && studentGroup.getTeacher() != null && user.getTeacherId().equals(EntityUtil.getNullableId(studentGroup.getTeacher()))) {
+                dto.setIsConnectedByStudentGroup(Boolean.TRUE);
+            }
+        }
         dto.setSupportServices(StreamUtil.toMappedSet(s -> ClassifierDto.of(s.getSupportService()), application.getSupportServices()));
         dto.setSupportModules(application.getSupportServices().stream()
                 .filter(s -> ClassifierUtil.equals(SupportServiceType.TUGITEENUS_1, s.getSupportService()))
                 .flatMap(s -> s.getModules().stream())
                 .map(ApplicationSupportServiceModuleDto::of)
                 .collect(Collectors.toSet()));
-        dto.setIsAdult(Boolean.valueOf(StudentUtil.isAdultAndDoNotNeedRepresentative(application.getStudent())));
-        dto.setCanEditStudent(Boolean.valueOf(StudentUtil.canBeEdited(application.getStudent())));
-        dto.setHasSpecialNeed(Boolean.valueOf(StudentUtil.hasSpecialNeeds(application.getStudent())));
+        dto.setIsAdult(Boolean.valueOf(StudentUtil.isAdultAndDoNotNeedRepresentative(applicationStudent)));
+        dto.setCanEditStudent(Boolean.valueOf(StudentUtil.canBeEdited(applicationStudent)));
+        dto.setHasSpecialNeed(Boolean.valueOf(StudentUtil.hasSpecialNeeds(applicationStudent)));
         return dto;
     }
 
@@ -571,6 +582,14 @@ public class ApplicationDto extends InsertedChangedVersionDto {
 
     public void setIsConnectedByCommittee(Boolean isConnectedByCommittee) {
         this.isConnectedByCommittee = isConnectedByCommittee;
+    }
+
+    public Boolean getIsConnectedByStudentGroup() {
+        return isConnectedByStudentGroup;
+    }
+
+    public void setIsConnectedByStudentGroup(Boolean isConnectedByStudentGroup) {
+        this.isConnectedByStudentGroup = isConnectedByStudentGroup;
     }
 
 

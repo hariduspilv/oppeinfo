@@ -243,7 +243,7 @@ public class ApplicationController {
         
         boolean notAllowed = !UserUtil.canViewStudentSpecificData(user, application.getStudent());
         
-        if (notAllowed && (UserUtil.isTeacher(user, application.getStudent().getSchool()) || UserUtil.isSchoolAdmin(user, application.getStudent().getSchool()))) {
+        if (notAllowed && (UserUtil.isTeacher(user, application.getStudent().getSchool()) || UserUtil.isSchoolAdminOrLeadingTeacher(user, application.getStudent().getSchool()))) {
             Query isCommitteeMemberQuery = em.createNativeQuery("select c.id from application a "
                     + "join committee c on a.committee_id = c.id "
                     + "join committee_member cm on cm.committee_id = c.id "

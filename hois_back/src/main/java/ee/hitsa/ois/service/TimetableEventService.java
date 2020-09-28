@@ -8,11 +8,13 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsStringList;
 
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,9 +28,12 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
+import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.enums.SchoolTimetableType;
+import ee.hitsa.ois.util.HttpUtil;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -159,6 +164,8 @@ public class TimetableEventService {
     private AutomaticMessageService automaticMessageService;
     @Autowired
     private SchoolService schoolService;
+    @Autowired
+    private StudyYearService studyYearService;
 
     public TimetableEvent createEvent(HoisUserDetails user, TimetableSingleEventForm form) {
         TimetableEvent te = createEvent(form, user.getSchoolId(), user.getPersonId());
@@ -409,10 +416,12 @@ public class TimetableEventService {
 
     /**
      * Get group's timetable for view.
+     * @param school
      * @param command
+     * @param checkSchool
      * @return timetable with timetable's curriculum and events
      */
-    public TimetableByGroupDto groupTimetable(TimetableEventSearchCommand command, School school, boolean checkSchool) {
+    public TimetableByGroupDto groupTimetable(School school, TimetableEventSearchCommand command, boolean checkSchool) {
         if (checkSchool) {
             UserUtil.throwAccessDeniedIf(!TimetableService.allowedToViewSchoolTimetable(school));
         }
@@ -429,19 +438,22 @@ public class TimetableEventService {
                 generalTimetableCurriculum, Boolean.valueOf(schoolType.isHigher()));
     }
 
-    public TimetableByTeacherDto teacherTimetable(TimetableEventSearchCommand command, School school) {
+    public TimetableByTeacherDto teacherTimetable(School school, TimetableEventSearchCommand command) {
         HoisUserDetails user = TimetableService.userFromPrincipal();
-        boolean withPersonalUrl = user != null && user.isTeacher() && user.getTeacherId().equals(command.getTeachers().get(0));
-        return teacherTimetable(command, school, withPersonalUrl, true);
+        boolean withPersonalParam = user != null && user.isTeacher() && user.getTeacherId().equals(command.getTeachers().get(0));
+        return teacherTimetable(school, command, withPersonalParam, true);
     }
 
     /**
      * Get teacher's timetable for view.
+     * @param school
      * @param command
+     * @param withPersonalParam
+     * @param checkSchool
      * @return TimetableByTeacherDto
      */
-    public TimetableByTeacherDto teacherTimetable(TimetableEventSearchCommand command, School school,
-            boolean withPersonalUrl, boolean checkSchool) {
+    public TimetableByTeacherDto teacherTimetable(School school, TimetableEventSearchCommand command,
+            boolean withPersonalParam, boolean checkSchool) {
         if (checkSchool) {
             UserUtil.throwAccessDeniedIf(command.getPerson() == null && !TimetableService.allowedToViewSchoolTimetable(school));
         }
@@ -458,8 +470,8 @@ public class TimetableEventService {
         TimetableByTeacherDto dto = new TimetableByTeacherDto(
                 getStudyPeriods(school.getId(), command.getFrom(), command.getThru()), eventResultList,
                 resultAsLong(teacher, 0), resultAsString(teacher, 1), resultAsString(teacher, 2), Boolean.valueOf(schoolType.isHigher()));
-        if (withPersonalUrl) {
-            dto.setPersonalUrl(timetableService.getPersonalUrl(Role.ROLL_O, dto.getTeacherId()));
+        if (withPersonalParam) {
+            dto.setPersonalParam(timetableService.getPersonalUrlParam(Role.ROLL_O, dto.getTeacherId()));
         }
         return dto;
     }
@@ -471,12 +483,12 @@ public class TimetableEventService {
      */
     public TimetableByStudentDto studentTimetable(HoisUserDetails user, TimetableEventSearchCommand command) {
         School school = em.getReference(School.class, user.getSchoolId());
-        boolean withPersonalUrl = user.isStudent() && user.getStudentId().equals(command.getStudent());
-        return studentTimetable(command, school, withPersonalUrl);
+        boolean withPersonalParam = user.isStudent() && user.getStudentId().equals(command.getStudent());
+        return studentTimetable(school, command, withPersonalParam);
     }
 
-    private TimetableByStudentDto studentTimetable(TimetableEventSearchCommand command, School school,
-            boolean withPersonalUrl) {
+    private TimetableByStudentDto studentTimetable(School school, TimetableEventSearchCommand command,
+            boolean withPersonalParam) {
         UserUtil.throwAccessDeniedIf(command.getPerson() == null && !TimetableService.allowedToViewSchoolTimetable(school));
         Object student;
         try {
@@ -503,18 +515,20 @@ public class TimetableEventService {
                 getStudyPeriods(school.getId(), command.getFrom(), command.getThru()), eventResultList,
                 resultAsLong(student, 0), resultAsString(student, 1), resultAsString(student, 2),
                 resultAsBoolean(student, 3));
-        if (withPersonalUrl) {
-            dto.setPersonalUrl(timetableService.getPersonalUrl(Role.ROLL_T, dto.getStudentId()));
+        if (withPersonalParam) {
+            dto.setPersonalParam(timetableService.getPersonalUrlParam(Role.ROLL_T, dto.getStudentId()));
         }
         return dto;
     }
     
     /**
      * Get room's timetable for view.
+     * @param school
      * @param command
+     * @param checkSchool
      * @return timetable with room's info and timetable's events
      */
-    public TimetableByRoomDto roomTimetable(TimetableEventSearchCommand command, School school, boolean checkSchool) {
+    public TimetableByRoomDto roomTimetable(School school, TimetableEventSearchCommand command, boolean checkSchool) {
         if (checkSchool) {
             UserUtil.throwAccessDeniedIf(!TimetableService.allowedToViewSchoolTimetable(school));
         }
@@ -533,28 +547,43 @@ public class TimetableEventService {
     }
 
     public TimetableByDto personalTimetable(TimetableEventSearchCommand command, String encodedPerson) {
+        setPersonalTimetablePerson(command, encodedPerson);
+        TimetableByDto timetable = personalTimetable(command);
+        timetable.setPersonalParam(encodedPerson);
+        return timetable;
+    }
+
+    public TimetableByDto personalTimetable(TimetableEventSearchCommand command) {
         TimetableByDto timetable = null;
+        if (command.getPerson() != null) {
+            if (Role.ROLL_O.name().equals(command.getPerson().getRole())) {
+                School school = command.getPerson().getSchool();
+                timetable = teacherTimetable(school, command, false, true);
+                timetable.setSchoolId(school.getId());
+            } else if (Role.ROLL_T.name().equals(command.getPerson().getRole())) {
+                School school = command.getPerson().getSchool();
+                timetable = studentTimetable(school, command, false);
+                timetable.setSchoolId(school.getId());
+            }
+        }
+        return timetable;
+    }
+
+    private void setPersonalTimetablePerson(TimetableEventSearchCommand command, String encodedPerson) {
         TimetablePersonHolder person = timetableService.getPerson(encodedPerson);
         command.setPerson(person);
         if (person != null) {
             if (Role.ROLL_O.name().equals(person.getRole())) {
                 Teacher teacher = em.getReference(Teacher.class, person.getRoleId());
+                command.getPerson().setSchool(teacher.getSchool());
                 command.setTeachers(new ArrayList<>());
                 command.getTeachers().add(teacher.getId());
-
-                School school = teacher.getSchool();
-                timetable = teacherTimetable(command, school, false, true);
-                timetable.setSchoolId(school.getId());
             } else if (Role.ROLL_T.name().equals(person.getRole())) {
                 Student student = em.getReference(Student.class, person.getRoleId());
+                command.getPerson().setSchool(student.getSchool());
                 command.setStudent(student.getId());
-
-                School school = student.getSchool();
-                timetable = studentTimetable(command, school, false);
-                timetable.setSchoolId(school.getId());
             }
         }
-        return timetable;
     }
 
     private void filterTimetableSingleEvents(List<TimetableEventSearchDto> events, School school,
@@ -844,9 +873,11 @@ public class TimetableEventService {
 
     private List<TimetableEventSearchDto> getTimetableEventsList(JpaNativeQueryBuilder qb) {
         String select = "distinct tet.id, j.id as journal_id, ssp.id as subject_study_period_id,"
-                + " coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(te.name, j.name_et, subj.name_en) as name_en,"
+                + " coalesce(te.name, j.name_et, subj.name_et) as name_et,"
+                + " case when subj.id is null then coalesce(te.name, j.name_et) else subj.name_en || ' (' || subj.code || ')' end as name_en,"
                 + " tet.start, tet.end, te.consider_break, tobj.id as single_event, t.id as timetableId, te.capacity_type_code,"
-                + " te.is_personal, te.person_id, p.firstname, p.lastname, te.is_imported, sspe.id as exam_id";
+                + " te.is_personal, te.person_id, p.firstname, p.lastname, te.is_imported, sspe.id as exam_id,"
+                + " coalesce(tet.changed, tet.inserted) changed";
         List<?> eventResult = qb.select(select, em).getResultList();
 
         List<TimetableEventSearchDto> eventResultList = StreamUtil.toMappedList(r -> {
@@ -865,6 +896,7 @@ public class TimetableEventService {
             dto.setIsImported(isImported != null ? isImported : Boolean.FALSE);
             Long subjectStudyPeriodExamId = resultAsLong(r, 16);
             dto.setIsExam(subjectStudyPeriodExamId != null ? Boolean.TRUE : Boolean.FALSE);
+            dto.setChanged(resultAsLocalDateTime(r, 17));
             return dto;
         }, eventResult);
         return eventResultList;
@@ -923,7 +955,8 @@ public class TimetableEventService {
             criteria.setUser(user.getUserId());
         }
         JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(criteria, user.getSchoolId()).sort(pageable);
-        String select = "tet.id, coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(te.name, j.name_et, subj.name_en) as name_en,"
+        String select = "tet.id, coalesce(te.name, j.name_et, subj.name_et) as name_et,"
+                    + " case when subj.id is null then coalesce(te.name, j.name_et) else subj.name_en || ' (' || subj.code || ')' end as name_en,"
                     + " tet.start, tet.end, te.consider_break, tobj.id as single_event, t.id as timetableId, te.capacity_type_code,"
                     + " te.is_personal, te.person_id, p.firstname, p.lastname, te.is_imported, te.juhan_event_id";
         // do not show exams, they are managed thru separate UI
@@ -1098,71 +1131,100 @@ public class TimetableEventService {
 
     /**
      * Generate iCalendar for group timetable
+     * @param school
      * @param command
-     * @param language
+     * @param lang
      * @return calendar filename and iCalendar format calendar as a string
      */
-    public TimetableCalendarDto getGroupCalendar(TimetableEventSearchCommand command, String language, School school) {
-        TimetableByGroupDto groupTimetable = groupTimetable(command, school, true);
-        return timetableGenerationService.getICal(groupTimetable, getLanguage(language));
+    public TimetableCalendarDto getGroupCalendar(School school, TimetableEventSearchCommand command, Language lang) {
+        TimetableByGroupDto groupTimetable = groupTimetable(school, command, true);
+        return timetableGenerationService.getICal(groupTimetable, lang);
     }
 
     /**
      * Generate iCalendar for teacher timetable
+     * @param school
      * @param command
-     * @param language
+     * @param lang
      * @return calendar filename and iCalendar format calendar as a string
      */
-    public TimetableCalendarDto getTeacherCalendar(TimetableEventSearchCommand command, String language, School school) {
-        TimetableByTeacherDto teacherTimetable = teacherTimetable(command, school, false, true);
-        return timetableGenerationService.getICal(teacherTimetable, getLanguage(language));
+    public TimetableCalendarDto getTeacherCalendar(School school, TimetableEventSearchCommand command, Language lang) {
+        TimetableByTeacherDto teacherTimetable = teacherTimetable(school, command, false, true);
+        return timetableGenerationService.getICal(teacherTimetable, lang);
     }
 
     /**
      * Generate iCalendar for room timetable
+     * @param school
      * @param command
-     * @param language
+     * @param lang
      * @return calendar filename and iCalendar format calendar as a string
      */
-    public TimetableCalendarDto getRoomCalendar(TimetableEventSearchCommand command, String language, School school) {
-        TimetableByRoomDto roomTimetable = roomTimetable(command, school, true);
-        return timetableGenerationService.getICal(roomTimetable, getLanguage(language));
+    public TimetableCalendarDto getRoomCalendar(School school, TimetableEventSearchCommand command, Language lang) {
+        TimetableByRoomDto roomTimetable = roomTimetable(school, command, true);
+        return timetableGenerationService.getICal(roomTimetable, lang);
     }
 
     /**
      * Generate iCalendar for student timetable
+     * @param user
      * @param command
-     * @param language
+     * @param lang
      * @return calendar filename and iCalendar format calendar as a string
      */
     public TimetableCalendarDto getStudentCalendar(HoisUserDetails user, TimetableEventSearchCommand command,
-            String language) {
+            Language lang) {
         School school = em.getReference(School.class, user.getSchoolId());
-        TimetableByStudentDto studentTimetable = studentTimetable(command, school, false);
-        return timetableGenerationService.getICal(studentTimetable, getLanguage(language));
+        TimetableByStudentDto studentTimetable = studentTimetable(school, command, false);
+        return timetableGenerationService.getICal(studentTimetable, lang);
     }
 
     /**
      * Generate iCalendar for person timetable
      * @param command
-     * @param language
+     * @param encodedPerson
+     * @param lang
      * @return calendar filename and iCalendar format calendar as a string
      */
     public TimetableCalendarDto getPersonalCalendar(TimetableEventSearchCommand command, String encodedPerson,
-            String language) {
+            Language lang) {
         TimetableByDto personTimetable = personalTimetable(command, encodedPerson);
-        return timetableGenerationService.getICal(personTimetable, getLanguage(language));
+        return timetableGenerationService.getICal(personTimetable, lang);
+    }
+
+    /**
+     * Generate iCalendar link for person timetable
+     * @param response
+     * @param encodedPerson
+     * @param lang
+     * @return calendar filename and iCalendar format calendar as a string
+     */
+    public void getPersonalCalendarLink(HttpServletResponse response, String encodedPerson, Language lang) {
+        TimetableEventSearchCommand command = new TimetableEventSearchCommand();
+        setPersonalTimetablePerson(command, encodedPerson);
+        StudyYear studyYear = studyYearService.getCurrentStudyYear(command.getPerson().getSchool().getId());
+        command.setFrom(studyYear != null ? studyYear.getStartDate() : LocalDate.now());
+
+        try {
+            TimetableByDto personTimetable = personalTimetable(command);
+            String filename = String.format("%s.ics", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss")));
+            String iCalContent = timetableGenerationService.getICalContent(personTimetable.getTimetableEvents(), lang);
+            HttpUtil.ical(response, filename, iCalContent.getBytes());
+        } catch (IOException e) {
+            throw new HoisException("Exception occured generating ical file", e);
+        }
     }
 
     /**
      * Generate iCalendar for search result
+     * @param school
      * @param command
-     * @param language
+     * @param lang
      * @return calendar filename and iCalendar format calendar as a string
      */
-    public TimetableCalendarDto getSearchCalendar(TimetableEventSearchCommand command, String language, School school) {
+    public TimetableCalendarDto getSearchCalendar(School school, TimetableEventSearchCommand command, Language lang) {
         TimetableByDto searchResult = searchTimetable(command, school);
-        return timetableGenerationService.getICal(searchResult.getTimetableEvents(), getLanguage(language));
+        return timetableGenerationService.getICal(searchResult.getTimetableEvents(), lang);
     }
 
     public Map<String, ?> searchTimetableFormData(School school, Long studyYearId) {
@@ -1187,10 +1249,6 @@ public class TimetableEventService {
         data.put("subjects", autocompleteService.journalsAndSubjects(school.getId(), journalSubjectLookup));
 
         return data;
-    }
-
-    private static Language getLanguage(String language) {
-        return "et".equals(language) ? Language.ET : Language.EN;
     }
 
     private static class ResultObject {

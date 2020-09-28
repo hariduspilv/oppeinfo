@@ -1,0 +1,68 @@
+<md-dialog aria-label="grading schema dialog" flex="50" flex-xs="100">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{'schoolGradingSchema.label' | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout md-dialog-content" layout="column" flex ng-cloak>
+        <div class="form-readonly top-margin" layout="row" flex>
+          <md-input-container flex>
+            <label>{{'schoolGradingSchema.studyYears' | translate}}</label>
+            <hois-value value="gradingSchema.studyYearObjects.map(currentLanguageNameField).sort().join(', ')"></hois-value>
+          </md-input-container>
+        </div>
+
+        <div layout="row" flex>
+          <md-input-container class="md-block" flex="15" flex-md="30" flex-sm="100" flex-xs="100">
+            <md-checkbox ng-model="gradingSchema.isVerbal" aria-label="{{'schoolGradingSchema.verbalAssessmentAllowed' | translate}}" disabled>
+              {{'schoolGradingSchema.verbalAssessmentAllowed' | translate}}</md-checkbox>
+          </md-input-container>
+          <md-input-container class="md-block" flex="15" flex-md="30" flex-sm="100" flex-xs="100">
+            <md-checkbox ng-model="gradingSchema.isGrade" aria-label="{{'schoolGradingSchema.showStudentMark' | translate}}" disabled>
+              {{'schoolGradingSchema.showStudentMark' | translate}}</md-checkbox>
+          </md-input-container>
+        </div>
+
+        <md-table-container>
+          <table md-table>
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{'schoolGradingSchema.gradingSchemaRows.grade' | translate}}</th>
+                <th md-column>{{'schoolGradingSchema.gradingSchemaRows.gradeEn' | translate}}</th>
+                <th md-column>{{'schoolGradingSchema.gradingSchemaRows.gradeReal' | translate}}</th>
+                <th md-column>{{'schoolGradingSchema.gradingSchemaRows.validity' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in gradingSchema.gradingSchemaRows" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{row.grade}}</td>
+                <td md-cell>{{row.gradeEn}}</td>
+                <td md-cell>
+                  <md-input-container>
+                    <hois-select ng-model="row.gradeReal" values="grades" show-property="value" value-property="code"
+                      aria-label="{{'schoolGradingSchema.gradingSchemaRows.gradeReal' | translate}}" disabled></hois-select>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="row.isValid" aria-label="{{'schoolGradingSchema.validity' | translate}}" disabled></md-checkbox>
+                  </md-input-container>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+    </md-dialog-content>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

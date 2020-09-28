@@ -2,7 +2,7 @@
   <form name="directiveStudentForm" ng-submit="loadData()" novalidate ng-cloak>
     <md-toolbar>
       <div class="md-toolbar-tools">
-        <h2>{{'directive.addStudents'| translate}}</h2>
+        <h2>{{(picking? 'directive.pickStudents' : 'directive.addStudents') | translate}}</h2>
         <span flex></span>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon md-font-set="material-icons">close</md-icon>

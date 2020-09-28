@@ -60,6 +60,24 @@ angular.module('hitsaOis')
         return false;
       },
       /**
+       * Splits array into chunk sizes from start
+       * @param {*} inputArray 
+       * @param {*} chunkSize 
+       */
+      partSplit: function(inputArray, chunkSize) {
+        return inputArray.reduce(function(resultArray, item, index) {
+          const chunkIndex = Math.floor(index/chunkSize)
+
+          if(!resultArray[chunkIndex]) {
+            resultArray[chunkIndex] = []; // start a new chunk
+          }
+
+          resultArray[chunkIndex].push(item);
+
+          return resultArray;
+        }, []);
+      },
+      /**
        * Finds common parts of two arrays!
        *
        * Note, that arrays with repeating elements are not considered here

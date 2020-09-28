@@ -363,7 +363,8 @@
         "apelCommittees": "VÕTA komisjonid",
         "scholarshipCommittees": "Õppetoet/Stip komisjonid",
         "studentGroupYearTransfer": "Uude aastasse viimine",
-        "supportCommittees": "Tugiteenuste komisjonid"
+        "supportCommittees": "Tugiteenuste komisjonid",
+        "gradingSchema": "Hindamissüsteem"
       },
       "mainData": {
         "classifiers": "Klassifikaatorid",
@@ -893,9 +894,29 @@
     }
   },
   "student": {
+    "akadDirective": {
+      "label": "Akadeemiline puhkus",
+      "startDate": "Algus kp",
+      "endDate": "Lõpp kp",
+      "reason": "Põhjus",
+      "nr": "Käskkirja nr"
+    },
+    "foreignLanguages": {
+      "label": "Võõrkeeled"
+    },
+    "foreignLanguage": "Võõrkeel",
+    "foreignLanguageType": "Võõrkeele liik",
+    "representativeOtherContact": "Täiendavad kontaktid",
+    "isAcadStudyAllowed": "Õppimine lubatud",
+    "otherContact": "Muu kontakt",
+    "regNr": "Registrinumber",
+    "job": "Töökoht",
+    "jobOccupation": "Amet",
+    "addInfo": "Muu info",
     "addAll": "Lisa kõik õppijad",
     "plural": "Õppijad",
     "label": "Õppija",
+    "declaration": "Õpingukava",
     "absences": "Puudumistõendid",
     "results": "Õpitulemused",
     "address": "Postiaadress",
@@ -910,7 +931,14 @@
     "course": "Kursus/õppeaasta",
     "curriculum": "Õppekava",
     "curriculumVersion": "Õppekava versioon",
+    "higher": {
+      "curriculumVersion": "Õppekava / Õppekava versioon"
+    },
+    "vocational": {
+      "curriculumVersion": "Õppekava / Rakenduskava"
+    },
     "curriculumSpeciality": "Peaeriala",
+    "curriculumSpecialityOrMajor": "Peaeriala / Spetsialiseerumine",
     "documents": "Dokumendid",
     "dormitory": "Õpilaskodu",
     "remarks": "Märkused",
@@ -977,6 +1005,7 @@
     "studyLevel": "Õppetase",
     "showAll": "Kuva kõik",
     "showGuestStudents": "Kuva külalisõpilased",
+    "showExternalStudents": "Kuva eksternid",
     "supportService": {
       "label": "Tugiteenused",
       "ehis": "Tugimeetmed EHISest",
@@ -996,7 +1025,8 @@
           "label": "Muuda sissekanne"
         },
         "innoveHistory": {
-          "label": "HEV andmed EHISest"
+          "label": "HEV andmed EHISest",
+          "missingIdcode": "Puudub Eesti isikukood"
         },
         "printServices": {
           "label": "Trüki väljavõte",
@@ -1043,6 +1073,12 @@
       "label": "Käskkirjad",
       "type": "Käskkirja liik"
     },
+    "apelApplication": {
+      "label": "VÕTA",
+      "status": "Staatus",
+      "insertedDate": "Koostamise kp",
+      "confirmedDate": "Kinnitamise kp"
+    },
     "practiceContracts": {
       "label": "Praktikalepingud",
       "contractNumber": "Lepingu nr",
@@ -1082,6 +1118,7 @@
       "showLess": "Näita vähem"
     },
     "representative": {
+      "otherContact": "Täiendavad kontaktid",
       "add": "Lisa uus esindaja",
       "alreadyapplication": "Te olete juba esitanud avalduse õppija andmete nägemiseks",
       "alreadyexist": "Isik on juba õppija esindaja",
@@ -1121,6 +1158,8 @@
       }
     },
     "result": {
+      "apelApplicationCreditsVocational": "VÕTA maht",
+      "apelApplicationCreditsHigher": "VÕTA maht",
       "openAll": "Ava kõik",
       "curriculumCredits": "Õppekava maht",
       "totalCredits": "Kokku EKAP",
@@ -1161,8 +1200,9 @@
       "supplementPreview": "Hindamislehe eelvaade",
       "higher": {
         "modulesNotTakenIntoAccount": "Õppekavas mittearvestatavad moodulid",
-        "curriculumVersion": "Õppekava versioon",
-        "consideredCredits": "Kokku / õppekava täitmisel arvesse võetud EAP",
+        "curriculumVersion": "Õppekava / õppekava versioon",
+        "consideredCredits": "Kokku / õppekava täitmisel arvesse võetud EAP / õppekava täidetuse %",
+        "consideredCreditsShort": "Kokku / ÕK täit. EAP/ ÕK täidetuse %",
         "mandatorySubjects": "Kohustuslikud ained",
         "optionalSubjects": "Valikained",
         "withoutStudyYear": "Ilma õppeaastata",
@@ -1380,6 +1420,7 @@
     "code": "Lühinimi",
     "deleteconfirm": "Kas oled kindel, et soovid õppeasutust kustutada?",
     "ehisId": "EHISe ID",
+    "ekisUrl": "EKIS url",
     "email": "E-post",
     "emailDomain": "Õppeasutuse e-posti domeen",
     "generateUserEmail": "E-posti automaatne genereerimine uuele kasutajale",
@@ -1490,6 +1531,7 @@
     "academicLeaveApplicationNotfound": "Akadeemilise puhkuse avaldust ei leitud",
     "addInfo": "Lisainfo",
     "addStudents": "Lisa õppijad",
+    "pickStudents": "Vali õppijad",
     "addToDirective": "Lisa käskkirjale",
     "cancel": "Tühista",
     "cancelconfirm": "Kas oled kindel, et soovid käskkirja tühistada?",
@@ -1679,6 +1721,7 @@
     "modulehours": "Mooduli maht tundides",
     "moduleTotal": "kokku",
     "plannedHoursTotal": "Planeeritud tundide arv kokku",
+    "contractPlannedHoursTotal": "KT kokku",
     "responsibleformodule": "Mooduli vastutaja",
     "selectAll": "Vali kõik",
     "schoolDepartment": "Struktuuriüksus",
@@ -1705,7 +1748,11 @@
       "addModuleOutcomes": "Kuva päevikus ÕV-d kõikide teemade puhul",
       "addStudents": "Lisa õpilased automaatselt päevikusse",
       "assessment": "Hindamisviis",
+      "assessmentRequired": "Hindamisviis on kohustuslik!",
+      "connectedJournals": "Seotud päevikud",
       "deleteconfirm": "Kas oled kindel, et soovid päeviku kustutada?",
+      "divideIntoSubgroups": "Jaga osarühmadeks",
+      "dividedIntoSubgroups": "Osarühmadeks jagatud",
       "duplicateteacherHigher": "Õppejõud on juba olemas",
       "duplicateteacherVocational": "Õpetaja on juba olemas",
       "duplicateroom": "Ruum on juba olemas",
@@ -1713,25 +1760,28 @@
       "duplicatetheme": "Teema on juba päevikus",
       "isConfirmer": "kinnitaja",
       "isFiller": "täitja",
-      "groupProportion": "Osakaal",
       "name": "Päeviku nimi",
       "teacherHigher": "Õppejõud",
       "teacherVocational": "Õpetaja",
       "theme": "Õpetatav teema",
       "capacity-type": "Õppetöö liik",
       "group": "Seotud rühm",
+      "groupProportion": "Osakaal",
+      "groupProportionClassifierMissing": "Osakaalu klassifikaator puudu. Pöörduge peaadministraatori poole",
       "group-module": "Moodul",
       "group-theme": "Teema",
       "loadsDiffer": "Koormused erinevad",
       "total": "PÄEVIK KOKKU",
       "themeExistInOtherJournals": "Teema on seotud teise päevikuga",
       "themeExistInOtherJournalsConfirm": "Teema(d) \"{{themes}}\" on seotud teise päevikuga.",
+      "untisCode": "Tunniplaani kood",
+      "untisCodeNotUnique": "Päeviku tunniplaani kood ei ole unikaalne. Genereeritud kood {{generatedCode}} on juba kasutuses",
       "hasStudents": "Päevikuga on seotud õppijad",
       "outcomesReferenced": "Õpiväljunditega on seotud teisi kirjeid",
       "capacityTypeReferenced": "Eemaldatud õppetöö liikidega on seotud teisi kirjeid",
       "noJournalCapacityTypes": "Vähemalt üks õppetöö liik peab olema valitud",
-      "assessmentRequired": "Hindamisviis on kohustuslik!",
-      "saveConfirm": "Kas oled kindel, et soovid päeviku salvestada?"
+      "saveConfirm": "Kas oled kindel, et soovid päeviku salvestada?",
+      "subgroupCount": "Osarühmade arv"
     },
     "search": {
       "vocational": "Õpperühmad (kutse)",
@@ -2812,12 +2862,44 @@
   "schoolCapacityType": {
     "type": "Õppetöö liik",
     "isTimetable": "Kasutatakse tunniplaani koostamisel",
+    "isContact": "Kontakttunnid (KT)",
     "teacherLoadPercentageHigher": "Arvestatakse õppejõu koormuses koefitsiendiga (%)",
     "teacherLoadPercentageVocational": "Arvestatakse õpetaja koormuses koefitsiendiga (%)",
     "studyYear": "Õppeaasta",
     "loadPercentage": "Koormuse koefitsient %",
     "removeUsableConfirmHigher": "Kas soovid tühjendada kõik \"Arvestatakse õppejõu koormuses koefitsiendiga\" sisestatud vastava rea väljad?",
     "removeUsableConfirmVocational": "Kas soovid tühjendada kõik \"Arvestatakse õpetaja koormuses koefitsiendiga\" sisestatud vastava rea väljad?"
+  },
+  "schoolGradingSchema": {
+    "label": "Hindamissüsteem",
+    "addGradingSchema": "Lisa hindamissüsteem",
+    "deleteGradingSchema": "Kustuta hindamissüsteem",
+    "educationLevels": {
+      "basic": "Põhiharidus",
+      "secondary": "Keskharidus",
+      "vocational": "Kutseharidus",
+      "higher": "Kõrgharidus"
+    },
+    "gradingSchemaRows": {
+      "alreadyInUse": "Hinnet ei saa kustutada (võetud kasutusele)",
+      "grade": "Hinne",
+      "gradeEn": "Hinne inglise keeles",
+      "gradeReal": "Hinde vastavus",
+      "validity": "Kehtivus"
+    },
+    "otherGradingSchemas": "Teised hindamissüsteemid",
+    "showStudentMark": "Kuva õpilasele hindeline tulemus",
+    "studyYears": "Õppeaastad",
+    "verbalAssessmentAllowed": "Sõnaline hindamine lubatud",
+    "messages": {
+      "deleteGradingSchemaConfirm": "Kas oled kindel, et soovid hindamissüsteemi kustutada?",
+      "deleteSchemaRowConfirm": "Kas oled kindel, et soovid hinde kustutada?"
+    },
+    "error": {
+      "inUse": "Hindamissüsteem on juba kasutuses",
+      "studyYearsInUse": "Õppeaasta on juba teise hindamissüsteemiga seotud",
+      "studyLevelsMissing": "Õppeasutusel on õppetasemed seadistamata"
+    }
   },
   "subjectProgram": {
     "label": "Aineprogramm",
@@ -3161,6 +3243,8 @@
     "themeMatches": "Teemade vastavus",
     "noMatchingThemes": "Positiivsete tulemustega sooritusi ei leitud",
     "messages": {
+      "noCurriculum": "Õppijal puudub rakenduskava/õppekava versioon",
+      "externalStudent": "Avaldus on eksternile keelatud",
       "noCurriculumVersionHigher": "Õppijal ei ole kehtivat õppekava, mille versioon on kinnitatud ja praegu kehtiv",
       "noCurriculumVersionCurriculum": "Õppijal ei ole kehtivat õppekava, mille versioon on kinnitatud, praegu kehtiv, õige õppevormiga ja seotud kehtiva õpperühmaga",
       "applicationAlreadyExists": "Avaldus juba eksisteerib",
@@ -3774,7 +3858,8 @@
       "room": "Ruum",
       "subject": "Aine/teema",
       "studyYear": "Õppeaasta",
-      "personalUrl": "Personaalne url"
+      "personalUrl": "Personaalne url",
+      "personalCalendarUrl": "Personaalne url (isikliku kalendriga linkimiseks)"
     },
     "saveToCalendar": "Salvesta kalendrisse",
     "schoolBoard": "Infokiosk",
@@ -3914,7 +3999,10 @@
       "finalEntryNotAllowed": "Lõpptulemuse lisamine ei ole lubatud",
       "changingOutcomeResultNotAllowed": "Õpilase ÕV hinde muutmine ei ole lubatud",
       "studentsAdded": "{{numberOfJournals}} päevikusse lisati {{numberOfAddedStudents}} õppijat",
-      "noStudentsAdded": "Ühtegi sobivat õppijat ei leitud"
+      "noStudentsAdded": "Ühtegi sobivat õppijat ei leitud",
+      "requestInProgress": "Õppijaid lisatakse, palun oodake",
+      "overlappedRequest": "Valitud õppeaastasse toimub juba õppijate lisamine {{user}} poolt. Proovige hiljem uuesti!",
+      "failure": "Õppijate lisamine ebaõnnestus, palun pöördu õppeasutuse administraatori poole"
     },
     "prompt": {
       "confirm": "Kas oled kindel, et soovid päeviku kinnitada? Peale kinnitamist saab tulemusi muuta ainult vastavate õigustega administratiivne töötaja",
@@ -4226,6 +4314,7 @@
     "todaysAbsences": "Tänased puudumised"
   },
   "declaration": {
+    "declaration": "Õpingukava",
     "myDeclaration": "Minu õpingukava",
     "declarationPeriod": "Deklareerimisperiood: {{from}} - {{thru}}",
     "previousDeclarations": "Varasemad õpingukavad",
@@ -5224,8 +5313,8 @@
       "atLeastOneLearningMustBeTransferred": "Vähemalt üks formaalne/informaalne õpe peab olema üle kantud",
       "formalRecordsHaveErrors": "Formaalse õppe komplektid sisaldavad vigu",
       "incompleteData": "Sisestatud andmed on puudulikud",
-      "thereMustBeMoreTransferableCreditsThanSubstitutableCreditsVocational": "Ülekantavate moodulite mahtude summa peab olema suurem või võrdne asendatavate moodulite mahtude summaga",
-      "thereMustBeMoreTransferableCreditsThanSubstitutableCreditsHigher": "Ülekantava õppeaine maht peab olema suurem või võrdne asendatavate õppeainete mahtude summaga",
+      "transferableCreditsSmallerThanSubstitutableCreditsVocational": "Ülekantavate moodulite mahtude summa on väiksem asendatavate moodulite mahtude summast",
+      "transferableCreditsSmallerThanSubstitutableCreditsHigher": "Ülekantavate õppeainete mahtude summa on väiksem asendatavate õppeainete mahtude summast",
       "subjectReplacedMoreThanOnce": "Õppeaine on asendatud rohkem kui üks kord",
       "subjectTransferredMoreThanOnce": "Õppeaine on üle kantud rohkem kui üks kord",
       "subjectHasPositiveGrade": "Õppeaine on juba hinnatud positiivsele hindele",
@@ -5236,7 +5325,7 @@
       "moduleHasAlreadyBeenAdded": "Moodul on juba lisatud",
       "moduleOrItsThemeHasAlreadyBeenAdded": "Valitud moodul või selles sisalduv teema on juba lisatud",
       "themeOrParentModuleHasAlreadyBeenAdded": "Valitud teema või moodul, millesse teema kuulub, on juba lisatud",
-      "transferredSubjectLargerThanSubstitutableSubject": "Formaalses õppes ülekantavate ainete maht on suurem kui asendatavate ainete maht",
+      "transferredSubjectLargerThanSubstitutableSubject": "Ülekantavate ainete maht on suurem kui asendatavate ainete maht",
       "nominalStudyEndWontBeChanged": "Välisõppes kogutud ainepunktide arv on 0. Nominaalaega ei pikendata!",
       "alreadySentToEhis": "Nominaalaja pikendus juba saadetud EHISesse, tagasi kerimist ei toimu"
     }

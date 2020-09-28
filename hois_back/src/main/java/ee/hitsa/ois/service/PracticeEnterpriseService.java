@@ -742,7 +742,7 @@ public class PracticeEnterpriseService {
             StudentPracticeStatisticsDto dto = new StudentPracticeStatisticsDto();
             dto.setId(resultAsLong(r, 0));
             dto.setContractNr(resultAsString(r, 1));
-            dto.setStudent(PersonUtil.fullnameOptionalGuest(resultAsString(r, 2), resultAsString(r, 8)));
+            dto.setStudent(PersonUtil.fullnameTypeSpecific(resultAsString(r, 2), resultAsString(r, 8)));
             dto.setStudentGroup(resultAsString(r, 3));
             dto.setStartDate(JpaQueryUtil.resultAsLocalDate(r, 4));
             dto.setEndDate(JpaQueryUtil.resultAsLocalDate(r, 5));
@@ -1260,7 +1260,7 @@ public class PracticeEnterpriseService {
             ContractStatisticsDto dto = new ContractStatisticsDto();
             dto.setId(resultAsLong(r, 0));
             dto.setContractNr(resultAsString(r, 1));
-            dto.setStudent(PersonUtil.fullnameOptionalGuest(resultAsString(r, 2), resultAsString(r, 10)));
+            dto.setStudent(PersonUtil.fullnameTypeSpecific(resultAsString(r, 2), resultAsString(r, 10)));
             dto.setStudentGroup(resultAsString(r, 3));
             dto.setStartDate(JpaQueryUtil.resultAsLocalDate(r, 4));
             dto.setEndDate(JpaQueryUtil.resultAsLocalDate(r, 5));

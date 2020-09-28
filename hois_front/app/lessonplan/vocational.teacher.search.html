@@ -41,6 +41,7 @@
               {{auth.higher ? ('lessonplan.teacherHigher' | translate) : ('lessonplan.teacherVocational' | translate)}}
             </th>
             <th md-column>{{'lessonplan.plannedHoursTotal' | translate}}</th>
+            <th md-column>{{'lessonplan.contractPlannedHoursTotal' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
@@ -49,6 +50,7 @@
               <md-button md-no-ink class="md-primary change-button" ng-href="#/lessonplans/vocational/byteacher/{{::row.id}}/{{::row.studyYear}}">{{::row.teacherFullname}}</md-button>
             </td>
             <td md-cell>{{::row.plannedHours}}</td>
+            <td md-cell>{{::row.contractPlannedHours}}</td>
           </tr>
         </tbody>
       </table>

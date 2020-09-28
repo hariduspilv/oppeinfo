@@ -3,6 +3,7 @@ package ee.hitsa.ois.util;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -10,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
+import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.PhotoAdd;
 import ee.hitsa.ois.enums.StudentStatus;
@@ -28,6 +30,10 @@ public abstract class StudentUtil {
     public static boolean isStudying(Student student) {
         return ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_O, student.getStatus());
     }
+    
+    public static boolean isExternal(Student student) {
+        return ClassifierUtil.equals(StudentType.OPPUR_E, student.getType());
+    }
 
     public static boolean hasFinished(Student student) {
         return ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_L, student.getStatus());
@@ -36,7 +42,7 @@ public abstract class StudentUtil {
     public static boolean isOnAcademicLeave(Student student) {
         return ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_A, student.getStatus());
     }
-
+    
     public static boolean isHigher(Student student) {
         if (student.getCurriculumVersion() == null) return getIsDirectiveHigher(student);
         return CurriculumUtil.isHigher(student.getCurriculumVersion().getCurriculum());
@@ -103,9 +109,20 @@ public abstract class StudentUtil {
     }
     public static boolean getIsDirectiveHigher(Student student) {
         // should be only one directive per student
-        Optional<Directive> directive = student.getDirectiveStudents().stream()
-                .filter(p -> p.getDirective() != null && p.getDirective().getType() != null && DirectiveType.KASKKIRI_KYLALIS.name().equals(EntityUtil.getNullableCode(p.getDirective().getType())))
-                .map(p -> p.getDirective()).findFirst();
+        Optional<Directive> directive = Optional.empty();
+        if (StudentUtil.isGuestStudent(student)) {
+            directive = student.getDirectiveStudents().stream()
+                    .filter(p -> p.getDirective() != null && p.getDirective().getType() != null && !Boolean.TRUE.equals(p.getCanceled())
+                        && DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name().equals(EntityUtil.getNullableCode(p.getDirective().getStatus()))
+                        && DirectiveType.KASKKIRI_KYLALIS.name().equals(EntityUtil.getNullableCode(p.getDirective().getType())))
+                    .map(p -> p.getDirective()).findFirst();
+        } else if (StudentUtil.isExternal(student)) {
+            directive = student.getDirectiveStudents().stream()
+                    .filter(p -> p.getDirective() != null && p.getDirective().getStatus() != null && p.getDirective().getType() != null && !Boolean.TRUE.equals(p.getCanceled())
+                        && DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name().equals(EntityUtil.getNullableCode(p.getDirective().getStatus()))
+                        && DirectiveType.KASKKIRI_EKSTERN.name().equals(EntityUtil.getNullableCode(p.getDirective().getType())))
+                    .map(p -> p.getDirective()).sorted(Comparator.comparing(Directive::getConfirmDate).reversed()).findFirst();
+        }
         if (directive.isPresent()) {
             Boolean higher = directive.get().getIsHigher();
             if (higher == null) return false;

@@ -39,18 +39,24 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
 
   var entity = $route.current.locals.entity;
   if (angular.isDefined(entity)) {
+    var allowedOnForm = true;
     entity.$promise.then(function (response) {
       if (!$scope.isView) {
         if (!canChange(response)) {
-          message.error('main.messages.error.nopermission');
-          $scope.back("#/");
+          allowedOnForm = false;
         }
       } else {
-        if ($scope.auth.isAdmin() && 
-          response.type === 'AVALDUS_LIIK_TUGI' && !AuthService.isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS') && !response.isConnectedByCommittee) {
-          message.error('main.messages.error.nopermission');
-          $scope.back("#/");
+        allowedOnForm = (response.isConnectedByCommittee && ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher() || $scope.auth.isTeacher())) ||
+        (response.isConnectedByStudentGroup && $scope.auth.isTeacher() && AuthService.isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS')) ||
+        (!$scope.auth.isTeacher() && AuthService.isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS'));
+        if ($scope.auth.isAdmin() && response.type === 'AVALDUS_LIIK_TUGI' 
+          && !AuthService.isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS') && !response.isConnectedByCommittee) {
+          allowedOnForm = false;
         }
+      }
+      if (!allowedOnForm) {
+        message.error('main.messages.error.nopermission');
+        $scope.back("#/");
       }
     });
   }
@@ -136,6 +142,11 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       $scope.application.oldStudyForm = student.studyForm;
     }
     loadFormDeferred.resolve();
+    $scope.oVersFilter = [$scope.application.oldStudyForm];
+    // filter out study form external for non-external students
+    if (student.type !== 'OPPUR_E') {
+      $scope.oVersFilter.push('OPPEVORM_E');
+    }
   }
 
   function applicationOkava(student, loadFormDeferred) {
@@ -143,6 +154,10 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
     if ($scope.isCreate) {
       $scope.application.oldStudyForm = student.studyForm;
       $scope.application.oldCurriculumVersion = student.curriculumVersion;
+    }
+    if (student.type === 'OPPUR_E') {
+      $scope.application.newStudyForm = 'OPPEVORM_E';
+      $scope.disableStudyFormChange = true;
     }
 
     var allStudyForms = Classifier.queryForDropdown({ mainClassCode: 'OPPEVORM' });
@@ -160,6 +175,12 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
           return (higher && it.higher) || (vocational && it.vocational);
         }).map(function(it) { return it.code;});
       }
+      // filter out study form external for non-external students
+      if (student.type !== 'OPPUR_E') {
+        studyForms = studyForms.filter(function (item) {
+          return item !== 'OPPEVORM_E';
+        });
+      }
       $scope.allowedStudyForms = studyForms;
     }
 
@@ -167,14 +188,20 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       var selectedCurriculumVersion = allCurriculumVersions.find(function (it) { return it.id === $scope.application.newCurriculumVersion.id; });
       if (angular.isObject(selectedCurriculumVersion)) {
         allStudyForms.$promise.then(function() {
-          $scope.application.newStudyForm = selectedCurriculumVersion.studyForm;
-          filterStudyForms();
+          if (!$scope.disableStudyFormChange) {
+            $scope.application.newStudyForm = selectedCurriculumVersion.studyForm;
+            filterStudyForms();
+          }
         });
       }
     };
 
     allCurriculumVersions.$promise.then(function (result) {
-      $scope.curriculumVersions = result.filter(function (it) { return it.id !== student.curriculumVersion.id; });
+      if (student.curriculumVersion !== null && student.curriculumVersion !== undefined) {
+        $scope.curriculumVersions = result.filter(function (it) { return it.id !== student.curriculumVersion.id; });
+      } else {
+        $scope.curriculumVersions = result;
+      }
       allStudyForms.$promise.then(function() {
         filterStudyForms();
         loadFormDeferred.resolve();
@@ -313,7 +340,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
       }
     }
 
-    $scope.studentEhisSchool = $route.current.locals.auth.school.ehisSchool;
+    $scope.studentEhisSchool = $scope.auth.school.ehisSchool;
     if ($scope.isCreate) {
       $scope.application.isPeriod = true;
     }
@@ -446,7 +473,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
         higher: false,
         curriculumId: student.curriculum,
         hasGroup: true,
-        studyForm: student.studyForm
+        studyForm: (student.type !== 'OPPUR_E' ? student.studyForm : undefined)
       }, function(result) {
         $scope.formState.curriculumVersions = result.filter(function (r) {
           return r.id !== $scope.application.oldCurriculumVersion.id;
@@ -455,7 +482,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
           $scope.formState.curriculumsEmpty = true;
         }
       }),
-      studentGroups: QueryUtils.endpoint("/autocomplete/studentgroups").query({valid: true, higher: false, curriculumId: student.curriculum, studyForm: student.studyForm})
+      studentGroups: QueryUtils.endpoint("/autocomplete/studentgroups").query({valid: true, higher: false, curriculumId: student.curriculum, studyForm: (student.type !== 'OPPUR_E' ? student.studyForm : undefined)})
     };
     $q.all($scope.formState.curriculumVersions, $scope.formState.studentGroups).then(loadFormDeferred.resolve);
 
@@ -641,6 +668,9 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
         break;
       case 'AVALDUS_LIIK_VALIS':
         $scope.studentSearchCriteria = { studying: true };
+        break;
+      case 'AVALDUS_LIIK_OKAVA':
+        $scope.studentSearchCriteria = { studying: true, hasCurriculumVersion: true };
         break;
       case 'AVALDUS_LIIK_OVORM':
       case 'AVALDUS_LIIK_MUU':

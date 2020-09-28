@@ -13,6 +13,7 @@ import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 
 @Entity
 public class JournalEntryStudent extends BaseEntityWithId {
@@ -44,6 +45,11 @@ public class JournalEntryStudent extends BaseEntityWithId {
     private Boolean isRemark;
     private String remarkInsertedBy;
     private LocalDateTime remarkInserted;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private GradingSchemaRow gradingSchemaRow;
+
+    private String verbalGrade;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_entry_student_id", nullable = false, updatable = false, insertable = true)
@@ -159,6 +165,22 @@ public class JournalEntryStudent extends BaseEntityWithId {
 
     public Set<JournalEntryStudentHistory> getJournalEntryStudentHistories() {
         return journalEntryStudentHistories;
+    }
+
+    public GradingSchemaRow getGradingSchemaRow() {
+        return gradingSchemaRow;
+    }
+
+    public void setGradingSchemaRow(GradingSchemaRow gradingSchemaRow) {
+        this.gradingSchemaRow = gradingSchemaRow;
+    }
+
+    public String getVerbalGrade() {
+        return verbalGrade;
+    }
+
+    public void setVerbalGrade(String verbalGrade) {
+        this.verbalGrade = verbalGrade;
     }
 
     public void setJournalEntryStudentHistories(Set<JournalEntryStudentHistory> journalEntryStudentHistories) {

@@ -3,7 +3,7 @@
     <form name="practiceJournalForm" ng-submit="save()" novalidate layout="column">
       <div flex>
         <hois-autocomplete ng-model="practiceJournal.student" method="students" name="student" label="student.label"
-          additional-query-params="{active: true, higher: formState.isHigher, showStudentGroup: true, userId: auth.isLeadingTeacher() ? auth.user : null}"
+          additional-query-params="{showGuestStudent: true, active: true, higher: formState.isHigher, showStudentGroup: true, userId: auth.isLeadingTeacher() ? auth.user : null}"
           required ng-disabled="practiceJournal.id"></hois-autocomplete>
       </div>
 

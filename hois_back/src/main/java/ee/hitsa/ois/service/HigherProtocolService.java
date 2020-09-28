@@ -461,7 +461,7 @@ public class HigherProtocolService extends AbstractProtocolService {
     public StudentSearchDto mapStudent(Object result) {
         StudentSearchDto dto = new StudentSearchDto();
         dto.setId(resultAsLong(result, 0));
-        dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(result, 1), resultAsString(result, 2),
+        dto.setFullname(PersonUtil.fullnameTypeSpecific(resultAsString(result, 1), resultAsString(result, 2),
                 resultAsString(result, 5)));
         dto.setStudentGroup(new AutocompleteResult(null, resultAsString(result, 3), resultAsString(result, 3)));
         dto.setCurriculum(new AutocompleteResult(null, resultAsString(result, 4), resultAsString(result, 4)));

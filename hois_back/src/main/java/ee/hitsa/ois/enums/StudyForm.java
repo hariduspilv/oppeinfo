@@ -16,5 +16,7 @@ public enum StudyForm {
     /** Määramata */
     OPPEVORM_M,
     /** statsionaarne õpe - töökohapõhine õpe */
-    OPPEVORM_W
+    OPPEVORM_W,
+    /** eksternõpe */
+    OPPEVORM_E
 }

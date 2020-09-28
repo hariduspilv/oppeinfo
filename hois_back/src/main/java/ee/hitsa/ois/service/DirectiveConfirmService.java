@@ -26,7 +26,6 @@ import javax.transaction.Transactional.TxType;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
-import ee.hitsa.ois.service.fotobox.FotoBoxService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.PropertyAccessor;
@@ -134,8 +133,6 @@ public class DirectiveConfirmService {
     private PersonService personService;
     @Autowired
     private SchoolService schoolService;
-    @Autowired
-    private FotoBoxService fotoBoxService;
 
     private static final String ABSENCE_REJECT_DIRECTIVE_CANCELED = "Käskkiri tühistatud";
 
@@ -351,6 +348,10 @@ public class DirectiveConfirmService {
                         allErrors.add(new ErrorForField("directive.notValid", propertyPath(rowNum, "directiveStudent")));
                     }
                 }
+            } else if (DirectiveType.KASKKIRI_EKSTERN.equals(directiveType)) {
+                if (ds.getPreviousStudyLevel() == null) {
+                    allErrors.add(new ErrorForField(Required.MESSAGE, propertyPath(rowNum, "previousStudyLevel")));
+                }
             } else if (DirectiveType.KASKKIRI_STIPTOET.equals(directiveType)) {
                 // check students which do not qualify for directive
                 // status should be active and no overlapping academic leave
@@ -539,12 +540,12 @@ public class DirectiveConfirmService {
         return new ErrorForField("studentExists", propertyPath(rowNum, "idcode"));
     }
 
-    public Directive rejectByEkis(long directiveId, String rejectComment, String preamble, long wdId) {
+    public Directive rejectByEkis(long directiveId, String rejectComment, String preamble, long wdId, long schoolId) {
         //TODO veahaldus
         // • ÕISi käskkiri ei leitud – ÕISist ei leita vastava OIS_ID ja WD_ID-ga käskkirja
         // • Vale staatus – tagasi lükata saab ainult „kinnitamisel“ staatusega käskkirja. „Koostamisel“ ja „Kinnitatud“ käskkirju tagasi lükata ei saa.
         // • Üldine veateade – üldine viga salvestamisel, nt liiga lühike andmeväli, vale andmetüüp vms.
-        Directive directive = findDirective(directiveId, wdId);
+        Directive directive = findDirective(directiveId, wdId, schoolId);
         LOG.info("directive {} rejected by ekis with reason {}", EntityUtil.getId(directive), rejectComment);
         setDirectiveStatus(directive, DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL);
         directive.setPreamble(preamble);
@@ -596,9 +597,23 @@ public class DirectiveConfirmService {
         return status;
     }
 
-    private Directive findDirective(long directiveId, long wdId) {
+    private Directive findDirective(long directiveId, long wdId, long schoolId) {
         try {
             Directive directive = em.getReference(Directive.class, Long.valueOf(directiveId));
+
+            School school = directive.getSchool();
+            // ekis true, school 0 - throw
+            // ekis false, school 0 - OK
+            // ekis true, school !0 - OK, if same school
+            // ekis false, school !0 - throw
+            if (
+                    (school.getEkisUrl() != null && (Long.valueOf(0).equals(schoolId) || !school.getId().equals(schoolId)))
+                ||
+                    (school.getEkisUrl() == null && !Long.valueOf(0).equals(schoolId))
+            ) {
+                throw new EntityNotFoundException();
+            }
+
             if(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL, directive.getStatus())) {
                 throw new HoisException("Käskkiri vale staatusega");
             }
@@ -612,9 +627,7 @@ public class DirectiveConfirmService {
     }
 
     public Directive confirm(String confirmer, Directive directive, LocalDate confirmDate) {
-        DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
-        directive = confirmDirectiveChanges(confirmer, directive, confirmDate);
-        return directive;
+        return confirmDirectiveChanges(confirmer, directive, confirmDate);
     }
 
     @Transactional(TxType.REQUIRES_NEW)
@@ -700,8 +713,12 @@ public class DirectiveConfirmService {
 
     private void updateStudentData(DirectiveType directiveType, DirectiveStudent directiveStudent, Classifier studentStatus, DirectiveStudent academicLeave) {
         Student student = directiveStudent.getStudent();
-        if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType)  || DirectiveType.KASKKIRI_KYLALIS.equals(directiveType)) {
+        boolean newStudent = false;
+        if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType) 
+                || DirectiveType.KASKKIRI_KYLALIS.equals(directiveType)
+                || (EntityUtil.getNullableId(student) == null && DirectiveType.KASKKIRI_EKSTERN.equals(directiveType))) {
             student = createStudent(directiveStudent);
+            newStudent = true;
         }
 
         // copy entered data from directive
@@ -797,6 +814,22 @@ public class DirectiveConfirmService {
             cancelScholarships(directiveStudent);
             endContracts(student);
             break;
+        case KASKKIRI_EKSTERN:
+            student.setType(EntityUtil.getOptionalOne(StudentType.OPPUR_E.name(), em));
+            student.setStudyStart(confirmDate);
+            student.setStudyEnd(null);
+            if (!newStudent) {
+                // already existing user
+                // new students are enabled during creation
+                userService.enableUser(student, confirmDate);
+            }
+            break;
+        case KASKKIRI_EKSTERNKATK:
+            student.setStudyEnd(confirmDate);
+            userService.disableUser(student, LocalDate.now().minusDays(1));
+            cancelScholarships(directiveStudent);
+            endContracts(student);
+            break;
         case KASKKIRI_ENNIST:
             student.setStudyStart(confirmDate);
             student.setStudyEnd(null);
@@ -836,7 +869,8 @@ public class DirectiveConfirmService {
         }
 
         student = studentService.saveWithHistory(student);
-        if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType)  || DirectiveType.KASKKIRI_KYLALIS.equals(directiveType)) {
+        if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType) 
+                || DirectiveType.KASKKIRI_KYLALIS.equals(directiveType) || (newStudent && DirectiveType.KASKKIRI_EKSTERN.equals(directiveType))) {
             // store reference to created student also into directive_student
             directiveStudent.setStudent(student);
             directiveStudent.setStudentHistory(student.getStudentHistory());
@@ -865,7 +899,8 @@ public class DirectiveConfirmService {
             Student student = ds.getStudent();
             DirectiveStudent cancelds = includedStudents.get(student.getId());
             if(cancelds != null) {
-                if(DirectiveType.KASKKIRI_IMMAT.equals(canceledDirectiveType) || DirectiveType.KASKKIRI_IMMATV.equals(canceledDirectiveType) || DirectiveType.KASKKIRI_KYLALIS.equals(canceledDirectiveType)) {
+                if(DirectiveType.KASKKIRI_IMMAT.equals(canceledDirectiveType) || DirectiveType.KASKKIRI_IMMATV.equals(canceledDirectiveType) 
+                        || DirectiveType.KASKKIRI_KYLALIS.equals(canceledDirectiveType) || DirectiveType.KASKKIRI_EKSTERN.equals(canceledDirectiveType)) {
                     student.setStudyEnd(confirmDate);
                     student.setStatus(em.getReference(Classifier.class, StudentStatus.OPPURSTAATUS_K.name()));
                     personService.deleteUser(confirmer, UserService.userFor(student.getPerson(), student.getId(), Role.ROLL_T));
@@ -888,6 +923,11 @@ public class DirectiveConfirmService {
                         student.setStudyEnd(original.getStudyEnd());
                         student.setStatus(original.getStatus());
                         userService.disableUser(student, confirmDate);
+                        break;
+                    case KASKKIRI_EKSTERNKATK:
+                        student.setStudyEnd(null);
+                        student.setStatus(original.getStatus());
+                        userService.enableUser(student, confirmDate);
                         break;
                     case KASKKIRI_LOPET:
                         student.setStudyEnd(null);

@@ -19,7 +19,7 @@
 
     for (var i = 0; i < timetableEvents.length; i++) {
       var event = timetableEvents[i];
-      var weekDay = moment(event.date).isoWeekday() - 1;
+      var weekDay = moment.parseZone(event.date).isoWeekday() - 1;
       var eventDurationMinutes = moment.duration(moment(event.timeEnd, "HH:mm").diff(moment(event.timeStart, "HH:mm"))).asMinutes();
       var rowHeight = ROW_HEIGHT * (eventDurationMinutes / TIME_QUOTIENT);
       var timeFromDayStart = moment.duration(moment(event.timeStart, "HH:mm").diff(moment(DAY_START_TIME, "HH:mm"))).asMinutes();
@@ -60,7 +60,7 @@
     }
 
     timetableEvents.forEach(function (event) {
-      var weekDay = moment(event.date).isoWeekday() - 1;
+      var weekDay = moment.parseZone(event.date).isoWeekday() - 1;
       eventsByDays[weekDay].push(event);
     });
     return eventsByDays;
@@ -136,12 +136,13 @@
     var week = ['dayMon', 'dayTue', 'dayWed', 'dayThu', 'dayFri', 'daySat', 'daySun'];
 
     for (var i = 0; i < week.length; i++) {
-      var isToday = moment().format("DD.MM.YYYY") === moment(scope.shownWeek.start).add(i, "days").format("DD.MM.YYYY");
+      var date =  moment.parseZone(scope.shownWeek.start).add(i, "days");
+      var isToday = date.isSame(moment().tz('Europe/Tallinn'), 'day');
       weekColumns.push({
         name: week[i],
         column: i + 1,
         events: [],
-        date: moment(scope.shownWeek.start).add(i, "days").toDate(),
+        date: date.format(),
         today: isToday,
         expanded: isToday
       });
@@ -217,7 +218,7 @@
     QueryUtils.loadingWheel(scope, true);
     QueryUtils.endpoint(url).search(timetableCriteria(scope, true)).$promise.then(function (result) {
       QueryUtils.loadingWheel(scope, false);
-      scope.$parent.personalUrl = result.personalUrl;
+      scope.$parent.personalParam = result.personalParam;
       scope.shownStudyPeriods = result.studyPeriods;
       scope.shownTimetableCurriculum = result.generalTimetableCurriculum;
       scope.isHigher = result.isHigher;
@@ -296,14 +297,14 @@
       criteria = angular.extend(criteria, {
         from: scope.weeks[0].start,
         thru: scope.weeks[scope.weeks.length - 1].end,
-        lang: scope.currentLanguage()
+        lang: scope.currentLanguage().toUpperCase()
       });
     }
     return criteria;
   }
 
-  angular.module('hitsaOis').controller('TimetableWeekViewController', ['$location', '$route', '$scope', '$q', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
-    function ($location, $route, $scope, $q, Classifier, GeneralTimetableUtils, QueryUtils) {
+  angular.module('hitsaOis').controller('TimetableWeekViewController', ['$location', '$q', '$route', '$scope', 'Classifier', 'GeneralTimetableUtils', 'QueryUtils',
+    function ($location, $q, $route, $scope, Classifier, GeneralTimetableUtils, QueryUtils) {
       $scope.generalTimetableUtils = new GeneralTimetableUtils();
       $scope.auth = $route.current.locals.auth;
 

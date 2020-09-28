@@ -2,28 +2,27 @@ package ee.hitsa.ois.web.dto.timetable;
 
 public class JournalAutomaticAddStudentsResult {
 
-    private Long numberOfJournals;
-    private Long numberOfAddedStudents;
+    private Long journalId;
+    private Long addedStudents;
 
-    public JournalAutomaticAddStudentsResult(Long numberOfJournals, Long numberOfAddedStudents) {
-        this.numberOfJournals = numberOfJournals;
-        this.numberOfAddedStudents = numberOfAddedStudents;
+    public JournalAutomaticAddStudentsResult(Long journalId, Long addedStudents) {
+        this.journalId = journalId;
+        this.addedStudents = addedStudents;
     }
 
-    public Long getNumberOfJournals() {
-        return numberOfJournals;
+    public Long getJournalId() {
+        return journalId;
     }
 
-    public void setNumberOfJournals(Long numberOfJournals) {
-        this.numberOfJournals = numberOfJournals;
+    public void setJournalId(Long journalId) {
+        this.journalId = journalId;
     }
 
-    public Long getNumberOfAddedStudents() {
-        return numberOfAddedStudents;
+    public Long getAddedStudents() {
+        return addedStudents;
     }
 
-    public void setNumberOfAddedStudents(Long numberOfAddedStudents) {
-        this.numberOfAddedStudents = numberOfAddedStudents;
+    public void setAddedStudents(Long addedStudents) {
+        this.addedStudents = addedStudents;
     }
-
 }

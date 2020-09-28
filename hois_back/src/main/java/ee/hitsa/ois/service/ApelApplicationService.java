@@ -5,7 +5,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -111,6 +110,8 @@ public class ApelApplicationService {
     private AutomaticMessageService automaticMessageService;
     @Autowired
     private Validator validator;
+    @Autowired
+    private StudentService studentService;
 
     private static final String RPM_FROM = "from apel_application aa"
             + " join student s on aa.student_id = s.id"
@@ -242,7 +243,7 @@ public class ApelApplicationService {
                 Boolean.valueOf(ApelApplicationUtil.canCanChangeTransferStatus(user, application)));
         dto.setCanConfirm(Boolean.valueOf(ApelApplicationUtil.canConfirm(user, application)));
         dto.setCanRemoveConfirmation(Boolean.valueOf(ApelApplicationUtil.canRemoveConfirmation(user, application)));
-
+        dto.setIsVocational(Boolean.valueOf(studentService.isVocational(application.getStudent())));
         List<AbroadStudiesHolder> finishedAbroadStudies = finishedAbroadStudies(application.getStudent());
         dto.setAbroadStudyPeriods(StreamUtil.nullSafeList(finishedAbroadStudies).stream()
                 .filter(StreamUtil.distinctByKey(as -> as.getApplicationId()))
@@ -293,7 +294,9 @@ public class ApelApplicationService {
 
     private ApelApplication save(HoisUserDetails user, ApelApplication application,
             ApelApplicationForm applicationForm, boolean validate) {
-        if (validate) validateSubmittedApplication(application, true);
+        if (validate) {
+            validateSubmittedApplication(application);
+        }
         EntityUtil.bindToEntity(applicationForm, application, "nominalType", "newNominalStudyEnd", "oldNominalStudyEnd",
                 "isEhisSent", "records", "committee", "decision", "files");
 
@@ -602,7 +605,7 @@ public class ApelApplicationService {
      * @return
      */
     public ApelApplication submit(ApelApplication application) {
-        validateSubmittedApplication(application, false);
+        validateSubmittedApplication(application);
         if (application.getRecords().isEmpty()) {
             throw new ValidationFailedException("apel.error.atLeastOneFormalOrInformalLearning");
         }
@@ -614,7 +617,7 @@ public class ApelApplicationService {
         return application;
     }
 
-    private void validateSubmittedApplication(ApelApplication application, boolean strictValidation) {
+    private void validateSubmittedApplication(ApelApplication application) {
         boolean vocational = Boolean.TRUE.equals(application.getIsVocational());
         Set<Long> recordsWithErrors = new HashSet<>();
         Map<Long, List<String>> recordErrors = new HashMap<>();
@@ -622,13 +625,9 @@ public class ApelApplicationService {
         for (ApelApplicationRecord record : application.getRecords()) {
             // formal subject or modules need to be validated because they can be transferred from abroad studies applications
             validateFormalSubjectsOrModules(record, recordsWithErrors, recordErrors, vocational);
-
-            if (strictValidation && !recordsWithErrors.contains(record.getId())) {
-                validateTransferredCredits(record, recordsWithErrors, recordErrors, vocational);
-            }
         }
 
-        if(!recordsWithErrors.isEmpty()) {
+        if (!recordsWithErrors.isEmpty()) {
             Map<Object, Object> params = new HashMap<>();
             params.put("recordsWithErrors", recordsWithErrors);
             params.put("recordErrors", recordErrors);
@@ -651,6 +650,8 @@ public class ApelApplicationService {
         }
     }
 
+    //TODO: logic moved to frontend, only warning now, doesn't forbid, remove?
+    /*
     private static void validateTransferredCredits(ApelApplicationRecord record, Set<Long> recordsWithErrors,
             Map<Long, List<String>> recordErrors, boolean vocational) {
         BigDecimal replacedCredits;
@@ -682,6 +683,7 @@ public class ApelApplicationService {
             addRecordError(record.getId(), error, recordErrors);
         }
     }
+     */
 
     private static void addRecordError(Long recordId, String error, Map<Long, List<String>> recordErrors) {
         if (!recordErrors.containsKey(recordId)) {
@@ -689,14 +691,12 @@ public class ApelApplicationService {
         }
         recordErrors.get(recordId).add(error);
     }
-
-
-
+    /**
     private static boolean allTransferredSubjectsInFreeChoiceModules(ApelApplicationRecord record) {
         return record.getFormalSubjectsOrModules().stream().allMatch(s -> s.getCurriculumVersionHmodule() != null &&
                 HigherModuleType.KORGMOODUL_V.name().equals(EntityUtil.getCode(s.getCurriculumVersionHmodule().getType())));
     }
-
+    */
 
     /**
      * Set APEL application's status to 'Being confirmed'

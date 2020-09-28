@@ -1445,7 +1445,7 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
         };
 
         dialogScope.areReplacedSubjectsValid = function () {
-          if (!allTransferredSubjectsInFreeChoiceModules()) {
+          if (!ApelApplicationUtils.allTransferredSubjectsInFreeChoiceModules(dialogScope.record)) {
             return !ArrayUtils.isEmpty(dialogScope.record.formalReplacedSubjectsOrModules);
           }
           return true;
@@ -1462,7 +1462,7 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
             }
           }
 
-          if (!allTransferredSubjectsInFreeChoiceModules()) {
+          if (!ApelApplicationUtils.allTransferredSubjectsInFreeChoiceModules(dialogScope.record)) {
             if (ArrayUtils.isEmpty(dialogScope.record.formalReplacedSubjectsOrModules)) {
               message.error('apel.error.atLeastOneSubstitutableSubject');
               return;
@@ -1473,13 +1473,6 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
           ApelApplicationUtils.formalSubjectOrModulesObjectsToIdentifiers(dialogScope.record);
           dialogScope.submit();
         };
-
-        function allTransferredSubjectsInFreeChoiceModules() {
-          var nonFreeChoiceModules = (dialogScope.record.formalSubjectsOrModules || []).filter(function (transfer) {
-            return transfer.curriculumVersionHmodule === null || transfer.curriculumVersionHmodule.type !== 'KORGMOODUL_V';
-          });
-          return nonFreeChoiceModules.length === 0;
-        }
 
         function formalSubjectsOrModulesToArray() {
           var array = [];

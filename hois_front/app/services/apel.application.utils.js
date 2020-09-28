@@ -29,15 +29,13 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
   };
 
   apelApplicationUtil.sendToConfirm = function (application, callback) {
+    removeRecordErrors(application);
     if (!atLeastOneLearningTransferred(application)) {
       message.error('apel.error.atLeastOneLearningMustBeTransferred');
       return;
     }
+    var extraPrompts = validateFormalTransferredCredits(application);
 
-    var extraPrompts = [];
-    if (!application.isVocational && formalTansferredSubjectsSmallerThanSubstitutableSubjects(application)) {
-      extraPrompts.push('apel.error.transferredSubjectLargerThanSubstitutableSubject');
-    }
     var studyEndExtendingNotAllowed = !application.isEhisSent && application.nominalType !== null &&
       application.nominalType !== 'NOM_PIKEND_0' && apelApplicationUtil.abroadStudiesCredits(application) === 0;
     if (studyEndExtendingNotAllowed) {
@@ -56,6 +54,26 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
     }
   };
 
+  function validateFormalTransferredCredits(application) {
+    var extraPrompts = [];
+    if (areTransferredCreditsSmallerThanSubstitutableCredits(application)) {
+      extraPrompts.push(application.isVocational ?
+        'apel.error.transferableCreditsSmallerThanSubstitutableCreditsVocational' :
+        'apel.error.transferableCreditsSmallerThanSubstitutableCreditsHigher');
+    }
+    if (!application.isVocational && isTransferredSubjectLargerThanSubstitutableSubject(application)) {
+      extraPrompts.push('apel.error.transferredSubjectLargerThanSubstitutableSubject');
+    }
+    return extraPrompts;
+  }
+
+  function removeRecordErrors(application) {
+    application.records.forEach(function (record) {
+      record.error = false;
+      record.errorMessages = [];
+    });
+  }
+
   function atLeastOneLearningTransferred(application) {
     for (var i = 0; i < application.records.length; i++) {
       for (var j = 0; j < application.records[i].data.length; j++) {
@@ -67,7 +85,7 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
     return false;
   }
 
-  function formalTansferredSubjectsSmallerThanSubstitutableSubjects(application) {
+  function isTransferredSubjectLargerThanSubstitutableSubject(application) {
     var error = false;
     application.records.forEach(function (record) {
       if (record.isFormalLearning) {
@@ -84,13 +102,76 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
           replacedCredits += subject.subject.credits;
         });
 
-        record.error = transferredCredits > replacedCredits;
-        if (!error && record.error) {
-          error = true;
+        var recordError = transferredCredits > replacedCredits;
+        if (recordError) {
+          record.error = true;
+          addRecordErrorMessage(record, 'apel.error.transferredSubjectLargerThanSubstitutableSubject');
+          if (!error) {
+            error = true;
+          }
         }
       }
     });
     return error;
+  }
+
+  function areTransferredCreditsSmallerThanSubstitutableCredits(application) {
+    var error = false;
+    for (var i = 0; i < application.records.length; i++) {
+      var record = application.records[i];
+
+      var recordTransferred = false;
+      var transferredCredits = 0;
+      record.formalSubjectsOrModules.forEach(function (subjectOrModule) {
+        if (subjectOrModule.transfer) {
+          recordTransferred = true;
+          transferredCredits += subjectOrModule.credits;
+        }
+      });
+
+      if (!recordTransferred) {
+        continue;
+      }
+
+      var replacedCredits = 0;
+      if (record.isFormalLearning) {
+        if (application.isVocational) {
+          record.formalReplacedSubjectsOrModules.forEach(function (moduleOrTheme) {
+            if (moduleOrTheme.curriculumVersionOmoduleTheme) {
+              replacedCredits += moduleOrTheme.curriculumVersionOmoduleTheme.credits;
+            } else {
+              replacedCredits += moduleOrTheme.curriculumVersionOmodule.credits;
+            }
+          });
+        } else {
+          if (allTransferredSubjectsInFreeChoiceModules(record)) {
+            continue;
+          }
+          record.formalReplacedSubjectsOrModules.forEach(function (subject) {
+            replacedCredits += subject.subject.credits;
+          });
+        }
+
+        var recordError = replacedCredits > transferredCredits;
+        if (recordError) {
+          record.error = true;
+          addRecordErrorMessage(record, application.isVocational ?
+            'apel.error.transferableCreditsSmallerThanSubstitutableCreditsVocational' :
+            'apel.error.transferableCreditsSmallerThanSubstitutableCreditsHigher');
+          if (!error) {
+            error = true;
+          }
+        }
+      }
+    }
+    return error;
+  }
+
+  function addRecordErrorMessage(record, error) {
+    if (angular.isUndefined(record.errorMessages)) {
+      record.errorMessages = [];
+    }
+    record.errorMessages.push(error);
   }
 
   function sendToConfirmWithComment(application, callback, studyEndExtendingNotAllowed, extraPrompts) {
@@ -135,9 +216,14 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
   }
 
   apelApplicationUtil.sendToCommittee = function (application, callback) {
-    var modifiedApplication = apelApplicationUtil.recordsToIdentifiers(application);
+    var modifiedApplication = apelApplicationUtil.recordsToIdentifiers(application)
+
+    removeRecordErrors(application);
+    var extraPrompts = validateFormalTransferredCredits(application);
+
     dialogService.confirmDialog({
-      prompt: 'apel.sendToCommitteeConfirm'
+      prompt: 'apel.sendToCommitteeConfirm',
+      extraPrompts: extraPrompts
     }, function () {
       QueryUtils.endpoint('/apelApplications/' + modifiedApplication.id + '/sendToCommittee/').put({
         student: modifiedApplication.student,
@@ -156,38 +242,26 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
   };
 
   apelApplicationUtil.confirm = function (application, callback) {
+    removeRecordErrors(application);
     if (!atLeastOneLearningTransferred(application)) {
       message.error('apel.error.atLeastOneLearningMustBeTransferred');
       return;
     }
-    if (!application.isVocational && formalTansferredSubjectsSmallerThanSubstitutableSubjects(application)) {
-      dialogService.confirmDialog({
-        prompt: 'apel.error.transferredSubjectLargerThanSubstitutableSubject',
-        extraPrompts: ['apel.confirmConfirm']
-      }, function () {
-        confirm(application, callback, false);
-      });
-    } else {
-      confirm(application, callback, true);
-    }
+    var extraPrompts = validateFormalTransferredCredits(application);
+
+    dialogService.confirmDialog({
+      prompt: 'apel.confirmConfirm',
+      extraPrompts: extraPrompts
+    }, function () {
+      confirm(application, callback, false);
+    });
   };
 
-  function confirm(application, callback, askForConfirmation) {
-    if (askForConfirmation) {
-      dialogService.confirmDialog({
-        prompt: 'apel.confirmConfirm'
-      }, function () {
-        QueryUtils.endpoint('/apelApplications/' + application.id + '/confirm/').put({}, function (response) {
-          message.info('apel.messages.confirmed');
-          callback(response);
-        });
-      });
-    } else {
+  function confirm(application, callback) {
       QueryUtils.endpoint('/apelApplications/' + application.id + '/confirm/').put({}, function (response) {
         message.info('apel.messages.confirmed');
         callback(response);
       });
-    }
   }
 
   apelApplicationUtil.sendBack = function (application, callback) {
@@ -287,6 +361,17 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
       }
     }
     return false;
+  }
+
+  apelApplicationUtil.allTransferredSubjectsInFreeChoiceModules = function (record) {
+    return allTransferredSubjectsInFreeChoiceModules(record);
+  };
+
+  function allTransferredSubjectsInFreeChoiceModules(record) {
+    var nonFreeChoiceModules = (record.formalSubjectsOrModules || []).filter(function (transfer) {
+      return transfer.curriculumVersionHmodule === null || transfer.curriculumVersionHmodule.type !== 'KORGMOODUL_V';
+    });
+    return nonFreeChoiceModules.length === 0;
   }
 
   return apelApplicationUtil;

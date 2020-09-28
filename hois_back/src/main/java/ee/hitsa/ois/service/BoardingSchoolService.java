@@ -102,7 +102,7 @@ public class BoardingSchoolService {
             BoardingSchoolSearchDto dto = new BoardingSchoolSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setStudent(resultAsLong(r, 1));
-            dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 12)));
+            dto.setFullname(PersonUtil.fullnameTypeSpecific(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 12)));
             dto.setIdcode(resultAsString(r, 4));
             dto.setStudentGroup(new AutocompleteResult(resultAsLong(r, 5), resultAsString(r, 6), resultAsString(r, 6)));
             dto.setValidFrom(resultAsLocalDate(r, 7));
@@ -219,7 +219,7 @@ public class BoardingSchoolService {
                 .map(r -> {
                     BoardingSchoolManagementDto dto = new BoardingSchoolManagementDto();
                     dto.setStudent(resultAsLong(r, 0));
-                    dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 8)));
+                    dto.setFullname(PersonUtil.fullnameTypeSpecific(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 8)));
                     dto.setIdcode(resultAsString(r, 3));
                     dto.setStudentGroup(
                             new AutocompleteResult(resultAsLong(r, 4), resultAsString(r, 5), resultAsString(r, 5)));

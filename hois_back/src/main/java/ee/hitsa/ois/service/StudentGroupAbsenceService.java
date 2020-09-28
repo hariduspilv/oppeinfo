@@ -177,8 +177,8 @@ public class StudentGroupAbsenceService {
         qb.sort("p.lastname, p.firstname");
         List<?> data = qb.select("s.id, p.firstname, p.lastname, s.type_code as studentType", em).getResultList();
         return StreamUtil.toMappedList(s -> new AutocompleteResult(resultAsLong(s, 0),
-                PersonUtil.fullnameOptionalGuest(resultAsString(s, 1), resultAsString(s, 2), resultAsString(s, 3)),
-                PersonUtil.fullnameOptionalGuest(resultAsString(s, 1), resultAsString(s, 2), resultAsString(s, 3))), data);
+                PersonUtil.fullnameTypeSpecific(resultAsString(s, 1), resultAsString(s, 2), resultAsString(s, 3)),
+                PersonUtil.fullnameTypeSpecific(resultAsString(s, 1), resultAsString(s, 2), resultAsString(s, 3))), data);
     }
 
     public List<StudyWeekDto> studyYearWeeks(Long studyYearId) {

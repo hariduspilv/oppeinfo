@@ -1,6 +1,8 @@
-<md-nav-bar md-selected-nav-item="currentNavItem" aria-label="{{'subjectStudyPeriod.label.options' | translate}}">
-  <md-nav-item md-nav-href="#/declaration/current/view" name="current">{{'declaration.myDeclaration' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/declarations/previous?_menu" name="previous">{{'declaration.previousDeclarations' | translate}}</md-nav-item>
+<div ng-cloak ng-if="student && student.isVocational===false" ng-include="'student/templates/view.navbar.higher.tmpl.html'"></div>
+<div style="margin-top: 15px;" ng-if="student && student.isVocational===false" layout-padding ng-include="'student/templates/view.student.header.html'"></div>
+<md-nav-bar md-selected-nav-item="currentNavItem" aria-label="{{'subjectStudyPeriod.label.options' | translate}}" ng-if="currentNavItem">
+  <md-nav-item md-nav-href="{{student ? '#/students/'+studentId+'/declaration?_noback' : '#/declaration/current/view?_menu'}}" name="current">{{(student ? 'declaration.declaration' : 'declaration.myDeclaration') | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="{{student ? '#/students/'+studentId+'/declaration/previous?_noback' : '#/declarations/previous?_menu'}}" name="previous">{{'declaration.previousDeclarations' | translate}}</md-nav-item>
 </md-nav-bar>
 
 <md-table-container ng-cloak layout-padding>
@@ -15,7 +17,7 @@
     </thead>
     <tbody md-body>
       <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-          <td md-cell><a ng-href="#/declarations/{{row.id}}/view">{{currentLanguageNameField(row.studyPeriod)}}</a></td>
+          <td md-cell><a ng-href="#/declarations/{{row.id}}/view{{inStudentData ? '?_fromStudentData' : ''}}">{{currentLanguageNameField(row.studyPeriod)}}</a></td>
           <td md-cell>{{row.inserted | hoisDate}}</td>
           <td md-cell>{{currentLanguageNameField(row.status)}}</td>
           <td md-cell>{{row.confirmDate | hoisDate}}</td>

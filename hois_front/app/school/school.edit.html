@@ -93,7 +93,7 @@
       <md-checkbox ng-model="school.isWithoutEkis" name="isWithoutEkis">
         {{'school.isWithoutEkis' | translate}}
       </md-checkbox>
-    </md-input-container> 
+    </md-input-container>
 
     <md-input-container class="md-block">
       <md-checkbox ng-model="school.isStudentTerms" name="isStudentTerms">
@@ -204,6 +204,11 @@
     <md-input-container class="md-block">
       <label class="textInput">{{'school.finalEn62' | translate}}</label>
       <textarea ng-model="school.finalEn62" name="finalEn62" md-maxlength="500" max-rows="10"></textarea>
+    </md-input-container>
+
+    <md-input-container class="md-block">
+      <label class="textInput">{{'school.ekisUrl' | translate}}</label>
+      <input ng-model="school.ekisUrl" name="ekisUrl" type="text" md-maxlength="4000">
     </md-input-container>
 
     <lf-ng-md-file-input name="logoFiles"

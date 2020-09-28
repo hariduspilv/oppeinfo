@@ -4,6 +4,8 @@ import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_AKAD;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_AKADK;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_DUPLIKAAT;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_EKSMAT;
+import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_EKSTERN;
+import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_EKSTERNKATK;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_ENNIST;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_FINM;
 import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_IMMAT;
@@ -97,7 +99,6 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
-import ee.hitsa.ois.enums.CurriculumModuleType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.DocumentStatus;
@@ -239,6 +240,8 @@ public class DirectiveService {
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_AKADK, EnumUtil.toNameList(OPPURSTAATUS_A));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_DUPLIKAAT, EnumUtil.toNameList(OPPURSTAATUS_L));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_EKSMAT, EnumUtil.toNameList(OPPURSTAATUS_O, OPPURSTAATUS_V));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_EKSTERN, EnumUtil.toNameList(OPPURSTAATUS_K));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_EKSTERNKATK, EnumUtil.toNameList(OPPURSTAATUS_O));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_ENNIST, EnumUtil.toNameList(OPPURSTAATUS_K));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_FINM, EnumUtil.toNameList(OPPURSTAATUS_O));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_INDOK, StudentStatus.STUDENT_STATUS_ACTIVE);
@@ -582,7 +585,7 @@ public class DirectiveService {
             }
         }
 
-        if(KASKKIRI_IMMAT.equals(directiveType) || KASKKIRI_KYLALIS.equals(directiveType)) {
+        if(KASKKIRI_IMMAT.equals(directiveType) || KASKKIRI_KYLALIS.equals(directiveType) || KASKKIRI_EKSTERN.equals(directiveType)) {
             long rowNum = 0;
             for(DirectiveFormStudent dfs : StreamUtil.nullSafeList(form.getStudents())) {
                 if(!StringUtils.hasText(dfs.getSex())) {
@@ -594,7 +597,8 @@ public class DirectiveService {
                 rowNum++;
             }
         }
-        if (DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType) || DirectiveType.KASKKIRI_KYLALIS.equals(directiveType)) {
+        if (DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType) 
+                || DirectiveType.KASKKIRI_KYLALIS.equals(directiveType) || KASKKIRI_EKSTERN.equals(directiveType)) {
             long rowNum = 0;
             Map<Long, Long> curriculumVersionCurriculum = new HashMap<>();
             Set<Long> uniqueRows = new LinkedHashSet<>();
@@ -774,7 +778,7 @@ public class DirectiveService {
                     messagesToStudents.add(directiveStudent);
                 }
 
-                if(KASKKIRI_IMMAT.equals(directiveType) || KASKKIRI_KYLALIS.equals(directiveType)) {
+                if(KASKKIRI_IMMAT.equals(directiveType) || KASKKIRI_KYLALIS.equals(directiveType) || KASKKIRI_EKSTERN.equals(directiveType)) {
                     // directive type can add new persons (and later students) to the system
                     setPerson(formStudent, directiveStudent);
                 }
@@ -919,10 +923,13 @@ public class DirectiveService {
             if (!KASKKIRI_TUGI.equals(directiveType)) {
                 studentMapping.values().forEach(ds -> studentRemovedFromDirective(user, ds));
             }
-            if(!DirectiveType.KASKKIRI_IMMAT.equals(directiveType) && !DirectiveType.KASKKIRI_IMMATV.equals(directiveType) && !DirectiveType.KASKKIRI_KYLALIS.equals(directiveType)) {
+            if(!DirectiveType.KASKKIRI_IMMAT.equals(directiveType) && !DirectiveType.KASKKIRI_IMMATV.equals(directiveType) 
+                    && !DirectiveType.KASKKIRI_KYLALIS.equals(directiveType)) {
                 for (DirectiveStudent directiveStudent : messagesToStudents) {
-                    StudentDirectiveCreated data = new StudentDirectiveCreated(directiveStudent);
-                    automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_KASKKIRI, directiveStudent.getStudent(), data);
+                    if (!(DirectiveType.KASKKIRI_EKSTERN.equals(directiveType) && EntityUtil.getNullableId(directiveStudent.getStudent()) == null)) {
+                        StudentDirectiveCreated data = new StudentDirectiveCreated(directiveStudent);
+                        automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_KASKKIRI, directiveStudent.getStudent(), data);
+                    }
                 }
             }
         }
@@ -1485,7 +1492,9 @@ public class DirectiveService {
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from student s inner join person person on s.person_id = person.id " +
-                "inner join curriculum_version cv on s.curriculum_version_id = cv.id inner join curriculum c on cv.curriculum_id = c.id " +
+                (DirectiveType.KASKKIRI_EKSTERNKATK.equals(directiveType) ? 
+                        "left join curriculum_version cv on s.curriculum_version_id = cv.id left join curriculum c on cv.curriculum_id = c.id "
+                        : "inner join curriculum_version cv on s.curriculum_version_id = cv.id inner join curriculum c on cv.curriculum_id = c.id ") +
                 (DirectiveType.KASKKIRI_LOPET == directiveType ? "join student_curriculum_completion scc on scc.student_id = s.id " : "") +
                 "left outer join student_group sg on s.student_group_id = sg.id").sort("sg.code", "person.lastname", "person.firstname");
 
@@ -1496,6 +1505,11 @@ public class DirectiveService {
         qb.optionalCriteria("c.is_higher = :isHigher", "isHigher", criteria.getIsHigher());
         qb.optionalCriteria("s.student_group_id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
         if (DirectiveType.KASKKIRI_TYHIST != directiveType) qb.requiredCriteria("s.type_code != :typeCode", "typeCode", StudentType.OPPUR_K.name());
+        
+        List<DirectiveType> externalAllowedTypes = Arrays.asList(DirectiveType.KASKKIRI_TYHIST, DirectiveType.KASKKIRI_DUPLIKAAT, 
+                DirectiveType.KASKKIRI_EKSTERN, DirectiveType.KASKKIRI_EKSTERNKATK, DirectiveType.KASKKIRI_LOPET, DirectiveType.KASKKIRI_MUU, 
+                DirectiveType.KASKKIRI_PRAKTIK, DirectiveType.KASKKIRI_OKAVA, DirectiveType.KASKKIRI_OTEGEVUS);
+        if (!externalAllowedTypes.contains(directiveType)) qb.requiredCriteria("s.type_code != :typeCode", "typeCode", StudentType.OPPUR_E.name());
 
         if(DirectiveType.KASKKIRI_STIPTOET.equals(directiveType)) {
             // For EHIS_STIPENDIUM which passed only if it has scholarship_no_application for current school
@@ -1573,6 +1587,9 @@ public class DirectiveService {
                     "and not exists(select 1 from directive_student ds2 join directive d2 on ds2.directive_id = d2.id and ds2.canceled = false and ds2.scholarship_application_id = ds.scholarship_application_id and d2.status_code = :scholarshipDirectiveStatus and d2.type_code = :scholarshipEndDirectiveType))",
                     "scholarshipDirectiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
             qb.parameter("scholarshipEndDirectiveType", DirectiveType.KASKKIRI_STIPTOETL.name());
+            break;
+        case KASKKIRI_EKSTERNKATK:
+            qb.requiredCriteria("s.type_code = :externType", "externType", StudentType.OPPUR_E.name());
             break;
         case KASKKIRI_INDOKLOP:
             // should exists confirmed and not canceled KASKKIRI_INDOK that
@@ -1674,7 +1691,7 @@ public class DirectiveService {
         return StreamUtil.toMappedList(r -> {
             DirectiveStudentSearchDto dto = new DirectiveStudentSearchDto();
             dto.setId(resultAsLong(r, 0));
-            dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 9)));
+            dto.setFullname(PersonUtil.fullnameTypeSpecific(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 9)));
             dto.setIdcode(resultAsString(r, 3));
             if(!DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || !DirectiveType.KASKKIRI_IMMATV.equals(directiveType)) {
                 String curriculumVersionCode = resultAsString(r, 5);

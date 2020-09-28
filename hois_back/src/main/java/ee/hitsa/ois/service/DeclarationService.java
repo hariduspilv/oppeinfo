@@ -99,6 +99,8 @@ public class DeclarationService {
     private ProtocolStudentRepository protocolStudentRepository;
     @Autowired
     private SubjectStudyPeriodDeclarationService subjectStudyPeriodDeclarationService;
+    @Autowired
+    private StudentService studentService;
     
     private static final String DECLARATION_PERIOD_EVENT_TYPE = "SYNDMUS_DEKP";
 
@@ -176,7 +178,7 @@ public class DeclarationService {
         String select = "distinct s.id, p.firstname, p.lastname, p.idcode, s.type_code";
         List<?> data = qb.select(select, em).getResultList();
         return StreamUtil.toMappedList(r -> {
-            String name = PersonUtil.fullnameAndIdcodeOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4));
+            String name = PersonUtil.fullnameAndIdcodeTypeSpecific(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4));
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
         }, data);
     }
@@ -219,7 +221,7 @@ public class DeclarationService {
 
             StudentSearchDto studentDto = new StudentSearchDto();
             studentDto.setId(resultAsLong(r, 1));
-            studentDto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 17)));
+            studentDto.setFullname(PersonUtil.fullnameTypeSpecific(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 17)));
             studentDto.setIdcode(resultAsString(r, 4));
             studentDto.setCurriculumVersion(
                     new AutocompleteResult(resultAsLong(r, 5), resultAsString(r, 6), resultAsString(r, 6)));
@@ -290,7 +292,7 @@ public class DeclarationService {
             return false;
         }
         Student student = em.getReference(Student.class, studentId);
-        if(!StudentUtil.isHigher(student)) {
+        if(!studentService.isHigher(student)) {
             return false;
         }
         if(user.isStudent()) {

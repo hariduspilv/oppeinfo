@@ -24,6 +24,8 @@ import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import javax.validation.Validator;
 
+import ee.hitsa.ois.enums.*;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,12 +52,6 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
-import ee.hitsa.ois.enums.ContractStatus;
-import ee.hitsa.ois.enums.JournalStatus;
-import ee.hitsa.ois.enums.MessageType;
-import ee.hitsa.ois.enums.OccupationalGrade;
-import ee.hitsa.ois.enums.StudentStatus;
-import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.message.PracticeJournalUniqueUrlMessage;
 import ee.hitsa.ois.service.ekis.EkisService;
@@ -216,7 +212,7 @@ public class ContractService {
             dto.setEndDate(resultAsLocalDate(r, 4));
             dto.setConfirmDate(resultAsLocalDate(r, 5));
 
-            String studentName = PersonUtil.fullnameOptionalGuest(resultAsString(r, 7), resultAsString(r, 8), resultAsString(r, 15));
+            String studentName = PersonUtil.fullnameTypeSpecific(resultAsString(r, 7), resultAsString(r, 8), resultAsString(r, 15));
             dto.setStudent(new AutocompleteResult(resultAsLong(r, 6), studentName, studentName));
 
             dto.setEnterpriseName(resultAsString(r, 9));
@@ -564,8 +560,8 @@ public class ContractService {
      * @param wdId
      * @return
      */
-    public Contract confirmedByEkis(long contractId, String contractNr, LocalDate confirmDate, long wdId) {
-        Contract contract = findContract(contractId, wdId);
+    public Contract confirmedByEkis(long contractId, String contractNr, LocalDate confirmDate, long wdId, long schoolId) {
+        Contract contract = findContract(contractId, wdId, schoolId);
         contract.setContractNr(contractNr);
         contract.setConfirmDate(confirmDate);
         setContractStatus(contract, ContractStatus.LEPING_STAATUS_K);
@@ -630,9 +626,23 @@ public class ContractService {
         return practiceJournal;
     }
 
-    private Contract findContract(long contractId, long wdId) {
+    private Contract findContract(long contractId, long wdId, long schoolId) {
         try {
             Contract contract = em.getReference(Contract.class, Long.valueOf(contractId));
+
+            School school = contract.getStudent().getSchool();
+            // ekis true, school 0 - throw
+            // ekis false, school 0 - OK
+            // ekis true, school !0 - OK, if same school
+            // ekis false, school !0 - throw
+            if (
+                    (school.getEkisUrl() != null && (Long.valueOf(0).equals(schoolId) || !school.getId().equals(schoolId)))
+                ||
+                    (school.getEkisUrl() == null && !Long.valueOf(0).equals(schoolId))
+            ) {
+                throw new EntityNotFoundException();
+            }
+
             if(!ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_Y, contract.getStatus())) {
                 throw new HoisException("Leping vale staatusega");
             }
@@ -716,7 +726,7 @@ public class ContractService {
             dto.setContractNr(resultAsString(r, 1));
             dto.setStatus(resultAsString(r, 2));
             dto.setConfirmDate(resultAsLocalDate(r, 3));
-            String studentName = PersonUtil.fullnameOptionalGuest(resultAsString(r, 5), resultAsString(r, 6), resultAsString(r, 15));
+            String studentName = PersonUtil.fullnameTypeSpecific(resultAsString(r, 5), resultAsString(r, 6), resultAsString(r, 15));
             dto.setStudent(new AutocompleteResult(resultAsLong(r, 4), studentName, studentName));
             dto.setEnterpriseContactPersonName(resultAsString(r, 7));
             String teacherName = PersonUtil.fullname(resultAsString(r, 9), resultAsString(r, 10));

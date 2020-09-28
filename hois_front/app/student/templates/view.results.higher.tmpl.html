@@ -17,19 +17,23 @@
             <label>{{'student.birthDate' | translate}}</label>
             <hois-value value="student.person.birthdate | hoisDate"></hois-value>
           </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.status' | translate}}</label>
+            <hois-classifier-value ng-model="student.status" main-classifier-code="OPPURSTAATUS"></hois-classifier-value>
+          </md-input-container>
         </div>
       </div>
     </div>
 
-    <div ng-if="!student.isGuestStudent" layout="row" layout-xs="column" flex>
+    <div ng-if="!student.isGuestStudent && !externalMissingCurriculum(student)" layout="row" layout-xs="column" flex>
       <div flex="90">
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <label>{{'student.result.higher.curriculumVersion' | translate}}</label>
-            <hois-value value="currentLanguageNameField(student.curriculumVersion)"></hois-value>
+            <hois-value value="currentLanguageNameField(student.curriculumObject) + (student.curriculumObject ? ' / ' : '') + currentLanguageNameField(student.curriculumVersion)"></hois-value>
           </md-input-container>
           <md-input-container ng-if="student.curriculumIncludesSpecialities || student.curriculumSpeciality" flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <label>{{'student.curriculumSpeciality' | translate}}</label>
+            <label>{{'student.curriculumSpecialityOrMajor' | translate}}</label>
             <hois-value ng-if="student.curriculumSpeciality" value="currentLanguageNameField(student.curriculumSpeciality)"></hois-value>
             <hois-value ng-if="!student.curriculumSpeciality" value="'student.result.higher.notSelected' | translate" class="invalid"></hois-value>
           </md-input-container>
@@ -48,19 +52,26 @@
     <div layout="row" layout-xs="column" flex>
       <div flex="90">
         <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container ng-if="!student.isGuestStudent" flex="20" flex-sm="100" flex-xs="100">
+          <md-input-container ng-if="!student.isGuestStudent  && !externalMissingCurriculum(student)" flex="20" flex-sm="100" flex-xs="100">
             <label>{{'student.result.curriculumCredits' | translate}}</label>
             <hois-value value="student.curriculumCredits != null ? student.curriculumCredits + ' EAP' : ''"></hois-value>
           </md-input-container>
-          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="{{student.isGuestStudent ? 0 : 5}}" flex-offset-xs="0" flex-offset-sm="0">
-            <label>{{'student.result.higher.consideredCredits' | translate}}</label>
-            <hois-value value="student.higherResults.creditsSubmitted.toString() + ' / ' + student.higherResults.creditsSubmittedConsidered.toString()"></hois-value>
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="{{(student.isGuestStudent || externalMissingCurriculum(student)) ? 0 : 5}}" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.result.higher.consideredCreditsShort' | translate}}</label>
+            <hois-value value="student.higherResults.creditsSubmitted.toString() + ' / '
+              + student.higherResults.creditsSubmittedConsidered.toString() + ' / '
+              + student.higherResults.consideredFulfillmentPercentage.toString() + '%'"></hois-value>
+            <md-tooltip class="tooltip-multiline">{{'student.result.higher.consideredCredits' | translate}}</md-tooltip>
           </md-input-container>
-          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="10" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.result.apelApplicationCreditsHigher' | translate}}</label>
+            <hois-value value="student.apelApplicationCredits != null ? student.apelApplicationCredits + ' EAP' : ''"></hois-value>
+          </md-input-container>
+          <md-input-container flex="10" flex-sm="100" flex-xs="100">
             <label>{{'student.result.kkh' | translate}}</label>
             <hois-value value="student.higherResults.averageGrade.toString()"></hois-value>
           </md-input-container>
-          <md-input-container ng-if="!student.isGuestStudent" flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container ng-if="!student.isGuestStudent  && !externalMissingCurriculum(student)" flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.result.curriculumFulfilled' | translate}}</label>
             <hois-value value="(student.higherResults.isCurriculumFulfilled ? ('student.result.fulfilled' | translate) : ('student.result.notFulfilled' | translate))
               + (student.higherResults.fulfillmentPercentage != null ?' (' + student.higherResults.fulfillmentPercentage +'%)' : '')"></hois-value>
@@ -71,7 +82,7 @@
 
     <div ng-controller="StudentViewResultsHigherController as controller" flex="90" ng-cloak>
       <md-content>
-        <md-nav-bar md-selected-nav-item="resultsCurrentNavItem" nav-bar-aria-label="results selection" ng-if="!student.isGuestStudent">
+        <md-nav-bar md-selected-nav-item="resultsCurrentNavItem" nav-bar-aria-label="results selection" ng-if="!student.isGuestStudent && !externalMissingCurriculum(student)">
           <md-nav-item md-nav-click="changeResultsCurrentNavItem('student.curriculumFulfillment')" name="student.curriculumFulfillment">
             {{'student.result.curriculumFulfillment' | translate}}
           </md-nav-item>
@@ -109,8 +120,8 @@
     </div>
 
     <div layout="row">
-      <a ng-href="{{supplementPreviewPdfUrl}}?isHigher=true" ng-if="supplementPreviewPdfUrl" target="_blank" class="md-button md-raised">{{'student.result.higher.supplementPreview' | translate}}</a>
-      <a ng-href="{{supplementPreviewPdfUrl}}?isHigher=true&lang=EN" ng-if="supplementPreviewPdfUrl" target="_blank" class="md-button md-raised">{{'student.result.higher.supplementPreviewEn' | translate}}</a>
+      <a ng-href="{{supplementPreviewPdfUrl}}?isHigher=true" ng-if="student.curriculum !== null && supplementPreviewPdfUrl" target="_blank" class="md-button md-raised">{{'student.result.higher.supplementPreview' | translate}}</a>
+      <a ng-href="{{supplementPreviewPdfUrl}}?isHigher=true&lang=EN" ng-if="student.curriculum !== null && supplementPreviewPdfUrl" target="_blank" class="md-button md-raised">{{'student.result.higher.supplementPreviewEn' | translate}}</a>
     </div>
 
   </div>

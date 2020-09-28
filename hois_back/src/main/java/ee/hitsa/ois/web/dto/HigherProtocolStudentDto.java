@@ -46,7 +46,7 @@ public class HigherProtocolStudentDto extends VersionedCommand implements Protoc
         if (student != null && student.getStudentGroup() != null) {
             s.setStudentGroup(student.getStudentGroup().getCode());
         }
-        String name = PersonUtil.fullnameOptionalGuest(student);
+        String name = PersonUtil.fullname(student);
         s.setStudent(new AutocompleteResult(EntityUtil.getId(student), name, name));
 
         SubjectStudyPeriodExam exam = protocolStudent.getSubjectStudyPeriodExamStudent() != null

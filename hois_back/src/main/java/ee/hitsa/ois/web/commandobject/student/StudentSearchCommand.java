@@ -20,7 +20,7 @@ public class StudentSearchCommand {
     private List<String> status;
     private Boolean higher;
     private Boolean showMyStudentGroups;
-    private Boolean showGuestStudents;
+    private Long studentType;
 
     public List<Long> getStudentGroupId() {
         return studentGroupId;
@@ -118,12 +118,12 @@ public class StudentSearchCommand {
         this.showMyStudentGroups = showMyStudentGroups;
     }
 
-    public Boolean getShowGuestStudents() {
-        return showGuestStudents;
+    public Long getStudentType() {
+        return studentType;
     }
 
-    public void setShowGuestStudents(Boolean showGuestStudents) {
-        this.showGuestStudents = showGuestStudents;
+    public void setStudentType(Long studentType) {
+        this.studentType = studentType;
     }
 
 }

@@ -431,7 +431,7 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
         return students.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
             FinalVocationalProtocolStudentDto dto = new FinalVocationalProtocolStudentDto();
             dto.setStudentId(resultAsLong(r, 0));
-            dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2),
+            dto.setFullname(PersonUtil.fullnameTypeSpecific(resultAsString(r, 1), resultAsString(r, 2),
                     resultAsString(r, 6)));
             dto.setIdcode(resultAsString(r, 3));
             dto.setStatus(resultAsString(r, 4));

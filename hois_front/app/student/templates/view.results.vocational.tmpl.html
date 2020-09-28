@@ -5,25 +5,21 @@
     <div layout="row" layout-xs="column" flex>
       <div flex="90">
         <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex>
+          <md-input-container flex="15">
             <label>{{'student.label' | translate}}</label>
             <hois-value value="student.person.firstname + ' ' + student.person.lastname"></hois-value>
           </md-input-container>
-          <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="15" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.idcode' | translate}}</label>
             <hois-value value="student.person.idcode"></hois-value>
           </md-input-container>
-          <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="15" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.birthDate' | translate}}</label>
             <hois-value value="student.person.birthdate | hoisDate"></hois-value>
           </md-input-container>
-          <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!student.isGuestStudent">
-            <label>{{'student.studyForm' | translate}}</label>
-            <hois-classifier-value ng-model="student.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
-          </md-input-container>
-          <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="student.speciality">
-            <label>{{'studentGroup.speciality' | translate}}</label>
-            <hois-classifier-value ng-model="student.speciality" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
+          <md-input-container flex="15" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.status' | translate}}</label>
+            <hois-classifier-value ng-model="student.status" main-classifier-code="OPPURSTAATUS"></hois-classifier-value>
           </md-input-container>
         </div>
       </div>
@@ -32,25 +28,45 @@
     <div layout="row" layout-xs="column" flex>
       <div flex="90">
         <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex="15" ng-if="!student.isGuestStudent">
-            <label>{{'student.curriculum' | translate}}</label>
-            <hois-value value="currentLanguageNameField(student.curriculumVersion)"></hois-value>
+          <md-input-container flex="15" ng-if="!student.isGuestStudent && !externalMissingCurriculum(student)">
+            <label>{{'student.vocational.curriculumVersion' | translate}}</label>
+            <hois-value value="currentLanguageNameField(student.curriculumObject) + (student.curriculumObject ? ' / ' : '') + currentLanguageNameField(student.curriculumVersion)"></hois-value>
           </md-input-container>
-          <md-input-container flex="15" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!student.isGuestStudent">
+          <md-input-container flex="15" flex-offset="{{(student.isGuestStudent || externalMissingCurriculum(student)) ? 0 : 5}}" flex-offset-xs="0" flex-offset-sm="0" ng-if="student.speciality">
+            <label>{{'studentGroup.speciality' | translate}}</label>
+            <hois-classifier-value ng-model="student.speciality" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
+          </md-input-container>
+          <md-input-container flex="15" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!student.isGuestStudent && !externalMissingCurriculum(student)">
+            <label>{{'student.studyForm' | translate}}</label>
+            <hois-classifier-value ng-model="student.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
+          </md-input-container>
+        </div>
+      </div>
+    </div>
+
+    <div layout="row" layout-xs="column" flex>
+      <div flex="90">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="15" ng-if="!student.isGuestStudent && !externalMissingCurriculum(student)">
             <label>{{'student.result.curriculumCredits' | translate}}</label>
             <hois-value value="student.curriculumCredits != null ? student.curriculumCredits + ' EKAP' : ''"></hois-value>
           </md-input-container>
-          <md-input-container flex="15" flex-offset="{{student.isGuestStudent ? 0 : 5}}" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="15" flex-offset="{{(student.isGuestStudent || externalMissingCurriculum(student)) ? 0 : 5}}" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.result.totalCredits' | translate}}</label>
             <hois-value value="student.credits != null ? student.credits + ' EKAP' : ''"></hois-value>
+          </md-input-container>
+          <md-input-container flex="15" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.result.apelApplicationCreditsVocational' | translate}}</label>
+            <hois-value value="student.apelApplicationCredits != null ? student.apelApplicationCredits + ' EKAP' : ''"></hois-value>
           </md-input-container>
           <md-input-container flex="15" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.result.kkh' | translate}}</label>
             <hois-value value="student.kkh"></hois-value>
           </md-input-container>
-          <md-input-container flex="15" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!student.isGuestStudent">
+          <md-input-container flex="15" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!student.isGuestStudent && !externalMissingCurriculum(student)">
             <label>{{'student.result.curriculumFulfilled' | translate}}</label>
-            <hois-value value="student.isCurriculumFulfilled ? ('student.result.fulfilled' | translate) : ('student.result.notFulfilled' | translate)"></hois-value>
+            <hois-value value="(student.isCurriculumFulfilled ? ('student.result.fulfilled' | translate) : ('student.result.notFulfilled' | translate)) 
+            + (student.fulfillmentPercentage != null ?' (' + student.fulfillmentPercentage +'%)' : '')"></hois-value>
           </md-input-container>
         </div>
       </div>
@@ -59,7 +75,7 @@
     <div ng-controller="StudentViewResultsVocationalController as controller" ng-cloak>
       <md-content style="overflow: visible">
         <md-table-container>
-        <md-nav-bar md-selected-nav-item="resultsCurrentNavItem" nav-bar-aria-label="results selection" layout-margin ng-if="!student.isGuestStudent">
+        <md-nav-bar md-selected-nav-item="resultsCurrentNavItem" nav-bar-aria-label="results selection" layout-margin ng-if="!student.isGuestStudent && !externalMissingCurriculum(student)">
           <md-nav-item md-nav-click="changeResultsCurrentNavItem('student.curriculumFulfillment')" name="student.curriculumFulfillment">
             {{'student.result.curriculumFulfillment' | translate}}
           </md-nav-item>
@@ -92,7 +108,7 @@
     </div>
 
     <div layout="row">
-      <a ng-href="{{supplementPreviewPdfUrl}}?isHigher=false" ng-if="supplementPreviewPdfUrl" target="_blank" class="md-button md-raised">{{'student.result.supplementPreview' | translate}}</a>
+      <a ng-href="{{supplementPreviewPdfUrl}}?isHigher=false" ng-if="student.curriculum !== null && supplementPreviewPdfUrl" target="_blank" class="md-button md-raised">{{'student.result.supplementPreview' | translate}}</a>
     </div>
 
   </div>

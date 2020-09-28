@@ -63,7 +63,7 @@
         <div layout="row" layout-xs="column">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            <md-button ng-href="#/applications/new" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS')" class="md-raised">{{'application.makeApplication' | translate}}</md-button>
+            <md-button ng-href="#/applications/new" ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS') && !(auth.isTeacher() && auth.teacherGroupIds.length === 0)" class="md-raised">{{'application.makeApplication' | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>
@@ -105,8 +105,9 @@
           <td md-cell>{{row.submitted | hoisDateTime}}</td>
           <td md-cell>
             <md-button ng-if="((row.status.code === 'AVALDUS_STAATUS_KOOST') || ((row.status.code === 'AVALDUS_STAATUS_YLEVAAT' || row.status.code === 'AVALDUS_STAATUS_ESIT') && auth.isAdmin()))
-            && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS') && row.canEditStudent 
-            && !(auth.isAdmin() && row.type.code === 'AVALDUS_LIIK_TUGI' && !isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS') && !row.isConnectedByCommittee)"
+            && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS') && row.canEditStudent
+            && !(auth.isAdmin() && row.type.code === 'AVALDUS_LIIK_TUGI' && !isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS') && !row.isConnectedByCommittee)
+            && (auth.isAdmin() || row.type.code === 'AVALDUS_LIIK_TUGI')"
               md-no-ink class="md-primary change-button" ng-href="#/applications/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
           </td>
         </tr>

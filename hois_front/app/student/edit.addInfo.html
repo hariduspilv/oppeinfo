@@ -1,0 +1,18 @@
+<div ng-cloak>
+    <div ng-if="student && student.isVocational===true" ng-include="'student/templates/view.navbar.vocational.tmpl.html'"></div>
+    <div ng-if="student && student.isVocational===false" ng-include="'student/templates/view.navbar.higher.tmpl.html'"></div>
+  </div>
+  
+  <div layout-padding ng-cloak>
+    <div flex>
+        <form name="studentEditAddInfoForm" ng-submit="update()">
+            <md-input-container flex style="width: 100%">
+                <label>{{'student.addInfo' | translate}}</label>
+                <textarea ng-model="student.addInfo" md-maxlength="4000" name="addInfo" max-rows="10"></textarea>
+            </md-input-container>
+            <div layout="row">
+                <md-button type="submit" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+            </div>
+        </form>
+    </div>
+  </div>

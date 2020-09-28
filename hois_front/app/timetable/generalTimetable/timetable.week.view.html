@@ -26,9 +26,9 @@
         </md-button>
 
         <h2 ng-if="shownStudyPeriods" style="display:inline-block">{{shownStudyPeriods}}.&nbsp;</h2>
-        <h2 ng-if="hideWeekSelect">{{shownWeek.start | hoisDate}} - {{shownWeek.end | hoisDate}}</h2>
+        <h2 ng-if="hideWeekSelect">{{shownWeek.start | hoisZonedDate}} - {{shownWeek.end | hoisZonedDate}}</h2>
         <select ng-if="!hideWeekSelect" ng-show="weeks" class="timetableWeekSelect" ng-model="shownWeek" ng-change="weekSelectChange(shownWeek)" required
-          ng-options="((week.start | hoisDate) + ' - ' + (week.end | hoisDate)) for week in weeks"></select>
+          ng-options="((week.start | hoisZonedDate) + ' - ' + (week.end | hoisZonedDate)) for week in weeks"></select>
 
         <md-button ng-if="nextWeekIndex && directRoute && !encodedPerson" class="md-icon-button md-primary" ng-href="#/timetable/{{::schoolId}}/{{timetableType}}/{{typeId}}/{{studyYearId}}/{{nextWeekIndex}}">
             <md-icon>arrow_forward</md-icon>
@@ -62,7 +62,7 @@
                 </div>
             </div>
             <div ng-repeat="day in weekColumns" flex="20" layout="column" style="position:relative; border-left: 1px solid #ccc;border-collapse: collapse">
-                <div style="height:32px;text-align:center" md-colors="day.today ? {background: 'accent-400'}:{}">{{'timetable.timetablePlan.' + day.name | translate}}<br>{{day.date | hoisDate}}</div>
+                <div style="height:32px;text-align:center" md-colors="day.today ? {background: 'accent-400'}:{}">{{'timetable.timetablePlan.' + day.name | translate}}<br>{{day.date | hoisZonedDate}}</div>
                 <div layout="row">
                     <div flex ng-repeat="event in day.events track by $index" 
                         ng-style="{'height': event.rowHeight + 'px', 'top': event.top + 'px', 'z-index': $index, 
@@ -138,13 +138,13 @@
 
     <div hide-gt-xs ng-if="timetableEvents && timetableEvents.length > 0">
         <span>
-        <hois-collapsable ng-repeat="day in weekColumns" expanded="day.today" header-background-color="day.today ? 'rgb(236, 64, 122)' : none">
+        <hois-collapsable ng-repeat="day in weekColumns" expanded="day.expanded" header-background-color="day.today ? 'rgb(236, 64, 122)' : none">
             <hois-collapsable-header>
-                <span ng-style="{color: day.today ? 'white' : none}">{{'timetable.timetablePlan.' + day.name | translate}} {{day.date | hoisDate}}</span>
+                <span ng-style="{color: day.today ? 'white' : none}">{{'timetable.timetablePlan.' + day.name | translate}} {{day.date | hoisZonedDate}}</span>
             </hois-collapsable-header>
             <div layout="column">
-                <div flex ng-repeat="event in day.events track by $index">
-                    <div ng-style="{'background-color': event.public ? getEventColor(event.capacityType) : '#EFEAEC', 
+                <div flex ng-repeat="event in day.events | orderBy: ['timeStart', 'timeEnd'] track by $index">
+                    <div ng-style="{'background-color': event.public ? getEventColor(event.capacityType) : '#EFEAEC',
                         'color': getEventTextColor(event.capacityType)}"
                         style="position:relative; border: 1px solid rgba(0,0,0, 0.3); min-height: 80px;">
                         <div>
@@ -187,7 +187,7 @@
                             </span>
                         </div>
                         <div>
-                            {{event.studentGroups.length &gt; 0 ? ('timetable.timetableEvent.subgroup' | translate) : ""}}
+                            {{event.subgroups.length &gt; 0 ? ('timetable.timetableEvent.subgroup' | translate) : ""}}
                             <span ng-repeat="subgroup in event.subgroups track by $index">
                                 <span>{{subgroup.code}}{{$last ? '' : ', '}}</span>
                             </span>
@@ -219,14 +219,21 @@
         </div>
     </div>
 
-    <div>
-        <md-button ng-if="!hideLinks" class="md-icon-button timetableIconButton" ng-click="generateCalendar()">
-            <md-tooltip md-direction="top">{{'timetable.saveToCalendar' | translate}}</md-tooltip>
-            <md-icon md-font-set="material-icons md-primary md-48">event</md-icon>
-        </md-button>
+    <div>&nbsp;</div>
+    <div class="form-readonly" layout="row">
+      <md-button ng-if="!hideLinks" class="md-icon-button timetableButton timetableIconButton" ng-click="generateCalendar()">
+        <md-tooltip md-direction="top">{{'timetable.saveToCalendar' | translate}}</md-tooltip>
+        <md-icon md-font-set="material-icons md-primary md-48">event</md-icon>
+      </md-button>
+      <md-input-container ng-if="!hideLinks && personalParam" flex>
+        <label>{{'timetable.search.personalCalendarUrl' | translate}}</label>
+        <hois-value value="apiUrl() + '/timetableevents/timetableByPerson/' + personalParam + '/calendar.ics?lang=' + currentLanguage().toUpperCase()"></hois-value>
+      </md-input-container>
 
-        <md-button ng-if="directRoute && auth != null" ng-click="back('#/timetable/generalTimetableByGroup');" class="md-raised">{{'main.button.back' | translate}}</md-button>
-        <md-button ng-if="directRoute && auth == null" ng-click="back('#/timetable/' + schoolId + 'generalTimetableByGroup/')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      <div>
+        <md-button ng-if="directRoute && auth != null" ng-click="back('#/timetable/generalTimetableByGroup');" class="md-raised timetableButton">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="directRoute && auth == null" ng-click="back('#/timetable/' + schoolId + 'generalTimetableByGroup/')" class="md-raised timetableButton">{{'main.button.back' | translate}}</md-button>
+      </div>
     </div>
 </div>
 

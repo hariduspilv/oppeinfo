@@ -9,6 +9,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.report.StudentDataCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -79,12 +80,17 @@ public class ReportStudentDataDto {
         this.studentId = resultAsLong(r, 0);
         this.firstname = resultAsString(r, 1);
         this.lastname = resultAsString(r, 2);
-        this.guestStudent = resultAsBoolean(r, 9);
+        this.guestStudent = Boolean.valueOf(StudentType.OPPUR_K.name().equals(resultAsString(r, 9)));
+        boolean externalStudent = StudentType.OPPUR_E.name().equals(resultAsString(r, 9));
         if (Boolean.TRUE.equals(criteria.getFullnameShow())) {
             if (Boolean.TRUE.equals(criteria.getFullname())) {
-                this.fullname = this.lastname + " " + this.firstname + (Boolean.TRUE.equals(this.guestStudent) ? " (KY)" : "");
+                this.fullname = this.lastname + " " + this.firstname 
+                        + (Boolean.TRUE.equals(this.guestStudent) ? " (KY)" : "")
+                        + (externalStudent ? " (E)" : "");
             } else {
-                this.fullname = this.firstname + " " + this.lastname + (Boolean.TRUE.equals(this.guestStudent) ? " (KY)" : "");
+                this.fullname = this.firstname + " " + this.lastname 
+                        + (Boolean.TRUE.equals(this.guestStudent) ? " (KY)" : "")
+                        + (externalStudent ? " (E)" : "");
             }
         }
         this.sex = resultAsString(r, 3);

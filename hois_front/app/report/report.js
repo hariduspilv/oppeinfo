@@ -766,6 +766,9 @@ function ($q, $scope, $route, QueryUtils, DataUtils, Classifier, message, FormUt
     $scope.criteria.perGroup = $scope.formState.perGroup;
     entryTypeToCriteria();
     gradeToCriteria();
+    // reset page when searching
+    $scope.criteria.page = 1;
+    $scope.tabledata.content = [];
     if ($scope.criteria.countableGrades.length === 0 && $scope.criteria.queryType === 'EDUCATIONAL_SUCCESS_RESULTS') {
       message.error('report.studentSuccess.error.countableGrades');
       return;
@@ -774,9 +777,6 @@ function ($q, $scope, $route, QueryUtils, DataUtils, Classifier, message, FormUt
       message.error('report.studentSuccess.error.gradeType');
       return;
     }
-    // reset page when searching
-    $scope.criteria.page = 1;
-    $scope.tabledata.content = [];
     gradeToFormState();
     $scope.loadData();
   };

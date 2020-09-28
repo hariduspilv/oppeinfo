@@ -26,6 +26,8 @@ public class MailService {
     private String testReceivers;
     @Value("${hois.mail.disable:#{null}}")
     private Boolean disable;
+    @Value("${hois.mail.sender:#{null}}")
+    private String sender;
     @Autowired
     private JavaMailSender mailSender;
 
@@ -47,11 +49,17 @@ public class MailService {
             log.warn("email is using debug receivers");
         }
 
+        if (sender == null) {
+            log.error("hois.mail.sender does not exists, skip email sending");
+            return;
+        }
+
+        log.info("sending email from {}, sender email replaced by {}", from, sender);
         try {
             executorService.execute(() -> {
                 try {
                     mailSender.send(mail -> {
-                        mail.setFrom(from);
+                        mail.setFrom(sender);
                         mail.setRecipients(Message.RecipientType.TO, receivers);
                         mail.setSubject(subject);
                         mail.setText(message);

@@ -15,6 +15,7 @@
               </th>
               <th md-column>{{'schoolCapacityType.type' | translate}}</th>
               <th md-column>{{'schoolCapacityType.isTimetable' | translate}}</th>
+              <th md-column ng-if="!isHigher">{{'schoolCapacityType.isContact' | translate}}</th>
               <th md-column>{{auth.higher ? ('schoolCapacityType.teacherLoadPercentageHigher' | translate) : ('schoolCapacityType.teacherLoadPercentageVocational' | translate)}}</th>
               <th md-column>&nbsp;</th>
             </tr>
@@ -30,13 +31,16 @@
                 <md-checkbox ng-model="capacityType.isTimetable" ng-disabled="!capacityType.isUsable">
                 </md-checkbox>
               </td>
+              <td md-cell ng-if="!isHigher">
+                <md-checkbox ng-model="capacityType.isContact"></md-checkbox>
+              </td>
               <td md-cell>
                 <div ng-repeat="load in capacityType.loads">
                   {{load.loadPercentage}} ({{currentLanguageNameField(studyYearMap[load.studyYearId])}})
                 </div>
               </td>
               <td md-cell>
-                <md-button md-no-ink class="md-primary change-button" ng-if="canEdit && capacityType.id && capacityType.isUsable" 
+                <md-button md-no-ink class="md-primary change-button" ng-if="canEdit && capacityType.id && capacityType.isUsable"
                   ng-click="changeLoads(capacityType)">{{'main.button.change' | translate}}</md-button>
               </td>
             </tr>

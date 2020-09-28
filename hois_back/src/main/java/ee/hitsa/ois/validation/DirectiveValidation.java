@@ -9,6 +9,7 @@ public interface DirectiveValidation {
     interface Akadk extends DirectiveValidation { }
     interface Duplikaat extends DirectiveValidation { }
     interface Eksmat extends DirectiveValidation { }
+    interface Ekstern extends DirectiveValidation { }
     interface Ennist extends DirectiveValidation { }
     interface Finm extends DirectiveValidation { }
     interface Immat extends DirectiveValidation { } // immatv uses same rules

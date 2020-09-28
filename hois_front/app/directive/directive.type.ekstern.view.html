@@ -1,0 +1,57 @@
+<md-table-container>
+  <table md-table md-row-select="formState.cancelSelect" multiple ng-model="formState.selectedStudents" class="secondary-table">
+    <thead md-head>
+      <tr md-row>
+        <th md-column>{{'directive.student.order' | translate}}</th>
+        <th md-column>{{'directive.student.foreign' | translate}}</th>
+        <th md-column>{{'directive.student.fullname' | translate}}</th>
+        <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column>{{'directive.student.birthdate' | translate}}</th>
+        <th md-column>{{'directive.student.sex' | translate}}</th>
+        <th md-column>{{'directive.student.citizenship' | translate}}</th>
+        <th md-column>{{'directive.student.curriculumVersion' | translate}}</th>
+        <th md-column>{{'directive.student.studyForm' | translate}}</th>
+        <th md-column>{{'directive.student.language' | translate}}</th>
+        <th md-column>{{'directive.student.studentGroup' | translate}}</th>
+        <th md-column>{{'directive.student.previousStudyLevel' | translate}}</th>
+        <th md-column ng-if="formState.school.vocational">{{'directive.student.dormitory' | translate}}</th>
+      </tr>
+    </thead>
+    <tbody md-body>
+      <tr md-row ng-disabled="!row.selectable" md-select="row" md-select-id="student" ng-repeat="row in record.students | orderBy:'+lastname'" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>{{$index + 1}}.</td>
+        <td md-cell>
+          <md-checkbox ng-model="row._foreign" aria-label="{{'directive.student.foreign' | translate}}" disabled></md-checkbox>
+        </td>
+        <td md-cell ng-if="row.student">
+          <a class="md-primary" ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</a>
+        </td>
+        <td ng-if="!row.student" md-cell>{{::row.fullname}}</td>
+        <td md-cell>{{::(row.idcode || row.foreignIdcode)}}</td>
+        <td md-cell>
+          <hois-value value="row.birthdate | hoisDate"></hois-value>
+        </td>
+        <td md-cell>
+          <hois-classifier-value ng-model="row.sex" main-classifier-code="SUGU"></hois-classifier-value>
+        </td>
+        <td md-cell>
+          <hois-classifier-value ng-model="row.citizenship" main-classifier-code="RIIK"></hois-classifier-value>
+        </td>
+        <td md-cell>{{currentLanguageNameField(row.newCurriculumVersion)}}</td>
+        <td md-cell>
+          <hois-classifier-value ng-model="row.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
+        </td>
+        <td md-cell>
+          <hois-classifier-value ng-model="row.language" main-classifier-code="OPPEKEEL"></hois-classifier-value>
+        </td>
+        <td md-cell>{{::row.newStudentGroup}}</td>
+        <td md-cell>
+          <hois-classifier-value ng-model="row.previousStudyLevel" main-classifier-code="OPPEASTE"></hois-classifier-value>
+        </td>
+        <td md-cell ng-if="formState.school.vocational">
+          <hois-classifier-value ng-model="row.dormitory" main-classifier-code="YHISELAMU"></hois-classifier-value>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</md-table-container>

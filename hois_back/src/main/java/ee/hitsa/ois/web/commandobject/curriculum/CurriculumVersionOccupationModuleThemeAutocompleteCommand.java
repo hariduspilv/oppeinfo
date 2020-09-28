@@ -10,6 +10,7 @@ public class CurriculumVersionOccupationModuleThemeAutocompleteCommand {
     private Boolean addStudyYearToName;
     private Boolean existInOtherJournals;
     private Long journalId;
+    private Long journalSubId;
     private Long studentGroupId;
 
     public Long getCurriculumVersionOmoduleId() {
@@ -58,6 +59,14 @@ public class CurriculumVersionOccupationModuleThemeAutocompleteCommand {
 
     public void setJournalId(Long journalId) {
         this.journalId = journalId;
+    }
+
+    public Long getJournalSubId() {
+        return journalSubId;
+    }
+
+    public void setJournalSubId(Long journalSubId) {
+        this.journalSubId = journalSubId;
     }
 
     public Long getStudentGroupId() {

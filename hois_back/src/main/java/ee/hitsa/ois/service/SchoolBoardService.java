@@ -94,7 +94,7 @@ public class SchoolBoardService {
     public TimetableByGroupDto groupTimetableForWeek(String schoolIdentifier, TimetableEventSearchCommand criteria) {
         School school = schoolByIdentifier(schoolIdentifier);
         criteria.setSchoolBoard(Boolean.TRUE);
-        return timetableEventService.groupTimetable(criteria, school, false);
+        return timetableEventService.groupTimetable(school, criteria, false);
     }
 
     public List<TeacherTimetableDto> teacherTimetables(String schoolIdentifier) {
@@ -119,7 +119,7 @@ public class SchoolBoardService {
     public TimetableByTeacherDto teacherTimetableForWeek(String schoolIdentifier, TimetableEventSearchCommand criteria) {
         School school = schoolByIdentifier(schoolIdentifier);
         criteria.setSchoolBoard(Boolean.TRUE);
-        return timetableEventService.teacherTimetable(criteria, school, false, false);
+        return timetableEventService.teacherTimetable(school, criteria, false, false);
     }
 
     public List<RoomTimetableDto> roomTimetables(String schoolIdentifier) {
@@ -149,7 +149,7 @@ public class SchoolBoardService {
     public TimetableByRoomDto roomTimetableForWeek(String schoolIdentifier, TimetableEventSearchCommand criteria) {
         School school = schoolByIdentifier(schoolIdentifier);
         criteria.setSchoolBoard(Boolean.TRUE);
-        return timetableEventService.roomTimetable(criteria, school, false);
+        return timetableEventService.roomTimetable(school, criteria, false);
     }
 
     private static void setCurrentWeekEventsCriteria(JpaNativeQueryBuilder qb) {

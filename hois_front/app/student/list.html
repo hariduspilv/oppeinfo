@@ -45,12 +45,15 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <div layout="row" layout-align="start center">
             <md-input-container class="top-margin small-margin" flex>
-              <md-radio-group layout="row" ng-model="criteria.showGuestStudents">
-                <md-radio-button ng-value="false || undefined || null" aria-label="showAll">
+              <md-radio-group layout="row" ng-model="criteria.studentType">
+                <md-radio-button ng-value="0 || undefined || null" aria-label="showAll">
                   {{'student.showAll' | translate}}
                 </md-radio-button>
-                <md-radio-button ng-value="true" aria-label="showGuestStudents">
+                <md-radio-button ng-value="1" aria-label="showGuestStudents">
                   {{'student.showGuestStudents' | translate}}
+                </md-radio-button>
+                <md-radio-button ng-value="2" aria-label="showExternalStudents">
+                  {{'student.showExternalStudents' | translate}}
                 </md-radio-button>
               </md-radio-group>
             </md-input-container>

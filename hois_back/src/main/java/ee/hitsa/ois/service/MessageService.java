@@ -438,7 +438,7 @@ public class MessageService {
             dto.setRole(Arrays.asList(resultAsString(r, 4)));
             if (isstudent) {
                 dto.setId(resultAsLong(r, 5));
-                dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 6)));
+                dto.setFullname(PersonUtil.fullnameTypeSpecific(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 6)));
             } else {
                 dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
             }

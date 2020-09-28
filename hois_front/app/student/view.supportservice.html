@@ -26,8 +26,8 @@
           <hois-classifier-value ng-model="student.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
         </md-input-container>
         <md-input-container flex>
-          <label>{{'student.curriculum' | translate}}</label>
-          <hois-value value="currentLanguageNameField(student.curriculumVersion)"></hois-value>
+          <label>{{(student.isVocational ? 'student.vocational.curriculumVersion' : 'student.higher.curriculumVersion') | translate}}</label>
+          <hois-value value="currentLanguageNameField(student.curriculumObject) + (student.curriculumObject ? ' / ' : '') + currentLanguageNameField(student.curriculumVersion)"></hois-value>
         </md-input-container>
       </div>
     </div>

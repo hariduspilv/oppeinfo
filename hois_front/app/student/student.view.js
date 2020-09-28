@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog', '$q', '$route', '$scope', 'dialogService',
-  'message', 'Classifier', 'QueryUtils', 'oisFileService',
-  function ($mdDialog, $q, $route, $scope, dialogService, message, Classifier, QueryUtils, oisFileService) {
+  'message', 'Classifier', 'QueryUtils', 'oisFileService', 'ArrayUtils',
+  function ($mdDialog, $q, $route, $scope, dialogService, message, Classifier, QueryUtils, oisFileService, ArrayUtils) {
     var auth = $route.current.locals.auth;
     var studentId = (auth.isStudent() || auth.isParent() ? auth.student : $route.current.params.id);
     var baseUrl = '/students';
@@ -13,7 +13,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
 
     var dormitoryMapper = Classifier.valuemapper({ dormitory: 'YHISELAMU' });
     var loadStudent = function () {
-      QueryUtils.endpoint(baseUrl).get({ id: studentId }, function (result) {
+      QueryUtils.endpoint(baseUrl).get({ id: studentId, withHTM: true }, function (result) {
         $scope.student = result;
         if ($scope.student.person.address && $scope.student.person.postcode && $scope.student.person.address.endsWith($scope.student.person.postcode)) {
           $scope.student.person.address = $scope.student.person.address.substring(0, $scope.student.person.address.lastIndexOf($scope.student.person.postcode));
@@ -21,6 +21,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
             $scope.student.person.address = $scope.student.person.address.slice(0, -2);
           }
         }
+        mapForeignLanguages();
         $scope.student.dormitoryHistory.forEach(function (history) {
           dormitoryMapper.objectmapper(history);
         });
@@ -32,6 +33,31 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
       });
     };
     loadStudent();
+
+    function mapForeignLanguages() {
+      Classifier.queryForDropdown({ mainClassCode: 'VOORKEEL_TYYP' }, function (result) {
+        var languagesList = [];
+        result.forEach(function (language) {
+          var languageSaved = false;
+          var savedObject = {};
+          $scope.student.studentLanguages.forEach(function (studentLanguage) {
+            if (studentLanguage.foreignLangTypeCode === language.code) {
+              languageSaved = true;
+              savedObject = studentLanguage;
+            }
+          });
+          if (languageSaved) {
+            savedObject.languageFilter = [];
+            languagesList.push(angular.copy(savedObject));
+          } else {
+            languagesList.push({foreignLangTypeCode: language.code, languageFilter: []});
+          }
+        })
+        $scope.student.foreignLanguageTypes = ArrayUtils.partSplit(languagesList, 2);
+      });
+    }
+
+    // representatives
 
     $scope.representativesCriteria = { order: 'person.lastname', size: 5, page: 1 };
     $scope.representatives = {};
@@ -139,6 +165,8 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
       });
     };
 
+    // foreign studies
+
     $scope.foreignstudiesCriteria = { order: '-3', size: 5, page: 1 };
     $scope.foreignstudies = {};
 
@@ -152,7 +180,23 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
       $scope.foreignstudies.$promise = QueryUtils.endpoint(baseUrl + '/:id/foreignstudies').search(query, afterForeignstudiesLoad);
     };
 
-    $scope.loadForeignstudies();
+    // akad directives
+
+    $scope.akadDirectivesCriteria = { order: '-8', size: 5, page: 1 };
+    $scope.akadDirectives = {};
+    var akadDirectivesMapper = Classifier.valuemapper({ reason: 'AKADPUHKUS_POHJUS' });
+
+    function afterAkadDirectivesLoad(result) {
+      $scope.akadDirectives.content = akadDirectivesMapper.objectmapper(result.content);
+      $scope.akadDirectives.totalElements = result.totalElements;
+    }
+
+    $scope.loadAkadDirectives = function() {
+      var query = angular.extend({}, QueryUtils.getQueryParams($scope.akadDirectivesCriteria), { id: studentId });
+      $scope.akadDirectives.$promise = QueryUtils.endpoint(baseUrl + '/:id/akadDirectives').search(query, afterAkadDirectivesLoad);
+    };
+
+    $scope.loadAkadDirectives();
 
     $scope.updatePersonData = function () {
       QueryUtils.loadingWheel($scope, true);
@@ -190,9 +234,9 @@ function ($route, $scope, $localStorage, QueryUtils, config, StudentUtil) {
   $scope.formState.openAllCollapsables = false;
 
   $scope.studentId = ($scope.auth.isStudent() || $scope.auth.isParent() ? $scope.auth.student : $route.current.params.id);
-  QueryUtils.endpoint('/students').get({ id: $scope.studentId }).$promise.then(function (student) {
+  QueryUtils.endpoint('/students').get({ id: $scope.studentId, withHTM: true }).$promise.then(function (student) {
     $scope.student = student;
-    if ($scope.student.isGuestStudent) {
+    if ($scope.student.isGuestStudent || ($scope.student.type === 'OPPUR_E' && $scope.student.curriculumVersion === null)) {
       $scope.changeResultsCurrentNavItem('student.inOrderOfPassing');
     }
     canWatchStudentConnectedEntities();
@@ -201,6 +245,10 @@ function ($route, $scope, $localStorage, QueryUtils, config, StudentUtil) {
     }
   });
   $scope.currentNavItem = 'student.results';
+
+  $scope.externalMissingCurriculum = function(student) {
+    return student.type === 'OPPUR_E' && (student.curriculumVersion === null || student.curriculumVersion === undefined);
+  }
 
   $scope.changeResultsCurrentNavItem = function (navItem) {
     $scope.resultsCurrentNavItem = navItem;
@@ -899,7 +947,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       $scope.applications.totalElements = result.totalElements;
     };
 
-    QueryUtils.endpoint('/students').get({ id: $scope.studentId }).$promise.then(function (student) {
+    QueryUtils.endpoint('/students').get({ id: $scope.studentId, withHTM: true }).$promise.then(function (student) {
       $scope.student = student;
     });
 
@@ -935,6 +983,23 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       $scope.directives.$promise = QueryUtils.endpoint('/students/:studentId/directives').search(query, $scope.afterDirectivesLoad);
     };
 
+    // apel applications
+
+    $scope.apelApplicationsCriteria = { size: 5, page: 1, studentId: $scope.studentId };
+    $scope.apelApplications = {};
+    var apelApplicationsMapper = Classifier.valuemapper({ status: 'VOTA_STAATUS' });
+    $scope.afterApelApplicationsLoad = function (result) {
+      $scope.apelApplications.content = apelApplicationsMapper.objectmapper(result.content);
+      $scope.apelApplications.totalElements = result.totalElements;
+    };
+
+    $scope.loadApelApplications = function () {
+      var query = QueryUtils.getQueryParams($scope.apelApplicationsCriteria);
+      $scope.apelApplications.$promise = QueryUtils.endpoint('/students/:studentId/apelApplications').search(query, $scope.afterApelApplicationsLoad);
+    };
+
+    // practice contracts
+
     $scope.practiceContractsCriteria = { size: 5, page: 1, order: 'contract_nr', studentId: $scope.studentId };
     $scope.practiceContracts = {};
     var practiceContractsMapper = Classifier.valuemapper({ status: 'LEPING_STAATUS' });
@@ -948,7 +1013,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       $scope.practiceContracts.$promise = QueryUtils.endpoint('/students/:studentId/practicecontracts').search(query, $scope.afterPracticeContractsLoad);
     };
 
-    $scope.certificatesCriteria = { size: 5, page: 1, order: 'type.' + $scope.currentLanguageNameField(), student: $scope.studentId};
+    $scope.certificatesCriteria = { size: 5, page: 1, order: 'type.' + $scope.currentLanguageNameField() + ', inserted desc', student: $scope.studentId};
     $scope.certificates = {};
     var certificatesMapper = Classifier.valuemapper({type: 'TOEND_LIIK', status: 'TOEND_STAATUS'});
     function afterCertificatesLoad(result) {
@@ -973,6 +1038,9 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       $q.all(directivesMapper.promises).then(function () {
         $scope.afterDirectivesLoad(result.directives);
       });
+      $q.all(apelApplicationsMapper.promises).then(function () {
+        $scope.afterApelApplicationsLoad(result.apelApplications);
+      });
       $q.all(practiceContractsMapper.promises).then(function () {
         $scope.afterPracticeContractsLoad(result.practiceContracts);
       });
@@ -992,7 +1060,8 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       return AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS) &&
         $scope.student && $scope.student.userCanEditStudent && (application.status.code === 'AVALDUS_STAATUS_KOOST' ||
         (application.status.code === 'AVALDUS_STAATUS_YLEVAAT' && ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher())))
-        && !($scope.auth.isAdmin() && application.type.code === 'AVALDUS_LIIK_TUGI' && !AuthService.isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS') && !application.isConnectedByCommittee);
+        && !($scope.auth.isAdmin() && application.type.code === 'AVALDUS_LIIK_TUGI' && !AuthService.isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_TUGITEENUS') && !application.isConnectedByCommittee)
+        && ($scope.auth.isAdmin() || application.type.code === 'AVALDUS_LIIK_TUGI');
     };
 
     $scope.canViewContract = function () {
@@ -1001,7 +1070,8 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
     };
 
     $scope.canEditContract = function (contract) {
-      return AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LEPING) && $scope.student.userCanEditStudent &&
+      return AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_LEPING) 
+        && $scope.student !== undefined && $scope.student.userCanEditStudent &&
         (($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher()) && contract.status.code === 'LEPING_STAATUS_S');
     };
 
@@ -1009,7 +1079,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
     $scope.auth = $route.current.locals.auth;
     $scope.generalTimetableUtils = new GeneralTimetableUtils();
     $scope.studentId = ($route.current.locals.auth.isStudent() ? $route.current.locals.auth.student : $route.current.params.id);
-    QueryUtils.endpoint('/students').get({ id: $scope.studentId }).$promise.then(function (student) {
+    QueryUtils.endpoint('/students').get({ id: $scope.studentId, withHTM: true }).$promise.then(function (student) {
       $scope.student = student;
     });
     $scope.typeId = $scope.studentId;
@@ -1046,8 +1116,8 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       $scope.$broadcast("updateWeekTimetable", { criteria: $scope.criteria });
     };
 
-  }]).controller('StudentEditController', ['$location', '$route', '$scope', 'message', 'oisFileService', 'QueryUtils', 'DataUtils', 'dialogService', 'hoisDateFilter', '$rootScope',
-    function ($location, $route, $scope, message, oisFileService, QueryUtils, DataUtils, dialogService, hoisDateFilter, $rootScope) {
+  }]).controller('StudentEditController', ['$location', '$route', '$scope', 'message', 'oisFileService', 'QueryUtils', 'DataUtils', 'dialogService', 'hoisDateFilter', '$rootScope', 'Classifier', 'ArrayUtils',
+    function ($location, $route, $scope, message, oisFileService, QueryUtils, DataUtils, dialogService, hoisDateFilter, $rootScope, Classifier, ArrayUtils) {
     var id = $route.current.params.id;
     var cannotEditStatuses = Object.freeze({
       OPPURSTAATUS_K: "OPPURSTAATUS_K",
@@ -1068,7 +1138,42 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       $scope.errorParams = {
         studyStart: hoisDateFilter($scope.student.studyStart)
       };
+      $scope.student.foreignLanguageTypes = {};
+      Classifier.queryForDropdown({ mainClassCode: 'VOORKEEL_TYYP' }, function (result) {
+        var languagesList = [];
+        result.forEach(function (language) {
+          var languageSaved = false;
+          var savedObject = {};
+          $scope.student.studentLanguages.forEach(function (studentLanguage) {
+            if (studentLanguage.foreignLangTypeCode === language.code) {
+              languageSaved = true;
+              savedObject = studentLanguage;
+            }
+          });
+          if (languageSaved) {
+            savedObject.languageFilter = [];
+            languagesList.push(angular.copy(savedObject));
+          } else {
+            languagesList.push({foreignLangTypeCode: language.code, languageFilter: []});
+          }
+        })
+        $scope.student.foreignLanguageTypes = ArrayUtils.partSplit(languagesList, 2);
+      });
     }
+
+
+    $scope.addValueToOtherFilters = function(self, oldValue) {
+      $scope.student.foreignLanguageTypes.forEach(function(languagePairs) {
+        languagePairs.forEach(function (language) {
+          if (language.foreignLangTypeCode !== self.foreignLangTypeCode) {
+            if (oldValue !== null && oldValue !== undefined) {
+              ArrayUtils.remove(language.languageFilter, oldValue);
+            }
+            language.languageFilter.push(self.foreignLangCode);
+          }
+        });
+      });
+    };
 
     function isAddressFilled(person) {
       // TEMPORARY REMOVED
@@ -1098,7 +1203,21 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       }
     }
 
+    $scope.setAcadStudyDefault = function() {
+      if ($scope.student.isAcadStudyAllowed === null || $scope.student.isAcadStudyAllowed === undefined) {
+        $scope.student.isAcadStudyAllowed = true;
+      }
+    };
+
+    function flatMapLanguages() {
+      $scope.student.studentLanguages = [].concat.apply([], $scope.student.foreignLanguageTypes);
+      $scope.student.studentLanguages = $scope.student.studentLanguages.filter(function (language) {
+        return language.foreignLangCode !== undefined && language.foreignLangCode !== null && language.foreignLangCode !== "";
+      })
+    }
+
     $scope.update = function () {
+      flatMapLanguages();
       $scope.studentEditForm.$setSubmitted();
       if (!isAddressFilled($scope.student.person)) {
         message.error('student.error.addressRequired');
@@ -1117,11 +1236,35 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
         });
       });
     };
-  }]).controller('StudentAbsencesController', ['$mdDialog', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils', '$location', '$q',
+  }]).controller('StudentAddInfoController', ['$location', '$route', '$scope', 'message', 'oisFileService', 'QueryUtils', 'DataUtils', 'dialogService', 'hoisDateFilter', '$rootScope',
+  function ($location, $route, $scope, message, oisFileService, QueryUtils, DataUtils, dialogService, hoisDateFilter, $rootScope) {
+    var id = $route.current.params.id;
+    $scope.currentNavItem = 'student.addInfo';
+    $scope.auth = $route.current.locals.auth;
+    $scope.studentId = ($route.current.locals.auth.isStudent() ? $route.current.locals.auth.student : $route.current.params.id);
+    QueryUtils.endpoint('/students').get({ id: $scope.studentId, withHTM: true }).$promise.then(function (student) {
+      $scope.student = student;
+      if (!$scope.student.userCanViewStudentAddInfo) {
+        message.error("main.messages.error.nopermission");
+        $rootScope.back("#/students/" + $scope.student.id + "/main");
+      }
+    });
+    
+    $scope.update = function() {
+      $scope.studentEditAddInfoForm.$setSubmitted();
+      if (!$scope.studentEditAddInfoForm.$valid) {
+          message.error('main.messages.form-has-errors');
+          return false;
+      }
+      QueryUtils.endpoint('/students/'+id+'/addinfo').save($scope.student, function () {
+        message.updateSuccess();
+      });
+    };
+}]).controller('StudentAbsencesController', ['$mdDialog', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils', '$location', '$q',
     function ($mdDialog, $route, $scope, dialogService, message, DataUtils, QueryUtils, $location, $q) {
       $scope.auth = $route.current.locals.auth;
       $scope.studentId = $route.current.params.id;
-      $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
+      $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId, withHTM: true });
       if ($scope.auth.school.notAbsence) {
         message.error('main.messages.error.nopermission');
         return $location.path('');
@@ -1190,7 +1333,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       function ($q, $route, $scope, Classifier, QueryUtils) {
       $scope.auth = $route.current.locals.auth;
       $scope.studentId = $route.current.params.id;
-      QueryUtils.endpoint('/students').get({ id: $scope.studentId }).$promise.then(function (response) {
+      QueryUtils.endpoint('/students').get({ id: $scope.studentId, withHTM: true }).$promise.then(function (response) {
         $scope.student = response;
       });
       $scope.currentNavItem = 'student.remarks';
@@ -1215,7 +1358,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       function ($route, $scope, QueryUtils) {
       $scope.auth = $route.current.locals.auth;
       $scope.studentId = $route.current.params.id;
-      QueryUtils.endpoint('/students').get({ id: $scope.studentId }).$promise.then(function (response) {
+      QueryUtils.endpoint('/students').get({ id: $scope.studentId, withHTM: true }).$promise.then(function (response) {
         $scope.student = response;
       });
       $scope.currentNavItem = 'student.rr';
@@ -1228,7 +1371,7 @@ function ($filter, $route, $scope, Classifier, QueryUtils, $rootScope, Vocationa
       function ($route, $scope, QueryUtils, $timeout, dialogService, oisFileService, message, config, $httpParamSerializer) {
       $scope.auth = $route.current.locals.auth;
       $scope.studentId = $route.current.params.id;
-      QueryUtils.endpoint('/students').get({ id: $scope.studentId }).$promise.then(function (student) {
+      QueryUtils.endpoint('/students').get({ id: $scope.studentId, withHTM: true }).$promise.then(function (student) {
         $scope.student = student;
       });
       $scope.currentNavItem = 'student.supportService';

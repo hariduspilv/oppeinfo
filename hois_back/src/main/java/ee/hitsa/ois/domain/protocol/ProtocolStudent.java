@@ -16,6 +16,7 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodExamStudent;
 
@@ -53,6 +54,9 @@ public class ProtocolStudent extends BaseEntityWithId {
     
     @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumGrade curriculumGrade;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private GradingSchemaRow gradingSchemaRow;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "protocol_student_id", nullable = false, updatable = false)
@@ -132,6 +136,14 @@ public class ProtocolStudent extends BaseEntityWithId {
 
     public void setCurriculumGrade(CurriculumGrade curriculumGrade) {
         this.curriculumGrade = curriculumGrade;
+    }
+
+    public GradingSchemaRow getGradingSchemaRow() {
+        return gradingSchemaRow;
+    }
+
+    public void setGradingSchemaRow(GradingSchemaRow gradingSchemaRow) {
+        this.gradingSchemaRow = gradingSchemaRow;
     }
 
     public List<ProtocolStudentHistory> getProtocolStudentHistories() {

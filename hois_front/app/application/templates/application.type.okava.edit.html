@@ -24,6 +24,7 @@
     <md-input-container flex="60" flex-sm="100" flex-xs="100">
       <label>{{'application.newStudyForm' | translate}}</label>
       <hois-classifier-select ng-model="application.newStudyForm" main-classifier-code="OPPEVORM" show-only-values="allowedStudyForms"
+        ng-disabled="disableStudyFormChange"
         criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" only-valid
         ignore-preselected model-value-attr="code" required></hois-classifier-select>
     </md-input-container>

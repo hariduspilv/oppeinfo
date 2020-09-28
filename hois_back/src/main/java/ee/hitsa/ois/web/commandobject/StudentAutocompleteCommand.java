@@ -19,6 +19,7 @@ public class StudentAutocompleteCommand extends SearchCommand {
     private List<Long> studentGroup;
     private Long studentGroupTeacher;
     private Long userId;
+    private Boolean hasCurriculumVersion;
 
     public Boolean getActive() {
         return active;
@@ -138,6 +139,14 @@ public class StudentAutocompleteCommand extends SearchCommand {
 
     public void setOnlyStudyingOrFinishedGuestStudent(Boolean onlyStudyingOrFinishedGuestStudent) {
         this.onlyStudyingOrFinishedGuestStudent = onlyStudyingOrFinishedGuestStudent;
+    }
+
+    public Boolean getHasCurriculumVersion() {
+        return hasCurriculumVersion;
+    }
+
+    public void setHasCurriculumVersion(Boolean hasCurriculumVersion) {
+        this.hasCurriculumVersion = hasCurriculumVersion;
     }
 
 }

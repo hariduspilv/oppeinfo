@@ -225,7 +225,20 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
   function ($location, $route, $scope, ArrayUtils, Classifier, QueryUtils, dialogService, message) {
 
   var id = $route.current.params.id;
+  $scope.formState = {};
   $scope.currentDeclarationPage = $location.path() === '/declaration/current/view';
+  $scope.inStudentData = $location.path() === '/students/'+id+'/declaration';
+  if ($route.current.params._fromStudentData || $location.path().endsWith('fromStudentData')) {
+    $scope.fromStudentData = true;
+  }
+  if ($location.path().startsWith('/student')) {
+    $scope.currentNavItem = 'current';
+    $scope.studentId = ($route.current.locals.auth.isStudent() || $route.current.locals.auth.isParent() ? $route.current.locals.auth.student : $route.current.params.id);
+    QueryUtils.endpoint('/students').get({ id: $scope.studentId, withHTM: true }).$promise.then(function (student) {
+      $scope.student = student;
+      $scope.formState.showNavBar = true;
+    });
+  }
   $scope.auth = $route.current.locals.auth;
   var ConfirmEndPoint = QueryUtils.endpoint('/declarations/confirm');
 
@@ -234,7 +247,6 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
   var currentWrapper = new DeclarationWrapper(undefined, {isNextPeriod: false});
   var nextWrapper = new DeclarationWrapper(undefined, {isNextPeriod: true});
   $scope.declarations = [currentWrapper, nextWrapper];
-  $scope.formState = {};
   $scope.DECLARATION_PERIOD_TYPE = Object.freeze({
     BEFORE: 0,
     CURRENT: 1,
@@ -255,7 +267,7 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
    * @param {boolean} next if true then looks for next period declaration.
    */
   function getDeclarationDataWithoutId(wrapper, next) {
-    QueryUtils.endpoint('/declarations/' + (next ? 'next' : 'current')).get().$promise.then(function(response){
+    QueryUtils.endpoint('/declarations/' + (next ? 'next' : 'current')).get({id : $scope.studentId}).$promise.then(function(response){
       if(!response.id) {
         wrapper.formState.noDeclaration = true;
       } else {
@@ -282,7 +294,11 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
         }
 
         if (wrapper.formState.type === $scope.DECLARATION_PERIOD_TYPE.CURRENT && !response.id) {
-          QueryUtils.endpoint('/declarations/canCreate?next=' + !!next).search().$promise.then(function(response){
+          var endpointUrl = '/declarations/canCreate?next=' + !!next;
+          if ($scope.inStudentData) {
+            endpointUrl = '/declarations/canCreate/'+ id +'?next=' + !!next;
+          }
+          QueryUtils.endpoint(endpointUrl).search().$promise.then(function(response){
             wrapper.formState.canCreateDeclaration = response.canCreate;
           });
         }
@@ -296,7 +312,10 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
     });
   }
 
-  if(id) {
+  if ($scope.studentId) {
+    getDeclarationDataWithoutId(currentWrapper);
+    getDeclarationDataWithoutId(nextWrapper, true);
+  } else if(id) {
     currentWrapper.declaration = QueryUtils.endpoint('/declarations').get({id: id}, function(response){
       afterLoad(response);
       currentWrapper.formState.declaration = true;
@@ -322,9 +341,13 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
   }
 
   $scope.addDeclaration = function(next) {
-    var Endpoint = QueryUtils.endpoint('/declarations/create?next=' + !!next);
+    var endpoint = '/declarations/create?next=' + !!next;
+    if ($scope.inStudentData) {
+      endpoint = '/declarations/create/' + id + '?next=' + !!next;
+    }
+    var Endpoint = QueryUtils.endpoint(endpoint);
     new Endpoint().$save().then(function(response){
-      $location.path("/declarations/" + response.id + "/edit");
+      $location.url("/declarations/" + response.id + "/edit");
     });
   };
 
@@ -464,13 +487,21 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
       });
     };
   }
-]).controller('DeclarationStudentSearchController', ['$scope', '$q', 'Classifier', 'QueryUtils',
-  function ($scope, $q, Classifier, QueryUtils) {
-
-    $scope.currentNavItem = 'previous';
+]).controller('DeclarationStudentSearchController', ['$scope', '$q', 'Classifier', 'QueryUtils', '$location', '$route',
+  function ($scope, $q, Classifier, QueryUtils, $location, $route) {
     var clMapper = Classifier.valuemapper({status: 'OPINGUKAVA_STAATUS'});
-    QueryUtils.createQueryForm($scope, '/declarations/previous', {order: 'dId'}, clMapper.objectmapper);
-
+    if ($location.path().startsWith('/student')) {
+      $scope.studentId = ($route.current.locals.auth.isStudent() || $route.current.locals.auth.isParent() ? $route.current.locals.auth.student : $route.current.params.id);
+      QueryUtils.endpoint('/students').get({ id: $scope.studentId, withHTM: true }).$promise.then(function (student) {
+        $scope.inStudentData = true;
+        $scope.student = student;
+        $scope.currentNavItem = 'previous';
+      });
+      QueryUtils.createQueryForm($scope, '/declarations/previous/' + $scope.studentId, {order: 'dId'}, clMapper.objectmapper);
+    } else {
+      $scope.currentNavItem = 'previous';
+      QueryUtils.createQueryForm($scope, '/declarations/previous', {order: 'dId'}, clMapper.objectmapper);
+    }
     $q.all(clMapper.promises).then($scope.loadData);
   }
 ]).controller('DeclarationNewController', ['$scope', '$location', 'FormUtils', 'QueryUtils', 'message',

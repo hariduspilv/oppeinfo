@@ -94,6 +94,7 @@ public class School extends BaseEntityWithId implements Translatable {
     private String finalSchoolTypeEn;
     @Column(name = "final_en_62")
     private String finalEn62;
+    private String ekisUrl;
 
     @JsonIgnore
     @OneToMany(mappedBy = "school", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -437,4 +438,11 @@ public class School extends BaseEntityWithId implements Translatable {
         this.isStudentDeclarationDelete = isStudentDeclarationDelete;
     }
 
+    public String getEkisUrl() {
+        return ekisUrl;
+    }
+
+    public void setEkisUrl(String ekisUrl) {
+        this.ekisUrl = ekisUrl;
+    }
 }

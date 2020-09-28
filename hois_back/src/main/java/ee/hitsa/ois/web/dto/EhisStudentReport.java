@@ -4,8 +4,11 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import ee.hitsa.ois.domain.WsEhisStudentLog;
+import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DirectiveType;
@@ -28,7 +31,10 @@ public class EhisStudentReport {
         setStudentId(student.getId());
         setName(student.getPerson().getFullname());
         setIdcode(student.getPerson().getIdcode());
-        setCurriculum(student.getCurriculumVersion().getCurriculum().getCode());
+        setCurriculum(Optional.ofNullable(student.getCurriculumVersion())
+                .map(CurriculumVersion::getCurriculum)
+                .map(Curriculum::getCode)
+                .orElse(null));
 
         setError(Boolean.valueOf(Boolean.TRUE.equals(log.getHasOtherErrors()) || Boolean.TRUE.equals(log.getHasXteeErrors())));
         setMessage(log.getLogTxt());

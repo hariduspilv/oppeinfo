@@ -122,7 +122,7 @@ public class StudentCardService {
     
     private static StudentCardSearchDto mapStudentCardSearchDto(Object row, StudentCardSearchDto dto, ClassifierCache cache) {
         dto.setStudentId(resultAsLong(row, 0));
-        dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(row, 1), resultAsString(row, 2), resultAsString(row, 15)));
+        dto.setFullname(PersonUtil.fullnameTypeSpecific(resultAsString(row, 1), resultAsString(row, 2), resultAsString(row, 15)));
         String studentGroupCode = resultAsString(row, 4);
         dto.setStudentGroup(new AutocompleteResult(resultAsLong(row, 3), studentGroupCode, studentGroupCode));
         dto.setPictureExists(resultAsBoolean(row, 5));
@@ -273,7 +273,7 @@ public class StudentCardService {
                 // Every loop it should get bytes from DB.
                 OisFile file = em.getReference(OisFile.class, entry.getValue().getPhotoId());
                 ZipEntry zipEntry = new ZipEntry(String.format("%s.%s",
-                        entry.getKey(), getFileExtension(file.getFname())));
+                        entry.getKey(), getFileExtension(file.getFname(),file.getFtype())));
                 zipOut.putNextEntry(zipEntry);
                 zipOut.write(file.getFdata(), 0, file.getFdata().length);
                 // Forget instances of OisFile, we don't need to store MBs of data.
@@ -350,8 +350,21 @@ public class StudentCardService {
         }
     }
     
-    private static String getFileExtension(String filename) {
+    private static String getFileExtension(String filename, String ftype) {
         String[] split = filename.split("\\.");
-        return split.length == 0 ? filename : split[split.length - 1];
+        if (split.length == 1) {
+        	if(ftype.indexOf("png") > -1) 	{
+        		return "png";
+        	}
+        	else if(ftype.indexOf("jpeg") > -1) 	{
+        		return "jpg";
+        	}
+        	else {
+        		return "";
+        	}
+        }	
+        else	{
+        	return split[split.length - 1];
+        }
     }
 }

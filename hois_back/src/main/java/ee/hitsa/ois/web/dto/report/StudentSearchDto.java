@@ -49,7 +49,7 @@ public class StudentSearchDto {
         id = resultAsLong(record, 0);
         firstName = resultAsString(record, 1);
         lastName = resultAsString(record, 2);
-        fullName = PersonUtil.fullnameOptionalGuest(firstName, lastName, resultAsString(record, 20));
+        fullName = PersonUtil.fullnameTypeSpecific(firstName, lastName, resultAsString(record, 20));
         idcode = resultAsString(record, 3);
         studyStart = resultAsLocalDate(record, 4);
         studyLevel = resultAsString(record, 5);

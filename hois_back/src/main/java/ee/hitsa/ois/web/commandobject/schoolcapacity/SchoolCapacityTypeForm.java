@@ -5,6 +5,7 @@ public class SchoolCapacityTypeForm {
     private String typeCode;
     private Boolean isUsable;
     private Boolean isTimetable;
+    private Boolean isContact;
     
     public String getTypeCode() {
         return typeCode;
@@ -26,5 +27,11 @@ public class SchoolCapacityTypeForm {
     public void setIsTimetable(Boolean isTimetable) {
         this.isTimetable = isTimetable;
     }
-    
+
+    public Boolean getIsContact() {
+        return isContact;
+    }
+    public void setIsContact(Boolean isContact) {
+        this.isContact = isContact;
+    }
 }

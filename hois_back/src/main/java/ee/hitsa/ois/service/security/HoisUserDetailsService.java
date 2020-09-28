@@ -99,8 +99,8 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
         
         if (school != null) {
             SchoolService.SchoolType type = schoolService.schoolType(schoolId);
-            authenticatedSchool = new AuthenticatedSchool(school.getId(), type.isHigher(), type.isVocational(),
-                    type.isDoctoral(), school.getIsLetterGrade() != null ? school.getIsLetterGrade().booleanValue() : false,
+            authenticatedSchool = new AuthenticatedSchool(school.getId(), type.isBasic(), type.isSecondary(), type.isVocational(),
+                    type.isHigher(), type.isDoctoral(), school.getIsLetterGrade() != null ? school.getIsLetterGrade().booleanValue() : false,
                     EntityUtil.getCode(school.getEhisSchool()), school.getIsWithoutEkis() != null ? school.getIsWithoutEkis().booleanValue() : false,
                     Boolean.TRUE.equals(school.getIsHmodules()), Boolean.TRUE.equals(school.getIsNotAbsence()));
             OisFile logo = school.getLogo();
@@ -142,7 +142,27 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
                 if (teacherId != null) {
                     committeeQuery.setParameter(3, teacherId);
                 }
+                
                 List<?> committeeList = committeeQuery.getResultList();
+                if (committeeList != null) {
+                    Query inApplicationCommittee = em.createNativeQuery("select a.id from application a "
+                            + "join student s on a.student_id = s.id "
+                            + "join person p on s.person_id = p.id "
+                            + "join classifier type on a.type_code = type.code "
+                            + "join classifier status on a.status_code = status.code "
+                            + "where s.school_id = ?1 "
+                            + "and exists(select 1 from committee_member cm where cm.committee_id = a.committee_id and (cm.person_id = ?2 "
+                            + (teacherId != null ? "or cm.teacher_id = ?3))" : "))"))
+                            .setParameter(1, schoolId)
+                            .setParameter(2, user.getPerson().getId());
+                    if (teacherId != null) {
+                        inApplicationCommittee.setParameter(3, teacherId);
+                    }
+                    List<?> inApplicationCommitteeList = inApplicationCommittee.getResultList();
+                    if (!inApplicationCommitteeList.isEmpty()) {
+                        authenticatedUser.setInApplicationCommittee(Boolean.TRUE);
+                    }
+                }
                 authenticatedUser.setCommittees(StreamUtil.toMappedList(r -> resultAsString(r, 0), committeeList));
             }
         }

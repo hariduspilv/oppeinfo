@@ -12,6 +12,8 @@ import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
 
+import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
@@ -28,11 +30,6 @@ import ee.hitsa.ois.domain.rr.WsRrLogSchool;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.ExceptionUtil;
-import ee.hitsa.ois.util.JpaNativeQueryBuilder;
-import ee.hitsa.ois.util.JpaQueryUtil;
-import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.rr.PopulationRegisterChangesSearchDto;
 import ee.hitsa.ois.web.dto.rr.PopulationRegisterSearchDto;
@@ -71,7 +68,7 @@ public class PopulationRegisterLogService {
         qb.optionalCriteria("wrcl.inserted < :validThru", "validThru", cmd.getThru() != null ? cmd.getThru().plusDays(1) : null);
         return JpaQueryUtil.pagingResult(qb, select.toString(), em, pageable).map(r -> {
             WsRrChangeLogDto dto = new WsRrChangeLogDto();
-            String studentName = PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 10));
+            String studentName = PersonUtil.fullnameTypeSpecific(resultAsString(r, 1), resultAsString(r, 10));
             dto.setStudent(new AutocompleteResult(resultAsLong(r, 0), studentName, studentName));
             Long groupId = resultAsLong(r, 2);
             if (groupId != null) {
@@ -126,7 +123,7 @@ public class PopulationRegisterLogService {
         WsRrLog wsRrLog = new WsRrLog();
         wsRrLog.setIdcode(person.getIdcode());
         wsRrLog.setWsName(log.getQueryName());
-        wsRrLog.setRequest(log.getOutgoingXml() != null ? log.getOutgoingXml() : "i18n:EmptyXml");
+        wsRrLog.setRequest(log.getOutgoingXml() != null ? log.getOutgoingXml() : TranslateUtil.optionalTranslate("error.emptyOutgoingXml", Language.ET));
         wsRrLog.setResponse(log.getIncomingXml());
         wsRrLog.setHasErrors(Boolean.valueOf(log.getError() != null));
         wsRrLog.setLogTxt(log.getError() != null ? ExceptionUtil.getRootCause(log.getError()).getMessage() : null);

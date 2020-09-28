@@ -640,6 +640,11 @@ public abstract class UserUtil {
         throwAccessDeniedIf(!canViewStudent(user, student),
                 "User is not allowed to see student's information");
     }
+    
+    public static void assertCanViewStudentAddInfo(HoisUserDetails user, Student student) {
+        throwAccessDeniedIf(!canViewStudentAddInfo(user, student),
+                "User is not allowed to see student's additional information");
+    }
 
     public static void assertCanViewStudentSpecificData(HoisUserDetails user, Student student) {
         throwAccessDeniedIf(!canViewStudentSpecificData(user, student),
@@ -724,6 +729,16 @@ public abstract class UserUtil {
                 .filter(u -> user == null || !user.getId().equals(EntityUtil.getId(u)))
                 .filter(u -> DateUtils.isValid(u.getValidFrom(), u.getValidThru()))
                 .findAny().isPresent(), "user.shouldBeUniqueAdmin");
+    }
+
+    public static boolean canViewStudentAddInfo(HoisUserDetails user, Student student) {
+        if (StudentUtil.canBeEdited(student)) {
+            if (isSchoolAdmin(user, student.getSchool()) || isStudentGroupTeacher(user, student)
+                    || isLeadingTeacher(user, student)) {
+                return hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPUR);
+            }
+        }
+        return false;
     }
     
 }

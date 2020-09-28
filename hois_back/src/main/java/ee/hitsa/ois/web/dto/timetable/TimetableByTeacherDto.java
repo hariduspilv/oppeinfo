@@ -6,7 +6,6 @@ public class TimetableByTeacherDto extends TimetableByDto {
     private final Long teacherId;
     private final String firstname;
     private final String lastname;
-    private String personalUrl;
 
     public TimetableByTeacherDto(String studyPeriods, List<TimetableEventSearchDto> timetableEvents, Long teacherId,
             String firstname, String lastname, Boolean isHigher) {
@@ -27,13 +26,4 @@ public class TimetableByTeacherDto extends TimetableByDto {
     public String getLastname() {
         return lastname;
     }
-
-    public String getPersonalUrl() {
-        return personalUrl;
-    }
-
-    public void setPersonalUrl(String personalUrl) {
-        this.personalUrl = personalUrl;
-    }
-
 }

@@ -250,6 +250,9 @@ public class UserService {
             if (StudentType.OPPUR_K.name().equals(resultAsString(r, 12))) {
                 nameEt += " (KY)";
                 nameEn += " (KY)";
+            } else if (StudentType.OPPUR_E.name().equals(resultAsString(r, 12))) {
+                nameEt += " (E)";
+                nameEn += " (E)";
             }
             
             return new UserProjection(resultAsLong(r, 0), resultAsString(r, 1), code, nameEt, nameEn, resultAsString(r, 7),  resultAsString(r, 8));

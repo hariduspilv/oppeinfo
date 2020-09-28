@@ -118,7 +118,7 @@ public class StudentRepresentativeApplicationDto extends StudentRepresentativeAp
         EntityUtil.bindToDto(application, dto);
         Student student = application.getStudent();
         dto.setStudentId(student.getId());
-        dto.setStudentFullname(PersonUtil.fullnameOptionalGuest(student.getPerson().getFullname(), EntityUtil.getNullableCode(student.getType())));
+        dto.setStudentFullname(PersonUtil.fullnameTypeSpecific(student.getPerson().getFullname(), EntityUtil.getNullableCode(student.getType())));
         dto.setStudentIdcode(student.getPerson().getIdcode());
         if(AVALDUS_ESINDAJA_STAATUS_K.name().equals(dto.getStatus())) {
             dto.setConfirmDate(application.getChanged());

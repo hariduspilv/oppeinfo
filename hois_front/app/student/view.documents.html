@@ -5,32 +5,7 @@
 
 <div layout-padding ng-cloak>
   <div flex>
-    <div layout="row" layout-xs="column" flex class="form-readonly">
-      <div layout="row" layout-sm="column" layout-xs="column" flex>
-        <md-input-container flex>
-          <label>{{'student.label' | translate}}</label>
-          <hois-value value="student.person.firstname + ' ' + student.person.lastname"></hois-value>
-        </md-input-container>
-        <md-input-container flex>
-          <label>{{'student.idcode' | translate}}</label>
-          <hois-value value="student.person.idcode"></hois-value>
-        </md-input-container>
-        <md-input-container flex>
-          <label>{{'student.birthDate' | translate}}</label>
-          <hois-value value="student.person.birthdate | hoisDate"></hois-value>
-        </md-input-container>
-      </div>
-      <div layout="row" layout-sm="column" layout-xs="column" flex ng-if="!student.isGuestStudent">
-        <md-input-container flex>
-          <label>{{'student.studyForm' | translate}}</label>
-          <hois-classifier-value ng-model="student.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
-        </md-input-container>
-        <md-input-container flex>
-          <label>{{'student.curriculum' | translate}}</label>
-          <hois-value value="currentLanguageNameField(student.curriculumVersion)"></hois-value>
-        </md-input-container>
-      </div>
-    </div>
+    <div ng-include="'student/templates/view.student.header.html'"></div>
     <hois-collapsable label="('student.application.label' | translate)">
       <md-table-container>
         <table md-table md-progress="applications.$promise" class="secondary-table">
@@ -174,6 +149,36 @@
       </md-table-container>
       <md-table-pagination ng-show="directives.totalElements > directivesCriteria.size" md-limit="directivesCriteria.size" md-limit-options="[5, 10, 15]"
         md-page="directivesCriteria.page" md-total="{{directives.totalElements}}" md-on-paginate="loadDirectives" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+        md-page-select></md-table-pagination>
+    </hois-collapsable>
+
+    <hois-collapsable label="('student.apelApplication.label' | translate)">
+      <md-table-container>
+        <table md-table md-progress="apelApplications.$promise" class="secondary-table">
+          <thead md-head md-order="apelApplicationsCriteria.order" md-on-reorder="loadApelApplications">
+            <tr md-row>
+              <th md-column md-order-by="c.nameEt">{{'student.apelApplication.status' | translate}}</th>
+              <th md-column md-order-by="aa.inserted">{{'student.apelApplication.insertedDate' | translate}}</th>
+              <th md-column md-order-by="aa.confirmed">{{'student.apelApplication.confirmedDate' | translate}}</th>
+              <th md-column ng-if="!auth.isParent()"></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in apelApplications.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+              <td md-cell>{{::row.inserted | hoisDate}}</td>
+              <td md-cell>{{::row.confirmed | hoisDate}}</td>
+              <td md-cell ng-if="row.canView">
+                <div>
+                  <md-button md-no-ink class="md-primary change-button" ng-href="#/apelApplication/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination ng-show="apelApplications.totalElements > apelApplications.size" md-limit="apelApplications.size" md-limit-options="[5, 10, 15]"
+        md-page="apelApplications.page" md-total="{{apelApplications.totalElements}}" md-on-paginate="loadApelApplications" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
         md-page-select></md-table-pagination>
     </hois-collapsable>
 

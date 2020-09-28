@@ -13,6 +13,7 @@ public class StudentHigherResultDto {
     private Boolean isCurriculumFulfilled;
     private BigDecimal creditsSubmitted;
     private BigDecimal creditsSubmittedConsidered;
+    private BigDecimal consideredFulfillmentPercentage;
     private BigDecimal fulfillmentPercentage;
 
     public List<StudentHigherStudyPeriodResultDto> getStudyPeriodResults() {
@@ -37,6 +38,14 @@ public class StudentHigherResultDto {
 
     public void setCreditsSubmittedConsidered(BigDecimal creditsSubmittedConsidered) {
         this.creditsSubmittedConsidered = creditsSubmittedConsidered;
+    }
+
+    public BigDecimal getConsideredFulfillmentPercentage() {
+        return consideredFulfillmentPercentage;
+    }
+
+    public void setConsideredFulfillmentPercentage(BigDecimal consideredFulfillmentPercentage) {
+        this.consideredFulfillmentPercentage = consideredFulfillmentPercentage;
     }
 
     public Boolean getIsCurriculumFulfilled() {

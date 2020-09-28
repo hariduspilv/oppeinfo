@@ -17,7 +17,7 @@ import ee.hitsa.ois.domain.student.Student;
 public class JournalStudent extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = false)
+    @JoinColumn(nullable = false, updatable = false)
     private Journal journal;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

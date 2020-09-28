@@ -44,7 +44,7 @@ public class ModuleProtocolStudentDto {
         if (protocolStudent.getStudent().getStudentGroup() != null) {
             dto.setStudentGroup(protocolStudent.getStudent().getStudentGroup().getCode());
         }
-        dto.setFullname(PersonUtil.fullnameOptionalGuest(protocolStudent.getStudent()));
+        dto.setFullname(PersonUtil.fullname(protocolStudent.getStudent()));
         dto.setIdcode(protocolStudent.getStudent().getPerson().getIdcode());
         dto.setStatus(EntityUtil.getCode(protocolStudent.getStudent().getStatus()));
 

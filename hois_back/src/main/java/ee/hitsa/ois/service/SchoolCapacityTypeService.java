@@ -50,11 +50,13 @@ public class SchoolCapacityTypeService {
             if (capacityType == null) {
                 dto.setIsUsable(Boolean.FALSE);
                 dto.setIsTimetable(Boolean.FALSE);
+                dto.setIsContact(Boolean.FALSE);
                 dto.setLoads(new ArrayList<>());
             } else {
                 dto.setId(EntityUtil.getId(capacityType));
                 dto.setIsUsable(capacityType.getIsUsable());
                 dto.setIsTimetable(capacityType.getIsTimetable());
+                dto.setIsContact(capacityType.getIsContact());
                 dto.setLoads(StreamUtil.toMappedList(load -> {
                     SchoolCapacityTypeLoadForm loadDto = new SchoolCapacityTypeLoadForm();
                     loadDto.setStudyYearId(EntityUtil.getId(load.getStudyYear()));
@@ -79,6 +81,8 @@ public class SchoolCapacityTypeService {
             }
             capacityType.setIsUsable(capacity.getIsUsable());
             capacityType.setIsTimetable(capacity.getIsTimetable());
+            capacityType.setIsContact(Boolean.FALSE.equals(capacityType.getIsHigher())
+                    ? capacity.getIsContact() : Boolean.FALSE);
             EntityUtil.save(capacityType, em);
         }
     }
@@ -119,10 +123,14 @@ public class SchoolCapacityTypeService {
     }
 
     private Map<String, SchoolCapacityType> getSchoolCapacitiesByTypeCode(HoisUserDetails user, Boolean isHigher) {
+        return getSchoolCapacitiesByTypeCode(user.getSchoolId(), isHigher);
+    }
+
+    public Map<String, SchoolCapacityType> getSchoolCapacitiesByTypeCode(Long schoolId, Boolean isHigher) {
         List<SchoolCapacityType> schoolCapacities = em.createQuery("select sct from SchoolCapacityType sct"
-                + " where sct.school.id = ?1 and sct.isHigher = ?2", 
+                        + " where sct.school.id = ?1 and sct.isHigher = ?2",
                 SchoolCapacityType.class)
-                .setParameter(1, user.getSchoolId())
+                .setParameter(1, schoolId)
                 .setParameter(2, isHigher)
                 .getResultList();
         return StreamUtil.toMap(sct -> EntityUtil.getCode(sct.getCapacityType()), schoolCapacities);

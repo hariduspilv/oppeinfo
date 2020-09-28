@@ -24,6 +24,8 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
     private String studentGroupCode;
     private List<CurriculumVersionOccupationModuleThemeResult> themes;
     private String moduleNameEt;
+    private Long journalSubId;
+    private List<AutocompleteResult> subJournals;
 
     public static LessonPlanJournalDto of(Journal journal, LessonPlanModule lessonPlanModule) {
         LessonPlanJournalDto dto = of(journal, lessonPlanModule.getLessonPlan(), lessonPlanModule.getCurriculumVersionOccupationModule());
@@ -64,6 +66,12 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
         dto.setJournalRooms(StreamUtil.toMappedList(r -> new AutocompleteResult(EntityUtil.getId(r.getRoom()),
                 r.getRoom().getCode(), r.getRoom().getCode()), journal.getJournalRooms()));
         dto.setModuleNameEt(occupationModule.getCurriculumModule().getNameEt());
+        if (journal.getJournalSub() != null) {
+            dto.setJournalSubId(journal.getJournalSub().getId());
+            dto.setSubJournals(StreamUtil.nullSafeList(journal.getJournalSub().getJournals()).stream()
+                    .filter(j -> !j.getId().equals(journal.getId())).map(AutocompleteResult::of)
+                    .collect(Collectors.toList()));
+        }
         return dto;
     }
 
@@ -106,6 +114,20 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
     public void setModuleNameEt(String moduleNameEt) {
         this.moduleNameEt = moduleNameEt;
     }
-    
-    
+
+    public Long getJournalSubId() {
+        return journalSubId;
+    }
+
+    public void setJournalSubId(Long journalSubId) {
+        this.journalSubId = journalSubId;
+    }
+
+    public List<AutocompleteResult> getSubJournals() {
+        return subJournals;
+    }
+
+    public void setSubJournals(List<AutocompleteResult> subJournals) {
+        this.subJournals = subJournals;
+    }
 }

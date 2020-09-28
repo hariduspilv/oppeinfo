@@ -37,7 +37,7 @@ public class AuthenticatedUser implements Serializable {
     private List<String> committees;
     private List<Long> curriculums;
     private Boolean hasSchoolRole;
-    
+    private Boolean inApplicationCommittee;
     private Boolean mustAgreeWithToS;
 
     public AuthenticatedUser(String name, Long person, Long user, String roleCode, Long student, Long teacher,
@@ -211,6 +211,14 @@ public class AuthenticatedUser implements Serializable {
 
     public void setMustAgreeWithToS(Boolean mustAgreeWithToS) {
         this.mustAgreeWithToS = mustAgreeWithToS;
+    }
+
+    public Boolean getInApplicationCommittee() {
+        return inApplicationCommittee;
+    }
+
+    public void setInApplicationCommittee(Boolean inApplicationCommittee) {
+        this.inApplicationCommittee = inApplicationCommittee;
     }
 
 }

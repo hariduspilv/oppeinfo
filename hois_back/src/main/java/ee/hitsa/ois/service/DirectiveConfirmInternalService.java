@@ -1,6 +1,7 @@
 package ee.hitsa.ois.service;
 
 import ee.hitsa.ois.domain.directive.Directive;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.*;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.service.fotobox.FotoBoxService;
@@ -31,11 +32,9 @@ public class DirectiveConfirmInternalService {
     private TaskScheduler scheduler;
 
     private Directive confirm(String confirmer, Directive directive, LocalDate confirmDate, boolean isEKIS) {
-        DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
         directiveConfirmService.confirm(confirmer, directive, confirmDate);
-
-        if (DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType)
-                || DirectiveType.KASKKIRI_KYLALIS.equals(directiveType) || DirectiveType.KASKKIRI_ENNIST.equals(directiveType)) {
+        if (ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_IMMAT, DirectiveType.KASKKIRI_IMMATV, 
+                DirectiveType.KASKKIRI_EKSTERN, DirectiveType.KASKKIRI_KYLALIS, DirectiveType.KASKKIRI_ENNIST)) {
 //            fotoBoxService.directiveStudentPhotoAsyncRequest(confirmer, directive);
             scheduler.schedule(() -> fotoBoxService.directiveStudentPhotoJobRequest(confirmer, directive, isEKIS),
                     Date.from(LocalDateTime.now().plusSeconds(30).atZone(ZoneId.systemDefault()).toInstant()));
@@ -45,12 +44,12 @@ public class DirectiveConfirmInternalService {
 
     @Transactional(Transactional.TxType.REQUIRES_NEW)
     public Directive confirmedByEkis(long directiveId, String directiveNr, LocalDate confirmDate, String preamble, long wdId,
-                                     String signerIdCode, String signerName) {
+                                     String signerIdCode, String signerName, long schoolId) {
         //TODO veahaldus
         //• ÕISi käskkiri ei leitud – ÕISist ei leita vastava vastava OIS_ID ja WD_ID-ga käskkirja
         //• Vale staatus – kinnitada saab ainult „kinnitamisel“ staatusega käskkirja. „Koostamisel“ ja „Kinnitatud“ käskkirju kinnitada ei saa.
         //• Üldine veateade – üldine viga salvestamisel, nt liiga lühike andmeväli, vale andmetüüp vms
-        Directive directive = findDirective(directiveId, wdId);
+        Directive directive = findDirective(directiveId, wdId, schoolId);
         directive.setDirectiveNr(directiveNr);
         directive.setPreamble(preamble);
         return confirm(PersonUtil.fullnameAndIdcode(signerName, signerIdCode), directive, confirmDate, true);
@@ -63,9 +62,24 @@ public class DirectiveConfirmInternalService {
         return confirm(confirmer, directive, confirmDate, false);
     }
 
-    private Directive findDirective(long directiveId, long wdId) {
+    private Directive findDirective(long directiveId, long wdId, long schoolId) {
         try {
             Directive directive = em.getReference(Directive.class, Long.valueOf(directiveId));
+
+            School school = directive.getSchool();
+            // ekis true, school 0 - throw
+            // ekis false, school 0 - OK
+            // ekis true, school !0 - OK, if same school
+            // ekis false, school !0 - throw
+
+            if (
+                    (school.getEkisUrl() != null && (Long.valueOf(0).equals(schoolId) || !school.getId().equals(schoolId)))
+                ||
+                    (school.getEkisUrl() == null && !Long.valueOf(0).equals(schoolId))
+            ) {
+                throw new EntityNotFoundException();
+            }
+
             if (!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL, directive.getStatus())) {
                 throw new HoisException("Käskkiri vale staatusega");
             }

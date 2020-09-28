@@ -10,6 +10,8 @@ public enum DirectiveType {
     KASKKIRI_AKADK(null, DirectiveValidation.Akadk.class),
     KASKKIRI_DUPLIKAAT(null, DirectiveValidation.Duplikaat.class),
     KASKKIRI_EKSMAT(StudentStatus.OPPURSTAATUS_K, DirectiveValidation.Eksmat.class),
+    KASKKIRI_EKSTERN(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Ekstern.class, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel", "nominalStudyEnd", "dormitory"),
+    KASKKIRI_EKSTERNKATK(StudentStatus.OPPURSTAATUS_K, DirectiveValidation.Ekstern.class),
     KASKKIRI_ENNIST(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Ennist.class, "studentGroup", "nominalStudyEnd"),
     KASKKIRI_FINM(null, DirectiveValidation.Finm.class, "fin", "finSpecific"),
     KASKKIRI_LOPET(StudentStatus.OPPURSTAATUS_L, DirectiveValidation.Lopet.class),

@@ -1818,6 +1818,10 @@ md-grid-tile {
   font-weight: 500;
 }
 
+.timetableButton {
+  top: -25px;
+}
+
 .timetableIconButton {
   height: inherit !important;
   width: inherit !important;
@@ -2879,27 +2883,144 @@ table.questions-secondary-table.secondary-table td:not(:first-child) {
 
 .school-board-school-events,
 .school-board-school-events md-icon,
-.school-board-school-events table.md-table td.md-cell,
-.school-board-school-events table.md-table th.md-column {
-  font-size: 51px;
+.school-board-school-events table.md-table td.md-cell {
+  font-size: 46px;
+}
+
+.school-board-school-events table.md-table td.md-cell div {
+  padding: 24px 24px;
 }
 
 .school-board-school-events md-icon {
-  height: 51px;
-  width: 51px;
+  height: 46px;
+  width: 46px;
 }
 
-.school-board-school-events table.md-table td.md-cell {
-  padding: 24px 24px;
+.school-board-school-events-capacity-type {
+  font-style: italic;
+  font-size: 36px;
+}
+
+.school-board-school-events-back {
+  font-size: 20px;
+  text-decoration: none;
+  margin-left: 15px;
+}
+
+.school-board-school-events-back md-icon {
+  color: inherit;
+  font-size: 20px;
+  height: 20px;
+  width: 20px;
+  min-height: 20px;
+  min-width: 20px;
+}
+
+.school-board-school-events-time {
+  width: 300px;
+  float: left;
+}
+.school-board-school-events-subject {
+  float: left;
+}
+
+.school-board-school-events-room {
+  font-weight: bold;
+  float: right;
+}
+
+@media (max-width: 2560px) {
+  .school-board-school-events,
+  .school-board-school-events md-icon,
+  .school-board-school-events table.md-table td.md-cell {
+    font-size: 36px;
+  }
+
+  .school-board-school-events table.md-table td.md-cell div {
+    padding: 6px 0px;
+  }
+
+  .school-board-school-events md-icon {
+    height: 36px;
+    width: 36px;
+  }
+
+  .school-board-school-events-capacity-type {
+    font-size: 28px;
+  }
+
+  .school-board-school-events-back {
+    font-size: 14px;
+  }
+
+  .school-board-school-events-back md-icon {
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+    min-height: 14px;
+    min-width: 14px;
+  }
+}
+
+@media (max-width: 1366px) {
+  .school-board-school-events,
+  .school-board-school-events md-icon,
+  .school-board-school-events table.md-table td.md-cell {
+    font-size: 28px;
+  }
+
+  .school-board-school-events-time {
+  width: 200px;
+  float: left;
+}
+
+  .school-board-school-events table.md-table td.md-cell div {
+    padding: 6px 0px;
+  }
+
+  .school-board-school-events md-icon {
+    height: 28px;
+    width: 28px;
+  }
+
+  .school-board-school-events table.md-table td.md-cell {
+    padding: 12px 12px;
+  }
+
+  .school-board-school-events-capacity-type {
+    font-size: 20px;
+  }
+
+  .school-board-school-events-back {
+    font-size: 12px;
+  }
+
+  .school-board-school-events-back md-icon {
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
+    min-height: 12px;
+    min-width: 12px;
+  }
+}
+
+.school-board-school-room-events-back {
+  font-size: 13px;
+  text-decoration: none;
+  margin-left: 15px;
+}
+
+.school-board-school-room-events-back md-icon {
+  color: inherit;
+  font-size: 13px;
+  height: 13px;
+  width: 13px;
+  min-height: 13px;
+  min-width: 13px;
 }
 
 .school-board-occupied {
   background: #FA787E;
-}
-
-.school-board-capacity-type {
-  font-style: italic;
-  font-size: 36px;
 }
 
 @media (max-width: 600px) {

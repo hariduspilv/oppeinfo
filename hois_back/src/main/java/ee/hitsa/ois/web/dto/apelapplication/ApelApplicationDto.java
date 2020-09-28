@@ -62,7 +62,6 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
             dto.setStudentGroup(application.getStudent().getStudentGroup().getCode());
         }
         dto.setCurriculumVersion(AutocompleteResult.of(application.getStudent().getCurriculumVersion()));
-        dto.setIsVocational(dto.getCurriculumVersion().getIsVocational());
         dto.setRecords(StreamUtil.toMappedList(ApelApplicationRecordDto::of, application.getRecords()));
         dto.setComments(StreamUtil.toMappedList(ApelApplicationCommentDto::of, application.getComments()));
         dto.setFiles(StreamUtil.toMappedList(ApelApplicationFileDto::of, application.getFiles()));

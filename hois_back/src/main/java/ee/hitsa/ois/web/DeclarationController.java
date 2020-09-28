@@ -29,6 +29,7 @@ import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.DeclarationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DeclarationUtil;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.DeclarationSearchCommand;
@@ -88,11 +89,37 @@ public class DeclarationController {
         }
         return get(user, declaration);
     }
+    
+    @GetMapping("/current/{id:\\d+}")
+    public DeclarationDto getStudentsCurrentDeclaration(HoisUserDetails user, @WithEntity Student student) {
+        UserUtil.assertSameSchool(user, student.getSchool());
+        Declaration declaration = declarationService.getCurrent(user.getSchoolId(), EntityUtil.getId(student));
+        if(declaration == null) {
+            return null;
+        }
+        return get(user, declaration);
+    }
 
     @GetMapping("/next")
     public DeclarationDto getStudentsNextDeclaration(HoisUserDetails user) {
         UserUtil.assertIsStudent(user);
         Declaration declaration = declarationService.getNext(user.getSchoolId(), user.getStudentId());
+        if(declaration == null) {
+            return null;
+        }
+        return get(user, declaration);
+    }
+    
+    @GetMapping("/previous/{id:\\d+}")
+    public Page<DeclarationDto> searchStudentsPreviousDeclarations(HoisUserDetails user, Pageable pageable, @WithEntity Student student) {
+        UserUtil.assertSameSchool(user, student.getSchool());
+        return declarationService.searchStudentsPreviousDeclarations(EntityUtil.getId(student), pageable);
+    }
+    
+    @GetMapping("/next/{id:\\d+}")
+    public DeclarationDto getStudentsNextDeclaration(HoisUserDetails user, @WithEntity Student student) {
+        UserUtil.assertSameSchool(user, student.getSchool());
+        Declaration declaration = declarationService.getNext(user.getSchoolId(), EntityUtil.getId(student));
         if(declaration == null) {
             return null;
         }
@@ -134,8 +161,19 @@ public class DeclarationController {
      */
     @GetMapping("/canCreate")
     public Map<String, ?> canCreate(HoisUserDetails user, @RequestParam(name="next", defaultValue="false") boolean isNextDeclaration) {
-        return Collections.singletonMap("canCreate", Boolean.valueOf(user.isStudent()
+        return Collections.singletonMap("canCreate", Boolean.valueOf((user.isStudent())
                 ? (isNextDeclaration ? declarationService.canCreateNext(user, user.getStudentId()) : declarationService.canCreateCurrent(user, user.getStudentId()))
+                : false));
+    }
+    
+    /**
+     * Only admin get permission to create new declarations
+     * from students/{id}/declaration page
+     */
+    @GetMapping("/canCreate/{id:\\d+}")
+    public Map<String, ?> canCreate(HoisUserDetails user, @RequestParam(name="next", defaultValue="false") boolean isNextDeclaration, @WithEntity Student student) {
+        return Collections.singletonMap("canCreate", Boolean.valueOf(UserUtil.isSchoolAdminOrStudent(user, student.getSchool())
+                ? (isNextDeclaration ? declarationService.canCreateNext(user, EntityUtil.getId(student)) : declarationService.canCreateCurrent(user, EntityUtil.getId(student)))
                 : false));
     }
 
@@ -147,7 +185,7 @@ public class DeclarationController {
 
     @PostMapping("/create/{id:\\d+}")
     public DeclarationDto createForSchoolAdmin(HoisUserDetails user, @WithEntity Student student, @RequestParam(name="next", defaultValue="false") boolean isNextDeclaration) {
-        UserUtil.assertIsSchoolAdmin(user, student.getSchool());
+        UserUtil.isSchoolAdminOrStudent(user, student.getSchool());
         return get(user, declarationService.create(user, student.getId(), isNextDeclaration));
     }
 

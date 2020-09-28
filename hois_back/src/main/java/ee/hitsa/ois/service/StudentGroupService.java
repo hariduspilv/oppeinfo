@@ -311,7 +311,7 @@ public class StudentGroupService {
         return StreamUtil.toMappedList(r -> {
             StudentGroupStudentDto dto = new StudentGroupStudentDto();
             dto.setId(resultAsLong(r, 0));
-            dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 9)));
+            dto.setFullname(PersonUtil.fullnameTypeSpecific(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 9)));
             dto.setIdcode(resultAsString(r, 3));
             String cvCode = resultAsString(r, 5);
             dto.setCurriculumVersion(new AutocompleteResult(resultAsLong(r, 4),
@@ -379,7 +379,7 @@ public class StudentGroupService {
         return StreamUtil.toMappedList(r -> {
             StudentGroupStudentDto dto = new StudentGroupStudentDto();
             dto.setId(resultAsLong(r, 0));
-            dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 9)));
+            dto.setFullname(PersonUtil.fullnameTypeSpecific(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 9)));
             dto.setIdcode(resultAsString(r, 3));
             String cvCode = resultAsString(r, 5);
             if (resultAsLong(r, 4) != null) {

@@ -416,8 +416,8 @@ angular.module('hitsaOis')
             icon: 'perm_data_setting'
           },
           {
-            name: authenticatedUser.higher && authenticatedUser.vocational ? 
-                'main.menu.reports.educationalSuccessVocational' 
+            name: authenticatedUser.higher && authenticatedUser.vocational ?
+                'main.menu.reports.educationalSuccessVocational'
               : 'main.menu.reports.educationalSuccess',
             url: '/reports/students/educationalSuccess?_menu',
             icon:'blur_circular',
@@ -694,6 +694,11 @@ angular.module('hitsaOis')
             name: 'main.menu.settings.capacityTypes',
             url: "/school/capacityTypes",
             icon: "bubble_chart"
+          },
+          {
+            name: 'main.menu.settings.gradingSchema',
+            url: "/school/gradingSchema",
+            icon: "forward_5"
           },
           {
             name: 'main.menu.settings.generalmessages',
@@ -1475,8 +1480,8 @@ angular.module('hitsaOis')
             icon: 'perm_data_setting'
           },
           {
-            name: authenticatedUser.higher && authenticatedUser.vocational ? 
-                'main.menu.reports.educationalSuccessVocational' 
+            name: authenticatedUser.higher && authenticatedUser.vocational ?
+                'main.menu.reports.educationalSuccessVocational'
               : 'main.menu.reports.educationalSuccess',
             url: '/reports/students/educationalSuccess?_menu',
             icon:'blur_circular',
@@ -1714,7 +1719,7 @@ angular.module('hitsaOis')
           },
           {
             name: 'main.menu.myStudyInformation.declaration',
-            url: '/declaration/current/view',
+            url: '/declaration/current/view?_menu',
             icon:"perm_contact_calendar",
             studyLevel: {
               higher: true
@@ -2089,9 +2094,14 @@ angular.module('hitsaOis')
       }
       if (rights && rights.hasOwnProperty('data')) {
         var guestStudentForbidden = rights.data.guestStudentForbidden;
+        var externalStudentForbidden = rights.data.externalStudentForbidden;
         rights = rights.data.authorizedRoles;
         // forbidding guest student
         if (guestStudentForbidden && angular.isDefined(authenticatedUser) && authenticatedUser.type === 'OPPUR_K') {
+          return false;
+        }
+        // forbidding external student
+        if (externalStudentForbidden && angular.isDefined(authenticatedUser) && authenticatedUser.type === 'OPPUR_E') {
           return false;
         }
         if(angular.isFunction(rights)) {

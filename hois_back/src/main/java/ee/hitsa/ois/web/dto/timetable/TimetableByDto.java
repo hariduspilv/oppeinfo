@@ -7,6 +7,7 @@ public class TimetableByDto {
     private final List<TimetableEventSearchDto> timetableEvents;
     private final Boolean isHigher;
     private Long schoolId;
+    private String personalParam;
 
     public TimetableByDto(String studyPeriods, List<TimetableEventSearchDto> timetableEvents, Boolean isHigher) {
         this.studyPeriods = studyPeriods;
@@ -34,4 +35,15 @@ public class TimetableByDto {
         return isHigher;
     }
 
+    public Boolean getHigher() {
+        return isHigher;
+    }
+
+    public String getPersonalParam() {
+        return personalParam;
+    }
+
+    public void setPersonalParam(String personalParam) {
+        this.personalParam = personalParam;
+    }
 }

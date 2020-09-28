@@ -59,6 +59,14 @@ public class Student extends StudentBase {
     private List<DirectiveStudent> directiveStudents;
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudentSupportService> supportServices;
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StudentLanguages> studentLanguages;
+    private String addInfo;
+    private String jobOccupation;
+    private String job;
+    private String otherContact;
+    private Boolean isAcadStudyAllowed;
+    private String representativeOtherContact;
 
     public Person getPerson() {
         return person;
@@ -204,6 +212,62 @@ public class Student extends StudentBase {
     public void setSupportServices(List<StudentSupportService> supportServices) {
         getSupportServices().clear();
         getSupportServices().addAll(supportServices);
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
+    }
+
+    public String getJobOccupation() {
+        return jobOccupation;
+    }
+
+    public void setJobOccupation(String jobOccupation) {
+        this.jobOccupation = jobOccupation;
+    }
+
+    public String getJob() {
+        return job;
+    }
+
+    public void setJob(String job) {
+        this.job = job;
+    }
+
+    public String getOtherContact() {
+        return otherContact;
+    }
+
+    public void setOtherContact(String otherContact) {
+        this.otherContact = otherContact;
+    }
+
+    public Boolean getIsAcadStudyAllowed() {
+        return isAcadStudyAllowed;
+    }
+
+    public void setIsAcadStudyAllowed(Boolean isAcadStudyAllowed) {
+        this.isAcadStudyAllowed = isAcadStudyAllowed;
+    }
+
+    public String getRepresentativeOtherContact() {
+        return representativeOtherContact;
+    }
+
+    public void setRepresentativeOtherContact(String representativeOtherContact) {
+        this.representativeOtherContact = representativeOtherContact;
+    }
+
+    public List<StudentLanguages> getStudentLanguages() {
+        return studentLanguages;
+    }
+
+    public void setStudentLanguages(List<StudentLanguages> studentLanguages) {
+        this.studentLanguages = studentLanguages;
     }
     
 }

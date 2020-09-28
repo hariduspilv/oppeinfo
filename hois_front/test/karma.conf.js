@@ -35,6 +35,7 @@ module.exports = function(config) {
       'bower_components/angular-material-data-table/dist/md-data-table.js',
       'bower_components/lf-ng-md-file-input/dist/lf-ng-md-file-input.js',
       'bower_components/moment/moment.js',
+      'bower_components/moment-timezone/builds/moment-timezone-with-data-10-year-range.min.js',
       'bower_components/ng-storage/ngStorage.js',
       'bower_components/angular-cache/dist/angular-cache.js',
       'bower_components/hwcrypto/hwcrypto.js',

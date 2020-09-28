@@ -8,6 +8,7 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 
 @Entity
 public class ProtocolStudentHistory extends BaseEntityWithId {
@@ -21,6 +22,9 @@ public class ProtocolStudentHistory extends BaseEntityWithId {
 
     @Size(max = 255)
     private String addInfo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private GradingSchemaRow gradingSchemaRow;
 
     public ProtocolStudent getProtocolStudent() {
         return protocolStudent;
@@ -46,4 +50,11 @@ public class ProtocolStudentHistory extends BaseEntityWithId {
         this.addInfo = addInfo;
     }
 
+    public GradingSchemaRow getGradingSchemaRow() {
+        return gradingSchemaRow;
+    }
+
+    public void setGradingSchemaRow(GradingSchemaRow gradingSchemaRow) {
+        this.gradingSchemaRow = gradingSchemaRow;
+    }
 }

@@ -77,7 +77,8 @@ public class SchoolForm extends VersionedCommand {
     private String finalSchoolTypeEn;
     @Size(max = 500)
     private String finalEn62;
-
+    @Size(max = 4000)
+    private String ekisUrl;
 
     public String getNameEt() {
         return nameEt;
@@ -373,5 +374,13 @@ public class SchoolForm extends VersionedCommand {
 
     public void setIsStudentDeclarationDelete(Boolean isStudentDeclarationDelete) {
         this.isStudentDeclarationDelete = isStudentDeclarationDelete;
+    }
+
+    public String getEkisUrl() {
+        return ekisUrl;
+    }
+
+    public void setEkisUrl(String ekisUrl) {
+        this.ekisUrl = ekisUrl;
     }
 }

@@ -1,5 +1,7 @@
 package ee.hitsa.ois.domain;
 
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
+
 import java.math.BigDecimal;
 
 import javax.persistence.Entity;
@@ -20,6 +22,11 @@ public class MidtermTaskStudentResult extends BaseEntityWithId {
 
     private BigDecimal points;
     private String pointsTxt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private GradingSchemaRow gradingSchemaRow;
+
+    private String verbalGrade;
 
     public MidtermTask getMidtermTask() {
         return midtermTask;
@@ -51,5 +58,21 @@ public class MidtermTaskStudentResult extends BaseEntityWithId {
 
     public void setPointsTxt(String pointsTxt) {
         this.pointsTxt = pointsTxt;
+    }
+
+    public GradingSchemaRow getGradingSchemaRow() {
+        return gradingSchemaRow;
+    }
+
+    public void setGradingSchemaRow(GradingSchemaRow gradingSchemaRow) {
+        this.gradingSchemaRow = gradingSchemaRow;
+    }
+
+    public String getVerbalGrade() {
+        return verbalGrade;
+    }
+
+    public void setVerbalGrade(String verbalGrade) {
+        this.verbalGrade = verbalGrade;
     }
 }

@@ -100,7 +100,7 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell><a ng-href="#/timetable/timetableEvent/{{::row.id}}/view">{{row.nameEt}}</a></td>
+            <td md-cell><a ng-href="#/timetable/timetableEvent/{{::row.id}}/view">{{currentLanguageNameField(row)}}</a></td>
             <td md-cell>{{::row.date | hoisDate}}</td>
             <td md-cell>{{::row.timeStart | hoisTime}}-{{::row.timeEnd | hoisTime}}</td>
             <td ng-if="eventsPerm" md-cell><span ng-repeat="teacher in row.teachers">{{::teacher.name}}{{$last ? "" : ", "}}</span></td>

@@ -8,6 +8,8 @@ import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.util.TranslateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +36,7 @@ public class EhisInnoveService extends EhisService {
         try {
             InnoveAjalugu innoveAjalugu = new InnoveAjalugu();
             if (student.getPerson() == null || student.getPerson().getIdcode() == null) {
-                throw new HoisException("i18n puudub isikukood");
+                throw new HoisException(TranslateUtil.optionalTranslate("error.missingIdcode", Language.ET));
             }
             innoveAjalugu.setIsikukood(student.getPerson().getIdcode());
             

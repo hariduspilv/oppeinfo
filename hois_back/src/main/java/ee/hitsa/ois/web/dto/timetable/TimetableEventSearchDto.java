@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto.timetable;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -32,6 +33,7 @@ public class TimetableEventSearchDto {
     private Boolean isJuhanEvent;
     private Boolean isExam;
     private Boolean isOngoing;
+    private LocalDateTime changed;
 
     public TimetableEventSearchDto(Long id, Long journalId, Long subjectStudyPeriodId, String nameEt, String nameEn,
             LocalDate date, LocalTime timeStart, LocalTime timeEnd, Boolean considerBreak, Boolean singleEvent,
@@ -242,5 +244,13 @@ public class TimetableEventSearchDto {
 
     public void setIsOngoing(Boolean isOngoing) {
         this.isOngoing = isOngoing;
+    }
+
+    public LocalDateTime getChanged() {
+        return changed;
+    }
+
+    public void setChanged(LocalDateTime changed) {
+        this.changed = changed;
     }
 }

@@ -21,6 +21,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.JobStatus;
 import ee.hitsa.ois.enums.JobType;
+import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
@@ -78,13 +79,18 @@ public class JobService {
         // valis and lopetamine are sent manually
         // kiitus, noomi, otegevus and praktik are not sent to ehis.
         // muu is not sent to ehis
+        DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
+        
+        // only LOPET directive external students are allowed to be sent to EHIS
+        boolean allExternalStudents = directive.getStudents().stream().allMatch(p -> p.getStudent() != null && ClassifierUtil.equals(StudentType.OPPUR_E, p.getStudent().getType()));
+        if (!DirectiveType.KASKKIRI_LOPET.equals(directiveType) && allExternalStudents) return;
+        
         if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_TYHIST, DirectiveType.KASKKIRI_AKAD, DirectiveType.KASKKIRI_AKADK, DirectiveType.KASKKIRI_LOPET,
                 DirectiveType.KASKKIRI_VALIS, DirectiveType.KASKKIRI_VALISKATK, DirectiveType.KASKKIRI_KIITUS, DirectiveType.KASKKIRI_NOOMI, DirectiveType.KASKKIRI_OTEGEVUS,
-                DirectiveType.KASKKIRI_PRAKTIK, DirectiveType.KASKKIRI_TUGILOPP, DirectiveType.KASKKIRI_MUU)) {
+                DirectiveType.KASKKIRI_PRAKTIK, DirectiveType.KASKKIRI_TUGILOPP, DirectiveType.KASKKIRI_MUU, DirectiveType.KASKKIRI_EKSTERN, DirectiveType.KASKKIRI_EKSTERNKATK)) {
             submitEhisSend(directive, null);
         }
-
-        DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
+        
         switch(directiveType) {
         case KASKKIRI_TYHIST:
             Directive canceled = directive.getCanceledDirective();

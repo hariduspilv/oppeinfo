@@ -58,7 +58,7 @@ public class StudentGroupStudentDto {
     public static StudentGroupStudentDto of(HoisUserDetails user, Student student) {
         StudentGroupStudentDto dto = new StudentGroupStudentDto();
         Person p = student.getPerson();
-        dto.setFullname(PersonUtil.fullnameOptionalGuest(p.getFullname(), EntityUtil.getNullableCode(student.getType())));
+        dto.setFullname(PersonUtil.fullnameTypeSpecific(p.getFullname(), EntityUtil.getNullableCode(student.getType())));
         if (user.isSchoolAdmin() || user.isLeadingTeacher() || user.isTeacher()) {
             dto.setId(student.getId());
             dto.setIdcode(p.getIdcode());

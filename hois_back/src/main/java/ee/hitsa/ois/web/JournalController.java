@@ -11,9 +11,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
+import ee.hitsa.ois.service.JournalAsyncService;
 import ee.hitsa.ois.web.commandobject.timetable.JournalOutcomeForm;
+import ee.hitsa.ois.web.commandobject.timetable.JournalSuitableStudentsCommand;
+import ee.hitsa.ois.web.dto.FutureStatusResponse;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
-import ee.hitsa.ois.web.dto.timetable.JournalAutomaticAddStudentsResult;
 import ee.hitsa.ois.web.dto.timetable.JournalOutcomeDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -74,6 +76,8 @@ public class JournalController {
 
     @Autowired
     private JournalService journalService;
+    @Autowired
+    private JournalAsyncService journalAsyncService;
     @Autowired
     private JournalUnconfirmedService journalUnconfirmedService;
     @Autowired
@@ -300,10 +304,17 @@ public class JournalController {
         return Collections.singletonMap("numberOfConfirmedJournals", journalService.confirmAll(user));
     }
 
-    @GetMapping("/addAllSuitableStudents")
-    public JournalAutomaticAddStudentsResult addAllSuitableStudents(HoisUserDetails user, @RequestParam("studyYearId") Long studyYear) {
+    @PostMapping("/addAllSuitableStudentsRequest")
+    public Map<String, Object> addAllSuitableStudents(HoisUserDetails user,
+            @RequestBody @Valid JournalSuitableStudentsCommand criteria) {
         JournalUtil.asserCanAddAllSuitableStudents(user);
-        return journalService.addAllSuitableStudents(user, studyYear);
+        String requestHash = journalAsyncService.addAllSuitableStudentsRequest(user, criteria.getStudyYearId());
+        return Collections.singletonMap("key", requestHash);
+    }
+
+    @GetMapping("/addAllSuitableStudentsStatus")
+    public FutureStatusResponse studentsWithoutPhotoRequestStatus(HoisUserDetails user, @RequestParam String key) {
+        return journalAsyncService.addAllSuitableStudentsStatus(user, key);
     }
 
     /**

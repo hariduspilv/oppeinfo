@@ -13,6 +13,7 @@ public abstract class AsyncMemoryManager {
 
     public static final Integer EHIS_STUDENT = Integer.valueOf(0x00);
     public static final Integer EHIS_TEACHER = Integer.valueOf(0x01);
+    public static final Integer JOURNAL_STUDENTS = Integer.valueOf(0x02);
     public static final Integer POLL = Integer.valueOf(0x10);
     public static final Integer FOTOBOX = Integer.valueOf(0x11);
     public static final Integer OTHER = Integer.valueOf(0xFF);
@@ -31,6 +32,7 @@ public abstract class AsyncMemoryManager {
     static {
         REQUESTS.put(EHIS_STUDENT, new ConcurrentHashMap<>());
         REQUESTS.put(EHIS_TEACHER, new ConcurrentHashMap<>());
+        REQUESTS.put(JOURNAL_STUDENTS, new ConcurrentHashMap<>());
         REQUESTS.put(POLL, new ConcurrentHashMap<>());
         REQUESTS.put(FOTOBOX, new ConcurrentHashMap<>());
         REQUESTS.put(OTHER, new ConcurrentHashMap<>());

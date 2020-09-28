@@ -167,8 +167,6 @@ public class TimetableService {
     @Autowired
     private TimetableObjectRepository timetableObjectRepository;
 
-    @Value("${hois.frontend.baseUrl}")
-    private String frontendBaseUrl;
     @Value("${timetable.cypher.key}")
     private String encryptionKey;
 
@@ -1055,14 +1053,15 @@ public class TimetableService {
     private Page<TimetableManagementSearchDto> searchVocationalTimetableForManagement(
             TimetableManagementSearchCommand criteria, Pageable pageable, HoisUserDetails user) {
         School school = em.getReference(School.class, user.getSchoolId());
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable t");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable t"
+                + " join study_period sp on sp.id = t.study_period_id");
 
-        qb.requiredCriteria("t.study_period_id = :studyPeriod", "studyPeriod", criteria.getStudyPeriod());
+        qb.requiredCriteria("sp.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
         qb.requiredCriteria("t.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("t.is_higher = :isHigher", "isHigher",
                 Boolean.valueOf(TimetableType.isHigher(criteria.getType())));
 
-        String select = "t.id, t.status_code, t.start_date, t.end_date, t.is_higher";
+        String select = "t.id, t.status_code, t.start_date, t.end_date, t.is_higher, sp.id sp_id";
         List<?> data = qb.select(select, em).getResultList();
         StudyPeriod sp = em.getReference(StudyPeriod.class, criteria.getStudyPeriod());
 
@@ -1073,9 +1072,12 @@ public class TimetableService {
             LocalDate start = resultAsLocalDate(r, 2);
             LocalDate end = resultAsLocalDate(r, 3);
             Boolean isHigher = resultAsBoolean(r, 4);
-            return new TimetableManagementSearchDto(id, status, start, end, isHigher, EntityUtil.getId(sp), canExportOrImportTimetable, canExportOrImportTimetable);
+            Long studyPeriodId = resultAsLong(r, 5);
+            return new TimetableManagementSearchDto(id, status, start, end, isHigher, studyPeriodId,
+                    canExportOrImportTimetable, canExportOrImportTimetable);
         }, data);
-        wrappedData = addMissingDatesToBlocked(sp, wrappedData, canExportOrImportTimetable);
+        addMissingDatesToBlocked(sp, wrappedData, canExportOrImportTimetable);
+        wrappedData = StreamUtil.toFilteredList(w -> w.getStudyPeriod().equals(criteria.getStudyPeriod()), wrappedData);
 
         String pageableSort = pageable.getSort() != null ? pageable.getSort().toString() : null;
         if ("3: ASC, 4: ASC".equals(pageableSort)) {
@@ -1119,7 +1121,6 @@ public class TimetableService {
             wrappedData = addMissingDatesToBlocked(sp, wrappedData);
         }
         wrappedData = StreamUtil.toFilteredList(wrapped -> wrapped.getStart().isAfter(timetable.getStartDate()), wrappedData);
-        Collections.sort(wrappedData, (dto1, dto2) -> dto1.getStart().compareTo(dto2.getStart()));
         return wrappedData;
     }
 
@@ -1130,45 +1131,20 @@ public class TimetableService {
     
     private static List<TimetableManagementSearchDto> addMissingDatesToBlocked(StudyPeriod sp,
             List<TimetableManagementSearchDto> data, Boolean canExportOrImportTimetable) {
-        LocalDate currentStart = sp.getStartDate();
-        LocalDate currentEnd = sp.getStartDate();
-        LocalDate spEnd = sp.getEndDate();
-        List<TimetableManagementSearchDto> toAdd = new ArrayList<>();
+        Set<LocalDate> timetableStartDates = StreamUtil.toMappedSet(TimetableManagementSearchDto::getStart, data);
+        List<LocalDate> spWeekBeginningDates = sp.getWeekBeginningDates();
 
-        Collections.sort(data, (dto1, dto2) -> dto1.getStart().compareTo(dto2.getStart()));
-
-        for (TimetableManagementSearchDto dto : data) {
-            // TODO: put the while into a function , both whiles are same
-            while (currentStart.isBefore(dto.getStart())) {
-                currentEnd = currentStart.with(TemporalAdjusters.next(DayOfWeek.SUNDAY));
-                currentEnd = currentEnd.isBefore(dto.getStart()) ? currentEnd : dto.getStart().minusDays(1);
-                toAdd.add(
+        for (LocalDate currentStart : spWeekBeginningDates) {
+            if (!timetableStartDates.contains(currentStart)) {
+                LocalDate currentEnd = currentStart.with(TemporalAdjusters.next(DayOfWeek.SUNDAY));
+                data.add(
                         new TimetableManagementSearchDto(null, TimetableStatus.TUNNIPLAAN_STAATUS_A.name(),
                                 currentStart, currentEnd, Boolean.FALSE, EntityUtil.getId(sp),
                                 canExportOrImportTimetable, canExportOrImportTimetable));
-                currentStart = currentStart.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
-            }
-            currentEnd = dto.getEnd().plusDays(1);
-            currentStart = currentEnd.getDayOfWeek().equals(DayOfWeek.MONDAY) ? currentEnd
-                    : currentEnd.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
-        }
-        if (currentEnd.isBefore(spEnd)) {
-            while (currentStart.isBefore(spEnd)) {
-                currentEnd = currentStart.with(TemporalAdjusters.next(DayOfWeek.SUNDAY));
-                currentEnd = currentEnd.isBefore(spEnd) ? currentEnd : spEnd;
-                toAdd.add(
-                        new TimetableManagementSearchDto(null, TimetableStatus.TUNNIPLAAN_STAATUS_A.name(),
-                                currentStart, currentEnd, Boolean.FALSE, EntityUtil.getId(sp),
-                                canExportOrImportTimetable, canExportOrImportTimetable));
-                currentStart = currentStart.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
             }
         }
-
-        Collections.sort(data, (dto1, dto2) -> dto2.getStart().compareTo(dto1.getStart()));
-        Collections.sort(toAdd, (dto1, dto2) -> dto2.getStart().compareTo(dto1.getStart()));
-
-        toAdd.addAll(data);
-        return toAdd;
+        data.sort(Comparator.comparing(TimetableManagementSearchDto::getStart));
+        return data;
     }
 
     public List<TimetableDatesDto> blockedDatesForPeriod(HoisUserDetails user, Long studyPeriod, String code,
@@ -2876,12 +2852,7 @@ public class TimetableService {
         }
     }
 
-    public String getPersonalUrl(Role role, Long id) {
-        String param = getPersonalUrlParam(role, id);
-        return frontendBaseUrl + "timetable/personalGeneralTimetable/" + param;
-    }
-
-    private String getPersonalUrlParam(Role role, Long id) {
+    public String getPersonalUrlParam(Role role, Long id) {
         byte[] encryptedId = CryptoUtil.encrypt(encryptionKey, role.name() + ";" + id);
         try {
             return Base64.encodeBase64URLSafeString(encryptedId);
@@ -2893,6 +2864,7 @@ public class TimetableService {
     public static class TimetablePersonHolder {
         private final String role;
         private final Long roleId;
+        private School school;
 
         public TimetablePersonHolder(String role, Long roleId) {
             this.role = role;
@@ -2907,5 +2879,12 @@ public class TimetableService {
             return roleId;
         }
 
+        public School getSchool() {
+            return school;
+        }
+
+        public void setSchool(School school) {
+            this.school = school;
+        }
     }
 }

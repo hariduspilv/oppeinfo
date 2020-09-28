@@ -12,7 +12,7 @@
           
           <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
             ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups"
-            additional-query-params="{userId: auth.isLeadingTeacher() ? auth.user : null}" label="{{'studentGroup.label'}}"></hois-autocomplete>
+            additional-query-params="{userId: (auth.isLeadingTeacher() ? auth.user : null), higher: false}" label="{{'studentGroup.label'}}"></hois-autocomplete>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">

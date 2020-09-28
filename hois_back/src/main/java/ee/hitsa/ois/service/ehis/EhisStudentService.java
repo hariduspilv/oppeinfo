@@ -29,6 +29,7 @@ import javax.persistence.Query;
 import javax.transaction.Transactional;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import ee.hitsa.ois.service.StudentResultHigherService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -53,10 +54,13 @@ import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.DocumentStatus;
 import ee.hitsa.ois.enums.EhisStudentDataType;
+import ee.hitsa.ois.enums.FinSpecific;
 import ee.hitsa.ois.enums.FormStatus;
 import ee.hitsa.ois.enums.FormType;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.StudentType;
+import ee.hitsa.ois.enums.StudyForm;
+import ee.hitsa.ois.enums.StudyLanguage;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -101,6 +105,8 @@ public class EhisStudentService extends EhisService {
     
     @Autowired
     private EhisDirectiveStudentService ehisDirectiveStudentService;
+    @Autowired
+    private StudentResultHigherService studentResultHigherService;
     
     public Optional<ExportStudentsRequest> findOverlappedActiveExportStudentsRequest(HoisUserDetails hoisUser, EhisStudentForm ehisStudentForm, ExportStudentsRequest origin) {
         Optional<AsyncRequest<?>> optAsyncRequest = AsyncMemoryManager.findAny(AsyncMemoryManager.EHIS_STUDENT, hoisUser.getSchoolId(), (requestsByHash) -> {
@@ -163,6 +169,7 @@ public class EhisStudentService extends EhisService {
         case CURRICULA_FULFILMENT: return curriculumFulfillment(schoolId, wrapper, maxRequests);
         case DORMITORY: return dormitoryChanges(schoolId, ehisStudentForm, wrapper, maxRequests);
         case FOREIGN_STUDY: return foreignStudy(schoolId, ehisStudentForm, wrapper, maxRequests);
+        // for external student, only graduation is sent to ehis
         case GRADUATION: return graduation(schoolId, ehisStudentForm, wrapper, maxRequests);
         case DUPLICATE: return duplicate(schoolId, ehisStudentForm, wrapper, maxRequests);
         case VOTA: return vota(schoolId, ehisStudentForm, wrapper, maxRequests);
@@ -436,6 +443,11 @@ public class EhisStudentService extends EhisService {
                     .getResultList();
             List<String> extraNr = StreamUtil.toMappedList(er -> resultAsString(er, 0), extraResult);
             List<String> extraNrEn = StreamUtil.toMappedList(er -> resultAsString(er, 0), extraResultEn);
+            if (directiveStudent.getStudent() != null) {
+                if (StudentUtil.isExternal(directiveStudent.getStudent())) {
+                    ehisDirectiveStudentService.admissionMatriculation(directiveStudent, StudyForm.OPPEVORM_E, FinSpecific.FINTAPSUSTUS_X, StudyLanguage.OPPEKEEL_E);
+                }
+            }
             if (!directiveStudent.getStudent().getFinalThesis().isEmpty()
                     && CurriculumUtil.isMagisterOrDoctoralOrIntegratedStudy(
                             directiveStudent.getStudent().getCurriculumVersion().getCurriculum())) {
@@ -526,7 +538,7 @@ public class EhisStudentService extends EhisService {
                 + " and (ds.diploma_supplement_id is null or sup.sup_id is not null)"
                 + " and (ds.diploma_supplement_en_id is null or sup_en.sup_id is not null)"
                 + " and (ds.diploma_id is null or sup.sup_id is not null or sup_en.sup_id is not null)"
-                + " and s.type_code != ?7"
+                + " and s.type_code not in (?7)"
                 + " and not (" + SQL_WHERE_CURRICULUM_JOINTMENTOR + ")"
                 + " order by d.confirm_date asc")
                 .setParameter(1, EnumUtil.toNameList(DocumentStatus.LOPUDOK_STAATUS_K, DocumentStatus.LOPUDOK_STAATUS_C))
@@ -535,7 +547,7 @@ public class EhisStudentService extends EhisService {
                 .setParameter(4, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name())
                 .setParameter(5, JpaQueryUtil.parameterAsTimestamp(ehisStudentForm.getFrom()))
                 .setParameter(6, JpaQueryUtil.parameterAsTimestamp(ehisStudentForm.getThru()))
-                .setParameter(7, StudentType.OPPUR_K.name())
+                .setParameter(7, EnumUtil.toNameList(StudentType.OPPUR_K, StudentType.OPPUR_E))
                 .setParameter(8, FormStatus.LOPUBLANKETT_STAATUS_T.name())
                 .setParameter(9, EnumUtil.toNameList(FormType.LOPUBLANKETT_HIN, FormType.LOPUBLANKETT_R))
                 .setParameter(10, EnumUtil.toNameList(FormType.LOPUBLANKETT_DS))
@@ -609,16 +621,27 @@ public class EhisStudentService extends EhisService {
             if (completion == null) {
                 continue;
             }
+
             BigDecimal points = completion.getCredits();
+            BigDecimal percentage;
             Boolean lastPeriod = Boolean.FALSE;
-            if (points == null) {
-                points = completion.getCreditsLastStudyPeriod();
-                lastPeriod = Boolean.TRUE;
+            if (StudentUtil.isHigher(student)) {
+                BigDecimal curriculumCredits = student.getCurriculumVersion().getCurriculum().getCredits();
+                if (curriculumCredits == null) {
+                    continue;
+                }
+                percentage = studentResultHigherService.getConsideredCurriculumCompletion(student,
+                        curriculumCredits.add(completion.getStudyBacklog()));
+            } else {
+                if (points == null) {
+                    points = completion.getCreditsLastStudyPeriod();
+                    lastPeriod = Boolean.TRUE;
+                }
+                if (points == null) {
+                    continue;
+                }
+                percentage = StudentUtil.getCurriculumCompletion(points, student);
             }
-            if (points == null) {
-                continue;
-            }
-            BigDecimal percentage = StudentUtil.getCurriculumCompletion(points, student);
             WsEhisStudentLog log = curriculumFulfillment(student, percentage, points, lastPeriod);
             fulfilment.add(new EhisStudentReport.CurriculaFulfilment(student, log, percentage, points, lastPeriod));
         }
@@ -699,12 +722,12 @@ public class EhisStudentService extends EhisService {
     }
 
     private List<Student> findStudents(Long schoolId) {
-        return em.createQuery("select s from Student s where s.school.id = ?1 and s.status.code in ?2 and s.type.code != ?3 "
+        return em.createQuery("select s from Student s where s.school.id = ?1 and s.status.code in ?2 and s.type.code not in (?3) "
                 + "and not (s.curriculumVersion.curriculum.joint = true and s.curriculumVersion.curriculum.jointMentor.code is not null and "
                 + "s.curriculumVersion.curriculum.jointMentor.code != s.school.ehisSchool.code)", Student.class)
                 .setParameter(1, schoolId)
                 .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
-                .setParameter(3, StudentType.OPPUR_K.name())
+                .setParameter(3, EnumUtil.toNameList(StudentType.OPPUR_K, StudentType.OPPUR_E))
                 .getResultList();
     }
 
@@ -724,7 +747,7 @@ public class EhisStudentService extends EhisService {
                 + "and coalesce ( ds2.start_date, ds.end_date ) >= ?5 "
                 + "where s.school_id = ?1 and s.status_code in ?7 "
                 + "and exists (select 1 from student_special_need ssn2 where ssn2.student_id = s.id and coalesce(ssn2.changed, ssn2.inserted) >= ?5 and coalesce(ssn2.changed, ssn2.inserted) <= ?6) "
-                + "and ssn_cl.ehis_value is not null and s.type_code != ?8 "
+                + "and ssn_cl.ehis_value is not null and s.type_code not in (?8) "
                 + "and not (" + SQL_WHERE_CURRICULUM_JOINTMENTOR + ") "
                 + "group by s.id")
         .setParameter(1, schoolId)
@@ -734,7 +757,7 @@ public class EhisStudentService extends EhisService {
         .setParameter(5, JpaQueryUtil.parameterAsTimestamp(DateUtils.firstMomentOfDay(ehisStudentForm.getFrom())))
         .setParameter(6, JpaQueryUtil.parameterAsTimestamp(DateUtils.lastMomentOfDay(ehisStudentForm.getThru())))
         .setParameter(7, StudentStatus.STUDENT_STATUS_ACTIVE)
-        .setParameter(8, StudentType.OPPUR_K.name())
+        .setParameter(8, EnumUtil.toNameList(StudentType.OPPUR_K, StudentType.OPPUR_E))
         .getResultList();
 
         Map<Long, ChangedSpecialNeeds> mappedData = data.stream().collect(Collectors.toMap(
@@ -756,13 +779,13 @@ public class EhisStudentService extends EhisService {
                 + "join student_group sg on sg.id = sgyf.student_group_id "
                 + "join student s on s.student_group_id = sg.id "
                 + "where s.school_id = ?1 and sgyf.is_transfered and s.status_code in ?2 and sgyf.changed >= ?3 and sgyf.changed <= ?4 "
-                + "and s.type_code != ?5 and not (" + SQL_WHERE_CURRICULUM_JOINTMENTOR + ") "
+                + "and s.type_code not in (?5) and not (" + SQL_WHERE_CURRICULUM_JOINTMENTOR + ") "
                 + "order by sgyf.changed asc ")
                 .setParameter(1, schoolId)
                 .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
                 .setParameter(3, JpaQueryUtil.parameterAsTimestamp(DateUtils.firstMomentOfDay(ehisStudentForm.getFrom())))
                 .setParameter(4, JpaQueryUtil.parameterAsTimestamp(DateUtils.lastMomentOfDay(ehisStudentForm.getThru())))
-                .setParameter(5, StudentType.OPPUR_K.name())
+                .setParameter(5, EnumUtil.toNameList(StudentType.OPPUR_K, StudentType.OPPUR_E))
                 .getResultList();
         
         Map<Long, ChangedCourse> mappedData = data.stream().collect(Collectors.toMap(
@@ -788,13 +811,13 @@ public class EhisStudentService extends EhisService {
                 + " join student s on sh.student_id = s.id"
                 + " left join student_history sh2 on sh.student_id = sh2.student_id and sh2.inserted <= ?3"
                 + " where s.school_id = ?1 and s.status_code in ?2 and coalesce(sh.dormitory_code, 'x') != 'x'"
-                + " and sh.inserted >= ?3 and sh.inserted <= ?4 and s.type_code != ?5 and not (" + SQL_WHERE_CURRICULUM_JOINTMENTOR + "))"
+                + " and sh.inserted >= ?3 and sh.inserted <= ?4 and s.type_code not in (?5) and not (" + SQL_WHERE_CURRICULUM_JOINTMENTOR + "))"
                 + " x where x.first_dormitory_code != x.last_dormitory_code")
                 .setParameter(1, schoolId)
                 .setParameter(2, StudentStatus.STUDENT_STATUS_ACTIVE)
                 .setParameter(3, JpaQueryUtil.parameterAsTimestamp(DateUtils.firstMomentOfDay(criteria.getFrom())))
                 .setParameter(4, JpaQueryUtil.parameterAsTimestamp(DateUtils.lastMomentOfDay(criteria.getThru())))
-                .setParameter(5, StudentType.OPPUR_K.name())
+                .setParameter(5, EnumUtil.toNameList(StudentType.OPPUR_K, StudentType.OPPUR_E))
                 .getResultList();
 
         Map<Long, ChangedDormitory> changedDormitories = StreamUtil.toMap(r -> resultAsLong(r, 0),
@@ -900,14 +923,14 @@ public class EhisStudentService extends EhisService {
 
     private List<ApelApplication> findApelApplications(Long schoolId, EhisStudentForm criteria) {
         return em.createQuery("select a from ApelApplication a where a.school.id = ?1 and a.confirmed >= ?2 and a.confirmed <= ?3 "
-                + "and a.student.type.code != ?4 and not ( "
+                + "and a.student.type.code not in (?4) and not ( "
                 + "a.student.curriculumVersion.curriculum.joint = true and "
                 + "a.student.curriculumVersion.curriculum.jointMentor.code is not null and "
                 + "a.student.curriculumVersion.curriculum.jointMentor.code != a.student.school.ehisSchool.code)", ApelApplication.class)
                 .setParameter(1, schoolId)
                 .setParameter(2, DateUtils.firstMomentOfDay(criteria.getFrom()))
                 .setParameter(3, DateUtils.lastMomentOfDay(criteria.getThru()))
-                .setParameter(4, StudentType.OPPUR_K.name())
+                .setParameter(4, EnumUtil.toNameList(StudentType.OPPUR_K, StudentType.OPPUR_E))
                 .getResultList();
     }
     

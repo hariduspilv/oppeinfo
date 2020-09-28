@@ -181,7 +181,7 @@ public class StudentRemarkService {
         StudentRemarkDto dto = new StudentRemarkDto();
         dto.setId(resultAsLong(result, 0));
         dto.setJournalStudentEntryId(resultAsLong(result, 1));
-        String personFullname = PersonUtil.fullnameOptionalGuest(resultAsString(result, 3), resultAsString(result, 4), resultAsString(result, 12));
+        String personFullname = PersonUtil.fullnameTypeSpecific(resultAsString(result, 3), resultAsString(result, 4), resultAsString(result, 12));
         dto.setStudent(new AutocompleteResult(resultAsLong(result, 2), personFullname, personFullname));
         dto.setStudentGroup(resultAsString(result, 5));
         dto.setReason(resultAsString(result, 6));

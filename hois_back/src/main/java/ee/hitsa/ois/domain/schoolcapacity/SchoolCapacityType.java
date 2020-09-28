@@ -28,6 +28,8 @@ public class SchoolCapacityType extends BaseEntityWithId {
     private Boolean isUsable;
     @Column(nullable = false)
     private Boolean isTimetable;
+    @Column(nullable = false)
+    private Boolean isContact;
     @OneToMany(mappedBy = "schoolCapacityType", fetch = FetchType.LAZY)
     private List<SchoolCapacityTypeLoad> typeLoads = new ArrayList<>();
     
@@ -65,7 +67,14 @@ public class SchoolCapacityType extends BaseEntityWithId {
     public void setIsTimetable(Boolean isTimetable) {
         this.isTimetable = isTimetable;
     }
-    
+
+    public Boolean getIsContact() {
+        return isContact;
+    }
+    public void setIsContact(Boolean isContact) {
+        this.isContact = isContact;
+    }
+
     public List<SchoolCapacityTypeLoad> getTypeLoads() {
         return typeLoads;
     }

@@ -602,7 +602,7 @@ public class StudentGroupTeacherReportService {
             StudentDto student = new StudentDto();
             Long studentId = resultAsLong(r, 0);
             student.setId(studentId);
-            student.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 4)));
+            student.setFullname(PersonUtil.fullnameTypeSpecific(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 4)));
             student.setStatus(resultAsString(r, 3));
             student.setIsIndividualCurriculum(Boolean.valueOf(studentIndividualCurriculums.contains(studentId)));
             return student;
@@ -1415,7 +1415,7 @@ public class StudentGroupTeacherReportService {
         String journalResults = null;
         if (criteria.getEntryTypes() != null) {
             qb = negativeJournalResultsQb(criteria);
-            journalResults = qb.querySql("s.id student_id, p.firstname, p.lastname, j.id journal_id, "
+            journalResults = qb.querySql("s.id student_id, p.firstname, p.lastname, s.type_code as studentType, j.id journal_id, "
                     + "j.name_et journal_name_et, j.name_et journal_name_en, je.entry_type_code, jes.grade_code, jes.grade_inserted, "
                     + "coalesce(jes.grade_inserted_by, jes.changed_by, jes.inserted_by) as grade_inserted_by, "
                     + "false as is_practice_journal", false);
@@ -1423,7 +1423,7 @@ public class StudentGroupTeacherReportService {
         }
 
         qb = negativePracticeJournalResultsQb(criteria);
-        String practicejournalResults = qb.querySql("s2.id student_id, p2.firstname, p2.lastname, pj.id journal_id, "
+        String practicejournalResults = qb.querySql("s2.id student_id, p2.firstname, p2.lastname, s2.type_code as studentType, pj.id journal_id, "
                 + "cm.name_et || ' - ' || mcl.name_et || ' (' || cv.code || ')' || coalesce(' ' || cvot.name_et, '') journal_name_et, "
                 + "cm.name_en || ' - ' || mcl.name_en || ' (' || cv.code || ')' || coalesce(' ' || cvot.name_et, '') journal_name_en, "
                 + "null entry_type_code, pj.grade_code, pj.grade_inserted, tp.firstname || ' ' || tp.lastname grade_inserted_by, "
@@ -1433,7 +1433,7 @@ public class StudentGroupTeacherReportService {
         String outcomeResults = null;
         if (Boolean.TRUE.equals(criteria.getOutcomeResults())) {
             qb = negativeOutcomeResultsQb(criteria);
-            outcomeResults = qb.querySql("s3.id student_id, p3.firstname, p3.lastname, cmo.id outcome_id, cmo.outcome_et, "
+            outcomeResults = qb.querySql("s3.id student_id, p3.firstname, p3.lastname, s3.type_code as studentType, cmo.id outcome_id, cmo.outcome_et, "
                     + "cmo.outcome_en, '" + JournalEntryType.SISSEKANNE_O + "' entry_type_code, scmor.grade_code, "
                     + "scmor.grade_date grade_inserted_by, tp2.firstname || ' ' || tp2.lastname, "
                     + "false as is_practice_journal", false);
@@ -1443,15 +1443,15 @@ public class StudentGroupTeacherReportService {
         qb = new JpaNativeQueryBuilder("from ("
                 + (journalResults != null ? journalResults + " union all " : "")
                 + (outcomeResults != null ? outcomeResults + " union all " : "")
-                + "select student_id, firstname, lastname, journal_id, "
+                + "select student_id, firstname, lastname, studentType, journal_id, "
                 + "string_agg(journal_name_et, ', ') journal_name_et, string_agg(journal_name_en, ' ') journal_name_en, "
                 + "null entry_type_code, grade_code, grade_inserted, grade_inserted_by, is_practice_journal "
                 + "from (" + practicejournalResults + " order by journal_name_et, journal_name_en) as pjr "
-                + "group by student_id, firstname, lastname, journal_id, grade_code, grade_inserted, "
+                + "group by student_id, firstname, lastname, studentType, journal_id, grade_code, grade_inserted, "
                 + "grade_inserted_by, is_practice_journal) as results");
 
         qb.sort("lastname, firstname, journal_name_et, journal_name_en, grade_inserted desc");
-        List<?> data = qb.select("student_id, firstname, lastname, journal_id, "
+        List<?> data = qb.select("student_id, firstname, lastname, studentType, journal_id, "
                 + "journal_name_et, journal_name_en, entry_type_code, grade_code, grade_inserted, grade_inserted_by, "
                 + "is_practice_journal", em, queryParameters).getResultList();
 
@@ -1460,12 +1460,13 @@ public class StudentGroupTeacherReportService {
             result.setStudentId(resultAsLong(r, 0));
             result.setFirstname(resultAsString(r, 1));
             result.setLastname(resultAsString(r, 2));
-            result.setJournal(new AutocompleteResult(resultAsLong(r, 3), resultAsString(r, 4), resultAsString(r, 5)));
-            result.setEntryType(resultAsString(r, 6));
-            result.setGrade(resultAsString(r, 7));
-            result.setGradeInserted(resultAsLocalDate(r, 8));
-            result.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 9)));
-            result.setIsPracticeJournal(resultAsBoolean(r, 10));
+            result.setFullname(PersonUtil.fullnameTypeSpecific(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3)));
+            result.setJournal(new AutocompleteResult(resultAsLong(r, 4), resultAsString(r, 5), resultAsString(r, 6)));
+            result.setEntryType(resultAsString(r, 7));
+            result.setGrade(resultAsString(r, 8));
+            result.setGradeInserted(resultAsLocalDate(r, 9));
+            result.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 10)));
+            result.setIsPracticeJournal(resultAsBoolean(r, 11));
             return result;
         }, data);
     }

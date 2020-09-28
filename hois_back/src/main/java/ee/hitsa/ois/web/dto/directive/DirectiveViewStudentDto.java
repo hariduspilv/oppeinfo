@@ -633,6 +633,7 @@ public class DirectiveViewStudentDto {
                     ? ExistingDirectiveStudentDto.of(directiveStudent.getDirectiveStudent())
                     : null);
             break;
+        case KASKKIRI_EKSTERN:
         case KASKKIRI_IMMAT:
         case KASKKIRI_IMMATV:
             dto.setNewCurriculumVersion(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);

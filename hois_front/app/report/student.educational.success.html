@@ -1,6 +1,7 @@
 <style>
     .md-chips .md-chip-input-container {
       min-width: unset;
+      width: 100%;
     }
     .md-table .md-table .md-row:first-child .md-cell {
       border-top: none;
@@ -117,7 +118,7 @@
                       {{'main.messages.error.max' | translate: {max: 1000} }}
                     </div>
                     <div ng-message="pattern">
-                      {{'main.messages.error.number' | translate}}
+                      {{'main.messages.error.integer' | translate}}
                     </div>
                   </div>
                 </md-input-container>
@@ -214,7 +215,7 @@
                           {{'main.messages.error.max' | translate: {max: 999} }}
                         </div>
                         <div ng-message="pattern">
-                          {{'main.messages.error.number' | translate}}
+                          {{'main.messages.error.integer' | translate}}
                         </div>
                       </div>
                     </md-input-container>
@@ -232,7 +233,7 @@
                           {{'main.messages.error.max' | translate: {max: 999} }}
                         </div>
                         <div ng-message="pattern">
-                          {{'main.messages.error.number' | translate}}
+                          {{'main.messages.error.integer' | translate}}
                         </div>
                       </div>
                     </md-input-container>

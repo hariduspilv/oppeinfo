@@ -66,7 +66,9 @@ public class EkisSoapService implements EkisTahvelPort {
         log.info("EkisSoapService: enforceContract");
         LocalDate contractDate = DateUtils.toLocalDate(request.getContractDate());
         Contract contract = withExceptionHandler(() -> {
-            Contract c = contractService.confirmedByEkis(request.getOisContractId(), request.getContractNumber(), contractDate, request.getWdContractId());
+            Contract c = contractService.confirmedByEkis(request.getOisContractId(),
+                    request.getContractNumber(), contractDate, request.getWdContractId(),
+                    request.getSchoolId() != null ? request.getSchoolId() : 0);
             jobService.contractConfirmed(EntityUtil.getId(c));
             return c;
         });
@@ -89,8 +91,10 @@ public class EkisSoapService implements EkisTahvelPort {
         log.info("EkisSoapService: enforceDirective");
         LocalDate directiveDate = DateUtils.toLocalDate(request.getDirectiveDate());
         Directive directive = withExceptionHandler(() -> {
-            Directive d = directiveConfirmInternalService.confirmedByEkis(request.getOisDirectiveId(), request.getDirectiveNumber(), directiveDate,
-                    request.getPreamble(), request.getWdDirectiveId(), request.getSignerIDCode(), request.getSignerName());
+            Directive d = directiveConfirmInternalService.confirmedByEkis(request.getOisDirectiveId(),
+                    request.getDirectiveNumber(), directiveDate, request.getPreamble(), request.getWdDirectiveId(),
+                    request.getSignerIDCode(), request.getSignerName(),
+                    request.getSchoolId() != null ? request.getSchoolId() : 0);
             jobService.directiveConfirmed(EntityUtil.getId(d));
             return d;
         });
@@ -107,7 +111,8 @@ public class EkisSoapService implements EkisTahvelPort {
         log.info("EkisSoapService: rejectDirective");
         Directive directive = withExceptionHandler(() ->
             directiveConfirmService.rejectByEkis(request.getOisDirectiveId(), request.getRejectComment(),
-                    request.getPreamble(), request.getWdDirectiveId()));
+                    request.getPreamble(), request.getWdDirectiveId(),
+                    request.getSchoolId() != null ? request.getSchoolId() : 0));
 
         RejectDirectiveResponse response = new RejectDirectiveResponse();
         response.setOisDirectiveId(request.getOisDirectiveId());

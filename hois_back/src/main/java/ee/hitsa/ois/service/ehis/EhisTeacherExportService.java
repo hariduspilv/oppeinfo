@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.schoolcapacity.SchoolCapacityType;
+import ee.hitsa.ois.service.SchoolCapacityTypeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,6 +101,8 @@ public class EhisTeacherExportService extends EhisService {
 
     @Autowired
     private StudyYearService studyYearService;
+    @Autowired
+    private SchoolCapacityTypeService schoolCapacityTypeService;
     
     public Optional<ExportTeacherRequest> findOverlappedActiveExportTeacherRequest(HoisUserDetails hoisUser, EhisTeacherExportForm form, ExportTeacherRequest origin) {
         Optional<AsyncRequest<?>> optAsyncRequest = AsyncMemoryManager.findAny(AsyncMemoryManager.EHIS_TEACHER, hoisUser.getSchoolId(), (requestsByHash) -> {
@@ -268,6 +272,8 @@ public class EhisTeacherExportService extends EhisService {
         List<RequestObject> result = new ArrayList<>();
         List<TeacherSubject> subjects = higher ? teacherSubjects(schoolTeachers, periods) : teacherModules(schoolTeachers, periods);
         Map<Long, List<TeacherSubject>> subjectByTeacher = subjects.stream().collect(Collectors.groupingBy(TeacherSubject::getTeacherId));
+        Map<String, SchoolCapacityType> schoolCapacitiesByTypeCode = schoolCapacityTypeService
+                .getSchoolCapacitiesByTypeCode(schoolId, Boolean.TRUE.equals(higher));
 
         List<Teacher> teachers = em.createQuery("select t from Teacher t where t.id in ?1", Teacher.class)
                 .setParameter(1,  schoolTeachers).getResultList();
@@ -281,7 +287,7 @@ public class EhisTeacherExportService extends EhisService {
                     oppejoudList.getItem().add(oppejoud);
                     request = new RequestObject(teacher, oppejoudList);
                 } else {
-                    Oppeasutus oppeasutus = createOppeasutus(teacher, subjectByTeacher.get(EntityUtil.getId(teacher)));
+                    Oppeasutus oppeasutus = createOppeasutus(teacher, subjectByTeacher.get(EntityUtil.getId(teacher)), schoolCapacitiesByTypeCode);
                     OppeasutusList oppeasutusList = new OppeasutusList();
                     oppeasutusList.getItem().add(oppeasutus);
                     request = new RequestObject(teacher, oppeasutusList);
@@ -411,7 +417,8 @@ public class EhisTeacherExportService extends EhisService {
         }
     }
 
-    private Oppeasutus createOppeasutus(Teacher teacher, List<TeacherSubject> modules) {
+    private Oppeasutus createOppeasutus(Teacher teacher, List<TeacherSubject> modules,
+                                        Map<String, SchoolCapacityType> schoolCapacitiesByTypeCode) {
         Oppeasutus oppeasutus = new Oppeasutus();
         oppeasutus.setKoolId(ehisValue(teacher.getSchool().getEhisSchool()));
 
@@ -481,9 +488,23 @@ public class EhisTeacherExportService extends EhisService {
 
                 JournalTeacher journalTeacher = em.getReference(JournalTeacher.class, jtId);
                 if (Boolean.TRUE.equals(journalTeacher.getJournal().getCapacityDiff())) {
-                    aine.setTunde(journalTeacher.getJournalTeacherCapacities().stream().mapToLong(JournalTeacherCapacity::getHours).sum());
+                    aine.setTunde(journalTeacher.getJournalTeacherCapacities()
+                        .stream()
+                        .filter(cap -> {
+                            SchoolCapacityType capacityType = schoolCapacitiesByTypeCode
+                                    .get(EntityUtil.getCode(cap.getJournalCapacityType().getCapacityType()));
+                            return Boolean.TRUE.equals(capacityType.getIsContact());
+                        })
+                        .mapToLong(JournalTeacherCapacity::getHours).sum());
                 } else {
-                    aine.setTunde(journalTeacher.getJournal().getJournalCapacities().stream().mapToLong(JournalCapacity::getHours).sum());
+                    aine.setTunde(journalTeacher.getJournal().getJournalCapacities()
+                        .stream()
+                        .filter(cap -> {
+                            SchoolCapacityType capacityType = schoolCapacitiesByTypeCode
+                                    .get(EntityUtil.getCode(cap.getJournalCapacityType().getCapacityType()));
+                            return Boolean.TRUE.equals(capacityType.getIsContact());
+                        })
+                        .mapToLong(JournalCapacity::getHours).sum());
                 }
                 
                 aine.setTunnidErivajadus(yesNo(Boolean.FALSE));

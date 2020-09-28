@@ -63,6 +63,18 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA]
         }
+      })
+      .when('/declaration/current/view/fromStudentData', {
+        templateUrl: 'declaration/declaration.view.html',
+        controller: 'DeclarationViewController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+        },
+        data: {
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA]
+        }
       }).when('/declarations/previous', {
         templateUrl: 'declaration/declaration.student.search.html',
         controller: 'DeclarationStudentSearchController',

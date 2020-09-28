@@ -27,7 +27,7 @@ public class CurriculumCompletionDto {
 
     public CurriculumCompletionDto(Object record) {
         id = resultAsLong(record, 0);
-        fullName = PersonUtil.fullnameOptionalGuest(resultAsString(record, 1), resultAsString(record, 2), resultAsString(record, 14));
+        fullName = PersonUtil.fullnameTypeSpecific(resultAsString(record, 1), resultAsString(record, 2), resultAsString(record, 14));
         String code = resultAsString(record, 3);
         curriculumVersion = new AutocompleteResult(null, CurriculumUtil.versionName(code, resultAsString(record, 4)), CurriculumUtil.versionName(code, resultAsString(record, 5)));
         studentGroup = resultAsString(record, 6);

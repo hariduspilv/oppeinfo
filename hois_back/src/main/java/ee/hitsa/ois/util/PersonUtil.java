@@ -46,18 +46,18 @@ public abstract class PersonUtil {
     
     public static String fullname(Student student) {
         if (student.getPerson() == null) return null;
-        if (!StudentType.OPPUR_K.name().equals(EntityUtil.getNullableCode(student.getType()))) {
-            return fullname(student.getPerson());
-        }
-        return fullname(student.getPerson()) + " (KY)";
+        String type = EntityUtil.getNullableCode(student.getType());
+        if (type == null) return null;
+        String fullname = fullname(student.getPerson());
+        return fullnameTypeSpecific(fullname, type);
     }
 
     public static String fullnameAndIdcode(String firstname, String lastname, String idcode) {
         return fullnameAndIdcode(fullname(firstname, lastname), idcode);
     }
     
-    public static String fullnameAndIdcodeOptionalGuest(String firstname, String lastname, String idcode, String type) {
-        return fullnameAndIdcodeOptionalGuest(fullname(firstname, lastname), idcode, type);
+    public static String fullnameAndIdcodeTypeSpecific(String firstname, String lastname, String idcode, String type) {
+        return fullnameAndIdcodeTypeSpecific(fullname(firstname, lastname), idcode, type);
     }
     
     public static String fullnameAndIdcodeOptionalGuestForCertificate(String firstname, String lastname, String idcode, String sGroup, String type, LocalDate guestStart) {
@@ -75,6 +75,32 @@ public abstract class PersonUtil {
         return fullname(firstname, lastname) + " (KY)";
     }
     
+    public static String fullnameTypeSpecific(String fullname, String type) {
+        if (StudentType.OPPUR_K.name().equals(type)) {
+            return fullnameOptionalGuest(fullname, type);
+        } else if (StudentType.OPPUR_E.name().equals(type)) {
+            return fullnameOptionalExternal(fullname, type);
+        }
+        return fullname;
+    }
+    
+    public static String fullnameTypeSpecific(String firstname, String lastname, String type) {
+        String fullname = fullname(firstname, lastname);
+        if (StudentType.OPPUR_K.name().equals(type)) {
+            return fullnameOptionalGuest(fullname, type);
+        } else if (StudentType.OPPUR_E.name().equals(type)) {
+            return fullnameOptionalExternal(fullname, type);
+        }
+        return fullname;
+    }
+    
+    public static String fullnameOptionalExternal(String fullname, String type) {
+        if (!StudentType.OPPUR_E.name().equals(type)) {
+            return fullname;
+        }
+        return fullname + " (E)";
+    }
+    
     public static String fullnameOptionalGuest(String fullname, String type) {
         if (!StudentType.OPPUR_K.name().equals(type)) {
             return fullname;
@@ -90,11 +116,15 @@ public abstract class PersonUtil {
         return fullname + " (" + idcode + ")";
     }
     
-    public static String fullnameAndIdcodeOptionalGuest(String fullname, String idcode, String type) {
+    public static String fullnameAndIdcodeTypeSpecific(String fullname, String idcode, String type) {
         if(StringUtils.hasText(idcode) && StudentType.OPPUR_K.name().equals(type)) {
             return fullname + " (" + idcode + " KY)";
+        } else if (StringUtils.hasText(idcode) && StudentType.OPPUR_E.name().equals(type)) {
+            return fullname + " (" + idcode + " E)";
         } else if (StringUtils.hasText(idcode)) {
             return  fullname + " (" + idcode + ")";
+        } else if (StudentType.OPPUR_E.name().equals(type)) {
+            return  fullname + " (E)";
         } else if (StudentType.OPPUR_K.name().equals(type)) {
             return  fullname + " (KY)";
         }
@@ -114,14 +144,10 @@ public abstract class PersonUtil {
                 }
                 return fullname + " (külalisõpilane alates " + guestStart.format(formatter)+ ")";
             }
-            if (StringUtils.hasText(idcode) && StringUtils.hasText(sGroup)) {
-                return fullname + " ("+ sGroup + "; " + idcode + "; KY)";
-            } else if (StringUtils.hasText(idcode) && !StringUtils.hasText(sGroup)) {
-                return fullname + " (" + idcode + "; KY)";
-            } else if (!StringUtils.hasText(idcode) && StringUtils.hasText(sGroup)) {
-                return fullname + " (" + sGroup + "; KY)";
-            }
-            return fullname + "(KY)";
+            return typeSpecificName(fullname, idcode, sGroup, "KY");
+        }
+        if (StudentType.OPPUR_E.name().equals(type)) {
+            return typeSpecificName(fullname, idcode, sGroup, "E");
         }
         if (StringUtils.hasText(idcode) && StringUtils.hasText(sGroup)) {
             return fullname + " ("+ sGroup + "; " + idcode + ")";
@@ -131,6 +157,17 @@ public abstract class PersonUtil {
             return fullname + " (" + sGroup + ")";
         }
         return fullname;
+    }
+    
+    public static String typeSpecificName(String fullname, String idcode, String sGroup, String variable) {
+        if (StringUtils.hasText(idcode) && StringUtils.hasText(sGroup)) {
+            return fullname + " ("+ sGroup + "; " + idcode + "; " + variable + ")";
+        } else if (StringUtils.hasText(idcode) && !StringUtils.hasText(sGroup)) {
+            return fullname + " (" + idcode + "; " + variable + ")";
+        } else if (!StringUtils.hasText(idcode) && StringUtils.hasText(sGroup)) {
+            return fullname + " (" + sGroup + "; " + variable + ")";
+        }
+        return fullname + "(" + variable + ")";
     }
 
     public static String fullnameAndIdcode(Person person) {

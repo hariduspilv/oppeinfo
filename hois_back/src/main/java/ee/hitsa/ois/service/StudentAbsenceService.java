@@ -131,7 +131,7 @@ public class StudentAbsenceService {
     private static StudentAbsenceDto rowToDto(boolean hasPermissionToChangeStatus,  Object[] row) {
         StudentAbsenceDto dto = new StudentAbsenceDto();
         dto.setId(resultAsLong(row, 0));
-        String fullname = PersonUtil.fullnameOptionalGuest(resultAsString(row, 2), resultAsString(row, 3), resultAsString(row, 15));
+        String fullname = PersonUtil.fullnameTypeSpecific(resultAsString(row, 2), resultAsString(row, 3), resultAsString(row, 15));
         dto.setStudent(new AutocompleteResult(resultAsLong(row, 1), fullname, fullname));
         dto.setStudentGroup(resultAsString(row, 4));
         dto.setValidFrom(resultAsLocalDate(row, 5));

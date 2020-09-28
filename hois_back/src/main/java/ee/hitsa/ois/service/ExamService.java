@@ -697,7 +697,7 @@ public class ExamService {
             ExamDto.ExamStudent dto = new ExamDto.ExamStudent();
             dto.setId(resultAsLong(r, 0));
             dto.setStudentId(resultAsLong(r, 1));
-            dto.setFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 10)));
+            dto.setFullname(PersonUtil.fullnameTypeSpecific(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 10)));
             String curriculumVersionCode = resultAsString(r, 4);
             dto.setCurriculumVersion(new AutocompleteResult(null,
                     CurriculumUtil.versionName(curriculumVersionCode, resultAsString(r, 5)),

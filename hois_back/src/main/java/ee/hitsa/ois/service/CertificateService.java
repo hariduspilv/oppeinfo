@@ -125,7 +125,7 @@ public class CertificateService {
             dto.setHeadline(resultAsString(r, 3));
             dto.setWhom(resultAsString(r, 4));
             dto.setInserted(JpaQueryUtil.resultAsLocalDateTime(r, 5).toLocalDate());
-            dto.setStudentFullname(PersonUtil.fullnameOptionalGuest(resultAsString(r, 6), resultAsString(r, 11)));
+            dto.setStudentFullname(PersonUtil.fullnameTypeSpecific(resultAsString(r, 6), resultAsString(r, 11)));
             dto.setStudentId(resultAsLong(r, 7));
             dto.setStatus(resultAsString(r, 9));
             dto.setStudentGroup(resultAsString(r, 10));

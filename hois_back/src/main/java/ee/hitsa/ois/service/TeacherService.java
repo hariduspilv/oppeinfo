@@ -298,7 +298,6 @@ public class TeacherService {
         if (!Boolean.TRUE.equals(teacherForm.getIsHigher()) && !Boolean.TRUE.equals(teacherForm.getIsVocational())) {
             throw new ValidationFailedException("teacher-vocational-higher");
         }
-        UntisCodeUtil untisCodeUtil = new UntisCodeUtil();
         updatePerson(teacherForm.getPerson(), teacher.getPerson());
 
         EntityUtil.setUsername(user.getUsername(), em);
@@ -309,7 +308,7 @@ public class TeacherService {
                 .setParameter(1, user.getSchoolId())
                 .setParameter(2, teacherForm.getPerson().getId())
                 .getResultList();
-    		teacherForm.setUntisCode(untisCodeUtil.generateTeacherCode(teacherForm.getPerson(), teachers));
+    		teacherForm.setUntisCode(UntisCodeUtil.generateTeacherCode(teacherForm.getPerson(), teachers));
         } else {
         	teacherForm.setUntisCode(teacherForm.getUntisCode().replaceAll("\\s+", ""));
         	List<Teacher> teacherList = em.createQuery("select t from Teacher t "+
@@ -327,7 +326,7 @@ public class TeacherService {
                     .setParameter(1, user.getSchoolId())
                     .setParameter(2, teacherForm.getPerson().getId())
                     .getResultList();
-        		teacherForm.setUntisCode(untisCodeUtil.generateTeacherCode(teacherForm.getPerson(), teachers));
+        		teacherForm.setUntisCode(UntisCodeUtil.generateTeacherCode(teacherForm.getPerson(), teachers));
         	}
         }
         

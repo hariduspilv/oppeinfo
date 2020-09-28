@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import com.lowagie.text.DocumentException;
+import com.lowagie.text.pdf.BaseFont;
 
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.exception.HoisException;
@@ -94,7 +95,7 @@ public class PdfService {
         ITextRenderer renderer = new ITextRenderer();
         renderer.setDocumentFromString(xhtml);
         try {
-            renderer.getFontResolver().addFont("fonts/GARA.TTF", true);
+            renderer.getFontResolver().addFont("fonts/GARA.TTF", BaseFont.IDENTITY_H, true/*BaseFont.NOT_EMBEDDED*/);
         } catch (Exception e) {
             log.error("pdf generation failed, cannot add font", e);
             throw new HoisException(e);

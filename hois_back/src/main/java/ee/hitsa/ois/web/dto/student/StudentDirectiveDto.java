@@ -10,6 +10,9 @@ public class StudentDirectiveDto {
     private String directiveNr;
     private LocalDate confirmDate;
     private String insertedBy;
+    private String reason;
+    private LocalDate startDate;
+    private LocalDate endDate;
 
     public Long getId() {
         return id;
@@ -57,5 +60,29 @@ public class StudentDirectiveDto {
 
     public void setInsertedBy(String insertedBy) {
         this.insertedBy = insertedBy;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
     }
 }

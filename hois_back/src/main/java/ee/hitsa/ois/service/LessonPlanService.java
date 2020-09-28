@@ -30,7 +30,10 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.timetable.JournalSub;
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.JournalUtil;
+import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,6 +91,7 @@ import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleJ
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleJournalTeacherForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm.LessonPlanGroupForm;
+import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm.LessonPlanJournalTeacherForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchTeacherCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -655,81 +659,138 @@ public class LessonPlanService {
     }
 
     public Page<LessonPlanSearchTeacherDto> search(HoisUserDetails user, LessonPlanSearchTeacherCommand criteria, Pageable pageable) {
-        Map<String, Object> queryParameters = new HashMap<>();
-        
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_teacher jt"
-                + " join journal j on j.id = jt.journal_id "
-                + " join journal_capacity jc on j.id = jc.journal_id");
-        qb.filter("jt.teacher_id = t.id");
-        qb.filter("(j.is_capacity_diff is null or j.is_capacity_diff = false)");
-        qb.requiredCriteria("j.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
-        if (user.isTeacher()) {
-            qb.filter("j.id in (select jot.journal_id"
+        String from = " from teacher t " +
+                // journal capacity
+                "  left join (  " +
+                "    select  " +
+                "      sum(jc.hours) as num,  " +
+                "      sum(case when sct.is_contact then jc.hours end) as contact,  " +
+                "      jt.teacher_id  " +
+                "    from  " +
+                "      journal_teacher jt  " +
+                "    join journal j on  " +
+                "      j.id = jt.journal_id  " +
+                "    join journal_capacity jc on  " +
+                "      j.id = jc.journal_id  " +
+                "    join journal_capacity_type jct on jc.journal_capacity_type_id = jct.id  " +
+                "    join classifier c on jct.capacity_type_code = c.code  " +
+                "    join school_capacity_type sct on sct.school_id = :schoolId and c.code = sct.capacity_type_code and sct.is_higher = false " +
+                "    where  " +
+                "      (j.is_capacity_diff is null  " +
+                "      or j.is_capacity_diff = false)  " +
+                "      and j.study_year_id = :studyYear  " +
+                (user.isTeacher() ?
+                    " and j.id in (select jot.journal_id"
                     + " from journal_omodule_theme jot"
                     + " join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id"
                     + " join lesson_plan lp on lp.id = lpm.lesson_plan_id"
-                    + " where lp.is_usable = true)");
-        }
-        String journalCapacityQuery = qb.querySql("sum(jc.hours)", false);
-        queryParameters.putAll(qb.queryParameters());
-
-        qb = new JpaNativeQueryBuilder("from journal_teacher jt2"
-                + " join journal j2 on j2.id = jt2.journal_id "
-                + " join journal_teacher_capacity jtc on jt2.id = jtc.journal_teacher_id");
-        qb.filter("jt2.teacher_id = t.id");
-        qb.filter("j2.is_capacity_diff = true");
-        qb.requiredCriteria("j2.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
-        if (user.isTeacher()) {
-            qb.filter("j2.id in (select jot.journal_id"
+                    + " where lp.is_usable = true) "
+                    : ""
+                ) +
+                "    group by jt.teacher_id) jc_hours on t.id = jc_hours.teacher_id  " +
+                // journal teacher capacity
+                "  left join (  " +
+                "    select  " +
+                "      sum(jtc.hours) as num,  " +
+                "      sum(case when sct.is_contact then jtc.hours end) as contact,  " +
+                "      jt2.teacher_id  " +
+                "    from  " +
+                "      journal_teacher jt2  " +
+                "    join journal j2 on  " +
+                "      j2.id = jt2.journal_id  " +
+                "    join journal_teacher_capacity jtc on  " +
+                "      jt2.id = jtc.journal_teacher_id  " +
+                "    join journal_capacity_type jct on jtc.journal_capacity_type_id = jct.id  " +
+                "    join classifier c on jct.capacity_type_code = c.code  " +
+                "    join school_capacity_type sct on sct.school_id = :schoolId and c.code = sct.capacity_type_code and sct.is_higher = false " +
+                "    where  " +
+                "      j2.is_capacity_diff = true  " +
+                "      and j2.study_year_id = :studyYear  " +
+                (user.isTeacher() ?
+                    " and j2.id in (select jot.journal_id"
                     + " from journal_omodule_theme jot"
                     + " join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id"
                     + " join lesson_plan lp on lp.id = lpm.lesson_plan_id"
-                    + " where lp.is_usable = true)");
-        }
-        String journalTeacherCapacityQuery = qb.querySql("sum(jtc.hours)", false);
-        queryParameters.putAll(qb.queryParameters());
-        
-        qb = new JpaNativeQueryBuilder("from subject_study_period_teacher sspt"
-                + " join subject_study_period ssp on ssp.id = sspt.subject_study_period_id"
-                + " join subject_study_period_capacity sspc on sspc.subject_study_period_id = ssp.id"
-                + " join study_period sp on sp.id = ssp.study_period_id");
-        qb.filter("sspt.teacher_id = t.id and (ssp.is_capacity_diff is null or ssp.is_capacity_diff = false)");
-        qb.requiredCriteria("sp.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
-        String subjectQuery = qb.querySql("sum(sspc.hours)", false);
-        queryParameters.putAll(qb.queryParameters());
-        
-        qb = new JpaNativeQueryBuilder("from subject_study_period_teacher sspt2"
-                + " join subject_study_period_teacher_capacity ssptc on ssptc.subject_study_period_teacher_id = sspt2.id"
-                + " join subject_study_period ssp2 on ssp2.id = sspt2.subject_study_period_id"
-                + " join study_period sp2 on sp2.id = ssp2.study_period_id");
-        qb.filter("sspt2.teacher_id = t.id and ssp2.is_capacity_diff = true");
-        qb.requiredCriteria("sp2.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
-        String subjectTeacherQuery = qb.querySql("sum(ssptc.hours)", false);
-        queryParameters.putAll(qb.queryParameters());
-        
-        qb = new JpaNativeQueryBuilder("from teacher t");
+                    + " where lp.is_usable = true) "
+                    : ""
+                ) +
+                "    group by jt2.teacher_id) jtc_hours on t.id = jtc_hours.teacher_id  " +
+                // subject capacity
+                "  left join (  " +
+                "    select  " +
+                "      sum(sspc.hours) as num,  " +
+//                "      sum(case when sct.is_contact then sspc.hours end) as contact,  " +
+                "      0 as contact,  " + //
+                "      sspt.teacher_id  " +
+                "    from  " +
+                "      subject_study_period_teacher sspt  " +
+                "    join subject_study_period ssp on  " +
+                "      ssp.id = sspt.subject_study_period_id  " +
+                "    join subject_study_period_capacity sspc on  " +
+                "      sspc.subject_study_period_id = ssp.id  " +
+                "    join study_period sp on  " +
+                "      sp.id = ssp.study_period_id  " +
+//                "    join classifier c on sspc.capacity_type_code = c.code  " +
+//                "    join school_capacity_type sct on sct.school_id = :schoolId and c.code = sct.capacity_type_code and sct.is_higher = true " +
+                "    where  " +
+                "      (ssp.is_capacity_diff is null  " +
+                "      or ssp.is_capacity_diff = false)  " +
+                "      and sp.study_year_id = :studyYear  " +
+                "    group by sspt.teacher_id) ssp_hours on t.id = ssp_hours.teacher_id  " +
+                // subject teacher capacity
+                "  left join (  " +
+                "    select  " +
+                "      sum(ssptc.hours) as num,  " +
+//                "      sum(case when sct.is_contact then ssptc.hours end) as contact,  " +
+                "      0 as contact,  " +
+                "      sspt2.teacher_id  " +
+                "    from  " +
+                "      subject_study_period_teacher sspt2  " +
+                "    join subject_study_period_teacher_capacity ssptc on  " +
+                "      ssptc.subject_study_period_teacher_id = sspt2.id  " +
+                "    join subject_study_period ssp2 on  " +
+                "      ssp2.id = sspt2.subject_study_period_id  " +
+                "    join study_period sp2 on  " +
+                "      sp2.id = ssp2.study_period_id  " +
+//                "    join subject_study_period_capacity sspc on  " +
+//                "      ssptc.subject_study_period_capacity_id = sspc.id  " +
+//                "    join classifier c on sspc.capacity_type_code = c.code  " +
+//                "    join school_capacity_type sct on sct.school_id = :schoolId and c.code = sct.capacity_type_code and sct.is_higher = true " +
+                "    where  " +
+                "      ssp2.is_capacity_diff = true  " +
+                "      and sp2.study_year_id = :studyYear  " +
+                "    group by sspt2.teacher_id) sspt_hours on t.id = sspt_hours.teacher_id  ";
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
         if (user.isTeacher()) {
             qb.requiredCriteria("t.id = :teacherId", "teacherId", user.getTeacherId());
         } else {
             qb.optionalCriteria("t.id = :teacherId", "teacherId", criteria.getTeacher());
         }
         qb.requiredCriteria("t.school_id = :schoolId", "schoolId", user.getSchoolId());
-        String hoursQuery = qb.querySql("t.id, t.person_id"
-                + ", coalesce((" + journalCapacityQuery + "), 0) as jc_hours"
-                + ", coalesce((" + journalTeacherCapacityQuery + "), 0) as jtc_hours"
-                + ", coalesce((" + subjectQuery + "), 0) as ssp_hours"
-                + ", coalesce((" + subjectTeacherQuery + "), 0) as sspt_hours", false);
-        queryParameters.putAll(qb.queryParameters());
+        qb.parameter("studyYear", criteria.getStudyYear());
+
+        String hoursQuery = qb.querySql(
+                " t.id, t.person_id, " +
+                "coalesce(jc_hours.num, 0) as jc_hours, " +
+                "coalesce(jc_hours.contact, 0) as jc_hours_contact, " +
+                "coalesce(jtc_hours.num, 0) as jtc_hours, " +
+                "coalesce(jtc_hours.contact, 0) as jtc_hours_contact, " +
+                "coalesce(ssp_hours.num, 0) as ssp_hours, " +
+                "coalesce(ssp_hours.contact, 0) as ssp_hours_contact, " +
+                "coalesce(sspt_hours.num, 0) as sspt_hours, " +
+                "coalesce(sspt_hours.contact, 0) as sspt_hours_contact ", false);
+        Map<String, Object> queryParameters = new HashMap<>(qb.queryParameters());
         
         qb = new JpaNativeQueryBuilder("from (" + hoursQuery + ") hours"
                 + " join person p on hours.person_id = p.id ").sort(pageable);
         qb.filter("(hours.jc_hours + hours.jtc_hours + hours.ssp_hours + hours.sspt_hours) > 0");
-        
 
-        return JpaQueryUtil.pagingResult(qb, "hours.id, p.firstname, p.lastname, hours.jc_hours + hours.jtc_hours + hours.ssp_hours + hours.sspt_hours as total_hours", 
-                queryParameters, em, pageable).map(r -> {
-            return new LessonPlanSearchTeacherDto(resultAsLong(r, 0), PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)), resultAsLong(r, 3), criteria.getStudyYear());
-        });
+        return JpaQueryUtil.pagingResult(qb, "hours.id, p.firstname, p.lastname," +
+                        " hours.jc_hours + hours.jtc_hours + hours.ssp_hours + hours.sspt_hours as total_hours," +
+                        " hours.jc_hours_contact + hours.jtc_hours_contact + hours.ssp_hours_contact + hours.sspt_hours_contact as total_contact_hours",
+                queryParameters, em, pageable).map(r -> new LessonPlanSearchTeacherDto(
+                        resultAsLong(r, 0), PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)),
+                        resultAsLong(r, 3), resultAsLong(r, 4), criteria.getStudyYear()));
     }
 
     public LessonPlanByTeacherDto getByTeacher(HoisUserDetails user, Teacher teacher, StudyYear studyYear) {
@@ -950,7 +1011,8 @@ public class LessonPlanService {
         
         Map<Long, CurriculumVersionOccupationModuleThemeResult> dtoThemes = StreamUtil.toMap(t -> t.getId(), t -> t,
                 dto.getThemes());
-        autocompleteService.setThemesInOtherJournals(dtoThemes, dto.getStudentGroupId(), dto.getId());
+        autocompleteService.setThemesInOtherJournals(dtoThemes, dto.getStudentGroupId(), dto.getId(),
+                dto.getJournalSubId());
         return dto;
     }
 
@@ -960,8 +1022,9 @@ public class LessonPlanService {
         
         Map<Long, CurriculumVersionOccupationModuleThemeResult> themes = StreamUtil.toMap(t -> t.getId(), t -> t,
                 dto.getThemes());
-        autocompleteService.setThemesInOtherJournals(themes, EntityUtil.getId(lessonPlanModule.getLessonPlan().getStudentGroup()),
-                EntityUtil.getId(journal));
+        autocompleteService.setThemesInOtherJournals(themes,
+                EntityUtil.getId(lessonPlanModule.getLessonPlan().getStudentGroup()),
+                EntityUtil.getId(journal), EntityUtil.getNullableId(journal.getJournalSub()));
         return dto;
     }
 
@@ -978,21 +1041,48 @@ public class LessonPlanService {
         } else {
             lessonPlanModule = em.getReference(LessonPlanModule.class, form.getLessonPlanModuleId());
         }
+
+        Journal journal = new Journal();
+        if (Boolean.TRUE.equals(form.getDivideIntoGroups())) {
+            JournalSub journalSub = createJournalSub(form);
+            String journalName = form.getNameEt();
+            String groupEt = TranslateUtil.translate("lessonplan.group", Language.ET);
+            for (long i = journalSub.getSubJournals().longValue(); i > 0; i--) {
+                form.setNameEt(journalName + " " + groupEt + " " + i);
+                journal = createJournal(user, form, lessonPlan, lessonPlanModule, journalSub);
+            }
+        } else {
+            journal = createJournal(user, form, lessonPlan, lessonPlanModule, null);
+        }
+        return new LessonPlanCreatedJournalDto(EntityUtil.getId(journal), EntityUtil.getId(lessonPlanModule));
+    }
+
+    private JournalSub createJournalSub(LessonPlanJournalForm form) {
+        JournalSub journalSub = new JournalSub();
+        Classifier cl = em.getReference(Classifier.class, form.getGroupProportion());
+        journalSub.setSubJournals(Long.valueOf(cl.getValue()));
+        return EntityUtil.save(journalSub, em);
+    }
+
+    private Journal createJournal(HoisUserDetails user, LessonPlanJournalForm form, LessonPlan lessonPlan,
+            LessonPlanModule lessonPlanModule, JournalSub journalSub) {
         Journal journal = new Journal();
         journal.setStudyYear(lessonPlan.getStudyYear());
         journal.setSchool(lessonPlan.getSchool());
         journal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
-        journal = saveJournal(journal, form, user, lessonPlanModule);
-        return new LessonPlanCreatedJournalDto(EntityUtil.getId(journal), EntityUtil.getId(lessonPlanModule));
+        if (journalSub != null) {
+            journal.setJournalSub(journalSub);
+            journalSub.getJournals().add(journal);
+        }
+        return saveJournal(journal, form, user, lessonPlanModule, true);
     }
 
-    private Journal saveJournal(Journal journal, LessonPlanJournalForm form, HoisUserDetails user, LessonPlanModule lessonPlanModule) {
-        assertSameSchool(journal, lessonPlanModule.getLessonPlan().getSchool());
-
-        EntityUtil.setUsername(user.getUsername(), em);
+    private void saveJournalSpecifics(Journal journal, LessonPlanJournalForm form) {
+        EntityUtil.bindToEntity(form, journal, classifierRepository, "journalCapacityTypes", "journalTeachers",
+                "journalOccupationModuleThemes", "groups", "journalRooms");
 
         List<JournalCapacityType> capacityTypes = journal.getJournalCapacityTypes();
-        if(capacityTypes != null) {
+        if (capacityTypes != null) {
             // try to delete capacity types first to catch foreign reference errors
             List<String> formJournalCapacityTypes = form.getJournalCapacityTypes();
             capacityTypes.removeIf(type -> !formJournalCapacityTypes.contains(EntityUtil.getCode(type.getCapacityType())));
@@ -1000,7 +1090,7 @@ public class LessonPlanService {
                 em.flush();
             } catch (PersistenceException e) {
                 Throwable cause = e.getCause();
-                if(cause instanceof ConstraintViolationException) {
+                if (cause instanceof ConstraintViolationException) {
                     throw new EntityRemoveException("lessonplan.journal.capacityTypeReferenced", cause);
                 }
                 throw e;
@@ -1008,45 +1098,7 @@ public class LessonPlanService {
         } else {
             journal.setJournalCapacityTypes(capacityTypes = new ArrayList<>());
         }
-        UntisCodeUtil untisCodeUtil = new UntisCodeUtil();
-        Long studyYear = EntityUtil.getId(journal.getStudyYear());
-        List<LessonPlan> lessonplan = em.createQuery("select l from LessonPlan l "
-    			+ "where l.school.id = ?1 "
-    			+ "and l.id = ?2",LessonPlan.class)
-            .setParameter(1, user.getSchoolId())
-            .setParameter(2, form.getLessonPlan())
-            .getResultList();
-        List<StudentGroup> studentGroups = lessonplan.stream().map(p->p.getStudentGroup()).collect(Collectors.toList());
-        if (StringUtils.isEmpty(form.getUntisCode())) {
-        	List<Journal> journals = em.createQuery("select j from Journal j "
-        			+ "where j.school.id = ?1 "
-        			+ "and j.studyYear.id = ?2",Journal.class)
-                .setParameter(1, user.getSchoolId())
-                .setParameter(2, studyYear)
-                .getResultList();
-    		form.setUntisCode(untisCodeUtil.generateJournalCode(form, journals, studentGroups, journal));
-        } else {
-        	List<Journal> journalsWithSameCode = em.createQuery("select j from Journal j "
-        			+ "where j.school.id = ?1 "
-        			+ "and j.untisCode = ?2 "
-        			+ "and j.studyYear.id = ?3", Journal.class)
-                .setParameter(1, user.getSchoolId())
-                .setParameter(2, form.getUntisCode())
-                .setParameter(3, studyYear)
-                .getResultList();
-        	if (journalsWithSameCode.size() > 1) {
-        		List<Journal> journals = em.createQuery("select j from Journal j "
-            			+ "where j.school.id = ?1 "
-            			+ "and j.studyYear.id = ?2",Journal.class)
-                    .setParameter(1, user.getSchoolId())
-                    .setParameter(2, studyYear)
-                    .getResultList();
-        		form.setUntisCode(untisCodeUtil.generateJournalCode(form, journals, studentGroups, journal));
-        		
-        	}
-        }
 
-        EntityUtil.bindToEntity(form, journal, classifierRepository, "journalCapacityTypes", "journalTeachers", "journalOccupationModuleThemes", "groups", "journalRooms");
         EntityUtil.bindEntityCollection(capacityTypes, c -> EntityUtil.getCode(c.getCapacityType()), form.getJournalCapacityTypes(), ct -> {
             JournalCapacityType jct = new JournalCapacityType();
             jct.setJournal(journal);
@@ -1055,7 +1107,7 @@ public class LessonPlanService {
         });
 
         List<JournalRoom> journalRooms = journal.getJournalRooms();
-        if(journalRooms == null) {
+        if (journalRooms == null) {
             journal.setJournalRooms(journalRooms = new ArrayList<>());
         }
         EntityUtil.bindEntityCollection(journalRooms, r -> EntityUtil.getId(r.getRoom()), form.getJournalRooms(), jr -> jr.getId(), jrf -> {
@@ -1066,7 +1118,7 @@ public class LessonPlanService {
         });
 
         List<JournalTeacher> teachers = journal.getJournalTeachers();
-        if(teachers == null) {
+        if (teachers == null) {
             journal.setJournalTeachers(teachers = new ArrayList<>());
         }
         EntityUtil.bindEntityCollection(teachers, EntityUtil::getId, form.getJournalTeachers(), jt -> jt.getId(), jtf -> {
@@ -1078,6 +1130,12 @@ public class LessonPlanService {
         }, (jtf, jt) -> {
             EntityUtil.bindToEntity(jtf, jt);
         });
+    }
+
+    private Journal saveJournal(Journal journal, LessonPlanJournalForm form, HoisUserDetails user,
+            LessonPlanModule lessonPlanModule, boolean saveJournalSpecifics) {
+        assertSameSchool(journal, lessonPlanModule.getLessonPlan().getSchool());
+        EntityUtil.setUsername(user.getUsername(), em);
 
         List<JournalOccupationModuleTheme> oldThemes = journal.getJournalOccupationModuleThemes();
         List<JournalOccupationModuleThemeHolder> fromForm = StreamUtil.toMappedList(id -> new JournalOccupationModuleThemeHolder(journal, lessonPlanModule, id), form.getJournalOccupationModuleThemes());
@@ -1129,11 +1187,56 @@ public class LessonPlanService {
         }
 
         setTimetableObjectStudentGroups(journal, form, lessonPlanModule);
+
+        if (saveJournalSpecifics) {
+            saveJournalSpecifics(journal, form);
+
+            if (journal.getId() == null) {
+                em.persist(journal);
+            }
+            setUniqueUntisCode(journal, form);
+        }
         return EntityUtil.save(journal, em);
     }
-    
+
     public Journal saveJournal(Journal journal, LessonPlanJournalForm form, HoisUserDetails user) {
-        return saveJournal(journal, form, user, em.getReference(LessonPlanModule.class, form.getLessonPlanModuleId()));
+        LessonPlanModule lessonPlanModule = em.getReference(LessonPlanModule.class, form.getLessonPlanModuleId());
+
+        if (journal.getJournalSub() != null) {
+            List<Journal> journalSubJournals = journal.getJournalSub().getJournals();
+            for (Journal subJournal : journalSubJournals) {
+                if (subJournal.getId().equals(journal.getId())) {
+                    continue;
+                }
+                saveJournal(subJournal, form, user, lessonPlanModule, false);
+            }
+        } else if (Boolean.TRUE.equals(form.getDivideIntoGroups())) {
+            JournalSub journalSub = createJournalSub(form);
+            String journalName = form.getNameEt();
+            String groupEt = TranslateUtil.translate("lessonplan.group", Language.ET);
+
+            // hack: remove journal_teacher_id from form to add teachers for new journals
+            List<LessonPlanJournalTeacherForm> copiedTeachers = form.getJournalTeachers();
+            List<LessonPlanJournalTeacherForm> newJournalTeachers = new ArrayList<>();
+            for (LessonPlanJournalTeacherForm teacherForm : form.getJournalTeachers()) {
+                LessonPlanJournalTeacherForm newJournalTeacher = new LessonPlanJournalTeacherForm();
+                newJournalTeacher.setTeacher(teacherForm.getTeacher());
+                newJournalTeacher.setIsFiller(teacherForm.getIsFiller());
+                newJournalTeacher.setIsConfirmer(teacherForm.getIsConfirmer());
+                newJournalTeachers.add(newJournalTeacher);
+            }
+            form.setJournalTeachers(newJournalTeachers);
+
+            for (long i = journalSub.getSubJournals().longValue(); i > 1; i--) {
+                form.setNameEt(journalName + " " + groupEt + " " + i);
+                createJournal(user, form, lessonPlanModule.getLessonPlan(), lessonPlanModule, journalSub);
+            }
+
+            form.setNameEt(journalName + " " + groupEt + " " + 1);
+            form.setJournalTeachers(copiedTeachers);
+            journal.setJournalSub(journalSub);
+        }
+        return saveJournal(journal, form, user, lessonPlanModule, true);
     }
     
     private void setJournalOccupationModuleThemes(Journal journal, List<JournalOccupationModuleTheme> oldThemes, List<JournalOccupationModuleThemeHolder> fromForm) {
@@ -1193,6 +1296,17 @@ public class LessonPlanService {
         }
     }
 
+    private void setUniqueUntisCode(Journal journal, LessonPlanJournalForm form) {
+        if (StringUtils.isEmpty(form.getUntisCode())) {
+            journal.setUntisCode(UntisCodeUtil.generateJournalCode(journal, form, em));
+        } else {
+            List<Journal> journalsWithSameCode = UntisCodeUtil.journalsWithUntisCode(journal, form.getUntisCode(), em);
+            if (journalsWithSameCode.size() > 1) {
+                journal.setUntisCode(UntisCodeUtil.generateJournalCode(journal, form, em));
+            }
+        }
+    }
+
     private void createMissingPlansAndAdd(Collection<Long> newGroupIds, Map<Long, Long> lessonPlanIds, Long studyYearId, HoisUserDetails user) {
         newGroupIds.removeAll(lessonPlanIds.keySet());
         // add lesson plans for student groups not already present
@@ -1215,6 +1329,7 @@ public class LessonPlanService {
         if (!journal.getJournalStudents().isEmpty()) {
             throw new ValidationFailedException("lessonplan.journal.hasStudents");
         }
+        EntityUtil.setUsername(user.getUsername(), em);
         
         //  remove timetable objects and groups that do not have any connecting events
         Query objectsQuery = em.createNativeQuery("select tto.id from timetable_object tto where tto.journal_id=?1 " + 
@@ -1237,8 +1352,34 @@ public class LessonPlanService {
             }
         }
 
-        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(journal, em);
+
+        if (journal.getJournalSub() != null) {
+            journalSubChangesFromJournalDeletion(journal.getJournalSub());
+        }
+    }
+
+    private void journalSubChangesFromJournalDeletion(JournalSub journalSub) {
+        List<Journal> journalSubJournals = journalSub.getJournals();
+        if (journalSubJournals.size() > 1) {
+            Classifier groupProportion = em.find(Classifier.class, MainClassCode.PAEVIK_GRUPI_JAOTUS.name()
+                    + "_" + journalSubJournals.size());
+            if (groupProportion == null) {
+                throw new ValidationFailedException("lessonplan.journal.groupProportionClassifierMissing");
+            }
+
+            for (Journal subJournal : journalSubJournals) {
+                subJournal.setGroupProportion(groupProportion);
+                EntityUtil.save(subJournal, em);
+            }
+            journalSub.setSubJournals(Long.valueOf(journalSubJournals.size()));
+            EntityUtil.save(journalSub, em);
+        } else {
+            Journal leftOverJournal = journalSubJournals.get(0);
+            leftOverJournal.setJournalSub(null);
+            EntityUtil.save(leftOverJournal, em);
+            EntityUtil.deleteEntity(journalSub, em);
+        }
     }
 
     private Map<Long, Long> findLessonPlanByStudyYearAndStudentGroup(StudyYear studyYear, Collection<Long> studentGroup) {

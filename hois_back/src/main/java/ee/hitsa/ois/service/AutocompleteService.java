@@ -619,22 +619,24 @@ public class AutocompleteService {
         if (Boolean.TRUE.equals(lookup.getExistInOtherJournals()) && lookup.getStudentGroupId() != null) {
             Map<Long, CurriculumVersionOccupationModuleThemeResult> themes = StreamUtil.toMap(r -> r.getId(), r -> r,
                     results);
-            setThemesInOtherJournals(themes, lookup.getStudentGroupId(), lookup.getJournalId());
+            setThemesInOtherJournals(themes, lookup.getStudentGroupId(), lookup.getJournalId(),
+                    lookup.getJournalSubId());
         }
         return results;
     }
 
     public void setThemesInOtherJournals(Map<Long, CurriculumVersionOccupationModuleThemeResult> themes,
-            Long studentGroupId, Long journalId) {
+            Long studentGroupId, Long journalId, Long journalSubId) {
         if (!themes.isEmpty()) {
-            Set<Long> themesInOtherJournals = themesInOtherJournals(themes.keySet(), studentGroupId, journalId);
+            Set<Long> themesInOtherJournals = themesInOtherJournals(themes.keySet(), studentGroupId,
+                    journalId, journalSubId);
             for (CurriculumVersionOccupationModuleThemeResult theme : themes.values()) {
                 theme.setExistsInOtherJournals(Boolean.valueOf(themesInOtherJournals.contains(theme.getId())));
             }
         }
     }
 
-    private Set<Long> themesInOtherJournals(Set<Long> themeIds, Long studentGroupId, Long journalId) {
+    private Set<Long> themesInOtherJournals(Set<Long> themeIds, Long studentGroupId, Long journalId, Long journalSubId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_version_omodule_theme cvot");
         qb.requiredCriteria("cvot.id in (:themeIds)", "themeIds", themeIds);
 
@@ -643,7 +645,10 @@ public class AutocompleteService {
                 + " join curriculum_version_omodule_theme cvot2 on jot.curriculum_version_omodule_theme_id = cvot.id"
                 + " join lesson_plan_module lpm on cvot2.curriculum_version_omodule_id = lpm.curriculum_version_omodule_id"
                 + " join lesson_plan lp on lpm.lesson_plan_id = lp.id"
-                + " where lp.student_group_id = " + studentGroupId + (journalId != null ? " and j.id != " + journalId : "") + ")";
+                + " where lp.student_group_id = " + studentGroupId
+                + (journalId != null ? " and j.id != " + journalId : "")
+                + (journalSubId != null ? " and coalesce(j.journal_sub_id, 0) != " + journalSubId : "")
+                + ")";
         qb.filter(filter);
 
         List<?> data = qb.select("cvot.id", em).getResultList();
@@ -991,6 +996,9 @@ public class AutocompleteService {
         if (Boolean.TRUE.equals(lookup.getShowStudentGroup())) {
             from += " left join student_group sg on s.student_group_id = sg.id";
         }
+        if (Boolean.TRUE.equals(lookup.getHasCurriculumVersion())) {
+            from += " join curriculum_version c_ver on c_ver.id = s.curriculum_version_id";
+        }
         if (Boolean.TRUE.equals(lookup.getShowGuestStudent())) {
             from += " left join (select s.study_start, ds.student_id "
                         + "from directive_student ds "
@@ -1088,7 +1096,7 @@ public class AutocompleteService {
     public List<AutocompleteResult> students(Long schoolId, StudentAutocompleteCommand lookup) {
         List<?> data = studentResults(schoolId, lookup);
         return StreamUtil.toMappedList(r -> {
-            String name = PersonUtil.fullnameAndIdcodeOptionalGuest(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 5));
+            String name = PersonUtil.fullnameAndIdcodeTypeSpecific(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 5));
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
         }, data);
     }
@@ -1113,7 +1121,7 @@ public class AutocompleteService {
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname",
                 "concat(p.firstname, ' ', p.lastname, ' (', p.idcode, ')')"), "name", lookup.getName());
         qb.requiredCriteria("s.status_code in :statusCodes", "statusCodes", StudentStatus.STUDENT_STATUS_ACTIVE);
-        qb.requiredCriteria("s.type_code != :studentType", "studentType", StudentType.OPPUR_K.name());
+        qb.requiredCriteria("s.type_code not in (:studentTypes)", "studentTypes", EnumUtil.toNameList(StudentType.OPPUR_K, StudentType.OPPUR_E));
         qb.requiredCriteria("not exists (select 1 from scholarship_application sa where sa.student_id = s.id "
                         + "and sa.scholarship_term_id = :termId)", "termId", term.getId());
 

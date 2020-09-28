@@ -37,6 +37,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private String fullname;
     private String oldStudyForm;
     private String oldStudyLoad;
+    private String type;
     private AutocompleteResult oldCurriculumVersion;
     private String oldFin;
     private String oldFinSpecific;
@@ -408,6 +409,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     public static DirectiveStudentDto of(Student student, DirectiveType directiveType) {
         DirectiveStudentDto dto = new DirectiveStudentDto();
         dto.setStudent(student.getId());
+        dto.setType(EntityUtil.getNullableCode(student.getType()));
         setPersonData(student.getPerson(), dto);
 
         switch(directiveType) {
@@ -486,6 +488,14 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         dto.setBirthdate(person.getBirthdate());
         dto.setSex(EntityUtil.getNullableCode(person.getSex()));
         dto.setCitizenship(EntityUtil.getNullableCode(person.getCitizenship()));
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
     
 }

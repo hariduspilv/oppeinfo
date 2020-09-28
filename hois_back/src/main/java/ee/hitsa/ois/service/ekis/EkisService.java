@@ -153,7 +153,7 @@ public class EkisService {
         request.setType(value(certificate.getType()));
         request.setInstitution(certificate.getWhom());
 
-        return withResponse(ekis.registerCertificate(ctx(), request), (result) -> {
+        return withResponse(ekis.registerCertificate(ctx(certificate.getSchool()), request), (result) -> {
             certificate.setWdId(Long.valueOf(result.getWdId()));
             // TODO waiting for implementation in EKIS
             // certificate.setWdUrl(result.getWdUrl());
@@ -189,7 +189,7 @@ public class EkisService {
         request.setContent(StreamUtil.toMappedList(ds -> studentForRegisterDirective(directiveType, ds), directive.getStudents()));
         request.setWdId(directive.getWdId() != null ? directive.getWdId().intValue() : MISSING_WD_ID);
 
-        return withResponse(ekis.registerDirective(ctx(), request), (result) -> {
+        return withResponse(ekis.registerDirective(ctx(directive.getSchool()), request), (result) -> {
             directive.setWdId(Long.valueOf(result.getWdId()));
             directive.setStatus(em.getReference(Classifier.class, DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL.name()));
             return save(directive);
@@ -210,7 +210,7 @@ public class EkisService {
         request.setOisId(directive.getId().toString());
         request.setWdId(directive.getWdId().intValue());
 
-        withResponse(ekis.deleteDirective(ctx(), request), (result) -> {
+        withResponse(ekis.deleteDirective(ctx(directive.getSchool()), request), (result) -> {
             // do nothing
             return null;
         }, directive.getSchool(), directive, l -> {});
@@ -219,7 +219,7 @@ public class EkisService {
     /**
      * send register practice contract request to EKIS
      *
-     * @param directiveId
+     * @param contractId
      * @return contract with status updated and wd_id set
      * @throws ValidationFailedException if there was an error
      */
@@ -399,7 +399,7 @@ public class EkisService {
             }
         }
 
-        return withResponse(ekis.registerPracticeContract(ctx(), request), (result) -> {
+        return withResponse(ekis.registerPracticeContract(ctx(contract.getStudent().getSchool()), request), (result) -> {
             contract.setWdId(Long.valueOf(result.getWdId()));
             contract.setStatus(em.getReference(Classifier.class, ContractStatus.LEPING_STAATUS_Y.name()));
             if (Boolean.TRUE.equals(contract.getIsPracticeAbsence()) || Boolean.TRUE.equals(contract.getIsPracticeHidden())) {
@@ -717,7 +717,11 @@ public class EkisService {
         return UUID.randomUUID().toString();
     }
 
-    private EkisRequestContext ctx() {
+    private EkisRequestContext ctx(School school) {
+        return ctx(school.getEkisUrl() != null ? school.getEkisUrl() : this.endpoint);
+    }
+
+    private EkisRequestContext ctx(String endpoint) {
         return new EkisRequestContext(endpoint);
     }
     

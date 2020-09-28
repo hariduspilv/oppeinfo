@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,14 +31,12 @@ import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 import javax.validation.Validator;
 
-import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResult;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResultHistory;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
 import ee.hitsa.ois.web.commandobject.timetable.JournalOutcomeForm;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
-import ee.hitsa.ois.web.dto.timetable.JournalAutomaticAddStudentsResult;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateBaseDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateXlsDto;
 import ee.hitsa.ois.web.dto.timetable.JournalOutcomeDto;
@@ -556,13 +555,14 @@ public class JournalService {
         return new ArrayList<>();
     }
 
-    private JpaNativeQueryBuilder suitedStudentsQb(HoisUserDetails user) {
+    public JpaNativeQueryBuilder suitedStudentsQb(HoisUserDetails user) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j "
                 + "join journal_omodule_theme jot on jot.journal_id = j.id "
                 + "join lesson_plan_module lpm on lpm.id = jot.lesson_plan_module_id "
                 + "join lesson_plan lp on lp.id = lpm.lesson_plan_id "
                 + "join student_group sg on sg.id = lp.student_group_id "
                 + "join student s on s.student_group_id = sg.id "
+                + "join person p on p.id = s.person_id "
                 + "join curriculum_version_omodule cvo on cvo.curriculum_version_id = s.curriculum_version_id "
                     + "and cvo.id = lpm.curriculum_version_omodule_id "
                 + "join curriculum_version_omodule_theme cvot on cvot.curriculum_version_omodule_id = cvo.id "
@@ -580,8 +580,11 @@ public class JournalService {
                     "teacherId", user.getTeacherId());
         }
 
+        qb.filter("s.id not in (select js.student_id from journal_student js "
+                + "join journal j2 on j2.id = js.journal_id "
+                + "where j2.id = j.id or j2.journal_sub_id = j.journal_sub_id)");
+
         // who has no positive result in given module
-        qb.filter("s.id not in (select js.student_id from journal_student js where js.journal_id = j.id)");
         qb.filter("s.id not in (select svr.student_id from student_vocational_result svr "
                 + "join curriculum_version_omodule cvo2 on cvo2.id = svr.curriculum_version_omodule_id "
                     + "or cvo2.id = any(svr.arr_modules) "
@@ -602,13 +605,13 @@ public class JournalService {
 
         // themes has no positive grade and is not replaced in apel application
         qb.filter("s.id not in ( "
-                + "select js2.student_id from journal j2 "
-                    + "join journal_omodule_theme jot2 on jot2.journal_id = j2.id "
-                    + "join journal_student js2 on js2.journal_id = j2.id and js2.student_id = s.id "
-                    + "join journal_entry je on je.journal_id = j2.id and je.entry_type_code = :finalEntry "
-                    + "join journal_entry_student jes on jes.journal_entry_id = je.id and jes.journal_student_id = js2.id "
+                + "select js3.student_id from journal j3 "
+                    + "join journal_omodule_theme jot3 on jot3.journal_id = j3.id "
+                    + "join journal_student js3 on js3.journal_id = j3.id and js3.student_id = s.id "
+                    + "join journal_entry je on je.journal_id = j3.id and je.entry_type_code = :finalEntry "
+                    + "join journal_entry_student jes on jes.journal_entry_id = je.id and jes.journal_student_id = js3.id "
                     + "where jes.grade_code in (:positiveGrades) "
-                    + "and jot2.curriculum_version_omodule_theme_id = cvot.id "
+                    + "and jot3.curriculum_version_omodule_theme_id = cvot.id "
                 + "union all "
                 + "select aa.student_id from apel_application aa "
                     + "join apel_application_record aar on aar.apel_application_id = aa.id "
@@ -675,7 +678,7 @@ public class JournalService {
         for (Long student : command.getStudents()) {
             if (!existingStudents.contains(student)) {
                 JournalStudent js = JournalStudent.of(em.getReference(Student.class, student));
-                journal.getJournalStudents().add(js);
+                js.setJournal(journal);
                 EntityUtil.save(js, em);
                 if (finalResultEntry != null) {
                     setApelResultAsFinalResult(user, finalResultEntry, js, journalStudentApelResults);
@@ -1568,6 +1571,16 @@ public class JournalService {
         SchoolType type = schoolService.schoolType(EntityUtil.getId(journal.getSchool()));
         dto.setIsHigherSchool(Boolean.valueOf(type.isHigher()));
         
+        Set<Long> studentsWithIndividualCurriculums = studentsWithIndividualCurriculums(EntityUtil.getId(journal));
+        for (Long studentId : studentsWithIndividualCurriculums) {
+            // all journal students might not be shown
+            Optional<JournalStudentDto> journalStudentOpt = dto.getJournalStudents().stream().filter(p -> studentId.equals(p.getStudentId())).findFirst();
+            if (journalStudentOpt.isPresent()) {
+                JournalStudentDto journalStudent = journalStudentOpt.get();
+                journalStudent.setIsIndividualCurriculum(Boolean.TRUE);
+            }
+        }
+        
         return xlsService.generate("journal.xls", Collections.singletonMap("journal", dto));
     }
 
@@ -2050,50 +2063,6 @@ public class JournalService {
         q.setParameter("finalResult", JournalEntryType.SISSEKANNE_L.name());
         
         return Integer.valueOf(q.executeUpdate());
-    }
-
-    public JournalAutomaticAddStudentsResult addAllSuitableStudents(HoisUserDetails user, Long studyYearId) {
-        List<Journal> journals = em.createQuery("select j from Journal j "
-                + "where j.studyYear.id = ?1 and j.addStudents = true and j.status.code = ?2", Journal.class)
-                .setParameter(1, studyYearId)
-                .setParameter(2, JournalStatus.PAEVIK_STAATUS_T.name())
-                .getResultList();
-
-        if (!journals.isEmpty()) {
-            Map<Long, Journal> journalsById = StreamUtil.toMap(BaseEntityWithId::getId, journals);
-            JpaNativeQueryBuilder qb = suitedStudentsQb(user);
-            qb.requiredCriteria("j.id in (:journalIds)", "journalIds", journalsById.keySet());
-            List<?> data = qb.select("j.id j_id, s.id s_id", em).getResultList();
-
-            Set<Long> studentIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 1), data);
-            Map<Long, Set<Long>> studentsByJournals = data.stream().collect(
-                    Collectors.groupingBy(r -> resultAsLong(r, 0),
-                    Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toSet())));
-
-            if (!studentIds.isEmpty()) {
-                List<Student> students = em.createQuery("select s from Student s where s.id in ?1", Student.class)
-                        .setParameter(1, studentIds)
-                        .getResultList();
-                Map<Long, Student> studentsById = StreamUtil.toMap(BaseEntityWithId::getId, students);
-
-                for (Long journalId : studentsByJournals.keySet()) {
-                    Journal journal = journalsById.get(journalId);
-                    Set<Long> journalStudentIds = studentsByJournals.get(journalId);
-                    for (Long studentId : journalStudentIds) {
-                        JournalStudent js = new JournalStudent();
-                        js.setJournal(journal);
-                        js.setStudent(studentsById.get(studentId));
-                        journal.getJournalStudents().add(js);
-                    }
-                    EntityUtil.save(journal, em);
-                }
-            }
-
-            long numberOfAddedStudents = studentsByJournals.entrySet().stream().flatMap(r -> r.getValue().stream()).count();
-            return new JournalAutomaticAddStudentsResult(Long.valueOf(studentsByJournals.keySet().size()),
-                    Long.valueOf(numberOfAddedStudents));
-        }
-        return new JournalAutomaticAddStudentsResult(Long.valueOf(0), Long.valueOf(0));
     }
 
 }

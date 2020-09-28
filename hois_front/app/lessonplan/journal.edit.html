@@ -14,14 +14,37 @@
 
           <div>&nbsp;</div>
           <div flex>
-            <md-checkbox ng-model="record.addModuleOutcomes" aria-label="{{'lessonplan.journal.addModuleOutcomes' | translate}}">
-              {{'lessonplan.journal.addModuleOutcomes' | translate}}
-            </md-checkbox>
+            <md-input-container>
+              <md-checkbox ng-model="record.addModuleOutcomes" aria-label="{{'lessonplan.journal.addModuleOutcomes' | translate}}">
+                {{'lessonplan.journal.addModuleOutcomes' | translate}}
+              </md-checkbox>
+            </md-input-container>
           </div>
           <div flex>
-            <md-checkbox ng-model="record.addStudents" aria-label="{{'lessonplan.journal.addStudents' | translate}}">
-              {{'lessonplan.journal.addStudents' | translate}}
-            </md-checkbox>
+            <md-input-container>
+              <md-checkbox ng-model="record.addStudents" aria-label="{{'lessonplan.journal.addStudents' | translate}}">
+                {{'lessonplan.journal.addStudents' | translate}}
+              </md-checkbox>
+            </md-input-container>
+          </div>
+          <div flex ng-if="!record.journalSubId" layout="row" flex>
+            <md-input-container>
+              <md-checkbox ng-model="record.divideIntoGroups" aria-label="{{'lessonplan.journal.divideIntoSubgroups' | translate}}">
+                {{'lessonplan.journal.divideIntoSubgroups' | translate}}
+              </md-checkbox>
+            </md-input-container>
+            <md-input-container ng-if="record.divideIntoGroups" flex="20" flex-md="25" flex-sm="50" flex-xs="50" flex-offset="5">
+              <label>{{'lessonplan.journal.subgroupCount' | translate}}</label>
+              <hois-select ng-model="record.groupProportion" values="formState.groupProportions"
+                show-property="value" value-property="code" filter-values="['PAEVIK_GRUPI_JAOTUS_1']" required></hois-select>
+            </md-input-container>
+          </div>
+          <div ng-if="record.journalSubId" flex>
+            <md-input-container>
+              <md-checkbox aria-label="{{'lessonplan.journal.dividedIntoSubgroups' | translate}}" ng-checked="true" disabled>
+                {{'lessonplan.journal.dividedIntoSubgroups' | translate}}
+              </md-checkbox>
+            </md-input-container>
           </div>
 
           <div layout="row" flex="100" flex-sm="100" flex-xs="100">
@@ -71,7 +94,7 @@
 
           <div layout="row" flex="100" flex-sm="100" flex-xs="100">
             <md-input-container flex="50" flex-sm="100" flex-xs="100">
-                <label>{{'teacher.untis' | translate}}</label>
+                <label>{{'lessonplan.journal.untisCode' | translate}}</label>
                 <input ng-model="record.untisCode" name="untisCode" type="text" md-maxlength="20">
                 <div ng-messages="journalForm.untisCode.$error">
                   <div ng-message="md-maxlength">
@@ -82,7 +105,8 @@
 
             <md-input-container flex="50" flex-sm="100" flex-xs="100">
               <label class="textInput">{{'lessonplan.journal.groupProportion' | translate}}</label>
-              <hois-classifier-select ng-model="record.groupProportion" required main-classifier-code="PAEVIK_GRUPI_JAOTUS" model-value-attr="code"></hois-classifier-select>
+              <hois-classifier-select ng-model="record.groupProportion" required main-classifier-code="PAEVIK_GRUPI_JAOTUS"
+                model-value-attr="code" ng-disabled="record.journalSubId || record.divideIntoGroups"></hois-classifier-select>
             </md-input-container>
           </div>
 
@@ -206,5 +230,24 @@
         <md-button ng-click="back('#/lessonplans/vocational/' + record.lessonPlan + '/edit', journalForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>
+  </div>
+
+  <div ng-if="record.subJournals.length > 0" flex>
+    <div>&nbsp;</div>
+    <fieldset flex="100" layout="column">
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'lessonplan.journal.connectedJournals' | translate}}</legend>
+
+      <md-table-container>
+        <table md-table>
+          <tbody md-body>
+            <tr md-row ng-repeat="subJournal in record.subJournals | orderBy: currentLanguageNameField()">
+              <td md-cell>
+                <a ng-click="openSubJournal(subJournal)">{{currentLanguageNameField(subJournal)}}</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </fieldset>
   </div>
 </div>

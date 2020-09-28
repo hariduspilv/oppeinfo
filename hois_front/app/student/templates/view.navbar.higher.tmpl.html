@@ -3,12 +3,16 @@
     <md-nav-item md-nav-href="#/students/{{::studentId}}/main?_noback" name="student.main">{{'student.main' | translate}}</md-nav-item>
     <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/results?_noback"
       name="student.results">{{'student.results' | translate}}</md-nav-item>
+    <md-nav-item ng-if="student.userCanViewStudentSpecificData && !auth.isLeadingTeacher() && isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA')" md-nav-href="#/students/{{::studentId}}/declaration?_noback"
+      name="{{currentNavItem === 'current' ? 'current' : 'previous'}}">{{'student.declaration' | translate}}</md-nav-item>
     <md-nav-item ng-if="student.userCanViewStudentSpecificData" md-nav-href="#/students/{{::studentId}}/documents?_noback"
       name="student.documents">{{'student.documents' | translate}}</md-nav-item>
     <md-nav-item ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && student.status && student.status !== 'OPPURSTAATUS_L' && student.status !== 'OPPURSTAATUS_K'" 
       md-nav-href="#/students/{{::studentId}}/timetable?_noback" name="student.timetable">{{'student.studentTimetable' | translate}}</md-nav-item>
     <md-nav-item ng-if="student.userCanViewStudentSpecificData && student.person.idcode != null" md-nav-href="#/students/{{::studentId}}/rr?_noback"
       name="student.rr">{{'rr.student.tabLabel' | translate}}</md-nav-item>
+    <md-nav-item ng-if="student.userCanViewStudentAddInfo" md-nav-href="#/students/{{::studentId}}/addInfo?_noback"
+      name="student.addInfo">{{'student.addInfo' | translate}}</md-nav-item>
   </md-nav-bar>
 </md-content>
 
@@ -18,6 +22,8 @@
     name="student.main">{{'student.main' | translate}}</md-button>
   <md-button class="md-raised" ng-if="student.userCanViewStudentSpecificData" ng-href="#/students/{{::studentId}}/results?_noback"
     ng-class="{'md-accent': currentNavItem === 'student.results'}" name="student.results">{{'student.results' | translate}}</md-button>
+  <md-button class="md-raised" ng-if="student.userCanViewStudentSpecificData && !auth.isLeadingTeacher() && isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA')" ng-href="#/students/{{::studentId}}/declaration?_noback"
+    name="{{currentNavItem === 'current' ? 'current' : 'previous'}}">{{'student.declaration' | translate}}</md-button>
   <md-button class="md-raised" ng-if="student.userCanViewStudentSpecificData" ng-href="#/students/{{::studentId}}/documents?_noback"
     ng-class="{'md-accent': currentNavItem === 'student.documents'}" name="student.documents">{{'student.documents' | translate}}</md-button>
   <md-button class="md-raised" ng-if="(auth.isAdmin() || auth.isLeadingTeacher()) && student.status !== 'OPPURSTAATUS_L' && student.status !== 'OPPURSTAATUS_K'"
@@ -25,4 +31,6 @@
     name="student.timetable">{{'student.studentTimetable' | translate}}</md-button>
   <md-button class="md-raised" ng-if="student.userCanViewStudentSpecificData" ng-class="{'md-accent': currentNavItem === 'student.rr'}"
     ng-href="#/students/{{::studentId}}/rr?_noback" name="student.rr">{{'rr.student.tabLabel' | translate}}</md-button>
+  <md-button ng-if="student.userCanViewStudentAddInfo" ng-href="#/students/{{::studentId}}/addInfo?_noback"
+    name="student.addInfo">{{'student.addInfo' | translate}}</md-button>
 </div>

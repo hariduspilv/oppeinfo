@@ -15,8 +15,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
+            // checks if admin and leading teacher have view right (regular teacher needs to be student group teacher aswell)
+            // checks if admin, leading teacher or regular teacher is in any application committee when view rights are missing
             return (['ROLL_A', 'ROLL_J'].indexOf(Session.roleCode) !== -1 && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS) !== -1) || 
-                    (Session.committees.indexOf('KOMISJON_T') !== -1 && ['ROLL_A', 'ROLL_J', 'ROLL_O'].indexOf(Session.roleCode) !== -1) ||
+                    (Session.inApplicationCommittee && ['ROLL_A', 'ROLL_J', 'ROLL_O'].indexOf(Session.roleCode) !== -1) ||
                     ((Session.teacherGroupIds || []).length > 0 && Session.roleCode === 'ROLL_O' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS) !== -1);
           }
         }
@@ -32,7 +34,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
-            return (Session.roleCode === 'ROLL_A' || Session.roleCode === 'ROLL_T' || Session.roleCode === 'ROLL_O') &&
+            return (Session.roleCode === 'ROLL_A' || Session.roleCode === 'ROLL_T' || ((Session.teacherGroupIds || []).length > 0 && Session.roleCode === 'ROLL_O')) &&
               roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_AVALDUS) !== -1;
           }
         }
@@ -55,8 +57,12 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         },
         data: {
           authorizedRoles: function(Session, roles) {
-            return (Session.committees.indexOf('KOMISJON_T') !== -1 && ['ROLL_A', 'ROLL_J', 'ROLL_O'].indexOf(Session.roleCode) !== -1) ||
-                    roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS) !== -1;
+            // Light check - specific application relations are checked in controller
+            // checks if user has view right (regular teacher needs to be student group teacher)
+            // checks if admin, leading teacher or regular teacher is in any application committee (view rights can be missing)
+            return (Session.inApplicationCommittee && ['ROLL_A', 'ROLL_J', 'ROLL_O'].indexOf(Session.roleCode) !== -1) ||
+            ((Session.teacherGroupIds || []).length > 0 && Session.roleCode === 'ROLL_O' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS) !== -1) ||
+            (Session.roleCode !== 'ROLL_O' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS) !== -1);
           }
         }
       });

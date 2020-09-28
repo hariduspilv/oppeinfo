@@ -172,10 +172,17 @@ public class ApplicationService {
             }
         } else if (user.isTeacher()) {
             if (Boolean.TRUE.equals(criteria.getConnectedByCommittee())) {
-                qb.requiredCriteria("(exists(select 1 from student_group sg where student.student_group_id = sg.id and sg.teacher_id = :teacherId) or exists(select 1 from committee_member cm where cm.committee_id = a.committee_id and"
-                        + " (cm.person_id = :personId or cm.teacher_id = :teacherId)))", "personId", user.getPersonId());
+                if (!UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_AVALDUS)) {
+                    qb.requiredCriteria("exists(select 1 from committee_member cm where cm.committee_id = a.committee_id and "
+                            + "(cm.person_id = :personId or cm.teacher_id = :teacherId))", "personId", user.getPersonId());
+                } else {
+                    qb.requiredCriteria("(exists(select 1 from student_group sg where student.student_group_id = sg.id and sg.teacher_id = :teacherId) or exists(select 1 from committee_member cm where cm.committee_id = a.committee_id and"
+                            + " (cm.person_id = :personId or cm.teacher_id = :teacherId)))", "personId", user.getPersonId());
+                }
                 qb.parameter("teacherId", user.getTeacherId());
             }
+        } else if (user.isLeadingTeacher() && !UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_AVALDUS)) {
+            qb.filter("exists(select 1 from committee_member cm where cm.committee_id = a.committee_id and cm.person_id = :personId)");
         }
         qb.filter(":personId = :personId");
         qb.parameter("personId", user.getPersonId());
@@ -188,7 +195,7 @@ public class ApplicationService {
             dto.setInserted(resultAsLocalDateTime(r, 3));
             dto.setSubmitted(resultAsLocalDateTime(r, 4));
             Long studentId = resultAsLong(r, 5);
-            String name = PersonUtil.fullnameOptionalGuest(resultAsString(r, 6), resultAsString(r, 7), resultAsString(r, 9));
+            String name = PersonUtil.fullnameTypeSpecific(resultAsString(r, 6), resultAsString(r, 7), resultAsString(r, 9));
             dto.setStudent(new AutocompleteResult(studentId, name, name));
             dto.setRejectReason(resultAsString(r, 8));
             dto.setStudentGroup(resultAsString(r, 10));
@@ -693,7 +700,7 @@ public class ApplicationService {
 
     public Map<String, ApplicationApplicableDto> applicableApplicationTypes(Student student) {
         List<String> existingApplications = existingApplicationsTypes(EntityUtil.getId(student));
-        boolean isHigher = StudentUtil.isHigher(student);
+        boolean isHigher = studentService.isHigher(student);
         Map<String, ApplicationApplicableDto> result = new HashMap<>();
         rulesByApplicationType(student, existingApplications, result);
         rulesByApplicationClassifier(isHigher, result);
@@ -713,13 +720,20 @@ public class ApplicationService {
             Map<String, ApplicationApplicableDto> result) {
         boolean isActive = StudentUtil.isActive(student);
         boolean isStudying = StudentUtil.isStudying(student);
+        boolean isExternalStudent = StudentUtil.isExternal(student);
+        Set<String> externalStudentApplications = EnumUtil.toNameSet(ApplicationType.AVALDUS_LIIK_MUU, ApplicationType.AVALDUS_LIIK_RAKKAVA, 
+                ApplicationType.AVALDUS_LIIK_OKAVA, ApplicationType.AVALDUS_LIIK_OVERSKAVA, ApplicationType.AVALDUS_LIIK_EKSMAT);
 
         for (Classifier classifier : classifierService.findAllByMainClassCode(MainClassCode.AVALDUS_LIIK)) {
             String type = classifier.getCode();
             if (existingApplications.contains(type) && !ApplicationType.AVALDUS_LIIK_TUGI.name().equals(type)) {
                 result.put(type, new ApplicationApplicableDto("application.messages.applicationAlreadyExists"));
             } else {
-                if (ApplicationType.AVALDUS_LIIK_AKAD.name().equals(type)) {
+                if (isExternalStudent && !externalStudentApplications.contains(type)) {
+                    result.put(type, new ApplicationApplicableDto("application.messages.externalStudent"));
+                } else if (ApplicationType.AVALDUS_LIIK_OKAVA.name().equals(type) && student.getCurriculumVersion() == null) {
+                    result.put(type, new ApplicationApplicableDto("application.messages.noCurriculum"));
+                } else if (ApplicationType.AVALDUS_LIIK_AKAD.name().equals(type)) {
                     if (!isActive) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotActive"));
                     } else if (!StudentUtil.isNominalStudy(student)) {

@@ -49,6 +49,12 @@ public class StudentForm extends VersionedCommand {
     @Valid
     private OisFileCommand photo;
     private Boolean deleteCurrentPhoto;
+    private String job;
+    private String jobOccupation;
+    private String otherContact;
+    private Boolean isAcadStudyAllowed;
+    private String representativeOtherContact;
+    private List<StudentLanguageCommand> studentLanguages;
 
     public StudentPersonForm getPerson() {
         return person;
@@ -304,5 +310,53 @@ public class StudentForm extends VersionedCommand {
 
     public void setIsGuestStudent(Boolean isGuestStudent) {
         this.isGuestStudent = isGuestStudent;
+    }
+
+    public String getJob() {
+        return job;
+    }
+
+    public void setJob(String job) {
+        this.job = job;
+    }
+
+    public String getJobOccupation() {
+        return jobOccupation;
+    }
+
+    public void setJobOccupation(String jobOccupation) {
+        this.jobOccupation = jobOccupation;
+    }
+
+    public String getOtherContact() {
+        return otherContact;
+    }
+
+    public void setOtherContact(String otherContact) {
+        this.otherContact = otherContact;
+    }
+
+    public Boolean getIsAcadStudyAllowed() {
+        return isAcadStudyAllowed;
+    }
+
+    public void setIsAcadStudyAllowed(Boolean isAcadStudyAllowed) {
+        this.isAcadStudyAllowed = isAcadStudyAllowed;
+    }
+
+    public String getRepresentativeOtherContact() {
+        return representativeOtherContact;
+    }
+
+    public void setRepresentativeOtherContact(String representativeOtherContact) {
+        this.representativeOtherContact = representativeOtherContact;
+    }
+
+    public List<StudentLanguageCommand> getStudentLanguages() {
+        return studentLanguages;
+    }
+
+    public void setStudentLanguages(List<StudentLanguageCommand> studentLanguages) {
+        this.studentLanguages = studentLanguages;
     }
 }

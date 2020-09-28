@@ -162,6 +162,18 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPETOOLIIK]
       }
     })
+    .when('/school/gradingSchema', {
+      templateUrl: 'school/school.grading.schema.html',
+      controller: 'SchoolGradingSchemaController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_HINDAMISSYSTEEM]
+      }
+    })
     .when('/school/finaldocsigners', {
       templateUrl: 'school/final.doc.signer.search.html',
       controller: 'SimpleListController',

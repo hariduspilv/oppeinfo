@@ -10,6 +10,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -82,7 +85,7 @@ public class TimetableGenerationService {
             + "END:VTIMEZONE\r\n";
     private static final String EVENT_START = "BEGIN:VEVENT\r\n";
     private static final String EVENT_END = "END:VEVENT\r\n";
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'");
 
     private static final EnumMap<Day, Function<LessonTimeDto, Boolean>> DAY_MAPPING = new EnumMap<>(Day.class);
     static {
@@ -127,7 +130,7 @@ public class TimetableGenerationService {
         return new TimetableCalendarDto(fileName, iCalContent);
     }
 
-    private static String getICalContent(List<TimetableEventSearchDto> events, Language lang) {
+    public String getICalContent(List<TimetableEventSearchDto> events, Language lang) {
         String calEvents = getICalEvents(events, lang);
         return ICAL_BEGIN + TIMEZONE + calEvents + ICAL_END;
     }
@@ -141,7 +144,8 @@ public class TimetableGenerationService {
     }
 
     private static String getICalEvent(TimetableEventSearchDto event, Language lang) {
-        String uid = "UID:" + getEventUID(event.getId()) + "\r\n";
+        String uid = "UID:" + event.getId().toString() + "@hois" + "\r\n";
+        String dtStamp = "DTSTAMP:" + getEventTime(event.getChanged()) + "\r\n";
         String dtStart = "DTSTART:" + getEventTime(event.getDate(), event.getTimeStart()) + "\r\n";
         String dtEnd = "DTEND:" + getEventTime(event.getDate(), event.getTimeEnd()) + "\r\n";
         String eventName = getEventName(event, lang);
@@ -149,19 +153,16 @@ public class TimetableGenerationService {
         String description = "DESCRIPTION:" + getEventDescription(event, lang) + "\r\n";
         String location = "LOCATION:" + getEventLocation(event.getRooms(), lang) + "\r\n";
 
-        return EVENT_START + uid + dtStart + dtEnd + summary + description + location + EVENT_END;
-    }
-
-    private static String getEventUID(Long eventId) {
-        LocalDateTime currentTime = LocalDateTime.now();
-        String timeString = currentTime.format(FORMATTER);
-
-        return eventId.toString() + ";" + timeString + "@hois";
+        return EVENT_START + uid + dtStamp + dtStart + dtEnd + summary + description + location + EVENT_END;
     }
 
     private static String getEventTime(LocalDate date, LocalTime time) {
         LocalDateTime eventTime = LocalDateTime.of(date, time);
-        return eventTime.format(FORMATTER);
+        return getEventTime(eventTime);
+    }
+
+    private static String getEventTime(LocalDateTime eventTime) {
+        return ZonedDateTime.of(eventTime, ZoneId.systemDefault()).withZoneSameInstant(ZoneOffset.UTC).format(FORMATTER);
     }
 
     private static String getEventName(TimetableEventSearchDto event, Language lang) {

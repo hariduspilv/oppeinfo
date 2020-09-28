@@ -42,10 +42,13 @@ import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.domain.student.StudentSpecialNeed;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.FinSpecific;
 import ee.hitsa.ois.enums.FinalThesisStatus;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.ScholarshipType;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.StudyForm;
+import ee.hitsa.ois.enums.StudyLanguage;
 import ee.hitsa.ois.enums.StudyLoad;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.service.StudentResultHigherService;
@@ -95,6 +98,9 @@ public class EhisDirectiveStudentService extends EhisService {
         Long studentId = EntityUtil.getNullableId(job.getStudent());
 
         for (DirectiveStudent directiveStudent : directive.getStudents()) {
+            if (!DirectiveType.KASKKIRI_LOPET.equals(directiveType) && directiveStudent.getStudent() != null && StudentUtil.isExternal(directiveStudent.getStudent())) {
+                continue;
+            }
             if(Boolean.TRUE.equals(directiveStudent.getCanceled()) || (studentId != null && !studentId.equals(EntityUtil.getId(directiveStudent.getStudent())))) {
                 continue;
             }
@@ -139,7 +145,7 @@ public class EhisDirectiveStudentService extends EhisService {
                     break;
                 case KASKKIRI_IMMAT:
                 case KASKKIRI_IMMATV:
-                    admissionMatriculation(directiveStudent);
+                    admissionMatriculation(directiveStudent, null, null, null);
                     break;
                 case KASKKIRI_VALIS:
                     if (!ClassifierUtil.COUNTRY_ESTONIA.equals(EntityUtil.getNullableCode(directiveStudent.getCountry()))) {
@@ -597,7 +603,7 @@ public class EhisDirectiveStudentService extends EhisService {
         makeRequest(directive, khlOppeasutusList);
     }
 
-    private void admissionMatriculation(DirectiveStudent directiveStudent) {
+    void admissionMatriculation(DirectiveStudent directiveStudent, StudyForm studyform, FinSpecific fin, StudyLanguage language) {
         Student student = directiveStudent.getStudent();
         Directive directive = directiveStudent.getDirective();
 
@@ -609,14 +615,17 @@ public class EhisDirectiveStudentService extends EhisService {
         KhlKorgharidusLisa khlKorgharidusLisa = new KhlKorgharidusLisa();
 
         khlKorgharidusLisa.setOppimaAsumKp(date(student.getStudyStart()));
-        Short course = student.getStudentGroup().getCourse();
+        Short course = null;
+        if (student.getStudentGroup() != null) {
+            course = student.getStudentGroup().getCourse();
+        }
         khlKorgharidusLisa.setKursus(course != null ? BigInteger.valueOf(course.longValue()) : null);
         khlKorgharidusLisa.setOppekava(requiredCurriculumCode(student));
-        khlKorgharidusLisa.setKlOppekeel(ehisValue(student.getLanguage()));
-        khlKorgharidusLisa.setKlOppevorm(ehisValue(student.getStudyForm()));
+        khlKorgharidusLisa.setKlOppekeel(ehisValue(student.getLanguage() != null ? student.getLanguage() : (language != null ? em.getReference(Classifier.class, language.name()) : null)));
+        khlKorgharidusLisa.setKlOppevorm(ehisValue(student.getStudyForm() != null ? student.getStudyForm() : (studyform != null ? em.getReference(Classifier.class, studyform.name()) : null)));
         Classifier studyLoad = student.getStudyLoad() == null ? em.getReference(Classifier.class, StudyLoad.OPPEKOORMUS_MTA.name()) : student.getStudyLoad();
         khlKorgharidusLisa.setKlOppekoormus(ehisValue(studyLoad));
-        khlKorgharidusLisa.setKlRahastAllikas(ehisValue(student.getFinSpecific()));
+        khlKorgharidusLisa.setKlRahastAllikas(ehisValue(student.getFinSpecific() != null ? student.getFinSpecific() : (fin != null ? em.getReference(Classifier.class, fin.name()) : null)));
         khlKorgharidusLisa.setKlEelnevHaridus(ehisValue(student.getPreviousStudyLevel()));
         khlKorgharidusLisa.setKlYhiselamu(ehisValue(student.getDormitory()));
 

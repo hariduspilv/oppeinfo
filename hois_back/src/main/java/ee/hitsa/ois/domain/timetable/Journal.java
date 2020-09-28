@@ -46,6 +46,9 @@ public class Journal extends BaseEntityWithId {
     private Boolean capacityDiff;
     private Boolean addStudents;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private JournalSub journalSub;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
     private List<JournalTeacher> journalTeachers;
@@ -55,8 +58,7 @@ public class Journal extends BaseEntityWithId {
     private List<JournalRoom> journalRooms;
 
     // cannot delete journal when there are students
-    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, orphanRemoval = true)
-    @JoinColumn(name = "journal_id", nullable = false, updatable = false)
+    @OneToMany(mappedBy = "journal", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, orphanRemoval = true)
     private Set<JournalStudent> journalStudents = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -179,6 +181,14 @@ public class Journal extends BaseEntityWithId {
 
     public void setCapacityDiff(Boolean capacityDiff) {
         this.capacityDiff = capacityDiff;
+    }
+
+    public JournalSub getJournalSub() {
+        return journalSub;
+    }
+
+    public void setJournalSub(JournalSub journalSub) {
+        this.journalSub = journalSub;
     }
 
     public Boolean getAddStudents() {

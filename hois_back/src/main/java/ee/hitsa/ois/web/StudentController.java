@@ -19,7 +19,9 @@ import javax.validation.Valid;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.student.StudentCurriculumCompletionHigherModule;
 import ee.hitsa.ois.service.fotobox.FotoBoxService;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
+import ee.hitsa.ois.web.commandobject.StudentCommand;
 import ee.hitsa.ois.web.dto.student.StudentHigherProgressDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -27,6 +29,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.NullHandling;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,6 +44,7 @@ import ee.hitsa.ois.concurrent.AsyncMemoryManager;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentSupportService;
+import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
@@ -66,6 +70,7 @@ import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.ehis.EhisStudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
+import ee.hitsa.ois.web.commandobject.student.StudentAddInfoForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentModuleListChangeForm;
 import ee.hitsa.ois.web.commandobject.student.StudentResultCardForm;
@@ -78,6 +83,7 @@ import ee.hitsa.ois.web.dto.EhisStudentExportRequestDto;
 import ee.hitsa.ois.web.dto.EhisStudentReport;
 import ee.hitsa.ois.web.dto.FutureStatusResponse;
 import ee.hitsa.ois.web.dto.StudentSupportServiceDto;
+import ee.hitsa.ois.web.dto.apelapplication.ApelApplicationSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
 import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
@@ -143,15 +149,15 @@ public class StudentController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public StudentViewDto get(HoisUserDetails user, @WithEntity Student student) {
+    public StudentViewDto get(HoisUserDetails user, @WithEntity Student student, StudentCommand criteria) {
         UserUtil.assertCanViewStudent(user, student);
-        return studentService.getStudentView(user, student);
+        return studentService.getStudentView(user, student, criteria);
     }
 
     @PutMapping("/{id:\\d+}")
     public StudentViewDto save(HoisUserDetails user, @WithVersionedEntity(versionRequestBody = true) Student student, @Valid @RequestBody StudentForm form) {
         UserUtil.throwAccessDeniedIf(!UserUtil.canEditStudent(user, student), "User cannot edit student data");
-        return get(user, studentService.save(user, student, form));
+        return get(user, studentService.save(user, student, form), null);
     }
 
     @GetMapping("/{id:\\d+}/absences")
@@ -205,13 +211,19 @@ public class StudentController {
         int pagesize = 5;
         // TODO correct sorting
         result.put("applications", applications(user, student, new PageRequest(0, pagesize, new Sort(
-                new Sort.Order(Direction.DESC, "inserted")
+                new Sort.Order(Direction.DESC, "submitted")
         ))));
         if(user.isStudent()) {
             result.put("applicationTypesApplicable", applicationService.applicableApplicationTypes(student));
         }
-        result.put("directives", directives(user, student, new PageRequest(0, pagesize, null, "confirm_date, headline")));
-        result.put("practiceContracts", practiceContracts(user, student, new PageRequest(0, pagesize, null, "contract_nr")));
+        result.put("directives", directives(user, student, new PageRequest(0, pagesize, new Sort(
+                new Sort.Order(Direction.DESC, "confirm_date"), 
+                new Sort.Order("headline")))));
+        result.put("practiceContracts", practiceContracts(user, student, new PageRequest(0, pagesize, new Sort(
+                new Sort.Order(Direction.DESC, "confirm_date", NullHandling.NULLS_LAST), 
+                new Sort.Order("contract_nr")))));
+        result.put("apelApplications", apelApplications(user, student, new PageRequest(0, pagesize, new Sort(
+                new Sort.Order(Direction.DESC, "inserted")))));
         Map<String, Object> studentDto = new HashMap<>();
         studentDto.put("isVocational", Boolean.valueOf(StudentUtil.isVocational(student)));
         studentDto.put("status", EntityUtil.getCode(student.getStatus()));
@@ -228,13 +240,25 @@ public class StudentController {
     @GetMapping("/{id:\\d+}/directives")
     public Page<StudentDirectiveDto> directives(HoisUserDetails user, @WithEntity Student student, Pageable pageable) {
         UserUtil.assertCanViewStudentSpecificData(user, student);
-        return studentService.directives(user, student, pageable);
+        return studentService.directives(user, student, pageable, null);
+    }
+    
+    @GetMapping("/{id:\\d+}/akadDirectives")
+    public Page<StudentDirectiveDto> akadDirectives(HoisUserDetails user, @WithEntity Student student, Pageable pageable) {
+        UserUtil.assertCanViewStudent(user, student);
+        return studentService.directives(user, student, pageable, DirectiveType.KASKKIRI_AKAD);
     }
     
     @GetMapping("/{id:\\d+}/practicecontracts")
     public Page<StudentPracticeContractDto> practiceContracts(HoisUserDetails user, @WithEntity Student student, Pageable pageable) {
         UserUtil.assertCanViewStudentSpecificData(user, student);
         return studentService.practiceContracts(user, student, pageable);
+    }
+    
+    @GetMapping("/{id:\\d+}/apelApplications")
+    public Page<ApelApplicationSearchDto> apelApplications(HoisUserDetails user, @WithEntity Student student, Pageable pageable) {
+        UserUtil.assertCanViewStudentSpecificData(user, student);
+        return studentService.apelApplications(user, student, pageable);
     }
 
     @GetMapping("/{id:\\d+}/foreignstudies")
@@ -309,6 +333,7 @@ public class StudentController {
     public EhisStudentReport innoveHistory(HoisUserDetails user, @WithEntity Student student) {
         UserUtil.throwAccessDeniedIf(!UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_TUGITEENUS)
                 || !StudentUtil.canBeEdited(student));
+        ValidationFailedException.throwIf(student.getPerson().getIdcode() == null, "student.supportService.operation.innoveHistory.missingIdcode");
         EhisStudentReport report = new EhisStudentReport();
         report.fill(student, ehisInnoveService.innoveHistory(student));
         return report;
@@ -389,6 +414,12 @@ public class StudentController {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user);
         return studentService.saveSpecialities(user, form);
     }
+    
+    @PostMapping("/{id:\\d+}/addinfo")
+    public StudentViewDto saveAddinfo(HoisUserDetails user, @WithEntity Student student, @RequestBody StudentAddInfoForm form) {
+        UserUtil.assertCanViewStudentAddInfo(user, student);
+        return studentService.saveAddInfo(user, student, form);
+    }
 
     @GetMapping("/{id:\\d+}/studentResultCard")
     public StudentResultCardDto studentResultCard(HoisUserDetails user, @WithEntity Student student) {
@@ -435,7 +466,7 @@ public class StudentController {
     }
 
     @GetMapping("/{id:\\d+}/requestStudentPhoto")
-    public OisFileCommand requestStudentPhoto(HoisUserDetails user, @WithEntity Student student) throws IOException {
+    public OisFileCommand requestStudentPhoto(HoisUserDetails user, @WithEntity Student student) {
         UserUtil.throwAccessDeniedIf(!UserUtil.canRequestStudentFotoBoxPhoto(user, student));
         return fotoBoxService.requestStudentPhoto(user, student);
     }

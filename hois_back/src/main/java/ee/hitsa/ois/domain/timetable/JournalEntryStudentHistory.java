@@ -10,6 +10,7 @@ import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 
 @Entity
 public class JournalEntryStudentHistory extends BaseEntityWithId {
@@ -26,6 +27,11 @@ public class JournalEntryStudentHistory extends BaseEntityWithId {
     private LocalDateTime gradeInserted;
     
     private String gradeInsertedBy;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private GradingSchemaRow gradingSchemaRow;
+
+    private String verbalGrade;
 
     public JournalEntryStudent getJournalEntryStudent() {
         return journalEntryStudent;
@@ -58,5 +64,20 @@ public class JournalEntryStudentHistory extends BaseEntityWithId {
     public void setGradeInsertedBy(String gradeInsertedBy) {
         this.gradeInsertedBy = gradeInsertedBy;
     }
-    
+
+    public GradingSchemaRow getGradingSchemaRow() {
+        return gradingSchemaRow;
+    }
+
+    public void setGradingSchemaRow(GradingSchemaRow gradingSchemaRow) {
+        this.gradingSchemaRow = gradingSchemaRow;
+    }
+
+    public String getVerbalGrade() {
+        return verbalGrade;
+    }
+
+    public void setVerbalGrade(String verbalGrade) {
+        this.verbalGrade = verbalGrade;
+    }
 }

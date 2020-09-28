@@ -63,9 +63,9 @@
         </md-input-container>
       </div>
       <div ng-show="declaration.canBeChanged" layout="row" layout-xs="column">
-        <md-button ng-if="!isGuestStudent || hasCurriculum" class="md-raised" ng-click="openAddCurriculumSubject()">{{'declaration.addCurriculumSubject' | translate}}</md-button>
+        <md-button ng-if="hasCurriculum" class="md-raised" ng-click="openAddCurriculumSubject()">{{'declaration.addCurriculumSubject' | translate}}</md-button>
         <md-button class="md-raised" ng-click="openAddExtraCurriculumSubject()">
-      {{(isGuestStudent && !hasCurriculum ? 'declaration.addSubject' : 'declaration.addExtraCurriculumSubject') | translate}}</md-button>
+      {{(!hasCurriculum ? 'declaration.addSubject' : 'declaration.addExtraCurriculumSubject') | translate}}</md-button>
       </div>
       <div>&nbsp;</div>
 

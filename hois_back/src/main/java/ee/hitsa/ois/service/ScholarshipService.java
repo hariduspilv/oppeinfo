@@ -151,6 +151,8 @@ public class ScholarshipService {
     private ClassifierService classifierService;
     @Autowired
     private SchoolService schoolService;
+    @Autowired
+    private StudentResultHigherService studentResultHigherService;
 
     /**
      * Create scholarship term
@@ -661,7 +663,7 @@ public class ScholarshipService {
         BigDecimal credits = studyResults.stream().filter(r -> HigherAssessment.GRADE_POSITIVE.contains(r.getGrade()))
                 .map(StudyResult::getCredits).reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
         results.setCredits(credits);
-        results.setCurriculumCompletion(getHigherCurriculumCompletion(student, credits));
+        results.setCurriculumCompletion(studentResultHigherService.getConsideredCurriculumCompletion(student, credits));
 
         return results;
     }
@@ -701,24 +703,6 @@ public class ScholarshipService {
             }
         }
         return averages;
-    }
-
-    private BigDecimal getHigherCurriculumCompletion(Student student, BigDecimal collectedCredits) {
-        List<?> data = em.createNativeQuery("select case when jaak_sem > nom_sem then 0 else nom_sem - jaak_sem end * 30 from "
-                + "(select nom_sem, round(extract (day from nominal_study_end - now()) / 30.5 / 6) jaak_sem from "
-                + "(select round(c.study_period/6.0) nom_sem, coalesce(s.nominal_study_end, "
-                + "s.study_start + interval '1 month' * c.study_period - interval '1 day') nominal_study_end "
-                + "from student s "
-                + "join curriculum_version cv on cv.id = s.curriculum_version_id "
-                + "join curriculum c on c.id = cv.curriculum_id "
-                + "where s.id = :studentId) x) y")
-                .setParameter("studentId", EntityUtil.getId(student))
-                .setMaxResults(1).getResultList();
-        BigDecimal expectedCredits = !data.isEmpty() ? resultAsDecimal(data.get(0), 0) : BigDecimal.ZERO;
-        if (BigDecimal.ZERO.compareTo(expectedCredits) != 0) {
-            return collectedCredits.multiply(BigDecimal.valueOf(100)).divide(expectedCredits, 1, RoundingMode.DOWN);
-        }
-        return BigDecimal.valueOf(100);
     }
 
     private Long lastDeclarationPeriod(Student student, Long currentStudyPeriod) {

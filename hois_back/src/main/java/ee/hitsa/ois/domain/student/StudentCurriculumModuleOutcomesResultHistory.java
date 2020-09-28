@@ -2,6 +2,7 @@ package ee.hitsa.ois.domain.student;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -24,6 +25,11 @@ public class StudentCurriculumModuleOutcomesResultHistory extends BaseEntityWith
     private LocalDateTime gradeInserted;
     private String gradeInsertedBy;
     private String addInfo;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private GradingSchemaRow gradingSchemaRow;
+
+    private String verbalGrade;
 
     public StudentCurriculumModuleOutcomesResult getStudentCurriculumModuleOutcomesResult() {
         return studentCurriculumModuleOutcomesResult;
@@ -71,5 +77,21 @@ public class StudentCurriculumModuleOutcomesResultHistory extends BaseEntityWith
 
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+
+    public GradingSchemaRow getGradingSchemaRow() {
+        return gradingSchemaRow;
+    }
+
+    public void setGradingSchemaRow(GradingSchemaRow gradingSchemaRow) {
+        this.gradingSchemaRow = gradingSchemaRow;
+    }
+
+    public String getVerbalGrade() {
+        return verbalGrade;
+    }
+
+    public void setVerbalGrade(String verbalGrade) {
+        this.verbalGrade = verbalGrade;
     }
 }

@@ -154,7 +154,7 @@ public class FotoBoxService {
                 if (newPhotoStudents != null) {
                     for (Student student : newPhotoStudents) {
                         log.info("Updating student with id: " + student.getId());
-                        saveStudentPhoto(student, photoUsercode, output);
+                        saveStudentPhoto(student, entry.getName(), output);
                         result.get(photoUsercode).add(student.getId());
                     }
                 }
@@ -185,14 +185,14 @@ public class FotoBoxService {
                 Base64.getEncoder().encodeToString(response.getBody().getByteArray());
     }
 
-    private void saveStudentPhoto(Student student, String usercode, ByteArrayOutputStream output) {
+    private void saveStudentPhoto(Student student, String filename, ByteArrayOutputStream output) {
         OisFile photo = student.getPhoto();
         if (photo == null) {
             photo = new OisFile();
             student.setPhoto(photo);
         }
         photo.setFtype("image/jpeg");
-        photo.setFname(usercode);
+        photo.setFname(filename);
         photo.setFdata(output.toByteArray());
         EntityUtil.save(photo, em);
         EntityUtil.save(student, em);

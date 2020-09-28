@@ -9,6 +9,7 @@ public class ResultReport {
     private Long studentId;
     private String firstname;
     private String lastname;
+    private String fullname;
     private AutocompleteResult journal;
     private String entryType;
     private String grade;
@@ -86,6 +87,14 @@ public class ResultReport {
 
     public void setIsPracticeJournal(Boolean isPracticeJournal) {
         this.isPracticeJournal = isPracticeJournal;
+    }
+
+    public String getFullname() {
+        return fullname;
+    }
+
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
     }
 
 }

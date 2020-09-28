@@ -194,7 +194,7 @@ public class SaisAdmissionService {
                 continue;
             }
 
-            List<SaisAdmission> saisAdmissions = saisAdmissionRepository.findByCode(admission.getCode());
+            List<SaisAdmission> saisAdmissions = saisAdmissionRepository.findByCodeAndCurriculumVersionCurriculumSchoolId(admission.getCode(), schoolId);//.findByCode(admission.getCode());
             Optional<SaisAdmission> saisAdmissionNotArchived = saisAdmissions.stream().filter(p-> Boolean.FALSE.equals(p.getArchived())).findFirst();
             SaisAdmission saisAdmission = null;
             if (saisAdmissionNotArchived.isPresent()) {
