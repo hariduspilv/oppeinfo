@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.dto.timetable;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResult;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.web.dto.GradeDto;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ public class StudentCurriculumModuleOutcomesResultDto extends StudentCurriculumM
         StudentCurriculumModuleOutcomesResultDto dto = new StudentCurriculumModuleOutcomesResultDto();
         dto.setId(result.getId());
         dto.setStudentId(EntityUtil.getId(result.getStudent()));
-        dto.setGrade(EntityUtil.getNullableCode(result.getGrade()));
+        dto.setGrade(GradeDto.of(result));
         dto.setGradeDate(result.getGradeDate());
         dto.setGradeInserted(result.getGradeInserted());
         dto.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(result.getGradeInsertedBy()));

@@ -6,12 +6,14 @@ import java.util.List;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.web.dto.GradeDto;
 
 public class JournalEntryStudentResultDto {
 
     private Long journalEntryStudentId;
     private Long journalStudentId;
-    private String grade;
+    private GradeDto grade;
+    private String verbalGrade;
     private String addInfo;
     private LocalDateTime inserted;
     private LocalDateTime gradeInserted;
@@ -41,14 +43,22 @@ public class JournalEntryStudentResultDto {
         this.journalStudentId = journalStudentId;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
-    
-    public void setGrade(String grade) {
+
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
-    
+
+    public String getVerbalGrade() {
+        return verbalGrade;
+    }
+
+    public void setVerbalGrade(String verbalGrade) {
+        this.verbalGrade = verbalGrade;
+    }
+
     public String getAddInfo() {
         return addInfo;
     }

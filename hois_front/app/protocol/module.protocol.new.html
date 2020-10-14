@@ -53,7 +53,7 @@
                   <td md-cell>{{row.studentGroup}}</td>
                   <td md-cell>{{row.idcode}}</td>
                   <td md-cell>{{currentLanguageNameField(row.status)}}</td>
-                  <td md-cell>{{journalResultsView(row.journalResults)}}</td>
+                  <td md-cell><span ng-repeat="result in row.journalResults track by $index">{{result | hoisVocationalGrade}}<span ng-if="!$last"> / </span></span></td>
                 </tr>
               </tbody>
             </table>

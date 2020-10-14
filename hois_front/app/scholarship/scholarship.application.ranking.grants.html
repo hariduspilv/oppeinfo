@@ -13,17 +13,11 @@
               show-only-values="formState.allowedStipendTypes" ng-change="resetCurriculum()"></hois-classifier-select>
           </md-input-container>
           <div layout="row" flex="20" flex-xs="100" flex-offset-xs="0" flex-offset="5">
-            <md-input-container flex ng-if="criteria.type !== 'STIPTOETUS_POHI'">
+            <md-input-container flex>
               <label class="textInput">{{'stipend.curriculums' | translate}}</label>
               <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum"
                 criteria="{higher: false, closed: false, teacher: auth.teacher, userId: auth.isLeadingTeacher() ? auth.user : null}"
-                sorted-query="true" multiple></hois-select>
-            </md-input-container>
-            <md-input-container flex ng-if="criteria.type === 'STIPTOETUS_POHI'">
-              <label class="textInput">{{'stipend.curriculum' | translate}}</label>
-              <hois-select flex ng-model="criteria.curriculum" type="curriculum" label="stipend.curriculum"
-                criteria="{higher: false, closed: false, teacher: auth.teacher, userId: auth.isLeadingTeacher() ? auth.user : null}"
-                sorted-query="true" required></hois-select>
+                sorted-query="true" ng-required="criteria.type === 'STIPTOETUS_POHI'" multiple></hois-select>
             </md-input-container>
           </div>
           <md-input-container flex="20" flex-xs="100" flex-offset-xs="0" flex-offset="5">

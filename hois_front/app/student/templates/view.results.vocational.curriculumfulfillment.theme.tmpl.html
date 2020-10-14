@@ -10,7 +10,7 @@
 <td md-cell>{{row.credits}}</td>
 <td md-cell>
   <span ng-class="{badResult: !gradeUtil.isPositive(moduleResultById[module.curriculumModule.id].themeResultById[row.id].grade.code)}">
-    {{moduleResultById[module.curriculumModule.id].themeResultById[row.id].grade.value}}
+    {{moduleResultById[module.curriculumModule.id].themeResultById[row.id].grade | hoisVocationalGrade}}
   </span>
   <span ng-if="row.moduleOutcomes && !moduleResultById[module.curriculumModule.id].themeResultById[row.id].grade">-</span>
 </td>

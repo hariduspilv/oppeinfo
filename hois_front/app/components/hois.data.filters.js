@@ -1,8 +1,19 @@
 'use strict';
 
-angular.module('hitsaOis').filter('hoisHigherGrade', function ($rootScope, HigherGradeUtil) {
+angular.module('hitsaOis').filter('hoisVocationalGrade', function ($rootScope) {
+  return function (grade) {
+    if (grade !== null && angular.isDefined(grade)) {
+      return grade.gradingSchemaRowId ? $rootScope.currentLanguageNameField(grade) : grade.value;
+    }
+    return null;
+  };
+}).filter('hoisHigherGrade', function ($rootScope, HigherGradeUtil) {
   return function (grade, letterGrades) {
     if (grade !== null && angular.isDefined(grade)) {
+      if (grade.gradingSchemaRowId) {
+        return $rootScope.currentLanguageNameField(grade);
+      }
+
       if (HigherGradeUtil.isDistinctive(grade.code)) {
         return letterGrades ? grade.value2 : grade.value;
       }
@@ -16,11 +27,11 @@ angular.module('hitsaOis').filter('hoisHigherGrade', function ($rootScope, Highe
 }).filter('hoisLimitTo', function ($filter) {
   return function (input, limit, conditional) {
     if (angular.isDefined(conditional)) {
-      return input && input.length > limit && conditional ? 
+      return input && input.length > limit && conditional ?
         (angular.isArray(input) ? $filter('limitTo')(input, limit).join(', ') + '...' : $filter('limitTo')(input, limit) + '...') :
         (angular.isArray(input) ? input.join(', ') : input);
     }
-    return input && input.length > limit ? 
+    return input && input.length > limit ?
     (angular.isArray(input) ? $filter('limitTo')(input, limit).join(', ') + '...' : $filter('limitTo')(input, limit) + '...') :
     (angular.isArray(input) ? input.join(', ') : input);
   };

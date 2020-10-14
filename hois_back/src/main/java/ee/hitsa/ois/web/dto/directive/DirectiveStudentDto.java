@@ -357,6 +357,9 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
                 setPersonData(person, dto);
             }
             dto.setApelSchoolId(EntityUtil.getNullableId(directiveStudent.getApelSchool()));
+            if (directiveStudent.getCurriculumVersion() != null) {
+                dto.setCurriculumVersionObject(new CurriculumVersionResult(directiveStudent.getCurriculumVersion()));
+            }
         }
         CurriculumGrade grade = directiveStudent.getCurriculumGrade();
         if (grade != null) {

@@ -113,7 +113,7 @@ public class CertificateStudentResult {
         result.setOccupationModuleId(dto.getCurriculumVersionModuleId());
         result.setCurriculumId(dto.getCurriculum() != null ? dto.getCurriculum().getId() : null);
 
-        Classifier grade = vocationalGrades.get(dto.getGrade());
+        Classifier grade = dto.getGrade() != null ? vocationalGrades.get(dto.getGrade().getCode()) : null;
         result.setGradeName(grade != null ? grade.getNameEt() : null);
         result.setGradeNameEn(grade != null ? grade.getNameEn() : null);
         result.setGradeValue(grade != null ? grade.getValue() : null);

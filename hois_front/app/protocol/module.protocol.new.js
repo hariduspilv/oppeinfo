@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($scope, $route, $location, QueryUtils, DataUtils, Classifier, message, ArrayUtils, sharedProperties) {
+angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($location, $route, $scope, $q, GRADING_SCHEMA_TYPE, ArrayUtils, GradingSchema, Classifier, DataUtils, QueryUtils, message, sharedProperties) {
   $scope.auth = $route.current.locals.auth;
   $scope.formState = {
     selectedStudents: []
@@ -19,7 +19,13 @@ angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($
     $scope.formState.studyYear = sharedProperties.getProperties()['module.protocol.default.fields'].studyYear;
   }
 
-  var clMapper = Classifier.valuemapper({ journalResults: 'KUTSEHINDAMINE', status: 'OPPURSTAATUS' });
+  var clMapper = Classifier.valuemapper({ status: 'OPPURSTAATUS' });
+  var gradeMapper;
+
+  var gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.VOCATIONAL);
+  $q.all(gradingSchema.promises).then(function () {
+    gradeMapper = gradingSchema.gradeMapper(gradingSchema.gradeSelection(), ['journalResults']);
+  });
 
   $scope.$watch('formState.curriculumVersionObject', function () {
     $scope.formState.curriculumVersion = $scope.formState.curriculumVersionObject ? $scope.formState.curriculumVersionObject.id : null;
@@ -42,6 +48,7 @@ angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($
 
     query.$promise.then(function (result) {
       $scope.formState.selectedStudents = [];
+      gradeMapper.objectmapper(result.occupationModuleStudents);
       $scope.tabledata.content = clMapper.objectmapper(result.occupationModuleStudents);
       result.occupationModuleStudents.forEach(function (it) {
         if (it.status.code === 'OPPURSTAATUS_O') {
@@ -52,10 +59,6 @@ angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($
         $scope.formState.teacher = result.teacher;
       }
     });
-  };
-
-  $scope.journalResultsView = function (journalResult) {
-    return journalResult.map(function (it) { return it.value; }).join(' / ');
   };
 
   var ModuleProtocolEndpoint = QueryUtils.endpoint('/moduleProtocols');

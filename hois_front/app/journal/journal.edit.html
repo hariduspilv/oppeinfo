@@ -123,22 +123,21 @@
                   </span>
 
                   <span ng-if="(result.absence.value || result.lessonAbsences.length > 0)
-                    && (result.journalEntryStudentHistories.length > 0 || (result.grade && !journalEntry.quickUpdate))">/&nbsp;</span>
+                    && (result.journalEntryStudentHistories.length > 0 || ((result.grade || result.verbalGrade) && !journalEntry.quickUpdate))">/&nbsp;</span>
 
-                  <span ng-repeat="historyResult in result.journalEntryStudentHistories | orderBy: 'gradeInserted' track by $index">
-                    <span ng-class="{badResult: !gradeUtil.isPositive(historyResult.grade.code)}">{{historyResult.grade.value}}</span>
-                    <span>*</span>
-                    <span ng-if="!journalEntry.quickUpdate || $index !== result.journalEntryStudentHistories.length - 1"> / </span>
-                    <md-tooltip>
-                      {{historyResult.gradeInserted | hoisDate}}, &nbsp; {{historyResult.gradeInsertedBy}}
-                    </md-tooltip>
+                  <span layout="row" layout-align="start center" flex>
+                    <span ng-repeat-start="historyResult in result.journalEntryStudentHistories | orderBy: 'gradeInserted' track by $index">
+                      <hois-journal-result value="historyResult"></hois-journal-result>
+                      <md-tooltip>{{historyResult.gradeInserted | hoisDate}}, &nbsp; {{historyResult.gradeInsertedBy}}</md-tooltip>
+                    </span>
+                    <span>&nbsp;*</span>
+                    <span ng-repeat-end ng-if="!journalEntry.quickUpdate || $index !== result.journalEntryStudentHistories.length - 1">&nbsp;/&nbsp;</span>
                   </span>
 
                   <span ng-if="!journalEntry.quickUpdate">
-                    <span ng-class="{journalFinalResult: journalEntry.entryType.code === 'SISSEKANNE_L',
-                                    badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
-                    <span ng-if="!result.grade && result.journalEntryStudentHistories.length > 0"> - </span>
-                    <md-tooltip ng-if="result.grade.value" class="tooltip-multiline">
+                    <hois-journal-result value="result" final-result="journalEntry.entryType.code === 'SISSEKANNE_L'"></hois-journal-result>
+                    <span ng-if="!result.grade && !result.verbalGrade && result.journalEntryStudentHistories.length > 0"> - </span>
+                    <md-tooltip ng-if="result.grade.code" class="tooltip-multiline">
                       {{result.gradeInserted | hoisDate}}, &nbsp; {{result.gradeInsertedBy}}
                       <span ng-if="result.addInfo">,&nbsp;</span> {{result.addInfo}}
                     </md-tooltip>
@@ -146,15 +145,21 @@
                 </div>
                 <div ng-if="journalEntry.quickUpdate" layout="row" layout-align="end center" flex>
                   <md-input-container ng-if="formState.gradeInputAsSelect" class="quickUpdateGrade">
-                    <hois-select ng-model="journalEntry.quickUpdateStudents[row.id].grade" values="grades" show-property="value" value-property="code"
-                      aria-label="grade" ng-change="quickUpdateGradeChanged(journalEntry, row.id)" hide-values="hideInvalid"
-                      ng-disabled="!row.canEdit || (row.apelTransferredFinalResult && journalEntry.entryType.code === 'SISSEKANNE_L')"></hois-select>
+                    <hois-grade-select ng-model="journalEntry.quickUpdateStudents[row.id].grade" values="grades"
+                      aria-label="grade" ng-change="quickUpdateGradeChanged(journalEntry, row.id)"
+                      ng-disabled="!row.canEdit || (row.apelTransferredFinalResult && journalEntry.entryType.code === 'SISSEKANNE_L')"></hois-grade-select>
                   </md-input-container>
-                  <md-input-container ng-if="!formState.gradeInputAsSelect" class="quickUpdateGradeAsInput">
-                    <input ng-model="journalEntry.quickUpdateStudents[row.id].gradeValue" style="width: 75px;" ng-model-options="{ allowInvalid: true}"
-                      ng-change="quickUpdateGradeChanged(journalEntry, row.id)" type="text" ng-pattern="gradeInputRegex" aria-label="grade"
-                      ng-disabled="!row.canEdit || (row.apelTransferredFinalResult && journalEntry.entryType.code === 'SISSEKANNE_L')">
-                  </md-input-container>
+                  <span ng-if="!formState.gradeInputAsSelect">
+                    <md-input-container ng-if="!journalEntry.quickUpdateStudents[row.id].grade.gradingSchemaRowId" class="quickUpdateGradeAsInput">
+                      <input class="gradeAsInput" ng-model="journalEntry.quickUpdateStudents[row.id].gradeValue" ng-model-options="{ allowInvalid: true}"
+                        ng-change="quickUpdateGradeChanged(journalEntry, row.id)" type="text" ng-pattern="gradeInputRegex" aria-label="grade"
+                        ng-disabled="!row.canEdit || (row.apelTransferredFinalResult && journalEntry.entryType.code === 'SISSEKANNE_L')">
+                    </md-input-container>
+                    <md-input-container ng-if="journalEntry.quickUpdateStudents[row.id].grade.gradingSchemaRowId" class="quickUpdateGradeAsInput">
+                      <input class="gradeAsInput" value="{{journalEntry.quickUpdateStudents[row.id].grade | hoisVocationalGrade}}" disabled>
+                    </md-input-container>
+                  </span>
+                  <hois-journal-verbal-result ng-if="journalEntry.quickUpdateStudents[row.id].verbalGrade" value="journalEntry.quickUpdateStudents[row.id]"></hois-journal-verbal-result>
                   <md-input-container class="quickUpdateAddInfo">
                     <input type="text" ng-model="journalEntry.quickUpdateStudents[row.id].addInfo" md-maxlength="1000"
                       aria-label="additional info" ng-change="quickUpdateAddInfoChanged(journalEntry, row.id)"
@@ -167,7 +172,7 @@
                 <div ng-if="journalEntry.studentOutcomeResults[row.studentId]" layout="row" layout-align="start center">
                   <div ng-repeat="result in journalEntry.studentOutcomeResults[row.studentId].history | orderBy: 'gradeInserted'">
                     <span>
-                      <span ng-class="{badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
+                      <span ng-class="{badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade | hoisVocationalGrade}}</span>
                       <span>*</span>
                       <md-tooltip class="tooltip-multiline">
                         <span>{{result.gradeDate | hoisDate}}, {{result.gradeInsertedBy}}</span>
@@ -180,7 +185,7 @@
                     <span ng-if="!journalEntry.studentOutcomeResults[row.studentId].grade">-</span>
                     <span ng-if="journalEntry.studentOutcomeResults[row.studentId].grade">
                       <span ng-class="{badResult: !gradeUtil.isPositive(journalEntry.studentOutcomeResults[row.studentId].grade.code)}">
-                        {{journalEntry.studentOutcomeResults[row.studentId].grade.value}}
+                        {{journalEntry.studentOutcomeResults[row.studentId].grade | hoisVocationalGrade}}
                       </span>
                       <md-tooltip class="tooltip-multiline">
                         {{journalEntry.studentOutcomeResults[row.studentId].gradeDate | hoisDate}}, {{journalEntry.studentOutcomeResults[row.studentId].gradeInsertedBy}}

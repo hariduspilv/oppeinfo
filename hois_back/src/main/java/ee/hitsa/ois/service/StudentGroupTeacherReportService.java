@@ -25,6 +25,7 @@ import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import ee.hitsa.ois.enums.ProtocolStatus;
+import ee.hitsa.ois.web.dto.GradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
 import ee.hitsa.ois.web.dto.report.studentgroupteacher.StudentProgressDto;
 import ee.hitsa.ois.web.dto.student.StudentVocationalStudyProgrammeDto;
@@ -710,10 +711,10 @@ public class StudentGroupTeacherReportService {
                             .map(StudentResultColumnDto::getJournalResult)
                             .flatMap(jr -> jr.getResults().stream())
                             .filter(r -> r.getGrade() != null)
-                            .map(StudentJournalEntryResultDto::getGrade);
+                            .map(r -> r.getGrade().getCode());
                     Stream<String> outcomeGrades = student.getResultColumns().stream()
                             .filter(c -> c.getOutcomeResult() != null && c.getOutcomeResult().getGrade() != null)
-                            .map(r -> r.getOutcomeResult().getGrade());
+                            .map(r -> r.getOutcomeResult().getGrade().getCode());
                     double average = Stream.concat(journalGrades, outcomeGrades)
                             .mapToInt(OccupationalGrade::getGradeMark)
                             .filter(m -> m != 0)
@@ -973,7 +974,7 @@ public class StudentGroupTeacherReportService {
 
             List<?> grades = qb.select(
                     "distinct s.id as student_id, j.id, j.name_et, jes.id as student_entry_id, je.entry_type_code, je.entry_date, "
-                            + "jes.grade_code, jes.grade_inserted, "
+                            + "jes.grade_code, jes.grading_schema_row_id, jes.verbal_grade, jes.grade_inserted, "
                             + "coalesce(jes.grade_inserted_by, jes.changed_by, jes.inserted_by) as grade_inserted_by, "
                             + "jes.is_remark, jes.add_info",
                     em).getResultList();
@@ -987,12 +988,13 @@ public class StudentGroupTeacherReportService {
                             result.setStudentEntryId(resultAsLong(r, 3));
                             result.setEntryType(resultAsString(r, 4));
                             result.setEntryDate(resultAsLocalDate(r, 5));
-                            result.setGrade(resultAsString(r, 6));
-                            result.setGradeInserted(resultAsLocalDate(r, 7));
+                            result.setGrade(new GradeDto(resultAsString(r, 6), resultAsLong(r, 7)));
+                            result.setVerbalGrade(resultAsString(r, 8));
+                            result.setGradeInserted(resultAsLocalDate(r, 9));
                             result.setGradeInsertedBy(
-                                    PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 8)));
-                            if (Boolean.TRUE.equals(resultAsBoolean(r, 9))) {
-                                result.setAddInfo(resultAsString(r, 10));
+                                    PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 10)));
+                            if (Boolean.TRUE.equals(resultAsBoolean(r, 11))) {
+                                result.setAddInfo(resultAsString(r, 12));
                             }
                             return result;
                         }, Collectors.toList())));
@@ -1149,10 +1151,8 @@ public class StudentGroupTeacherReportService {
 
         qb.filter("pj.grade_code is not null");
         qb.sort("pj.grade_inserted desc nulls last");
-        List<?> data = qb
-                .select("pj.student_id, cvo.curriculum_module_id, cvot.id theme_id, pj.grade_code, pj.grade_inserted",
-                        em)
-                .getResultList();
+        List<?> data = qb.select("pj.student_id, cvo.curriculum_module_id, cvot.id theme_id,"
+                + " pj.grade_code, pj.grading_schema_row_id, pj.grade_inserted", em).getResultList();
 
         Map<Long, List<StudentResultDto>> studentPracticeModuleResults = new HashMap<>();
         if (!data.isEmpty()) {
@@ -1161,8 +1161,8 @@ public class StudentGroupTeacherReportService {
                         StudentResultDto result = new StudentResultDto();
                         result.setModuleId(resultAsLong(r, 1));
                         result.setModuleThemeId(resultAsLong(r, 2));
-                        result.setGrade(resultAsString(r, 3));
-                        result.setGradeInserted(resultAsLocalDate(r, 4));
+                        result.setGrade(new GradeDto(resultAsString(r, 3), resultAsLong(r, 4)));
+                        result.setGradeInserted(resultAsLocalDate(r, 5));
                         return result;
                     }, Collectors.toList())));
         }
@@ -1222,7 +1222,7 @@ public class StudentGroupTeacherReportService {
 
         qb.sort("scmor.grade_date desc");
         List<?> data = qb.select("scmor.student_id, cmo.curriculum_module_id, scmor.curriculum_module_outcomes_id,"
-                + " scmor.grade_code, scmor.grade_date, scmor.grade_inserted_by", em).getResultList();
+                + " scmor.grade_code, scmor.grading_schema_row_id, scmor.grade_date, scmor.grade_inserted_by", em).getResultList();
 
         Map<Long, List<StudentResultDto>> studentOutcomeResults = new HashMap<>();
         if (!data.isEmpty()) {
@@ -1231,9 +1231,9 @@ public class StudentGroupTeacherReportService {
                         StudentResultDto result = new StudentResultDto();
                         result.setModuleId(resultAsLong(r, 1));
                         result.setOutcomeId(resultAsLong(r, 2));
-                        result.setGrade(resultAsString(r, 3));
-                        result.setGradeInserted(resultAsLocalDate(r, 4));
-                        result.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 5)));
+                        result.setGrade(new GradeDto(resultAsString(r, 3), resultAsLong(r, 4)));
+                        result.setGradeInserted(resultAsLocalDate(r, 5));
+                        result.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 6)));
                         return result;
                     }, Collectors.toList())));
         }
@@ -1285,7 +1285,7 @@ public class StudentGroupTeacherReportService {
 
         qb.sort("svr.grade_date desc nulls last");
         List<?> data = qb.select("s.id as student_id, cvo.curriculum_module_id as module_id,"
-                + " svr.grade_code, svr.grade_date", em).getResultList();
+                + " svr.grade_code, svr.grading_schema_row_id, svr.grade_date", em).getResultList();
 
         Map<Long, List<StudentResultDto>> studentModuleResults = new HashMap<>();
         if (!data.isEmpty()) {
@@ -1293,8 +1293,8 @@ public class StudentGroupTeacherReportService {
                     .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
                         StudentResultDto result = new StudentResultDto();
                         result.setModuleId(resultAsLong(r, 1));
-                        result.setGrade(resultAsString(r, 2));
-                        result.setGradeInserted(resultAsLocalDate(r, 3));
+                        result.setGrade(new GradeDto(resultAsString(r, 2), resultAsLong(r, 3)));
+                        result.setGradeInserted(resultAsLocalDate(r, 4));
                         return result;
                     }, Collectors.toList())));
         }

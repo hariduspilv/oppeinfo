@@ -19,8 +19,8 @@ public class JournalEntryStudentHistory extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false, insertable = false)
     private JournalEntryStudent journalEntryStudent;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
     private Classifier grade;
 
     @NotNull
@@ -29,6 +29,7 @@ public class JournalEntryStudentHistory extends BaseEntityWithId {
     private String gradeInsertedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
     private GradingSchemaRow gradingSchemaRow;
 
     private String verbalGrade;

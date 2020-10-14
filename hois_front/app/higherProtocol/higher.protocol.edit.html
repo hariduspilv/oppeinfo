@@ -152,9 +152,8 @@
                   </span>
                 </td>
                 <td md-cell>
-                  <hois-select class="protocolGradeSelect" ng-model="student.grade" ng-change="gradeChanged(student)" values="grades"
-                    value-property="code" show-function-value="gradeSelectShownValue" hide-values="hideInvalid" sorted-query="true"
-                    aria-label="{{'higherProtocol.finalGrade' | translate}}" ng-disabled="!formState.canEditProtocol || !student.canChangeGrade"></hois-select>
+                  <hois-grade-select class="protocolGradeSelect" aria-label="{{'higherProtocol.finalGrade' | translate}}" ng-model="student.grade" values="grades"
+                    ng-change="gradeChanged(student)" ng-disabled="!formState.canEditProtocol || !student.canChangeGrade"></hois-grade-select>
                 </td>
                 <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
                   <md-input-container ng-if="student.gradeHasChanged">

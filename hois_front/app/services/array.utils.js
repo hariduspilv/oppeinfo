@@ -66,7 +66,7 @@ angular.module('hitsaOis')
        */
       partSplit: function(inputArray, chunkSize) {
         return inputArray.reduce(function(resultArray, item, index) {
-          const chunkIndex = Math.floor(index/chunkSize)
+          var chunkIndex = Math.floor(index/chunkSize);
 
           if(!resultArray[chunkIndex]) {
             resultArray[chunkIndex] = []; // start a new chunk

@@ -3,14 +3,10 @@ package ee.hitsa.ois.web.dto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import ee.hitsa.ois.enums.MainClassCode;
-import ee.hitsa.ois.validation.ClassifierRestriction;
-
 public class ModuleProtocolOutcomeResultDto {
 
     private Long curriculumModuleOutcomeId;
-    @ClassifierRestriction(MainClassCode.KUTSEHINDAMINE)
-    private String grade;
+    private GradeDto grade;
     private LocalDate gradeDate;
     private LocalDateTime gradeInserted;
 
@@ -18,10 +14,10 @@ public class ModuleProtocolOutcomeResultDto {
         
     }
 
-    public ModuleProtocolOutcomeResultDto(Long curriculumModuleOutcomeId, String grade, LocalDate gradeDate,
-            LocalDateTime gradeInserted) {
+    public ModuleProtocolOutcomeResultDto(Long curriculumModuleOutcomeId, String gradeCode, Long gradingSchemaRowId,
+            LocalDate gradeDate, LocalDateTime gradeInserted) {
         this.curriculumModuleOutcomeId = curriculumModuleOutcomeId;
-        this.grade = grade;
+        this.grade = new GradeDto(gradeCode, gradingSchemaRowId);
         this.gradeDate = gradeDate;
         this.gradeInserted = gradeInserted;
     }
@@ -33,12 +29,12 @@ public class ModuleProtocolOutcomeResultDto {
     public void setCurriculumModuleOutcomeId(Long curriculumModuleOutcomeId) {
         this.curriculumModuleOutcomeId = curriculumModuleOutcomeId;
     }
-    
-    public String getGrade() {
+
+    public GradeDto getGrade() {
         return grade;
     }
 
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
 

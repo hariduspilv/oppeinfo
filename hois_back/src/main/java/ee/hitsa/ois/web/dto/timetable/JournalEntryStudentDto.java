@@ -7,6 +7,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEntryStudentForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEntryStudentLessonAbsenceForm;
+import ee.hitsa.ois.web.dto.GradeDto;
 
 public class JournalEntryStudentDto extends JournalEntryStudentForm {
 
@@ -16,7 +17,8 @@ public class JournalEntryStudentDto extends JournalEntryStudentForm {
 
     public static JournalEntryStudentDto of(JournalEntryStudent journalEntryStudent) {
         JournalEntryStudentDto dto = EntityUtil.bindToDto(journalEntryStudent, new JournalEntryStudentDto(),
-                "journalEntryStudentHistories");
+                "grade", "journalEntryStudentHistories");
+        dto.setGrade(GradeDto.of(journalEntryStudent));
         dto.setLessonAbsences(StreamUtil.toMap(r -> r.getLessonNr(), r -> JournalEntryStudentLessonAbsenceForm.of(r),
                 journalEntryStudent.getJournalEntryStudentLessonAbsences()));
         dto.journalEntryStudentHistories = StreamUtil.toMappedList(JournalEntryStudentHistoryDto::new,

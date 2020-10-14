@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('ProtocolUtils', function ($mdDialog, $timeout, $rootScope, $window, QueryUtils, config, dialogService, message, resourceErrorHandler) {
+  .factory('ProtocolUtils', function ($mdDialog, $rootScope, $timeout, $window, DataUtils, QueryUtils, config, dialogService, message, resourceErrorHandler) {
     var protocolUtils = {};
     var CONFIRM_LOGIN_TYPES = ['LOGIN_TYPE_I', 'LOGIN_TYPE_M', 'LOGIN_TYPE_T', 'LOGIN_TYPE_H'];
 
@@ -134,7 +134,7 @@ angular.module('hitsaOis')
 
       var allGraded = true;
       for (var i = 0; i < protocol.protocolStudents.length; i++) {
-        if (!angular.isString(protocol.protocolStudents[i].grade) || protocol.protocolStudents[i].grade.trim().length === 0) {
+        if (!angular.isObject(protocol.protocolStudents[i].grade)) {
           allGraded = false;
           break;
         }
@@ -163,6 +163,24 @@ angular.module('hitsaOis')
       }
       return allHaveAddInfo;
     }
+
+    protocolUtils.gradeChanged = function (form, savedStudents, row) {
+      if (row) {
+        var savedResult = savedStudents.find(function (student) { return student.id === row.id; });
+        if (!DataUtils.isSameGrade(savedResult.grade, row.grade)) {
+          form.$setSubmitted();
+          row.gradeHasChanged = true;
+        } else {
+          row.gradeHasChanged = false;
+
+          if (!savedResult.addInfo) {
+            row.addInfo = null;
+          } else {
+            row.addInfo = savedResult.addInfo;
+          }
+        }
+      }
+    };
 
     return protocolUtils;
   });

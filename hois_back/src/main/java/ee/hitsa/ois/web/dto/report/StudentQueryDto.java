@@ -73,6 +73,13 @@ public class StudentQueryDto extends SchoolQueryDto {
     private List<String> studentStatuses;
     private Boolean studentStatusesShow;
     
+    private String regNr;
+    private Boolean regNrShow;
+    
+    private LocalDate nominalStudyEndFrom;
+    private LocalDate nominalStudyEndThru;
+    private Boolean nominalStudyEndShow;
+    
     private List<String> studyForm;
     private Boolean studyFormShow;
     
@@ -107,6 +114,11 @@ public class StudentQueryDto extends SchoolQueryDto {
     private Boolean curriculumPercentageShow;
     private BigDecimal curriculumPercentageFrom;
     private BigDecimal curriculumPercentageThru;
+    
+    private List<String> foreignLanguage;
+    private Boolean foreignLanguageShow;
+    
+    
     // Contact data
     private String address;
     private Boolean addressShow;
@@ -201,6 +213,12 @@ public class StudentQueryDto extends SchoolQueryDto {
     private Boolean completedSchoolYearShow;
     private String completedSchoolYearSign;
     private Long completedSchoolYear;
+    
+    private List<String> previousStudyLevel;
+    private Boolean previousStudyLevelShow;
+    
+    private List<String> dormitory;
+    private Boolean dormitoryShow;
     
     public String getFirstname() {
         return firstname;
@@ -1053,6 +1071,72 @@ public class StudentQueryDto extends SchoolQueryDto {
     }
     public void setSpecialityHigher(List<AutocompleteResult> specialityHigher) {
         this.specialityHigher = specialityHigher;
+    }
+    public String getRegNr() {
+        return regNr;
+    }
+    public void setRegNr(String regNr) {
+        this.regNr = regNr;
+    }
+    public Boolean getRegNrShow() {
+        return regNrShow;
+    }
+    public void setRegNrShow(Boolean regNrShow) {
+        this.regNrShow = regNrShow;
+    }
+    public LocalDate getNominalStudyEndFrom() {
+        return nominalStudyEndFrom;
+    }
+    public void setNominalStudyEndFrom(LocalDate nominalStudyEndFrom) {
+        this.nominalStudyEndFrom = nominalStudyEndFrom;
+    }
+    public LocalDate getNominalStudyEndThru() {
+        return nominalStudyEndThru;
+    }
+    public void setNominalStudyEndThru(LocalDate nominalStudyEndThru) {
+        this.nominalStudyEndThru = nominalStudyEndThru;
+    }
+    public Boolean getNominalStudyEndShow() {
+        return nominalStudyEndShow;
+    }
+    public void setNominalStudyEndShow(Boolean nominalStudyEndShow) {
+        this.nominalStudyEndShow = nominalStudyEndShow;
+    }
+    public List<String> getForeignLanguage() {
+        return foreignLanguage;
+    }
+    public void setForeignLanguage(List<String> foreignLanguage) {
+        this.foreignLanguage = foreignLanguage;
+    }
+    public Boolean getForeignLanguageShow() {
+        return foreignLanguageShow;
+    }
+    public void setForeignLanguageShow(Boolean foreignLanguageShow) {
+        this.foreignLanguageShow = foreignLanguageShow;
+    }
+    public List<String> getPreviousStudyLevel() {
+        return previousStudyLevel;
+    }
+    public void setPreviousStudyLevel(List<String> previousStudyLevel) {
+        this.previousStudyLevel = previousStudyLevel;
+    }
+    public Boolean getPreviousStudyLevelShow() {
+        return previousStudyLevelShow;
+    }
+    public void setPreviousStudyLevelShow(Boolean previousStudyLevelShow) {
+        this.previousStudyLevelShow = previousStudyLevelShow;
+    }
+    public List<String> getDormitory() {
+        return dormitory;
+    }
+    public void setDormitory(List<String> dormitory) {
+        this.dormitory = dormitory;
+    }
+    public Boolean getDormitoryShow() {
+        return dormitoryShow;
+    }
+    public void setDormitoryShow(Boolean dormitoryShow) {
+        this.dormitoryShow = dormitoryShow;
     }
 
 }

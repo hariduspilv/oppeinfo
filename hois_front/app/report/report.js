@@ -212,9 +212,10 @@ function ($q, $scope, $route, Classifier, QueryUtils, classifierAutocomplete, me
     directiveTypes: 'KASKKIRI', stiptoetlReason: 'KASKKIRI_STIPTOETL_POHJUS', fin: 'FINTAPSUSTUS', 
     exmatReason: 'EKSMAT_POHJUS', akadReason: 'AKADPUHKUS_POHJUS',
     studentStatuses: 'OPPURSTAATUS', studyForm: 'OPPEVORM', studyLoad: 'OPPEKOORMUS', studyLevel: 'OPPEASTE', 
-    language: 'OPPEKEEL', activeResult: 'KORGHINDAMINE'});
+    language: 'OPPEKEEL', activeResult: 'KORGHINDAMINE', foreignLanguage: 'EHIS_VOORKEEL', previousStudyLevel: 'OPPEASTE', 
+    dormitory: 'YHISELAMU'});
     
-  QueryUtils.createQueryForm($scope, '/reports/students/data', {sort: 'firstname, lastname'}, clMapper.objectmapper);
+  QueryUtils.createQueryForm($scope, '/reports/students/data', {sort: 'firstname, lastname, foreign_language_et'}, clMapper.objectmapper);
 
   function getSavedQueries() {
     $scope.formState.savedQueries = QueryUtils.endpoint('/reports/students/data/query/savedStudentQueries').query({isStudentQuery: true});
@@ -348,16 +349,12 @@ function ($q, $scope, $route, Classifier, QueryUtils, classifierAutocomplete, me
         return "p.lastname || ' ' || p.firstname";
       }
       return "p.firstname || ' ' || p.lastname";
-    } else if (variableName === 'curriculum') {
+    } else if (['curriculum', 'activeResultSubject', 'declaredSubject', 'foreignLanguage'].indexOf(variableName) >= 0) {
       return variableName + ($translate.use() === 'en' ? 'En' : 'Et');
     } else if (variableName === 'studyYearNumber') {
       return "study_year_nr";
     } else if (variableName === 'activeResult') {
       return 'gradeCode';
-    } else if (variableName === 'activeResultSubject') {
-      return variableName + ($translate.use() === 'en' ? 'En' : 'Et');
-    } else if (variableName === 'declaredSubject') {
-      return variableName + ($translate.use() === 'en' ? 'En' : 'Et');
     }
     return variableName;
   }
@@ -626,7 +623,7 @@ function ($q, $scope, $route, QueryUtils, DataUtils, Classifier, message, FormUt
       {label:"SISSEKANNE_M", selected: true}
     ];
     return true;
-  }
+  };
 
   function initFormstate() {
     $scope.formState = {
@@ -680,7 +677,7 @@ function ($q, $scope, $route, QueryUtils, DataUtils, Classifier, message, FormUt
 
   $scope.setToday = function() {
     $scope.criteria.thru = new Date();
-  }
+  };
 
   $scope.preselectFrom = function() {
     $scope.setToday();
@@ -695,7 +692,7 @@ function ($q, $scope, $route, QueryUtils, DataUtils, Classifier, message, FormUt
     } else {
       $scope.criteria.from = null;
     }
-  }
+  };
 
   $scope.clearSortAndTable = function() {
     var savedType = $scope.criteria.queryType;
@@ -760,7 +757,7 @@ function ($q, $scope, $route, QueryUtils, DataUtils, Classifier, message, FormUt
       gradeToFormState();
       ExcelUtils.get($rootScope.excel('reports/students/educationalSuccess.xls', $scope.criteria), 'educationalSuccess', $scope);
     });
-  }
+  };
 
   $scope.loadResults = function() {
     $scope.criteria.perGroup = $scope.formState.perGroup;
@@ -854,7 +851,7 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
         return true;
       }
       return false;
-    })
+    });
   }
 
   /** Load departments and educationLevelOptions when curriculum changes */
@@ -922,7 +919,7 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
         return true;
       }
       return false;
-    })
+    });
   }
 
   function getEducationLevelCriteria() {
@@ -1181,6 +1178,10 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
       });
     });
 
+    $scope.studyYearChanged = function () {
+      $scope.criteria.studyPeriod = null;
+    };
+
     $scope.studyPeriodRows = function(index) {
       var rowcount = 1;
       if(index !== -1) {
@@ -1201,14 +1202,21 @@ function ($route, $scope, Classifier, QueryUtils, $q) {
       return index === 0 || table[index - 1].studyPeriod.id !== table[index].studyPeriod.id;
     };
   }
-]).controller('StudentGroupTeacherController', ['$httpParamSerializer', '$route', '$scope', '$sessionStorage', '$timeout', '$window', 'Classifier', 'DataUtils', 'VocationalGradeUtil', 'QueryUtils', 'config', 'dialogService', 'message',
-function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $window, Classifier, DataUtils, VocationalGradeUtil, QueryUtils, config, dialogService, message) {
+]).controller('StudentGroupTeacherController', ['$httpParamSerializer', '$q', '$route', '$scope', '$sessionStorage', '$timeout', '$window', 'GRADING_SCHEMA_TYPE', 'Classifier', 'DataUtils', 'GradingSchema', 'VocationalGradeUtil', 'QueryUtils', 'config', 'dialogService', 'message',
+function ($httpParamSerializer, $q, $route, $scope, $sessionStorage, $timeout, $window, GRADING_SCHEMA_TYPE, Classifier, DataUtils, GradingSchema, VocationalGradeUtil, QueryUtils, config, dialogService, message) {
   $scope.gradeUtil = VocationalGradeUtil;
   $scope.auth = $route.current.locals.auth;
 
   var baseUrl = '/reports/studentgroupteacher';
-  var resultsMapper = Classifier.valuemapper({grade: 'KUTSEHINDAMINE', entryType: 'SISSEKANNE'});
+  var resultsMapper = Classifier.valuemapper({entryType: 'SISSEKANNE'});
   var absencesMapper = Classifier.valuemapper({absence: 'PUUDUMINE', entryType: 'SISSEKANNE'});
+  var gradeMapper;
+
+  var gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.VOCATIONAL);
+  $q.all(gradingSchema.promises).then(function () {
+    gradeMapper = gradingSchema.gradeMapper(gradingSchema.gradeSelection(), ['grade']);
+  });
+
   $scope.entryTypesOrder = [
     'SISSEKANNE_H',
     'SISSEKANNE_R',
@@ -1406,6 +1414,12 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
       }
     }
 
+    $q.all(resultsMapper.promises.concat(gradingSchema.promises)).then(function () {
+      search();
+    });
+  };
+
+  function search() {
     QueryUtils.loadingWheel($scope, true);
     QueryUtils.endpoint(baseUrl).get($scope.criteria).$promise.then(function (result) {
       $scope.record = result;
@@ -1414,22 +1428,23 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
           if (column.journalResult) {
             if (column.journalResult.results) {
               resultsMapper.objectmapper(column.journalResult.results);
+              gradeMapper.objectmapper(column.journalResult.results);
             }
             if (column.journalResult.absences) {
               absencesMapper.objectmapper(column.journalResult.absences);
             }
           }
           if (column.practiceModuleThemeResult) {
-            resultsMapper.objectmapper(column.practiceModuleThemeResult);
+            gradeMapper.objectmapper(column.practiceModuleThemeResult);
           }
           if (column.practiceModuleResult) {
-            resultsMapper.objectmapper(column.practiceModuleResult);
+            gradeMapper.objectmapper(column.practiceModuleResult);
           }
           if (column.outcomeResult) {
-            resultsMapper.objectmapper(column.outcomeResult);
+            gradeMapper.objectmapper(column.outcomeResult);
           }
           if (column.moduleResult) {
-            resultsMapper.objectmapper(column.moduleResult);
+            gradeMapper.objectmapper(column.moduleResult);
           }
         });
       });
@@ -1442,7 +1457,7 @@ function ($httpParamSerializer, $route, $scope, $sessionStorage, $timeout, $wind
       $scope.toStorage(baseUrl, $scope.criteria);
       $scope.$broadcast('refreshFixedColumns');
     });
-  };
+  }
 
   $scope.clearCriteria = function() {
     $scope.formState.showAllParameters = true;

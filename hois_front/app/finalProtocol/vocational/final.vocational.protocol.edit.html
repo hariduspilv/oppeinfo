@@ -68,8 +68,8 @@
                   <td md-cell>{{row.studentGroup}}</td>
                   <td md-cell ng-if="protocol.isFinalThesis">{{row.theme.nameEt}}</td>
                   <td md-cell>
-                    <hois-select class="protocolGradeSelect" ng-model="row.grade" values="grades" show-property="value" value-property="code"
-                      hide-values="hideInvalid" aria-label="grade" ng-change="gradeChanged(row)" ng-disabled="!formState.canEditProtocol"></hois-select>
+                    <hois-grade-select class="protocolGradeSelect" ng-model="row.grade" values="grades" aria-label="grade"
+                      ng-change="gradeChanged(row)" ng-disabled="!formState.canEditProtocol"></hois-grade-select>
                   </td>
                   <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
                     <md-input-container ng-if="row.gradeHasChanged">

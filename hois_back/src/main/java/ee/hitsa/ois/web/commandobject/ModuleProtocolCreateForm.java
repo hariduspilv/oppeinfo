@@ -5,7 +5,7 @@ import java.util.List;
 public class ModuleProtocolCreateForm {
 
     private ProtocolVdataForm protocolVdata;
-    private List<ModuleProtocolStudentCreateForm> protocolStudents;
+    private List<ProtocolStudentCreateForm> protocolStudents;
 
     public ProtocolVdataForm getProtocolVdata() {
         return protocolVdata;
@@ -15,11 +15,11 @@ public class ModuleProtocolCreateForm {
         this.protocolVdata = protocolVdata;
     }
 
-    public List<ModuleProtocolStudentCreateForm> getProtocolStudents() {
+    public List<ProtocolStudentCreateForm> getProtocolStudents() {
         return protocolStudents;
     }
 
-    public void setProtocolStudents(List<ModuleProtocolStudentCreateForm> protocolStudents) {
+    public void setProtocolStudents(List<ProtocolStudentCreateForm> protocolStudents) {
         this.protocolStudents = protocolStudents;
     }
 

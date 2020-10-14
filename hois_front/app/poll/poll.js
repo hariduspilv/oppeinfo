@@ -687,7 +687,7 @@
             }
             showThemeDialog(dialogService, criteria, dialogScope, formState, oisFileService);
         });
-    };
+    }
 
     function mapItems(itemById, list, repetitiveThemes, journal) {
         list.forEach(function (item) {
@@ -841,7 +841,7 @@
         return [hasErrors, errorThemes];
     }
 
-    angular.module('hitsaOis').controller('PollListController', function ($scope, $route, QueryUtils, Classifier, $q, message) {
+    angular.module('hitsaOis').controller('PollListController', function ($scope, $route, QueryUtils, Classifier, $q) {
         $scope.auth = $route.current.locals.auth;
         var clMapper = Classifier.valuemapper({
             typeCode: 'KYSITLUS',

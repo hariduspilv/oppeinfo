@@ -751,9 +751,11 @@ public class DirectiveService {
             boolean isHigher = directive.getIsHigher().booleanValue();
             Map<Long, DirectiveStudent> studentMapping = StreamUtil.toMap(DirectiveStudent::getId, students);
             Set<Long> fetchedStudentIds = StreamUtil.toMappedSet(DirectiveFormStudent::getStudent, form.getStudents());
-            Set<Long> cumLaude = !fetchedStudentIds.isEmpty() && KASKKIRI_LOPET.equals(directiveType) ?
+            Set<Long> cumLaude = !fetchedStudentIds.isEmpty()
+                    && (KASKKIRI_DUPLIKAAT.equals(directiveType) || KASKKIRI_LOPET.equals(directiveType)) ?
                     studentService.cumLaudes(fetchedStudentIds, isHigher) : Collections.emptySet();
-            Set<Long> studentsWithCertificate = !fetchedStudentIds.isEmpty() && KASKKIRI_LOPET.equals(directiveType) ?
+            Set<Long> studentsWithCertificate = !fetchedStudentIds.isEmpty()
+                    && (KASKKIRI_DUPLIKAAT.equals(directiveType) || KASKKIRI_LOPET.equals(directiveType)) ?
                     occupationCertificates(fetchedStudentIds) : Collections.emptySet();
             Map<Long, DiplomaStudentDto> studentDiplomas = KASKKIRI_DUPLIKAAT.equals(directiveType) ?
                     studentDiplomas(EntityUtil.getId(directive.getSchool()), fetchedStudentIds) : Collections.emptyMap();

@@ -72,6 +72,13 @@ public class StudentDataCommand extends QuerySaveCommand {
     private List<String> studentStatuses;
     private Boolean studentStatusesShow;
     
+    private String regNr;
+    private Boolean regNrShow;
+    
+    private LocalDate nominalStudyEndFrom;
+    private LocalDate nominalStudyEndThru;
+    private Boolean nominalStudyEndShow;
+    
     private List<String> studyForm;
     private Boolean studyFormShow;
     
@@ -102,6 +109,9 @@ public class StudentDataCommand extends QuerySaveCommand {
     
     private List<String> language;
     private Boolean languageShow;
+    
+    private List<String> foreignLanguage;
+    private Boolean foreignLanguageShow;
     
     private Boolean curriculumPercentageShow;
     private BigDecimal curriculumPercentageFrom;
@@ -201,6 +211,12 @@ public class StudentDataCommand extends QuerySaveCommand {
     private String completedSchoolYearSign;
     private Long completedSchoolYear;
     
+    private List<String> previousStudyLevel;
+    private Boolean previousStudyLevelShow;
+    
+    private List<String> dormitory;
+    private Boolean dormitoryShow;
+    
     private String orderField1;
     private String orderField2;
     private String orderField3;
@@ -208,6 +224,231 @@ public class StudentDataCommand extends QuerySaveCommand {
     private Boolean orderField1Desc;
     private Boolean orderField2Desc;
     private Boolean orderField3Desc;
+    
+    @Order(value=0)
+    public Boolean getNrShow() {
+        return nrShow;
+    }
+    @Order(value=1)
+    public Boolean getFirstnameShow() {
+        return firstnameShow;
+    }
+    @Order(value=2)
+    public Boolean getLastnameShow() {
+        return lastnameShow;
+    }
+    @Order(value=3)
+    public Boolean getFullnameShow() {
+        return fullnameShow;
+    }
+    @Order(value=4)
+    public Boolean getSexShow() {
+        return sexShow;
+    }
+    @Order(value=5)
+    public Boolean getIdcodeShow() {
+        return idcodeShow;
+    }
+    @Order(value=6)
+    public Boolean getBankaccountShow() {
+        return bankaccountShow;
+    }
+    @Order(value=7)
+    public Boolean getBirthdateShow() {
+        return birthdateShow;
+    }
+    @Order(value=8)
+    public Boolean getResidenceCountryShow() {
+        return residenceCountryShow;
+    }
+    @Order(value=9)
+    public Boolean getCitizenshipShow() {
+        return citizenshipShow;
+    }
+    @Order(value=10)
+    public Boolean getGuestStudentShow() {
+        return guestStudentShow;
+    }
+    @Order(value=11)
+    public Boolean getForeignStudentShow() {
+        return foreignStudentShow;
+    }
+    @Order(value=12)
+    public Boolean getCumLaudeShow() {
+        return cumLaudeShow;
+    }
+    @Order(value=13)
+    public Boolean getImmatDateShow() {
+        return immatDateShow;
+    }
+    @Order(value=14)
+    public Boolean getDirectiveConfirmDateShow() {
+        return directiveConfirmDateShow;
+    }
+    @Order(value=15)
+    public Boolean getFinishedDateShow() {
+        return finishedDateShow;
+    }
+    @Order(value=16)
+    public Boolean getDirectiveTypesShow() {
+        return directiveTypesShow;
+    }
+    @Order(value=17)
+    public Boolean getDirectiveReasonsShow() {
+        return directiveReasonsShow;
+    }
+    @Order(value=18)
+    public Boolean getStudentGroupsShow() {
+        return studentGroupsShow;
+    }
+    @Order(value=19)
+    public Boolean getStudentStatusesShow() {
+        return studentStatusesShow;
+    }
+    @Order(value=20)
+    public Boolean getRegNrShow() {
+        return regNrShow;
+    }
+    @Order(value=21)
+    public Boolean getNominalStudyEndShow() {
+        return nominalStudyEndShow;
+    }
+    @Order(value=22)
+    public Boolean getStudyFormShow() {
+        return studyFormShow;
+    }
+    @Order(value=23)
+    public Boolean getStudyLoadShow() {
+        return studyLoadShow;
+    }
+    @Order(value=24)
+    public Boolean getSchoolDepartmentShow() {
+        return schoolDepartmentShow;
+    }
+    @Order(value=25)
+    public Boolean getCurriculumShow() {
+        return curriculumShow;
+    }
+    @Order(value=26)
+    public Boolean getEhisCodeShow() {
+        return ehisCodeShow;
+    }
+    @Order(value=27)
+    public Boolean getStudyLevelShow() {
+        return studyLevelShow;
+    }
+    @Order(value=28)
+    public Boolean getSpecialityShow() {
+        return specialityShow;
+    }
+    @Order(value=29)
+    public Boolean getStudyYearNumberShow() {
+        return studyYearNumberShow;
+    }
+    @Order(value=30)
+    public Boolean getFinShow() {
+        return finShow;
+    }
+    @Order(value=31)
+    public Boolean getLanguageShow() {
+        return languageShow;
+    }
+    @Order(value=32)
+    public Boolean getCurriculumPercentageShow() {
+        return curriculumPercentageShow;
+    }
+    @Order(value=33)
+    public Boolean getForeignLanguageShow() {
+        return foreignLanguageShow;
+    }
+    @Order(value=34)
+    public Boolean getAddressShow() {
+        return addressShow;
+    }
+    @Order(value=35)
+    public Boolean getPhoneShow() {
+        return phoneShow;
+    }
+    @Order(value=36)
+    public Boolean getOfficialEmailShow() {
+        return officialEmailShow;
+    }
+    @Order(value=37)
+    public Boolean getPersonalEmailShow() {
+        return personalEmailShow;
+    }
+    @Order(value=38)
+    public Boolean getEapShow() {
+        return eapShow;
+    }
+    @Order(value=39)
+    public Boolean getEapSumShow() {
+        return eapSumShow;
+    }
+    @Order(value=40)
+    public Boolean getWeightedAverageSumShow() {
+        return weightedAverageSumShow;
+    }
+    @Order(value=41)
+    public Boolean getWeightedAverageShow() {
+        return weightedAverageShow;
+    }
+    @Order(value=42)
+    public Boolean getAverageSumShow() {
+        return averageSumShow;
+    }
+    @Order(value=43)
+    public Boolean getAverageShow() {
+        return averageShow;
+    }
+    @Order(value=44)
+    public Boolean getDebtSumShow() {
+        return debtSumShow;
+    }
+    @Order(value=45)
+    public Boolean getDebtShow() {
+        return debtShow;
+    }
+    @Order(value=46)
+    public Boolean getDebtPointsSumShow() {
+        return debtPointsSumShow;
+    }
+    @Order(value=47)
+    public Boolean getDebtPointsShow() {
+        return debtPointsShow;
+    }
+    @Order(value=48)
+    public Boolean getDeclaredEapShow() {
+        return declaredEapShow;
+    }
+    @Order(value=49)
+    public Boolean getActiveResultShow() {
+        return activeResultShow;
+    }
+    @Order(value=50)
+    public Boolean getDeclaredSubjectShow() {
+        return declaredSubjectShow;
+    }
+    @Order(value=51)
+    public Boolean getDeclarationConfirmationShow() {
+        return declarationConfirmationShow;
+    }
+    @Order(value=52)
+    public Boolean getPreviousSchoolNameShow() {
+        return previousSchoolNameShow;
+    }
+    @Order(value=53)
+    public Boolean getCompletedSchoolYearShow() {
+        return completedSchoolYearShow;
+    }
+    @Order(value=54)
+    public Boolean getPreviousStudyLevelShow() {
+        return previousStudyLevelShow;
+    }
+    @Order(value=55)
+    public Boolean getDormitoryShow() {
+        return dormitoryShow;
+    }
     
     public String getResultType() {
         return resultType;
@@ -593,10 +834,6 @@ public class StudentDataCommand extends QuerySaveCommand {
     public void setDeclaredSubjectRepetitive(Boolean declaredSubjectRepetitive) {
         this.declaredSubjectRepetitive = declaredSubjectRepetitive;
     }
-    @Order(value=48)
-    public Boolean getDeclarationConfirmationShow() {
-        return declarationConfirmationShow;
-    }
     public void setDeclarationConfirmationShow(Boolean declarationConfirmationShow) {
         this.declarationConfirmationShow = declarationConfirmationShow;
     }
@@ -612,282 +849,122 @@ public class StudentDataCommand extends QuerySaveCommand {
     public void setDeclarationConfirmationThru(LocalDate declarationConfirmationThru) {
         this.declarationConfirmationThru = declarationConfirmationThru;
     }
-    @Order(value=46)
-    public Boolean getActiveResultShow() {
-        return activeResultShow;
-    }
     public void setActiveResultShow(Boolean activeResultShow) {
         this.activeResultShow = activeResultShow;
-    }
-    @Order(value=47)
-    public Boolean getDeclaredSubjectShow() {
-        return declaredSubjectShow;
     }
     public void setDeclaredSubjectShow(Boolean declaredSubjectShow) {
         this.declaredSubjectShow = declaredSubjectShow;
     }
-    @Order(value=1)
-    public Boolean getFirstnameShow() {
-        return firstnameShow;
-    }
     public void setFirstnameShow(Boolean firstnameShow) {
         this.firstnameShow = firstnameShow;
-    }
-    @Order(value=2)
-    public Boolean getLastnameShow() {
-        return lastnameShow;
     }
     public void setLastnameShow(Boolean lastnameShow) {
         this.lastnameShow = lastnameShow;
     }
-    @Order(value=4)
-    public Boolean getSexShow() {
-        return sexShow;
-    }
     public void setSexShow(Boolean sexShow) {
         this.sexShow = sexShow;
-    }
-    @Order(value=5)
-    public Boolean getIdcodeShow() {
-        return idcodeShow;
     }
     public void setIdcodeShow(Boolean idcodeShow) {
         this.idcodeShow = idcodeShow;
     }
-    @Order(value=8)
-    public Boolean getResidenceCountryShow() {
-        return residenceCountryShow;
-    }
     public void setResidenceCountryShow(Boolean residenceCountryShow) {
         this.residenceCountryShow = residenceCountryShow;
-    }
-    @Order(value=9)
-    public Boolean getCitizenshipShow() {
-        return citizenshipShow;
     }
     public void setCitizenshipShow(Boolean citizenshipShow) {
         this.citizenshipShow = citizenshipShow;
     }
-    @Order(value=10)
-    public Boolean getGuestStudentShow() {
-        return guestStudentShow;
-    }
     public void setGuestStudentShow(Boolean guestStudentShow) {
         this.guestStudentShow = guestStudentShow;
-    }
-    @Order(value=11)
-    public Boolean getForeignStudentShow() {
-        return foreignStudentShow;
     }
     public void setForeignStudentShow(Boolean foreignStudentShow) {
         this.foreignStudentShow = foreignStudentShow;
     }
-    @Order(value=12)
-    public Boolean getCumLaudeShow() {
-        return cumLaudeShow;
-    }
     public void setCumLaudeShow(Boolean cumLaudeShow) {
         this.cumLaudeShow = cumLaudeShow;
-    }
-    @Order(value=13)
-    public Boolean getImmatDateShow() {
-        return immatDateShow;
     }
     public void setImmatDateShow(Boolean immatDateShow) {
         this.immatDateShow = immatDateShow;
     }
-    @Order(value=14)
-    public Boolean getDirectiveConfirmDateShow() {
-        return directiveConfirmDateShow;
-    }
     public void setDirectiveConfirmDateShow(Boolean directiveConfirmDateShow) {
         this.directiveConfirmDateShow = directiveConfirmDateShow;
-    }
-    @Order(value=18)
-    public Boolean getStudentGroupsShow() {
-        return studentGroupsShow;
     }
     public void setStudentGroupsShow(Boolean studentGroupsShow) {
         this.studentGroupsShow = studentGroupsShow;
     }
-    @Order(value=19)
-    public Boolean getStudentStatusesShow() {
-        return studentStatusesShow;
-    }
     public void setStudentStatusesShow(Boolean studentStatusesShow) {
         this.studentStatusesShow = studentStatusesShow;
-    }
-    @Order(value=20)
-    public Boolean getStudyFormShow() {
-        return studyFormShow;
     }
     public void setStudyFormShow(Boolean studyFormShow) {
         this.studyFormShow = studyFormShow;
     }
-    @Order(value=21)
-    public Boolean getStudyLoadShow() {
-        return studyLoadShow;
-    }
     public void setStudyLoadShow(Boolean studyLoadShow) {
         this.studyLoadShow = studyLoadShow;
-    }
-    @Order(value=22)
-    public Boolean getSchoolDepartmentShow() {
-        return schoolDepartmentShow;
     }
     public void setSchoolDepartmentShow(Boolean schoolDepartmentShow) {
         this.schoolDepartmentShow = schoolDepartmentShow;
     }
-    @Order(value=23)
-    public Boolean getCurriculumShow() {
-        return curriculumShow;
-    }
     public void setCurriculumShow(Boolean curriculumShow) {
         this.curriculumShow = curriculumShow;
-    }
-    @Order(value=24)
-    public Boolean getEhisCodeShow() {
-        return ehisCodeShow;
     }
     public void setEhisCodeShow(Boolean ehisCodeShow) {
         this.ehisCodeShow = ehisCodeShow;
     }
-    @Order(value=25)
-    public Boolean getStudyLevelShow() {
-        return studyLevelShow;
-    }
     public void setStudyLevelShow(Boolean studyLevelShow) {
         this.studyLevelShow = studyLevelShow;
-    }
-    @Order(value=26)
-    public Boolean getSpecialityShow() {
-        return specialityShow;
     }
     public void setSpecialityShow(Boolean specialityShow) {
         this.specialityShow = specialityShow;
     }
-    @Order(value=27)
-    public Boolean getStudyYearNumberShow() {
-        return studyYearNumberShow;
-    }
     public void setStudyYearNumberShow(Boolean studyYearNumberShow) {
         this.studyYearNumberShow = studyYearNumberShow;
-    }
-    @Order(value=28)
-    public Boolean getFinShow() {
-        return finShow;
     }
     public void setFinShow(Boolean finShow) {
         this.finShow = finShow;
     }
-    @Order(value=29)
-    public Boolean getLanguageShow() {
-        return languageShow;
-    }
     public void setLanguageShow(Boolean languageShow) {
         this.languageShow = languageShow;
-    }
-    @Order(value=31)
-    public Boolean getAddressShow() {
-        return addressShow;
     }
     public void setAddressShow(Boolean addressShow) {
         this.addressShow = addressShow;
     }
-    @Order(value=32)
-    public Boolean getPhoneShow() {
-        return phoneShow;
-    }
     public void setPhoneShow(Boolean phoneShow) {
         this.phoneShow = phoneShow;
-    }
-    @Order(value=33)
-    public Boolean getOfficialEmailShow() {
-        return officialEmailShow;
     }
     public void setOfficialEmailShow(Boolean officialEmailShow) {
         this.officialEmailShow = officialEmailShow;
     }
-    @Order(value=34)
-    public Boolean getPersonalEmailShow() {
-        return personalEmailShow;
-    }
     public void setPersonalEmailShow(Boolean personalEmailShow) {
         this.personalEmailShow = personalEmailShow;
-    }
-    @Order(value=35)
-    public Boolean getEapShow() {
-        return eapShow;
     }
     public void setEapShow(Boolean eapShow) {
         this.eapShow = eapShow;
     }
-    @Order(value=36)
-    public Boolean getEapSumShow() {
-        return eapSumShow;
-    }
     public void setEapSumShow(Boolean eapSumShow) {
         this.eapSumShow = eapSumShow;
-    }
-    @Order(value=37)
-    public Boolean getWeightedAverageSumShow() {
-        return weightedAverageSumShow;
     }
     public void setWeightedAverageSumShow(Boolean weightedAverageSumShow) {
         this.weightedAverageSumShow = weightedAverageSumShow;
     }
-    @Order(value=38)
-    public Boolean getWeightedAverageShow() {
-        return weightedAverageShow;
-    }
     public void setWeightedAverageShow(Boolean weightedAverageShow) {
         this.weightedAverageShow = weightedAverageShow;
-    }
-    @Order(value=39)
-    public Boolean getAverageSumShow() {
-        return averageSumShow;
     }
     public void setAverageSumShow(Boolean averageSumShow) {
         this.averageSumShow = averageSumShow;
     }
-    @Order(value=40)
-    public Boolean getAverageShow() {
-        return averageShow;
-    }
     public void setAverageShow(Boolean averageShow) {
         this.averageShow = averageShow;
-    }
-    @Order(value=41)
-    public Boolean getDebtSumShow() {
-        return debtSumShow;
     }
     public void setDebtSumShow(Boolean debtSumShow) {
         this.debtSumShow = debtSumShow;
     }
-    @Order(value=42)
-    public Boolean getDebtShow() {
-        return debtShow;
-    }
     public void setDebtShow(Boolean debtShow) {
         this.debtShow = debtShow;
-    }
-    @Order(value=43)
-    public Boolean getDebtPointsSumShow() {
-        return debtPointsSumShow;
     }
     public void setDebtPointsSumShow(Boolean debtPointsSumShow) {
         this.debtPointsSumShow = debtPointsSumShow;
     }
-    @Order(value=44)
-    public Boolean getDebtPointsShow() {
-        return debtPointsShow;
-    }
     public void setDebtPointsShow(Boolean debtPointsShow) {
         this.debtPointsShow = debtPointsShow;
-    }
-    @Order(value=50)
-    public Boolean getCompletedSchoolYearShow() {
-        return completedSchoolYearShow;
     }
     public void setCompletedSchoolYearShow(Boolean completedSchoolYearShow) {
         this.completedSchoolYearShow = completedSchoolYearShow;
@@ -940,10 +1017,6 @@ public class StudentDataCommand extends QuerySaveCommand {
     public void setOrderField3Desc(Boolean orderField3Desc) {
         this.orderField3Desc = orderField3Desc;
     }
-    @Order(value=49)
-    public Boolean getPreviousSchoolNameShow() {
-        return previousSchoolNameShow;
-    }
     public void setPreviousSchoolNameShow(Boolean previousSchoolNameShow) {
         this.previousSchoolNameShow = previousSchoolNameShow;
     }
@@ -953,23 +1026,11 @@ public class StudentDataCommand extends QuerySaveCommand {
     public void setPreviousSchoolName(String previousSchoolName) {
         this.previousSchoolName = previousSchoolName;
     }
-    @Order(value=16)
-    public Boolean getDirectiveTypesShow() {
-        return directiveTypesShow;
-    }
     public void setDirectiveTypesShow(Boolean directiveTypesShow) {
         this.directiveTypesShow = directiveTypesShow;
     }
-    @Order(value=17)
-    public Boolean getDirectiveReasonsShow() {
-        return directiveReasonsShow;
-    }
     public void setDirectiveReasonsShow(Boolean directiveReasonsShow) {
         this.directiveReasonsShow = directiveReasonsShow;
-    }
-    @Order(value=6)
-    public Boolean getBankaccountShow() {
-        return bankaccountShow;
     }
     public void setBankaccountShow(Boolean bankaccountShow) {
         this.bankaccountShow = bankaccountShow;
@@ -985,10 +1046,6 @@ public class StudentDataCommand extends QuerySaveCommand {
     }
     public void setDeclaredEap(BigDecimal declaredEap) {
         this.declaredEap = declaredEap;
-    }
-    @Order(value=45)
-    public Boolean getDeclaredEapShow() {
-        return declaredEapShow;
     }
     public void setDeclaredEapShow(Boolean declaredEapShow) {
         this.declaredEapShow = declaredEapShow;
@@ -1011,10 +1068,6 @@ public class StudentDataCommand extends QuerySaveCommand {
     public void setDeclaredEapPeriod(Long declaredEapPeriod) {
         this.declaredEapPeriod = declaredEapPeriod;
     }
-    @Order(value=3)
-    public Boolean getFullnameShow() {
-        return fullnameShow;
-    }
     public void setFullnameShow(Boolean fullnameShow) {
         this.fullnameShow = fullnameShow;
     }
@@ -1030,10 +1083,6 @@ public class StudentDataCommand extends QuerySaveCommand {
     public void setBirthdateFrom(LocalDate birthdateFrom) {
         this.birthdateFrom = birthdateFrom;
     }
-    @Order(value=7)
-    public Boolean getBirthdateShow() {
-        return birthdateShow;
-    }
     public void setBirthdateShow(Boolean birthdateShow) {
         this.birthdateShow = birthdateShow;
     }
@@ -1042,10 +1091,6 @@ public class StudentDataCommand extends QuerySaveCommand {
     }
     public void setBirthdateThru(LocalDate birthdateThru) {
         this.birthdateThru = birthdateThru;
-    }
-    @Order(value=15)
-    public Boolean getFinishedDateShow() {
-        return finishedDateShow;
     }
     public void setFinishedDateShow(Boolean finishedDateShow) {
         this.finishedDateShow = finishedDateShow;
@@ -1098,10 +1143,6 @@ public class StudentDataCommand extends QuerySaveCommand {
     public void setImmatDateThru(LocalDate immatDateThru) {
         this.immatDateThru = immatDateThru;
     }
-    @Order(value=30)
-    public Boolean getCurriculumPercentageShow() {
-        return curriculumPercentageShow;
-    }
     public void setCurriculumPercentageShow(Boolean curriculumPercentageShow) {
         this.curriculumPercentageShow = curriculumPercentageShow;
     }
@@ -1141,10 +1182,6 @@ public class StudentDataCommand extends QuerySaveCommand {
     public void setBankaccount(String bankaccount) {
         this.bankaccount = bankaccount;
     }
-    @Order(value=0)
-    public Boolean getNrShow() {
-        return nrShow;
-    }
     public void setNrShow(Boolean nrShow) {
         this.nrShow = nrShow;
     }
@@ -1159,6 +1196,57 @@ public class StudentDataCommand extends QuerySaveCommand {
     }
     public void setSpeciality(List<String> speciality) {
         this.speciality = speciality;
+    }
+    public String getRegNr() {
+        return regNr;
+    }
+    public void setRegNr(String regNr) {
+        this.regNr = regNr;
+    }
+    public void setRegNrShow(Boolean regNrShow) {
+        this.regNrShow = regNrShow;
+    }
+    public void setNominalStudyEndShow(Boolean nominalStudyEndShow) {
+        this.nominalStudyEndShow = nominalStudyEndShow;
+    }
+    public LocalDate getNominalStudyEndFrom() {
+        return nominalStudyEndFrom;
+    }
+    public void setNominalStudyEndFrom(LocalDate nominalStudyEndFrom) {
+        this.nominalStudyEndFrom = nominalStudyEndFrom;
+    }
+    public LocalDate getNominalStudyEndThru() {
+        return nominalStudyEndThru;
+    }
+    public void setNominalStudyEndThru(LocalDate nominalStudyEndThru) {
+        this.nominalStudyEndThru = nominalStudyEndThru;
+    }
+    public List<String> getForeignLanguage() {
+        return foreignLanguage;
+    }
+    public void setForeignLanguage(List<String> foreignLanguage) {
+        this.foreignLanguage = foreignLanguage;
+    }
+    public void setForeignLanguageShow(Boolean foreignLanguageShow) {
+        this.foreignLanguageShow = foreignLanguageShow;
+    }
+    public List<String> getPreviousStudyLevel() {
+        return previousStudyLevel;
+    }
+    public void setPreviousStudyLevel(List<String> previousStudyLevel) {
+        this.previousStudyLevel = previousStudyLevel;
+    }
+    public void setPreviousStudyLevelShow(Boolean previousStudyLevelShow) {
+        this.previousStudyLevelShow = previousStudyLevelShow;
+    }
+    public List<String> getDormitory() {
+        return dormitory;
+    }
+    public void setDormitory(List<String> dormitory) {
+        this.dormitory = dormitory;
+    }
+    public void setDormitoryShow(Boolean dormitoryShow) {
+        this.dormitoryShow = dormitoryShow;
     }
 
 }

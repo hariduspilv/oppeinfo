@@ -20,10 +20,12 @@ angular.module('hitsaOis').constant('VocationalGrade', {
   var VOCATIONAL_GRADE_PREFIX = 'KUTSEHINDAMINE_';
 
   return {
-    isPositive: function(gradeCode) {
+    isPositive: function(grade) {
+      var gradeCode = angular.isObject(grade) ? grade.code : grade;
       return ArrayUtils.includes(POSITIVE_GRADES, gradeCode);
     },
-    isDistinctive: function(gradeCode) {
+    isDistinctive: function(grade) {
+      var gradeCode = angular.isObject(grade) ? grade.code : grade;
       return ArrayUtils.includes(DISTINCTIVE_GRADES, gradeCode);
     },
     removePrefix: function(gradeCode) {

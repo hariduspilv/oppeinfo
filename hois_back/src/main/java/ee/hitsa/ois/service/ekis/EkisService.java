@@ -143,7 +143,8 @@ public class EkisService {
         }
         if(person != null) {
             request.setStudent(person.getFullname());
-            request.setEmail(StringUtils.hasText(certificate.getStudent().getEmail()) ? certificate.getStudent().getEmail() : person.getEmail());
+            request.setEmail(certificate.getStudent() != null && StringUtils.hasText(certificate.getStudent().getEmail())
+                    ? certificate.getStudent().getEmail() : person.getEmail());
         } else {
             request.setStudent(certificate.getOtherName());
         }

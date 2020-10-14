@@ -1,12 +1,13 @@
 'use strict';
 
-angular.module('hitsaOis').controller('JournalEditController', function ($scope, $route, $filter, $window, QueryUtils, ArrayUtils, DataUtils, Classifier, StudentUtil, message, dialogService, VocationalGradeUtil, $q, oisFileService, stateStorageService) {
+angular.module('hitsaOis').controller('JournalEditController', function ($filter, $q, $route, $scope, $window, GRADING_SCHEMA_TYPE, ArrayUtils, Classifier, DataUtils, GradingSchema, StudentUtil, VocationalGradeUtil, QueryUtils, dialogService, message, oisFileService, stateStorageService) {
   $scope.auth = $route.current.locals.auth;
   $scope.gradeUtil = VocationalGradeUtil;
-  var classifierMapper = Classifier.valuemapper({ entryType: 'SISSEKANNE', grade: 'KUTSEHINDAMINE', absence: 'PUUDUMINE' });
+  var classifierMapper = Classifier.valuemapper({ entryType: 'SISSEKANNE', absence: 'PUUDUMINE' });
+  var gradeClassifierMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE' });
   var stateKey = 'journal';
   var schoolId = $route.current.locals.auth.school.id;
-  $scope.grades = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMINE' });
+  var gradingSchema, gradeMapper;
   $scope.gradeInputRegex = '^X$|^A$|^MA$|^1$|^2$|^3$|^4$|^5$';
 
   // same constant that is in absence.search.js
@@ -25,6 +26,18 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
   var state = stateStorageService.loadState(schoolId, stateKey);
 
+  function setGradingSchema(entity) {
+    gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.VOCATIONAL);
+    $q.all(gradingSchema.promises).then(function () {
+      $scope.grades = gradingSchema.gradeSelection(entity.studyYearId, true);
+      gradeMapper = gradingSchema.gradeMapper($scope.grades, ['grade']);
+      var validSchoolGradingSchema = gradingSchema.validSchoolGradingSchema(entity.studyYearId);
+      $scope.formState.gradeInputSelection = validSchoolGradingSchema === null;
+      $scope.formState.isVerbal = validSchoolGradingSchema !== null && validSchoolGradingSchema.isVerbal;
+      $scope.formState.isGrade = !$scope.formState.isVerbal || validSchoolGradingSchema.isGrade;
+    });
+  }
+
   function loadUsedHours() {
     QueryUtils.endpoint('/journals/' + entity.id + '/usedHours').get().$promise.then(function (result) {
       $scope.journal.lessonHours = result;
@@ -40,12 +53,12 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       journalEntriesByDate.forEach(function (it) {
         for (var p in it.journalStudentResults) {
           if (it.journalStudentResults.hasOwnProperty(p)) {
-            mapStudentResultClassifiers(it.journalStudentResults[p]);
+            mapStudentResult(it.journalStudentResults[p]);
           }
         }
         for (var o in it.studentOutcomeResults) {
           if (it.studentOutcomeResults.hasOwnProperty(o)) {
-            mapOutocomesResultClassifiers(it.studentOutcomeResults[o]);
+            mapOutocomesResult(it.studentOutcomeResults[o]);
           }
         }
       });
@@ -56,7 +69,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         $scope.journal.journalStudents.forEach(function (student) {
           for (var p in student.apelResults) {
             if (student.apelResults.hasOwnProperty(p)) {
-              classifierMapper.objectmapper(student.apelResults[p]);
+              gradeClassifierMapper.objectmapper(student.apelResults[p]);
             }
           }
           setStudentApelTransferredModuleResult(student);
@@ -79,26 +92,23 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     }
   }
 
-  function mapStudentResultClassifiers(result) {
+  function mapStudentResult(result) {
+    gradeMapper.objectmapper(result);
     classifierMapper.objectmapper(result);
     result[0].lessonAbsences.forEach(function (absence) {
       classifierMapper.objectmapper(absence);
     });
     result[0].journalEntryStudentHistories.forEach(function (history) {
-      classifierMapper.objectmapper(history);
+      gradeMapper.objectmapper(history);
     });
   }
 
-  function mapOutocomesResultClassifiers(result) {
-    classifierMapper.objectmapper(result);
+  function mapOutocomesResult(result) {
+    gradeMapper.objectmapper(result);
     result.history.forEach(function (it) {
-      classifierMapper.objectmapper(it);
+      gradeMapper.objectmapper(it);
     });
   }
-
-  $scope.hideInvalid = function (cl) {
-    return !Classifier.isValid(cl);
-  };
 
   $scope.finished = function (quickUpdateInProgress) {
     var rowHeight = quickUpdateInProgress ? STUDENT_ROW_WITH_INPUT_HEIGHT : STUDENT_ROW_HEIGHT;
@@ -113,9 +123,12 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   function entityToForm(entity) {
     $scope.journal = entity;
     $scope.$parent.$parent.moodleCourseId = entity.moodleCourseId;
-    loadJournalEntries();
-    loadJournalOutcomes();
-    loadJournalStudents($scope.formState.showAllStudentsModel);
+    setGradingSchema(entity);
+    $q.all(classifierMapper.promises.concat(gradingSchema.promises)).then(function () {
+      loadJournalEntries();
+      loadJournalOutcomes();
+      loadJournalStudents($scope.formState.showAllStudentsModel);
+    });
   }
 
   var entity = $route.current.locals.entity;
@@ -294,6 +307,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     Classifier.queryForDropdown({ mainClassCode: 'PUUDUMINE' }, function (result) {
       dialogScope.absenceOptions = Classifier.toMap(result);
     });
+    dialogScope.savedJournalEntryStudents = {};
   }
 
   function capacityTypesToArray(selectedCapacityTypes, newEntity) {
@@ -322,10 +336,9 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   function showEntryDialog(editEntity) {
     dialogService.showDialog('journal/journal.addEntry.dialog.html', function (dialogScope) {
       dialogScope.journal = $scope.journal;
-      dialogScope.gradeInputAsSelect = $scope.formState.gradeInputAsSelect;
+      dialogScope.formState = $scope.formState;
       dialogScope.grades = $scope.grades;
       dialogScope.gradeInputRegex = $scope.gradeInputRegex;
-      dialogScope.hideInvalid = $scope.hideInvalid;
       dialogScope.maxLessons = NORMAL_MAX_LESSONS;
 
       dialogScope.entryDateChanged = function () {
@@ -568,19 +581,24 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         angular.extend(dialogScope.journalEntry, editEntity);
         dialogScope.entryDateCalendar = dialogScope.journalEntry.entryDate;
         editEntity.journalEntryStudents.forEach(function (it) {
-          it.gradeValue = it.grade ? VocationalGradeUtil.removePrefix(it.grade) : null;
+          gradeMapper.objectmapper(it);
+          if (!dialogScope.formState.gradeInputAsSelect && it.grade) {
+            if (!it.grade.gradingSchemaRowId) {
+              it.gradeValue = VocationalGradeUtil.removePrefix(it.grade.code);
+            }
+          }
           dialogScope.journalEntryStudents[it.journalStudent] = it;
           DataUtils.convertStringToDates(it.journalEntryStudentHistories, ['gradeInserted']);
-          classifierMapper.objectmapper(it.journalEntryStudentHistories);
+          gradeMapper.objectmapper(it.journalEntryStudentHistories);
           setStudentAbsenceCheckboxValues(it);
         });
         getStudentsWithAcceptedAbsences(false);
-        dialogScope.savedJournalEntryStudents = angular.copy(dialogScope.journalEntryStudents);
         editEntity.journalEntryCapacityTypes.forEach(function (it) {
           dialogScope.selectedCapacityTypes[it] = true;
         });
         dialogScope.canDeleteEntries = canDeleteEntries();
         setMaxLessons(dialogScope.journalEntry.entryType);
+        dialogScope.savedJournalEntryStudents = angular.copy(dialogScope.journalEntryStudents);
       }
 
       setForbiddenTypes(dialogScope, editEntity);
@@ -620,13 +638,51 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         }
       }
 
+      dialogScope.gradeSelectShown = function (row) {
+        var grade = dialogScope.journalEntryStudents[row.id].grade;
+        return dialogScope.journalEntry.entryType === 'SISSEKANNE_L' || dialogScope.formState.isGrade ||
+          (grade !== null && angular.isDefined(grade));
+      };
+
+      dialogScope.gradeSelectDisabled = function (row) {
+        var grade = dialogScope.journalEntryStudents[row.id].grade;
+        return !(dialogScope.journalEntry.entryType === 'SISSEKANNE_L' || dialogScope.formState.isGrade) || gradeChangeDisabled(row) ||
+          // School grading schema grades can only be changed when grades are inserted with hois-grade-select
+          (!dialogScope.formState.gradeInputAsSelect && (grade !== null && angular.isDefined(grade)) && grade.gradingSchemaRowId !== null);
+      };
+
+      function gradeChangeDisabled(row) {
+        return !row.canEdit ||
+          // Final entry grade that comes from apel application can't be changed
+          (row.apelTransferredFinalResult && dialogScope.journalEntry.entryType === 'SISSEKANNE_L') ||
+          // Moodle imported grades can only be changed for final entry
+          (dialogScope.journalEntry.moodleGradeItemId && dialogScope.journalEntry.entryType !== 'SISSEKANNE_L');
+      }
+
+      dialogScope.verbalGradeShown = function (row) {
+        var verbalGrade = dialogScope.journalEntryStudents[row.id].verbalGrade;
+        return dialogScope.journalEntry.entryType !== 'SISSEKANNE_L' &&
+          (dialogScope.formState.isVerbal || (verbalGrade !== null && angular.isDefined(verbalGrade)));
+      };
+
+      dialogScope.verbalGradeDisabled = function (row) {
+        return !dialogScope.formState.isVerbal || gradeChangeDisabled(row);
+      };
+
+      dialogScope.canRemoveStudentHistory = function (row) {
+        return !gradeChangeDisabled(row);
+      };
+
       dialogScope.changedJournalEntryStudents = [];
       dialogScope.journalEntryStudentChanged = function (row) {
         var entryStudent = dialogScope.journalEntryStudents[row.id];
 
-        if (!dialogScope.gradeInputAsSelect) {
+        if (!dialogScope.formState.gradeInputAsSelect) {
           if (entryStudent.gradeValue) {
-            entryStudent.grade = VocationalGradeUtil.addPrefix(entryStudent.gradeValue);
+            entryStudent.grade = {
+              code: VocationalGradeUtil.addPrefix(entryStudent.gradeValue),
+              gradingSchemaRowId: null
+            };
           } else {
             entryStudent.grade = null;
           }
@@ -699,9 +755,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
       dialogScope.setJournalEntryTypeChanged = function (entryType) {
         setJournalEntryDefaultName(entryType);
-        if (entryType === 'SISSEKANNE_L') {
-          setApelTransferredResultAsFinalResult();
-        }
+        journalEntryStudentChanges(entryType);
         setMaxLessons(entryType);
       };
 
@@ -711,11 +765,41 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         dialogScope.journalEntry.nameEt = holder.entryType.nameEt;
       }
 
-      function setApelTransferredResultAsFinalResult() {
-        dialogScope.journalStudents.forEach(function(student) {
-          if (student.apelTransferredFinalResult) {
-            dialogScope.journalEntryStudents[student.id].grade = student.apelTransferredFinalResult;
-            dialogScope.journalEntryStudentChanged(student);
+      function journalEntryStudentChanges(entryType) {
+        dialogScope.journalStudents.forEach(function (student) {
+          if (StudentUtil.isActive(student.status)) {
+            var gradeChanged = false;
+            if (entryType === 'SISSEKANNE_L') {
+              // set apel transferred result as final result
+              if (angular.isDefined(student.apelTransferredFinalResult)) {
+                dialogScope.journalEntryStudents[student.id].grade = {
+                  code: student.apelTransferredFinalResult,
+                  gradingSchemaRowId: null
+                };
+                gradeChanged = true;
+              }
+
+              // verbal grades are not allowed in final result entry
+              var verbalGrade = dialogScope.journalEntryStudents[student.id].verbalGrade;
+              if (verbalGrade !== null && angular.isDefined(verbalGrade)) {
+                dialogScope.journalEntryStudents[student.id].verbalGrade = null;
+                gradeChanged = true;
+              }
+            } else {
+              // remove just set apel transferred result if it's not valid
+              var grade = dialogScope.journalEntryStudents[student.id].grade;
+              if (grade !== null && angular.isDefined(grade) && !grade.valid) {
+                var savedStudent = dialogScope.savedJournalEntryStudents[student.id];
+                if (angular.isUndefined(savedStudent) || !DataUtils.isSameGrade(savedStudent.grade, grade)) {
+                  dialogScope.journalEntryStudents[student.id].grade = null;
+                  gradeChanged = true;
+                }
+              }
+            }
+
+            if (gradeChanged) {
+              dialogScope.journalEntryStudentChanged(student);
+            }
           }
         });
       }
@@ -739,6 +823,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         entryStudent.removeStudentHistory = true;
         entryStudent.grade = null;
         entryStudent.gradeValue = null;
+        entryStudent.verbalGrade = null;
         if (dialogScope.changedJournalEntryStudents.indexOf(entryStudent) === -1) {
           dialogScope.changedJournalEntryStudents.push(entryStudent);
         }
@@ -836,8 +921,9 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
         journalEntry.quickUpdateStudents[p] = {
           id: result.journalEntryStudentId,
           journalStudent: result.journalStudentId,
-          grade: result.grade ? result.grade.code : null,
-          gradeValue: result.grade ? VocationalGradeUtil.removePrefix(result.grade.code) : null,
+          grade: result.grade,
+          gradeValue: result.grade && !result.grade.gradingSchemaRowId ? VocationalGradeUtil.removePrefix(result.grade.code) : null,
+          verbalGrade: result.verbalGrade,
           isRemark: result.isRemark,
           addInfo: result.addInfo
         };
@@ -881,7 +967,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
           entriesByDate.journalStudentResults = updatedEntryStudents;
           for (var key in entriesByDate.journalStudentResults) {
             if (entriesByDate.journalStudentResults.hasOwnProperty(key)) {
-              mapStudentResultClassifiers(entriesByDate.journalStudentResults[key]);
+              mapStudentResult(entriesByDate.journalStudentResults[key]);
             }
           }
           entriesByDate.quickUpdate = false;
@@ -929,7 +1015,10 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
     if (!$scope.formState.gradeInputAsSelect) {
       if (studentQuickUpdate.gradeValue && new RegExp($scope.gradeInputRegex).test(studentQuickUpdate.gradeValue)) {
-        studentQuickUpdate.grade = VocationalGradeUtil.addPrefix(studentQuickUpdate.gradeValue);
+        studentQuickUpdate.grade = {
+          code: VocationalGradeUtil.addPrefix(studentQuickUpdate.gradeValue),
+          gradingSchemaRowId : null
+        };
       } else {
         studentQuickUpdate.grade = null;
       }
@@ -1075,7 +1164,6 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       dialogScope.gradeInputAsSelect = $scope.formState.gradeInputAsSelect;
       dialogScope.grades = $scope.grades;
       dialogScope.gradeInputRegex = $scope.gradeInputRegex;
-      dialogScope.hideInvalid = $scope.hideInvalid;
       dialogScope.currentDate = new Date();
 
       dialogScope.journalStudents = $scope.journal.journalStudents;
@@ -1090,9 +1178,15 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       });
 
       outcome.outcomeStudents.forEach(function (it) {
-        it.gradeValue = it.grade ? VocationalGradeUtil.removePrefix(it.grade) : null;
+        if (!dialogScope.gradeInputAsSelect && it.grade) {
+          if (it.grade.gradingSchemaRowId) {
+            gradeMapper.objectmapper(it);
+          } else {
+            it.gradeValue = VocationalGradeUtil.removePrefix(it.grade.code);
+          }
+        }
         it.history.forEach(function (resultHistory) {
-          classifierMapper.objectmapper(resultHistory);
+          gradeMapper.objectmapper(resultHistory);
         });
 
         it.isCurriculumOutcome = (dialogScope.journalOccupationStudents[it.studentId] === undefined ? false : dialogScope.journalOccupationStudents[it.studentId].isCurriculumOutcome);
@@ -1105,7 +1199,10 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
         if (!dialogScope.gradeInputAsSelect) {
           if (outcomeStudent.gradeValue) {
-            outcomeStudent.grade = VocationalGradeUtil.addPrefix(outcomeStudent.gradeValue);
+            outcomeStudent.grade = {
+              code: VocationalGradeUtil.addPrefix(outcomeStudent.gradeValue),
+              gradingSchemaRowId: null
+            };
           } else {
             removeCurrentResult(outcomeStudent);
           }
@@ -1122,7 +1219,6 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
       function removeCurrentResult(result) {
         result.grade = null;
-        result.gradeValue = null;
         result.gradeDate = null;
         result.addInfo = null;
       }

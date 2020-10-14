@@ -4,14 +4,14 @@ import java.util.List;
 
 public class ModuleProtocolSaveForm extends VersionedCommand {
 
-    private List<ModuleProtocolStudentSaveForm> protocolStudents;
+    private List<ProtocolStudentSaveForm> protocolStudents;
     private String signerMobileNumber;
 
-    public List<ModuleProtocolStudentSaveForm> getProtocolStudents() {
+    public List<ProtocolStudentSaveForm> getProtocolStudents() {
         return protocolStudents;
     }
 
-    public void setProtocolStudents(List<ModuleProtocolStudentSaveForm> protocolStudents) {
+    public void setProtocolStudents(List<ProtocolStudentSaveForm> protocolStudents) {
         this.protocolStudents = protocolStudents;
     }
 

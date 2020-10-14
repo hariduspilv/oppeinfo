@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.dto.report.studentgroupteacher;
 import java.time.LocalDate;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.GradeDto;
 
 public class StudentJournalEntryResultDto {
 
@@ -10,7 +11,8 @@ public class StudentJournalEntryResultDto {
     private Long studentEntryId;
     private String entryType;
     private LocalDate entryDate;
-    private String grade;
+    private GradeDto grade;
+    private String verbalGrade;
     private LocalDate gradeInserted;
     private String gradeInsertedBy;
     private String addInfo;
@@ -25,6 +27,7 @@ public class StudentJournalEntryResultDto {
         this.entryType = result.getEntryType();
         this.entryDate = result.getEntryDate();
         this.grade = result.getGrade();
+        this.verbalGrade = result.getVerbalGrade();
         this.gradeInserted = result.getGradeInserted();
         this.gradeInsertedBy = result.getGradeInsertedBy();
         this.addInfo = result.getAddInfo();
@@ -62,12 +65,20 @@ public class StudentJournalEntryResultDto {
         this.entryDate = entryDate;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
 
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
+    }
+
+    public String getVerbalGrade() {
+        return verbalGrade;
+    }
+
+    public void setVerbalGrade(String verbalGrade) {
+        this.verbalGrade = verbalGrade;
     }
 
     public LocalDate getGradeInserted() {

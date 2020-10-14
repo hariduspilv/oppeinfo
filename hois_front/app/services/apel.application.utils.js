@@ -216,7 +216,7 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
   }
 
   apelApplicationUtil.sendToCommittee = function (application, callback) {
-    var modifiedApplication = apelApplicationUtil.recordsToIdentifiers(application)
+    var modifiedApplication = apelApplicationUtil.recordsToIdentifiers(application);
 
     removeRecordErrors(application);
     var extraPrompts = validateFormalTransferredCredits(application);

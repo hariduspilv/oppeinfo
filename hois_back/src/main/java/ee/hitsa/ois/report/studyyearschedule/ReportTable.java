@@ -4,6 +4,7 @@ import java.util.List;
 
 public class ReportTable {
 
+    private String studyYear;
     private List<ReportStudyPeriod> studyPeriods;
     private List<Short> weeks;
     private List<ReportDepartment> departments;
@@ -27,6 +28,12 @@ public class ReportTable {
     }
     public void setDepartments(List<ReportDepartment> departments) {
         this.departments = departments;
+    }
+    public String getStudyYear() {
+        return studyYear;
+    }
+    public void setStudyYear(String studyYear) {
+        this.studyYear = studyYear;
     }
     
 }

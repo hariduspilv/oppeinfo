@@ -301,7 +301,7 @@ public class TimetableEventService {
         form.setTeachers(new ArrayList<>(Arrays.asList(new TimetableSingleEventTeacherForm(null,
                 EntityUtil.getId(absence.getTeacher()), null, null, Boolean.FALSE))));
         
-        for(LocalDate date = absence.getStartDate(); date.isBefore(absence.getEndDate()); date = date.plusDays(1)) {
+        for(LocalDate date = absence.getStartDate(); date.isBefore(absence.getEndDate().plusDays(1)); date = date.plusDays(1)) {
             form.setDate(date);
             createEvent(form, EntityUtil.getId(absence.getTeacher().getSchool()), null);
         }
@@ -747,6 +747,9 @@ public class TimetableEventService {
         String from = "from timetable_event_time tet"
                 + " join timetable_event te on tet.timetable_event_id = te.id"
                 + " left join subject_study_period_exam sspe on sspe.timetable_event_id = te.id"
+                + " left join subject_study_period exam_ssp on exam_ssp.id = sspe.subject_study_period_id"
+                + " left join subject exam_subj on exam_subj.id = exam_ssp.subject_id"
+                + " left join classifier exam_type on exam_type.code = sspe.type_code"
                 + " left join person p on p.id = te.person_id and te.is_personal = true"
                 + " left join timetable_object tobj on te.timetable_object_id = tobj.id"
                 + " left join timetable t on tobj.timetable_id = t.id left join journal j on tobj.journal_id = j.id";
@@ -874,7 +877,10 @@ public class TimetableEventService {
     private List<TimetableEventSearchDto> getTimetableEventsList(JpaNativeQueryBuilder qb) {
         String select = "distinct tet.id, j.id as journal_id, ssp.id as subject_study_period_id,"
                 + " coalesce(te.name, j.name_et, subj.name_et) as name_et,"
-                + " case when subj.id is null then coalesce(te.name, j.name_et) else subj.name_en || ' (' || subj.code || ')' end as name_en,"
+                + " case when coalesce(subj.id, exam_subj.id) is null then coalesce(te.name, j.name_et)"
+                    + " when subj.id is not null then subj.name_en || ' (' || subj.code || ')'"
+                    + " else exam_subj.name_en || ' (' || exam_subj.code || ') '"
+                        + " || lower(coalesce(exam_type.name_en, exam_type.name_et)) end as name_en,"
                 + " tet.start, tet.end, te.consider_break, tobj.id as single_event, t.id as timetableId, te.capacity_type_code,"
                 + " te.is_personal, te.person_id, p.firstname, p.lastname, te.is_imported, sspe.id as exam_id,"
                 + " coalesce(tet.changed, tet.inserted) changed";

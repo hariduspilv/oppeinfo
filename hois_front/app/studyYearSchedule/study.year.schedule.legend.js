@@ -136,7 +136,7 @@ angular.module('hitsaOis').controller('studyYearScheduleLegendController',
 
     function codesWrongLength() {
       return $scope.legends.filter(function (el) {
-        return el.code && el.code.length > 2;
+        return el.code && el.code.length > 4;
       }).length > 0;
     }
 
@@ -153,7 +153,7 @@ angular.module('hitsaOis').controller('studyYearScheduleLegendController',
     }
 
     $scope.codeIsValid = function (legend) {
-      return legend.code && legend.code.length <= 2;
+      return legend.code && legend.code.length <= 4;
     };
 
     $scope.nameEtIsValid = function (legend) {

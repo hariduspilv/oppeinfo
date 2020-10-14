@@ -494,7 +494,7 @@ public class DocumentService {
         Map<Long, Diploma> existing = StreamUtil.toMap(d -> EntityUtil.getId(d.getStudent()), getDiplomas(form));
         List<?> result = em.createNativeQuery("select ds.student_id, upper(coalesce(old_dip.firstname, p.firstname)) firstname"
                 + ", upper(coalesce(old_dip.lastname, p.lastname)) lastname, p.idcode, p.birthdate"
-                + ", ds.is_cum_laude, c.mer_code, c.name_et, level.extraval2, cg.name_et grade_name_et"
+                + ", ds.is_cum_laude as is_cum_laude, c.mer_code, c.name_et, level.extraval2, cg.name_et grade_name_et"
                 + ", cg.name_en grade_name_en, old_dip.id dupl"
                 + " from directive_student ds"
                 + " join curriculum_version cv on cv.id = ds.curriculum_version_id"

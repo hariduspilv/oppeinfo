@@ -281,36 +281,7 @@
       </hois-collapsable>
     </div>
 
-    <div>
-      <hois-collapsable label="('student.foreignLanguages.label' | translate)">
-        <div layout="column">
-          <div layout="row" layout-xs="column" ng-repeat="row in student.foreignLanguageTypes">
-            <div layout="row" flex="50" flex-xs="100" ng-if="row.length > 0">
-              <md-input-container flex="50" class="md-block">
-                <label>{{'student.foreignLanguageType' | translate}}</label>
-                <hois-classifier-value ng-model="row[0].foreignLangTypeCode" main-classifier-code="VOORKEEL_TYYP"></hois-classifier-value>
-              </md-input-container>
-              <md-input-container flex="50" class="md-block" flex-offset="5">
-                <label>{{'student.foreignLanguage' | translate}}</label>
-                <hois-classifier-value ng-model="row[0].foreignLangCode" main-classifier-code="EHIS_VOORKEEL"></hois-classifier-value>
-              </md-input-container>
-            </div>
-            <div layout="row" flex="50" flex-xs="100" ng-if="row.length > 1">
-              <md-input-container flex="50" class="md-block" flex-offset="5" flex-offset-xs="0">
-                <label>{{'student.foreignLanguageType' | translate}}</label>
-                <hois-classifier-value ng-model="row[1].foreignLangTypeCode" main-classifier-code="VOORKEEL_TYYP"></hois-classifier-value>
-              </md-input-container>
-              <md-input-container flex="50" class="md-block" flex-offset="5">
-                <label>{{'student.foreignLanguage' | translate}}</label>
-                <hois-classifier-value ng-model="row[1].foreignLangCode" main-classifier-code="EHIS_VOORKEEL"></hois-classifier-value>
-              </md-input-container>
-            </div>
-          </div>
-        </div>
-      </hois-collapsable>
-    </div>
-
-    <div>
+    <div ng-if="akadDirectives.content !== undefined && akadDirectives.content.length !== 0">
       <hois-collapsable label="('student.akadDirective.label' | translate)">
         <div layout="row" ng-if="student.status === 'OPPURSTAATUS_A'">
           <md-input-container flex="35" flex-sm="100" flex-xs="100">
@@ -340,6 +311,46 @@
         </md-table-container>
         <md-table-pagination ng-show="akadDirectives.totalElements > akadDirectivesCriteria.size" md-limit="akadDirectivesCriteria.size" md-limit-options="[5, 10, 15]"
                              md-page="akadDirectivesCriteria.page" md-total="{{akadDirectives.totalElements}}" md-on-paginate="loadAkadDirectives"
+                             md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+
+      </hois-collapsable>
+    </div>
+
+    <div ng-if="foreignstudies.content !== undefined && foreignstudies.content.length !== 0 && !student.isGuestStudent">
+      <hois-collapsable label="('student.foreignStudy' | translate)">
+
+        <md-table-container>
+          <table md-table md-progress="foreignstudies.$promise" class="secondary-table">
+            <thead md-head md-order="foreignstudiesCriteria.order" md-on-reorder="loadForeignstudies">
+              <tr md-row>
+                <th md-column md-order-by="1">{{'student.foreignstudy.school' | translate}}</th>
+                <th md-column md-order-by="country.{{currentLanguageNameField()}}">{{'student.foreignstudy.country' | translate}}</th>
+                <th md-column md-order-by="3">{{'student.foreignstudy.startDate' | translate}}</th>
+                <th md-column md-order-by="4">{{'student.foreignstudy.endDate' | translate}}</th>
+                <th md-column md-order-by="purpose.{{currentLanguageNameField()}}">{{'student.foreignstudy.purpose' | translate}}</th>
+                <th md-column md-order-by="programme.{{currentLanguageNameField()}}">{{'student.foreignstudy.programme' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in foreignstudies.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{row.school != null ? currentLanguageNameField(row.school) : '-'}}</td>
+                <td md-cell>
+                  <hois-classifier-value ng-model="row.country" main-classifier-code="RIIK"></hois-classifier-value>
+                </td>
+                <td md-cell>{{::row.startDate | hoisDate}}</td>
+                <td md-cell>{{::row.endDate | hoisDate}}</td>
+                <td md-cell>
+                  <hois-classifier-value ng-model="row.abroadPurpose" main-classifier-code="VALISOPE_EESMARK"></hois-classifier-value>
+                </td>
+                <td md-cell>
+                  <hois-classifier-value ng-model="row.abroadProgramme" main-classifier-code="VALISKOOL_PROGRAMM"></hois-classifier-value>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+        <md-table-pagination ng-show="foreignstudies.totalElements > foreignstudiesCriteria.size" md-limit="foreignstudiesCriteria.size" md-limit-options="[5, 10, 15]"
+                             md-page="foreignstudiesCriteria.page" md-total="{{foreignstudies.totalElements}}" md-on-paginate="loadForeignstudies"
                              md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
 
       </hois-collapsable>
@@ -389,6 +400,39 @@
           </md-input-container>
         </div>
 
+      </hois-collapsable>
+    </div>
+
+    <div>
+      <hois-collapsable label="('student.foreignLanguages.label' | translate)">
+        <div style="font-style: italic; font-size: 13px;" ng-if="student.foreignLanguageTypes === null || student.foreignLanguageTypes === undefined 
+          || student.foreignLanguageTypes.length === 0">
+          {{'student.error.foreignLanguageMissing' | translate}}
+        </div>
+        <div layout="column">
+          <div layout="row" layout-xs="column" ng-repeat="row in student.foreignLanguageTypes">
+            <div layout="row" flex="50" flex-xs="100" ng-if="row.length > 0">
+              <md-input-container flex="50" class="md-block">
+                <label>{{'student.foreignLanguageType' | translate}}</label>
+                <hois-classifier-value ng-model="row[0].foreignLangTypeCode" main-classifier-code="VOORKEEL_TYYP"></hois-classifier-value>
+              </md-input-container>
+              <md-input-container flex="50" class="md-block" flex-offset="5">
+                <label>{{'student.foreignLanguage' | translate}}</label>
+                <hois-classifier-value ng-model="row[0].foreignLangCode" main-classifier-code="EHIS_VOORKEEL"></hois-classifier-value>
+              </md-input-container>
+            </div>
+            <div layout="row" flex="50" flex-xs="100" ng-if="row.length > 1">
+              <md-input-container flex="50" class="md-block" flex-offset="5" flex-offset-xs="0">
+                <label>{{'student.foreignLanguageType' | translate}}</label>
+                <hois-classifier-value ng-model="row[1].foreignLangTypeCode" main-classifier-code="VOORKEEL_TYYP"></hois-classifier-value>
+              </md-input-container>
+              <md-input-container flex="50" class="md-block" flex-offset="5">
+                <label>{{'student.foreignLanguage' | translate}}</label>
+                <hois-classifier-value ng-model="row[1].foreignLangCode" main-classifier-code="EHIS_VOORKEEL"></hois-classifier-value>
+              </md-input-container>
+            </div>
+          </div>
+        </div>
       </hois-collapsable>
     </div>
 
@@ -463,46 +507,6 @@
             <hois-value value="student.isRepresentativeMandatory ? 'main.yes' : 'main.no' | translate"></hois-value>
           </md-input-container>
         </div>
-
-      </hois-collapsable>
-    </div>
-
-    <div ng-if="!student.isGuestStudent">
-      <hois-collapsable label="('student.foreignStudy' | translate)">
-
-        <md-table-container>
-          <table md-table md-progress="foreignstudies.$promise" class="secondary-table">
-            <thead md-head md-order="foreignstudiesCriteria.order" md-on-reorder="loadForeignstudies">
-              <tr md-row>
-                <th md-column md-order-by="1">{{'student.foreignstudy.school' | translate}}</th>
-                <th md-column md-order-by="country.{{currentLanguageNameField()}}">{{'student.foreignstudy.country' | translate}}</th>
-                <th md-column md-order-by="3">{{'student.foreignstudy.startDate' | translate}}</th>
-                <th md-column md-order-by="4">{{'student.foreignstudy.endDate' | translate}}</th>
-                <th md-column md-order-by="purpose.{{currentLanguageNameField()}}">{{'student.foreignstudy.purpose' | translate}}</th>
-                <th md-column md-order-by="programme.{{currentLanguageNameField()}}">{{'student.foreignstudy.programme' | translate}}</th>
-              </tr>
-            </thead>
-            <tbody md-body>
-              <tr md-row ng-repeat="row in foreignstudies.content" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td md-cell>{{row.school != null ? currentLanguageNameField(row.school) : '-'}}</td>
-                <td md-cell>
-                  <hois-classifier-value ng-model="row.country" main-classifier-code="RIIK"></hois-classifier-value>
-                </td>
-                <td md-cell>{{::row.startDate | hoisDate}}</td>
-                <td md-cell>{{::row.endDate | hoisDate}}</td>
-                <td md-cell>
-                  <hois-classifier-value ng-model="row.abroadPurpose" main-classifier-code="VALISOPE_EESMARK"></hois-classifier-value>
-                </td>
-                <td md-cell>
-                  <hois-classifier-value ng-model="row.abroadProgramme" main-classifier-code="VALISKOOL_PROGRAMM"></hois-classifier-value>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </md-table-container>
-        <md-table-pagination ng-show="foreignstudies.totalElements > foreignstudiesCriteria.size" md-limit="foreignstudiesCriteria.size" md-limit-options="[5, 10, 15]"
-                             md-page="foreignstudiesCriteria.page" md-total="{{foreignstudies.totalElements}}" md-on-paginate="loadForeignstudies"
-                             md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
 
       </hois-collapsable>
     </div>

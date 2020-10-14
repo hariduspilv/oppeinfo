@@ -2,6 +2,10 @@ package ee.hitsa.ois.xls;
 
 import java.awt.Color;
 
+import org.apache.poi.ss.usermodel.ClientAnchor;
+import org.apache.poi.ss.usermodel.Comment;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Drawing;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -72,6 +76,17 @@ public abstract class AbstractColorAreaListener<T extends Object> implements Are
                         }
                         newStyle.setFont(getFont(variable));
                         cell.setCellStyle(newStyle);
+                        String commentString = getComment(variable);
+                        if (commentString != null) {
+                            CreationHelper factory = workbook.getCreationHelper();
+                            Drawing drawing = sheet.createDrawingPatriarch();
+                            ClientAnchor anchor = factory.createClientAnchor();
+                            Comment comment = drawing.createCellComment(anchor);
+                            comment.setVisible(false);
+                            comment.setString(factory.createRichTextString(commentString));
+                            comment.setVisible(false);
+                            cell.setCellComment(comment);
+                        }
                     }
                 }
             }
@@ -80,6 +95,8 @@ public abstract class AbstractColorAreaListener<T extends Object> implements Are
         }
     }
     
+    protected abstract String getComment(T object);
+
     protected abstract boolean styleLocked(CellRef srcCell);
     
     protected abstract Color getColor(T object);

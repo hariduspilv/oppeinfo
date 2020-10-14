@@ -67,12 +67,14 @@
              (resultColumn.outcomeResult && record.showStudentProgress && !resultColumn.intendedModule),
             'blue-100': resultColumn.moduleResult && record.showStudentProgress && resultColumn.intendedModule,
             'deep-orange-200': resultColumn.moduleResult && record.showStudentProgress && !resultColumn.intendedModule}">
-        <div ng-if="resultColumn.journalResult" layout="row">
-          <div ng-repeat="result in resultColumn.journalResult.results">
-            <span ng-if="!gradeUtil.isPositive(result.grade.code)" class="badResult">{{result.grade.value}}</span>
+        <div ng-if="resultColumn.journalResult" layout="row" layout-align="start center" flex>
+          <div ng-repeat="result in resultColumn.journalResult.results" layout="row" layout-align="start center">
+            <span ng-if="!gradeUtil.isPositive(result.grade.code)" class="badResult">{{result.grade | hoisVocationalGrade}}</span>
             <span ng-if="gradeUtil.isPositive(result.grade.code) && entryTypeColors[result.entryType.code]"
-              md-colors="{color: getEntryColor(result.entryType.code)}">{{result.grade.value}}</span>
-            <span ng-if="gradeUtil.isPositive(result.grade.code) && !entryTypeColors[result.entryType.code]">{{result.grade.value}}</span>
+              md-colors="{color: getEntryColor(result.entryType.code)}">{{result.grade | hoisVocationalGrade}}</span>
+            <span ng-if="gradeUtil.isPositive(result.grade.code) && !entryTypeColors[result.entryType.code]">{{result.grade | hoisVocationalGrade}}</span>
+            <span ng-if="result.verbalGrade">,&nbsp;</span>
+            <hois-journal-verbal-result ng-if="result.verbalGrade" value="result"></hois-journal-verbal-result>
             <md-tooltip class="tooltip-multiline">
               <span>{{result.gradeInserted ? (result.gradeInserted | hoisDate) : '-'}},</span>
               <span>{{result.gradeInsertedBy}},</span>
@@ -115,27 +117,27 @@
           </div>
         </div>
         <div ng-if="resultColumn.practiceModuleThemeResult">
-          <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.practiceModuleThemeResult.grade.code)}">{{resultColumn.practiceModuleThemeResult.grade.value}}</div>
+          <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.practiceModuleThemeResult.grade.code)}">{{resultColumn.practiceModuleThemeResult.grade | hoisVocationalGrade}}</div>
           <md-tooltip>
             <span>{{resultColumn.practiceModuleThemeResult.gradeInserted ?
               (resultColumn.practiceModuleThemeResult.gradeInserted | hoisDate) : '-'}}</span>
           </md-tooltip>
         </div>
         <div ng-if="resultColumn.practiceModuleResult">
-          <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.practiceModuleResult.grade.code)}">{{resultColumn.practiceModuleResult.grade.value}}</div>
+          <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.practiceModuleResult.grade.code)}">{{resultColumn.practiceModuleResult.grade | hoisVocationalGrade}}</div>
           <md-tooltip>
             <span>{{resultColumn.practiceModuleResult.gradeInserted ? (resultColumn.practiceModuleResult.gradeInserted | hoisDate) : '-'}}</span>
           </md-tooltip>
         </div>
         <div ng-if="resultColumn.outcomeResult">
-          <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.outcomeResult.grade.code)}">{{resultColumn.outcomeResult.grade.value}}</div>
+          <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.outcomeResult.grade.code)}">{{resultColumn.outcomeResult.grade | hoisVocationalGrade}}</div>
           <md-tooltip>
             <span>{{resultColumn.outcomeResult.gradeInserted ? (resultColumn.outcomeResult.gradeInserted | hoisDate) : '-'}},</span>
             <span>{{resultColumn.outcomeResult.gradeInsertedBy}}</span>
           </md-tooltip>
         </div>
         <div ng-if="resultColumn.moduleResult">
-          <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.moduleResult.grade.code)}">{{resultColumn.moduleResult.grade.value}}</div>
+          <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.moduleResult.grade.code)}">{{resultColumn.moduleResult.grade | hoisVocationalGrade}}</div>
           <md-tooltip>
             <span>{{resultColumn.moduleResult.gradeInserted ? (resultColumn.moduleResult.gradeInserted | hoisDate) : '-'}}</span>
           </md-tooltip>

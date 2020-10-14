@@ -26,6 +26,7 @@ import javax.transaction.Transactional.TxType;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
+import ee.hitsa.ois.enums.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.PropertyAccessor;
@@ -55,20 +56,6 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentHistory;
-import ee.hitsa.ois.enums.ApplicationStatus;
-import ee.hitsa.ois.enums.ContractStatus;
-import ee.hitsa.ois.enums.DirectiveCancelType;
-import ee.hitsa.ois.enums.DirectiveStatus;
-import ee.hitsa.ois.enums.DirectiveType;
-import ee.hitsa.ois.enums.DocumentStatus;
-import ee.hitsa.ois.enums.FormStatus;
-import ee.hitsa.ois.enums.JobType;
-import ee.hitsa.ois.enums.MessageType;
-import ee.hitsa.ois.enums.Role;
-import ee.hitsa.ois.enums.ScholarshipStatus;
-import ee.hitsa.ois.enums.StudentStatus;
-import ee.hitsa.ois.enums.StudentType;
-import ee.hitsa.ois.enums.SupportServiceType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.exception.SingleMessageWithParamsException;
@@ -197,7 +184,9 @@ public class DirectiveConfirmService {
                     LocalDate startDate = DateUtils.periodStart(ds);
                     LocalDate endDate = DateUtils.periodEnd(ds);
                     if(studentScholarships.stream().anyMatch(p -> !p.getStartDate().isAfter(endDate) && !p.getEndDate().isBefore(startDate)
-                            && !Boolean.TRUE.equals(p.getScholarshipApplication().getScholarshipTerm().getIsAcademicLeave()))) {
+                            && (p.getScholarshipApplication() != null
+                                ? !Boolean.TRUE.equals(p.getScholarshipApplication().getScholarshipTerm().getIsAcademicLeave())
+                                : !ScholarshipType.STIPTOETUS_MUU.name().equals(EntityUtil.getNullableCode(p.getDirective().getScholarshipType()))))) {
                         invalidStudents.add(createInvalidStudent(ds, "directive.scholarshipExists"));
                     }
                 }
@@ -688,12 +677,24 @@ public class DirectiveConfirmService {
             if(q.setMaxResults(1).getResultList().isEmpty()) {
                 // no canceled, update status
                 Student student = em.getReference(Student.class, studentId);
-                if(!ClassifierUtil.equals(newStatus, student.getStatus())) {
+                student = setTypeSpecificChanges(student, type);
+                // save for akad minek because its acad study allowed is updated
+                if(!ClassifierUtil.equals(newStatus, student.getStatus()) || JobType.JOB_AKAD_MINEK.equals(type)) {
                     student.setStatus(em.getReference(Classifier.class, newStatus.name()));
                     studentService.saveWithHistory(student);
                 }
             }
         }
+    }
+
+    private static Student setTypeSpecificChanges(Student student, JobType type) {
+        switch(type) {
+        case JOB_AKAD_MINEK:
+            student.setIsAcadStudyAllowed(Boolean.FALSE);
+        default:
+            // do nothing
+        }
+        return student;
     }
 
     public void sendAcademicLeaveEndingMessage(Job job) {
@@ -772,7 +773,11 @@ public class DirectiveConfirmService {
             if (directiveStudent.getDiplomaForm() != null) {
                 directiveStudent.getDiplomaForm().setStatus(em.getReference(Classifier.class, FormStatus.LOPUBLANKETT_STAATUS_R.name()));
                 directiveStudent.getDiplomaForm().setDefected(confirmDate);
-                directiveStudent.getDiplomaForm().setDefectReason(directiveStudent.getAddInfo());
+                directiveStudent.getDiplomaForm().setDefectReason(directiveStudent.getAddInfo() != null
+                        ? directiveStudent.getAddInfo().length() > 255
+                            ? directiveStudent.getAddInfo().substring(0, 252) + "..."
+                            : directiveStudent.getAddInfo()
+                        : null);
                 directiveStudent.getDiplomaForm().setDefectedBy(directiveStudent.getDirective().getConfirmer());
             }
 
@@ -785,7 +790,11 @@ public class DirectiveConfirmService {
                 forms.forEach(dsForm -> {
                     dsForm.getForm().setStatus(em.getReference(Classifier.class, FormStatus.LOPUBLANKETT_STAATUS_R.name()));
                     dsForm.getForm().setDefected(confirmDate);
-                    dsForm.getForm().setDefectReason(directiveStudent.getAddInfo());
+                    dsForm.getForm().setDefectReason(directiveStudent.getAddInfo() != null
+                            ? directiveStudent.getAddInfo().length() > 255
+                                ? directiveStudent.getAddInfo().substring(0, 252) + "..."
+                                : directiveStudent.getAddInfo()
+                            : null);
                     dsForm.getForm().setDefectedBy(directiveStudent.getDirective().getConfirmer());
                 });
                 if (ClassifierUtil.equals(DocumentStatus.LOPUDOK_STAATUS_K, directiveStudent.getDiplomaSupplement().getStatusEn())) {
@@ -798,7 +807,11 @@ public class DirectiveConfirmService {
                 formsEn.forEach(dsForm -> {
                     dsForm.getForm().setStatus(em.getReference(Classifier.class, FormStatus.LOPUBLANKETT_STAATUS_R.name()));
                     dsForm.getForm().setDefected(confirmDate);
-                    dsForm.getForm().setDefectReason(directiveStudent.getAddInfo());
+                    dsForm.getForm().setDefectReason(directiveStudent.getAddInfo() != null
+                            ? directiveStudent.getAddInfo().length() > 255
+                                ? directiveStudent.getAddInfo().substring(0, 252) + "..."
+                                : directiveStudent.getAddInfo()
+                            : null);
                     dsForm.getForm().setDefectedBy(directiveStudent.getDirective().getConfirmer());
                 });
                 if (ClassifierUtil.equals(DocumentStatus.LOPUDOK_STAATUS_K, directiveStudent.getDiplomaSupplementEn().getStatus())) {
@@ -1031,30 +1044,39 @@ public class DirectiveConfirmService {
             return Collections.emptyMap();
         }
 
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds "+
-                "join directive d on ds.directive_id = d.id and ds.canceled = false "+
-                "left join study_period sps on ds.study_period_start_id = sps.id "+
-                "left join study_period spe on ds.study_period_end_id = spe.id").sort(new Sort(Direction.DESC, "d.confirm_date"));
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds "
+                + "join directive d on ds.directive_id = d.id and ds.canceled = false "
+                + "join student s on ds.student_id = s.id "
+                + "left join study_period sps on ds.study_period_start_id = sps.id "
+                + "left join study_period spe on ds.study_period_end_id = spe.id "
+                + "left join (directive_student ds_katk join directive d_katk on d_katk.id = ds_katk.directive_id "
+                        + "and d_katk.type_code = :katkDirectiveType and d_katk.status_code = :directiveStatus) "
+                        + "on ds_katk.directive_student_id = ds.id and ds_katk.canceled = false")
+                .sort(new Sort(Direction.DESC, "d.confirm_date"));
 
         List<Long> studentIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudent()), directive.getStudents());
         qb.requiredCriteria("ds.student_id in (:studentIds)", "studentIds", studentIds);
         qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
         qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_AKAD);
+        qb.parameter("katkDirectiveType", DirectiveType.KASKKIRI_AKADK.name());
         if(ClassifierUtil.equals(DirectiveType.KASKKIRI_AKADK, directive.getType())) {
             qb.requiredCriteria("ds.directive_id in (select a.directive_id"
                     + " from directive_student ds2"
                     + " join application a on ds2.application_id = a.id"
                     + " where ds2.directive_id = :directiveId)", "directiveId", directive.getId());
         } else {
-            // match academic leave period
-            qb.requiredCriteria("exists(select 1 from directive_student ds2 where ds2.directive_id = :directiveId "
-                    + "and ds2.start_date <= case when ds.is_period then spe.end_date else ds.end_date end "
-                    + "and ds2.end_date >= case when ds.is_period then sps.start_date else ds.start_date end "
-                    + "and ds2.student_id = ds.student_id)", "directiveId", directive.getId());
+            // student isn't studying or matches academic leave period in the future
+            qb.requiredCriteria("(s.status_code not in (:studentStatus) "
+                    + "or exists(select 1 from directive_student ds2 where ds2.directive_id = :directiveId "
+                    + "and coalesce(sps.start_date, ds.start_date) >= now() "
+                    + "and ds2.start_date <= coalesce(ds_katk.start_date, spe.end_date, ds.end_date) "
+                    + "and ds2.end_date >= coalesce(sps.start_date, ds.start_date) "
+                    + "and ds2.student_id = ds.student_id))", "directiveId", directive.getId());
+            qb.parameter("studentStatus", EnumUtil.toNameList(StudentStatus.OPPURSTAATUS_O, StudentStatus.OPPURSTAATUS_V));
         }
 
-        List<?> data = qb.select("ds.student_id, case when ds.is_period then sps.start_date else ds.start_date end, "+
-                  "case when ds.is_period then spe.end_date else ds.end_date end", em).getResultList();
+        List<?> data = qb.select("ds.student_id, coalesce(sps.start_date, ds.start_date) start_date, "
+                  + "coalesce(ds_katk.start_date, spe.end_date, ds.end_date) end_date", em).getResultList();
 
         return data.stream().map(r -> {
             DirectiveStudent ds = new DirectiveStudent();

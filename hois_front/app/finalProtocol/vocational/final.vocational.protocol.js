@@ -1,27 +1,16 @@
 'use strict';
 
-angular.module('hitsaOis').controller('FinalVocationalProtocolEditController', 
-function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, VocationalGradeUtil, oisFileService, config, message, dialogService, $location) {
+angular.module('hitsaOis').controller('FinalVocationalProtocolEditController',
+function ($location, $route, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, GradingSchema, ProtocolUtils, VocationalGradeUtil, QueryUtils, config, dialogService, message, oisFileService) {
   var endpoint = '/finalVocationalProtocols';
   $scope.gradeUtil = VocationalGradeUtil;
   $scope.auth = $route.current.locals.auth;
-  var clMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', status: 'PROTOKOLL_STAATUS', studyLevel: 'OPPEASTE' });
-  var studentClMapper = Classifier.valuemapper({ journalResults: 'KUTSEHINDAMINE', status: 'OPPURSTAATUS' });
-  var editForbiddenGrades = ['KUTSEHINDAMINE_1', 'KUTSEHINDAMINE_X'];
-  var viewForbiddenGrades = ['KUTSEHINDAMINE_X'];
-  var allGrades = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMINE' });
+  var clMapper = Classifier.valuemapper({ status: 'PROTOKOLL_STAATUS', studyLevel: 'OPPEASTE' });
+  var studentClMapper = Classifier.valuemapper({ status: 'OPPURSTAATUS' });
+  var gradingSchema, gradeMapper;
+  var hiddenGrades = ['KUTSEHINDAMINE_1', 'KUTSEHINDAMINE_X'];
   $scope.formState = {};
   var deferredEntityToDto;
-
-  allGrades.$promise.then(function (result) {
-    $scope.grades = result.filter(function (it) {
-      if ($route.current.locals.isView) {
-        return viewForbiddenGrades.indexOf(it.code) === -1;
-      } else {
-        return editForbiddenGrades.indexOf(it.code) === -1;
-      }
-    });
-  });
 
   function resolveDeferredIfExists() {
     if (angular.isDefined(deferredEntityToDto) && deferredEntityToDto.promise.$$state.status === 0) {
@@ -29,10 +18,27 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
     }
   }
 
+  function setGradingSchema(entity) {
+    gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.VOCATIONAL);
+    $q.all(gradingSchema.promises).then(function () {
+      $scope.grades = gradingSchema.gradeSelection(entity.protocolVdata.studyYear.id);
+      $scope.grades.forEach(function (grade) {
+        // hide classifier grades that were previously filtered
+        if (!grade.gradingSchemaRowId && hiddenGrades.indexOf(grade.code) !== -1) {
+          grade.valid = false;
+        }
+      });
+      gradeMapper = gradingSchema.gradeMapper($scope.grades, ['grade']);
+    });
+  }
+
   function entityToDto(entity) {
-    $q.all(clMapper.promises).then(function () {
+    $q.all(clMapper.promises.concat(gradingSchema.promises)).then(function () {
       $scope.finalProtocolForm.$setPristine();
       $scope.protocol = clMapper.objectmapper(entity);
+      $scope.protocol.protocolStudents.forEach(function (protocolStudent) {
+        gradeMapper.objectmapper(protocolStudent);
+      });
       $scope.savedStudents = angular.copy($scope.protocol.protocolStudents);
 
       if (!$route.current.locals.isView && $scope.protocol.finalDate) {
@@ -63,26 +69,8 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
     });
   }
 
-  $scope.hideInvalid = function (cl) {
-    return !Classifier.isValid(cl);
-  }
-
   $scope.gradeChanged = function(row) {
-    if (row) {
-      var savedResult = $filter('filter')($scope.savedStudents, {id: row.id}, true)[0];
-      if (savedResult.grade !== row.grade) {
-        $scope.finalProtocolForm.$setSubmitted();
-        row.gradeHasChanged = true;
-      } else {
-        row.gradeHasChanged = false;
-
-        if (!savedResult.addInfo) {
-          row.addInfo = null;
-        } else {
-          row.addInfo = savedResult.addInfo;
-        }
-      }
-    }
+    ProtocolUtils.gradeChanged($scope.finalProtocolForm, $scope.savedStudents, row);
     $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.protocol);
   };
 
@@ -127,9 +115,8 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
   }
 
   if ($route.current.locals.entity) {
+    setGradingSchema($route.current.locals.entity);
     entityToDto($route.current.locals.entity);
-  } else if ($scope.protocol) {
-    loadGradesSelect();
   }
 
   $scope.selectedFinalDateChanged = function () {
@@ -144,7 +131,7 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
 
   function isSelectedCommitteeAvailable() {
     for (var i = 0; i < $scope.committees.length; i++) {
-      if ($scope.committees[i].id = $scope.protocol.committee) {
+      if ($scope.committees[i].id === $scope.protocol.committee) {
         return true;
       }
     }
@@ -160,7 +147,7 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
       $scope.committeeMembers = null;
     }
   };
-  
+
   $scope.deleteProtocolStudent = function (protocolStudent) {
     dialogService.confirmDialog({prompt: 'finalProtocol.prompt.deleteStudent'}, function() {
       var ProtocolStudentEndpoint = QueryUtils.endpoint(endpoint + '/' + $scope.protocol.id + '/removeStudent');
@@ -192,25 +179,14 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
         dialogScope.tabledata.content = studentClMapper.objectmapper(result);
       });
     }, function (submittedDialogScope) {
-      if(!validationPassed()) {
-        return false;
-      }
-
-      if (submittedDialogScope.selectedStudents.length === 0) {
-        return false;
-      }
-      
-      var addedStudents = submittedDialogScope.selectedStudents.map(function (it) { return { studentId: it, occupations: [] }; });
-      addedStudents.forEach(function (addedStudent) {
-        $scope.protocol.protocolStudents.push(addedStudent);
+      QueryUtils.endpoint(endpoint + '/' + $scope.protocol.id + '/addStudents').save({
+        version: $scope.protocol.version,
+        protocolStudents: submittedDialogScope.selectedStudents.map(function (it) { return { studentId: it }; })
+      }, function (result) {
+        message.info('finalProtocol.messages.studentSuccesfullyAdded');
+        entityToDto(result);
       });
-      $scope.save();
     });
-  };
-
-  $scope.gradeValue = function (code) {
-    var grade = clMapper.objectmapper({ grade: code }).grade;
-    return grade ? grade.value : undefined;
   };
 
   $scope.confirm = function () {
@@ -238,8 +214,8 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
     if(!validationPassed()) {
       return false;
     }
-    new FinalVocationlProtocolEndpoint({ 
-      id: $scope.protocol.id, 
+    new FinalVocationlProtocolEndpoint({
+      id: $scope.protocol.id,
       version: $scope.protocol.version,
       finalDate: $scope.protocol.finalDate,
       committeeId: $scope.protocol.committee,
@@ -250,14 +226,14 @@ function ($scope, $route, $filter, $q, QueryUtils, Classifier, ProtocolUtils, Vo
         entityToDto(result);
       }).catch(angular.noop);
   };
-  
+
   function getStudentsWithOccupations() {
     var protocolStudents = $scope.protocol.protocolStudents;
 
     protocolStudents.forEach(function (student) {
       var occupationCodes = [];
       var codes = Object.keys(student.occupations);
-      
+
       for (var i = 0; i < codes.length; i++) {
         if (student.occupations[codes[i]].granted) {
           occupationCodes.push(codes[i]);

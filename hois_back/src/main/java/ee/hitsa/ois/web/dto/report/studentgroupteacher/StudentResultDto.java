@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.report.studentgroupteacher;
 
+import ee.hitsa.ois.web.dto.GradeDto;
+
 import java.time.LocalDate;
 
 public class StudentResultDto {
@@ -7,7 +9,7 @@ public class StudentResultDto {
     private Long moduleId;
     private Long moduleThemeId;
     private Long outcomeId;
-    private String grade;
+    private GradeDto grade;
     private LocalDate gradeInserted;
     private String gradeInsertedBy;
 
@@ -48,11 +50,11 @@ public class StudentResultDto {
         this.outcomeId = outcomeId;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
 
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
 

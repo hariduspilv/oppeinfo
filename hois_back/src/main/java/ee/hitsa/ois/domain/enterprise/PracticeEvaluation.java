@@ -16,19 +16,20 @@ import ee.hitsa.ois.domain.school.School;
 
 @Entity
 public class PracticeEvaluation extends BaseEntityWithId {
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private School school;
-	private String nameEt;
-	private String addInfo;
-	private Boolean isActive;
-	@ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private String nameEt;
+    private String addInfo;
+    private Boolean isActive;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
-	private Classifier target;
-	
-	@OneToMany(mappedBy="practiceEvaluation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Classifier target;
+
+    @OneToMany(mappedBy="practiceEvaluation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PracticeEvaluationCriteria> criteria = new ArrayList<>();
-	
+
     public School getSchool() {
         return school;
     }

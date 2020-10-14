@@ -4,7 +4,7 @@ angular.module('hitsaOis').controller('SubjectProgramController',
   ['$scope', 'QueryUtils', '$route', 'ArrayUtils', 'message', 'dialogService',
    '$location', 'config', '$rootScope', '$timeout', '$mdColors', 'Classifier', '$filter',
 function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $location, config, $rootScope, $timeout, $mdColors, Classifier, $filter) {
-  
+
   var formTypes = Object.freeze({
     periods: "periods",
     programs: "programs",
@@ -24,13 +24,13 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
 
   $scope.isString = function(possibleString) {
     return angular.isString(possibleString);
-  }
+  };
 
   $scope.auth = $route.current.locals.auth;
   var subjectId = $route.current.params.subjectId;
   var subjectStudyPeriodId = $route.current.params.subjectStudyPeriodId;
   var teacherId = $route.current.params.teacher;
-  
+
   var formType = formTypes[$route.current.params.form || ($route.current.locals.params ? $route.current.locals.params.form : undefined)]; // Used to understand from where did user come.
   if (angular.isUndefined(formType)) {
     message.error('main.messages.error.nopermission');
@@ -46,7 +46,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     status: 'AINEPROGRAMM_STAATUS_L',
     isLetterGrade: !!$scope.auth && !!$scope.auth.school ? $scope.auth.school.letterGrades : undefined
   };
-  
+
   var mappedGrades = {};
   var grades = Classifier.queryForDropdown({ mainClassCode: 'KORGHINDAMINE' });
   grades.$promise.then(function () {
@@ -136,7 +136,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
     if (angular.isUndefined(week1) || angular.isUndefined(week2)) {
       return angular.isUndefined(week1) ? 1 : -1;
     }
-    
+
     var isValid1 = weekRegex.test(week1);
     var isValid2 = weekRegex.test(week2);
 
@@ -353,7 +353,7 @@ function ($scope, QueryUtils, $route, ArrayUtils, message, dialogService, $locat
           }
         };
       }, function () {
-        
+
       });
   };
 
@@ -437,7 +437,7 @@ function ($scope, QueryUtils, $route, DataUtils, Classifier, message, $q) {
       }
     });
     $scope.studyPeriods.forEach(function (studyPeriod) {
-      studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + 
+      studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' +
         $scope.currentLanguageNameField(studyPeriod);
     });
   }

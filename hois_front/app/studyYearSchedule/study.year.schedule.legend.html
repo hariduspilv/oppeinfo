@@ -20,7 +20,7 @@
                 <td md-cell>
                     <span ng-class="{invalid: formSubmitted && !codeIsValid(item)}" ng-if="!item.edited">{{item.code}}</span>
                     <md-input-container ng-if="item.edited">
-                        <input ng-model="item.code" class="small-input" type="text" max="2" md-max-length="2">
+                        <input ng-model="item.code" class="small-input" type="text" max="4" md-max-length="4">
                     </md-input-container>
                 </td>
                 <td md-cell>

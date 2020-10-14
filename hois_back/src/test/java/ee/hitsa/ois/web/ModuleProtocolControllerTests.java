@@ -25,7 +25,7 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.ProtocolRepository;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolCreateForm;
-import ee.hitsa.ois.web.commandobject.ModuleProtocolStudentCreateForm;
+import ee.hitsa.ois.web.commandobject.ProtocolStudentCreateForm;
 import ee.hitsa.ois.web.commandobject.ProtocolVdataForm;
 import ee.hitsa.ois.web.dto.ModuleProtocolDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolSearchDto;
@@ -102,9 +102,9 @@ public class ModuleProtocolControllerTests {
         protocolVdata.setCurriculumVersionOccupationModule(
                 existingProtocol.getProtocolVdata().getCurriculumVersionOccupationModule().getId());
 
-        List<ModuleProtocolStudentCreateForm> protocolStudents = existingProtocol.getProtocolStudents().stream()
+        List<ProtocolStudentCreateForm> protocolStudents = existingProtocol.getProtocolStudents().stream()
                 .map(it -> {
-                    ModuleProtocolStudentCreateForm form = new ModuleProtocolStudentCreateForm();
+                    ProtocolStudentCreateForm form = new ProtocolStudentCreateForm();
                     form.setStudentId(it.getStudent().getId());
                     return form;
                 }).collect(Collectors.toList());

@@ -8,9 +8,9 @@
         </div>
         <div flex-gt-md="15" flex-offset-gt-md="5" layout="row" layout-align-gt-md="center center">
           <div ng-if="moduleResultById[module.curriculumModule.id] && moduleResultById[module.curriculumModule.id].grade && positiveGrade(moduleResultById[module.curriculumModule.id].grade.code)"
-            class="bold" md-colors="{color: 'green-600'}">{{moduleResultById[module.curriculumModule.id].grade.value}} ({{moduleResultById[module.curriculumModule.id].credits}} {{'student.result.ekap' | translate}})</div>
+            class="bold" md-colors="{color: 'green-600'}">{{moduleResultById[module.curriculumModule.id].grade | hoisVocationalGrade}} ({{moduleResultById[module.curriculumModule.id].credits}} {{'student.result.ekap' | translate}})</div>
           <div ng-if="moduleResultById[module.curriculumModule.id] && moduleResultById[module.curriculumModule.id].grade && !positiveGrade(moduleResultById[module.curriculumModule.id].grade.code)"
-            class="bold" md-colors="{color: 'red-500'}">{{moduleResultById[module.curriculumModule.id].grade.value}} ({{moduleResultById[module.curriculumModule.id].credits}} {{'student.result.ekap' | translate}})</div>
+            class="bold" md-colors="{color: 'red-500'}">{{moduleResultById[module.curriculumModule.id].grade | hoisVocationalGrade}} ({{moduleResultById[module.curriculumModule.id].credits}} {{'student.result.ekap' | translate}})</div>
           <div ng-if="(!moduleResultById[module.curriculumModule.id] || !moduleResultById[module.curriculumModule.id].grade) && module.moduleBacklog < 0"
             md-colors="{color: 'accent'}">{{module.moduleBacklog | number: 1}} {{'student.result.ekap' | translate}}</div>
           <div ng-if="(!moduleResultById[module.curriculumModule.id] || (moduleResultById[module.curriculumModule.id] && !moduleResultById[module.curriculumModule.id].grade)) && module.moduleBacklog >= 0"

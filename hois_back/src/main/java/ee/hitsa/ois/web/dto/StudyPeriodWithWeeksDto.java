@@ -13,7 +13,7 @@ public class StudyPeriodWithWeeksDto {
     private final String nameEn;
     private LocalDate startDate;
     private LocalDate endDate;
-
+    private List<StudyPeriodEventDto> vacations;
     private List<Short> weekNrs;
     private List<LocalDate> weekBeginningDates;
     // list of nrs that are added to weekNrs list so that study period weeks can go from 1 to last period's week
@@ -71,5 +71,13 @@ public class StudyPeriodWithWeeksDto {
 
     public void setExternalWeeks(List<Short> externalWeeks) {
         this.externalWeeks = externalWeeks;
+    }
+
+    public List<StudyPeriodEventDto> getVacations() {
+        return vacations;
+    }
+
+    public void setVacations(List<StudyPeriodEventDto> vacations) {
+        this.vacations = vacations;
     }
 }

@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
+import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -11,17 +13,20 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HigherProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.web.commandobject.HigherProtocolSaveForm;
 import ee.hitsa.ois.web.commandobject.OisFileViewDto;
+import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
-public class HigherProtocolDto extends HigherProtocolSaveForm {
+public class HigherProtocolDto extends VersionedCommand {
     private Long id;
     private String protocolNr;
     private String protocolType;
     private String status;
+    private Set<HigherProtocolStudentDto> protocolStudents = new HashSet<>();
     private SubjectStudyPeriodMidtermTaskDto subjectStudyPeriodMidtermTaskDto;
     private HigherProtocolModuleDto moduleDto;
     private OisFileViewDto oisFile;
+    private LocalDate finalDate;
+    private Long studyYearId;
     private Boolean canBeEdited;
     private Boolean canBeConfirmed;
     private Boolean canBeDeleted;
@@ -110,6 +115,14 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
         this.status = status;
     }
 
+    public Set<HigherProtocolStudentDto> getProtocolStudents() {
+        return protocolStudents;
+    }
+
+    public void setProtocolStudents(Set<HigherProtocolStudentDto> protocolStudents) {
+        this.protocolStudents = protocolStudents;
+    }
+
     public SubjectStudyPeriodMidtermTaskDto getSubjectStudyPeriodMidtermTaskDto() {
         return subjectStudyPeriodMidtermTaskDto;
     }
@@ -132,6 +145,22 @@ public class HigherProtocolDto extends HigherProtocolSaveForm {
 
     public void setOisFile(OisFileViewDto oisFile) {
         this.oisFile = oisFile;
+    }
+
+    public LocalDate getFinalDate() {
+        return finalDate;
+    }
+
+    public void setFinalDate(LocalDate finalDate) {
+        this.finalDate = finalDate;
+    }
+
+    public Long getStudyYearId() {
+        return studyYearId;
+    }
+
+    public void setStudyYearId(Long studyYearId) {
+        this.studyYearId = studyYearId;
     }
 
     public Boolean getCanBeEdited() {

@@ -22,8 +22,7 @@ public class ModuleProtocolStudentDto {
     private String fullname;
     private String studentGroup;
     private String idcode;
-    @ClassifierRestriction(MainClassCode.KUTSEHINDAMINE)
-    private String grade;
+    private GradeDto grade;
     @ClassifierRestriction(MainClassCode.OPPURSTAATUS)
     private String status;
     private String addInfo;
@@ -39,7 +38,7 @@ public class ModuleProtocolStudentDto {
 
     public static ModuleProtocolStudentDto of(ProtocolStudent protocolStudent) {
         ModuleProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent, new ModuleProtocolStudentDto(),
-                "protocolStudentHistories");
+                "grade", "protocolStudentHistories");
         dto.setStudentId(protocolStudent.getStudent().getId());
         if (protocolStudent.getStudent().getStudentGroup() != null) {
             dto.setStudentGroup(protocolStudent.getStudent().getStudentGroup().getCode());
@@ -47,6 +46,7 @@ public class ModuleProtocolStudentDto {
         dto.setFullname(PersonUtil.fullname(protocolStudent.getStudent()));
         dto.setIdcode(protocolStudent.getStudent().getPerson().getIdcode());
         dto.setStatus(EntityUtil.getCode(protocolStudent.getStudent().getStatus()));
+        dto.setGrade(GradeDto.of(protocolStudent));
 
         if (protocolStudent.getStudent().getJournalStudents() != null) {
             List<JournalStudent> journalStudents = protocolStudent.getStudent().getJournalStudents();
@@ -64,7 +64,7 @@ public class ModuleProtocolStudentDto {
                                                 .stream().mapToInt(it -> it.getHours() == null ? 0
                                                         : it.getHours().intValue())
                                                 .sum()),
-                                        EntityUtil.getCode(jes.getGrade()))));
+                                        EntityUtil.getCode(jes.getGrade()), EntityUtil.getNullableId(jes.getGradingSchemaRow()))));
             }
             
         }
@@ -76,7 +76,8 @@ public class ModuleProtocolStudentDto {
                         .map(r -> EntityUtil.getId(r.getModule().getCurriculumModule())).collect(Collectors.toList())
                         .contains(EntityUtil.getId(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule().getCurriculumModule())))
                     .forEach(pj -> dto.getPracticeJournalResults()
-                            .add(new ProtocolPracticeJournalResultDto(pj.getId(), EntityUtil.getCode(pj.getGrade()),
+                            .add(new ProtocolPracticeJournalResultDto(pj.getId(),
+                                    EntityUtil.getCode(pj.getGrade()), EntityUtil.getNullableId(pj.getGradingSchemaRow()),
                                     pj.getGradeInserted() != null ? pj.getGradeInserted() : pj.getInserted(),
                                     pj.getModuleSubjects())));
         }
@@ -117,11 +118,11 @@ public class ModuleProtocolStudentDto {
         this.idcode = idcode;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
 
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
 

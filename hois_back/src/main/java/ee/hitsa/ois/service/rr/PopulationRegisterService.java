@@ -167,6 +167,13 @@ public class PopulationRegisterService {
             String address = elukoht == null || StringUtils.isBlank(elukoht.getElukohtTekst()) ? null : elukoht.getElukohtTekst();
             String oids = elukoht == null || StringUtils.isBlank(elukoht.getElukohtAdsOid()) ? null : elukoht.getElukohtAdsOid();
             String postCode = elukoht == null || StringUtils.isBlank(elukoht.getElukohtPostiindeks()) ? null : elukoht.getElukohtPostiindeks();
+            // unused, check happens using address.
+            //String addressCode = elukoht == null || StringUtils.isBlank(elukoht.getElukohtKoodaadress()) ? null : elukoht.getElukohtKoodaadress();
+            String addressAds = elukoht == null ? null : StringUtils.rightPad(
+                            StringUtils.defaultIfBlank(StringUtils.leftPad(elukoht.getElukohtMaakonnaKood(), 2, '0'), "00")
+                                + StringUtils.defaultIfBlank(StringUtils.leftPad(elukoht.getElukohtVallaKood(), 3, '0'), "000")
+                                + StringUtils.defaultIfBlank(StringUtils.leftPad(elukoht.getElukohtKylaKood(), 4, '0'), "0000"),
+                    33, '0');
             
             ClassifierCache classifiers = new ClassifierCache(classifierService);
             
@@ -186,17 +193,8 @@ public class PopulationRegisterService {
                 logService.insertChangeLog(log, data.getStudents());
             }
 
-//            data.getPerson().setFirstname(isik.getIsikEesnimi());
-//            data.getPerson().setLastname(isik.getIsikPerenimi());
-//            data.getPerson().setCitizenship(classifiers.getByValue(isik.getIsikPohiKodakondsus(), MainClassCode.RIIK));
-//            data.getPerson().setResidenceCountry(elukoht == null? null : classifiers.getByNameEt(elukoht.getElukohtRiikNim(), MainClassCode.RIIK));
-//            data.getPerson().setAddress(elukoht == null? null : elukoht.getElukohtTekst());
-//            //data.getPerson().setAddressAds(elukoht == null? null : elukoht.getElukohtKoodaadress()); XXX
-//            data.getPerson().setAddressAdsOid(elukoht == null? null : elukoht.getElukohtAdsOid());
-//            data.getPerson().setPostcode(elukoht == null ? null : elukoht.getElukohtPostiindeks());
-            
             logService.savePersonData(data.getPerson(), firstName, lastName, classifiers.getByValue(isik.getIsikPohiKodakondsus(), MainClassCode.RIIK),
-                    elukoht == null? null : classifiers.getByNameEt(elukoht.getElukohtRiikNim(), MainClassCode.RIIK), address, null, oids, postCode);
+                    elukoht == null? null : classifiers.getByNameEt(elukoht.getElukohtRiikNim(), MainClassCode.RIIK), address, oids, postCode, addressAds);
         });
         return result.hasError() ? result.getLog().getError() : null;
     }

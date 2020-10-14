@@ -39,6 +39,7 @@ import ee.hitsa.ois.concurrent.AsyncRequest;
 import ee.hitsa.ois.concurrent.WrapperCallable;
 import ee.hitsa.ois.concurrent.request.EhisAsyncRequest;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Job;
 import ee.hitsa.ois.domain.WsEhisStudentLog;
 import ee.hitsa.ois.domain.apelapplication.ApelApplication;
 import ee.hitsa.ois.domain.apelapplication.ApelApplicationFormalSubjectOrModule;
@@ -48,6 +49,7 @@ import ee.hitsa.ois.domain.apelapplication.ApelSchool;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentCurriculumCompletion;
+import ee.hitsa.ois.domain.student.StudentLanguages;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
 import ee.hitsa.ois.enums.ApelInformalType;
 import ee.hitsa.ois.enums.DirectiveStatus;
@@ -83,6 +85,7 @@ import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
 import ee.hois.xroad.ehis.generated.KhlOppekavaTaitmine;
 import ee.hois.xroad.ehis.generated.KhlVOTA;
 import ee.hois.xroad.ehis.generated.KhlVOTAArr;
+import ee.hois.xroad.ehis.generated.KhlVoorkeeledArr;
 
 /**
  * 
@@ -919,6 +922,24 @@ public class EhisStudentService extends EhisService {
                 .setParameter(6, criteria.getFrom())
                 .setParameter(7, criteria.getThru())
                 .getResultList();
+    }
+    
+    public void sendStudentLanguages(Job job)    {
+        Student student = em.getReference(Student.class, EntityUtil.getId(job.getStudent()));
+        KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+
+        KhlVoorkeeledArr khlVoorkeeledArr = new KhlVoorkeeledArr();
+        khlVoorkeeledArr.setMuutusKp(date(job.getJobTime().toLocalDate()));
+        for (StudentLanguages language : student.getStudentLanguages()) {
+            khlVoorkeeledArr.getKlVoorkeel().add(ehisValue(language.getForeignLang()));
+        }
+
+        KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+        khlKorgharidusMuuda.setVoorkeeled(khlVoorkeeledArr);
+
+        khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+
+        makeRequest(student, khlOppeasutusList);
     }
 
     private List<ApelApplication> findApelApplications(Long schoolId, EhisStudentForm criteria) {

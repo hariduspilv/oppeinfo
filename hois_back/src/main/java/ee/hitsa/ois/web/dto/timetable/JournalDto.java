@@ -23,6 +23,7 @@ import ee.hitsa.ois.web.dto.studymaterial.JournalLessonHoursDto;
 public class JournalDto {
 
     private Long id;
+    private Long studyYearId;
     private String studyYear;
     private LocalDate studyYearStartDate;
     private LocalDate studyYearEndDate;
@@ -58,6 +59,7 @@ public class JournalDto {
     public static JournalDto of(Journal journal) {
         JournalDto dto = EntityUtil.bindToDto(journal, new JournalDto(), "studyYear", "journalTeachers",
                 "journalStudents", "journalEntries", "journalRooms", "isReviewOk", "reviewDate", "reviewInfo");
+        dto.setStudyYearId(EntityUtil.getId(journal.getStudyYear()));
         dto.setStudyYear(EntityUtil.getCode(journal.getStudyYear().getYear()));
         dto.setStudyYearStartDate(journal.getStudyYear().getStartDate());
         dto.setStudyYearEndDate(journal.getStudyYear().getEndDate());
@@ -110,6 +112,14 @@ public class JournalDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getStudyYearId() {
+        return studyYearId;
+    }
+
+    public void setStudyYearId(Long studyYearId) {
+        this.studyYearId = studyYearId;
     }
 
     public String getStudyYear() {

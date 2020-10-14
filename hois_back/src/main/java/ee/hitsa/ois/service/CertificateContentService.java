@@ -458,8 +458,7 @@ public class CertificateContentService {
         List<StudentVocationalResultModuleThemeDto> data = studentService.studentVocationalResults(student,
                 showUncompleted, false);
         if (!showUncompleted) {
-            data = StreamUtil.toFilteredList(
-                    r -> OccupationalGrade.isPositive(r.getGrade()), data);
+            data = StreamUtil.toFilteredList(r -> r.getGrade() != null && OccupationalGrade.isPositive(r.getGrade().getCode()), data);
         }
         
         Map<String, Classifier> grades = getVocationalGrades();

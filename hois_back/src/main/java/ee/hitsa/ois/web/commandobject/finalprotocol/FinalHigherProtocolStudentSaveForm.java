@@ -1,8 +1,8 @@
 package ee.hitsa.ois.web.commandobject.finalprotocol;
 
-import ee.hitsa.ois.web.dto.HigherProtocolStudentDto;
+import ee.hitsa.ois.web.commandobject.ProtocolStudentSaveForm;
 
-public class FinalHigherProtocolStudentSaveForm extends HigherProtocolStudentDto {
+public class FinalHigherProtocolStudentSaveForm extends ProtocolStudentSaveForm {
 
     private String occupationCode;
     private Long curriculumGradeId;

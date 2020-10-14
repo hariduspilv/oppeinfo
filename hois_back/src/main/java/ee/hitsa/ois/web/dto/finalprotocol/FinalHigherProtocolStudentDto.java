@@ -11,6 +11,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.FinalProtocolUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.web.dto.GradeDto;
 import ee.hitsa.ois.web.dto.HigherProtocolStudentDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
 
@@ -25,13 +26,16 @@ public class FinalHigherProtocolStudentDto extends HigherProtocolStudentDto {
     private List<FinalProtocolStudentOccupationDto> curriculumOccupations = new ArrayList<>();
     
     public static FinalHigherProtocolStudentDto of(ProtocolStudent protocolStudent) {
-        FinalHigherProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent, new FinalHigherProtocolStudentDto());
+        FinalHigherProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent, new FinalHigherProtocolStudentDto(),
+                "grade");
         Student student = protocolStudent.getStudent();
         dto.setStudentId(EntityUtil.getId(student));
         dto.setFullname(PersonUtil.fullname(student));
         dto.setIdcode(student.getPerson().getIdcode());
         dto.setStatus(EntityUtil.getCode(student.getStatus()));
         dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);
+        dto.setGrade(GradeDto.of(protocolStudent));
+
         dto.setCurriculumGrade(protocolStudent.getCurriculumGrade() != null ? CurriculumGradeDto.of(protocolStudent.getCurriculumGrade()) : null);
         if (!protocolStudent.getStudent().getFinalThesis().isEmpty()) {
             dto.setFinalThesisCurriculumGrade(EntityUtil.getNullableId(protocolStudent.getStudent().getFinalThesis().get(0).getCurriculumGrade()));

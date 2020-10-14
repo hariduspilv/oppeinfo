@@ -524,19 +524,32 @@ public class ScholarshipService {
         ScholarshipUtil.assertCanEditApplication(user, term, student);
 
         Map<String, Object> result = new HashMap<>();
+        result.put("stipend", ScholarshipTermApplicationDto.of(term));
+        ScholarshipApplication application = getApplicationForTermAndStudent(term, student);
+        result.put("application", getStudentApplicationDto(student, term, application));
+        result.put("termCompliance", studentCompliesTerm(student, term));
+
         if (!user.isStudent()) {
             result.put("student", AutocompleteResult.of(student));
-            result.put("studentGroup",  AutocompleteResult.of(student.getStudentGroup()));
+            if (application != null) {
+                if (application.getStudentGroup() != null) {
+                    result.put("studentGroup", AutocompleteResult.of(application.getStudentGroup()));
+                }
+            } else if (student.getStudentGroup() != null) {
+                result.put("studentGroup", AutocompleteResult.of(student.getStudentGroup()));
+            }
         }
-        result.put("stipend", ScholarshipTermApplicationDto.of(term));
-        result.put("application", getStudentApplicationDto(student, term));
-        result.put("termCompliance", studentCompliesTerm(student, term));
         return result;
     }
 
     public ScholarshipApplicationDto getStudentApplicationDto(Student student, ScholarshipTerm term) {
-        Person person = student.getPerson();
         ScholarshipApplication application = getApplicationForTermAndStudent(term, student);
+        return getStudentApplicationDto(student, term, application);
+    }
+
+    private ScholarshipApplicationDto getStudentApplicationDto(Student student, ScholarshipTerm term,
+            ScholarshipApplication application) {
+        Person person = student.getPerson();
         ScholarshipApplicationDto applicationDto = application == null ? 
                 new ScholarshipApplicationDto() : ScholarshipApplicationDto.of(application);;
         applicationDto.setCanApply(Boolean.valueOf(ScholarshipUtil.canApply(term, application)));
@@ -584,10 +597,17 @@ public class ScholarshipService {
         return applicationDto;
     }
 
-    public Map<String, Object> getApplicationView(ScholarshipApplication application) {
+    public Map<String, Object> getApplicationView(HoisUserDetails user, ScholarshipApplication application) {
         Map<String, Object> result = new HashMap<>();
         result.put("stipend", ScholarshipTermApplicationDto.of(application.getScholarshipTerm()));
         result.put("application", getApplicationDto(application));
+
+        if (!user.isStudent()) {
+            result.put("student", AutocompleteResult.of(application.getStudent()));
+            if (application.getStudentGroup() != null) {
+                result.put("studentGroup", AutocompleteResult.of(application.getStudentGroup()));
+            }
+        }
         return result;
     }
 
@@ -695,7 +715,7 @@ public class ScholarshipService {
                 Optional<BigDecimal> resultCredits = distinctiveResults.stream().map(StudyResult::getCredits)
                         .reduce(BigDecimal::add);
                 if (resultCredits.isPresent()) {
-                    wagMark = wagGradeSum.divide(resultCredits.get(), 2, RoundingMode.DOWN);
+                    wagMark = wagGradeSum.divide(resultCredits.get(), 3, RoundingMode.FLOOR);
                 }
 
                 averages.setAverageMark(averageMark(gradeSum, distinctiveResults.size()));

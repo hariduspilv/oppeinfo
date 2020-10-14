@@ -15,6 +15,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -33,67 +34,70 @@ public class StudentHigherResult {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private Student student;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     private Subject subject;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumVersionHigherModule curriculumVersionHmodule;
-    
+
     @Required
     private String subjectNameEt;
-    
+
     @Required
     private String subjectNameEn;
-    
+
     private String subjectCode;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     private ApelSchool apelSchool;
-    
+
     @Column(name = "grade")
     private String gradeValue;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier grade;
-    
+
     private Short gradeMark;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     private ProtocolStudent protocolStudent;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     private ApelApplicationRecord apelApplicationRecord;
     
     @Required
     private BigDecimal credits;
-    
+
     @Required
     private Boolean isOptional;
-    
+
     private String teachers;
     private LocalDate gradeDate;
-    
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime inserted;
-    
+
     @LastModifiedDate
     private LocalDateTime changed;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     private StudyPeriod studyPeriod;
-    
+
     @OneToOne(mappedBy="studentHigherResult", cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(nullable = false, updatable = false)
     private StudentHigherResultModule changedModule;
 
     private Boolean isActive;
     private Boolean isModule;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private GradingSchemaRow gradingSchemaRow;
 
     public Long getId() {
         return id;
@@ -279,4 +283,11 @@ public class StudentHigherResult {
         this.isModule = isModule;
     }
 
+    public GradingSchemaRow getGradingSchemaRow() {
+        return gradingSchemaRow;
+    }
+
+    public void setGradingSchemaRow(GradingSchemaRow gradingSchemaRow) {
+        this.gradingSchemaRow = gradingSchemaRow;
+    }
 }

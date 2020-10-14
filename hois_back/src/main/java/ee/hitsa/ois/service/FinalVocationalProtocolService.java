@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -178,7 +179,7 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
         return dto;
     }
 
-    public FinalVocationalProtocolDto create(HoisUserDetails user, FinalVocationalProtocolCreateForm form) {
+    public Protocol create(HoisUserDetails user, FinalVocationalProtocolCreateForm form) {
         SchoolService.SchoolType type = schoolService.schoolType(user.getSchoolId());
         FinalProtocolUtil.assertIsSchoolAdminOrTeacherResponsible(user, type.isHigher(),
                 form.getProtocolVdata().getTeacher());
@@ -195,25 +196,12 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
         protocolVdata.setProtocol(protocol);
         protocol.setProtocolVdata(protocolVdata);
 
-        List<Long> studentIds = StreamUtil.toMappedList(ps -> ps.getStudentId(), form.getProtocolStudents());
-        Set<String> occupations = curriculumOccpations(protocol);
-        Map<Long, List<StudentOccupationCertificate>> studentOccupationCertificates = studentOccupationCertificates(
-                studentIds, occupations);
-
         protocol.setProtocolStudents(StreamUtil.toMappedList(dto -> {
             ProtocolStudent protocolStudent = EntityUtil.bindToEntity(dto, new ProtocolStudent());
             protocolStudent.setStudent(em.getReference(Student.class, dto.getStudentId()));
-
-            List<StudentOccupationCertificate> studentCertificates = studentOccupationCertificates
-                    .get(dto.getStudentId());
-            if (studentCertificates != null) {
-                for (StudentOccupationCertificate sc : studentCertificates) {
-                    addStudentOccupationCertificateToProtocol(protocolStudent, sc);
-                }
-            }
             return protocolStudent;
         }, form.getProtocolStudents()));
-        return FinalVocationalProtocolDto.of(EntityUtil.save(protocol, em));
+        return EntityUtil.save(protocol, em);
     }
 
     private ProtocolVdata protocolVdataFromDto(ProtocolVdataForm vdata) {
@@ -249,36 +237,24 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
     private void saveStudents(Protocol protocol, FinalVocationalProtocolSaveForm form) {
         List<ProtocolStudent> storedStudents = new ArrayList<>(protocol.getProtocolStudents());
         EntityUtil.bindEntityCollection(protocol.getProtocolStudents(), ProtocolStudent::getId,
-                form.getProtocolStudents(), FinalVocationalProtocolStudentSaveForm::getId, dto -> {
-                    ProtocolStudent ps = EntityUtil.bindToEntity(dto, new ProtocolStudent(), "student");
-                    ps.setStudent(em.getReference(Student.class, dto.getStudentId()));
-                    saveOccupationCertificates(ps, dto);
-                    return ps;
-                }, (dto, ps) -> {
+                // no protocol students created here
+                form.getProtocolStudents(), FinalVocationalProtocolStudentSaveForm::getId, null, (dto, ps) -> {
                     if (gradeChangedButNotRemoved(dto, ps)) {
+                        assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
-                        Classifier grade = em.getReference(Classifier.class, dto.getGrade());
+                        Classifier grade = em.getReference(Classifier.class, dto.getGrade().getCode());
                         Short mark = getMark(EntityUtil.getCode(grade));
-                        gradeStudent(ps, grade, mark, Boolean.FALSE, LocalDate.now());
+                        GradingSchemaRow gradingSchemaRow = EntityUtil.getOptionalOne(GradingSchemaRow.class,
+                                dto.getGrade().getGradingSchemaRowId(), em);
+                        gradeStudent(ps, grade, mark, Boolean.FALSE, gradingSchemaRow, LocalDate.now());
                         ps.setAddInfo(dto.getAddInfo());
                     } else if (gradeRemoved(dto, ps)) {
+                        assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
                         removeGrade(ps);
                     }
                     saveOccupationCertificates(ps, dto);
                 });
-        assertRemovedStudents(storedStudents, protocol.getProtocolStudents());
-    }
-
-    private static void assertRemovedStudents(List<ProtocolStudent> oldStudents, List<ProtocolStudent> newStudents) {
-        Set<Long> newIds = StreamUtil.toMappedSet(ProtocolStudent::getId, newStudents);
-        List<ProtocolStudent> removedStudents = StreamUtil
-                .toFilteredList(oldStudent -> !newIds.contains(oldStudent.getId()), oldStudents);
-        for (ProtocolStudent protocolStudent : removedStudents) {
-            if (!FinalProtocolUtil.studentCanBeDeleted(protocolStudent)) {
-                throw new ValidationFailedException("finalProtocol.messages.cantRemoveStudent");
-            }
-        }
     }
 
     private void saveOccupationCertificates(ProtocolStudent student, FinalVocationalProtocolStudentSaveForm form) {
@@ -310,6 +286,23 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
         return studentsForSelection(user,
                 EntityUtil.getId(protocol.getProtocolVdata().getCurriculumVersionOccupationModule()),
                 protocol.getIsFinalThesis(), protocol.getId()).values();
+    }
+
+    public Protocol addStudents(Protocol protocol, FinalVocationalProtocolSaveForm form) {
+        Map<Long, ProtocolStudent> existingStudents = StreamUtil.toMap(it -> EntityUtil.getId(it.getStudent()),
+                protocol.getProtocolStudents());
+
+        for (FinalVocationalProtocolStudentSaveForm studentForm : form.getProtocolStudents()) {
+            if (existingStudents.containsKey(studentForm.getStudentId())) {
+                log.warn("student {} is already added to protocol {}", studentForm.getStudentId(), protocol.getId());
+            } else {
+                ProtocolStudent ps = new ProtocolStudent();
+                ps.setStudent(em.getReference(Student.class, studentForm.getStudentId()));
+                ps.setProtocol(protocol);
+                protocol.getProtocolStudents().add(ps);
+            }
+        }
+        return EntityUtil.save(protocol, em);
     }
 
     private static Short getMark(String grade) {

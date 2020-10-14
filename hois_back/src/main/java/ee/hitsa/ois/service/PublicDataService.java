@@ -4,21 +4,29 @@ import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.school.StudyYearSchedule;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.util.SubjectUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.subject.SubjectSearchCommand;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
+import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 import ee.hitsa.ois.web.dto.studymaterial.JournalDto;
 import ee.hitsa.ois.web.dto.studymaterial.StudyMaterialSearchDto;
 import ee.hitsa.ois.web.dto.timetable.SchoolPublicDataSettingsDto;
@@ -28,26 +36,37 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.service.curriculum.CurriculumSearchService;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.web.commandobject.StudyYearScheduleDtoContainer;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSearchCommand;
 import ee.hitsa.ois.web.dto.AcademicCalendarDto;
 import ee.hitsa.ois.web.dto.PublicDataMapper;
 import ee.hitsa.ois.web.dto.StateCurriculumDto;
+import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
+import ee.hitsa.ois.web.dto.StudyYearDto;
+import ee.hitsa.ois.web.dto.StudyYearScheduleDto;
+import ee.hitsa.ois.web.dto.StudyYearScheduleLegendDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SubjectDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
@@ -70,6 +89,8 @@ public class PublicDataService {
     private StudyMaterialService studyMaterialService;
     @Autowired
     private SubjectService subjectService;
+    @Autowired
+    private StudyYearScheduleService studyYearScheduleService;
 
     public SchoolPublicDataSettingsDto schoolPublicSettings(Long schoolId) {
         School school = em.getReference(School.class, schoolId);
@@ -244,4 +265,54 @@ public class PublicDataService {
     public Object subjectProgram(SubjectProgram program) {
         return new PublicDataMapper(Language.ET).map(program);
     }
+
+    public Map<String, ?> getStudyYearScheduleLegends(Long schoolId) {
+        School school = em.getReference(School.class, schoolId);
+        Map<String, Object> response = new HashMap<>();
+        response.put("legends", StreamUtil.toMappedList(StudyYearScheduleLegendDto::of, school.getStudyYearScheduleLegends()));
+        return response;
+    }
+
+    public List<StudentGroupSearchDto> getStudyYearScheduleStudentGroups(Long schoolId) {
+        List<StudentGroup> data;
+        JpaQueryBuilder<StudentGroup> qb = new JpaQueryBuilder<>(StudentGroup.class, "sg").sort("code");
+        qb.requiredCriteria("sg.school.id = :schoolId", "schoolId", schoolId);
+        data = qb.select(em).getResultList();
+
+        return StreamUtil.toMappedList(sg -> {
+            StudentGroupSearchDto dto = new StudentGroupSearchDto();
+            dto.setId(sg.getId());
+            dto.setCode(sg.getCode());
+            dto.setValidFrom(sg.getValidFrom());
+            dto.setValidThru(sg.getValidThru());
+            dto.setSchoolDepartments(StreamUtil.toMappedList(d -> EntityUtil.getId(d.getSchoolDepartment()),
+                    sg.getCurriculum().getDepartments()));
+            dto.setCanEdit(Boolean.FALSE);
+            return dto;
+        }, data.stream().filter(sg -> sg.getCurriculum() != null && !sg.getCurriculum().getDepartments().isEmpty()));
+    }
+
+    public List<StudyYearDto> getStudyYearsWithStudyPeriods(Long schoolId) {
+        return studyYearScheduleService.getStudyYearsWithStudyPeriods(schoolId);
+    }
+
+    public Set<StudyYearScheduleDto> getStudyYearSchedule(Long schoolId, StudyYearScheduleDtoContainer schedulesCmd) {
+        JpaQueryBuilder<StudyYearSchedule> qb = new JpaQueryBuilder<>(StudyYearSchedule.class, "sys");
+
+        qb.requiredCriteria("sys.school.id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("sys.studyPeriod.id in (:studyPeriodIds)", "studyPeriodIds", schedulesCmd.getStudyPeriods());
+        qb.optionalCriteria("sys.studentGroup.id in (:studentGroupIds)", "studentGroupIds", schedulesCmd.getStudentGroups());
+
+        return StreamUtil.toMappedSet(StudyYearScheduleDto::of, qb.select(em).getResultList());
+    }
+
+    public List<StudyPeriodWithWeeksDto> getStudyYearPeriods(StudyYear studyYear) {
+        return studyYearScheduleService.getStudyYearPeriods(studyYear);
+    }
+
+    public List<SchoolDepartmentResult> studyYearScheduleSchoolDepartments(Long schoolId) {
+        return autocompleteService.schoolDepartments(schoolId);
+    }
+    
+    
 }

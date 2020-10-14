@@ -53,23 +53,30 @@
                       <span ng-if="!journalOccupationStudents[row.studentId].removeStudentHistory"
                         ng-repeat="gradeHistory in journalOccupationStudents[row.studentId].history | orderBy: 'gradeInserted'">
                         <span>
-                          <span>{{gradeHistory.grade.value}}</span>
+                          <span>{{gradeHistory.grade | hoisVocationalGrade}}</span>
                           <md-tooltip>{{gradeHistory.gradeInsertedBy}}, {{gradeHistory.gradeInserted | hoisDate}}</md-tooltip>
                         </span>
                         <span ng-if="gradeHistory.grade.value && !$last">/</span>
                       </span>
                       <span ng-if="row.canEdit && journalOccupationStudents[row.studentId].canEdit">
-                        <md-input-container>
-                          <hois-select ng-if="gradeInputAsSelect" ng-model="journalOccupationStudents[row.studentId].grade" values="grades" show-property="value"
-                            hide-values="hideInvalid" value-property="code" ng-change="journalOutcomeStudentChanged(row)" aria-label="grade"></hois-select>
-                          <input ng-if="!gradeInputAsSelect" ng-model="journalOccupationStudents[row.studentId].gradeValue" style="width: 75px;"
-                            ng-change="journalOutcomeStudentChanged(row)" type="text" ng-pattern="gradeInputRegex" aria-label="grade">
+                        <md-input-container ng-if="gradeInputAsSelect">
+                          <hois-grade-select ng-model="journalOccupationStudents[row.studentId].grade" values="grades"
+                            ng-change="journalOutcomeStudentChanged(row)" aria-label="grade"></hois-grade-select>
                         </md-input-container>
+                        <span ng-if="!gradeInputAsSelect">
+                          <md-input-container ng-if="!journalOccupationStudents[row.studentId].grade.gradingSchemaRowId" class="gradeAsInput">
+                            <input ng-model="journalOccupationStudents[row.studentId].gradeValue"
+                              ng-change="journalOutcomeStudentChanged(row)" type="text" ng-pattern="gradeInputRegex" aria-label="grade">
+                          </md-input-container>
+                          <md-input-container ng-if="journalOccupationStudents[row.studentId].grade.gradingSchemaRowId" class="gradeAsInput">
+                            <input value="{{journalOccupationStudents[row.studentId].grade | hoisVocationalGrade}}" disabled>
+                          </md-input-container>
+                          {{journalOccupationStudents[row.id].grade}}
+                        </span>
                       </span>
                       <span ng-if="!row.canEdit || !journalOccupationStudents[row.studentId].canEdit">
                         <md-input-container>
-                          <hois-select ng-model="journalOccupationStudents[row.studentId].grade" values="grades" show-property="value"
-                            hide-values="hideInvalid" value-property="code" aria-label="grade" disabled></hois-select>
+                          <hois-grade-select ng-model="journalOccupationStudents[row.studentId].grade" values="grades" aria-label="grade" disabled></hois-grade-select>
                         </md-input-container>
                       </span>
                     </td>

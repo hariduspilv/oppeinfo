@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import ee.hitsa.ois.services.JuhanService;
 import ee.hitsa.ois.web.commandobject.juhan.JuhanEventForm;
+import ee.hitsa.ois.web.commandobject.juhan.JuhanEventsForm;
 import ee.hitsa.ois.web.commandobject.juhan.JuhanRoomCommand;
 import ee.hitsa.ois.web.commandobject.juhan.JuhanTeacherCommand;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -38,9 +40,9 @@ public class JuhanController {
         return juhanService.rooms(schoolId, criteria);
     }
 
-    @PostMapping("/event")
-    public ResponseEntity<Map<String, Object>> event(@Valid @RequestBody JuhanEventForm eventForm) {
-        return juhanService.event(eventForm);
+    @PostMapping("/events")
+    public ResponseEntity<Map<String, Object>> events(@Valid @RequestBody JuhanEventsForm eventsForm) {
+        return juhanService.events(eventsForm);
     }
 
 }

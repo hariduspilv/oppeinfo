@@ -16,6 +16,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
+import ee.hitsa.ois.web.commandobject.ProtocolStudentSaveForm;
+import ee.hitsa.ois.web.dto.GradeDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,12 +68,11 @@ public class AbstractProtocolService {
     }
 
     public static boolean gradeChangedButNotRemoved(ProtocolStudentForm dto, ProtocolStudent ps) {
-        return dto.getGrade() != null && !dto.getGrade().isEmpty() &&
-                !dto.getGrade().equals(EntityUtil.getNullableCode(ps.getGrade()));
+        return dto.getGrade() != null && !dto.getGrade().equals(GradeDto.of(ps));
     }
 
     protected static boolean gradeRemoved(ProtocolStudentForm dto, ProtocolStudent ps) {
-        return dto.getGrade() == null || dto.getGrade().isEmpty() &&
+        return dto.getGrade() == null || dto.getGrade().getCode().isEmpty() &&
                 EntityUtil.getNullableCode(ps.getGrade()) != null;
     }
 
@@ -80,23 +82,26 @@ public class AbstractProtocolService {
             history.setProtocolStudent(ps);
             history.setAddInfo(ps.getAddInfo());
             history.setGrade(ps.getGrade());
+            history.setGradingSchemaRow(ps.getGradingSchemaRow());
             ps.getProtocolStudentHistories().add(history);
         }
     }
 
     protected static void removeGrade(ProtocolStudent ps) {
         ps.setGrade(null);
+        ps.setGradingSchemaRow(null);
         ps.setGradeDate(null);
         ps.setGradeMark(null);
         ps.setGradeValue(null);
     }
 
     protected static void gradeStudent(ProtocolStudent ps, Classifier grade, Short gradeMark, Boolean isLetterGrade,
-            LocalDate gradeDate) {
+           GradingSchemaRow gradingSchemaRow, LocalDate gradeDate) {
         ps.setGrade(grade);
-        ps.setGradeDate(gradeDate);
         ps.setGradeMark(gradeMark);
         ps.setGradeValue(Boolean.TRUE.equals(isLetterGrade) ? grade.getValue2() : grade.getValue());
+        ps.setGradingSchemaRow(gradingSchemaRow);
+        ps.setGradeDate(gradeDate);
     }
 
     protected void setConfirmation(HoisUserDetails user, Protocol protocol) {
@@ -112,7 +117,7 @@ public class AbstractProtocolService {
             automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OA_TULEMUS, protocolStudent.getStudent(), msg);
         }
     }
-    
+
     public void removeStudent(HoisUserDetails user, ProtocolStudent student) {
         if (!ProtocolUtil.studentCanBeDeleted(student)) {
             throw new ValidationFailedException("finalProtocol.messages.cantRemoveStudent");
@@ -120,7 +125,7 @@ public class AbstractProtocolService {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(student, em);
     }
-    
+
     public AutocompleteResult lessonPlanModuleTeacher(Long studyYearId, Long curriculumVersionOmoduleId) {
         Query q = em.createNativeQuery("select lpm.teacher_id, p.firstname, p.lastname from lesson_plan_module lpm " + 
                 "join lesson_plan lp on lpm.lesson_plan_id = lp.id " + 
@@ -138,7 +143,29 @@ public class AbstractProtocolService {
         }
         return null;
     }
-    
+
+    protected static void assertHasAddInfoIfProtocolConfirmed(ProtocolStudentSaveForm form, Protocol protocol) {
+        if(ProtocolUtil.confirmed(protocol) && addInfoMissing(form)) {
+            throw new ValidationFailedException("higherProtocol.error.addInfoRequired");
+        }
+    }
+
+    private static boolean addInfoMissing(ProtocolStudentSaveForm form) {
+        return form.getAddInfo() == null || form.getAddInfo().isEmpty();
+    }
+
+    protected Long higherProtocolStudyYear(Protocol protocol) {
+        List<?> data = em.createNativeQuery("select coalesce(sp.study_year_id, "
+                + "get_study_year(cast(p.inserted as date), cast(p.school_id as int))) from protocol p "
+                + "join protocol_hdata phd on phd.protocol_id = p.id "
+                + "left join subject_study_period ssp on ssp.id = phd.subject_study_period_id "
+                + "left join study_period sp on sp.id = ssp.study_period_id "
+                + "where p.id = ?1")
+                .setParameter(1, protocol.getId())
+                .getResultList();
+        return !data.isEmpty() ? resultAsLong(data.get(0), 0) : null;
+    }
+
     /* FINAL EXAM methods */
     
     public List<AutocompleteResult> committeesForSelection(HoisUserDetails user, LocalDate finalDate) {

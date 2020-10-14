@@ -28,6 +28,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentUtil;
 
 /**
  * Job handling service.
@@ -62,6 +63,23 @@ public class JobService {
             ehis.setContract(contract);
             ehis.setJobTime(contract.getEndDate().atStartOfDay().plusDays(1));
             submitJob(JobType.JOB_PRAKTIKALEPING_KEHTETU, ehis);
+        }
+    }
+    
+    public void studentLanguageUpdated(Student student) {
+        if (ClassifierUtil.equals(StudentType.OPPUR_T, student.getType()) 
+                && student.getCurriculumVersion() != null
+                && Boolean.FALSE.equals(student.getCurriculumVersion().getCurriculum().getHigher())
+                && StudentUtil.isActive(student)) {
+            List<Job> jobs = findExecutableJobsForStudent(student, JobType.JOB_KEEL_EHIS);
+            // send languages to ehis only once per student
+            if (jobs.isEmpty()) {
+                Job languageJob = new Job();
+                languageJob.setSchool(student.getSchool());
+                languageJob.setStudent(student);
+                languageJob.setJobTime(LocalDateTime.now());
+                submitJob(JobType.JOB_KEEL_EHIS, languageJob);
+            }
         }
     }
 
@@ -183,6 +201,22 @@ public class JobService {
             .setParameter(1, JobStatus.JOB_STATUS_VALMIS.name())
             .setParameter(2, typeNames)
             .setParameter(3, LocalDateTime.now())
+            .getResultList();
+    }
+    
+    /**
+     * Find all jobs which are ready to execute for one student
+     *
+     * @param types
+     * @return list of jobs
+     */
+    public List<Job> findExecutableJobsForStudent(Student student, JobType... types) {
+        List<String> typeNames = EnumUtil.toNameList(types);
+        return em.createQuery("select j from Job j where j.status.code = ?1 and j.type.code in ?2 and j.jobTime <= ?3 and j.student.id = ?4 order by j.inserted", Job.class)
+            .setParameter(1, JobStatus.JOB_STATUS_VALMIS.name())
+            .setParameter(2, typeNames)
+            .setParameter(3, LocalDateTime.now())
+            .setParameter(4, EntityUtil.getId(student))
             .getResultList();
     }
 

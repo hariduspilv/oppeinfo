@@ -156,23 +156,6 @@ public class SchoolService {
                 !Collections.disjoint(EducationLevel.DOCTOR, educationLevels));
     }
     
-    public static SchoolType schoolType(Long schoolId, EntityManager em) {
-        List<?> data = em.createNativeQuery("select clc.connect_classifier_code from school s " +
-                "join school_study_level ssl on ssl.school_id = s.id " +
-                "join classifier cl on cl.code = ssl.study_level_code " +
-                "join classifier_connect clc on clc.classifier_code = cl.code " +
-                "where s.id = :school")
-                .setParameter("school", schoolId)
-                .getResultList();
-        Set<String> educationLevels = StreamUtil.toMappedSet(r -> resultAsString(r, 0), data);
-
-        return new SchoolType(!Collections.disjoint(EducationLevel.BASIC, educationLevels),
-                !Collections.disjoint(EducationLevel.SECONDARY, educationLevels),
-                !Collections.disjoint(EducationLevel.VOCATIONAL, educationLevels),
-                !Collections.disjoint(EducationLevel.HIGHER, educationLevels),
-                !Collections.disjoint(EducationLevel.DOCTOR, educationLevels));
-    }
-    
     /**
      * @param schoolId
      * @return null if schoolId is null

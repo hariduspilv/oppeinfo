@@ -1,22 +1,23 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('SchoolGradingSchemaController', ['$q', '$route', '$scope', 'USER_ROLES', 'ArrayUtils', 'AuthService', 'Classifier', 'DataUtils', 'QueryUtils', 'dialogService', 'message',
-    function ($q, $route, $scope, USER_ROLES, ArrayUtils, AuthService, Classifier, DataUtils, QueryUtils, dialogService, message) {
+  .controller('SchoolGradingSchemaController', ['$route', '$scope', 'GRADING_SCHEMA_TYPE', 'USER_ROLES', 'ArrayUtils', 'AuthService', 'Classifier', 'DataUtils', 'FormUtils', 'HigherGradeUtil', 'QueryUtils', 'dialogService', 'message',
+    function ($route, $scope, GRADING_SCHEMA_TYPE, USER_ROLES, ArrayUtils, AuthService, Classifier, DataUtils, FormUtils, HigherGradeUtil, QueryUtils, dialogService, message) {
       $scope.auth = $route.current.locals.auth;
       $scope.formState = { studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query() };
+      $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_HINDAMISSYSTEEM);
       var baseUrl = '/gradingSchema';
       var Endpoint = QueryUtils.endpoint(baseUrl);
 
       var school = $scope.auth.school;
       if (school.higher) {
-        $scope.schemaType = 'higher';
+        $scope.schemaType = GRADING_SCHEMA_TYPE.HIGHER;
       } else if (school.vocational) {
-        $scope.schemaType = 'vocational';
+        $scope.schemaType = GRADING_SCHEMA_TYPE.VOCATIONAL;
       } else if (school.secondary) {
-        $scope.schemaType = 'secondary';
+        $scope.schemaType = GRADING_SCHEMA_TYPE.SECONDARY;
       } else if (school.basic) {
-        $scope.schemaType = 'basic';
+        $scope.schemaType = GRADING_SCHEMA_TYPE.BASIC;
       } else {
         message.error('schoolGradingSchema.error.studyLevelsMissing');
       }
@@ -48,7 +49,19 @@ angular.module('hitsaOis')
       function schemaTypeChanges() {
         if (angular.isDefined($scope.schemaType)) {
           $scope.currentNavItem = 'educationLevel.' + $scope.schemaType;
-          $scope.grades = Classifier.queryForDropdown({ mainClassCode: $scope.schemaType === 'higher' ? 'KORGHINDAMINE' : 'KUTSEHINDAMINE' });
+
+          if ($scope.schemaType === GRADING_SCHEMA_TYPE.HIGHER) {
+            $scope.grades = Classifier.queryForDropdown({ mainClassCode: 'KORGHINDAMINE' });
+            $scope.grades.$promise.then(function () {
+              $scope.grades = HigherGradeUtil.orderedGrades($scope.grades);
+            });
+            $scope.gradeSelectShownValue = function (grade) {
+              return HigherGradeUtil.gradeSelectShownValue(grade, $scope.auth.school.letterGrades);
+            };
+          } else {
+            $scope.grades = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMINE' });
+            $scope.gradeSelectShownValue = null;
+          }
 
           loadTypeSchemas().then(function (schemas) {
             var currentGradingSchema;
@@ -88,9 +101,22 @@ angular.module('hitsaOis')
         });
         $scope.otherGradingSchemas = otherSchemas;
         $scope.formState.studyYearsInUse = studyYearsInUse;
+        if ($scope.formState.gradingSchemaForm) {
+          $scope.formState.gradingSchemaForm.$setPristine();
+        }
       }
 
       $scope.addGradingSchema = function () {
+        if (angular.isDefined($scope.formState.gradingSchemaForm) && $scope.formState.gradingSchemaForm.$dirty === true) {
+          dialogService.confirmDialog({prompt: 'main.messages.confirmFormDataNotSaved'}, function () {
+            addGradingSchema();
+          });
+        } else {
+          addGradingSchema();
+        }
+      };
+
+      function addGradingSchema() {
         loadTypeSchemas().then(function (schemas) {
           setTypeSchemas(schemas, null);
           $scope.gradingSchema = {
@@ -103,7 +129,7 @@ angular.module('hitsaOis')
             gradingSchemaRows: [ { isValid: true } ]
           };
         });
-      };
+      }
 
       $scope.isVerbalChanged = function () {
         if (!$scope.gradingSchema.isVerbal) {
@@ -112,20 +138,22 @@ angular.module('hitsaOis')
       };
 
       $scope.save = function () {
-        var gradingSchema = new Endpoint($scope.gradingSchema);
-        if (angular.isDefined($scope.gradingSchema.id)) {
-          gradingSchema.$update().then(function (response) {
-            $scope.gradingSchema = response;
-            $scope.formState.gradingSchemaForm.$setPristine();
-            message.info('main.messages.update.success');
-          });
-        } else {
-          gradingSchema.$save().then(function (response) {
-            $scope.gradingSchema = response;
-            $scope.formState.gradingSchemaForm.$setPristine();
-            message.info('main.messages.create.success');
-          });
-        }
+        FormUtils.withValidForm($scope.formState.gradingSchemaForm, function () {
+          var gradingSchema = new Endpoint($scope.gradingSchema);
+          if (angular.isDefined($scope.gradingSchema.id)) {
+            gradingSchema.$update().then(function (response) {
+              $scope.gradingSchema = response;
+              $scope.formState.gradingSchemaForm.$setPristine();
+              message.info('main.messages.update.success');
+            }).catch(angular.noop);
+          } else {
+            gradingSchema.$save().then(function (response) {
+              $scope.gradingSchema = response;
+              $scope.formState.gradingSchemaForm.$setPristine();
+              message.info('main.messages.create.success');
+            }).catch(angular.noop);
+          }
+        });
       };
 
       $scope.deleteGradingSchema = function () {
@@ -137,7 +165,7 @@ angular.module('hitsaOis')
                 setTypeSchemas(schemas, null);
               });
               message.info('main.messages.delete.success');
-            });
+            }).catch(angular.noop);
           } else {
             $scope.gradingSchema = null;
           }
@@ -162,26 +190,19 @@ angular.module('hitsaOis')
         });
       };
 
-      $scope.openGradingSchemaDialog = function(gradingSchema) {
+      $scope.openGradingSchemaDialog = function (gradingSchema) {
         dialogService.showDialog('school/school.grading.schema.dialog.html', function (dialogScope) {
           dialogScope.grades = $scope.grades;
-          QueryUtils.endpoint(baseUrl + '/' + gradingSchema.id).get().$promise.then(function (result) {
-            dialogScope.gradingSchema = result;
-            dialogScope.gradingSchema.studyYearObjects = [];
-            dialogScope.gradingSchema.studyYears.forEach(function (studyYearId) {
-              dialogScope.gradingSchema.studyYearObjects.push($scope.studyYearMap[studyYearId]);
-            });
-          });
+          dialogScope.gradingSchema = gradingSchema;
         });
       };
 
       $scope.editGradingSchema = function (gradingSchema) {
-        if (angular.isDefined($scope.formState.gradingSchemaForm) && $scope.formState.gradingSchemaForm.$dirty === true) {
+          if (angular.isDefined($scope.formState.gradingSchemaForm) && $scope.formState.gradingSchemaForm.$dirty === true) {
           dialogService.confirmDialog({prompt: 'main.messages.confirmFormDataNotSaved'}, function () {
             loadTypeSchemas().then(function (schemas) {
               setTypeSchemas(schemas, gradingSchema);
             });
-            $scope.formState.gradingSchemaForm.$setPristine();
           });
         } else {
           loadTypeSchemas().then(function (schemas) {

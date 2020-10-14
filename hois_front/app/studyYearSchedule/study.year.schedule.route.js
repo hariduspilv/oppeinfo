@@ -2,6 +2,14 @@
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
   $routeProvider
+    .when('/studyYearSchedule/public/:schoolId', {
+      templateUrl: 'studyYearSchedule/study.year.schedule.html',
+      controller: 'studyYearScheduleController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); }
+      }
+    })
     .when('/studyYearScheduleLegend', {
         templateUrl: 'studyYearSchedule/study.year.schedule.legend.html',
         controller: 'studyYearScheduleLegendController',

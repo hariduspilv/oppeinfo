@@ -1,4 +1,4 @@
-VERSIOON:  2.2.0/20200929
+VERSIOON:  2.3.0/20201015
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -10,24 +10,24 @@ README.md - tarne ja installeerimise kirjeldus
 /hois_html - rakenduse genereeritud html-id
 
 
-EELDUS: ver. 2.1.0/20200819
+EELDUS: ver. 2.2.0/20200929
 ------------------------------------------------------
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20200929.sql
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20201015.sql
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
 
 Andmebaasi installeerimiseks:
-1. käivitada install20200929.sql skript, nt
+1. käivitada install20201015.sql skript, nt
    
-   psql -h devhois -f install20200929.sql 2>&1 | tee log.txt
+   psql -h devhois -f install20201015.sql 2>&1 | tee log.txt
    
    , kus
    
    -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install20200929.sql - install faili nimi
+   -f install20201015.sql - install faili nimi
    log.txt - andmebaasi installeerimise logi fail
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
@@ -38,10 +38,10 @@ RAKENDUSE INSTALLEERIMINE:
 ------------------------------------------------------
 1. Backendi paigaldamiseks
 	1. Teisendada Fujitsu Laotajas asuv hois_back.jar /opt/hois kausta
-	2. Lisada application.properties e-mailide saatmiseks vajalikud parameetrid
+	2. Lisada application.properties võõrkeelte saatmiseks vajalikud parameetrid
 	
-	# e-mail sender configuration
-	hois.mail.sender=noreply@tahvel.ee
+	# võõrkeelte muutuste edastamise sagedus
+	hois.jobs.ehis.languages.cron=0 00 3 * * *
 	
 	3. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
 	

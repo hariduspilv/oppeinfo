@@ -38,6 +38,7 @@ import ee.hitsa.ois.web.commandobject.enterprise.PracticeEnterpriseIscedClassCom
 import ee.hitsa.ois.web.commandobject.enterprise.PracticeEnterpriseLocationCommand;
 import ee.hitsa.ois.web.commandobject.enterprise.PracticeEnterprisePersonCommand;
 import ee.hitsa.ois.web.commandobject.enterprise.PracticeEnterpriseSearchCommand;
+import ee.hitsa.ois.web.commandobject.enterprise.RegCodeUpdateCommand;
 import ee.hitsa.ois.web.commandobject.enterprise.StudyYearStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentPracticeStatisticsSearchCommand;
 import ee.hitsa.ois.web.dto.enterprise.EnterpriseRegCodeCheckDto;
@@ -134,9 +135,9 @@ public class PracticeEnterpriseController {
      * @param enterprise
      * @return Updated enterprise
      */
-    @GetMapping("/updateRegCode/{id:\\d+}")
-    public PracticeEnterpriseForm updateRegCode(HoisUserDetails user, EnterpriseRegCodeCheckDto enterpriseForm,
-            @WithEntity EnterpriseSchool enterprise) {
+    @GetMapping("/updateRegCode/{enterpriseId:\\d+}")
+    public PracticeEnterpriseForm updateRegCode(HoisUserDetails user, RegCodeUpdateCommand enterpriseForm,
+            @WithEntity("enterpriseId") Enterprise enterprise) {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_ETTEVOTE);
         return practiceEnterpriseService.updateRegCode(user, enterpriseForm, enterprise);
     }

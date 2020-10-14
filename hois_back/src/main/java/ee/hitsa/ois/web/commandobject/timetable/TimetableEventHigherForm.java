@@ -2,6 +2,8 @@ package ee.hitsa.ois.web.commandobject.timetable;
 
 import java.time.LocalDateTime;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.enums.MainClassCode;
@@ -13,6 +15,8 @@ public class TimetableEventHigherForm extends TimetableEventForm {
     private Long studentGroupId;
     @NotNull
     private LocalDateTime startTime;
+    @Min(0)
+    @Max(99)
     private Long lessonAmount;
     @ClassifierRestriction(MainClassCode.TUNNIPLAAN_SYNDMUS_KORDUS)
     private String repeatCode;

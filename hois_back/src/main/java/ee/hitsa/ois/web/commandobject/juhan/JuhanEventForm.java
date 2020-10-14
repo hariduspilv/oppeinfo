@@ -48,7 +48,7 @@ public class JuhanEventForm {
     }
 
     public List<JuhanEventTeacherForm> getTeachers() {
-        return teachers != null ? teachers : new ArrayList<>();
+        return teachers != null ? teachers : (teachers = new ArrayList<>());
     }
 
     public void setTeachers(List<JuhanEventTeacherForm> teachers) {
@@ -56,7 +56,7 @@ public class JuhanEventForm {
     }
 
     public List<JuhanEventRoomForm> getRooms() {
-        return rooms != null ? rooms : new ArrayList<>();
+        return rooms != null ? rooms : (rooms = new ArrayList<>());
     }
 
     public void setRooms(List<JuhanEventRoomForm> rooms) {

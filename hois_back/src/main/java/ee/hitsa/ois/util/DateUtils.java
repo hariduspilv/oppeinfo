@@ -21,6 +21,7 @@ public abstract class DateUtils {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
     private static final DateTimeFormatter SHORT_YEAR_FORMATTER = DateTimeFormatter.ofPattern("YY");
+    private static final DateTimeFormatter SHORT_DAY_MONTH_FORMATTER = DateTimeFormatter.ofPattern("dd.MM");
     private static final DateTimeFormatter ISO8601_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     public static String nullableDate(LocalDate date) {
@@ -33,6 +34,10 @@ public abstract class DateUtils {
 
     public static String dateTime(LocalDateTime dateTime) {
         return dateTime != null ? dateTime.format(DATE_TIME_FORMATTER) : "-";
+    }
+    
+    public static String shortDayMonth(LocalDate date) {
+        return SHORT_DAY_MONTH_FORMATTER.format(date);
     }
 
     public static String shortYear(LocalDate date) {

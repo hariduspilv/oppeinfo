@@ -10,15 +10,15 @@ import ee.hitsa.ois.web.dto.HigherProtocolStudentDto;
 public class HigherProtocolSaveForm extends VersionedCommand {
 
     @Valid
-    private Set<HigherProtocolStudentDto> protocolStudents;
+    private Set<ProtocolStudentSaveForm> protocolStudents;
     private LocalDate finalDate;
     private String signerMobileNumber;
 
-    public Set<HigherProtocolStudentDto> getProtocolStudents() {
+    public Set<ProtocolStudentSaveForm> getProtocolStudents() {
         return protocolStudents;
     }
 
-    public void setProtocolStudents(Set<HigherProtocolStudentDto> protocolStudents) {
+    public void setProtocolStudents(Set<ProtocolStudentSaveForm> protocolStudents) {
         this.protocolStudents = protocolStudents;
     }
 

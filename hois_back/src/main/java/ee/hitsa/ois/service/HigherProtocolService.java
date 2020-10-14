@@ -18,11 +18,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.Language;
@@ -30,6 +30,7 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.ProtocolUtil;
+import ee.hitsa.ois.web.commandobject.ProtocolStudentSaveForm;
 import ee.hitsa.ois.web.commandobject.SearchCommand;
 import ee.hitsa.ois.web.dto.HigherProtocolModuleDto;
 import ee.hitsa.ois.web.dto.HigherProtocolModuleSubjectDto;
@@ -60,7 +61,6 @@ import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HigherProtocolGradeUtil;
-import ee.hitsa.ois.util.HigherProtocolUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -231,29 +231,6 @@ public class HigherProtocolService extends AbstractProtocolService {
         updateProtocolStudents(protocol, form);
         return EntityUtil.save(protocol, em);
     }
-    
-    /**
-     * Get main protocol final date per student
-     * @param protocol
-     * @return
-     */
-    public static Map<Long, LocalDate> mapStudentToFinalDate(Protocol protocol, EntityManager em) {
-        Map<Long, LocalDate> studentToFinalDate = new HashMap<>();
-        List<?> data = em.createNativeQuery("select ps.student_id, p.final_date from protocol_student ps "
-                + "join protocol p on p.id = ps.protocol_id "
-                + "join protocol_hdata ph on ph.protocol_id = p.id "
-                + "where p.school_id = ?1 "
-                + "and ph.subject_study_period_id = ?2 "
-                + "and ph.type_code = ?3 "
-                + "and p.status_code = ?4")
-            .setParameter(1, EntityUtil.getId(protocol.getSchool()))
-            .setParameter(2, EntityUtil.getId(protocol.getProtocolHdata().getSubjectStudyPeriod()))
-            .setParameter(3, ProtocolType.PROTOKOLLI_LIIK_P.name())
-            .setParameter(4, ProtocolStatus.PROTOKOLL_STAATUS_K.name())
-            .getResultList();
-        data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> JpaQueryUtil.resultAsLocalDate(r, 1), (o, n) -> o, () -> studentToFinalDate));
-        return studentToFinalDate;
-    }
 
     private void updateProtocolStudents(Protocol protocol, HigherProtocolSaveForm form) {
         boolean isMainProtocol = ClassifierUtil.equals(ProtocolType.PROTOKOLLI_LIIK_P, protocol.getProtocolHdata().getType());
@@ -261,13 +238,15 @@ public class HigherProtocolService extends AbstractProtocolService {
         Map<Long, LocalDate> protocolStudentExamDates = protocolStudentExamDates(protocol);
         EntityUtil.bindEntityCollection(protocol.getProtocolStudents(), ProtocolStudent::getId,
                 // no protocol students created here
-                form.getProtocolStudents(), HigherProtocolStudentDto::getId, null, (dto, ps) -> {
+                form.getProtocolStudents(), ProtocolStudentSaveForm::getId, null, (dto, ps) -> {
                     if (gradeChangedButNotRemoved(dto, ps)) {
-                        HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);
+                        assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
-                        Classifier grade = em.getReference(Classifier.class, dto.getGrade());
+                        Classifier grade = em.getReference(Classifier.class, dto.getGrade().getCode());
                         Long psId = EntityUtil.getId(ps);
-                        Short mark = HigherAssessment.getGradeMark(dto.getGrade());
+                        Short mark = HigherAssessment.getGradeMark(dto.getGrade().getCode());
+                        GradingSchemaRow gradingSchemaRow = EntityUtil.getOptionalOne(GradingSchemaRow.class,
+                                dto.getGrade().getGradingSchemaRowId(), em);
                         LocalDate gradeDate;
                         if (isMainProtocol) {
                             gradeDate = protocol.getFinalDate() != null ? protocol.getFinalDate() : LocalDate.now();
@@ -276,9 +255,9 @@ public class HigherProtocolService extends AbstractProtocolService {
                                     ? protocolStudentExamDates.get(psId)
                                     : LocalDate.now();
                         }
-                        gradeStudent(ps, grade, mark, isLetterGrade, gradeDate);
+                        gradeStudent(ps, grade, mark, isLetterGrade, gradingSchemaRow, gradeDate);
                     } else if (gradeRemoved(dto, ps)) {
-                        HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);
+                        assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
                         removeGrade(ps);
                     } else if (isMainProtocol && ps.getGrade() != null) {
@@ -491,9 +470,11 @@ public class HigherProtocolService extends AbstractProtocolService {
 
     public HigherProtocolDto get(HoisUserDetails user, Protocol protocol) {
         HigherProtocolDto dto = HigherProtocolDto.ofWithUserRights(user, protocol);
+        dto.setStudyYearId(higherProtocolStudyYear(protocol));
         SubjectStudyPeriod subjectStudyPeriod = protocol.getProtocolHdata().getSubjectStudyPeriod();
         if (subjectStudyPeriod != null) {
             dto.setAssessmentCode(EntityUtil.getNullableCode(subjectStudyPeriod.getSubject().getAssessment()));
+
         }
         Map<Long, List<HigherProtocolModuleSubjectResultDto>> subjectResults = new HashMap<>();
         Map<Long, List<ProtocolPracticeJournalResultDto>> practiceResults = new HashMap<>();
@@ -542,11 +523,12 @@ public class HigherProtocolService extends AbstractProtocolService {
                 dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getSubject().getId());
         qb.filter("pj.grade_code is not null");
 
-        List<?> data = qb.select("pj.student_id, pj.id, pj.grade_code, pj.grade_inserted", em).getResultList();
+        List<?> data = qb.select("pj.student_id, pj.id, pj.grade_code, pj.grading_schema_row_id, "
+                + "pj.grade_inserted", em).getResultList();
 
         return StreamUtil.nullSafeList(data).stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
                 Collectors.mapping(r -> new ProtocolPracticeJournalResultDto(resultAsLong(r, 1), resultAsString(r, 2),
-                        resultAsLocalDateTime(r, 3), null), Collectors.toList())));
+                        resultAsLong(r, 3), resultAsLocalDateTime(r, 4), null), Collectors.toList())));
     }
 
     private List<Long> studentsWithNewerProtocols(Protocol protocol) {
@@ -649,15 +631,16 @@ public class HigherProtocolService extends AbstractProtocolService {
         }
 
         List<?> data = qb.select("ps.id ps_id, shr.id shr_id, shr.subject_id, shr.credits, shr.grade_code,"
-                + " shr.apel_application_record_id", em).getResultList();
+                + " shr.grading_schema_row_id,  shr.apel_application_record_id", em).getResultList();
         return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
                 Collectors.mapping(r -> new HigherProtocolModuleSubjectResultDto(resultAsLong(r, 1), resultAsLong(r, 2),
-                        resultAsDecimal(r, 3), resultAsString(r, 4), resultAsLong(r, 5)), Collectors.toList())));
+                        resultAsDecimal(r, 3), resultAsString(r, 4), resultAsLong(r, 5), resultAsLong(r, 6)),
+                        Collectors.toList())));
     }
 
     private HigherAssessment calculateModuleProtocolGrade(List<HigherProtocolModuleSubjectResultDto> studentResults) {
         if (studentResults != null) {
-            List<HigherAssessment> results = StreamUtil.toMappedList(r -> HigherAssessment.valueOf(r.getGrade()),
+            List<HigherAssessment> results = StreamUtil.toMappedList(r -> HigherAssessment.valueOf(r.getGrade().getCode()),
                     studentResults);
             boolean includesDistinctiveResults = results.stream().anyMatch(r -> Boolean.TRUE.equals(r.getIsDistinctive()));
             if (!includesDistinctiveResults) {
@@ -667,7 +650,7 @@ public class HigherProtocolService extends AbstractProtocolService {
             BigDecimal totalCredits = BigDecimal.ZERO;
             BigDecimal wagCredits = BigDecimal.ZERO;
             for (HigherProtocolModuleSubjectResultDto result : studentResults) {
-                HigherAssessment resultGrade = HigherAssessment.valueOf(result.getGrade());
+                HigherAssessment resultGrade = HigherAssessment.valueOf(result.getGrade().getCode());
                 if (resultGrade.getIsDistinctive()) {
                     totalCredits = totalCredits.add(result.getCredits());
                     wagCredits = wagCredits.add(BigDecimal.valueOf(resultGrade.getMark()).multiply(result.getCredits()));

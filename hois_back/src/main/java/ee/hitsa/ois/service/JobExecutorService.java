@@ -21,6 +21,7 @@ import ee.hitsa.ois.domain.Job;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.JobType;
 import ee.hitsa.ois.service.ehis.EhisDirectiveStudentService;
+import ee.hitsa.ois.service.ehis.EhisStudentService;
 import ee.hitsa.ois.service.kutseregister.KutseregisterService;
 import ee.hitsa.ois.service.poll.PollService;
 import ee.hitsa.ois.service.rr.PopulationRegisterService;
@@ -32,7 +33,13 @@ import ee.hitsa.ois.util.EnumUtil;
  * job execution service
  *
  * All transaction logic is outside of this service to avoid marking transaction as rollback only in case of unhandled exception.
+ * 
+ * NB! 
+ * cannot use references to other tables from job in this service directly (job.getStudent().getSomething... will result in no session exception
+ * use student = em.getReference(Student.class, EntityUtil.getId(job.getStudent()) instead
+ * 
  */
+
 @ConditionalOnExpression("${hois.jobs.enabled:false}")
 @Service
 public class JobExecutorService {
@@ -67,6 +74,8 @@ public class JobExecutorService {
     private PollService pollService;
     @Autowired
     private StudentService studentService;
+    @Autowired
+    private EhisStudentService ehisStudentService;
     
     @Value("${hois.jobs.supportService.message.days}")
     private Integer supportServiceMessageDays;
@@ -118,6 +127,16 @@ public class JobExecutorService {
         handleJobs(job -> {
             ehisDirectiveStudentService.updateStudents(job);
         }, AUTHENTICATION_MSG, JobType.JOB_EHIS);
+    }
+    
+    /**
+     * Handler for EHIS languages job
+     */
+    @Scheduled(cron = "${hois.jobs.ehis.languages.cron}")
+    public void ehisLanguagesJob() {
+        handleJobs(job -> {
+            ehisStudentService.sendStudentLanguages(job);
+        }, AUTHENTICATION_MSG, JobType.JOB_KEEL_EHIS);
     }
 
     /**

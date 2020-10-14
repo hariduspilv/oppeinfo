@@ -36,7 +36,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
-import ee.hitsa.ois.exception.AssertionFailedException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -870,9 +869,6 @@ public class TimetableService {
             List<TimetableObjectStudentGroup> messageStudentGroups = new ArrayList<>();
             if (Boolean.TRUE.equals(timetable.getIsHigher())) {
                 if (timetableObject.getSubjectStudyPeriod().getSubgroups().isEmpty()) {
-                    if (form.getStudentGroups() == null || form.getStudentGroups().isEmpty()) {
-                        throw new AssertionFailedException("If there is no connected subgroup then one studengroup is required");
-                    }
                     List<TimetableObjectStudentGroup> oldStudentGroups = timetableObject.getTimetableObjectStudentGroups();
                     messageStudentGroups.addAll(oldStudentGroups);
                     if (EntityUtil.bindEntityCollection(timetableObject.getTimetableObjectStudentGroups(),

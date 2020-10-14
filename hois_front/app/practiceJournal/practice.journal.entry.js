@@ -34,7 +34,7 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
         };
       } else {
         $scope.grades = $scope.grades.sort(function (grade1, grade2) {
-            return grade1.value - grade2.value;
+          return grade1.code.localeCompare(grade2.code);
         });
       }
       $scope.gradesMap = Classifier.toMap($scope.grades);

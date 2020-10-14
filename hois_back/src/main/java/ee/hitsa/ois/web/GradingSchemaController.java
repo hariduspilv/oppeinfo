@@ -38,7 +38,7 @@ public class GradingSchemaController {
 
     @GetMapping("/typeSchemas")
     public List<GradingSchemaDto> typeSchemas(HoisUserDetails user, @RequestParam String type) {
-        UserUtil.throwAccessDeniedIf(!GradingSchemaUtil.canViewTypeSchemas(user));
+        // used for grade selections and therefore can't have and won't need user rights check
         return gradingSchemaService.typeSchemas(user, type);
     }
 

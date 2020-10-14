@@ -17,6 +17,7 @@ import javax.persistence.OneToMany;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.enterprise.PracticeEvaluation;
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
@@ -107,6 +108,9 @@ public class PracticeJournal extends BaseEntityWithId {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Subject subject;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private GradingSchemaRow gradingSchemaRow;
 
     public Set<PracticeJournalEntry> getPracticeJournalEntries() {
         return practiceJournalEntries;
@@ -244,6 +248,14 @@ public class PracticeJournal extends BaseEntityWithId {
         this.status = status;
     }
 
+    public PracticeEvaluation getPracticeEvaluation() {
+        return practiceEvaluation;
+    }
+
+    public void setPracticeEvaluation(PracticeEvaluation practiceEvaluation) {
+        this.practiceEvaluation = practiceEvaluation;
+    }
+
     public Classifier getGrade() {
         return grade;
     }
@@ -308,12 +320,12 @@ public class PracticeJournal extends BaseEntityWithId {
         this.subject = subject;
     }
 
-    public PracticeEvaluation getPracticeEvaluation() {
-        return practiceEvaluation;
+    public GradingSchemaRow getGradingSchemaRow() {
+        return gradingSchemaRow;
     }
 
-    public void setPracticeEvaluation(PracticeEvaluation practiceEvaluation) {
-        this.practiceEvaluation = practiceEvaluation;
+    public void setGradingSchemaRow(GradingSchemaRow gradingSchemaRow) {
+        this.gradingSchemaRow = gradingSchemaRow;
     }
 
     public Set<PracticeJournalEvaluation> getPracticeJournalEvaluations() {

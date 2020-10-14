@@ -1,13 +1,16 @@
 package ee.hitsa.ois.report.studyyearschedule;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
+import ee.hitsa.ois.web.dto.report.WeekStartAndEndDto;
 
 public class ReportStudyPeriod {
 
     private StudyPeriodWithWeeksDto period;
     private List<Short> weeks;
+    private List<WeekStartAndEndDto> weekDates = new ArrayList<>();
     private Short startWeek;
     private Short endWeek;
 
@@ -41,5 +44,13 @@ public class ReportStudyPeriod {
 
     public void setEndWeek(Short endWeek) {
         this.endWeek = endWeek;
+    }
+
+    public List<WeekStartAndEndDto> getWeekDates() {
+        return weekDates;
+    }
+
+    public void setWeekDates(List<WeekStartAndEndDto> weekDates) {
+        this.weekDates = weekDates;
     }
 }

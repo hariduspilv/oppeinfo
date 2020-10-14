@@ -1,26 +1,23 @@
 package ee.hitsa.ois.web.dto;
 
-import ee.hitsa.ois.enums.MainClassCode;
-import ee.hitsa.ois.validation.ClassifierRestriction;
-
 public class ModuleProtocolJournalResultDto {
 
     private Long journalId;
     private String nameEt;
     private Integer capacity;
 
-    @ClassifierRestriction(MainClassCode.KUTSEHINDAMINE)
-    private String grade;
+    private GradeDto grade;
 
     public ModuleProtocolJournalResultDto() {
 
     }
 
-    public ModuleProtocolJournalResultDto(Long journalId, String nameEt, Integer capacity, String grade) {
+    public ModuleProtocolJournalResultDto(Long journalId, String nameEt, Integer capacity, String gradeCode,
+            Long gradingSchemaRowId) {
         this.journalId = journalId;
         this.nameEt = nameEt;
         this.capacity = capacity;
-        this.grade = grade;
+        this.grade = new GradeDto(gradeCode, gradingSchemaRowId);
     }
 
     public Long getJournalId() {
@@ -39,11 +36,11 @@ public class ModuleProtocolJournalResultDto {
         this.nameEt = nameEt;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
 
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
 

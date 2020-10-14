@@ -32,10 +32,12 @@ angular.module('hitsaOis').constant('HigherGrade', {
   };
 
   return {
-    isPositive: function(gradeCode) {
+    isPositive: function(grade) {
+      var gradeCode = angular.isObject(grade) ? grade.code : grade;
       return ArrayUtils.includes(POSITIVE_GRADES, gradeCode);
     },
-    isDistinctive: function(gradeCode) {
+    isDistinctive: function(grade) {
+      var gradeCode = angular.isObject(grade) ? grade.code : grade;
       return ArrayUtils.includes(DISTINCTIVE_GRADES, gradeCode);
     },
     isPositiveValue: function(gradeValue, letterGrades) {
@@ -57,6 +59,9 @@ angular.module('hitsaOis').constant('HigherGrade', {
       return grades.sort(function (grade1, grade2) {
         return GRADES.indexOf(grade1.code) - GRADES.indexOf(grade2.code);
       });
+    },
+    gradeComparator: function (grade1, grade2) {
+      return GRADES.indexOf(grade1.code) - GRADES.indexOf(grade2.code);
     },
     gradeSelectShownValue: function (grade, letterGrades) {
       return _gradeSelectShownValue(grade, letterGrades);

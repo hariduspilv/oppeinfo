@@ -11,7 +11,7 @@
    * Creates additional row to hold items in hois-table-data-detail/between.
    * In case if there is nothing to hold then row is not created
    * In case if hois-table-data is not used then it will compile it as a default `td` tag.
-   * 
+   *
    * @example
    *  <tr md-row hois-table-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
    *    <td md-cell>{{$index + 1}}.</td>
@@ -29,8 +29,8 @@
    *    <...>
    *  </tr>
    */
-  HoisTableRow.$inject = ['$timeout'];
-  function HoisTableRow($timeout) {
+  HoisTableRow.$inject = [];
+  function HoisTableRow() {
     var directive = {
         bindToController: true,
         controller: HoisTableRowController,
@@ -45,13 +45,13 @@
         template: '<tr class="hois-table-row" ng-transclude></tr>'
     };
     return directive;
-    
+
     function link(_scope, element, attrs, ctrl) {
       if (typeof attrs.excludeClass === 'string' && attrs.excludeClass !== '') {
         ctrl.excludeClass = attrs.excludeClass.split(' ');
       }
 
-      $timeout(ctrl.orderInit);
+      ctrl.orderInit();
 
       /**
        * Redraw needs to be executed in case if there is decreased amount of columns.
@@ -65,7 +65,7 @@
       var obs = new MutationObserver(redrawIfNeeds);
       obs.observe(element[0], {
         childList: true
-      })
+      });
       function redrawIfNeeds() {
         if (ctrl.data && ctrl.data.length !== element[0].querySelectorAll('td').length) {
           ctrl.orderRedraw();
@@ -108,14 +108,21 @@
       );
 
       self._init = true;
-      
+
       if (force) {
         return;
       }
 
+      var obs = new MutationObserver(updateClasses);
+      obs.observe(self._elementMaster[0], {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+
       // Copy styles from main element (tr.master) to subelements (tr.between and tr.detail)
-      $scope.$watch(function () { return self._elementMaster.attr('class'); }, function (newValue) {
-        var split = newValue.split(" ");
+      // $scope.$watch(function () { return self._elementMaster.attr('class'); });
+      function updateClasses() {
+        var split = self._elementMaster[0].className.split(' ');
         (self.excludeClass || []).forEach(function (r) {
           for (var i = 0; i < split.length; i++) {
             if (split[i] === r) {
@@ -146,19 +153,23 @@
             self._elementDetail.addClass('hois-table-row-detail');
           }
         });
-      });
+      }
     }
 
-    function fillRow(tr, source, maxTD) {
+    function fillRow(tr, source, maxTD, additionalClass) {
       if (typeof maxTD !== 'number' || isNaN(maxTD)) {
         throw new Error('Maximum td element number should be declared to create a row!');
       }
       if (!tr) {
         // Creates a row.
         tr = angular.element(document.createElement('tr'));
-        self._elementMaster[0].classList.forEach(function (cl) {
-          tr.addClass(cl);
-        });
+        // forEach not available for IE11
+        for (var k = 0; k < self._elementMaster[0].classList.length; k++) {
+          tr.addClass(self._elementMaster[0].classList[k]);
+        }
+        if (additionalClass) {
+          tr.addClass(additionalClass);
+        }
         self._elementMaster.after(tr);
       }
       // New indexed elements
@@ -227,7 +238,7 @@
             }
           }
         }
-        
+
         if (r.between) {
           betweens.push({
             index: r.index,
@@ -245,14 +256,14 @@
       });
 
       if (betweens.length > 0) {
-        self._elementBetween = fillRow(self._elementBetween, betweens, self.data.length);
+        self._elementBetween = fillRow(self._elementBetween, betweens, self.data.length, 'hois-table-row-between');
       } else if (self._elementBetween) {
         self._elementBetween.remove();
         self._elementBetween = undefined;
       }
 
       if (details.length > 0) {
-        self._elementDetail = fillRow(self._elementDetail, details, self.data.length);
+        self._elementDetail = fillRow(self._elementDetail, details, self.data.length, 'hois-table-row-detail');
       } else if (self._elementDetail) {
         self._elementDetail.remove();
         self._elementDetail = undefined;

@@ -115,7 +115,7 @@ public class ReportController {
     }
     
     @GetMapping("/students/movement")
-    public Page<StudentMovementDto> studentsCount(HoisUserDetails user, @Valid StudentMovementCommand criteria,
+    public Page<StudentMovementDto> studentMovement(HoisUserDetails user, @Valid StudentMovementCommand criteria,
             Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
         return reportService.studentMovement(user, criteria, pageable);

@@ -28,6 +28,7 @@ import ee.hitsa.ois.domain.student.StudentCurriculumCompletionHigherModule;
 import ee.hitsa.ois.enums.SubjectConnection;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EnumUtil;
+import ee.hitsa.ois.web.dto.GradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleResult;
 import ee.hitsa.ois.web.dto.student.StudentHigherProgressDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherProgressPeriodDto;
@@ -282,12 +283,12 @@ public class StudentResultHigherService {
 
         List<?> rows = qb.select("cvh.id curriculum_version_hmodule_id, shr.id shr_id, shr.grade_code, shr.grade, "
                 + "shr.grade_date, shr.teachers, shr.study_period_id, cl.name_et grade_name_et, cl.name_en grade_name_en, "
-                + "shr.is_active", em).getResultList();
+                + "shr.is_active, shr.grading_schema_row_id", em).getResultList();
 
         return rows.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
             StudentHigherResultGradeDto grade = new StudentHigherResultGradeDto();
             grade.setId(resultAsLong(r, 1));
-            grade.setGrade(resultAsString(r, 2));
+            grade.setGrade(new GradeDto(resultAsString(r, 2), resultAsLong(r, 10)));
             grade.setGradeValue(resultAsString(r, 3));
             grade.setGradeDate(resultAsLocalDate(r, 4));
             grade.getTeachers().add(resultAsString(r, 5));
@@ -325,7 +326,8 @@ public class StudentResultHigherService {
                 + "shr.apel_application_record_id, aar.is_formal_learning, a_s.id as school_id, a_s.name_et, a_s.name_en, "
                 + "shr.grade_code, shr.grade, shr.grade_date, shr.teachers, shr.study_period_id, "
                 + "cl.name_et grade_name_et, cl.name_en grade_name_en, shr.is_active, "
-                + "country.name_et c_name_et, coalesce(country.name_en, country.name_et) c_name_en",
+                + "country.name_et c_name_et, coalesce(country.name_en, country.name_et) c_name_en, "
+                + "shr.grading_schema_row_id",
                 em).getResultList();
 
         List<StudentHigherSubjectResultDto> studentResults = new ArrayList<>();
@@ -368,7 +370,7 @@ public class StudentResultHigherService {
 
             StudentHigherResultGradeDto grade = new StudentHigherResultGradeDto();
             grade.setId(resultAsLong(r, 0));
-            grade.setGrade(resultAsString(r, 15));
+            grade.setGrade(new GradeDto(resultAsString(r, 15), resultAsLong(r, 25)));
             grade.setGradeValue(resultAsString(r, 16));
             grade.setGradeDate(resultAsLocalDate(r, 17));
             grade.getTeachers().add(resultAsString(r, 18));
@@ -698,8 +700,8 @@ public class StudentResultHigherService {
             if(Boolean.TRUE.equals(subjectResult.getIsOk())) {
                 BigDecimal credits = subjectResult.getSubject().getCredits();
 
-                HigherAssessment grade = HigherAssessment.valueOf(subjectResult.getLastGrade().getGrade());
-                if (grade.getIsDistinctive().booleanValue()) {
+                HigherAssessment grade = HigherAssessment.valueOf(subjectResult.getLastGrade().getGrade().getCode());
+                if (Boolean.TRUE.equals(grade.getIsDistinctive())) {
                     BigDecimal gradeMark = BigDecimal.valueOf(grade.getMark().longValue());
                     numerator = numerator.add(gradeMark.multiply(credits));
                     denominator = denominator.add(credits);
@@ -857,7 +859,7 @@ public class StudentResultHigherService {
 
         for (StudentHigherProgressSubjectDto subject : subjects) {
             if (subject.getGrade() != null) {
-                HigherAssessment grade = HigherAssessment.valueOf(subject.getGrade());
+                HigherAssessment grade = HigherAssessment.valueOf(subject.getGrade().getCode());
                 if (grade.getIsPositive()) {
                     BigDecimal credits = subject.getCredits();
                     totalCredits = totalCredits.add(subject.getCredits());
@@ -945,7 +947,8 @@ public class StudentResultHigherService {
                 + "cvh.id cvh_id, cvh.name_et cvh_name_et, cvh.name_en cvh_name_en, cvh.type_code, cv.id cv_id, cv.curriculum_id, "
                 + "shrm_cvh.id shrm_cvh_id, shrm_cvh.name_et shrm_cvh_name_et, shrm_cvh.name_en shrm_cvh_name_en, "
                 + "shrm_cvh.type_code shrm_cvh_type_code, shrm_cv.id shrm_cvh_cv_id, shrm_cv.curriculum_id shrm_cv_curriculum_id, "
-                + "shrm.is_optional shrm_is_optional, shr.id shr_id, shr.grade_code, p.id protocol_id, p.is_final, aar.apel_application_id, "
+                + "shrm.is_optional shrm_is_optional, shr.id shr_id, shr.grade_code, shr.grading_schema_row_id, "
+                + "p.id protocol_id, p.is_final, aar.apel_application_id, "
                 + "not exists (" + prerequisites + ") prerequisites, "
                 + (taughtThisSemester != null ? "exists (" + taughtThisSemester + ")" : "false") + " taught_this_semester, "
                 + (declared != null ? "exists (" + declared + ")" : "false") + " declared";
@@ -971,13 +974,15 @@ public class StudentResultHigherService {
                 dto.setReplacedModuleOptional(resultAsBoolean(r, 21));
             }
             dto.setResultId(resultAsLong(r, 22));
-            dto.setGrade(resultAsString(r, 23));
-            dto.setProtocolId(resultAsLong(r, 24));
-            dto.setIsFinalProtocol(resultAsBoolean(r, 25));
-            dto.setApelApplicationId(resultAsLong(r, 26));
-            dto.setPrerequisitesCompleted(resultAsBoolean(r, 27));
-            dto.setTaughtThisSemester(resultAsBoolean(r, 28));
-            dto.setDeclared(resultAsBoolean(r, 29));
+            if (resultAsString(r, 23) != null) {
+                dto.setGrade(new GradeDto(resultAsString(r, 23), resultAsLong(r, 24)));
+            }
+            dto.setProtocolId(resultAsLong(r, 25));
+            dto.setIsFinalProtocol(resultAsBoolean(r, 26));
+            dto.setApelApplicationId(resultAsLong(r, 27));
+            dto.setPrerequisitesCompleted(resultAsBoolean(r, 28));
+            dto.setTaughtThisSemester(resultAsBoolean(r, 29));
+            dto.setDeclared(resultAsBoolean(r, 30));
             dto.setReplacedApelApplicationId(replacedSubjectApplications.get(dto.getId()));
             return dto;
         }, data);
@@ -1014,8 +1019,8 @@ public class StudentResultHigherService {
                 + "cvh.id cvh_id, cvh.name_et cvh_name_et, cvh.name_en cvh_name_en, cvh.type_code, cv.id cv_id, cv.curriculum_id, "
                 + "shrm_cvh.id shrm_cvh_id, shrm_cvh.name_et shrm_cvh_name_et, shrm_cvh.name_en shrm_cvh_name_en, "
                 + "shrm_cvh.type_code shrm_cvh_type_code, shrm_cv.id shrm_cv_id, shrm_cv.curriculum_id shrm_cv_curriculum_id, "
-                + "shrm.is_optional shrm_is_optional, shr.id shr_id, shr.grade_code, ps.protocol_id, p.is_final, "
-                + "aar.apel_application_id";
+                + "shrm.is_optional shrm_is_optional, shr.id shr_id, shr.grade_code, shr.grading_schema_row_id, "
+                + "ps.protocol_id, p.is_final, aar.apel_application_id";
         List<?> data = qb.select(select, em).getResultList();
 
         return StreamUtil.toMappedList(r -> {
@@ -1034,10 +1039,12 @@ public class StudentResultHigherService {
                 dto.setReplacedModuleOptional(resultAsBoolean(r, 18));
             }
             dto.setResultId(resultAsLong(r, 19));
-            dto.setGrade(resultAsString(r, 20));
-            dto.setProtocolId(resultAsLong(r, 21));
-            dto.setIsFinalProtocol(resultAsBoolean(r, 22));
-            dto.setApelApplicationId(resultAsLong(r, 23));
+            if (resultAsString(r, 20) != null) {
+                dto.setGrade(new GradeDto(resultAsString(r, 20), resultAsLong(r, 21)));
+            }
+            dto.setProtocolId(resultAsLong(r, 22));
+            dto.setIsFinalProtocol(resultAsBoolean(r, 23));
+            dto.setApelApplicationId(resultAsLong(r, 24));
             return dto;
         }, data);
     }

@@ -11,7 +11,7 @@ import ee.hitsa.ois.util.StreamUtil;
 public class ProtocolPracticeJournalResultDto {
 
     private Long journalId;
-    private String grade;
+    private GradeDto grade;
     private LocalDateTime inserted;
     private List<AutocompleteResult> themes;
 
@@ -19,10 +19,10 @@ public class ProtocolPracticeJournalResultDto {
         
     }
 
-    public ProtocolPracticeJournalResultDto(Long journalId, String grade, LocalDateTime inserted,
-            Set<PracticeJournalModuleSubject> moduleSubject) {
+    public ProtocolPracticeJournalResultDto(Long journalId, String gradeCode, Long gradingSchemaRowId,
+            LocalDateTime inserted, Set<PracticeJournalModuleSubject> moduleSubject) {
         this.journalId = journalId;
-        this.grade = grade;
+        this.grade = new GradeDto(gradeCode, gradingSchemaRowId);
         this.inserted = inserted;
         this.themes = StreamUtil.nullSafeSet(moduleSubject).stream().filter(ms -> ms.getTheme() != null)
                 .map(ms -> AutocompleteResult.of(ms.getTheme())).collect(Collectors.toList());
@@ -36,11 +36,11 @@ public class ProtocolPracticeJournalResultDto {
         this.journalId = journalId;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
 
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
 

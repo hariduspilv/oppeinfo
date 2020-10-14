@@ -55,7 +55,7 @@ public class StudentHigherSubjectResultDto {
         if(grades != null && !grades.isEmpty()) {
             grades.sort(StreamUtil.comparingWithNullsLast(StudentHigherResultGradeDto::getIsActive).reversed());
             lastGrade = grades.get(0);
-            isOk = Boolean.valueOf((lastGrade.getGrade() != null && HigherAssessment.isPositive(lastGrade.getGrade())) || showUncompleted);
+            isOk = Boolean.valueOf((lastGrade.getGrade() != null && HigherAssessment.isPositive(lastGrade.getGrade().getCode())) || showUncompleted);
         } else {
             isOk = this.isAddedFromDirective == null ? Boolean.FALSE : this.isAddedFromDirective;
         }

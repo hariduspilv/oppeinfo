@@ -25,13 +25,13 @@ angular.module('hitsaOis').controller('PracticeEnterpriseViewController', ['$rou
     $scope.update = function() {
         if ($scope.enterprise.country === 'RIIK_EST' && $scope.enterprise.regCode && !$scope.enterprise.person) {
             QueryUtils.loadingWheel($scope, true);
-            QueryUtils.endpoint(baseUrl + '/updateRegCode').get(
+            QueryUtils.endpoint(baseUrl + '/updateRegCode/' + id).get(
             {
                 country: $scope.enterprise.country,
                 regCode: $scope.enterprise.regCode,
                 language: $scope.enterprise.language,
                 active: $scope.enterprise.active,
-                id: $scope.enterprise.enterpriseSchoolId
+                enterpriseSchoolId: $scope.enterprise.enterpriseSchoolId
             }
             ).$promise.then(function (response) {
                 QueryUtils.loadingWheel($scope, false);

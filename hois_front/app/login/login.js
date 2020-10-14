@@ -165,6 +165,12 @@ angular.module('hitsaOis')
               return $rootScope.currentLanguageNameField(a).localeCompare($rootScope.currentLanguageNameField(b));
             });
           });
+          $scope.visibleIndex = 1;
+
+          $scope.showIndex = function(index) {
+            $scope.visibleIndex = index;
+          };
+
           $scope.credentials = {};
           if ($localStorage.ldapschool) {
             $scope.credentials.school = $localStorage.ldapschool;

@@ -19,6 +19,8 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
+import ee.hitsa.ois.web.dto.GradeDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolOutcomeResultDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolStudentDto;
@@ -56,13 +58,12 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.ModuleProtocolGradeUtil;
 import ee.hitsa.ois.util.ModuleProtocolUtil;
 import ee.hitsa.ois.util.PersonUtil;
-import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSaveForm;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSearchCommand;
-import ee.hitsa.ois.web.commandobject.ModuleProtocolStudentSaveForm;
+import ee.hitsa.ois.web.commandobject.ProtocolStudentSaveForm;
 import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
 import ee.hitsa.ois.web.commandobject.ProtocolVdataForm;
 import ee.hitsa.ois.web.commandobject.timetable.OtherStudentsSearchCommand;
@@ -215,14 +216,15 @@ public class ModuleProtocolService extends AbstractProtocolService {
     private Map<Long, List<ModuleProtocolOutcomeResultDto>> studentOutcomeResults(List<Long> studentIds,
             List<Long> outcomeIds) {
         List<?> data = em.createNativeQuery("select scmor.student_id, scmor.curriculum_module_outcomes_id, "
-                + "scmor.grade_code, scmor.grade_date, scmor.grade_inserted from student_curriculum_module_outcomes_result scmor "
+                + "scmor.grade_code, scmor.grading_schema_row_id, scmor.grade_date, scmor.grade_inserted "
+                + "from student_curriculum_module_outcomes_result scmor "
                 + "where scmor.student_id in (:studentIds) and scmor.curriculum_module_outcomes_id in (:outcomeIds)")
                 .setParameter("studentIds", studentIds)
                 .setParameter("outcomeIds", outcomeIds)
                 .getResultList();
         return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
                 Collectors.mapping(r -> new ModuleProtocolOutcomeResultDto(resultAsLong(r, 1), resultAsString(r, 2),
-                        resultAsLocalDate(r, 3), resultAsLocalDateTime(r, 4)), Collectors.toList())));
+                        resultAsLong(r, 3), resultAsLocalDate(r, 4), resultAsLocalDateTime(r, 5)), Collectors.toList())));
     }
 
     public List<AutocompleteResult> occupationModules(HoisUserDetails user, Long curriculumVersionId) {
@@ -264,7 +266,8 @@ public class ModuleProtocolService extends AbstractProtocolService {
         if (!result.isEmpty()) {
             CurriculumVersionOccupationModule occupationalModule = em
                     .getReference(CurriculumVersionOccupationModule.class, occupationalModuleId);
-            List<?> grades = em.createNativeQuery("select js.student_id, jes.grade_code from journal_entry_student jes "
+            List<?> grades = em.createNativeQuery("select js.student_id, jes.grade_code, jes.grading_schema_row_id "
+                    + "from journal_entry_student jes "
                     + "join journal_student js on js.id = jes.journal_student_id "
                     + "join journal_entry je on je.id = jes.journal_entry_id "
                     + "join journal j on je.journal_id = j.id "
@@ -275,7 +278,7 @@ public class ModuleProtocolService extends AbstractProtocolService {
                         + "join curriculum_module cm on cm.id = cvo.curriculum_module_id "
                         + "where jot.journal_id = js.journal_id and cm.id = :curriculumModuleId) "
                     + "union all "
-                    + "select pj.student_id, pj.grade_code from practice_journal pj "
+                    + "select pj.student_id, pj.grade_code, pj.grading_schema_row_id from practice_journal pj "
                     + "where pj.student_id in (:studentIds) and pj.grade_code is not null "
                     + "and exists (select pjms.id from practice_journal_module_subject pjms "
                         + "join curriculum_version_omodule cvo2 on cvo2.id = pjms.curriculum_version_omodule_id "
@@ -287,7 +290,8 @@ public class ModuleProtocolService extends AbstractProtocolService {
             .getResultList();
 
             grades.stream().filter(r -> StringUtils.hasText(resultAsString(r, 1))).forEach(r -> {
-                result.get(resultAsLong(r, 0)).getJournalResults().add(resultAsString(r, 1));
+                result.get(resultAsLong(r, 0)).getJournalResults().add(
+                        new GradeDto(resultAsString(r, 1), resultAsLong(r, 2)));
             });
         }
     }
@@ -369,23 +373,23 @@ public class ModuleProtocolService extends AbstractProtocolService {
     public Protocol save(Protocol protocol, ModuleProtocolSaveForm form) {
         List<ProtocolStudent> storedStudents = new ArrayList<>(protocol.getProtocolStudents());
         EntityUtil.bindEntityCollection(protocol.getProtocolStudents(), ProtocolStudent::getId,
-                form.getProtocolStudents(), ModuleProtocolStudentSaveForm::getId, dto -> {
-                    ProtocolStudent ps = EntityUtil.bindToEntity(dto, new ProtocolStudent(), "student");
-                    ps.setStudent(em.getReference(Student.class, dto.getStudentId()));
-                    return ps;
-                }, (dto, ps) -> {
+                // no protocol students created here
+                form.getProtocolStudents(), ProtocolStudentSaveForm::getId, null, (dto, ps) -> {
                     if (gradeChangedButNotRemoved(dto, ps)) {
+                        assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
-                        Classifier grade = em.getReference(Classifier.class, dto.getGrade());
+                        Classifier grade = em.getReference(Classifier.class, dto.getGrade().getCode());
                         Short mark = getMark(EntityUtil.getCode(grade));
-                        gradeStudent(ps, grade, mark, Boolean.FALSE, LocalDate.now());
+                        GradingSchemaRow gradingSchemaRow = EntityUtil.getOptionalOne(GradingSchemaRow.class,
+                                dto.getGrade().getGradingSchemaRowId(), em);
+                        gradeStudent(ps, grade, mark, Boolean.FALSE, gradingSchemaRow, LocalDate.now());
                         ps.setAddInfo(dto.getAddInfo());
                     } else if (gradeRemoved(dto, ps)) {
+                        assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
                         removeGrade(ps);
                     }
                 });
-        assertRemovedStudents(storedStudents, protocol.getProtocolStudents());
 
         return EntityUtil.save(protocol, em);
     }
@@ -394,16 +398,6 @@ public class ModuleProtocolService extends AbstractProtocolService {
         return Short.valueOf((short) OccupationalGrade.valueOf(grade).getMark());
     }
 
-    private static void assertRemovedStudents(List<ProtocolStudent> oldStudents, List<ProtocolStudent> newStudents) {
-        Set<Long> newIds = StreamUtil.toMappedSet(ProtocolStudent::getId, newStudents);
-        List<ProtocolStudent> removedStudents = StreamUtil.toFilteredList(oldStudent -> !newIds.contains(oldStudent.getId()), oldStudents);
-        for (ProtocolStudent protocolStudent : removedStudents) {
-            if(!ProtocolUtil.studentCanBeDeleted(protocolStudent)) {
-                throw new ValidationFailedException("moduleProtocol.messages.cantRemoveStudent");
-            }
-        }
-    }
-    
     private static final String NOT_ADDED_TO_PROTOCOL = "s.id not in (select ps.student_id from protocol_student ps "
             + "where ps.protocol_id = :protocolId)";
     
@@ -461,7 +455,7 @@ public class ModuleProtocolService extends AbstractProtocolService {
     public Protocol addStudents(Protocol protocol, ModuleProtocolSaveForm form) {
         Map<Long, ProtocolStudent> existingStudents = StreamUtil.toMap(it -> EntityUtil.getId(it.getStudent()), protocol.getProtocolStudents());
 
-        for (ModuleProtocolStudentSaveForm moduleProtocolStudentForm : form.getProtocolStudents()) {
+        for (ProtocolStudentSaveForm moduleProtocolStudentForm : form.getProtocolStudents()) {
             if (existingStudents.containsKey(moduleProtocolStudentForm.getStudentId())) {
                 log.warn("student {} is already added to protocol {}", moduleProtocolStudentForm.getStudentId(),
                         protocol.getId());

@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('FinalHigherProtocolEditController', ['$route', '$location', '$scope', '$filter', '$q', 'Classifier', 'HigherGradeUtil', 'ProtocolUtils', 'QueryUtils', 'config' ,'dialogService', 'message', 'oisFileService',
-function ($route, $location, $scope, $filter, $q, Classifier, HigherGradeUtil, ProtocolUtils, QueryUtils, config, dialogService, message, oisFileService) {
+angular.module('hitsaOis').controller('FinalHigherProtocolEditController', ['$route', '$location', '$scope', '$q', 'GRADING_SCHEMA_TYPE', 'Classifier', 'DataUtils', 'GradingSchema', 'HigherGradeUtil', 'ProtocolUtils', 'QueryUtils', 'config' ,'dialogService', 'message', 'oisFileService',
+function ($route, $location, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, DataUtils, GradingSchema, HigherGradeUtil, ProtocolUtils, QueryUtils, config, dialogService, message, oisFileService) {
   $scope.gradeUtil = HigherGradeUtil;
   var endpoint = "/finalHigherProtocols";
   $scope.auth = $route.current.locals.auth;
@@ -9,28 +9,27 @@ function ($route, $location, $scope, $filter, $q, Classifier, HigherGradeUtil, P
   $scope.record = $route.current.locals.entity;
   var FORBIDDEN_GRADES = ['KORGHINDAMINE_MI'];
   var PROFESSIONAL_DIPLOMA_STUDY_LEVEL = 'OPPEASTE_514';
-  var clMapper = Classifier.valuemapper({ grade: 'KORGHINDAMINE', status: 'PROTOKOLL_STAATUS', studyLevel: 'OPPEASTE' });
+  var clMapper = Classifier.valuemapper({ status: 'PROTOKOLL_STAATUS', studyLevel: 'OPPEASTE' });
+  var gradingSchema, gradeMapper;
   $scope.formState = {};
   var deferredEntityToDto;
 
-  function filterGrades() {
-    $scope.grades = $scope.grades.filter(function(it) {
-      if (!$route.current.locals.isView) {
-        return FORBIDDEN_GRADES.indexOf(it.code) === -1;
-      }
+  function setGradingSchema(entity) {
+    gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.HIGHER);
+    $q.all(gradingSchema.promises).then(function () {
+      $scope.grades = gradingSchema.gradeSelection(entity.studyYearId);
+      $scope.grades.forEach(function (grade) {
+        // hide classifier grades that were previously filtered
+        if (!grade.gradingSchemaRowId && FORBIDDEN_GRADES.indexOf(grade.code) !== -1) {
+          grade.valid = false;
+        }
+      });
+      gradeMapper = gradingSchema.gradeMapper($scope.grades, ['grade']);
     });
   }
 
-  $scope.grades = Classifier.queryForDropdown({ mainClassCode: 'KORGHINDAMINE' }, filterGrades);
-  $scope.grades.$promise.then(function () {
-    $scope.grades = HigherGradeUtil.orderedGrades($scope.grades);
-  });
-
-  $scope.gradeSelectShownValue = function (grade) {
-    return HigherGradeUtil.gradeSelectShownValue(grade, $scope.auth.school.letterGrades);
-  };
-
   if ($route.current.locals.entity) {
+    setGradingSchema($route.current.locals.entity);
     entityToDto($route.current.locals.entity);
   }
 
@@ -41,13 +40,11 @@ function ($route, $location, $scope, $filter, $q, Classifier, HigherGradeUtil, P
   }
 
   function entityToDto(entity) {
-    $q.all(clMapper.promises).then(function () {
+    $q.all(clMapper.promises.concat(gradingSchema.promises)).then(function () {
       $scope.finalProtocolForm.$setPristine();
       $scope.protocol = clMapper.objectmapper(entity);
       $scope.record.protocolStudents.forEach(function (student) {
-        if ($route.current.locals.isView) {
-          student = clMapper.objectmapper(student);
-        }
+        gradeMapper.objectmapper(student);
       });
 
       $scope.savedStudents = angular.copy($scope.protocol.protocolStudents);
@@ -93,14 +90,10 @@ function ($route, $location, $scope, $filter, $q, Classifier, HigherGradeUtil, P
     });
   }
 
-  $scope.hideInvalid = function (cl) {
-    return !Classifier.isValid(cl);
-  }
-
   $scope.gradeChanged = function(row) {
     if (row) {
-      var savedResult = $filter('filter')($scope.savedStudents, {id: row.id}, true)[0];
-      if (savedResult.grade !== row.grade) {
+      var savedResult = $scope.savedStudents.find(function (student) { return student.id === row.id; });
+      if (!DataUtils.isSameGrade(savedResult.grade, row.grade)) {
         $scope.finalProtocolForm.$setSubmitted();
         row.gradeHasChanged = true;
         if (HigherGradeUtil.isPositive(row.grade) && !!row.finalThesisCurriculumGrade && !(row.curriculumGrade || {}).id) {
@@ -198,7 +191,7 @@ function ($route, $location, $scope, $filter, $q, Classifier, HigherGradeUtil, P
 
   function isSelectedCommitteeAvailable() {
     for (var i = 0; i < $scope.committees.length; i++) {
-      if ($scope.committees[i].id = $scope.protocol.committee) {
+      if ($scope.committees[i].id === $scope.protocol.committee) {
         return true;
       }
     }
@@ -267,9 +260,7 @@ function ($route, $location, $scope, $filter, $q, Classifier, HigherGradeUtil, P
       }).catch(angular.noop);
   };
 
-  function getStudentsWithResults(students) {
-    var protocolStudents = $scope.protocol.protocolStudents;
-
+  function getStudentsWithResults(protocolStudents) {
     protocolStudents.forEach(function (student) {
       var occupation = null;
       var codes = Object.keys(student.occupations);

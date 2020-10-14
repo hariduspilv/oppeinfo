@@ -49,8 +49,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($http, 
         allowedOnForm = (response.isConnectedByCommittee && ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher() || $scope.auth.isTeacher())) ||
         (response.isConnectedByStudentGroup && $scope.auth.isTeacher() && AuthService.isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS')) ||
         (!$scope.auth.isTeacher() && AuthService.isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS'));
-        if ($scope.auth.isAdmin() && response.type === 'AVALDUS_LIIK_TUGI' 
-          && !AuthService.isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS') && !response.isConnectedByCommittee) {
+        if ($scope.auth.isAdmin() && response.type === 'AVALDUS_LIIK_TUGI' &&
+          !AuthService.isAuthorized('ROLE_OIGUS_V_TEEMAOIGUS_TUGITEENUS') && !response.isConnectedByCommittee) {
           allowedOnForm = false;
         }
       }

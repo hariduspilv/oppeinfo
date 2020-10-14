@@ -11,6 +11,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.FinalProtocolUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.GradeDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolStudentDto;
 
 public class FinalVocationalProtocolStudentDto extends ModuleProtocolStudentDto {
@@ -19,7 +20,8 @@ public class FinalVocationalProtocolStudentDto extends ModuleProtocolStudentDto 
     private List<FinalProtocolStudentOccupationDto> curriculumOccupations = new ArrayList<>();
     
     public static FinalVocationalProtocolStudentDto of(ProtocolStudent protocolStudent) {
-        FinalVocationalProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent, new FinalVocationalProtocolStudentDto());
+        FinalVocationalProtocolStudentDto dto = EntityUtil.bindToDto(protocolStudent,
+                new FinalVocationalProtocolStudentDto(), "grade");
         Student student = protocolStudent.getStudent();
         dto.setStudentId(student.getId());
         dto.setFullname(PersonUtil.fullname(student));
@@ -30,6 +32,7 @@ public class FinalVocationalProtocolStudentDto extends ModuleProtocolStudentDto 
         FinalThesis thesis = !student.getFinalThesis().isEmpty() ? student.getFinalThesis().get(0) : null;
         dto.setTheme(thesis != null ? new AutocompleteResult(thesis.getId(), thesis.getThemeEt(), thesis.getThemeEn())
                 : null);
+        dto.setGrade(GradeDto.of(protocolStudent));
 
         if (protocolStudent.getProtocolStudentOccupations() != null) {
             protocolStudent.getProtocolStudentOccupations().forEach(oc -> {

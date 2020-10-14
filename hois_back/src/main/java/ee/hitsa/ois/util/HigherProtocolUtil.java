@@ -12,7 +12,6 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.HigherProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSaveForm;
-import ee.hitsa.ois.web.dto.HigherProtocolStudentDto;
 
 public abstract class HigherProtocolUtil {
 
@@ -146,16 +145,6 @@ public abstract class HigherProtocolUtil {
                 throw new ValidationFailedException("higherProtocol.error.protocolStudentsAddedOrRemoved");
             }
         }
-    }
-
-    public static void assertHasAddInfoIfProtocolConfirmed(HigherProtocolStudentDto dto, Protocol protocol) {
-        if(ProtocolUtil.confirmed(protocol) && addInfoMissing(dto)) {
-            throw new ValidationFailedException("higherProtocol.error.addInfoRequired");
-        }
-    }
-
-    private static boolean addInfoMissing(HigherProtocolStudentDto dto) {
-        return dto.getAddInfo() == null || dto.getAddInfo().isEmpty();
     }
 
     public static void assertStudentsAdded(HigherProtocolCreateForm form) {

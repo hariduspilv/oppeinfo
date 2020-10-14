@@ -6,9 +6,9 @@
         <span>{{currentLanguageNameField(result.module)}}</span>
       </div>
       <div flex-gt-md="15" flex-offset-gt-md="5" layout="row" layout-align-gt-md="center center">
-        <div ng-if="positiveGrade(result.grade.code)" class="bold" md-colors="{color: 'green-600'}">{{result.grade.value}}
+        <div ng-if="positiveGrade(result.grade.code)" class="bold" md-colors="{color: 'green-600'}">{{result.grade | hoisVocationalGrade}}
           ({{result.credits}} {{'student.result.ekap' | translate}})</div>
-        <div ng-if="!positiveGrade(result.grade.code)" class="bold" md-colors="{color: 'red-500'}">{{result.grade.value}}
+        <div ng-if="!positiveGrade(result.grade.code)" class="bold" md-colors="{color: 'red-500'}">{{result.grade | hoisVocationalGrade}}
           ({{result.credits}} {{'student.result.ekap' | translate}})</div>
       </div>
       <div flex-gt-md="30" flex-offset-gt-md="5"></div>

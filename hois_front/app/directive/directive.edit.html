@@ -11,7 +11,7 @@
       </div>
 
       <div flex ng-if="(record.type === 'KASKKIRI_LOPET' || record.type === 'KASKKIRI_KYLALIS' || record.type === 'KASKKIRI_DUPLIKAAT' || record.type === 'KASKKIRI_EKSTERN') && formState.school.higher && formState.school.vocational">
-        <md-input-container class="md-block">
+        <md-input-container class="md-block" ng-init="(record.isHigher = record.isHigher || false) || directiveTypeChanged()">
           <md-radio-group layout-gt-sm="row" ng-model="record.isHigher" ng-change="directiveTypeChanged()" required name="isHigher" ng-disabled="formState.state !== 'CHOOSETYPE'">
             <md-radio-button ng-value="false">{{'directive.vocational' | translate}}</md-radio-button>
             <md-radio-button ng-value="true">{{'directive.higher' | translate}}</md-radio-button>
@@ -159,12 +159,18 @@
 <style>
   /* Overrides default user-agent style for error message */
   div.template div.invalid p {
-    margin-block-start: 0.25em;
-    margin-block-end: 0.25em;
-    margin-inline-start: 0px;
-    margin-inline-end: 0px;
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+    margin-left: 0;
+    margin-right: 0;
   }
-  div.template tr.hois-table-row-detail {
+  div.template tr.hois-table-row-detail,
+  div.template tr.hois-table-row-between {
     height: auto !important;
+  }
+  div.template tr.hois-table-row-detail div.invalid,
+  div.template tr.hois-table-row-between div.invalid {
+    margin-top: 0.25em;
+    margin-bottom: 0.75em;
   }
 </style>

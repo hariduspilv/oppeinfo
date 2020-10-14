@@ -15,6 +15,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -32,49 +33,52 @@ public class StudentVocationalResult {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private Student student;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     private ApelApplicationRecord apelApplicationRecord;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumVersionOccupationModule curriculumVersionOmodule;
-    
+
     private String moduleNameEt;
     private String moduleNameEn;
     
     @ManyToOne(fetch = FetchType.LAZY)
     private ApelSchool apelSchool;
-    
+
     @Column(name = "grade")
     private String gradeValue;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier grade;
-    
+
     private Short gradeMark;
-    
+
     @Required
     private BigDecimal credits;
-    
+
     private String teachers;
     private LocalDate gradeDate;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     private ProtocolStudent protocolStudent;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    private StudyYear studyYear;
-    
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime inserted;
-    
+
     @LastModifiedDate
     private LocalDateTime changed;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private StudyYear studyYear;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private GradingSchemaRow gradingSchemaRow;
     
     @OneToOne(mappedBy="studentVocationalResult", cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(nullable = false, updatable = false)
@@ -193,14 +197,6 @@ public class StudentVocationalResult {
         this.protocolStudent = protocolStudent;
     }
 
-    public StudyYear getStudyYear() {
-        return studyYear;
-    }
-
-    public void setStudyYear(StudyYear studyYear) {
-        this.studyYear = studyYear;
-    }
-
     public LocalDateTime getInserted() {
         return inserted;
     }
@@ -215,6 +211,22 @@ public class StudentVocationalResult {
 
     public void setChanged(LocalDateTime changed) {
         this.changed = changed;
+    }
+
+    public StudyYear getStudyYear() {
+        return studyYear;
+    }
+
+    public void setStudyYear(StudyYear studyYear) {
+        this.studyYear = studyYear;
+    }
+
+    public GradingSchemaRow getGradingSchemaRow() {
+        return gradingSchemaRow;
+    }
+
+    public void setGradingSchemaRow(GradingSchemaRow gradingSchemaRow) {
+        this.gradingSchemaRow = gradingSchemaRow;
     }
 
     public StudentVocationalResultOmodule getChangedModule() {

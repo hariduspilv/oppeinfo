@@ -11,7 +11,7 @@
 
     $scope.formState = {
       showAllParameters: false
-    }
+    };
 
     $scope.toggleShowAllParameters = function () {
       $scope.formState.showAllParameters = !$scope.formState.showAllParameters;

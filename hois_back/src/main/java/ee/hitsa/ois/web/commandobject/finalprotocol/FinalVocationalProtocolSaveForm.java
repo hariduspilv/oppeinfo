@@ -9,7 +9,6 @@ import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class FinalVocationalProtocolSaveForm extends VersionedCommand {
 
-    @NotNull
     private LocalDate finalDate;
     private Long committeeId;
     private List<FinalProtocolCommitteeMemberForm> protocolCommitteeMembers;

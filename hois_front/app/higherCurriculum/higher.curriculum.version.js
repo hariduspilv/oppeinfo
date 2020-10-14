@@ -20,7 +20,7 @@ angular.module('hitsaOis')
     $scope.moduleOrderBy = Curriculum.curriculumModuleOrder;
     $scope.typeOrder = function (module) {
       return Curriculum.higherModuleTypeOrder(module.type);
-    }
+    };
     $scope.STATUS = Curriculum.STATUS;
     $scope.VERSION_STATUS = Curriculum.VERSION_STATUS;
     $scope.schoolModuleGrades = !!($scope.auth.school || {}).hmodules;

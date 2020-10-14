@@ -260,7 +260,8 @@ angular.module('hitsaOis')
     '/:backType?/studyMaterial/:schoolId?/higher/:subjectStudyPeriodId/view',
     '/practiceJournals/supervisor/:uuid',
     '/poll/supervisor/:uuid',
-    '/poll/expert/:uuid'
+    '/poll/expert/:uuid',
+    '/studyYearSchedule/public/:schoolId'
   ])
   .service('Session', function () {
     this.school = {};

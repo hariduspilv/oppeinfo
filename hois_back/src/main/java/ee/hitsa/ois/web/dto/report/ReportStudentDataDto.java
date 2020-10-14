@@ -38,6 +38,7 @@ public class ReportStudentDataDto {
     private String directiveReasons;
     private AutocompleteResult studentGroups;
     private String studentStatuses;
+    private LocalDate nominalStudyEnd;
     private String studyForm;
     private String studyLoad;
     private String schoolDepartment;
@@ -74,6 +75,10 @@ public class ReportStudentDataDto {
     private String exmatReason;
     private String akadReason;
     private String stiptoetlReason;
+    private String foreignLanguage;
+    private String previousStudyLevel;
+    private String dormitory;
+    private String regNr;
     
     public ReportStudentDataDto(Object r, StudentDataCommand criteria, Integer order) {
         this.nr = order;
@@ -118,42 +123,47 @@ public class ReportStudentDataDto {
         this.directiveReasons = resultAsString(r, 16);
         this.studentGroups = new AutocompleteResult(resultAsLong(r, 17), resultAsString(r, 18), resultAsString(r, 18));
         this.studentStatuses = resultAsString(r, 19);
-        this.studyForm = resultAsString(r, 20);
-        this.studyLoad = resultAsString(r, 21);
-        this.schoolDepartment = resultAsString(r, 22);
-        this.curriculum = new AutocompleteResult(resultAsLong(r, 23), resultAsString(r, 24), resultAsString(r, 25));
-        this.ehisCode = resultAsString(r, 26);
-        this.studyLevel = resultAsString(r, 27);
-        this.speciality = new AutocompleteResult(null, resultAsString(r, 28), resultAsString(r, 29));
-        this.studyYearNumber = resultAsLong(r, 30);
-        this.fin = resultAsString(r, 31);
-        this.language = resultAsString(r, 32);
-        this.curriculumPercentage = resultAsDecimal(r, 33);
-        this.address = resultAsString(r, 34);
-        this.phone = resultAsString(r, 35);
-        this.officialEmail = resultAsString(r, 36);
-        this.personalEmail = resultAsString(r, 37);
-        this.eap = resultAsDecimal(r, 38);
-        this.weightedAverageSum = resultAsDecimal(r, 39);
-        this.eapSum = resultAsDecimal(r, 40);
-        this.weightedAverage = resultAsDecimal(r, 41);
-        this.averageSum = resultAsDecimal(r, 42);
-        this.average = resultAsDecimal(r, 43);
-        this.debtSum = resultAsLong(r, 44);
-        this.debt = resultAsLong(r, 45);
-        this.debtPointsSum = resultAsLong(r, 46);
-        this.debtPoints = resultAsLong(r, 47);
-        this.declaredEap = resultAsLong(r, 48);
-        this.activeResult = resultAsString(r, 49);
-        if (resultAsLong(r, 50) != null) {
-            this.activeResultSubject = new AutocompleteResult(null, resultAsString(r, 51), resultAsString(r, 52));
+        this.regNr = resultAsString(r, 20);
+        this.nominalStudyEnd = resultAsLocalDate(r, 21);
+        this.studyForm = resultAsString(r, 22);
+        this.studyLoad = resultAsString(r, 23);
+        this.schoolDepartment = resultAsString(r, 24);
+        this.curriculum = new AutocompleteResult(resultAsLong(r, 25), resultAsString(r, 26), resultAsString(r, 27));
+        this.ehisCode = resultAsString(r, 28);
+        this.studyLevel = resultAsString(r, 29);
+        this.speciality = new AutocompleteResult(null, resultAsString(r, 30), resultAsString(r, 31));
+        this.studyYearNumber = resultAsLong(r, 32);
+        this.fin = resultAsString(r, 33);
+        this.language = resultAsString(r, 34);
+        this.foreignLanguage = resultAsString(r, 35);
+        this.curriculumPercentage = resultAsDecimal(r, 38);
+        this.address = resultAsString(r, 39);
+        this.phone = resultAsString(r, 40);
+        this.officialEmail = resultAsString(r, 41);
+        this.personalEmail = resultAsString(r, 42);
+        this.eap = resultAsDecimal(r, 43);
+        this.weightedAverageSum = resultAsDecimal(r, 44);
+        this.eapSum = resultAsDecimal(r, 45);
+        this.weightedAverage = resultAsDecimal(r, 46);
+        this.averageSum = resultAsDecimal(r, 47);
+        this.average = resultAsDecimal(r, 48);
+        this.debtSum = resultAsLong(r, 49);
+        this.debt = resultAsLong(r, 50);
+        this.debtPointsSum = resultAsLong(r, 51);
+        this.debtPoints = resultAsLong(r, 52);
+        this.declaredEap = resultAsLong(r, 53);
+        this.activeResult = resultAsString(r, 54);
+        if (resultAsLong(r, 55) != null) {
+            this.activeResultSubject = new AutocompleteResult(null, resultAsString(r, 56), resultAsString(r, 57));
         }
-        if (resultAsLong(r, 53) != null) {
-            this.declaredSubject = new AutocompleteResult(null, resultAsString(r, 54), resultAsString(r, 55));
+        if (resultAsLong(r, 58) != null) {
+            this.declaredSubject = new AutocompleteResult(null, resultAsString(r, 59), resultAsString(r, 60));
         }
-        this.declarationConfirmation = resultAsLocalDate(r, 56);
-        this.previousSchoolName = resultAsString(r, 57);
-        this.completedSchoolYear = resultAsLong(r, 58);
+        this.declarationConfirmation = resultAsLocalDate(r, 61);
+        this.previousSchoolName = resultAsString(r, 62);
+        this.completedSchoolYear = resultAsLong(r, 63);
+        this.previousStudyLevel = resultAsString(r, 64);
+        this.dormitory = resultAsString(r, 65);
     }
 
     public String getFirstname() {
@@ -602,5 +612,45 @@ public class ReportStudentDataDto {
 
     public void setSpeciality(AutocompleteResult speciality) {
         this.speciality = speciality;
+    }
+
+    public String getForeignLanguage() {
+        return foreignLanguage;
+    }
+
+    public void setForeignLanguage(String foreignLanguage) {
+        this.foreignLanguage = foreignLanguage;
+    }
+
+    public LocalDate getNominalStudyEnd() {
+        return nominalStudyEnd;
+    }
+
+    public void setNominalStudyEnd(LocalDate nominalStudyEnd) {
+        this.nominalStudyEnd = nominalStudyEnd;
+    }
+
+    public String getPreviousStudyLevel() {
+        return previousStudyLevel;
+    }
+
+    public void setPreviousStudyLevel(String previousStudyLevel) {
+        this.previousStudyLevel = previousStudyLevel;
+    }
+
+    public String getDormitory() {
+        return dormitory;
+    }
+
+    public void setDormitory(String dormitory) {
+        this.dormitory = dormitory;
+    }
+
+    public String getRegNr() {
+        return regNr;
+    }
+
+    public void setRegNr(String regNr) {
+        this.regNr = regNr;
     }
 }

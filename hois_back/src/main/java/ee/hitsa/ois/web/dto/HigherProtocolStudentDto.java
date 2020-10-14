@@ -11,20 +11,16 @@ import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodExam;
-import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.ProtocolUtil;
-import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.web.commandobject.ProtocolStudentForm;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
-public class HigherProtocolStudentDto extends VersionedCommand implements ProtocolStudentForm {
+public class HigherProtocolStudentDto extends VersionedCommand {
 
     @NotNull
     private Long id;
-    @ClassifierRestriction(MainClassCode.KORGHINDAMINE)
-    private String grade;
+    private GradeDto grade;
     private List<ProtocolPracticeJournalResultDto> practiceJournalResults = new ArrayList<>();
     private List<HigherProtocolModuleSubjectResultDto> subjectResults = new ArrayList<>();
     private Long studentId;
@@ -53,6 +49,7 @@ public class HigherProtocolStudentDto extends VersionedCommand implements Protoc
                 ?  protocolStudent.getSubjectStudyPeriodExamStudent().getSubjectStudyPeriodExam() : null;
         s.setExamDate(exam != null ? exam.getTimetableEvent().getStart().toLocalDate() : null);
         s.setStudentStatus(EntityUtil.getCode(protocolStudent.getStudent().getStatus()));
+        s.setGrade(GradeDto.of(protocolStudent));
 
         s.setCanChangeGrade(Boolean.valueOf(ProtocolUtil.studentGradeCanBeChanged(protocolStudent)));
         s.setCanBeDeleted(Boolean.valueOf(!ProtocolUtil.hasGrade(protocolStudent))); // different from other protocols
@@ -91,12 +88,11 @@ public class HigherProtocolStudentDto extends VersionedCommand implements Protoc
         this.id = id;
     }
 
-    @Override
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
 
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
     

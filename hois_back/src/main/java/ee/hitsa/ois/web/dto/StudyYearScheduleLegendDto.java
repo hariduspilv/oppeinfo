@@ -12,7 +12,7 @@ public class StudyYearScheduleLegendDto extends VersionedCommand {
 
     private Long id;
     @NotNull
-    @Size(max = 2)
+    @Size(max = 4)
     private String code;
     @NotNull
     @Size(max = 50)
@@ -24,6 +24,8 @@ public class StudyYearScheduleLegendDto extends VersionedCommand {
     private String color;
     private Boolean brightText;
     private Boolean inUse;
+    private Boolean vacation;
+    private String addInfo;
 
     public static StudyYearScheduleLegendDto of(StudyYearScheduleLegend l) {
         StudyYearScheduleLegendDto dto = new StudyYearScheduleLegendDto();
@@ -34,6 +36,17 @@ public class StudyYearScheduleLegendDto extends VersionedCommand {
         } else {
             dto.setBrightText(Boolean.FALSE);
         }
+        return dto;
+    }
+    
+    /**
+     * Create copy of the same object
+     * @param other
+     * @return
+     */
+    public static StudyYearScheduleLegendDto of(StudyYearScheduleLegendDto other) {
+        StudyYearScheduleLegendDto dto = new StudyYearScheduleLegendDto();
+        EntityUtil.bindToDto(other, dto);
         return dto;
     }
 
@@ -91,6 +104,22 @@ public class StudyYearScheduleLegendDto extends VersionedCommand {
 
     public void setInUse(Boolean inUse) {
         this.inUse = inUse;
+    }
+
+    public Boolean getVacation() {
+        return vacation;
+    }
+
+    public void setVacation(Boolean vacation) {
+        this.vacation = vacation;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
     }
 
 }

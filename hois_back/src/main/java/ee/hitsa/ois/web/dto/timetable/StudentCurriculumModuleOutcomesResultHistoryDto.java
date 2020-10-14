@@ -4,6 +4,7 @@ import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResult;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResultHistory;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.web.dto.GradeDto;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 public class StudentCurriculumModuleOutcomesResultHistoryDto {
 
     private Long resultId;
-    private String grade;
+    private GradeDto grade;
     private LocalDate gradeDate;
     private LocalDateTime gradeInserted;
     private String gradeInsertedBy;
@@ -20,7 +21,7 @@ public class StudentCurriculumModuleOutcomesResultHistoryDto {
     public static StudentCurriculumModuleOutcomesResultHistoryDto of(StudentCurriculumModuleOutcomesResultHistory history) {
         StudentCurriculumModuleOutcomesResultHistoryDto dto = new StudentCurriculumModuleOutcomesResultHistoryDto();
         dto.setResultId(EntityUtil.getId(history.getStudentCurriculumModuleOutcomesResult()));
-        dto.setGrade(EntityUtil.getCode(history.getGrade()));
+        dto.setGrade(GradeDto.of(history));
         dto.setGradeDate(history.getGradeDate());
         dto.setGradeInserted(history.getGradeInserted());
         dto.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(history.getGradeInsertedBy()));
@@ -36,11 +37,11 @@ public class StudentCurriculumModuleOutcomesResultHistoryDto {
         this.resultId = resultId;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
 
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
 

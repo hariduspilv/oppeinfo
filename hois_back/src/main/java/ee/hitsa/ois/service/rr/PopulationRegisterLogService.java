@@ -6,6 +6,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -14,6 +15,7 @@ import javax.transaction.Transactional.TxType;
 
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.*;
+import ee.hois.xroad.rahvastikuregister.generated.RR434ResponseType;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
@@ -150,8 +152,18 @@ public class PopulationRegisterLogService {
         });
     }
 
+    private static boolean isAddressAContainsB(String addressA, String addressB) {
+        if (addressA == null && addressB == null) {
+            return true;
+        } else if (addressA == null || addressB == null) {
+            return false;
+        }
+        return addressA.toUpperCase().trim().contains(addressB.replace(" tn ", " tänav ").toUpperCase().trim())
+            || addressA.toUpperCase().trim().contains(addressB.replace(" tänav ", " tn ").toUpperCase().trim());
+    }
+
     public void savePersonData(Person person, String firstname, String lastname, Classifier citizenship, Classifier residence,
-            String address, String addressAds, String addressAdsOid, String postcode) {
+                               String address, String addressAdsOid, String postcode, String addressAds) {
         if (!StringUtils.equalsIgnoreCase(person.getFirstname(), firstname)) {
             person.setFirstname(PersonUtil.initCapName(firstname));
         }
@@ -160,8 +172,14 @@ public class PopulationRegisterLogService {
         }
         person.setCitizenship(citizenship);
         person.setResidenceCountry(residence);
+
+        if (person.getAddressAds() != null && !isAddressAContainsB(address, person.getAddress())) {
+            person.setAddressAds(addressAds);
+        } else if (person.getAddressAds() == null) {
+            person.setAddressAds(addressAds);
+        }
         person.setAddress(address);
-        //person.setAddressAds(elukoht == null? null : elukoht.getElukohtKoodaadress()); XXX
+
         person.setAddressAdsOid(addressAdsOid);
         person.setPostcode(postcode);
         em.merge(person);

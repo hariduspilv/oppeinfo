@@ -473,7 +473,7 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
           $scope.loadData();
         });
       });
-    }
+    };
 
     $scope.showUncomposed = function() {
       var DialogController = function (scope) {

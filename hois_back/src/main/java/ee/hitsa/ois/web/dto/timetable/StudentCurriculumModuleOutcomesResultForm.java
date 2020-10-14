@@ -1,8 +1,7 @@
 package ee.hitsa.ois.web.dto.timetable;
 
-import ee.hitsa.ois.enums.MainClassCode;
-import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.dto.GradeDto;
 
 import java.time.LocalDate;
 
@@ -10,8 +9,7 @@ public class StudentCurriculumModuleOutcomesResultForm extends VersionedCommand 
 
     private Long id;
     private Long studentId;
-    @ClassifierRestriction(MainClassCode.KUTSEHINDAMINE)
-    private String grade;
+    private GradeDto grade;
     private LocalDate gradeDate;
     private String addInfo;
 
@@ -31,11 +29,11 @@ public class StudentCurriculumModuleOutcomesResultForm extends VersionedCommand 
         this.studentId = studentId;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
 
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
 

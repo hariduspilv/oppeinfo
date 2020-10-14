@@ -25,6 +25,7 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.juhan.JuhanEventForm;
 import ee.hitsa.ois.web.commandobject.juhan.JuhanEventRoomForm;
 import ee.hitsa.ois.web.commandobject.juhan.JuhanEventTeacherForm;
+import ee.hitsa.ois.web.commandobject.juhan.JuhanEventsForm;
 import ee.hitsa.ois.web.commandobject.juhan.JuhanRoomCommand;
 import ee.hitsa.ois.web.commandobject.juhan.JuhanTeacherCommand;
 import ee.hitsa.ois.web.dto.BusyTimeDto;
@@ -47,6 +48,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Transactional
@@ -180,109 +182,145 @@ public class JuhanService {
         }
     }
 
-    public ResponseEntity<Map<String, Object>> event(JuhanEventForm eventForm) {
+    public ResponseEntity<Map<String, Object>> events(JuhanEventsForm eventsForm) {
         // hack: we are going to change authentication to allow audit info filled
         SecurityContextHolder.getContext().setAuthentication(JUHAN);
         Authentication oldAuthentication = SecurityContextHolder.getContext().getAuthentication();
 
-        Map<String, Object> result = new HashMap<>();
-        try {
-            TimetableEvent te = juhanEvent(eventForm);
-            if (te != null && eventForm.getTeachers().isEmpty() && eventForm.getRooms().isEmpty()) {
-                EntityUtil.deleteEntity(te, em);
-            } else {
-                List<String> requiredFields = new ArrayList<>();
-                if (eventForm.getEventName() == null) {
-                    requiredFields.add("eventName");
-                }
-                if (eventForm.getEventStart() == null) {
-                    requiredFields.add("eventStart");
-                }
-                if (eventForm.getEventEnd() == null) {
-                    requiredFields.add("eventEnd");
-                }
+        Set<Long> juhanEventIds = StreamUtil.toMappedSet(JuhanEventForm::getEventId, eventsForm.getEvents());
+        if (juhanEventIds.size() != eventsForm.getEvents().size()) {
+            throw new ValidationFailedException("Duplicate event ids");
+        }
 
-                if(!requiredFields.isEmpty()) {
+        Map<String, Object> result = new HashMap<>();
+        List<Map<String, Object>> events = new ArrayList<>();
+        Map<Long, TimetableEvent> createdEvents = juhanEvents(juhanEventIds);
+
+        for (JuhanEventForm eventForm : eventsForm.getEvents()) {
+            TimetableEvent timetableEvent = createdEvents.get(eventForm.getEventId());
+            if (timetableEvent != null && !eventForm.getSchoolId().equals(EntityUtil.getId(timetableEvent.getSchool()))) {
+                throw new ValidationFailedException("Event and school don't match");
+            }
+
+            if (timetableEvent != null && eventForm.getTeachers().isEmpty() && eventForm.getRooms().isEmpty()) {
+                EntityUtil.deleteEntity(timetableEvent, em);
+                events.add(deleteEvent(timetableEvent));
+            } else {
+                List<String> requiredFields = eventFormRequiredFieldsValidation(eventForm);
+                if (!requiredFields.isEmpty()) {
                     return new ResponseEntity<>(errorResponse(requiredFields), HttpStatus.PRECONDITION_FAILED);
                 }
-
-                if (te == null) {
-                    te = new TimetableEvent();
-                }
-                LocalDateTime start = DateUtils.toLocalDateTime(eventForm.getEventStart());
-                LocalDateTime end = DateUtils.toLocalDateTime(eventForm.getEventEnd());
-
-                List<Teacher> formTeachers = formTeachers(eventForm);
-                List<Room> formRooms = formRooms(eventForm);
-                if (formTeachers.isEmpty() && formRooms.isEmpty()) {
-                    throw new ValidationFailedException("Missing a school connected teacher or room");
-                }
-
-                te.setSchool(em.getReference(School.class, eventForm.getSchoolId()));
-                te.setRepeatCode(em.getReference(Classifier.class, TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_EI.name()));
-                te.setStart(start);
-                te.setEnd(end);
-                te.setJuhanEventId(eventForm.getEventId());
-
-                TimetableEventTime tet = !te.getTimetableEventTimes().isEmpty() ? te.getTimetableEventTimes().get(0)
-                        : new TimetableEventTime();
-                tet.setTimetableEvent(te);
-                te.setName(maximumSubstring(eventForm.getEventName(), 255));
-                tet.setStart(start);
-                tet.setEnd(end);
-
-                EntityUtil.bindEntityCollection(tet.getTimetableEventTeachers(),
-                        r -> EntityUtil.getId(r.getTeacher()), formTeachers, BaseEntityWithId::getId, teacher -> {
-                            TimetableEventTeacher eventTeacher = new TimetableEventTeacher();
-                            eventTeacher.setTeacher(teacher);
-                            eventTeacher.setTimetableEventTime(tet);
-                            return eventTeacher;
-                        });
-                String otherTeachers = StreamUtil.nullSafeList(eventForm.getTeachers()).stream().filter(
-                        r -> r.getIdcode() == null && r.getUqcode() == null && r.getTeacherName() != null)
-                        .map(JuhanEventTeacherForm::getTeacherName).collect(Collectors.joining(", "));
-                if (!otherTeachers.isEmpty()) {
-                    tet.setOtherTeacher(maximumSubstring(otherTeachers, 1000));
-                }
-
-                EntityUtil.bindEntityCollection(tet.getTimetableEventRooms(),
-                        r -> EntityUtil.getId(r.getRoom()), formRooms, BaseEntityWithId::getId, room -> {
-                            TimetableEventRoom eventRoom = new TimetableEventRoom();
-                            eventRoom.setRoom(room);
-                            eventRoom.setTimetableEventTime(tet);
-                            return eventRoom;
-                        });
-                String otherRooms = StreamUtil.nullSafeList(eventForm.getRooms()).stream().filter(
-                        r -> r.getRoomId() == null && r.getRoomName() != null)
-                        .map(JuhanEventRoomForm::getRoomName).collect(Collectors.joining(", "));
-                if (!otherRooms.isEmpty()) {
-                    tet.setOtherRoom(maximumSubstring(otherRooms, 1000));
-                }
-
-                te.getTimetableEventTimes().add(tet);
-                EntityUtil.save(te, em);
+                events.add(createEvent(timetableEvent, eventForm));
             }
+        }
+        result.put("events", events);
+
+        SecurityContextHolder.getContext().setAuthentication(oldAuthentication);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    private List<String> eventFormRequiredFieldsValidation(JuhanEventForm eventForm) {
+        List<String> requiredFields = new ArrayList<>();
+        if (eventForm.getEventName() == null) {
+            requiredFields.add("eventName");
+        }
+        if (eventForm.getEventStart() == null) {
+            requiredFields.add("eventStart");
+        }
+        if (eventForm.getEventEnd() == null) {
+            requiredFields.add("eventEnd");
+        }
+        return requiredFields;
+    }
+
+    private Map<String, Object> deleteEvent(TimetableEvent timetableEvent) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("eventId", timetableEvent.getJuhanEventId());
+        try {
+            EntityUtil.deleteEntity(timetableEvent, em);
             result.put("result", OK);
         } catch (Exception e) {
             result.put("result", FAIL);
             result.put("msg", e.getMessage());
-            return new ResponseEntity<>(result, HttpStatus.PRECONDITION_FAILED);
-        } finally {
-            SecurityContextHolder.getContext().setAuthentication(oldAuthentication);
         }
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return result;
     }
 
-    private TimetableEvent juhanEvent(JuhanEventForm eventForm) {
-        List<TimetableEvent> events = em.createQuery("select te from TimetableEvent te " +
-                "where te.juhanEventId = ?1", TimetableEvent.class)
-                .setParameter(1, eventForm.getEventId())
-                .setMaxResults(1).getResultList();
-        TimetableEvent foundEvent = !events.isEmpty() ? events.get(0) : null;
-        if (foundEvent != null && !eventForm.getSchoolId().equals(EntityUtil.getId(foundEvent.getSchool()))) {
-            throw new ValidationFailedException("Event and school don't match");
+    private Map<String, Object> createEvent(TimetableEvent timetableEvent, JuhanEventForm eventForm) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("eventId", eventForm.getEventId());
+        try {
+            if (timetableEvent == null) {
+                timetableEvent = new TimetableEvent();
+            }
+
+            LocalDateTime start = DateUtils.toLocalDateTime(eventForm.getEventStart());
+            LocalDateTime end = DateUtils.toLocalDateTime(eventForm.getEventEnd());
+
+            List<Teacher> formTeachers = formTeachers(eventForm);
+            List<Room> formRooms = formRooms(eventForm);
+            if (formTeachers.isEmpty() && formRooms.isEmpty()) {
+                throw new ValidationFailedException("Missing a school connected teacher or room");
+            }
+
+            timetableEvent.setSchool(em.getReference(School.class, eventForm.getSchoolId()));
+            timetableEvent.setRepeatCode(em.getReference(Classifier.class, TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_EI.name()));
+            timetableEvent.setStart(start);
+            timetableEvent.setEnd(end);
+            timetableEvent.setJuhanEventId(eventForm.getEventId());
+
+            TimetableEventTime timetableEventTime = !timetableEvent.getTimetableEventTimes().isEmpty() ?
+                    timetableEvent.getTimetableEventTimes().get(0) : new TimetableEventTime();
+            timetableEventTime.setTimetableEvent(timetableEvent);
+            timetableEvent.setName(maximumSubstring(eventForm.getEventName(), 255));
+            timetableEventTime.setStart(start);
+            timetableEventTime.setEnd(end);
+
+            EntityUtil.bindEntityCollection(timetableEventTime.getTimetableEventTeachers(),
+                    r -> EntityUtil.getId(r.getTeacher()), formTeachers, BaseEntityWithId::getId, teacher -> {
+                        TimetableEventTeacher eventTeacher = new TimetableEventTeacher();
+                        eventTeacher.setTeacher(teacher);
+                        eventTeacher.setTimetableEventTime(timetableEventTime);
+                        return eventTeacher;
+                    });
+            String otherTeachers = otherTeachers(eventForm, formTeachers);
+            if (!otherTeachers.isEmpty()) {
+                timetableEventTime.setOtherTeacher(maximumSubstring(otherTeachers, 1000));
+            }
+
+            EntityUtil.bindEntityCollection(timetableEventTime.getTimetableEventRooms(),
+                    r -> EntityUtil.getId(r.getRoom()), formRooms, BaseEntityWithId::getId, room -> {
+                        TimetableEventRoom eventRoom = new TimetableEventRoom();
+                        eventRoom.setRoom(room);
+                        eventRoom.setTimetableEventTime(timetableEventTime);
+                        return eventRoom;
+                    });
+            String otherRooms = StreamUtil.nullSafeList(eventForm.getRooms()).stream().filter(
+                    r -> r.getRoomId() == null && r.getRoomName() != null)
+                    .map(JuhanEventRoomForm::getRoomName).collect(Collectors.joining(", "));
+            if (!otherRooms.isEmpty()) {
+                timetableEventTime.setOtherRoom(maximumSubstring(otherRooms, 1000));
+            }
+
+            timetableEvent.getTimetableEventTimes().add(timetableEventTime);
+            EntityUtil.save(timetableEvent, em);
+            result.put("result", OK);
+        } catch (Exception e) {
+            result.put("result", FAIL);
+            result.put("msg", e.getMessage());
         }
-        return foundEvent;
+        return result;
+    }
+
+    private Map<Long, TimetableEvent> juhanEvents(Set<Long> juhanEventIds) {
+        if (juhanEventIds.isEmpty()) {
+            return new HashMap<>();
+        }
+        List<TimetableEvent> events = em.createQuery("select te from TimetableEvent te " +
+                "where te.juhanEventId in ?1", TimetableEvent.class)
+                .setParameter(1, juhanEventIds)
+                .getResultList();
+        return StreamUtil.toMap(TimetableEvent::getJuhanEventId, e -> e, events);
     }
 
     private List<Teacher> formTeachers(JuhanEventForm eventForm) {
@@ -309,10 +347,26 @@ public class JuhanService {
 
             teachers = qb.select(em).getResultList();
         }
-        if (teachers.size() != idcodes.size() + uniqueCodes.size()) {
-            throw new ValidationFailedException("Teachers don't belong to school");
-        }
         return teachers;
+    }
+
+    private String otherTeachers(JuhanEventForm eventForm, List<Teacher> formTeachers) {
+        List<String> teacherCodes = formTeacherCodes(formTeachers);
+        return eventForm.getTeachers().stream().filter(t -> t.getTeacherName() != null
+                && ((t.getIdcode() == null && t.getUqcode() == null)
+                || (!teacherCodes.contains(t.getIdcode()) && !teacherCodes.contains(t.getUqcode()))))
+                .map(JuhanEventTeacherForm::getTeacherName).collect(Collectors.joining(", "));
+    }
+
+    private List<String> formTeacherCodes(List<Teacher> formTeachers) {
+        if (formTeachers.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<?> data = em.createNativeQuery("select coalesce(p.unique_code, p.idcode) from teacher t "
+                + "join person p on p.id = t.person_id where t.id in ?1")
+                .setParameter(1, StreamUtil.toMappedList(BaseEntityWithId::getId, formTeachers))
+                .getResultList();
+        return StreamUtil.toMappedList(r -> resultAsString(r, 0), data);
     }
 
     private List<Room> formRooms(JuhanEventForm eventForm) {

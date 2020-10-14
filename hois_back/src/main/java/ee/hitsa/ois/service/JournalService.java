@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,11 +32,15 @@ import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 import javax.validation.Validator;
 
+import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResult;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResultHistory;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
+import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.web.commandobject.timetable.JournalOutcomeForm;
+import ee.hitsa.ois.web.dto.GradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateBaseDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateXlsDto;
@@ -49,8 +54,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-
-import com.google.common.base.Objects;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyYear;
@@ -231,7 +234,7 @@ public class JournalService {
             command.setTeacher(user.getTeacherId());
         }
         if (command.getTeacher() != null) {
-            if (Boolean.TRUE.equals(command.getOnlyMyJournals())) {
+            if (!user.isTeacher() || Boolean.TRUE.equals(command.getOnlyMyJournals())) {
                 qb.filter("j.id in (select j.id from journal j " + 
                         "join journal_teacher jt on j.id=jt.journal_id " + 
                         "where jt.teacher_id=" + command.getTeacher() + ")");
@@ -648,8 +651,8 @@ public class JournalService {
     }
 
     public Journal saveJournalReview(Journal journal, JournalReviewForm journalReviewForm) {
-        if (Objects.equal(journal.getReviewOk(), journalReviewForm.getIsReviewOk())
-                && Objects.equal(journal.getReviewInfo(), journalReviewForm.getReviewInfo())) {
+        if (Objects.equals(journal.getReviewOk(), journalReviewForm.getIsReviewOk())
+                && Objects.equals(journal.getReviewInfo(), journalReviewForm.getReviewInfo())) {
             throw new ValidationFailedException("journal.messages.reviewIsNotChanged");
         }
         journal.setReviewOk(journalReviewForm.getIsReviewOk());
@@ -798,7 +801,8 @@ public class JournalService {
             Long lessons = journalEntryForm.getLessons() != null ? journalEntryForm.getLessons() : Long.valueOf(1);
             if (journalEntryStudentForm.getId() != null) {
                 JournalEntryStudent journalEntryStudent = em.getReference(JournalEntryStudent.class, journalEntryStudentForm.getId());
-                assertJournalEntryStudentRules(journalEntryStudent.getJournalStudent());
+                assertJournalEntryStudentRules(journalEntry, journalEntryStudent.getJournalStudent(),
+                        journalEntryStudentForm);
                 
                 updateJournalStudentEntry(user, journalEntryStudent, journalEntryStudentForm, lessons);
                 if (Boolean.TRUE.equals(journalEntryStudentForm.getRemoveStudentHistory())) {
@@ -819,9 +823,8 @@ public class JournalService {
 
     private void updateJournalStudentEntry(HoisUserDetails user, JournalEntryStudent journalEntryStudent,
             JournalEntryStudentForm journalEntryStudentForm, Long lessons) {
-        String savedGrade = EntityUtil.getNullableCode(journalEntryStudent.getGrade());
-        if (Boolean.FALSE.equals(journalEntryStudentForm.getRemoveStudentHistory()) && savedGrade != null
-                && !savedGrade.equals(journalEntryStudentForm.getGrade())) {
+        if (Boolean.FALSE.equals(journalEntryStudentForm.getRemoveStudentHistory())
+                && journalStudentEntryHistoryNecessary(journalEntryStudent, journalEntryStudentForm)) {
             setJournalEntryStudentHistory(journalEntryStudent);
         }
         updateJournalEntryStudentGrade(user, journalEntryStudent, journalEntryStudentForm);
@@ -832,11 +835,29 @@ public class JournalService {
         updateStudentEntryAbsences(journalEntryStudent, journalEntryStudentForm, lessons);
     }
 
+    private boolean journalStudentEntryFormGradeEmpty(JournalEntryStudentForm form) {
+        return form.getGrade() == null && StringUtils.isEmpty(form.getVerbalGrade());
+    }
+
+    private boolean journalStudentEntryGradeChanged(JournalEntryStudent journalEntryStudent,
+            JournalEntryStudentForm form) {
+        return !Objects.equals(GradeDto.of(journalEntryStudent), form.getGrade())
+                || !Objects.equals(journalEntryStudent.getVerbalGrade(), form.getVerbalGrade());
+    }
+
+    private boolean journalStudentEntryHistoryNecessary(JournalEntryStudent journalEntryStudent,
+            JournalEntryStudentForm form) {
+        return (journalEntryStudent.getGrade() != null && !Objects.equals(GradeDto.of(journalEntryStudent), form.getGrade()))
+                || (journalEntryStudent.getVerbalGrade() != null && form.getVerbalGrade() == null);
+    }
+
     private static void setJournalEntryStudentHistory(JournalEntryStudent journalEntryStudent) {
         JournalEntryStudentHistory journalEntryStudentHistory = new JournalEntryStudentHistory();
         journalEntryStudentHistory.setGrade(journalEntryStudent.getGrade());
+        journalEntryStudentHistory.setGradingSchemaRow(journalEntryStudent.getGradingSchemaRow());
         journalEntryStudentHistory.setGradeInserted(journalEntryStudent.getGradeInserted());
-        
+        journalEntryStudentHistory.setVerbalGrade(journalEntryStudent.getVerbalGrade());
+
         String insertedBy;
         if (journalEntryStudent.getGradeInsertedBy() != null) {
             insertedBy = journalEntryStudent.getGradeInsertedBy();
@@ -846,21 +867,29 @@ public class JournalService {
             insertedBy = journalEntryStudent.getInsertedBy();
         }
         journalEntryStudentHistory.setGradeInsertedBy(insertedBy);
-        
+
+        journalEntryStudentHistory.setJournalEntryStudent(journalEntryStudent);
         journalEntryStudent.getJournalEntryStudentHistories().add(journalEntryStudentHistory);
     }
 
     private void updateJournalEntryStudentGrade(HoisUserDetails user, JournalEntryStudent journalEntryStudent,
             JournalEntryStudentForm journalEntryStudentForm) {
-        if (journalEntryStudentForm.getGrade() != null) {
-            if (!journalEntryStudentForm.getGrade()
-                    .equals(EntityUtil.getNullableCode(journalEntryStudent.getGrade()))) {
+        if (!journalStudentEntryFormGradeEmpty(journalEntryStudentForm)) {
+            if (journalStudentEntryGradeChanged(journalEntryStudent, journalEntryStudentForm)) {
+                if (journalEntryStudentForm.getGrade() != null) {
+                    journalEntryStudent.setGrade(em.getReference(Classifier.class,
+                            journalEntryStudentForm.getGrade().getCode()));
+                    journalEntryStudent.setGradingSchemaRow(EntityUtil.getOptionalOne(GradingSchemaRow.class,
+                            journalEntryStudentForm.getGrade().getGradingSchemaRowId(), em));
+                }
+                journalEntryStudent.setVerbalGrade(journalEntryStudentForm.getVerbalGrade());
                 journalEntryStudent.setGradeInserted(LocalDateTime.now());
                 journalEntryStudent.setGradeInsertedBy(user.getUsername());
-                journalEntryStudent.setGrade(em.getReference(Classifier.class, journalEntryStudentForm.getGrade()));
             }
         } else {
             journalEntryStudent.setGrade(null);
+            journalEntryStudent.setGradingSchemaRow(null);
+            journalEntryStudent.setVerbalGrade(null);
             journalEntryStudent.setGradeInserted(null);
             journalEntryStudent.setGradeInsertedBy(null);
         }
@@ -880,9 +909,14 @@ public class JournalService {
         }
     }
 
-    private static void assertJournalEntryStudentRules(JournalStudent journaStudent) {
-        if (!StudentUtil.isActive(journaStudent.getStudent())) {
+    private static void assertJournalEntryStudentRules(JournalEntry journalEntry, JournalStudent journalStudent,
+            JournalEntryStudentForm form) {
+        if (!StudentUtil.isActive(journalStudent.getStudent())) {
             throw new ValidationFailedException("journal.messages.changeIsNotAllowedStudentIsNotStudying");
+        }
+        if (JournalEntryType.SISSEKANNE_L.name().equals(EntityUtil.getNullableCode(journalEntry.getEntryType()))
+                && !StringUtils.isEmpty(form.getVerbalGrade())) {
+            throw new ValidationFailedException("journal.messages.finalEntryVerbalGradeIsNotAllowed");
         }
     }
 
@@ -894,10 +928,10 @@ public class JournalService {
     private void saveJournalStudentEntry(HoisUserDetails user, JournalEntry journalEntry,
             JournalEntryStudentForm journalEntryStudentForm, Long lessons) {
         JournalStudent journalStudent = em.getReference(JournalStudent.class, journalEntryStudentForm.getJournalStudent());
-        assertJournalEntryStudentRules(journalStudent);
+        assertJournalEntryStudentRules(journalEntry, journalStudent, journalEntryStudentForm);
 
         JournalEntryStudent journalEntryStudent = EntityUtil.bindToEntity(journalEntryStudentForm,
-                new JournalEntryStudent(), classifierRepository, "journalEntryStudentHistories", "gradeInserted",
+                new JournalEntryStudent(), classifierRepository, "grade", "journalEntryStudentHistories", "gradeInserted",
                 "absence", "absenceInserted", "absenceAccepted", "journalEntryStudentLessonAbsences");
         updateStudentEntryAbsences(journalEntryStudent, journalEntryStudentForm, lessons);
 
@@ -906,6 +940,11 @@ public class JournalService {
         String inserter = user.getUsername();
         LocalDateTime now = LocalDateTime.now();
         if (journalEntryStudentForm.getGrade() != null) {
+            journalEntryStudent.setGrade(em.getReference(Classifier.class, journalEntryStudentForm.getGrade().getCode()));
+            journalEntryStudent.setGradingSchemaRow(EntityUtil.getOptionalOne(GradingSchemaRow.class,
+                    journalEntryStudentForm.getGrade().getGradingSchemaRowId(), em));
+        }
+        if (!journalStudentEntryFormGradeEmpty(journalEntryStudentForm)) {
             journalEntryStudent.setGradeInserted(now);
             journalEntryStudent.setGradeInsertedBy(inserter);
         }
@@ -984,10 +1023,10 @@ public class JournalService {
             if (journalEntryStudentForm.getId() != null) {
                 JournalEntryStudent journalEntryStudent = em.getReference(JournalEntryStudent.class,
                         journalEntryStudentForm.getId());
-                assertJournalEntryStudentRules(journalEntryStudent.getJournalStudent());
+                assertJournalEntryStudentRules(journalEntry, journalEntryStudent.getJournalStudent(),
+                        journalEntryStudentForm);
 
-                if (journalEntryStudent.getGrade() != null && !EntityUtil.getCode(journalEntryStudent.getGrade())
-                        .equals(journalEntryStudentForm.getGrade())) {
+                if (journalStudentEntryHistoryNecessary(journalEntryStudent, journalEntryStudentForm)) {
                     setJournalEntryStudentHistory(journalEntryStudent);
                 }
                 updateJournalEntryStudentGrade(user, journalEntryStudent, journalEntryStudentForm);
@@ -995,17 +1034,22 @@ public class JournalService {
             } else {
                 JournalStudent journalStudent = em.getReference(JournalStudent.class,
                         journalEntryStudentForm.getJournalStudent());
+                assertJournalEntryStudentRules(journalEntry, journalStudent, journalEntryStudentForm);
 
                 JournalEntryStudent journalEntryStudent = new JournalEntryStudent();
                 journalEntryStudent.setJournalStudent(journalStudent);
                 if (journalEntryStudentForm.getGrade() != null) {
-                    journalEntryStudent.setGrade(em.getReference(Classifier.class, journalEntryStudentForm.getGrade()));
+                    journalEntryStudent.setGrade(em.getReference(Classifier.class,
+                            journalEntryStudentForm.getGrade().getCode()));
+                    journalEntryStudent.setGradingSchemaRow(EntityUtil.getOptionalOne(GradingSchemaRow.class,
+                            journalEntryStudentForm.getGrade().getGradingSchemaRowId(), em));
+                }
+                if (!journalStudentEntryFormGradeEmpty(journalEntryStudentForm)) {
                     journalEntryStudent.setGradeInserted(LocalDateTime.now());
                     journalEntryStudent.setGradeInsertedBy(user.getUsername());
                 }
                 journalEntryStudent.setAddInfo(journalEntryStudentForm.getAddInfo());
                 journalEntry.getJournalEntryStudents().add(journalEntryStudent);
-
             }
         }
     }
@@ -1055,7 +1099,8 @@ public class JournalService {
     public List<JournalEntryByDateDto> journalEntriesByDate(Journal journal, Boolean allStudents) {
         List<JournalEntryByDateDto> result = new ArrayList<>();
 
-        for (JournalEntry journalEntry : journal.getJournalEntries()) {
+        List<JournalEntry> journalEntries = journalEntries(journal);
+        for (JournalEntry journalEntry : journalEntries) {
             JournalEntryByDateDto journalEntryByDateDto = EntityUtil.bindToDto(journalEntry,
                     new JournalEntryByDateDto());
             journalEntryByDateDto.setTeacher(PersonUtil.stripIdcodeFromFullnameAndIdcode(journalEntry.getInsertedBy()));
@@ -1082,17 +1127,36 @@ public class JournalService {
         JournalUtil.orderJournalEntriesByDate(result);
         return result;
     }
-    
-    private static Map<Long, List<JournalEntryStudentResultDto>> journalEntryByDateStudentResults(
+
+    private List<JournalEntry> journalEntries(Journal journal) {
+        return em.createQuery("select je from JournalEntry je where je.journal.id = ?1", JournalEntry.class)
+                .setParameter(1, journal.getId())
+                .getResultList();
+    }
+
+    private List<JournalEntryStudent> journalEntryStudents(JournalEntry journalEntry, Boolean allStudents) {
+        JpaQueryBuilder<JournalEntryStudent> qb =  new JpaQueryBuilder<>(JournalEntryStudent.class, "jes");
+        qb.requiredCriteria("jes.journalEntry.id = :journalEntryId", "journalEntryId", journalEntry.getId());
+        if (Boolean.FALSE.equals(allStudents)) {
+            qb.requiredCriteria("jes.journalStudent.student.status.code in :statusCodes", "statusCodes",
+                    StudentStatus.STUDENT_STATUS_ACTIVE);
+        }
+        return qb.select(em).getResultList();
+    }
+
+    private Map<Long, List<JournalEntryStudentResultDto>> journalEntryByDateStudentResults(
             JournalEntry journalEntry, Boolean allStudents) {
+        List<JournalEntryStudent> journalEntryStudents = journalEntryStudents(journalEntry, allStudents);
+        Map<Long, List<JournalEntryStudentHistory>> historiesMap = jesHistories(journalEntryStudents);
+        Map<Long, List<JournalEntryStudentLessonAbsence>> lessonAbsencesMap = jesLessonAbsences(journalEntryStudents);
+
         Map<Long, List<JournalEntryStudentResultDto>> studentResultsMap = new HashMap<>();
-        for (JournalEntryStudent journalEntryStudent : journalEntry.getJournalEntryStudents()) {
-            if (Boolean.TRUE.equals(allStudents)
-                    || StudentUtil.isActive(journalEntryStudent.getJournalStudent().getStudent())) {
+        for (JournalEntryStudent journalEntryStudent : journalEntryStudents) {
                 List<JournalEntryStudentResultDto> studentResults = new ArrayList<>();
                 JournalEntryStudentResultDto dto = EntityUtil.bindToDto(journalEntryStudent,
-                        new JournalEntryStudentResultDto(), "gradeInsertedBy", "journalEntryStudentHistories",
+                        new JournalEntryStudentResultDto(), "grade", "gradeInsertedBy", "journalEntryStudentHistories",
                         "lessonAbsences");
+                dto.setGrade(GradeDto.of(journalEntryStudent));
                 dto.setJournalEntryStudentId(EntityUtil.getId(journalEntryStudent));
                 dto.setJournalStudentId(EntityUtil.getId(journalEntryStudent.getJournalStudent()));
 
@@ -1107,14 +1171,37 @@ public class JournalService {
 
                 dto.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(insertedBy));
                 dto.setJournalEntryStudentHistories(StreamUtil.toMappedList(JournalEntryStudentHistoryDto::new,
-                        journalEntryStudent.getJournalEntryStudentHistories()));
+                        historiesMap.get(journalEntryStudent.getId())));
                 dto.setLessonAbsences(StreamUtil.toMappedList(JournalEntryStudentLessonAbsenceDto::new,
-                        journalEntryStudent.getJournalEntryStudentLessonAbsences()));
+                        lessonAbsencesMap.get(journalEntryStudent.getId())));
                 studentResults.add(dto);
                 studentResultsMap.put(dto.getJournalStudentId(), studentResults);
-            }
         }
         return studentResultsMap;
+    }
+
+    private Map<Long, List<JournalEntryStudentLessonAbsence>> jesLessonAbsences(List<JournalEntryStudent> journalEntryStudents) {
+        if (journalEntryStudents.isEmpty()) {
+            return new HashMap<>();
+        }
+        List<JournalEntryStudentLessonAbsence> lessonAbsences = em.createQuery("select jesla from JournalEntryStudentLessonAbsence jesla "
+                + "where jesla.journalEntryStudent.id in ?1", JournalEntryStudentLessonAbsence.class)
+                .setParameter(1, StreamUtil.toMappedList(BaseEntityWithId::getId, journalEntryStudents))
+                .getResultList();
+        return lessonAbsences.stream().collect(Collectors.groupingBy(a -> EntityUtil.getId(a.getJournalEntryStudent()),
+                Collectors.mapping(a -> a, Collectors.toList())));
+    }
+
+    private Map<Long, List<JournalEntryStudentHistory>> jesHistories(List<JournalEntryStudent> journalEntryStudents) {
+        if (journalEntryStudents.isEmpty()) {
+            return new HashMap<>();
+        }
+        List<JournalEntryStudentHistory> histories = em.createQuery("select jesh from JournalEntryStudentHistory jesh "
+                + "where jesh.journalEntryStudent.id in ?1", JournalEntryStudentHistory.class)
+                .setParameter(1, StreamUtil.toMappedList(BaseEntityWithId::getId, journalEntryStudents))
+                .getResultList();
+        return histories.stream().collect(Collectors.groupingBy(h -> EntityUtil.getId(h.getJournalEntryStudent()),
+                Collectors.mapping(h -> h, Collectors.toList())));
     }
 
     private List<CurriculumModuleOutcome> journalOutcomes(Long journalId) {
@@ -1298,8 +1385,8 @@ public class JournalService {
                 EntityUtil.assertEntityVersion(result, studentForm.getVersion());
                 JournalUtil.assertCanEditOutcomeGrade(user, result);
 
-                String savedGrade = EntityUtil.getNullableCode(result.getGrade());
-                if ((savedGrade != null && !savedGrade.equals(studentForm.getGrade()))) {
+                GradeDto savedGrade = GradeDto.of(result);
+                if (savedGrade != null && !savedGrade.equals(studentForm.getGrade())) {
                     result.addToHistory();
                 }
 
@@ -1307,11 +1394,13 @@ public class JournalService {
                 result.setGradeDate(studentForm.getGradeDate());
                 result.setAddInfo(studentForm.getAddInfo());
                 EntityUtil.save(result, em);
-            } else {
+            } else if (studentForm.getGrade() != null) {
                 StudentCurriculumModuleOutcomesResult result = new StudentCurriculumModuleOutcomesResult();
                 result.setStudent(em.getReference(Student.class, studentForm.getStudentId()));
                 result.setCurriculumModuleOutcomes(outcome);
-                result.setGrade(em.getReference(Classifier.class, studentForm.getGrade()));
+                result.setGrade(em.getReference(Classifier.class, studentForm.getGrade().getCode()));
+                result.setGradingSchemaRow(EntityUtil.getOptionalOne(GradingSchemaRow.class,
+                        studentForm.getGrade().getGradingSchemaRowId(), em));
                 result.setGradeDate(studentForm.getGradeDate());
                 result.setGradeInserted(LocalDateTime.now());
                 result.setGradeInsertedBy(user.getUsername());
@@ -1327,8 +1416,10 @@ public class JournalService {
     private void updateStudentOccupationResultGrade(HoisUserDetails user, StudentCurriculumModuleOutcomesResult result,
             StudentCurriculumModuleOutcomesResultForm studentForm) {
         if (studentForm.getGrade() != null) {
-            if (!studentForm.getGrade().equals(EntityUtil.getNullableCode(result.getGrade()))) {
-                result.setGrade(em.getReference(Classifier.class, studentForm.getGrade()));
+            if (!studentForm.getGrade().equals(GradeDto.of(result))) {
+                result.setGrade(em.getReference(Classifier.class, studentForm.getGrade().getCode()));
+                result.setGradingSchemaRow(EntityUtil.getOptionalOne(GradingSchemaRow.class,
+                        studentForm.getGrade().getGradingSchemaRowId(), em));
                 result.setGradeInserted(LocalDateTime.now());
                 result.setGradeInsertedBy(user.getUsername());
                 result.setGradeInsertedTeacher(EntityUtil.getOptionalOne(Teacher.class, user.getTeacherId(), em));

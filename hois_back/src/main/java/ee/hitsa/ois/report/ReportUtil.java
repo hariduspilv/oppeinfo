@@ -68,21 +68,25 @@ public abstract class ReportUtil {
         if (resultColumn.getJournalResult() != null) {
             return journalResultAsString(absencesPerJournals, resultColumn.getJournalResult(), classifierCache);
         } else if (resultColumn.getPracticeModuleThemeResult() != null) {
-            return classifierValue(resultColumn.getPracticeModuleThemeResult().getGrade(), VOCATIONAL_GRADE, classifierCache);
+            return classifierValue(resultColumn.getPracticeModuleThemeResult().getGrade().getCode(),
+                    VOCATIONAL_GRADE, classifierCache);
         } else if (resultColumn.getPracticeModuleResult() != null) {
-            return classifierValue(resultColumn.getPracticeModuleResult().getGrade(), VOCATIONAL_GRADE, classifierCache);
+            return classifierValue(resultColumn.getPracticeModuleResult().getGrade().getCode(),
+                    VOCATIONAL_GRADE, classifierCache);
         } else if (resultColumn.getOutcomeResult() != null) {
-            return classifierValue(resultColumn.getOutcomeResult().getGrade(), VOCATIONAL_GRADE, classifierCache);
+            return classifierValue(resultColumn.getOutcomeResult().getGrade().getCode(),
+                    VOCATIONAL_GRADE, classifierCache);
         } else if (resultColumn.getModuleResult() != null) {
-            return classifierValue(resultColumn.getModuleResult().getGrade(), VOCATIONAL_GRADE, classifierCache);
+            return classifierValue(resultColumn.getModuleResult().getGrade().getCode(),
+                    VOCATIONAL_GRADE, classifierCache);
         }
         return "";
     }
     
     private static String journalResultAsString(Boolean absencesPerJournals, StudentJournalResultDto journalResult,
             ClassifierCache classifierCache) {
-        List<String> journalGrades = StreamUtil.toMappedList(e -> e.getGrade(),
-                StreamUtil.toFilteredList(e -> e.getGrade() != null, journalResult.getResults()));
+        List<String> journalGrades = journalResult.getResults().stream().filter(e -> e.getGrade() != null)
+                .map(e -> e.getGrade().getCode()).collect(Collectors.toList());
 
         String result = !CollectionUtils.isEmpty(journalGrades) ? journalGrades.stream()
                 .map(g -> classifierValue(g, "KUTSEHINDAMINE", classifierCache)).collect(Collectors.joining(" ")) : "";

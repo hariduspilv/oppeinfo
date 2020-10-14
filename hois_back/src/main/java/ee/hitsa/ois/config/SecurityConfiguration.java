@@ -63,6 +63,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/haridLogin").permitAll()
                 .antMatchers("/haridCallback").permitAll()
                 .antMatchers(HttpMethod.GET, "/public/**").permitAll()
+                .antMatchers(HttpMethod.POST, "/public/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/autocomplete/classifiers").permitAll()
                 .antMatchers(HttpMethod.GET, "/autocomplete/schools").permitAll()
                 .antMatchers(HttpMethod.GET, "/autocomplete/schoolsWithLogo").permitAll()

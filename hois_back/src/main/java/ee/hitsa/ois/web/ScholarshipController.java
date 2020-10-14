@@ -212,7 +212,7 @@ public class ScholarshipController {
     public Map<String, Object> getStudentApplication(HoisUserDetails user,
             @WithEntity ScholarshipApplication application) {
         ScholarshipUtil.assertCanViewApplication(user, application);
-        return scholarshipService.getApplicationView(application);
+        return scholarshipService.getApplicationView(user, application);
     }
 
     @GetMapping("/{id:\\d+}/application")

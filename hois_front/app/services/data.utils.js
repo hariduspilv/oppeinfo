@@ -246,9 +246,15 @@ angular.module('hitsaOis').factory('DataUtils',
         //URLs starting with http://, https://, or ftp://
         replacePattern1 = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
         replacedText = inputText.replace(replacePattern1, '<a href="$1" target="_blank">$1</a>');
-    
+
         return replacedText;
+      },
+
+      isSameGrade: function (grade1, grade2) {
+        return angular.isObject(grade1) && angular.isObject(grade2) &&
+          grade1.gradingSchemaRowId === grade2.gradingSchemaRowId && grade1.code === grade2.code;
       }
+
     };
   }
 );

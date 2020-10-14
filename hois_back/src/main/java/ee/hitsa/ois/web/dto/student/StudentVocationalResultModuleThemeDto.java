@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.GradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumResult;
 
 public class StudentVocationalResultModuleThemeDto {
@@ -16,7 +17,7 @@ public class StudentVocationalResultModuleThemeDto {
     private AutocompleteResult outcome;
     private CurriculumResult curriculum;
     private BigDecimal credits;
-    private String grade;
+    private GradeDto grade;
     private LocalDate date;
     private List<AutocompleteResult> teachers = new ArrayList<>();
     private String teachersAsString;
@@ -75,11 +76,11 @@ public class StudentVocationalResultModuleThemeDto {
         this.credits = credits;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
 
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
 

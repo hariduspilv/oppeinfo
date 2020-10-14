@@ -280,6 +280,12 @@ public class XlsService {
             }
             return Date.from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
         }
+        public String shortDateAsString(LocalDate localDate) {
+            if (localDate == null) {
+                return null;
+            }
+            return DateUtils.shortDayMonth(localDate);
+        }
 
         /**
          * For cases when date is shown with other data in the same cell

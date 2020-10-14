@@ -10,6 +10,7 @@ import ee.hitsa.ois.domain.gradingschema.GradingSchema;
 import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import ee.hitsa.ois.domain.gradingschema.GradingSchemaStudyYear;
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.enums.GradingSchemaType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -60,7 +61,7 @@ public class GradingSchemaService {
         List<?> data = em.createNativeQuery("select gsr.id, gsr.grade, gsr.grade_en, gsr.grade_real_code, " +
                 "gsr.is_valid, " + SCHEMA_ROW_IN_USE + "in_use from grading_schema gs " +
                 "join grading_schema_row gsr on gsr.grading_schema_id = gs.id " +
-                "where gs.id = ?1")
+                "where gs.id = ?1 order by gsr.grade_real_code, gsr.id")
                 .setParameter(1, dto.getId())
                 .getResultList();
         dto.setGradingSchemaRows(StreamUtil.toMappedList(r -> new GradingSchemaRowDto(resultAsLong(r, 0),
@@ -75,15 +76,16 @@ public class GradingSchemaService {
                 "and gs.isBasic = :isBasic and gs.isSecondary = :isSecondary " +
                 "order by gs.inserted", GradingSchema.class)
                 .setParameter("schoolId", user.getSchoolId())
-                .setParameter("isVocational", type.equals("vocational"))
-                .setParameter("isHigher", type.equals("higher"))
-                .setParameter("isBasic", type.equals("basic"))
-                .setParameter("isSecondary", type.equals("secondary"))
+                .setParameter("isVocational", type.equals(GradingSchemaType.VOCATIONAL.name().toLowerCase()))
+                .setParameter("isHigher", type.equals(GradingSchemaType.HIGHER.name().toLowerCase()))
+                .setParameter("isBasic", type.equals(GradingSchemaType.BASIC.name().toLowerCase()))
+                .setParameter("isSecondary", type.equals(GradingSchemaType.SECONDARY.name().toLowerCase()))
                 .getResultList();
 
         List<GradingSchemaDto> schemaDtos = StreamUtil.toMappedList(GradingSchemaDto::of, gradingSchemas);
         if (!schemaDtos.isEmpty()) {
             setTypeSchemaStudyYears(schemaDtos);
+            setTypeSchemaRows(schemaDtos);
         }
         return schemaDtos;
     }
@@ -99,6 +101,22 @@ public class GradingSchemaService {
                 Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toList())));
         for (GradingSchemaDto dto : schemaDtos) {
             dto.setStudyYears(studyYearsBySchema.get(dto.getId()));
+        }
+    }
+
+    private void setTypeSchemaRows(List<GradingSchemaDto> schemaDtos) {
+        List<?> data = em.createNativeQuery("select gs.id gs_id, gsr.id gsr_id, gsr.grade, gsr.grade_en, " +
+                "gsr.grade_real_code, gsr.is_valid from grading_schema gs " +
+                "join grading_schema_row gsr on gsr.grading_schema_id = gs.id " +
+                "where gs.id in (?1)")
+                .setParameter(1, StreamUtil.toMappedList(GradingSchemaDto::getId, schemaDtos))
+                .getResultList();
+        Map<Long, List<GradingSchemaRowForm>> rowsBySchema = data.stream().collect(
+                Collectors.groupingBy(r -> resultAsLong(r, 0),
+                        Collectors.mapping(r -> new GradingSchemaRowForm(resultAsLong(r, 1), resultAsString(r, 2),
+                                resultAsString(r, 3), resultAsString(r, 4), resultAsBoolean(r, 5)), Collectors.toList())));
+        for (GradingSchemaDto dto : schemaDtos) {
+            dto.setGradingSchemaRows(rowsBySchema.get(dto.getId()));
         }
     }
 

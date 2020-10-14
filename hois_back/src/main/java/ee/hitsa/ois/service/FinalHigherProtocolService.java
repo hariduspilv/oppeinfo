@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,6 @@ import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.protocol.ProtocolStudentOccupation;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.enums.CurriculumStatus;
@@ -51,7 +51,6 @@ import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.FinalProtocolUtil;
-import ee.hitsa.ois.util.HigherProtocolUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -186,6 +185,7 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
         includeCorrectImportedOccupationCertificates(protocol);
 
         FinalHigherProtocolDto dto = FinalHigherProtocolDto.of(protocol);
+        dto.setStudyYearId(higherProtocolStudyYear(protocol));
         dto.setCanBeEdited(Boolean.valueOf(FinalProtocolUtil.canEdit(user, protocol)));
         dto.setCanBeConfirmed(Boolean.valueOf(FinalProtocolUtil.canConfirm(user, protocol)));
         dto.setCanBeDeleted(Boolean.valueOf(FinalProtocolUtil.canDelete(user, protocol)));
@@ -215,21 +215,10 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
         }
         
         protocol.setProtocolHdata(protocolHData);
-        
-        List<Long> studentIds = StreamUtil.toMappedList(ps -> ps.getStudentId(), form.getProtocolStudents());
-        Set<String> occupations = curriculumOccpations(protocol);
-        Map<Long, List<StudentOccupationCertificate>> studentOccupationCertificates = studentOccupationCertificates(studentIds, occupations);
 
         protocol.setProtocolStudents(StreamUtil.toMappedList(dto -> {
             ProtocolStudent protocolStudent = EntityUtil.bindToEntity(dto, new ProtocolStudent());
             protocolStudent.setStudent(em.getReference(Student.class, dto.getStudentId()));
-
-            List<StudentOccupationCertificate> studentCertificates = studentOccupationCertificates.get(dto.getStudentId());
-            if (studentCertificates != null) {
-                for(StudentOccupationCertificate sc : studentCertificates) {
-                    addStudentOccupationCertificateToProtocol(protocolStudent, sc);
-                }
-            }
             return protocolStudent;
         }, form.getProtocolStudents()));
 
@@ -263,21 +252,19 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
     private void saveStudents(Protocol protocol, FinalHigherProtocolSaveForm form) {
         Boolean isLetterGrade = protocol.getSchool().getIsLetterGrade();
         EntityUtil.bindEntityCollection(protocol.getProtocolStudents(), ProtocolStudent::getId,
-                form.getProtocolStudents(), FinalHigherProtocolStudentSaveForm::getId, dto -> {
-                    ProtocolStudent ps = EntityUtil.bindToEntity(dto, new ProtocolStudent(), "student");
-                    ps.setStudent(em.getReference(Student.class, dto.getStudentId()));
-                    saveOccupationCertificates(ps, dto);
-                    return ps;
-                }, (dto, ps) -> {
+                // no protocol students created here
+                form.getProtocolStudents(), FinalHigherProtocolStudentSaveForm::getId, null, (dto, ps) -> {
                     if (gradeChangedButNotRemoved(dto, ps)) {
-                        HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);
+                        assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
-                        Classifier grade = em.getReference(Classifier.class, dto.getGrade());
-                        Short mark = HigherAssessment.getGradeMark(dto.getGrade());
-                        gradeStudent(ps, grade, mark, isLetterGrade, LocalDate.now());
+                        Classifier grade = em.getReference(Classifier.class, dto.getGrade().getCode());
+                        Short mark = HigherAssessment.getGradeMark(dto.getGrade().getCode());
+                        GradingSchemaRow gradingSchemaRow = EntityUtil.getOptionalOne(GradingSchemaRow.class,
+                                dto.getGrade().getGradingSchemaRowId(), em);
+                        gradeStudent(ps, grade, mark, isLetterGrade, gradingSchemaRow, LocalDate.now());
                         ps.setAddInfo(dto.getAddInfo());
                     } else if (gradeRemoved(dto, ps)) {
-                        HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);
+                        assertHasAddInfoIfProtocolConfirmed(dto, protocol);
                         addHistory(ps);
                         removeGrade(ps);
                     }
@@ -481,7 +468,7 @@ public class FinalHigherProtocolService extends AbstractProtocolService {
     
     public Protocol confirm(HoisUserDetails user, Protocol protocol, FinalHigherProtocolSaveForm protocolSaveForm) {
         setConfirmation(user, protocol);
-        Protocol confirmedProtocol = null;
+        Protocol confirmedProtocol;
         if (protocolSaveForm != null) {
             confirmedProtocol = save(protocol, protocolSaveForm);
         } else {

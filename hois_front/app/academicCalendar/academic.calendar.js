@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('AcademicCalendarController', ['$scope', '$route', 'QueryUtils', 'DataUtils', 
+angular.module('hitsaOis').controller('AcademicCalendarController', ['$scope', '$route', 'QueryUtils', 'DataUtils',
   function($scope, $route, QueryUtils, DataUtils) {
     $scope.auth = $route.current.locals.auth;
     $scope.formState = {};
@@ -21,13 +21,13 @@ angular.module('hitsaOis').controller('AcademicCalendarController', ['$scope', '
 
     $scope.changeStudyYear = function(studyYear) {
       QueryUtils.loadingWheel($scope, true);
-      QueryUtils.endpoint((!schoolAuthenticatedUser ? '/public' : '') 
-      + '/academicCalendar/' + $scope.schoolId + '/' + studyYear.id).search().$promise.then(function(response) {
+      QueryUtils.endpoint((!schoolAuthenticatedUser ? '/public' : '') +
+        '/academicCalendar/' + $scope.schoolId + '/' + studyYear.id).search().$promise.then(function(response) {
         $scope.data = response;
         $scope.formState.studyYear = studyYear;
         QueryUtils.loadingWheel($scope, false);
       });
-    }
+    };
 
     if (angular.isDefined($scope.schoolId)) {
       QueryUtils.endpoint('/academicCalendar/studyYears/' + $scope.schoolId).query().$promise.then(function (response) {
@@ -40,7 +40,7 @@ angular.module('hitsaOis').controller('AcademicCalendarController', ['$scope', '
           if (!result.isForbidden) {
             $scope.data = QueryUtils.endpoint('/public/academicCalendar/' + $scope.schoolId).search();
           }
-        }); 
+        });
       } else {
         $scope.data = QueryUtils.endpoint('/academicCalendar/' + $scope.schoolId).search();
         $scope.isForbidden = false;

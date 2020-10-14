@@ -43,7 +43,7 @@
       <div flex="45" layout="column" layout-gt-sm="row" flex-offset-gt-md="5">
         <md-input-container flex="100"  flex-gt-sm="35">
           <label>{{'timetable.timetablePlan.lessonAmount' | translate}}</label>
-          <input ng-model="plan.lessonAmount" type="number" autofocus aria-label="lessonamount">
+          <input ng-model="plan.lessonAmount" type="number" min="1" max="99" step="1" autofocus aria-label="lessonamount">
         </md-input-container>
         <md-input-container flex="100" flex-gt-sm="60" flex-offset-gt-sm="5" ng-if="loaded">
           <label>{{'timetable.timetablePlan.repetition' | translate}}</label>

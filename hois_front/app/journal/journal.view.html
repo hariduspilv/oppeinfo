@@ -186,8 +186,8 @@
               </td>
               <td ng-if="journalEntryTypes[journalEntry.entryType.code]._selected" class="bordered" ng-repeat="journalEntry in journal.journalEntriesByDate">
                 <div ng-if="journalEntry.entryType.code !== 'SISSEKANNE_O'" layout="row">
-                  <div ng-repeat="result in journalEntry.journalStudentResults[row.id] | orderBy: 'gradeInserted'">
-                    <span>
+                  <div layout="row" layout-align="start center" ng-repeat="result in journalEntry.journalStudentResults[row.id] | orderBy: 'gradeInserted'">
+                    <span ng-if="result.absence">
                       {{result.absence.value}}
                       <md-tooltip ng-if="result.absence.value">
                         {{journalEntry.entryDate ? (journalEntry.entryDate | hoisDate) : '-'}}
@@ -216,19 +216,19 @@
                     <span ng-if="(result.absence.value || result.lessonAbsences.length > 0)
                         && (result.journalEntryStudentHistories.length > 0 || result.grade)">/</span>
 
-                    <span ng-repeat="historyResult in result.journalEntryStudentHistories | orderBy: 'gradeInserted' track by $index">
-                      <span ng-class="{badResult: !gradeUtil.isPositive(historyResult.grade.code)}">{{historyResult.grade.value}}</span>
-                      <span>* / </span>
-                      <md-tooltip>
-                        {{historyResult.gradeInserted | hoisDate}}, &nbsp; {{historyResult.gradeInsertedBy}}
-                      </md-tooltip>
+                    <span layout="row" layout-align="start center" flex>
+                      <span ng-repeat-start="historyResult in result.journalEntryStudentHistories | orderBy: 'gradeInserted' track by $index">
+                        <hois-journal-result value="historyResult"></hois-journal-result>
+                        <md-tooltip>{{historyResult.gradeInserted | hoisDate}}, &nbsp; {{historyResult.gradeInsertedBy}}</md-tooltip>
+                      </span>
+                      <span>&nbsp;*</span>
+                      <span ng-repeat-end ng-if="!journalEntry.quickUpdate || $index !== result.journalEntryStudentHistories.length - 1">&nbsp;/&nbsp;</span>
                     </span>
 
                     <span>
-                      <span ng-class="{journalFinalResult: journalEntry.entryType.code === 'SISSEKANNE_L',
-                                      badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
-                      <span ng-if="!result.grade && result.journalEntryStudentHistories.length > 0"> - </span>
-                      <md-tooltip ng-if="result.grade.value" class="tooltip-multiline">
+                      <hois-journal-result value="result" final-result="journalEntry.entryType.code === 'SISSEKANNE_L'"></hois-journal-result>
+                      <span ng-if="!result.grade && !result.verbalGrade && result.journalEntryStudentHistories.length > 0"> - </span>
+                      <md-tooltip ng-if="result.grade.code" class="tooltip-multiline">
                         {{result.gradeInserted | hoisDate}}, &nbsp; {{result.gradeInsertedBy}}
                         <span ng-if="result.addInfo">,&nbsp;</span> {{result.addInfo}}
                       </md-tooltip>
@@ -239,7 +239,7 @@
                   <div ng-if="journalEntry.studentOutcomeResults[row.studentId]" layout="row" layout-align="start center">
                     <div ng-repeat="result in journalEntry.studentOutcomeResults[row.studentId].history | orderBy: 'gradeInserted'">
                     <span>
-                      <span ng-class="{badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade.value}}</span>
+                      <span ng-class="{badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade | hoisVocationalGrade}}</span>
                       <span>*</span>
                       <md-tooltip class="tooltip-multiline">
                         <span>{{result.gradeDate | hoisDate}}, {{result.gradeInsertedBy}}</span>
@@ -252,7 +252,7 @@
                       <span ng-if="!journalEntry.studentOutcomeResults[row.studentId].grade">-</span>
                       <span ng-if="journalEntry.studentOutcomeResults[row.studentId].grade">
                       <span ng-class="{badResult: !gradeUtil.isPositive(journalEntry.studentOutcomeResults[row.studentId].grade.code)}">
-                        {{journalEntry.studentOutcomeResults[row.studentId].grade.value}}
+                        {{journalEntry.studentOutcomeResults[row.studentId].grade | hoisVocationalGrade}}
                       </span>
                       <md-tooltip class="tooltip-multiline">
                         {{journalEntry.studentOutcomeResults[row.studentId].gradeDate | hoisDate}}, {{journalEntry.studentOutcomeResults[row.studentId].gradeInsertedBy}}

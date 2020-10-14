@@ -99,7 +99,7 @@ angular.module('hitsaOis')
 
     Curriculum.higherModuleTypeOrder = function (type) {
       return higherModuleTypeOrder[type] === undefined ? 0 : higherModuleTypeOrder[type];
-    }
+    };
 
     return Curriculum;
   });

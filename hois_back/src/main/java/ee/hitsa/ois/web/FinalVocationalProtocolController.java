@@ -89,7 +89,7 @@ public class FinalVocationalProtocolController {
     @PostMapping
     public FinalVocationalProtocolDto create(HoisUserDetails user,
             @Valid @RequestBody FinalVocationalProtocolCreateForm finalProtocolCreateForm) {
-        return finalProtocolService.create(user, finalProtocolCreateForm);
+        return get(user, finalProtocolService.create(user, finalProtocolCreateForm));
     }
 
     @PutMapping("/{id:\\d+}")
@@ -145,8 +145,16 @@ public class FinalVocationalProtocolController {
     @GetMapping("/{id:\\d+}/otherStudents")
     public Collection<FinalVocationalProtocolStudentDto> otherStudents(HoisUserDetails user,
             @WithEntity Protocol protocol) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        FinalProtocolUtil.assertCanEdit(user, protocol);
         return finalProtocolService.otherStudents(user, protocol);
+    }
+
+    @PostMapping("/{id:\\d+}/addStudents")
+    public FinalVocationalProtocolDto addStudents(HoisUserDetails user,
+            @WithVersionedEntity(versionRequestBody = true) Protocol protocol,
+            @Valid @RequestBody FinalVocationalProtocolSaveForm finalProtocolSaveForm) {
+        FinalProtocolUtil.assertCanEdit(user, protocol);
+        return get(user, finalProtocolService.addStudents(protocol, finalProtocolSaveForm));
     }
 
     @DeleteMapping("/{id:\\d+}/removeStudent/{studentId:\\d+}")

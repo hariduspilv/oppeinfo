@@ -1248,15 +1248,14 @@ public class ReportService {
                     "join apel_application_record aar on aafsm.apel_application_record_id = aar.id " +
                     "join apel_application aa on aar.apel_application_id = aa.id " +
                     "left join apel_school aps on aafsm.apel_school_id = aps.id " +
-                    "left join apel_application_formal_replaced_subject_or_module aafrsm on aar.id = aafrsm.apel_application_record_id and aafrsm.curriculum_version_omodule_id is not null " +
-                    "left join curriculum_version_omodule cvo on coalesce(aafsm.curriculum_version_omodule_id, aafrsm.curriculum_version_omodule_id) = cvo.id " +
-                    "left join curriculum_version_hmodule cvh on aafsm.curriculum_version_hmodule_id = cvh.id");
+                    "join student s on aa.student_id = s.id");
             qb.requiredCriteria("aa.inserted >= :start", "start", start);
             qb.requiredCriteria("aa.inserted <= :end", "end", end);
             qb.requiredCriteria("aa.status_code != :draft", "draft", ApelApplicationStatus.VOTA_STAATUS_K);
-            qb.requiredCriteria("(cvo.curriculum_version_id in (:cv) or cvh.curriculum_version_id in (:cv))", "cv", cvIds);
+            qb.requiredCriteria("s.curriculum_version_id in (:cv)", "cv", cvIds);
 
-            List<?> data = qb.select("aa.id, aa.inserted, case when aafsm.is_my_school then '"+ClassifierUtil.COUNTRY_ESTONIA+"' else aps.country_code end, aafsm.transfer, aa.confirmed, aafsm.credits, coalesce(cvh.curriculum_version_id, cvo.curriculum_version_id), aa.status_code", em).getResultList();
+            List<?> data = qb.select("aa.id, aa.inserted, case when aafsm.is_my_school then '" + ClassifierUtil.COUNTRY_ESTONIA + "' else aps.country_code end, " +
+                    "aafsm.transfer, aa.confirmed, coalesce(aafsm.credits, 0) credits, s.curriculum_version_id, aa.status_code", em).getResultList();
             for(Object r : data) {
                 VotaDto dto = findVota(resultAsLocalDate(r, 1), resultAsLong(r, 6), sortedStudyPeriods, dtosByPeriodAndCurriculum);
                 if(dto != null) {
@@ -1270,14 +1269,17 @@ public class ReportService {
                     "join apel_application_record aar on aaism.apel_application_record_id = aar.id " +
                     "join apel_application aa on aar.apel_application_id = aa.id " +
                     "left join curriculum_version_omodule cvo on aaism.curriculum_version_omodule_id = cvo.id " +
+                    "left join curriculum_module cm on cvo.curriculum_module_id = cm.id " +
                     "left join curriculum_version_omodule_theme cvot on aaism.curriculum_version_omodule_theme_id = cvot.id " +
-                    "left join curriculum_version_hmodule cvh on aaism.curriculum_version_hmodule_id = cvh.id");
+                    "left join subject subj on aaism.subject_id = subj.id " +
+                    "join student s on aa.student_id = s.id");
             qb.requiredCriteria("aa.inserted >= :start", "start", start);
             qb.requiredCriteria("aa.inserted <= :end", "end", end);
             qb.requiredCriteria("aa.status_code != :draft", "draft", ApelApplicationStatus.VOTA_STAATUS_K);
-            qb.requiredCriteria("(cvo.curriculum_version_id in (:cv) or cvh.curriculum_version_id in (:cv))", "cv", cvIds);
+            qb.requiredCriteria("s.curriculum_version_id in (:cv)", "cv", cvIds);
 
-            data = qb.select("aa.id, aa.inserted, aaism.transfer, aa.confirmed, coalesce(cvh.total_credits, cvot.credits) as credits, coalesce(cvh.curriculum_version_id, cvo.curriculum_version_id), aa.status_code", em).getResultList();
+            data = qb.select("aa.id, aa.inserted, aaism.transfer, aa.confirmed, coalesce(subj.credits, cvot.credits, cm.credits) as credits, " +
+                    "s.curriculum_version_id, aa.status_code", em).getResultList();
             for(Object r : data) {
                 VotaDto dto = findVota(resultAsLocalDate(r, 1), resultAsLong(r, 5), sortedStudyPeriods, dtosByPeriodAndCurriculum);
                 if(dto != null) {
@@ -2060,6 +2062,8 @@ public class ReportService {
         
         if (Boolean.TRUE.equals(criteria.getDeclarationConfirmationShow()) || criteria.getDeclarationConfirmationFrom() != null || criteria.getDeclarationConfirmationThru() != null) SEARCH_FROM += declarationConfirmation(user);
         
+        if (Boolean.TRUE.equals(criteria.getForeignLanguageShow())) SEARCH_FROM += foreignLanguage();
+        
         String sortFields = (criteria.getOrderField1() != null && !StringUtils.isEmpty(criteria.getOrderField1()) ? (criteria.getOrderField1() + (Boolean.TRUE.equals(criteria.getOrderField1Desc()) ? " desc, " : ", " )) : "") +
                             (criteria.getOrderField2() != null && !StringUtils.isEmpty(criteria.getOrderField2()) ? (criteria.getOrderField2() + (Boolean.TRUE.equals(criteria.getOrderField2Desc()) ? " desc, " : ", " )) : "") +
                             (criteria.getOrderField3() != null && !StringUtils.isEmpty(criteria.getOrderField3()) ? (criteria.getOrderField3() + (Boolean.TRUE.equals(criteria.getOrderField3Desc()) ? " desc" : "" )) : "");
@@ -2099,10 +2103,14 @@ public class ReportService {
                                  + (Boolean.TRUE.equals(criteria.getDirectiveTypesShow()) ? "D1.type_code as directive_types, " : "null as directive_types, ")
                                  + (Boolean.TRUE.equals(criteria.getDirectiveConfirmDateShow()) ? "D1.confirm_date as directive_confirm_date, " : "null as directive_confirm_date, ")
                                  + (Boolean.TRUE.equals(criteria.getDirectiveReasonsShow()) ? "D1.reason_code as directive_reasons, " : "null as directive_reasons, ")
-                                 + "sg.id as studentGroupId, sg.code as student_groups, s.status_code as student_statuses, s.study_form_code as study_form, s.study_load_code as study_load, coalesce(sd1.name_et, sd2.nameEt) as school_department, "
+                                 + "sg.id as studentGroupId, sg.code as student_groups, s.status_code as student_statuses, "
+                                 + "null as reg_nr, "
+                                 + "s.nominal_study_end as nominal_study_end, "
+                                 + "s.study_form_code as study_form, s.study_load_code as study_load, coalesce(sd1.name_et, sd2.nameEt) as school_department, "
                                  + "c.id as curriculumId, c.code || ' ' || c.name_et as curriculum_et, c.code || ' ' || c.name_en as curriculum_en, "
                                  + "c.mer_code as ehis_code, c.orig_study_level_code as study_level, coalesce(cs1.name_et, cs2.name_et) as speciality, coalesce(cs1.name_en, cs2.name_en) as specialityEn, sg.course as study_year_nr, "
                                  + "s.fin_specific_code as fin, s.language_code as language, "
+                                 + (Boolean.TRUE.equals(criteria.getForeignLanguageShow()) ? "foreignLanguage.foreign_language_code as foreign_language, foreignLanguage.langEt as foreign_language_et, coalesce(foreignLanguage.langEn, foreignLanguage.langEt) as foreign_language_en, " : "null as foreign_language, null as foreign_language_et, null as foreign_language_en, ")
                                  + "case when round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) is null then 0 else round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) end as curriculum_percentage, ";
         
         String CONTACT_DATA_SELECT = "p.address, p.phone, s.email as official_email, p.email as personal_email, ";
@@ -2127,13 +2135,21 @@ public class ReportService {
                     ", declaredSubject.id as declaredSubjectId, declaredSubject.code || ' - ' || declaredSubject.name_et as declared_subject_et, declaredSubject.code || ' - ' || declaredSubject.name_en as declared_subject_en" 
                     : ", null as declaredSubjectId, null as declared_subject_et, null as declared_subject_en")
                 + (Boolean.TRUE.equals(criteria.getDeclarationConfirmationShow()) ? ", declarationConfirmation.confirm_date as declaration_confirmation" : ", null as declaration_confirmation")
-                + ", s.previous_school_name, extract(year from s.previous_school_end_date) as completed_school_year";
+                + ", s.previous_school_name, extract(year from s.previous_school_end_date) as completed_school_year, "
+                + "s.previous_study_level_code as previous_study_level, "
+                + "s.dormitory_code as dormitory";
         Holder<Integer> i = new Holder<>(Integer.valueOf(0));
         return JpaQueryUtil.pagingResult(qb, 
                 PERSON_DATA_SELECT + STUDY_DATA_SELECT + CONTACT_DATA_SELECT + STATISTICS_DATA_SELECT + ADD_INFO_SELECT, em, pageable).map(r -> {
                     i.value ++;
                     return new ReportStudentDataDto(r, criteria, i.value);
                 });
+    }
+
+    private static String foreignLanguage() {
+        return "left join (select sl.student_id, sl.foreign_lang_code as foreign_language_code, c_lang.name_et as langEt, c_lang.name_en as langEn "
+                + "from student_languages sl "
+                + "join classifier c_lang on c_lang.code = sl.foreign_lang_code) as foreignLanguage on foreignLanguage.student_id = s.id ";
     }
 
     private static void setAddInfoDataCriteria(JpaNativeQueryBuilder qb, StudentDataCommand criteria) {
@@ -2143,6 +2159,8 @@ public class ReportService {
         if (criteria.getCompletedSchoolYearSign() != null) {
             qb.optionalCriteria("extract(year from s.previous_school_end_date) " + criteria.getCompletedSchoolYearSign() + " :completedSchoolYear", "completedSchoolYear", criteria.getCompletedSchoolYear());
         }
+        qb.optionalCriteria("s.previous_study_level_code in (:previousStudyLevel)", "previousStudyLevel", criteria.getPreviousStudyLevel());
+        qb.optionalCriteria("s.dormitory_code in (:dorimitory)", "dorimitory", criteria.getDormitory());
     }
 
     private String declarationConfirmation(HoisUserDetails user) {
@@ -2553,6 +2571,8 @@ public class ReportService {
         
         qb.optionalCriteria("s.study_start >= :immatFrom", "immatFrom", criteria.getImmatDateFrom());
         qb.optionalCriteria("s.study_start <= :immatThru", "immatThru", criteria.getImmatDateThru());
+        qb.optionalCriteria("s.nominal_study_end >= :nominalStudyEndFrom", "nominalStudyEndFrom", criteria.getNominalStudyEndFrom());
+        qb.optionalCriteria("s.nominal_study_end <= :nominalStudyEndThru", "nominalStudyEndThru", criteria.getNominalStudyEndThru());
         qb.optionalCriteria("(s.study_end >= :finishedFrom or s.study_end is null)", "finishedFrom", criteria.getFinishedDateFrom());
         qb.optionalCriteria("s.study_end <= :finishedThru", "finishedThru", criteria.getFinishedDateThru());
         qb.optionalCriteria("D1.type_code in (:directiveTypes)", "directiveTypes", criteria.getDirectiveTypes());
@@ -2593,6 +2613,7 @@ public class ReportService {
         qb.optionalCriteria("sg.course = :studyYearNumber", "studyYearNumber", criteria.getStudyYearNumber());
         qb.optionalCriteria("s.fin_specific_code in (:finCodes)", "finCodes", criteria.getFin());
         qb.optionalCriteria("s.language_code in (:studyLanguages)", "studyLanguages", criteria.getLanguage());
+        qb.optionalCriteria("foreignLanguage.foreign_language_code in (:foreignLanguages)", "foreignLanguages", criteria.getForeignLanguage());
         qb.optionalCriteria("round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) > :curriculumPercentageFrom", "curriculumPercentageFrom", criteria.getCurriculumPercentageFrom());
         qb.optionalCriteria("round((c.credits + scc.study_backlog) * 100 / coalesce(case when c.credits is not null and c.credits != 0 then c.credits else null end, 1)) < :curriculumPercentageThru", "curriculumPercentageThru", criteria.getCurriculumPercentageThru());
     }
@@ -2623,7 +2644,8 @@ public class ReportService {
     private List<List<Object>> getData(List<String> header, List<?> students) {
         ClassifierUtil.ClassifierCache classifierCache = new ClassifierUtil.ClassifierCache(classifierService);
         List<String> classifierFields = Arrays.asList("sex", "residenceCountry", "citizenship", "directiveTypes", "fin", 
-                "speciality", "studentStatuses", "studyForm", "studyLoad", "studyLevel", "language", "activeResult", "studyYear");
+                "speciality", "studentStatuses", "studyForm", "studyLoad", "studyLevel", "language", "activeResult", "studyYear",
+                "previousStudyLevel", "dormitory");
         List<String> booleanTranslatable = Arrays.asList("guestStudent", "foreignStudent", "cumLaude");
         List<List<Object>> result = new ArrayList<>();
         for (Object student : students) {
@@ -2644,6 +2666,8 @@ public class ReportService {
                             } else if (((String)value).startsWith("KASKKIRI_STIPTOETL_POHJUS")) {
                                 value = classifierCache.getByCode((String)value, MainClassCode.valueOf("KASKKIRI_STIPTOETL_POHJUS"));
                             }
+                        } else if ("foreignLanguage".equals(fieldName)) {
+                            value = classifierCache.getByCode((String)value, MainClassCode.valueOf("EHIS_VOORKEEL"));
                         } else if (classifierFields.contains(fieldName)) {
                             value = classifierCache.getByCode((String)value, MainClassCode.valueOf(((String)value).split("\\_")[0]));
                         }

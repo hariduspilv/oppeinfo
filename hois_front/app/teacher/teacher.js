@@ -39,13 +39,13 @@
           return occupation.occupationEn || occupation.occupationEt;
         }
         return occupation.occupationEt;
-      }
+      };
       $scope.filterOccupations = function (occupation) {
         if (teacherSavedOccupationId === occupation.id) {
           return true;
         }
         return occupation.isValid;
-      }
+      };
 
       function afterLoad() {
         setIsVocationalOrIsHigher($scope, $translate);
@@ -77,7 +77,7 @@
           $scope.teacher = new Endpoint({isActive: true, isStudyPeriodScheduleLoad: true, scheduleLoad: 0, person: {citizenship: 'RIIK_EST'}});
         }
       }
-      
+
       loadTeacher(id);
 
       if (!angular.isArray($scope.teacher.teacherPositionEhis)) {
@@ -129,7 +129,7 @@
       };
 
       $scope.delete = function () {
-        FormUtils.deleteRecord($scope.teacher, baseUrl + '?_noback', 
+        FormUtils.deleteRecord($scope.teacher, baseUrl + '?_noback',
           {prompt: $scope.auth.higher ? 'teacher.deleteConfirmHigher' : 'teacher.deleteConfirmVocational'});
       };
 
@@ -423,7 +423,7 @@
     var auth = $route.current.locals.auth;
     $scope.auth = auth;
     var id = (auth.isTeacher() ? auth.teacher : $route.current.params.id);
-    
+
     $scope.teacherId = id;
     var Endpoint = QueryUtils.endpoint('/teachers');
 
@@ -480,10 +480,10 @@
     $scope.getUrl = function () {
       return "#/teachers/" + $scope.teacher.id + "/" + currentTab + "?_noback";
     };
-    
+
     $scope.loadData(); // HITSAOIS-219. Fixes the jumping button
     // (problem with md-dynamic-height because after changing tab it starts to change height but data is not loaded yet)
-    
+
   }]).controller('TeacherRtipAbsenceEditController', ['$scope', '$route', '$translate', 'QueryUtils', 'message', function ($scope, $route, $translate, QueryUtils, message) {
     $scope.auth = $route.current.locals.auth;
     var id = $route.current.params.id;
@@ -521,7 +521,7 @@
   }]).controller('TeacherProgramController', ['$scope', '$route', 'QueryUtils', '$translate', function ($scope, $route, QueryUtils, $translate) {
     var id = $route.current.params.id;
     var Endpoint = QueryUtils.endpoint('/teachers');
-    
+
     $route.current.locals = angular.extend($route.current.locals || {}, {
       params: {
         myData: true
@@ -529,7 +529,7 @@
     });
     $scope.separateController = true;
     $scope.auth = $route.current.locals.auth;
-    
+
     function afterLoad() {
       setIsVocationalOrIsHigher($scope, $translate);
       $scope.currentNavItem = 'teacher.programs';

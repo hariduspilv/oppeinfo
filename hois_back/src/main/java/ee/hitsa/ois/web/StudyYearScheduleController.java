@@ -8,6 +8,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.school.StudyYearSchedule;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.service.StudyYearScheduleService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
+import ee.hitsa.ois.web.commandobject.StudyYearScheduleCommand;
 import ee.hitsa.ois.web.commandobject.StudyYearScheduleDtoContainer;
 import ee.hitsa.ois.web.commandobject.StudyYearScheduleForm;
 import ee.hitsa.ois.web.dto.StudyYearDto;
@@ -42,18 +44,50 @@ public class StudyYearScheduleController {
         }
         return schedulesCmd;
     }
-
-    @PutMapping
-    public StudyYearScheduleDtoContainer updateStudyYearSchedules(HoisUserDetails user, 
-            @Valid @RequestBody StudyYearScheduleDtoContainer schedulesCmd) {
+    
+    @PostMapping("/schedule")
+    public void saveStudyYearSchedule(HoisUserDetails user, 
+            @Valid @RequestBody StudyYearScheduleCommand scheduleCmd) {
         /*
          * User can select school department with no student groups and click Save
          * This code prevents changes to database and errors
          */
-        if(!CollectionUtils.isEmpty(schedulesCmd.getStudyPeriods())) {
-            studyYearScheduleService.update(user.getSchoolId(), schedulesCmd);
+        if(!CollectionUtils.isEmpty(scheduleCmd.getStudyPeriods())) {
+            studyYearScheduleService.update(user.getSchoolId(), scheduleCmd, null);
         }
-        return getStudyYearSchedules(user, schedulesCmd);
+    }
+
+    @PutMapping("/schedule/{id:\\d+}")
+    public void updateStudyYearSchedule(HoisUserDetails user, 
+            @Valid @RequestBody StudyYearScheduleCommand scheduleCmd, @WithEntity StudyYearSchedule oldSchedule) {
+        /*
+         * User can select school department with no student groups and click Save
+         * This code prevents changes to database and errors
+         */
+        if(!CollectionUtils.isEmpty(scheduleCmd.getStudyPeriods())) {
+            studyYearScheduleService.update(user.getSchoolId(), scheduleCmd, oldSchedule);
+        }
+    }
+    
+    /**
+     * Used for deleting study year schedule entity
+     * Putmapping is used, so command can be added for returning new list of schedules
+     * 
+     * @param user
+     * @param scheduleCmd
+     * @param studyYearSchedule
+     * @return
+     */
+    @PutMapping("/{id:\\d+}")
+    public void deleteStudyYearSchedule(HoisUserDetails user, @Valid @RequestBody StudyYearScheduleCommand scheduleCmd, 
+            @WithEntity StudyYearSchedule studyYearSchedule) {
+        /*
+         * User can select school department with no student groups and click Save
+         * This code prevents changes to database and errors
+         */
+        if(!CollectionUtils.isEmpty(scheduleCmd.getStudyPeriods())) {
+            studyYearScheduleService.delete(studyYearSchedule);
+        }
     }
 
     /**

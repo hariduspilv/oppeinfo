@@ -1,18 +1,24 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.web.dto.timetable.SchoolPublicDataSettingsDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,14 +43,17 @@ import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.PublicDataService;
 import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.StateCurriculumService;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HttpUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectProgramUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
+import ee.hitsa.ois.web.commandobject.StudyYearScheduleDtoContainer;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.subject.SubjectSearchCommand;
 import ee.hitsa.ois.web.dto.AcademicCalendarDto;
@@ -52,10 +61,14 @@ import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.StateCurriculumDto;
 import ee.hitsa.ois.web.dto.StateCurriculumSearchDto;
+import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
+import ee.hitsa.ois.web.dto.StudyYearDto;
+import ee.hitsa.ois.web.dto.StudyYearScheduleLegendDto;
 import ee.hitsa.ois.web.dto.SubjectDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
+import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 import ee.hitsa.ois.web.dto.studymaterial.JournalDto;
 import ee.hitsa.ois.web.dto.studymaterial.StudyMaterialSearchDto;
 import ee.hitsa.ois.web.dto.studymaterial.SubjectStudyPeriodDto;
@@ -219,6 +232,40 @@ public class PublicDataController {
     @GetMapping("/studyMaterial/subjectStudyPeriod/{id:\\d+}/materials")
     public List<StudyMaterialSearchDto> subjectStudyPeriodMaterials(@WithEntity SubjectStudyPeriod subjectStudyPeriod) {
         return publicDataService.subjectStudyPeriodMaterials(subjectStudyPeriod);
+    }
+    
+    @GetMapping("/studyYearScheduleLegends")
+    public Map<String, ?> studyYearScheduleLegends(Long schoolId) {
+        return publicDataService.getStudyYearScheduleLegends(schoolId);
+    }
+    
+    @GetMapping("studyYearSchedule/studentGroups")
+    public List<StudentGroupSearchDto> getStudyYearScheduleStudentGroups(Long schoolId) {
+        return publicDataService.getStudyYearScheduleStudentGroups(schoolId);
+    }
+    
+    @GetMapping("/studyYears")
+    public List<StudyYearDto> getStudyYearsWithStudyPeriods(Long schoolId) {
+        return publicDataService.getStudyYearsWithStudyPeriods(schoolId);
+    }
+    
+    @PostMapping("/studyYearSchedule/{id:\\d+}")
+    public StudyYearScheduleDtoContainer getStudyYearSchedules(@PathVariable("id") Long schoolId, @NotNull @Valid @RequestBody StudyYearScheduleDtoContainer schedulesCmd) {
+        // user can select school department with no student groups, and it should not cause an error
+        if(!CollectionUtils.isEmpty(schedulesCmd.getStudyPeriods())) {
+            schedulesCmd.setStudyYearSchedules(publicDataService.getStudyYearSchedule(schoolId, schedulesCmd));
+        }
+        return schedulesCmd;
+    }
+    
+    @GetMapping("/studyYearSchedule/studyYearPeriods/{studyYearId:\\d+}")
+    public List<StudyPeriodWithWeeksDto> getStudyYearPeriods(@WithEntity("studyYearId") StudyYear studyYear) {
+        return publicDataService.getStudyYearPeriods(studyYear);
+    }
+    
+    @GetMapping("/studyYearSchedule/schooldepartments")
+    public List<SchoolDepartmentResult> studyYearScheduleSchoolDepartments(Long schoolId) {
+        return publicDataService.studyYearScheduleSchoolDepartments(schoolId);
     }
 
 }

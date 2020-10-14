@@ -155,26 +155,26 @@
     "logOut": "Logi välja",
     "login": {
       "user": {
-        "title": "Kasutaja",
+        "title": "KASUTAJA",
         "school": "Kool",
         "username": "Kasutajanimi",
         "password": "Parool"
       },
       "idcard": {
-        "title": "ID-kaart"
+        "title": "ID-KAART"
       },
       "mobileid": {
-        "title": "Mobiil-ID",
+        "title": "MOBIIL-ID",
         "idcode": "Isikukood",
         "mobilenumber": "Mobiilinumber",
         "notMobileIdUser": "See number ei ole Mobiil-ID kasutaja",
         "instructions": "Toimige palun telefonile ilmuvate juhiste kohaselt. Enne PIN-koodi sisestamist veenduge, et telefoni ekraanil olev kontrollkood on sama, mis allpool näidatud. Peale edukat isikutuvastust suunatakse teid automaatselt järgmisele lehele."
       },
       "tara": {
-        "title": "TARA (smart-ID)"
+        "title": "TARA (SMART-ID)"
       },
       "harid": {
-        "title": "HarID"
+        "title": "HARID"
       },
       "error": "Sisselogimine ebaõnnestus"
     },
@@ -907,7 +907,7 @@
     "foreignLanguage": "Võõrkeel",
     "foreignLanguageType": "Võõrkeele liik",
     "representativeOtherContact": "Täiendavad kontaktid",
-    "isAcadStudyAllowed": "Õppimine lubatud",
+    "isAcadStudyAllowed": "Osaleb õppetööl",
     "otherContact": "Muu kontakt",
     "regNr": "Registrinumber",
     "job": "Töökoht",
@@ -1046,7 +1046,8 @@
       "checkRequired": "Vähemalt üks õppija peab valitud olema",
       "addressRequired": "Aadress on kohustuslik",
       "cannotBeBeforeStudyStart": "Ei saa olla varasem õpingute alustamise kuupäevast: {{studyStart}}",
-      "cannotBeGuestStudent": "Muu tõendi koostamine külalisõpilasele pole lubatud"
+      "cannotBeGuestStudent": "Muu tõendi koostamine külalisõpilasele pole lubatud",
+      "foreignLanguageMissing": "Õpitavad võõrkeeled puuduvad"
     },
     "absence": {
       "cause": "Puudumise põhjus",
@@ -1569,7 +1570,7 @@
     "scholarshipType": "Stipendiumi/õppetoetuse liik",
     "scholarshipEhis": "Stipendiumi liik EHISes",
     "scholarshipEhisTypeInSelect": "Muu - {{type}}",
-    "scholarshipOverlapsAcademicLeave": "Akadeemilise puhkuse periood kattub maksmise perioodiga",
+    "scholarshipOverlapsAcademicLeave": "Õppija on akadeemilisel puhkusel või akadeemilise puhkuse periood kattub õppetoetuse perioodiga",
     "scholarshipStudentNotActive": "Õppija pole aktiivne",
     "scholarshipNotAccepted": "Taotlus ei ole aktsepteeritud",
     "studentHasNoSpecialNeedWithName": "Tugiteenuse määramiseks peab õppijal ({{student}}) olema vähemalt üks erivajadus",
@@ -2887,8 +2888,9 @@
       "gradeReal": "Hinde vastavus",
       "validity": "Kehtivus"
     },
+    "insertedDate": "Lisamise kp",
     "otherGradingSchemas": "Teised hindamissüsteemid",
-    "showStudentMark": "Kuva õpilasele hindeline tulemus",
+    "showStudentMark": "Kuva õppijale hindeline tulemus",
     "studyYears": "Õppeaastad",
     "verbalAssessmentAllowed": "Sõnaline hindamine lubatud",
     "messages": {
@@ -3588,6 +3590,7 @@
     }
   },
   "studyYearScheduleLegend": {
+    "label": "Õppetöögraafiku legend",
     "code": "Kood",
     "name": "Nimetus",
     "nameEt": "Nimetus eesti keeles",
@@ -3596,7 +3599,7 @@
     "defaultLegend": "Hetkel kuvatakse vaikimisi legendi, kui soovite seda kasutada siis vajutage salvesta nuppu",
     "error": {
       "codeRequired": "Kood on kohustuslik!",
-      "codeLength": "Koodi maksimaalne pikkus on 2 sümbolit",
+      "codeLength": "Koodi maksimaalne pikkus on 4 sümbolit",
       "nameEtRequired": "Nimetus eesti keeles on kohustuslik!",
       "nameLength": "Nimetuse maksimaalne pikkus on 50 sümbolit",
       "inUseLegendRemove": "Oled kustutanud legendi, millega on seotud kirjeid õppetöögraafikus. Kas oled kindel, et soovid andmed salvestada? <br/>Kustutamisel eemaldatakse kõik legendiga seotud kirjed õppetöögraafikust. "
@@ -4690,6 +4693,11 @@
       "residenceCountry": "Elukohariik",
       "citizenship": "Kodakondsus",
       "fullname": "Täisnimi",
+      "dormitory": "Õpilaskodu",
+      "nominalStudyEnd": "Nominaalaja lõpp",
+      "foreignLanguage": "Võõrkeel",
+      "previousStudyLevel":"Eelnev haridus",
+      "regNr": "Registrinumber",
       "guestStudent": "Külalisõppija",
       "foreignStudent": "Välisõppija",
       "cumLaude": "Cum laude",
@@ -4764,6 +4772,9 @@
         "studyForm": "Õppevorm",
         "studyLoad": "Koormus",
         "schoolDepartment": "Struktuuriüksus",
+        "nominalStudyEndFrom": "Alates",
+        "nominalStudyEndThru": "Kuni",
+        "regNr": "Registrinumber",
         "curriculum": "Õppekava",
         "ehisCode": "EHIS kood",
         "studyLevel": "Õppetase",
@@ -4773,6 +4784,7 @@
         "studyYear": "Õppeaasta/kursus",
         "fin": "Rahastamine",
         "language": "Õppekeel",
+        "foreignLanguage": "Võõrkeel",
         "curriculumPercentage": "Õppekava täitmise protsent",
         "curriculumPercentageFrom": "Alates",
         "curriculumPercentageThru": "Kuni"
@@ -4826,7 +4838,9 @@
         "declarationConfirmationFrom": "Alates",
         "declarationConfirmationThru": "Kuni",
         "previousSchoolName": "Lõpetatud õppeasutus",
-        "completedSchoolYear": "Aasta"
+        "completedSchoolYear": "Aasta",
+        "previousStudyLevel":"Eelnev haridus",
+        "dormitory": "Õpilaskodu"
       },
       "sorting": {
         "label": "Tulemuse järjestamine",

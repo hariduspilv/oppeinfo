@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.student;
 
+import ee.hitsa.ois.web.dto.GradeDto;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +9,7 @@ import java.util.List;
 public class StudentHigherResultGradeDto {
 
     private Long id;
-    private String grade;
+    private GradeDto grade;
     private String gradeValue;
     private String gradeNameEt;
     private String gradeNameEn;
@@ -25,11 +27,11 @@ public class StudentHigherResultGradeDto {
         this.id = id;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
 
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
 

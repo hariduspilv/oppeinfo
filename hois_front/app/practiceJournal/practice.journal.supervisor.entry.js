@@ -25,7 +25,7 @@ angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController'
       if (entity.isHigher) {
         $scope.grades = HigherGradeUtil.orderedGrades($scope.grades);
         $scope.gradeSelectShownValue = function (grade) {
-          return HigherGradeUtil.gradeSelectShownValue(grade, $scope.auth.school.letterGrades);
+          return HigherGradeUtil.gradeSelectShownValue(grade, entity.letterGrades);
         };
       } else {
         $scope.grades = $scope.grades.sort(function (grade1, grade2) {

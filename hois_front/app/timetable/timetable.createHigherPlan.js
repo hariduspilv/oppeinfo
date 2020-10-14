@@ -244,7 +244,9 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$
         });
 
         if (!dialogScope.subgroups) {
-          dialogScope.studentGroups = matchingCapacities.map(function (it) {
+          dialogScope.studentGroups = matchingCapacities.filter(function (it) {
+            return it.studentGroup !== null;
+          }).map(function (it) {
             return it.studentGroup;
           });
           (dialogScope.studentGroups || []).forEach(function (it) {
@@ -379,7 +381,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$
               message.error('timetable.timetableEvent.error.atLeastOneSubgroupMustBeSelected');
               return;
             }
-          } else {
+          } else if (dialogScope.studentGroups && dialogScope.studentGroups.length > 0) {
             if (!atLeastOneGroupMustBeSelected(dialogScope.studentGroups)) {
               message.error('timetable.timetableEvent.error.atLeastOneStudentGroupMustBeSelected');
               return;

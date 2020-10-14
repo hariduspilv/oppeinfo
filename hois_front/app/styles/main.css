@@ -1941,8 +1941,14 @@ md-checkbox.md-checked.journal-lesson-absence .md-icon {
   margin-left: 30px !important;
 }
 
-.journal-add-info-input {
-  width: 100%;
+.journal-textarea {
+  min-width: 400px;
+}
+
+@media (max-width: 1920px) {
+  .journal-textarea {
+    min-width: 200px;
+  }
 }
 
 .middle-text {
@@ -2493,6 +2499,10 @@ label.ui-btn {
 
 .quickUpdateAddInfo input {
   margin: 0px;
+}
+
+.gradeAsInput {
+  width: 75px;
 }
 
 #tt >  div:nth-child(2)

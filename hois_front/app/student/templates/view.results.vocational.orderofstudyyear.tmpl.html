@@ -26,9 +26,10 @@
                 <span ng-if="row.isPractice">{{'student.result.practice' | translate}}</span>
               </td>
             <td md-cell>
-              <span ng-class="row.isModule ? 'md-body-2 bold' : ''">
-                <span ng-class="{badResult: !gradeUtil.isPositive(row.grade.code)}">{{row.grade.value}}</span>
+              <span ng-if="!row.entryType" ng-class="row.isModule ? 'md-body-2 bold' : ''">
+                <span ng-class="{badResult: !gradeUtil.isPositive(row.grade.code)}">{{row.grade | hoisVocationalGrade}}</span>
               </span>
+              <hois-journal-result ng-if="row.entryType" value="row"></hois-journal-result>
             </td>
             <td md-cell>{{row.date | hoisDate}}</td>
             <td md-cell>{{row.teachers}}</td>
@@ -36,7 +37,7 @@
         </tbody>
       </table>
     </md-table-container>
-    <!-- 
+    <!--
     <div class="md-body-2 bold" layout="row">
       <div>{{'student.result.totalCredits' | translate}}: {{studyYearResult.credits}}</div>
       <div>{{'student.result.kkh' | translate}}: {{studyYearResult.kkh.toFixed(2)}}</div>

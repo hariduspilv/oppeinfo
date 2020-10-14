@@ -19,7 +19,7 @@ public class StudyYearSchedule extends BaseEntityWithId {
     @JoinColumn(name = "student_group_id", updatable = false)
     private StudentGroup studentGroup;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "study_year_schedule_legend_id", updatable = false)
+    @JoinColumn(name = "study_year_schedule_legend_id", updatable = true)
     private StudyYearScheduleLegend studyYearScheduleLegend;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "study_period_id", updatable = false)

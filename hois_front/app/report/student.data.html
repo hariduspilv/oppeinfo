@@ -43,7 +43,12 @@
 
   .width-135 {
     width: 135px;
-    padding-right: 30px;
+    padding-right: 28px;
+  }
+
+  .width-134 {
+    width: 134px;
+    padding-right: 28px;
   }
 
   .width-100 {
@@ -461,6 +466,37 @@
               <div layout="column" layout-gt-md="row">
                 <div layout="row">
                   <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.regNrShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.regNr' | translate}}">
+                      {{'report.studentData.regNr' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.studyData.regNr' | translate}}</label>
+                    <input ng-model="formState.criteria.regNr" type="text" md-maxlength="255">
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.nominalStudyEndShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.nominalStudyEnd' | translate}}">
+                      {{'report.studentData.nominalStudyEnd' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container>
+                    <label>{{'report.studentData.studyData.nominalStudyEndFrom' | translate}}</label>
+                    <md-datepicker ng-model="formState.criteria.nominalStudyEndFrom"></md-datepicker>
+                  </md-input-container>
+                  <md-input-container style="margin-right: 21px">
+                    <label>{{'report.studentData.studyData.nominalStudyEndThru' | translate}}</label>
+                    <md-datepicker ng-model="formState.criteria.nominalStudyEndThru"></md-datepicker>
+                  </md-input-container>
+                </div>
+              </div>
+
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
                     <md-checkbox ng-model="formState.criteria.studyFormShow" class="checkbox-width-150"
                       aria-label="{{'report.studentData.studyForm' | translate}}">
                       {{'report.studentData.studyForm' | translate}}
@@ -603,7 +639,7 @@
                   </md-input-container>
                   <md-input-container class="width-300">
                     <label class="textInput">{{'report.studentData.studyData.fin' | translate}}</label>
-                    <hois-classifier-select ng-model="formState.criteria.fin" name="directiveType" only-valid ignore-preselected flex
+                    <hois-classifier-select ng-model="formState.criteria.fin" name="fin" only-valid ignore-preselected flex
                         model-value-attr="code" main-classifier-code="FINTAPSUSTUS" multiple
                         aria-label="{{'report.studentData.studyData.fin' | translate}}">
                     </hois-classifier-select>
@@ -618,7 +654,7 @@
                   </md-input-container>
                   <md-input-container class="width-300">
                     <label class="textInput">{{'report.studentData.studyData.language' | translate}}</label>
-                    <hois-classifier-select ng-model="formState.criteria.language" name="directiveType" only-valid ignore-preselected flex
+                    <hois-classifier-select ng-model="formState.criteria.language" name="language" only-valid ignore-preselected flex
                         model-value-attr="code" main-classifier-code="OPPEKEEL" multiple
                         aria-label="{{'report.studentData.studyData.language' | translate}}">
                     </hois-classifier-select>
@@ -633,7 +669,7 @@
                       {{'report.studentData.studyData.curriculumPercentage' | translate}}
                     </md-checkbox>
                   </md-input-container>
-                  <md-input-container class="width-135">
+                  <md-input-container class="width-134">
                     <label>{{'report.studentData.studyData.curriculumPercentageFrom' | translate}}</label>
                     <input ng-model="formState.criteria.curriculumPercentageFrom" type="number" name="curriculumPercentageFrom" min="-100" 
                     max="{{formState.criteria.curriculumPercentageThru ? formState.criteria.curriculumPercentageThru : 100}}" pattern="^(\-)?\d+(\.\d{1})?$">
@@ -649,21 +685,36 @@
                         </div>
                     </div>
                   </md-input-container>
-                    <md-input-container class="width-135">
-                      <label>{{'report.studentData.studyData.curriculumPercentageThru' | translate}}</label>
-                      <input ng-model="formState.criteria.curriculumPercentageThru" type="number" name="curriculumPercentageThru" 
-                      min="{{formState.criteria.curriculumPercentageFrom ? formState.criteria.curriculumPercentageFrom : -100}}" max="100" pattern="^(\-)?\d+(\.\d{1})?$">
-                      <div ng-messages="searchForm.curriculumPercentageThru.$error" ng-show="searchForm.curriculumPercentageThru.$dirty">
-                          <div ng-message="min">
-                            {{'main.messages.error.min' | translate: {min: (formState.criteria.studyData.curriculumPercentage.from ? formState.criteria.studyData.curriculumPercentage.from : 0) } }}
-                          </div>
-                          <div ng-message="max">
-                            {{'main.messages.error.max' | translate: {max: 100} }}
-                          </div>
-                          <div ng-message="pattern">
-                          {{'stateCurriculum.error.decimalPresision' | translate}}
-                          </div>
-                      </div>
+                  <md-input-container class="width-135">
+                    <label>{{'report.studentData.studyData.curriculumPercentageThru' | translate}}</label>
+                    <input ng-model="formState.criteria.curriculumPercentageThru" type="number" name="curriculumPercentageThru" 
+                    min="{{formState.criteria.curriculumPercentageFrom ? formState.criteria.curriculumPercentageFrom : -100}}" max="100" pattern="^(\-)?\d+(\.\d{1})?$">
+                    <div ng-messages="searchForm.curriculumPercentageThru.$error" ng-show="searchForm.curriculumPercentageThru.$dirty">
+                        <div ng-message="min">
+                          {{'main.messages.error.min' | translate: {min: (formState.criteria.studyData.curriculumPercentage.from ? formState.criteria.studyData.curriculumPercentage.from : 0) } }}
+                        </div>
+                        <div ng-message="max">
+                          {{'main.messages.error.max' | translate: {max: 100} }}
+                        </div>
+                        <div ng-message="pattern">
+                        {{'stateCurriculum.error.decimalPresision' | translate}}
+                        </div>
+                    </div>
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.foreignLanguageShow" class="checkbox-width-150"
+                      aria-label="{{'report.studentData.foreignLanguage' | translate}}">
+                      {{'report.studentData.foreignLanguage' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.studyData.foreignLanguage' | translate}}</label>
+                    <hois-classifier-select ng-model="formState.criteria.foreignLanguage" name="foreignLanguage" only-valid ignore-preselected flex
+                        model-value-attr="code" main-classifier-code="EHIS_VOORKEEL" multiple
+                        aria-label="{{'report.studentData.studyData.foreignLanguage' | translate}}">
+                    </hois-classifier-select>
                   </md-input-container>
                 </div>
               </div>
@@ -1422,6 +1473,40 @@
                   </md-input-container>
                 </div>
               </div>
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.previousStudyLevelShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.previousStudyLevel' | translate}}">
+                      {{'report.studentData.previousStudyLevel' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.addInfo.previousStudyLevel' | translate}}</label>
+                    <hois-classifier-select ng-model="formState.criteria.previousStudyLevel" name="previousStudyLevel" only-valid ignore-preselected flex
+                        model-value-attr="code" main-classifier-code="OPPEASTE" multiple
+                        aria-label="{{'report.studentData.addInfo.previousStudyLevel' | translate}}">
+                    </hois-classifier-select>
+                  </md-input-container>
+                </div>
+              </div>
+              <div layout="column" layout-gt-md="row">
+                <div layout="row">
+                  <md-input-container>
+                    <md-checkbox ng-model="formState.criteria.dormitoryShow" class="checkbox-width-200"
+                      aria-label="{{'report.studentData.dormitory' | translate}}">
+                      {{'report.studentData.dormitory' | translate}}
+                    </md-checkbox>
+                  </md-input-container>
+                  <md-input-container class="width-300">
+                    <label class="textInput">{{'report.studentData.addInfo.dormitory' | translate}}</label>
+                    <hois-classifier-select ng-model="formState.criteria.dormitory" name="dormitory" only-valid ignore-preselected flex
+                        model-value-attr="code" main-classifier-code="YHISELAMU" multiple
+                        aria-label="{{'report.studentData.addInfo.dormitory' | translate}}">
+                    </hois-classifier-select>
+                  </md-input-container>
+                </div>
+              </div>
             </div>
           </hois-collapsable>
           <hois-collapsable expanded="collapsable.isSortingExpanded">
@@ -1548,6 +1633,8 @@
               <th md-column ng-if="savedHeader.directiveReasonsShow">{{'report.studentData.directiveReasons' | translate}}</th>
               <th md-column ng-if="savedHeader.studentGroupsShow">{{'report.studentData.studentGroups' | translate}}</th>
               <th md-column ng-if="savedHeader.studentStatusesShow">{{'report.studentData.studentStatuses' | translate}}</th>
+              <th md-column ng-if="savedHeader.regNrShow">{{'report.studentData.regNr' | translate}}</th>
+              <th md-column ng-if="savedHeader.nominalStudyEndShow">{{'report.studentData.nominalStudyEnd' | translate}}</th>
               <th md-column ng-if="savedHeader.studyFormShow">{{'report.studentData.studyForm' | translate}}</th>
               <th md-column ng-if="savedHeader.studyLoadShow">{{'report.studentData.studyLoad' | translate}}</th>
               <th md-column ng-if="savedHeader.schoolDepartmentShow">{{'report.studentData.schoolDepartment' | translate}}</th>
@@ -1559,6 +1646,7 @@
               <th md-column ng-if="savedHeader.finShow">{{'report.studentData.fin' | translate}}</th>
               <th md-column ng-if="savedHeader.languageShow">{{'report.studentData.language' | translate}}</th>
               <th md-column ng-if="savedHeader.curriculumPercentageShow">{{'report.studentData.curriculumPercentage' | translate}}</th>
+              <th md-column ng-if="savedHeader.foreignLanguageShow">{{'report.studentData.foreignLanguage' | translate}}</th>
 
               <th md-column ng-if="savedHeader.addressShow">{{'report.studentData.address' | translate}}</th>
               <th md-column ng-if="savedHeader.phoneShow">{{'report.studentData.phone' | translate}}</th>
@@ -1583,6 +1671,8 @@
               <th md-column ng-if="savedHeader.declarationConfirmationShow">{{'report.studentData.declarationConfirmation' | translate}}</th>
               <th md-column ng-if="savedHeader.previousSchoolNameShow">{{'report.studentData.previousSchoolName' | translate}}</th>
               <th md-column ng-if="savedHeader.completedSchoolYearShow">{{'report.studentData.completedSchoolYear' | translate}}</th>
+              <th md-column ng-if="savedHeader.previousStudyLevelShow">{{'report.studentData.previousStudyLevel' | translate}}</th>
+              <th md-column ng-if="savedHeader.dormitoryShow">{{'report.studentData.dormitory' | translate}}</th>
             </tr>
           </thead>
           <tbody md-body>
@@ -1608,6 +1698,8 @@
               <td md-cell ng-if="savedHeader.directiveReasonsShow">{{currentLanguageNameField(getDirectiveReason(row))}}</td>
               <td md-cell ng-if="savedHeader.studentGroupsShow">{{currentLanguageNameField(row.studentGroups)}}</td>
               <td md-cell ng-if="savedHeader.studentStatusesShow">{{currentLanguageNameField(row.studentStatuses)}}</td>
+              <td md-cell ng-if="savedHeader.regNrShow">{{row.regNr}}</td>
+              <td md-cell ng-if="savedHeader.nominalStudyEndShow">{{row.nominalStudyEnd | hoisDate}}</td>
               <td md-cell ng-if="savedHeader.studyFormShow">{{currentLanguageNameField(row.studyForm)}}</td>
               <td md-cell ng-if="savedHeader.studyLoadShow">{{currentLanguageNameField(row.studyLoad)}}</td>
               <td md-cell ng-if="savedHeader.schoolDepartmentShow">{{row.schoolDepartment}}</td>
@@ -1619,6 +1711,7 @@
               <td md-cell ng-if="savedHeader.finShow">{{currentLanguageNameField(row.fin)}}</td>
               <td md-cell ng-if="savedHeader.languageShow">{{currentLanguageNameField(row.language)}}</td>
               <td md-cell ng-if="savedHeader.curriculumPercentageShow">{{row.curriculumPercentage ? row.curriculumPercentage : 0}}</td>
+              <td md-cell ng-if="savedHeader.foreignLanguageShow">{{currentLanguageNameField(row.foreignLanguage)}}</td>
               
               <td md-cell ng-if="savedHeader.addressShow">{{row.address}}</td>
               <td md-cell ng-if="savedHeader.phoneShow">{{row.phone}}</td>
@@ -1643,6 +1736,8 @@
               <td md-cell ng-if="savedHeader.declarationConfirmationShow">{{row.declarationConfirmation | hoisDate}}</td>
               <td md-cell ng-if="savedHeader.previousSchoolNameShow">{{row.previousSchoolName}}</td>
               <td md-cell ng-if="savedHeader.completedSchoolYearShow">{{row.completedSchoolYear}}</td>
+              <td md-cell ng-if="savedHeader.previousStudyLevelShow">{{currentLanguageNameField(row.previousStudyLevel)}}</td>
+              <td md-cell ng-if="savedHeader.dormitoryShow">{{currentLanguageNameField(row.dormitory)}}</td>
             </tr>
           </tbody>
         </table>

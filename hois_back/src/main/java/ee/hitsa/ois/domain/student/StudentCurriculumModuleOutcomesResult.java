@@ -147,6 +147,7 @@ public class StudentCurriculumModuleOutcomesResult extends BaseEntityWithId {
         StudentCurriculumModuleOutcomesResultHistory history = new StudentCurriculumModuleOutcomesResultHistory();
         history.setStudentCurriculumModuleOutcomesResult(this);
         history.setGrade(this.getGrade());
+        history.setGradingSchemaRow(this.getGradingSchemaRow());
         history.setGradeDate(this.getGradeDate());
         history.setGradeInserted(this.getGradeInserted());
         history.setGradeInsertedBy(this.getGradeInsertedBy());
@@ -157,6 +158,7 @@ public class StudentCurriculumModuleOutcomesResult extends BaseEntityWithId {
 
     public void removeGrade() {
         this.setGrade(null);
+        this.setGradingSchemaRow(null);
         this.setGradeDate(null);
         this.setGradeInserted(null);
         this.setGradeInsertedBy(null);

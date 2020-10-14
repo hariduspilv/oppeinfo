@@ -3,12 +3,14 @@ package ee.hitsa.ois.web.dto.student;
 import java.time.LocalDate;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.GradeDto;
 
 public class StudentVocationalResultByTimeDto {
 
     private AutocompleteResult name;
     private LocalDate date;
-    private String grade;
+    private GradeDto grade;
+    private String verbalGrade;
     private String teachers;
     private Boolean isModule;
     private String journalName;
@@ -36,14 +38,22 @@ public class StudentVocationalResultByTimeDto {
         this.date = date;
     }
     
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
     
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
-    
+
+    public String getVerbalGrade() {
+        return verbalGrade;
+    }
+
+    public void setVerbalGrade(String verbalGrade) {
+        this.verbalGrade = verbalGrade;
+    }
+
     public String getTeachers() {
         return teachers;
     }

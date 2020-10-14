@@ -85,7 +85,7 @@ public class FinalHigherProtocolController {
     public FinalHigherProtocolDto create(HoisUserDetails user,
             @Valid @RequestBody FinalHigherProtocolCreateForm finalProtocolCreateForm) {
         FinalProtocolUtil.assertCanCreateHigherProtocol(user);
-        return FinalHigherProtocolDto.of(finalProtocolService.create(user, finalProtocolCreateForm));
+        return get(user, finalProtocolService.create(user, finalProtocolCreateForm));
     }
 
     @PutMapping("/{id:\\d+}")

@@ -74,6 +74,7 @@ import ee.hitsa.ois.web.commandobject.enterprise.PracticeEnterpriseIscedClassCom
 import ee.hitsa.ois.web.commandobject.enterprise.PracticeEnterpriseLocationCommand;
 import ee.hitsa.ois.web.commandobject.enterprise.PracticeEnterprisePersonCommand;
 import ee.hitsa.ois.web.commandobject.enterprise.PracticeEnterpriseSearchCommand;
+import ee.hitsa.ois.web.commandobject.enterprise.RegCodeUpdateCommand;
 import ee.hitsa.ois.web.commandobject.enterprise.StudyYearStatisticsCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentPracticeStatisticsSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -344,19 +345,32 @@ public class PracticeEnterpriseService {
     	}
 	}
 	
-	public PracticeEnterpriseForm updateRegCode(HoisUserDetails user, EnterpriseRegCodeCheckDto enterpriseForm, EnterpriseSchool enterpriseSchool) {
+	public PracticeEnterpriseForm updateRegCode(HoisUserDetails user, RegCodeUpdateCommand enterpriseForm, Enterprise enterprise) {
+	    EnterpriseSchool enterpriseSchool = null;
+	    if (enterpriseForm.getEnterpriseSchoolId() == null) {
+	        enterpriseSchool = new EnterpriseSchool();
+	        enterpriseSchool.setSchool(em.getReference(School.class, user.getSchoolId()));
+	        enterpriseSchool.setEnterprise(enterprise);
+	        enterpriseSchool.setActive(Boolean.FALSE);
+	        enterpriseSchool = EntityUtil.save(enterpriseSchool, em);
+	    } else {
+	        enterpriseSchool = em.getReference(EnterpriseSchool.class, enterpriseForm.getEnterpriseSchoolId());
+	    }
 		EnterpriseRegCodeResponseDto regCodeResponse = regCodeWithoutCheck(user, enterpriseForm);
-		regCodeResponse.setRegisterAddress(regCodeResponse.getRegisterAddress());
-		regCodeResponse.setRegisterAddressOid(regCodeResponse.getRegisterAddressAds());
-		regCodeResponse.setRegisterAddressAds(regCodeResponse.getRegisterAddressOid());
 		if (StringUtils.isEmpty(enterpriseSchool.getAddress())) {
 		    enterpriseSchool.setAddress(regCodeResponse.getAddress());
 	        enterpriseSchool.setAddressAds(regCodeResponse.getAddressAds());
 	        enterpriseSchool.setAddressOid(regCodeResponse.getAddressOid());
 		}
+		enterpriseSchool.getEnterprise().setAddress(regCodeResponse.getAddress());
+		enterpriseSchool.getEnterprise().setAddressAds(regCodeResponse.getAddressAds());
+		enterpriseSchool.getEnterprise().setAddressOid(regCodeResponse.getAddressOid());
 		enterpriseSchool.getEnterprise().setEbusinessUpdated(LocalDateTime.now());
+		if (regCodeResponse.getName() != null) {
+		    enterpriseSchool.getEnterprise().setName(regCodeResponse.getName());
+		}
 		EntityUtil.setUsername(user.getUsername(), em);
-		EntityUtil.save(enterpriseSchool, em);
+		enterpriseSchool = EntityUtil.save(enterpriseSchool, em);
 		PracticeEnterpriseForm practiceEnterpriseForm = PracticeEnterpriseForm.of(enterpriseSchool);
 		practiceEnterpriseForm.setAddressRegister(regCodeResponse.getAddress());
 		return practiceEnterpriseForm;

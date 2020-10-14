@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.student;
 
+import ee.hitsa.ois.web.dto.GradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleSubjectDto;
 
@@ -9,7 +10,7 @@ public class StudentHigherProgressSubjectDto extends CurriculumVersionHigherModu
     private CurriculumVersionHigherModuleResult replacedModule;
     private Boolean replacedModuleOptional;
     private Long resultId;
-    private String grade;
+    private GradeDto grade;
     private Long protocolId;
     private Boolean isFinalProtocol;
     private Long apelApplicationId;
@@ -50,11 +51,11 @@ public class StudentHigherProgressSubjectDto extends CurriculumVersionHigherModu
         this.resultId = resultId;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
 
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
 

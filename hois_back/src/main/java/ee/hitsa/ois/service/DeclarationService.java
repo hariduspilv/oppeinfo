@@ -154,7 +154,7 @@ public class DeclarationService {
     
     private static final String SUBGROUPS_FROM = "from subject_study_period ssp "
             + "join subject_study_period_subgroup subgroup on subgroup.subject_study_period_id = ssp.id "
-            + "left join subject_study_period_teacher sspt on sspt.subject_study_period_id = subgroup.id "
+            + "left join subject_study_period_teacher sspt on sspt.id = subgroup.subject_study_period_teacher_id "
             + "left join teacher t on t.id = sspt.teacher_id "
             + "left join person p on p.id = t.person_id "
             + "left join (select ds.subject_study_period_subgroup_id as subgroup_id, count(*) as declarations "
@@ -512,7 +512,7 @@ public class DeclarationService {
                 if (sgDto.getDeclared() == null) {
                     return true;
                 }
-                return sgDto.getPlaces().intValue() < sgDto.getDeclared().intValue();
+                return sgDto.getDeclared().intValue() < sgDto.getPlaces().intValue();
             }).map(sgDto -> {
                 return new AutocompleteResult(sgDto.getId(), sgDto.getNameEt(), sgDto.getNameEn());
             }).collect(Collectors.toCollection(LinkedHashSet::new)));

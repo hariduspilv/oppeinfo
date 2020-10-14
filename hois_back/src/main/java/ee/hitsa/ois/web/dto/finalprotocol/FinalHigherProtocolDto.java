@@ -39,6 +39,7 @@ public class FinalHigherProtocolDto extends VersionedCommand {
     private List<FinalProtocolOccupationDto> occupations = new ArrayList<>();
     private List<CurriculumGradeDto> curriculumGrades = new ArrayList<>();
     private Boolean isFinalThesis;
+    private Long studyYearId;
     
     private Boolean canBeEdited;
     private Boolean canBeConfirmed;
@@ -78,7 +79,7 @@ public class FinalHigherProtocolDto extends VersionedCommand {
         dto.setCurriculumGrades(StreamUtil.toMappedList(g -> CurriculumGradeDto.of(g), curriculum.getGrades()));
 
         if (protocol.getOisFile() != null) {
-        	dto.setOisFile(OisFileViewDto.of(protocol.getOisFile()));
+            dto.setOisFile(OisFileViewDto.of(protocol.getOisFile()));
         }
         dto.setConfirmedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(protocol.getConfirmer()));
         
@@ -231,6 +232,14 @@ public class FinalHigherProtocolDto extends VersionedCommand {
 
     public void setIsFinalThesis(Boolean isFinalThesis) {
         this.isFinalThesis = isFinalThesis;
+    }
+
+    public Long getStudyYearId() {
+        return studyYearId;
+    }
+
+    public void setStudyYearId(Long studyYearId) {
+        this.studyYearId = studyYearId;
     }
 
     public Boolean getCanBeEdited() {

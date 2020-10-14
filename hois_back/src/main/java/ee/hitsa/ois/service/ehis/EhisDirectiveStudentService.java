@@ -404,17 +404,18 @@ public class EhisDirectiveStudentService extends EhisService {
     WsEhisStudentLog graduation(DirectiveStudent directiveStudent, String docNr, 
             String academicNr, List<String> extraNr, String academicNrEn, List<String> extraNrEn) {
         try {
+            LocalDate graduationDate = directiveStudent.getDirective().getConfirmDate();
             Student student = directiveStudent.getStudent();
             KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
 
             KhlOppeasutuseLopetamine oppeasutuseLopetamine = new KhlOppeasutuseLopetamine();
-            oppeasutuseLopetamine.setMuutusKp(date(LocalDate.now()));
+            oppeasutuseLopetamine.setMuutusKp(date(graduationDate != null ? graduationDate : LocalDate.now()));
             oppeasutuseLopetamine.setLopudokumendiNr(docNr);
             oppeasutuseLopetamine.setEestikeelneAkademOiend(createOiend(academicNr, extraNr));
             
             if (academicNrEn != null) {
                 KhlOppeasutuseLopetamine oppeasutuseLopetamineEn = new KhlOppeasutuseLopetamine();
-                oppeasutuseLopetamineEn.setMuutusKp(date(LocalDate.now()));
+                oppeasutuseLopetamineEn.setMuutusKp(date(graduationDate != null ? graduationDate : LocalDate.now()));
                 oppeasutuseLopetamineEn.setLopudokumendiNr(docNr);
                 oppeasutuseLopetamine.setInglisekeelneAkademOiend(createOiend(academicNrEn, extraNrEn));
             }

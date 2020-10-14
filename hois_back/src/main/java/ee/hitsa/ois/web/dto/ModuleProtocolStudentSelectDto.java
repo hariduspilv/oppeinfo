@@ -11,7 +11,7 @@ public class ModuleProtocolStudentSelectDto {
     private String status;
     private String studentGroup;
     private AutocompleteResult curriculum;
-    private List<String> journalResults = new ArrayList<>();
+    private List<GradeDto> journalResults = new ArrayList<>();
 
     public Long getStudentId() {
         return studentId;
@@ -61,11 +61,11 @@ public class ModuleProtocolStudentSelectDto {
         this.curriculum = curriculum;
     }
 
-    public List<String> getJournalResults() {
+    public List<GradeDto> getJournalResults() {
         return journalResults;
     }
 
-    public void setJournalResults(List<String> journalResults) {
+    public void setJournalResults(List<GradeDto> journalResults) {
         this.journalResults = journalResults;
     }
 

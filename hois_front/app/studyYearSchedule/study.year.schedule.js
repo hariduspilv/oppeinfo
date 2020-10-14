@@ -1,14 +1,16 @@
 'use strict';
 
 angular.module('hitsaOis').controller('studyYearScheduleController',
-function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, dialogService, USER_ROLES, AuthService, config, $httpParamSerializer) {
+function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, dialogService, USER_ROLES, AuthService, config, $httpParamSerializer, $q) {
     $scope.auth = $route.current.locals.auth;
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPETOOGRAAFIK);
-
+    $scope.schoolId = $route.current.params.schoolId;
+    var promises = [];
+    
     $scope.colorOptions = {
         disabled: true
     };
-    $scope.useMyFilter = $scope.auth.isLeadingTeacher() || $scope.auth.isStudent() || $scope.auth.isParent();
+    $scope.useMyFilter = $scope.auth !== undefined && ($scope.auth.isLeadingTeacher() || $scope.auth.isStudent() || $scope.auth.isParent());
 
     $scope.criteria = {
         schoolDepartments: [],
@@ -28,7 +30,11 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
     $scope.weeks = [];
     $scope.studyYearSchedules = [];
     QueryUtils.loadingWheel($scope,true);
-    QueryUtils.endpoint('/autocomplete/schooldepartments').query().$promise.then(function(response){
+    var publicSchoolDepartmentEndpoint = QueryUtils.endpoint('/autocomplete/schooldepartments');
+    if ($scope.schoolId) {
+        publicSchoolDepartmentEndpoint = QueryUtils.endpoint('/public/studyYearSchedule/schooldepartments');
+    }
+    publicSchoolDepartmentEndpoint.query($scope.schoolId ? {schoolId: $scope.schoolId} : {}).$promise.then(function(response){
         $scope.schoolDepartments = response;
         if (ArrayUtils.isEmpty($scope.criteria.schoolDepartments)) {
             $scope.criteria.schoolDepartments = $scope.schoolDepartments.filter(function(dep){
@@ -40,7 +46,11 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
         }
     });
 
-    $scope.legends = QueryUtils.endpoint('/school/studyYearScheduleLegends').search();
+    var publicStudyYearScheduleLegendEndpoint = QueryUtils.endpoint('/school/studyYearScheduleLegends');
+    if ($scope.schoolId) {
+        publicStudyYearScheduleLegendEndpoint = QueryUtils.endpoint('/public/studyYearScheduleLegends');
+    }
+    $scope.legends = publicStudyYearScheduleLegendEndpoint.search($scope.schoolId ? {schoolId: $scope.schoolId} : {});
     QueryUtils.loadingWheel($scope,true);
     $scope.legends.$promise.then(function (response) {
         $scope.legends = response.legends;
@@ -48,7 +58,11 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
     });
 
     function getStudentGroups() {
-        $scope.studentGroups = QueryUtils.endpoint('/studyYearSchedule/studentGroups').query({showMine: $scope.criteria.showMine});
+        var studentGroupEndpoint = QueryUtils.endpoint('/studyYearSchedule/studentGroups');
+        if ($scope.schoolId) {
+            studentGroupEndpoint = QueryUtils.endpoint('/public/studyYearSchedule/studentGroups');
+        }
+        $scope.studentGroups = studentGroupEndpoint.query($scope.schoolId ? {schoolId: $scope.schoolId} : {showMine: $scope.criteria.showMine});
         if ($scope.criteria.showMine) {
             QueryUtils.loadingWheel($scope,true);
             $scope.studentGroups.$promise.then(function(response){
@@ -70,8 +84,14 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
         }
         $scope.yearSelectionTrigger();
     }
-
-    $scope.studyYears = QueryUtils.endpoint('/studyYearSchedule/studyYears').query(selectCurrentStudyYear);
+    var studyYearEndpoint = QueryUtils.endpoint('/studyYearSchedule/studyYears');
+    if ($scope.schoolId) {
+        studyYearEndpoint = QueryUtils.endpoint('/public/studyYears');
+    }
+    studyYearEndpoint.query($scope.schoolId ? {schoolId: $scope.schoolId} : {}).$promise.then(function(response) {
+        $scope.studyYears = response;
+        selectCurrentStudyYear();
+    });
 
     $scope.schoolDepartmentsChanged = function() {
         if(!ArrayUtils.isEmpty($scope.studentGroups)){
@@ -98,7 +118,11 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
 
     function getSchedules() {
         // because of many parameters this endpoint was changed from get to post method, it doesn't save anything
-        $scope.record = QueryUtils.endpoint('/studyYearSchedule').save($scope.criteria);
+        var studyYearScheduleEndpoint = QueryUtils.endpoint('/studyYearSchedule');
+        if ($scope.schoolId) {
+            studyYearScheduleEndpoint = QueryUtils.endpoint('/public/studyYearSchedule/'+$scope.schoolId);
+        }
+        $scope.record = studyYearScheduleEndpoint.save($scope.criteria);
         QueryUtils.loadingWheel($scope,true);
         $scope.record.$promise.then(function(response){
             $scope.studyYearSchedules = response.studyYearSchedules;
@@ -107,7 +131,11 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
     }
 
     function getWeeks() {
-      $scope.studyPeriods = QueryUtils.endpoint('/studyYearSchedule/studyYearPeriods/' + $scope.criteria.studyYear.id).query();
+        var studyPeriodEndpoint = QueryUtils.endpoint('/studyYearSchedule/studyYearPeriods/' + $scope.criteria.studyYear.id);
+        if ($scope.schoolId) {
+            studyPeriodEndpoint = QueryUtils.endpoint('/public/studyYearSchedule/studyYearPeriods/' + $scope.criteria.studyYear.id);
+        }
+      $scope.studyPeriods = studyPeriodEndpoint.query();
       $scope.studyPeriods.$promise.then(function (response) {
         getStudyPeriodWeeks(response);
       });
@@ -126,6 +154,15 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
           var end = start.add(6, 'days');
           week.end = end.toDate();
           week.notInStudyPeriod = studyPeriod.externalWeeks.indexOf(week.weekNr) !== -1;
+          if (studyPeriod.vacations != null) {
+            studyPeriod.vacations.forEach(function(vacation) {
+                var vacationStart = moment(vacation.start, "YYYY-MM-DD'T'hh:mm:ss.SSS'Z'").toDate();
+                var vacationEnd = moment(vacation.end, "YYYY-MM-DD'T'hh:mm:ss.SSS'Z'").toDate();
+                if (vacationStart <= week.end && (vacation.end === null || vacationEnd >= week.start)) {
+                    week.hasVacation = true;
+                }
+              });
+          }
           weeks.push(week);
         }
       });
@@ -235,11 +272,13 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
         };
         dialogService.showDialog('studyYearSchedule/study.year.schedule.add.dialog.html', DialogController,
             function (submitScope) {
+                promises = [];
                 if(!submitScope.data.legend) {
                     for(var j = 0; j < submitScope.data.weeks; j++) {
                         var deletedSchedule = $scope.getSchedule(studentGroup.id, week.weekNr + j);
-                        if(ArrayUtils.includes($scope.studyYearSchedules, deletedSchedule)) {
-                            ArrayUtils.remove($scope.studyYearSchedules, deletedSchedule);
+                        //id is needed for deletion
+                        if (deletedSchedule.id) {
+                            deleteSchedule(deletedSchedule);
                         }
                     }
                 } else {
@@ -257,23 +296,16 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
                             addInfo: submitScope.data.addInfo
                         };
 
-                        if(!schedulesEqual(oldSchedule, newSchedule)) {
-                            if(ArrayUtils.includes($scope.studyYearSchedules, oldSchedule)) {
-                                ArrayUtils.remove($scope.studyYearSchedules, oldSchedule);
-                            }
-                            $scope.studyYearSchedules.push(newSchedule);
+                        if (oldSchedule.studyYearScheduleLegend === null) {
+                            createSchedule(newSchedule);
+                        } else {
+                            updateSchedule(oldSchedule, newSchedule);
                         }
                     }
                 }
+                $q.all(promises).then(getSchedules);
             });
     };
-
-    function schedulesEqual(s1, s2) {
-        return s1.studyYearScheduleLegend === s2.studyYearScheduleLegend &&
-        s1.studentGroup === s2.studentGroup &&
-        s1.weekNr === s2.weekNr &&
-        s1.addInfo === s2.addInfo;
-    }
 
     $scope.getSchedule = function(studentGroupId, weekNr) {
         var schedule = $scope.studyYearSchedules.find(function(s){
@@ -290,13 +322,31 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
         return schedule;
     };
 
-    $scope.save = function() {
-        $scope.record.studyYearSchedules = $scope.studyYearSchedules;
-        $scope.record.$put().then(function(response){
-            message.updateSuccess();
-            $scope.studyYearSchedules = response.studyYearSchedules;
-        });
-    };
+    function deleteSchedule(schedule) {
+        if ($scope.canEdit) {
+            $scope.record.studyYearSchedule = schedule;
+            // $update is used instead of $delete because of many extra params
+            promises.push($scope.record.$update({id: schedule.id}));
+        }
+    }
+
+    function updateSchedule(oldSchedule, newSchedule) {
+        if ($scope.canEdit) {
+            $scope.record.studyYearSchedule = newSchedule;
+            var ScheduleEndPoint = QueryUtils.endpoint('/studyYearSchedule/schedule');
+            var record = new ScheduleEndPoint($scope.record);
+            promises.push(record.$update({id: oldSchedule.id}));
+        }
+    }
+
+    function createSchedule(newSchedule) {
+        if ($scope.canEdit) {
+            $scope.record.studyYearSchedule = newSchedule;
+            var ScheduleEndPoint = QueryUtils.endpoint('/studyYearSchedule/schedule');
+            var record = new ScheduleEndPoint($scope.record);
+            promises.push(record.$save());
+        }
+    }
 
     $scope.refreshHeight = function() {
         var rowLength = document.getElementsByClassName("lessonplan")[0].rows.length * 21;

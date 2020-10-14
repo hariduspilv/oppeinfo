@@ -2,9 +2,9 @@ package ee.hitsa.ois.web.commandobject.finalprotocol;
 
 import java.util.List;
 
-import ee.hitsa.ois.web.commandobject.ModuleProtocolStudentSaveForm;
+import ee.hitsa.ois.web.commandobject.ProtocolStudentSaveForm;
 
-public class FinalVocationalProtocolStudentSaveForm extends ModuleProtocolStudentSaveForm {
+public class FinalVocationalProtocolStudentSaveForm extends ProtocolStudentSaveForm {
 
     private List<String> occupationCodes;
 

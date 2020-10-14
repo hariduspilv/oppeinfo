@@ -55,7 +55,7 @@
                   <td md-cell ng-if="protocol.protocolVdata.isPractice">
                     <span ng-repeat="journalResult in row.practiceJournalResults | orderBy: 'inserted'">
                       <span>
-                        <span ng-class="{badResult: !gradeUtil.isPositive(journalResult.grade)}">{{gradeValue(journalResult.grade)}}</span>
+                        <span ng-class="{badResult: !gradeUtil.isPositive(journalResult.grade.code)}">{{journalResult.grade | hoisVocationalGrade}}</span>
                         <md-tooltip>
                           <span ng-if="journalResult.themes.length === 0">{{currentLanguageNameField(protocol.protocolVdata.curriculumVersionOccupationModule)}}</span>
                           <span ng-if="journalResult.themes.length > 0" ng-repeat="theme in journalResult.themes track by $index">
@@ -70,18 +70,18 @@
                   <td md-cell ng-if="formState.showJournals" ng-repeat="journal in journals | orderBy: 'nameEt'">
                     <span ng-if="protocolStudentJournalResults[row.id] && protocolStudentJournalResults[row.id][journal.id]"
                       ng-repeat="grade in protocolStudentJournalResults[row.id][journal.id]">
-                      <span ng-class="{badResult: !gradeUtil.isPositive(grade.code)}">{{grade.value}}</span>
+                      <span ng-class="{badResult: !gradeUtil.isPositive(grade.code)}">{{grade | hoisVocationalGrade}}</span>
                       <span ng-if="!$last">/</span>
                     </span>
                   </td>
                   <td md-cell ng-if="formState.showOutcomes && formState.hasOutcomes" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
                     <span ng-if="protocolStudentOutcomeResults[row.id] && protocolStudentOutcomeResults[row.id][outcome.id]">
-                      <span ng-class="{badResult: !gradeUtil.isPositive(protocolStudentOutcomeResults[row.id][outcome.id].code)}">{{protocolStudentOutcomeResults[row.id][outcome.id].value}}</span>
+                      <span ng-class="{badResult: !gradeUtil.isPositive(protocolStudentOutcomeResults[row.id][outcome.id].code)}">{{protocolStudentOutcomeResults[row.id][outcome.id] | hoisVocationalGrade}}</span>
                     </span>
                   </td>
                   <td md-cell>
-                    <hois-select class="protocolGradeSelect" ng-model="row.grade" values="grades" show-property="value" value-property="code" hide-values="hideInvalid"
-                      aria-label="grade" ng-change="gradeChanged(row)" ng-disabled="!formState.canEditProtocol || !row.canChangeGrade"></hois-select>
+                    <hois-grade-select class="protocolGradeSelect" ng-model="row.grade" values="grades" aria-label="grade" ng-change="gradeChanged(row)"
+                      ng-disabled="!formState.canEditProtocol || !row.canChangeGrade"></hois-grade-select>
                   </td>
                   <td md-cell ng-if="formState.canChangeConfirmedProtocolGrade">
                     <md-input-container ng-if="row.gradeHasChanged">

@@ -1,7 +1,11 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
+
 import java.awt.Color;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -12,10 +16,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import org.apache.poi.ss.usermodel.Comment;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.jxls.common.AreaListener;
@@ -31,6 +37,7 @@ import ee.hitsa.ois.domain.school.StudyYearSchedule;
 import ee.hitsa.ois.domain.school.StudyYearScheduleLegend;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.enums.StudyPeriodEventType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.report.studyyearschedule.ReportDepartment;
 import ee.hitsa.ois.report.studyyearschedule.ReportStudentGroup;
@@ -40,16 +47,20 @@ import ee.hitsa.ois.report.studyyearschedule.StudyYearScheduleReport;
 import ee.hitsa.ois.repository.StudyYearScheduleRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
+import ee.hitsa.ois.web.commandobject.StudyYearScheduleCommand;
 import ee.hitsa.ois.web.commandobject.StudyYearScheduleDtoContainer;
 import ee.hitsa.ois.web.commandobject.StudyYearScheduleForm;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
+import ee.hitsa.ois.web.dto.StudyPeriodEventDto;
 import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 import ee.hitsa.ois.web.dto.StudyYearDto;
 import ee.hitsa.ois.web.dto.StudyYearScheduleDto;
 import ee.hitsa.ois.web.dto.StudyYearScheduleLegendDto;
+import ee.hitsa.ois.web.dto.report.WeekStartAndEndDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 import ee.hitsa.ois.xls.AbstractColorAreaListener;
 
@@ -90,44 +101,26 @@ public class StudyYearScheduleService {
 
         return StreamUtil.toMappedSet(StudyYearScheduleDto::of, qb.select(em).getResultList());
     }
+    
+    public void update(Long schoolId, StudyYearScheduleCommand scheduleCmd, StudyYearSchedule oldSchedule) {
+        StudyYearScheduleDto dto = scheduleCmd.getStudyYearSchedule();
+        AssertionFailedException.throwIf(!CollectionUtils.isEmpty(scheduleCmd.getStudentGroups()) &&
+                !scheduleCmd.getStudentGroups().contains(dto.getStudentGroup()),
+                "Update command does not contain dto's studentGroup!");
+        AssertionFailedException.throwIf(!scheduleCmd.getStudyPeriods().contains(dto.getStudyPeriod()),
+                "Update command does not contain dto's studyPeriod!");
+        oldSchedule = bindFieldsFromDto(dto, em.getReference(School.class, schoolId), oldSchedule);
+        studyYearScheduleRepository.save(oldSchedule);
+    }
+    
+    public void delete(StudyYearSchedule schedule) {
+        studyYearScheduleRepository.delete(schedule);
+    }
 
-    public void update(Long schoolId, StudyYearScheduleDtoContainer schedulesCmd) {
-        Set<Long> oldSchedulesDtosIds = schedulesCmd.getStudyYearSchedules().stream()
-                .filter(d -> d.getId() != null).map(StudyYearScheduleDto::getId).collect(Collectors.toSet());
-        delete(schoolId, schedulesCmd, oldSchedulesDtosIds);
-
-        List<StudyYearScheduleDto> newSchedulesDtos = StreamUtil.toFilteredList(s -> s.getId() == null, schedulesCmd.getStudyYearSchedules());
-        if(!newSchedulesDtos.isEmpty()) {
-            School school = em.getReference(School.class, schoolId);
-            List<StudyYearSchedule> newSchedules = StreamUtil.toMappedList(dto -> {
-                AssertionFailedException.throwIf(!CollectionUtils.isEmpty(schedulesCmd.getStudentGroups()) &&
-                        !schedulesCmd.getStudentGroups().contains(dto.getStudentGroup()),
-                        "Update command does not contain dto's studentGroup!");
-                AssertionFailedException.throwIf(!schedulesCmd.getStudyPeriods().contains(dto.getStudyPeriod()),
-                        "Update command does not contain dto's studyPeriod!");
-
-                StudyYearSchedule schedule = getFromDto(dto, school);
-                return schedule;
-            }, newSchedulesDtos);
-
-            studyYearScheduleRepository.save(newSchedules);
+    private StudyYearSchedule bindFieldsFromDto(StudyYearScheduleDto dto, School school, StudyYearSchedule schedule) {
+        if (schedule == null) {
+            schedule = new StudyYearSchedule();
         }
-    }
-
-    private void delete(Long schoolId, StudyYearScheduleDtoContainer schedulesCmd, Set<Long> oldSchedulesDtosIds) {
-        JpaQueryBuilder<StudyYearSchedule> qb = new JpaQueryBuilder<>(StudyYearSchedule.class, "sys");
-
-        qb.requiredCriteria("sys.school.id = :schoolId", "schoolId", schoolId);
-        qb.requiredCriteria("sys.studyPeriod.id in (:studyPeriodIds)", "studyPeriodIds", schedulesCmd.getStudyPeriods());
-        qb.optionalCriteria("sys.studentGroup.id in (:studentGroupIds)", "studentGroupIds", schedulesCmd.getStudentGroups());
-        qb.optionalCriteria("sys.id not in (:oldScheduleIds)", "oldScheduleIds", oldSchedulesDtosIds);
-
-        List<StudyYearSchedule> deletedItems = qb.select(em).getResultList();
-        studyYearScheduleRepository.delete(deletedItems);
-    }
-
-    private StudyYearSchedule getFromDto(StudyYearScheduleDto dto, School school) {
-        StudyYearSchedule schedule = new StudyYearSchedule();
         schedule.setSchool(school);
 
         StudyPeriod studyPeriod = em.getReference(StudyPeriod.class, dto.getStudyPeriod());
@@ -194,11 +187,41 @@ public class StudyYearScheduleService {
             return dto;
         }, data);
     }
+    
+    public Map<Long, List<StudyPeriodEventDto>> getStudyYearPeriodEventsMappedToPeriod(StudyYear studyYear) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
+                "from study_period_event spe");
+        qb.requiredCriteria("spe.study_year_id = :studyYearId", "studyYearId", EntityUtil.getId(studyYear));
+        qb.requiredCriteria("spe.event_type_code = :eventTypeCode", "eventTypeCode", StudyPeriodEventType.SYNDMUS_VAHA.name());
+        List<?> data = qb.select("spe.study_period_id, spe.start, spe.end", em).getResultList();
+
+        return StreamUtil.nullSafeList(data).stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0) == null ? Long.valueOf(-1L) : resultAsLong(r, 0),
+                Collectors.mapping(r -> {
+                    StudyPeriodEventDto dto = new StudyPeriodEventDto();
+                    dto.setStart(resultAsLocalDateTime(r, 1));
+                    dto.setEnd(resultAsLocalDateTime(r, 2));
+                    return dto;
+                }, Collectors.toList())));
+    }
 
     public List<StudyPeriodWithWeeksDto> getStudyYearPeriods(StudyYear studyYear) {
+        Map<Long, List<StudyPeriodEventDto>> studyYearPeriodEvents = getStudyYearPeriodEventsMappedToPeriod(studyYear);
         List<StudyPeriodWithWeeksDto> studyPeriods = studyYear.getStudyPeriods().stream()
                 .sorted(Comparator.comparing(StudyPeriod::getStartDate))
-                .map(StudyPeriodWithWeeksDto::new).collect(Collectors.toList());
+                .map(p -> {
+                    StudyPeriodWithWeeksDto dto = new StudyPeriodWithWeeksDto(p);
+                    List<StudyPeriodEventDto> vacations = new ArrayList<>();
+                    List<StudyPeriodEventDto> vacationsWithoutPeriod = new ArrayList<>();
+                    if (studyYearPeriodEvents.containsKey(EntityUtil.getId(p))) {
+                        vacations = studyYearPeriodEvents.get(EntityUtil.getId(p));
+                    }
+                    if (studyYearPeriodEvents.containsKey(Long.valueOf(-1))) {
+                        vacationsWithoutPeriod = studyYearPeriodEvents.get(Long.valueOf(-1));
+                    }
+                    dto.setVacations(Stream.concat(vacations.stream(), vacationsWithoutPeriod.stream())
+                            .collect(Collectors.toList()));
+                    return dto;
+                }).collect(Collectors.toList());
         addExternalWeeksToPeriod(studyPeriods);
         return studyPeriods;
     }
@@ -231,6 +254,18 @@ public class StudyYearScheduleService {
             List<Short> weekNrs = sp.getWeekNrs();
             studyPeriodData.setWeeks(weekNrs);
             studyPeriodData.setStartWeek(weekNrs.get(0));
+            List<LocalDate> weekBeginDates = sp.getWeekBeginningDates();
+            for (LocalDate beginDate : weekBeginDates) {
+                WeekStartAndEndDto dto = new WeekStartAndEndDto();
+                dto.setStartDate(beginDate);
+                dto.setEndDate(beginDate.plusDays(6));
+                dto.setWeekNr(weekNrs.get(weekBeginDates.indexOf(beginDate)));
+                if (sp.getVacations().stream().anyMatch(p -> p.getStart().isBefore(dto.getEndDate().atTime(LocalTime.MAX)) 
+                        && (p.getEnd() == null || p.getEnd().isAfter(dto.getStartDate().atStartOfDay())))) {
+                    dto.setVacation(Boolean.TRUE);
+                }
+                studyPeriodData.getWeekDates().add(dto);
+            }
             studyPeriodData.setEndWeek(weekNrs.get(weekNrs.size() - 1));
             return studyPeriodData;
         }, studyPeriods);
@@ -252,6 +287,7 @@ public class StudyYearScheduleService {
         for (ReportStudyPeriod period : studyPeriods) {
             weeks.addAll(period.getWeeks());
         }
+        table.setStudyYear(studyYear.getYear().getNameEt());
         table.setWeeks(weeks);
         List<SchoolDepartmentResult> departmentList = StreamUtil.toFilteredList(d -> schedulesCmd.getSchoolDepartments().contains(d.getId()),
                 autocompleteService.schoolDepartments(user.getSchoolId()));
@@ -269,11 +305,27 @@ public class StudyYearScheduleService {
                 ReportStudentGroup groupData = new ReportStudentGroup();
                 groupData.setGroup(studentGroup);
                 groupData.setSchedule(StreamUtil.toMappedList(
-                        week -> schedule.stream()
-                        .filter(s -> s.getStudentGroup().equals(studentGroup.getId())
-                                && s.getWeekNr().intValue() == week.intValue())
-                        .map(s -> legendMap.get(s.getStudyYearScheduleLegend()))
-                        .findAny().orElse(null), weeks));
+                        week ->  {
+                            StudyYearScheduleLegendDto legend = schedule.stream().filter(s -> s.getStudentGroup().equals(studentGroup.getId())
+                                    && s.getWeekNr().intValue() == week.intValue())
+                            .map(s -> {
+                                StudyYearScheduleLegendDto dto = StudyYearScheduleLegendDto.of(legendMap.get(s.getStudyYearScheduleLegend()));
+                                dto.setAddInfo(s.getAddInfo());
+                                return dto;
+                            })
+                            .findAny().orElse(null);
+                            if (legend == null) {
+                                // set vacation
+                                if (studyPeriods.stream().flatMap(p -> p.getWeekDates().stream())
+                                        .anyMatch(p -> p.getWeekNr().intValue() == week.intValue() && Boolean.TRUE.equals(p.getVacation()))) {
+                                    StudyYearScheduleLegendDto dto = new StudyYearScheduleLegendDto();
+                                    //gray
+                                    dto.setColor("#EEEEEE");
+                                    return dto;
+                                }
+                            }
+                            return legend;
+                        }, weeks));
                 return groupData;
             }, studentGroups.stream().filter(sg -> sg.getSchoolDepartments().contains(department.getId()))));
             return departmentData;
@@ -292,35 +344,27 @@ public class StudyYearScheduleService {
                 p.getWeeks().remove(0);
             }
         });
+        data.put("studyYear", table.getStudyYear());
         data.put("studyPeriods", table.getStudyPeriods());
         data.put("weeks", table.getWeeks());
+        Collections.sort(table.getDepartments(), Comparator.comparing(p -> p.getDepartment().getNameEt(), String.CASE_INSENSITIVE_ORDER));
         data.put("departments", table.getDepartments());
         List<SimpleEntry<String, AreaListener>> listeners = new ArrayList<>();
-        listeners.add(new SimpleEntry<>("Sheet1!B11:B11", new AbstractColorAreaListener<StudyYearScheduleLegendDto>("schedule") {
+        AbstractColorAreaListener<WeekStartAndEndDto> vacationColorListener = new AbstractColorAreaListener<WeekStartAndEndDto>("weekDate") {
             
             private Font blackFont;
-            private Font whiteFont;
 
             @Override
-            protected Color getColor(StudyYearScheduleLegendDto dto) {
-                if (dto == null) {
-                    return Color.WHITE;
-                }
-                return Color.decode(dto.getColor());
+            protected Color getColor(WeekStartAndEndDto dto) {
+                return Boolean.TRUE.equals(dto.getVacation()) ? Color.decode("#EEEEEE") : Color.WHITE;
             }
 
             @Override
-            protected Font getFont(StudyYearScheduleLegendDto dto) {
+            protected Font getFont(WeekStartAndEndDto dto) {
                 if (blackFont == null) {
                     blackFont = getWorkbook().createFont();
                     blackFont.setColor(IndexedColors.BLACK.getIndex());
-                }
-                if (whiteFont == null) {
-                    whiteFont = getWorkbook().createFont();
-                    whiteFont.setColor(IndexedColors.WHITE.getIndex());
-                }
-                if (dto != null && Boolean.TRUE.equals(dto.getBrightText())) {
-                    return whiteFont;
+                    blackFont.setFontHeightInPoints((short) 8);
                 }
                 return blackFont;
             }
@@ -329,8 +373,22 @@ public class StudyYearScheduleService {
             protected boolean styleLocked(CellRef srcCell) {
                 return false;
             }
-        }));
-        listeners.add(new SimpleEntry<>("Sheet1!A4:D4", new AbstractColorAreaListener<StudyYearScheduleLegendDto>("item") {
+
+            @Override
+            protected String getComment(WeekStartAndEndDto object) {
+                return null;
+            }
+        };
+        listeners.add(new SimpleEntry<>("Sheet1!B9:B9", vacationColorListener));
+        listeners.add(new SimpleEntry<>("Sheet1!B10:B10", vacationColorListener));
+        listeners.add(new SimpleEntry<>("Sheet1!B11:B11", vacationColorListener));
+        listeners.add(new SimpleEntry<>("Sheet1!B13:B13", getAbstractColorAreaListener("schedule")));
+        listeners.add(new SimpleEntry<>("Sheet1!A4:D4", getAbstractColorAreaListener("item")));
+        return xlsService.generate("studyyearschedule.xlsx", data, listeners);
+    }
+
+    private static AbstractColorAreaListener<StudyYearScheduleLegendDto> getAbstractColorAreaListener(String excelVariable) {
+        return new AbstractColorAreaListener<StudyYearScheduleLegendDto>(excelVariable) {
             
             private Font blackFont;
             private Font whiteFont;
@@ -348,10 +406,12 @@ public class StudyYearScheduleService {
                 if (blackFont == null) {
                     blackFont = getWorkbook().createFont();
                     blackFont.setColor(IndexedColors.BLACK.getIndex());
+                    blackFont.setFontHeightInPoints((short) 8);
                 }
                 if (whiteFont == null) {
                     whiteFont = getWorkbook().createFont();
                     whiteFont.setColor(IndexedColors.WHITE.getIndex());
+                    whiteFont.setFontHeightInPoints((short) 8);
                 }
                 if (dto != null && Boolean.TRUE.equals(dto.getBrightText())) {
                     return whiteFont;
@@ -361,10 +421,20 @@ public class StudyYearScheduleService {
 
             @Override
             protected boolean styleLocked(CellRef srcCell) {
-                return srcCell.getCol() != 3;
+                if ("item".equals(excelVariable)) {
+                    return srcCell.getCol() != 3;
+                }
+                return false;
             }
-        }));
-        return xlsService.generate("studyyearschedule.xlsx", data, listeners);
+
+            @Override
+            protected String getComment(StudyYearScheduleLegendDto object) {
+                if (!"item".equals(excelVariable)) {
+                    return object.getAddInfo();
+                }
+                return null;
+            }
+        };
     }
 
     /**
