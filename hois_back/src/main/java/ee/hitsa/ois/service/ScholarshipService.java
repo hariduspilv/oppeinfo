@@ -153,6 +153,8 @@ public class ScholarshipService {
     private SchoolService schoolService;
     @Autowired
     private StudentResultHigherService studentResultHigherService;
+    @Autowired
+    private XlsService xlsService;
 
     /**
      * Create scholarship term
@@ -551,7 +553,7 @@ public class ScholarshipService {
             ScholarshipApplication application) {
         Person person = student.getPerson();
         ScholarshipApplicationDto applicationDto = application == null ? 
-                new ScholarshipApplicationDto() : ScholarshipApplicationDto.of(application);;
+                new ScholarshipApplicationDto() : ScholarshipApplicationDto.of(application);
         applicationDto.setCanApply(Boolean.valueOf(ScholarshipUtil.canApply(term, application)));
         applicationDto.setAddress(person.getAddress());
 
@@ -688,7 +690,8 @@ public class ScholarshipService {
         return results;
     }
 
-    private PeriodAverages setHigherAverageMarks(List<StudyResult> results) {
+    private static PeriodAverages setHigherAverageMarks(List<StudyResult> results) {
+        @SuppressWarnings("synthetic-access")
         PeriodAverages averages = new PeriodAverages();
         if (!results.isEmpty()) {
             long passedResults = results.stream().filter(r -> HigherAssessment.KORGHINDAMINE_A.name()
@@ -1222,7 +1225,7 @@ public class ScholarshipService {
                     + " where ds.scholarship_application_id = sa.id and ds.canceled = false"
                     + " and d.status_code in (" + directiveStatuses + "))) as has_directive"
                 + ", sd.id, sd.decided, sg.code as student_group_code, sa.bank_account_owner_idcode"
-                + ", st.scholarship_ehis_code, sa.wag_mark, sa.last_period_wag_mark";
+                + ", st.scholarship_ehis_code, sa.wag_mark, sa.last_period_wag_mark, c.mer_code as htmCode";
         List<?> data = qb.select(select, em).getResultList();
         List<ScholarshipApplicationRankingSearchDto> applications = StreamUtil.toMappedList(r -> {
         	ScholarshipApplicationRankingSearchDto dto = new ScholarshipApplicationRankingSearchDto();
@@ -1256,6 +1259,7 @@ public class ScholarshipService {
             dto.setTypeEhis(resultAsString(r, 26));
             dto.setWagMark(resultAsDecimal(r, 27));
             dto.setLastPeriodWagMark(resultAsDecimal(r, 28));
+            dto.setHtmCode(resultAsString(r, 29));
             return dto;
         }, data);
 
@@ -1920,5 +1924,25 @@ public class ScholarshipService {
                     .map(ClassifierDto::of).collect(Collectors.toCollection(() -> result));
         }
         return result;
+    }
+
+    public byte[] scholarshipsGrantsRankingXls(HoisUserDetails user, ScholarshipApplicationRankingSearchCommand command) {
+        return xlsService.generate("scholarshipApplicationRankingGrants.xls", getXlsData(user, command));
+    }
+
+    public byte[] scholarshipsRankingXls(HoisUserDetails user, ScholarshipApplicationRankingSearchCommand command) {
+        return xlsService.generate("scholarshipApplicationRanking.xls", getXlsData(user, command));
+    }
+    
+    public byte[] scholarshipsDoctorRankingXls(HoisUserDetails user, ScholarshipApplicationRankingSearchCommand command) {
+        return xlsService.generate("scholarshipApplicationRankingDoctor.xls", getXlsData(user, command));
+    }
+    
+    private Map<String, Object> getXlsData(HoisUserDetails user, ScholarshipApplicationRankingSearchCommand command) {
+        ScholarshipTermApplicationRankingSearchDto dto = applicationsRanking(user, command);
+        Map<String, Object> data = new HashMap<>();
+        data.put("content", dto != null ? dto.getApplications() : new ArrayList<>());
+        data.put("type", command.getType());
+        return data;
     }
 }

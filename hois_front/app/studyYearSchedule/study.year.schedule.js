@@ -5,6 +5,9 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
     $scope.auth = $route.current.locals.auth;
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_OPPETOOGRAAFIK);
     $scope.schoolId = $route.current.params.schoolId;
+    if ($scope.auth !== undefined) {
+        $scope.userSchoolId = $scope.auth.school.id;
+    }
     var promises = [];
     
     $scope.colorOptions = {
@@ -23,8 +26,8 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
     }
 
     $scope.formState = {
-        xlsUrl: 'studyYearSchedule/studyYearSchedule.xlsx',
-        pdfUrl: 'studyYearSchedule/studyYearSchedule.pdf'
+        xlsUrl: $scope.schoolId ? 'public/'+$scope.schoolId+'/studyYearSchedule.xlsx' :'studyYearSchedule/studyYearSchedule.xlsx',
+        pdfUrl: $scope.schoolId ? 'public/'+$scope.schoolId+'/studyYearSchedule.pdf' : 'studyYearSchedule/studyYearSchedule.pdf'
     };
 
     $scope.weeks = [];
@@ -55,6 +58,10 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
     $scope.legends.$promise.then(function (response) {
         $scope.legends = response.legends;
         QueryUtils.loadingWheel($scope,false);
+        if (response.failedDecrypt) {
+            message.error('main.messages.error.nopermission');
+            $scope.back("#/");
+        }
     });
 
     function getStudentGroups() {
@@ -105,6 +112,10 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
     $scope.showMineChanged = function() {
         getStudentGroups();
         getSchedules();
+    };
+
+    $scope.raiseError = function(errorMessage) {
+        message.error(errorMessage);
     };
 
     $scope.exportUrl = function(url) {
@@ -295,7 +306,6 @@ function ($scope, $route, QueryUtils, ArrayUtils, message, DataUtils, $window, d
                             studyPeriod: i === 0 ? week.studyPeriodId : $scope.getWeeksPeriod(week.weekNr + i),
                             addInfo: submitScope.data.addInfo
                         };
-
                         if (oldSchedule.studyYearScheduleLegend === null) {
                             createSchedule(newSchedule);
                         } else {

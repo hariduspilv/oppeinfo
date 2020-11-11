@@ -66,7 +66,8 @@
             <thead md-head>
               <tr md-row>
                 <th md-column>{{'user.rights.right' | translate}}</th>
-                <th md-column ng-repeat="perm in permissions">
+                <th md-column ng-repeat="perm in permissions"
+                    ng-show="showTPermissionFor.indexOf(user.role) !== -1 || perm.code != 'OIGUS_T'">
                   <md-checkbox ng-model="multiSelects[perm.code]" ng-change="multiSelectPermission(perm.code, multiSelects[perm.code])" aria-label="{{currentLanguageNameField(perm)}}" flex>{{currentLanguageNameField(perm)}}</md-checkbox>
                 </th>
               </tr>
@@ -74,7 +75,8 @@
             <tbody md-body>
               <tr md-row ng-repeat="object in objectsForRole | orderBy: currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{currentLanguageNameField(object)}}</td>
-                <td md-cell ng-repeat="perm in permissions">
+                <td md-cell ng-repeat="perm in permissions"
+                    ng-show="showTPermissionFor.indexOf(user.role) !== -1 || perm.code != 'OIGUS_T'">
                   <md-checkbox ng-if="showPermission(object.code, perm.code)" ng-model="(rights[object.code] || {})[perm.code]" aria-label="{{currentLanguageNameField(object)+' '+currentLanguageNameField(perm)}}" flex></md-checkbox>
                 </td>
               </tr>

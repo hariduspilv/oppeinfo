@@ -36,4 +36,43 @@
             <md-button class="md-raised md-default" ng-if="readOnly" ng-click="back('#/messageTemplate')">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>
+  <hois-collapsable class="hois-collapse2" expanded="false" ng-if="record.userRights.length > 0">
+    <hois-collapsable-header>
+      <div>
+        <span>
+          {{'messageTemplate.sendTo' | translate}}:
+          <span ng-repeat="userRights in record.userRights | orderBy: currentLanguageNameField">
+            {{currentLanguageNameField(userRights)}}{{!$last ? ', ' : ' '}}
+          </span>
+        </span>
+      </div>
+    </hois-collapsable-header>
+    <md-table-container>
+      <table class="secondary-table" md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+        <tr md-row>
+          <th md-column>{{'main.order' | translate}}</th>
+          <th md-column>{{'person.name' | translate}}</th>
+          <th md-column>{{'person.idcode' | translate}}</th>
+          <th md-column>{{'messageTemplate.hasUserRights' | translate}}</th>
+        </tr>
+        </thead>
+        <tbody md-body>
+        <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell width="10%">{{$index + 1}}.</td>
+          <td md-cell>{{::(currentLanguageNameField(row))}}</td>
+          <td md-cell>{{::row.idcode}}</td>
+          <td md-cell>
+            <span ng-repeat="ur in row.userRights | orderBy: currentLanguageNameField">
+              {{currentLanguageNameField(ur)}}{{!$last ? ', ' : ' '}}
+            </span>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+      <md-table-pagination ng-show="tabledata.totalElements > 10" md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                           md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                           md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+    </md-table-container>
+  </hois-collapsable>
 </div>

@@ -7,16 +7,10 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import javax.annotation.Nullable;
 import javax.transaction.Transactional;
 
 import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
@@ -254,9 +248,27 @@ public class ModuleProtocolService extends AbstractProtocolService {
         return results;
     }
 
+    public List<AutocompleteResult> studentGroups(HoisUserDetails user, Long curriculumVersionId) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_group sg");
+        qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("sg.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
+                curriculumVersionId);
+        qb.validNowCriteria("sg.valid_from", "sg.valid_thru");
+
+        String select = "sg.id, sg.code";
+        List<?> data = qb.select(select, em).getResultList();
+
+        List<AutocompleteResult> results = new ArrayList<>();
+        for (Object r : data) {
+            results.add(new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 1)));
+        }
+        return results;
+    }
+
     public Collection<ModuleProtocolStudentSelectDto> occupationModuleStudents(HoisUserDetails user,
-            Long occupationalModuleId) {
-        Map<Long, ModuleProtocolStudentSelectDto> result = studentsForSelection(user, occupationalModuleId);
+                                                                               Long occupationalModuleId,
+                                                                               @Nullable Long studentGroupId) {
+        Map<Long, ModuleProtocolStudentSelectDto> result = studentsForSelection(user, occupationalModuleId, studentGroupId);
         addJournalAndPracticeJournalResults(result, occupationalModuleId);
         return result.values();
     }
@@ -304,7 +316,8 @@ public class ModuleProtocolService extends AbstractProtocolService {
             + "select svr.student_id from student_vocational_result svr "
             + "where svr.grade_code in (:positiveGrades) and (svr.curriculum_version_omodule_id = cvo.id or cvo.id = any(svr.arr_modules)))";
 
-    private Map<Long, ModuleProtocolStudentSelectDto> studentsForSelection(HoisUserDetails user, Long occupationalModuleId) {
+    private Map<Long, ModuleProtocolStudentSelectDto> studentsForSelection(HoisUserDetails user, Long occupationalModuleId,
+                                                                           @Nullable Long studentGroupId) {
         JpaNativeQueryBuilder studentsQb = new JpaNativeQueryBuilder(
                 "from student s " +
                 "left join student_group sg on sg.id = s.student_group_id " + 
@@ -320,9 +333,9 @@ public class ModuleProtocolService extends AbstractProtocolService {
 
         studentsQb.requiredCriteria(HAS_NO_POSITIVE_RESULT_IN_THIS_MODULE,
                 "positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
-        
+        studentsQb.optionalCriteria("sg.id = :groupId", "groupId", studentGroupId);
 
-        studentsQb.sort("p.firstname, p.lastname");
+        studentsQb.sort("p.lastname, p.firstname");
         List<?> students = studentsQb.select("distinct s.id, p.firstname, p.lastname, p.idcode, " +
                 "s.status_code, s.type_code, sg.code", em) .getResultList();
 
@@ -335,7 +348,7 @@ public class ModuleProtocolService extends AbstractProtocolService {
             dto.setStatus(resultAsString(r, 4));
             dto.setStudentGroup(resultAsString(r, 6));
             return dto;
-        }));
+        }, (o, n) -> o, LinkedHashMap::new));
     }
 
     @org.springframework.transaction.annotation.Transactional(isolation = Isolation.SERIALIZABLE, propagation = Propagation.REQUIRES_NEW)
@@ -445,9 +458,9 @@ public class ModuleProtocolService extends AbstractProtocolService {
     }
 
     public ModuleProtocolOccupationalModuleDto occupationModule(HoisUserDetails user, Long studyYearId,
-            Long curriculumVersionOccupationModuleId) {
+            Long curriculumVersionOccupationModuleId, @Nullable Long studentGroupId) {
         ModuleProtocolOccupationalModuleDto dto = new ModuleProtocolOccupationalModuleDto();
-        dto.setOccupationModuleStudents(occupationModuleStudents(user, curriculumVersionOccupationModuleId));
+        dto.setOccupationModuleStudents(occupationModuleStudents(user, curriculumVersionOccupationModuleId, studentGroupId));
         dto.setTeacher(lessonPlanModuleTeacher(studyYearId, curriculumVersionOccupationModuleId));
         return dto;
     }

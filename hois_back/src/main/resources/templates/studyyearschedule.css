@@ -14,6 +14,7 @@ table.legend {
     border-collapse: collapse;
     margin-bottom: 20pt;
     width: 100%;
+    page-break-after: always;
 }
 
 table.legend td {
@@ -30,7 +31,12 @@ table.legend th {
 table.schedule {
     border-collapse: collapse;
     margin-bottom: 20pt;
-    width: 100%;
+    font-size: 8px;
+    page-break-after: always;
+}
+
+table.schedule:last-child {
+    page-break-after: auto;
 }
 
 table.schedule td {

@@ -27,6 +27,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.web.dto.student.StudentHigherModuleResultDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherResultDto;
@@ -69,9 +70,7 @@ import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
-import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.TranslateUtil;
@@ -109,7 +108,6 @@ public class CertificateContentService {
         CertificateType type = CertificateType.valueOf(command.getType());
         SchoolType schoolType = schoolService.schoolType(schoolId);
         boolean isHigherSchool = schoolType.isHigher();
-        boolean isOnlyHigherSchool = schoolType.isHigher() && !schoolType.isVocational();
         Language lang = Boolean.FALSE.equals(command.getEstonian()) ? Language.EN : Language.ET;
         if(command.getStudent() != null) {
             Student student = em.getReference(Student.class, command.getStudent());
@@ -117,7 +115,8 @@ public class CertificateContentService {
                 throw new ValidationFailedException("certificate.error.content");
             }
             return generate(student, type, Boolean.TRUE.equals(command.getShowModules()), Boolean.TRUE.equals(command.getAddOutcomes()),
-                    Boolean.TRUE.equals(command.getShowUncompleted()), isHigherSchool, isOnlyHigherSchool, lang);
+                    Boolean.TRUE.equals(command.getShowUncompleted()), Boolean.TRUE.equals(command.getStateGradingSchema()),
+                    isHigherSchool, lang);
         }
 
         if(command.getOtherIdcode() == null) {
@@ -141,7 +140,7 @@ public class CertificateContentService {
     }
 
     public String generate(Student student, CertificateType type, boolean showModules, boolean addOutcomes,
-            boolean showUncompleted, boolean isHigherSchool, boolean isOnlyHigherSchool, Language lang) {
+            boolean showUncompleted, boolean stateGradingSchema, boolean isHigherSchool, Language lang) {
         CertificateReport report = CertificateReport.of(student);
         report.setIsHigherSchool(Boolean.valueOf(isHigherSchool));
         StudyYear studyYear = studyYearService.getCurrentStudyYear(EntityUtil.getId(student.getSchool()));
@@ -149,16 +148,12 @@ public class CertificateContentService {
             throw new ValidationFailedException("studyYear.missingCurrent");
         }
 
-        Boolean higher;
-        if (report.getStudent().isGuestStudent()) {
-            higher = directiveStudyLevel(student);
-        } else {
-            higher = Boolean.valueOf(StudentUtil.isHigher(student));
-        }
+        Boolean higher = Boolean.valueOf(StudentUtil.isHigher(student));
         
         report.setStudyYear(studyYear.getYear().getNameEt());
         setFinished(report, student, type);
-        setStudentResults(report, student, type, showModules, addOutcomes, showUncompleted, lang);
+        setStudentResults(report, student, type, higher, showModules, addOutcomes, showUncompleted,
+                stateGradingSchema, lang);
         if (type.equals(CertificateType.TOEND_LIIK_SOOR)) {
             if (report.getStudent().isGuestStudent()) {
                 setAbroadProgramme(report, student);
@@ -168,8 +163,8 @@ public class CertificateContentService {
                             : Streams.concat(report.getStudent().getMappedResults().values().stream().flatMap(e -> e.keySet().stream()),
                                     report.getStudent().getMappedResults().values().stream().flatMap(e -> e.values().stream()).flatMap(e -> e.stream()))
                             .anyMatch(p -> p != null && p.getGradeName() != null);
-                    if (hasGrade) {
-                        setGradingSystem(report, student, isHigherSchool, isOnlyHigherSchool, showUncompleted, lang);
+                    if (hasGrade && stateGradingSchema) {
+                        setGradingSystem(report, student, higher, showUncompleted, lang);
                     }
                 }
             }
@@ -177,9 +172,14 @@ public class CertificateContentService {
                 StudentCurriculumCompletion completion = studentService.getStudentCurriculumCompletion(student);
                 report.getStudent().setAverageMark(completion != null ? completion.getAverageMark().setScale(2, RoundingMode.DOWN) : null);
                 report.getStudent().setCreditsAll(higherCreditsAll(report.getStudent()));
-                setGrades(report, student, lang);
+                if (stateGradingSchema) {
+                    setGrades(report, student, lang);
+                }
             }
             setEvents(report, student, lang);
+        }
+        if (type.equals(CertificateType.TOEND_LIIK_OPI)) {
+            setEvents(report, student, lang, true, false);
         }
         setSessions(report, studyYear, type);
         setLastSession(report, studyYear, type);
@@ -235,12 +235,21 @@ public class CertificateContentService {
         } catch (@SuppressWarnings("unused") MissingFormatArgumentException e) {}
     }
 
-    private void setEvents(CertificateReport report, Student student, Language lang) {
+    private void setEvents(CertificateReport report, Student student, Language lang,
+                           boolean academicLeave, boolean foreignStudy) {
         List<CertificateEvent> events = new ArrayList<>();
-        events.addAll(findAcademicLeaves(student, lang));
-        events.addAll(findForeignStudy(student, lang));
+        if (academicLeave) {
+            events.addAll(findAcademicLeaves(student, lang));
+        }
+        if (foreignStudy) {
+            events.addAll(findForeignStudy(student, lang));
+        }
         events.sort(Comparator.comparing(CertificateEvent::getStart).thenComparing(CertificateEvent::getEnd, Comparator.nullsLast(Comparator.naturalOrder())));
         report.getStudent().setEvents(events);
+    }
+
+    private void setEvents(CertificateReport report, Student student, Language lang) {
+        setEvents(report, student, lang, true, true);
     }
     
     private List<CertificateEventAcademicLeave> findAcademicLeaves(Student student, Language lang) {
@@ -315,14 +324,12 @@ public class CertificateContentService {
         }
     }
 
-    private void setGradingSystem(CertificateReport report, Student student, boolean isHigherSchool,
-            boolean isOnlyHigherSchool, boolean showUncompleted, Language lang) {
-        Boolean directiveStudyLevel = directiveStudyLevel(student);
-        if (directiveStudyLevel != null) {
-            report.getStudent().setHigher(Boolean.TRUE.equals(directiveStudyLevel) || isOnlyHigherSchool);
-        }
+    private void setGradingSystem(CertificateReport report, Student student, boolean isHigherStudent,
+            boolean showUncompleted, Language lang) {
+        report.getStudent().setHigher(isHigherStudent);
+
         TypedQuery<Classifier> query = em.createQuery("select c from Classifier c where c.code in (?1) order by c.value desc", Classifier.class);
-        if (isHigherSchool) {
+        if (isHigherStudent) {
             query.setParameter(1, showUncompleted ? HigherAssessment.GRADE_SYSTEM : HigherAssessment.GRADE_POSITIVE);
         } else {
             query.setParameter(1, showUncompleted ? OccupationalGrade.OCCUPATIONAL_GRADE_SYSTEM
@@ -331,7 +338,7 @@ public class CertificateContentService {
         List<Classifier> grades = query.getResultList();
         Boolean isLetterGrade = student.getSchool().getIsLetterGrade();
         report.setGradeSystem(grades.stream().map(p ->
-                (isHigherSchool && Boolean.TRUE.equals(isLetterGrade) ? p.getValue2() : p.getValue())
+                (isHigherStudent && Boolean.TRUE.equals(isLetterGrade) ? p.getValue2() : p.getValue())
                         + " - " + TranslateUtil.name(p, lang)).collect(Collectors.joining("; ")));
     }
 
@@ -365,21 +372,21 @@ public class CertificateContentService {
     }
 
     private void setStudentResults(CertificateReport report, Student student, CertificateType type,
-            boolean showModules, boolean addOutcomes, boolean showUncompleted, Language lang) {
+            boolean isHigherStudent, boolean showModules, boolean addOutcomes, boolean showUncompleted,
+            boolean stateGradingSchema, Language lang) {
         if(CertificateType.TOEND_LIIK_SOOR.equals(type)) {
-            boolean higher = report.getStudent().isGuestStudent() ? Boolean.TRUE.equals(directiveStudyLevel(student))
-                    : StudentUtil.isHigher(student);
             report.setAddOutcomes(Boolean.valueOf(addOutcomes));
-            if (higher) {
-                setHigherResults(report, student, showModules, showUncompleted, addOutcomes, lang);
+            if (isHigherStudent) {
+                setHigherResults(report, student, showModules, showUncompleted, addOutcomes, stateGradingSchema, lang);
             } else {
-                report.getStudent().setMappedResults(getVocationalResults(student, addOutcomes, showUncompleted));
+                report.getStudent().setMappedResults(getVocationalResults(student, addOutcomes, showUncompleted,
+                        stateGradingSchema));
             }
         }
     }
 
     private void setHigherResults(CertificateReport report, Student student, boolean showModules,
-            boolean showUncompleted, boolean addOutcomes, Language lang) {
+            boolean showUncompleted, boolean addOutcomes, boolean stateGradingSchema, Language lang) {
         StudentHigherResultDto higherResults = studentResultHigherService.positiveHigherResults(student,
                 showModules, showUncompleted);
         List<StudentHigherModuleResultDto> modules = higherResults.getModules().stream()
@@ -391,7 +398,7 @@ public class CertificateContentService {
         List<CertificateStudentResult> results = new ArrayList<>();
 
         subjectResults.forEach(r -> {
-            CertificateStudentResult result = CertificateStudentResult.of(r);
+            CertificateStudentResult result = CertificateStudentResult.of(r, stateGradingSchema);
             results.add(result);
             if (r.getSubject().getSchool() != null) {
                 AutocompleteResult school = r.getSubject().getSchool();
@@ -436,7 +443,7 @@ public class CertificateContentService {
 
             LinkedHashMap<CertificateStudentResult, List<CertificateStudentResult>> mappedResults = new LinkedHashMap<>();
             for (StudentHigherModuleResultDto module : modules) {
-                CertificateStudentResult moduleResult = CertificateStudentResult.of(module);
+                CertificateStudentResult moduleResult = CertificateStudentResult.of(module, stateGradingSchema);
                 List<CertificateStudentResult> moduleSubjectResults = resultsByModules.containsKey(module.getId()) ?
                         resultsByModules.get(module.getId()) : new ArrayList<>();
                 if (moduleResult.getGradeValue() != null || !moduleSubjectResults.isEmpty()) {
@@ -454,7 +461,8 @@ public class CertificateContentService {
         }
     }
 
-    private Map<CertificateStudentResultHeader, Map<CertificateStudentResult, List<CertificateStudentResult>>> getVocationalResults(Student student, boolean addOutcomes, boolean showUncompleted) {
+    private Map<CertificateStudentResultHeader, Map<CertificateStudentResult, List<CertificateStudentResult>>> getVocationalResults(
+            Student student, boolean addOutcomes, boolean showUncompleted, boolean stateGradingSchema) {
         List<StudentVocationalResultModuleThemeDto> data = studentService.studentVocationalResults(student,
                 showUncompleted, false);
         if (!showUncompleted) {
@@ -462,9 +470,11 @@ public class CertificateContentService {
         }
         
         Map<String, Classifier> grades = getVocationalGrades();
+        Map<Long, GradingSchemaRow> gradingSchemaRows = getGradingSchemaRows(EntityUtil.getId(student.getSchool()), stateGradingSchema);
         Long curriculumId = student.getCurriculumVersion() != null ? student.getCurriculumVersion().getCurriculum().getId() : null;
         String cvCode = student.getCurriculumVersion() != null ? student.getCurriculumVersion().getCode() : null;
-        List<CertificateStudentResult> results = StreamUtil.toMappedList(r -> CertificateStudentResult.of(r, grades, curriculumId), data);
+        List<CertificateStudentResult> results = StreamUtil.toMappedList(r ->
+                CertificateStudentResult.of(r, grades, gradingSchemaRows, curriculumId), data);
         if (addOutcomes) {
             addVocationalOutcomes(data, results);
         }
@@ -734,19 +744,19 @@ public class CertificateContentService {
         return StreamUtil.toMap(Classifier::getCode, grades);
     }
 
+    private Map<Long, GradingSchemaRow> getGradingSchemaRows(Long schoolId, boolean stateGradingSchema) {
+        if (stateGradingSchema) {
+            return new HashMap<>();
+        }
+        List<GradingSchemaRow> rows = em.createQuery("select gsr from GradingSchemaRow gsr"
+                + " where gsr.gradingSchema.school.id = ?1", GradingSchemaRow.class)
+                .setParameter(1, schoolId)
+                .getResultList();
+        return StreamUtil.toMap(GradingSchemaRow::getId, rows);
+    }
+
     private static String getTemplateName(boolean isHigher, CertificateType type, Language lang) {
         String fileName = isHigher ? type.getHigherCertificate(lang) : type.getVocationalCertificate(lang);
         return PATH + fileName;
-    }
-
-    //TODO: rename- directive study level = true/false ?
-    public Boolean directiveStudyLevel(Student student) {
-        List<?> directiveStudyLevels = em.createNativeQuery("select d.is_higher from directive d "
-                + "join directive_student ds on ds.directive_id = d.id and ds.student_id = ?1 "
-                + "where d.type_code = ?2")
-            .setParameter(1, EntityUtil.getId(student))
-            .setParameter(2, DirectiveType.KASKKIRI_KYLALIS.name())
-            .setMaxResults(1).getResultList();
-        return JpaQueryUtil.resultAsBoolean(directiveStudyLevels.get(0), 0);
     }
 }

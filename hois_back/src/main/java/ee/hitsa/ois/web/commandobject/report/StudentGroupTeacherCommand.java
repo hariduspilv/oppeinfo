@@ -21,7 +21,7 @@ public class StudentGroupTeacherCommand {
     private Long curriculumVersion;
     private LocalDate from;
     private LocalDate thru;
-    private List<String> entryTypes = new ArrayList<>();
+    private List<String> entryTypes;
     private Boolean outcomeResults = Boolean.FALSE;
     private Boolean moduleGrade = Boolean.FALSE;
     private Boolean absencesPerJournals = Boolean.FALSE;
@@ -114,7 +114,7 @@ public class StudentGroupTeacherCommand {
     }
 
     public List<String> getEntryTypes() {
-        return entryTypes;
+        return entryTypes != null ? entryTypes : (entryTypes = new ArrayList<>());
     }
 
     public void setEntryTypes(List<String> entryTypes) {

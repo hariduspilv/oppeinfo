@@ -41,8 +41,6 @@ public class StudentCurriculumModuleOutcomesResult extends BaseEntityWithId {
     @ManyToOne(fetch = FetchType.LAZY)
     private GradingSchemaRow gradingSchemaRow;
 
-    private String verbalGrade;
-
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "student_curriculum_module_outcomes_result_id", nullable = false, updatable = false)
     private Set<StudentCurriculumModuleOutcomesResultHistory> history = new HashSet<>();
@@ -125,14 +123,6 @@ public class StudentCurriculumModuleOutcomesResult extends BaseEntityWithId {
 
     public void setGradingSchemaRow(GradingSchemaRow gradingSchemaRow) {
         this.gradingSchemaRow = gradingSchemaRow;
-    }
-
-    public String getVerbalGrade() {
-        return verbalGrade;
-    }
-
-    public void setVerbalGrade(String verbalGrade) {
-        this.verbalGrade = verbalGrade;
     }
 
     public Set<StudentCurriculumModuleOutcomesResultHistory> getHistory() {

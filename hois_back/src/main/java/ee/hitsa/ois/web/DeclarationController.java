@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.validation.Valid;
 
+import ee.hitsa.ois.util.PersonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -52,7 +53,11 @@ public class DeclarationController {
     @GetMapping("/{id:\\d+}")
     public DeclarationDto get(HoisUserDetails user, @WithEntity Declaration declaration) {
         UserUtil.assertCanViewStudent(user, declaration.getStudent());
-        return declarationService.get(user, declaration);
+        DeclarationDto dto = declarationService.get(user, declaration);
+        if (user.isStudent() || user.isRepresentative()) {
+            dto.setConfirmer(PersonUtil.stripIdcodeFromFullnameAndIdcode(dto.getConfirmer()));
+        }
+        return dto;
     }
 
     @GetMapping

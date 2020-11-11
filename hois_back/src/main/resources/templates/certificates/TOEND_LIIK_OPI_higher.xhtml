@@ -1,6 +1,6 @@
 <p>
 {{ content.school }} tõendab, et <b>{{ content.student.firstname }} {{ content.student.lastname }} 
-(ik {{ content.student.idcode }})</b> õpib {{ content.studyYear }} õppeaastal meie õppeasutuses{{content.student.curriculum != null ? " õppekaval " + content.student.curriculum.name + " (kood " + content.student.curriculum.code + ")." : "."}} 
+(ik {{ content.student.idcode }})</b> õpib {{ content.studyYear }} õppeaastal meie õppeasutuses{{content.student.curriculum != null ? " õppekaval " + content.student.curriculum.name + " (kood " + content.student.curriculum.merCode + ")" : ""}}{{content.student.course != null ? ", " + content.student.course + ". kursusel" : ""}}.
 <br>
 Õppevorm on {{ content.student.studyForm != null ? (content.student.studyForm | name) : "määramata"}},
 õppekoormus on {{ content.student.studyLoad != null ? (content.student.studyLoad | name) : "määramata"}}.
@@ -18,4 +18,10 @@
 {% endif %}
 
  Õpingute eeldatav lõppkuupäev on {{ content.student.nominalStudyEnd != null ? content.student.nominalStudyEnd : "määramata"}}.
+{% if content.student.events != null and content.student.events.isEmpty() == false %}
+	{% for event in content.student.events %}
+		<br/>
+		Tõendi väljastamise hetkel on üliõpilase staatus "{{ event.name }}" alates {{ event.start }} kuni {{ event.end }}
+	{% endfor %}
+{% endif %}
 </p>

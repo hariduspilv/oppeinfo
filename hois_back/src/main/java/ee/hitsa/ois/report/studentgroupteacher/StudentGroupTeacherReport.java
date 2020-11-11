@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.report.ReportUtil;
@@ -36,12 +37,12 @@ public class StudentGroupTeacherReport {
     private Boolean showTotalColumns;
 
     public StudentGroupTeacherReport(StudentGroupTeacherCommand criteria, StudentGroupTeacherDto dto,
-            ClassifierCache classifierCache) {
-        this(criteria, dto, classifierCache, Language.ET);
+            ClassifierCache classifierCache, Map<Long, GradingSchemaRow> gradingSchemaRowMap) {
+        this(criteria, dto, classifierCache, gradingSchemaRowMap, Language.ET);
     }
 
     public StudentGroupTeacherReport(StudentGroupTeacherCommand criteria, StudentGroupTeacherDto dto,
-            ClassifierCache classifierCache, Language lang) {
+            ClassifierCache classifierCache, Map<Long, GradingSchemaRow> gradingSchemaRowMap, Language lang) {
         this.averageGrade = dto.getAverageGrade();
         this.showAverageGrade = criteria.getAverageGrade();
         this.showWeightedAverageGrade = criteria.getWeightedAverageGrade();
@@ -55,8 +56,8 @@ public class StudentGroupTeacherReport {
         Map<Long, List<String>> studentResultColumns = new HashMap<>();
         for (StudentDto student : dto.getStudents()) {
             List<String> studentColumns = StreamUtil.toMappedList(rc -> ReportUtil
-                    .studentResultColumnAsString(criteria.getAbsencesPerJournals(), rc, classifierCache),
-                    student.getResultColumns());
+                    .studentResultColumnAsString(criteria.getAbsencesPerJournals(), rc, classifierCache,
+                            gradingSchemaRowMap, lang), student.getResultColumns());
             studentResultColumns.put(student.getId(), studentColumns);
         }
 
@@ -158,6 +159,7 @@ public class StudentGroupTeacherReport {
         tableStudent.put("totalAbsences", student.getTotalAbsences());
         tableStudent.put("lessonAbsencePercentage", student.getLessonAbsencePercentage());
         tableStudent.put("withoutReasonAbsences", student.getWithoutReasonAbsences());
+        tableStudent.put("withoutReasonAbsencesPercentage", student.getWithoutReasonAbsencesPercentage());
         tableStudent.put("withReasonAbsences", student.getWithReasonAbsences());
         tableStudent.put("beingLate", student.getBeingLate());
         tableStudent.put("averageGrade", student.getAverageGrade());

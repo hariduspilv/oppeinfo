@@ -1,5 +1,20 @@
 <div class="ois-form-layout-padding" ng-cloak>
-  <div flex>
+  <hois-collapsable expanded="false">
+    <hois-collapsable-header>
+      <div layout="column" layout-gt-md="row">
+        <div flex-gt-md="50">
+          <span>{{journal.nameEt}}</span>
+        </div>
+        <div flex-gt-md="45" flex-offset-gt-md="5" layout="row" layout-align-gt-md="center center">
+          <span ng-repeat="type in journal.lessonHours.capacityHours | orderBy: 'capacity'">
+            <span>{{capacityTypes[type.capacity].value.toUpperCase()}}:</span>
+            <span>{{type.plannedHours + '/' + type.usedHours}}</span>
+            <span ng-if="!$last">&nbsp;</span>
+          </span>
+        </div>
+      </div>
+    </hois-collapsable-header>
+
     <form name="journalForm" ng-submit="journalForm.$valid && loadData()" novalidate>
       <div class="form-readonly" layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="25" flex-sm="100" flex-xs="100">
@@ -42,12 +57,12 @@
       <div class="form-readonly" layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="25" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'journal.studentGroups' | translate}}</label>
-          <hois-value value="journal.studentGroups.join(', ')"></hois-value>
+          <hois-value value="journal.studentGroups.sort().join(', ')"></hois-value>
         </md-input-container>
 
         <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{auth.higher ? ('journal.teachersHigher' | translate) : ('journal.teachersVocational' | translate)}}</label>
-          <hois-value value="journal.journalTeachers.join(', ')"></hois-value>
+          <hois-value value="journal.journalTeachers.sort().join(', ')"></hois-value>
         </md-input-container>
       </div>
 
@@ -57,9 +72,9 @@
           <hois-value value="showModuleNames(journal.curriculumModules)"></hois-value>
         </md-input-container>
 
-        <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <label class="textInput">{{'journal.plannedAndEnteredLessonsCount' | translate}}</label>
-          <hois-value value="journal.lessonHours.totalPlannedHours + '/' + journal.lessonHours.totalUsedHours"></hois-value>
+        <md-input-container ng-if="journal.responsiblesForModules.length > 0" flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'journal.responsiblesForModules' | translate}}</label>
+          <hois-value value="journal.responsiblesForModules.join(', ')"></hois-value>
         </md-input-container>
       </div>
 
@@ -69,6 +84,11 @@
           <hois-classifier-value ng-if="journal.assessment" ng-model="journal.assessment"
             main-classifier-code="KUTSEHINDAMISVIIS"></hois-classifier-value>
           <hois-value ng-if="!journal.assessment" value="'journal.noAssessment' | translate"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'journal.plannedAndEnteredLessonsCount' | translate}}</label>
+          <hois-value value="journal.lessonHours.totalPlannedHours + '/' + journal.lessonHours.totalUsedHours"></hois-value>
         </md-input-container>
 
         <md-input-container class="md-input-has-value" flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -153,7 +173,7 @@
       </div>
 
     </form>
-  </div>
+  </hois-collapsable>
 </div>
 
 <div ng-if="journal.hasJournalStudents">

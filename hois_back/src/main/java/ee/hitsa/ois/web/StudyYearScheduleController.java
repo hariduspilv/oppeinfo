@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.service.OisFileService;
 import ee.hitsa.ois.service.StudyYearScheduleService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
@@ -40,8 +41,9 @@ public class StudyYearScheduleController {
     public StudyYearScheduleDtoContainer getStudyYearSchedules(HoisUserDetails user, @NotNull @Valid @RequestBody StudyYearScheduleDtoContainer schedulesCmd) {
         // user can select school department with no student groups, and it should not cause an error
         if(!CollectionUtils.isEmpty(schedulesCmd.getStudyPeriods())) {
-            schedulesCmd.setStudyYearSchedules(studyYearScheduleService.getSet(user, schedulesCmd));
+            schedulesCmd.setStudyYearSchedules(studyYearScheduleService.getSet(user, null, schedulesCmd));
         }
+        schedulesCmd.setEncryptedSchoolId(OisFileService.encryptAndDecodeId(user.getSchoolId()));
         return schedulesCmd;
     }
     
@@ -113,13 +115,13 @@ public class StudyYearScheduleController {
     public void studyYearScheduleAsExcel(HoisUserDetails user, 
             @NotNull @Valid StudyYearScheduleForm schedulesCmd, 
             HttpServletResponse response) throws IOException {
-        HttpUtil.xls(response, "studyyearschedule.xlsx", studyYearScheduleService.studyYearScheduleAsExcel(user, schedulesCmd));
+        HttpUtil.xls(response, "studyyearschedule.xlsx", studyYearScheduleService.studyYearScheduleAsExcel(user, null, schedulesCmd));
     }
 
     @GetMapping("/studyYearSchedule.pdf")
     public void studyYearScheduleAsPdf(HoisUserDetails user, 
             @NotNull @Valid StudyYearScheduleForm schedulesCmd, 
             HttpServletResponse response) throws IOException {
-        HttpUtil.pdf(response, "studyyearschedule.pdf", studyYearScheduleService.studyYearScheduleAsPdf(user, schedulesCmd));
+        HttpUtil.pdf(response, "studyyearschedule.pdf", studyYearScheduleService.studyYearScheduleAsPdf(user, null, schedulesCmd));
     }
 }

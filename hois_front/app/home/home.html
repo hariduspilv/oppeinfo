@@ -107,7 +107,7 @@
           <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons" style="margin-top: 0 !important;">info_outline</md-icon>
           <span layout="column" layout-align="start start">
             <p style="margin: 0; text-align: left;" md-colors="{color: 'warn'}">{{msg.title}} <a ng-click="msg.showContent = !msg.showContent">{{msg.showContent ? 'main.button.hide' : 'main.button.view' | translate}}</a></p>
-            <p style="margin: 0; text-align: left; white-space: pre-line" ng-if="msg.showContent" ng-bind-html="linkify(msg.content)"></p>
+            <p style="margin: 0; text-align: left; white-space: pre-line" ng-if="msg.showContent" ng-bind-html="msg.content | linky:'_blank'"></p>
           </span>
         </div>
       </md-whiteframe>

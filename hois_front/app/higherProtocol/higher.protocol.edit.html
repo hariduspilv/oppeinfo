@@ -88,7 +88,10 @@
     </div>
 
     <div layout="column">
-      <md-table-container>
+      <md-table-container class="fixed-md-table-container" resize-table fixed-column-table
+                          fixed-columns="{{!!formState.canCalculate ? 4 : 3}}"
+                          search-criteria-height="250"
+                          table-class="{{!!record.moduleDto ? 'md-table' : 'dummy'}}">
         <table md-table md-row-select="formState.canCalculate" multiple="true" ng-model="calculateGrades.protocolStudents">
           <thead md-head>
             <tr md-row>
@@ -111,7 +114,7 @@
             </tr>
           </thead>
           <tbody md-body>
-            <tr md-row ng-repeat="student in record.protocolStudents | filter: filterStudents(record.subgroup) | orderBy: 'student.nameEt'"
+            <tr md-row ng-repeat="student in record.protocolStudents | filter: filterStudents(record.subgroup)"
                 ng-disabled="!student.canChangeGrade" ng-class-odd="'odd'" ng-class-even="'even'"
                 md-select="student.id" md-select-id="student.id">
               <ng-form name="higherProtocolStudentForm">
@@ -131,7 +134,7 @@
                 <td ng-if="record.protocolType === 'PROTOKOLLI_LIIK_K'" md-cell>{{student.examDate | hoisDate}}</td>
                 <td md-cell ng-show="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject">
                   <span ng-repeat="journalResult in student.practiceJournalResults | orderBy: 'inserted'">
-                    <span ng-class="{badResult: !gradeUtil.isPositive(journalResult.grade.code)}">{{journalResult.grade | hoisHigherGrade: letterGrades}}</span>
+                    <hois-higher-result value="journalResult.grade" exists-grading-schema="existsSchoolGradingSchema" letter-grades="letterGrades"></hois-higher-result>
                     <span ng-if="!$last">/</span>
                   </span>
                 </td>
@@ -142,13 +145,13 @@
                 <td md-cell ng-repeat="subject in record.moduleDto.subjects" style="min-width: 75px;">
                   <span ng-if="subject.id">
                     <span ng-if="student.mappedResults.subjectResults[subject.id].isApelTransfer" class="apelAsterisk">*</span>
-                    <span ng-class="{badResult: !gradeUtil.isPositive(student.mappedResults.subjectResults[subject.id].grade.code)}">
-                      {{student.mappedResults.subjectResults[subject.id].grade | hoisHigherGrade: letterGrades}}</span>
+                    <hois-higher-result value="student.mappedResults.subjectResults[subject.id].grade"
+                      exists-grading-schema="existsSchoolGradingSchema" letter-grades="letterGrades"></hois-higher-result>
                   </span>
                   <span ng-if="!subject.id">
                     <span ng-if="student.mappedResults.otherSubjectResults[subject.studentHigherResultId].isApelTransfer" class="apelAsterisk">*</span>
-                    <span ng-class="{badResult: !gradeUtil.isPositive(student.mappedResults.otherSubjectResults[subject.studentHigherResultId].grade.code)}">
-                      {{student.mappedResults.otherSubjectResults[subject.studentHigherResultId].grade | hoisHigherGrade: letterGrades}}</span>
+                    <hois-higher-result value="student.mappedResults.otherSubjectResults[subject.studentHigherResultId].grade"
+                      exists-grading-schema="existsSchoolGradingSchema" letter-grades="letterGrades"></hois-higher-result>
                   </span>
                 </td>
                 <td md-cell>

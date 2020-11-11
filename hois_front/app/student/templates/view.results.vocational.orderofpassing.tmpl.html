@@ -26,9 +26,9 @@
         </td>
         <td md-cell>
           <span ng-if="!row.entryType" ng-class="row.isModule ? 'md-body-2 bold' : ''">
-            <span ng-class="{badResult: !gradeUtil.isPositive(row.grade.code)}">{{row.grade | hoisVocationalGrade}}</span>
+            <hois-vocational-result value="row.grade" exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
           </span>
-          <hois-journal-result ng-if="row.entryType" value="row"></hois-journal-result>
+          <hois-journal-result ng-if="row.entryType" value="row" exists-grading-schema="existsSchoolGradingSchema"></hois-journal-result>
         </td>
         <td md-cell>{{row.date | hoisDate}}</td>
         <td md-cell>{{row.teachers}}</td>

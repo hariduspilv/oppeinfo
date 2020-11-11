@@ -27,12 +27,12 @@
         <hois-value value="application.insertedBy"></hois-value>
       </md-input-container>
       <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-        <label>{{'apel.confirmedDate' | translate}}</label>
-        <hois-value value="application.confirmed | hoisDate"></hois-value>
+        <label>{{'apel.submittedDate' | translate}}</label>
+        <hois-value value="application.submitted | hoisDate"></hois-value>
       </md-input-container>
       <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-        <label>{{'apel.confirmer' | translate}}</label>
-        <hois-value value="application.confirmedBy"></hois-value>
+        <label>{{'apel.submitter' | translate}}</label>
+        <hois-value value="application.submittedBy"></hois-value>
       </md-input-container>
     </div>
 
@@ -40,6 +40,14 @@
       <md-input-container flex="45" flex-sm="100" flex-xs="100">
         <label>{{'apel.status' | translate}}</label>
         <hois-classifier-value ng-model="application.status" main-classifier-code="VOTA_STAATUS"></hois-classifier-value>
+      </md-input-container>
+      <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <label>{{'apel.confirmedDate' | translate}}</label>
+        <hois-value value="application.confirmed | hoisDate"></hois-value>
+      </md-input-container>
+      <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <label>{{'apel.confirmer' | translate}}</label>
+        <hois-value value="application.confirmedBy"></hois-value>
       </md-input-container>
     </div>
 

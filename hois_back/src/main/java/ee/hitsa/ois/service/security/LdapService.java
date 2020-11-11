@@ -61,7 +61,7 @@ public class LdapService {
         try {
             ctx = new InitialDirContext(env);
         } catch (@SuppressWarnings("unused") AuthenticationException e) {
-            log.info("Invalid LDAP user credentials: {}", username);
+            log.info("Invalid LDAP user credentials - username: {}, schoolId: {}", username, schoolId);
             return null;
         } catch (NamingException e) {
             log.error("Cannot connect to LDAP server", e);

@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.commandobject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -19,7 +20,7 @@ public class PracticeJournalEntriesSupervisorForm {
     private String supervisorComment;
 
     public List<PracticeJournalEntrySupervisorForm> getPracticeJournalEntries() {
-        return practiceJournalEntries;
+        return practiceJournalEntries != null ? practiceJournalEntries : (practiceJournalEntries = new ArrayList<>());
     }
 
     public void setPracticeJournalEntries(List<PracticeJournalEntrySupervisorForm> practiceJournalEntries) {

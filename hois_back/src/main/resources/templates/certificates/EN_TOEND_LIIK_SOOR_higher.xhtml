@@ -75,7 +75,7 @@
 						<td>{{ subjectResult.subjectEn }}</td>
 						<td>{{ subjectResult.subjectCode }}</td>
 						<td>{{ subjectResult.hours }}</td>
-						<td>{{ subjectResult.gradeValue }}</td>
+						<td>{{ subjectResult.gradeValueEn != null ? subjectResult.gradeValueEn : subjectResult.gradeValue }}</td>
 						<td>{{ subjectResult.gradeNameEn }}</td>
 						<td>{{ subjectResult.date }}</td>
 						<td>{{ subjectResult.assessedBy }}</td>
@@ -105,7 +105,7 @@
 			<td>{{ result.subjectEn }}</td>
 			<td>{{ result.subjectCode }}</td>
 			<td>{{ result.hours }}</td>
-			<td>{{ result.gradeValue }}</td>
+			<td>{{ result.gradeValueEn != null ? result.gradeValueEn : result.gradeValue }}</td>
 			<td>{{ result.gradeNameEn }}</td>
 			<td>{{ result.date }}</td>
 			<td>{{ result.assessedBy }}</td>

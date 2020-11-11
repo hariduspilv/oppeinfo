@@ -1,0 +1,8 @@
+<div layout="row" layout-md="column" layout-sm="column" layout-xs="column" layout-align="space-between" flex>
+  <div ng-include="'journal/journal.entryType.buttons.tmpl.html'"></div>
+  <md-input-container ng-if="journal.isIndividual" flex flex-offset="5" flex-offset-md="0" flex-offset-sm="0" flex-offset-xs="0" style="top: -10px">
+    <label>{{'journal.selectStudent' | translate}}</label>
+    <hois-select ng-model="formState.selectedJournalStudent" values="journal.journalStudents" value-property="id"
+      show-property="fullname" sorted-query="true" ng-change="updateSelectedJournalStudent()"></hois-select>
+  </md-input-container>
+</div>

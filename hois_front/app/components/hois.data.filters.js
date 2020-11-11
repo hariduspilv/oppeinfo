@@ -35,6 +35,14 @@ angular.module('hitsaOis').filter('hoisVocationalGrade', function ($rootScope) {
     (angular.isArray(input) ? $filter('limitTo')(input, limit).join(', ') + '...' : $filter('limitTo')(input, limit) + '...') :
     (angular.isArray(input) ? input.join(', ') : input);
   };
+}).filter('hoisLimitToList', function ($filter) {
+  return function (input, limit, conditional) {
+    if (!angular.isArray(input)) return;
+    if (angular.isDefined(conditional)) {
+      return input && input.length > limit && conditional ? $filter('limitTo')(input, limit) : input;
+    }
+    return input && input.length > limit ? $filter('limitTo')(input, limit) : input;
+  };
 }).filter('hoisNumber', function ($filter) {
   return function (input, decimals) {
     var number = input % 1 ? $filter('number')(input, decimals) : $filter('number')(input, 0);
@@ -65,5 +73,11 @@ angular.module('hitsaOis').filter('hoisVocationalGrade', function ($rootScope) {
     });
 
     return result;
+  };
+}).filter('linkyWithHtml', function($filter) {
+  return function(value) {
+    var linked = $filter('linky')(value, '_blank');
+    return linked.replace(/\&gt;/g, '>').replace(/\&lt;/g, '<')
+      .replace(/(<a href=)(\&#34;.*?)(>)(.+?)(<\/a>)(.+?>)(.+?)(<\/a>)/g, '<a href="$4" target="_blank">$7</a>');
   };
 });

@@ -36,6 +36,19 @@
                     </md-radio-button>
                 </md-radio-group>
             </div>
+            <div ng-if="formState.gradingSchemaSelection && !record.id && record.type === 'TOEND_LIIK_SOOR'">
+              <div>&nbsp;</div>
+              <div layout="row">
+                  <md-radio-group layout-gt-sm="row" ng-model="record.stateGradingSchema" ng-change="reloadContent()">
+                      <md-radio-button ng-value="true" aria-label="{{'document.stateGradingScheme' | translate}}">
+                          {{'document.stateGradingScheme' | translate}}
+                      </md-radio-button>
+                      <md-radio-button ng-value="false" aria-label="{{'document.schoolGradingSchema' | translate}}">
+                          {{'document.schoolGradingSchema' | translate}}
+                      </md-radio-button>
+                  </md-radio-group>
+              </div>
+            </div>
             <div>&nbsp;</div>
             <md-input-container>
                 <label class="common-label" ng-show="record.content">{{'certificate.content' | translate}}</label>

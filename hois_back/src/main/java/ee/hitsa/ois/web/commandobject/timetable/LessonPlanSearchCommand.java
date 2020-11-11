@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.commandobject.timetable;
 
+import java.util.List;
+
 import javax.validation.constraints.NotNull;
 
 public class LessonPlanSearchCommand {
@@ -8,8 +10,9 @@ public class LessonPlanSearchCommand {
     private Long studyYear;
     private Long schoolDepartment;
     private Long curriculumVersion;
-    private Long studentGroup;
-    private Long teacher;
+    private List<Long> studentGroup;
+    private List<Long> teacher;
+    private Boolean byTeacher;
 
     public Long getStudyYear() {
         return studyYear;
@@ -35,20 +38,28 @@ public class LessonPlanSearchCommand {
         this.curriculumVersion = curriculumVersion;
     }
 
-    public Long getStudentGroup() {
-        return studentGroup;
-    }
-
-    public void setStudentGroup(Long studentGroup) {
-        this.studentGroup = studentGroup;
-    }
-
-    public Long getTeacher() {
+    public List<Long> getTeacher() {
         return teacher;
     }
 
-    public void setTeacher(Long teacher) {
+    public void setTeacher(List<Long> teacher) {
         this.teacher = teacher;
+    }
+
+    public List<Long> getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(List<Long> studentGroup) {
+        this.studentGroup = studentGroup;
+    }
+
+    public Boolean getByTeacher() {
+        return byTeacher;
+    }
+
+    public void setByTeacher(Boolean byTeacher) {
+        this.byTeacher = byTeacher;
     }
     
 }

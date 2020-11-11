@@ -290,13 +290,13 @@ function ($route, $scope, $localStorage, QueryUtils, config, StudentUtil) {
 }]).controller('StudentViewResultsVocationalController', ['$filter', '$q', '$route', '$scope', 'GRADING_SCHEMA_TYPE', 'Classifier', 'GradingSchema', 'VocationalGradeUtil', 'QueryUtils', '$rootScope',
 function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingSchema, VocationalGradeUtil, QueryUtils, $rootScope) {
   $scope.auth = $route.current.locals.auth;
-  $scope.gradeUtil = VocationalGradeUtil;
   var entryMapper = Classifier.valuemapper({ studyYear: 'OPPEAASTA', entryType: 'SISSEKANNE' });
   var moduleMapper = Classifier.valuemapper({ module: 'KUTSEMOODUL' });
   var gradeMapper;
 
   var gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.VOCATIONAL);
   $q.all(gradingSchema.promises).then(function () {
+    $scope.existsSchoolGradingSchema = gradingSchema.existsSchoolGradingSchema();
     gradeMapper = gradingSchema.gradeMapper(gradingSchema.gradeSelection(), ['grade']);
   });
 
@@ -633,6 +633,7 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
 
     var gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.HIGHER);
     $q.all(gradingSchema.promises).then(function () {
+      $scope.existsSchoolGradingSchema = gradingSchema.existsSchoolGradingSchema();
       gradeMapper = gradingSchema.gradeMapper(gradingSchema.gradeSelection(), ['grade']);
     });
 
@@ -948,7 +949,7 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
     $scope.currentNavItem = 'student.documents';
     $scope.auth = $route.current.locals.auth;
 
-    $scope.applicationsCriteria = { size: 5, page: 1, order: '-inserted', studentId: $scope.studentId };
+    $scope.applicationsCriteria = { size: 5, page: 1, order: '-submitted', studentId: $scope.studentId };
     $scope.applications = {};
     var applicationsMapper = Classifier.valuemapper({ type: 'AVALDUS_LIIK', status: 'AVALDUS_STAATUS' });
     $scope.afterApplicationsLoad = function (result) {
@@ -979,7 +980,7 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
       filterValues: ($scope.auth.isGuestStudent() ? CertificateUtil.getGuestStudentForbiddenTypes() : [CertificateType.TOEND_LIIK_MUU])});
     }
 
-    $scope.directivesCriteria = { size: 5, page: 1, order: 'confirm_date, headline', studentId: $scope.studentId };
+    $scope.directivesCriteria = { size: 5, page: 1, order: 'confirm_date desc, headline', studentId: $scope.studentId };
     $scope.directives = {};
     var directivesMapper = Classifier.valuemapper({ type: 'KASKKIRI', status: 'KASKKIRI_STAATUS' });
     $scope.afterDirectivesLoad = function (result) {
@@ -994,7 +995,7 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
 
     // apel applications
 
-    $scope.apelApplicationsCriteria = { size: 5, page: 1, studentId: $scope.studentId };
+    $scope.apelApplicationsCriteria = { size: 5, page: 1, order: '-inserted', studentId: $scope.studentId };
     $scope.apelApplications = {};
     var apelApplicationsMapper = Classifier.valuemapper({ status: 'VOTA_STAATUS' });
     $scope.afterApelApplicationsLoad = function (result) {
@@ -1009,7 +1010,7 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
 
     // practice contracts
 
-    $scope.practiceContractsCriteria = { size: 5, page: 1, order: 'contract_nr', studentId: $scope.studentId };
+    $scope.practiceContractsCriteria = { size: 5, page: 1, order: 'confirm_date desc nulls last, contract_nr', studentId: $scope.studentId };
     $scope.practiceContracts = {};
     var practiceContractsMapper = Classifier.valuemapper({ status: 'LEPING_STAATUS' });
     $scope.afterPracticeContractsLoad = function (result) {

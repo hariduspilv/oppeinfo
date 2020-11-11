@@ -9,10 +9,12 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.lang.invoke.MethodHandles;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +24,8 @@ import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.validation.Validator;
 
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
+import ee.hitsa.ois.web.dto.GradeDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -248,7 +252,7 @@ public class PracticeJournalService {
                 PracticeJournalEvaluation eval = evals.get(0);
                 dto.setId(EntityUtil.getId(eval));
                 if (eval.getValueClf() != null) {
-                    dto.setValueClf(eval.getValueClf().getCode());
+                    dto.setGrade(GradeDto.of(eval));
                 }
                 if (eval.getValueNr() != null) {
                     dto.setValueNr(eval.getValueNr().toString());
@@ -311,10 +315,8 @@ public class PracticeJournalService {
     public PracticeJournal save(PracticeJournal practiceJournal, PracticeJournalForm practiceJournalForm) {
         assertValidationRules(practiceJournalForm);
         PracticeJournal changedPracticeJournal = EntityUtil.bindToEntity(practiceJournalForm, practiceJournal,
-                "student", "module", "theme", "teacher", "subject", "moduleSubjects", "practiceEvaluation");
-        if (!StringUtils.isEmpty(practiceJournalForm.getGrade())) {
-            changedPracticeJournal.setGrade(em.getReference(Classifier.class, practiceJournalForm.getGrade()));
-        }
+                "grade", "student", "module", "theme", "teacher", "subject", "moduleSubjects", "practiceEvaluation");
+        saveGrade(practiceJournal, practiceJournalForm.getGrade());
         changedPracticeJournal.setPracticeEvaluation(EntityUtil.getOptionalOne(PracticeEvaluation.class, practiceJournalForm.getPracticeEvaluation(), em));
         changedPracticeJournal.setStudent(EntityUtil.getOptionalOne(Student.class, practiceJournalForm.getStudent(), em));
         changedPracticeJournal.setTeacher(EntityUtil.getOptionalOne(Teacher.class, practiceJournalForm.getTeacher(), em));
@@ -382,34 +384,90 @@ public class PracticeJournalService {
         return EntityUtil.save(practiceJournal, em);
     }
 
+    // refactor by removing bindEndityCollection?
     private void updatePracticeJournalStudentEvaluations(PracticeJournal practiceJournal,
             PracticeJournalEntriesStudentForm practiceJournalEntriesStudentForm) {
+        List<Long> studentEvaluationCriteria = validStudentEvaluationCriteria(practiceJournal,
+                practiceJournalEntriesStudentForm);
         EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalEvaluations(), eval -> EntityUtil.getId(eval),
                 practiceJournalEntriesStudentForm.getStudentPracticeEvalCriteria(), PracticeJournalEvaluationForm::getId, dto -> {
                     PracticeJournalEvaluation eval = new PracticeJournalEvaluation();
                     eval.setPracticeJournal(practiceJournal);
                     return updateEvals(dto, eval);
-                }, this::updateEvals);
+                }, (dto, eval) -> {
+                    if (studentEvaluationCriteria.contains(dto.getCriteriaId())) {
+                        updateEvals(dto, eval);
+                    }
+                });
     }
-    
+
+    // return valid criteria ids, remove invalid entries from form
+    private List<Long> validStudentEvaluationCriteria(PracticeJournal practiceJournal, PracticeJournalEntriesStudentForm entriesStudentForm) {
+        List<Long> studentEvaluationCriteria = new ArrayList<>();
+        if (practiceJournal.getContract() != null && practiceJournal.getContract().getStudentPracticeEvaluation() != null) {
+            studentEvaluationCriteria = StreamUtil.toMappedList(EntityUtil::getId,
+                    practiceJournal.getContract().getStudentPracticeEvaluation().getCriteria());
+
+            Iterator<PracticeJournalEvaluationForm> evaluationFormIterator = entriesStudentForm
+                    .getStudentPracticeEvalCriteria().iterator();
+            while (evaluationFormIterator.hasNext()) {
+                PracticeJournalEvaluationForm evaluationForm = evaluationFormIterator.next();
+                if (evaluationForm.getId() == null && !studentEvaluationCriteria.contains(evaluationForm.getCriteriaId())) {
+                    evaluationFormIterator.remove();
+                }
+            }
+        }
+        return studentEvaluationCriteria;
+    }
+
+    // refactor by removing bindEndityCollection?
     private void updatePracticeJournalSupervisorEvaluations(PracticeJournal practiceJournal,
             PracticeJournalEntriesSupervisorForm practiceJournalEntriesSupervisorForm) {
+        List<Long> supervisorEvaluationCriteria = validSupervisorEvaluationCriteria(practiceJournal,
+                practiceJournalEntriesSupervisorForm);
         EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalEvaluations(), eval -> EntityUtil.getId(eval),
                 practiceJournalEntriesSupervisorForm.getSupervisorPracticeEvalCriteria(), PracticeJournalEvaluationForm::getId, dto -> {
                     PracticeJournalEvaluation eval = new PracticeJournalEvaluation();
                     eval.setPracticeJournal(practiceJournal);
                     return updateEvals(dto, eval);
-                }, this::updateEvals);
+                }, (dto, eval) -> {
+                    if (supervisorEvaluationCriteria.contains(dto.getCriteriaId())) {
+                        updateEvals(dto, eval);
+                    }
+                });
     }
-    
+
+    // return valid criteria ids, remove invalid entries from form
+    private List<Long> validSupervisorEvaluationCriteria(PracticeJournal practiceJournal,
+            PracticeJournalEntriesSupervisorForm entriesSupervisorForm) {
+        List<Long> supervisorEvaluationCriteria = new ArrayList<>();
+        if (practiceJournal.getContract() != null && practiceJournal.getContract().getPracticeEvaluation() != null) {
+            supervisorEvaluationCriteria = StreamUtil.toMappedList(EntityUtil::getId,
+                    practiceJournal.getContract().getPracticeEvaluation().getCriteria());
+
+            Iterator<PracticeJournalEvaluationForm> evaluationFormIterator = entriesSupervisorForm
+                    .getSupervisorPracticeEvalCriteria().iterator();
+            while (evaluationFormIterator.hasNext()) {
+                PracticeJournalEvaluationForm evaluationForm = evaluationFormIterator.next();
+                if (evaluationForm.getId() == null && !supervisorEvaluationCriteria.contains(evaluationForm.getCriteriaId())) {
+                    evaluationFormIterator.remove();
+                }
+            }
+        }
+        return supervisorEvaluationCriteria;
+    }
+
     private PracticeJournalEvaluation updateEvals(PracticeJournalEvaluationForm form, PracticeJournalEvaluation eval) {
         eval = EntityUtil.bindToEntity(form, eval, "criteriaId", "id", "valueClf");
         eval.setPracticeEvaluationCriteria(EntityUtil.getOptionalOne(PracticeEvaluationCriteria.class, form.getCriteriaId(), em));
         eval.setPracticeEvaluation(eval.getPracticeEvaluationCriteria().getPracticeEvaluation());
-        if (form.getValueClf() != null) {
-            eval.setValueClf(em.getReference(Classifier.class, form.getValueClf()));
+        if (form.getGrade() != null) {
+            eval.setValueClf(em.getReference(Classifier.class, form.getGrade().getCode()));
+            eval.setGradingSchemaRow(EntityUtil.getOptionalOne(GradingSchemaRow.class,
+                    form.getGrade().getGradingSchemaRowId(), em));
         } else {
             eval.setValueClf(null);
+            eval.setGradingSchemaRow(null);
         }
         return eval;
     }
@@ -426,17 +484,30 @@ public class PracticeJournalService {
             PracticeJournalEntriesTeacherForm practiceJournalEntriesTeacherForm) {
         assertTeacherSaveEntries(practiceJournal);
         EntityUtil.setUsername(user.getUsername(), em);
-        
-        if (practiceJournalEntriesTeacherForm.getGrade() != null && !practiceJournalEntriesTeacherForm.getGrade()
-                .equals(EntityUtil.getNullableCode(practiceJournal.getGrade()))) {
-            practiceJournal.setGradeInserted(LocalDateTime.now());
-        }
+
         EntityUtil.bindToEntity(practiceJournalEntriesTeacherForm, practiceJournal, classifierRepository,
-                "practiceJournalEntries", "practiceJournalFiles");
+                "grade", "practiceJournalEntries", "practiceJournalFiles");
+        saveGrade(practiceJournal, practiceJournalEntriesTeacherForm.getGrade());
         updatePracticeJournalTeacherEntries(practiceJournal, practiceJournalEntriesTeacherForm);
         updatePracticeJournalFiles(practiceJournal, practiceJournalEntriesTeacherForm);
         return EntityUtil.save(practiceJournal, em);
     }
+
+    private void saveGrade(PracticeJournal practiceJournal, GradeDto formGrade) {
+        if (formGrade != null) {
+            if (!formGrade.equals(GradeDto.of(practiceJournal))) {
+                practiceJournal.setGrade(em.getReference(Classifier.class, formGrade.getCode()));
+                practiceJournal.setGradingSchemaRow(EntityUtil.getOptionalOne(GradingSchemaRow.class,
+                        formGrade.getGradingSchemaRowId(), em));
+                practiceJournal.setGradeInserted(LocalDateTime.now());
+            }
+        } else {
+            practiceJournal.setGrade(null);
+            practiceJournal.setGradingSchemaRow(null);
+            practiceJournal.setGradeInserted(null);
+        }
+    }
+
     public PracticeJournal saveEntriesSupervisor(PracticeJournal practiceJournal,
             PracticeJournalEntriesSupervisorForm practiceJournalEntriesSupervisorForm) {
         assertSupervisorSaveEntries(practiceJournal);

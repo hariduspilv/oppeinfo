@@ -5,7 +5,11 @@ angular.module('hitsaOis').controller('ScholarshipApplicationRankingController',
     var baseUrl = '/scholarships';
     $scope.currentNavItem = 'ranking';
     $scope.criteria = {};
-    $scope.formState = {};
+    $scope.formState = {
+      xlsUrl: "scholarships/applications/ranking/scholarshipApplicationRankingGrants.xls",
+      xlsUrlHigher: "scholarships/applications/ranking/scholarshipApplicationRanking.xls",
+      xlsUrlDoctor: "scholarships/applications/ranking/scholarshipApplicationRankingDoctor.xls"
+    };
     $scope.formState.allowedStipendTypes = $route.current.locals.params.allowedStipendTypes;
     $scope.scholarshipType = $route.current.locals.params.scholarshipType;
     var stipend = $route.current.locals.params.stipend;

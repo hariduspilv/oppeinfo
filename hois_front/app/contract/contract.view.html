@@ -88,7 +88,7 @@
         </md-input-container>
         <md-input-container flex>
           <label class="textInput">{{'contract.contactPersonEmail' | translate}}</label>
-          <hois-value value="contract.contactPersonEmail"></hois-value>
+          <hois-value value="contract.contactPersonEmail" hois-linky></hois-value>
         </md-input-container>
         <md-input-container flex>
           <label class="textInput">{{'contract.contactPersonPhone' | translate}}</label>
@@ -117,7 +117,7 @@
         <tbody md-body>
         <tr md-row ng-repeat="contractSupervisor in contract.supervisors" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{contractSupervisor.supervisorName}}</td>
-            <td md-cell>{{contractSupervisor.supervisorEmail}}</td>
+            <td md-cell ng-bind-html="contractSupervisor.supervisorEmail | linky: '_blank'"></td>
             <td md-cell>{{contractSupervisor.supervisorPhone}}</td>
             <td ng-if="(contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_K'
               || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_T')
@@ -188,7 +188,7 @@
       <div layout="row" layout-sm="column" layout-xs="column" flex>
         <md-input-container flex>
           <label class="textInput">{{'contract.practicePlan' | translate}}</label>
-          <hois-value value="contract.practicePlan"></hois-value>
+          <hois-value value="contract.practicePlan" hois-linky></hois-value>
         </md-input-container>
       </div>
 

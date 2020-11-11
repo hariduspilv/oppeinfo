@@ -20,7 +20,7 @@
           <table class="journalResults">
             <tbody>
               <tr>
-                <td width="15%">
+                <td width="40%">
                   <span>{{ result.grade }}</span>
                   {% if result.entryType is not empty %}
                     <span>({{ result.entryType }})</span>
@@ -29,7 +29,7 @@
                   {% endif %}
                 </td>
                 <td width="15%">{{ result.gradeInserted | hoisDate }}</td>
-                <td width="70%">{{ result.gradeInsertedBy }}</td>
+                <td width="35%">{{ result.gradeInsertedBy }}</td>
               </tr>
             </tbody>
           </table>

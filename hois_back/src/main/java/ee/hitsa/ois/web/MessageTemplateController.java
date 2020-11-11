@@ -1,9 +1,18 @@
 package ee.hitsa.ois.web;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.util.EnumUtil;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -68,5 +77,23 @@ public class MessageTemplateController {
     @GetMapping("/usedTypeCodes")
     public Set<String> getUsedTypeCodes(HoisUserDetails user, String code) {
         return messageTemplateService.getUsedTypeCodes(user.getSchoolId(), code);
+    }
+
+    @GetMapping("/usersByPermission")
+    public Page<AutocompleteResult> get(HoisUserDetails user, @RequestParam List<String> permissionObjects,
+                                        Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return messageTemplateService.getUsersWithGivenUserRightsInSchool(user.getSchoolId(),
+                permissionObjects.stream().map(po -> EnumUtil.valueOf(PermissionObject.class, po))
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList()), pageable);
+    }
+
+    @GetMapping("/contentTemplate")
+    public Map<String, Object> getContentTemplate(HoisUserDetails user, @RequestParam String templateType) {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_AUTOTEADE);
+        Map<String, Object> map = new HashMap<>();
+        map.put("content", messageTemplateService.getTemplateExample(templateType));
+        return map;
     }
 }

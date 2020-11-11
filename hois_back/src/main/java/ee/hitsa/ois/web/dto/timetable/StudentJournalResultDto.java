@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import ee.hitsa.ois.web.dto.GradeDto;
+
 import java.time.LocalDateTime;
 
 public class StudentJournalResultDto {
@@ -8,18 +10,20 @@ public class StudentJournalResultDto {
     private final String nameEt;
     private final String nameEn;
     private final String content;
-    private final String grade;
+    private final GradeDto grade;
+    private final String verbalGrade;
     private final LocalDateTime gradeInserted;
     private final String addInfo;
 
     public StudentJournalResultDto(Long entryId, String entryCode, String nameEt, String nameEn, String content,
-            String grade, LocalDateTime gradeInserted, String addInfo) {
+            String gradeCode, Long gradingSchemaRowId, String verbalGrade, LocalDateTime gradeInserted, String addInfo) {
         this.entryId = entryId;
         this.entryCode = entryCode;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
         this.content = content;
-        this.grade = grade;
+        this.grade = new GradeDto(gradeCode, gradingSchemaRowId);
+        this.verbalGrade = verbalGrade;
         this.gradeInserted = gradeInserted;
         this.addInfo = addInfo;
     }
@@ -44,8 +48,12 @@ public class StudentJournalResultDto {
         return content;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
+    }
+
+    public String getVerbalGrade() {
+        return verbalGrade;
     }
 
     public LocalDateTime getGradeInserted() {

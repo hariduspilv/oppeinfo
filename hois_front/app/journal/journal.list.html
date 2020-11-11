@@ -87,7 +87,11 @@
               <a ng-if="row.canEdit" ng-href="/#/journal/{{::row.id}}/edit">{{row.nameEt}}</a>
             </td>
             <td md-cell>{{row.teachers}}</td>
-            <td md-cell>{{currentLanguageNameField(row.modules)}}</td>
+            <td md-cell>
+              {{currentLanguageNameField(row.moduleObjects | limitTo: (row.showAllModules ? row.moduleObjects.length : 1), ', ')}}
+              <span class="custom-tooltip" ng-if="!row.showAllModules && row.moduleObjects.length > 1" ng-click="row.showAllModules = true">{{'main.button.showMore' | translate}}</span>
+              <span class="custom-tooltip" ng-if="row.showAllModules" ng-click="row.showAllModules = false">{{'main.button.showLess' | translate}}</span>
+            </td>
             <td md-cell>{{row.studentCount}}</td>
             <td md-cell>{{row.plannedHours}}/{{row.usedHours}}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>

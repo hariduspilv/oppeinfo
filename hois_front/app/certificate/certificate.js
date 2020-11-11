@@ -43,7 +43,9 @@ angular.module('hitsaOis')
     var baseUrl = '/certificate';
     var Endpoint = QueryUtils.endpoint(baseUrl + '/order');
     var id = $route.current.params.id;
+    $scope.formState = {};
     $scope.auth = $route.current.locals.auth;
+
     if ($scope.auth.isGuestStudent() && !ArrayUtils.includes(['TOEND_LIIK_OPI', 'TOEND_LIIK_SOOR'], $route.current.params.typeCode)) {
       message.error('main.messages.error.nopermission');
       $location.path('');
@@ -78,6 +80,7 @@ angular.module('hitsaOis')
         command.showModules = $scope.record.showModules;
         command.showUncompleted = $scope.record.showUncompleted;
         command.estonian = $scope.record.estonian;
+        command.stateGradingSchema = $scope.record.stateGradingSchema;
       }
       QueryUtils.endpoint(baseUrl + '/content').search(command).$promise.then(function(response) {
         $scope.record.content = response.content;
@@ -88,8 +91,15 @@ angular.module('hitsaOis')
     if($scope.record.type) {
       if (CertificateUtil.isResultsCertificate($scope.record)) {
         $scope.record.estonian = true;
+        $scope.record.stateGradingSchema = true;
+        QueryUtils.endpoint('/gradingSchema/schoolExistingGradingSchemas').get().$promise.then(function (result) {
+          $scope.formState.gradingSchemaSelection = ($scope.auth.higher && result.higher) ||
+            ($scope.auth.vocational && result.vocational);
+        });
       } else {
         $scope.record.estonian = undefined;
+        $scope.record.stateGradingSchema = undefined;
+        $scope.formState.gradingSchemaSelection = false;
       }
       loadContent();
     }
@@ -138,6 +148,7 @@ angular.module('hitsaOis')
     var CompleteEndpoit = QueryUtils.endpoint(baseUrl + '/complete');
     var id = $route.current.params.id;
     var changedByOtherIdCodeChange = false;
+    var schoolExistingGradingSchemas = QueryUtils.endpoint('/gradingSchema/schoolExistingGradingSchemas').get();
     $scope.formState = {};
     $scope.forbiddenTypes = [];
     $scope.auth = $route.current.locals.auth;
@@ -204,6 +215,7 @@ angular.module('hitsaOis')
           $scope.otherFound = true;
           $scope.studentType = response.type;
           $scope.isHigher = response.higher;
+          $scope.formState.gradingSchemaSelection = (response.higher && schoolExistingGradingSchemas.higher) || (!response.higher && schoolExistingGradingSchemas.vocational);
           $scope.record.showModules = response.higher && $scope.auth.school.hmodules;
           $scope.forbiddenTypes = CertificateUtil.getForbiddenTypes(response.status);
           return response;
@@ -232,6 +244,7 @@ angular.module('hitsaOis')
           command.showModules = $scope.record.showModules;
           command.showUncompleted = $scope.record.showUncompleted;
           command.estonian = $scope.record.estonian;
+          command.stateGradingSchema = $scope.record.stateGradingSchema;
         }
         if (!angular.equals(command, $scope.lastCommand)) {
           QueryUtils.endpoint(baseUrl + '/content').search(command).$promise.then(function(response) {
@@ -252,8 +265,10 @@ angular.module('hitsaOis')
       if (id !== undefined) { return; }
       if (CertificateUtil.isResultsCertificate($scope.record)) {
         $scope.record.estonian = true;
+        $scope.record.stateGradingSchema = true;
       } else {
         $scope.record.estonian = undefined;
+        $scope.record.stateGradingSchema = undefined;
       }
       $scope.record.showUncompleted = undefined;
       $scope.formState.student = undefined;
@@ -272,8 +287,10 @@ angular.module('hitsaOis')
       } else {
         if (CertificateUtil.isResultsCertificate($scope.record)) {
           $scope.record.estonian = true;
+          $scope.record.stateGradingSchema = true;
         } else {
           $scope.record.estonian = undefined;
+          $scope.record.stateGradingSchema = undefined;
         }
         $scope.record.showUncompleted = undefined;
         setTypeName();
@@ -483,12 +500,14 @@ angular.module('hitsaOis')
           $scope.otherFound = true;
           $scope.formState.student = {id: result.id, nameEt: result.fullname, nameEn: result.fullname, status: result.status};
           $scope.isHigher = result.higher;
+          $scope.formState.gradingSchemaSelection = (result.higher && schoolExistingGradingSchemas.higher) || (!result.higher && schoolExistingGradingSchemas.vocational);
           $scope.record.showModules = result.higher && $scope.auth.school.hmodules;
           $scope.forbiddenTypes = CertificateUtil.getForbiddenTypes(result.status);
         } else {
           changedByOtherIdCodeChange = true;
           $scope.formState.student = null;
           $scope.isHigher = null;
+          $scope.formState.gradingSchemaSelection = false;
           $scope.record.showModules = null;
           $scope.forbiddenTypes = [];
           if(result && result.fullname) {

@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier, $rootScope, USER_CONFIRM_RIGHTS, ArrayUtils) {
+  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier, $rootScope, USER_CONFIRM_RIGHTS, ArrayUtils, USER_MESSAGE_RIGHTS) {
     var JWT_TOKEN_HEADER = 'Authorization';
     var authService = {};
     var roleMapper = Classifier.valuemapper({role: 'ROLL'});
@@ -134,7 +134,9 @@ angular.module('hitsaOis')
     };
 
     authService.isValidRolePermission = function (roleCode, objectCode, permCode) {
-      return permCode !== 'OIGUS_K' || USER_CONFIRM_RIGHTS.indexOf(objectCode) !== -1;
+      return ['OIGUS_K', 'OIGUS_T'].indexOf(permCode) === -1
+        || (permCode === 'OIGUS_K' && USER_CONFIRM_RIGHTS.indexOf(objectCode) !== -1)
+        || (permCode === 'OIGUS_T' && USER_MESSAGE_RIGHTS.indexOf(objectCode) !== -1);
     };
 
     return authService;
@@ -177,6 +179,9 @@ angular.module('hitsaOis')
         return false;
       }
       if (isStudentInType(currentUser, 'OPPUR_E')() && $route.current.data.externalStudentForbidden) {
+        return false;
+      }
+      if (isStudentInType(currentUser, 'OPPUR_E')() && currentUser.curriculumVersion === null && $route.current.data.studentCurriculumRequired) {
         return false;
       }
       var authorizedRoles = $route.current.data.authorizedRoles;
@@ -495,5 +500,12 @@ angular.module('hitsaOis')
     'TEEMAOIGUS_RIIKLIKOPPEKAVA',
     'TEEMAOIGUS_TUNNIPLAAN',
     'TEEMAOIGUS_VOTA'
-  ])
+  ]).constant('USER_MESSAGE_RIGHTS', [
+    'TEEMAOIGUS_AVALDUS',
+    'TEEMAOIGUS_ESINDAVALDUS',
+    'TEEMAOIGUS_MARKUS',
+    'TEEMAOIGUS_PUUDUMINE',
+    'TEEMAOIGUS_TUGITEENUS',
+    'TEEMAOIGUS_VOTA'
+])
 ;

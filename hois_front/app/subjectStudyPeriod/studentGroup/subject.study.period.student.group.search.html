@@ -22,14 +22,17 @@
                   <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" ng-model="criteria.curriculum" display="display"
                     ha-controller="directiveControllers" ha-search="searchCurriculums" label="subjectStudyPeriod.curriculum"></hois-autocomplete>
                   <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5"
-                    ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" name="studentGroup"
+                    ng-model="criteria.studentGroup" ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" name="studentGroup" multiple
                     label="{{'subjectStudyPeriod.studentGroup'}}" additional-query-params="{higher: true, valid: true, curriculumId: criteria.curriculum.id}"></hois-autocomplete>
               </div>
           <div layout="row">
               <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
               <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
               <md-button class="md-raised" ng-if="canEdit" href="#/subjectStudyPeriods/studentGroups/new">{{'main.button.create' | translate}}</md-button>
-              <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'main.button.printXls' | translate}}</a>
+              <md-button ng-disabled="!searchForm.$valid" ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" 
+              class="md-button md-raised">{{'main.button.printXls' | translate}}</md-button>
+              <md-button ng-disabled="!searchForm.$valid" ng-href="{{excel(formState.xlsUrlSummary, criteria)}}" target="_blank" 
+              class="md-button md-raised">{{'subjectStudyPeriod.printXlsSummary' | translate}}</md-button>
           </div>
       </form>
     </fieldset>

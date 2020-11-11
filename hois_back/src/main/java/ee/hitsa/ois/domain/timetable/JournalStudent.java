@@ -30,6 +30,10 @@ public class JournalStudent extends BaseEntityWithId {
     @JoinColumn(name = "journal_student_id", nullable = false, updatable = false, insertable = false)
     private Set<JournalEntryStudent> journalEntryStudents = new HashSet<>();
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "journal_student_id", nullable = false, updatable = false, insertable = false)
+    private Set<JournalEntry> journalEntries = new HashSet<>();
+
     public static JournalStudent of(Student student) {
         JournalStudent journalStudent = new JournalStudent();
         journalStudent.setStudent(student);
@@ -68,4 +72,11 @@ public class JournalStudent extends BaseEntityWithId {
         this.journalEntryStudents = journalEntryStudents;
     }
 
+    public Set<JournalEntry> getJournalEntries() {
+        return journalEntries;
+    }
+
+    public void setJournalEntries(Set<JournalEntry> journalEntries) {
+        this.journalEntries = journalEntries;
+    }
 }

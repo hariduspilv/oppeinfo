@@ -774,7 +774,8 @@ public class ApplicationService {
             automaticMessageService.sendMessageToStudentRepresentatives(MessageType.TEATE_LIIK_AV_KINNIT, student, data);
         } else {
             log.info("confirm needed message sent to student {} school", EntityUtil.getId(application.getStudent()));
-            automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_AV_KINNIT, student.getSchool(), data);
+            automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_AV_KINNIT,
+                    student.getSchool(), data, PermissionObject.TEEMAOIGUS_AVALDUS);
         }
     }
 

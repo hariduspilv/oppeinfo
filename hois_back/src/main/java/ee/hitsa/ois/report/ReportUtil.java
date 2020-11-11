@@ -1,8 +1,12 @@
 package ee.hitsa.ois.report;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
+import ee.hitsa.ois.web.dto.GradeDto;
+import ee.hitsa.ois.web.dto.report.studentgroupteacher.StudentJournalEntryResultDto;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.util.CollectionUtils;
 
@@ -64,32 +68,36 @@ public abstract class ReportUtil {
     }
     
     public static String studentResultColumnAsString(Boolean absencesPerJournals, StudentResultColumnDto resultColumn,
-            ClassifierCache classifierCache) {
+            ClassifierCache classifierCache, Map<Long, GradingSchemaRow> gradingSchemaRowMap, Language lang) {
         if (resultColumn.getJournalResult() != null) {
-            return journalResultAsString(absencesPerJournals, resultColumn.getJournalResult(), classifierCache);
-        } else if (resultColumn.getPracticeModuleThemeResult() != null) {
-            return classifierValue(resultColumn.getPracticeModuleThemeResult().getGrade().getCode(),
-                    VOCATIONAL_GRADE, classifierCache);
-        } else if (resultColumn.getPracticeModuleResult() != null) {
-            return classifierValue(resultColumn.getPracticeModuleResult().getGrade().getCode(),
-                    VOCATIONAL_GRADE, classifierCache);
-        } else if (resultColumn.getOutcomeResult() != null) {
-            return classifierValue(resultColumn.getOutcomeResult().getGrade().getCode(),
-                    VOCATIONAL_GRADE, classifierCache);
-        } else if (resultColumn.getModuleResult() != null) {
-            return classifierValue(resultColumn.getModuleResult().getGrade().getCode(),
-                    VOCATIONAL_GRADE, classifierCache);
+            return journalResultAsString(absencesPerJournals, resultColumn.getJournalResult(), classifierCache,
+                    gradingSchemaRowMap, lang);
+        } else if (resultColumn.getPracticeModuleThemeResult() != null && resultColumn.getPracticeModuleThemeResult().getGrade() != null) {
+            return vocationalGradeAsString(resultColumn.getPracticeModuleThemeResult().getGrade(), null,
+                    classifierCache, gradingSchemaRowMap, lang);
+        } else if (resultColumn.getPracticeModuleResult() != null && resultColumn.getPracticeModuleResult().getGrade() != null) {
+            return vocationalGradeAsString(resultColumn.getPracticeModuleResult().getGrade(), null,
+                    classifierCache, gradingSchemaRowMap, lang);
+        } else if (resultColumn.getOutcomeResult() != null && resultColumn.getOutcomeResult().getGrade() != null) {
+            return vocationalGradeAsString(resultColumn.getOutcomeResult().getGrade(), null,
+                    classifierCache, gradingSchemaRowMap, lang);
+        } else if (resultColumn.getModuleResult() != null && resultColumn.getModuleResult().getGrade() != null) {
+            return vocationalGradeAsString(resultColumn.getModuleResult().getGrade(), null,
+                    classifierCache, gradingSchemaRowMap, lang);
         }
         return "";
     }
     
     private static String journalResultAsString(Boolean absencesPerJournals, StudentJournalResultDto journalResult,
-            ClassifierCache classifierCache) {
-        List<String> journalGrades = journalResult.getResults().stream().filter(e -> e.getGrade() != null)
-                .map(e -> e.getGrade().getCode()).collect(Collectors.toList());
+            ClassifierCache classifierCache, Map<Long, GradingSchemaRow> gradingSchemaRowMap, Language lang) {
+        List<StudentJournalEntryResultDto> journalGrades = journalResult.getResults().stream()
+                .filter(e -> e.getGrade() != null)
+                .collect(Collectors.toList());
 
-        String result = !CollectionUtils.isEmpty(journalGrades) ? journalGrades.stream()
-                .map(g -> classifierValue(g, "KUTSEHINDAMINE", classifierCache)).collect(Collectors.joining(" ")) : "";
+        String result = !CollectionUtils.isEmpty(journalGrades)
+                ? journalGrades.stream().map(g -> vocationalGradeAsString(g.getGrade(), g.getVerbalGrade(),
+                    classifierCache, gradingSchemaRowMap, lang)).collect(Collectors.joining(" "))
+                : "";
         if (Boolean.TRUE.equals(absencesPerJournals)) {
             result += " ";
             result += absencePerJournal(journalResult, Absence.PUUDUMINE_H) != 0
@@ -104,6 +112,23 @@ public abstract class ReportUtil {
             result += absencePerJournal(journalResult, Absence.PUUDUMINE_PR) != 0
                     ? " PR:" + absencePerJournal(journalResult, Absence.PUUDUMINE_PR)
                     : "";
+        }
+        return result;
+    }
+
+    public static String vocationalGradeAsString(GradeDto grade, String verbalGrade, ClassifierCache classifierCache,
+            Map<Long, GradingSchemaRow> gradingSchemaRowMap, Language lang) {
+        String result = "";
+        if (grade != null) {
+            if (grade.getGradingSchemaRowId() != null) {
+                GradingSchemaRow row = gradingSchemaRowMap.get(grade.getGradingSchemaRowId());
+                result = Language.EN.equals(lang) ? row.getGradeEn() : row.getGrade();
+            } else if (grade.getCode() != null) {
+                result = classifierValue(grade.getCode(), "KUTSEHINDAMINE", classifierCache);
+            }
+            if (verbalGrade != null) {
+                result = (!result.isEmpty() ? result + ", " : "") + verbalGrade;
+            }
         }
         return result;
     }
@@ -153,7 +178,7 @@ public abstract class ReportUtil {
         if (Boolean.TRUE.equals(isLetterGrade)) {
             return TranslateUtil.name(grade, lang);
         }
-        return Language.EN == lang ? grade.getExtraval2() : grade.getExtraval1();
+        return Language.EN.equals(lang) ? grade.getExtraval2() : grade.getExtraval1();
     }
 
     public static void assertCanViewStudentGroupTeacherReport(HoisUserDetails user, StudentGroup studentGroup) {

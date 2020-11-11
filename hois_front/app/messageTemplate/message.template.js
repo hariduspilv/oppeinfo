@@ -17,10 +17,12 @@ angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope'
 
     $q.all(clMapper.promises).then($scope.loadData);
   }
-]).controller('MessageTemplateEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils', '$rootScope',
-  function ($location, $route, $scope, dialogService, message, DataUtils, QueryUtils, $rootScope) {
+]).controller('MessageTemplateEditController', ['$location', '$route', '$scope', 'dialogService', 'message',
+                                                'DataUtils', 'QueryUtils', '$rootScope', 'Classifier', '$q',
+  function ($location, $route, $scope, dialogService, message, DataUtils, QueryUtils, $rootScope, Classifier, $q) {
 
     $scope.readOnly = $route.current.$$route.originalPath.indexOf("view") !== -1;
+    var clMapper = Classifier.valuemapper({userRights: 'TEEMAOIGUS'});
 
     $scope.getIsValid = function() {
         $scope.isValid =
@@ -29,12 +31,25 @@ angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope'
     };
 
     function afterLoad() {
-      DataUtils.convertStringToDates($scope.record, ['validFrom', 'validThru']);
-      getUsedTypes();
-      $scope.getIsValid();
-      if($scope.messageTemplateForm) {
-        $scope.messageTemplateForm.$setPristine();
-      }
+      $q.all(clMapper.promises).then(function () {
+        DataUtils.convertStringToDates($scope.record, ['validFrom', 'validThru']);
+        getUsedTypes();
+        if ($scope.record.userRights && $scope.record.userRights.length > 0) {
+          QueryUtils.createQueryForm($scope, '/messageTemplate/usersByPermission',
+            {permissionObjects: $scope.record.userRights},
+            mapUserRights, undefined, true, true);
+          $scope.loadData();
+        }
+        clMapper.objectmapper($scope.record);
+        $scope.getIsValid();
+        if($scope.messageTemplateForm) {
+          $scope.messageTemplateForm.$setPristine();
+        }
+      });
+    }
+
+    function mapUserRights() {
+      angular.forEach($scope.tabledata.content, clMapper.objectmapper);
     }
 
     var baseUrl = '/messageTemplate';
@@ -92,5 +107,18 @@ angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope'
         });
       });
     };
+
+    $scope.$watch('record.type', function (newV, oldV) {
+      if (oldV === newV || !newV || !!$scope.record.content) {
+        return;
+      }
+      QueryUtils.loadingWheel($scope, true);
+      QueryUtils.endpoint(baseUrl + "/contentTemplate").search({templateType: newV}, function (data) {
+        $scope.record.content = data.content;
+        QueryUtils.loadingWheel($scope, false);
+      }, function () {
+        QueryUtils.loadingWheel($scope, false);
+      });
+    })
   }
 ]);

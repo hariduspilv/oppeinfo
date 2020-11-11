@@ -33,6 +33,14 @@
           </md-input-container>
         </div>
 
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex flex-sm="100">
+            <label class="textInput">{{'student.studentGroup' | translate}}</label>
+            <hois-select ng-model="formState.studentGroup" values="formState.studentGroups"
+                         ng-change="studentGroupChange()"></hois-select>
+          </md-input-container>
+        </div>
+
         <br/>
 
         <div flex>
@@ -48,12 +56,17 @@
                 </tr>
               </thead>
               <tbody md-body>
-                <tr md-row md-select="row.studentId" ng-repeat="row in tabledata.content | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <tr md-row md-select="row.studentId" ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
                   <td md-cell>{{row.fullname}}</td>
                   <td md-cell>{{row.studentGroup}}</td>
                   <td md-cell>{{row.idcode}}</td>
                   <td md-cell>{{currentLanguageNameField(row.status)}}</td>
-                  <td md-cell><span ng-repeat="result in row.journalResults track by $index">{{result | hoisVocationalGrade}}<span ng-if="!$last"> / </span></span></td>
+                  <td md-cell>
+                    <span ng-repeat="result in row.journalResults track by $index">
+                      <hois-vocational-result value="result" exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
+                      <span ng-if="!$last">/</span>
+                    </span>
+                  </td>
                 </tr>
               </tbody>
             </table>

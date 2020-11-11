@@ -49,7 +49,7 @@ public class SubjectStudyPeriodTeacherSearchService {
             filters.add(cb.equal(root.get("school").get("id"), schoolId));
 
             if (criteria.getTeacher() != null) {
-                filters.add(cb.equal(root.get("id"), criteria.getTeacher()));
+                filters.add(root.get("id").in(criteria.getTeacher()));
             }
 
             filters.add(cb.equal(root.get("isHigher"), Boolean.TRUE));

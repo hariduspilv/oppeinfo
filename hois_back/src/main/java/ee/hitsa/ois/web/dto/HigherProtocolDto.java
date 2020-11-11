@@ -1,13 +1,12 @@
 package ee.hitsa.ois.web.dto;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.protocol.Protocol;
+import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -61,15 +60,24 @@ public class HigherProtocolDto extends VersionedCommand {
             Map<Long, DeclarationSubject> dsByStudentId = protocol.getProtocolHdata().getSubjectStudyPeriod()
                     .getDeclarationSubjects().stream()
                     .collect(Collectors.toMap(ds -> ds.getDeclaration().getStudent().getId(), ds -> ds, (o, n) -> o));
-            dto.setProtocolStudents(StreamUtil.toMappedSet(ps -> HigherProtocolStudentDto.ofWithSubgroups(ps,
-                    dsByStudentId.get(ps.getStudent().getId())), protocol.getProtocolStudents()));
+            dto.setProtocolStudents(StreamUtil.nullSafeList(protocol.getProtocolStudents())
+                    .stream()
+                    .sorted(Comparator.comparing((ProtocolStudent ps) -> ps.getStudent().getPerson().getLastname(), String::compareToIgnoreCase)
+                            .thenComparing(ps -> ps.getStudent().getPerson().getFirstname(), String::compareToIgnoreCase))
+                    .map(ps -> HigherProtocolStudentDto.ofWithSubgroups(ps, dsByStudentId.get(ps.getStudent().getId())))
+                    .collect(Collectors.toCollection(LinkedHashSet::new)));
 
             Set<Long> studentIds = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
             dto.setSubjectStudyPeriodMidtermTaskDto(SubjectStudyPeriodMidtermTaskDto.ofForProtocol(studentIds,
                     subjectStudyPeriod));
         } else {
             dto.setModuleDto(HigherProtocolModuleDto.of(protocol.getProtocolHdata()));
-            dto.setProtocolStudents(StreamUtil.toMappedSet(HigherProtocolStudentDto::of, protocol.getProtocolStudents()));
+            dto.setProtocolStudents(StreamUtil.nullSafeList(protocol.getProtocolStudents())
+                    .stream()
+                    .sorted(Comparator.comparing((ProtocolStudent ps) -> ps.getStudent().getPerson().getLastname(), String::compareToIgnoreCase)
+                            .thenComparing(ps -> ps.getStudent().getPerson().getFirstname(), String::compareToIgnoreCase))
+                    .map(HigherProtocolStudentDto::of)
+                    .collect(Collectors.toCollection(LinkedHashSet::new)));
         }
 
         if (protocol.getOisFile() != null) {

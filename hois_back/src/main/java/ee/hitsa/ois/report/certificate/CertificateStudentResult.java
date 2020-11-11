@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.dto.student.StudentHigherModuleResultDto;
 import org.springframework.util.StringUtils;
@@ -34,6 +35,7 @@ public class CertificateStudentResult {
     private BigDecimal hours;
     private BigDecimal moduleCredits;
     private String gradeValue;
+    private String gradeValueEn;
     private String gradeName;
     private String gradeNameEn;
     private String date;
@@ -49,7 +51,7 @@ public class CertificateStudentResult {
     private Boolean isHeader = Boolean.FALSE;
     private Boolean isSameCurriculum = Boolean.FALSE;
 
-    public static CertificateStudentResult of(StudentHigherSubjectResultDto dto) {
+    public static CertificateStudentResult of(StudentHigherSubjectResultDto dto, boolean stateGradingSchema) {
         CertificateStudentResult result = new CertificateStudentResult();
 
         SubjectSearchDto subject = dto.getSubject();
@@ -63,7 +65,13 @@ public class CertificateStudentResult {
         if (grade != null) {
             result.setGradeName(grade.getGradeNameEt());
             result.setGradeNameEn(grade.getGradeNameEn());
-            result.setGradeValue(grade.getGradeValue());
+            if (grade.getGrade().getGradingSchemaRowId() == null || stateGradingSchema) {
+                result.setGradeValue(grade.getGradeValue());
+                result.setGradeValueEn(grade.getGradeValue());
+            } else {
+                result.setGradeValue(grade.getGradingSchemaGradeEt());
+                result.setGradeValueEn(grade.getGradingSchemaGradeEn());
+            }
             result.setDate(DateUtils.date(grade.getGradeDate()));
             List<String> teachers = grade.getTeachers();
             if (teachers.contains(null)) {
@@ -76,7 +84,7 @@ public class CertificateStudentResult {
         return result;
     }
 
-    public static CertificateStudentResult of(StudentHigherModuleResultDto dto) {
+    public static CertificateStudentResult of(StudentHigherModuleResultDto dto, boolean stateGradingSchema) {
         CertificateStudentResult result = new CertificateStudentResult();
         result.setModule(new AutocompleteResult(dto.getId(), dto.getNameEt(), dto.getNameEn()));
         result.setIsHeader(Boolean.TRUE);
@@ -86,14 +94,22 @@ public class CertificateStudentResult {
         if (grade != null) {
             result.setGradeName(grade.getGradeNameEt());
             result.setGradeNameEn(grade.getGradeNameEn());
-            result.setGradeValue(grade.getGradeValue());
+            if (grade.getGrade().getGradingSchemaRowId() == null || stateGradingSchema) {
+                result.setGradeValue(grade.getGradeValue());
+                result.setGradeValueEn(grade.getGradeValue());
+            } else {
+                result.setGradeValue(grade.getGradingSchemaGradeEt());
+                result.setGradeValueEn(grade.getGradingSchemaGradeEn());
+            }
             result.setDate(DateUtils.date(grade.getGradeDate()));
             result.setAssessedBy(String.join(", ", StreamUtil.nullSafeList(grade.getTeachers())));
         }
         return result;
     }
 
-    public static CertificateStudentResult of(StudentVocationalResultModuleThemeDto dto, Map<String, Classifier> vocationalGrades, Long studentCurriculumId) {
+    public static CertificateStudentResult of(StudentVocationalResultModuleThemeDto dto,
+            Map<String, Classifier> vocationalGrades, Map<Long, GradingSchemaRow> gradingSchemaRows,
+            Long studentCurriculumId) {
         CertificateStudentResult result = new CertificateStudentResult();
 
         result.setTheme(dto.getTheme() != null ? dto.getTheme().getNameEt() : null);
@@ -113,10 +129,20 @@ public class CertificateStudentResult {
         result.setOccupationModuleId(dto.getCurriculumVersionModuleId());
         result.setCurriculumId(dto.getCurriculum() != null ? dto.getCurriculum().getId() : null);
 
-        Classifier grade = dto.getGrade() != null ? vocationalGrades.get(dto.getGrade().getCode()) : null;
-        result.setGradeName(grade != null ? grade.getNameEt() : null);
-        result.setGradeNameEn(grade != null ? grade.getNameEn() : null);
-        result.setGradeValue(grade != null ? grade.getValue() : null);
+        if (dto.getGrade() != null) {
+            Classifier grade = vocationalGrades.get(dto.getGrade().getCode());
+            result.setGradeName(grade != null ? grade.getNameEt() : null);
+            result.setGradeNameEn(grade != null ? grade.getNameEn() : null);
+            if (dto.getGrade().getGradingSchemaRowId() == null || gradingSchemaRows.isEmpty()) {
+                String gradeValue = grade != null ? grade.getValue() : null;
+                result.setGradeValue(gradeValue);
+                result.setGradeValueEn(gradeValue);
+            } else {
+                GradingSchemaRow schemaGrade = gradingSchemaRows.get(dto.getGrade().getGradingSchemaRowId());
+                result.setGradeValue(schemaGrade != null ? schemaGrade.getGrade() : null);
+                result.setGradeValueEn(schemaGrade != null ? schemaGrade.getGradeEn() : null);
+            }
+        }
         result.setDate(DateUtils.date(dto.getDate()));
         result.setAssessedBy(String.join(", ", StreamUtil.toMappedList(AutocompleteResult::getNameEt, dto.getTeachers().stream().filter(p->p.getNameEn()!=null).collect(Collectors.toList()))));
         if (StringUtils.isEmpty(result.getAssessedBy())) result.setAssessedBy(dto.getTeachersAsString());
@@ -186,6 +212,14 @@ public class CertificateStudentResult {
 
     public void setGradeValue(String gradeValue) {
         this.gradeValue = gradeValue;
+    }
+
+    public String getGradeValueEn() {
+        return gradeValueEn;
+    }
+
+    public void setGradeValueEn(String gradeValueEn) {
+        this.gradeValueEn = gradeValueEn;
     }
 
     public String getGradeName() {

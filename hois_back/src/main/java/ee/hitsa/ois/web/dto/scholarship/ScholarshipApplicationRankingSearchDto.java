@@ -10,6 +10,7 @@ public class ScholarshipApplicationRankingSearchDto extends ScholarshipApplicati
     private Long term;
     private String termNameEt;
     private String curriculumCode;
+    private String htmCode;
     private String studentGroup;
     private Long studentId;
     private String studentName;
@@ -220,5 +221,13 @@ public class ScholarshipApplicationRankingSearchDto extends ScholarshipApplicati
 
     public void setCanViewDecision(Boolean canViewDecision) {
         this.canViewDecision = canViewDecision;
+    }
+
+    public String getHtmCode() {
+        return htmCode;
+    }
+
+    public void setHtmCode(String htmCode) {
+        this.htmCode = htmCode;
     }
 }

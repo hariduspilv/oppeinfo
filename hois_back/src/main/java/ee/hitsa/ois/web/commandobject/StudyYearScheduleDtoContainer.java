@@ -3,7 +3,6 @@ package ee.hitsa.ois.web.commandobject;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.web.dto.StudyYearScheduleDto;
@@ -17,6 +16,7 @@ public class StudyYearScheduleDtoContainer {
     @Size(max = 4000)
     private String addInfo;
     private Boolean showMine;
+    private String encryptedSchoolId;
 
     public Set<StudyYearScheduleDto> getStudyYearSchedules() {
         return studyYearSchedules != null ? studyYearSchedules : (studyYearSchedules = new HashSet<>());
@@ -56,6 +56,14 @@ public class StudyYearScheduleDtoContainer {
 
     public void setShowMine(Boolean showMine) {
         this.showMine = showMine;
+    }
+
+    public String getEncryptedSchoolId() {
+        return encryptedSchoolId;
+    }
+
+    public void setEncryptedSchoolId(String encryptedSchoolId) {
+        this.encryptedSchoolId = encryptedSchoolId;
     }
 
 }

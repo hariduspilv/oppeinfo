@@ -46,7 +46,7 @@
 
         <div layout="row">
           <div layout="row" flex="45" flex-sm="100" flex-xs="100">
-            <hois-autocomplete flex ha-controller="directiveControllers" ng-model="criteria.roomObject" method="rooms" name="student" label="lessonplan.event.room"
+            <hois-autocomplete flex ha-controller="directiveControllers" ng-model="criteria.roomObject" method="rooms" name="room" label="lessonplan.event.room"
               additional-query-params="{isStudy: true}"></hois-autocomplete>
           </div>
           <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
@@ -54,6 +54,14 @@
             <input ng-model="criteria.otherRoom" type="text" md-maxlength="255">
           </md-input-container>
         </div>
+
+        <div ng-if="eventsPerm && auth.vocational" layout="row">
+          <md-input-container class="md-block" flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'lessonplan.event.studentName' | translate}}</label>
+            <input ng-model="criteria.studentName" type="text" md-maxlength="255">
+          </md-input-container>
+        </div>
+
         <div ng-if="eventsPerm" layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <md-checkbox ng-model="criteria.singleEvent" ng-disabled="criteria.personalEvent || criteria.juhanEvent">
@@ -92,6 +100,7 @@
             <th ng-if="eventsPerm" md-column>{{auth.higher ? ('lessonplan.event.teachersHigher' | translate) : ('lessonplan.event.teachersVocational' | translate)}}</th>
             <th md-column>{{'lessonplan.event.rooms' | translate}}</th>
             <th ng-if="eventsPerm" md-column>{{'lessonplan.event.studentGroups' | translate}}</th>
+            <th ng-if="eventsPerm && auth.vocational" md-column>{{'lessonplan.event.students' | translate}}</th>
             <th ng-if="eventsPerm" md-column>{{'lessonplan.event.singleEvent' | translate}}</th>
             <th ng-if="eventsPerm && auth.isAdmin()" md-column>{{'lessonplan.event.personalEvent' | translate}}</th>
             <th ng-if="eventsPerm" md-column>{{'lessonplan.event.juhanEvent' | translate}}</th>
@@ -103,15 +112,14 @@
             <td md-cell><a ng-href="#/timetable/timetableEvent/{{::row.id}}/view">{{currentLanguageNameField(row)}}</a></td>
             <td md-cell>{{::row.date | hoisDate}}</td>
             <td md-cell>{{::row.timeStart | hoisTime}}-{{::row.timeEnd | hoisTime}}</td>
-            <td ng-if="eventsPerm" md-cell><span ng-repeat="teacher in row.teachers">{{::teacher.name}}{{$last ? "" : ", "}}</span></td>
+            <td ng-if="eventsPerm" md-cell><span ng-repeat="teacher in row.teachers | orderBy: 'name'">{{::teacher.name}}{{$last ? "" : ", "}}</span></td>
             <td md-cell>
-              <span ng-repeat="room in row.rooms">
-                <span ng-if="room.id">{{::room.buildingCode}}-{{::room.roomCode}}</span>
-                <span ng-if="!room.id">{{::room.roomCode}}</span>
-                {{$last ? "" : ", "}}
+              <span ng-repeat="room in row.rooms | orderBy: ['buildingCode', 'roomCode']">
+                <span ng-if="room.id">{{::room.buildingCode}}-{{::room.roomCode}}</span><span ng-if="!room.id">{{::room.roomCode}}</span>{{$last ? "" : ", "}}
               </span>
             </td>
-            <td ng-if="eventsPerm" md-cell><span ng-repeat="group in row.studentGroups">{{::group.code}}{{$last ? "" : ", "}}</span></td>
+            <td ng-if="eventsPerm" md-cell><span ng-repeat="group in row.studentGroups | orderBy: 'code'">{{::group.code}}{{$last ? "" : ", "}}</span></td>
+            <td ng-if="eventsPerm && auth.vocational" md-cell><span ng-repeat="student in row.students | orderBy: 'name'">{{::student.name}}{{$last ? "" : ", "}}</span></td>
             <td ng-if="eventsPerm" md-cell>{{row.singleEvent ? 'main.yes' : 'main.no' | translate}}</td>
             <td ng-if="eventsPerm && auth.isAdmin()" md-cell>{{row.isPersonal ? 'main.yes' : 'main.no' | translate}}</td>
             <td ng-if="eventsPerm" md-cell>{{row.isJuhanEvent ? 'main.yes' : 'main.no' | translate}}</td>

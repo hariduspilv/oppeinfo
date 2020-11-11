@@ -1,0 +1,24 @@
+<hois-collapsable label="('journal.curriculumVersionModuleOrThemeDescription' | translate)" expanded="false">
+  <div class="md-body-1" ng-repeat="curriculumVersion in journal.curriculumVersions | orderBy: currentLanguageNameField()">
+    <div>
+      <span>{{'journal.curriculumVersion' | translate}}:</span>
+      <a target="_blank" ng-href="#/vocationalCurriculum/{{::curriculumVersion.curriculumId}}/moduleImplementationPlan/{{::curriculumVersion.id}}/view">
+        {{currentLanguageNameField(curriculumVersion)}}</a>
+    </div>
+    <div>
+      <span>{{'journal.module' | translate}}:</span>
+      <a ng-repeat="module in curriculumVersion.modules" target="_blank" ng-href="#/occupationModule/{{::curriculumVersion.curriculumId}}/{{::curriculumVersion.id}}/{{::module.curriculumModuleId}}/{{::module.id}}/view">
+        {{currentLanguageNameField(module)}}</a>
+    </div>
+    <div>
+      <span>{{'journal.themes' | translate}}:</span>
+      <span ng-repeat="theme in curriculumVersion.themes | orderBy: currentLanguageNameField()">
+          <a class="md-raised small-link" ng-click="themeDescriptionDialog(theme)">{{currentLanguageNameField(theme)}}</a><span ng-if="!$last">,</span>
+        </span>
+    </div>
+    <div>&nbsp;</div>
+  </div>
+  <div class="md-body-1" ng-repeat="individualCurriculum in journal.individualCurriculums | orderBy: 'fullname'">
+    <a ng-click="individualCurriculumDialog(individualCurriculum)">{{individualCurriculum.fullname}} - {{'journal.individualCurriculumDistinction' | translate}}</a>
+  </div>
+</hois-collapsable>

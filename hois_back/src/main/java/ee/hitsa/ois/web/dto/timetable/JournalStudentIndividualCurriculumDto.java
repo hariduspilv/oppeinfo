@@ -6,7 +6,7 @@ public class JournalStudentIndividualCurriculumDto {
 
     private Long studentId;
     private String fullname;
-    private List<JournalModuleDescriptionDto> distinctions;
+    private List<JournalStudentDistinctionDto> distinctions;
 
     public Long getStudentId() {
         return studentId;
@@ -24,11 +24,11 @@ public class JournalStudentIndividualCurriculumDto {
         this.fullname = fullname;
     }
 
-    public List<JournalModuleDescriptionDto> getDistinctions() {
+    public List<JournalStudentDistinctionDto> getDistinctions() {
         return distinctions;
     }
 
-    public void setDistinctions(List<JournalModuleDescriptionDto> distinctions) {
+    public void setDistinctions(List<JournalStudentDistinctionDto> distinctions) {
         this.distinctions = distinctions;
     }
 

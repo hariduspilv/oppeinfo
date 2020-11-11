@@ -9,7 +9,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import ee.hitsa.ois.service.GradingSchemaService;
+import ee.hitsa.ois.web.dto.gradingSchema.GradingSchemaDto;
 import ee.hitsa.ois.web.dto.timetable.SchoolPublicDataSettingsDto;
+
+import org.apache.commons.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -20,6 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.StudyYear;
@@ -43,17 +48,17 @@ import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.PublicDataService;
 import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.StateCurriculumService;
-import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.CryptoUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HttpUtil;
-import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectProgramUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.SchoolCapacityTypeCommand;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.StudyYearScheduleDtoContainer;
+import ee.hitsa.ois.web.commandobject.StudyYearScheduleForm;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.subject.SubjectSearchCommand;
 import ee.hitsa.ois.web.dto.AcademicCalendarDto;
@@ -63,7 +68,6 @@ import ee.hitsa.ois.web.dto.StateCurriculumDto;
 import ee.hitsa.ois.web.dto.StateCurriculumSearchDto;
 import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 import ee.hitsa.ois.web.dto.StudyYearDto;
-import ee.hitsa.ois.web.dto.StudyYearScheduleLegendDto;
 import ee.hitsa.ois.web.dto.SubjectDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
@@ -91,12 +95,21 @@ public class PublicDataController {
     private AutocompleteService autocompleteService;
     @Autowired
     private SchoolService schoolService;
+    @Autowired
+    private GradingSchemaService gradingSchemaService;
     @Value("${hois.frontend.baseUrl}")
     private String frontendBaseUrl;
+    @Value("${file.cypher.key}")
+    private String encryptionKey;
 
     @GetMapping("/schoolSettings")
     public SchoolPublicDataSettingsDto schoolSettings(Long schoolId) {
         return publicDataService.schoolPublicSettings(schoolId);
+    }
+
+    @GetMapping("/gradingSchemas")
+    public List<GradingSchemaDto> gradingSchemas(Long schoolId, @RequestParam String type) {
+        return gradingSchemaService.typeSchemas(schoolId, type);
     }
 
     @GetMapping("/academicCalendar/{schoolId:\\d+}")
@@ -235,25 +248,50 @@ public class PublicDataController {
     }
     
     @GetMapping("/studyYearScheduleLegends")
-    public Map<String, ?> studyYearScheduleLegends(Long schoolId) {
-        return publicDataService.getStudyYearScheduleLegends(schoolId);
+    public Map<String, ?> studyYearScheduleLegends(String schoolId) {
+        String decryptedSchoolIdString = decrypt(schoolId);
+        Long decryptedSchoolId = null;
+        if (decryptedSchoolIdString == null) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("failedDecrypt", Boolean.TRUE);
+            return response;
+        }
+        try {
+            decryptedSchoolId = Long.valueOf(decryptedSchoolIdString);
+        } catch (@SuppressWarnings("unused") NumberFormatException e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("failedDecrypt", Boolean.TRUE);
+            return response;
+        }
+        return publicDataService.getStudyYearScheduleLegends(decryptedSchoolId);
     }
     
     @GetMapping("studyYearSchedule/studentGroups")
-    public List<StudentGroupSearchDto> getStudyYearScheduleStudentGroups(Long schoolId) {
-        return publicDataService.getStudyYearScheduleStudentGroups(schoolId);
+    public List<StudentGroupSearchDto> getStudyYearScheduleStudentGroups(String schoolId) {
+        String decryptedSchoolIdString = decrypt(schoolId);
+        if (decryptedSchoolIdString == null) return null;
+        Long decryptedSchoolId = Long.valueOf(decryptedSchoolIdString);
+        return publicDataService.getStudyYearScheduleStudentGroups(decryptedSchoolId);
     }
     
     @GetMapping("/studyYears")
-    public List<StudyYearDto> getStudyYearsWithStudyPeriods(Long schoolId) {
-        return publicDataService.getStudyYearsWithStudyPeriods(schoolId);
+    public List<StudyYearDto> getStudyYearsWithStudyPeriods(String schoolId) {
+        String decryptedSchoolIdString = decrypt(schoolId);
+        if (decryptedSchoolIdString == null) return null;
+        Long decryptedSchoolId = Long.valueOf(decryptedSchoolIdString);
+        return publicDataService.getStudyYearsWithStudyPeriods(decryptedSchoolId);
     }
     
-    @PostMapping("/studyYearSchedule/{id:\\d+}")
-    public StudyYearScheduleDtoContainer getStudyYearSchedules(@PathVariable("id") Long schoolId, @NotNull @Valid @RequestBody StudyYearScheduleDtoContainer schedulesCmd) {
+    @PostMapping("/studyYearSchedule/{id}")
+    public StudyYearScheduleDtoContainer getStudyYearSchedules(@PathVariable("id") String schoolId, @NotNull @Valid @RequestBody StudyYearScheduleDtoContainer schedulesCmd) {
         // user can select school department with no student groups, and it should not cause an error
+        String decryptedSchoolIdString = decrypt(schoolId);
+        if (decryptedSchoolIdString == null) {
+            return null;
+        }
+        Long decryptedSchoolId = Long.valueOf(decryptedSchoolIdString);
         if(!CollectionUtils.isEmpty(schedulesCmd.getStudyPeriods())) {
-            schedulesCmd.setStudyYearSchedules(publicDataService.getStudyYearSchedule(schoolId, schedulesCmd));
+            schedulesCmd.setStudyYearSchedules(publicDataService.getStudyYearSchedule(decryptedSchoolId, schedulesCmd));
         }
         return schedulesCmd;
     }
@@ -264,8 +302,34 @@ public class PublicDataController {
     }
     
     @GetMapping("/studyYearSchedule/schooldepartments")
-    public List<SchoolDepartmentResult> studyYearScheduleSchoolDepartments(Long schoolId) {
-        return publicDataService.studyYearScheduleSchoolDepartments(schoolId);
+    public List<SchoolDepartmentResult> studyYearScheduleSchoolDepartments(String schoolId) {
+        String decryptedSchoolIdString = decrypt(schoolId);
+        if (decryptedSchoolIdString == null) return null;
+        Long decryptedSchoolId = Long.valueOf(decryptedSchoolIdString);
+        return publicDataService.studyYearScheduleSchoolDepartments(decryptedSchoolId);
     }
+    
+    @GetMapping("/{id}/studyYearSchedule.xlsx")
+    public void studyYearScheduleAsExcel(@PathVariable("id") String schoolId, @NotNull @Valid StudyYearScheduleForm schedulesCmd, 
+            HttpServletResponse response) throws IOException {
+        String decryptedSchoolIdString = decrypt(schoolId);
+        if (decryptedSchoolIdString == null) return;
+        Long decryptedSchoolId = Long.valueOf(decryptedSchoolIdString);
+        HttpUtil.xls(response, "studyyearschedule.xlsx", publicDataService.studyYearScheduleAsExcel(decryptedSchoolId, schedulesCmd));
+    }
+    
+    @GetMapping("/{id}/studyYearSchedule.pdf")
+    public void studyYearScheduleAsPdf(@PathVariable("id") String schoolId, @NotNull @Valid StudyYearScheduleForm schedulesCmd, 
+            HttpServletResponse response) throws IOException {
+        String decryptedSchoolIdString = decrypt(schoolId);
+        if (decryptedSchoolIdString == null) return;
+        Long decryptedSchoolId = Long.valueOf(decryptedSchoolIdString);
+        HttpUtil.pdf(response, "studyyearschedule.pdf", publicDataService.studyYearScheduleAsPdf(decryptedSchoolId, schedulesCmd));
+    }
+    
+    private String decrypt(String encryptedSchoolId) {
+        return CryptoUtil.decrypt(encryptionKey, Base64.decodeBase64(encryptedSchoolId));
+    }
+    
 
 }

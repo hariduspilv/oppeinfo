@@ -593,13 +593,13 @@ public class DirectiveViewStudentDto {
         Application application = directiveStudent.getApplication();
         switch(directiveType) {
         case KASKKIRI_AKAD:
-            dto.setNewStudyPeriodStart(directiveStudent.getStudyPeriodStart() != null ? AutocompleteResult.of(directiveStudent.getStudyPeriodStart()) : null);
-            dto.setNewStudyPeriodEnd(directiveStudent.getStudyPeriodEnd() != null ? AutocompleteResult.of(directiveStudent.getStudyPeriodEnd()) : null);
+            dto.setNewStudyPeriodStart(directiveStudent.getStudyPeriodStart() != null ? AutocompleteResult.ofWithYear(directiveStudent.getStudyPeriodStart()) : null);
+            dto.setNewStudyPeriodEnd(directiveStudent.getStudyPeriodEnd() != null ? AutocompleteResult.ofWithYear(directiveStudent.getStudyPeriodEnd()) : null);
             dto.setApplicationIsPeriod(application != null ? application.getIsPeriod() : null);
             dto.setApplicationStartDate(application != null ? application.getStartDate() : null);
             dto.setApplicationEndDate(application != null ? application.getEndDate() : null);
-            dto.setApplicationStudyPeriodStart(application != null && application.getStudyPeriodStart() != null ? AutocompleteResult.of(application.getStudyPeriodStart()) : null);
-            dto.setApplicationStudyPeriodEnd(application != null && application.getStudyPeriodEnd() != null ? AutocompleteResult.of(application.getStudyPeriodEnd()) : null);
+            dto.setApplicationStudyPeriodStart(application != null && application.getStudyPeriodStart() != null ? AutocompleteResult.ofWithYear(application.getStudyPeriodStart()) : null);
+            dto.setApplicationStudyPeriodEnd(application != null && application.getStudyPeriodEnd() != null ? AutocompleteResult.ofWithYear(application.getStudyPeriodEnd()) : null);
             break;
         case KASKKIRI_DUPLIKAAT:
             dto.setDiplomaDto(DiplomaStudentDto.fill(directiveStudent));

@@ -48,6 +48,7 @@ public class LessonPlanJournalForm extends VersionedCommand {
     
     private List<AutocompleteResult> journalRooms;
     private Boolean addModuleOutcomes;
+    private Boolean isIndividual;
     private Boolean addStudents;
     private Boolean divideIntoGroups;
 
@@ -144,9 +145,17 @@ public class LessonPlanJournalForm extends VersionedCommand {
 		return untisCode;
 	}
 
-	public void setUntisCode(String untisCode) {
+    public void setUntisCode(String untisCode) {
 		this.untisCode = untisCode;
 	}
+
+    public Boolean getIsIndividual() {
+        return isIndividual;
+    }
+
+    public void setIsIndividual(Boolean isIndividual) {
+        this.isIndividual = isIndividual;
+    }
 
     public Boolean getAddModuleOutcomes() {
         return addModuleOutcomes;

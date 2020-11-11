@@ -15,6 +15,7 @@ import java.util.function.BiConsumer;
 
 import javax.persistence.EntityManager;
 
+import ee.hitsa.ois.enums.PermissionObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +81,8 @@ public abstract class ApplicationUtil {
         SEND_MESSAGE_CALL.put(ApplicationType.AVALDUS_LIIK_TUGI, new HashMap<>(defaultMessageCalls));
         SEND_MESSAGE_CALL.get(ApplicationType.AVALDUS_LIIK_TUGI).put(OperationType.SUBMIT, (application, service) -> {
             StudentApplicationCreated dataBean = new StudentApplicationCreated(application);
-            service.sendMessageToStudentAndRepresentativeAndSchoolAdmins(MessageType.TEATE_LIIK_OP_AVALDUS, application.getStudent(), dataBean);
+            service.sendMessageToStudentAndRepresentativeAndSchoolAdmins(MessageType.TEATE_LIIK_OP_AVALDUS,
+                    application.getStudent(), dataBean, PermissionObject.TEEMAOIGUS_TUGITEENUS);
         });
         SEND_MESSAGE_CALL.get(ApplicationType.AVALDUS_LIIK_TUGI).put(OperationType.REJECT, (application, service) -> {
             StudentApplicationRejectedMessage dataBean = new StudentApplicationRejectedMessage(application);
@@ -88,14 +90,16 @@ public abstract class ApplicationUtil {
         });
         SEND_MESSAGE_CALL.get(ApplicationType.AVALDUS_LIIK_TUGI).put(OperationType.SAVE, (application, service) -> {
             StudentApplicationChosenCommitteeMessage dataBean = new StudentApplicationChosenCommitteeMessage(application);
-            service.sendMessageToStudentAndRepresentativeAndSchoolAdmins(MessageType.TEATE_LIIK_OP_AVALDUS_YL, application.getStudent(), dataBean);
+            service.sendMessageToStudentAndRepresentativeAndSchoolAdmins(MessageType.TEATE_LIIK_OP_AVALDUS_YL,
+                    application.getStudent(), dataBean, PermissionObject.TEEMAOIGUS_TUGITEENUS);
         });
         SEND_MESSAGE_CALL.get(ApplicationType.AVALDUS_LIIK_TUGI).put(OperationType.CONFIRM, (application, service) -> {
             if (Boolean.FALSE.equals(application.getIsDecided())) {
                 SEND_MESSAGE_CALL.get(ApplicationType.AVALDUS_LIIK_TUGI).get(OperationType.REJECT).accept(application, service);
             } else {
                 ConfirmationNeededMessage dataBean = new ConfirmationNeededMessage(application);
-                service.sendMessageToStudentAndRepresentativeAndSchoolAdmins(MessageType.TEATE_LIIK_AV_KINNIT, application.getStudent(), dataBean);
+                service.sendMessageToStudentAndRepresentativeAndSchoolAdmins(MessageType.TEATE_LIIK_AV_KINNIT,
+                        application.getStudent(), dataBean, PermissionObject.TEEMAOIGUS_TUGITEENUS);
             }
         });
     }

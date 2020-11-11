@@ -58,13 +58,18 @@
         scope.nextWeekIndex = scope.weeks[shownWeekIndex + 1] ? shownWeekIndex + 1 : null;
     }
 
-    angular.module('hitsaOis').controller('StudentJournalListController', ['$scope', '$route', 'Classifier', 'DataUtils', 'VocationalGradeUtil', 'QueryUtils', 'stateStorageService',
-        function ($scope, $route, Classifier, DataUtils, VocationalGradeUtil, QueryUtils, stateStorageService) {
+    angular.module('hitsaOis').controller('StudentJournalListController', ['$q', '$route', '$scope', 'GRADING_SCHEMA_TYPE', 'Classifier', 'DataUtils', 'GradingSchema', 'VocationalGradeUtil', 'QueryUtils', 'stateStorageService',
+        function ($q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, DataUtils, GradingSchema, VocationalGradeUtil, QueryUtils, stateStorageService) {
             $scope.currentNavItem = 'journals';
             $scope.auth = $route.current.locals.auth;
             $scope.gradeUtil = VocationalGradeUtil;
             var studentId = $scope.auth.student;
-            var clMapper = Classifier.valuemapper({entryType: 'SISSEKANNE', grade: 'KUTSEHINDAMINE'});
+            var clMapper = Classifier.valuemapper({entryType: 'SISSEKANNE'});
+            var gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.VOCATIONAL);
+            var gradeMapper;
+            $q.all(clMapper.promises.concat(gradingSchema.promises)).then(function () {
+              gradeMapper = gradingSchema.gradeMapper(gradingSchema.gradeSelection(), ['grade']);
+            });
 
             var schoolId = $route.current.locals.auth.school.id;
             var stateKey = 'studentJournal';
@@ -100,13 +105,16 @@
                 if ($scope.journalsByYears[journalYearIndex].journals.length === 0) {
                     QueryUtils.loadingWheel($scope, true);
                     QueryUtils.endpoint('/journals/studentJournals/').query({studentId: studentId, studyYearId: syId}).$promise.then(function (journals) {
-                        journals.forEach(function (journal) {
-                            journal.journalEntries.forEach(function (entry) {
+                        $q.all(clMapper.promises.concat(gradingSchema.promises)).then(function () {
+                            journals.forEach(function (journal) {
+                              journal.journalEntries.forEach(function (entry) {
                                 clMapper.objectmapper(entry);
+                                gradeMapper.objectmapper(entry);
+                              });
+                              $scope.journalsByYears[journalYearIndex].journals.push(journal);
                             });
-                            $scope.journalsByYears[journalYearIndex].journals.push(journal);
-                        });
-                        QueryUtils.loadingWheel($scope, false);
+                         QueryUtils.loadingWheel($scope, false);
+                      });
                     });
                 }
             };
@@ -187,12 +195,13 @@
                 getPreviousAndNextWeek($scope);
             };
         }
-    ]).controller('StudentJournalViewController', ['$mdColors', '$route', '$scope', 'Classifier', 'QueryUtils', function ($mdColors, $route, $scope, Classifier, QueryUtils) {
+    ]).controller('StudentJournalViewController', ['$mdColors', '$q', '$route', '$scope', 'GRADING_SCHEMA_TYPE', 'Classifier', 'GradingSchema', 'QueryUtils', function ($mdColors, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingSchema, QueryUtils) {
         $scope.auth = $route.current.locals.auth;
         var studentId = $scope.auth.student;
         var journalId = $route.current.params.id;
 
-        var clMapper = Classifier.valuemapper({entryType: 'SISSEKANNE', grade: 'KUTSEHINDAMINE'});
+        var clMapper = Classifier.valuemapper({entryType: 'SISSEKANNE'});
+        var gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.VOCATIONAL);
 
         $scope.journalEntryTypeColors = {
             'SISSEKANNE_T': 'default-grey-50',
@@ -219,13 +228,18 @@
         };
 
         QueryUtils.endpoint('/journals/studentJournal/').search({studentId: studentId, journalId: journalId}).$promise.then(function (journal) {
-            journal.journalEntries.forEach(function (entry) {
+            $q.all(clMapper.promises.concat(gradingSchema.promises)).then(function () {
+              var gradeMapper = gradingSchema.gradeMapper(gradingSchema.gradeSelection(), ['grade']);
+
+              journal.journalEntries.forEach(function (entry) {
                 clMapper.objectmapper(entry);
+                gradeMapper.objectmapper(entry);
                 (entry.previousResults || []).forEach(function (result) {
-                  clMapper.objectmapper(result);
+                  gradeMapper.objectmapper(result);
                 });
+              });
+              $scope.journal = journal;
             });
-            $scope.journal = journal;
         });
 
       }]);

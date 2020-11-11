@@ -34,6 +34,7 @@
               <th class="label">{{ "studentgroupteacher.totalAbsences" | translate }}</th>
               <th class="label">{{ "studentgroupteacher.totalAbsencesPercentage" | translate }}</th>
               <th class="label">{{ "studentgroupteacher.withoutReasonAbsences" | translate }}</th>
+              <th class="label">{{ "studentgroupteacher.withoutReasonAbsencesPercentage" | translate }}</th>
               <th class="label">{{ "studentgroupteacher.withReasonAbsences" | translate }}</th>
               <th class="label">{{ "studentgroupteacher.beingLate" | translate }}</th>
               {% if content.showAverageGrade %}
@@ -89,7 +90,7 @@
             {% endif %}
 
             {% for column in student.resultColumns %}
-              <td class="center" style="white-space: nowrap">{{ column }}</td>
+              <td class="center">{{ column }}</td>
             {% endfor %}
 
             {% if student.totalAbsences >= 0 %}
@@ -97,6 +98,7 @@
               <td class="center">{{ student.totalAbsences }}</td>
               <td class="center">{{ student.lessonAbsencePercentage }}</td>
               <td class="center">{{ student.withoutReasonAbsences }}</td>
+              <td class="center">{{ student.withoutReasonAbsencesPercentage }}</td>
               <td class="center">{{ student.withReasonAbsences }}</td>
               <td class="center">{{ student.beingLate }}</td>
               {% if content.showAverageGrade %}

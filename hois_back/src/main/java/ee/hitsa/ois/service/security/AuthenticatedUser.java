@@ -39,6 +39,7 @@ public class AuthenticatedUser implements Serializable {
     private Boolean hasSchoolRole;
     private Boolean inApplicationCommittee;
     private Boolean mustAgreeWithToS;
+    private Long curriculumVersion;
 
     public AuthenticatedUser(String name, Long person, Long user, String roleCode, Long student, Long teacher,
             Integer sessionTimeoutInSeconds) {
@@ -219,6 +220,14 @@ public class AuthenticatedUser implements Serializable {
 
     public void setInApplicationCommittee(Boolean inApplicationCommittee) {
         this.inApplicationCommittee = inApplicationCommittee;
+    }
+
+    public Long getCurriculumVersion() {
+        return curriculumVersion;
+    }
+
+    public void setCurriculumVersion(Long curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
     }
 
 }

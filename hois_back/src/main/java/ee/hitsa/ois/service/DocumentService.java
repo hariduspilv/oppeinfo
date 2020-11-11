@@ -309,11 +309,15 @@ public class DocumentService {
                 + "join directive d on d.id = ds.directive_id "
                 + "join diploma dip on dip.directive_id = ds.directive_id and dip.student_id = ds.student_id "
                 + "left join form dip_f on dip_f.id = dip.form_id "
+                    // case when form has been defected not through duplicates
+                    + "and (dip.status_code != ?2 or dip_f.status_code != ?3)"
                 + "left join diploma_supplement sup on sup.diploma_id = dip.id "
                 + "where ds.student_id in (?1) "
                 + "group by dip.id, dip_f.full_code "
                 + "order by dip.diploma_id desc nulls last")
                 .setParameter(1, studentIds)
+                .setParameter(2, DocumentStatus.LOPUDOK_STAATUS_K.name())
+                .setParameter(3, FormStatus.LOPUBLANKETT_STAATUS_R.name())
                 .getResultList();
         
         return results.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> r, Collectors.toList())));
@@ -380,7 +384,7 @@ public class DocumentService {
                 }).collect(Collectors.toList()));
                 // Excel data
                 fillExcelDocumentData(dto.getDiplomaNrs(), code -> dto.setDiplomaNr(code), code -> dto.setDiplomaCancelledNr(code));
-                
+
                 LinkedList<Long> supplementEtIds = diplomas.stream().flatMap(d -> resultAsStringList(d, 6, ";").stream())
                         .map(Long::valueOf).distinct().collect(Collectors.toCollection(LinkedList::new));
                 LinkedList<Long> supplementEnIds = diplomas.stream().flatMap(d -> resultAsStringList(d, 7, ";").stream())
@@ -439,9 +443,9 @@ public class DocumentService {
             StringBuilder sb = new StringBuilder();
             if (doc.getFullCode() != null) {
                 sb.append(doc.getFullCode());
-            }
-            if (Boolean.TRUE.equals(doc.getDuplicate())) {
-                sb.append(" (dupl)");
+                if (Boolean.TRUE.equals(doc.getDuplicate())) {
+                    sb.append(" (dupl)");
+                }
             }
             return sb.toString();
         }).orElse(null));

@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web;
 
+import java.util.Collections;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -63,7 +65,7 @@ public class MidtermTaskController {
     (HoisUserDetails user, SubjectStudyPeriodSearchCommand criteria, Pageable pageable, 
             @NotNull @PathVariable("id") Long subjectStudyPeriodId) {
         if(user.isTeacher()) {
-            criteria.setTeacher(user.getTeacherId());
+            criteria.setTeacher(Collections.singletonList(user.getTeacherId()));
         }
         return midtermTaskService.searchSubjectStudyPeriods(subjectStudyPeriodId, criteria, pageable);
     }

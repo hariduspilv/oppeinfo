@@ -21,6 +21,8 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
     private CurriculumVersionResult curriculumVersion;
     private String studentGroup;
     private String status;
+    private String submittedBy;
+    private LocalDate submitted;
     private String confirmedBy;
     private LocalDateTime confirmed;
     private Boolean isVocational;
@@ -56,7 +58,7 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
             return null;
         }
         ApelApplicationDto dto = EntityUtil.bindToDto(application, new ApelApplicationDto(), "student", "record",
-                "files", "confirmedBy");
+                "files", "confirmedBy", "submittedBy");
         dto.setStudent(AutocompleteResult.of(application.getStudent(), false));
         if (application.getStudent() != null && application.getStudent().getStudentGroup() != null) {
             dto.setStudentGroup(application.getStudent().getStudentGroup().getCode());
@@ -66,6 +68,7 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
         dto.setComments(StreamUtil.toMappedList(ApelApplicationCommentDto::of, application.getComments()));
         dto.setFiles(StreamUtil.toMappedList(ApelApplicationFileDto::of, application.getFiles()));
         dto.setConfirmedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(application.getConfirmedBy()));
+        dto.setSubmittedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(application.getSubmittedBy()));
         return dto;
     }
 
@@ -332,6 +335,22 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
 
     public void setStudentGroup(String studentGroup) {
         this.studentGroup = studentGroup;
+    }
+
+    public String getSubmittedBy() {
+        return submittedBy;
+    }
+
+    public void setSubmittedBy(String submittedBy) {
+        this.submittedBy = submittedBy;
+    }
+
+    public LocalDate getSubmitted() {
+        return submitted;
+    }
+
+    public void setSubmitted(LocalDate submitted) {
+        this.submitted = submitted;
     }
 
 }

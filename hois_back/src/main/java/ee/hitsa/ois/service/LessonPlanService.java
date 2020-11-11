@@ -7,12 +7,14 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,6 +99,8 @@ import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchTeacherCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeResult;
+import ee.hitsa.ois.web.dto.lessonPlan.LessonPlanXlsCapacityDto;
+import ee.hitsa.ois.web.dto.lessonPlan.LessonPlanXlsTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanByTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanByTeacherDto.LessonPlanByTeacherSubjectDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanByTeacherDto.LessonPlanByTeacherSubjectStudentGroupDto;
@@ -455,6 +459,8 @@ public class LessonPlanService {
         journalCopy.setGroupProportion(journal.getGroupProportion());
         journalCopy.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
         journalCopy.setAddModuleOutcomes(journal.getAddModuleOutcomes());
+        journalCopy.setAddStudents(journal.getAddStudents());
+        journalCopy.setIsIndividual(journal.getIsIndividual());
         journalCopy.setUntisCode(journal.getUntisCode());
 
         copyPreviousLessonPlanJournalCapacities(journal, journalCopy);
@@ -632,7 +638,7 @@ public class LessonPlanService {
         qb.requiredCriteria("lp.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
         qb.optionalCriteria("cv.school_department_id = :schoolDepartmentId", "schoolDepartmentId", criteria.getSchoolDepartment());
         qb.optionalCriteria("lp.curriculum_version_id = :curriculumVersionId", "curriculumVersionId", criteria.getCurriculumVersion());
-        qb.optionalCriteria("lp.student_group_id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
+        qb.optionalCriteria("lp.student_group_id in (:studentGroupIds)", "studentGroupIds", criteria.getStudentGroup());
         
         if (criteria.getTeacher() != null) {
             qb.requiredCriteria("lp.id in (select lp.id from lesson_plan lp "
@@ -640,7 +646,7 @@ public class LessonPlanService {
                     + "join journal_omodule_theme jot on lpm.id = jot.lesson_plan_module_id "
                     + "join journal j on jot.journal_id = j.id "
                     + "join journal_teacher jt on j.id = jt.journal_id "
-                    + "where jt.teacher_id = :teacherId)", "teacherId", criteria.getTeacher());
+                    + "where jt.teacher_id in (:teacherIds))", "teacherIds", criteria.getTeacher());
         }
         
         String select = "lp.id, sg.code as student_group_code, cv.code, (select coalesce(sum(jc.hours * (1 / cast(c.value as numeric))), 0) "
@@ -764,7 +770,7 @@ public class LessonPlanService {
         if (user.isTeacher()) {
             qb.requiredCriteria("t.id = :teacherId", "teacherId", user.getTeacherId());
         } else {
-            qb.optionalCriteria("t.id = :teacherId", "teacherId", criteria.getTeacher());
+            qb.optionalCriteria("t.id in (:teacherId)", "teacherId", criteria.getTeacher());
         }
         qb.requiredCriteria("t.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.parameter("studyYear", criteria.getStudyYear());
@@ -1668,6 +1674,208 @@ public class LessonPlanService {
         data.put("subjectTotals", dto.getSubjectTotals());
         
         return xlsService.generate("lessonplanbyteacher.xls", data);
+    }
+    
+    public byte[] summaryLessonPlan(LessonPlanSearchCommand criteria, HoisUserDetails user) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
+                "from lesson_plan lp "
+                + "join student_group sg on lp.student_group_id = sg.id "
+                + "join curriculum_version cv on lp.curriculum_version_id = cv.id "
+                + "join curriculum c on cv.curriculum_id = c.id "
+                + "left join school_department sd on cv.school_department_id = sd.id "
+                + "join lesson_plan_module lpm on lp.id = lpm.lesson_plan_id "
+                + "join curriculum_version_omodule cvo on cvo.id = lpm.curriculum_version_omodule_id "
+                + "join curriculum_module cm on cvo.curriculum_module_id = cm.id "
+                + "join (select distinct j.id, jot.lesson_plan_module_id, j.group_proportion_code, j.name_et "
+                    + "from journal_omodule_theme jot "
+                    + "join journal j on jot.journal_id = j.id) j on j.lesson_plan_module_id = lpm.id "
+                + "join classifier g_prop on g_prop.code = j.group_proportion_code "
+                + "join journal_teacher jt on j.id = jt.journal_id "
+                + "join teacher t on jt.teacher_id = t.id "
+                + "join person p on t.person_id = p.id");
+
+        if (user.isLeadingTeacher() && !Boolean.TRUE.equals(criteria.getByTeacher())) {
+            qb.requiredCriteria("c.id in (:userCurriculumIds)", "userCurriculumIds",
+                    user.getCurriculumIds());
+        }
+        qb.requiredCriteria("lp.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("lp.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
+        qb.optionalCriteria("lp.student_group_id in (:studentGroupIds)", "studentGroupIds", criteria.getStudentGroup());
+        qb.optionalCriteria("lp.curriculum_version_id = :curriculumVersionId", "curriculumVersionId", criteria.getCurriculumVersion());
+        qb.optionalCriteria("cv.school_department_id = :schoolDepartmentId", "schoolDepartmentId", criteria.getSchoolDepartment());
+        if (user.isTeacher()) {
+            qb.requiredCriteria("jt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+        } else {
+            qb.optionalCriteria("jt.teacher_id in (:teacherIds)", "teacherIds", criteria.getTeacher());
+        }
+        qb.sort("sg.code, cm.name_et, j.name_et");
+        List<?> journals = qb.select(
+                "lp.id as planId, j.id as journalId, j.name_et as journalEt, "
+                + "sd.id as departmentId, sd.name_et as departmentEt, sd.name_en as departmentEn, "
+                // HTM code    group proportion
+                + "c.mer_code, g_prop.name_et as proportionEt, jt.id as teacherId, p.firstname || ' ' || p.lastname, "
+                + "sg.id, sg.code as groupCode, cm.id as moduleId, cm.name_et as moduleEt, cm.name_en as moduleEn, "
+                + "c.id as curriculumId, c.name_et as curriculumEt, c.name_en as curriculumEn"
+                , em).getResultList();
+        Set<Long> lessonPlanIds = journals.stream().map(p -> resultAsLong(p, 0)).collect(Collectors.toSet());
+        List<ClassifierDto> schoolCapacities = lessonPlanSchoolCapacityTypeDtos(user.getSchoolId(), Boolean.FALSE);
+        // add missing journal capacities if school capacities where changed but lesson plan still contains them
+        Set<String> additionalJournalCapacities = getJournalCapacitiesFromLessonPlan(lessonPlanIds, criteria, user);
+        addMissingJournalCapacities(schoolCapacities, additionalJournalCapacities);
+        schoolCapacities.sort(Comparator.comparing(ClassifierDto::getNameEt, String.CASE_INSENSITIVE_ORDER));
+        List<String> defaultSort = schoolCapacities.stream().map(ClassifierDto::getValue).collect(Collectors.toList());
+        // map of journal teacher id, student group id and capacity dto
+        Map<Long, Map<Long, List<LessonPlanXlsCapacityDto>>> capacitiesPerJournalTeacherId = teacherCapacities(criteria, schoolCapacities, lessonPlanIds, user);
+        ClassifierDto contactLesson = new ClassifierDto();
+        contactLesson.setValue("kt");
+        schoolCapacities.add(contactLesson);
+        List<LessonPlanXlsTeacherDto> teachers = StreamUtil.toMappedList(r -> {
+            LessonPlanXlsTeacherDto dto = new LessonPlanXlsTeacherDto();
+            dto.setLessonPlanId(resultAsLong(r, 0));
+            dto.setJournal(new AutocompleteResult(resultAsLong(r, 1), resultAsString(r, 2), resultAsString(r, 2)));
+            dto.setDepartment(new AutocompleteResult(resultAsLong(r, 3), resultAsString(r, 4), resultAsString(r, 5)));
+            dto.setMerCode(resultAsString(r, 6));
+            dto.setProportion(resultAsString(r, 7));
+            dto.setTeacher(new AutocompleteResult(resultAsLong(r, 8), resultAsString(r, 9), resultAsString(r, 9)));
+            Map<Long, List<LessonPlanXlsCapacityDto>> capacitiesPerStudentGroup = capacitiesPerJournalTeacherId.get(resultAsLong(r, 8));
+            if (capacitiesPerStudentGroup != null) {
+                List<LessonPlanXlsCapacityDto> capacities = capacitiesPerStudentGroup.get(resultAsLong(r, 10));
+                if (capacities != null) {
+                    setCapacitySummaries(dto, capacities);
+                    capacities.sort(Comparator.comparing(LessonPlanXlsCapacityDto::getStudyPeriodStart)
+                            .thenComparing(Comparator.comparingInt(item -> defaultSort.indexOf(item.getCapacityType()))));
+                    Map<Long, List<LessonPlanXlsCapacityDto>> capacietiesPerStudyPeriod = capacities.stream().collect(Collectors.groupingBy(o -> o.getStudyPeriod().getId(), LinkedHashMap::new, 
+                            Collectors.mapping(s -> s, Collectors.toList())));
+                    Iterator<Map.Entry<Long, List<LessonPlanXlsCapacityDto>>> iterator = capacietiesPerStudyPeriod.entrySet().iterator();
+                    while (iterator.hasNext()) {
+                        Map.Entry<Long, List<LessonPlanXlsCapacityDto>> pair = iterator.next();
+                        LessonPlanXlsCapacityDto copyable = pair.getValue().get(0);
+                        LessonPlanXlsCapacityDto newCapacity = createNewCapacity(copyable, pair.getValue());
+                        pair.getValue().add(newCapacity);
+                    }
+                    capacities = capacietiesPerStudyPeriod.entrySet().stream().flatMap(p -> p.getValue().stream()).collect(Collectors.toList());
+                    dto.setCapacities(capacities);
+                }
+            }
+            dto.setStudentGroup(new AutocompleteResult(resultAsLong(r, 10), resultAsString(r, 11), resultAsString(r, 11)));
+            dto.setModule(new AutocompleteResult(resultAsLong(r, 12), resultAsString(r, 13), resultAsString(r, 14)));
+            dto.setCurriculum(new AutocompleteResult(resultAsLong(r, 15), resultAsString(r, 16), resultAsString(r, 17)));
+            return dto;
+        }, journals);
+        Map<String, Object> data = new HashMap<>();
+        StudyYear studyYear = em.getReference(StudyYear.class, criteria.getStudyYear());
+        data.put("teachers", teachers);
+        data.put("capacities", schoolCapacities);
+        data.put("studyPeriods", studyYear.getStudyPeriods().stream()
+                .sorted(Comparator.comparing(StudyPeriod::getStartDate))
+                .map(p -> new AutocompleteResult(p.getId(), p.getNameEt(), p.getNameEn())).collect(Collectors.toList()));
+        return xlsService.generate("lessonplansummary.xls", data);
+    }
+    
+    private static void setCapacitySummaries(LessonPlanXlsTeacherDto dto, List<LessonPlanXlsCapacityDto> capacities) {
+        Long capacitiesSum = Long.valueOf(capacities.stream()
+                .filter(p -> p.getHours() != null)
+                .mapToInt(p -> p.getHours().intValue()).sum());
+        Long contactCapacitiesSum = Long.valueOf(capacities.stream()
+                .filter(p -> p.getHours() != null && Boolean.TRUE.equals(p.getIsContact()))
+                .mapToInt(p -> p.getHours().intValue()).sum());
+        BigDecimal sumWithLoad = capacities.stream().filter(p -> p.getHoursWithLoad() != null).map(p -> p.getHoursWithLoad()).reduce(BigDecimal.ZERO, BigDecimal::add);
+        dto.setCapacitiesSum(capacitiesSum);
+        dto.setContactCapacitiesSum(contactCapacitiesSum);
+        dto.setSumWithLoad(sumWithLoad);
+    }
+
+    public static LessonPlanXlsCapacityDto createNewCapacity(LessonPlanXlsCapacityDto copyable,
+            List<LessonPlanXlsCapacityDto> list) {
+        LessonPlanXlsCapacityDto newCapacity = new LessonPlanXlsCapacityDto();
+        newCapacity.setCapacityType("kt");
+        newCapacity.setStudyPeriod(copyable.getStudyPeriod());
+        newCapacity.setStudyPeriodStart(copyable.getStudyPeriodStart());
+        newCapacity.setHours(Long.valueOf(list.stream()
+                .filter(p -> p.getHours() != null && Boolean.TRUE.equals(p.getIsContact()))
+                .mapToInt(p -> p.getHours().intValue()).sum()));
+        return newCapacity;
+    }
+
+    private Set<String> getJournalCapacitiesFromLessonPlan(Set<Long> lessonPlanIds, LessonPlanSearchCommand criteria, HoisUserDetails user) {
+        if (lessonPlanIds == null || lessonPlanIds.isEmpty()) {
+            return new HashSet<>();
+        }
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
+                "from lesson_plan lp "
+                + "join lesson_plan_module lpm on lp.id = lpm.lesson_plan_id "
+                + "join journal_omodule_theme jot on lpm.id = jot.lesson_plan_module_id "
+                + "join journal j on jot.journal_id = j.id "
+                + "join journal_teacher jt on j.id = jt.journal_id "
+                + "left join journal_teacher_capacity jtc on j.is_capacity_diff = true and jtc.journal_teacher_id = jt.id "
+                + "left join journal_capacity jc on j.is_capacity_diff is not true and jc.journal_id = j.id "
+                + "join journal_capacity_type jct on ((jct.id = jtc.journal_capacity_type_id and j.is_capacity_diff = true) "
+                    + "or (jtc.id = jc.journal_capacity_type_id and j.is_capacity_diff is not true))");
+
+        qb.requiredCriteria("lp.id in (:lessonPlanIds)", "lessonPlanIds", lessonPlanIds);
+        if (user.isTeacher()) {
+            qb.requiredCriteria("jt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+        } else {
+            qb.optionalCriteria("jt.teacher_id in (:teacherIds)", "teacherIds", criteria.getTeacher());
+        }
+        
+        List<?> additionalCapacities = qb.select("distinct jct.capacity_type_code", em).getResultList();
+        return additionalCapacities.stream().map(p -> resultAsString(p, 0)).collect(Collectors.toSet());
+    }
+
+    private Map<Long, Map<Long, List<LessonPlanXlsCapacityDto>>> teacherCapacities(LessonPlanSearchCommand criteria, 
+            List<ClassifierDto> schoolCapacities, Set<Long> lessonPlanIds, HoisUserDetails user) {
+        if (lessonPlanIds == null || lessonPlanIds.isEmpty() || schoolCapacities == null || schoolCapacities.isEmpty()) {
+            return new LinkedHashMap<>();
+        }
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
+                "from study_year sy "
+                + "join lesson_plan lp on sy.id = lp.study_year_id "
+                + "join lesson_plan_module lpm on lp.id = lpm.lesson_plan_id "
+                + "join (select distinct j.id, jot.lesson_plan_module_id, j.group_proportion_code, j.name_et, j.is_capacity_diff "
+                    + "from journal_omodule_theme jot "
+                    + "join journal j on jot.journal_id = j.id) j on j.lesson_plan_module_id = lpm.id "
+                + "join journal_teacher jt on j.id = jt.journal_id "
+                + "join study_period sp on sp.study_year_id = sy.id "
+                + "join classifier c_type on c_type.code in (:capacityTypes) "
+                + "left join (select jtc.hours, jct.capacity_type_code, jtc.journal_teacher_id, jtc.study_period_id "
+                    + "from journal_teacher_capacity jtc "
+                    + "join journal_capacity_type jct on jct.id = jtc.journal_capacity_type_id"
+                    + ") teacherCap on j.is_capacity_diff = true and teacherCap.journal_teacher_id = jt.id and sp.id = teacherCap.study_period_id and c_type.code = teacherCap.capacity_type_code "
+                + "left join (select jc.hours, jc.journal_id, jc.study_period_id, jct.capacity_type_code "
+                    + "from journal_capacity jc "
+                    + "join journal_capacity_type jct on jct.id = jc.journal_capacity_type_id"
+                    + ") journalCap on j.is_capacity_diff is not true and journalCap.journal_id = j.id and sp.id = journalCap.study_period_id and c_type.code = journalCap.capacity_type_code "
+                + "left join school_capacity_type sct on sct.capacity_type_code = c_type.code and sct.school_id = lp.school_id and sct.is_higher is not true "
+                + "left join school_capacity_type_load sctl on sctl.school_capacity_type_id = sct.id and sctl.study_year_id = sy.id");
+
+        qb.requiredCriteria("lp.id in (:lessonPlanIds)", "lessonPlanIds", lessonPlanIds);
+        if (user.isTeacher()) {
+            qb.requiredCriteria("jt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
+        } else {
+            qb.optionalCriteria("jt.teacher_id in (:teacherIds)", "teacherIds", criteria.getTeacher());
+        }
+
+        qb.requiredCriteria("sy.id = :studyYearId", "studyYearId", criteria.getStudyYear());
+        qb.parameter("capacityTypes", schoolCapacities.stream().map(p -> p.getCode()).collect(Collectors.toList()));
+        qb.groupBy( "journalTeacherId, periodId, periodEt, periodStart, "
+                + "sct.is_contact, capacityType, groupId, sctl.load_percentage");
+        List<?> data = qb.select(
+                "jt.id as journalTeacherId, sp.id as periodId, sp.name_et as periodEt, sp.start_date as periodStart, "
+                + "sum(coalesce(teacherCap.hours, journalCap.hours)) as hours, sct.is_contact, c_type.value as capacityType, "
+                + "lp.student_group_id as groupId, coalesce(sctl.load_percentage, 100) * coalesce(sum(coalesce(teacherCap.hours, journalCap.hours)), 0) / 100.0 as hoursWithLoad",
+                em).getResultList();
+        return data.stream()
+                .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.groupingBy(r -> resultAsLong(r, 7), LinkedHashMap::new, Collectors.mapping(r -> {
+                    LessonPlanXlsCapacityDto dto = new LessonPlanXlsCapacityDto();
+                    dto.setStudyPeriod(new AutocompleteResult(resultAsLong(r, 1), resultAsString(r, 2), resultAsString(r, 2)));
+                    dto.setStudyPeriodStart(resultAsLocalDate(r, 3));
+                    dto.setHours(resultAsLong(r, 4));
+                    dto.setIsContact(resultAsBoolean(r, 5));
+                    dto.setCapacityType(resultAsString(r, 6));
+                    dto.setHoursWithLoad(resultAsDecimal(r, 8));
+                    return dto;
+                }, Collectors.toList()))));
     }
 
     private static List<LessonPlanXlsJournalDto> lessonplanExcelJournals(LessonPlanByTeacherDto dto) {

@@ -53,9 +53,10 @@
             <label>{{'module.independentStudyDescription' | translate}}</label>
             <textarea ng-model="occupationModule.independentStudyEt" max-rows="2" readonly></textarea>
           </md-input-container>
-          <md-input-container flex>
+          <div style="height: 20px"></div>
+          <md-input-container flex class="readonly">
             <label>{{'module.studyMaterials' | translate}}</label>
-            <textarea ng-model="occupationModule.studyMaterials" max-rows="2" readonly></textarea>
+            <hois-value value="occupationModule.studyMaterials" hois-linky></hois-value>
           </md-input-container>
           <div>&nbsp;</div>
           <fieldset tabindex="2" layout="column" style="overflow:auto">

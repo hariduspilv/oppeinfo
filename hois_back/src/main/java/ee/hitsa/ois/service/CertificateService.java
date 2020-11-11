@@ -161,12 +161,11 @@ public class CertificateService {
         if(!certificateValidationService.canEditContent(user, EntityUtil.getCode(certificate.getType()))) {
             SchoolType schoolType = schoolService.schoolType(user.getSchoolId());
             boolean isHigherSchool = schoolType.isHigher();
-            boolean isOnlyHigherSchool = schoolType.isHigher() && !schoolType.isVocational();
             Language lang = Boolean.FALSE.equals(form.getEstonian()) ? Language.EN : Language.ET;
             certificate.setContent(certificateContentService.generate(certificate.getStudent(),
                     CertificateType.valueOf(form.getType()), Boolean.TRUE.equals(form.getShowModules()),
                     Boolean.TRUE.equals(form.getAddOutcomes()), Boolean.TRUE.equals(form.getShowUncompleted()),
-                    isHigherSchool, isOnlyHigherSchool, lang));
+                    Boolean.TRUE.equals(form.getStateGradingSchema()), isHigherSchool, lang));
         }
         return save(user, certificate, form);
     }

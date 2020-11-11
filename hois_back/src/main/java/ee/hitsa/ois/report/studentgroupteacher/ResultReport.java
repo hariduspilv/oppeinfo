@@ -3,6 +3,7 @@ package ee.hitsa.ois.report.studentgroupteacher;
 import java.time.LocalDate;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.GradeDto;
 
 public class ResultReport {
 
@@ -12,7 +13,9 @@ public class ResultReport {
     private String fullname;
     private AutocompleteResult journal;
     private String entryType;
+    private GradeDto gradeDto;
     private String grade;
+    private String verbalGrade;
     private LocalDate gradeInserted;
     private String gradeInsertedBy;
     private Boolean isPracticeJournal;
@@ -57,12 +60,28 @@ public class ResultReport {
         this.entryType = entryType;
     }
 
+    public GradeDto getGradeDto() {
+        return gradeDto;
+    }
+
+    public void setGradeDto(GradeDto gradeDto) {
+        this.gradeDto = gradeDto;
+    }
+
     public String getGrade() {
         return grade;
     }
 
     public void setGrade(String grade) {
         this.grade = grade;
+    }
+
+    public String getVerbalGrade() {
+        return verbalGrade;
+    }
+
+    public void setVerbalGrade(String verbalGrade) {
+        this.verbalGrade = verbalGrade;
     }
 
     public LocalDate getGradeInserted() {

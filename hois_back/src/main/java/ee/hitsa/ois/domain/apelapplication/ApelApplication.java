@@ -33,8 +33,10 @@ public class ApelApplication extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier status;
 
-    private String confirmedBy;
+    private LocalDate submitted;
+    private String submittedBy;
     private LocalDateTime confirmed;
+    private String confirmedBy;
     private Boolean isVocational;
     private String decision;
 
@@ -187,5 +189,21 @@ public class ApelApplication extends BaseEntityWithId {
 
     public void setOutcomeResults(List<StudentCurriculumModuleOutcomesResult> outcomeResults) {
         this.outcomeResults = outcomeResults;
+    }
+
+    public String getSubmittedBy() {
+        return submittedBy;
+    }
+
+    public void setSubmittedBy(String submittedBy) {
+        this.submittedBy = submittedBy;
+    }
+
+    public LocalDate getSubmitted() {
+        return submitted;
+    }
+
+    public void setSubmitted(LocalDate submitted) {
+        this.submitted = submitted;
     }
 }

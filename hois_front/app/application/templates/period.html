@@ -31,11 +31,11 @@
   <div flex>
     <md-input-container>
       <label>{{labelStart | translate}}</label>
-      <hois-select ng-model="application.studyPeriodStart" values="studyPeriods" show-property="display" ng-required="application.isPeriod"></hois-select>
+      <hois-select ng-model="application.studyPeriodStart" values="studyPeriods" sorted-query="true" show-property="display" ng-required="application.isPeriod"></hois-select>
     </md-input-container>
     <md-input-container style="margin-left: 0px" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
       <label>{{labelEnd | translate}}</label>
-      <hois-select ng-model="application.studyPeriodEnd" values="studyPeriods" show-property="display" ng-required="application.isPeriod"></hois-select>
+      <hois-select ng-model="application.studyPeriodEnd" values="studyPeriods" sorted-query="true" show-property="display" ng-required="application.isPeriod"></hois-select>
     </md-input-container>
   </div>
 </div>

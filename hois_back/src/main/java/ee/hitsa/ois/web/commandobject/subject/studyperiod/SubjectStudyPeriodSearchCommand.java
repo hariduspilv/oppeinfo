@@ -12,12 +12,13 @@ public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     private EntityConnectionCommand studentGroupObject;
     private EntityConnectionCommand curriculumObject;
     private List<Long> studyPeriods;
-    private Long studentGroup;
+    private List<Long> studentGroup;
     private Long student;
     private Long studyPeriod;
+    private Long studyYear;
     private EntityConnectionCommand curriculum;
     private Long department;
-    private Long teacher;
+    private List<Long> teacher;
     private Long subject;
     private String programStatus;
 
@@ -51,29 +52,11 @@ public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     public void setDepartment(Long department) {
         this.department = department;
     }
-    public Long getTeacher() {
-        return teacher;
-    }
-    public void setTeacher(Long teacher) {
-        this.teacher = teacher;
-    }
-    public Long getStudentGroup() {
-        return studentGroup;
-    }
-    public void setStudentGroup(Long studentGroup) {
-        this.studentGroup = studentGroup;
-    }
     public EntityConnectionCommand getSubjectObject() {
         return subjectObject;
     }
     public void setSubjectObject(EntityConnectionCommand subjectObject) {
         this.subjectObject = subjectObject;
-    }
-    public EntityConnectionCommand getTeacherObject() {
-        return teacherObject;
-    }
-    public void setTeacherObject(EntityConnectionCommand teacherObject) {
-        this.teacherObject = teacherObject;
     }
     public List<Long> getStudyPeriods() {
         return studyPeriods;
@@ -98,5 +81,29 @@ public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     }
     public void setCurriculumObject(EntityConnectionCommand curriculumObject) {
         this.curriculumObject = curriculumObject;
+    }
+    public List<Long> getStudentGroup() {
+        return studentGroup;
+    }
+    public void setStudentGroup(List<Long> studentGroup) {
+        this.studentGroup = studentGroup;
+    }
+    public EntityConnectionCommand getTeacherObject() {
+        return teacherObject;
+    }
+    public void setTeacherObject(EntityConnectionCommand teacherObject) {
+        this.teacherObject = teacherObject;
+    }
+    public List<Long> getTeacher() {
+        return teacher;
+    }
+    public void setTeacher(List<Long> teacher) {
+        this.teacher = teacher;
+    }
+    public Long getStudyYear() {
+        return studyYear;
+    }
+    public void setStudyYear(Long studyYear) {
+        this.studyYear = studyYear;
     }
 }

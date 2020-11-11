@@ -1,6 +1,6 @@
 <md-nav-bar md-selected-nav-item="currentNavItem" ng-if="formState.vocational && (auth.isAdmin() || auth.isLeadingTeacher())">
-  <md-nav-item ng-if="formState.vocational" md-nav-href="#/lessonplans/vocational" name="lessonplan.vocational">{{'lessonplan.search.vocational' | translate}}</md-nav-item>
-  <md-nav-item ng-if="formState.vocational" md-nav-href="#/lessonplans/vocational/byteacher" name="lessonplan.vocational-byteacher">
+  <md-nav-item ng-if="formState.vocational" md-nav-href="#/lessonplans/vocational?_menu" name="lessonplan.vocational">{{'lessonplan.search.vocational' | translate}}</md-nav-item>
+  <md-nav-item ng-if="formState.vocational" md-nav-href="#/lessonplans/vocational/byteacher?_menu" name="lessonplan.vocational-byteacher">
     {{auth.higher ? ('lessonplan.search.vocationalByTeacherHigher' | translate) : ('lessonplan.search.vocationalByTeacherVocational' | translate)}}</md-nav-item>
 <!--  <md-nav-item ng-if="formState.higher" md-nav-href="#/lessonplans/higher" name="lessonplan.higher">{{'lessonplan.higher' | translate}}</md-nav-item>
   <md-nav-item ng-if="formState.higher" md-nav-href="#/lessonplans/higher/byteacher" name="lessonplan.higher-byteacher">{{'lessonplan.higher-byteacher' | translate}}</md-nav-item>  -->
@@ -18,13 +18,21 @@
           </md-input-container>
 
           <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="auth.isAdmin()">
-            <hois-autocomplete ha-attribute="id" ha-controller="directiveControllers" label="{{auth.higher ? 'lessonplan.teacherHigher' : 'lessonplan.teacherVocational'}}" ng-model="criteria.teacher" method="teachers"></hois-autocomplete>
+            <hois-autocomplete ha-controller="directiveControllers" 
+            label="{{auth.higher ? 'lessonplan.teacherHigher' : 'lessonplan.teacherVocational'}}" ng-model="criteria.teacherObject" 
+            method="teachers" multiple></hois-autocomplete>
           </div>
         </div>
 
         <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()" ng-if="auth.isAdmin()">{{'main.button.clear' | translate}}</md-button>
+          <md-button ng-if="auth.vocational" ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised"
+            ng-disabled="!vocationalTeacherSearchForm.$valid">{{
+              (auth.higher && auth.vocational ? 'subjectStudyPeriod.printXlsSummaryVocational' : 'subjectStudyPeriod.printXlsSummary') | translate}}</md-button>
+          <md-button ng-if="auth.higher && auth.isTeacher()" ng-href="{{excel(formState.xlsUrlHigher, criteria)}}" target="_blank" class="md-button md-raised"
+            ng-disabled="!vocationalTeacherSearchForm.$valid">{{
+              (auth.higher && auth.vocational ? 'subjectStudyPeriod.printXlsSummaryHigher' : 'subjectStudyPeriod.printXlsSummary') | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>

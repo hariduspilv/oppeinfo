@@ -5,7 +5,7 @@
             <tbody md-body>
                 <tr md-row ng-repeat-start="row in unreadMessages.content" ng-click="readMessage(row)" ng-style="{'cursor': row.content ? 'pointer' : 'default'}" ng-init="$last && pageLoadingHandler.setFinish('unreadMessages')">
                     <td md-cell width="10%">{{::row.dateSent | hoisDateTime}}</td>
-                    <td md-cell width="75%"><p style="color: rgb(13, 71, 161);">{{::row.subject}}</p></td>
+                    <td md-cell width="75%"><p style="color: rgb(13, 71, 161);" ng-bind-html="row.subject | linky: '_blank'"></p></td>
                     <td md-cell>
                         <md-button style="margin: 0;" ng-if="row.content">
                             <md-icon md-font-set="material-icons md-dark">
@@ -18,7 +18,7 @@
                     <td style="border: none"></td>
                     <td md-cell style="border: none">
                         <div>
-                            <pre>{{::row.content}}</pre>
+                            <pre ng-bind-html="row.content | linkyWithHtml"></pre>
                             <p>{{'message.messageSender' | translate}}: {{::row.sender}}</p>
                         </div>
                         <md-button class="md-primary btn-respond" ng-href="/#/message/{{row.id}}/respond?backUrl=home" ng-if="row.sendersId !== -1">

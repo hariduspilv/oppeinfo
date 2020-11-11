@@ -277,15 +277,12 @@ angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '
           });
         }
       }
-      if (type === 'KASKKIRI_VALIS') {
+      if (type === 'KASKKIRI_VALIS' || type === 'KASKKIRI_AKAD') {
         $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query({}, function (response) {
           response.forEach(function (studyPeriod) {
             studyPeriod.display = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
           });
         });
-      }
-      if(type === 'KASKKIRI_AKAD') {
-        $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query();
       }
     }
 

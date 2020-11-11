@@ -11,7 +11,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_VOTA, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_VOTAKOM]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_VOTA, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_VOTAKOM],
+          studentCurriculumRequired: true
         }
       })
       .when('/apelApplication/new', {
@@ -26,7 +27,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         data: {
           authorizedRoles: function (Session, roles) {
             return roles.indexOf(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_VOTA) !== -1 || (Session.roleCode !== 'ROLL_A' && roles.indexOf(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_VOTA) !== -1);
-          }
+          },
+          studentCurriculumRequired: true
         }
       })
       .when('/apelApplication/:id/edit', {

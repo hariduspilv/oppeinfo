@@ -24,6 +24,7 @@ angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($
 
   var gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.VOCATIONAL);
   $q.all(gradingSchema.promises).then(function () {
+    $scope.existsSchoolGradingSchema = gradingSchema.existsSchoolGradingSchema();
     gradeMapper = gradingSchema.gradeMapper(gradingSchema.gradeSelection(), ['journalResults']);
   });
 
@@ -35,13 +36,33 @@ angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($
     } else {
       $scope.formState.curriculumVersionOccupationModule = undefined;
     }
+    $scope.formState.studentGroup = undefined;
     if ($scope.formState.curriculumVersion) {
       $scope.formState.curriculumVersionOccupationModules = QueryUtils.endpoint('/moduleProtocols/occupationModules/' + $scope.formState.curriculumVersion).query();
+      $scope.formState.studentGroups = QueryUtils.endpoint('/moduleProtocols/studentGroups/' + $scope.formState.curriculumVersion).query();
     }
   });
 
   $scope.curriculumVersionOccupationModuleChange = function () {
-    var query = QueryUtils.endpoint('/moduleProtocols/occupationModule/' + $scope.formState.studyYear + '/' + $scope.formState.curriculumVersionOccupationModule).get();
+    var query = QueryUtils.endpoint('/moduleProtocols/occupationModule/' +
+      $scope.formState.studyYear + '/' +
+      $scope.formState.curriculumVersionOccupationModule +
+      (!!$scope.formState.studentGroup ? '?studentGroupId=' + $scope.formState.studentGroup : '')).get();
+    loadStudents(query);
+  };
+
+  $scope.studentGroupChange = function () {
+    if (!$scope.formState.curriculumVersionOccupationModule) {
+      return;
+    }
+    var query = QueryUtils.endpoint('/moduleProtocols/occupationModule/' +
+      $scope.formState.studyYear + '/' +
+      $scope.formState.curriculumVersionOccupationModule +
+      (!!$scope.formState.studentGroup ? '?studentGroupId=' + $scope.formState.studentGroup : '')).get();
+    loadStudents(query);
+  };
+
+  function loadStudents(query) {
     $scope.tabledata = {
       $promise: query.$promise
     };
@@ -59,7 +80,7 @@ angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($
         $scope.formState.teacher = result.teacher;
       }
     });
-  };
+  }
 
   var ModuleProtocolEndpoint = QueryUtils.endpoint('/moduleProtocols');
   $scope.submit = function () {

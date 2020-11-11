@@ -9,7 +9,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
     var Endpoint = QueryUtils.endpoint('/persons/'+personId+'/users');
 
     $scope.auth = $route.current.locals.auth;
-    $scope.multiSelects = {"OIGUS_V": false, "OIGUS_M": false, "OIGUS_K": false};
+    $scope.multiSelects = {"OIGUS_V": false, "OIGUS_M": false, "OIGUS_K": false, "OIGUS_T": false};
     $scope.noSchool = ['ROLL_P', 'ROLL_V'];
     $scope.filterValues = ['ROLL_L', 'ROLL_O', 'ROLL_T', 'ROLL_X'];
     if (!$scope.auth.isMainAdmin()) {
@@ -18,6 +18,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
     if ($scope.auth.isAdmin()) {
       $scope.filterValues.push('ROLL_V');
     }
+    $scope.showTPermissionFor = ['ROLL_A', 'ROLL_O'];
 
     $scope.objects = Classifier.queryForDropdown({mainClassCode: 'TEEMAOIGUS'});
     $scope.permissions = Classifier.queryForDropdown({mainClassCode: 'OIGUS'});
@@ -168,7 +169,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
       if ($scope.user.curriculums) {
         $scope.user.curriculums.length = 0;
       }
-      
+
       if (!!(school || {}).id) {
         // Remove admin role if user has admin role already in this school
         if ($scope.user.person.schoolAdminInSchools.indexOf(school.id) !== -1) {
@@ -408,6 +409,7 @@ angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q',
     $scope.permissions = Classifier.queryForDropdown({mainClassCode: 'OIGUS'});
     $scope.userRoleDefaults = QueryUtils.endpoint('/users/rolesDefaults').search();
     $scope.user = Endpoint.get({id: userId});
+    $scope.showTPermissionFor = ['ROLL_A', 'ROLL_O'];
 
     $scope.showPermission = function(objectCode, permCode) {
       return AuthService.isValidRolePermission($scope.user.role, objectCode, permCode) &&

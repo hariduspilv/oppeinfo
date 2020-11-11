@@ -10,17 +10,15 @@ public class PrerequisiteSubjectDto {
     private String nameEn;
     private BigDecimal credits;
     private String assessment;
-    private String grade;
+    private GradeDto grade;
     
-    public PrerequisiteSubjectDto(Long id, String code, String nameEt, String nameEn, BigDecimal credits,
-            String assessment, String grade) {
+    public PrerequisiteSubjectDto(Long id, String code, String nameEt, String nameEn, BigDecimal credits, String assessment) {
         this.id = id;
         this.code = code;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
         this.credits = credits;
         this.assessment = assessment;
-        this.grade = grade;
     }
     
     public Long getId() {
@@ -71,11 +69,11 @@ public class PrerequisiteSubjectDto {
         this.assessment = assessment;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
     
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
     

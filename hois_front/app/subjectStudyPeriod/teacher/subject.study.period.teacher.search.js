@@ -7,7 +7,10 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherSearchController
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM);
     $scope.currentNavItem = 'teachers';
 
-    $scope.formState = {xlsUrl: 'subjectStudyPeriods/teachers/searchByTeacher.xls'};
+    $scope.formState = {
+      xlsUrl: 'subjectStudyPeriods/teachers/searchByTeacher.xls',
+      xlsUrlSummary: "subjectStudyPeriods/studentGroups/workloadsummary.xls"
+    };
 
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriods/teachers', {order: 'id'}, function () {
       $scope.periodId = $scope.criteria.studyPeriod;
@@ -36,8 +39,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherSearchController
         }
       };
 
-    $scope.$watch('criteria.teacherObject', function() {
-            $scope.criteria.teacher = $scope.criteria.teacherObject ? $scope.criteria.teacherObject.id : null;
+    $scope.$watchCollection('criteria.teacherObject', function() {
+            $scope.criteria.teacher = $scope.criteria.teacherObject ? $scope.criteria.teacherObject.map(function(item) {return item.id}) : null;
         }
     );
   });

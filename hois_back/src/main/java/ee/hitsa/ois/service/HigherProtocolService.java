@@ -419,7 +419,7 @@ public class HigherProtocolService extends AbstractProtocolService {
                 + "and shr2.curriculum_version_hmodule_id = cvhm2.id and shr2.grade_code in (:positiveGrades))",
                 "positiveGrades", HigherAssessment.GRADE_POSITIVE);
 
-        qb.sort("p.firstname, p.lastname");
+        qb.sort("p.lastname, p.firstname");
         String select = STUDENT_SELECT + ", ((select cvhm.compulsory_study_credits <= sum(case when coalesce(shrm.is_optional, shr.is_optional) = false then shr.credits else 0 end) "
                 + "and cvhm.optional_study_credits <= sum(case when coalesce(shrm.is_optional, shr.is_optional) then shr.credits else 0 end) "
                 + "from student_higher_result shr "

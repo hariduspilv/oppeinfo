@@ -6,6 +6,7 @@ import ee.hitsa.ois.web.dto.StudyYearScheduleLegendDto;
 
 public class StudyYearScheduleReport {
 
+    private String studyYear;
     private List<StudyYearScheduleLegendDto> legends;
     private List<ReportTable> tables;
     
@@ -21,6 +22,12 @@ public class StudyYearScheduleReport {
     }
     public void setTables(List<ReportTable> tables) {
         this.tables = tables;
+    }
+    public String getStudyYear() {
+        return studyYear;
+    }
+    public void setStudyYear(String studyYear) {
+        this.studyYear = studyYear;
     }
     
 }

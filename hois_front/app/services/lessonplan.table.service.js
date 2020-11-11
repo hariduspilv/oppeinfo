@@ -103,7 +103,7 @@ angular.module('hitsaOis')
                 teachersGroupsSpan.appendChild(teacherDiv);
               }
               journalInfoDiv.appendChild(teachersGroupsSpan);
-              
+
               if (journal.groupProportion.code !== 'PAEVIK_GRUPI_JAOTUS_1') {
                 journalInfoDiv.appendChild(document.createElement('br'));
 
@@ -473,7 +473,7 @@ angular.module('hitsaOis')
         responsibleTeacher.setAttribute('label', $translate.instant('lessonplan.responsibleformodule'));
         responsibleTeacher.setAttribute('ng-model', 'record.modules[' + moduleIndex + '].teacher');
         responsibleTeacher.setAttribute('method', 'teachers');
-        var additionalQueryParams = 
+        var additionalQueryParams =
         '{valid: true' + (scope.record.modules[moduleIndex].teacher ? ', selectedTeacherId:' + scope.record.modules[moduleIndex].teacher.id : '') + '}';
         responsibleTeacher.setAttribute('additional-query-params', additionalQueryParams);
       }
@@ -504,6 +504,14 @@ angular.module('hitsaOis')
       journalNameColumn.colSpan = 3;
       journalNameColumn.style = 'font-weight: bold;';
       journalNameColumn.innerHTML = journal.nameEt;
+
+      if (journal.isIndividual) {
+        var individualJournalColumn = document.createElement('span');
+        individualJournalColumn.innerHTML = 'IND';
+        individualJournalColumn.className = 'lessonplan-individual-journal';
+        journalNameColumn.appendChild(individualJournalColumn);
+      }
+
       row.appendChild(journalNameColumn);
 
       var journalThemesColumn = document.createElement("td");
@@ -614,7 +622,7 @@ angular.module('hitsaOis')
           for (var weekIndex = 0; weekIndex < scope.formState.weekNrs.length; weekIndex++) {
             var week = scope.formState.weekNrs[weekIndex];
             if (week.show) {
-              var moduleWeekId = MODULE_WEEK_HOUR + SEPARATOR + moduleIndex + SEPARATOR + 
+              var moduleWeekId = MODULE_WEEK_HOUR + SEPARATOR + moduleIndex + SEPARATOR +
                 capacityType.code + SEPARATOR + weekIndex;
               var moduleWeekValue = totalColumnValue(scope.formState.moduleTotals[module.id][capacityType.code][weekIndex]);
               moduleCtTotalRow.appendChild(weekTotalColumn(moduleWeekId, moduleWeekValue, week));
@@ -802,7 +810,7 @@ angular.module('hitsaOis')
 
         var isValidInput = this.value === '' || isPositiveWholeNumber(this.value);
         input.style = isValidInput ? null : 'border: 1px solid rgb(221,44,0);';
-        input.classList.add(CENTER); 
+        input.classList.add(CENTER);
         journal.hours[capacityCode][weekIndex] = isValidInput ? this.value : null;
         scope.updateTotals(journal, capacityCode, weekIndex);
 
@@ -830,7 +838,7 @@ angular.module('hitsaOis')
         changeTotalsIrrespectiveOfChosenPeriod(scope, module, journal, moduleIndex, journalIndex, capacityCode);
       });
       input.addEventListener('mousewheel', function(event) {
-        event.preventDefault(); 
+        event.preventDefault();
       });
     }
 
@@ -870,7 +878,7 @@ angular.module('hitsaOis')
         changeTotalsIrrespectiveOfChosenPeriod(scope, module, journal, moduleIndex, journalIndex, capacityCode);
       });
       input.addEventListener('mousewheel', function(event) {
-        event.preventDefault(); 
+        event.preventDefault();
       });
     }
 

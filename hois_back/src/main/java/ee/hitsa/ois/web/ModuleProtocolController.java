@@ -128,11 +128,17 @@ public class ModuleProtocolController {
         return moduleProtocolService.occupationModules(user, curriculumVersionId);
     }
 
+    @GetMapping("/studentGroups/{curriculumVersionId:\\d+}")
+    public List<AutocompleteResult> studentGroups(HoisUserDetails user, @PathVariable Long curriculumVersionId) {
+        ModuleProtocolUtil.assertCanCreate(user);
+        return moduleProtocolService.studentGroups(user, curriculumVersionId);
+    }
+
     @GetMapping("occupationModule/{studyYearId:\\d+}/{curriculumVersionOccupationModuleId:\\d+}")
     public ModuleProtocolOccupationalModuleDto occupationModule(HoisUserDetails user, @PathVariable Long studyYearId,
-            @PathVariable Long curriculumVersionOccupationModuleId) {
+            @PathVariable Long curriculumVersionOccupationModuleId, @RequestParam(required = false) Long studentGroupId) {
         ModuleProtocolUtil.assertCanCreate(user);
-        return moduleProtocolService.occupationModule(user, studyYearId, curriculumVersionOccupationModuleId);
+        return moduleProtocolService.occupationModule(user, studyYearId, curriculumVersionOccupationModuleId, studentGroupId);
     }
 
     @GetMapping("/{id:\\d+}/otherStudents")

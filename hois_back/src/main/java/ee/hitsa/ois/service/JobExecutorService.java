@@ -76,6 +76,8 @@ public class JobExecutorService {
     private StudentService studentService;
     @Autowired
     private EhisStudentService ehisStudentService;
+    @Autowired
+    private TimetableEventService timetableEventService;
     
     @Value("${hois.jobs.supportService.message.days}")
     private Integer supportServiceMessageDays;
@@ -237,7 +239,17 @@ public class JobExecutorService {
             directiveService.sendSupportServiceMessages(supportServiceMessageDays);
         }, AUTHENTICATION_MSG);
     }
-    
+
+    /**
+     * Automatic task to send teacher schedule for the next 2 weeks.
+     */
+    @Scheduled(cron = "${hois.jobs.timetable.teacherSchedule.cron}")
+    public void sendTeacherSchedule() {
+        withAuthentication(() -> {
+            timetableEventService.sendTeacherWeekSchedules();
+        }, AUTHENTICATION_MSG);
+    }
+
     /**
      * Job execution wrapper.
      * If actual handler returns without exception, job is marked as done, otherwise failed (and exception is logged).

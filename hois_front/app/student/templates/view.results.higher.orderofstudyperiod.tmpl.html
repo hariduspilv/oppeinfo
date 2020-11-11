@@ -39,7 +39,7 @@
                 <tr class="one-row">
                   <td ng-repeat="result in row.grades | orderBy: ['isActive', 'gradeDate']">
                     <span ng-if="$index !== 0">/</span>
-                    <span ng-class="{badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade | hoisHigherGrade: auth.school.letterGrades}}</span>
+                    <hois-higher-result value="result.grade" exists-grading-schema="existsSchoolGradingSchema" letter-grades="auth.school.letterGrades"></hois-higher-result>
                   </td>
                 </tr>
               </table>

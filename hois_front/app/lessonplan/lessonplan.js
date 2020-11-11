@@ -132,7 +132,8 @@
       var school = Session.school || {};
       $scope.formState = {
         higher: school.higher,
-        vocational: school.vocational
+        vocational: school.vocational,
+        xlsUrl: 'lessonplans/lessonplansummary.xls'
       };
       
       $scope.currentNavItem = $route.current.$$route.data.currentNavItem;
@@ -279,8 +280,11 @@
         $scope.formState.curriculumLessonPlans = result.curriculumLessonPlans;
       });
 
-      $scope.$watch('criteria.teacherObject', function (value) {
-        $scope.criteria.teacher = angular.isObject(value) ? value.id : value;
+      $scope.$watchCollection('criteria.teacherObject', function (value) {
+        $scope.criteria.teacher = angular.isObject(value) ?
+          value.map(function(item) {
+            return item.id;
+          }) : value;
       });
     }
   ).controller('LessonplanTeacherSearchController',
@@ -290,7 +294,9 @@
       var school = Session.school || {};
       $scope.formState = {
         higher: school.higher,
-        vocational: school.vocational
+        vocational: school.vocational,
+        xlsUrl: 'lessonplans/lessonplansummary.xls',
+        xlsUrlHigher: 'subjectStudyPeriods/studentGroups/workloadsummary.xls'
       };
       $scope.currentNavItem = $route.current.$$route.data.currentNavItem;
 
@@ -305,8 +311,16 @@
         }
       };
 
+      $scope.$watchCollection('criteria.teacherObject', function (value) {
+        $scope.criteria.teacher = angular.isObject(value) ?
+          value.map(function(item) {
+            return item.id;
+          }) : value;
+      });
+
       $scope.formState.studyYears = QueryUtils.endpoint('/autocomplete/studyYears').query();
       $scope.formState.studyYears.$promise.then(function () {
+        $scope.criteria.byTeacher = true;
         if (!$scope.criteria.studyYear) {
           var sy = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyYears);
           if (sy) {

@@ -1,105 +1,128 @@
 <div class="ois-form-layout-padding" ng-cloak>
-  <div flex class="form-readonly">
-    <div layout="row" layout-sm="column" layout-xs="column">
-      <md-input-container flex="25" flex-sm="100" flex-xs="100">
-        <label class="textInput">{{'journal.studyYear' | translate}}</label>
-        <hois-classifier-value ng-model="journal.studyYear" main-classifier-code="OPPEAASTA"></hois-classifier-value>
-      </md-input-container>
-
-      <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-        <label class="textInput">{{'main.status' | translate}}</label>
-        <hois-classifier-value ng-model="journal.status" main-classifier-code="PAEVIK_STAATUS"></hois-classifier-value>
-      </md-input-container>
-    </div>
-
-    <div layout="row" layout-sm="column" layout-xs="column">
-      <md-input-container flex="25" flex-sm="100" flex-xs="100">
-        <label class="textInput">{{'journal.label' | translate}}</label>
-        <hois-value value="journal.nameEt"></hois-value>
-      </md-input-container>
-
-      <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-        <label>{{'journal.endDate' | translate}}</label>
-        <hois-value value="journal.endDate | hoisDate"></hois-value>
-      </md-input-container>
-    </div>
-
-    <div layout="row" layout-sm="column" layout-xs="column">
-      <md-input-container flex="25" flex-sm="100" flex-xs="100">
-        <label class="textInput">{{'journal.studentGroups' | translate}}</label>
-        <hois-value value="journal.studentGroups.join(', ')"></hois-value>
-      </md-input-container>
-
-      <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-        <label class="textInput">{{auth.higher ? ('journal.teachersHigher' | translate) : ('journal.teachersVocational' | translate)}}</label>
-        <hois-value value="journal.journalTeachers.join(', ')"></hois-value>
-      </md-input-container>
-    </div>
-
-    <div layout="row" layout-sm="column" layout-xs="column">
-      <md-input-container flex="25" flex-sm="100" flex-xs="100">
-        <label class="textInput">{{'journal.modules' | translate}}</label>
-        <hois-value value="showModuleNames(journal.curriculumModules)"></hois-value>
-      </md-input-container>
-
-      <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-        <label class="textInput">{{'journal.plannedAndEnteredLessonsCount' | translate}}</label>
-        <hois-value value="journal.lessonHours.totalPlannedHours + '/' + journal.lessonHours.totalUsedHours"></hois-value>
-      </md-input-container>
-    </div>
-
-    <div layout="row" layout-sm="column" layout-xs="column">
-      <md-input-container flex="25" flex-sm="100" flex-xs="100">
-        <label>{{'journal.assessment' | translate}}</label>
-        <hois-classifier-value ng-if="journal.assessment" ng-model="journal.assessment"
-          main-classifier-code="KUTSEHINDAMISVIIS"></hois-classifier-value>
-        <hois-value ng-if="!journal.assessment" value="'journal.noAssessment' | translate"></hois-value>
-      </md-input-container>
-
-      <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" class="md-input-has-value">
-        <label class="textInput">{{'journal.capacitiesPlannedAndEnteredLessonsCount' | translate}}</label>
-        <div class="md-body-1">
+  <hois-collapsable expanded="false">
+    <hois-collapsable-header>
+      <div layout="column" layout-gt-md="row">
+        <div flex-gt-md="50">
+          <span>{{journal.nameEt}}</span>
+        </div>
+        <div flex-gt-md="45" flex-offset-gt-md="5" layout="row" layout-align-gt-md="center center">
           <span ng-repeat="type in journal.lessonHours.capacityHours | orderBy: 'capacity'">
             <span>{{capacityTypes[type.capacity].value.toUpperCase()}}:</span>
             <span>{{type.plannedHours + '/' + type.usedHours}}</span>
+            <span ng-if="!$last">&nbsp;</span>
           </span>
         </div>
-      </md-input-container>
-    </div>
+      </div>
+    </hois-collapsable-header>
 
-    <div layout="row" layout-sm="column" layout-xs="column">
-      <md-input-container flex="25" flex-sm="100" flex-xs="100">
-        <label>{{'moodle.courseId' | translate}}</label>
-        <hois-value value="journal.moodleCourseId"></hois-value>
-      </md-input-container>
-    </div>
-  </div>
-</div>
-
-<div ng-if="journal.canViewReview" class="ois-form-layout-padding">
-  <fieldset>
-    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'journal.review' | translate}}</legend>
-    <div class="form-readonly">
-      <br>
+    <div flex class="form-readonly">
       <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container  flex="45" flex-sm="100" flex-xs="100">
-          <label>{{'journal.isReviewOk' | translate}}</label>
-          <hois-value value="journal.isReviewOk !== null ? (journal.isReviewOk ? ('main.yes' | translate) :  ('main.no' | translate)) : ''"></hois-value>
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'journal.studyYear' | translate}}</label>
+          <hois-classifier-value ng-model="journal.studyYear" main-classifier-code="OPPEAASTA"></hois-classifier-value>
         </md-input-container>
-        <md-input-container  flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
-          <label>{{'journal.reviewDate' | translate}}</label>
-          <hois-value value="journal.reviewDate | hoisDate"></hois-value>
-        </md-input-container>
-      </div>
-      <div layout="column" flex>
-        <md-input-container flex>
-          <label>{{'journal.addInfo' | translate}}</label>
-          <hois-value value="journal.reviewInfo"></hois-value>
+
+        <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'main.status' | translate}}</label>
+          <hois-classifier-value ng-model="journal.status" main-classifier-code="PAEVIK_STAATUS"></hois-classifier-value>
         </md-input-container>
       </div>
-  </div>
-  </fieldset>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'journal.label' | translate}}</label>
+          <hois-value value="journal.nameEt"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'journal.endDate' | translate}}</label>
+          <hois-value value="journal.endDate | hoisDate"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'journal.studentGroups' | translate}}</label>
+          <hois-value value="journal.studentGroups.join(', ')"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{auth.higher ? ('journal.teachersHigher' | translate) : ('journal.teachersVocational' | translate)}}</label>
+          <hois-value value="journal.journalTeachers.join(', ')"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'journal.modules' | translate}}</label>
+          <hois-value value="showModuleNames(journal.curriculumModules)"></hois-value>
+        </md-input-container>
+
+        <md-input-container ng-if="journal.responsiblesForModules.length > 0" flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'journal.responsiblesForModules' | translate}}</label>
+          <hois-value value="journal.responsiblesForModules.join(', ')"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label>{{'journal.assessment' | translate}}</label>
+          <hois-classifier-value ng-if="journal.assessment" ng-model="journal.assessment"
+            main-classifier-code="KUTSEHINDAMISVIIS"></hois-classifier-value>
+          <hois-value ng-if="!journal.assessment" value="'journal.noAssessment' | translate"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'journal.plannedAndEnteredLessonsCount' | translate}}</label>
+          <hois-value value="journal.lessonHours.totalPlannedHours + '/' + journal.lessonHours.totalUsedHours"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" class="md-input-has-value">
+          <label class="textInput">{{'journal.capacitiesPlannedAndEnteredLessonsCount' | translate}}</label>
+          <div class="md-body-1">
+            <span ng-repeat="type in journal.lessonHours.capacityHours | orderBy: 'capacity'">
+              <span>{{capacityTypes[type.capacity].value.toUpperCase()}}:</span>
+              <span>{{type.plannedHours + '/' + type.usedHours}}</span>
+            </span>
+          </div>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label>{{'moodle.courseId' | translate}}</label>
+          <hois-value value="journal.moodleCourseId"></hois-value>
+        </md-input-container>
+      </div>
+    </div>
+
+    <div ng-if="journal.canViewReview" class="ois-form-layout-padding">
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'journal.review' | translate}}</legend>
+        <div class="form-readonly">
+          <br>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container  flex="45" flex-sm="100" flex-xs="100">
+              <label>{{'journal.isReviewOk' | translate}}</label>
+              <hois-value value="journal.isReviewOk !== null ? (journal.isReviewOk ? ('main.yes' | translate) :  ('main.no' | translate)) : ''"></hois-value>
+            </md-input-container>
+            <md-input-container  flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
+              <label>{{'journal.reviewDate' | translate}}</label>
+              <hois-value value="journal.reviewDate | hoisDate"></hois-value>
+            </md-input-container>
+          </div>
+          <div layout="column" flex>
+            <md-input-container flex>
+              <label>{{'journal.addInfo' | translate}}</label>
+              <hois-value value="journal.reviewInfo"></hois-value>
+            </md-input-container>
+          </div>
+      </div>
+      </fieldset>
+    </div>
+  </hois-collapsable>
 </div>
+
 
 <div ng-controller="JournalEditController as journalEditController">
   <div layout-padding>
@@ -132,15 +155,14 @@
         </div>
       </div>
       <br>
-      <div ng-include="'journal/journal.entryType.buttons.tmpl.html'"></div>
-      <div class="container" fixed-column-table fixed-columns="2" ng-style="{'overflow-y': journal.journalStudents.length < 11 ? 'hidden':'scroll'}">
+      <div ng-include="'journal/journal.entry.filters.tmpl.html'"></div>
+      <div id="journalEntriesByDate" class="container" fixed-column-table fixed-columns="2" ng-style="{'overflow-y': journal.journalStudents.length < 11 ? 'hidden':'scroll'}">
         <table class="journalTable">
           <thead>
             <tr flex>
               <th>{{'main.nr' | translate}}</th>
               <th style="padding-right:11em;"><span>{{'student.label' | translate}}, {{'journal.studentGroup' | translate}}</span></th>
-              <th ng-if="journalEntryTypes[journalEntry.entryType.code]._selected" class="bordered"
-                md-colors="{background: getEntryColor(journalEntry.entryType.code)}" ng-repeat="journalEntry in journal.journalEntriesByDate">
+              <th class="bordered" md-colors="{background: getEntryColor(journalEntry.entryType.code)}" ng-repeat="journalEntry in journal.journalEntriesByDate | filter: filterJournalEntriesByDate">
                 <span ng-if="journalEntry.moodleGradeItemId"><md-icon md-font-set="material-icons">school</md-icon></span>
                 <span>
                   <span ng-if="journalEntry.entryType.code === 'SISSEKANNE_L'">{{'journal.finalResult' | translate}} {{journalEntry.entryDate ? ' - ' + (journalEntry.entryDate | hoisDateShortYear) : ''}}</span>
@@ -184,7 +206,7 @@
                   <span ng-if="row.isMoodleRegistered"><md-icon md-font-set="material-icons">school</md-icon></span>
                 </span>
               </td>
-              <td ng-if="journalEntryTypes[journalEntry.entryType.code]._selected" class="bordered" ng-repeat="journalEntry in journal.journalEntriesByDate">
+              <td class="bordered" ng-repeat="journalEntry in journal.journalEntriesByDate | filter: filterJournalEntriesByDate">
                 <div ng-if="journalEntry.entryType.code !== 'SISSEKANNE_O'" layout="row">
                   <div layout="row" layout-align="start center" ng-repeat="result in journalEntry.journalStudentResults[row.id] | orderBy: 'gradeInserted'">
                     <span ng-if="result.absence">
@@ -214,19 +236,19 @@
                     </span>
 
                     <span ng-if="(result.absence.value || result.lessonAbsences.length > 0)
-                        && (result.journalEntryStudentHistories.length > 0 || result.grade)">/</span>
+                        && (result.journalEntryStudentHistories.length > 0 || result.grade)">&nbsp;/&nbsp;</span>
 
                     <span layout="row" layout-align="start center" flex>
                       <span ng-repeat-start="historyResult in result.journalEntryStudentHistories | orderBy: 'gradeInserted' track by $index">
-                        <hois-journal-result value="historyResult"></hois-journal-result>
+                        <hois-journal-result value="historyResult" exists-grading-schema="existsSchoolGradingSchema" previous-result="true"></hois-journal-result>
                         <md-tooltip>{{historyResult.gradeInserted | hoisDate}}, &nbsp; {{historyResult.gradeInsertedBy}}</md-tooltip>
                       </span>
-                      <span>&nbsp;*</span>
                       <span ng-repeat-end ng-if="!journalEntry.quickUpdate || $index !== result.journalEntryStudentHistories.length - 1">&nbsp;/&nbsp;</span>
                     </span>
 
                     <span>
-                      <hois-journal-result value="result" final-result="journalEntry.entryType.code === 'SISSEKANNE_L'"></hois-journal-result>
+                      <hois-journal-result ng-if="result.grade || result.verbalGrade" value="result" exists-grading-schema="existsSchoolGradingSchema"
+                        final-result="journalEntry.entryType.code === 'SISSEKANNE_L'"></hois-journal-result>
                       <span ng-if="!result.grade && !result.verbalGrade && result.journalEntryStudentHistories.length > 0"> - </span>
                       <md-tooltip ng-if="result.grade.code" class="tooltip-multiline">
                         {{result.gradeInserted | hoisDate}}, &nbsp; {{result.gradeInsertedBy}}
@@ -239,8 +261,7 @@
                   <div ng-if="journalEntry.studentOutcomeResults[row.studentId]" layout="row" layout-align="start center">
                     <div ng-repeat="result in journalEntry.studentOutcomeResults[row.studentId].history | orderBy: 'gradeInserted'">
                     <span>
-                      <span ng-class="{badResult: !gradeUtil.isPositive(result.grade.code)}">{{result.grade | hoisVocationalGrade}}</span>
-                      <span>*</span>
+                      <hois-vocational-result value="result.grade" exists-grading-schema="existsSchoolGradingSchema" previous-result="true"></hois-vocational-result>
                       <md-tooltip class="tooltip-multiline">
                         <span>{{result.gradeDate | hoisDate}}, {{result.gradeInsertedBy}}</span>
                         <span><span ng-if="result.addInfo">, </span> {{result.addInfo}}</span>
@@ -251,14 +272,13 @@
                     <div>
                       <span ng-if="!journalEntry.studentOutcomeResults[row.studentId].grade">-</span>
                       <span ng-if="journalEntry.studentOutcomeResults[row.studentId].grade">
-                      <span ng-class="{badResult: !gradeUtil.isPositive(journalEntry.studentOutcomeResults[row.studentId].grade.code)}">
-                        {{journalEntry.studentOutcomeResults[row.studentId].grade | hoisVocationalGrade}}
+                        <hois-vocational-result value="journalEntry.studentOutcomeResults[row.studentId].grade"
+                          exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
+                        <md-tooltip class="tooltip-multiline">
+                          {{journalEntry.studentOutcomeResults[row.studentId].gradeDate | hoisDate}}, {{journalEntry.studentOutcomeResults[row.studentId].gradeInsertedBy}}
+                          <span ng-if="journalEntry.studentOutcomeResults[row.studentId].addInfo">,&nbsp;</span> {{journalEntry.studentOutcomeResults[row.studentId].addInfo}}
+                        </md-tooltip>
                       </span>
-                      <md-tooltip class="tooltip-multiline">
-                        {{journalEntry.studentOutcomeResults[row.studentId].gradeDate | hoisDate}}, {{journalEntry.studentOutcomeResults[row.studentId].gradeInsertedBy}}
-                        <span ng-if="journalEntry.studentOutcomeResults[row.studentId].addInfo">,&nbsp;</span> {{journalEntry.studentOutcomeResults[row.studentId].addInfo}}
-                      </md-tooltip>
-                    </span>
                     </div>
                   </div>
                 </div>
@@ -271,7 +291,7 @@
   </div>
 
   <div layout-padding>
-    <div ng-include="'journal/journal.entryType.buttons.tmpl.html'"></div>
+    <div ng-include="'journal/journal.entry.filters.tmpl.html'"></div>
     <div flex>
       <div layout="row">
         <a ng-attr-href="{{excel(formState.xlsUrl)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
@@ -293,6 +313,7 @@
             <tr md-row>
               <th md-column> </th>
               <th md-column>{{'journal.entry.date' | translate}}</th>
+              <th md-column ng-if="journal.isIndividual">{{'student.label' | translate}}</th>
               <th md-column>{{'journal.entry.lessons' | translate}}</th>
               <th md-column>{{'journal.entry.nameContent' | translate}}</th>
               <th md-column>{{'journal.entry.homework' | translate}}</th>
@@ -304,14 +325,15 @@
               ng-class-even="'even'" md-colors="{background: getEntryColor(row.entryType)}">
               <td md-cell><span ng-if="row.moodleGradeItemId"><md-icon md-font-set="material-icons">school</md-icon></span> </td>
               <td md-cell>{{row.entryDate ? (row.entryDate | hoisDate) : '-'}}</td>
+              <td md-cell ng-if="journal.isIndividual">{{row.journalStudentName ? row.journalStudentName : '-'}}</td>
               <td md-cell>{{row.lessons ? row.lessons : '-'}}</td>
               <td md-cell>
                 <span>{{row.nameEt ? row.nameEt : '-'}}</span>
                 <span ng-if="row.nameEt && row.content">/</span>
-                <hois-value value="row.content"></hois-value>
+                <hois-value value="row.content" hois-linky></hois-value>
               </td>
               <td md-cell>
-                <hois-value value="row.homework ? row.homework : '-'"></hois-value>
+                <hois-value value="(row.homework ? row.homework : '-')" hois-linky></hois-value>
               </td>
               <td md-cell>{{row.homeworkDuedate ? (row.homeworkDuedate | hoisDate) : '-' }}</td>
             </tr>
@@ -363,14 +385,6 @@
   </div>
 
   <div layout-padding>
-    <hois-collapsable label="('journal.curriculumVersionModuleOrThemeDescription' | translate)" expanded="false">
-      <div ng-repeat="module in journal.moduleDescriptions | orderBy: ['-isModule', currentLanguageNameField()]">
-        <a href="" class="md-raised small-link" ng-click="moduleDescriptionDialog(module)">{{currentLanguageNameField(module)}}</a>
-      </div>
-      <div ng-repeat="individualCurriculum in journal.individualCurriculums | orderBy: 'fullname'">
-        <a class="md-raised small-link" ng-click="individualCurriculumDialog(individualCurriculum)">
-          {{individualCurriculum.fullname}} - {{'journal.individualCurriculumDistinction' | translate}}</a>
-      </div>
-    </hois-collapsable>
+    <div ng-include="'journal/journal.module.theme.description.tmpl.html'"></div>
   </div>
 </div>

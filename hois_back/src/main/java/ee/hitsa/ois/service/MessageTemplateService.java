@@ -1,25 +1,50 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
-
+import java.beans.PropertyDescriptor;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.lang.invoke.MethodHandles;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.time.LocalDate;
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.UserSchoolRole;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.exception.HoisException;
+import ee.hitsa.ois.util.EnumUtil;
+import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.MessageTemplateUserResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.expression.ExpressionException;
 import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.TypedValue;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.ReflectivePropertyAccessor;
@@ -42,6 +67,8 @@ import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo.Error;
 import ee.hitsa.ois.web.commandobject.MessageTemplateForm;
 import ee.hitsa.ois.web.commandobject.MessageTemplateSearchCommand;
 import ee.hitsa.ois.web.dto.MessageTemplateDto;
+
+import static ee.hitsa.ois.util.JpaQueryUtil.*;
 
 @Transactional
 @Service
@@ -137,36 +164,105 @@ public class MessageTemplateService {
         MessageType type = MessageType.valueOf(EntityUtil.getCode(messageTemplate.getType()));
         Object data = type.getDataBean() != null ? BeanUtils.instantiateClass(type.getDataBean()) : null;
         ExpressionParser spelParser = new SpelExpressionParser();
+
         try {
             StandardEvaluationContext ctx = new StandardEvaluationContext(data);
-            ctx.setPropertyAccessors(Arrays.asList(new HoisReflectivePropertyAccessor()));
-            spelParser.parseExpression(messageTemplate.getContent(), new TemplateParserContext()).getValue(ctx, String.class);
-        } catch(@SuppressWarnings("unused") ExpressionException | IllegalStateException e) {
+            ctx.setPropertyAccessors(Collections.singletonList(new HoisReflectivePropertyAccessor()));
+            String contentWithoutFor = forPatterns(spelParser, ctx, data, messageTemplate.getContent());
+            spelParser.parseExpression(contentWithoutFor, new TemplateParserContext()).getValue(ctx, String.class);
+        } catch(@SuppressWarnings("unused") ExpressionException | IllegalStateException
+                | InvocationTargetException | IllegalAccessException e) {
             throw new ValidationFailedException("content", "messageTemplate.invalidcontent");
         }
+    }
+
+    public static String forPatterns(ExpressionParser parser, StandardEvaluationContext ctx, Object data, String content)
+            throws InvocationTargetException, IllegalAccessException {
+        if (data == null) {
+            return content;
+        }
+        Pattern forPattern = Pattern.compile(".*?(#for\\{([\\da-zA-Z_]+?)}\\n?(.*?)#forend).*?", Pattern.DOTALL);
+        Matcher matcher = forPattern.matcher(content);
+
+        String nContent = content;
+        Map<String, Method> mappedMethods = new HashMap<>();
+        for (PropertyDescriptor pd : BeanUtils.getPropertyDescriptors(data.getClass())) {
+            Method pReadMethod = pd.getReadMethod();
+            String pName = pd.getName();
+            if (pReadMethod != null && Modifier.isPublic(pReadMethod.getDeclaringClass().getModifiers())
+                    && Collection.class.isAssignableFrom(pReadMethod.getReturnType())) {
+                mappedMethods.put(pName, pReadMethod);
+            }
+        }
+
+        while (matcher.find()) {
+            String variable = PersonUtil.toCamelCase(matcher.group(2));
+            String spelExp = matcher.group(3);
+            if (!mappedMethods.containsKey(variable)) {
+                continue;
+            }
+            Method method = mappedMethods.get(variable);
+            Collection<?> retValue = (Collection<?>) method.invoke(data);
+            Object orig = ctx.getRootObject() != null ? ctx.getRootObject().getValue() : null;
+            StringBuilder sb = new StringBuilder();
+            for (Object obj : retValue) {
+                ctx.setRootObject(obj);
+                sb.append(parser.parseExpression(spelExp, new TemplateParserContext()).getValue(ctx, String.class));
+            }
+            if (sb.length() > 0 && sb.charAt(sb.length() - 1) == '\n') {
+                sb.deleteCharAt(sb.length() - 1);
+            }
+            ctx.setRootObject(orig);
+            nContent = nContent.replace(matcher.group(1), sb.toString());
+        }
+        return nContent;
+    }
+
+    public Page<AutocompleteResult> getUsersWithGivenUserRightsInSchool(Long schoolId,
+                                                                        List<PermissionObject> permissionObjects,
+                                                                        Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from user_ u" +
+                " join person p on u.person_id = p.id" +
+                " join user_rights ur on u.id = ur.user_id");
+        qb.groupBy(" p.id, p.lastname, p.firstname ");
+        qb.sort(" p.lastname, p.firstname ");
+
+        qb.requiredCriteria("u.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("u.role_code in :roleCodes", "roleCodes",
+                EnumUtil.toNameList(Role.ROLL_A, Role.ROLL_J, Role.ROLL_O));
+        qb.validNowCriteria("u.valid_from", "u.valid_thru");
+        qb.requiredCriteria("ur.permission_code = :permissionCode",
+                "permissionCode", Permission.OIGUS_T.name());
+        qb.requiredCriteria("ur.object_code in :objectCodes",
+                "objectCodes", permissionObjects.stream()
+                        .map(Enum::name).collect(Collectors.toList()));
+        return JpaQueryUtil.pagingResult(qb, "p.id, p.firstname || ' ' || p.lastname as fullname," +
+                " p.idcode, string_agg(distinct ur.object_code, ',') as objectcodes", em, pageable)
+                .map(r -> new MessageTemplateUserResult(resultAsLong(r, 0),
+                        resultAsString(r, 1), resultAsString(r, 1),
+                        resultAsString(r, 2), resultAsStringList(r, 3, ",")));
+    }
+
+    public String getTemplateExample(String templateType) {
+        MessageType type = EnumUtil.valueOf(MessageType.class, templateType);
+        if (type == null || type.getTemplate() == null) {
+            return null;
+        }
+        ClassPathResource resource = new ClassPathResource("templates/messages/" + type.getTemplate());
+        String result;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
+            result = reader.lines().collect(Collectors.joining("\n"));
+        } catch (IOException e) {
+            throw new HoisException(String.format("Exception during %s template reading", type.getTemplate()), e);
+        }
+        return result;
     }
 
     public static class HoisReflectivePropertyAccessor extends ReflectivePropertyAccessor {
 
         @Override
         protected String getPropertyMethodSuffix(String propertyName) {
-            return super.getPropertyMethodSuffix(toCamelCase(propertyName));
-        }
-
-        // TODO utility function
-        private static String toCamelCase(String value) {
-            StringBuilder sb = new StringBuilder();
-            for(int i = 0, cnt = value.length(); i < cnt; i++) {
-                char ch = value.charAt(i);
-                if(ch == '_') {
-                    if(++i < cnt) {
-                        sb.append(Character.toUpperCase(value.charAt(i)));
-                    }
-                } else {
-                    sb.append(Character.toLowerCase(ch));
-                }
-            }
-            return sb.toString();
+            return super.getPropertyMethodSuffix(PersonUtil.toCamelCase(propertyName));
         }
     }
 }

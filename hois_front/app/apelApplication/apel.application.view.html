@@ -82,7 +82,7 @@
             </thead>
             <tbody md-body>
               <tr md-row ng-repeat="comment in application.comments | orderBy: 'inserted'" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td md-cell>{{comment.addInfo}}</td>
+                <td md-cell ng-bind-html="comment.addInfo | linky: '_blank'"></td>
                 <td md-cell>{{comment.inserted | hoisDateTime}}</td>
                 <td md-cell>{{comment.insertedBy}}</td>
               </tr>

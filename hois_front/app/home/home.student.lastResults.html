@@ -15,15 +15,21 @@
                             {{result.nameEt}}
                             <md-tooltip ng-if="result.content || result.addInfo" hide-sm md-direction="bottom">{{result.content}}{{ result.content && result.addInfo ? " - ": ""}}{{result.addInfo}}</md-tooltip>
                         </span>
-                        <span hide-gt-sm ng-if="result.content" style="font-style: italic"><br>({{result.content}})</span>
-                        <span hide-gt-sm ng-if="result.addInfo"><br>{{result.addInfo}}</span>
+                        <br ng-if="result.content">
+                        <span hide-gt-sm ng-bind-html="result.content | linky: '_blank'" ng-if="result.content" style="font-style: italic"></span>
+                        <br ng-if="result.addInfo">
+                        <span hide-gt-sm ng-bind-html="result.addInfo | linky: '_blank'" ng-if="result.addInfo"></span>
                       </div>
                       <div ng-if="!result.entryCode">
                         <span style="font-weight: bold;">{{currentLanguageNameField(result)}}</span>
                       </div>
                     </td>
-                    <td md-cell ng-class="{goodGrade: result.grade.value === '5', badGrade: result.grade.value === '2'}" style="font-weight: bold;">
-                        {{result.grade.value}}
+                    <td md-cell style="font-weight: bold;">
+                      <span layout="row" layout-align="start center">
+                        <span ng-class="{goodGrade: result.grade.code === 'KUTSEHINDAMINE_5', badGrade: !gradeUtil.isPositive(result.grade)}">{{result.grade | hoisVocationalGrade}}</span>
+                        <span ng-if="result.grade && result.verbalGrade">,&nbsp;</span>
+                        <hois-journal-verbal-result ng-if="result.verbalGrade" value="result"></hois-journal-verbal-result>
+                      </span>
                     </td>
                 </tr>
             </tbody>

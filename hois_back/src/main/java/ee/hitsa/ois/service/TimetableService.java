@@ -36,6 +36,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.timetable.TimetableEventStudent;
+import ee.hitsa.ois.web.dto.timetable.TimetableJournalStudentDto;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -412,6 +414,34 @@ public class TimetableService {
             if(teachers != null) {
                 dto.setTeachers(new ArrayList<>(teachers.keySet()));
                 dto.setTeacherNames(new ArrayList<>(teachers.values()));
+            }
+        }
+
+        return timetableEvents;
+    }
+
+    private List<TimetableEventDto> addStudentsListToEvents(List<TimetableEventDto> timetableEvents) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event_student tets"
+                + " join timetable_event_time tet on tet.id = tets.timetable_event_time_id"
+                + " join student s on s.id = tets.student_id"
+                + " join person p on p.id = s.person_id");
+
+        qb.requiredCriteria("tet.id in (:timetableEventIds)", "timetableEventIds",
+                timetableEvents.stream().map(TimetableEventDto::getId).collect(Collectors.toSet()));
+
+        qb.sort("p.lastname, p.firstname");
+        List<?> data = qb.select("tet.id, s.id as student_id, p.firstname, p.lastname", em).getResultList();
+
+        Map<Long, Map<Long, String>> studentsByTimetableEventTimes = data.stream().collect(Collectors.
+                groupingBy(r -> resultAsLong(r, 0), Collectors.toMap(r -> resultAsLong(r, 1),
+                        r -> PersonUtil.fullname(resultAsString(r, 2), resultAsString(r, 3)),
+                        (v1, v2) -> v1, LinkedHashMap::new)));
+
+        for (TimetableEventDto dto : timetableEvents) {
+            Map<Long, String> students = studentsByTimetableEventTimes.get(dto.getId());
+            if (students != null) {
+                dto.setStudents(new ArrayList<>(students.keySet()));
+                dto.setStudentNames(new ArrayList<>(students.values()));
             }
         }
 
@@ -843,8 +873,8 @@ public class TimetableService {
             TimetableEvent timetableEvent = timetableEventTime.getTimetableEvent();
 
             List<TimetableEventTime> changedEvents;
-            boolean modified = !Objects.equals(timetableEvent.getStart().toLocalTime(), form.getStartTime());
-            if(!modified && !Objects.equals(timetableEvent.getEnd().toLocalTime(), form.getEndTime())) {
+            boolean modified = !Objects.equals(timetableEventTime.getStart().toLocalTime(), form.getStartTime());
+            if(!modified && !Objects.equals(timetableEventTime.getEnd().toLocalTime(), form.getEndTime())) {
                 modified = true;
             }
             if (Boolean.TRUE.equals(form.getChangeUpcomingEvents())) {
@@ -917,6 +947,16 @@ public class TimetableService {
                     timetableEventTeacher.setTeacher(em.getReference(Teacher.class, id));
                     timetableEventTeacher.setTimetableEventTime(timetableEventTime);
                     return timetableEventTeacher;
+                })) {
+            modified = true;
+        }
+        List<TimetableEventStudent> oldStudents = currentTime.getTimetableEventStudents();
+        if(EntityUtil.bindEntityCollection(oldStudents, r -> EntityUtil.getId(r.getStudent()), form.getStudents(),
+                r -> r, id -> {
+                    TimetableEventStudent timetableEventStudent = new TimetableEventStudent();
+                    timetableEventStudent.setStudent(em.getReference(Student.class, id));
+                    timetableEventStudent.setTimetableEventTime(timetableEventTime);
+                    return timetableEventStudent;
                 })) {
             modified = true;
         }
@@ -1588,19 +1628,24 @@ public class TimetableService {
                 EntityUtil.getId(timetable.getStudyPeriod().getStudyYear()));
         qb.filter("lp.is_usable = true");
         qb.requiredCriteria("lp.student_group_id in (:studentGroupIds)", "studentGroupIds", studentGroupIds);
-        String select = "distinct j.id as journal_id, j.name_et";
+        String select = "distinct j.id as journal_id, j.name_et, j.is_individual";
         List<?> data = qb.select(select, em).getResultList();
-        List<TimetableJournalDto> journals = StreamUtil
-                .toMappedList(r -> new TimetableJournalDto(resultAsLong(r, 0), resultAsString(r, 1)), data);
+        List<TimetableJournalDto> journals = StreamUtil.toMappedList(r ->
+                new TimetableJournalDto(resultAsLong(r, 0), resultAsString(r, 1), resultAsBoolean(r, 2)), data);
         if (!journals.isEmpty()) {
             List<Long> journalIds =  StreamUtil.toMappedList(TimetableJournalDto::getId, journals);
             Map<Long, List<TimetableJournalTeacherDto>> teachersByJournals = journalTeachers(journalIds, timetable);
+            Map<Long, List<TimetableJournalStudentDto>> studentsByJournals = journalStudents(journalIds);
             Map<Long, List<RoomAutocompleteResult>> roomsByJournals = journalRooms(journalIds);
 
             for (TimetableJournalDto journal : journals) {
                 List<TimetableJournalTeacherDto> teachers = teachersByJournals.get(journal.getId());
                 if (teachers != null) {
                     journal.getTeachers().addAll(teachers);
+                }
+                List<TimetableJournalStudentDto> students = studentsByJournals.get(journal.getId());
+                if (students != null) {
+                    journal.getStudents().addAll(students);
                 }
                 List<RoomAutocompleteResult> rooms = roomsByJournals.get(journal.getId());
                 if (rooms != null) {
@@ -1635,6 +1680,28 @@ public class TimetableService {
                     Collectors.groupingBy(t -> t.getJournalId(), Collectors.mapping(t -> t, Collectors.toList())));
         }
         return teachersByJournals;
+    }
+
+    private Map<Long, List<TimetableJournalStudentDto>> journalStudents(List<Long> journalIds) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_student js"
+                + " join student s on s.id = js.student_id"
+                + " join person p on p.id = s.person_id"
+                + " left join student_group sg on sg.id = s.student_group_id");
+        qb.requiredCriteria("js.journal_id in (:journalIds)", "journalIds", journalIds);
+
+        qb.sort("p.lastname, p.firstname");
+        List<?> data = qb.select("js.journal_id, js.id journal_student_id, s.id as student_id,"
+                + " p.firstname, p.lastname, s.status_code, sg.code student_group_code", em).getResultList();
+
+        return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
+            TimetableJournalStudentDto dto = new TimetableJournalStudentDto();
+            dto.setId(resultAsLong(r, 1));
+            dto.setStudentId(resultAsLong(r, 2));
+            dto.setFullname(PersonUtil.fullname(resultAsString(r, 3), resultAsString(r, 4)));
+            dto.setStatus(resultAsString(r, 5));
+            dto.setStudentGroup(resultAsString(r, 6));
+            return dto;
+        }, Collectors.toList())));
     }
 
     private void setJournalTeacherCapacities(Map<Long, TimetableJournalTeacherDto> journalTeachers,
@@ -1884,6 +1951,7 @@ public class TimetableService {
         if (!result.isEmpty()) {
             result = addRoomsListToEvents(result);
             result = addTeachersListToEvents(result);
+            result = addStudentsListToEvents(result);
         }
 
         return result;
@@ -2174,7 +2242,11 @@ public class TimetableService {
             List<Student> students;
             Subject subject = null;
             String journalName = null;
-            if(Boolean.TRUE.equals(timetable.getIsHigher())) {
+
+            List<TimetableEventStudent> timetableEventStudents = changedEvents.get(0).getTimetableEventStudents();
+            if (!timetableEventStudents.isEmpty()) {
+                students = StreamUtil.toMappedList(TimetableEventStudent::getStudent, timetableEventStudents);
+            } else if (Boolean.TRUE.equals(timetable.getIsHigher())) {
                 // send message only to students who have declared this subject
                 students = em.createQuery("select ds.declaration.student from DeclarationSubject ds where ds.declaration.status.code=?1 "
                         + "and ds.subjectStudyPeriod.id = ?2 and ds.declaration.student.studentGroup is not null", Student.class)

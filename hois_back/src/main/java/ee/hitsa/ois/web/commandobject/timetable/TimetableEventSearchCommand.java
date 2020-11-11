@@ -19,6 +19,7 @@ public class TimetableEventSearchCommand {
     private String otherRoom;
     private List<Long> timetables;
     private Long student;
+    private String studentName;
     private Boolean higher;
     private Boolean vocational;
     private Long journalOrSubjectId;
@@ -124,6 +125,14 @@ public class TimetableEventSearchCommand {
 
     public void setStudent(Long student) {
         this.student = student;
+    }
+
+    public String getStudentName() {
+        return studentName;
+    }
+
+    public void setStudentName(String studentName) {
+        this.studentName = studentName;
     }
 
     public Boolean getHigher() {

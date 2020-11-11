@@ -40,7 +40,9 @@
       <tbody md-body>
         <tr md-row ng-repeat="result in ::vocationalResultsCurriculum.otherOutcomeResults | orderBy: 'date' track by $index">
           <td md-cell>{{currentLanguageNameField(result.outcome)}} ({{currentLanguageNameField(result.curriculum)}})</td>
-          <td md-cell>{{result.grade | hoisVocationalGrade}}</td>
+          <td md-cell>
+            <hois-vocational-result value="result.grade" exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
+          </td>
           <td md-cell>{{result.date | hoisDate}}</td>
           <td md-cell>{{displayTeachers(result.teachers)}}</td>
         </tr>

@@ -59,6 +59,12 @@ public class SubjectStudyPeriodStudentGroupController {
         UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KOORM);
         return subjectStudyPeriodStudentGroupSearchService.searchByStudentGroup(user.getSchoolId(), criteria, pageable);
     }
+    
+    @GetMapping("/workloadsummary.xls")
+    public void summaryLessonplanAsExcelVocational(HoisUserDetails user, @Valid SubjectStudyPeriodSearchCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KOORM);
+        HttpUtil.xls(response, "workloadsummary.xls", subjectStudyPeriodStudentGroupSearchService.teacherCapacitiesAsExcel(criteria, user));
+    }
 
     @GetMapping("/container")
     public SubjectStudyPeriodDtoContainer getStudentGroupsSspContainer(HoisUserDetails user, @Valid SubjectStudyPeriodDtoContainer container) {

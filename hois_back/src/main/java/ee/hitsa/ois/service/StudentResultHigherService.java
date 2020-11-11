@@ -272,7 +272,8 @@ public class StudentResultHigherService {
             boolean onlyActiveResults) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_higher_result shr "
                 + "left join curriculum_version_hmodule cvh on cvh.id = shr.curriculum_version_hmodule_id "
-                + "left join classifier cl on shr.grade_code = cl.code")
+                + "left join classifier cl on shr.grade_code = cl.code "
+                + "left join grading_schema_row gsr on shr.grading_schema_row_id = gsr.id")
                 .sort("shr.is_active desc, shr.grade_date");
         qb.requiredCriteria("shr.student_id = :studentId", "studentId", EntityUtil.getId(student));
         qb.filter("shr.is_module = true");
@@ -283,7 +284,8 @@ public class StudentResultHigherService {
 
         List<?> rows = qb.select("cvh.id curriculum_version_hmodule_id, shr.id shr_id, shr.grade_code, shr.grade, "
                 + "shr.grade_date, shr.teachers, shr.study_period_id, cl.name_et grade_name_et, cl.name_en grade_name_en, "
-                + "shr.is_active, shr.grading_schema_row_id", em).getResultList();
+                + "shr.is_active, shr.grading_schema_row_id, gsr.grade gsr_grade_et, gsr.grade_en gsr_grade_en", em)
+                .getResultList();
 
         return rows.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> {
             StudentHigherResultGradeDto grade = new StudentHigherResultGradeDto();
@@ -295,6 +297,8 @@ public class StudentResultHigherService {
             grade.setStudyPeriod(resultAsLong(r, 6));
             grade.setGradeNameEt(resultAsString(r, 7));
             grade.setGradeNameEn(resultAsString(r, 8));
+            grade.setGradingSchemaGradeEt(resultAsString(r, 11));
+            grade.setGradingSchemaGradeEn(resultAsString(r, 12));
             grade.setIsActive(resultAsBoolean(r, 9));
             return grade;
         }, Collectors.toList())));
@@ -306,6 +310,7 @@ public class StudentResultHigherService {
                 + "left join student_higher_result_module shrm on shr.id = shrm.student_higher_result_id "
                 + "left join curriculum_version_hmodule cvh on cvh.id = coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id) "
                 + "left join classifier cl on shr.grade_code = cl.code "
+                + "left join grading_schema_row gsr on shr.grading_schema_row_id = gsr.id "
                 + "left join apel_application_record aar on shr.apel_application_record_id = aar.id "
                 + "left join apel_application aa on aar.apel_application_id = aa.id "
                 + "left join apel_school a_s on shr.apel_school_id = a_s.id "
@@ -327,7 +332,7 @@ public class StudentResultHigherService {
                 + "shr.grade_code, shr.grade, shr.grade_date, shr.teachers, shr.study_period_id, "
                 + "cl.name_et grade_name_et, cl.name_en grade_name_en, shr.is_active, "
                 + "country.name_et c_name_et, coalesce(country.name_en, country.name_et) c_name_en, "
-                + "shr.grading_schema_row_id",
+                + "shr.grading_schema_row_id, gsr.grade gsr_grade_et, gsr.grade_en gsr_grade_en",
                 em).getResultList();
 
         List<StudentHigherSubjectResultDto> studentResults = new ArrayList<>();
@@ -377,6 +382,8 @@ public class StudentResultHigherService {
             grade.setStudyPeriod(resultAsLong(r, 19));
             grade.setGradeNameEt(resultAsString(r, 20));
             grade.setGradeNameEn(resultAsString(r, 21));
+            grade.setGradingSchemaGradeEt(resultAsString(r, 26));
+            grade.setGradingSchemaGradeEn(resultAsString(r, 27));
             grade.setIsActive(resultAsBoolean(r, 22));
 
             dto.getGrades().add(grade);

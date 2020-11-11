@@ -5,17 +5,14 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.web.ControllerErrorHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -151,6 +148,11 @@ public class CurriculumService {
         curriculum.setTeacher(curriculumForm.getTeacher() == null ? null : em.getReference(Teacher.class, curriculumForm.getTeacher().getId()));
         if(CurriculumUtil.isVocational(curriculum)) {
             updateStudyForms(curriculum, curriculumForm.getStudyForms());
+            boolean deletedUsedForm = curriculum.getVersions().stream()
+                    .anyMatch(cv -> !curriculum.getStudyForms().contains(cv.getCurriculumStudyForm()));
+            if(deletedUsedForm) {
+                throw new ValidationFailedException("curriculum.error.removedUsedStudyForm");
+            }
             if(Boolean.TRUE.equals(curriculum.getJoint())) {
                 updateVersionsSchoolDepartments(curriculum);
             }

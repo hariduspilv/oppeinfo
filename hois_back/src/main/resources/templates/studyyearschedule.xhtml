@@ -25,6 +25,7 @@
 	  </tr>
 	  {% endfor %}
     </table>
+    <div style="font-weight: bold;margin-bottom: 10px;">{{ "studyyearschedule.title" | translate }} {{ content.studyYear }}</div>
     {% for table in content.tables %}
     <table class="schedule">
       <tr>
@@ -35,8 +36,21 @@
       </tr>
       <tr>
         <td></td>
-        {% for week in table.weeks %}
-        <td>{{ week }}</td>
+        {% for studyPeriod in table.studyPeriods %}
+	        {% for weekDate in studyPeriod.weekDates %}
+	        <td style="background-color: {{ weekDate.vacation ? '#EEEEEE' : 'white'}}">{{ weekDate.weekNr }}</td>
+	        {% endfor %}
+        {% endfor %}
+      </tr>
+      <tr>
+        <td></td>
+        {% for studyPeriod in table.studyPeriods %}
+            {% for weekDate in studyPeriod.weekDates %}
+            <td style="background-color: {{ weekDate.vacation ? '#EEEEEE' : 'white'}}">
+            {{ weekDate.startDate | hoisShortDate }}<br />
+            {{ weekDate.endDate | hoisShortDate }}
+            </td>
+            {% endfor %}
         {% endfor %}
       </tr>
       {% for department in table.departments %}
@@ -47,11 +61,11 @@
           <tr>
             <td class="break-long-words">{{ studentGroup.group.code }}</td>
             {% for schedule in studentGroup.schedule %}
-            {% if schedule is not empty %}
-                <td style="background-color: {{schedule.color}}; color: {{schedule.brightText ? 'white' : 'black'}}">{{ schedule.code }}</td>
-            {% else %}
-            	<td></td>
-            {% endif %}
+	            {% if schedule is not empty %}
+	                <td style="background-color: {{schedule.color}}; color: {{schedule.brightText ? 'white' : 'black'}}">{{ schedule.code }}</td>
+	            {% else %}
+	            	<td></td>
+	            {% endif %}
             {% endfor %}
           </tr>
           {% endfor %}

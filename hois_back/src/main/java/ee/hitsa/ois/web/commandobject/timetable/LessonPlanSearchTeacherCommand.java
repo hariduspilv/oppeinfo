@@ -1,14 +1,14 @@
 package ee.hitsa.ois.web.commandobject.timetable;
 
-import javax.validation.constraints.NotNull;
+import java.util.List;
 
-import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
+import javax.validation.constraints.NotNull;
 
 public class LessonPlanSearchTeacherCommand {
 
     @NotNull
     private Long studyYear;
-    private EntityConnectionCommand teacher;
+    private List<Long> teacher;
 
     public Long getStudyYear() {
         return studyYear;
@@ -18,11 +18,11 @@ public class LessonPlanSearchTeacherCommand {
         this.studyYear = studyYear;
     }
 
-    public EntityConnectionCommand getTeacher() {
+    public List<Long> getTeacher() {
         return teacher;
     }
 
-    public void setTeacher(EntityConnectionCommand teacher) {
+    public void setTeacher(List<Long> teacher) {
         this.teacher = teacher;
     }
 }

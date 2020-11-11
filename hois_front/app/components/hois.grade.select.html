@@ -1,7 +1,7 @@
 <md-select ng-model-options="{trackBy: '$value.gradingSchemaRowId + $value.code'}">
   <md-option ng-if="!isRequired && !ngRequired" ng-value="null"></md-option>
   <md-option ng-repeat="grade in filteredGrades" ng-value="grade" aria-label="{{$root.currentLanguageNameField(grade)}}">
-    <span ng-style="{'color': !grade.valid ? 'red': 'inherit'}">
+    <span ng-class="{'invalidGradingSchema': !grade.valid }">
       <span ng-if="grade.code.indexOf('KORGHINDAMINE') !== -1">
         {{grade.gradingSchemaRowId ? $root.currentLanguageNameField(grade) : (grade | hoisHigherGrade: auth.school.letterGrades)}}
       </span>

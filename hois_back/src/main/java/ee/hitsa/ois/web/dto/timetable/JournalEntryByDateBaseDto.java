@@ -13,6 +13,7 @@ public class JournalEntryByDateBaseDto {
 
     @ClassifierRestriction(MainClassCode.SISSEKANNE)
     private String entryType;
+    private Long journalStudent;
     private Long startLessonNr;
     private Long lessons;
     private Long curriculumModuleOutcomes;
@@ -49,6 +50,14 @@ public class JournalEntryByDateBaseDto {
 
     public void setEntryType(String entryType) {
         this.entryType = entryType;
+    }
+
+    public Long getJournalStudent() {
+        return journalStudent;
+    }
+
+    public void setJournalStudent(Long journalStudent) {
+        this.journalStudent = journalStudent;
     }
 
     public Long getStartLessonNr() {

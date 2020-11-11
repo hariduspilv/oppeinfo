@@ -51,6 +51,8 @@
         <div layout="row">
           <md-button ng-click="reloadTable()" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised"
+            ng-disabled="!applicationSearchForm.$valid">{{'main.button.printXls' | translate}}</md-button>
         </div>
       </form>
     </fieldset>

@@ -8,7 +8,10 @@ function ($scope, $route, QueryUtils, ArrayUtils, DataUtils, USER_ROLES, AuthSer
 
     $scope.currentNavItem = 'studentGroups';
 
-    $scope.formState = {xlsUrl: 'subjectStudyPeriods/studentGroups/searchByStudentGroup.xls'};
+    $scope.formState = {
+        xlsUrl: 'subjectStudyPeriods/studentGroups/searchByStudentGroup.xls',
+        xlsUrlSummary: "subjectStudyPeriods/studentGroups/workloadsummary.xls"
+    };
 
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriods/studentGroups', {order: 'id'}, function () {
         $scope.periodId = $scope.criteria.studyPeriod;

@@ -1,0 +1,18 @@
+<b>Lugupeetud, #{opetaja_nimi}.</b> Automaatsüsteem edastas teile kooli nimi järgneva kahe nädala tunniplaanid.
+
+<b>Järgmise nädala tunnid</b> (nädal nr. #{nadal_nr1})
+
+<b>Ajavahemik:</b> #{nadal_algus_lopp1}
+#for{nadal1_sundmused}
+#{jrk}: #{sundmuse_nimetus} (#{opperyhm}) | <b>#{nadalapaev}, kell:</b> #{sundmuse_aeg} | <b>Ruum: </b> #{sundmuse_ruum}
+#forend
+
+<b>Ülejärgmise nädala tunnid</b> (nädal nr. #{nadal_nr2})
+
+<b>Ajavahemik:</b> #{nadal_algus_lopp2}
+#for{nadal2_sundmused}
+#{jrk}: #{sundmuse_nimetus} (#{opperyhm}) | <b>#{nadalapaev}, kell:</b> #{sundmuse_aeg} | <b>Ruum: </b> #{sundmuse_ruum}
+#forend
+
+
+#{tunniplaan_url}

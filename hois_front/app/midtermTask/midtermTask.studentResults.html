@@ -24,13 +24,16 @@
     <div layout="row" ng-if="record.subgroups.length > 0">
       <md-input-container flex="15" flex-sm="50" flex-xs="100">
         <label>{{'midtermTask.subgroupSelect' | translate}}</label>
-        <md-select ng-model="controller.subgroup" ng-model-options="{trackBy: '$value.id'}">
+        <md-select ng-model="controller.subgroup" ng-model-options="{trackBy: '$value.id'}" ng-change="subgroupChanged()">
           <md-option md-option-empty></md-option>
           <md-option ng-value="val" ng-repeat="val in record.subgroups">{{currentLanguageNameField(val)}}</md-option>
         </md-select>
       </md-input-container>
     </div>
-    <md-table-container>
+    <md-table-container class="fixed-md-table-container" resize-table fixed-column-table
+                        fixed-columns="3"
+                        search-criteria-height="250"
+                        table-class="md-table">
       <table md-table>
         <thead md-head>
           <tr md-row>
@@ -83,7 +86,10 @@
                     <td>
                       <table>
                         <tr ng-repeat="protocolStudent in protocol.protocolStudents | filter: filterStudentProtocols(student)">
-                          <td>{{protocolStudent.grade | hoisHigherGrade: auth.school.letterGrades}}</td>
+                          <td>
+                            <hois-higher-result value="protocolStudent.grade" exists-grading-schema="existsSchoolGradingSchema"
+                              letter-grades="auth.school.letterGrades"></hois-higher-result>
+                          </td>
                         </tr>
                       </table>
                     </td>

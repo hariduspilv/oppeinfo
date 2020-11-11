@@ -736,7 +736,7 @@ md-toast.toastError .md-toast-content span {
 
 .logo {
   min-width: 60px;
-  max-width: 100px;
+  max-width: 200px;
   min-height: 40px;
   max-height: 60px;
   padding: 0.2em;
@@ -1383,6 +1383,10 @@ th.bordered[md-column] {
   color: red;
 }
 
+.invalidGradingSchema {
+  color: #1565C0;
+}
+
 .goodResult {
   color: #4CAF50;
 }
@@ -1443,6 +1447,11 @@ label.required::after {
 
 .lessonplan input[type="text"].ng-dirty.ng-invalid, .lessonplan input[type="number"].ng-dirty.ng-invalid {
   border: 1px solid rgb(221,44,0);
+}
+
+.lessonplan-individual-journal {
+  color: blue;
+  float: right;
 }
 
 .lessonplan-teacher-load, .lessonplan-teacher-load-label {
@@ -1905,10 +1914,6 @@ tr.scholarship-bottom-border td {
   .substitutableModuleSelect {
     width: 100%;
   }
-}
-
-.small-link {
-  font-size: 14px;
 }
 
 .timetable-capacities {
@@ -3036,6 +3041,9 @@ table.questions-secondary-table.secondary-table td:not(:first-child) {
 @media (max-width: 600px) {
   .school-board-type-button {
     font-size: 16px;
+  }
+  .logo {
+    max-width: 100px;
   }
 }
 

@@ -266,5 +266,20 @@ public abstract class PersonUtil {
         builder.append(fullname.substring(last));
         return builder.toString();
     }
+
+    public static String toCamelCase(String value) {
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0, cnt = value.length(); i < cnt; i++) {
+            char ch = value.charAt(i);
+            if(ch == '_') {
+                if(++i < cnt) {
+                    sb.append(Character.toUpperCase(value.charAt(i)));
+                }
+            } else {
+                sb.append(Character.toLowerCase(ch));
+            }
+        }
+        return sb.toString();
+    }
     
 }

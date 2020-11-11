@@ -11,11 +11,14 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.service.JournalAsyncService;
+import ee.hitsa.ois.web.commandobject.timetable.JournalEntriesCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalOutcomeForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSuitableStudentsCommand;
 import ee.hitsa.ois.web.dto.FutureStatusResponse;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeDto;
 import ee.hitsa.ois.web.dto.timetable.JournalOutcomeDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -124,10 +127,10 @@ public class JournalController {
     }
 
     @GetMapping("/{id:\\d+}/journalEntry")
-    public Page<JournalEntryTableDto> journalTableEntries(HoisUserDetails user,
-            @PathVariable("id") Long journalId, Pageable pageable) {
-        JournalUtil.assertCanView(user, em.find(Journal.class, journalId));
-        return journalService.journalTableEntries(journalId, pageable);
+    public Page<JournalEntryTableDto> journalTableEntries(HoisUserDetails user, @WithEntity Journal journal,
+            JournalEntriesCommand command, Pageable pageable) {
+        JournalUtil.assertCanView(user, journal);
+        return journalService.journalTableEntries(journal, command, pageable);
     }
 
     @GetMapping("/{id:\\d+}/journalEntry/{journalEntry:\\d+}")
@@ -227,6 +230,14 @@ public class JournalController {
         JournalUtil.assertCanView(user, journal);
         return journalService.journalEntryLessonInfo(journal);
     }
+
+    @GetMapping("/{id:\\d+}/theme/{theme:\\d+}")
+    public CurriculumVersionOccupationModuleThemeDto journalTheme(HoisUserDetails user,
+            @WithEntity Journal journal, @WithEntity("theme") CurriculumVersionOccupationModuleTheme theme) {
+        JournalUtil.assertCanView(user, journal);
+        return journalService.journalTheme(theme);
+    }
+
 
     @GetMapping("/{id:\\d+}/journal.xls")
     public void journalAsExcel(HoisUserDetails user, @WithEntity Journal journal, HttpServletResponse response) throws IOException {

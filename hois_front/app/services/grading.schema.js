@@ -9,16 +9,24 @@ angular.module('hitsaOis').constant('GRADING_SCHEMA_TYPE', {
   function ($q, GRADING_SCHEMA_TYPE, Classifier, HigherGradeUtil, QueryUtils) {
     var type, classifierGrades, schoolGradingSchemas;
 
-    function GradingSchema(gradingSchemaType) {
+    function GradingSchema(gradingSchemaType, schoolId) {
       type = gradingSchemaType;
       var gradesClassCode = GRADING_SCHEMA_TYPE.HIGHER === gradingSchemaType ? 'KORGHINDAMINE' : 'KUTSEHINDAMINE';
       classifierGrades = Classifier.queryForDropdown({ mainClassCode: gradesClassCode });
-      schoolGradingSchemas = QueryUtils.endpoint('/gradingSchema/typeSchemas').query({ type: gradingSchemaType });
+
+      if (angular.isDefined(schoolId)) {
+        schoolGradingSchemas = QueryUtils.endpoint('/public/gradingSchemas').query({ schoolId: schoolId, type: gradingSchemaType });
+      } else {
+        schoolGradingSchemas = QueryUtils.endpoint('/gradingSchema/typeSchemas').query({ type: gradingSchemaType });
+      }
       var promises = [classifierGrades.$promise, schoolGradingSchemas.$promise];
 
       return {
         promises: promises,
-        existsGradingSchema: function (studyYearId) {
+        existsSchoolGradingSchema: function () {
+          return existsSchoolGradingSchema();
+        },
+        existsValidSchoolGradingSchema: function (studyYearId) {
           return existsValidSchoolGradingSchema(studyYearId);
         },
         validSchoolGradingSchema: function (studyYearId) {
@@ -34,6 +42,10 @@ angular.module('hitsaOis').constant('GRADING_SCHEMA_TYPE', {
           return analogGetter(selection);
         }
       };
+    }
+
+    function existsSchoolGradingSchema() {
+      return schoolGradingSchemas.length > 0;
     }
 
     function existsValidSchoolGradingSchema(studyYearId) {
@@ -62,8 +74,8 @@ angular.module('hitsaOis').constant('GRADING_SCHEMA_TYPE', {
       var schoolGradingSchemaGradesValid = false;
       var selection = [];
       schoolGradingSchemas.forEach(function (schoolGradingSchema) {
-        var validSchoolGradingSchema = schoolGradingSchema.studyYears.indexOf(studyYearId) !== -1
-          && (!isGradeCheck || !schoolGradingSchema.isVerbal || schoolGradingSchema.isGrade);
+        var validSchoolGradingSchema = schoolGradingSchema.studyYears.indexOf(studyYearId) !== -1 &&
+          (!isGradeCheck || !schoolGradingSchema.isVerbal || schoolGradingSchema.isGrade);
         schoolGradingSchemaGradesValid = schoolGradingSchemaGradesValid || validSchoolGradingSchema;
         schoolGradingSchema.gradingSchemaRows.forEach(function (row) {
           selection.push({

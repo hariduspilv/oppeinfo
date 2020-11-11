@@ -62,7 +62,7 @@
     <md-input-container flex="45">
       <label class="textInput">{{'stipend.studyForm' | translate}}</label>
       <hois-classifier-select ng-model="stipend.studyForms" name="type" model-value-attr="code" main-classifier-code="OPPEVORM"
-        criteria="{vocational: true}" multiple></hois-classifier-select>
+        criteria="{vocational: true}" multiple filter-values="['OPPEVORM_E']"></hois-classifier-select>
     </md-input-container>
     <md-input-container flex="50" flex-offset="5">
       <label class="textInput">{{'stipend.courses' | translate}}</label>
@@ -117,7 +117,7 @@
       </md-checkbox>
     </div>
   </fieldset>
-  
+
   <div>&nbsp;</div>
   <fieldset>
     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stipend.previousPeriodCriteria' | translate}}</legend>
@@ -171,7 +171,7 @@
     <div layout="row" flex>
       <md-input-container flex="45">
         <label class="textInput">{{'stipend.curriculumCompletion' | translate}}</label>
-        <input ng-model="stipend.curriculumCompletion" type="number" autofocus aria-label="curriculumCompletion" min="0">
+        <input ng-model="stipend.curriculumCompletion" type="number" autofocus aria-label="curriculumCompletion" min="0" max="100">
       </md-input-container>
       <md-input-container flex="50" flex-offset="5">
         <label class="textInput">{{'stipend.priority' | translate}}</label>

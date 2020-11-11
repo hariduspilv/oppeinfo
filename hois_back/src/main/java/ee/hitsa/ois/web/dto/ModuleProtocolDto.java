@@ -3,9 +3,12 @@ package ee.hitsa.ois.web.dto;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.protocol.Protocol;
+import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -36,7 +39,12 @@ public class ModuleProtocolDto extends VersionedCommand {
 
     public static ModuleProtocolDto of(Protocol protocol) {
         ModuleProtocolDto dto = EntityUtil.bindToDto(protocol, new ModuleProtocolDto(), "protocolStudents", "protocolVdata", "confirmer");
-        dto.setProtocolStudents(StreamUtil.toMappedList(ModuleProtocolStudentDto::of, protocol.getProtocolStudents()));
+        dto.setProtocolStudents(StreamUtil.nullSafeList(protocol.getProtocolStudents())
+                .stream()
+                .sorted(Comparator.comparing((ProtocolStudent ps) -> ps.getStudent().getPerson().getLastname(), String::compareToIgnoreCase)
+                        .thenComparing(ps -> ps.getStudent().getPerson().getFirstname(), String::compareToIgnoreCase))
+                .map(ModuleProtocolStudentDto::of)
+                .collect(Collectors.toList()));
         if (protocol.getProtocolVdata() != null) {
             dto.setProtocolVdata(ProtocolVdataDto.of(protocol.getProtocolVdata()));
         }

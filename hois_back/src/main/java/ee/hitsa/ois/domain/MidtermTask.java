@@ -31,8 +31,6 @@ public class MidtermTask extends BaseEntityWithId {
     @JoinColumn(updatable = false, nullable = false)
     private SubjectStudyPeriod subjectStudyPeriod;
 
-    private Boolean isGradeSchema;
-
     @OneToMany(mappedBy = "midtermTask", fetch = FetchType.LAZY)
     private List<MidtermTaskStudentResult> studentResults;
 
@@ -130,13 +128,5 @@ public class MidtermTask extends BaseEntityWithId {
 
     public void setStudentResults(List<MidtermTaskStudentResult> studentResults) {
         this.studentResults = studentResults;
-    }
-
-    public Boolean getGradeSchema() {
-        return isGradeSchema;
-    }
-
-    public void setGradeSchema(Boolean gradeSchema) {
-        isGradeSchema = gradeSchema;
     }
 }

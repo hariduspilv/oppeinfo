@@ -11,6 +11,7 @@ public class ProtocolStudentReport {
     private final String fullname;
     private final String grade;
     private final String gradeName;
+    private final String gradingSchemaGrade;
     private final String studentgroup;
 
     ProtocolStudentReport(ProtocolStudent protocolStudent, Boolean letterGrades, Language lang) {
@@ -21,12 +22,19 @@ public class ProtocolStudentReport {
         } else {
             studentgroup = null;
         }
-        if (protocolStudent.getGrade() != null) {
+        if (protocolStudent.getGradingSchemaRow() != null) {
+            grade = null;
+            gradeName = null;
+            gradingSchemaGrade = Language.EN.equals(lang) ? protocolStudent.getGradingSchemaRow().getGradeEn()
+                    : protocolStudent.getGradingSchemaRow().getGrade();
+        } else if (protocolStudent.getGrade() != null) {
             grade = ReportUtil.gradeValue(protocolStudent.getGrade(), letterGrades, lang);
             gradeName = name(protocolStudent.getGrade(), lang);
+            gradingSchemaGrade = null;
         } else {
             grade = null;
             gradeName = null;
+            gradingSchemaGrade = null;
         }
     }
 
@@ -36,6 +44,10 @@ public class ProtocolStudentReport {
 
     public String getGrade() {
         return grade;
+    }
+
+    public String getGradingSchemaGrade() {
+        return gradingSchemaGrade;
     }
 
     public String getGradeName() {

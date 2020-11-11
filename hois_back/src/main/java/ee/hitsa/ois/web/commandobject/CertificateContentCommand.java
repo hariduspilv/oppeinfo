@@ -16,6 +16,7 @@ public class CertificateContentCommand {
     private Boolean addOutcomes;
     private Boolean estonian;
     private Boolean showUncompleted;
+    private Boolean stateGradingSchema;
 
     public Long getStudent() {
         return student;
@@ -80,5 +81,12 @@ public class CertificateContentCommand {
     public void setShowUncompleted(Boolean showUncompleted) {
         this.showUncompleted = showUncompleted;
     }
-    
+
+    public Boolean getStateGradingSchema() {
+        return stateGradingSchema;
+    }
+
+    public void setStateGradingSchema(Boolean stateGradingSchema) {
+        this.stateGradingSchema = stateGradingSchema;
+    }
 }

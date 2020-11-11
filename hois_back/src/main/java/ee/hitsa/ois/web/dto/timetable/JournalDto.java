@@ -2,10 +2,12 @@ package ee.hitsa.ois.web.dto.timetable;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import ee.hitsa.ois.domain.curriculum.CurriculumModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.Journal;
@@ -18,6 +20,8 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleResult;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.studymaterial.JournalLessonHoursDto;
 
 public class JournalDto {
@@ -31,7 +35,8 @@ public class JournalDto {
     private List<String> studentGroups = new ArrayList<>();
     private List<String> journalTeachers = new ArrayList<>();
     private List<AutocompleteResult> curriculumModules = new ArrayList<>();
-    private List<JournalModuleDescriptionDto> moduleDescriptions = new ArrayList<>();
+    private List<String> responsiblesForModules = new ArrayList<>();
+    private List<JournalCurriculumVersionDto> curriculumVersions = new ArrayList<>();
     private List<JournalStudentIndividualCurriculumDto> individualCurriculums = new ArrayList<>();
     private JournalLessonHoursDto lessonHours;
     @ClassifierRestriction(MainClassCode.PAEVIK_STAATUS)
@@ -40,6 +45,7 @@ public class JournalDto {
     private Boolean hasJournalStudents;
     private List<AutocompleteResult> journalRooms = new ArrayList<>();
     private Boolean includesOutcomes;
+    private Boolean isIndividual;
     private Boolean finalEntryAllowed;
     private String assessment;
     private Boolean isDistinctiveAssessment;
@@ -64,33 +70,51 @@ public class JournalDto {
         dto.setStudyYearStartDate(journal.getStudyYear().getStartDate());
         dto.setStudyYearEndDate(journal.getStudyYear().getEndDate());
 
-        if (!journal.getJournalOccupationModuleThemes().isEmpty()
-                && journal.getJournalOccupationModuleThemes().get(0) != null) {
-            CurriculumVersionOccupationModule cvom = journal.getJournalOccupationModuleThemes().get(0)
-                    .getCurriculumVersionOccupationModuleTheme().getModule();
-            CurriculumModule module = cvom.getCurriculumModule();
-            JournalModuleDescriptionDto moduleDescription = EntityUtil.bindToDto(cvom,
-                    new JournalModuleDescriptionDto());
-            moduleDescription.setNameEt(module.getNameEt());
-            moduleDescription.setNameEn(module.getNameEn());
-            moduleDescription.setIsModule(Boolean.TRUE);
-            moduleDescription.setAssessment(EntityUtil.getCode(cvom.getAssessment()));
-            dto.moduleDescriptions.add(moduleDescription);
-        }
+        Map<Long, CurriculumVersionResult> curriculumVersionsById = new HashMap<>();
+        Map<Long, Map<Long, CurriculumVersionOccupationModuleResult>> modulesByCurriculumVersion = new HashMap<>();
+        Map<Long, List<AutocompleteResult>> themesByCurriculumVersion = new HashMap<>();
 
         for (JournalOccupationModuleTheme theme : journal.getJournalOccupationModuleThemes()) {
             CurriculumVersionOccupationModuleTheme cvomt = theme.getCurriculumVersionOccupationModuleTheme();
+            CurriculumVersionOccupationModule cvom = cvomt.getModule();
+            CurriculumVersion curriculumVersion = cvom.getCurriculumVersion();
             
             dto.getStudentGroups().add(theme.getLessonPlanModule().getLessonPlan().getStudentGroup().getCode());
-            dto.getCurriculumModules().add(AutocompleteResult.of(cvomt.getModule()));
-
-            if (cvomt.getAssessment() != null) {
-                JournalModuleDescriptionDto themeDescription = EntityUtil.bindToDto(cvomt, new JournalModuleDescriptionDto());
-                themeDescription.setIsModule(Boolean.FALSE);
-                themeDescription.setAssessment(EntityUtil.getCode(cvomt.getAssessment()));
-                dto.moduleDescriptions.add(themeDescription);
+            dto.getCurriculumModules().add(AutocompleteResult.of(cvom));
+            if (theme.getLessonPlanModule().getTeacher() != null) {
+                String responsibleForModule = PersonUtil.fullname(theme.getLessonPlanModule().getTeacher().getPerson());
+                if (!dto.getResponsiblesForModules().contains(responsibleForModule)) {
+                    dto.getResponsiblesForModules().add(responsibleForModule);
+                }
             }
+
+            CurriculumVersionOccupationModuleResult curriculumModuleResult = AutocompleteResult.of(cvom, false);
+            CurriculumVersionResult curriculumVersionResult = AutocompleteResult.of(curriculumVersion);
+
+            Long cvId = curriculumVersionResult.getId();
+            if (!themesByCurriculumVersion.containsKey(cvId)) {
+                themesByCurriculumVersion.put(cvId, new ArrayList<>());
+            }
+            themesByCurriculumVersion.get(cvId).add(new AutocompleteResult(cvomt.getId(), cvomt.getNameEt(), null));
+
+            if (!modulesByCurriculumVersion.containsKey(cvId)) {
+                modulesByCurriculumVersion.put(cvId, new HashMap<>());
+            }
+            modulesByCurriculumVersion.get(cvId).put(curriculumModuleResult.getId(), curriculumModuleResult);
+            curriculumVersionsById.put(cvId, curriculumVersionResult);
         }
+
+        for (CurriculumVersionResult cv : curriculumVersionsById.values()) {
+            JournalCurriculumVersionDto cvDto = new JournalCurriculumVersionDto();
+            cvDto.setId(cv.getId());
+            cvDto.setCurriculumId(cv.getCurriculum());
+            cvDto.setNameEt(cv.getNameEt());
+            cvDto.setNameEn(cv.getNameEn());
+            cvDto.getModules().addAll(modulesByCurriculumVersion.get(cvDto.getId()).values());
+            cvDto.getThemes().addAll(themesByCurriculumVersion.get(cvDto.getId()));
+            dto.getCurriculumVersions().add(cvDto);
+        }
+
         dto.setStudentGroups(dto.getStudentGroups().stream().distinct().collect(Collectors.toList()));
         dto.setCurriculumModules(dto.getCurriculumModules().stream().distinct().collect(Collectors.toList()));
         
@@ -178,6 +202,14 @@ public class JournalDto {
         this.curriculumModules = curriculumModules;
     }
 
+    public List<String> getResponsiblesForModules() {
+        return responsiblesForModules;
+    }
+
+    public void setResponsiblesForModules(List<String> responsiblesForModules) {
+        this.responsiblesForModules = responsiblesForModules;
+    }
+
     public JournalLessonHoursDto getLessonHours() {
         return lessonHours;
     }
@@ -218,12 +250,12 @@ public class JournalDto {
         this.journalRooms = journalRooms;
     }
 
-    public List<JournalModuleDescriptionDto> getModuleDescriptions() {
-        return moduleDescriptions;
+    public List<JournalCurriculumVersionDto> getCurriculumVersions() {
+        return curriculumVersions;
     }
 
-    public void setModuleDescriptions(List<JournalModuleDescriptionDto> moduleDescriptions) {
-        this.moduleDescriptions = moduleDescriptions;
+    public void setCurriculumVersions(List<JournalCurriculumVersionDto> curriculumVersions) {
+        this.curriculumVersions = curriculumVersions;
     }
 
     public List<JournalStudentIndividualCurriculumDto> getIndividualCurriculums() {
@@ -240,6 +272,14 @@ public class JournalDto {
 
     public void setIncludesOutcomes(Boolean includesOutcomes) {
         this.includesOutcomes = includesOutcomes;
+    }
+
+    public Boolean getIsIndividual() {
+       return isIndividual;
+    }
+
+    public void setIsIndividual(Boolean isIndividual) {
+        this.isIndividual = isIndividual;
     }
 
     public Boolean getFinalEntryAllowed() {

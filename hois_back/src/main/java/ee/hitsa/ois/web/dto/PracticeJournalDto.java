@@ -23,6 +23,7 @@ public class PracticeJournalDto extends VersionedCommand {
     private AutocompleteResult studentGroup;
     private AutocompleteResult school;
     private AutocompleteResult studentCurriculumVersion;
+    private AutocompleteResult studyYear;
     private String studentStudyForm;
     private AutocompleteResult module;
     private AutocompleteResult theme;
@@ -40,7 +41,7 @@ public class PracticeJournalDto extends VersionedCommand {
     private String supervisorOpinion;
     private String teacherComment;
     private String teacherOpinion;
-    private String grade;
+    private GradeDto grade;
     private ContractDto contract;
     private List<PracticeJournalEntryDto> practiceJournalEntries;
     private List<PracticeJournalFileDto> practiceJournalFiles;
@@ -60,7 +61,8 @@ public class PracticeJournalDto extends VersionedCommand {
 
     public static PracticeJournalDto of(PracticeJournal practiceJournal) {
         PracticeJournalDto dto = EntityUtil.bindToDto(practiceJournal, new PracticeJournalDto(), "contract",
-                "practiceJournalEntries", "practiceJournalFiles", "moduleSubjects", "practiceEvaluation", "studentGroup");
+                "practiceJournalEntries", "practiceJournalFiles", "moduleSubjects", "practiceEvaluation",
+                "studentGroup", "grade");
         if (practiceJournal.getStudent() != null) {
             Student student = practiceJournal.getStudent();
             if (student.getStatus() != null && student.getStatus().getCode() != null) {
@@ -70,6 +72,7 @@ public class PracticeJournalDto extends VersionedCommand {
                 dto.setStudentGroup(AutocompleteResult.of(practiceJournal.getStudent().getStudentGroup()));
             }
         }
+        dto.setGrade(GradeDto.of(practiceJournal));
         dto.setContract(ContractDto.of(practiceJournal.getContract()));
         if (practiceJournal.getPracticeEvaluation() != null) {
             dto.setPracticeEvaluation(AutocompleteResult.of(practiceJournal.getPracticeEvaluation()));
@@ -85,6 +88,7 @@ public class PracticeJournalDto extends VersionedCommand {
         dto.getModuleSubjects().sort(Comparator.comparing(ms -> ms.getModule() != null ? ms.getModule().getNameEt() : ms.getSubject().getNameEt(), 
                 String.CASE_INSENSITIVE_ORDER));
         dto.setStudentCurriculumVersion(AutocompleteResult.of(practiceJournal.getStudent().getCurriculumVersion()));
+        dto.setStudyYear(AutocompleteResult.of(practiceJournal.getStudyYear()));
         dto.setStudentStudyForm(EntityUtil.getNullableCode(practiceJournal.getStudent().getStudyForm()));
         dto.setIsHigher(Boolean.valueOf(StudentUtil.isHigher(practiceJournal.getStudent())));
         return dto;
@@ -120,6 +124,14 @@ public class PracticeJournalDto extends VersionedCommand {
 
     public void setStudentCurriculumVersion(AutocompleteResult studentCurriculumVersion) {
         this.studentCurriculumVersion = studentCurriculumVersion;
+    }
+
+    public AutocompleteResult getStudyYear() {
+        return studyYear;
+    }
+
+    public void setStudyYear(AutocompleteResult studyYear) {
+        this.studyYear = studyYear;
     }
 
     public String getStudentStudyForm() {
@@ -242,11 +254,11 @@ public class PracticeJournalDto extends VersionedCommand {
         this.teacherOpinion = teacherOpinion;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
 
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
 

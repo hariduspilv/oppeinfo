@@ -14,8 +14,10 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
 ]).controller('AuthenticatedHomeController', ['$rootScope', '$scope', '$timeout', 'AUTH_EVENTS', 'AuthService', 'USER_ROLES',
                                               'ArrayUtils', 'QueryUtils', '$resource', 'config', 'Session', '$filter', '$mdDialog',
                                               'message', 'dialogService', 'oisFileService', 'FormUtils', 'Classifier', '$q',
+                                              'GRADING_SCHEMA_TYPE', 'GradingSchema', 'VocationalGradeUtil',
   function ($rootScope, $scope, $timeout, AUTH_EVENTS, AuthService, USER_ROLES, ArrayUtils, QueryUtils, $resource,
-      config, Session, $filter, $mdDialog, message, dialogService, oisFileService, FormUtils, Classifier, $q) {
+            config, Session, $filter, $mdDialog, message, dialogService, oisFileService, FormUtils, Classifier, $q,
+            GRADING_SCHEMA_TYPE, GradingSchema, VocationalGradeUtil) {
     /**
      * Still under question if we need to add a delay for timeout.
      */
@@ -746,10 +748,12 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School', '$l
         function (result) {
           $scope.lastResults = result;
 
-          var clMapper = Classifier.valuemapper({grade: 'KUTSEHINDAMINE'});
-          $q.all(clMapper.promises).then(function () {
+          $scope.gradeUtil = VocationalGradeUtil;
+          var gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.VOCATIONAL);
+          $q.all(gradingSchema.promises).then(function () {
+            var gradeMapper = gradingSchema.gradeMapper(gradingSchema.gradeSelection(), ['grade']);
             $scope.lastResults.forEach(function (lastResult) {
-              lastResult = clMapper.objectmapper(lastResult);
+              gradeMapper.objectmapper(lastResult);
             });
           });
           if (result.length === 0) {

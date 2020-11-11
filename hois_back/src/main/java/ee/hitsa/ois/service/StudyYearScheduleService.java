@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -21,7 +22,6 @@ import java.util.stream.Stream;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
-import org.apache.poi.ss.usermodel.Comment;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.jxls.common.AreaListener;
@@ -79,14 +79,14 @@ public class StudyYearScheduleService {
     @Autowired
     private PdfService pdfService;
     
-    private static final int PDF_MAX_WEEKS = 16;
+    private static final int PDF_MAX_WEEKS = 28;
 
-    public Set<StudyYearScheduleDto> getSet(HoisUserDetails user, StudyYearScheduleDtoContainer schedulesCmd) {
+    public Set<StudyYearScheduleDto> getSet(HoisUserDetails user, Long schoolId, StudyYearScheduleDtoContainer schedulesCmd) {
         JpaQueryBuilder<StudyYearSchedule> qb = new JpaQueryBuilder<>(StudyYearSchedule.class, "sys");
 
-        qb.requiredCriteria("sys.school.id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("sys.school.id = :schoolId", "schoolId", user != null ? user.getSchoolId() : schoolId);
         qb.requiredCriteria("sys.studyPeriod.id in (:studyPeriodIds)", "studyPeriodIds", schedulesCmd.getStudyPeriods());
-        if (Boolean.TRUE.equals(schedulesCmd.getShowMine())) {
+        if (user != null && Boolean.TRUE.equals(schedulesCmd.getShowMine())) {
             Long studentId = user.getStudentId();
             if (studentId != null) {
                 Student student = em.getReference(Student.class, studentId);
@@ -144,19 +144,19 @@ public class StudyYearScheduleService {
     }
 
     public List<StudentGroupSearchDto> getStudentGroups(HoisUserDetails user, Boolean showMine) {
-        return getStudentGroups(user, showMine, null, null);
+        return getStudentGroups(user, null,showMine, null, null);
     }
 
-    public List<StudentGroupSearchDto> getStudentGroups(HoisUserDetails user, Boolean showMine, LocalDate from,
+    public List<StudentGroupSearchDto> getStudentGroups(HoisUserDetails user, Long schoolId, Boolean showMine, LocalDate from,
             LocalDate thru) {
         List<StudentGroup> data;
-        if (Boolean.TRUE.equals(showMine) && (user.isStudent() || user.isRepresentative())) {
+        if (user != null && Boolean.TRUE.equals(showMine) && (user.isStudent() || user.isRepresentative())) {
             data = em.createQuery("select s.studentGroup from Student s where s.id = ?1", StudentGroup.class)
                     .setParameter(1, user.getStudentId()).getResultList();
         } else {
             JpaQueryBuilder<StudentGroup> qb = new JpaQueryBuilder<>(StudentGroup.class, "sg").sort("code");
-            qb.requiredCriteria("sg.school.id = :schoolId", "schoolId", user.getSchoolId());
-            if (Boolean.TRUE.equals(showMine) && user.isLeadingTeacher()) {
+            qb.requiredCriteria("sg.school.id = :schoolId", "schoolId", user != null ? user.getSchoolId() : schoolId);
+            if (user != null && Boolean.TRUE.equals(showMine) && user.isLeadingTeacher()) {
                 qb.requiredCriteria("sg.curriculum.id in (:userCurriculumIds)", "userCurriculumIds", user.getCurriculumIds());
             }
             qb.optionalCriteria("(sg.validFrom is null or sg.validFrom <= :thru)", "thru", thru);
@@ -172,7 +172,9 @@ public class StudyYearScheduleService {
             dto.setValidThru(sg.getValidThru());
             dto.setSchoolDepartments(StreamUtil.toMappedList(d -> EntityUtil.getId(d.getSchoolDepartment()),
                     sg.getCurriculum().getDepartments()));
-            dto.setCanEdit(Boolean.valueOf(UserUtil.isSchoolAdminOrLeadingTeacher(user, sg)));
+            if (user != null) {
+                dto.setCanEdit(Boolean.valueOf(UserUtil.isSchoolAdminOrLeadingTeacher(user, sg)));
+            }
             return dto;
         }, data.stream().filter(sg -> sg.getCurriculum() != null && !sg.getCurriculum().getDepartments().isEmpty()));
     }
@@ -271,11 +273,22 @@ public class StudyYearScheduleService {
         }, studyPeriods);
     }
 
-    private StudyYearScheduleReport getReport(HoisUserDetails user, StudyYearScheduleForm schedulesCmd) {
-        School school = em.getReference(School.class, user.getSchoolId());
+    private StudyYearScheduleReport getReport(HoisUserDetails user, Long schoolId, StudyYearScheduleForm schedulesCmd) {
+        School school = null;
+        List<SchoolDepartmentResult> departmentList = null;
         StudyYear studyYear = em.getReference(StudyYear.class, schedulesCmd.getStudyYearId());
-        UserUtil.assertSameSchool(user, studyYear.getSchool());
+        if (user != null) {
+            school = em.getReference(School.class, user.getSchoolId());
+            UserUtil.assertSameSchool(user, studyYear.getSchool());
+            departmentList = StreamUtil.toFilteredList(d -> schedulesCmd.getSchoolDepartments().contains(d.getId()),
+                    autocompleteService.schoolDepartments(user.getSchoolId()));
+        } else {
+            school = em.getReference(School.class, schoolId);
+            departmentList = StreamUtil.toFilteredList(d -> schedulesCmd.getSchoolDepartments().contains(d.getId()),
+                    autocompleteService.schoolDepartments(schoolId));
+        }
         StudyYearScheduleReport report = new StudyYearScheduleReport();
+        report.setStudyYear(studyYear.getYear().getNameEt());
         List<StudyYearScheduleLegendDto> legendList = StreamUtil.toMappedList(StudyYearScheduleLegendDto::of, 
                 school.getStudyYearScheduleLegends());
         Map<Long, StudyYearScheduleLegendDto> legendMap = StreamUtil.toMap(StudyYearScheduleLegendDto::getId, legendList);
@@ -287,17 +300,14 @@ public class StudyYearScheduleService {
         for (ReportStudyPeriod period : studyPeriods) {
             weeks.addAll(period.getWeeks());
         }
-        table.setStudyYear(studyYear.getYear().getNameEt());
         table.setWeeks(weeks);
-        List<SchoolDepartmentResult> departmentList = StreamUtil.toFilteredList(d -> schedulesCmd.getSchoolDepartments().contains(d.getId()),
-                autocompleteService.schoolDepartments(user.getSchoolId()));
-        List<StudentGroupSearchDto> studentGroups = getStudentGroups(user, schedulesCmd.getShowMine(),
+        List<StudentGroupSearchDto> studentGroups = getStudentGroups(user, schoolId, schedulesCmd.getShowMine(),
                 studyYear.getStartDate(), studyYear.getEndDate());
         StudyYearScheduleDtoContainer schedulesContainer = new StudyYearScheduleDtoContainer();
         schedulesContainer.setStudyPeriods(StreamUtil.toMappedSet(sp -> sp.getPeriod().getId(), studyPeriods));
         schedulesContainer.setStudentGroups(StreamUtil.toMappedSet(StudentGroupSearchDto::getId, studentGroups));
         schedulesContainer.setShowMine(schedulesCmd.getShowMine());
-        Set<StudyYearScheduleDto> schedule = getSet(user, schedulesContainer);
+        Set<StudyYearScheduleDto> schedule = getSet(user, schoolId, schedulesContainer);
         table.setDepartments(StreamUtil.toMappedList(department -> {
             ReportDepartment departmentData = new ReportDepartment();
             departmentData.setDepartment(department);
@@ -330,12 +340,13 @@ public class StudyYearScheduleService {
             }, studentGroups.stream().filter(sg -> sg.getSchoolDepartments().contains(department.getId()))));
             return departmentData;
         }, departmentList));
+        Collections.sort(table.getDepartments(), Comparator.comparing(p -> p.getDepartment().getNameEt(), String.CASE_INSENSITIVE_ORDER));
         report.setTables(Collections.singletonList(table));
         return report;
     }
     
-    public byte[] studyYearScheduleAsExcel(HoisUserDetails user, StudyYearScheduleForm schedulesCmd) {
-        StudyYearScheduleReport report = getReport(user, schedulesCmd);
+    public byte[] studyYearScheduleAsExcel(HoisUserDetails user, Long schoolId, StudyYearScheduleForm schedulesCmd) {
+        StudyYearScheduleReport report = getReport(user, schoolId, schedulesCmd);
         ReportTable table = report.getTables().get(0);
         Map<String, Object> data = new HashMap<>();
         data.put("legends", report.getLegends());
@@ -344,10 +355,9 @@ public class StudyYearScheduleService {
                 p.getWeeks().remove(0);
             }
         });
-        data.put("studyYear", table.getStudyYear());
+        data.put("studyYear", report.getStudyYear());
         data.put("studyPeriods", table.getStudyPeriods());
         data.put("weeks", table.getWeeks());
-        Collections.sort(table.getDepartments(), Comparator.comparing(p -> p.getDepartment().getNameEt(), String.CASE_INSENSITIVE_ORDER));
         data.put("departments", table.getDepartments());
         List<SimpleEntry<String, AreaListener>> listeners = new ArrayList<>();
         AbstractColorAreaListener<WeekStartAndEndDto> vacationColorListener = new AbstractColorAreaListener<WeekStartAndEndDto>("weekDate") {
@@ -445,8 +455,8 @@ public class StudyYearScheduleService {
      * @param schedulesCmd
      * @return bytes of file
      */
-    public byte[] studyYearScheduleAsPdf(HoisUserDetails user, StudyYearScheduleForm schedulesCmd) {
-        StudyYearScheduleReport report = getReport(user, schedulesCmd);
+    public byte[] studyYearScheduleAsPdf(HoisUserDetails user, Long schoolId, StudyYearScheduleForm schedulesCmd) {
+        StudyYearScheduleReport report = getReport(user, schoolId, schedulesCmd);
         ReportTable table = report.getTables().get(0);
         // Map periods by weeks. Fill empty weeks by next period
         Map<Integer, ReportStudyPeriod> studyPeriodsByWeek = new HashMap<>();
@@ -483,10 +493,16 @@ public class StudyYearScheduleService {
                         ReportStudyPeriod tempPeriod = new ReportStudyPeriod();
                         tempPeriod.setPeriod(p.getPeriod());
                         tempPeriod.setWeeks(new ArrayList<>());
+                        tempPeriod.setWeekDates(new ArrayList<>());
                         iteratedPeriods.put(p, tempPeriod);
                         temp.getStudyPeriods().add(tempPeriod);
                     }
-                    iteratedPeriods.get(p).getWeeks().add(Short.valueOf((short) w));
+                    Short weekShort = Short.valueOf((short) w);
+                    iteratedPeriods.get(p).getWeeks().add(weekShort);
+                    Optional<WeekStartAndEndDto> weekDto = p.getWeekDates().stream().filter(weekStartAndEnd -> weekShort.equals(weekStartAndEnd.getWeekNr())).findFirst();
+                    if (weekDto.isPresent()) {
+                        iteratedPeriods.get(p).getWeekDates().add(weekDto.get());
+                    }
                 }
             }
             temp.setDepartments(splitDepartments(table, i, nextRow ? next : next + 1));

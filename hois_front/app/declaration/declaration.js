@@ -10,13 +10,18 @@ function calculateSubjectCredits(subjects) {
 }
 
 angular.module('hitsaOis').controller('DeclarationEditController',
-['$location', '$scope', '$route', 'ArrayUtils', 'Classifier', 'DataUtils', 'FormUtils', 'QueryUtils', 'dialogService', 'message',
-function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtils, QueryUtils, dialogService, message) {
+['$q', '$location', '$scope', '$route', 'GRADING_SCHEMA_TYPE', 'ArrayUtils', 'DataUtils', 'FormUtils', 'GradingSchema', 'QueryUtils', 'dialogService', 'message',
+function ($q, $location, $scope, $route, GRADING_SCHEMA_TYPE, ArrayUtils, DataUtils, FormUtils, GradingSchema, QueryUtils, dialogService, message) {
 
   var SubjectEndpoint = QueryUtils.endpoint('/declarations/subject');
   var ConfirmEndPoint = QueryUtils.endpoint('/declarations/confirm');
 
-  var clMapper = Classifier.valuemapper({grade: 'KORGHINDAMINE'});
+  var gradeMapper;
+  var gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.HIGHER);
+  $q.all(gradingSchema.promises).then(function () {
+    $scope.existsSchoolGradingSchema = gradingSchema.existsSchoolGradingSchema();
+    gradeMapper = gradingSchema.gradeMapper(gradingSchema.gradeSelection(), ['grade']);
+  });
 
   var id = $route.current.params.id;
   $scope.formState = {};
@@ -75,10 +80,10 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
     $scope.isGuestStudent = declaration.student.type === 'OPPUR_K';
     (declaration.subjects || []).forEach(function (subject) {
       subject.mandatoryPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
-        clMapper.objectmapper(prerequisiteSubject);
+        gradeMapper.objectmapper(prerequisiteSubject);
       });
       subject.recommendedPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
-        clMapper.objectmapper(prerequisiteSubject);
+        gradeMapper.objectmapper(prerequisiteSubject);
       });
     });
   }
@@ -213,6 +218,7 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
   $scope.seePrerequisites = function(subject) {
       var DialogController = function (scope) {
         scope.subject = subject;
+        scope.existsSchoolGradingSchema = $scope.existsSchoolGradingSchema;
         scope.letterGrades = $scope.auth.school.letterGrades;
       };
 
@@ -221,8 +227,8 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
       });
   };
 
-}]).controller('DeclarationViewController', ['$location', '$route', '$scope', 'ArrayUtils', 'Classifier', 'QueryUtils', 'dialogService', 'message',
-  function ($location, $route, $scope, ArrayUtils, Classifier, QueryUtils, dialogService, message) {
+}]).controller('DeclarationViewController', ['$q', '$location', '$route', '$scope', 'GRADING_SCHEMA_TYPE', 'ArrayUtils', 'Classifier', 'GradingSchema', 'QueryUtils', 'dialogService', 'message',
+  function ($q, $location, $route, $scope, GRADING_SCHEMA_TYPE, ArrayUtils, Classifier, GradingSchema, QueryUtils, dialogService, message) {
 
   var id = $route.current.params.id;
   $scope.formState = {};
@@ -242,7 +248,12 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
   $scope.auth = $route.current.locals.auth;
   var ConfirmEndPoint = QueryUtils.endpoint('/declarations/confirm');
 
-  var clMapper = Classifier.valuemapper({grade: 'KORGHINDAMINE'});
+  var gradeMapper;
+  var gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.HIGHER);
+  $q.all(gradingSchema.promises).then(function () {
+    $scope.existsSchoolGradingSchema = gradingSchema.existsSchoolGradingSchema();
+    gradeMapper = gradingSchema.gradeMapper(gradingSchema.gradeSelection(), ['grade']);
+  });
 
   var currentWrapper = new DeclarationWrapper(undefined, {isNextPeriod: false});
   var nextWrapper = new DeclarationWrapper(undefined, {isNextPeriod: true});
@@ -332,10 +343,10 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
   function afterLoad(declaration) {
     (declaration.subjects || []).forEach(function (subject) {
       subject.mandatoryPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
-        clMapper.objectmapper(prerequisiteSubject);
+        gradeMapper.objectmapper(prerequisiteSubject);
       });
       subject.recommendedPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
-        clMapper.objectmapper(prerequisiteSubject);
+        gradeMapper.objectmapper(prerequisiteSubject);
       });
     });
   }
@@ -379,6 +390,8 @@ function ($location, $scope, $route, ArrayUtils, Classifier, DataUtils, FormUtil
   $scope.seePrerequisites = function(subject) {
       var DialogController = function (scope) {
         scope.subject = subject;
+        scope.existsSchoolGradingSchema = $scope.existsSchoolGradingSchema;
+        scope.letterGrades = $scope.auth.school.letterGrades;
       };
 
       dialogService.showDialog('declaration/declaration.subject.prerequisites.html', DialogController,

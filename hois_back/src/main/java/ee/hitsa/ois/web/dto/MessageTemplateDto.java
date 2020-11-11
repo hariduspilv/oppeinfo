@@ -1,9 +1,14 @@
 package ee.hitsa.ois.web.dto;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.MessageTemplate;
+import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.EnumUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.MessageTemplateForm;
 
 public class MessageTemplateDto extends MessageTemplateForm {
@@ -12,9 +17,19 @@ public class MessageTemplateDto extends MessageTemplateForm {
     private String insertedBy;
     private LocalDateTime changed;
     private String changedBy;
+
+    private List<String> userRights;
     
     public static MessageTemplateDto of(MessageTemplate messageTemplate) {
-        return EntityUtil.bindToDto(messageTemplate, new MessageTemplateDto());
+        MessageTemplateDto dto = EntityUtil.bindToDto(messageTemplate, new MessageTemplateDto());
+        MessageType type = EnumUtil.valueOf(MessageType.class, messageTemplate.getType());
+        if (type != null) {
+            dto.setUserRights(StreamUtil.nullSafeSet(type.getPermissions())
+                    .stream()
+                    .map(Enum::name)
+                    .collect(Collectors.toList()));
+        }
+        return dto;
     }
     
     public Long getId() {
@@ -55,5 +70,13 @@ public class MessageTemplateDto extends MessageTemplateForm {
 
     public void setChangedBy(String changedBy) {
         this.changedBy = changedBy;
+    }
+
+    public List<String> getUserRights() {
+        return userRights;
+    }
+
+    public void setUserRights(List<String> userRights) {
+        this.userRights = userRights;
     }
 }

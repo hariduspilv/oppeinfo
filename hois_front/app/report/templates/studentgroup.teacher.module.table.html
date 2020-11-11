@@ -31,7 +31,7 @@
       <td ng-repeat="resultColumn in row.resultColumns"
           ng-class="{'deep-orange-100': !resultColumn.intendedModule && (record.showStudentProgress || !resultColumn.moduleResult.grade)}">
         <div>
-          <div ng-class="{badResult: !gradeUtil.isPositive(resultColumn.moduleResult.grade.code)}">{{resultColumn.moduleResult.grade | hoisVocationalGrade}}</div>
+          <hois-vocational-result value="resultColumn.moduleResult.grade" exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
           <md-tooltip>
             <span>{{resultColumn.moduleResult.gradeInserted ? (resultColumn.moduleResult.gradeInserted | hoisDate) : '-'}}</span>
           </md-tooltip>

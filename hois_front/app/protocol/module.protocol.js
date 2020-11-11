@@ -1,8 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ModuleProtocolController', function ($q, $location, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingSchema, ProtocolUtils, VocationalGradeUtil, QueryUtils, config, dialogService, message, oisFileService, stateStorageService) {
+angular.module('hitsaOis').controller('ModuleProtocolController', function ($q, $location, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingSchema, ProtocolUtils, QueryUtils, config, dialogService, message, oisFileService, stateStorageService) {
   var endpoint = '/moduleProtocols';
-  $scope.gradeUtil = VocationalGradeUtil;
   $scope.auth = $route.current.locals.auth;
   var stateKey = 'moduleProtocol';
   var schoolId = $scope.auth.school.id;
@@ -37,6 +36,7 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($q, 
   function setGradingSchema(entity) {
     gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.VOCATIONAL);
     $q.all(gradingSchema.promises).then(function () {
+      $scope.existsSchoolGradingSchema = gradingSchema.existsSchoolGradingSchema();
       $scope.grades = gradingSchema.gradeSelection(entity.protocolVdata.studyYear.id);
       $scope.grades.forEach(function (grade) {
         // hide classifier grades that were previously filtered
@@ -156,6 +156,8 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($q, 
       $scope.formState.canAddDeleteStudents = ProtocolUtils.canAddDeleteStudents($scope.auth, $scope.protocol);
       $scope.formState.canConfirm = ProtocolUtils.canConfirm($scope.auth, $scope.protocol);
       $scope.formState.protocolPdfUrl = config.apiUrl + endpoint + '/' + entity.id + '/print/protocol.pdf';
+      $scope.$broadcast('refreshFixedColumns');
+      $scope.$broadcast('refreshFixedTableHeight');
       resolveDeferredIfExists();
     }).catch(function () {
       resolveDeferredIfExists();

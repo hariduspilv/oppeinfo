@@ -24,7 +24,10 @@ import java.util.stream.Stream;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import ee.hitsa.ois.enums.ProtocolStatus;
+import ee.hitsa.ois.report.studentgroupteacher.StudentGroupTeacherReport;
 import ee.hitsa.ois.web.dto.GradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
 import ee.hitsa.ois.web.dto.report.studentgroupteacher.StudentProgressDto;
@@ -84,6 +87,11 @@ public class StudentGroupTeacherReportService {
     private StudentService studentService;
     @Autowired
     private XlsService xlsService;
+
+    private static final String CONTACT_LESSON_CRITERIA = "exists (select 1 from journal_entry_capacity_type ject"
+            + " join school_capacity_type sct on sct.capacity_type_code = ject.capacity_type_code"
+                + " and sct.school_id = j.school_id and sct.is_higher = false"
+            + " where ject.journal_entry_id = je.id and sct.is_contact)";
 
     public StudentGroupTeacherDto studentGroupTeacher(StudentGroupTeacherCommand criteria) {
         if (Boolean.TRUE.equals(criteria.getAllModules()) || Boolean.TRUE.equals(criteria.getAllModulesAndOutcomes())) {
@@ -409,6 +417,10 @@ public class StudentGroupTeacherReportService {
 
         if (Boolean.TRUE.equals(criteria.getJournalsWithEntries())
                 || Boolean.TRUE.equals(criteria.getNegativeResults())) {
+            // journalResults method demands that if journals with entries should be shown then entry types need to be selected
+            if (criteria.getEntryTypes().isEmpty()) {
+                return Collections.emptyMap();
+            }
             qb.optionalCriteria("je.entry_type_code in (:entryTypeCodes)", "entryTypeCodes", criteria.getEntryTypes());
         }
 
@@ -805,6 +817,7 @@ public class StudentGroupTeacherReportService {
                 + "join journal_entry je on je.id = jes.journal_entry_id " + "join journal j on js.journal_id = j.id");
         qb.requiredCriteria("s.id in (:studentIds)", "studentIds", studentIds);
         qb.filter("(jes.absence_code is not null or jesla.absence_code is not null)");
+        qb.filter(CONTACT_LESSON_CRITERIA);
 
         qb.optionalCriteria("j.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
         qb.optionalCriteria("coalesce(je.entry_date, jes.absence_inserted, jesla.absence_inserted) >= :entryFrom", "entryFrom",
@@ -941,7 +954,7 @@ public class StudentGroupTeacherReportService {
             Set<Long> studentIds, Set<Long> journalIds) {
         Map<Long, List<StudentJournalEntryResultDto>> studentResults = new HashMap<>();
 
-        if (criteria.getEntryTypes() != null) {
+        if (!criteria.getEntryTypes().isEmpty()) {
             JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                     "from student s " + "join journal_student js on js.student_id = s.id "
                             + "join journal_entry_student jes on js.id = jes.journal_student_id "
@@ -965,7 +978,7 @@ public class StudentGroupTeacherReportService {
                 qb.parameter("studyPeriodEnd", DateUtils.lastMomentOfDay(criteria.getStudyPeriodEnd()));
             }
 
-            qb.filter("jes.grade_code is not null");
+            qb.filter("(jes.grade_code is not null or jes.verbal_grade is not null)");
 
             if (Boolean.TRUE.equals(criteria.getNegativeResults())) {
                 qb.optionalCriteria("jes.grade_code not in (:positiveGrades)", "positiveGrades",
@@ -1317,12 +1330,12 @@ public class StudentGroupTeacherReportService {
         if (!students.isEmpty()) {
             List<Long> studentIds = StreamUtil.toMappedList(s -> s.getId(), students);
 
-            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
-                    "from student s " + "join journal_student js on js.student_id = s.id "
-                            + "join journal_entry_student jes on js.id = jes.journal_student_id "
-                            + "join journal_entry je on je.id = jes.journal_entry_id "
-                            + "join journal j on js.journal_id = j.id");
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s "
+                    + "join journal_student js on js.student_id = s.id "
+                    + "join journal j on j.id = js.journal_id "
+                    + "join journal_entry je on je.journal_id = j.id and (je.journal_student_id is null or je.journal_student_id = js.id)");
             qb.requiredCriteria("s.id in (:studentIds)", "studentIds", studentIds);
+            qb.filter(CONTACT_LESSON_CRITERIA);
 
             qb.optionalCriteria("j.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
             qb.optionalCriteria("je.entry_date >= :entryFrom", "entryFrom", criteria.getFrom(),
@@ -1344,35 +1357,58 @@ public class StudentGroupTeacherReportService {
                 student.setJournalEntryLessons(
                         enteredLessons.containsKey(student.getId()) ? enteredLessons.get(student.getId())
                                 : Long.valueOf(0));
-                if (!Long.valueOf(0).equals(student.getTotalAbsences())) {
-                    double percentage = (double) student.getTotalAbsences().intValue()
-                            / student.getJournalEntryLessons().intValue() * 100;
-                    student.setLessonAbsencePercentage(
-                            new BigDecimal(percentage).setScale(1, BigDecimal.ROUND_HALF_UP));
-                }
+                student.setLessonAbsencePercentage(absencePercentage(student.getTotalAbsences(),
+                        student.getJournalEntryLessons()));
+                student.setWithoutReasonAbsencesPercentage(absencePercentage(student.getWithoutReasonAbsences(),
+                        student.getJournalEntryLessons()));
             }
         }
     }
 
-    public byte[] studentGroupTeacherAsExcel(StudentGroupTeacherCommand criteria, ClassifierCache classifierCache) {
+    private BigDecimal absencePercentage(Long absences, Long journalEntryLessons) {
+        if (!Long.valueOf(0).equals(absences)) {
+            double percentage = (double) absences.intValue() / journalEntryLessons.intValue() * 100;
+            return new BigDecimal(percentage).setScale(1, BigDecimal.ROUND_HALF_UP);
+        }
+        return null;
+    }
+
+    public StudentGroupTeacherReport studentGroupTeacherAsPdf(HoisUserDetails user, StudentGroupTeacherCommand criteria,
+            ClassifierCache classifierCache) {
+        return new StudentGroupTeacherReport(criteria, studentGroupTeacher(criteria), classifierCache,
+                gradingSchemaRowMap(user.getSchoolId()));
+    }
+
+    private Map<Long, GradingSchemaRow> gradingSchemaRowMap(Long schoolId) {
+        List<GradingSchemaRow> rows = em.createQuery("select gsr from GradingSchemaRow gsr"
+                + " where gsr.gradingSchema.school.id = ?1", GradingSchemaRow.class)
+                .setParameter(1, schoolId)
+                .getResultList();
+        return StreamUtil.toMap(BaseEntityWithId::getId, r -> r, rows);
+    }
+
+    public byte[] studentGroupTeacherAsExcel(HoisUserDetails user, StudentGroupTeacherCommand criteria,
+            ClassifierCache classifierCache) {
+        Language lang = Language.ET;
         StudentGroupTeacherDto dto = studentGroupTeacher(criteria);
+        Map<Long, GradingSchemaRow> gradingSchemaRowMap = gradingSchemaRowMap(user.getSchoolId());
 
         List<String> resultColumns = StreamUtil.toMappedList(
-                rc -> ReportUtil.resultColumnAsString(rc, Boolean.TRUE, Language.ET), dto.getResultColumns());
+                rc -> ReportUtil.resultColumnAsString(rc, Boolean.TRUE, lang), dto.getResultColumns());
 
         List<Map<String, Object>> students = StreamUtil.toMappedList(s -> {
             Map<String, Object> student = new HashMap<>();
             student.put("fullname", s.getFullname());
             student.put("status", s.getStatus());
             student.put("isIndividualCurriculum", s.getIsIndividualCurriculum());
-            student.put("resultColumns",
-                    StreamUtil.toMappedList(rc -> ReportUtil
-                            .studentResultColumnAsString(criteria.getAbsencesPerJournals(), rc, classifierCache),
-                            s.getResultColumns()));
+            student.put("resultColumns", StreamUtil.toMappedList(rc -> ReportUtil.studentResultColumnAsString(
+                    criteria.getAbsencesPerJournals(), rc, classifierCache, gradingSchemaRowMap, lang),
+                    s.getResultColumns()));
             student.put("journalEntryLessons", s.getJournalEntryLessons());
             student.put("totalAbsences", s.getTotalAbsences());
             student.put("lessonAbsencePercentage", s.getLessonAbsencePercentage());
             student.put("withoutReasonAbsences", s.getWithoutReasonAbsences());
+            student.put("withoutReasonAbsencesPercentage", s.getWithoutReasonAbsencesPercentage());
             student.put("withReasonAbsences", s.getWithReasonAbsences());
             student.put("beingLate", s.getBeingLate());
             student.put("averageGrade", s.getAverageGrade());
@@ -1413,12 +1449,12 @@ public class StudentGroupTeacherReportService {
         JpaNativeQueryBuilder qb;
 
         String journalResults = null;
-        if (criteria.getEntryTypes() != null) {
+        if (!criteria.getEntryTypes().isEmpty()) {
             qb = negativeJournalResultsQb(criteria);
             journalResults = qb.querySql("s.id student_id, p.firstname, p.lastname, s.type_code as studentType, j.id journal_id, "
                     + "j.name_et journal_name_et, j.name_et journal_name_en, je.entry_type_code, jes.grade_code, jes.grade_inserted, "
                     + "coalesce(jes.grade_inserted_by, jes.changed_by, jes.inserted_by) as grade_inserted_by, "
-                    + "false as is_practice_journal", false);
+                    + "false as is_practice_journal, jes.grading_schema_row_id, jes.verbal_grade", false);
             queryParameters.putAll(qb.queryParameters());
         }
 
@@ -1427,7 +1463,7 @@ public class StudentGroupTeacherReportService {
                 + "cm.name_et || ' - ' || mcl.name_et || ' (' || cv.code || ')' || coalesce(' ' || cvot.name_et, '') journal_name_et, "
                 + "cm.name_en || ' - ' || mcl.name_en || ' (' || cv.code || ')' || coalesce(' ' || cvot.name_et, '') journal_name_en, "
                 + "null entry_type_code, pj.grade_code, pj.grade_inserted, tp.firstname || ' ' || tp.lastname grade_inserted_by, "
-                + "true as is_practice_journal", false);
+                + "true as is_practice_journal, pj.grading_schema_row_id, null as verbal_grade", false);
         queryParameters.putAll(qb.queryParameters());
 
         String outcomeResults = null;
@@ -1436,7 +1472,7 @@ public class StudentGroupTeacherReportService {
             outcomeResults = qb.querySql("s3.id student_id, p3.firstname, p3.lastname, s3.type_code as studentType, cmo.id outcome_id, cmo.outcome_et, "
                     + "cmo.outcome_en, '" + JournalEntryType.SISSEKANNE_O + "' entry_type_code, scmor.grade_code, "
                     + "scmor.grade_date grade_inserted_by, tp2.firstname || ' ' || tp2.lastname, "
-                    + "false as is_practice_journal", false);
+                    + "false as is_practice_journal, scmor.grading_schema_row_id, null as verbal_grade", false);
             queryParameters.putAll(qb.queryParameters());
         }
 
@@ -1445,15 +1481,16 @@ public class StudentGroupTeacherReportService {
                 + (outcomeResults != null ? outcomeResults + " union all " : "")
                 + "select student_id, firstname, lastname, studentType, journal_id, "
                 + "string_agg(journal_name_et, ', ') journal_name_et, string_agg(journal_name_en, ' ') journal_name_en, "
-                + "null entry_type_code, grade_code, grade_inserted, grade_inserted_by, is_practice_journal "
+                + "null entry_type_code, grade_code, grade_inserted, grade_inserted_by, is_practice_journal, "
+                + "grading_schema_row_id, verbal_grade "
                 + "from (" + practicejournalResults + " order by journal_name_et, journal_name_en) as pjr "
                 + "group by student_id, firstname, lastname, studentType, journal_id, grade_code, grade_inserted, "
-                + "grade_inserted_by, is_practice_journal) as results");
+                + "grade_inserted_by, is_practice_journal, grading_schema_row_id, verbal_grade) as results");
 
         qb.sort("lastname, firstname, journal_name_et, journal_name_en, grade_inserted desc");
         List<?> data = qb.select("student_id, firstname, lastname, studentType, journal_id, "
                 + "journal_name_et, journal_name_en, entry_type_code, grade_code, grade_inserted, grade_inserted_by, "
-                + "is_practice_journal", em, queryParameters).getResultList();
+                + "is_practice_journal, grading_schema_row_id, verbal_grade", em, queryParameters).getResultList();
 
         return StreamUtil.toMappedList(r -> {
             ResultReport result = new ResultReport();
@@ -1463,7 +1500,8 @@ public class StudentGroupTeacherReportService {
             result.setFullname(PersonUtil.fullnameTypeSpecific(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3)));
             result.setJournal(new AutocompleteResult(resultAsLong(r, 4), resultAsString(r, 5), resultAsString(r, 6)));
             result.setEntryType(resultAsString(r, 7));
-            result.setGrade(resultAsString(r, 8));
+            result.setGradeDto(new GradeDto(resultAsString(r, 8), resultAsLong(r, 12)));
+            result.setVerbalGrade(resultAsString(r, 13));
             result.setGradeInserted(resultAsLocalDate(r, 9));
             result.setGradeInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 10)));
             result.setIsPracticeJournal(resultAsBoolean(r, 11));
@@ -1562,19 +1600,21 @@ public class StudentGroupTeacherReportService {
         return qb;
     }
 
-    public byte[] negativeResultsAsExcel(HoisUserDetails user, StudentGroupTeacherCommand criteria) {
+    public byte[] negativeResultsAsExcel(HoisUserDetails user, StudentGroupTeacherCommand criteria,
+            ClassifierCache classifierCache) {
         Map<String, Object> data = new HashMap<>();
-        data.put("studentGroup",
-                AutocompleteResult.of(em.getReference(StudentGroup.class, criteria.getStudentGroup())));
-        data.put("rows", negativeResults(criteria));
+        data.put("studentGroup", AutocompleteResult.of(em.getReference(StudentGroup.class, criteria.getStudentGroup())));
+        List<ResultReport> results = negativeResults(criteria);
+        setNegativeResultClassifiers(user.getSchoolId(), results, classifierCache, Language.ET);
+        data.put("rows", results);
         data.put("isHigherSchool", Boolean.valueOf(schoolService.schoolType(user.getSchoolId()).isHigher()));
         return xlsService.generate("student.group.teacher.negative.results.xls", data);
     }
 
-    public NegativeResultsReport negativeResultsAsPdfData(StudentGroupTeacherCommand criteria,
+    public NegativeResultsReport negativeResultsAsPdfData(HoisUserDetails user, StudentGroupTeacherCommand criteria,
             ClassifierCache classifierCache) {
         List<ResultReport> results = negativeResults(criteria);
-        setNegativeResultClassifiers(results, classifierCache, Language.ET);
+        setNegativeResultClassifiers(user.getSchoolId(), results, classifierCache, Language.ET);
 
         List<NegativeResultsStudentReport> students = new ArrayList<>();
         Map<Long, List<ResultReport>> resultsByStudent = results.stream().collect(Collectors.groupingBy(
@@ -1610,11 +1650,12 @@ public class StudentGroupTeacherReportService {
         return report;
     }
 
-    private static void setNegativeResultClassifiers(List<ResultReport> results, ClassifierCache classifierCache,
-            Language lang) {
+    private void setNegativeResultClassifiers(Long schoolId, List<ResultReport> results,
+            ClassifierCache classifierCache, Language lang) {
+        Map<Long, GradingSchemaRow> gradingSchemaRowMap = gradingSchemaRowMap(schoolId);
         for (ResultReport result : results) {
-            result.setGrade(ReportUtil.classifierValue(result.getGrade(), MainClassCode.KUTSEHINDAMINE.name(),
-                    classifierCache));
+            result.setGrade(ReportUtil.vocationalGradeAsString(result.getGradeDto(), result.getVerbalGrade(),
+                    classifierCache, gradingSchemaRowMap, lang));
             result.setEntryType(ReportUtil.classifierName(result.getEntryType(), MainClassCode.SISSEKANNE.name(),
                     classifierCache, lang));
         }

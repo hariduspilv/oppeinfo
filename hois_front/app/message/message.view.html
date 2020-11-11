@@ -4,13 +4,13 @@
         <div layout="row">
             <md-input-container flex>
                 <label class="textInput">{{'message.subject' | translate}}</label>
-                <hois-value value="record.subject"/>
+                <hois-value value="record.subject" hois-linky/>
             </md-input-container>
         </div>
         <div layout="row">
             <md-input-container flex>
                 <label class="textInput">{{'message.content' | translate}}</label>
-                <hois-value value="record.content"/>
+                <hois-value value="record.content" hois-html hois-linky></hois-value>
             </md-input-container>
         </div>
         <div layout="row" ng-show="!isSent">

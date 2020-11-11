@@ -38,7 +38,28 @@
             </div>
           </div>
 
-          <div ng-if="hasApelViewPerm" flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <div flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <div layout="column" flex>
+              <div layout="row" flex>
+                <md-input-container>
+                  <label>{{'apel.submittedFrom' | translate}}</label>
+                  <md-datepicker ng-model="criteria.submittedFrom" md-max-date="criteria.submittedThru" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                </md-input-container>
+                <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'apel.submittedThru' | translate}}</label>
+                  <md-datepicker ng-model="criteria.submittedThru" md-min-date="criteria.submittedFrom" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+                </md-input-container>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div ng-if="hasApelViewPerm" layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'apel.status' | translate}}</label>
+            <hois-classifier-select multiple ng-model="criteria.status" main-classifier-code="VOTA_STAATUS" model-value-attr="code"></hois-classifier-select>
+          </md-input-container>
+          <div flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <div layout="column" flex>
               <div layout="row" flex>
                 <md-input-container>
@@ -52,13 +73,6 @@
               </div>
             </div>
           </div>
-        </div>
-
-        <div ng-if="hasApelViewPerm" layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex="45" flex-sm="100" flex-xs="100">
-            <label>{{'apel.status' | translate}}</label>
-            <hois-classifier-select multiple ng-model="criteria.status" main-classifier-code="VOTA_STAATUS" model-value-attr="code"></hois-classifier-select>
-          </md-input-container>
         </div>
 
         <div layout="row">
@@ -90,6 +104,8 @@
             <th md-column ng-if="!auth.isStudent()" md-order-by="{{'curriculum_' + currentLanguageNameField()}}">{{'apel.curriculum' | translate}}</th>
             <th md-column ng-if="hasApelViewPerm" md-order-by="application_status">{{'apel.status' | translate}}</th>
             <th md-column md-order-by="inserted">{{'apel.insertedDate' | translate}}</th>
+            <th md-column md-order-by="submitted">{{'apel.submittedDate' | translate}}</th>
+            <th md-column md-order-by="submittedBy">{{'apel.submitter' | translate}}</th>
             <th md-column ng-if="hasApelViewPerm" md-order-by="confirmed">{{'apel.confirmedDate' | translate}}</th>
             <th md-column ng-if="auth.isStudent()"></th>
             <th md-column></th>
@@ -106,6 +122,8 @@
               <hois-classifier-value ng-model="row.status" main-classifier-code="VOTA_STAATUS"></hois-classifier-value>
             </td>
             <td md-cell>{{row.inserted | hoisDate}}</td>
+            <td md-cell>{{row.submitted | hoisDate}}</td>
+            <td md-cell>{{row.submittedBy | hoisDate}}</td>
             <td md-cell ng-if="hasApelViewPerm">{{row.confirmed | hoisDate}}</td>
             <td md-cell ng-if="auth.isStudent()">
               <div>

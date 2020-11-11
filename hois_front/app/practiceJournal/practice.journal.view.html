@@ -90,7 +90,7 @@
               </tbody>
             </table>
           </md-table-container>
-    
+
           <md-table-container ng-if="practiceJournal.isHigher">
             <table md-table class="secondary-table">
               <thead md-head>
@@ -135,16 +135,16 @@
                     <hois-value value="row.practiceDate | hoisDate"></hois-value>
                   </td>
                   <td md-cell colspan="1.5" style="word-break: break-all">
-                    <hois-value value="row.description"></hois-value>
+                    <hois-value value="row.description" hois-linky></hois-value>
                   </td>
                   <td md-cell>
                     <hois-value value="row.astroHours"></hois-value>
                   </td>
                   <td ng-if="practiceJournal.contract" md-cell>
-                    <hois-value value="row.supervisorComment"></hois-value>
+                    <hois-value value="row.supervisorComment" hois-linky></hois-value>
                   </td>
                   <td md-cell>
-                    <hois-value value="row.teacherComment"></hois-value>
+                    <hois-value value="row.teacherComment" hois-linky></hois-value>
                   </td>
                 </tr>
                 <tr ng-if="practiceJournal.practiceJournalEntries && practiceJournal.practiceJournalEntries.length !== 0" md-row ng-class-odd="'odd'" ng-class-even="'even'" flex>
@@ -213,14 +213,14 @@
       <div class="form-readonly" layout="row" flex>
         <md-input-container flex>
           <label>{{'practiceJournal.teacherComment' | translate}}</label>
-          <hois-value value="practiceJournal.teacherComment"></hois-value>
+          <hois-value value="practiceJournal.teacherComment" hois-linky></hois-value>
         </md-input-container>
       </div>
 
       <div ng-if="practiceJournal.contract" class="form-readonly" layout="row">
         <md-input-container flex>
           <label>{{'practiceJournal.supervisorComment' | translate}}</label>
-          <hois-value value="practiceJournal.supervisorComment"></hois-value>
+          <hois-value value="practiceJournal.supervisorComment" hois-linky></hois-value>
         </md-input-container>
       </div>
 
@@ -271,22 +271,24 @@
     <div class="form-readonly" layout="row">
       <md-input-container flex>
         <label>{{'practiceJournal.teacherOpinion' | translate}}</label>
-        <hois-value value="practiceJournal.teacherOpinion"></hois-value>
+        <hois-value value="practiceJournal.teacherOpinion" hois-linky></hois-value>
       </md-input-container>
     </div>
 
     <div ng-if="practiceJournal.contract" class="form-readonly" layout="row">
       <md-input-container flex>
         <label>{{'practiceJournal.supervisorOpinion' | translate}}</label>
-        <hois-value value="practiceJournal.supervisorOpinion"></hois-value>
+        <hois-value value="practiceJournal.supervisorOpinion" hois-linky></hois-value>
       </md-input-container>
     </div>
 
-    <div class="form-readonly" layout="row">
-      <md-input-container flex>
-        <label class="textInput">{{'practiceJournal.grade' | translate}}</label>
-        <hois-value ng-if="practiceJournal.isHigher" value="gradesMap[practiceJournal.grade] | hoisHigherGrade: letterGrades"></hois-value>
-        <hois-value ng-if="!practiceJournal.isHigher" value="gradesMap[practiceJournal.grade].value"></hois-value>
+    <div class="form-readonly" layout="row" flex>
+      <md-input-container flex="100">
+        <label class="responsiveLabel">{{'practiceJournal.grade' | translate}}</label>
+        <div class="md-body-1 hois-value">
+          <hois-higher-result ng-if="practiceJournal.isHigher" value="practiceJournal.grade" exists-grading-schema="existsSchoolGradingSchema" letter-grades="letterGrades"></hois-higher-result>
+          <hois-vocational-result ng-if="!practiceJournal.isHigher" value="practiceJournal.grade" exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
+        </div>
       </md-input-container>
     </div>
 
@@ -297,65 +299,69 @@
         <div class="form-readonly" layout="column" flex>
           <fieldset>
             <div ng-repeat="eval in practiceJournal.studentPracticeEvalCriteria track by $index" layout="column">
-    
+
               <label style="font-size: 14px; padding-bottom: 10px;">{{eval.nameEt}}</label>
-    
+
               <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_T'" layout="column">
                 <label class="responsiveLabel">{{eval.addInfo}}</label>
                 <md-input-container flex="100">
                   <hois-value value="eval.valueTxt"></hois-value>
                 </md-input-container>
               </div>
-    
+
               <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_N'" layout="column">
                 <label class="responsiveLabel">{{eval.addInfo}}</label>
                 <md-input-container flex="100">
                   <hois-value value="eval.valueNr"></hois-value>
                 </md-input-container>
               </div>
-    
+
               <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="column">
                 <label class="responsiveLabel">{{eval.addInfo}}</label>
                 <md-input-container flex="100">
-                  <hois-value ng-if="practiceJournal.isHigher" value="gradesMap[eval.valueClf] | hoisHigherGrade: letterGrades"></hois-value>
-                  <hois-value ng-if="!practiceJournal.isHigher" value="gradesMap[eval.valueClf].value"></hois-value>
+                  <div class="md-body-1 hois-value">
+                    <hois-higher-result ng-if="practiceJournal.isHigher" value="eval.grade" exists-grading-schema="existsSchoolGradingSchema" letter-grades="letterGrades"></hois-higher-result>
+                    <hois-vocational-result ng-if="!practiceJournal.isHigher" value="eval.grade" exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
+                  </div>
                 </md-input-container>
               </div>
-    
+
               <div>&nbsp;</div>
-    
+
             </div>
-    
+
           </fieldset>
         </div>
       </hois-collapsable>
-      
+
       <hois-collapsable label="('contract.supervisorEvaluation' | translate)" ng-if="practiceJournal.supervisorPracticeEvalCriteria && practiceJournal.supervisorPracticeEvalCriteria.length !== 0" expanded="false">
         <div class="form-readonly" layout="column" flex>
           <fieldset>
             <div ng-repeat="eval in practiceJournal.supervisorPracticeEvalCriteria track by $index" layout="column">
-    
+
                 <label style="font-size: 14px; padding-bottom: 10px;">{{eval.nameEt}}</label>
-      
+
                 <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_T'" layout="column">
                   <label class="responsiveLabel">{{eval.addInfo}}</label>
                   <md-input-container flex="100">
                     <hois-value value="eval.valueTxt"></hois-value>
                   </md-input-container>
                 </div>
-      
+
                 <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_N'" layout="column">
                   <label class="responsiveLabel">{{eval.addInfo}}</label>
                   <md-input-container flex="100">
                     <hois-value value="eval.valueNr"></hois-value>
                   </md-input-container>
                 </div>
-      
+
                 <div ng-if="eval.type === 'PRAKTIKA_KRITEERIUM_H'" layout="column">
                   <label class="responsiveLabel">{{eval.addInfo}}</label>
                   <md-input-container flex="100">
-                    <hois-value ng-if="practiceJournal.isHigher" value="gradesMap[eval.valueClf] | hoisHigherGrade: letterGrades"></hois-value>
-                    <hois-value ng-if="!practiceJournal.isHigher" value="gradesMap[eval.valueClf].value"></hois-value>
+                    <div class="md-body-1 hois-value">
+                      <hois-higher-result ng-if="practiceJournal.isHigher" value="eval.grade" exists-grading-schema="existsSchoolGradingSchema" letter-grades="letterGrades"></hois-higher-result>
+                      <hois-vocational-result ng-if="!practiceJournal.isHigher" value="eval.grade" exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
+                    </div>
                   </md-input-container>
                 </div>
               </div>
@@ -363,7 +369,7 @@
         </div>
       </hois-collapsable>
       <hois-collapsable label="('contract.practicePlan' | translate)" expanded="false">
-        <p class="practice-plan">{{practiceJournal.practicePlan}}</p>
+        <p class="practice-plan" ng-bind-html="practiceJournal.practicePlan | linky: '_blank'"></p>
       </hois-collapsable>
     </div>
   </div>

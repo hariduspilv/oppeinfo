@@ -54,7 +54,13 @@
           <td>{{ loop.index + 1 }}.</td>
           <td>{{ student.fullname }}</td>
 		  <td>{{ student.studentgroup }}</td>
-          <td>{{ student.grade }}</td>
+          <td>
+            {% if student.grade != null %}
+              {{ student.grade }}
+            {% else %}
+              {{ student.gradingSchemaGrade }}
+            {% endif %}
+          </td>
         </tr>
       {% endfor %}
     </table>

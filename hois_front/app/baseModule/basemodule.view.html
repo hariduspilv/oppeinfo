@@ -96,9 +96,10 @@
                 <label>{{'basemodule.independentStudyDescription' | translate}}</label>
                 <textarea ng-model="baseModule.cvIndependentStudyEt" name="cvIndependentStudyEt" disabled max-rows="2"></textarea>
             </md-input-container>
-            <md-input-container flex>
+            <div style="height: 20px"></div>
+            <md-input-container flex class="readonly">
                 <label>{{'basemodule.studyMaterials' | translate}}</label>
-                <textarea ng-model="baseModule.cvStudyMaterials" name="cvStudyMaterials" disabled max-rows="2"></textarea>
+                <hois-value value="baseModule.cvStudyMaterials" hois-linky></hois-value>
             </md-input-container>
             <div flex>
                 <fieldset tabindex="2">

@@ -351,7 +351,7 @@ public class ReportController {
         ReportUtil.assertCanViewStudentGroupTeacherReport(user,
                 em.getReference(StudentGroup.class, criteria.getStudentGroup()));
         HttpUtil.xls(response, "student_group_teacher.xls", studentGroupTeacherReportService
-                .studentGroupTeacherAsExcel(criteria, new ClassifierCache(classifierService)));
+                .studentGroupTeacherAsExcel(user, criteria, new ClassifierCache(classifierService)));
     }
 
     @GetMapping("/studentgroupteacher/studentgroupteacher.pdf")
@@ -359,8 +359,8 @@ public class ReportController {
             HttpServletResponse response) throws IOException {
         ReportUtil.assertCanViewStudentGroupTeacherReport(user,
                 em.getReference(StudentGroup.class, criteria.getStudentGroup()));
-        StudentGroupTeacherReport report = new StudentGroupTeacherReport(criteria,
-                studentGroupTeacherReportService.studentGroupTeacher(criteria), new ClassifierCache(classifierService));
+        StudentGroupTeacherReport report = studentGroupTeacherReportService.studentGroupTeacherAsPdf(user, criteria,
+                new ClassifierCache(classifierService));
         HttpUtil.pdf(response, criteria.getStudentGroup() + ".pdf",
                 pdfService.generate(StudentGroupTeacherReport.TEMPLATE_NAME, report));
     }
@@ -370,8 +370,8 @@ public class ReportController {
             @Valid StudentGroupTeacherCommand criteria, HttpServletResponse response) throws IOException {
         ReportUtil.assertCanViewStudentGroupTeacherReport(user,
                 em.getReference(StudentGroup.class, criteria.getStudentGroup()));
-        HttpUtil.xls(response, "negative_results.xls",
-                studentGroupTeacherReportService.negativeResultsAsExcel(user, criteria));
+        HttpUtil.xls(response, "negative_results.xls", studentGroupTeacherReportService.negativeResultsAsExcel(user,
+                criteria, new ClassifierCache(classifierService)));
     }
 
     @GetMapping("/studentgroupteacher/negativeresults.pdf")
@@ -381,7 +381,7 @@ public class ReportController {
                 em.getReference(StudentGroup.class, criteria.getStudentGroup()));
         HttpUtil.pdf(response, criteria.getStudentGroup() + ".pdf",
                 pdfService.generate(NegativeResultsReport.TEMPLATE_NAME, studentGroupTeacherReportService
-                        .negativeResultsAsPdfData(criteria, new ClassifierCache(classifierService))));
+                        .negativeResultsAsPdfData(user, criteria, new ClassifierCache(classifierService))));
     }
 
     @GetMapping("/teachers/detailload/data")

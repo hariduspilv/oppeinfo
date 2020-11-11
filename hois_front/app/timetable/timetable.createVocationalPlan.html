@@ -130,7 +130,7 @@
                 <div index-value="{{$parent.$index}}" drop-fn="saveEvent(data)" ng-attr-ois-drop="{{plan.selectedGroup === group.id}}" ng-repeat="currentEvent in t = angular.equals(t.id, getEventsForLesson($index, lesson, group).id) ? t : getEventsForLesson($index, lesson, group)"
                   ng-click="changeEvent(currentEvent)" ng-attr-ois-drag="{{plan.selectedGroup === group.id}}" id="{{currentEvent.journalObject.id + '-' + $index + group.id}}"
                   journal-id="{{currentEvent.journal}}" class="timetable-drag" style="background-color:{{currentEvent.journalObject.color}}"
-                  old-event-id="{{currentEvent.id}}" title="{{currentEvent.journalObject.name}}/{{currentLanguageNameField(getCapacityType(currentEvent.capacityType))}}&#10;{{currentEvent.currentTeachers.join(', ')}}">
+                  old-event-id="{{currentEvent.id}}" title="{{currentEvent.journalObject.name}}/{{currentLanguageNameField(getCapacityType(currentEvent.capacityType))}}&#10;{{currentEvent.studentNames.join(', ')}}&#10;{{currentEvent.currentTeachers.join(', ')}}">
                   <span>{{currentEvent.journalObject.name.substr(0, 4)}}/{{getCapacityTypeValue(currentEvent.capacityType)}}</span>
                   <br>
                   <span style=";{{currentEvent.rooms.length !== 0 ? '' : 'color:red;font-weight: bold;'}}">{{currentEvent.rooms.length !== 0 ? getRoomCodes(currentEvent.rooms) : "?"}}</span>

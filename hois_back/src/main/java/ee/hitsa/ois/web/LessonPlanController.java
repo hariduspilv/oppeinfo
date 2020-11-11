@@ -150,6 +150,12 @@ public class LessonPlanController {
         UserUtil.assertHasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_TUNNIJAOTUSPLAAN);
         lessonPlanService.deleteJournal(user, journal);
     }
+    
+    @GetMapping("/lessonplansummary.xls")
+    public void summaryLessonplanAsExcel(HoisUserDetails user, @Valid LessonPlanSearchCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_TUNNIJAOTUSPLAAN);
+        HttpUtil.xls(response, "lessonplansummary.xls", lessonPlanService.summaryLessonPlan(criteria, user));
+    }
 
     @GetMapping("/{id:\\d+}/lessonplan.xls")
     public void lessonplanAsExcel(HoisUserDetails user, @WithEntity LessonPlan lessonPlan, HttpServletResponse response)

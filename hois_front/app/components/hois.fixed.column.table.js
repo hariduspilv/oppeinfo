@@ -8,7 +8,8 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout, $wi
       fixedColumns: '@',
       resizeTable: '@',
       maxTableHeight: '@',
-      searchCriteriaHeight: '@'
+      searchCriteriaHeight: '@',
+      tableClass: '@'
     },
     link: function (scope, element) {
       var container = element[0];
@@ -71,16 +72,17 @@ angular.module('hitsaOis').directive('fixedColumnTable', function ($timeout, $wi
       }
 
       function activate() {
-        applyClasses('thead tr', 'cross', 'th');
-        applyClasses('tbody tr', 'fixed-cell', 'td');
+        var tableClassQuery = angular.isDefined(scope.tableClass) ? 'table.' + scope.tableClass + ' > ' : '';
+        applyClasses(tableClassQuery + 'thead > tr', 'cross', 'th');
+        applyClasses(tableClassQuery + 'tbody > tr', 'fixed-cell', 'td');
 
         function updateHeaders() {
           var x = container.scrollLeft;
           var y = container.scrollTop;
 
-          var leftHeaders = [].concat.apply([], container.querySelectorAll('tbody td.fixed-cell'));
-          var crossHeaders = [].concat.apply([], container.querySelectorAll('thead th.cross'));
-          var topHeaders = [].concat.apply([], container.querySelectorAll('thead th'));
+          var leftHeaders = [].concat.apply([], container.querySelectorAll(tableClassQuery + 'tbody > tr td.fixed-cell'));
+          var crossHeaders = [].concat.apply([], container.querySelectorAll(tableClassQuery + 'thead > tr th.cross'));
+          var topHeaders = [].concat.apply([], container.querySelectorAll(tableClassQuery + 'thead > tr th'));
 
           //Update the left header positions when the container is scrolled
           leftHeaders.forEach(function (leftHeader) {

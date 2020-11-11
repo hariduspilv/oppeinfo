@@ -14,11 +14,11 @@
           <div layout="row" layout-sm="column" layout-xs="column" >
             <md-input-container flex-sm="100" flex-xs="100">
               <label>{{'main.from' | translate}}</label>
-              <input ng-model="formState.from" pattern="\d*" required>
+              <input ng-model="formState.from" pattern="\d*" md-maxlength="10" required>
             </md-input-container>
             <md-input-container flex-sm="100" flex-xs="100">
               <label>{{'main.thru' | translate}}</label>
-              <input ng-model="formState.thru" pattern="\d*" required>
+              <input ng-model="formState.thru" pattern="\d*" md-maxlength="10" required>
             </md-input-container>
           </div>
         </div>
@@ -27,7 +27,7 @@
       <div layout="row" ng-if="actionType === 'defected'">
         <md-input-container flex="50" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'form.reason' | translate}}</label>
-          <input ng-model="formState.reason" name="reason" required>
+          <input ng-model="formState.reason" name="reason" md-maxlength="255" required>
         </md-input-container>
       </div>
 

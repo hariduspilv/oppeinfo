@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.commandobject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -33,7 +34,7 @@ public class PracticeJournalEntriesStudentForm {
     }
 
     public List<PracticeJournalEvaluationForm> getStudentPracticeEvalCriteria() {
-        return studentPracticeEvalCriteria;
+        return studentPracticeEvalCriteria != null ? studentPracticeEvalCriteria : (studentPracticeEvalCriteria = new ArrayList<>());
     }
 
     public void setStudentPracticeEvalCriteria(List<PracticeJournalEvaluationForm> studentPracticeEvalCriteria) {

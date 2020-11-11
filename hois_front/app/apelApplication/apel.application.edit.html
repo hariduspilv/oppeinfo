@@ -4,7 +4,7 @@
       <div ng-hide="application.student" layout="row" layout-sm="column" layout-xs="column">
         <div flex="45" flex-sm="100" flex-xs="100">
           <hois-autocomplete flex ng-model="application.student" method="students" name="student" label="apel.student"
-            additional-query-params="{active: true, hideGuestStudents: true}"></hois-autocomplete>
+            additional-query-params="{active: true, hideGuestStudents: true, hasCurriculumVersion: true}"></hois-autocomplete>
         </div>
       </div>
       <div ng-hide="!application.student">
@@ -128,7 +128,7 @@
               </thead>
               <tbody md-body>
                 <tr md-row ng-repeat="comment in application.comments | orderBy: 'inserted'" ng-class-odd="'odd'" ng-class-even="'even'">
-                  <td md-cell>{{comment.addInfo}}</td>
+                  <td md-cell ng-bind-html="comment.addInfo | linky: '_blank'"></td>
                   <td md-cell>{{comment.inserted | hoisDateTime}}</td>
                   <td md-cell>{{comment.insertedBy}}</td>
                   <td md-cell></td>
@@ -235,7 +235,7 @@
         <md-button class="md-raised md-default" ng-if="application.canRemoveConfirmation"
           ng-click="removeConfirmation()">{{'apel.removeConfirmation' | translate}}</md-button>
         <a href="{{applicationPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
-        <md-button class="md-raised md-default" href="/#/apelApplication/">{{'main.button.back' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="back('/#/apelApplication/')">{{'main.button.back' | translate}}</md-button>
       </div>
       <div ng-if="!application.student" layout="row">
         <md-button class="md-raised md-default" ng-click="back('/#/apelApplication/')">{{'main.button.back' | translate}}</md-button>

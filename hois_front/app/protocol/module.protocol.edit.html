@@ -4,7 +4,9 @@
     <form ng-submit="save()" novalidate layout="column" name="moduleProtocolForm">
       <div>
         <div flex>
-          <md-table-container>
+          <md-table-container class="fixed-md-table-container" resize-table fixed-column-table
+                              fixed-columns="{{formState.canEditProtocol ? 4 : 3}}"
+                              search-criteria-height="250">
             <table md-table md-progress="protocol.$promise">
               <thead md-head>
                 <tr md-row>
@@ -40,7 +42,7 @@
                 </tr>
               </thead>
               <tbody md-body>
-                <tr md-row ng-repeat="row in protocol.protocolStudents | orderBy: 'fullname' track by $index" ng-class-odd="'odd'" ng-class-even="'even'"
+                <tr md-row ng-repeat="row in protocol.protocolStudents track by $index" ng-class-odd="'odd'" ng-class-even="'even'"
                   md-select="row.id" md-select-id="row.id">
                   <td md-cell ng-if="formState.canEditProtocol">
                     <md-input-container>
@@ -55,7 +57,7 @@
                   <td md-cell ng-if="protocol.protocolVdata.isPractice">
                     <span ng-repeat="journalResult in row.practiceJournalResults | orderBy: 'inserted'">
                       <span>
-                        <span ng-class="{badResult: !gradeUtil.isPositive(journalResult.grade.code)}">{{journalResult.grade | hoisVocationalGrade}}</span>
+                        <hois-vocational-result value="journalResult.grade" exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
                         <md-tooltip>
                           <span ng-if="journalResult.themes.length === 0">{{currentLanguageNameField(protocol.protocolVdata.curriculumVersionOccupationModule)}}</span>
                           <span ng-if="journalResult.themes.length > 0" ng-repeat="theme in journalResult.themes track by $index">
@@ -70,13 +72,13 @@
                   <td md-cell ng-if="formState.showJournals" ng-repeat="journal in journals | orderBy: 'nameEt'">
                     <span ng-if="protocolStudentJournalResults[row.id] && protocolStudentJournalResults[row.id][journal.id]"
                       ng-repeat="grade in protocolStudentJournalResults[row.id][journal.id]">
-                      <span ng-class="{badResult: !gradeUtil.isPositive(grade.code)}">{{grade | hoisVocationalGrade}}</span>
+                      <hois-vocational-result value="grade" exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
                       <span ng-if="!$last">/</span>
                     </span>
                   </td>
                   <td md-cell ng-if="formState.showOutcomes && formState.hasOutcomes" ng-repeat="outcome in outcomes | orderBy: 'orderNr'">
                     <span ng-if="protocolStudentOutcomeResults[row.id] && protocolStudentOutcomeResults[row.id][outcome.id]">
-                      <span ng-class="{badResult: !gradeUtil.isPositive(protocolStudentOutcomeResults[row.id][outcome.id].code)}">{{protocolStudentOutcomeResults[row.id][outcome.id] | hoisVocationalGrade}}</span>
+                      <hois-vocational-result value="protocolStudentOutcomeResults[row.id][outcome.id]" exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
                     </span>
                   </td>
                   <td md-cell>

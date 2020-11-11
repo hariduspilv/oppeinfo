@@ -15,12 +15,14 @@
       <div class="md-dialog-content">
         <div flex>
           <div ng-if="journalEntry.id">
-            <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
-              <div md-colors="{color: 'default-warn'}">
-                <md-icon md-colors="{color: 'default-warn'}" md-font-set="material-icons">info_outline</md-icon>
-                <span>{{'journal.entry.changingDateAndLessonsWarning' | translate}}</span>
-              </div>
-            </md-whiteframe>
+            <hois-whiteframe-warning>
+              <span>{{'journal.entry.changingDateAndLessonsWarning' | translate}}</span>
+            </hois-whiteframe-warning>
+          </div>
+          <div ng-if="inactiveStudentsHaveEntries && journal.isIndividual">
+            <hois-whiteframe-warning md-color="'accent'">
+              <span>{{'journal.entry.inactiveStudentsIndividualEntryNotAllowed' | translate}}</span>
+            </hois-whiteframe-warning>
           </div>
 
           <div layout="row" layout-sm="column" layout-xs="column">
@@ -39,8 +41,19 @@
             </md-input-container>
           </div>
           <div layout="row" layout-sm="column" layout-xs="column">
-            <md-input-container layout="row" layout-align="start center" flex>
-              <md-checkbox ng-repeat="type in capacityTypes" ng-model="selectedCapacityTypes[type.code]">{{currentLanguageNameField(type)}}</md-checkbox>
+            <div flex="100" flex-gt-sm="45">
+              <div ng-repeat="typesRow in capacityTypes" layout="column" flex>
+                <div layout="row" flex>
+                  <md-checkbox ng-repeat="type in typesRow" ng-model="selectedCapacityTypes[type.code]">{{currentLanguageNameField(type)}}</md-checkbox>
+                </div>
+              </div>
+            </div>
+            <md-input-container ng-if="(journal.isIndividual && journalEntry.entryType !== 'SISSEKANNE_L') || formState.journalStudent"
+                flex="100" flex-gt-sm="45" flex-offset="0" flex-offset-gt-sm="10">
+              <label>{{'journal.entry.selectStudent' | translate}}</label>
+              <hois-select ng-model="formState.journalStudent" values="journalStudents" value-property="id"
+                show-property="fullname" sorted-query="true" ng-change="journalStudentChanged()" hide-values="hideNonActiveJournalStudents"
+                ng-disabled="!journal.isIndividual || inactiveStudentsHaveEntries"></hois-select>
             </md-input-container>
           </div>
 
@@ -115,7 +128,7 @@
                   </tr>
                 </thead>
                 <tbody md-body>
-                  <tr md-row ng-repeat="row in journalStudents track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <tr md-row ng-repeat="row in journalStudents | filter: filterJournalStudents track by $index" ng-class-odd="'odd'" ng-class-even="'even'">
                     <td md-cell>{{$index + 1}}</td>
                     <td md-cell>
                       <i>
@@ -127,7 +140,7 @@
                           <span>{{'student.statuses.individualCurriculumShort' | translate}}</span>
                         </span>
                       </i>
-                      <span>{{::row.fullname}}, {{row.studentGroup}}</span>
+                      <span>{{row.fullname}}, {{row.studentGroup}}</span>
                     </td>
                     <td md-cell>
                       <md-input-container>
@@ -200,7 +213,7 @@
                       <div layout="row" layout-align="space-between center" flex>
                         <span ng-if="!journalEntryStudents[row.id].removeStudentHistory" layout="row" layout-align="start center" flex>
                           <span ng-repeat-start="gradeHistory in journalEntryStudents[row.id].journalEntryStudentHistories | orderBy: 'gradeInserted'">
-                            <hois-journal-result value="gradeHistory"></hois-journal-result>
+                            <hois-journal-result value="gradeHistory" exists-grading-schema="existsSchoolGradingSchema"></hois-journal-result>
                           </span>
                           <span ng-repeat-end ng-if="(gradeHistory.grade || gradeHistory.verbalGrade) && !$last">&nbsp;/&nbsp;</span>
                         </span>
@@ -228,7 +241,7 @@
                         <span ng-if="verbalGradeShown(row)">
                           <md-input-container>
                             <textarea class="journal-textarea" ng-model="journalEntryStudents[row.id].verbalGrade" ng-change="journalEntryStudentChanged(row)"
-                              md-maxlength="4000" max-rows="2" ng-disabled="verbalGradeDisabled(row)"></textarea>
+                              md-maxlength="4000" max-rows="2" aria-label="verbal grade" ng-disabled="verbalGradeDisabled(row)"></textarea>
                           </md-input-container>
                         </span>
                         <span ng-if="canRemoveStudentHistory(row)">

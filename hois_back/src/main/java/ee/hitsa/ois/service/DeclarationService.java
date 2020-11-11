@@ -32,6 +32,7 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.web.dto.GradeDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -166,6 +167,15 @@ public class DeclarationService {
             new Sort.Order(Direction.ASC, "p.firstname", NullHandling.NULLS_LAST),
             new Sort.Order(Direction.ASC, "subgroup.id"));
     
+    private static final String STUDENT_GROUP_SELECT= "ssp.id as ssp_id, sg.code, sg.id as studentGroupId";
+    
+    private static final String STUDENT_GROUP_FROM = "from subject_study_period ssp "
+            + "join subject_study_period_student_group s_group on s_group.subject_study_period_id = ssp.id "
+            + "join student_group sg on sg.id = s_group.student_group_id";
+    
+    private static final Sort STUDENT_GROUP_SORT = new Sort(
+            new Sort.Order(Direction.ASC, "sg.code"));
+    
     public List<AutocompleteResult> autocompleteStudents(HoisUserDetails user, SearchCommand lookup) {
 
         String from = "from declaration d join student s on s.id = d.student_id join person p on s.person_id = p.id";
@@ -264,7 +274,7 @@ public class DeclarationService {
         dto.setCanBeSetUnconfirmed(Boolean.valueOf(DeclarationUtil.canUnconfirmDeclaration(user, declaration)));
         dto.setCanBeSetConfirmed(Boolean.valueOf(DeclarationUtil.canConfirmDeclaration(user, declaration)));
         Long studentId = dto.getStudent().getId();
-        Map<Long, String> studentResults = studentSubjectResults(studentId);
+        Map<Long, GradeDto> studentResults = studentSubjectResults(studentId);
         for(DeclarationSubjectDto subject : dto.getSubjects()) {
             subject.setIsAssessed(subjectAssessed(studentId, subject.getSubjectStudyPeriod(), subject.getId()));
             
@@ -279,12 +289,14 @@ public class DeclarationService {
         return dto;
     }
     
-    private Map<Long, String> studentSubjectResults(Long studentId) {
-        List<?> data = em.createNativeQuery("select shr.subject_id, shr.grade_code from student_higher_result shr " +
+    private Map<Long, GradeDto> studentSubjectResults(Long studentId) {
+        List<?> data = em.createNativeQuery("select shr.subject_id, shr.grade_code, shr.grading_schema_row_id " +
+                "from student_higher_result shr " +
                 "where shr.student_id = ?1 and shr.is_active = true")
                 .setParameter(1, studentId)
                 .getResultList();
-        return data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> resultAsString(r, 1), (o, n) -> o));
+        return data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0),
+                r -> new GradeDto(resultAsString(r, 1), resultAsLong(r, 2)), (o, n) -> o));
     }
 
     public boolean canCreate(HoisUserDetails user, Long studentId) {
@@ -500,9 +512,11 @@ public class DeclarationService {
         Page<Object[]> result = JpaQueryUtil.pagingResult(qb, SUBJECT_CURRICULUM_SELECT, em, pageable);
         Set<Long> sspIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), result.getContent());
         Map<Long, List<SubjectStudyPeriodSubgroupDto>> subgroups = subquerySubgroups(sspIds);
-        
+        Map<Long, List<AutocompleteResult>> studentGroupMap = subqueryStudentGroups(sspIds);
         return result.map(r -> {
             DeclarationSubjectDto dto = subjectQueryResultToDto(r);
+            List<AutocompleteResult> periodStudentGroups = studentGroupMap.get(dto.getSubjectStudyPeriod());
+            dto.setStudentGroups(periodStudentGroups);
             List<SubjectStudyPeriodSubgroupDto> periodSubgroups = subgroups.get(dto.getSubjectStudyPeriod());
             if (periodSubgroups == null || periodSubgroups.isEmpty()) {
                 return dto;
@@ -524,6 +538,19 @@ public class DeclarationService {
             
             return dto;
         });
+    }
+
+    private Map<Long, List<AutocompleteResult>> subqueryStudentGroups(Set<Long> sspIds) {
+        if (sspIds == null || sspIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_GROUP_FROM).sort(STUDENT_GROUP_SORT);
+        qb.requiredCriteria("ssp.id in :sspIds", "sspIds", sspIds);
+        
+        List<?> results = qb.select(STUDENT_GROUP_SELECT, em).getResultList();
+        return results.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
+                Collectors.mapping(r -> new AutocompleteResult(resultAsLong(r, 2), resultAsString(r, 1), resultAsString(r, 1)), Collectors.toList())));
     }
 
     public List<DeclarationSubjectDto> getExtraCurriculumSubjectsOptions(Declaration declaration) {

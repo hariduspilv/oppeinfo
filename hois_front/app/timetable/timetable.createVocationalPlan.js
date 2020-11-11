@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', 'dialogService', 'ArrayUtils',
-  function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, dialogService, ArrayUtils) {
+angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$location', '$rootScope', '$route', '$scope', 'ArrayUtils', 'Classifier', 'DataUtils', 'StudentUtil', 'QueryUtils', 'dialogService', 'message',
+  function ($location, $rootScope, $route, $scope, ArrayUtils, Classifier, DataUtils, StudentUtil, QueryUtils, dialogService, message) {
     $scope.auth = $route.current.locals.auth;
     var bsave=false;
     $scope.Math = window.Math;
@@ -413,6 +413,8 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
 
         dialogScope.occupiedTime = [];
         dialogScope.lesson = currentEvent;
+        dialogScope.showStudentSelection = currentEvent.journalObject.isIndividual || currentEvent.students.length > 0;
+        dialogScope.studentSelectionDisabled = !currentEvent.journalObject.isIndividual;
         dialogScope.teachers = currentEvent.journalObject.teachers;
         dialogScope.teachers.forEach(function (it) {
           if (angular.isArray(currentEvent.teachers)) {
@@ -424,6 +426,10 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
             return c.capacityType === currentEvent.capacityType;
           })[0];
         });
+        dialogScope.students = currentEvent.journalObject.students;
+        if (currentEvent.students.length > 0) {
+          dialogScope.lesson.student = currentEvent.students[0];
+        }
         dialogScope.lessonHeader = currentEvent.journalObject.name;
         dialogScope.lessonCapacityName = $scope.getCapacityType(currentEvent.capacityType);
         dialogScope.lesson.startTime = new Date(currentEvent.start);
@@ -434,6 +440,10 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         } else {
           dialogScope.lesson.eventRooms = [];
         }
+
+        dialogScope.hideNonActiveJournalStudents = function (journalStudent) {
+          return !StudentUtil.isActive(journalStudent.status);
+        };
 
         dialogScope.$watch('lesson.eventRoom', function () {
           if (angular.isDefined(dialogScope.lesson.eventRoom) && dialogScope.lesson.eventRoom !== null) {
@@ -545,7 +555,8 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
               filtered.push(teacher.id);
             }
             return filtered;
-          }, [])
+          }, []),
+          students: getSubmittedDialogStudents(submittedDialogScope)
         };
 
         bsave=true;
@@ -554,6 +565,13 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         });
       });
     };
+
+    function getSubmittedDialogStudents(submittedDialogScope) {
+      if (angular.isDefined(submittedDialogScope.lesson.student) && submittedDialogScope.lesson.student !== null) {
+        return submittedDialogScope.lesson.student !== '' ? [submittedDialogScope.lesson.student] : null;
+      }
+      return null;
+    }
 
     $scope.saveEvent = function (params) {
       bsave=true;

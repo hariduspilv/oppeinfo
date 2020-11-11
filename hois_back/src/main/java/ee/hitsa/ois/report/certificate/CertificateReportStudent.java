@@ -5,9 +5,12 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentBase;
+import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.enums.StudentType;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
@@ -45,6 +48,7 @@ public class CertificateReportStudent {
     private String curriculumGradeNameEt;
     private BigDecimal creditsAll;
     private BigDecimal averageMark;
+    private String course;
 
     private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
@@ -70,6 +74,11 @@ public class CertificateReportStudent {
         reportStudent.setHasQuit(StudentUtil.hasQuit(student));
         reportStudent.setGuestStudent(ClassifierUtil.equals(StudentType.OPPUR_K, student.getType()));
         reportStudent.setIsActive(StudentUtil.isActive(student));
+        reportStudent.setCourse(Optional.of(student)
+                .map(StudentBase::getStudentGroup)
+                .map(StudentGroup::getCourse)
+                .map(Object::toString)
+                .orElse(null));
         return reportStudent;
     }
 
@@ -290,5 +299,13 @@ public class CertificateReportStudent {
 
     public void setApelSchools(List<AutocompleteResult> apelSchools) {
         this.apelSchools = apelSchools;
+    }
+
+    public String getCourse() {
+        return course;
+    }
+
+    public void setCourse(String course) {
+        this.course = course;
     }
 }

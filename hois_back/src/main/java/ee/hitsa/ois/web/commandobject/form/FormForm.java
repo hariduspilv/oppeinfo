@@ -4,14 +4,19 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.Required;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Size;
+
 public class FormForm {
 
     @Required
     @ClassifierRestriction(MainClassCode.LOPUBLANKETT)
     private String type;
     @Required
+    @Size(max = 10)
     private String from;
     @Required
+    @Size(max = 10)
     private String thru;
     
     public String getType() {

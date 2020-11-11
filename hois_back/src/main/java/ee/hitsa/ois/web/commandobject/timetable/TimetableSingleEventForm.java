@@ -37,6 +37,7 @@ public class TimetableSingleEventForm {
     private List<TimetableSingleEventTeacherForm> teachers;
     private List<AutocompleteResult> studentGroups;
     private List<AutocompleteResult> subgroups;
+    private List<AutocompleteResult> students;
     private Long weekAmount;
     private String otherTeacher;
     private String otherRoom;
@@ -88,6 +89,9 @@ public class TimetableSingleEventForm {
 
         form.setSubgroups(StreamUtil.toMappedList(eg -> AutocompleteResult.of(eg.getSubjectStudyPeriodSubgroup(), false),
                 event.getTimetableEventSubgroups()));
+
+        form.setStudents(StreamUtil.toMappedList(s -> AutocompleteResult.of(s.getStudent(), false),
+                event.getTimetableEventStudents()));
 
         LocalDateTime maxDate = event.getTimetableEvent().getTimetableEventTimes().stream()
                 .map(TimetableEventTime::getStart).max(LocalDateTime::compareTo).get();
@@ -186,6 +190,14 @@ public class TimetableSingleEventForm {
 
     public void setSubgroups(List<AutocompleteResult> subgroups) {
         this.subgroups = subgroups;
+    }
+
+    public List<AutocompleteResult> getStudents() {
+        return students;
+    }
+
+    public void setStudents(List<AutocompleteResult> students) {
+        this.students = students;
     }
 
     public Long getWeekAmount() {

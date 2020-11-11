@@ -60,13 +60,19 @@
             <thead md-head>
             <tr md-row>
               <th md-column>{{'user.rights.right' | translate}}</th>
-              <th md-column ng-repeat="perm in permissions">{{currentLanguageNameField(perm)}}</th>
+              <th md-column ng-repeat="perm in permissions"
+                  ng-show="showTPermissionFor.indexOf(user.role) !== -1 || perm.code != 'OIGUS_T'">
+                {{currentLanguageNameField(perm)}}
+              </th>
             </tr>
             </thead>
             <tbody md-body>
             <tr md-row ng-repeat="object in objects | orderBy: currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
               <td md-cell>{{currentLanguageNameField(object)}}</td>
-              <td md-cell ng-repeat="perm in permissions">{{showPermission(object.code, perm.code) ? ((user.rights[object.code] || []).indexOf(perm.code) !== -1 ? 'main.yes' : 'main.no' | translate) : ''}}</td>
+              <td md-cell ng-repeat="perm in permissions"
+                  ng-show="showTPermissionFor.indexOf(user.role) !== -1 || perm.code != 'OIGUS_T'">
+                {{showPermission(object.code, perm.code) ? ((user.rights[object.code] || []).indexOf(perm.code) !== -1 ? 'main.yes' : 'main.no' | translate) : ''}}
+              </td>
             </tr>
             </tbody>
           </table>

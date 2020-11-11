@@ -7,7 +7,7 @@
                 ng-init="$last && pageLoadingHandler.setFinish('generalMessages')">
                     <td md-cell width="10%">{{::row.inserted | hoisDate}}</td>
                     <td md-cell width="90%">
-                        <p style="color: rgb(13, 71, 161);">{{::row.title}}</p>
+                        <p style="color: rgb(13, 71, 161);" ng-bind-html="row.title | linky: '_blank'"></p>
                     </td>
                     <td md-cell>
                         <md-button style="margin: 0;" ng-if="row.content">
@@ -20,7 +20,7 @@
                 <tr ng-repeat-end ng-show="row.clicked">
                     <td style="border: none" class="disableTableData"></td>
                     <td md-cell style="border: none" colspan="3" class="noPadding">
-                        <pre class="paddingLeft-24" style="width: 100%">{{::row.content}}</pre>
+                        <pre class="paddingLeft-24" style="width: 100%" ng-bind-html="row.content | linky: '_blank'"></pre>
                     </td>
                 </tr>
             </tbody>

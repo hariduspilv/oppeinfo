@@ -273,7 +273,7 @@ public class MessageService {
             saveReceivers(message, persons);
             // email should be sent personally to hide everyone's email.
             emails.forEach(email -> {
-                mailService.sendMail(message, emailSender, Collections.singleton(email));
+                mailService.sendMail(message, emailSender, Collections.singleton(email), false);
             });
         }
 

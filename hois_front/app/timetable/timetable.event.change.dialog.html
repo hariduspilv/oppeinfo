@@ -30,6 +30,15 @@
               </md-radio-group>
             </md-input-container>
           </div>
+          <div ng-if="showStudentSelection" flex="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
+            <div layout="row" flex="70">
+              <md-input-container flex="100">
+                <label>{{'lessonplan.event.student' | translate}}</label>
+                <hois-select ng-model="lesson.student" values="students" value-property="studentId"
+                  show-property="fullname" sorted-query="true" ng-disabled="studentSelectionDisabled" hide-values="hideNonActiveJournalStudents"></hois-select>
+              </md-input-container>
+            </div>
+          </div>
           <div flex="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
             <div layout="row" flex="70">
               <hois-autocomplete flex ng-model="lesson.eventRoom" method="rooms" label="lessonplan.event.room" warning-param="isOccupied"

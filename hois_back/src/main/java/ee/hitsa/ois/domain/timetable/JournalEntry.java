@@ -33,9 +33,13 @@ public class JournalEntry extends BaseEntityWithId {
     private LocalDate homeworkDuedate;
     private Long moodleGradeItemId;
     
-    @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn()
     private CurriculumModuleOutcome curriculumModuleOutcomes;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn()
+    private JournalStudent journalStudent;
 
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, orphanRemoval = true)
     @JoinColumn(name = "journal_entry_id", nullable = false, updatable = true)
@@ -105,6 +109,18 @@ public class JournalEntry extends BaseEntityWithId {
     public void setMoodleGradeItemId(Long moodleGradeItemId) {
         this.moodleGradeItemId = moodleGradeItemId;
     }
+    public CurriculumModuleOutcome getCurriculumModuleOutcomes() {
+        return curriculumModuleOutcomes;
+    }
+    public void setCurriculumModuleOutcomes(CurriculumModuleOutcome curriculumModuleOutcomes) {
+        this.curriculumModuleOutcomes = curriculumModuleOutcomes;
+    }
+    public JournalStudent getJournalStudent() {
+        return journalStudent;
+    }
+    public void setJournalStudent(JournalStudent journalStudent) {
+        this.journalStudent = journalStudent;
+    }
     public Set<JournalEntryCapacityType> getJournalEntryCapacityTypes() {
         return journalEntryCapacityTypes;
     }
@@ -116,12 +132,6 @@ public class JournalEntry extends BaseEntityWithId {
     }
     public void setJournalEntryStudents(Set<JournalEntryStudent> journalEntryStudents) {
         this.journalEntryStudents = journalEntryStudents;
-    }
-    public CurriculumModuleOutcome getCurriculumModuleOutcomes() {
-        return curriculumModuleOutcomes;
-    }
-    public void setCurriculumModuleOutcomes(CurriculumModuleOutcome curriculumModuleOutcomes) {
-        this.curriculumModuleOutcomes = curriculumModuleOutcomes;
     }
 
 }

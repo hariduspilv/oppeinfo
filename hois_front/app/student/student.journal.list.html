@@ -30,18 +30,22 @@
                         <tr md-row ng-repeat="journal in year.journals | orderBy: 'nameEt'" ng-class-odd="'odd'" ng-class-even="'even'">
                             <td md-cell><a ng-href="/#/students/journals/{{journal.id}}">{{journal.nameEt}}</a></td>
                             <td md-cell>
-                                <span ng-repeat="result in journal.journalEntries | filter : {grade: '!'}"
-                                ng-class="{good: isFinal(result.entryType.code) && gradeUtil.isPositive(result.grade.code),
-                                bad: isFinal(result.entryType.code) && !gradeUtil.isPositive(result.grade.code),
-                                bold: isTestButNotFinal(result.entryType.code)}">
-                                    <span>{{result.grade.value}}</span>
-                                    <md-tooltip class="tooltip-multiline" ng-if="result.grade">
+                              <span layout="row" flex>
+                                <span ng-if="result.grade || result.verbalGrade" ng-repeat-start="result in journal.journalEntries | filter : {grade: '!'}" layout="row" layout-align="none center">
+                                    <span ng-if="result.grade" ng-class="{good: isFinal(result.entryType.code) && gradeUtil.isPositive(result.grade.code),
+                                      bad: isFinal(result.entryType.code) && !gradeUtil.isPositive(result.grade.code),
+                                      bold: isTestButNotFinal(result.entryType.code)}">{{result.grade | hoisVocationalGrade}}</span>
+                                    <span ng-if="result.grade && result.verbalGrade">,&nbsp;</span>
+                                    <hois-journal-verbal-result ng-if="result.verbalGrade" value="result"></hois-journal-verbal-result>
+                                    <md-tooltip class="tooltip-multiline" ng-if="result.grade || result.verbalGrade">
                                         <span>{{result.gradeInserted | hoisDate}}</span>
                                         <span ng-if="result.entryType.code">, {{currentLanguageNameField(result.entryType)}}</span>
                                         <span ng-if="result.addInfo && !result.isRemark">, {{result.addInfo}}</span>
                                         <span ng-if="result.entryType.code === 'SISSEKANNE_O'">, {{currentLanguageNameField(result)}}</span>
                                     </md-tooltip>
                                 </span>
+                                <span ng-if="result.grade || result.verbalGrade" ng-repeat-end>&nbsp;</span>
+                              </span>
                             </td>
                             <td md-cell>{{currentLanguageNameField(journal.modules)}}</td>
                             <td md-cell>{{journal.teachers}}</td>

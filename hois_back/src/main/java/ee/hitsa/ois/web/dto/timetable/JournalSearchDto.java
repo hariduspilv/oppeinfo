@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto.timetable;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -11,6 +12,7 @@ public class JournalSearchDto {
     private String nameEt;
     private String teachers;
     private AutocompleteResult modules;
+    private List<AutocompleteResult> moduleObjects;
     private Integer plannedHours;
     private Integer usedHours;
     private String status;
@@ -52,15 +54,23 @@ public class JournalSearchDto {
     public void setTeachers(String teachers) {
         this.teachers = teachers;
     }
-    
+
     public AutocompleteResult getModules() {
         return modules;
     }
-    
+
     public void setModules(AutocompleteResult modules) {
         this.modules = modules;
     }
-    
+
+    public List<AutocompleteResult> getModuleObjects() {
+        return moduleObjects;
+    }
+
+    public void setModuleObjects(List<AutocompleteResult> moduleObjects) {
+        this.moduleObjects = moduleObjects;
+    }
+
     public Integer getPlannedHours() {
         return plannedHours;
     }

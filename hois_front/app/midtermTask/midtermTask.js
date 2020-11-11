@@ -1,15 +1,21 @@
 'use strict';
 
 angular.module('hitsaOis').controller('MidtermTaskStudentResultsController',
-['$q', '$route', '$scope', '$timeout', 'ArrayUtils', 'Classifier', 'MidtermTaskUtil', 'QueryUtils', 'dialogService', 'message',
-function ($q, $route, $scope, $timeout, ArrayUtils, Classifier, MidtermTaskUtil, QueryUtils, dialogService, message) {
+['$q', '$route', '$scope', '$timeout', 'GRADING_SCHEMA_TYPE', 'ArrayUtils', 'GradingSchema', 'MidtermTaskUtil', 'QueryUtils', 'dialogService', 'message',
+function ($q, $route, $scope, $timeout, GRADING_SCHEMA_TYPE, ArrayUtils, GradingSchema, MidtermTaskUtil, QueryUtils, dialogService, message) {
   $scope.auth = $route.current.locals.auth;
   $scope.updateSubgroupPlaces = updateSubgroupPlaces;
 
   $scope.subjectStudyPeriodId = $route.current.params.id;
   var Endpoint = QueryUtils.endpoint('/midtermTasks/studentResults');
   var midtermTaskUtil = new MidtermTaskUtil();
-  var clMapper = Classifier.valuemapper({ grade: 'KORGHINDAMINE' });
+
+  var gradeMapper;
+  var gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.HIGHER);
+  $q.all(gradingSchema.promises).then(function () {
+    $scope.existsSchoolGradingSchema = gradingSchema.existsSchoolGradingSchema();
+    gradeMapper = gradingSchema.gradeMapper(gradingSchema.gradeSelection(), ['grade']);
+  });
 
   function studentHasResultForTask(student, midtermTask) {
     var result = $scope.record.studentResults.find(function(studentResult){
@@ -48,10 +54,10 @@ function ($q, $route, $scope, $timeout, ArrayUtils, Classifier, MidtermTaskUtil,
   function afterload() {
     $scope.record.midtermTasks = midtermTaskUtil.getSortedMidtermTasks($scope.record.midtermTasks);
     $scope.moodleTasks = midtermTaskUtil.getMoodleTasks($scope.record.midtermTasks);
-    $q.all(clMapper.promises).then(function () {
+    $q.all(gradingSchema.promises).then(function () {
       $scope.record.protocols.forEach(function (protocol) {
         protocol.protocolStudents.forEach(function (student) {
-          clMapper.objectmapper(student);
+          gradeMapper.objectmapper(student);
         });
       });
     });
@@ -63,6 +69,8 @@ function ($q, $route, $scope, $timeout, ArrayUtils, Classifier, MidtermTaskUtil,
       addEmptyStudentResults(student);
     });
     midtermTaskUtil.sortStudentResults($scope.record.studentResults, $scope.record.midtermTasks);
+    $scope.$broadcast('refreshFixedColumns');
+    $scope.$broadcast('refreshFixedTableHeight');
     // set pristine after timeout as ngModel in mdSelect will set dirty
     $timeout(function () {
       $scope.midtermTaskResultForm.$setPristine();
@@ -155,6 +163,11 @@ function ($q, $route, $scope, $timeout, ArrayUtils, Classifier, MidtermTaskUtil,
       student.previousSubgroup = newSubgroup.id;
     }
   }
+
+  $scope.subgroupChanged = function () {
+    $scope.$broadcast('refreshFixedColumns');
+    $scope.$broadcast('refreshFixedTableHeight');
+  };
 
 }]).controller('MidtermTaskController', ['$scope', '$sessionStorage', 'QueryUtils', 'DataUtils', '$route', 'ArrayUtils', 'message', 'dialogService', 'orderByFilter', '$rootScope', function ($scope, $sessionStorage, QueryUtils, DataUtils, $route, ArrayUtils, message, dialogService, orderBy, $rootScope) {
 

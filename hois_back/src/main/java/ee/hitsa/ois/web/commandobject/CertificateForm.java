@@ -44,6 +44,7 @@ public class CertificateForm extends VersionedCommand {
     private Boolean addOutcomes;
     private Boolean estonian;
     private Boolean showUncompleted;
+    private Boolean stateGradingSchema;
 
     public String getOtherName() {
         return otherName;
@@ -156,5 +157,12 @@ public class CertificateForm extends VersionedCommand {
     public void setShowUncompleted(Boolean showUncompleted) {
         this.showUncompleted = showUncompleted;
     }
-    
+
+    public Boolean getStateGradingSchema() {
+        return stateGradingSchema;
+    }
+
+    public void setStateGradingSchema(Boolean stateGradingSchema) {
+        this.stateGradingSchema = stateGradingSchema;
+    }
 }

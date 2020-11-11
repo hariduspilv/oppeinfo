@@ -95,7 +95,7 @@ public class ApelApplicationController {
     @PutMapping("/{id:\\d+}/submit")
     public ApelApplicationDto submit(HoisUserDetails user, @WithEntity ApelApplication application) {
         UserUtil.throwAccessDeniedIf(!ApelApplicationUtil.canSubmit(user, application));
-        ApelApplication submittedApplication = apelApplicationService.submit(application);
+        ApelApplication submittedApplication = apelApplicationService.submit(application, user);
         return get(user, submittedApplication);
     }
 

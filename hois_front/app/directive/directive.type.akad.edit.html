@@ -28,7 +28,8 @@
         <td md-cell hois-table-data>
           <hois-table-data-master>
             <hois-select ng-if="row.isPeriod" ng-model="row.studyPeriodStart" name="students[{{$index}}].studyPeriodStart"
-              values="formState.studyPeriods" aria-label="{{'directive.student.akadStartDate' | translate}}"></hois-select>
+                         values="formState.studyPeriods" aria-label="{{'directive.student.akadStartDate' | translate}}"
+                         show-property="display" sorted-query="true"></hois-select>
             <md-datepicker ng-if="!row.isPeriod" ng-model="row.startDate" md-max-date="row.endDate" name="students[{{$index}}].startDate"></md-datepicker>
           </hois-table-data-master>
           <hois-table-data-detail>
@@ -43,7 +44,8 @@
         <td md-cell hois-table-data>
           <hois-table-data-master>
             <hois-select ng-if="row.isPeriod" ng-model="row.studyPeriodEnd" name="students[{{$index}}].studyPeriodEnd"
-              values="formState.studyPeriods" aria-label="{{'directive.student.akadEndDate' | translate}}"></hois-select>
+                         values="formState.studyPeriods" aria-label="{{'directive.student.akadEndDate' | translate}}"
+                         show-property="display" sorted-query="true"></hois-select>
             <md-datepicker ng-if="!row.isPeriod" ng-model="row.endDate" md-min-date="row.startDate" name="students[{{$index}}].endDate"></md-datepicker>
           </hois-table-data-master>
           <hois-table-data-detail>

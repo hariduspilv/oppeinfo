@@ -288,8 +288,8 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             dto.setApplicationIsPeriod(application.getIsPeriod());
             dto.setApplicationStartDate(application.getStartDate());
             dto.setApplicationEndDate(application.getEndDate());
-            dto.setApplicationStudyPeriodStart(application.getStudyPeriodStart() != null ? AutocompleteResult.of(application.getStudyPeriodStart()) : null);
-            dto.setApplicationStudyPeriodEnd(application.getStudyPeriodEnd() != null ? AutocompleteResult.of(application.getStudyPeriodEnd()) : null);
+            dto.setApplicationStudyPeriodStart(application.getStudyPeriodStart() != null ? AutocompleteResult.ofWithYear(application.getStudyPeriodStart()) : null);
+            dto.setApplicationStudyPeriodEnd(application.getStudyPeriodEnd() != null ? AutocompleteResult.ofWithYear(application.getStudyPeriodEnd()) : null);
             break;
         case KASKKIRI_AKADK:
             dto.setStartDate(application.getStartDate());

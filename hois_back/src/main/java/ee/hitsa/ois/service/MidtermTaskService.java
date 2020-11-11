@@ -91,7 +91,7 @@ public class MidtermTaskService {
                 Root<SubjectStudyPeriodTeacher> targetRoot = teacherSubquery
                         .from(SubjectStudyPeriodTeacher.class);
                 teacherSubquery = teacherSubquery.select(targetRoot.get("subjectStudyPeriod").get("id"))
-                        .where(cb.equal(targetRoot.get("teacher").get("id"), criteria.getTeacher()));
+                        .where(targetRoot.get("teacher").get("id").in(criteria.getTeacher()));
                 filters.add(root.get("id").in(teacherSubquery));
             }
             

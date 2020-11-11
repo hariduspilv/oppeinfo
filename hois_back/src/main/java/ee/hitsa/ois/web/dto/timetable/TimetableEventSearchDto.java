@@ -21,6 +21,7 @@ public class TimetableEventSearchDto {
     private List<TimetableEventSearchRoomDto> rooms;
     private List<TimetableEventSearchGroupDto> studentGroups;
     private List<TimetableEventSearchSubgroupDto> subgroups;
+    private List<TimetableEventSearchStudentDto> students;
     private Boolean considerBreak;
     private Boolean singleEvent;
     private Boolean publicEvent;
@@ -33,6 +34,7 @@ public class TimetableEventSearchDto {
     private Boolean isJuhanEvent;
     private Boolean isExam;
     private Boolean isOngoing;
+    private Boolean includesEventStudents;
     private LocalDateTime changed;
 
     public TimetableEventSearchDto(Long id, Long journalId, Long subjectStudyPeriodId, String nameEt, String nameEn,
@@ -150,6 +152,14 @@ public class TimetableEventSearchDto {
         this.subgroups = subgroups;
     }
 
+    public List<TimetableEventSearchStudentDto> getStudents() {
+        return students;
+    }
+
+    public void setStudents(List<TimetableEventSearchStudentDto> students) {
+        this.students = students;
+    }
+
     public Boolean getConsiderBreak() {
         return considerBreak;
     }
@@ -244,6 +254,14 @@ public class TimetableEventSearchDto {
 
     public void setIsOngoing(Boolean isOngoing) {
         this.isOngoing = isOngoing;
+    }
+
+    public Boolean getIncludesEventStudents() {
+        return includesEventStudents;
+    }
+
+    public void setIncludesEventStudents(Boolean includesEventStudents) {
+        this.includesEventStudents = includesEventStudents;
     }
 
     public LocalDateTime getChanged() {

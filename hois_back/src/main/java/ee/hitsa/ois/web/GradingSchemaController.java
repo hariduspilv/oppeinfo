@@ -10,6 +10,7 @@ import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.gradingschema.GradingSchemaForm;
 import ee.hitsa.ois.web.dto.gradingSchema.GradingSchemaDto;
+import ee.hitsa.ois.web.dto.gradingSchema.SchoolExistingGradingSchemasDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,7 +40,7 @@ public class GradingSchemaController {
     @GetMapping("/typeSchemas")
     public List<GradingSchemaDto> typeSchemas(HoisUserDetails user, @RequestParam String type) {
         // used for grade selections and therefore can't have and won't need user rights check
-        return gradingSchemaService.typeSchemas(user, type);
+        return gradingSchemaService.typeSchemas(user.getSchoolId(), type);
     }
 
     @PostMapping
@@ -67,5 +68,10 @@ public class GradingSchemaController {
             @WithEntity GradingSchemaRow row) {
         UserUtil.throwAccessDeniedIf(!GradingSchemaUtil.canEdit(user, gradingSchema));
         gradingSchemaService.deleteSchemaRow(user, row);
+    }
+
+    @GetMapping("/schoolExistingGradingSchemas")
+    public SchoolExistingGradingSchemasDto schoolExistingGradingSchemas(HoisUserDetails user) {
+        return gradingSchemaService.schoolExistingGradingSchemas(user.getSchoolId());
     }
 }

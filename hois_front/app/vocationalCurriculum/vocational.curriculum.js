@@ -977,7 +977,7 @@ angular.module('hitsaOis')
          return false;
        }
        return !ArrayUtils.isEmpty(files.filter(function(file){
-         return file.ehisFile === 'EHIS_FAIL_15773' && file.sendEhis === true && 
+         return file.ehisFile === 'EHIS_FAIL_15773' && file.sendEhis === true &&
           file.oisFile && file.oisFile.ftype === 'application/pdf';
        }));
      };
@@ -1059,8 +1059,20 @@ angular.module('hitsaOis')
           message.info(updateSuccess);
           $scope.vocationalCurriculumForm.$setPristine();
           mapDtoToModel(response, $scope);
-        }, function(){
+        }).catch(function (response) {
           convertBackToModel(curriculum);
+          if (response.data && response.data._errors) {
+            var invalidStudyForm = false;
+            angular.forEach(response.data._errors, function (err) {
+              if (err.code === 'curriculum.error.removedUsedStudyForm') {
+                invalidStudyForm = true;
+              }
+            });
+            if (invalidStudyForm) {
+              // used 'required' as it is automatically updated when value is changed
+              $scope.vocationalCurriculumForm.studyForms.$setValidity('required', false);
+            }
+          }
         });
       } else {
         curriculum.newFiles = curriculum.files;
@@ -1419,19 +1431,19 @@ angular.module('hitsaOis')
 
     /**
      * Default comparator from orderBy.js
-     * 
-     * @param {Object} v1 
-     * @param {Object} v2 
+     *
+     * @param {Object} v1
+     * @param {Object} v2
      */
     function defaultCompare(v1, v2) {
       var result = 0;
       var type1 = v1.type;
       var type2 = v2.type;
-  
+
       if (type1 === type2) {
         var value1 = v1.value;
         var value2 = v2.value;
-  
+
         if (type1 === 'string') {
           // Compare strings case-insensitively
           value1 = value1.toLowerCase();
@@ -1446,7 +1458,7 @@ angular.module('hitsaOis')
             value2 = v2.index;
           }
         }
-  
+
         if (value1 !== value2) {
           result = value1 < value2 ? -1 : 1;
         }
@@ -1457,7 +1469,7 @@ angular.module('hitsaOis')
           (type2 === 'null') ? -1 :
           (type1 < type2) ? -1 : 1;
       }
-  
+
       return result;
     }
 

@@ -42,10 +42,14 @@
         <td>{{ student.fullname }}</td>
 		<td>{{ student.studentgroup }}</td>
         <td>
-          {{ student.grade }}
-          
-          {% if student.gradeName != null %}
-            ({{ student.gradeName }})
+          {% if student.grade != null %}
+            {{ student.grade }}
+
+            {% if student.gradeName != null %}
+              ({{ student.gradeName }})
+            {% endif %}
+          {% else %}
+            {{ student.gradingSchemaGrade }}
           {% endif %}
         </td>
       </tr>

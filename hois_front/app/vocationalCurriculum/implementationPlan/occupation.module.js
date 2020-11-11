@@ -48,7 +48,9 @@ angular.module('hitsaOis')
     $scope.formState = {
       readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1
     };
-    $scope.capacities = QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({ isHigher: false });
+    if ($scope.auth.school !== null) {
+      $scope.capacities = QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({ isHigher: false });
+    }
     $scope.curriculumVersion = QueryUtils.endpoint(baseUrl + "/curriculumVersion").get({id: curriculumVersion});
     $scope.backToEditForm = '#/vocationalCurriculum/' + curriculum + '/moduleImplementationPlan/' + curriculumVersion + '/edit';
     $scope.backToViewForm = '#/vocationalCurriculum/' + curriculum + '/moduleImplementationPlan/' + curriculumVersion + '/view';

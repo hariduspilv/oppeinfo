@@ -122,7 +122,7 @@ public class ApelApplicationService {
             + " join classifier c on aa.status_code = c.code";
     private static final String RPM_SELECT = "aa.id as application_id, aa.status_code as application_status, s.id as student_id,"
             + " p.firstname as student_firstname, p.lastname as student_lastname, cur.id as curriculum_id, cur.name_et as curriculum_name_et,"
-            + " cur.name_en as curriculum_name_en, aa.inserted, aa.confirmed, sg.code";
+            + " cur.name_en as curriculum_name_en, aa.inserted, aa.confirmed, sg.code, aa.submitted, aa.submitted_by";
 
     private static final String OUTCOME_RESULT_ADDINFO = "VÕTA";
     
@@ -183,6 +183,11 @@ public class ApelApplicationService {
                 DateUtils::firstMomentOfDay);
         qb.optionalCriteria("aa.confirmed <= :confirmedThru", "confirmedThru", criteria.getConfirmedThru(),
                 DateUtils::lastMomentOfDay);
+        
+        qb.optionalCriteria("aa.submitted >= :submittedFrom", "submittedFrom", criteria.getSubmittedFrom(),
+                DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("aa.submitted <= :submittedThru", "submittedThru", criteria.getSubmittedThru(),
+                DateUtils::lastMomentOfDay);
 
         qb.optionalCriteria("aa.committee_id = :committeeId", "committeeId", criteria.getCommittee());
 
@@ -204,6 +209,8 @@ public class ApelApplicationService {
             dto.setCurriculum(new AutocompleteResult(curriculumId, resultAsString(r, 6), resultAsString(r, 7)));
             dto.setCanEdit(Boolean.valueOf(ApelApplicationUtil.canEdit(user, dto.getStatus(), curriculumId)));
             dto.setCanReview(Boolean.valueOf(ApelApplicationUtil.canReview(user, dto.getStatus(), committeeMembers.get(dto.getId()))));
+            dto.setSubmitted(resultAsLocalDate(r, 11));
+            dto.setSubmittedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 12)));
             return dto;
         });
     }
@@ -604,13 +611,15 @@ public class ApelApplicationService {
      * @param application
      * @return
      */
-    public ApelApplication submit(ApelApplication application) {
+    public ApelApplication submit(ApelApplication application, HoisUserDetails user) {
         validateSubmittedApplication(application);
         if (application.getRecords().isEmpty()) {
             throw new ValidationFailedException("apel.error.atLeastOneFormalOrInformalLearning");
         }
 
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_E);
+        application.setSubmittedBy(user.getUsername());
+        application.setSubmitted(LocalDate.now());
         application = EntityUtil.save(application, em);
         ApelApplicationCreated data = new ApelApplicationCreated(application);
         automaticMessageService.sendMessageToStudentAndSchoolAdmins(MessageType.TEATE_LIIK_VOTA, application.getStudent(), data);
@@ -750,6 +759,8 @@ public class ApelApplicationService {
             application.setDecision(commentForm.getAddInfo());
             createComment(application, commentForm);
         }
+        application.setSubmitted(null);
+        application.setSubmittedBy(null);
         setApplicationStatus(application, ApelApplicationStatus.VOTA_STAATUS_K);
         return EntityUtil.save(application, em);
     }
@@ -815,9 +826,9 @@ public class ApelApplicationService {
     }
 
     private List<CurriculumModuleOutcome> apelApplicationOutcomes(Long applicationId) {
-        return em.createQuery("select aaismo.curriculumModuleOutcomes from ApelApplicationInformalSubjectOrModuleOutcomes aaismo" +
-                " where aaismo.apelApplicationInformalSubjectOrModule.apelApplicationRecord.apelApplication.id = :applicationId",
-                CurriculumModuleOutcome.class)
+        return em.createQuery("select aaismo.curriculumModuleOutcomes from ApelApplicationInformalSubjectOrModuleOutcomes aaismo"
+                + " where aaismo.apelApplicationInformalSubjectOrModule.apelApplicationRecord.apelApplication.id = :applicationId"
+                + " and aaismo.apelApplicationInformalSubjectOrModule.transfer = true", CurriculumModuleOutcome.class)
                 .setParameter("applicationId", applicationId)
                 .getResultList();
     }

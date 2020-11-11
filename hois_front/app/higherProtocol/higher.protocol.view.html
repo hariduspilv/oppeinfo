@@ -101,7 +101,7 @@
           </tr>
         </thead>
         <tbody md-body>
-          <tr md-row ng-repeat="student in record.protocolStudents | filter: filterStudents(record.subgroup) | orderBy: 'student.nameEt'"
+          <tr md-row ng-repeat="student in record.protocolStudents | filter: filterStudents(record.subgroup)"
               ng-class-odd="'odd'" ng-class-even="'even'">
             <ng-form name="higherProtocolStudentForm">
               <td md-cell>{{$index + 1}}.</td>
@@ -120,7 +120,7 @@
               <td ng-if="record.protocolType === 'PROTOKOLLI_LIIK_K'" md-cell>{{student.examDate | hoisDate}}</td>
               <td md-cell ng-show="record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject">
                 <span ng-repeat="journalResult in student.practiceJournalResults | orderBy: 'inserted'">
-                  <span ng-class="{badResult: !gradeUtil.isPositive(journalResult.grade.code)}">{{journalResult.grade | hoisHigherGrade: letterGrades}}</span>
+                  <hois-higher-result value="journalResult.grade" exists-grading-schema="existsSchoolGradingSchema" letter-grades="letterGrades"></hois-higher-result>
                   <span ng-if="!$last">/</span>
                 </span>
               </td>
@@ -131,17 +131,17 @@
               <td md-cell ng-repeat="subject in record.moduleDto.subjects" style="min-width: 100px;">
                 <span ng-if="subject.id">
                   <span ng-if="student.mappedResults.subjectResults[subject.id].isApelTransfer" class="apelAsterisk">*</span>
-                  <span ng-class="{badResult: !gradeUtil.isPositive(student.mappedResults.subjectResults[subject.id].grade.code)}">
-                    {{student.mappedResults.subjectResults[subject.id].grade | hoisHigherGrade: letterGrades}}</span>
+                  <hois-higher-result value="student.mappedResults.subjectResults[subject.id].grade"
+                    exists-grading-schema="existsSchoolGradingSchema" letter-grades="letterGrades"></hois-higher-result>
                 </span>
                 <span ng-if="!subject.id">
                   <span ng-if="student.mappedResults.otherSubjectResults[subject.studentHigherResultId].isApelTransfer" class="apelAsterisk">*</span>
-                  <span ng-class="{badResult: !gradeUtil.isPositive(student.mappedResults.otherSubjectResults[subject.studentHigherResultId].grade.code)}">
-                    {{student.mappedResults.otherSubjectResults[subject.studentHigherResultId].grade | hoisHigherGrade: letterGrades}}</span>
+                  <hois-higher-result value="student.mappedResults.otherSubjectResults[subject.studentHigherResultId].grade"
+                    exists-grading-schema="existsSchoolGradingSchema" letter-grades="letterGrades"></hois-higher-result>
                 </span>
               </td>
               <td md-cell>
-                <span ng-class="{badResult: !gradeUtil.isPositive(student.grade.code)}">{{student.grade | hoisHigherGrade: letterGrades}}</span>
+                <hois-higher-result value="student.grade" exists-grading-schema="existsSchoolGradingSchema" letter-grades="letterGrades"></hois-higher-result>
               </td>
               <td md-cell ng-if="record.status.code === 'PROTOKOLL_STAATUS_K'">{{student.addInfo}}</td>
             </ng-form>

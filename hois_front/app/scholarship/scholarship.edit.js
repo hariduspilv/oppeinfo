@@ -13,7 +13,7 @@ angular.module('hitsaOis').controller('ScholarshipEditController', ['$route', '$
       STIPTOETUS_TULEMUS: 'scholarship/term/scholarship.scho.edit.html'
     };
 
-    $scope.filteredStudyForm = ['OPPEVORM_P', 'OPPEVORM_Q', 'OPPEVORM_S', 'OPPEVORM_MS', 'OPPEVORM_K', 'OPPEVORM_M'];
+    $scope.filteredStudyForm = ['OPPEVORM_P', 'OPPEVORM_Q', 'OPPEVORM_S', 'OPPEVORM_MS', 'OPPEVORM_K', 'OPPEVORM_M', 'OPPEVORM_E'];
     var enabledEhisTypeFor = ['STIPTOETUS_ERIALA', 'STIPTOETUS_MUU', 'STIPTOETUS_TULEMUS', 'STIPTOETUS_DOKTOR'];
 
     $scope.formState = {priorities: Classifier.queryForDropdown({mainClassCode: 'PRIORITEET'})};

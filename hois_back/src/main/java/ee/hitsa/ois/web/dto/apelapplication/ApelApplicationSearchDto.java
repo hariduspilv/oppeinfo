@@ -15,6 +15,8 @@ public class ApelApplicationSearchDto {
     private String status;
     private LocalDate inserted;
     private LocalDate confirmed;
+    private LocalDate submitted;
+    private String submittedBy;
     private Boolean canEdit;
     private Boolean canReview;
     private Boolean canView;
@@ -102,5 +104,21 @@ public class ApelApplicationSearchDto {
 
     public void setCanView(Boolean canView) {
         this.canView = canView;
+    }
+
+    public LocalDate getSubmitted() {
+        return submitted;
+    }
+
+    public void setSubmitted(LocalDate submitted) {
+        this.submitted = submitted;
+    }
+
+    public String getSubmittedBy() {
+        return submittedBy;
+    }
+
+    public void setSubmittedBy(String submittedBy) {
+        this.submittedBy = submittedBy;
     }
 }

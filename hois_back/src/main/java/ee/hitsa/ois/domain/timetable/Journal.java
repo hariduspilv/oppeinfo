@@ -78,6 +78,7 @@ public class Journal extends BaseEntityWithId {
     private Set<JournalEntry> journalEntries = new HashSet<>();
 
     private Boolean addModuleOutcomes;
+    private Boolean isIndividual;
 
     public School getSchool() {
         return school;
@@ -263,4 +264,11 @@ public class Journal extends BaseEntityWithId {
         this.addModuleOutcomes = addModuleOutcomes;
     }
 
+    public Boolean getIsIndividual() {
+        return isIndividual;
+    }
+
+    public void setIsIndividual(Boolean isIndividual) {
+        this.isIndividual = isIndividual;
+    }
 }

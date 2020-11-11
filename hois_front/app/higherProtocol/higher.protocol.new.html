@@ -75,7 +75,7 @@
           </thead>
           <tbody md-body>
             <tr md-row md-select="student.id" md-select-id="student.id" ng-disabled="!student.canSelect"
-                ng-repeat="student in students | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
+                ng-repeat="student in students" ng-class-odd="'odd'" ng-class-even="'even'">
               <td md-cell>{{student.fullname}}</td>
               <td md-cell>{{student.studentGroup.nameEt}}</td>
               <td md-cell>{{student.curriculum.nameEt}}</td>

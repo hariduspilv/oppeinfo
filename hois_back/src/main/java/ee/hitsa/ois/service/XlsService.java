@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -320,6 +322,15 @@ public class XlsService {
                 return null;
             }
             return Long.valueOf(value);
+        }
+        
+        public Object decimalString(Object nr) {
+            if (nr == null) return null;
+            if (nr instanceof BigDecimal) {
+                DecimalFormat df = new DecimalFormat("0.###");
+                return df.format(nr);
+            }
+            return nr;
         }
         
         /**

@@ -1,9 +1,8 @@
 'use strict';
 
 angular.module('hitsaOis').controller('FinalVocationalProtocolEditController',
-function ($location, $route, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, GradingSchema, ProtocolUtils, VocationalGradeUtil, QueryUtils, config, dialogService, message, oisFileService) {
+function ($location, $route, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, GradingSchema, ProtocolUtils, QueryUtils, config, dialogService, message, oisFileService) {
   var endpoint = '/finalVocationalProtocols';
-  $scope.gradeUtil = VocationalGradeUtil;
   $scope.auth = $route.current.locals.auth;
   var clMapper = Classifier.valuemapper({ status: 'PROTOKOLL_STAATUS', studyLevel: 'OPPEASTE' });
   var studentClMapper = Classifier.valuemapper({ status: 'OPPURSTAATUS' });
@@ -21,6 +20,7 @@ function ($location, $route, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, Gradin
   function setGradingSchema(entity) {
     gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.VOCATIONAL);
     $q.all(gradingSchema.promises).then(function () {
+      $scope.existsSchoolGradingSchema = gradingSchema.existsSchoolGradingSchema();
       $scope.grades = gradingSchema.gradeSelection(entity.protocolVdata.studyYear.id);
       $scope.grades.forEach(function (grade) {
         // hide classifier grades that were previously filtered

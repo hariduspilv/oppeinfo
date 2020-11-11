@@ -28,6 +28,9 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
       if (!angular.isDefined($scope.criteria.personalEvent)) {
         $scope.criteria.personalEvent = false;
       }
+      if (!angular.isDefined($scope.criteria.juhanEvent)) {
+        $scope.criteria.juhanEvent = false;
+      }
     }
 
     if (!angular.isDefined($scope.criteria.from)) {
@@ -56,6 +59,8 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
     $scope.clearEventCriteria = function () {
       _clearCriteria();
       $scope.criteria.singleEvent = false;
+      $scope.criteria.personalEvent = false;
+      $scope.criteria.juhanEvent = false;
       $scope.directiveControllers.forEach(function (c) {
         c.clear();
       });

@@ -1,9 +1,11 @@
 package ee.hitsa.ois.web;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,6 +91,27 @@ public class ScholarshipController {
             @Valid ScholarshipApplicationRankingSearchCommand command) {
         ScholarshipUtil.assertCanSearchApplications(user);
         return scholarshipService.applicationsRanking(user, command);
+    }
+    
+    @GetMapping("/applications/ranking/scholarshipApplicationRankingGrants.xls")
+    public void scholarshipsGrantsRankingXls(HoisUserDetails user, @Valid ScholarshipApplicationRankingSearchCommand command, HttpServletResponse response)
+            throws IOException {
+        ScholarshipUtil.assertCanSearchApplications(user);
+        HttpUtil.xls(response, "scholarshipApplicationRankingGrants.xls", scholarshipService.scholarshipsGrantsRankingXls(user, command));
+    }
+    
+    @GetMapping("/applications/ranking/scholarshipApplicationRanking.xls")
+    public void scholarshipsRankingXls(HoisUserDetails user, @Valid ScholarshipApplicationRankingSearchCommand command, HttpServletResponse response)
+            throws IOException {
+        ScholarshipUtil.assertCanSearchApplications(user);
+        HttpUtil.xls(response, "scholarshipApplicationRanking.xls", scholarshipService.scholarshipsRankingXls(user, command));
+    }
+    
+    @GetMapping("/applications/ranking/scholarshipApplicationRankingDoctor.xls")
+    public void scholarshipsDoctorRankingXls(HoisUserDetails user, @Valid ScholarshipApplicationRankingSearchCommand command, HttpServletResponse response)
+            throws IOException {
+        ScholarshipUtil.assertCanSearchApplications(user);
+        HttpUtil.xls(response, "scholarshipApplicationRankingDoctor.xls", scholarshipService.scholarshipsDoctorRankingXls(user, command));
     }
 
     @GetMapping("/{id:\\d+}")

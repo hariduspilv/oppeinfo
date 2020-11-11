@@ -5,8 +5,7 @@ import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
-import ee.hitsa.ois.enums.MainClassCode;
-import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.web.dto.GradeDto;
 
 public class PracticeJournalEntriesTeacherForm {
 
@@ -17,8 +16,7 @@ public class PracticeJournalEntriesTeacherForm {
     @Size(max=10000)
     private String teacherOpinion;
 
-    @ClassifierRestriction({MainClassCode.KUTSEHINDAMINE, MainClassCode.KORGHINDAMINE})
-    private String grade;
+    private GradeDto grade;
     private List<PracticeFileForm> practiceJournalFiles;
     public List<PracticeJournalEntryTeacherForm> getPracticeJournalEntries() {
         return practiceJournalEntries;
@@ -44,11 +42,11 @@ public class PracticeJournalEntriesTeacherForm {
         this.teacherOpinion = teacherOpinion;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
 
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
     }
 

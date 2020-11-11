@@ -22,6 +22,7 @@ public class FinalProtocolStudentReport {
     private final String name;
     private final String grade;
     private final String gradeName;
+    private final String gradingSchemaGrade;
     private final List<String> occupations;
     private final List<String> partOccupations;
     private final String curriculumGrade;
@@ -30,22 +31,29 @@ public class FinalProtocolStudentReport {
             Language lang) {
         name = PersonUtil.fullname(student.getStudent().getPerson());
 
-        // can't use ReportUtil.gradeValue because higher grade should not be taken from name
-        if (student.getGrade() != null) {
+        if (student.getGradingSchemaRow() != null) {
+            grade = null;
+            gradeName = name(student.getGrade(), lang);
+            gradingSchemaGrade = Language.EN.equals(lang) ? student.getGradingSchemaRow().getGradeEn()
+                    : student.getGradingSchemaRow().getGrade();
+        } else if (student.getGrade() != null) {
+            // can't use ReportUtil.gradeValue because higher grade should not be taken from name
             if (Boolean.FALSE.equals(isVocational)) {
                 HigherAssessment assessment = EnumUtil.valueOf(HigherAssessment.class, student.getGrade());
                 if (Boolean.TRUE.equals(assessment.getIsDistinctive())) {
                     grade = Boolean.TRUE.equals(letterGrades) ? student.getGrade().getValue2() : student.getGrade().getValue();
                 } else {
-                    grade = Language.EN == lang ?  student.getGrade().getExtraval2() :  student.getGrade().getExtraval1();
+                    grade = Language.EN.equals(lang) ?  student.getGrade().getExtraval2() :  student.getGrade().getExtraval1();
                 }
             } else {
                 grade = student.getGrade().getValue();
             }
             gradeName = name(student.getGrade(), lang);
+            gradingSchemaGrade = null;
         } else {
             grade = null;
             gradeName = null;
+            gradingSchemaGrade = null;
         }
 
         List<ProtocolStudentOccupation> nonPartOccupations = StreamUtil.toFilteredList(
@@ -85,6 +93,10 @@ public class FinalProtocolStudentReport {
 
     public String getGradeName() {
         return gradeName;
+    }
+
+    public String getGradingSchemaGrade() {
+        return gradingSchemaGrade;
     }
 
     public List<String> getOccupations() {

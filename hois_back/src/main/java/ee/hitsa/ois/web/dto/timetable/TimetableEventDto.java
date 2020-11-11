@@ -14,6 +14,8 @@ public class TimetableEventDto {
     private List<RoomAutocompleteResult> rooms = new ArrayList<>();
     private List<Long> teachers = new ArrayList<>();
     private List<String> teacherNames = new ArrayList<>();
+    private List<Long> students = new ArrayList<>();
+    private List<String> studentNames = new ArrayList<>();
     private List<Long> subgroups = new ArrayList<>();
     private List<String> subgroupCodes = new ArrayList<>();
     private Long studentGroup;
@@ -116,6 +118,22 @@ public class TimetableEventDto {
 
     public void setTeacherNames(List<String> teacherNames) {
         this.teacherNames = teacherNames;
+    }
+
+    public List<Long> getStudents() {
+        return students;
+    }
+
+    public void setStudents(List<Long> students) {
+        this.students = students;
+    }
+
+    public List<String> getStudentNames() {
+        return studentNames;
+    }
+
+    public void setStudentNames(List<String> studentNames) {
+        this.studentNames = studentNames;
     }
 
     public List<Long> getSubgroups() {

@@ -55,6 +55,7 @@ import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumResult;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 
 public class AutocompleteResult extends EntityConnectionCommand implements Translatable {
@@ -170,30 +171,34 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
         return new AutocompleteResult(module.getId(), module.getNameEt(), module.getNameEn());
     }
 
-    public static AutocompleteResult of(CurriculumVersionOccupationModule omodule) {
+    public static CurriculumVersionOccupationModuleResult of(CurriculumVersionOccupationModule omodule) {
         return curriculumVersionOccupationModuleResult(omodule, true);
     }
 
-    public static AutocompleteResult of(CurriculumVersionOccupationModule omodule,
+    public static CurriculumVersionOccupationModuleResult of(CurriculumVersionOccupationModule omodule,
             boolean includeCurriculumVersionCode) {
         return curriculumVersionOccupationModuleResult(omodule, includeCurriculumVersionCode);
     }
 
-    private static AutocompleteResult curriculumVersionOccupationModuleResult(CurriculumVersionOccupationModule omodule,
-            boolean includeCurriculumVersionCode) {
+    private static CurriculumVersionOccupationModuleResult curriculumVersionOccupationModuleResult(
+            CurriculumVersionOccupationModule omodule, boolean includeCurriculumVersionCode) {
         CurriculumModule curriculumModule = omodule.getCurriculumModule();
         Classifier moduleCode = curriculumModule.getModule();
         String curriculumVersionCode = includeCurriculumVersionCode ? omodule.getCurriculumVersion().getCode() : null;
-        return curriculumVersionOccupationModuleResult(omodule.getId(), curriculumModule.getNameEt(),
-                curriculumModule.getNameEn(), moduleCode.getNameEt(), moduleCode.getNameEn(), curriculumVersionCode);
+        CurriculumVersionOccupationModuleResult result = curriculumVersionOccupationModuleResult(omodule.getId(),
+                curriculumModule.getNameEt(), curriculumModule.getNameEn(), moduleCode.getNameEt(),
+                moduleCode.getNameEn(), curriculumVersionCode);
+        result.setCurriculumModuleId(curriculumModule.getId());
+        return result;
     }
 
-    public static AutocompleteResult curriculumVersionOccupationModuleResult(Long id, String moduleNameEt,
-            String moduleNameEn, String moduleCodeNameEt, String moduleCodeNameEn, String curriculumCode) {
+    public static CurriculumVersionOccupationModuleResult curriculumVersionOccupationModuleResult(Long id,
+            String moduleNameEt, String moduleNameEn, String moduleCodeNameEt, String moduleCodeNameEn,
+            String curriculumCode) {
         String nameEt = CurriculumUtil.moduleName(moduleNameEt, moduleCodeNameEt, curriculumCode);
         String nameEn = CurriculumUtil.moduleName(moduleNameEn != null ? moduleNameEn : moduleNameEt, moduleCodeNameEn,
                 curriculumCode);
-        return new AutocompleteResult(id, nameEt, nameEn);
+        return new CurriculumVersionOccupationModuleResult(id, nameEt, nameEn);
     }
 
     public static AutocompleteResult of(Directive directive) {

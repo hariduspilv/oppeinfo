@@ -926,6 +926,9 @@ public class EhisStudentService extends EhisService {
     
     public void sendStudentLanguages(Job job)    {
         Student student = em.getReference(Student.class, EntityUtil.getId(job.getStudent()));
+        if (student.getStudentLanguages().isEmpty() || !StudentUtil.isActive(student)) {
+            return;
+        }
         KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
 
         KhlVoorkeeledArr khlVoorkeeledArr = new KhlVoorkeeledArr();

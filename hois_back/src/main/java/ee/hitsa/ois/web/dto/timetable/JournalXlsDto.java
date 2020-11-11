@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ee.hitsa.ois.enums.Language;
 import org.springframework.beans.BeanUtils;
 
 import ee.hitsa.ois.domain.timetable.Journal;
@@ -31,7 +32,7 @@ public class JournalXlsDto extends JournalDto {
     private LocalDate journalFinalResultDate;
     private Map<Long, String> journalFinalResults = new HashMap<>();
 
-    public static JournalXlsDto of(Journal journal) {
+    public static JournalXlsDto of(Journal journal, Language lang) {
         JournalDto journalDto = JournalDto.of(journal);
         JournalXlsDto dto = new JournalXlsDto();
         BeanUtils.copyProperties(journalDto, dto, "journalEntries", "journalStudents");
@@ -46,9 +47,19 @@ public class JournalXlsDto extends JournalDto {
                 journalEntryByDateDto.setLessons(entry.getLessons());
 
                 for (JournalEntryStudent journalEntryStudent : entry.getJournalEntryStudents()) {
-                    if (journalEntryStudent.getGrade() != null) {
-                        journalEntryByDateDto.getJournalStudentGrade().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
+                    Long journalStudentId = EntityUtil.getId(journalEntryStudent.getJournalStudent());
+                    if (journalEntryStudent.getGradingSchemaRow() != null) {
+                        String gradingSchemaGrade = Language.EN.equals(lang) ? journalEntryStudent.getGradingSchemaRow().getGradeEn()
+                                : journalEntryStudent.getGradingSchemaRow().getGrade();
+                        journalEntryByDateDto.getJournalStudentGrade().put(journalStudentId, gradingSchemaGrade);
+                    } else if (journalEntryStudent.getGrade() != null) {
+                        journalEntryByDateDto.getJournalStudentGrade().put(journalStudentId,
                                 journalEntryStudent.getGrade().getValue());
+                    }
+                    if (journalEntryStudent.getVerbalGrade() != null) {
+                        String studentGrade = journalEntryByDateDto.getJournalStudentGrade().get(journalStudentId);
+                        studentGrade = (studentGrade != null ? studentGrade + ", " : "") + journalEntryStudent.getVerbalGrade();
+                        journalEntryByDateDto.getJournalStudentGrade().put(journalStudentId, studentGrade);
                     }
     
                     if (Boolean.TRUE.equals(journalEntryStudent.getIsLessonAbsence())) {
@@ -60,26 +71,28 @@ public class JournalXlsDto extends JournalDto {
                         for (JournalEntryStudentLessonAbsence absence : lessonAbsences) {
                             absences += absence.getAbsence().getValue() + "(" + absence.getLessonNr().toString() + ") ";
                         }
-                        journalEntryByDateDto.getJournalStudentAbsence()
-                                .put(EntityUtil.getId(journalEntryStudent.getJournalStudent()), absences);
+                        journalEntryByDateDto.getJournalStudentAbsence().put(journalStudentId, absences);
                     } else {
                         if (journalEntryStudent.getAbsence() != null) {
-                            journalEntryByDateDto.getJournalStudentAbsence().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
+                            journalEntryByDateDto.getJournalStudentAbsence().put(journalStudentId,
                                     journalEntryStudent.getAbsence().getValue());
                         }
                     }
                     
                     if(journalEntryStudent.getAddInfo() != null) {
-                        journalEntryByDateDto.getJournalStudentAddInfo().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
-                                journalEntryStudent.getAddInfo());
+                        journalEntryByDateDto.getJournalStudentAddInfo().put(journalStudentId, journalEntryStudent.getAddInfo());
                     }
                 }
                 dto.getJournalEntriesByDate().add(journalEntryByDateDto);
             } else {
                 for (JournalEntryStudent journalEntryStudent : entry.getJournalEntryStudents()) {
-                    if (journalEntryStudent.getGrade() != null) {
-                        dto.getJournalFinalResults().put(EntityUtil.getId(journalEntryStudent.getJournalStudent()),
-                                journalEntryStudent.getGrade().getValue());
+                    Long journalStudentId = EntityUtil.getId(journalEntryStudent.getJournalStudent());
+                    if (journalEntryStudent.getGradingSchemaRow() != null) {
+                        String gradingSchemaGrade = Language.EN.equals(lang) ? journalEntryStudent.getGradingSchemaRow().getGradeEn()
+                                : journalEntryStudent.getGradingSchemaRow().getGrade();
+                        dto.getJournalFinalResults().put(journalStudentId, gradingSchemaGrade);
+                    } else if (journalEntryStudent.getGrade() != null) {
+                        dto.getJournalFinalResults().put(journalStudentId, journalEntryStudent.getGrade().getValue());
                     }
                 }
 

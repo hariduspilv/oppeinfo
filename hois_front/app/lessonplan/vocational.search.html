@@ -1,6 +1,6 @@
 <md-nav-bar md-selected-nav-item="currentNavItem">
-  <md-nav-item ng-if="formState.vocational" md-nav-href="#/lessonplans/vocational" name="lessonplan.vocational">{{'lessonplan.search.vocational' | translate}}</md-nav-item>
-  <md-nav-item ng-if="formState.vocational" md-nav-href="#/lessonplans/vocational/byteacher" name="lessonplan.vocational-byteacher">
+  <md-nav-item ng-if="formState.vocational" md-nav-href="#/lessonplans/vocational?_menu" name="lessonplan.vocational">{{'lessonplan.search.vocational' | translate}}</md-nav-item>
+  <md-nav-item ng-if="formState.vocational" md-nav-href="#/lessonplans/vocational/byteacher?_menu" name="lessonplan.vocational-byteacher">
     {{auth.higher ? ('lessonplan.search.vocationalByTeacherHigher' | translate) : ('lessonplan.search.vocationalByTeacherVocational' | translate)}}
   </md-nav-item>
 <!--  <md-nav-item ng-if="formState.higher" md-nav-href="#/lessonplans/higher" name="lessonplan.higher">{{'lessonplan.higher' | translate}}</md-nav-item>
@@ -30,14 +30,14 @@
             <hois-select ng-model="criteria.curriculumVersion" values="formState.curriculumVersions"></hois-select>
           </md-input-container>
 
-          <hois-autocomplete flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-model="criteria.studentGroup"
+          <hois-autocomplete flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-model="criteria.studentGroup" multiple
             ha-attribute="id" ha-controller="directiveControllers" method="studentgroups" name="studentGroup" label="{{'lessonplan.studentGroup'}}"
             additional-query-params="{higher: false, userId: auth.isLeadingTeacher() ? auth.user : null}"></hois-autocomplete>
         </div>
 
         <div layout="row" layout-sm="column" layout-xs="column">
           <div flex="45" flex-sm="100" flex-xs="100">
-            <hois-autocomplete ng-model="criteria.teacherObject" ha-controller="directiveControllers" method="teachers"
+            <hois-autocomplete ng-model="criteria.teacherObject" ha-controller="directiveControllers" method="teachers" multiple
               label="{{auth.higher ? ('lessonplan.teacherHigher' | translate) : ('lessonplan.teacherVocational' | translate)}}"></hois-autocomplete>
           </div>
         </div>
@@ -46,6 +46,8 @@
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
           <md-button class="md-raised" ng-if="canEdit" ng-click="newLessonplan()">{{'main.button.create' | translate}}</md-button>
+          <md-button ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised"
+           ng-disabled="!vocationalSearchForm.$valid">{{'subjectStudyPeriod.printXlsSummary' | translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>

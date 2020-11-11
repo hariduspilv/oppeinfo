@@ -34,6 +34,10 @@ public class TimetableEventTime extends BaseEntityWithId {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "timetable_event_time_id", nullable = false, updatable = false)
+    private List<TimetableEventStudent> timetableEventStudents = new ArrayList<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "timetable_event_time_id", nullable = false, updatable = false)
     private List<TimetableEventRoom> timetableEventRooms = new ArrayList<>();
     
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -90,6 +94,14 @@ public class TimetableEventTime extends BaseEntityWithId {
 
     public void setTimetableEventTeachers(List<TimetableEventTeacher> timetableEventTeachers) {
         this.timetableEventTeachers = timetableEventTeachers;
+    }
+
+    public List<TimetableEventStudent> getTimetableEventStudents() {
+        return timetableEventStudents;
+    }
+
+    public void setTimetableEventStudents(List<TimetableEventStudent> timetableEventStudents) {
+        this.timetableEventStudents = timetableEventStudents;
     }
 
     public List<TimetableEventRoom> getTimetableEventRooms() {

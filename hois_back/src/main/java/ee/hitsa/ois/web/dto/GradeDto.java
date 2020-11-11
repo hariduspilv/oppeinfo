@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
+import ee.hitsa.ois.domain.PracticeJournal;
+import ee.hitsa.ois.domain.PracticeJournalEvaluation;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResult;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResultHistory;
@@ -49,6 +51,18 @@ public class GradeDto {
     public static GradeDto of(StudentCurriculumModuleOutcomesResultHistory outcomesResultHistory) {
         String gradeCode = EntityUtil.getNullableCode(outcomesResultHistory.getGrade());
         Long gradingSchemaRowId = EntityUtil.getNullableId(outcomesResultHistory.getGradingSchemaRow());
+        return gradeCode != null ? new GradeDto(gradeCode, gradingSchemaRowId) : null;
+    }
+
+    public static GradeDto of(PracticeJournal practiceJournal) {
+        String gradeCode = EntityUtil.getNullableCode(practiceJournal.getGrade());
+        Long gradingSchemaRowId = EntityUtil.getNullableId(practiceJournal.getGradingSchemaRow());
+        return gradeCode != null ? new GradeDto(gradeCode, gradingSchemaRowId) : null;
+    }
+
+    public static GradeDto of(PracticeJournalEvaluation practiceJournalEvaluation) {
+        String gradeCode = EntityUtil.getNullableCode(practiceJournalEvaluation.getValueClf());
+        Long gradingSchemaRowId = EntityUtil.getNullableId(practiceJournalEvaluation.getGradingSchemaRow());
         return gradeCode != null ? new GradeDto(gradeCode, gradingSchemaRowId) : null;
     }
 

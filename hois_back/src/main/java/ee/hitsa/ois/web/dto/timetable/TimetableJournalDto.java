@@ -8,12 +8,15 @@ import java.util.List;
 public class TimetableJournalDto {
     private Long id;
     private String name;
+    private Boolean isIndividual;
     private List<RoomAutocompleteResult> rooms = new ArrayList<>();
     private List<TimetableJournalTeacherDto> teachers = new ArrayList<>();
+    private List<TimetableJournalStudentDto> students = new ArrayList<>();
 
-    public TimetableJournalDto(Long id, String name) {
+    public TimetableJournalDto(Long id, String name, Boolean isIndividual) {
         this.id = id;
         this.name = name;
+        this.isIndividual = isIndividual;
     }
 
     public Long getId() {
@@ -32,6 +35,14 @@ public class TimetableJournalDto {
         this.name = name;
     }
 
+    public Boolean getIsIndividual() {
+        return isIndividual;
+    }
+
+    public void setIsIndividual(Boolean isIndividual) {
+        this.isIndividual = isIndividual;
+    }
+
     public List<RoomAutocompleteResult> getRooms() {
         return rooms;
     }
@@ -48,4 +59,11 @@ public class TimetableJournalDto {
         this.teachers = teachers;
     }
 
+    public List<TimetableJournalStudentDto> getStudents() {
+        return students;
+    }
+
+    public void setStudents(List<TimetableJournalStudentDto> students) {
+        this.students = students;
+    }
 }

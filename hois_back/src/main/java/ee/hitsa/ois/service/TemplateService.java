@@ -29,6 +29,7 @@ import com.mitchellbosecke.pebble.template.PebbleTemplate;
 
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.exception.HoisException;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.util.TranslateUtil;
 
@@ -76,6 +77,7 @@ public class TemplateService {
             Map<String, Filter> filters = new HashMap<>();
             filters.put("translate", new TranslateFilter());
             filters.put("hoisDate", new DateFilter());
+            filters.put("hoisShortDate", new ShortDateFilter());
             filters.put("hoisDateTime", new DateTimeFilter());
             filters.put("name", new NameFilter());
             return filters;
@@ -98,6 +100,28 @@ public class TemplateService {
                 lang = (Language) language;
             }
             return TranslateUtil.translate((String)input, lang);
+        }
+    }
+    
+    static class ShortDateFilter implements Filter {
+        private final DateTimeFormatter format = DateTimeFormatter.ofPattern("dd.MM");
+
+        @Override
+        public List<String> getArgumentNames() {
+            return null;
+        }
+
+        @Override
+        public Object apply(Object input, Map<String, Object> args) {
+            if(input == null) {
+                return null;
+            }
+            if (input instanceof LocalDate) {
+                return ((LocalDate)input).format(format);
+            } else if (input instanceof LocalDateTime) {
+                return ((LocalDateTime)input).format(format);
+            }
+            return null;
         }
     }
     

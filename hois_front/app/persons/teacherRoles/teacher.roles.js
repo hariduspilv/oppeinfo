@@ -44,7 +44,7 @@
     var school = $route.current.locals.auth.school;
 
     $scope.auth = $route.current.locals.auth;
-    $scope.multiSelects = {"OIGUS_V": false, "OIGUS_M": false, "OIGUS_K": false};
+    $scope.multiSelects = {"OIGUS_V": false, "OIGUS_M": false, "OIGUS_K": false, "OIGUS_T": false};
 
     $scope.objects = Classifier.queryForDropdown({mainClassCode: 'TEEMAOIGUS'});
     $scope.permissions = Classifier.queryForDropdown({mainClassCode: 'OIGUS'});
@@ -79,7 +79,7 @@
 
       for (var right in $scope.rights) {
         if (ArrayUtils.contains(rightsForRole, right)) {
-          $scope.rights[right][code] = AuthService.isValidRolePermission('ROLL_O', right, code) ? 
+          $scope.rights[right][code] = AuthService.isValidRolePermission('ROLL_O', right, code) ?
             permissionValue : false;
         }
       }
@@ -91,15 +91,15 @@
       for (var code in $scope.multiSelects) {
         $scope.multiSelects[code] = true;
         for (var right in $scope.rights) {
-          if (ArrayUtils.contains(rightsForRole, right) && 
-          AuthService.isValidRolePermission('ROLL_O', right, code) && 
+          if (ArrayUtils.contains(rightsForRole, right) &&
+          AuthService.isValidRolePermission('ROLL_O', right, code) &&
           !$scope.rights[right][code]) {
             $scope.multiSelects[code] = false;
             break;
           }
         }
       }
-    } 
+    }
 
     $scope.showPermission = function(objectCode, permCode) {
       return AuthService.isValidRolePermission('ROLL_O', objectCode, permCode);
@@ -241,7 +241,7 @@
         }
       });
 		};
-		
+
 		// only for new page
 		var occupation = occupationId ? QueryUtils.endpoint('/school/teacheroccupations').get({id: occupationId}, function(result) {
 			$scope.occupation = {
@@ -289,7 +289,7 @@
       $scope.setRoleRights();
     });
   }
-  
+
   TeacherRoleViewController.$inject = ['$q', '$route', '$scope', 'Classifier', 'QueryUtils',  'AuthService'];
   function TeacherRoleViewController($q, $route, $scope, Classifier, QueryUtils, AuthService) {
     $scope.currentNavItem = "teacherRoles";
@@ -310,7 +310,7 @@
 
     $q.all([$scope.objects.$promise, $scope.permissions.$promise, $scope.userRoleDefaults.$promise, $scope.role.$promise]).then(function() {
 			$scope.loadData();
-			
+
       var higher = school.higher ? true : undefined;
       var vocational = school.vocational ? true : undefined;
       var objects = $scope.userRoleDefaults.defaultRights['ROLL_O'] || {};

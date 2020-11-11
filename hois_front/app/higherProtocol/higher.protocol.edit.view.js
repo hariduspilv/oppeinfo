@@ -1,9 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$route', '$location', '$scope', '$q', 'GRADING_SCHEMA_TYPE', 'Classifier', 'GradingSchema', 'HigherGradeUtil', 'QueryUtils', 'MidtermTaskUtil', 'ProtocolUtils', 'config', 'dialogService', 'message', 'oisFileService',
-function ($route, $location, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, GradingSchema, HigherGradeUtil, QueryUtils, MidtermTaskUtil, ProtocolUtils, config, dialogService, message, oisFileService) {
+angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$route', '$location', '$scope', '$q', 'GRADING_SCHEMA_TYPE', 'Classifier', 'GradingSchema', 'QueryUtils', 'MidtermTaskUtil', 'ProtocolUtils', 'config', 'dialogService', 'message', 'oisFileService',
+function ($route, $location, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, GradingSchema, QueryUtils, MidtermTaskUtil, ProtocolUtils, config, dialogService, message, oisFileService) {
   $scope.auth = $route.current.locals.auth;
-  $scope.gradeUtil = HigherGradeUtil;
   $scope.letterGrades = $scope.auth.school.letterGrades;
   var baseUrl = "/higherProtocols";
   var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -15,6 +14,7 @@ function ($route, $location, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, Gradin
   function setGradingSchema(entity) {
     gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.HIGHER);
     $q.all(gradingSchema.promises).then(function () {
+      $scope.existsSchoolGradingSchema = gradingSchema.existsSchoolGradingSchema();
       $scope.grades = gradingSchema.gradeSelection(entity.studyYearId);
       gradeMapper = gradingSchema.gradeMapper($scope.grades, ['grade']);
       analogGetter = gradingSchema.analogGetter($scope.grades);
@@ -94,6 +94,8 @@ function ($route, $location, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, Gradin
         (($scope.record.subjectStudyPeriodMidtermTaskDto !== null && !$scope.record.subjectStudyPeriodMidtermTaskDto.subjectStudyPeriod.isPracticeSubject &&
           $scope.record.subjectStudyPeriodMidtermTaskDto.midtermTasks.length > 0) || $scope.record.moduleDto !== null);
       $scope.formState.isConfirmed = $scope.record.status === 'PROTOKOLL_STAATUS_K';
+      $scope.$broadcast('refreshFixedColumns');
+      $scope.$broadcast('refreshFixedTableHeight');
       resolveDeferredIfExists();
     }).catch(function () {
       resolveDeferredIfExists();

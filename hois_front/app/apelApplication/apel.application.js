@@ -365,7 +365,7 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
       var application = new ApelApplicationEndpoint($scope.application);
       application.$save().then(function () {
         message.info('main.messages.create.success');
-        $location.path('/apelApplication/' + application.id + '/edit');
+        $location.path('/apelApplication/' + application.id + '/edit?_noback');
       }).catch(angular.noop);
     }
 

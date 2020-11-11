@@ -289,6 +289,7 @@ public class LessonPlanDto extends LessonPlanForm {
         private String groupProportion;
         private List<LessonPlanModuleJournalThemeDto> themes;
         private List<String> studentGroups;
+        private Boolean isIndividual;
 
         public static LessonPlanModuleJournalDto of(LessonPlan lessonPlan, Journal journal, LessonPlanCapacityMapper capacityMapper) {
             LessonPlanModuleJournalDto dto = new LessonPlanModuleJournalDto();
@@ -316,6 +317,7 @@ public class LessonPlanDto extends LessonPlanForm {
 
             // all hours mapped by capacity type and week nr
             dto.setHours(capacityMapper.mapJournalOutput(journal));
+            dto.setIsIndividual(journal.getIsIndividual());
             return dto;
         }
 
@@ -349,6 +351,14 @@ public class LessonPlanDto extends LessonPlanForm {
 
         public void setStudentGroups(List<String> studentGroups) {
             this.studentGroups = studentGroups;
+        }
+
+        public Boolean getIsIndividual() {
+            return isIndividual;
+        }
+
+        public void setIsIndividual(Boolean isIndividual) {
+            this.isIndividual = isIndividual;
         }
     }
 

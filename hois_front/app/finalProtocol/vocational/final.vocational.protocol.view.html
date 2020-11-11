@@ -62,7 +62,7 @@
                   <td md-cell>{{row.studentGroup}}</td>
                   <td md-cell ng-if="protocol.isFinalThesis">{{row.theme.nameEt}}</td>
                   <td md-cell>
-                    <span ng-class="{badResult: !gradeUtil.isPositive(row.grade.code)}">{{row.grade | hoisVocationalGrade}}</span>
+                    <hois-vocational-result value="row.grade" exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
                   </td>
                   <td md-cell ng-if="protocol.status.code === 'PROTOKOLL_STAATUS_K'">{{row.addInfo}}</td>
                   <td md-cell>

@@ -6,6 +6,9 @@
   md-select{ 
     background: #F5F5F5;
   }
+  .custom-tooltip {
+    float: none;
+  }
 </style>
 <div ng-cloak ng-include="'declaration/declaration.navbar.html'"></div>
 
@@ -85,6 +88,7 @@
                   <th md-column md-order-by="s.credits">{{'declaration.eap' | translate}}</th>
                   <th md-column md-order-by="c.value">{{'declaration.assessment' | translate}}</th>
                   <th md-column md-order-by="cvhms.is_optional">{{'declaration.isRequired' | translate}}</th>
+                  <th md-column>{{'declaration.group' | translate}}</th>
                   <th md-column>{{'declaration.subgroup' | translate}}</th>
                   <th md-column></th>
                 </tr>
@@ -103,6 +107,15 @@
                   <td md-cell>{{subject.subject.credits}}</td>
                   <td md-cell>{{subject.subject.assessment}}</td>
                   <td md-cell>{{subject.isOptional ? 'main.no' : 'main.yes' | translate}}</td>
+                  <td md-cell>
+                    <table>
+                      <tr ng-repeat="studentGroup in subject.studentGroups | hoisLimitToList: 3:!subject.showAll">
+                        <td style="white-space: nowrap;">{{currentLanguageNameField(studentGroup)}}{{subject.studentGroups.indexOf(studentGroup) === 2 && !subject.showAll && subject.studentGroups.length > 3 ? '...' : (subject.studentGroups.indexOf(studentGroup) !== subject.studentGroups.length - 1 ? ',' : '')}}</td>
+                      </tr>
+                    </table>
+                    <span class="custom-tooltip" ng-if="!subject.showAll && subject.studentGroups.length > 3" ng-click="subject.showAll = true">{{'main.button.showMore' | translate}}</span>
+                    <span class="custom-tooltip" ng-if="subject.showAll" ng-click="subject.showAll = false">{{'main.button.showLess' | translate}}</span>
+                  </td>
                   <td md-cell>
                     <md-input-container ng-if="subject.subgroups.length > 0" style="width: 100%;">
                       <md-select ng-model="subject.subgroup" required aria-label="{{'declaration.subgroup' | translate}}">

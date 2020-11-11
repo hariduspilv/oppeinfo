@@ -13,15 +13,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.StudyYearSchedule;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.util.SubjectUtil;
-import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.subject.SubjectSearchCommand;
@@ -36,14 +33,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
-import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.subjectprogram.SubjectProgram;
@@ -51,7 +45,6 @@ import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.service.curriculum.CurriculumSearchService;
-import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
@@ -59,6 +52,7 @@ import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.StudyYearScheduleDtoContainer;
+import ee.hitsa.ois.web.commandobject.StudyYearScheduleForm;
 import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSearchCommand;
 import ee.hitsa.ois.web.dto.AcademicCalendarDto;
 import ee.hitsa.ois.web.dto.PublicDataMapper;
@@ -312,6 +306,14 @@ public class PublicDataService {
 
     public List<SchoolDepartmentResult> studyYearScheduleSchoolDepartments(Long schoolId) {
         return autocompleteService.schoolDepartments(schoolId);
+    }
+
+    public byte[] studyYearScheduleAsExcel(Long schoolId, StudyYearScheduleForm schedulesCmd) {
+        return studyYearScheduleService.studyYearScheduleAsExcel(null, schoolId, schedulesCmd);
+    }
+
+    public byte[] studyYearScheduleAsPdf(Long schoolId, StudyYearScheduleForm schedulesCmd) {
+        return studyYearScheduleService.studyYearScheduleAsPdf(null, schoolId, schedulesCmd);
     }
     
     

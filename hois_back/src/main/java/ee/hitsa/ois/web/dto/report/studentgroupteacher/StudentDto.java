@@ -23,6 +23,7 @@ public class StudentDto {
     private Long beingLate;
     private Long journalEntryLessons;
     private BigDecimal lessonAbsencePercentage;
+    private BigDecimal withoutReasonAbsencesPercentage;
     private List<StudentRemarkDto> remarks = new ArrayList<>();
     private BigDecimal averageGrade;
     private BigDecimal weightedAverageGrade;
@@ -131,6 +132,14 @@ public class StudentDto {
 
     public void setLessonAbsencePercentage(BigDecimal lessonAbsencePercentage) {
         this.lessonAbsencePercentage = lessonAbsencePercentage;
+    }
+
+    public BigDecimal getWithoutReasonAbsencesPercentage() {
+        return withoutReasonAbsencesPercentage;
+    }
+
+    public void setWithoutReasonAbsencesPercentage(BigDecimal withoutReasonAbsencesPercentage) {
+        this.withoutReasonAbsencesPercentage = withoutReasonAbsencesPercentage;
     }
 
     public List<StudentRemarkDto> getRemarks() {

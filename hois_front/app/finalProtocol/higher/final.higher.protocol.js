@@ -2,7 +2,6 @@
 
 angular.module('hitsaOis').controller('FinalHigherProtocolEditController', ['$route', '$location', '$scope', '$q', 'GRADING_SCHEMA_TYPE', 'Classifier', 'DataUtils', 'GradingSchema', 'HigherGradeUtil', 'ProtocolUtils', 'QueryUtils', 'config' ,'dialogService', 'message', 'oisFileService',
 function ($route, $location, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, DataUtils, GradingSchema, HigherGradeUtil, ProtocolUtils, QueryUtils, config, dialogService, message, oisFileService) {
-  $scope.gradeUtil = HigherGradeUtil;
   var endpoint = "/finalHigherProtocols";
   $scope.auth = $route.current.locals.auth;
   $scope.letterGrades = $scope.auth.school.letterGrades;
@@ -17,6 +16,7 @@ function ($route, $location, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, DataUt
   function setGradingSchema(entity) {
     gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.HIGHER);
     $q.all(gradingSchema.promises).then(function () {
+      $scope.existsSchoolGradingSchema = gradingSchema.existsSchoolGradingSchema();
       $scope.grades = gradingSchema.gradeSelection(entity.studyYearId);
       $scope.grades.forEach(function (grade) {
         // hide classifier grades that were previously filtered

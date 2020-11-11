@@ -21,6 +21,7 @@ import ee.hitsa.ois.web.commandobject.gradingschema.GradingSchemaForm;
 import ee.hitsa.ois.web.commandobject.gradingschema.GradingSchemaRowForm;
 import ee.hitsa.ois.web.dto.gradingSchema.GradingSchemaDto;
 import ee.hitsa.ois.web.dto.gradingSchema.GradingSchemaRowDto;
+import ee.hitsa.ois.web.dto.gradingSchema.SchoolExistingGradingSchemasDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -45,8 +46,7 @@ public class GradingSchemaService {
             "union all select 1 from student_curriculum_module_outcomes_result scmor where scmor.grading_schema_row_id = gsr.id " +
             "union all select 1 from student_curriculum_module_outcomes_result_history scmorh where scmorh.grading_schema_row_id = gsr.id " +
             "union all select 1 from protocol_student ps where ps.grading_schema_row_id = gsr.id " +
-            "union all select 1 from protocol_student_history psh where psh.grading_schema_row_id = gsr.id " +
-            "union all select 1 from midterm_task_student_result mtsr where mtsr.grading_schema_row_id = gsr.id" +
+            "union all select 1 from protocol_student_history psh where psh.grading_schema_row_id = gsr.id" +
             ")";
 
     public GradingSchemaDto get(GradingSchema gradingSchema) {
@@ -69,13 +69,13 @@ public class GradingSchemaService {
                 resultAsBoolean(r, 5)), data));
     }
 
-    public List<GradingSchemaDto> typeSchemas(HoisUserDetails user, String type) {
+    public List<GradingSchemaDto> typeSchemas(Long schoolId, String type) {
         List<GradingSchema> gradingSchemas = em.createQuery("select gs from GradingSchema gs " +
                 "where gs.school.id = :schoolId " +
                 "and gs.isVocational = :isVocational and gs.isHigher = :isHigher " +
                 "and gs.isBasic = :isBasic and gs.isSecondary = :isSecondary " +
                 "order by gs.inserted", GradingSchema.class)
-                .setParameter("schoolId", user.getSchoolId())
+                .setParameter("schoolId", schoolId)
                 .setParameter("isVocational", type.equals(GradingSchemaType.VOCATIONAL.name().toLowerCase()))
                 .setParameter("isHigher", type.equals(GradingSchemaType.HIGHER.name().toLowerCase()))
                 .setParameter("isBasic", type.equals(GradingSchemaType.BASIC.name().toLowerCase()))
@@ -108,7 +108,7 @@ public class GradingSchemaService {
         List<?> data = em.createNativeQuery("select gs.id gs_id, gsr.id gsr_id, gsr.grade, gsr.grade_en, " +
                 "gsr.grade_real_code, gsr.is_valid from grading_schema gs " +
                 "join grading_schema_row gsr on gsr.grading_schema_id = gs.id " +
-                "where gs.id in (?1)")
+                "where gs.id in (?1) order by gsr.grade_real_code, gsr.id")
                 .setParameter(1, StreamUtil.toMappedList(GradingSchemaDto::getId, schemaDtos))
                 .getResultList();
         Map<Long, List<GradingSchemaRowForm>> rowsBySchema = data.stream().collect(
@@ -208,5 +208,17 @@ public class GradingSchemaService {
     public void deleteSchemaRow(HoisUserDetails user, GradingSchemaRow row) {
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(row, em);
+    }
+
+    public SchoolExistingGradingSchemasDto schoolExistingGradingSchemas(Long schoolId) {
+        List<?> data = em.createNativeQuery("select count(case when gs.is_vocational then gs.id end) > 0 is_vocational, " +
+                "count(case when gs.is_higher then gs.id end) > 0 is_higher, " +
+                "count(case when gs.is_basic then gs.id end) > 0 is_basic, " +
+                "count(case when gs.is_secondary then gs.id end) > 0 is_secondary " +
+                "from grading_schema gs where gs.school_id = ?1")
+                .setParameter(1, schoolId)
+                .getResultList();
+         return new SchoolExistingGradingSchemasDto(resultAsBoolean(data.get(0), 0), resultAsBoolean(data.get(0), 1),
+            resultAsBoolean(data.get(0), 2), resultAsBoolean(data.get(0), 3));
     }
 }

@@ -30,7 +30,9 @@
                 <tr md-row ng-repeat="s in subject.mandatoryPrerequisiteSubjects | orderBy: currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
                   <td md-cell>{{currentLanguageNameField(s)}} ({{s.code}})</td>
                   <td md-cell>{{s.credits}}  / {{s.assessment}}</td>
-                  <td md-cell>{{s.grade | hoisHigherGrade: letterGrades}}</td>
+                  <td md-cell>
+                    <hois-higher-result value="s.grade" exists-grading-schema="existsSchoolGradingSchema" letter-grades="letterGrades"></hois-higher-result>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -54,7 +56,9 @@
                 <tr md-row ng-repeat="s in subject.recommendedPrerequisiteSubjects | orderBy: currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
                   <td md-cell>{{currentLanguageNameField(s)}} ({{s.code}})</td>
                   <td md-cell>{{s.credits}}  / {{s.assessment}}</td>
-                  <td md-cell>{{s.grade | hoisHigherGrade: letterGrades}}</td>
+                  <td md-cell>
+                    <hois-higher-result value="s.grade" exists-grading-schema="existsSchoolGradingSchema" letter-grades="letterGrades"></hois-higher-result>
+                  </td>
                 </tr>
               </tbody>
             </table>

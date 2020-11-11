@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -73,12 +74,14 @@ public class JobService {
                 && StudentUtil.isActive(student)) {
             List<Job> jobs = findExecutableJobsForStudent(student, JobType.JOB_KEEL_EHIS);
             // send languages to ehis only once per student
-            if (jobs.isEmpty()) {
+            if (jobs.isEmpty() && !student.getStudentLanguages().isEmpty()) {
                 Job languageJob = new Job();
                 languageJob.setSchool(student.getSchool());
                 languageJob.setStudent(student);
                 languageJob.setJobTime(LocalDateTime.now());
                 submitJob(JobType.JOB_KEEL_EHIS, languageJob);
+            } else if (!jobs.isEmpty() && student.getStudentLanguages().isEmpty()) {
+                cancelJobs(jobs.stream().map(Job::getId).collect(Collectors.toList()));
             }
         }
     }
@@ -383,6 +386,18 @@ public class JobService {
             if(canceled) {
                 q.setParameter("directiveId", EntityUtil.getId(directive.getCanceledDirective()));
             }
+            q.executeUpdate();
+        }
+    }
+
+    private void cancelJobs(List<Long> jobIds) {
+        if(!jobIds.isEmpty()) {
+            String sql = "update job set status_code = :newStatus" +
+                    " where id in :jobIds and status_code = :oldStatus";
+            Query q = em.createNativeQuery(sql);
+            q.setParameter("newStatus", JobStatus.JOB_STATUS_TYHISTATUD.name());
+            q.setParameter("oldStatus", JobStatus.JOB_STATUS_VALMIS.name());
+            q.setParameter("jobIds", jobIds);
             q.executeUpdate();
         }
     }

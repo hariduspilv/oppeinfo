@@ -7,11 +7,16 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class CurriculumVersionOccupationModuleResult extends AutocompleteResult {
 
+    private Long curriculumModuleId;
     private BigDecimal credits;
     private String assessment;
     private String gradeCode;
     private LocalDate gradeDate;
     private String teachers;
+
+    public CurriculumVersionOccupationModuleResult(Long id, String nameEt, String nameEn) {
+        super(id, nameEt, nameEn != null ? nameEn : nameEt);
+    }
 
     public CurriculumVersionOccupationModuleResult(Long id, String nameEt, String nameEn, BigDecimal credits, String assessment,
             String gradeCode, LocalDate gradeDate, String teachers) {
@@ -21,6 +26,14 @@ public class CurriculumVersionOccupationModuleResult extends AutocompleteResult 
         this.gradeCode = gradeCode;
         this.gradeDate = gradeDate;
         this.teachers = teachers;
+    }
+
+    public Long getCurriculumModuleId() {
+        return curriculumModuleId;
+    }
+
+    public void setCurriculumModuleId(Long curriculumModuleId) {
+        this.curriculumModuleId = curriculumModuleId;
     }
 
     public BigDecimal getCredits() {

@@ -10,7 +10,7 @@
           </md-input-container>
         </div>
         <div layout="row">
-          <hois-autocomplete flex ng-model="criteria.curriculum" method="curriculumsauto" no-paging="true" 
+          <hois-autocomplete flex ng-model="criteria.curriculum" method="curriculumsauto" no-paging="true"
           ha-controller="directiveControllers" label="document.search.curriculum"></hois-autocomplete>
         </div>
         <div layout="row">
@@ -67,21 +67,21 @@
             <td md-cell>{{currentLanguageNameField(row.diplomaStatus)}}</td>
             <td md-cell>
               <span ng-repeat="doc in ::row.diplomaNrs" style="display: block;">
-                <span ng-if="$first && !doc.defected"><a ng-href="{{formState.pdfBaseUrl}}/{{::row.diplomaId}}/diploma.pdf">{{doc.fullCode}}</a> {{doc.duplicate ? '(dupl)': ''}}</span>
+                <span ng-if="$first && !doc.defected"><a ng-href="{{formState.pdfBaseUrl}}/{{::row.diplomaId}}/diploma.pdf">{{doc.fullCode}}</a> {{doc.duplicate && !!doc.fullCode ? '(dupl)': ''}}</span>
                 <span ng-if="!$first || doc.defected" ng-style="!$first || doc.defected ? {'text-decoration': 'line-through'} : ''">{{doc.fullCode}} {{doc.duplicate ? '(dupl)' : ''}}</span>
               </span>
             </td>
             <td md-cell>{{currentLanguageNameField(row.supplementStatus)}}</td>
             <td md-cell>
               <span ng-repeat="doc in ::row.supplementNrs" style="display: block;">
-                <span ng-if="$first && !doc.defected"><a ng-href="{{formState.pdfBaseUrl}}/{{::row.supplementId}}/supplement.pdf">{{doc.fullCode}}</a> {{doc.duplicate ? '(dupl)': ''}}</span>
+                <span ng-if="$first && !doc.defected"><a ng-href="{{formState.pdfBaseUrl}}/{{::row.supplementId}}/supplement.pdf">{{doc.fullCode}}</a> {{doc.duplicate && !!doc.fullCode ? '(dupl)': ''}}</span>
                 <span ng-if="!$first || doc.defected" ng-style="!$first || doc.defected ? {'text-decoration': 'line-through'} : ''">{{doc.fullCode}} {{doc.duplicate ? '(dupl)' : ''}}</span>
               </span>
             </td>
             <td md-cell ng-if="auth.higher">{{currentLanguageNameField(row.supplementStatusEn)}}</td>
             <td md-cell ng-if="auth.higher">
               <span ng-repeat="doc in ::row.supplementNrsEn" style="display: block;">
-                <span ng-if="$first && !doc.defected"><a ng-href="{{formState.pdfBaseUrl}}/{{::row.supplementIdEn}}/supplement.pdf?lang=EN">{{doc.fullCode}}</a> {{doc.duplicate ? '(dupl)': ''}}</span>
+                <span ng-if="$first && !doc.defected"><a ng-href="{{formState.pdfBaseUrl}}/{{::row.supplementIdEn}}/supplement.pdf?lang=EN">{{doc.fullCode}}</a> {{doc.duplicate && !!doc.fullCode ? '(dupl)': ''}}</span>
                 <span ng-if="!$first || doc.defected" ng-style="!$first || doc.defected ? {'text-decoration': 'line-through'} : ''">{{doc.fullCode}} {{doc.duplicate ? '(dupl)' : ''}}</span>
               </span>
             </td>

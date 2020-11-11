@@ -40,8 +40,11 @@
         <td>{{ loop.index + 1 }}.</td>
         <td>{{ student.name }}</td>
         <td>
-          {{ student.grade }}
-        
+          {% if student.grade != null %}
+            {{ student.grade }}
+          {% else %}
+            {{ student.gradingSchemaGrade }}
+          {% endif %}
           {% if student.gradeName != null %}
             ({{ student.gradeName }})
           {% endif %}

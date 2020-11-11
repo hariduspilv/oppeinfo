@@ -108,7 +108,7 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
                 authenticatedSchool.setLogo(logo.getFdata());
             }
             if (user.getStudent() != null) {
-                List<?> result = em.createNativeQuery("select case when c.is_higher is not null then c.is_higher else d.is_higher end, level.value "
+                List<?> result = em.createNativeQuery("select case when c.is_higher is not null then c.is_higher else d.is_higher end, level.value, cv.id "
                         + "from student s "
                         + "left join curriculum_version cv on s.curriculum_version_id = cv.id "
                         + "left join curriculum c on c.id = cv.curriculum_id "
@@ -129,6 +129,7 @@ public class HoisUserDetailsService implements UserDetailsService, LogoutHandler
                 }
                 authenticatedUser.setCommittees(Collections.emptyList());
                 authenticatedUser.setType(EntityUtil.getNullableCode(user.getStudent().getType()));
+                authenticatedUser.setCurriculumVersion(resultAsLong(row, 2));
             } else {
                 // take values from school
                 authenticatedUser.setVocational(Boolean.valueOf(type.isVocational()));

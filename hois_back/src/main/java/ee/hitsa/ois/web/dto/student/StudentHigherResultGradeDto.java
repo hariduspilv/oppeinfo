@@ -13,6 +13,8 @@ public class StudentHigherResultGradeDto {
     private String gradeValue;
     private String gradeNameEt;
     private String gradeNameEn;
+    private String gradingSchemaGradeEt;
+    private String gradingSchemaGradeEn;
     private LocalDate gradeDate;
     private List<String> teachers = new ArrayList<>();
     private Long studyPeriod;
@@ -99,4 +101,19 @@ public class StudentHigherResultGradeDto {
         this.gradeNameEn = gradeNameEn;
     }
 
+    public String getGradingSchemaGradeEt() {
+        return gradingSchemaGradeEt;
+    }
+
+    public void setGradingSchemaGradeEt(String gradingSchemaGradeEt) {
+        this.gradingSchemaGradeEt = gradingSchemaGradeEt;
+    }
+
+    public String getGradingSchemaGradeEn() {
+        return gradingSchemaGradeEn;
+    }
+
+    public void setGradingSchemaGradeEn(String gradingSchemaGradeEn) {
+        this.gradingSchemaGradeEn = gradingSchemaGradeEn;
+    }
 }

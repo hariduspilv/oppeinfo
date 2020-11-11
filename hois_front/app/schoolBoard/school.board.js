@@ -107,8 +107,6 @@ angular.module('hitsaOis').constant('SCHOOL_BOARD_COLORS', {
 
     var baseUrl = '/schoolBoard/' + $scope.schoolId;
     $scope.headerColor = showSchoolEvents ? SCHOOL_BOARD_COLORS.currentLessons : SCHOOL_BOARD_COLORS.currentLessonsPerRooms;
-    $scope.currentDate = new Date();
-    $scope.weekday = WEEKDAY[$scope.currentDate.getDay()];
 
     SchoolBoardUtils.getSchool($scope.schoolId).then(function (school) {
       $scope.school = school;
@@ -131,9 +129,16 @@ angular.module('hitsaOis').constant('SCHOOL_BOARD_COLORS', {
       QueryUtils.endpoint(eventsUrl).query().$promise.then(function (result) {
         $q.all(clMapper.promises).then(function () {
           $scope.events = clMapper.objectmapper(result);
+          updateDate();
         });
       });
       updateCurrentEventsTimeout = $timeout(updateCurrentEvents, config.schoolBoardRefreshInSeconds * 1000);
+    }
+
+    function updateDate() {
+      var now = moment().tz('Europe/Tallinn');
+      $scope.currentDate = now.format('DD.MM.YYYY');
+      $scope.weekday = WEEKDAY[now.weekday()];
     }
   }
 ]).controller('SchoolBoardRoomsWithCurrentEventsController', ['$location', '$route', '$scope', '$timeout', 'SCHOOL_BOARD_COLORS', 'SchoolBoardUtils', 'QueryUtils', 'config',
@@ -170,7 +175,7 @@ angular.module('hitsaOis').constant('SCHOOL_BOARD_COLORS', {
     $scope.colors = SCHOOL_BOARD_COLORS;
     $scope.currentSection = 'schoolBoard.freeRooms.label';
     $scope.currentNavItem = $scope.type;
-    $scope.currentDate = new Date();
+    $scope.currentDate = moment().tz('Europe/Tallinn').format('DD.MM.YYYY HH:mm');
     var baseUrl = '/schoolBoard/' + $scope.schoolId;
 
     SchoolBoardUtils.getSchool($scope.schoolId).then(function (school) {

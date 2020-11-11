@@ -34,20 +34,22 @@
               <hois-value value="row.content"></hois-value>
             </td>
             <td md-cell>
-              <span ng-repeat="previousGrade in row.previousResults | orderBy: 'gradeInserted'">
+              <span layout="row" layout-align="none center">
+                <span ng-repeat="previousGrade in row.previousResults | orderBy: 'gradeInserted'" layout="row">
+                  <span>
+                    <hois-journal-result value="previousGrade" ignore-styles="true" previous-result="true"></hois-journal-result>
+                    <md-tooltip class="tooltip-multiline">
+                      <div>{{previousGrade.gradeInserted | hoisDate}}, {{previousGrade.gradeInsertedBy}}</div>
+                    </md-tooltip>
+                  </span>
+                  <span>&nbsp;/&nbsp;</span>
+                </span>
                 <span>
-                  <span>{{previousGrade.grade.value}}</span>
-                  <md-tooltip class="tooltip-multiline">
-                    <div>{{previousGrade.gradeInserted | hoisDate}}, {{previousGrade.gradeInsertedBy}}</div>
+                  <hois-journal-result value="row" ignore-styles="true"></hois-journal-result>
+                  <md-tooltip md-direction="bottom" style="height: auto;">
+                    <div>{{row.gradeInserted | hoisDate}}, {{row.gradeInsertedBy}}</div>
                   </md-tooltip>
                 </span>
-                <span>* / </span>
-              </span>
-              <span>
-                <span>{{row.grade ? row.grade.value : '-'}}</span>
-                <md-tooltip md-direction="bottom" style="height: auto;">
-                  <div>{{row.gradeInserted | hoisDate}}, {{row.gradeInsertedBy}}</div>
-                </md-tooltip>
               </span>
             </td>
             <td md-cell>
@@ -86,7 +88,7 @@
           <div layout="row" layout-align="space-between end">
             <span>{{row.entryDate ? (row.entryDate | hoisDate) : '-'}}</span>
             <span>
-              <span ng-if="row.grade && !row.isRemark">{{row.grade.value}}</span>
+              <span ng-if="row.grade && !row.isRemark">{{row.grade | hoisVocationalGrade}}</span>
               <span ng-if="row.isRemark">
                 <md-icon md-font-set="material-icons" md-colors="{color: 'warn'}">warning</md-icon>
               </span>
@@ -104,15 +106,17 @@
                   <hois-value value="row.content"></hois-value>
                 </td>
               </tr>
-              <tr md-row ng-if="row.grade.value || row.previousResults.length > 0">
+              <tr md-row ng-if="row.grade || row.verbalGrade || row.previousResults.length > 0">
                 <td md-cell>{{'student.journal.entry.grade' | translate}}</td>
               </tr>
-              <tr md-row ng-if="row.grade.value || row.previousResults.length > 0">
+              <tr md-row ng-if="row.grade || row.verbalGrade || row.previousResults.length > 0">
                 <td md-cell>
                   <table md-table class="journal-mobile-grades-table">
                     <tbody md-body>
                       <tr md-row>
-                        <td md-cell>{{row.grade ? row.grade.value : '-'}}</td>
+                        <td md-cell>
+                          <hois-journal-result value="row" ignore-styles="true"></hois-journal-result>
+                        </td>
                         <td md-cell>
                           <span>
                             <span>{{row.gradeInserted | hoisDate}}</span>
@@ -121,7 +125,9 @@
                         </td>
                       </tr>
                       <tr md-row ng-repeat="previousGrade in row.previousResults | orderBy: '-gradeInserted'">
-                        <td md-cell>{{previousGrade.grade.value}} *</td>
+                        <td md-cell>
+                          <hois-journal-result value="previousGrade" ignore-styles="true" previous-result="true"></hois-journal-result>
+                        </td>
                         <td md-cell>
                           <span>
                             <span>{{previousGrade.gradeInserted | hoisDate}}</span>
@@ -179,7 +185,7 @@
                   </span>
                 </td>
               </tr>
-              <tr md-row ng-if="!row.content && !(row.grade || row.previousResults.length > 0) && !row.addInfo && !row.homework
+              <tr md-row ng-if="!row.content && !(row.grade || row.verbalGrade || row.previousResults.length > 0) && !row.addInfo && !row.homework
                 && !row.homeworkDueDate && !(row.absence || row.lessonAbsences)">
                 <td md-cell>{{'student.journal.entry.empty' | translate}}</td>
               </tr>

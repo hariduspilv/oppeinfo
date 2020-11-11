@@ -35,6 +35,7 @@ public class DeclarationSubjectDto extends VersionedCommand {
     private Boolean isAssessed;
     private AutocompleteResult subgroup;
     private Set<AutocompleteResult> subgroups;
+    private List<AutocompleteResult> studentGroups;
 
     public static DeclarationSubjectDto of(DeclarationSubject declarationSubject) {
         DeclarationSubjectDto dto = new DeclarationSubjectDto();
@@ -77,7 +78,7 @@ public class DeclarationSubjectDto extends VersionedCommand {
         for (SubjectConnect connection: subject.getSubjectConnections()) {
             Subject cs = connection.getConnectSubject();
             PrerequisiteSubjectDto s = new PrerequisiteSubjectDto(cs.getId(), cs.getCode(), cs.getNameEt(), cs.getNameEn(),
-                    cs.getCredits(), cs.getAssessment().getValue(), null);
+                    cs.getCredits(), cs.getAssessment().getValue());
             String connectionCode = EntityUtil.getCode(connection.getConnection());
             if (SubjectConnection.AINESEOS_EK.name().equals(connectionCode)) {
                 mandatoryPrerequisiteSubjects.add(s);
@@ -207,5 +208,15 @@ public class DeclarationSubjectDto extends VersionedCommand {
 
     public void setSubgroups(Set<AutocompleteResult> subgroups) {
         this.subgroups = subgroups;
+    }
+
+
+    public List<AutocompleteResult> getStudentGroups() {
+        return studentGroups;
+    }
+
+
+    public void setStudentGroups(List<AutocompleteResult> studentGroups) {
+        this.studentGroups = studentGroups;
     }
 }

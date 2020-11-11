@@ -39,6 +39,8 @@
         teachers: event.teachers,
         studentGroups: event.studentGroups,
         subgroups: event.subgroups,
+        students: event.students,
+        includesEventStudents: event.includesEventStudents,
         public: event.publicEvent,
         journalId: event.journalId,
         subjectStudyPeriodId: event.subjectStudyPeriodId,

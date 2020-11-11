@@ -1,12 +1,13 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController', function ($filter, $route, $location, $scope, ArrayUtils, Classifier, DataUtils, HigherGradeUtil, QueryUtils, dialogService, message, oisFileService) {
+angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController', function ($filter, $q, $route, $location, $scope, GRADING_SCHEMA_TYPE, ArrayUtils, Classifier, DataUtils, GradingSchema, HigherGradeUtil, QueryUtils, dialogService, message, oisFileService) {
   $scope.removeFromArray = ArrayUtils.remove;
   $scope.practiceJournal = {
     practiceJournalEntries: [],
     practiceJournalFiles: []
   };
   $scope.formState = {};
+  var gradingSchema, gradeMapper;
 
   function assertPermissionToEdit(entity) {
     if (!entity.canAddEntries) {
@@ -15,29 +16,32 @@ angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController'
     }
   }
 
+  function setGradingSchema(entity) {
+    var gradingSchemaType = entity.isHigher ? GRADING_SCHEMA_TYPE.HIGHER : GRADING_SCHEMA_TYPE.VOCATIONAL;
+    gradingSchema = new GradingSchema(gradingSchemaType, entity.school.id);
+    $q.all(gradingSchema.promises).then(function () {
+      $scope.existsSchoolGradingSchema = gradingSchema.existsSchoolGradingSchema();
+      $scope.grades = gradingSchema.gradeSelection(entity.studyYear.id);
+      gradeMapper = gradingSchema.gradeMapper($scope.grades, ['grade']);
+    });
+  }
+
   function entityToForm(entity) {
     assertPermissionToEdit(entity);
     DataUtils.convertStringToDates(entity, ['startDate', 'endDate']);
-
-    var gradesClassCode = entity.isHigher ? 'KORGHINDAMINE' : 'KUTSEHINDAMINE';
-    $scope.grades = Classifier.queryForDropdown({ mainClassCode: gradesClassCode });
-    $scope.grades.$promise.then(function () {
-      if (entity.isHigher) {
-        $scope.grades = HigherGradeUtil.orderedGrades($scope.grades);
-        $scope.gradeSelectShownValue = function (grade) {
-          return HigherGradeUtil.gradeSelectShownValue(grade, entity.letterGrades);
-        };
-      } else {
-        $scope.grades = $scope.grades.sort(function (grade1, grade2) {
-          return grade1.value - grade2.value;
-        });
-      }
-      $scope.gradesMap = Classifier.toMap($scope.grades);
-    });
-
     entity.practiceJournalEntries.forEach(function (entry) {
       entry.astroHours = DataUtils.getHoursFromDoubleMinutes(entry.hours); // entry has minutes instead of hours
     });
+
+    $q.all(gradingSchema.promises).then(function () {
+      entity.studentPracticeEvalCriteria.forEach(function (evaluation) {
+        gradeMapper.objectmapper(evaluation);
+      });
+      entity.supervisorPracticeEvalCriteria.forEach(function (evaluation) {
+        gradeMapper.objectmapper(evaluation);
+      });
+    });
+
     $scope.practiceJournal = entity;
     $scope.practiceJournal.endDateDisplay = new Date($scope.practiceJournal.endDate);
     $scope.practiceJournal.endDateDisplay.setDate($scope.practiceJournal.endDateDisplay.getDate() + 30);
@@ -57,6 +61,7 @@ angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController'
 
   var entity = $route.current.locals.entity;
   if (angular.isDefined(entity)) {
+    setGradingSchema(entity);
     entityToForm(entity);
   }
 

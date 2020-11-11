@@ -1,5 +1,6 @@
 {
   "main": {
+    "board": "Õppeinfosüsteem Tahvel",
     "applicationTitle": "ÕPPEINFOSÜSTEEM",
     "footer": "Fujitsu Estonia AS 2016",
     "language": {
@@ -1761,6 +1762,7 @@
       "duplicatetheme": "Teema on juba päevikus",
       "isConfirmer": "kinnitaja",
       "isFiller": "täitja",
+      "isIndividual": "Individuaalpäevik",
       "name": "Päeviku nimi",
       "teacherHigher": "Õppejõud",
       "teacherVocational": "Õpetaja",
@@ -1791,6 +1793,9 @@
     },
     "event": {
       "studyPeriod": "Õppeperiood",
+      "student": "Õppija",
+      "students": "Õppijad",
+      "studentName": "Õppija nimi",
       "studentGroup": "Õpperühm",
       "studentGroups": "Õpperühmad",
       "name": "Sündmuse nimetus",
@@ -1876,9 +1881,11 @@
   },
   "messageTemplate": {
     "deleteconfirm": "Kas oled kindel, et soovid malli kustutada?",
+    "hasUserRights": "Kasutajaõigused",
     "invalidcontent": "Vigane teate sisu",
     "messageTemplate": "Teate mall",
     "messageTemplates": "Teadete mallid",
+    "sendTo": "Automaatteade saadetakse",
     "type": "Teate liik",
     "validDate": "Kehtivuse kuupäev",
     "validFrom": "Kehtivuse algus",
@@ -2321,7 +2328,8 @@
       "noSuchStudyLevel": "Kool pole seotud vastava õppetasemega",
       "noSubject": "Vähemalt üks õppeaine peab olema lisatud",
       "vocationalThemesWithBadStudyYearNumberPresent": "Ei saa lühendada õppeaega, teemad on seotud õppeaastaga rakenduskavades {{versions}}",
-      "noConnectionBetweenRyhmAndGroup": "Viga! Klassifikaatoril \"Õppekavarühm\" puudub seos klassifikaatoriga \"Õppekavagrupp\". Pöörduge peaadministraatori poole."
+      "noConnectionBetweenRyhmAndGroup": "Viga! Klassifikaatoril \"Õppekavarühm\" puudub seos klassifikaatoriga \"Õppekavagrupp\". Pöörduge peaadministraatori poole.",
+      "removedUsedStudyForm": "Eemaldatud õppevorm on seotud rakenduskavaga"
     },
     "prompt": {
       "deleteJointPartner": "Selle õppeasutuse ained on lisatud õppekavasse. Kas oled kindel, et soovid partnerülikooli kustutada?",
@@ -2975,6 +2983,9 @@
       "teachers": "Õppejõud",
       "subjects": "Õppeained"
     },
+    "printXlsSummary": "Koondväljund Excelisse",
+    "printXlsSummaryHigher": "Koondväljund Excelisse (kõrg)",
+    "printXlsSummaryVocational": "Koondväljund Excelisse (kutse)",
     "nameCode": "Õppeaine kood - Nimetus",
     "name": "Õppeaine nimetus (kood)",
     "studyPeriod": "Õppeperiood",
@@ -3584,9 +3595,11 @@
     "studyType": "Õppetöö liik",
     "durationInWeeks": "Kestvus nädalates",
     "addInfo": "Kommentaar",
+    "publicUrl": "Õppetöögraafiku avalik url",
     "error": {
       "minWeeks": "Minimaalne õppetöö kestvus on 1 nädal",
-      "maxWeeks": "Õppeaasta lõppuni on jäänud {{weeks}} nädalat"
+      "maxWeeks": "Õppeaasta lõppuni on jäänud {{weeks}} nädalat",
+      "departments": "Vähemalt 1 struktuuriüksus peab olema valitud"
     }
   },
   "studyYearScheduleLegend": {
@@ -3637,6 +3650,8 @@
     "noFreeForms": "Puuduvad",
     "estonian": "Eesti keeles",
     "english": "Inglise keeles",
+    "stateGradingScheme": "Riiklik hindamissüsteem",
+    "schoolGradingSchema": "Kooli hindamissüsteem",
     "button": {
       "showPdf": "Näita pdf",
       "excel": "Excelisse"
@@ -3833,10 +3848,12 @@
       "studentGroups": "Õpperühmad",
       "occupied": "Hõivatud",
       "substitute": "Asendaja",
-      "teacherName": "Nimi",
+      "personName": "Nimi",
       "code": "Tähis",
       "subgroup": "Osarühm",
       "subgroups": "Osarühmad",
+      "students": "Õppijad",
+      "individualEvent": "IND",
       "changeChosenEvent": "Muuda valitud päeva sündmus",
       "changeUpcomingEvents": "Muuda ka kõik tulevad sündmused",
       "changingStudentGroupsWarning": "Õpperühmad muudetakse kõigil kordusega lisatud tundidel!",
@@ -3887,6 +3904,7 @@
     "teachersVocational": "Õpetaja(d)",
     "module": "Moodul",
     "modules": "Moodul(id)",
+    "responsiblesForModules": "Mooduli(te) vastutaja(d)",
     "plannedAndEnteredLessonsCount": "Planeeritud ja sissekantud tundide arv",
     "plannedAndEnteredLessonsCount1": "Planeeritud ja sissekantud",
     "plannedAndEnteredLessonsCount2": "tundide arv",
@@ -3920,12 +3938,15 @@
     "entries": "Sissekanded",
     "curriculumVersionModuleOrThemeDescription": "Rakenduskava mooduli/teema kirjeldus",
     "studentDeleteconfirm": "Õppija kustutamisel kustutatakse ka kõik temaga seotud sissekanded. Olete kindel, et soovite õppija kustutada?",
+    "studentWithIndividualEntiriesDeleteConfirm": "Õpilasel on individuaalsed sissekanded. Õpilase kustutamisel kustutatakse ka individuaalsed sissekanded ja tunniplaan. Kas soovid jätkata?",
     "entryDeleteConfirm": "Kas oled kindel, et soovid sissekannet kustutada?",
-    "moduleDescription": "Mooduli kirjeldus",
+    "curriculumVersion": "Rakenduskava",
     "themeDescription": "Teema kirjeldus",
+    "themes": "Teema(d)",
     "outcome": "ÕV",
     "finalResult": "Lõpptulemus",
     "showAll": "Näita kõiki",
+    "selectStudent": "Vali õppija",
     "unconfirmedCountOne": "Teil on 1 kinnitamata päevik!",
     "unconfirmedCount": "Teil on {{count}} kinnitamata päevikut!",
     "lesson": "tund",
@@ -3942,6 +3963,7 @@
       "name": "Sissekande nimetus",
       "selectDate": "Vali kuupäev",
       "selectFromCalendar": "Vali kalendrist",
+      "selectStudent": "Vali õppija",
       "startLessonNr": "Algustund",
       "lessons": "Tundide arv",
       "content": "Sisu",
@@ -3956,6 +3978,7 @@
         "remark": "Märkus",
         "description": "Selgitus"
       },
+      "inactiveStudentsIndividualEntryNotAllowed": "Sissekanne omab seoseid mitteaktiivsete õppijatega, õppija valik keelatud",
       "changingDateAndLessonsWarning": "Algustunni, tundide arvu või kuupäeva muutmisel uuendab süsteem õppija puudumise andmed vastavalt kinnitatud puudumistõenditele!"
     },
     "apelResults": {
@@ -4330,6 +4353,7 @@
     "confirmer": "Kinnitaja",
     "course": "Kursus",
     "studentGroup": "Õpperühm",
+    "group": "Rühm",
     "status": "Õpingukava staatus",
     "addCurriculumSubject": "Lisa õppekava aine",
     "addExtraCurriculumSubject": "Lisa õppekava väline aine",
@@ -4996,6 +5020,7 @@
       "totalAbsences": "Puudumisi kokku",
       "totalAbsencesPercentage": "Puudumise %",
       "withoutReasonAbsences": "Põhjuseta puudumisi",
+      "withoutReasonAbsencesPercentage": "Põhjuseta puudumisi %",
       "withReasonAbsences": "Vabandatavaid puudumisi",
       "beingLate": "Hilinemisi",
       "curriculumFulfilled": "Õppekava täidetud",
@@ -5155,6 +5180,8 @@
     "status": "Staatus",
     "insertedFrom": "Koostamise kp alates",
     "insertedThru": "Koostamise kp kuni",
+    "submittedFrom": "Esitatud kp alates",
+    "submittedThru": "Esitatud kp kuni",
     "confirmedFrom": "Kinnitamise kp alates",
     "confirmedThru": "Kinnitamise kp kuni",
     "studentName": "Õppija nimi",
@@ -5163,8 +5190,10 @@
     "curriculumVersionVocational": "Rakenduskava",
     "insertedDate": "Koostamise kp",
     "confirmedDate": "Kinnitamise kp",
+    "submittedDate": "Esitamise kp",
     "inserter": "Koostaja",
     "confirmer": "Kinnitaja",
+    "submitter": "Esitaja",
     "submitConfirm": "Kas oled kindel, et soovid VÕTA taotluse esitada?",
     "deleteConfirm": "Kas oled kindel, et soovid VÕTA taotluse kustutada?",
     "sendToConfirm": "Saada kinnitamisele",

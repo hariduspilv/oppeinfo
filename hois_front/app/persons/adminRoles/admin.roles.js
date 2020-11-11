@@ -43,7 +43,7 @@
     var school = $route.current.locals.auth.school;
 
     $scope.auth = $route.current.locals.auth;
-    $scope.multiSelects = {"OIGUS_V": false, "OIGUS_M": false, "OIGUS_K": false};
+    $scope.multiSelects = {"OIGUS_V": false, "OIGUS_M": false, "OIGUS_K": false, "OIGUS_T": false};
 
     $scope.objects = Classifier.queryForDropdown({mainClassCode: 'TEEMAOIGUS'});
     $scope.permissions = Classifier.queryForDropdown({mainClassCode: 'OIGUS'});
@@ -78,7 +78,7 @@
 
       for (var right in $scope.rights) {
         if (ArrayUtils.contains(rightsForRole, right)) {
-          $scope.rights[right][code] = AuthService.isValidRolePermission('ROLL_A', right, code) ? 
+          $scope.rights[right][code] = AuthService.isValidRolePermission('ROLL_A', right, code) ?
             permissionValue : false;
         }
       }
@@ -90,15 +90,15 @@
       for (var code in $scope.multiSelects) {
         $scope.multiSelects[code] = true;
         for (var right in $scope.rights) {
-          if (ArrayUtils.contains(rightsForRole, right) && 
-          AuthService.isValidRolePermission('ROLL_A', right, code) && 
+          if (ArrayUtils.contains(rightsForRole, right) &&
+          AuthService.isValidRolePermission('ROLL_A', right, code) &&
           !$scope.rights[right][code]) {
             $scope.multiSelects[code] = false;
             break;
           }
         }
       }
-    } 
+    }
 
     $scope.showPermission = function(objectCode, permCode) {
       return AuthService.isValidRolePermission('ROLL_A', objectCode, permCode);
@@ -259,7 +259,7 @@
       $scope.setRoleRights();
     });
   }
-  
+
   AdminRoleViewController.$inject = ['$q', '$route', '$scope', 'Classifier', 'QueryUtils',  'AuthService'];
   function AdminRoleViewController($q, $route, $scope, Classifier, QueryUtils, AuthService) {
     $scope.currentNavItem = "adminRoles";

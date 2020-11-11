@@ -1214,6 +1214,7 @@ function ($httpParamSerializer, $q, $route, $scope, $sessionStorage, $timeout, $
 
   var gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.VOCATIONAL);
   $q.all(gradingSchema.promises).then(function () {
+    $scope.existsSchoolGradingSchema = gradingSchema.existsSchoolGradingSchema();
     gradeMapper = gradingSchema.gradeMapper(gradingSchema.gradeSelection(), ['grade']);
   });
 
@@ -1448,7 +1449,7 @@ function ($httpParamSerializer, $q, $route, $scope, $sessionStorage, $timeout, $
           }
         });
       });
-      $scope.tableTotalColumnsColspan = 6 + ($scope.record.showAverageGrade ? 1 : 0) +
+      $scope.tableTotalColumnsColspan = 7 + ($scope.record.showAverageGrade ? 1 : 0) +
         ($scope.record.showWeightedAverageGrade ? 1 : 0);
 
       QueryUtils.loadingWheel($scope, false);

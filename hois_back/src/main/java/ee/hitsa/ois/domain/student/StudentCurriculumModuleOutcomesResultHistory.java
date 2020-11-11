@@ -29,8 +29,6 @@ public class StudentCurriculumModuleOutcomesResultHistory extends BaseEntityWith
     @ManyToOne(fetch = FetchType.LAZY)
     private GradingSchemaRow gradingSchemaRow;
 
-    private String verbalGrade;
-
     public StudentCurriculumModuleOutcomesResult getStudentCurriculumModuleOutcomesResult() {
         return studentCurriculumModuleOutcomesResult;
     }
@@ -85,13 +83,5 @@ public class StudentCurriculumModuleOutcomesResultHistory extends BaseEntityWith
 
     public void setGradingSchemaRow(GradingSchemaRow gradingSchemaRow) {
         this.gradingSchemaRow = gradingSchemaRow;
-    }
-
-    public String getVerbalGrade() {
-        return verbalGrade;
-    }
-
-    public void setVerbalGrade(String verbalGrade) {
-        this.verbalGrade = verbalGrade;
     }
 }

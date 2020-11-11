@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -25,6 +26,7 @@ import java.util.stream.Stream;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.student.StudentBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -512,6 +514,28 @@ public class EkisService {
         case KASKKIRI_FINM:
             content.setFinsource(finsource(ds.getFin(), ds.getFinSpecific()));
             break;
+        case KASKKIRI_EKSTERN:
+        case KASKKIRI_KYLALIS:
+            content.setLoad(name(ds.getStudyLoad()));
+            content.setForm(name(ds.getStudyForm()));
+            content.setCurricula(curriculum(ds));
+            StudentGroup studentGroup = ds.getStudentGroup();
+            if (studentGroup != null) {
+                content.setGroup(studentGroup.getCode());
+                content.setCourse(intValue(studentGroup.getCourse())); 
+            }
+            CurriculumVersion curriculumVersion = ds.getCurriculumVersion();
+            if (curriculumVersion != null) {
+                Curriculum curriculum = curriculumVersion.getCurriculum();
+                content.setCurriculaMerCode(curriculum.getMerCode());
+                content.setStudyLevel(name(curriculum.getOrigStudyLevel()));
+                content.setCurriculaStudyPeriod(intValue(curriculum.getStudyPeriod()));
+            }
+            content.setFinsource(name(ds.getFin()));
+            content.setLang(name(ds.getLanguage()));
+            content.setStartDate(date(ds.getStartDate()));
+            content.setEndDate(date(ds.getEndDate()));
+            break;
         case KASKKIRI_IMMAT:
         case KASKKIRI_IMMATV:
             content.setLoad(name(ds.getStudyLoad()));
@@ -653,13 +677,19 @@ public class EkisService {
     }
 
     private static String curriculum(DirectiveStudent ds) {
-        CurriculumVersion cv = ds.getCurriculumVersion();
-        return cv != null ? cv.getCode() : null;
+        return Optional.of(ds)
+                .map(DirectiveStudent::getCurriculumVersion)
+                .map(CurriculumVersion::getCurriculum)
+                .map(Curriculum::getNameEt)
+                .orElse(null);
     }
 
     private static String curriculum(Student student) {
-        CurriculumVersion cv = student.getCurriculumVersion();
-        return cv != null ? cv.getCode() : null;
+        return Optional.of(student)
+                .map(StudentBase::getCurriculumVersion)
+                .map(CurriculumVersion::getCurriculum)
+                .map(Curriculum::getNameEt)
+                .orElse(null);
     }
 
     private static String date(LocalDateTime date) {

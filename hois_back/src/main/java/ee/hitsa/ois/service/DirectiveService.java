@@ -466,7 +466,7 @@ public class DirectiveService {
         List<DirectiveStudent> students = directive.getStudents();
         LocalDate now = LocalDate.now();
         if (students != null && students.size() != 0) {
-            return students.stream().allMatch(p -> now.isBefore(p.getStartDate()));
+            return students.stream().map(DateUtils::periodStart).filter(Objects::nonNull).allMatch(now::isBefore);
         }
         return true;
     }

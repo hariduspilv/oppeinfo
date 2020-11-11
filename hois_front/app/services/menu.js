@@ -1993,6 +1993,12 @@ angular.module('hitsaOis')
 
 
     function onLocationChange() {
+		
+		var dataLayer = window.dataLayer || [];
+dataLayer.push({
+        'event': 'Pageview',
+        'pagePath': $location.path()
+});
       var path = $location.path();
 
       if (path === '/') {
@@ -2095,6 +2101,7 @@ angular.module('hitsaOis')
       if (rights && rights.hasOwnProperty('data')) {
         var guestStudentForbidden = rights.data.guestStudentForbidden;
         var externalStudentForbidden = rights.data.externalStudentForbidden;
+        var studentCurriculumRequired = rights.data.studentCurriculumRequired;
         rights = rights.data.authorizedRoles;
         // forbidding guest student
         if (guestStudentForbidden && angular.isDefined(authenticatedUser) && authenticatedUser.type === 'OPPUR_K') {
@@ -2102,6 +2109,10 @@ angular.module('hitsaOis')
         }
         // forbidding external student
         if (externalStudentForbidden && angular.isDefined(authenticatedUser) && authenticatedUser.type === 'OPPUR_E') {
+          return false;
+        }
+        // forbidding external student without curriculum
+        if (studentCurriculumRequired && angular.isDefined(authenticatedUser) && authenticatedUser.type === 'OPPUR_E' && authenticatedUser.curriculumVersion === null) {
           return false;
         }
         if(angular.isFunction(rights)) {

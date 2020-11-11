@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import ee.hitsa.ois.web.dto.GradeDto;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,7 +14,8 @@ public class StudentJournalEntryDto {
     private String nameEt;
     private String nameEn;
     private String content;
-    private String grade;
+    private GradeDto grade;
+    private String verbalGrade;
     private LocalDateTime gradeInserted;
     private String gradeInsertedBy;
     private String addInfo;
@@ -27,17 +30,18 @@ public class StudentJournalEntryDto {
     
     public StudentJournalEntryDto() { }
 
-    public StudentJournalEntryDto(Long id, Long journalId, String entryType, LocalDate entryDate, String nameEt, String content,
-            String grade, LocalDateTime gradeInserted, String gradeInsertedBy, String addInfo, String homework,
-            LocalDate homeworkDueDate, String absence, Boolean isRemark, LocalDateTime remarkInserted,
-            String remarkInsertedBy) {
+    public StudentJournalEntryDto(Long id, Long journalId, LocalDate entryDate, String entryType, String nameEt,
+            String content, String gradeCode, Long gradingSchemaRowId, String verbalGrade, LocalDateTime gradeInserted,
+            String gradeInsertedBy, String addInfo, String homework, LocalDate homeworkDueDate, String absence,
+            Boolean isRemark, LocalDateTime remarkInserted, String remarkInsertedBy) {
         this.id = id;
         this.journalId = journalId;
         this.entryType = entryType;
         this.entryDate = entryDate;
         this.nameEt = nameEt;
         this.content = content;
-        this.grade = grade;
+        this.grade = gradeCode != null ? new GradeDto(gradeCode, gradingSchemaRowId) : null;
+        this.verbalGrade = verbalGrade;
         this.gradeInserted = gradeInserted;
         this.gradeInsertedBy = gradeInsertedBy;
         this.addInfo = addInfo;
@@ -105,12 +109,20 @@ public class StudentJournalEntryDto {
         this.content = content;
     }
 
-    public String getGrade() {
+    public GradeDto getGrade() {
         return grade;
     }
 
-    public void setGrade(String grade) {
+    public void setGrade(GradeDto grade) {
         this.grade = grade;
+    }
+
+    public String getVerbalGrade() {
+        return verbalGrade;
+    }
+
+    public void setVerbalGrade(String verbalGrade) {
+        this.verbalGrade = verbalGrade;
     }
 
     public LocalDateTime getGradeInserted() {

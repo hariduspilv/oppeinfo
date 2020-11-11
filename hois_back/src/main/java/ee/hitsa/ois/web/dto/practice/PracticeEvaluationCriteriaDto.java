@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.dto.practice;
 import ee.hitsa.ois.domain.enterprise.PracticeEvaluationCriteria;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.dto.GradeDto;
 
 public class PracticeEvaluationCriteriaDto extends VersionedCommand {
 
@@ -13,7 +14,7 @@ public class PracticeEvaluationCriteriaDto extends VersionedCommand {
     private Long orderNr;
     private Long criteriaId;
     private String valueNr;
-    private String valueClf;
+    private GradeDto grade;
     private String valueTxt;
     private Boolean disabled;
     
@@ -79,12 +80,12 @@ public class PracticeEvaluationCriteriaDto extends VersionedCommand {
         this.valueNr = valueNr;
     }
 
-    public String getValueClf() {
-        return valueClf;
+    public GradeDto getGrade() {
+        return grade;
     }
 
-    public void setValueClf(String valueClf) {
-        this.valueClf = valueClf;
+    public void setGrade(GradeDto grade) {
+        this.grade = grade;
     }
 
     public String getValueTxt() {

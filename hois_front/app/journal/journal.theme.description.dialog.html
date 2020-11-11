@@ -1,0 +1,125 @@
+<md-dialog aria-label="module description dialog" flex="50">
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"journal.themeDescription" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+  <md-dialog-content>
+    <div class="ois-form-layout-padding nomargin" layout="column" ng-cloak>
+      <md-input-container>
+        <label>{{'theme.name' | translate}}</label>
+        <input ng-model="themeDescription.nameEt" type="text" readonly>
+      </md-input-container>
+
+      <div layout="column" layout-gt-md="row">
+        <div layout="column" layout-gt-sm="row" flex-gt-md="50" flex="100">
+          <md-input-container flex-gt-sm="40" flex="100">
+            <label>{{'theme.capacityAndUnit' | translate}}</label>
+          </md-input-container>
+          <br><br>
+          <div layout="row" flex-gt-sm="60" flex="100">
+            <md-input-container flex-gt-sm="50" flex="100">
+              <label>EKAP</label>
+              <input ng-model="themeDescription.credits" name="credits" type="number" readonly>
+            </md-input-container>
+
+            <md-input-container flex-gt-sm="50" flex="100">
+              <label>{{'main.hour' | translate}}</label>
+              <input ng-model="themeDescription.hours" name="hours" type="number" readonly>
+            </md-input-container>
+          </div>
+        </div>
+        <div layout="row" flex-gt-md="50" flex="100">
+          <md-input-container flex-gt-sm="50" flex="100">
+            <label>{{'theme.proportionInModule' | translate}}</label>
+            <input ng-model="themeDescription.proportion" type="number" name="proportion" readonly>
+          </md-input-container>
+
+          <md-input-container flex-gt-sm="50" flex="100">
+            <label>{{'module.studyYear' | translate}}</label>
+            <input ng-model="themeDescription.studyYearNumber" readonly>
+          </md-input-container>
+        </div>
+      </div>
+      <div flex ng-if="themeDescription.capacities">
+        <fieldset tabindex="1">
+          <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'theme.capacityDistribution' | translate}}</legend>
+          <table flex class="module-capacities">
+            <tr style="padding-bottom:1em" flex class="secondary-table-header">
+              <td></td>
+              <td>{{'module.capacity' | translate}}</td>
+              <td>{{'module.contactStudy' | translate}}</td>
+            </tr>
+            <tr ng-repeat="item in themeDescription.capacities | orderBy: currentLanguageNameField(item.capacityType)" class="secondary-table-row">
+              <td>{{currentLanguageNameField(item.capacityType)}}</td>
+              <td>{{item.hours}}</td>
+              <td>{{item.contact ? 'main.yes' : 'main.no' | translate}}</td>
+            </tr>
+          </table>
+        </fieldset>
+      </div>
+      <div>&nbsp;</div>
+
+      <md-input-container ng-if="themeDescription.subthemes" flex>
+        <label>{{'module.subthemes' | translate}}</label>
+        <textarea ng-model="themeDescription.subthemes" max-rows="10" readonly></textarea>
+      </md-input-container>
+
+      <md-input-container ng-if="themeDescription.curriculumModuleOutcomes.length > 0" flex>
+        <label>{{'theme.connectionToStudyOutcome' | translate}}</label>
+        <textarea ng-value="joinOutcomes(themeDescription.curriculumModuleOutcomes)" max-rows="10" readonly></textarea>
+      </md-input-container>
+
+      <div>&nbsp;</div>
+      <div flex>
+        <fieldset tabindex="2">
+          <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.themeGradeFormation' | translate}}</legend>
+          <div layout="column" style="overflow: auto">
+            <div>&nbsp;</div>
+            <md-input-container flex>
+              <label>{{'module.gradedByOutcomes' | translate}}</label>
+              <textarea readonly>{{themeDescription.moduleOutcomes ? 'main.yes' : 'main.no' | translate}}</textarea>
+            </md-input-container>
+            <md-input-container flex ng-if="themeDescription.assessment">
+              <label>{{'module.totalGradeDescription' | translate}}</label>
+              <textarea ng-model="themeDescription.totalGradeDescription" max-rows="10" readonly></textarea>
+            </md-input-container>
+            <div ng-if="themeDescription.assessment === 'KUTSEHINDAMISVIIS_E'" layout="column" flex>
+              <md-input-container flex>
+                <label>{{'module.grade3Description' | translate}}</label>
+                <textarea ng-model="themeDescription.grade3Description" max-rows="10" readonly></textarea>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'module.grade4Description' | translate}}</label>
+                <textarea ng-model="themeDescription.grade4Description" max-rows="10" readonly></textarea>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'module.grade5Description' | translate}}</label>
+                <textarea ng-model="themeDescription.grade5Description" max-rows="10" readonly></textarea>
+              </md-input-container>
+            </div>
+            <div ng-if="themeDescription.assessment === 'KUTSEHINDAMISVIIS_M'" layout="column" flex>
+              <md-input-container flex>
+                <label>{{'module.gradeADescription' | translate}}</label>
+                <textarea ng-model="themeDescription.passDescription" max-rows="2" readonly></textarea>
+              </md-input-container>
+            </div>
+          </div>
+
+        </fieldset>
+      </div>
+      <div>&nbsp;</div>
+    </div>
+
+  </md-dialog-content>
+
+  <span flex></span>
+  <md-dialog-actions layout="row" layout-align="start center">
+    <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+  </md-dialog-actions>
+</md-dialog>
