@@ -67,8 +67,12 @@ angular.module('hitsaOis').controller('ContractViewController', ['$scope', '$loc
       $scope.disablesave = true;
     };
 
-    var ContractEndpoint = QueryUtils.endpoint('/contracts/cancel');
     $scope.save = function (success) {
+
+      var ContractEndpoint = QueryUtils.endpoint('/contracts/cancel');
+      if ($scope.auth.school.withoutEkis) {
+        var ContractEndpoint = QueryUtils.endpoint('/contracts/cancelWithoutEkis');
+      }
       FormUtils.withValidForm($scope.contractForm, function() {
         var contract = new ContractEndpoint($scope.contract);
         if (angular.isDefined($scope.contract.id)) {

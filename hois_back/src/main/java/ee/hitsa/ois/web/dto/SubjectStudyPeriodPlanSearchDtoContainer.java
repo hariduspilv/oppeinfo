@@ -14,16 +14,16 @@ public class SubjectStudyPeriodPlanSearchDtoContainer {
     private Set<SubjectStudyPeriodPlanSearchDto> plans;
     private BigDecimal credits;
 
-    public static SubjectStudyPeriodPlanSearchDtoContainer of (Subject subject, Long studyPeriodId) {
-        SubjectStudyPeriodPlanSearchDtoContainer container = 
+    public static SubjectStudyPeriodPlanSearchDtoContainer of(Subject subject) {
+        SubjectStudyPeriodPlanSearchDtoContainer container =
                 new SubjectStudyPeriodPlanSearchDtoContainer();
         container.setSubject(AutocompleteResult.of(subject, false));
         container.setCredits(subject.getCredits());
         container.setPlans(StreamUtil.toMappedSet
-              (SubjectStudyPeriodPlanSearchDto::of, 
-                      subject.getSubjectStudyPeriodPlans().stream().filter(p ->
-                  EntityUtil.getId(p.getStudyPeriod()).equals(studyPeriodId)
-              ).collect(Collectors.toSet())));
+              (SubjectStudyPeriodPlanSearchDto::of,
+                      subject.getSubjectStudyPeriodPlans().stream()
+                              .filter(p -> p.getStudyPeriod() == null)
+                              .collect(Collectors.toSet())));
         return container;
     }
 

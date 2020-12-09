@@ -22,6 +22,7 @@ public class TeacherDetailLoadReport {
     private List<LoadTypeDto> loadTypesRow;
     private List<ResultRowDto> rows;
     private Boolean journalSubjectReport;
+    private Boolean teacherReport = Boolean.FALSE;
     private Boolean isHigher;
     private Boolean isHigherSchool;
 
@@ -128,5 +129,13 @@ public class TeacherDetailLoadReport {
     public void setIsHigherSchool(Boolean isHigherSchool) {
         this.isHigherSchool = isHigherSchool;
     }
+
+	public Boolean getTeacherReport() {
+		return teacherReport;
+	}
+
+	public void setTeacherReport(Boolean teacherReport) {
+		this.teacherReport = teacherReport;
+	}
 
 }

@@ -216,16 +216,14 @@
                   </md-input-container>
                 </div>
 
-                <div layout="row" layout-sm="column" layout-xs="column">
+                <div ng-if="!isNew && record.newTransferableSubjectOrModule.curriculumVersionHmodule" layout="row" layout-sm="column" layout-xs="column">
                   <md-input-container flex="45" flex-sm="100" flex-xs="100">
                     <label>{{'apel.formalLearnings.module' | translate}}</label>
-                    <md-select ng-model="record.newTransferableSubjectOrModule.curriculumVersionHmodule" aria-label="module" ng-model-options="{trackBy: '$value.id'}"
-                      required>
-                      <md-option ng-repeat="val in curriculumModules" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
-                    </md-select>
+                    <input type="text" value="{{currentLanguageNameField(record.newTransferableSubjectOrModule.curriculumVersionHmodule)}}" disabled>
                   </md-input-container>
                   <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                    <md-checkbox ng-model="record.newTransferableSubjectOrModule.isOptional" ng-true-value="false" ng-false-value="true" aria-label="required">
+                    <md-checkbox ng-model="record.newTransferableSubjectOrModule.isOptional" ng-true-value="false" ng-false-value="true"
+                        aria-label="required" disabled>
                       {{'apel.formalLearnings.required' | translate}}
                     </md-checkbox>
                   </md-input-container>
@@ -251,7 +249,7 @@
                   <th md-column>{{'apel.formalLearnings.result' | translate}}</th>
                   <th md-column>{{'apel.formalLearnings.resultDate' | translate}}</th>
                   <th md-column>{{'apel.formalLearnings.teachersHigher' | translate}}</th>
-                  <th md-column>{{'apel.formalLearnings.module' | translate}} ({{'apel.formalLearnings.required' | translate}})</th>
+                  <th md-column ng-if="!isNew">{{'apel.formalLearnings.module' | translate}} ({{'apel.formalLearnings.required' | translate}})</th>
                   <th md-column></th>
                 </tr>
               </thead>
@@ -268,7 +266,7 @@
                   <td md-cell>{{row.grade | hoisHigherGrade: auth.school.letterGrades}}</td>
                   <td md-cell>{{row.gradeDate | hoisDate}}</td>
                   <td md-cell>{{row.teachers}}</td>
-                  <td md-cell>
+                  <td md-cell ng-if="!isNew">
                     <span ng-if="row.module">{{currentLanguageNameField(row.module)}} ({{row.isOptional ? 'main.no' : 'main.yes' | translate}})</span>
                   </td>
                   <td md-cell>
@@ -281,26 +279,39 @@
         </fieldset>
         <br>
         <fieldset>
-          <legend ng-class="{invalid: dialogForm.$submitted && !areReplacedSubjectsValid()}"
-            class="md-title-small">{{'apel.formalLearnings.substitutableSubjects' | translate}}</legend>
-          <div flex="50">
-            <md-input-container style="width: 100%">
-              <label>{{'apel.formalLearnings.substitutableSubject' | translate}}</label>
-              <md-select ng-model="selectedSubject" aria-label="substitutableSubjects" ng-change="addSelectedSubject()">
+          <legend class="md-title-small">{{'apel.formalLearnings.substitutableSubjects' | translate}}</legend>
+          <div layout="row" layout-align="start center">
+            <md-input-container ng-if="!dialogScope.freeChoiceSubjects" flex="45">
+              <label>{{'apel.informalLearnings.subject' | translate}}</label>
+              <md-select ng-model="formState.selectedSubject" aria-label="{{'apel.formalLearnings.subject' | translate}}" ng-change="addSelectedSubject()">
                 <md-option ng-repeat="val in subjects" ng-value="val">{{currentLanguageNameField(val)}}</md-option>
               </md-select>
             </md-input-container>
+            <hois-autocomplete ng-if="dialogScope.freeChoiceSubjects" flex="45" ng-model="formState.selectedSubject"
+                method="subjects" name="subject" label="{{'apel.formalLearnings.subject' | translate}}"
+                additional-query-params="{student: student.id, curriculumSubjects: false, curriculumVersion: curriculumVersionId,
+                ignoreCurriculumVersionStatus: true, noFinalSubjects: true}">
+            </hois-autocomplete>
+            <md-input-container flex-offset="5">
+              <md-checkbox ng-model="dialogScope.freeChoiceSubjects" aria-label="{{'apel.informalLearnings.freeChoice' | translate}}"
+                style="margin-bottom: 0;">{{'apel.informalLearnings.freeChoice' | translate}}</md-checkbox>
+            </md-input-container>
+          </div>
 
+          <div>
             <md-table-container>
               <table md-table class="secondary-table">
+                <thead md-head>
+                  <tr md-row>
+                    <th md-column class="apel-min-width">{{'apel.formalLearnings.subject' | translate}}</th>
+                    <th md-column>{{'apel.formalLearnings.creditsEAP' | translate}}</th>
+                    <th md-column></th>
+                  </tr>
+                </thead>
                 <tbody md-body>
                   <tr md-row ng-repeat="replacedSubject in record.formalReplacedSubjectsOrModules" ng-class-odd="'odd'" ng-class-even="'even'">
-                    <td md-cell>
-                      <span ng-if="replacedSubject.id">
-                        {{replacedSubject.subject.code}} - {{currentLanguageNameField(replacedSubject.subject)}} ({{replacedSubject.subject.credits}} {{'apel.formalLearnings.EAP' | translate}})
-                      </span>
-                      <span ng-if="!replacedSubject.id">{{currentLanguageNameField(replacedSubject.subject)}}</span>
-                    </td>
+                    <td md-cell>{{replacedSubject.subject.code}} - {{currentLanguageNameField(replacedSubject.subject)}}</td>
+                    <td md-cell>{{replacedSubject.subject.credits}}</td>
                     <td md-cell>
                       <a class="remove nomargin" ng-click="removeSubtitutableSubject(replacedSubject)">&times;</a>
                     </td>

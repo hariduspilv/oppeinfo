@@ -1,23 +1,30 @@
-<md-chips ng-model="ngHolder" md-autocomplete-snap
-          md-transform-chip="transformChip($chip)"
-          md-require-match="true"
-          md-max-chips="{{maxChips}}"
-          readonly="readonly">
-  <md-autocomplete
-    md-selected-item="selectedItem"
-    md-selected-item-change="selectedItemChange()"
-    md-search-text="ngSearchText"
-    md-min-length="mdMinLength"
-    md-no-cache="true"
-    md-items="item in haSearch(ngSearchText)"
-    placeholder="{{label | translate}}"
-    ng-hide="ngHolder.length > maxChips" flex>
-    <span md-highlight-text="ngSearchText" ng-style="{'color': warningParam && item['{{warningParam}}'] ? 'red' : 'inherit'}">{{display ? item[display] : $root.currentLanguageNameField(item)}}</span>
-  </md-autocomplete>
-  <md-chip-template>
-        <span>
-          <strong>{{getChipText($chip)}}</strong>
-        </span>
-  </md-chip-template>
-</md-chips>
-
+<style>
+  .multiple-autocomplete-container label {
+    display: none;
+  }
+</style>
+<md-input-container class="multiple-autocomplete-container" style="width: 100%; padding: 0px; margin: 0px">
+  <md-chips ng-model="ngHolder" md-autocomplete-snap
+            md-transform-chip="transformChip($chip)"
+            md-require-match="true"
+            md-max-chips="{{maxChips}}"
+            readonly="readonly">
+    <md-autocomplete
+      md-selected-item="selectedItem"
+      md-selected-item-change="selectedItemChange()"
+      md-search-text="ngSearchText"
+      md-min-length="mdMinLength"
+      md-no-cache="true"
+      md-require-match
+      md-items="item in haSearch(ngSearchText)"
+      placeholder="{{label | translate}}"
+      ng-hide="ngHolder.length > maxChips" flex>
+      <span md-highlight-text="ngSearchText" ng-style="{'color': warningParam && item['{{warningParam}}'] ? 'red' : 'inherit'}">{{display ? item[display] : $root.currentLanguageNameField(item)}}</span>
+    </md-autocomplete>
+    <md-chip-template>
+      <span>
+        <strong>{{getChipText($chip)}}</strong>
+      </span>
+    </md-chip-template>
+  </md-chips>
+</md-input-container>

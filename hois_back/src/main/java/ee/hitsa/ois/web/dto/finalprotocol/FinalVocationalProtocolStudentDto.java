@@ -7,9 +7,11 @@ import ee.hitsa.ois.domain.FinalThesis;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
+import ee.hitsa.ois.enums.StudyLanguage;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.FinalProtocolUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.GradeDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolStudentDto;
@@ -17,6 +19,8 @@ import ee.hitsa.ois.web.dto.ModuleProtocolStudentDto;
 public class FinalVocationalProtocolStudentDto extends ModuleProtocolStudentDto {
 
     private AutocompleteResult theme;
+    private String language;
+    private Boolean foreignStudyLanguage;
     private List<FinalProtocolStudentOccupationDto> curriculumOccupations = new ArrayList<>();
     
     public static FinalVocationalProtocolStudentDto of(ProtocolStudent protocolStudent) {
@@ -28,6 +32,7 @@ public class FinalVocationalProtocolStudentDto extends ModuleProtocolStudentDto 
         dto.setIdcode(student.getPerson().getIdcode());
         dto.setStatus(EntityUtil.getCode(student.getStatus()));
         dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);
+        dto.setForeignStudyLanguage(Boolean.valueOf(!StudentUtil.isStudyingInEstonian(student)));
         dto.setCanBeDeleted(Boolean.valueOf(FinalProtocolUtil.studentCanBeDeleted(protocolStudent)));
         FinalThesis thesis = !student.getFinalThesis().isEmpty() ? student.getFinalThesis().get(0) : null;
         dto.setTheme(thesis != null ? new AutocompleteResult(thesis.getId(), thesis.getThemeEt(), thesis.getThemeEn())
@@ -43,7 +48,8 @@ public class FinalVocationalProtocolStudentDto extends ModuleProtocolStudentDto 
                                 EntityUtil.getNullableCode(oc.getOccupation()),
                                 EntityUtil.getNullableCode(oc.getPartOccupation()),
                                 certificate != null ? EntityUtil.getNullableCode(certificate.getSpeciality()) : null,
-                                certificate != null ? certificate.getId() : null));
+                                certificate != null ? certificate.getId() : null,
+                                certificate != null ? EntityUtil.getNullableCode(certificate.getLanguageCode()) : null));
             });
         }
 
@@ -56,6 +62,22 @@ public class FinalVocationalProtocolStudentDto extends ModuleProtocolStudentDto 
 
     public void setTheme(AutocompleteResult theme) {
         this.theme = theme;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public Boolean getForeignStudyLanguage() {
+        return foreignStudyLanguage;
+    }
+
+    public void setForeignStudyLanguage(Boolean foreignStudyLanguage) {
+        this.foreignStudyLanguage = foreignStudyLanguage;
     }
 
     public List<FinalProtocolStudentOccupationDto> getCurriculumOccupations() {

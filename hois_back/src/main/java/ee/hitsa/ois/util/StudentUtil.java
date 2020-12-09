@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.Optional;
 
+import ee.hitsa.ois.enums.StudyLanguage;
 import org.apache.commons.lang3.StringUtils;
 
 import ee.hitsa.ois.domain.directive.Directive;
@@ -134,5 +135,8 @@ public abstract class StudentUtil {
     public static boolean isGuestStudent(Student student) {
         return StudentType.OPPUR_K.name().equals(EntityUtil.getNullableCode(student.getType()));
     }
-    
+
+    public static boolean isStudyingInEstonian(Student student) {
+        return StudyLanguage.OPPEKEEL_E.name().equals(EntityUtil.getNullableCode(student.getLanguage()));
+    }
 }

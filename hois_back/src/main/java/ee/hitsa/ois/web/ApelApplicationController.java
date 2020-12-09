@@ -199,7 +199,7 @@ public class ApelApplicationController {
     public ApelApplicationDto createComment(HoisUserDetails user,
             @Valid @RequestBody ApelApplicationCommentForm commentForm,
             @WithEntity("applicationId") ApelApplication application) {
-        UserUtil.throwAccessDeniedIf(!ApelApplicationUtil.canEdit(user, application));
+        UserUtil.throwAccessDeniedIf(!ApelApplicationUtil.canComment(user, application));
         apelApplicationService.createComment(application, commentForm);
         return get(user, application);
     }
@@ -219,7 +219,7 @@ public class ApelApplicationController {
         UserUtil.throwAccessDeniedIf(!ApelApplicationUtil.canView(user, application));
         Boolean isHigherSchool = Boolean.valueOf(schoolService.schoolType(EntityUtil.getId(application.getSchool())).isHigher());
         Boolean letterGrades = application.getSchool().getIsLetterGrade();
-        ApelApplicationReport report = new ApelApplicationReport(application, isHigherSchool, letterGrades);
+        ApelApplicationReport report = new ApelApplicationReport(application, isHigherSchool, letterGrades, user);
         String templateName = Boolean.TRUE.equals(application.getIsVocational()) ?
                 ApelApplicationReport.VOCATIONAL_TEMPLATE_NAME : ApelApplicationReport.HIGHER_TEMPLATE_NAME;
         HttpUtil.pdf(response, application.getId() + ".pdf", pdfService.generate(templateName, report));

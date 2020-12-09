@@ -15,6 +15,7 @@ public class StudentAutocompleteCommand extends SearchCommand {
     private Boolean showGuestStudent;
     private Boolean hideGuestStudents;
     private Boolean onlyStudyingOrFinishedGuestStudent;
+    private Boolean hideIdcode;
     private List<Long> curriculumVersion;
     private List<Long> studentGroup;
     private Long studentGroupTeacher;
@@ -139,6 +140,14 @@ public class StudentAutocompleteCommand extends SearchCommand {
 
     public void setOnlyStudyingOrFinishedGuestStudent(Boolean onlyStudyingOrFinishedGuestStudent) {
         this.onlyStudyingOrFinishedGuestStudent = onlyStudyingOrFinishedGuestStudent;
+    }
+
+    public Boolean getHideIdcode() {
+        return hideIdcode;
+    }
+
+    public void setHideIdcode(Boolean hideIdcode) {
+        this.hideIdcode = hideIdcode;
     }
 
     public Boolean getHasCurriculumVersion() {

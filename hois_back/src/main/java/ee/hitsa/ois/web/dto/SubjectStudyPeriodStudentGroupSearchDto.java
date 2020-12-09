@@ -5,7 +5,7 @@ import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 public class SubjectStudyPeriodStudentGroupSearchDto extends StudentGroupSearchDto {
     
     private Long timetable;
-    private Long studyPeriod;
+    private AutocompleteResult studyPeriod;
 
     public Long getTimetable() {
         return timetable;
@@ -13,10 +13,10 @@ public class SubjectStudyPeriodStudentGroupSearchDto extends StudentGroupSearchD
     public void setTimetable(Long timetable) {
         this.timetable = timetable;
     }
-    public Long getStudyPeriod() {
+    public AutocompleteResult getStudyPeriod() {
         return studyPeriod;
     }
-    public void setStudyPeriod(Long studyPeriod) {
+    public void setStudyPeriod(AutocompleteResult studyPeriod) {
         this.studyPeriod = studyPeriod;
     }
 }

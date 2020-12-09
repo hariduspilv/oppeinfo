@@ -198,12 +198,13 @@ public class CertificateContentService {
                 if (module.getKey().getGradeValue() != null) {
                     credits = credits.add(module.getKey().getModuleCredits());
                 } else {
-                    credits = credits.add(StreamUtil.sumBigDecimals(CertificateStudentResult::getHours, module.getValue()));
+                    credits = credits.add(StreamUtil.sumBigDecimals(csr -> csr.getConsideredReplacedCredits() != null ?
+                                    csr.getConsideredReplacedCredits() : csr.getCredits(), module.getValue()));
                 }
             }
             return credits;
         }
-        return StreamUtil.sumBigDecimals(CertificateStudentResult::getHours, reportStudent.getResults());
+        return StreamUtil.sumBigDecimals(CertificateStudentResult::getCredits, reportStudent.getResults());
     }
 
     private void setGrades(CertificateReport report, Student student, Language lang) {

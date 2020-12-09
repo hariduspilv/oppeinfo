@@ -26,12 +26,13 @@
           <md-checkbox ng-model="subject.oldIsOptional" aria-label="old is optional" disabled></md-checkbox>
         </td>
         <td md-cell>
-          <md-select ng-model="subject.curriculumVersionModuleId" aria-label="new module select">
+          <md-select ng-model="subject.curriculumVersionModuleId" aria-label="new module select" ng-disabled="!subject.canEdit">
             <md-option ng-repeat="val in higherCurriculumModules" ng-value="val.id">{{currentLanguageNameField(val)}}</md-option>
           </md-select>
         </td>
         <td md-cell>
-          <md-checkbox ng-model="subject.isOptional" aria-label="is optional" ng-disabled="!subject.curriculumVersionModuleId"></md-checkbox>
+          <md-checkbox ng-model="subject.isOptional" aria-label="is optional"
+            ng-disabled="!subject.canEdit || !subject.curriculumVersionModuleId"></md-checkbox>
         </td>
       </tr>
     </tbody>
@@ -40,5 +41,5 @@
 
 <br>
 <div layout="row" layout-margin>
-  <md-button ng-if="changeableModules.length > 0" class="md-raised md-primary" ng-click="saveChangedModules()">{{'main.button.save' | translate}}</md-button>
+  <md-button ng-if="canSaveChangeableModules" class="md-raised md-primary" ng-click="saveChangedModules()">{{'main.button.save' | translate}}</md-button>
 </div>

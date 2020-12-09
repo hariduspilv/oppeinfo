@@ -71,7 +71,7 @@
                         'color': getEventTextColor(event.capacityType)}"
                         style="padding: 0; border: 1px solid; position:absolute; overflow: hidden; border-color: rgba(0,0,0, 0.3);"
                         class="timetableEvent">
-                        <md-tooltip md-direction="bottom" style="margin: -18px; height: auto;">
+                        <md-tooltip class="tooltip-multiline" md-direction="bottom">
                             <div ng-if="event.public">{{event.timeStart}}-{{event.timeEnd}} {{currentLanguageNameField(event)}}</div>
                             <div ng-if="!event.public">{{event.timeStart}}-{{event.timeEnd}} {{'timetable.timetableEvent.occupied' | translate}}</div>
                             <div>
@@ -93,6 +93,7 @@
                                 {{'timetable.timetableEvent.individualEvent' | translate}}
                               </span>
                             </div>
+                            <div>{{event.addInfo}}</div>
                         </md-tooltip>
                         <div>
                             <div>
@@ -144,6 +145,7 @@
                               {{'timetable.timetableEvent.individualEvent' | translate}}
                             </span>
                         </div>
+                        <div>{{event.addInfo | hoisLimitTo: 40}}</div>
                     </div>
                 </div>
             </div>
@@ -215,6 +217,7 @@
                               {{'timetable.timetableEvent.individualEvent' | translate}}
                             </span>
                         </div>
+                        <div>{{event.addInfo}}</div>
                     </div>
                 </div>
             </div>

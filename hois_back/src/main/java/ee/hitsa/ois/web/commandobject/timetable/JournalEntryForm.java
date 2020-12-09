@@ -42,6 +42,7 @@ public class JournalEntryForm {
     @NotNull(groups = {Homework.class})
     private LocalDate homeworkDuedate;
     private List<String> journalEntryCapacityTypes;
+    private List<Long> journalEntryTeachers;
     private Long journalStudent;
     private List<JournalEntryStudentForm> journalEntryStudents;
 
@@ -98,6 +99,12 @@ public class JournalEntryForm {
     }
     public void setJournalEntryCapacityTypes(List<String> journalEntryCapacityTypes) {
         this.journalEntryCapacityTypes = journalEntryCapacityTypes;
+    }
+    public List<Long> getJournalEntryTeachers() {
+        return journalEntryTeachers;
+    }
+    public void setJournalEntryTeachers(List<Long> journalEntryTeachers) {
+        this.journalEntryTeachers = journalEntryTeachers;
     }
     public Long getJournalStudent() {
         return journalStudent;

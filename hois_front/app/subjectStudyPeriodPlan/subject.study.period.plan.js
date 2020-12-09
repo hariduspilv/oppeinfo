@@ -1,14 +1,13 @@
 'use strict';
 
-angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController', 
-  function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier, USER_ROLES, AuthService, $rootScope) {
+angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
+  function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier, USER_ROLES, AuthService, $rootScope, $q) {
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM);
 
     var allCapacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT', higher: true});
     var schoolCapacityTypes = QueryUtils.endpoint('/autocomplete/schoolCapacityTypes').query({ isHigher: true });
 
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriodPlans', {order: 'id'}, function (results) {
-        $scope.periodId = $scope.criteria.studyPeriod;
         var showCapacities = {};
         results.forEach(function (result) {
             result.plans.forEach(function (plan) {
@@ -25,34 +24,17 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
         });
     });
 
-    function setCurrentStudyPeriod() {
-        if($scope.criteria && !$scope.criteria.studyPeriod) {
-            $scope.criteria.studyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods).id;
-        }
-        $scope.loadData();
-        $scope.checkIfStudyPeriodIsPast();
-    }
-
-    QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query().$promise.then(function(response){
-        $scope.studyPeriods = response;
-        $scope.studyPeriods.forEach(function (studyPeriod) {
-          studyPeriod[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(studyPeriod.studyYear) + ' ' + $scope.currentLanguageNameField(studyPeriod);
-        });
-        setCurrentStudyPeriod();
-    });
-
     $scope.curriculums = QueryUtils.endpoint('/subjectStudyPeriodPlans/curriculums').query();
-    
+
     $scope.searchCurriculums = function (text) {
         return DataUtils.filterArrayByText($scope.curriculums, text, function (obj, regex) {
             return regex.test($scope.currentLanguageNameField(obj).toUpperCase());
         });
     };
 
-    $scope.$watch('criteria.subjectObject', function() {
-            $scope.criteria.subject = $scope.criteria.subjectObject ? $scope.criteria.subjectObject.id : null;
-        }
-    );
+    $scope.$watch('hiddenCriteria.subject', function() {
+      $scope.criteria.subject = ($scope.hiddenCriteria.subject || {}).id;
+    });
 
     $scope.load = function() {
         if (!$scope.searchForm.$valid) {
@@ -74,18 +56,6 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
         return capacity.hours ? capacity.hours : '-';
     };
 
-    $scope.pastStudyPeriodSelected = false;
-
-    $scope.checkIfStudyPeriodIsPast = function() {
-        if(!$scope.studyPeriods) {
-            return;
-        }
-        var studyPeriod = $scope.studyPeriods.find(function(el){return el.id === $scope.criteria.studyPeriod; });
-        if(studyPeriod) {
-            $scope.pastStudyPeriodSelected = DataUtils.isPastStudyYearOrPeriod(studyPeriod);
-        }
-    };
-
     $scope.mapComma = function(mappable, byId) {
         if (byId) {
             mappable.sort(function (a, b) {
@@ -99,16 +69,30 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
         return mappable.map(function(it) {return $scope.currentLanguageNameField(it);}).join(", ");
     };
 
-    $scope.$watch('criteria.curriculum', function() {
-            $scope.subjectQueryParams = $scope.criteria.curriculum ?
-            {curricula: [$scope.criteria.curriculum.id], 
-                status: ['AINESTAATUS_K'],
-                sort: 's.name_et, s.name_en, s.code'} : 
-            {status: ['AINESTAATUS_K'],
-                sort: 's.name_et, s.name_en, s.code'
-            };
-        }
-    );
+    $scope.$watch('hiddenCriteria.curriculum', function () {
+      if (!$scope.hiddenCriteria.curriculum) {
+        $scope.criteria.curriculum = undefined;
+        return;
+      }
+      $scope.criteria.curriculum = $scope.hiddenCriteria.curriculum.id;
+      if ($scope.hiddenCriteria.curriculumVersion &&
+        $scope.hiddenCriteria.curriculumVersion.curriculum !== $scope.criteria.curriculum) {
+        $scope.hiddenCriteria.curriculumVersion = undefined;
+      }
+      $scope.subjectQueryParams = $scope.criteria.curriculum ?
+        {curricula: [$scope.criteria.curriculum],
+          status: ['AINESTAATUS_K'],
+          sort: 's.name_et, s.name_en, s.code'} :
+        {status: ['AINESTAATUS_K'],
+          sort: 's.name_et, s.name_en, s.code'
+        };
+    });
+
+    $scope.$watch('hiddenCriteria.curriculumVersion', function () {
+      $scope.criteria.curriculumVersion = ($scope.hiddenCriteria.curriculumVersion || {}).id;
+    });
+
+    $q.all([$scope.curriculums.$promise]).then($scope.loadData);
 
 }).controller('subjectStudyPeriodPlanNewController', ['$scope', 'QueryUtils', 'ArrayUtils', 'message', 'DataUtils', '$mdDialog', 'dialogService', '$route', 'Classifier', '$location',
   function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogService, $route, Classifier, $location) {
@@ -116,6 +100,10 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
     var id = $route.current.params.id;
     var baseUrl = '/subjectStudyPeriodPlans';
     var Endpoint = QueryUtils.endpoint(baseUrl);
+    $scope.toEap = function (hours) {
+      return DataUtils.hoursToCredits(hours, 2);
+    };
+    $scope.toHours = DataUtils.creditsToHours;
     /**
      * Probably readonly is not needed at all, as user do not have access to form in this case.
      * Required security check is also present in back end
@@ -123,21 +111,10 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
     $scope.readOnly = false;
 
     var initialRecord = {
-        studyPeriod: $route.current.params.studyPeriodId,
         subject: $route.current.params.subjectId,
         studyForms: [],
         curriculums: []
     };
-
-    function getStudyPeriod(studyPeriodId) {
-        QueryUtils.endpoint(baseUrl + "/studyPeriod/" + studyPeriodId).get().$promise.then(
-            function(response) {
-                $scope.studyPeriod = response;
-                response[$scope.currentLanguageNameField()] = $scope.currentLanguageNameField(response.studyYear) + " " + $scope.currentLanguageNameField(response);
-                $scope.readOnly = DataUtils.isPastStudyYearOrPeriod($scope.studyPeriod);
-            }
-        );
-    }
 
     function getStudySubject(subjectId) {
       $scope.subject = QueryUtils.endpoint(baseUrl + "/subject/" + subjectId).get();
@@ -196,7 +173,6 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
     if (id) {
         Endpoint.get({ id: id }).$promise.then(function (response) {
             $scope.record = response;
-            getStudyPeriod(response.studyPeriod);
             getStudySubject(response.subject);
             getCurriculums();
             getStudyForms();
@@ -205,7 +181,6 @@ angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
     } else {
         $scope.record = new Endpoint(initialRecord);
             setInitialCapacities();
-            getStudyPeriod($scope.record.studyPeriod);
             getStudySubject($scope.record.subject);
             getCurriculums();
             getStudyForms();

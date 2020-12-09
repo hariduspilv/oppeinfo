@@ -8,6 +8,8 @@ public class ApelApplicationCommentForm {
     
     @Size(max = 4000)
     private String addInfo;
+    /** Is comment visible for student */
+    private Boolean isStudent;
 
     public Long getId() {
         return id;
@@ -23,6 +25,14 @@ public class ApelApplicationCommentForm {
 
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+
+    public Boolean getIsStudent() {
+        return isStudent;
+    }
+
+    public void setIsStudent(Boolean isStudent) {
+        this.isStudent = isStudent;
     }
 
 }

@@ -256,6 +256,10 @@
           colspan = application.canEdit ? 8 : 9;
         }
       }
+      // module (required) column not shown
+      if (application.isNew) {
+        colspan--;
+      }
     }
     return colspan;
   }
@@ -322,7 +326,7 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
       if (entity.status === 'VOTA_STAATUS_E' && ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher())) {
         $scope.committees = QueryUtils.endpoint('/apelApplications/' + entity.id + '/committees').query();
       }
-      $scope.application.committeeId = entity.committee ? entity.committee.id : null;
+      $scope.application.committeeIds = entity.committees ? entity.committees.map(function (item) {return item.id;}) : [];
       $scope.canChangeTransferStatus = entity.canChangeTransferStatus;
       $scope.nominalDurationDisabled = entity.isEhisSent || ['VOTA_STAATUS_E', 'VOTA_STAATUS_V'].indexOf(entity.status) === -1;
       $scope.canSeeNominalStudyExtension = canSeeNominalStudyExtension($scope.auth, entity);
@@ -523,7 +527,7 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
             student: dialogScope.student.id,
             curriculumSubjects: true,
             curriculumVersion: dialogScope.curriculumVersionId,
-            withCredits: true,
+            withModule: true,
             noFinalSubjects: true
           }).$promise.then(function (subjects) {
             dialogScope.subjects = subjects;
@@ -650,13 +654,15 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
         function addNewSubtitutableSubjectRow(subject, hModule, isOptional, credits) {
           var grade = dialogScope.gradesMap.KORGHINDAMINE_A;
           var newSubject = {
-            subject: subject,
+            subject: angular.copy(subject),
             curriculumVersionHmodule: hModule,
             isOptional: isOptional,
             credits: credits,
             skills: null,
             grade: grade
           };
+          newSubject.subject.nameEt = subject.subjectNameEt;
+          newSubject.subject.nameEn = subject.subjectNameEn;
           dialogScope.record.informalSubjectsOrModules.push(newSubject);
         }
 
@@ -755,6 +761,7 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
       dialogService.showDialog(dialogTemplate, function (dialogScope) {
         dialogScope.auth = $scope.auth;
         dialogScope.formState = {};
+        dialogScope.isNew = $scope.application.isNew;
         dialogScope.student = $scope.application.student;
         dialogScope.currentDate = new Date();
         dialogScope.curriculumVersionId = $scope.application.curriculumVersion.id;
@@ -785,15 +792,10 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
             student: dialogScope.student.id,
             curriculumSubjects: true,
             curriculumVersion: dialogScope.curriculumVersionId,
-            withCredits: true,
+            withModule: true,
             noFinalSubjects: true
           }).$promise.then(function (subjects) {
             dialogScope.subjects = subjects;
-          });
-          QueryUtils.endpoint('/apelApplications/studentModules/:student').query({
-            student: dialogScope.student.id
-          }).$promise.then(function(modules) {
-            dialogScope.curriculumModules = modules;
           });
         }
 
@@ -1282,14 +1284,24 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
           });
         };
 
-        dialogScope.addSelectedSubject = function () {
-          if (!ArrayUtils.contains(getReplacedSubjectsIds(dialogScope.record.formalReplacedSubjectsOrModules), dialogScope.selectedSubject.id)) {
-            dialogScope.record.formalReplacedSubjectsOrModules.push({subject: dialogScope.selectedSubject});
+        dialogScope.$watch('formState.selectedSubject', function () {
+          if (!dialogScope.formState.selectedSubject) {
+            return;
+          }
+
+          if (!ArrayUtils.contains(getReplacedSubjectsIds(dialogScope.record.formalReplacedSubjectsOrModules),
+              dialogScope.formState.selectedSubject.id)) {
+            var subject = dialogScope.formState.selectedSubject;
+
+            var newSubject = { subject: angular.copy(subject), credits: subject.credits };
+            newSubject.subject.nameEt = subject.code + ' - ' + subject.subjectNameEt;
+            newSubject.subject.nameEn = subject.code + ' - ' + subject.subjectNameEn;
+            dialogScope.record.formalReplacedSubjectsOrModules.push(newSubject);
           } else {
             message.error('apel.error.subjectHasAlreadyBeenAdded');
           }
-          dialogScope.selectedSubject = null;
-        };
+          dialogScope.formState.selectedSubject = null;
+        });
 
         dialogScope.removeSubtitutableSubject = function (subject) {
           ArrayUtils.remove(dialogScope.record.formalReplacedSubjectsOrModules, subject);
@@ -1431,8 +1443,7 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
                 if (dialogScope.isVocational) {
                   return som.nameEt !== null || som.curriculumVersionOmodule !== null;
                 } else {
-                  return ((som.nameEt !== null && som.nameEn !== null) || som.subject !== null) &&
-                    som.curriculumVersionHmodule !== null;
+                  return ((som.nameEt !== null && som.nameEn !== null) || som.subject !== null);
                 }
               }
             }
@@ -1444,13 +1455,6 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
           return !ArrayUtils.isEmpty(dialogScope.record.formalReplacedSubjectsOrModules);
         };
 
-        dialogScope.areReplacedSubjectsValid = function () {
-          if (!ApelApplicationUtils.allTransferredSubjectsInFreeChoiceModules(dialogScope.record)) {
-            return !ArrayUtils.isEmpty(dialogScope.record.formalReplacedSubjectsOrModules);
-          }
-          return true;
-        };
-
         dialogScope.submitHigherFormalLearning = function () {
           if (ArrayUtils.isEmpty(dialogScope.record.formalSubjectsOrModules)) {
             message.error('apel.error.atLeastOneTransferableSubject');
@@ -1458,13 +1462,6 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
           } else {
             if (!areTransferredSubjectsOrModulesValid()) {
               message.error('apel.error.incompleteData');
-              return;
-            }
-          }
-
-          if (!ApelApplicationUtils.allTransferredSubjectsInFreeChoiceModules(dialogScope.record)) {
-            if (ArrayUtils.isEmpty(dialogScope.record.formalReplacedSubjectsOrModules)) {
-              message.error('apel.error.atLeastOneSubstitutableSubject');
               return;
             }
           }
@@ -1568,8 +1565,14 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
 
     $scope.openEditCommentDialog = function (comment) {
       dialogService.showDialog('apelApplication/templates/comment.edit.dialog.html', function (dialogScope) {
+        dialogScope.isStudentAllowed = !($scope.auth.isStudent() || $scope.auth.isParent());
         if (comment) {
           dialogScope.comment = angular.copy(comment);
+        } else {
+          dialogScope.comment = {};
+        }
+        if (!dialogScope.isStudentAllowed) {
+          dialogScope.comment.isStudent = true;
         }
       }, function (submittedDialogScope) {
         var ApelApplicationCommentEndpoint = QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/comment');
@@ -1677,8 +1680,6 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
       ($scope.application.abroadStudyPeriods || []).forEach(function (period) {
         DataUtils.convertStringToDates(period, ['start', 'end']);
       });
-
-      $scope.application.committeeId = entity.committee ? entity.committee.id : null;
       $scope.canSeeNominalStudyExtension = canSeeNominalStudyExtension($scope.auth, entity);
 
       setGradesAndAssessments($q, $scope, Classifier, entity).then(function () {
@@ -1697,7 +1698,7 @@ angular.module('hitsaOis').controller('ApelApplicationEditController', function 
       if (entity.status === 'VOTA_STAATUS_E' && ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher())) {
         $scope.committees = QueryUtils.endpoint('/apelApplications/' + $scope.application.id + '/committees').query();
       }
-      $scope.application.committeeId = $scope.application.committee ? $scope.application.committee.id : null;
+      $scope.application.committeeIds = entity.committees ? entity.committees.map(function (item) {return item.id;}) : [];
     }
 
     $scope.getUrl = oisFileService.getUrl;

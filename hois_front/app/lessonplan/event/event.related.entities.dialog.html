@@ -1,0 +1,65 @@
+<md-dialog aria-label="event related entities dialog" flex="50" flex-xs="100">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2>{{currentLanguageNameField(event)}}</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-font-set="material-icons">close</md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <div class="md-dialog-content">
+      <hois-mock-pagination table-data="tableData" search-label="{{searchLabel}}" search-param="{{searchParam}}" limit-options="[10, 20, 50]">
+        <hois-mock-pagination-table>
+          <table ng-if="entityType === 'teacher'" md-table>
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{'timetable.timetableEvent.personName' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in tableData.shownContent" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{row.name}}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <table ng-if="entityType === 'studentGroup'" md-table>
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{'timetable.timetableEvent.code' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in tableData.shownContent" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{row.code}}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <table ng-if="entityType === 'student'" md-table>
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{'timetable.timetableEvent.personName' | translate}}</th>
+                <th md-column>{{'timetable.timetableEvent.studentGroup' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in tableData.shownContent" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{row.name}}</td>
+                <td md-cell>{{row.studentGroup}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </hois-mock-pagination-table>
+      </hois-mock-pagination>
+    </div>
+  </md-dialog-content>
+
+  <span flex></span>
+  <md-dialog-actions layout="row" layout-align="start center">
+    <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+  </md-dialog-actions>
+</md-dialog>

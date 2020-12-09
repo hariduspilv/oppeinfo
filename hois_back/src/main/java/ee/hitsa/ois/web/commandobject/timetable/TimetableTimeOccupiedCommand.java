@@ -1,31 +1,24 @@
 package ee.hitsa.ois.web.commandobject.timetable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class TimetableTimeOccupiedCommand {
 
-    private Long timetable;
     private Long timetableEventId;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private List<Long> rooms;
     private List<Long> teachers;
     private List<Long> studentGroups;
-    
+
     private String repeatCode;
+    private LocalDate repeatUntil;
     private Long weekAmount;
-    
+
     private Long exam;
     private Long subjectStudyPeriod;
-    
-    public Long getTimetable() {
-        return timetable;
-    }
-
-    public void setTimetable(Long timetable) {
-        this.timetable = timetable;
-    }
 
     public Long getTimetableEventId() {
         return timetableEventId;
@@ -81,6 +74,14 @@ public class TimetableTimeOccupiedCommand {
 
     public void setRepeatCode(String repeatCode) {
         this.repeatCode = repeatCode;
+    }
+
+    public LocalDate getRepeatUntil() {
+        return repeatUntil;
+    }
+
+    public void setRepeatUntil(LocalDate repeatUntil) {
+        this.repeatUntil = repeatUntil;
     }
 
     public Long getWeekAmount() {

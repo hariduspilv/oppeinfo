@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.commandobject.report;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import javax.validation.constraints.NotNull;
 
@@ -14,20 +15,32 @@ public class TeacherDetailLoadCommand {
     private LocalDate studyYearStart;
     private LocalDate studyYearEnd;
     private Long studyPeriod;
+    private Long curriculum;
     private LocalDate studyPeriodStart;
     private LocalDate studyPeriodEnd;
     private Long teacher;
-    private LocalDate from;
+    private List<Long> teachers;
+    private List<Long> studentGroups;
+    private String teacherPosition;
+	private LocalDate from;
     private LocalDate thru;
-
     private Boolean isHigher;
     private Boolean byStudyPeriods;
+    private Boolean byStudentGroups;
     private Boolean byWeeks;
     private Boolean byMonths;
     private Boolean byCapacities;
     private Boolean showPlannedLessons;
     private Boolean showTimetableLoad;
     private Boolean showSingleEvents;
+    
+    public List<Long> getTeachers() {
+		return teachers;
+	}
+
+	public void setTeachers(List<Long> teachers) {
+		this.teachers = teachers;
+	}
 
     public Long getStudyYear() {
         return studyYear;
@@ -164,5 +177,37 @@ public class TeacherDetailLoadCommand {
     public void setShowSingleEvents(Boolean showSingleEvents) {
         this.showSingleEvents = showSingleEvents;
     }
+
+	public List<Long> getStudentGroups() {
+		return studentGroups;
+	}
+
+	public void setStudentGroups(List<Long> studentGroups) {
+		this.studentGroups = studentGroups;
+	}
+
+	public String getTeacherPosition() {
+		return teacherPosition;
+	}
+
+	public void setTeacherPosition(String teacherPosition) {
+		this.teacherPosition = teacherPosition;
+	}
+
+	public Long getCurriculum() {
+		return curriculum;
+	}
+
+	public void setCurriculum(Long curriculum) {
+		this.curriculum = curriculum;
+	}
+
+	public Boolean getByStudentGroups() {
+		return byStudentGroups;
+	}
+
+	public void setByStudentGroups(Boolean byStudentGroups) {
+		this.byStudentGroups = byStudentGroups;
+	}
 
 }

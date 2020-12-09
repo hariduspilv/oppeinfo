@@ -6,10 +6,12 @@ import java.util.Set;
 
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
+import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
+import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class SubjectStudyPeriodDto extends VersionedCommand {
@@ -30,6 +32,11 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
     private Boolean capacityDiff;
     private Set<SubjectStudyPeriodSubgroupDto> subgroups;
     private Long students;
+    private Short places;
+    @ClassifierRestriction(MainClassCode.KOEFITSIENT)
+    private String coefficient;
+
+    private Boolean hasPlaces;
 
     private Boolean canUpdate;
     private Boolean canEditSubgroups;
@@ -147,6 +154,22 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
         this.students = students;
     }
 
+    public Short getPlaces() {
+        return places;
+    }
+
+    public void setPlaces(Short places) {
+        this.places = places;
+    }
+
+    public Boolean getHasPlaces() {
+        return hasPlaces;
+    }
+
+    public void setHasPlaces(Boolean hasPlaces) {
+        this.hasPlaces = hasPlaces;
+    }
+
     public Boolean getCanUpdate() {
         return canUpdate;
     }
@@ -171,6 +194,14 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
         this.canDelete = canDelete;
     }
 
+    public String getCoefficient() {
+        return coefficient;
+    }
+
+    public void setCoefficient(String coefficient) {
+        this.coefficient = coefficient;
+    }
+
     public static SubjectStudyPeriodDto of(SubjectStudyPeriod subjectStudyPeriod) {
         SubjectStudyPeriodDto dto = EntityUtil.bindToDto(subjectStudyPeriod, new SubjectStudyPeriodDto(), 
                 "studyPeriod", "teacher", "subjectStudyPeriodTeachers", "subject", "capacities", "subgroups");
@@ -189,6 +220,7 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
                 .flatMap(sg -> sg.getStudents().stream())
                 .filter(StudentUtil::isActive)
                 .count()));
+        dto.setHasPlaces(Boolean.valueOf(subjectStudyPeriod.getPlaces() != null));
         return dto;
     }
 }

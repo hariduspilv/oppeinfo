@@ -222,45 +222,22 @@ public abstract class JournalUtil {
         }
     }
 
-    public static void asserCanAddAllSuitableStudents(HoisUserDetails user) {
+    public static void assertCanAddAllSuitableStudents(HoisUserDetails user) {
         UserUtil.throwAccessDeniedIf(!canAddAllSuitableStudents(user));
-    }
-
-    public static void setOutcomeEntriesUnqiueOrderNrs(List<? extends JournalEntryByDateBaseDto> entries) {
-        // order outcomes by curriculum module id and their order nr and then give outcomes from different modules a unique outcome order nr
-        Collections.sort(entries, Comparator.comparing(JournalEntryByDateBaseDto::getCurriculumModule, Comparator.nullsFirst(Comparator.naturalOrder()))
-                .thenComparing(JournalEntryByDateBaseDto::getOutcomeOrderNr, Comparator.nullsFirst(Comparator.naturalOrder())));
-        List<Long> orderNrs = new ArrayList<>();
-        for (int i = 0; i < entries.size(); i++) {
-            Long entryOrderNr = entries.get(i) != null && entries.get(i).getOutcomeOrderNr() != null ? entries.get(i).getOutcomeOrderNr() : null;
-            if (entryOrderNr != null) {
-                entries.get(i).setOutcomeOrderNr(uniqueOrderNr(entryOrderNr, orderNrs));
-            }
-        }
-    }
-
-    public static Long uniqueOrderNr(Long entryOrderNr, List<Long> assignedOrderNrs) {
-        if (!assignedOrderNrs.contains(entryOrderNr)) {
-            assignedOrderNrs.add(entryOrderNr);
-            return entryOrderNr;
-        }
-        Long highestAssignedNr = Collections.max(assignedOrderNrs);
-        Long newOrderNr = Long.valueOf(highestAssignedNr.longValue() + 1);
-        assignedOrderNrs.add(newOrderNr);
-        return newOrderNr;
     }
 
     public static void orderJournalEntriesByDate(List<? extends JournalEntryByDateBaseDto> entries) {
         // order day entries by lesson nr
-        Collections.sort(entries, Comparator.comparing(JournalEntryByDateBaseDto::getEntryDate, Comparator.nullsFirst(Comparator.naturalOrder()))
+        entries.sort(Comparator.comparing(JournalEntryByDateBaseDto::getEntryDate, Comparator.nullsFirst(Comparator.naturalOrder()))
                 .thenComparing(JournalEntryByDateBaseDto::getStartLessonNr, Comparator.nullsLast(Comparator.naturalOrder()))
                 .thenComparing(JournalEntryByDateBaseDto::getLessons, Comparator.nullsFirst(Comparator.naturalOrder())));
 
         // outcome entries that don't have a date are ordered last among entries without date, all other entries are ordered by date
-        Collections.sort(entries, Comparator.comparing(JournalEntryByDateBaseDto::getOutcomeOrderNr, Comparator.nullsFirst(Comparator.naturalOrder())));
-        Collections.sort(entries, Comparator.comparing(JournalEntryByDateBaseDto::getEntryDate, Comparator.nullsFirst(Comparator.naturalOrder())));
+        entries.sort(Comparator.comparing(JournalEntryByDateBaseDto::getCurriculumModule, Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(JournalEntryByDateBaseDto::getOutcomeOrderNr, Comparator.nullsFirst(Comparator.naturalOrder())));
+        entries.sort(Comparator.comparing(JournalEntryByDateBaseDto::getEntryDate, Comparator.nullsFirst(Comparator.naturalOrder())));
 
-        Collections.sort(entries, (JournalEntryByDateBaseDto o1, JournalEntryByDateBaseDto o2) -> {
+        entries.sort((JournalEntryByDateBaseDto o1, JournalEntryByDateBaseDto o2) -> {
             if (isOutcomeEntryWithoutDate(o1) && !isOutcomeEntryWithoutDate(o2)) {
                 return 1;
             } else if (!isOutcomeEntryWithoutDate(o1) && isOutcomeEntryWithoutDate(o2)) {
@@ -270,7 +247,7 @@ public abstract class JournalUtil {
         });
 
         // put final results to the end of the list
-        Collections.sort(entries, (JournalEntryByDateBaseDto o1, JournalEntryByDateBaseDto o2) -> {
+        entries.sort((JournalEntryByDateBaseDto o1, JournalEntryByDateBaseDto o2) -> {
             if (isFinalResult(o1) && !isFinalResult(o2)) {
                 return 1;
             } else if (!isFinalResult(o1) && isFinalResult(o2)) {

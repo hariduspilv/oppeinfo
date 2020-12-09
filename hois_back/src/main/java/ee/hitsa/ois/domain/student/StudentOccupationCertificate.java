@@ -28,6 +28,9 @@ public class StudentOccupationCertificate extends BaseEntityWithId {
     private String issuer;
     private LocalDate issueDate;
     private String language;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="language_code")
+    private Classifier languageCode;
 
     public Student getStudent() {
         return student;
@@ -107,5 +110,13 @@ public class StudentOccupationCertificate extends BaseEntityWithId {
 
     public void setLanguage(String language) {
         this.language = language;
+    }
+
+    public Classifier getLanguageCode() {
+        return languageCode;
+    }
+
+    public void setLanguageCode(Classifier languageCode) {
+        this.languageCode = languageCode;
     }
 }

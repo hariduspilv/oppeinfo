@@ -144,9 +144,6 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
             }
           });
         } else {
-          if (allTransferredSubjectsInFreeChoiceModules(record)) {
-            continue;
-          }
           record.formalReplacedSubjectsOrModules.forEach(function (subject) {
             replacedCredits += subject.subject.credits;
           });
@@ -187,7 +184,7 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
         nominalType: studyEndExtendingNotAllowed ? null : modifiedApplication.nominalType,
         newNominalStudyEnd: studyEndExtendingNotAllowed ? null : modifiedApplication.newNominalStudyEnd,
         records: modifiedApplication.records,
-        committeeId: modifiedApplication.committeeId,
+        committeeIds: modifiedApplication.committeeIds,
         addInfo: submittedDialogScope.reason
       }, function (response) {
         message.info('apel.messages.sentToConfirm');
@@ -206,7 +203,7 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
       nominalType: studyEndExtendingNotAllowed ? null : modifiedApplication.nominalType,
       newNominalStudyEnd: studyEndExtendingNotAllowed ? null : modifiedApplication.newNominalStudyEnd,
       records:  modifiedApplication.records,
-      committeeId: modifiedApplication.committeeId
+      committeeIds: modifiedApplication.committeeIds
     }, function (response) {
       message.info('apel.messages.sentToConfirm');
       callback(response);
@@ -230,7 +227,7 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
         isVocational: modifiedApplication.isVocational,
         nominalType: modifiedApplication.nominalType,
         newNominalStudyEnd: modifiedApplication.newNominalStudyEnd,
-        committeeId: modifiedApplication.committeeId,
+        committeeIds: modifiedApplication.committeeIds,
         records:  modifiedApplication.records
       }, function (response) {
         message.info('apel.messages.sentToCommittee');
@@ -258,9 +255,12 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
   };
 
   function confirm(application, callback) {
-      QueryUtils.endpoint('/apelApplications/' + application.id + '/confirm/').put({}, function (response) {
+      QueryUtils.endpoint('/apelApplications/' + application.id + '/confirm/').put({
+      }, function (response) {
         message.info('apel.messages.confirmed');
         callback(response);
+      }, function (response) {
+        setRecordsWithErrors(application, response);
       });
   }
 
@@ -361,17 +361,6 @@ angular.module('hitsaOis').factory('ApelApplicationUtils', function (DataUtils, 
       }
     }
     return false;
-  }
-
-  apelApplicationUtil.allTransferredSubjectsInFreeChoiceModules = function (record) {
-    return allTransferredSubjectsInFreeChoiceModules(record);
-  };
-
-  function allTransferredSubjectsInFreeChoiceModules(record) {
-    var nonFreeChoiceModules = (record.formalSubjectsOrModules || []).filter(function (transfer) {
-      return transfer.curriculumVersionHmodule === null || transfer.curriculumVersionHmodule.type !== 'KORGMOODUL_V';
-    });
-    return nonFreeChoiceModules.length === 0;
   }
 
   return apelApplicationUtil;

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import ee.hitsa.ois.web.commandobject.report.TeacherDetailLoadCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
 import ee.hitsa.ois.web.dto.WeekDto;
 
@@ -16,6 +17,8 @@ public class TeacherDetailLoadReportDataDto {
     private List<WeekDto> weeks;
     private Map<Long, List<Short>> weekNrsByMonth;
     private List<Long> months;
+    private List<AutocompleteResult> studentGroups;
+    private List<AutocompleteResult> curriculums;
     private TeacherDetailLoadCommand criteria;
 
     public List<StudyPeriodWithWeeksDto> getStudyPeriods() {
@@ -73,5 +76,21 @@ public class TeacherDetailLoadReportDataDto {
     public void setCriteria(TeacherDetailLoadCommand criteria) {
         this.criteria = criteria;
     }
+
+	public List<AutocompleteResult> getStudentGroups() {
+		return studentGroups;
+	}
+
+	public void setStudentGroups(List<AutocompleteResult> studentGroups) {
+		this.studentGroups = studentGroups;
+	}
+
+	public List<AutocompleteResult> getCurriculums() {
+		return curriculums;
+	}
+
+	public void setCurriculums(List<AutocompleteResult> curriculums) {
+		this.curriculums = curriculums;
+	}
 
 }

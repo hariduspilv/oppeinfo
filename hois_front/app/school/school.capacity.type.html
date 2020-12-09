@@ -8,16 +8,21 @@
       <md-tablecontainer>
         <table md-table class="secondary-table">
           <thead md-head>
-            <tr md-row>
-              <th md-column>
+            <tr md-row style="height: 24px;">
+              <th md-column rowspan="2">
                 <md-checkbox ng-model="selectAll" ng-change="updateAllCheckBoxes(selectAll)">
                 </md-checkbox>
               </th>
-              <th md-column>{{'schoolCapacityType.type' | translate}}</th>
-              <th md-column>{{'schoolCapacityType.isTimetable' | translate}}</th>
-              <th md-column ng-if="!isHigher">{{'schoolCapacityType.isContact' | translate}}</th>
-              <th md-column>{{auth.higher ? ('schoolCapacityType.teacherLoadPercentageHigher' | translate) : ('schoolCapacityType.teacherLoadPercentageVocational' | translate)}}</th>
-              <th md-column>&nbsp;</th>
+              <th md-column rowspan="2">{{'schoolCapacityType.type' | translate}}</th>
+              <th md-column rowspan="2">{{'schoolCapacityType.isTimetable' | translate}}</th>
+              <th md-column ng-if="!isHigher" rowspan="2">{{'schoolCapacityType.isContact' | translate}}</th>
+              <th md-column colspan="{{coefficients.length}}" style="text-align: center">{{auth.higher ? ('schoolCapacityType.teacherLoadPercentageHigher' | translate) : ('schoolCapacityType.teacherLoadPercentageVocational' | translate)}}</th>
+              <th md-column rowspan="2">&nbsp;</th>
+            </tr>
+            <tr md-row style="height: 24px;">
+              <th md-column style="text-align: center; padding: 0; min-width: 100px;" ng-repeat="coef in coefficients">
+                {{coef.value}}
+              </th>
             </tr>
           </thead>
           <tbody md-body>
@@ -34,9 +39,11 @@
               <td md-cell ng-if="!isHigher">
                 <md-checkbox ng-model="capacityType.isContact"></md-checkbox>
               </td>
-              <td md-cell>
-                <div ng-repeat="load in capacityType.loads">
-                  {{load.loadPercentage}} ({{currentLanguageNameField(studyYearMap[load.studyYearId])}})
+              <td md-cell style="padding: 0;" ng-repeat="coef in coefficients">
+                <div style="width: min-content; margin: auto; white-space: nowrap;">
+                  <div ng-repeat="load in capacityType.mappedLoads[coef.code] | filter: {type: ''} | orderBy: '-startDate'">
+                    {{load.loadPercentage}} ({{currentLanguageNameField(studyYearMap[load.studyYearId])}})
+                  </div>
                 </div>
               </td>
               <td md-cell>

@@ -15,17 +15,23 @@
         <md-table-container>
           <table md-table>
             <thead md-head>
-            <tr md-row>
-              <th md-column>{{'schoolCapacityType.studyYear' | translate}}</th>
-              <th md-column>{{'schoolCapacityType.loadPercentage' | translate}}</th>
-            </tr>
+              <tr md-row style="height: 24px">
+                <th md-column rowspan="2">{{'schoolCapacityType.studyYear' | translate}}</th>
+                <th md-column colspan="{{coefficients.length}}" style="text-align: center">{{'schoolCapacityType.loadPercentage' | translate}}</th>
+              </tr>
+              <tr md-row style="height: 24px;">
+                <th md-column style="text-align: center; padding: 0;" ng-repeat="coef in coefficients">
+                  {{coef.value}}
+                </th>
+              </tr>
             </thead>
             <tbody md-body>
-            <tr md-row ng-repeat="row in studyYears" ng-class-odd="'odd'" ng-class-even="'even'">
+            <tr md-row ng-repeat="row in studyYears | orderBy: '-startDate'" ng-class-odd="'odd'" ng-class-even="'even'">
               <td md-cell>{{currentLanguageNameField(studyYearMap[row.studyYearId])}}</td>
-              <td md-cell>
-                <md-input-container class="md-block">
-                  <input ng-model="row.loadPercentage" name="loadPercentage" type="number" min="0" max="100">
+              <td md-cell style="width: 100px; padding: 0 12px;" ng-repeat="coef in coefficients">
+                <md-input-container>
+                  <input ng-model="row.loads[coef.code]" name="loadPercentage" type="number" min="0" max="100"
+                         aria-label="{{coef.value}}" style="height: 24px; padding-top: 2px;">
                 </md-input-container>
               </td>
             </tr>

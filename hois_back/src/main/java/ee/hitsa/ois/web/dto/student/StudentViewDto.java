@@ -74,6 +74,7 @@ public class StudentViewDto extends StudentForm {
     private List<StudentDormitoryHistoryDto> dormitoryHistory;
     private BigDecimal fulfillmentPercentage;
     private String addInfo;
+    private Long regNr;
 
     public Long getId() {
         return id;
@@ -575,6 +576,14 @@ public class StudentViewDto extends StudentForm {
 
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+
+    public Long getRegNr() {
+        return regNr;
+    }
+
+    public void setRegNr(Long regNr) {
+        this.regNr = regNr;
     }
 
     public Boolean getUserCanViewStudentAddInfo() {

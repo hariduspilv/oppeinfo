@@ -3,9 +3,11 @@ package ee.hitsa.ois.service.subjectstudyperiod;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
@@ -13,6 +15,11 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,6 +41,8 @@ import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodSear
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodSearchDto;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+
 @Transactional
 @Service
 public class SubjectStudyPeriodSubjectSearchService {
@@ -44,54 +53,50 @@ public class SubjectStudyPeriodSubjectSearchService {
     private EntityManager em;
     @Autowired
     private XlsService xlsService;
-    
+
     public Page<SubjectStudyPeriodSearchDto> search(Long schoolId, SubjectStudyPeriodSearchCommand criteria,
             Pageable pageable) {
-        return subjectRepository.findAll((root, query, cb) -> {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period ssp " +
+                "join subject s on ssp.subject_id = s.id " +
+                "join study_period sp on ssp.study_period_id = sp.id ");
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("s.status_code = :statusCode", "statusCode", SubjectStatus.AINESTAATUS_K);
+        qb.optionalCriteria((criteria.getStudyPeriod() != null ? "sp.id = :timeId" : "sp.study_year_id = :timeId"),
+                "timeId", criteria.getStudyPeriod() != null ? criteria.getStudyPeriod() : criteria.getStudyYear());
+        qb.optionalCriteria("s.id = :subjectId", "subjectId", criteria.getSubject());
+        qb.optionalCriteria("exists(select 1 from subject_study_period_teacher sspt " +
+                "where sspt.subject_study_period_id = ssp.id and sspt.teacher_id = :teacherId)",
+                "teacherId", criteria.getTeacher());
 
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("school").get("id"), schoolId));
+        qb.sort(pageable);
+        qb.groupBy("s.id, sp.id");
+        Page<Object> pagingResult = JpaQueryUtil.pagingResult(qb, "s.id as sid, sp.id as spid", em, pageable);
+        Set<Long> subjectIds = pagingResult.getContent().stream()
+                .map(r -> resultAsLong(r, 0))
+                .collect(Collectors.toSet());
+        if (subjectIds.isEmpty()) {
+            // Empty mapping for return
+            return pagingResult.map(r -> new SubjectStudyPeriodSearchDto());
+        }
 
-            filters.add(cb.equal(root.get("status").get("code"), SubjectStatus.AINESTAATUS_K.name()));
-            /*
-             * Search should show only those subjects, which have any
-             * connections with subject_study_period table with specific
-             * studyPeriod
-             */
-            if(criteria.getStudyPeriod() != null) {
-                Subquery<Long> sspSubjectQuery = query.subquery(Long.class);
-                Root<SubjectStudyPeriod> sspSubjectRoot = sspSubjectQuery.from(SubjectStudyPeriod.class);
-                sspSubjectQuery = sspSubjectQuery.select(sspSubjectRoot.get("subject").get("id"))
-                        .where(cb.equal(sspSubjectRoot.get("studyPeriod").get("id"), criteria.getStudyPeriod()));
-                filters.add(root.get("id").in(sspSubjectQuery));
-            }
+        // fetch everything we need for this request to decrease amount of requests
+        em.createQuery("select s from Subject s " +
+                "join fetch s.subjectStudyPeriods ssp " +
+                "join fetch ssp.studyPeriod sp " +
+                "join fetch sp.studyYear sy " +
+                "where s.id in :sIds", Subject.class)
+                .setParameter("sIds", subjectIds)
+                .getResultList();
 
-            if (criteria.getSubject() != null) {
-                filters.add(cb.equal(root.get("id"), criteria.getSubject()));
-            }
-            if (criteria.getTeacher() != null) {
-                Subquery<Long> sspTeachersQuery = query.subquery(Long.class);
-                Root<SubjectStudyPeriodTeacher> sspTeachertRoot = sspTeachersQuery
-                        .from(SubjectStudyPeriodTeacher.class);
-                if (criteria.getStudyPeriod() != null) {
-                    sspTeachersQuery = sspTeachersQuery
-                            .select(sspTeachertRoot.get("subjectStudyPeriod").get("subject").get("id"))
-                            .where(cb.and(sspTeachertRoot.get("teacher").get("id").in(criteria.getTeacher())),
-                                    cb.equal(sspTeachertRoot.get("subjectStudyPeriod").get("studyPeriod").get("id"), criteria.getStudyPeriod()));
-                } else {
-                    sspTeachersQuery = sspTeachersQuery
-                            .select(sspTeachertRoot.get("subjectStudyPeriod").get("subject").get("id"))
-                            .where(sspTeachertRoot.get("teacher").get("id").in(criteria.getTeacher()));
-                }
-                filters.add(root.get("id").in(sspTeachersQuery));
-            }
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(s -> {
+        return pagingResult.map(r -> {
+            Subject s = em.getReference(Subject.class, resultAsLong(r, 0));
+            StudyPeriod period = em.getReference(StudyPeriod.class, resultAsLong(r, 1));
             SubjectStudyPeriodSearchDto dto = new SubjectStudyPeriodSearchDto();
             dto.setSubject(AutocompleteResult.of(s));
+            dto.setStudyPeriod(AutocompleteResult.ofWithYear(period));
 
             Set<Person> teachers = new HashSet<>();
-            List<SubjectStudyPeriod> ssps = SubjectStudyPeriodUtil.filterSsps(s.getSubjectStudyPeriods(), criteria.getStudyPeriod());
+            List<SubjectStudyPeriod> ssps = SubjectStudyPeriodUtil.filterSsps(s.getSubjectStudyPeriods(), period.getId());
             for (SubjectStudyPeriod ssp : ssps) {
                 teachers.addAll(StreamUtil.toMappedList(t -> t.getTeacher().getPerson(), ssp.getTeachers()));
             }
@@ -104,10 +109,16 @@ public class SubjectStudyPeriodSubjectSearchService {
     public byte[] searchBySubjectAsExcel(Long schoolId, SubjectStudyPeriodSearchCommand criteria) {
         List<SubjectStudyPeriodSearchDto> subjects = search(schoolId, criteria,
                 new PageRequest(0, Integer.MAX_VALUE, Direction.ASC, "code")).getContent();
-        
+
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("subjectstudyperiod.studyYear", criteria.getStudyYear() != null
+                ? AutocompleteResult.of(em.getReference(StudyYear.class, criteria.getStudyYear())) : "-");
+        parameters.put("subjectstudyperiod.period", criteria.getStudyPeriod() != null
+                ? em.getReference(StudyPeriod.class, criteria.getStudyPeriod()) : "-");
+
         Map<String, Object> data = new HashMap<>();
-        data.put("studyPeriod", em.getReference(StudyPeriod.class, criteria.getStudyPeriod()));
         data.put("subjects", subjects);
+        data.put("parameters", parameters);
         return xlsService.generate("searchBySubject.xls", data);
     }
 }

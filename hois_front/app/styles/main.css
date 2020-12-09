@@ -9,6 +9,10 @@ a, a:visited, a:hover
 	text-decoration: underline;
 }
 
+md-input-container.md-input-invalid .md-chips {
+  box-shadow: 0 2px rgb(221,44,0);
+}
+
 .hois-collapse {
 background-color: #EEEEEE;
 margin-bottom:18px;
@@ -1473,6 +1477,12 @@ label.required::after {
   width: 100%;
   border: 1px solid #ccc;
 
+}
+
+.subject-study-period th, .subject-study-period .fixed-cell {
+  background: #FAFAFA;
+  position: relative;
+  z-index: 10;
 }
 
 .subject-study-period td{

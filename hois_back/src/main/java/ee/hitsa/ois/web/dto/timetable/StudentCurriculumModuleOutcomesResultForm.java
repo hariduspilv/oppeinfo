@@ -11,6 +11,7 @@ public class StudentCurriculumModuleOutcomesResultForm extends VersionedCommand 
     private Long studentId;
     private GradeDto grade;
     private LocalDate gradeDate;
+    private Boolean removeStudentHistory = Boolean.FALSE;
     private String addInfo;
 
     public Long getId() {
@@ -43,6 +44,14 @@ public class StudentCurriculumModuleOutcomesResultForm extends VersionedCommand 
 
     public void setGradeDate(LocalDate gradeDate) {
         this.gradeDate = gradeDate;
+    }
+
+    public Boolean getRemoveStudentHistory() {
+        return removeStudentHistory;
+    }
+
+    public void setRemoveStudentHistory(Boolean removeStudentHistory) {
+        this.removeStudentHistory = removeStudentHistory;
     }
 
     public String getAddInfo() {

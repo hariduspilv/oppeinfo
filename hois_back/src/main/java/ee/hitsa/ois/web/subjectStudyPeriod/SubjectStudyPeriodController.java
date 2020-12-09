@@ -1,10 +1,13 @@
 package ee.hitsa.ois.web.subjectStudyPeriod;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
 import ee.hitsa.ois.service.StudyYearService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -106,5 +109,13 @@ public class SubjectStudyPeriodController {
     public AutocompleteResult getStudyPeriod(HoisUserDetails user, @WithEntity StudyPeriod studyPeriod) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, studyPeriod.getStudyYear().getSchool());
         return AutocompleteResult.ofWithYear(studyPeriod); 
+    }
+
+    @GetMapping("/hasSubgroupCapacities/{id:\\d+}")
+    public Map<String, Object> hasSubgroupAnyCapacities(HoisUserDetails user, @WithEntity SubjectStudyPeriodSubgroup subgroup) {
+        UserUtil.assertIsSchoolAdmin(user);
+        Map<String, Object> map = new HashMap<>();
+        map.put("has", Boolean.valueOf(subjectStudyPeriodService.hasSubgroupAnyCapacities(subgroup)));
+        return map;
     }
 }

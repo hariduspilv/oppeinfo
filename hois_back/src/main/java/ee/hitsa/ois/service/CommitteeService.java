@@ -157,9 +157,10 @@ public class CommitteeService {
 
     private List<ApelApplicationDecisionDto> getApelApplicationDecisions(Committee committee) {
         List<?> result = em.createNativeQuery("select aa.id, p.firstname, p.lastname, aa.decision from apel_application aa "
+        		+ "join apel_application_committee aac on aac.apel_application_id = aa.id "
                 + "join student s on aa.student_id = s.id "
                 + "join person p on s.person_id = p.id "
-                + "where aa.committee_id = ?1 and aa.decision is not null "
+                + "where aac.committee_id = ?1 and aa.decision is not null "
                 + "order by p.lastname, p.firstname")
                 .setParameter(1, EntityUtil.getId(committee))
                 .getResultList();

@@ -7,6 +7,7 @@ import java.util.Set;
 import javax.validation.Valid;
 
 import ee.hitsa.ois.web.commandobject.SchoolSearchCommand;
+import ee.hitsa.ois.web.dto.PersonResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -239,7 +240,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/teachers")
-    public Page<OccupiedAutocompleteResult> teachers(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
+    public Page<PersonResult> teachers(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
         return asPage(autocompleteService.teachers(user.getSchoolId(), lookup, true));
     }
     
@@ -249,7 +250,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/teachersList")
-    public List<OccupiedAutocompleteResult> teachersAsList(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
+    public List<PersonResult> teachersAsList(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
         return autocompleteService.teachers(user.getSchoolId(), lookup, false);
     }
     
@@ -259,7 +260,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/students")
-    public Page<AutocompleteResult> students(HoisUserDetails user, StudentAutocompleteCommand lookup) {
+    public Page<PersonResult> students(HoisUserDetails user, StudentAutocompleteCommand lookup) {
         if(user.isStudent()) {
             // student is allowed to lookup himself/herself
             lookup.setId(user.getStudentId());

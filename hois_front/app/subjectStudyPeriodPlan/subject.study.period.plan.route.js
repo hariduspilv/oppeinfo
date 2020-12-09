@@ -16,7 +16,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           }
         }
       })
-      .when('/subjectStudyPeriodPlans/:subjectId/:studyPeriodId/new', {
+      .when('/subjectStudyPeriodPlans/:subjectId/new', {
         templateUrl: 'subjectStudyPeriodPlan/subject.study.period.plan.edit.html',
         controller: 'subjectStudyPeriodPlanNewController',
         controllerAs: 'controller',

@@ -7,7 +7,7 @@
         <md-input-container flex="10" flex-lg="20" flex-md="20" flex-sm="100" flex-xs="100">
           <label ng-if="protocol.isFinalThesis" class="required">{{'finalProtocol.finalDateThesis' | translate}}</label>
           <label ng-if="!protocol.isFinalThesis" class="required">{{'finalProtocol.finalDateExam' | translate}}</label>
-          <md-datepicker ng-model="protocol.finalDate" ng-change="selectedFinalDateChanged()" ng-disabled="!formState.canEditProtocol" required></md-datepicker>
+          <md-datepicker ng-model="protocol.finalDate" aria-label="final date" ng-change="selectedFinalDateChanged()" ng-disabled="!formState.canEditProtocol" required></md-datepicker>
         </md-input-container>
       </div>
 
@@ -58,6 +58,7 @@
                   <th md-column>{{'finalProtocol.grade' | translate}}</th>
                   <th md-column ng-if="formState.canChangeConfirmedProtocolGrade">{{'finalProtocol.changeReason' | translate}}</th>
                   <th md-column ng-repeat="occupation in protocol.occupations">{{occupation | hoisValidDates}}</th>
+                  <th md-column ng-if="formState.showLanguageColumn">{{'finalProtocol.language' | translate}}</th>
                   <th md-column></th>
                 </tr>
               </thead>
@@ -83,6 +84,11 @@
                     <md-checkbox ng-model="row.occupations[occupation.code].granted" aria-label="{{occupation.code}}"
                     ng-disabled="!formState.canEditProtocol || !occupation.isOccupationGrant || (occupation.isOccupationGrant && (row.occupations[occupation.code].ceritificateId != null))"></md-checkbox>
                     {{row.occupations[occupation.code].certificateNr}}
+                  </td>
+                  <td md-cell ng-if="formState.showLanguageColumn">
+                    <hois-classifier-select ng-if="row.foreignStudyLanguage || row.language" ng-model="row.language" aria-label="language"
+                      main-classifier-code="OPPEKEEL" model-value-attr="code" show-only-values="formState.allowedLanguages"
+                      ng-disabled="!row.foreignStudyLanguage || row.hasCertificates || !formState.canEditProtocol"></hois-classifier-select>
                   </td>
                   <td md-cell>
                     <a ng-if="row.canBeDeleted && formState.canAddDeleteStudents" ng-click="deleteProtocolStudent(row)" class="remove">&times;</a>

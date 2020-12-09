@@ -61,6 +61,7 @@ public class SubjectStudyPeriodTeacherController {
         subjectStudyPeriodCapacitiesService.setSubjects(container);
         subjectStudyPeriodTeacherService.setSubjectStudyPeriodPlansToTeachersContainer(container);
         subjectStudyPeriodCapacitiesService.setCapacityTypes(user.getSchoolId(), container);
+        subjectStudyPeriodTeacherService.setTeacherContainerData(container);
         return container;
     }
 

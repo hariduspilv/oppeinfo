@@ -14,7 +14,6 @@ import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResult;
@@ -40,9 +39,6 @@ public class ApelApplication extends BaseEntityWithId {
     private Boolean isVocational;
     private String decision;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Committee committee;
-
     private LocalDate newNominalStudyEnd;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -50,6 +46,7 @@ public class ApelApplication extends BaseEntityWithId {
 
     private LocalDate oldNominalStudyEnd;
     private Boolean isEhisSent;
+    private Boolean isNew;
 
     @OneToMany(mappedBy="apelApplication", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ApelApplicationRecord> records = new ArrayList<>();
@@ -62,6 +59,9 @@ public class ApelApplication extends BaseEntityWithId {
 
     @OneToMany(mappedBy="apelApplication", cascade = CascadeType.ALL)
     private List<StudentCurriculumModuleOutcomesResult> outcomeResults = new ArrayList<>();
+    
+    @OneToMany(mappedBy="apelApplication", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ApelApplicationCommittee> committees = new ArrayList<>();
 
     public Student getStudent() {
         return student;
@@ -119,14 +119,6 @@ public class ApelApplication extends BaseEntityWithId {
         this.decision = decision;
     }
 
-    public Committee getCommittee() {
-        return committee;
-    }
-
-    public void setCommittee(Committee committee) {
-        this.committee = committee;
-    }
-
     public LocalDate getNewNominalStudyEnd() {
         return newNominalStudyEnd;
     }
@@ -157,6 +149,14 @@ public class ApelApplication extends BaseEntityWithId {
 
     public void setIsEhisSent(Boolean isEhisSent) {
         this.isEhisSent = isEhisSent;
+    }
+
+    public Boolean getIsNew() {
+        return isNew;
+    }
+
+    public void setIsNew(Boolean isNew) {
+        this.isNew = isNew;
     }
 
     public List<ApelApplicationRecord> getRecords() {
@@ -205,5 +205,13 @@ public class ApelApplication extends BaseEntityWithId {
 
     public void setSubmitted(LocalDate submitted) {
         this.submitted = submitted;
+    }
+
+    public List<ApelApplicationCommittee> getCommittees() {
+        return committees;
+    }
+
+    public void setCommittees(List<ApelApplicationCommittee> committees) {
+        this.committees = committees;
     }
 }

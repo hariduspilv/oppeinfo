@@ -11,6 +11,7 @@ public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     private EntityConnectionCommand teacherObject;
     private EntityConnectionCommand studentGroupObject;
     private EntityConnectionCommand curriculumObject;
+    private Long curriculumVersion;
     private List<Long> studyPeriods;
     private List<Long> studentGroup;
     private Long student;
@@ -81,6 +82,12 @@ public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     }
     public void setCurriculumObject(EntityConnectionCommand curriculumObject) {
         this.curriculumObject = curriculumObject;
+    }
+    public Long getCurriculumVersion() {
+        return curriculumVersion;
+    }
+    public void setCurriculumVersion(Long curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
     }
     public List<Long> getStudentGroup() {
         return studentGroup;

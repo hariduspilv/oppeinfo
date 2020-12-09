@@ -20,6 +20,7 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.PersonResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.studymaterial.JournalLessonHoursDto;
@@ -33,7 +34,7 @@ public class JournalDto {
     private LocalDate studyYearEndDate;
     private String nameEt;
     private List<String> studentGroups = new ArrayList<>();
-    private List<String> journalTeachers = new ArrayList<>();
+    private List<PersonResult> journalTeachers = new ArrayList<>();
     private List<AutocompleteResult> curriculumModules = new ArrayList<>();
     private List<String> responsiblesForModules = new ArrayList<>();
     private List<JournalCurriculumVersionDto> curriculumVersions = new ArrayList<>();
@@ -117,10 +118,12 @@ public class JournalDto {
 
         dto.setStudentGroups(dto.getStudentGroups().stream().distinct().collect(Collectors.toList()));
         dto.setCurriculumModules(dto.getCurriculumModules().stream().distinct().collect(Collectors.toList()));
-        
+
         for (JournalTeacher teacher : journal.getJournalTeachers()) {
-            dto.getJournalTeachers().add(PersonUtil.fullname(teacher.getTeacher().getPerson()));
+            dto.getJournalTeachers().add(PersonResult.of(teacher.getTeacher()));
         }
+        dto.getJournalTeachers().sort(PersonResult.SORT);
+
         dto.setJournalRooms(StreamUtil.toMappedList(r -> new AutocompleteResult(EntityUtil.getId(r.getRoom()),
                 r.getRoom().getCode(), r.getRoom().getCode()), journal.getJournalRooms()));
 
@@ -186,11 +189,11 @@ public class JournalDto {
         this.studentGroups = studentGroups;
     }
 
-    public List<String> getJournalTeachers() {
+    public List<PersonResult> getJournalTeachers() {
         return journalTeachers;
     }
 
-    public void setJournalTeachers(List<String> journalTeachers) {
+    public void setJournalTeachers(List<PersonResult> journalTeachers) {
         this.journalTeachers = journalTeachers;
     }
 

@@ -65,24 +65,29 @@
             </table>
             <div>&nbsp;</div>
             <div layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="!hasObligatoryStudentGroup">
+              <div layout="column" flex-gt-sm="45" flex="100">
+                <div layout="column" layout-gt-sm="row">
+                  <md-input-container flex="100" ng-if="!hasObligatoryStudentGroup">
                     <label>{{'subjectStudyPeriod.studentGroups' | translate}}</label>
                     <hois-select ng-model="record.studentGroups" values="studentGroups" multiple
-                        ng-disabled="!auth.isAdmin()" ng-required="record.declarationType === 'DEKLARATSIOON_KOIK'"></hois-select>
-                </md-input-container>
-                <md-input-container flex="10" flex-sm="100" flex-xs="100" ng-if="hasObligatoryStudentGroup">
+                                 ng-disabled="!auth.isAdmin()" ng-required="record.declarationType === 'DEKLARATSIOON_KOIK'"></hois-select>
+                  </md-input-container>
+                  <md-input-container flex="100" flex-gt-sm="30" ng-if="hasObligatoryStudentGroup">
                     <label>{{'subjectStudyPeriod.studentGroupPreselected' | translate}}</label>
-                    <input type="text" ng-model="studentGroup.code" readonly>
-                </md-input-container>
-                <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="hasObligatoryStudentGroup">
+                    <input type="text" ng-value="currentLanguageNameField(studentGroup)" readonly>
+                  </md-input-container>
+                  <md-input-container flex="100" flex-gt-sm="65" flex-offset-gt-sm="5" flex-offset="0" ng-if="hasObligatoryStudentGroup">
                     <label>{{'subjectStudyPeriod.otherStudentGroups' | translate}}</label>
                     <hois-select ng-model="record.studentGroups" values="studentGroups" multiple ng-disabled="!auth.isAdmin()"></hois-select>
-                </md-input-container>
-                <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                    <label>{{'subjectStudyPeriod.proportion' | translate}}</label>
-                    <hois-classifier-select ng-model="record.groupProportion" model-value-attr="code" main-classifier-code="PAEVIK_GRUPI_JAOTUS"
-                        ng-disabled="!auth.isAdmin()" required></hois-classifier-select>
-                </md-input-container>
+                  </md-input-container>
+                </div>
+                <div layout="row">
+                  <md-input-container class="readonly readonly-reverse-margin" flex="100">
+                    <label>{{'subjectStudyPeriod.overallStudentsInGroups' | translate}}</label>
+                    <hois-value value="record.students"></hois-value>
+                  </md-input-container>
+                </div>
+              </div>
             </div>
             <md-input-container>
                 <label>{{'subjectStudyPeriod.addInfo' | translate}}</label>
@@ -106,6 +111,17 @@
                         </div>
                       </div>
                 </md-input-container>
+            </div>
+            <div layout="row">
+              <md-input-container layout="row">
+                <md-checkbox ng-model="record.hasPlaces" aria-label="has limited places" ng-disabled="!auth.isAdmin()"
+                             ng-change="!record.hasPlaces && (record.places = undefined)"></md-checkbox>
+              </md-input-container>
+              <md-input-container layout="row">
+                <label>{{'subjectStudyPeriod.places' | translate}}</label>
+                <input type="number" ng-model="record.places" name="places" max="999" min="0"
+                       pattern="^\d+$" ng-disabled="!record.hasPlaces || !auth.isAdmin()"/>
+              </md-input-container>
             </div>
             <fieldset ng-if="record.canEditSubgroups || record.subgroups.length > 0">
                 <legend md-colors="{color: 'primary-800'}" class="md-title-small">

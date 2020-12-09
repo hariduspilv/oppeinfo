@@ -11,6 +11,7 @@ public class SchoolDto extends SchoolForm {
 
     private Long id;
     private SchoolType type;
+    private Long lastStudentRegNr;
 
     public Long getId() {
         return id;
@@ -26,6 +27,14 @@ public class SchoolDto extends SchoolForm {
 
     public void setType(SchoolType type) {
         this.type = type;
+    }
+
+    public Long getLastStudentRegNr() {
+        return lastStudentRegNr;
+    }
+
+    public void setLastStudentRegNr(Long lastStudentRegNr) {
+        this.lastStudentRegNr = lastStudentRegNr;
     }
 
     public static SchoolDto of(School school) {

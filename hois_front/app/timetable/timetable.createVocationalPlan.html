@@ -52,21 +52,27 @@
                 <th md-column ng-repeat="journal in plan.currentJournals" ng-if="showJournalPlannedLessons(journal)">
                   <span>
                     <span title="{{journal.name}}&#10;{{journal.teachersString}}">{{journal.name.substring(0, 4)}}</span>
-                    <br>
                     <span title="{{'timetable.timetablePlan.weekPlannedLessons' | translate}} / {{'timetable.timetablePlan.weekAllocatedLessons' | translate}}"
-                      ng-style="{'color': isUnderAllocatedWeekLessons(journal) ? 'rgba(0,0,0,0.87)' : 'red'}">
-                      {{getTotalsByJournal(journal, 'thisPlannedLessons')}}/{{getTotalsByJournal(journal, 'thisPlannedLessons') - getTotalsByJournal(journal, 'lessonsLeft')}}
+                      ng-style="{'color': journal.isUnderAllocatedWeekLessons ? 'rgba(0,0,0,0.87)' : 'red'}">
+                      {{journal.currentWeekPlannedLessons}}/{{journal.currentWeekAllocatedLessons}}
                     </span>
+                    <br>
                     <span ng-if="plan.displayPeriodLessons">
                       <span title="{{'timetable.timetablePlan.periodPlannedLessons' | translate}} / {{'timetable.timetablePlan.periodAllocatedLessons' | translate}}"
-                        ng-style="{'color': isUnderAllocatedTotalLessons(journal) ? 'rgba(0,0,0,0.87)' : 'red'}">
-                        ({{getTotalsByJournal(journal, 'totalPlannedLessons')}}/{{getTotalsByJournal(journal,'totalAllocatedLessons')}})
+                        ng-style="{'color': journal.isUnderAllocatedStudyPeriodLessons ? 'rgba(0,0,0,0.87)' : 'red'}">
+                        {{journal.studyPeriodPlannedLessons}}/{{journal.studyPeriodAllocatedLessons}}
                       </span>
                     </span>
                     <span ng-if="plan.displayLeftOverLessons">
-                      <span title="{{'timetable.timetablePlan.periodPlannedLessons' | translate}} + {{'timetable.timetablePlan.previousPeriodNotAllocatedLessons' | translate}} /&#10;{{'timetable.timetablePlan.periodAllocatedLessons' | translate}}"
-                        ng-style="{'color': isUnderLeftOverTotalLessons(journal) ? 'rgba(0,0,0,0.87)' : 'red'}">
-                        ({{getTotalsByJournal(journal, 'totalPlannedLessons') + getTotalsByJournal(journal, 'leftOverLessons')}}/{{getTotalsByJournal(journal,'totalAllocatedLessons')}})
+                      <span title="{{'timetable.timetablePlan.periodPlannedLessons' | translate}} + {{'timetable.timetablePlan.previousPeriodNotAllocatedLessons' | translate}} / {{'timetable.timetablePlan.periodAllocatedLessons' | translate}}"
+                        ng-style="{'color': journal.isUnderLeftOverStudyPeriodLessons ? 'rgba(0,0,0,0.87)' : 'red'}">
+                        {{journal.studyPeriodLeftOverLessons}}/{{journal.studyPeriodAllocatedLessons}}
+                      </span>
+                    </span>
+                    <span>
+                      <span title="{{'timetable.timetablePlan.yearPlannedLessons' | translate}} / {{'timetable.timetablePlan.yearAllocatedLessons' | translate}}"
+                        ng-style="{'color': journal.isUnderLeftOverStudyYearLessons ? 'rgba(0,0,0,0.87)' : 'red'}">
+                        ({{journal.studyYearPlannedLessons}}/{{journal.studyYearAllocatedLessons}})
                       </span>
                     </span>
                   </span>
@@ -77,19 +83,19 @@
               <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" id="timetable-planned">
                 <td md-cell ng-repeat="capacity in plan.currentCapacitiesGrouped track by $index" ng-if="showCurrentCapacitiesGrouped(capacity)" id="timetable-planned-column">
                   <div ng-repeat="current in capacity" class="timetable-planned-capacity">
-                    <div ng-if="!plan.displayPeriodLessons && !plan.displayLeftOverLessons && current.lessonsLeft > 0"
+                    <div ng-if="!plan.displayPeriodLessons && !plan.displayLeftOverLessons && current.currentWeekLessonsLeft > 0"
                       title="{{getByCapacity(current, 'name')}}/{{currentLanguageNameField(getCapacityType(current.capacityType))}}&#10;{{getByCapacity(current, 'teachersString')}}"
                       style="background-color: {{getByCapacity(current, 'color')}}" id="{{current.journal}}-{{count}}" ois-drag="true"
                       journal-id="{{current.journal}}" capacity-type="{{current.capacityType}}" class="timetable-drag">
                       <span>{{getByCapacity(current, 'name').substring(0, 4)}}/{{getCapacityTypeValue(current.capacityType)}}</span>
                     </div>
-                    <div ng-if="plan.displayPeriodLessons && current.totalLessonsLeft > 0"
+                    <div ng-if="plan.displayPeriodLessons && current.studyPeriodLessonsLeft > 0"
                       title="{{getByCapacity(current, 'name')}}/{{currentLanguageNameField(getCapacityType(current.capacityType))}}&#10;{{getByCapacity(current, 'teachersString')}}"
                       style="background-color: {{getByCapacity(current, 'color')}}" id="{{current.journal}}-{{count}}" ois-drag="true"
                       journal-id="{{current.journal}}" capacity-type="{{current.capacityType}}" class="timetable-drag">
                       <span>{{getByCapacity(current, 'name').substring(0, 4)}}/{{getCapacityTypeValue(current.capacityType)}}</span>
                     </div>
-                    <div ng-if="plan.displayLeftOverLessons && current.totalPlannedLessons + current.leftOverLessons > current.totalAllocatedLessons"
+                    <div ng-if="plan.displayLeftOverLessons && current.studyPeriodPlannedLessons + current.leftOverLessons > current.studyPeriodAllocatedLessons"
                       title="{{getByCapacity(current, 'name')}}/{{currentLanguageNameField(getCapacityType(current.capacityType))}}&#10;{{getByCapacity(current, 'teachersString')}}"
                       style="background-color: {{getByCapacity(current, 'color')}}" id="{{current.journal}}-{{count}}" ois-drag="true"
                       journal-id="{{current.journal}}" capacity-type="{{current.capacityType}}" class="timetable-drag">

@@ -38,7 +38,7 @@
           <td colspan="{{::formState.weekNrs.length+3}}" class="dividerBorder">
             <span class="bold">{{::journal.nameEt}}:</span>&nbsp;
             <span ng-repeat="theme in getUniqueJournalThemes(journal.themes)">
-              <span ng-if="!$first">,&nbsp;</span>{{::theme.nameEt}}&nbsp;{{::theme.credits}}&nbsp;{{'lessonplan.credits' | translate}} 
+              <span ng-if="!$first">,&nbsp;</span>{{::theme.nameEt}}&nbsp;{{::theme.credits}}&nbsp;{{'lessonplan.credits' | translate}}
               &nbsp;(<span ng-repeat="(hourCap, hourCount) in theme.hours">{{::getCapacityByCode(hourCap).value.toUpperCase()}}{{hourCount}}{{$last ? "" : "/"}}</span>)</span>
             <div ng-if="!auth.isAdmin()" style="float: right;">
               <md-checkbox disabled ng-model="journal.isFiller">{{'lessonplan.isFiller' | translate}}</md-checkbox>
@@ -71,7 +71,7 @@
           </td>
           <td class="center">{{ct.value.toUpperCase()}}</td>
           <td class="center dividerBorder">{{formState.journalTotals[journal.id][ct.code]}}</td>
-          <td ng-if="formState.showWeeks" ng-repeat="h in journal.hours[ct.code] track by $index" 
+          <td ng-if="formState.showWeeks" ng-repeat="h in journal.hours[ct.code] track by $index"
             ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">{{journal.hours[ct.code][$index]}}</td>
           <td ng-if="!formState.showWeeks" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in formState.studyPeriods track by $index"
             class="center dividerBorder">{{journal.spHours[ct.code][$index]}}</td>
@@ -101,7 +101,7 @@
           </td>
           <td>{{'lessonplan.total' | translate}}</td>
           <td class="center dividerBorder">{{formState.journalTotals[journal.id].__}}</td>
-          <td ng-if="formState.showWeeks" ng-repeat="w in formState.weekNrs track by $index" 
+          <td ng-if="formState.showWeeks" ng-repeat="w in formState.weekNrs track by $index"
             ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">{{formState.journalTotals[journal.id]._[$index]}}</td>
           <td ng-if="!formState.showWeeks" colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in formState.studyPeriods track by $index"
             class="center dividerBorder">{{formState.journalTotals[journal.id]._spTotals[$index]}}</td>
@@ -115,7 +115,7 @@
           </td>
           <td class="center">{{ct.value.toUpperCase()}}</td>
           <td class="center dividerBorder">{{formState.grandTotals._[ct.code]}}</td>
-          <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals[ct.code] track by $index" 
+          <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals[ct.code] track by $index"
             ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">{{h | hoisNumber:1}}</td>
           <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
             class="center dividerBorder">{{formState.capGrandTotalsSp[ct.code][$index] | hoisNumber:1}}</td>
@@ -123,7 +123,7 @@
         <tr>
           <td colspan="{{formState.showCapacityTypes ? 1 : 2}}">{{'lessonplan.total' | translate}}</td>
           <td class="center dividerBorder">{{formState.grandTotals.__}}</td>
-          <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals._._ track by $index" 
+          <td ng-if="formState.showWeeks" ng-repeat="h in formState.grandTotals._._ track by $index"
             ng-class="{dividerBorder: formState.weekNrs[$index].endOfPeriod}" class="center">{{h | hoisNumber:1}}</td>
           <td ng-if="!formState.showWeeks" ng-repeat="sp in formState.studyPeriods track by $index" colspan="{{::sp.weekNrs.length}}"
             class="center dividerBorder">{{formState.grandTotalsSp[$index] | hoisNumber:1}}</td>
@@ -139,10 +139,11 @@
         <tr>
           <th rowspan="2" class="dividerBorder"><span style="float: left;">{{'lessonplan.subjects' | translate}}</span></th>
           <th colspan="{{formState.capacityTypes.length}}" ng-repeat="sp in formState.studyPeriods" class="dividerBorder">{{currentLanguageNameField(sp)}}</th>
-          <th rowspan="2">{{'lessonplan.total' | translate}}</th>
+          <th rowspan="2">{{'subjectStudyPeriod.overallTeacher' | translate}}</th>
+          <th rowspan="2">{{'subjectStudyPeriod.eap' | translate}}</th>
         </tr>
         <tr>
-          <td ng-if="formState.subjectCapacityTypes.length" ng-repeat="sct in formState.subjectCapacityTypes track by $index" class="center" 
+          <td ng-if="formState.subjectCapacityTypes.length" ng-repeat="sct in formState.subjectCapacityTypes track by $index" class="center"
             ng-class="{dividerBorder: sct.endOfPeriod}">{{sct.value.toUpperCase()}}</td>
           <td ng-if="!formState.subjectCapacityTypes.length" ng-repeat="sp in formState.studyPeriods" class="center">-</td>
         </tr>
@@ -154,34 +155,56 @@
                   <span>{{currentLanguageNameField(subject)}}</span>
               </td>
               <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{(subject.hours[sct.studyPeriod] || {})[sct.code]}}</td>
-              <td>{{sumSubjectHours(subject.hours)}}</td>
+            <td>{{sumSubjectHours(subject.hours)}}</td>
+            <td>{{toEap(sumSubjectHours(subject.hours), 2) | number: 2}}</td>
           </tr>
           <tr ng-repeat="studentGroup in subject.studentGroups">
               <td class="dividerBorder">
                 <span>{{studentGroup.studentGroups.join(', ')}}</span>
-                <span ng-if="subject.groupProportion && subject.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'" style="float: right;">
-                    <span class="subject-study-period-proportion">{{'subjectStudyPeriod.proportion' | translate | lowercase}}:
-                        <hois-classifier-value ng-model="subject.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
-                    </span>
+                <span ng-if="studentGroup.subgroups > 0">
+                  <span class="subject-study-period-proportion">{{'subjectStudyPeriod.subgroups.label' | translate | lowercase}}:
+                    {{studentGroup.subgroups}}
+                  </span>
                 </span>
               </td>
               <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">
                   {{(studentGroup.hours[sct.studyPeriod] || {})[sct.code]}}
               </td>
               <td>{{sumSubjectHours(studentGroup.hours)}}</td>
+              <td>{{toEap(sumSubjectHours(studentGroup.hours), 2) | number: 2}}</td>
           </tr>
           <!-- Total -->
           <tr class="bold">
-              <td class="dividerBorder">{{'lessonplan.total' | translate}}</td>
+              <td class="dividerBorder">{{'subjectStudyPeriod.overallSubject' | translate}}</td>
               <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{(subject.capacityTotals[sct.studyPeriod] || {})[sct.code] || 0}}</td>
               <td>{{sumSubjectHours(subject.capacityTotals)}}</td>
+              <td></td>
+          </tr>
+          <tr class="bold">
+            <td class="dividerBorder">{{'subjectStudyPeriod.eap' | translate}}</td>
+            <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{toEap((subject.capacityTotals[sct.studyPeriod] || {})[sct.code] || 0, 2) | number: 2}}</td>
+            <td></td>
+            <td>{{toEap(sumSubjectHours(subject.capacityTotals), 2) | number: 2}}</td>
           </tr>
       </tbody>
       <!-- Grand Total -->
       <tr class="bold bold-top-line" md-colors="{background: 'background-200'}">
-          <td class="dividerBorder">{{'lessonplan.grandTotal' | translate | uppercase}}</td>
-          <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{(record.subjectTotals[sct.studyPeriod] || {})[sct.code] || 0}}</td>
-          <td>{{sumSubjectHours(record.subjectTotals)}}</td>
+        <td class="dividerBorder">{{'lessonplan.grandTotal' | translate | uppercase}}</td>
+        <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{(record.subjectTotals[sct.studyPeriod] || {})[sct.code] || 0}}</td>
+        <td>{{sumSubjectHours(record.subjectTotals)}}</td>
+        <td></td>
+      </tr>
+      <tr class="bold" md-colors="{background: 'background-200'}">
+        <td class="dividerBorder">{{'subjectStudyPeriod.eap' | translate}}</td>
+        <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{toEap((record.subjectTotals[sct.studyPeriod] || {})[sct.code] || 0, 2) | number: 2}}</td>
+        <td></td>
+        <td>{{toEap(sumSubjectHours(record.subjectTotals), 2) | number: 2}}</td>
+      </tr>
+      <tr class="bold" md-colors="{background: 'background-200'}">
+        <td class="dividerBorder">{{'subjectStudyPeriod.overallContact' | translate}}</td>
+        <td ng-repeat="sct in formState.subjectCapacityTypes track by $index" ng-class="{dividerBorder: sct.endOfPeriod}">{{(record.subjectContactTotals[sct.studyPeriod] || {})[sct.code] || 0}}</td>
+        <td>{{sumSubjectHours(record.subjectContactTotals)}}</td>
+        <td>{{toEap(sumSubjectHours(record.subjectContactTotals), 2) | number: 2}}</td>
       </tr>
     </table>
   </md-table-container>

@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectViewController', 
+angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectViewController',
   function ($scope, QueryUtils, $route, Classifier, SspCapacities, USER_ROLES, AuthService) {
     $scope.auth = $route.current.locals.auth;
     $scope.canEdit = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_M_TEEMAOIGUS_KOORM);
@@ -17,6 +17,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectViewController',
     $scope.record.$promise.then(function(response){
         $scope.capacitiesUtil = new SspCapacities(response);
         $scope.capacityTypes = response.capacityTypes;
+        $scope.$broadcast('refreshFixedColumns');
+        $scope.$broadcast('refreshFixedTableHeight');
     });
     $scope.subject = QueryUtils.endpoint('/subjectStudyPeriods/subject/' + subject).get();
 

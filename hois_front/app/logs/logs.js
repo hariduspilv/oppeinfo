@@ -5,7 +5,7 @@ angular.module('hitsaOis').controller('LogsController', ['$mdDialog', '$route', 
     $scope.auth = $route.current.locals.auth;
     
     var messageTypes = {
-      ekis: ['registerDirective', 'deleteDirective', 'registerCertificate', 'registerPracticeContract', 'enforceContract', 'enforceDirective', 'rejectDirective'],
+      ekis: ['registerDirective', 'deleteDirective', 'registerCertificate', 'registerPracticeContract', 'cancelPracticeContract','enforceContract', 'rejectContract', 'enforceDirective', 'rejectDirective'],
       kutseregister: [$scope.auth.roleCode === 'ROLL_P' ? 'kutseregister.muutunudKutsestandardid' : 'kutseregister.kutsetunnistus'],
       rtip: ['sap.Z_EMPLOEES', 'sap.tootajaPohiandmed'],
       sais: ['sais2.AllAdmissionsExport', 'sais2.AllApplicationsExport'],

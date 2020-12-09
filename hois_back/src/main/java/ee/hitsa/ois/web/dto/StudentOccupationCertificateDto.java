@@ -23,6 +23,7 @@ public class StudentOccupationCertificateDto {
     private final LocalDate validFrom;
     private final LocalDate validThru;
     private final String language;
+    private final String languageCode;
 
     public StudentOccupationCertificateDto(String certificateNr, String occupationCode, String partOccupationCode, String specialityCode) {
         this.certificateNr = certificateNr;
@@ -40,6 +41,7 @@ public class StudentOccupationCertificateDto {
         validFrom = null;
         validThru = null;
         language = null;
+        languageCode = null;
     }
 
     public StudentOccupationCertificateDto(StudentOccupationCertificate certificate) {
@@ -68,6 +70,7 @@ public class StudentOccupationCertificateDto {
         validFrom = certificate.getValidFrom();
         validThru = certificate.getValidThru();
         language = certificate.getLanguage();
+        languageCode = EntityUtil.getNullableCode(certificate.getLanguageCode());
     }
 
     public String getCertificateNr() {
@@ -124,6 +127,10 @@ public class StudentOccupationCertificateDto {
 
     public String getLanguage() {
         return language;
+    }
+
+    public String getLanguageCode() {
+        return languageCode;
     }
 
     public String getPartOccupationSpecialityCode() {

@@ -20,6 +20,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$
     });
 
     function initializeData(result) {
+      DataUtils.convertStringToDates(result, ['startDate', 'endDate']);
       $scope.capacityTypes = result.timetableCapacities;
 
       $scope.plan = result;
@@ -47,6 +48,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$
       $scope.plan.studentGroups.forEach(function (it) {
         it.dropdownValue = "GROU-" + it.id;
       });
+      $scope.plan.repeatUntil = result.endDate;
       setCapacities();
       setAllGroups(true);
       setCurrentDatesForTimetable();
@@ -142,11 +144,6 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$
       });
     };
 
-    $scope.getCountForCapacity = function (capacity) {
-      capacity.thisAllocatedLessons = 0;
-      return capacity.thisPlannedLessons - capacity.thisAllocatedLessons;
-    };
-
     $scope.getRoomCodes = function (rooms) {
       return rooms.map(function (a) {
         return a.nameEt;
@@ -234,7 +231,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$
           }
         });
 
-        dialogScope.teachers = capacity.teachers;
+        dialogScope.teachers = (capacity.teachers || []);
         dialogScope.teachers.forEach(function (it) {
           if (angular.isArray(currentEvent.teachers)) {
             it.isTeaching = currentEvent.teachers.includes(it.id);
@@ -258,7 +255,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$
           });
         }
 
-        dialogScope.lessonHeader = $scope.currentLanguageNameField(capacity.subject) + ", " + capacity.teachers.map(function (teacher) {
+        dialogScope.lessonHeader = $scope.currentLanguageNameField(capacity.subject) + ", " + (capacity.teachers || []).map(function (teacher) {
           return teacher.nameEt;
         }).join(", ");
         dialogScope.lessonCapacityName = $scope.getCapacityType(currentEvent.capacityType);
@@ -476,11 +473,11 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$
 
     $scope.saveEventAfterCheck = function (params, allGroups, isSubjectTeacherPair, startTime) {
       var occupiedQuery = {
-        timetable: $scope.timetableId,
         oldEventId: params.oldEventId,
         startTime: startTime,
         subjectStudyPeriod: params.journalId,
-        repeatCode: $scope.plan.repeatCode,
+        repeatCode: params.oldEventId === '' ? $scope.plan.repeatCode : null,
+        repeatUntil: params.oldEventId === '' ? $scope.plan.repeatUntil : null,
         lessonAmount: $scope.plan.lessonAmount,
         room: angular.isDefined($scope.plan.eventRoom) ? $scope.plan.eventRoom.id : null
       };
@@ -509,7 +506,8 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$
         capacityType: params.capacityType,
         subjectStudyPeriod: params.journalId,
         studentGroupId: $scope.plan.selectedGroup.substr(5),
-        repeatCode: $scope.plan.repeatCode,
+        repeatCode: params.oldEventId === '' ? $scope.plan.repeatCode : null,
+        repeatUntil: params.oldEventId === '' ? $scope.plan.repeatUntil : null,
         lessonAmount: $scope.plan.lessonAmount,
         room: $scope.plan.eventRoom,
         isSubjectTeacherPair: isSubjectTeacherPair,
@@ -716,7 +714,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$q', '$
             return cap.studentGroup !== null && cap.studentGroup.id === currGroup.id;
           });
           currCapacities.forEach(function (currCap) {
-            currCap.teachers.forEach(function (currTeacher) {
+            (currCap.teachers || []).forEach(function (currTeacher) {
               if (currGroup.teacherIds.indexOf(currTeacher.id) === -1) {
                 currGroup.teacherIds.push(currTeacher.id);
                 currGroup.teachers.push(currTeacher);

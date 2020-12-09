@@ -31,7 +31,7 @@
             <td md-cell>
               <span>{{row.nameEt ? row.nameEt : '-'}}</span>
               <span ng-if="row.nameEt && row.content">/</span>
-              <hois-value value="row.content"></hois-value>
+              <hois-value value="row.content" hois-linky></hois-value>
             </td>
             <td md-cell>
               <span layout="row" layout-align="none center">
@@ -61,7 +61,7 @@
               </span>
             </td>
             <td md-cell>
-              <hois-value value="row.homework ? row.homework : '-'"></hois-value>
+              <hois-value value="row.homework ? row.homework : '-'" hois-linky></hois-value>
             </td>
             <td md-cell>{{row.homeworkDueDate ? (row.homeworkDueDate | hoisDate) : '-' }}</td>
             <td md-cell>
@@ -103,7 +103,7 @@
               </tr>
               <tr md-row ng-if="row.content">
                 <td md-cell>
-                  <hois-value value="row.content"></hois-value>
+                  <hois-value value="row.content" hois-linky></hois-value>
                 </td>
               </tr>
               <tr md-row ng-if="row.grade || row.verbalGrade || row.previousResults.length > 0">
@@ -160,7 +160,7 @@
               </tr>
               <tr md-row ng-if="row.homework">
                 <td md-cell>
-                  <hois-value value="row.homework"></hois-value>
+                  <hois-value value="row.homework" hois-linky></hois-value>
                 </td>
               </tr>
               <tr md-row ng-if="row.homeworkDueDate">

@@ -33,6 +33,7 @@ public class DeclarationSubjectDto extends VersionedCommand {
     private Set<PrerequisiteSubjectDto> recommendedPrerequisiteSubjects;
     private Boolean isDeclaredRepeatedly;
     private Boolean isAssessed;
+    private Boolean hasPlaces;
     private AutocompleteResult subgroup;
     private Set<AutocompleteResult> subgroups;
     private List<AutocompleteResult> studentGroups;
@@ -180,11 +181,9 @@ public class DeclarationSubjectDto extends VersionedCommand {
         return programs;
     }
 
-
     public void setPrograms(List<SubjectProgramResult> programs) {
         this.programs = programs;
     }
-
 
     public AutocompleteResult getModule() {
         return module;
@@ -210,13 +209,19 @@ public class DeclarationSubjectDto extends VersionedCommand {
         this.subgroups = subgroups;
     }
 
-
     public List<AutocompleteResult> getStudentGroups() {
         return studentGroups;
     }
 
-
     public void setStudentGroups(List<AutocompleteResult> studentGroups) {
         this.studentGroups = studentGroups;
+    }
+
+    public Boolean getHasPlaces() {
+        return hasPlaces;
+    }
+
+    public void setHasPlaces(Boolean hasPlaces) {
+        this.hasPlaces = hasPlaces;
     }
 }

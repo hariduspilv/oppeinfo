@@ -2,11 +2,11 @@
 
 function compareSubgroups(a, b) {
   var result = a.code.localeCompare(b.code);
-            
+
   if (result !== 0) {
       return result;
   }
-  
+
   if (a.teacher === b.teacher) {
       return 0;
   }
@@ -15,10 +15,10 @@ function compareSubgroups(a, b) {
   } else if (!b.teacher) {
       return 1;
   }
-  
+
   // AutocompleteResult for teacher has the same value for nameEt, nameEn, nameRu
   result = a.teacher.nameEt.localeCompare(b.teacher.nameEt);
-  
+
   if (result !== 0) {
       return result;
   }
@@ -31,7 +31,7 @@ function compareSubgroups(a, b) {
   } else if (!b.id) {
       return -1;
   }
-  
+
   return b.id - a.id;
 }
 
@@ -89,8 +89,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
 
     $scope.testStatus = { code: "AINEPROGRAMM_STAATUS_L"};
   }
-]).controller('SubjectStudyPeriodEditController', ['$location', '$route', '$rootScope', '$scope', '$q', 'ArrayUtils', 'DeclarationType', 'QueryUtils', 'dialogService', 'message',
-  function ($location, $route, $rootScope, $scope, $q, ArrayUtils, DeclarationType, QueryUtils, dialogService, message) {
+]).controller('SubjectStudyPeriodEditController', ['$location', '$route', '$rootScope', '$scope', '$q', 'ArrayUtils', 'DeclarationType', 'QueryUtils', 'dialogService', 'message', 'StudentUtil',
+  function ($location, $route, $rootScope, $scope, $q, ArrayUtils, DeclarationType, QueryUtils, dialogService, message, StudentUtil) {
     $scope.auth = $route.current.locals.auth;
 
     var baseUrl = '/subjectStudyPeriods';
@@ -115,8 +115,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
           return studentGroupId ? el.id !== studentGroupId : true;
       }).map(function(el){
           var newEl = el;
-          newEl.nameEt = el.code;
-          newEl.nameEn = el.code;
+          newEl.nameEt = el.code + (el.studentCount !== null ? ' (' + el.studentCount + ')' : ' (0)');
+          newEl.nameEn = el.code + (el.studentCount !== null ? ' (' + el.studentCount + ')' : ' (0)');
           return newEl;
       });
     });
@@ -126,7 +126,13 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
     });
 
     if(studentGroupId) {
-      $scope.studentGroup = QueryUtils.endpoint('/studentgroups').get({id: studentGroupId});
+      $scope.studentGroup = QueryUtils.endpoint('/studentgroups').get({id: studentGroupId}, function (result) {
+        result.studentCount = (result.members || []).filter(function (m) {
+          return StudentUtil.isActive(m.status);
+        }).length;
+        result.nameEt = result.code + (result.studentCount !== null ? ' (' + result.studentCount + ')' : ' (0)');
+        result.nameEn = result.code + (result.studentCount !== null ? ' (' + result.studentCount + ')' : ' (0)');
+      });
     }
 
     $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriodsWithYear').query({}, function (response) {
@@ -331,6 +337,20 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
     }
 
     function removeSubgroup(subgroup) {
+      if (subgroup.id) {
+        QueryUtils.endpoint(baseUrl + "/hasSubgroupCapacities/" + subgroup.id).search({}, function (result) {
+          if (result.has) {
+            dialogService.confirmDialog(
+              {prompt: 'subjectStudyPeriod.subgroups.hasAnyCapacities'},
+              function () { removeSubgroupCore(subgroup)} );
+          } else {
+            removeSubgroupCore(subgroup);
+          }
+        })
+      }
+    }
+
+    function removeSubgroupCore(subgroup) {
       ArrayUtils.remove($scope.record.subgroups, subgroup);
     }
 
@@ -368,8 +388,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
     QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list').query(function(result) {
         $scope.studentGroups = result.map(function(el){
             var newEl = el;
-            newEl.nameEt = el.code;
-            newEl.nameEn = el.code;
+            newEl.nameEt = el.code + (el.studentCount !== null ? ' (' + el.studentCount + ')' : ' (0)');
+            newEl.nameEn = el.code + (el.studentCount !== null ? ' (' + el.studentCount + ')' : ' (0)');
             return newEl;
         });
         $scope.record.subgroups.sort(compareSubgroups);

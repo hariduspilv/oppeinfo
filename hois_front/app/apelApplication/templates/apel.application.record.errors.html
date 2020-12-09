@@ -1,0 +1,5 @@
+<div ng-if="record.errorMessages && record.errorMessages.length > 0">
+  <hois-whiteframe-warning ng-repeat="error in record.errorMessages">
+    <span>{{error | translate}}</span>
+  </hois-whiteframe-warning>
+</div>

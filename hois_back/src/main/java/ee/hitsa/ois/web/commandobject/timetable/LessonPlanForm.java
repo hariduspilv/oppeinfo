@@ -6,6 +6,8 @@ import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
@@ -13,6 +15,8 @@ public class LessonPlanForm extends VersionedCommand {
 
     private Boolean isUsable;
     private Boolean showWeeks;
+    @ClassifierRestriction(MainClassCode.KOEFITSIENT)
+    private String coefficient;
     @Valid
     private List<? extends LessonPlanModuleForm> modules;
 
@@ -30,6 +34,14 @@ public class LessonPlanForm extends VersionedCommand {
 
     public void setShowWeeks(Boolean showWeeks) {
         this.showWeeks = showWeeks;
+    }
+
+    public String getCoefficient() {
+        return coefficient;
+    }
+
+    public void setCoefficient(String coefficient) {
+        this.coefficient = coefficient;
     }
 
     public List<? extends LessonPlanModuleForm> getModules() {

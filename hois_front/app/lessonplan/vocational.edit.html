@@ -1,3 +1,4 @@
+<form name="lessonPlanForm">
 <div ng-cloak class="ois-form-layout-padding">
   <div layout="column">
     <div flex="30" class="md-title">
@@ -22,7 +23,14 @@
         </span>
       </div>
     </div>
+
+    <div flex layout="row">
+      <span class="common-label" flex="15" flex-xl="10">{{'lessonplan.coefficient' | translate}}:</span>
+      <hois-classifier-radio layout="row" ng-model="record.coefficient" model-value-attr="code"
+        main-classifier-code="KOEFITSIENT" ng-disabled="isView || !canEdit"></hois-classifier-radio>
+    </div>
   </div>
+  <div>&nbsp;</div>
 
     <fieldset tabindex="1">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'lessonplan.showPeriods' | translate}}</legend>
@@ -51,3 +59,4 @@
   <md-button ng-if="!isView" ng-click="back()" class="md-raised">{{'main.button.back' | translate}}</md-button>
   <md-button ng-if="isView" ng-href="#/lessonplans/vocational" class="md-raised">{{'main.button.back' | translate}}</md-button>
 </div>
+</form>

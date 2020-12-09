@@ -7,14 +7,18 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.subjectstudyperiod.SubjectStudyPeriodExistingPlanDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.StudyPeriod;
@@ -94,8 +98,19 @@ public class SubjectStudyPeriodStudentGroupController {
     }
 
     @GetMapping("/list/limited/{studyPeriodId:\\d+}")
-    public List<StudentGroupSearchDto> getStudentGroupsFilteredList(HoisUserDetails user, @PathVariable("studyPeriodId") Long studyPeriodId) {
-        return subjectStudyPeriodStudentGroupService.getStudentGroupsList(user.getSchoolId(), studyPeriodId);
+    public List<StudentGroupSearchDto> getStudentGroupsFilteredListViaPath(
+            HoisUserDetails user,
+            @PathVariable("studyPeriodId") Long studyPeriodId,
+            @RequestParam(value = "name", required = false) String name) {
+        return subjectStudyPeriodStudentGroupService.getStudentGroupsList(user.getSchoolId(), studyPeriodId, name);
+    }
+
+    @GetMapping("/list/limited")
+    public List<StudentGroupSearchDto> getStudentGroupsFilteredListViaParam(
+            HoisUserDetails user,
+            @RequestParam("studyPeriodId") Long studyPeriodId,
+            @RequestParam(value = "name", required = false) String name) {
+        return subjectStudyPeriodStudentGroupService.getStudentGroupsList(user.getSchoolId(), studyPeriodId, name);
     }
 
     @GetMapping("/curriculum/{id:\\d+}")
@@ -114,7 +129,27 @@ public class SubjectStudyPeriodStudentGroupController {
     public List<CurriculumSearchDto> getCurricula(HoisUserDetails user) {
         return subjectStudyPeriodStudentGroupService.getCurricula(user.getSchoolId());
     }
-    
+
+    @GetMapping("/existingPlans/{periodId:\\d+}/{groupId:\\d+}")
+    public List<SubjectStudyPeriodExistingPlanDto> getExistingStudentGroupsByPeriods(HoisUserDetails user,
+                                                                                     @WithEntity("periodId") StudyPeriod period,
+                                                                                     @WithEntity("groupId") StudentGroup group) {
+        UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KOORM);
+        UserUtil.assertSameSchool(user, period.getStudyYear().getSchool());
+        UserUtil.assertSameSchool(user, group.getSchool());
+        return subjectStudyPeriodStudentGroupSearchService.getExistingPlans(user.getSchoolId(), period, group);
+    }
+
+    @PostMapping("/copyPlan/{periodId:\\d+}/{groupId:\\d+}/{sourcePeriodId:\\d+}/{sourceGroupId:\\d+}")
+    public void copyPlan(HoisUserDetails user,
+                         @WithEntity("periodId") StudyPeriod period,
+                         @WithEntity("groupId") StudentGroup group,
+                         @WithEntity("sourcePeriodId") StudyPeriod sourcePeriod,
+                         @WithEntity("sourceGroupId") StudentGroup sourceGroup) {
+        UserUtil.assertHasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_KOORM);
+        subjectStudyPeriodStudentGroupService.copyPlan(user.getSchoolId(), period, group, sourcePeriod, sourceGroup);
+    }
+
     @GetMapping("/curriculumProgram/{studyPeriod:\\d+}/{studentGroup:\\d+}")
     public Map<Short, List<CurriculumProgramDto>> getCurriculumProgram(HoisUserDetails user, @WithEntity("studentGroup") StudentGroup group,
             @WithEntity("studyPeriod") StudyPeriod period) {

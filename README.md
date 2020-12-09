@@ -1,4 +1,4 @@
-VERSIOON:  2.4.0/20201112
+VERSIOON:  2.5.0/20201210
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -10,24 +10,24 @@ README.md - tarne ja installeerimise kirjeldus
 /hois_html - rakenduse genereeritud html-id
 
 
-EELDUS: ver. 2.3.0/20201015
+EELDUS: ver. 2.4.0/20201112
 ------------------------------------------------------
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20201112.sql
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20201210.sql
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
 
 Andmebaasi installeerimiseks:
-1. käivitada install20201112.sql skript, nt
+1. käivitada install20201210.sql skript, nt
    
-   psql -h devhois -f install20201112.sql 2>&1 | tee log.txt
+   psql -h devhois -f install20201210.sql 2>&1 | tee log.txt
    
    , kus
    
    -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install20201112.sql - install faili nimi
+   -f install20201210.sql - install faili nimi
    log.txt - andmebaasi installeerimise logi fail
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja viiakse andmebaasi vastavad muudatused sisse
@@ -40,8 +40,15 @@ RAKENDUSE INSTALLEERIMINE:
 	1. Teisendada Fujitsu Laotajas asuv hois_back.jar /opt/hois kausta
 	2. Lisada application.properties võõrkeelte saatmiseks vajalikud parameetrid
 	
-	# tulevase tunniplaani edastamise sagedust iga neljap kell 04:00
-	hois.jobs.timetable.teacherSchedule.cron=0 0 4 * * 4
+	# reg.nr genereerimiseks vajalik tabeli lukustamise timeout (millisekundites)
+	hois.pessimisticLock.timeout=30000
+	
+	# mõningate avalike urlide välja lülitamine
+	endpoints.enabled=false
+	endpoints.info.enabled=true
+	endpoints.health.enabled=true
+	endpoints.health.sensitive=true
+	endpoints.metrics.enabled=true
 
 	
 	3. käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.

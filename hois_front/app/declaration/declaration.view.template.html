@@ -1,4 +1,4 @@
-<fieldset ng-cloak ng-if="(!wrapper.formState.isNextPeriod || wrapper.declaration.id) || wrapper.formState.type === DECLARATION_PERIOD_TYPE.CURRENT">
+<fieldset ng-cloak ng-if="(!wrapper.formState.isNextPeriod || wrapper.declaration.id) || ((wrapper.formState.isNextPeriod && auth.isAdmin()) || wrapper.formState.type === DECLARATION_PERIOD_TYPE.CURRENT)">
   <legend md-colors="{color: 'primary-800'}" class="md-title-small period" ng-if="wrapper.declaration.studyPeriod">
     {{currentLanguageNameField(wrapper.declaration.studyPeriod)}}
     <span ng-if="wrapper.formState.type === DECLARATION_PERIOD_TYPE.CURRENT && wrapper.formState.declarationPeriodStart && wrapper.formState.declarationPeriodEnd">
@@ -117,11 +117,11 @@
   </div>
 
   <div layout-padding>
-    <div ng-show="wrapper.formState.noDeclaration && wrapper.formState.type === DECLARATION_PERIOD_TYPE.CURRENT">
+    <div ng-show="wrapper.formState.noDeclaration && ((wrapper.formState.isNextPeriod && auth.isAdmin()) || wrapper.formState.type === DECLARATION_PERIOD_TYPE.CURRENT)">
       <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
         <div md-colors="{color: 'warn'}">
           <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-          <span>{{'declaration.noCurrentDeclaration' | translate}}</span>
+          <span>{{'declaration.no' + (wrapper.formState.isNextPeriod ? 'Next' : 'Current') + 'Declaration' | translate}}</span>
         </div>
       </md-whiteframe>
       <div ng-if="isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_OPINGUKAVA')" layout="row">
@@ -129,7 +129,7 @@
         ng-click="addDeclaration(wrapper.formState.isNextPeriod)">{{'main.button.add' | translate}}</md-button>
       </div>
     </div>
-    <div ng-show="wrapper.formState.noDeclaration && wrapper.formState.type !== DECLARATION_PERIOD_TYPE.CURRENT && !wrapper.formState.declarationPeriodStart && !wrapper.formState.declarationPeriodEnd">
+    <div ng-show="wrapper.formState.noDeclaration && (!(wrapper.formState.isNextPeriod && auth.isAdmin()) && wrapper.formState.type !== DECLARATION_PERIOD_TYPE.CURRENT) && !wrapper.formState.declarationPeriodStart && !wrapper.formState.declarationPeriodEnd">
       <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
         <div md-colors="{color: 'accent'}">
           <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
@@ -137,7 +137,7 @@
         </div>
       </md-whiteframe>
     </div>
-    <div ng-show="wrapper.formState.noDeclaration && wrapper.formState.type === DECLARATION_PERIOD_TYPE.AFTER && wrapper.formState.declarationPeriodEnd">
+    <div ng-show="wrapper.formState.noDeclaration && (!(wrapper.formState.isNextPeriod && auth.isAdmin()) && wrapper.formState.type === DECLARATION_PERIOD_TYPE.AFTER) && wrapper.formState.declarationPeriodEnd">
       <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
         <div md-colors="{color: 'accent'}">
           <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>
@@ -145,7 +145,7 @@
         </div>
       </md-whiteframe>
     </div>
-    <div ng-show="wrapper.formState.noDeclaration && wrapper.formState.type === DECLARATION_PERIOD_TYPE.BEFORE && wrapper.formState.declarationPeriodStart">
+    <div ng-show="wrapper.formState.noDeclaration && (!(wrapper.formState.isNextPeriod && auth.isAdmin()) && wrapper.formState.type === DECLARATION_PERIOD_TYPE.BEFORE) && wrapper.formState.declarationPeriodStart">
       <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
         <div md-colors="{color: 'accent'}">
           <md-icon md-colors="{color: 'accent'}" md-font-set="material-icons">info_outline</md-icon>

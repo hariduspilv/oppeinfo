@@ -1,5 +1,5 @@
 <div class="ois-form-layout-padding nomargin">
-  
+
   <form name="replaceModuleForm" layout="column" ng-show="showReplaceMenu">
     <div class="form-readonly" layout="column">
       <md-input-container flex>
@@ -82,7 +82,7 @@
       <md-button class="md-raised" ng-click="switchView(false)">{{'main.button.back' | translate}}</md-button>
     </div>
   </form>
-  
+
   <form ng-cloak name="vocationalCurriculumModuleForm" ng-show="!showReplaceMenu">
     <div layout="column" ng-cloak>
       <div layout="column" flex layout-gt-sm="row">
@@ -232,7 +232,13 @@
         </div>
         <div layout="column">
           <div ng-repeat="item in module.outcomes track by $index" class="occupation-row align-center" layout="row" flex>
-            <div flex="45">
+            <div flex="2">
+              <a ng-click="editOutcome(item)" ng-show="!(module.baseModule || moduleType === moduleTypes.BASE_MODULE)">
+                {{'module.outcome' | translate}}{{item.orderNr + 1}}
+              </a>
+              <p ng-show="module.baseModule || moduleType === moduleTypes.BASE_MODULE">{{'module.outcome' | translate}}{{item.orderNr + 1}}</p>
+            </div>
+            <div flex="40" flex-offset="5">
               <a ng-click="editOutcome(item)" ng-show="!(module.baseModule || moduleType === moduleTypes.BASE_MODULE)">
                 <p class="scrollable">{{item.outcomeEt}}</p>
               </a>

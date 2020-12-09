@@ -10,6 +10,7 @@ public class StudentGroupSearchDto {
     private Long id;
     private String code;
     private AutocompleteResult curriculum;
+    private AutocompleteResult curriculumVersion;
     private Short curriculumVersionAdmissinYear;
     private String studyForm;
     private String teacher;
@@ -45,6 +46,14 @@ public class StudentGroupSearchDto {
 
     public void setCurriculum(AutocompleteResult curriculum) {
         this.curriculum = curriculum;
+    }
+
+    public AutocompleteResult getCurriculumVersion() {
+        return curriculumVersion;
+    }
+
+    public void setCurriculumVersion(AutocompleteResult curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
     }
 
     public Short getCurriculumVersionAdmissinYear() {

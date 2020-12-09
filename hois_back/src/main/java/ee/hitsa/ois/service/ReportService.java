@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodCapacitiesService.SQL_SELECT_TEACHER_CAPACITY;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
@@ -1309,7 +1310,7 @@ public class ReportService {
                     "join teacher t on sspt.teacher_id = t.id " +
                     "join person p on t.person_id = p.id " +
                     "join subject_study_period_capacity ssppc on ssppc.subject_study_period_id = ssp.id " +
-                    "left join subject_study_period_teacher_capacity " +
+                    "left join (" + SQL_SELECT_TEACHER_CAPACITY + ") " +
                         "ssptc on ssptc.subject_study_period_capacity_id = ssppc.id and ssptc.subject_study_period_teacher_id = sspt.id").sort(pageable);
             qb.requiredCriteria("sy.school_id = :schoolId", "schoolId", schoolId);
             qb.requiredCriteria("sp.study_year_id = :studyYear", "studyYear", criteria.getStudyYear());
@@ -1378,12 +1379,13 @@ public class ReportService {
 
                 qb = new JpaNativeQueryBuilder("from subject_study_period_teacher sspt"
                         + " join subject_study_period_capacity sspc on sspc.subject_study_period_id = sspt.subject_study_period_id"
-                        + " left join subject_study_period_teacher_capacity ssptc on ssptc.subject_study_period_capacity_id = sspc.id and ssptc.subject_study_period_teacher_id = sspt.id"
+                        + " left join (" + SQL_SELECT_TEACHER_CAPACITY + ") ssptc on ssptc.subject_study_period_capacity_id = sspc.id and ssptc.subject_study_period_teacher_id = sspt.id"
                         + " join subject_study_period ssp on ssp.id = sspt.subject_study_period_id"
                         + " join study_period sp on sp.id = ssp.study_period_id"
                         + " join study_year sy on sy.id = sp.study_year_id"
-                        + " join school_capacity_type sct on sct.school_id = sy.school_id and sct.capacity_type_code = sspc.capacity_type_code and sct.is_higher = true"
-                        + " join school_capacity_type_load sctl on sctl.school_capacity_type_id = sct.id and sctl.study_year_id = sp.study_year_id");
+                        + " left join school_capacity_type sct on sct.school_id = sy.school_id and sct.capacity_type_code = sspc.capacity_type_code and sct.is_higher = true"
+                        + " left join school_capacity_type_load sctl on sctl.school_capacity_type_id = sct.id and sctl.study_year_id = sp.study_year_id"
+                            + " and coalesce(ssp.coefficient_code, 'KOEFITSIENT_K1') = sctl.coefficient_code");
 
                 qb.requiredCriteria("sspt.teacher_id in (:teacher)", "teacher", teachers);
                 qb.requiredCriteria("ssp.study_period_id in (:studyPeriod)", "studyPeriod", studyPeriods);
@@ -1392,7 +1394,7 @@ public class ReportService {
                 qb.groupBy("sspt.teacher_id, ssp.study_period_id, sspc.capacity_type_code, sctl.load_percentage");
                 
                 String hoursByTypeQuery = qb.querySql("sspt.teacher_id, ssp.study_period_id, "
-                        + "sctl.load_percentage * (coalesce(sum(case when ssp.is_capacity_diff is null or ssp.is_capacity_diff is false then sspc.hours end), 0) "
+                        + "coalesce(sctl.load_percentage, 100) * (coalesce(sum(case when ssp.is_capacity_diff is null or ssp.is_capacity_diff is false then sspc.hours end), 0) "
                         + "+ coalesce(sum(case when ssp.is_capacity_diff then ssptc.hours end), 0)) / 100.0 as hours", false);
                 Map<String, Object> parameters = new HashMap<>(qb.queryParameters());
 
@@ -1426,9 +1428,14 @@ public class ReportService {
                         + " left join journal_capacity jc on jc.journal_id = j.id and (j.is_capacity_diff is null or j.is_capacity_diff = false)"
                         + " left join journal_teacher_capacity jtc on jtc.journal_teacher_id = jt.id and j.is_capacity_diff = true"
                         + " join journal_capacity_type jct on jct.id = jc.journal_capacity_type_id or jct.id = jtc.journal_capacity_type_id"
+                        + " left join classifier lp_coefficient on lp_coefficient.code = (select min(lp.coefficient_code) from lesson_plan lp"
+                            + " join lesson_plan_module lpm on lpm.lesson_plan_id = lp.id"
+                            + " join journal_omodule_theme jot on jot.lesson_plan_module_id = lpm.id"
+                            + " where jot.journal_id = j.id)"
                         + " join study_period sp on sp.id = jc.study_period_id or sp.id = jtc.study_period_id"
-                        + " join school_capacity_type sct on sct.school_id = j.school_id and sct.capacity_type_code = jct.capacity_type_code and sct.is_higher = false"
-                        + " join school_capacity_type_load sctl on sctl.school_capacity_type_id = sct.id and sctl.study_year_id = sp.study_year_id");
+                        + " left join school_capacity_type sct on sct.school_id = j.school_id and sct.capacity_type_code = jct.capacity_type_code and sct.is_higher = false"
+                        + " left join school_capacity_type_load sctl on sctl.school_capacity_type_id = sct.id and sctl.study_year_id = sp.study_year_id"
+                            + " and coalesce(lp_coefficient.code, 'KOEFITSIENT_K1') = sctl.coefficient_code");
 
                 qb.requiredCriteria("jt.teacher_id in (:teacher)", "teacher", teachers);
                 qb.requiredCriteria("((jc.study_period_id in (:studyPeriod) and (j.is_capacity_diff is null or j.is_capacity_diff = false)) "
@@ -1441,7 +1448,7 @@ public class ReportService {
                 qb.groupBy("jt.teacher_id, coalesce(jc.study_period_id, jtc.study_period_id), jct.capacity_type_code, sctl.load_percentage");
                 
                 String hoursByTypeQuery = qb.querySql("jt.teacher_id, coalesce(jc.study_period_id, jtc.study_period_id) as study_period_id,"
-                        + " sctl.load_percentage * (coalesce(sum(jc.hours), 0) + coalesce(sum(jtc.hours), 0)) / 100.0 as hours", false);
+                        + " coalesce(sctl.load_percentage, 100) * (coalesce(sum(jc.hours), 0) + coalesce(sum(jtc.hours), 0)) / 100.0 as hours", false);
                 Map<String, Object> parameters = new HashMap<>(qb.queryParameters());
 
                 qb = new JpaNativeQueryBuilder("from (" + hoursByTypeQuery + ") bytype");
@@ -1471,7 +1478,7 @@ public class ReportService {
             }
 
             qb.groupBy("tete.teacher_id, t.study_period_id");
-            List<?> actualLoad = qb.select("tete.teacher_id, t.study_period_id, sum(coalesce(te.lessons, 1))", em).getResultList();
+            List<?> actualLoad = qb.select("tete.teacher_id, t.study_period_id, sum(get_lessons(tet.start, tet.end))", em).getResultList();
             actualLoad.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), () -> actualLoadHours, Collectors.toMap(r -> resultAsLong(r, 1), r -> resultAsLong(r, 2))));
         }
 
@@ -2104,7 +2111,7 @@ public class ReportService {
                                  + (Boolean.TRUE.equals(criteria.getDirectiveConfirmDateShow()) ? "D1.confirm_date as directive_confirm_date, " : "null as directive_confirm_date, ")
                                  + (Boolean.TRUE.equals(criteria.getDirectiveReasonsShow()) ? "D1.reason_code as directive_reasons, " : "null as directive_reasons, ")
                                  + "sg.id as studentGroupId, sg.code as student_groups, s.status_code as student_statuses, "
-                                 + "null as reg_nr, "
+                                 + "s.reg_nr as reg_nr, "
                                  + "s.nominal_study_end as nominal_study_end, "
                                  + "s.study_form_code as study_form, s.study_load_code as study_load, coalesce(sd1.name_et, sd2.nameEt) as school_department, "
                                  + "c.id as curriculumId, c.code || ' ' || c.name_et as curriculum_et, c.code || ' ' || c.name_en as curriculum_en, "
@@ -2569,6 +2576,7 @@ public class ReportService {
                     + "and ds.student_id = s.id)");
         }
         
+        qb.optionalContains("s.reg_nr\\:\\:character varying", "regNr", criteria.getRegNr());
         qb.optionalCriteria("s.study_start >= :immatFrom", "immatFrom", criteria.getImmatDateFrom());
         qb.optionalCriteria("s.study_start <= :immatThru", "immatThru", criteria.getImmatDateThru());
         qb.optionalCriteria("s.nominal_study_end >= :nominalStudyEndFrom", "nominalStudyEndFrom", criteria.getNominalStudyEndFrom());

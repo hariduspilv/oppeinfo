@@ -19,6 +19,7 @@ public class SubjectStudyPeriodCapacityDto {
 
     @ClassifierRestriction(MainClassCode.MAHT)
     private String capacityType;
+    private Long subgroup;
 
     public static SubjectStudyPeriodCapacityDto of(SubjectStudyPeriodCapacity c) {
         SubjectStudyPeriodCapacityDto dto = new SubjectStudyPeriodCapacityDto();
@@ -33,6 +34,7 @@ public class SubjectStudyPeriodCapacityDto {
         dto.setId(EntityUtil.getId(c));
         dto.setHours(c.getHours());
         dto.setCapacityType(EntityUtil.getCode(c.getSubjectStudyPeriodCapacity().getCapacityType()));
+        dto.setSubgroup(EntityUtil.getNullableId(c.getSubgroup()));
         return dto;
     }
 
@@ -58,5 +60,13 @@ public class SubjectStudyPeriodCapacityDto {
 
     public void setCapacityType(String capacityType) {
         this.capacityType = capacityType;
+    }
+
+    public Long getSubgroup() {
+        return subgroup;
+    }
+
+    public void setSubgroup(Long subgroup) {
+        this.subgroup = subgroup;
     }
 }

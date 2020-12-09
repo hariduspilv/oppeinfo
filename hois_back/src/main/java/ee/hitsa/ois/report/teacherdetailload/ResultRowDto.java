@@ -1,5 +1,6 @@
 package ee.hitsa.ois.report.teacherdetailload;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +11,9 @@ public class ResultRowDto extends PeriodDetailLoadDto {
 
     private AutocompleteResult name;
     private String studentGroups;
-    private List<Long> loads = new ArrayList<>();
+    private String subjectCode;
+    private BigDecimal eap;
+    private List<Object> loads = new ArrayList<>();
 
     public AutocompleteResult getName() {
         return name;
@@ -28,12 +31,28 @@ public class ResultRowDto extends PeriodDetailLoadDto {
         this.studentGroups = studentGroups;
     }
 
-    public List<Long> getLoads() {
-        return loads;
-    }
+	public List<Object> getLoads() {
+		return loads;
+	}
 
-    public void setLoads(List<Long> loads) {
-        this.loads = loads;
-    }
+	public void setLoads(List<Object> loads) {
+		this.loads = loads;
+	}
+
+	public String getSubjectCode() {
+		return subjectCode;
+	}
+
+	public void setSubjectCode(String subjectCode) {
+		this.subjectCode = subjectCode;
+	}
+
+	public BigDecimal getEap() {
+		return eap;
+	}
+
+	public void setEap(BigDecimal eap) {
+		this.eap = eap;
+	}
 
 }

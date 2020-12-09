@@ -420,13 +420,24 @@ public class HigherProtocolService extends AbstractProtocolService {
                 "positiveGrades", HigherAssessment.GRADE_POSITIVE);
 
         qb.sort("p.lastname, p.firstname");
-        String select = STUDENT_SELECT + ", ((select cvhm.compulsory_study_credits <= sum(case when coalesce(shrm.is_optional, shr.is_optional) = false then shr.credits else 0 end) "
-                + "and cvhm.optional_study_credits <= sum(case when coalesce(shrm.is_optional, shr.is_optional) then shr.credits else 0 end) "
-                + "from student_higher_result shr "
-                + "left join student_higher_result_module shrm on shrm.student_higher_result_id = shr.id "
-                + "join curriculum_version_hmodule cvhm on cvhm.id = coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id) "
-                + "where shr.student_id = s.id and cvhm.id = :moduleId and shr.grade_code in (:positiveGrades) "
-                + "group by cvhm.id) "
+        String select = STUDENT_SELECT + ", ((select cvhm.compulsory_study_credits <= sum(case when x.is_optional = false then x.credits else 0 end) "
+                    + "and cvhm.optional_study_credits <= sum(case when x.is_optional then x.credits else 0 end) "
+                    + "from (select 0, shr.id, shr.credits, coalesce(shrm.is_optional, shr.is_optional) as is_optional, "
+                        + "coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id) as curriculum_version_hmodule_id "
+                        + "from student_higher_result shr "
+                        + "left join student_higher_result_module shrm on shrm.student_higher_result_id = shr.id "
+                        + "join curriculum_version_hmodule cvhm on cvhm.id = coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id) "
+                        + "where shr.student_id = s.id and cvhm.id = :moduleId and shr.grade_code in (:positiveGrades) "
+                        + "and (select count(*) from student_higher_result_replaced_subject shrrs where shr.id = shrrs.student_higher_result_id) = 0 "
+                    + "union "
+                    + "select distinct 1, sb.id,sb.credits, shrrs.is_optional, shrrs.curriculum_version_hmodule_id "
+                        + "from student_higher_result shr "
+                        + "join student_higher_result_replaced_subject shrrs on shrrs.student_higher_result_id = shr.id "
+                        + "join curriculum_version_hmodule cvhm on cvhm.id = shrrs.curriculum_version_hmodule_id "
+                        + "join subject sb on sb.id = shrrs.subject_id "
+                        + "where shr.student_id = s.id and cvhm.id = :moduleId and shr.grade_code in (:positiveGrades)) x "
+                    + "join curriculum_version_hmodule cvhm on cvhm.id = x.curriculum_version_hmodule_id "
+                    + "group by cvhm.id) "
                 + "or exists (select 1 from student_curriculum_completion_hmodule scch "
                 + "where scch.student_id = s.id and scch.curriculum_version_hmodule_id = :moduleId)) module_fulfilled";
         List<?> result = qb.select(select, em).getResultList();

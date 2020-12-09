@@ -74,7 +74,7 @@
 						<td style="vertical-align: top;">{{ counter }}</td>
 						<td>{{ subjectResult.subjectEn }}</td>
 						<td>{{ subjectResult.subjectCode }}</td>
-						<td>{{ subjectResult.hours }}</td>
+						<td>{{ subjectResult.consideredReplacedCredits != null ? subjectResult.consideredReplacedCredits + ' / '  : '' }}{{ subjectResult.credits }}</td>
 						<td>{{ subjectResult.gradeValueEn != null ? subjectResult.gradeValueEn : subjectResult.gradeValue }}</td>
 						<td>{{ subjectResult.gradeNameEn }}</td>
 						<td>{{ subjectResult.date }}</td>
@@ -104,7 +104,7 @@
 			<td>{{ loop.index + 1 }}</td>
 			<td>{{ result.subjectEn }}</td>
 			<td>{{ result.subjectCode }}</td>
-			<td>{{ result.hours }}</td>
+			<td>{{ result.credits }}</td>
 			<td>{{ result.gradeValueEn != null ? result.gradeValueEn : result.gradeValue }}</td>
 			<td>{{ result.gradeNameEn }}</td>
 			<td>{{ result.date }}</td>

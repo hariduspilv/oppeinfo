@@ -82,7 +82,7 @@
 						{% if result.key.moduleCode != null and result.key.moduleCode.code != null %} - {{ result.key.moduleCode | name }}
 							{% if result.key.versionCode != null %} ({{ result.key.versionCode }}){% endif %}
 						{% endif %}</b></td>
-					<td><b>{{ not result.key.isHeader ? result.key.hours : result.key.moduleCredits }}</b></td>
+					<td><b>{{ not result.key.isHeader ? result.key.credits : result.key.moduleCredits }}</b></td>
 					<td><b>{{ not result.key.isHeader ? (result.key.gradeValueEn != null ? result.key.gradeValueEn : result.key.gradeValue) : '' }}</b></td>
 					<td><b>{{ not result.key.isHeader ? result.key.gradeNameEn : '' }}</b></td>
 					<td><b>{{ not result.key.isHeader ? result.key.date : '' }}</b></td>
@@ -94,7 +94,7 @@
 					<tr>
 						<td style="vertical-align: top;">{{ counter }}</td>
 						<td>{% if nested.theme != null %}{{ nested.theme }}{% else %}{% set outcomeCounter = outcomeCounter + 1 %}ÕV {{outcomeCounter}}. {{ nested.outcomeEn }}{% endif %}</td>
-						<td>{{ nested.hours }}</td>
+						<td>{{ nested.credits }}</td>
 						<td>{{ nested.gradeValueEn != null ? nested.gradeValueEn : nested.gradeValue }}</td>
 						<td>{{ nested.gradeNameEn }}</td>
 						<td>{{ nested.date }}</td>

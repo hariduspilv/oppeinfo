@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').controller('LessonplanEventSearchController',
-  function ($scope, $route, QueryUtils, USER_ROLES, AuthService) {
+  function ($route, $scope, USER_ROLES, AuthService, QueryUtils, dialogService) {
     $scope.currentNavItem = 'events';
     $scope.auth = $route.current.locals.auth;
     $scope.eventsPerm = AuthService.isAuthorized(USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_SYNDMUS);
@@ -18,7 +18,7 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
     });
 
     QueryUtils.createQueryForm($scope, baseUrl, {
-      order:'4 desc'
+      order: 'tet.start, tet.end'
     });
 
     if ($scope.eventsPerm) {
@@ -80,21 +80,18 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
       if (event.isJuhanEvent) {
         return false;
       }
-      if ($scope.auth.isAdmin()) {
+      if ($scope.auth.isAdmin() || $scope.auth.isLeadingTeacher()) {
         return !event.isPersonal || event.person.id === $scope.auth.person;
       }
 
-      // leading teacher can only see his/her studentgroup events or his/her personal events
-      // therefore there is no need for stricter check here
-      if ($scope.auth.isLeadingTeacher()) {
-        return true;
-      }
-
       if ($scope.auth.isTeacher()) {
-        if (!event.teachers) {
-          return false;
-        }
+        return (event.singleEvent && event.insertedTeacherId === $scope.auth.teacher) || (!event.singleEvent && isTeachersEvent(event));
+      }
+      return false;
+    };
 
+    function isTeachersEvent(event) {
+      if (event.teachers) {
         for (var i = 0; i < event.teachers.length; i++) {
           if (event.teachers[i].id === $scope.auth.teacher) {
             return true;
@@ -102,6 +99,28 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController',
         }
       }
       return false;
+    }
+
+    $scope.openEventRelatedEntitiesDialog = function (event, entityType) {
+      dialogService.showDialog('lessonplan/event/event.related.entities.dialog.html', function (dialogScope) {
+        dialogScope.event = event;
+        dialogScope.entityType = entityType;
+
+        dialogScope.tableData = { size: 10 };
+        if (entityType === 'teacher') {
+          dialogScope.tableData.content = event.teachers;
+          dialogScope.searchLabel = $scope.auth.higher ? 'lessonplan.event.teachersHigher' : 'lessonplan.event.teachersVocational';
+          dialogScope.searchParam = 'name';
+        } else if (entityType === 'studentGroup') {
+          dialogScope.tableData.content = event.studentGroups;
+          dialogScope.searchLabel = 'lessonplan.event.studentGroups';
+          dialogScope.searchParam = 'code';
+        } else if (entityType === 'student') {
+          dialogScope.tableData.content = event.students;
+          dialogScope.searchLabel = 'lessonplan.event.students';
+          dialogScope.searchParam = 'name';
+        }
+      });
     };
   })
   .controller('LessonplanEventRoomSearchController', ['$scope', 'QueryUtils', 'FormUtils', '$timeout', 'message', 'USER_ROLES',

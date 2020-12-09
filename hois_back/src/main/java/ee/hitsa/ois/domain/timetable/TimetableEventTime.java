@@ -27,6 +27,7 @@ public class TimetableEventTime extends BaseEntityWithId {
     private LocalDateTime end;
     private String otherTeacher;
     private String otherRoom;
+    private String addInfo;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "timetable_event_time_id", nullable = false, updatable = false)
@@ -86,6 +87,14 @@ public class TimetableEventTime extends BaseEntityWithId {
 
     public void setOtherRoom(String otherRoom) {
         this.otherRoom = otherRoom;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
     }
 
     public List<TimetableEventTeacher> getTimetableEventTeachers() {

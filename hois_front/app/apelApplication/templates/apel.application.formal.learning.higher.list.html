@@ -18,7 +18,7 @@
         <th md-column>{{'apel.formalLearnings.result' | translate}}</th>
         <th md-column>{{'apel.formalLearnings.resultDate' | translate}}</th>
         <th md-column>{{auth.higher ? ('apel.formalLearnings.teacherHigher' | translate) : ('apel.formalLearnings.teacherVocational' | translate)}}</th>
-        <th md-column>{{'apel.formalLearnings.module' | translate}} ({{'apel.formalLearnings.required' | translate}})</th>
+        <th md-column ng-if="!application.isNew">{{'apel.formalLearnings.module' | translate}} ({{'apel.formalLearnings.required' | translate}})</th>
         <td md-cell style="border-left: 1px rgba(0, 0, 0, 0.12) solid;"></td>
         <th md-column>{{'apel.formalLearnings.subject' | translate}} ({{'apel.formalLearnings.code' | translate}})</th>
         <th md-column>{{'apel.formalLearnings.creditsEAP' | translate}}</th>
@@ -40,7 +40,7 @@
         <td md-cell>{{row.grade | hoisHigherGrade: auth.school.letterGrades}}</td>
         <td md-cell>{{row.gradeDate | hoisDate}}</td>
         <td md-cell>{{row.teachers}}</td>
-        <td md-cell>
+        <td md-cell ng-if="!application.isNew">
           <span ng-if="row.module && row.isOptional === false">{{currentLanguageNameField(row.module)}} ({{'main.yes' | translate}})</span>
           <span ng-if="row.module && row.isOptional === true">{{currentLanguageNameField(row.module)}} ({{'main.no' | translate}})</span>
         </td>

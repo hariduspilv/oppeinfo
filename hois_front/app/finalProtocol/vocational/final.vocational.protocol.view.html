@@ -53,6 +53,7 @@
                   <th md-column>{{'finalProtocol.grade' | translate}}</th>
                   <th md-column ng-if="protocol.status.code === 'PROTOKOLL_STAATUS_K'">{{'finalProtocol.changeReason' | translate}}</th>
                   <th md-column>{{'finalProtocol.occupationAndCertificateNr' | translate}}</th>
+                  <th md-column ng-if="formState.showLanguageColumn">{{'finalProtocol.language' | translate}}</th>
                 </tr>
               </thead>
               <tbody md-body>
@@ -74,6 +75,7 @@
                       </span>
                     </span>
                   </td>
+                  <td md-cell ng-if="formState.showLanguageColumn">{{currentLanguageNameField(row.language)}}</td>
                 </tr>
               </tbody>
             </table>

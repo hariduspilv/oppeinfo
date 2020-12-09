@@ -4,7 +4,7 @@ import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.timetable.TimetableEventTeacher;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.PersonResult;
 
 public class TimetableSingleEventTeacherForm {
 
@@ -17,17 +17,17 @@ public class TimetableSingleEventTeacherForm {
         
     }
 
-    public TimetableSingleEventTeacherForm(Long id, Long teacherId, String nameEt, String nameEn,
+    public TimetableSingleEventTeacherForm(Long id, Long teacherId, String firstname, String lastName,
             Boolean isSubstitute) {
         this.id = id;
-        this.teacher = new AutocompleteResult(teacherId, nameEt, nameEn);
+        this.teacher = new PersonResult(teacherId, firstname, lastName);
         this.isSubstitute = isSubstitute;
     }
 
     public static TimetableSingleEventTeacherForm of(TimetableEventTeacher eventTeacher) {
         TimetableSingleEventTeacherForm dto = new TimetableSingleEventTeacherForm();
         dto.setId(eventTeacher.getId());
-        dto.setTeacher(AutocompleteResult.of(eventTeacher.getTeacher()));
+        dto.setTeacher(PersonResult.of(eventTeacher.getTeacher()));
         dto.setIsSubstitute(eventTeacher.getIsSubstitute());
         return dto;
     }

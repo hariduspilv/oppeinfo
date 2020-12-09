@@ -38,6 +38,7 @@ import ee.hitsa.ois.web.dto.EkisLogDto;
 import ee.hois.soap.LogContext;
 import ee.hois.soap.ekis.service.generated.EnforceContract;
 import ee.hois.soap.ekis.service.generated.EnforceDirective;
+import ee.hois.soap.ekis.service.generated.RejectContract;
 import ee.hois.soap.ekis.service.generated.RejectDirective;
 
 @Transactional(TxType.REQUIRES_NEW)
@@ -77,6 +78,11 @@ public class EkisLogService {
         School school = null;
         if(request instanceof EnforceContract) {
             logRecord.setContract(em.find(Contract.class, Long.valueOf(((EnforceContract)request).getOisContractId())));
+            if(logRecord.getContract() != null) {
+                school = logRecord.getContract().getStudent().getSchool();
+            }
+        } else if(request instanceof RejectContract) {
+            logRecord.setContract(em.find(Contract.class, Long.valueOf(((RejectContract)request).getOisContractId())));
             if(logRecord.getContract() != null) {
                 school = logRecord.getContract().getStudent().getSchool();
             }
@@ -155,5 +161,5 @@ public class EkisLogService {
         return dto;
     }
 
-    private static final Set<String> INCOMING_REQUESTS = new HashSet<>(Arrays.asList("enforceDirective", "rejectDirective", "enforceContract"));
+    private static final Set<String> INCOMING_REQUESTS = new HashSet<>(Arrays.asList("enforceDirective", "rejectDirective", "enforceContract", "rejectContract"));
 }

@@ -1,4 +1,3 @@
-
 <div class="ois-form-layout-padding" ng-cloak>
   <div flex>
     <form name="eventForm" ng-submit="eventForm.$valid && loadData()" novalidate>
@@ -7,11 +6,11 @@
           <label>{{'main.date' | translate}}</label>
           <md-datepicker required ng-model="timetableEvent.date"></md-datepicker>
         </md-input-container>
-        <md-input-container flex flex-sm="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-xs="100" flex-offset-sm="0" flex-offset-xs="0">
           <label>{{'main.start' | translate}}</label>
           <hois-time required ng-model="timetableEvent.startTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
         </md-input-container>
-        <md-input-container flex flex-sm="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-xs="100" flex-offset-sm="0" flex-offset-xs="0">
           <label>{{'main.end' | translate}}</label>
           <hois-time required ng-model="timetableEvent.endTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
         </md-input-container>
@@ -24,24 +23,21 @@
         </md-input-container>
       </div>
 
-      <div>&nbsp;</div>
-      <div ng-if="timetableEvent.id && timetableEvent.isPersonal" class="form-readonly" layout="row" flex>
-        <md-input-container flex="60" flex-sm="100" flex-xs="100">
-          <label class="textInput">{{'timetable.timetableEvent.person' | translate}}</label>
-          <hois-value value="currentLanguageNameField(timetableEvent.person)"></hois-value>
-        </md-input-container>
-      </div>
-
-      <div ng-if="!timetableEvent.id" layout-sm="column" layout-xs="column" flex>
-        <md-input-container flex="20" flex-sm="100" flex-xs="100">
+      <div layout-sm="column" layout-xs="column" flex>
+        <md-input-container ng-if="!timetableEvent.id" flex="20" flex-sm="100" flex-xs="100">
           <md-checkbox ng-model="timetableEvent.repeat" aria-label="Is repeat event">
             {{'timetable.timetableEvent.isRepeat' | translate}}
           </md-checkbox>
         </md-input-container>
-        <md-input-container ng-if="canCreatePersonalEvents" flex="20" flex-sm="100" flex-xs="100">
+        <md-input-container ng-if="timetableEvent.isPersonal || (!timetableEvent.id && canCreatePersonalEvents)" flex="20" flex-sm="100" flex-xs="100">
           <md-checkbox ng-model="timetableEvent.isPersonal" ng-change="personalEventChanged()" aria-label="Is personal event"
-            ng-disabled="!eventsPerm">
+            ng-disabled="!eventsPerm || timetableEvent.id || !canCreatePersonalEvents">
             {{'timetable.timetableEvent.personalEvent' | translate}}
+          </md-checkbox>
+        </md-input-container>
+        <md-input-container ng-if="timetableEvent.isSingleEvent" flex="20" flex-sm="100" flex-xs="100">
+          <md-checkbox ng-model="timetableEvent.isPublic" aria-label="Is public event">
+            {{'timetable.timetableEvent.isPublic' | translate}}
           </md-checkbox>
         </md-input-container>
         <div ng-if="timetableEvent.repeat" flex="80">
@@ -59,12 +55,27 @@
         </div>
       </div>
 
-      <div ng-if="eventsPerm && (!timetableEvent.id || !timetableEvent.isPersonal)" layout="column" flex="60" flex-sm="100" flex-xs="100">
-        <hois-autocomplete label="{{auth.higher ? 'timetable.timetableEvent.teacherHigher' : 'timetable.timetableEvent.teacherVocational'}}"
-          ng-model="timetableEvent.teacher" ng-disabled="auth.isTeacher() || timetableEvent.isPersonal"
-          ha-controller="directiveControllers" method="teachers" warning-param="isOccupied"
-          additional-query-params="{valid: true, occupied: true, date: timetableEvent.date, startTime: timetableEvent.startTime, endTime: timetableEvent.endTime,
-            repeatCode: timetableEvent.repeatCode, weekAmount: timetableEvent.weekAmount}" flex></hois-autocomplete>
+      <div>&nbsp;</div>
+      <div ng-if="timetableEvent.id && timetableEvent.isPersonal" class="form-readonly" layout="row" flex>
+        <md-input-container flex="60" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'timetable.timetableEvent.person' | translate}}</label>
+          <hois-value value="currentLanguageNameField(timetableEvent.person)"></hois-value>
+        </md-input-container>
+      </div>
+
+      <fieldset ng-if="eventsPerm && (!timetableEvent.id || !timetableEvent.isPersonal)" layout="column" flex="60" flex-sm="100" flex-xs="100">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">
+          {{auth.higher ? ('timetable.timetableEvent.teachersHigher' | translate) : ('timetable.timetableEvent.teachersVocational' | translate)}}
+        </legend>
+        <div layout="row" flex="100">
+          <hois-autocomplete label="{{auth.higher ? 'timetable.timetableEvent.teacherHigher' : 'timetable.timetableEvent.teacherVocational'}}"
+            ng-model="timetableEvent.teacher" ng-disabled="timetableEvent.isPersonal"
+            ha-controller="directiveControllers" method="teachers" warning-param="isOccupied"
+            additional-query-params="{valid: true, occupied: true, date: timetableEvent.date, startTime: timetableEvent.startTime, endTime: timetableEvent.endTime,
+              repeatCode: timetableEvent.repeatCode, weekAmount: timetableEvent.weekAmount}" flex></hois-autocomplete>
+          <md-button ng-if="!timetableEvent.isPersonal" ng-click="addAllTeachers()" class="md-raised">{{auth.higher ? 'timetable.timetableEvent.addAllTeachersHigher' : 'timetable.timetableEvent.addAllTeachersVocational' | translate}}</md-button>
+          <md-button ng-if="!timetableEvent.isPersonal" ng-click="removeAllTeachers()" class="md-raised">{{'timetable.timetableEvent.removeAll' | translate}}</md-button>
+        </div>
         <md-table-container ng-if="timetableEvent.teachers.length > 0">
           <table md-table class="secondary-table">
             <thead md-head>
@@ -75,22 +86,29 @@
               </tr>
             </thead>
             <tbody md-body>
-              <tr md-row ng-repeat="teacher in timetableEvent.teachers | orderBy: sortTeachers" ng-class-odd="'odd'" ng-class-even="'even'">
+              <tr md-row ng-repeat="teacher in timetableEvent.teachers | orderBy: ['teacher.lastname', 'teacher.firstname'] | limitTo: 5" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{currentLanguageNameField(teacher.teacher)}}</td>
                 <td md-cell ng-if="!timetableEvent.isSingleEvent">
                   <md-checkbox ng-model="teacher.isSubstitute" aria-label="{{'timetable.timetableEvent.substitute' | translate}}"
                     ng-disabled="!(auth.isAdmin() || auth.isLeadingTeacher)"></md-checkbox>
                 </td>
                 <td md-cell>
-                  <a ng-if="auth.isAdmin() || auth.isLeadingTeacher()" ng-click="deleteTeacher(teacher)" class="remove">&times;</a>
+                  <a ng-if="!(auth.isTeacher && auth.teacher === teacher.teacher.id)" ng-click="deleteTeacher(teacher)" class="remove">&times;</a>
                 </td>
               </tr>
             </tbody>
           </table>
         </md-table-container>
-      </div>
+        <div ng-if="timetableEvent.teachers.length > 5" layout="row" class="md-body-1">
+          <a ng-click="openEventRelatedEntitiesDialog('teacher')">{{'main.button.showMore' | translate}}</a>
+        </div>
+      </fieldset>
 
-      <div layout="column" flex="60" flex-sm="100" flex-xs="100">
+      <div>&nbsp;</div>
+      <fieldset layout="column" flex="60" flex-sm="100" flex-xs="100">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">
+          {{'timetable.timetableEvent.rooms' | translate}}
+        </legend>
         <hois-autocomplete label="timetable.timetableEvent.room" ng-model="timetableEvent.room" method="rooms" warning-param="isOccupied"
           additional-query-params="{isStudy: true, occupied: true, date: timetableEvent.date, startTime: timetableEvent.startTime, endTime: timetableEvent.endTime,
             repeatCode: timetableEvent.repeatCode, weekAmount: timetableEvent.weekAmount}" flex></hois-autocomplete>
@@ -112,18 +130,24 @@
             </tbody>
           </table>
         </md-table-container>
-        <div>&nbsp;</div>
-      </div>
+      </fieldset>
 
       <div ng-if="timetableEvent.isSingleEvent">
-        <div ng-if="eventsPerm && (!timetableEvent.id || !timetableEvent.isPersonal)" layout="column" flex="60" flex-sm="100" flex-xs="100">
-          <hois-autocomplete label="timetable.timetableEvent.studentGroup" ng-model="timetableEvent.studentGroup" ha-controller="directiveControllers"
-            method="studentgroups" warning-param="isOccupied" ng-disabled="timetableEvent.isPersonal"
-            ng-required="auth.isLeadingTeacher() && !timetableEvent.isPersonal && (!timetableEvent.studentGroups || timetableEvent.studentGroups.length === 0)"
-            additional-query-params="{valid: true, occupied: true, date: timetableEvent.date, startTime: timetableEvent.startTime, endTime: timetableEvent.endTime,
-              repeatCode: timetableEvent.repeatCode, weekAmount: timetableEvent.weekAmount, studentGroupTeacherId: (auth.isTeacher() && !auth.higher) ? auth.teacher : undefined,
-              userId: auth.isLeadingTeacher() ? auth.user : null}"
-            flex></hois-autocomplete>
+        <div>&nbsp;</div>
+        <fieldset ng-if="eventsPerm && (!timetableEvent.id || !timetableEvent.isPersonal)" layout="column" flex="60" flex-sm="100" flex-xs="100">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">
+            {{'timetable.timetableEvent.studentGroups' | translate}}
+          </legend>
+          <div layout="row" flex="100">
+            <hois-autocomplete label="timetable.timetableEvent.studentGroup" ng-model="timetableEvent.studentGroup" ha-controller="directiveControllers"
+              method="studentgroups" warning-param="isOccupied" ng-disabled="timetableEvent.isPersonal"
+              ng-required="auth.isLeadingTeacher() && !timetableEvent.isPersonal && (!timetableEvent.studentGroups || timetableEvent.studentGroups.length === 0)"
+              additional-query-params="{valid: true, occupied: true, date: timetableEvent.date, startTime: timetableEvent.startTime, endTime: timetableEvent.endTime,
+                repeatCode: timetableEvent.repeatCode, weekAmount: timetableEvent.weekAmount}"
+              flex></hois-autocomplete>
+            <md-button ng-if="!timetableEvent.isPersonal" ng-click="addAllStudentGroups()" class="md-raised">{{'timetable.timetableEvent.addAllStudentGroups' | translate}}</md-button>
+            <md-button ng-if="!timetableEvent.isPersonal" ng-click="removeAllStudentGroups()" class="md-raised">{{'timetable.timetableEvent.removeAll' | translate}}</md-button>
+          </div>
           <md-table-container ng-if="timetableEvent.studentGroups.length > 0">
             <table md-table class="secondary-table">
               <thead md-head>
@@ -133,7 +157,8 @@
                 </tr>
               </thead>
               <tbody md-body>
-                <tr md-row ng-repeat="studentGroup in timetableEvent.studentGroups" ng-class-odd="'odd'" ng-class-even="'even'">
+                <tr md-row ng-repeat="studentGroup in timetableEvent.studentGroups | orderBy: currentLanguageNameField() | limitTo: 5"
+                    ng-class-odd="'odd'" ng-class-even="'even'">
                   <td md-cell>{{studentGroup.nameEt}}</td>
                   <td md-cell>
                     <a ng-click="deleteStudentGroup(studentGroup)" class="remove">&times;</a>
@@ -142,10 +167,14 @@
               </tbody>
             </table>
           </md-table-container>
-        </div>
+          <div ng-if="timetableEvent.studentGroups.length > 5" layout="row" class="md-body-1">
+            <a ng-click="openEventRelatedEntitiesDialog('studentGroup')">{{'main.button.showMore' | translate}}</a>
+          </div>
+        </fieldset>
       </div>
 
       <fieldset flex="60" flex-sm="100" flex-xs="100" ng-if="!timetableEvent.isSingleEvent && timetableEvent.studentGroups.length > 0">
+        <div>&nbsp;</div>
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetableEvent.studentGroups' | translate}}</legend>
         <md-table-container>
           <table md-table class="secondary-table">
@@ -184,7 +213,39 @@
         </fieldset>
       </div>
 
-      <div ng-if="timetableEvent.students.length > 0">
+      <div ng-if="timetableEvent.isSingleEvent">
+        <div>&nbsp;</div>
+        <fieldset ng-if="eventsPerm && (!timetableEvent.id || !timetableEvent.isPersonal)" layout="column" flex="60" flex-sm="100" flex-xs="100">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">
+            {{'timetable.timetableEvent.students' | translate}}
+          </legend>
+          <div layout="row" flex="100">
+            <hois-autocomplete label="timetable.timetableEvent.student" ng-model="timetableEvent.student"
+              ha-controller="directiveControllers" method="students" ng-disabled="timetableEvent.isPersonal"
+              additional-query-params="{active: true, hideIdcode: true, showStudentGroup: true, showGuestStudent: true}" flex></hois-autocomplete>
+          </div>
+          <md-table-container ng-if="timetableEvent.students.length > 0">
+            <table md-table class="secondary-table">
+              <thead md-head>
+              <tr md-row>
+                <th md-column width="90%">{{'timetable.timetableEvent.personName' | translate}}</th>
+                <th md-column width="10%"></th>
+              </tr>
+              </thead>
+              <tbody md-body>
+              <tr md-row ng-repeat="student in timetableEvent.students | orderBy: ['lastname', 'firstname']" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{currentLanguageNameField(student)}}</td>
+                <td md-cell>
+                  <a ng-click="deleteStudent(student)" class="remove">&times;</a>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </fieldset>
+      </div>
+
+      <div ng-if="!timetableEvent.isSingleEvent && timetableEvent.students.length > 0">
         <div>&nbsp;</div>
         <fieldset flex="60" flex-sm="100" flex-xs="100">
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'timetable.timetableEvent.students' | translate}}</legend>
@@ -196,7 +257,7 @@
               </tr>
               </thead>
               <tbody md-body>
-              <tr md-row ng-repeat="student in timetableEvent.students | orderBy: currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
+              <tr md-row ng-repeat="student in timetableEvent.students | orderBy: ['lastname', 'firstname']" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{currentLanguageNameField(student)}}</td>
               </tr>
               </tbody>
@@ -205,6 +266,7 @@
         </fieldset>
       </div>
 
+      <div>&nbsp;</div>
       <div layout="column" flex="60" flex-sm="100" flex-xs="100">
         <md-input-container ng-if="eventsPerm && (!timetableEvent.id || !timetableEvent.isPersonal)">
           <label class="textInput">
@@ -218,13 +280,20 @@
         </md-input-container>
       </div>
 
-      <div ng-if="timetableEvent.isPersonal && (timetableEvent.studentGroups.length > 0 || timetableEvent.teachers.length > 0 || timetableEvent.otherTeacher)">
+      <div ng-if="timetableEvent.isPersonal && (timetableEvent.students.length > 0 || timetableEvent.studentGroups.length > 0 || timetableEvent.teachers.length > 0 || timetableEvent.otherTeacher)">
         <md-whiteframe class="md-whiteframe-1dp attention-whiteframe" flex="100" layout layout-align="left center">
           <div md-colors="{color: 'warn'}" layout layout-align="left center">
             <md-icon md-colors="{color: 'warn'}" md-font-set="material-icons">info_outline</md-icon>
-            <span>{{'timetable.timetableEvent.error.teachersAndStudentGroupsNotSaveForPersonalEvent' | translate}}</span>
+            <span>{{'timetable.timetableEvent.error.teachersAndStudentGroupsAndStudentsNotSaveForPersonalEvent' | translate}}</span>
           </div>
         </md-whiteframe>
+      </div>
+
+      <div layout="row" flex="60" flex-sm="100" flex-xs="100">
+        <md-input-container flex>
+          <label class="textInput">{{'timetable.timetableEvent.addInfo' | translate}}</label>
+          <textarea ng-model="timetableEvent.addInfo" md-maxlength="4000" max-rows="3"></textarea>
+        </md-input-container>
       </div>
 
       <div layout="row" flex>

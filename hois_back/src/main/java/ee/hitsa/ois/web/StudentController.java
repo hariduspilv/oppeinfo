@@ -371,9 +371,10 @@ public class StudentController {
     }
     
     @GetMapping("/{id:\\d+}/vocationalResultsByTime")
-    public Collection<StudentVocationalResultByTimeDto> vocationalResultsByTime(HoisUserDetails user, @WithEntity Student student) {
+    public Collection<StudentVocationalResultByTimeDto> vocationalResultsByTime(HoisUserDetails user,
+            @WithEntity Student student, @RequestParam String sort) {
         UserUtil.assertCanViewStudentSpecificData(user, student);
-        return studentService.vocationalResultsByTimeResults(student);
+        return studentService.vocationalResultsByTimeResults(student, sort);
     }
 
     @GetMapping("/{id:\\d+}/higherResults")

@@ -25,6 +25,8 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.jxls.area.Area;
 import org.jxls.builder.AreaBuilder;
 import org.jxls.common.AreaListener;
@@ -54,6 +56,7 @@ import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.xls.HasPoiTransformer;
 import ee.hitsa.ois.xls.HasWorkbook;
+import ee.hitsa.ois.xls.XlsDynamicColumnCommand;
 
 /**
  * xls generator using jxls
@@ -68,6 +71,11 @@ public class XlsService {
     
     @SuppressWarnings("resource")
     public byte[] generate(String templateName, Map<String, Object> data, List<SimpleEntry<String, AreaListener>> areaListeners) {
+    	return generate(templateName, data, areaListeners, null);
+    }
+    
+    @SuppressWarnings("resource")
+    public byte[] generate(String templateName, Map<String, Object> data, List<SimpleEntry<String, AreaListener>> areaListeners, XlsDynamicColumnCommand command) {
         try {
             String fullTemplatePath = XLS_TEMPLATE_PATH + templateName;
             try (InputStream is = ReportService.class.getResourceAsStream(fullTemplatePath)) {
@@ -90,19 +98,21 @@ public class XlsService {
                         // SuppressWarnings("resource") because if we close it then we will receive an exception about closed stream when call transformer.write()
                         // Workbook is closed in after.
                         workbook = poiTransformer.getWorkbook();
-                        Map<AreaRef, Area> mappedAreas = mapAreas(xlsAreaList);
-                        areaListeners.forEach(entry -> {
-                            Area area = mappedAreas.get(new AreaRef(entry.getKey()));
-                            if (area != null) {
-                                if (entry.getValue() instanceof HasPoiTransformer && ((HasPoiTransformer) entry.getValue()).getTransformer() == null) {
-                                    ((HasPoiTransformer) entry.getValue()).setTransformer(poiTransformer);
+                        if (areaListeners != null) {
+                        	Map<AreaRef, Area> mappedAreas = mapAreas(xlsAreaList);
+                            areaListeners.forEach(entry -> {
+                                Area area = mappedAreas.get(new AreaRef(entry.getKey()));
+                                if (area != null) {
+                                    if (entry.getValue() instanceof HasPoiTransformer && ((HasPoiTransformer) entry.getValue()).getTransformer() == null) {
+                                        ((HasPoiTransformer) entry.getValue()).setTransformer(poiTransformer);
+                                    }
+                                    if (entry.getValue() instanceof HasWorkbook && ((HasWorkbook) entry.getValue()).getWorkbook() == null) {
+                                        ((HasWorkbook) entry.getValue()).setWorkbook(workbook);
+                                    }
+                                    area.addAreaListener(entry.getValue());
                                 }
-                                if (entry.getValue() instanceof HasWorkbook && ((HasWorkbook) entry.getValue()).getWorkbook() == null) {
-                                    ((HasWorkbook) entry.getValue()).setWorkbook(workbook);
-                                }
-                                area.addAreaListener(entry.getValue());
-                            }
-                        });
+                            });
+                        }
                     } else {
                         workbook = null;
                     }
@@ -112,6 +122,27 @@ public class XlsService {
                         xlsArea.applyAt(new CellRef(xlsArea.getStartCellRef().getCellName()), context);
                         xlsArea.setFormulaProcessor(fp);
                         xlsArea.processFormulas();
+                    }
+                    
+                    if (command != null) {
+                    	Sheet sheet = workbook.getSheet(command.getSheet());
+                    	if (sheet != null) {
+                    		Integer maxColumns = command.getEndColumn();
+                    		int rows = sheet.getPhysicalNumberOfRows();
+                    		int actualMaxColumns = 0;
+                    		for (int i = 0; i < rows; i++) {
+                    			XSSFRow row = ((XSSFSheet) sheet).getRow(i);
+                    			int columns = row.getPhysicalNumberOfCells();
+                    			if (columns > actualMaxColumns) {
+                    				actualMaxColumns = columns;
+                    			}
+                    		}
+                    		
+                        	for (int i = command.getStartColumn() != null ? command.getStartColumn().intValue() : 0 ; 
+                        		i < (maxColumns != null ? maxColumns.intValue() : actualMaxColumns) ; i++) {
+                        		sheet.autoSizeColumn(i);
+                        	}
+                    	}
                     }
                     transformer.write();
                     if (workbook != null) {

@@ -78,7 +78,7 @@ public class ReportStudentDataDto {
     private String foreignLanguage;
     private String previousStudyLevel;
     private String dormitory;
-    private String regNr;
+    private Long regNr;
     
     public ReportStudentDataDto(Object r, StudentDataCommand criteria, Integer order) {
         this.nr = order;
@@ -123,7 +123,7 @@ public class ReportStudentDataDto {
         this.directiveReasons = resultAsString(r, 16);
         this.studentGroups = new AutocompleteResult(resultAsLong(r, 17), resultAsString(r, 18), resultAsString(r, 18));
         this.studentStatuses = resultAsString(r, 19);
-        this.regNr = resultAsString(r, 20);
+        this.regNr = resultAsLong(r, 20);
         this.nominalStudyEnd = resultAsLocalDate(r, 21);
         this.studyForm = resultAsString(r, 22);
         this.studyLoad = resultAsString(r, 23);
@@ -646,11 +646,11 @@ public class ReportStudentDataDto {
         this.dormitory = dormitory;
     }
 
-    public String getRegNr() {
+    public Long getRegNr() {
         return regNr;
     }
 
-    public void setRegNr(String regNr) {
+    public void setRegNr(Long regNr) {
         this.regNr = regNr;
     }
 }

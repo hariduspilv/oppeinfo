@@ -1,26 +1,47 @@
 <div layout="column" layout-padding>
     <form name="subjectStudyPeriodTeacherEditForm">
         <div layout="column">
-            <div ng-if="isNew" layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="25" flex-sm="100" flex-xs="100">
-                    <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
-                    <hois-select ng-model="record.studyPeriod" values="studyPeriods" required sorted-query="true"></hois-select>
-                </md-input-container>
-                <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-                    <label>{{'subjectStudyPeriod.teacher' | translate}}</label>
-                    <hois-select ng-model="record.teacher" values="teachers" required></hois-select>
-                </md-input-container>
+          <div layout="row" layout-md="column" layout-sm="column" layout-xs="column">
+            <div ng-if="isNew" flex="45" flex-md="100" flex-sm="100" flex-xs="100" layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
+                <hois-select ng-model="record.studyPeriod" values="studyPeriods" required sorted-query="true"></hois-select>
+              </md-input-container>
+              <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+                <label>{{'subjectStudyPeriod.teacher' | translate}}</label>
+                <hois-select ng-model="record.teacher" values="teachers" required></hois-select>
+              </md-input-container>
             </div>
-            <div ng-if="!isNew" layout="row" layout-sm="column" layout-xs="column" class="form-readonly">
-                <md-input-container flex="25" flex-sm="100" flex-xs="100">
-                    <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
-                    <hois-value value="currentLanguageNameField(studyPeriod)"></hois-value>
-                </md-input-container>
-                 <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-                    <label>{{'subjectStudyPeriod.teacher' | translate}}</label>
-                    <hois-value value="teacher.nameEt"></hois-value>
-                </md-input-container>
+            <div ng-if="!isNew" flex="45" flex-md="100" flex-sm="100" flex-xs="100" layout="row" layout-sm="column" layout-xs="column" class="form-readonly">
+              <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
+                <hois-value value="currentLanguageNameField(studyPeriod)"></hois-value>
+              </md-input-container>
+              <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+                <label>{{'subjectStudyPeriod.teacher' | translate}}</label>
+                <hois-value value="teacher.nameEt"></hois-value>
+              </md-input-container>
             </div>
+            <div flex="45" flex-md="100" flex-sm="100" flex-xs="100"
+                 layout="row" layout-sm="column" layout-xs="column"
+                 flex-offset-md="0" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5"
+                 class="form-readonly">
+              <md-input-container flex="100" flex-gt-sm="45">
+                <label>{{'subjectStudyPeriod.lessonPlanLoad' | translate }}</label>
+                <hois-value value="record.studyLoad"></hois-value>
+              </md-input-container>
+              <md-radio-group class="readonly" ng-model="record.isStudyPeriodScheduleLoad"
+                              flex="100" flex-gt-sm="50" flex-offset="0" flex-offset-gt-sm="5"
+                              layout="row" layout-align-gt-sm="start center" disabled>
+                <md-radio-button ng-value="true" aria-label="{{'subjectStudyPeriod.studyPeriodLoad' | translate}}">
+                  {{'subjectStudyPeriod.studyPeriodLoad' | translate}}
+                </md-radio-button>
+                <md-radio-button ng-value="false" aria-label="{{'subjectStudyPeriod.studyYearLoad' | translate}}">
+                  {{'subjectStudyPeriod.studyYearLoad' | translate}}
+                </md-radio-button>
+              </md-radio-group>
+            </div>
+          </div>
             <div flex layout="row" layout-align="start start" class="common-label" md-colors="{color: 'background-400'}">
                 <span ng-repeat="capacity in capacityTypes">
                     <span ng-if="$index !== 0">|</span>
@@ -28,17 +49,18 @@
                 </span>
             </div>
             <div>&nbsp;</div>
-            <md-table-container>
-                <table class="subject-study-period">
+            <md-table-container fixed-column-table fixed-columns="1" resize-table search-criteria-height="250">
+                <table class="subject-study-period pre-last-col-wide">
                     <thead>
                     <tr>
                         <th>
-                          <span>{{'subjectStudyPeriod.subjects' | translate}}</span>
+                          <span>{{'subjectStudyPeriod.subjectStudyPeriod' | translate}}</span>
                           <a ng-href="#/subjectStudyPeriod/new?teacherId={{record.teacher}}&studyPeriodId={{record.studyPeriod}}"
-                          ng-if="record.teacher">{{'subjectStudyPeriod.addSubjects' | translate}}</a>
+                          ng-if="record.teacher">{{'subjectStudyPeriod.addSubjectStudyPeriod' | translate}}</a>
                         </th>
                         <th ng-repeat="capacityType in capacityTypes">{{capacityType.value.toUpperCase()}}</th>
-                        <th>{{'subjectStudyPeriod.overall' | translate}}</th>
+                        <th>{{'subjectStudyPeriod.overallTeacher' | translate}}</th>
+                        <th>{{'subjectStudyPeriod.eap' | translate}}</th>
                     </tr>
                     </thead>
                     <tbody ng-repeat="subject in record.subjects">
@@ -48,6 +70,7 @@
                             </td>
                             <td ng-repeat="type in capacityTypes">{{capacitiesUtil.getSubjectsCapacityByType(subject.id, type.code)}}</td>
                             <td>{{capacitiesUtil.getSubjectsTotalCapacity(subject.id, capacityTypes)}}</td>
+                            <td>{{capacitiesUtil.toEap(capacitiesUtil.getSubjectsTotalCapacity(subject.id, capacityTypes)) | number: 2}}</td>
                         </tr>
                         <tr ng-repeat="ssp in record.subjectStudyPeriodDtos | filter:{ subject: subject.id }">
                             <td>
@@ -59,9 +82,14 @@
                                     <i ng-if="ssp.capacityDiff">
                                         <span>{{'subjectStudyPeriod.teacherLoadDiffersFromPair' | translate}}</span>
                                     </i>
-                                    <span ng-if="ssp.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'">
-                                        <span class="subject-study-period-proportion">{{'subjectStudyPeriod.proportion' | translate | lowercase}}:
-                                            <hois-classifier-value ng-model="ssp.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
+                                    <hois-classifier-radio flex="100" flex-gt-sm="50" flex-offset="0" flex-offset-gt-sm="5"
+                                                           layout="row" layout-align-gt-sm="start center"
+                                                           style="display: inline-flex; margin: 0;"
+                                                           ng-model="ssp.coefficient" model-value-attr="code"
+                                                           main-classifier-code="KOEFITSIENT"></hois-classifier-radio>
+                                    <span ng-if="ssp.subgroups.length > 0">
+                                        <span class="subject-study-period-proportion">{{'subjectStudyPeriod.subgroups.label' | translate | lowercase}}:
+                                            {{ssp.subgroups.length}}
                                         </span>
                                     </span>
                                     <a ng-href="#/subjectStudyPeriod/{{ssp.id}}/edit?teacherId={{record.teacher}}">{{'main.button.change' | translate}}</a>
@@ -79,20 +107,74 @@
                                     class="subject-study-period-period-total">{{capacity.hours ? capacity.hours : 0}}</div>
                             </td>
                             <td>
-                                <div ng-if="ssp.capacityDiff">{{capacitiesUtil.capacitiesSumBySsp(ssp.teachers[0])}}</div>
+                                <div ng-if="ssp.capacityDiff">{{capacitiesUtil.capacitiesSumBySspAndTeacher(ssp, teacher.id, true)}}</div>
                                 <div ng-class="{'subject-study-period-period-total': ssp.capacityDiff}">{{capacitiesUtil.capacitiesSumBySsp(ssp)}}</div>
+                            </td>
+                            <td>
+                              <div ng-if="ssp.capacityDiff">{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySspAndTeacher(ssp, teacher.id, true)) | number: 2}}</div>
+                              <div ng-class="{'subject-study-period-period-total': ssp.capacityDiff}">{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySsp(ssp)) | number: 2}}</div>
                             </td>
                         </tr>
                         <tr class="bold">
-                            <td>{{'subjectStudyPeriod.overall' | translate}}</td>
+                            <td>{{'subjectStudyPeriod.overallSubject' | translate}}</td>
                             <td ng-repeat="type in capacityTypes">{{capacitiesUtil.capacitiesSumBySubjectAndType(subject.id, type.code, teacher.id)}}</td>
                             <td>{{capacitiesUtil.capacitiesSumBySubject(subject.id, teacher.id)}}</td>
+                            <td></td>
+                        </tr>
+                        <tr class="bold">
+                          <td>{{'subjectStudyPeriod.eap' | translate}}</td>
+                          <td ng-repeat="type in capacityTypes">{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySubjectAndType(subject.id, type.code, teacher.id)) | number: 2}}</td>
+                          <td></td>
+                          <td>{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySubject(subject.id, teacher.id)) | number: 2}}</td>
                         </tr>
                     </tbody>
                     <tr class="bold bold-top-line" md-colors="{background: 'background-200'}">
-                        <td>{{'subjectStudyPeriod.overall' | translate | uppercase}}</td>
-                        <td ng-repeat="type in capacityTypes">{{capacitiesUtil.capacitiesSumByType(type.code, teacher.id)}}</td>
-                        <td>{{capacitiesUtil.capacitiesSumOverall(teacher.id)}}</td>
+                      <td>{{'subjectStudyPeriod.overall' | translate | uppercase}}</td>
+                      <td ng-repeat="type in capacityTypes">{{capacitiesUtil.capacitiesSumByType(type.code, teacher.id)}}</td>
+                      <td>{{capacitiesUtil.capacitiesSumOverall(teacher.id)}}</td>
+                      <td></td>
+                    </tr>
+                    <tr class="bold" md-colors="{background: 'background-200'}">
+                      <td>{{'subjectStudyPeriod.eap' | translate | uppercase}}</td>
+                      <td ng-repeat="type in capacityTypes">{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumByType(type.code, teacher.id)) | number: 2}}</td>
+                      <td></td>
+                      <td>{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumOverall(teacher.id)) | number: 2}}</td>
+                    </tr>
+                    <tr class="bold bold-top-line" md-colors="{background: 'background-200'}">
+                      <td>{{'subjectStudyPeriod.overallContact' | translate}}</td>
+                      <td ng-repeat="type in capacityTypes">{{capacitiesUtil.capacitiesSumByType(type.code, teacher.id, true)}}</td>
+                      <td>{{capacitiesUtil.capacitiesSumOverall(teacher.id, true)}}</td>
+                      <td>{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumOverall(teacher.id, true)) | number: 2}}</td>
+                    </tr>
+                    <tr class="bold" md-colors="{background: 'background-200'}" ng-if="!isEmptyObject(record.teacherPeriodVocationalCapacities)">
+                      <td>
+                        <span>
+                          {{'subjectStudyPeriod.overallVocational' | translate}}
+                          <md-tooltip md-direction="right" style="height: auto">
+                            <div ng-repeat="cap in record.vocationalCapacityTypes">
+                              {{currentLanguageNameField(cap)}}: {{record.teacherPeriodVocationalCapacities[cap.code] ? record.teacherPeriodVocationalCapacities[cap.code] : 0}}
+                            </div>
+                          </md-tooltip>
+                        </span>
+                      </td>
+                      <td ng-repeat="type in capacityTypes">{{record.teacherPeriodVocationalCapacities[type.code] ? record.teacherPeriodVocationalCapacities[type.code] : 0}}</td>
+                      <td>{{capacitiesUtil.teacherContainerVocationalLoadTotal(record.teacherPeriodVocationalCapacities)}}</td>
+                      <td>{{capacitiesUtil.toEap(capacitiesUtil.teacherContainerVocationalLoadTotal(record.teacherPeriodVocationalCapacities)) | number: 2}}</td>
+                    </tr>
+                    <tr class="bold" md-colors="{background: 'background-200'}" ng-if="!isEmptyObject(record.teacherYearVocationalCapacities)">
+                      <td>
+                        <span>
+                          {{'subjectStudyPeriod.overallVocationalYear' | translate}}
+                          <md-tooltip md-direction="right" style="height: auto">
+                            <div ng-repeat="cap in record.vocationalCapacityTypes">
+                              {{currentLanguageNameField(cap)}}: {{record.teacherYearVocationalCapacities[cap.code] ? record.teacherYearVocationalCapacities[cap.code] : 0}}
+                            </div>
+                          </md-tooltip>
+                        </span>
+                      </td>
+                      <td ng-repeat="type in capacityTypes">{{record.teacherYearVocationalCapacities[type.code] ? record.teacherYearVocationalCapacities[type.code] : 0}}</td>
+                      <td>{{capacitiesUtil.teacherContainerVocationalLoadTotal(record.teacherYearVocationalCapacities)}}</td>
+                      <td>{{capacitiesUtil.toEap(capacitiesUtil.teacherContainerVocationalLoadTotal(record.teacherYearVocationalCapacities)) | number: 2}}</td>
                     </tr>
                 </table>
             </md-table-container>
@@ -102,6 +184,8 @@
             <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
             <a ng-if="!isNew" ng-href="{{excel(formState.xlsUrl, container)}}" target="_blank" class="md-button md-raised">{{'main.button.printXls' | translate}}</a>
             <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/teachers', subjectStudyPeriodTeacherEditForm)">{{'main.button.back' | translate}}</md-button>
+            <md-button class="md-raised" ng-href="#/subjectStudyPeriod/new?teacherId={{record.teacher}}&studyPeriodId={{record.studyPeriod}}"
+                       ng-if="record.teacher">{{'subjectStudyPeriod.addSubjectStudyPeriod' | translate}}</md-button>
         </div>
     </form>
 </div>
@@ -114,5 +198,9 @@
     .subject-study-period td,
     .subject-study-period th {
         border-bottom: none !important;
+    }
+    .subject-study-period.pre-last-col-wide td:nth-last-child(2),
+    .subject-study-period.pre-last-col-wide th:nth-last-child(2) {
+      min-width: 120px;
     }
 </style>

@@ -18,7 +18,7 @@ public class ApelApplicationForm extends InsertedChangedVersionDto {
     @Valid
     private List<ApelApplicationRecordForm> records = new ArrayList<>();
     private String decision;
-    private Long committeeId;
+    private List<Long> committeeIds;
     private String nominalType;
     private LocalDate newNominalStudyEnd;
 
@@ -49,14 +49,6 @@ public class ApelApplicationForm extends InsertedChangedVersionDto {
         this.decision = decision;
     }
 
-    public Long getCommitteeId() {
-        return committeeId;
-    }
-
-    public void setCommitteeId(Long committeeId) {
-        this.committeeId = committeeId;
-    }
-
     public String getNominalType() {
         return nominalType;
     }
@@ -79,6 +71,14 @@ public class ApelApplicationForm extends InsertedChangedVersionDto {
 
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+
+    public List<Long> getCommitteeIds() {
+        return committeeIds;
+    }
+
+    public void setCommitteeIds(List<Long> committeeIds) {
+        this.committeeIds = committeeIds;
     }
 
 }

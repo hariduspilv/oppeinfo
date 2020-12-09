@@ -47,6 +47,11 @@
                   <md-checkbox ng-repeat="type in typesRow" ng-model="selectedCapacityTypes[type.code]">{{currentLanguageNameField(type)}}</md-checkbox>
                 </div>
               </div>
+              <div ng-repeat="teachersRow in teachers" layout="column" flex>
+                <div layout="row" flex>
+                  <md-checkbox ng-repeat="teacher in teachersRow" ng-model="selectedTeachers[teacher.id]">{{currentLanguageNameField(teacher)}}</md-checkbox>
+                </div>
+              </div>
             </div>
             <md-input-container ng-if="(journal.isIndividual && journalEntry.entryType !== 'SISSEKANNE_L') || formState.journalStudent"
                 flex="100" flex-gt-sm="45" flex-offset="0" flex-offset-gt-sm="10">
@@ -217,7 +222,6 @@
                           </span>
                           <span ng-repeat-end ng-if="(gradeHistory.grade || gradeHistory.verbalGrade) && !$last">&nbsp;/&nbsp;</span>
                         </span>
-                        <span>&nbsp;</span>
                         <span ng-if="gradeSelectShown(row)">
                           <span ng-if="!gradeSelectDisabled(row)">
                             <md-input-container ng-if="formState.gradeInputAsSelect">

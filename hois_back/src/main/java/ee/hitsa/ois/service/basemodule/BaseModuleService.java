@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
+
+import ee.hitsa.ois.web.dto.PersonResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -270,7 +272,7 @@ public class BaseModuleService {
      * Additional methods
      */
 
-    public List<OccupiedAutocompleteResult> getTeachers(Long schoolId, TeacherAutocompleteCommand lookup) {
+    public List<PersonResult> getTeachers(Long schoolId, TeacherAutocompleteCommand lookup) {
         return autocompleteService.teachers(schoolId, lookup, true);
     }
 

@@ -35,6 +35,11 @@ public class ClassifierDto extends InsertedChangedVersionDto implements Translat
         return dto;
     }
 
+    public static ClassifierDto ofEssential(Classifier classifier) {
+        return EntityUtil.bindToDto(classifier, new ClassifierDto(),
+                "inserted", "insertedBy", "changed", "changedBy");
+    }
+
     public String getValue2() {
         return value2;
     }

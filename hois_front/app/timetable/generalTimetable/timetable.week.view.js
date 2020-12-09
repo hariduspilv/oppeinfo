@@ -41,6 +41,7 @@
         subgroups: event.subgroups,
         students: event.students,
         includesEventStudents: event.includesEventStudents,
+        addInfo: event.addInfo,
         public: event.publicEvent,
         journalId: event.journalId,
         subjectStudyPeriodId: event.subjectStudyPeriodId,

@@ -17,6 +17,7 @@ import javax.persistence.Query;
 import javax.transaction.Transactional;
 
 import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.commandobject.ProtocolStudentSaveForm;
 import ee.hitsa.ois.web.dto.GradeDto;
 import org.slf4j.Logger;
@@ -200,10 +201,11 @@ public class AbstractProtocolService {
                     .getResultList().stream().filter(pso -> pso.getStudentOccupationCertificate() != null).collect(Collectors.groupingBy(pso -> EntityUtil.getId(pso.getProtocolStudent()), Collectors.toMap(pso -> EntityUtil.getId(pso.getStudentOccupationCertificate()), v -> v)));
 
             for(ProtocolStudent ps : protocol.getProtocolStudents()) {
+                List<StudentOccupationCertificate> studentCertificates = studentOccupationCertificates.get(EntityUtil.getId(ps.getStudent()));
                 Map<Long, ProtocolStudentOccupation> protocolStudentCertificates = protocolCertificates.get(EntityUtil.getId(ps));
-                Map<Long, StudentOccupationCertificate> studentCertificates = StreamUtil.toMap(soc -> EntityUtil.getId(soc), studentOccupationCertificates.get(EntityUtil.getId(ps.getStudent())));
+                Map<Long, StudentOccupationCertificate> studentCertificatesMap = StreamUtil.toMap(soc -> EntityUtil.getId(soc), studentCertificates);
 
-                studentCertificates.forEach((k, v) -> {
+                studentCertificatesMap.forEach((k, v) -> {
                     if (protocolStudentCertificates == null || !protocolStudentCertificates.keySet().remove(k)) {
                         // remove manually added occupation certificate before replacing it with imported certificate
                         if (Boolean.FALSE.equals(protocol.getIsVocational())) {
@@ -220,6 +222,12 @@ public class AbstractProtocolService {
                     protocolStudentCertificates.values().forEach(v -> {
                         ps.getProtocolStudentOccupations().removeIf(it -> it.equals(v));
                     });
+                }
+
+                // set language from acquired certificate if student isn't stuying in Estonian
+                if (Boolean.TRUE.equals(protocol.getIsVocational()) && studentCertificates != null &&
+                        !StudentUtil.isStudyingInEstonian(ps.getStudent())) {
+                    ps.setLanguage(studentCertificates.get(0).getLanguageCode());
                 }
             }
         }
@@ -256,7 +264,8 @@ public class AbstractProtocolService {
     protected Map<Long, List<StudentOccupationCertificate>> studentOccupationCertificates(List<Long> studentIds, Collection<String> occupations) {
         if (!studentIds.isEmpty() && !occupations.isEmpty()) {
             List<StudentOccupationCertificate> occupationCertificates = em.createQuery("select soc from StudentOccupationCertificate soc"
-                    + " where soc.student.id in (?1) and (soc.occupation.code in (?2) or soc.partOccupation.code in (?2))", StudentOccupationCertificate.class)
+                    + " where soc.student.id in (?1) and (soc.occupation.code in (?2) or soc.partOccupation.code in (?2))"
+                    + " order by soc.languageCode.nameEt", StudentOccupationCertificate.class)
                     .setParameter(1, studentIds)
                     .setParameter(2, occupations)
                     .getResultList();

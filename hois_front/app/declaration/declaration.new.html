@@ -1,9 +1,9 @@
-<form layout="column" class="ois-form-layout-padding form-readonly" name="declarationNewForm" novalidate>
-  <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="!nextPeriod.id">
+<form layout="column" class="ois-form-layout-padding" name="declarationNewForm" novalidate>
+  <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="periods.length < 2" class="readonly readonly-reverse-margin">
     <label>{{'declaration.studyPeriod' | translate}}</label>
     <hois-value value="currentLanguageNameField(studyPeriod)"></hois-value>
   </md-input-container>
-  <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="!!nextPeriod.id">
+  <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="periods.length > 1">
     <label>{{'declaration.studyPeriod' | translate}}</label>
     <md-select ng-model="controller.period" required ng-change="controller.student = undefined">
       <md-option ng-value="val.id" ng-repeat="val in periods">{{currentLanguageNameField(val)}}</md-option>
@@ -11,7 +11,7 @@
   </md-input-container>
   <div>&nbsp;</div>
   <hois-autocomplete ng-model="controller.student" url="/declarations/students" name="student"
-      label="declaration.student" additional-query-params="{nextPeriod: nextPeriod.id === controller.period}" required>
+      label="declaration.student" additional-query-params="{nextPeriod: studyPeriod.id !== controller.period, period: controller.period}" required>
   </hois-autocomplete>
 
   <div layout="row">

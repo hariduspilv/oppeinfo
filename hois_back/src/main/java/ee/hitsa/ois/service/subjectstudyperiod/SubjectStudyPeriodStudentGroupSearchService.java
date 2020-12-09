@@ -1,14 +1,37 @@
 package ee.hitsa.ois.service.subjectstudyperiod;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.service.SubjectStudyPeriodPlanService;
+import ee.hitsa.ois.service.XlsService;
+import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
+import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodSearchCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.ClassifierDto;
+import ee.hitsa.ois.web.dto.SubjectStudyPeriodStudentGroupSearchDto;
+import ee.hitsa.ois.web.dto.lessonPlan.LessonPlanXlsCapacityDto;
+import ee.hitsa.ois.web.dto.subjectstudyperiod.SubjectStudyPeriodExistingPlanDto;
+import ee.hitsa.ois.web.dto.subjectstudyperiod.TeacherWithWorkLoadDto;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -18,38 +41,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
-import javax.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort.Direction;
-import org.springframework.stereotype.Service;
-
-import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.StudyPeriod;
-import ee.hitsa.ois.domain.curriculum.Curriculum;
-import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
-import ee.hitsa.ois.domain.student.StudentGroup;
-import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
-import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
-import ee.hitsa.ois.repository.StudentGroupRepository;
-import ee.hitsa.ois.service.XlsService;
-import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.JpaNativeQueryBuilder;
-import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.util.SubjectStudyPeriodUtil;
-import ee.hitsa.ois.web.commandobject.subject.studyperiod.SubjectStudyPeriodSearchCommand;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.ClassifierDto;
-import ee.hitsa.ois.web.dto.SubjectStudyPeriodStudentGroupSearchDto;
-import ee.hitsa.ois.web.dto.lessonPlan.LessonPlanXlsCapacityDto;
-import ee.hitsa.ois.web.dto.subjectstudyperiod.TeacherWithWorkLoadDto;
+import static ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodCapacitiesService.SQL_SELECT_TEACHER_CAPACITY;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsStringList;
 
 @Transactional
 @Service
@@ -61,73 +59,77 @@ public class SubjectStudyPeriodStudentGroupSearchService {
             + "join timetable_object_student_group sg on sg.timetable_object_id = tobj.id ";
 
     @Autowired
-    private StudentGroupRepository studentGroupRepository;
-    @Autowired
     private EntityManager em;
     @Autowired
     private XlsService xlsService;
 
     public Page<SubjectStudyPeriodStudentGroupSearchDto> searchByStudentGroup(Long schoolId, SubjectStudyPeriodSearchCommand criteria,
             Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period_student_group sspsg " +
+                "join student_group sg on sspsg.student_group_id = sg.id " +
+                "join subject_study_period ssp on sspsg.subject_study_period_id = ssp.id " +
+                "join study_period sp on ssp.study_period_id = sp.id " +
+                "join study_year sy on sp.study_year_id = sy.id " +
+                "join curriculum c on sg.curriculum_id = c.id " +
+                "left join curriculum_version cv on sg.curriculum_version_id = cv.id ");
+        qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalCriteria("sg.id in :sgIds", "sgIds", criteria.getStudentGroup());
+        qb.optionalCriteria("sg.curriculum_id = :cId", "cId", criteria.getCurriculum());
+        qb.optionalCriteria("sg.curriculum_version_id = :cvId", "cvId", criteria.getCurriculumVersion());
+        if (criteria.getDepartment() != null) {
+            qb.requiredCriteria("exists(select 1 from curriculum_department cd " +
+                            "where cd.school_department_id in :departmentIds and cd.curriculum_id = sg.curriculum_id)",
+                    "departmentIds", Collections.singletonList(criteria.getDepartment()));
+        }
+        qb.filter("c.is_higher = true");
+        qb.validNowCriteria("sg.valid_from", "sg.valid_thru");
+        qb.optionalCriteria((criteria.getStudyPeriod() != null ? "sp.id = :timeId" : "sy.id = :timeId"),
+                "timeId", criteria.getStudyPeriod() != null ? criteria.getStudyPeriod() : criteria.getStudyYear());
 
-        return studentGroupRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("school").get("id"), schoolId));
-            if (criteria.getStudentGroup() != null) {
-                filters.add(root.get("id").in(criteria.getStudentGroup()));
-            }
-            if (criteria.getCurriculum() != null) {
-                filters.add(cb.equal(root.get("curriculum").get("id"), criteria.getCurriculum().getId()));
-            }
-            Long department = criteria.getDepartment();
-            if (department != null) {
-                Subquery<Long> departmentQuery = query.subquery(Long.class);
-                Root<CurriculumDepartment> curriculumDepartmentRoot = departmentQuery.from(CurriculumDepartment.class);
-                departmentQuery = departmentQuery.select(curriculumDepartmentRoot.get("curriculum").get("id")).where(
-                        curriculumDepartmentRoot.get("schoolDepartment").get("id").in(Arrays.asList(department)));
-                filters.add(root.get("curriculum").get("id").in(departmentQuery));
-            }
-            filters.add(cb.equal(root.get("curriculum").get("higher"), Boolean.TRUE));
+        qb.sort(pageable);
+        qb.groupBy("sg.id, c.id, cv.id, sp.id");
+        // Object[] {studentGroupId, studyPeriodId}
+        Page<Object> pagingResult = JpaQueryUtil.pagingResult(qb, "sg.id as sgid, sp.id as spid", em, pageable);
+        List<Long> groupIds = pagingResult.getContent().stream()
+                .map(r -> resultAsLong(r, 0))
+                .collect(Collectors.toList());
 
-            /*
-             * Only valid student groups should be shown
-             */
-            filters.add(cb.or(cb.lessThanOrEqualTo(root.get("validFrom"), LocalDate.now()),
-                    cb.isNull(root.get("validFrom"))));
-            filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), LocalDate.now()),
-                    cb.isNull(root.get("validThru"))));
+        if (groupIds.isEmpty()) {
+            // Empty mapping for return
+            return pagingResult.map(r -> new SubjectStudyPeriodStudentGroupSearchDto());
+        }
 
-            /*
-             * Search should show only those studentGroups, which have any
-             * connections with subject_study_period_student_group table with
-             * specific studyPeriod
-             */
-            Subquery<Long> sspStudentGroupQuery = query.subquery(Long.class);
-            Root<SubjectStudyPeriodStudentGroup> sspStudentGroupRoot = sspStudentGroupQuery
-                    .from(SubjectStudyPeriodStudentGroup.class);
-            sspStudentGroupQuery = sspStudentGroupQuery.select(sspStudentGroupRoot.get("studentGroup").get("id"))
-                    .where(cb.equal(sspStudentGroupRoot.get("subjectStudyPeriod").get("studyPeriod").get("id"),
-                            criteria.getStudyPeriod()));
-            filters.add(root.get("id").in(sspStudentGroupQuery));
+        // fetch everything we need for this request to decrease amount of requests
+        em.createQuery("select sg from StudentGroup sg " +
+                "join fetch sg.subjectStudyPeriods sspsg " +
+                "join fetch sspsg.subjectStudyPeriod ssp " +
+                "join fetch ssp.studyPeriod " +
+                "join fetch sg.curriculum " +
+                "left join fetch sg.curriculumVersion " +
+                "where sg.id in :sgIds", StudentGroup.class)
+                .setParameter("sgIds", groupIds)
+                .getResultList();
 
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(sg -> getSearchDto(sg, criteria.getStudyPeriod()));
+        return pagingResult.map(r -> getSearchDto(
+                em.getReference(StudentGroup.class, resultAsLong(r, 0)),
+                em.getReference(StudyPeriod.class, resultAsLong(r, 1))));
     }
 
-    private SubjectStudyPeriodStudentGroupSearchDto getSearchDto(StudentGroup sg, Long studyPeriod) {
+    private SubjectStudyPeriodStudentGroupSearchDto getSearchDto(StudentGroup sg, StudyPeriod studyPeriod) {
         SubjectStudyPeriodStudentGroupSearchDto dto = new SubjectStudyPeriodStudentGroupSearchDto();
         dto.setId(EntityUtil.getId(sg));
         dto.setCode(sg.getCode());
         dto.setCurriculum(curriculum(sg.getCurriculum()));
-        dto.setHours(getHours(sg, studyPeriod));
-        dto.setStudyPeriod(studyPeriod);
+        dto.setCurriculumVersion(AutocompleteResult.of(sg.getCurriculumVersion()));
+        dto.setHours(getHours(sg, studyPeriod.getId()));
+        dto.setStudyPeriod(AutocompleteResult.ofWithYear(studyPeriod));
         /*
          * This check prevents the exception in 
          * TimetableEventService.getGeneralTimetableCurriculum
          * When user proceeds to watch timetable 
          */
         if(sg.getCurriculumVersion() != null) {
-            dto.setTimetable(getTimetable(dto.getId(), studyPeriod));
+            dto.setTimetable(getTimetable(dto.getId(), studyPeriod.getId()));
         }
         return dto;
     }
@@ -159,11 +161,17 @@ public class SubjectStudyPeriodStudentGroupSearchService {
     
     public byte[] searchByStudentGroupAsExcel(Long schoolId, SubjectStudyPeriodSearchCommand criteria) {
         List<SubjectStudyPeriodStudentGroupSearchDto> studentGroups = searchByStudentGroup(schoolId, criteria,
-                new PageRequest(0, Integer.MAX_VALUE, Direction.ASC, "code")).getContent();
-        
+                new PageRequest(0, Integer.MAX_VALUE, Direction.ASC, "sg.code")).getContent();
+
+        Map<String, Object> parameters = new LinkedHashMap<>();
+        parameters.put("subjectstudyperiod.studyYear", criteria.getStudyYear() != null
+                ? AutocompleteResult.of(em.getReference(StudyYear.class, criteria.getStudyYear())) : "-");
+        parameters.put("subjectstudyperiod.period", criteria.getStudyPeriod() != null
+                ? em.getReference(StudyPeriod.class, criteria.getStudyPeriod()) : "-");
+
         Map<String, Object> data = new HashMap<>();
-        data.put("studyPeriod", em.getReference(StudyPeriod.class, criteria.getStudyPeriod()));
         data.put("studentGroups", studentGroups);
+        data.put("parameters", parameters);
         return xlsService.generate("searchByStudentGroup.xls", data);
     }
 
@@ -298,15 +306,15 @@ public class SubjectStudyPeriodStudentGroupSearchService {
                 + "join classifier c_type on c_type.code in (:capacityTypes) "
                 + "left join school_capacity_type sct on sct.capacity_type_code = c_type.code and sct.school_id = :schoolId and sct.is_higher = true "
                 + "left join school_capacity_type_load sctl on sctl.school_capacity_type_id = sct.id and sctl.study_year_id = sp.study_year_id "
-                + "left join (select sspp.subject_id, sspp.study_period_id, ssppc.is_contact, ssppc.capacity_type_code "
-                    + "from subject_study_period_plan sspp "
-                    + "join subject_study_period_plan_capacity ssppc on ssppc.subject_study_period_plan_id = sspp.id) Contact "
-                        + "on Contact.subject_id = ssp.subject_id "
-                        + "and Contact.study_period_id = ssp.study_period_id "
+                        + "and coalesce(ssp.coefficient_code, 'KOEFITSIENT_K1') = sctl.coefficient_code "
+                + "left join (select sspp.ssp_id, ssppc.is_contact, ssppc.capacity_type_code "
+                    + "from (" + SubjectStudyPeriodPlanService.SQL_JOIN_SELECT_PLAN_BY_SSP + ") sspp "
+                    + "join subject_study_period_plan_capacity ssppc on ssppc.subject_study_period_plan_id = sspp.plan_id) Contact "
+                        + "on Contact.ssp_id = ssp.id "
                         + "and Contact.capacity_type_code = c_type.code "
                 + "left join (select ssptc.hours, sspc.capacity_type_code, ssptc.subject_study_period_teacher_id, sspc.subject_study_period_id "
                     + "from subject_study_period_capacity sspc "
-                    + "join subject_study_period_teacher_capacity ssptc on ssptc.subject_study_period_capacity_id = sspc.id) THours "
+                    + "join (" + SQL_SELECT_TEACHER_CAPACITY + ") ssptc on ssptc.subject_study_period_capacity_id = sspc.id) THours "
                         + "on THours.subject_study_period_teacher_id = sspt.id "
                         + "and THours.subject_study_period_id = ssp.id "
                         + "and THours.capacity_type_code = c_type.code "
@@ -373,5 +381,39 @@ public class SubjectStudyPeriodStudentGroupSearchService {
                     .setParameter("codes", capacityCodes).getResultList();
         }
         return StreamUtil.toMappedList(ClassifierDto::of, capacities);
+    }
+
+    public List<SubjectStudyPeriodExistingPlanDto> getExistingPlans(Long schoolId, StudyPeriod period, StudentGroup group) {
+        if (group.getCurriculumVersion() == null) {
+            return Collections.emptyList();
+        }
+
+        List<?> results = em.createNativeQuery("select sp.id as spid, sg.id as sgid, sp.end_date, " +
+                "cl_sy.name_et || ' ' || sp.name_et || ' ' || sg.code || ' (' || coalesce(cv.code, '-') || ' ' || c.name_et || ')' as name_et, " +
+                "coalesce(cl_sy.name_en, cl_sy.name_et) || ' ' || coalesce(sp.name_en, sp.name_et) || " +
+                "' ' || sg.code || ' (' || coalesce(cv.code, '-') || ' ' || coalesce(c.name_en, c.name_et) || ')' as name_en " +
+                "from subject_study_period_student_group sspsg " +
+                "join subject_study_period ssp on sspsg.subject_study_period_id = ssp.id " +
+                "join study_period sp on ssp.study_period_id = sp.id " +
+                "join study_year sy on sp.study_year_id = sy.id " +
+                "join classifier cl_sy on sy.year_code = cl_sy.code " +
+                "join student_group sg on sspsg.student_group_id = sg.id " +
+                "join curriculum c on sg.curriculum_id = c.id " +
+                "left join curriculum_version cv on sg.curriculum_version_id = cv.id and c.id = cv.curriculum_id " +
+                "where sg.school_id = :schoolId and c.id = :curriculumId and sp.end_date <= :before " +
+                "group by cl_sy.code, sp.id, c.id, cv.id, sg.id")
+                .setParameter("schoolId", schoolId)
+                .setParameter("curriculumId", EntityUtil.getNullableId(group.getCurriculum()))
+                .setParameter("before", JpaQueryUtil.parameterAsTimestamp(period.getStartDate()))
+                .getResultList();
+        return results.stream().map(r -> {
+                    SubjectStudyPeriodExistingPlanDto dto = new SubjectStudyPeriodExistingPlanDto();
+                    dto.setPeriodId(resultAsLong(r, 0));
+                    dto.setGroupId(resultAsLong(r, 1));
+                    dto.setEndDate(resultAsLocalDate(r, 2));
+                    dto.setNameEt(resultAsString(r, 3));
+                    dto.setNameEn(resultAsString(r, 4));
+                    return dto;
+                }).collect(Collectors.toList());
     }
 }

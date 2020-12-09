@@ -39,6 +39,8 @@ import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResult;
 import ee.hitsa.ois.domain.student.StudentCurriculumModuleOutcomesResultHistory;
+import ee.hitsa.ois.domain.timetable.JournalEntryTeacher;
+import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
 import ee.hitsa.ois.enums.Language;
@@ -812,8 +814,24 @@ public class JournalService {
         validateJournalEntry(journal, null, journalEntryForm);
         EntityUtil.setUsername(user.getUsername(), em);
         JournalEntry journalEntry = EntityUtil.bindToEntity(journalEntryForm, new JournalEntry(), classifierRepository,
-                "journalStudent", "journalEntryStudents", "journalEntryCapacityTypes");
+                "journalEntryCapacityTypes", "journalEntryTeachers", "journalStudent", "journalEntryStudents");
         journal.getJournalEntries().add(journalEntry);
+
+        EntityUtil.bindEntityCollection(journalEntry.getJournalEntryCapacityTypes(),
+                type -> EntityUtil.getCode(type.getCapacityType()), journalEntryForm.getJournalEntryCapacityTypes(),
+                it -> {
+                    JournalEntryCapacityType type = new JournalEntryCapacityType();
+                    type.setCapacityType(em.getReference(Classifier.class, it));
+                    return type;
+                });
+
+        EntityUtil.bindEntityCollection(journalEntry.getJournalEntryTeachers(),
+                jt -> EntityUtil.getId(jt.getTeacher()), journalEntryForm.getJournalEntryTeachers(), it -> {
+                    JournalEntryTeacher teacher = new JournalEntryTeacher();
+                    teacher.setTeacher(em.getReference(Teacher.class, it));
+                    return teacher;
+                });
+
         journalEntry.setJournalStudent(EntityUtil.getOptionalOne(JournalStudent.class,
                 journalEntryForm.getJournalStudent(), em));
         saveJournalEntryStudents(user, journalEntryForm, journalEntry);
@@ -828,8 +846,24 @@ public class JournalService {
         validateJournalEntry(journal, journalEntry, journalEntryForm);
         EntityUtil.setUsername(user.getUsername(), em);
         Map<Long, Student> existingComments = getStudentsWithComments(journalEntry);
-        EntityUtil.bindToEntity(journalEntryForm, journalEntry, classifierRepository, "journalStudent",
-                "journalEntryStudents", "journalEntryCapacityTypes");
+        EntityUtil.bindToEntity(journalEntryForm, journalEntry, classifierRepository, "journalEntryCapacityTypes",
+                "journalEntryTeachers", "journalStudent", "journalEntryStudents");
+
+        EntityUtil.bindEntityCollection(journalEntry.getJournalEntryCapacityTypes(),
+                type -> EntityUtil.getCode(type.getCapacityType()), journalEntryForm.getJournalEntryCapacityTypes(),
+                it -> {
+                    JournalEntryCapacityType type = new JournalEntryCapacityType();
+                    type.setCapacityType(em.getReference(Classifier.class, it));
+                    return type;
+                });
+
+        EntityUtil.bindEntityCollection(journalEntry.getJournalEntryTeachers(),
+                jt -> EntityUtil.getId(jt.getTeacher()), journalEntryForm.getJournalEntryTeachers(), it -> {
+                    JournalEntryTeacher teacher = new JournalEntryTeacher();
+                    teacher.setTeacher(em.getReference(Teacher.class, it));
+                    return teacher;
+                });
+
         journalEntry.setJournalStudent(EntityUtil.getOptionalOne(JournalStudent.class,
                 journalEntryForm.getJournalStudent(), em));
         saveJournalEntryStudents(user, journalEntryForm, journalEntry);
@@ -901,13 +935,6 @@ public class JournalService {
                 saveJournalStudentEntry(user, journalEntry, journalEntryStudentForm, lessons);
             }
         }
-        EntityUtil.bindEntityCollection(journalEntry.getJournalEntryCapacityTypes(),
-                type -> EntityUtil.getCode(type.getCapacityType()), journalEntryForm.getJournalEntryCapacityTypes(),
-                it -> {
-                    JournalEntryCapacityType type = new JournalEntryCapacityType();
-                    type.setCapacityType(em.getReference(Classifier.class, it));
-                    return type;
-                });
     }
 
     private void removeUnsuitableJournalEntryStudents(JournalEntryForm journalEntryForm, JournalEntry journalEntry) {
@@ -1229,17 +1256,15 @@ public class JournalService {
         List<CurriculumModuleOutcome> journalOutcomes = journalOutcomes(journal.getId());
         Map<Long, List<JournalSearchDto>> outcomeOtherJournals = outcomeOtherJournals(journal.getId(),
             StreamUtil.toMappedList(CurriculumModuleOutcome::getId, journalOutcomes));
-        int outcomeWithoutOrderNr = 0;
         for (CurriculumModuleOutcome outcome : journalOutcomes) {
             JournalEntryByDateDto outcomeDto = new JournalEntryByDateDto();
-            setOutcomeEntryBaseData(outcomeDto, outcome, outcomeWithoutOrderNr);
+            setOutcomeEntryBaseData(outcomeDto, outcome);
             List<StudentCurriculumModuleOutcomesResultDto> outcomeResults = journalOutcomeResultDtos(null, journal, outcome);
             outcomeDto.setStudentOutcomeResults(StreamUtil.toMap(StudentCurriculumModuleOutcomesResultForm::getStudentId,
                     outcomeResults));
             outcomeDto.setOtherJournals(outcomeOtherJournals.get(outcome.getId()));
             result.add(outcomeDto);
         }
-        JournalUtil.setOutcomeEntriesUnqiueOrderNrs(result);
 
         JournalUtil.orderJournalEntriesByDate(result);
         return result;
@@ -1325,7 +1350,8 @@ public class JournalService {
         List<Long> outcomeIds = journalOutcomeIds(journalId);
         if (!outcomeIds.isEmpty()) {
             return em.createQuery("select cmo from CurriculumModuleOutcome cmo "
-                    + "where cmo.id in (?1)", CurriculumModuleOutcome.class)
+                    + "where cmo.id in (?1) "
+                    + "order by cmo.curriculumModule.id, cmo.orderNr", CurriculumModuleOutcome.class)
                     .setParameter(1, outcomeIds).getResultList();
         }
         return new ArrayList<>();
@@ -1372,16 +1398,11 @@ public class JournalService {
         return new HashMap<>();
     }
 
-    private static void setOutcomeEntryBaseData(JournalEntryByDateBaseDto dto,
-            CurriculumModuleOutcome outcome, int outcomeWithoutOrderNr) {
+    private static void setOutcomeEntryBaseData(JournalEntryByDateBaseDto dto, CurriculumModuleOutcome outcome) {
         dto.setEntryType(JournalEntryType.SISSEKANNE_O.name());
         dto.setNameEt(outcome.getOutcomeEt());
         dto.setNameEn(outcome.getOutcomeEn());
-        if (outcome.getOrderNr() != null) {
-            dto.setOutcomeOrderNr(outcome.getOrderNr());
-        } else {
-            dto.setOutcomeOrderNr(Long.valueOf(outcomeWithoutOrderNr++));
-        }
+        dto.setOutcomeOrderNr(outcome.getOrderNr());
         dto.setCurriculumModule(EntityUtil.getId(outcome.getCurriculumModule()));
         dto.setCurriculumModuleOutcomes(outcome.getId());
     }
@@ -1393,7 +1414,7 @@ public class JournalService {
                 + "join student s on s.id = js.student_id join student_group sg on sg.id = s.student_group_id "
                 + "where js.journal_id = j.id and sg.curriculum_id = cm.curriculum_id) connected_groups";
 
-        Page<CurriculumModuleOutcomeResult> page = JpaQueryUtil.pagingResult(qb, select, em, pageable).map(
+        return JpaQueryUtil.pagingResult(qb, select, em, pageable).map(
                 r -> {
                     String studentGroups = resultAsString(r, 4);
                     studentGroups = studentGroups != null ? " (" + studentGroups + ")" : "";
@@ -1402,11 +1423,6 @@ public class JournalService {
                     nameEn = nameEn != null ? nameEn + studentGroups : nameEt;
                     return new CurriculumModuleOutcomeResult(resultAsLong(r, 0), nameEt, nameEn, resultAsLong(r, 3));
                 });
-        List<Long> assignedOrderNrs = new ArrayList<>();
-        for (CurriculumModuleOutcomeResult dto : page.getContent()) {
-            dto.setOrderNr(JournalUtil.uniqueOrderNr(dto.getOrderNr(), assignedOrderNrs));
-        }
-        return page;
     }
 
     private JpaNativeQueryBuilder journalOutcomesQb(Long journalId) {
@@ -1503,14 +1519,15 @@ public class JournalService {
                 JournalUtil.assertCanEditOutcomeGrade(user, result);
 
                 GradeDto savedGrade = GradeDto.of(result);
-                if (savedGrade != null && !savedGrade.equals(studentForm.getGrade())) {
+                if (Boolean.FALSE.equals(studentForm.getRemoveStudentHistory())
+                        && savedGrade != null && !savedGrade.equals(studentForm.getGrade())) {
                     result.addToHistory();
+                }
+                if (Boolean.TRUE.equals(studentForm.getRemoveStudentHistory())) {
+                    removeStudentOutcomeGradeHistory(user, result);
                 }
 
                 updateStudentOccupationResultGrade(user, result, studentForm);
-                result.setGradeDate(studentForm.getGradeDate());
-                result.setAddInfo(studentForm.getAddInfo());
-                EntityUtil.save(result, em);
             } else if (studentForm.getGrade() != null) {
                 StudentCurriculumModuleOutcomesResult result = new StudentCurriculumModuleOutcomesResult();
                 result.setStudent(em.getReference(Student.class, studentForm.getStudentId()));
@@ -1541,9 +1558,23 @@ public class JournalService {
                 result.setGradeInsertedBy(user.getUsername());
                 result.setGradeInsertedTeacher(EntityUtil.getOptionalOne(Teacher.class, user.getTeacherId(), em));
             }
+            result.setGradeDate(studentForm.getGradeDate());
+            result.setAddInfo(studentForm.getAddInfo());
+            EntityUtil.save(result, em);
         } else {
-            result.removeGrade();
+            if (result.getHistory().isEmpty()) {
+                EntityUtil.setUsername(user.getUsername(), em);
+                EntityUtil.deleteEntity(result, em);
+            } else {
+                result.removeGrade();
+                EntityUtil.save(result, em);
+            }
         }
+    }
+
+    private void removeStudentOutcomeGradeHistory(HoisUserDetails user, StudentCurriculumModuleOutcomesResult result) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        result.getHistory().clear();
     }
 
     public List<JournalStudentDto> journalStudents(HoisUserDetails user, Journal journal, Boolean allStudents) {
@@ -1769,10 +1800,9 @@ public class JournalService {
         dto.setLessonHours(usedHours(journal));
 
         List<CurriculumModuleOutcome> journalOutcomes = journalOutcomes(journal.getId());
-        int outcomeWithoutOrderNr = 0;
         for (CurriculumModuleOutcome outcome : journalOutcomes) {
             JournalEntryByDateXlsDto outcomeDto = new JournalEntryByDateXlsDto();
-            setOutcomeEntryBaseData(outcomeDto, outcome, outcomeWithoutOrderNr);
+            setOutcomeEntryBaseData(outcomeDto, outcome);
 
             List<StudentCurriculumModuleOutcomesResult> results = journalOutcomeResults(journal.getId(), outcome.getId());
             if (!results.isEmpty()) {
@@ -1790,8 +1820,7 @@ public class JournalService {
             }
             dto.getOutcomeEntries().add(outcomeDto);
         }
-        JournalUtil.setOutcomeEntriesUnqiueOrderNrs(dto.getOutcomeEntries());
-        
+
         SchoolType type = schoolService.schoolType(EntityUtil.getId(journal.getSchool()));
         dto.setIsHigherSchool(Boolean.valueOf(type.isHigher()));
         

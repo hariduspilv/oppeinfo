@@ -6,6 +6,7 @@ public class StudentSearchDto {
 
     private Long id;
     private String fullname;
+    private Long regNr;
     private String idcode;
     private AutocompleteResult curriculumVersion;
     private AutocompleteResult curriculum;
@@ -33,6 +34,14 @@ public class StudentSearchDto {
 
     public void setFullname(String fullname) {
         this.fullname = fullname;
+    }
+
+    public Long getRegNr() {
+        return regNr;
+    }
+
+    public void setRegNr(Long regNr) {
+        this.regNr = regNr;
     }
 
     public String getIdcode() {

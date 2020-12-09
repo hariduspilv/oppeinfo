@@ -16,9 +16,11 @@ public class StudentModuleResultDto {
     private LocalDate gradeDate;
     private Boolean isOptional;
 
+    private Boolean canEdit;
+
     public StudentModuleResultDto(Long id, Long curriculumVersionModuleId, String nameEt, String nameEn,
             String subjectCode, BigDecimal credits, String grade, String gradeValue, LocalDate gradeDate,
-            Boolean isOptional) {
+            Boolean isOptional, Boolean canEdit) {
         super();
         this.id = id;
         this.curriculumVersionModuleId = curriculumVersionModuleId;
@@ -30,6 +32,7 @@ public class StudentModuleResultDto {
         this.gradeValue = gradeValue;
         this.gradeDate = gradeDate;
         this.isOptional = isOptional;
+        this.canEdit = canEdit;
     }
 
     public Long getId() {
@@ -112,4 +115,11 @@ public class StudentModuleResultDto {
         this.isOptional = isOptional;
     }
 
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
+    }
 }

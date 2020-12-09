@@ -357,6 +357,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($filter
       .$promise.then(function (result) {
         dialogScope.capacityTypes = ArrayUtils.partSplit(result, 4);
       });
+    dialogScope.teachers = ArrayUtils.partSplit($scope.journal.journalTeachers, 4);
     dialogScope.lessonPlanDates = $scope.formState.lessonInfo.lessonPlanDates.map(function (it) {
       var value = $filter('hoisDate')(it);
       return { nameEt: value, nameEn: value, id: it };
@@ -379,6 +380,18 @@ angular.module('hitsaOis').controller('JournalEditController', function ($filter
         }
       }
       newEntity.journalEntryCapacityTypes = capacityTypesArray;
+    }
+  }
+
+  function teachersToArray(selectedTeachers, newEntity) {
+    var teachersArray = [];
+    if (angular.isObject(selectedTeachers)) {
+      for (var p in selectedTeachers) {
+        if (selectedTeachers.hasOwnProperty(p) && selectedTeachers[p] === true) {
+          teachersArray.push(p);
+        }
+      }
+      newEntity.journalEntryTeachers = teachersArray;
     }
   }
 
@@ -645,6 +658,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($filter
 
       dialogScope.journalEntry = {};
       dialogScope.selectedCapacityTypes = {};
+      dialogScope.selectedTeachers =  {};
       dialogScope.journalEntryStudents = {};
       dialogScope.forbiddenEntryTypes = [];
 
@@ -674,11 +688,18 @@ angular.module('hitsaOis').controller('JournalEditController', function ($filter
         editEntity.journalEntryCapacityTypes.forEach(function (it) {
           dialogScope.selectedCapacityTypes[it] = true;
         });
+        editEntity.journalEntryTeachers.forEach(function (it) {
+          dialogScope.selectedTeachers[it] = true;
+        });
         dialogScope.inactiveStudentsHaveEntries = inactiveStudentsHaveEntries();
         dialogScope.canDeleteEntries = canDeleteEntries();
         setMaxLessons(dialogScope.journalEntry.entryType);
         dialogScope.savedJournalEntryStudents = angular.copy(dialogScope.journalEntryStudents);
       });
+      } else {
+        $scope.journal.journalTeachers.forEach(function (it) {
+          dialogScope.selectedTeachers[it.id] = !$scope.auth.isTeacher() || $scope.auth.teacher === it.id;
+        });
       }
 
       function inactiveStudentsHaveEntries() {
@@ -967,6 +988,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($filter
       var newEntity = angular.extend({}, submittedDialogScope.journalEntry);
       newEntity.journalEntryStudents = submittedDialogScope.changedJournalEntryStudents;
       capacityTypesToArray(submittedDialogScope.selectedCapacityTypes, newEntity);
+      teachersToArray(submittedDialogScope.selectedTeachers, newEntity);
 
       // this prevents an exception in back end - '' is sent if empty date is selected otherwise
       if(!newEntity.entryDate) {
@@ -1365,6 +1387,16 @@ angular.module('hitsaOis').controller('JournalEditController', function ($filter
         result.gradeDate = null;
         result.addInfo = null;
       }
+
+      dialogScope.removeStudentHistory = function (row) {
+        var outcomeStudent = dialogScope.journalOccupationStudents[row.studentId];
+        outcomeStudent.removeStudentHistory = true;
+        outcomeStudent.grade = null;
+        outcomeStudent.gradeValue = null;
+        if (dialogScope.changedJournalOutcomeStudents.indexOf(outcomeStudent) === -1) {
+          dialogScope.changedJournalOutcomeStudents.push(outcomeStudent);
+        }
+      };
 
       dialogScope.saveOutcome = function () {
         dialogScope.submit();

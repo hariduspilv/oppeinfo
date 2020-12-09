@@ -44,8 +44,8 @@
           <tr md-row>
             <th md-column>{{'report.teachersload.studyYear' | translate}}</th>
             <th md-column>{{'report.teachersload.studyPeriod' | translate}}</th>
-            <th md-column>{{'report.teachersload.subject' | translate}}</th>
             <th md-column>{{'report.teachersload.subjectcode' | translate}}</th>
+            <th md-column>{{'report.teachersload.subject' | translate}}</th>
             <th md-column>{{auth.higher ? ('report.teachersload.teacherHigher' | translate) : ('report.teachersload.teacherVocational' | translate)}}</th>
             <th md-column>{{auth.higher ? ('report.teachersload.plannedHoursHigher' | translate) : ('report.teachersload.plannedHoursVocational' | translate)}}</th>
             <th md-column>{{auth.higher ? ('report.teachersload.actualHoursHigher' | translate) : ('report.teachersload.actualHoursVocational' | translate)}}</th>
@@ -59,13 +59,13 @@
             <td md-cell>
               <div ng-repeat="subject in row.subjects">
                 <hr ng-if="!$first">
-                {{currentLanguageNameField(subject.subject)}}
+                {{::subject.code}}
               </div>
             </td>
             <td md-cell>
               <div ng-repeat="subject in row.subjects">
                 <hr ng-if="!$first">
-                {{::subject.code}}
+                {{currentLanguageNameField(subject.subject)}}
               </div>
             </td>
             <td md-cell>{{::row.teacher}}</td>

@@ -1,12 +1,15 @@
 package ee.hitsa.ois.service.subjectstudyperiod;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.getOrDefault;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -16,6 +19,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
+import ee.hitsa.ois.enums.Coefficient;
+import ee.hitsa.ois.service.SubjectStudyPeriodPlanService;
+import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanCapacityDto;
+import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanDto;
+import ee.hitsa.ois.web.dto.SubjectStudyPeriodSubgroupDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -58,7 +67,7 @@ public class SubjectStudyPeriodSubjectService {
             filters.add(cb.equal(root.get("subject").get("id"), container.getSubject()));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
-        Map<Long, Map<Long, Short>> teacherPlannedLoads = subjectStudyPeriodCapacitiesService
+        Map<Long, Map<Long, Integer>> teacherPlannedLoads = subjectStudyPeriodCapacitiesService
                 .subjectStudyPeriodTeacherPlannedLoads(ssps);
 
         List<SubjectStudyPeriodDto> subjectStudyPeriodDtos = StreamUtil.toMappedList(ssp -> {
@@ -69,12 +78,15 @@ public class SubjectStudyPeriodSubjectService {
                     StreamUtil.toMappedList(s -> AutocompleteResult.of(s.getStudentGroup()), ssp.getStudentGroups()));
             dto.setCapacities(StreamUtil.toMappedList(SubjectStudyPeriodCapacityDto::of, ssp.getCapacities()));
             dto.setGroupProportion(EntityUtil.getCode(ssp.getGroupProportion()));
-            Map<Long, Short> spPlannedLoads = teacherPlannedLoads.get(EntityUtil.getId(ssp.getStudyPeriod()));
+            Map<Long, Integer> spPlannedLoads = teacherPlannedLoads.get(EntityUtil.getId(ssp.getStudyPeriod()));
             dto.setTeachers(StreamUtil.toMappedList(
                     t -> SubjectStudyPeriodTeacherDto.of(t,
                             spPlannedLoads != null ? spPlannedLoads.get(EntityUtil.getId(t.getTeacher())) : null),
                     ssp.getTeachers()));
             dto.setCapacityDiff(ssp.getCapacityDiff());
+            dto.setCoefficient(getOrDefault(EntityUtil.getNullableCode(ssp.getCoefficient()),
+                    Coefficient.KOEFITSIENT_K1.name()));
+            dto.setSubgroups(StreamUtil.toMappedSet(SubjectStudyPeriodSubgroupDto::of, ssp.getSubgroups()));
             return dto;
         }, ssps);
         container.setSubjectStudyPeriodDtos(subjectStudyPeriodDtos);
@@ -105,6 +117,7 @@ public class SubjectStudyPeriodSubjectService {
 
     public byte[] subjectStudyPeriodSubjectAsExcel(Long schoolId, SubjectStudyPeriodDtoContainer container) {
         setSubjectStudyPeriodsToSubjectsContainer(schoolId, container);
+        setSubjectStudyPeriodsPlanToSubjectContainer(container);
         List<Classifier> capacities = subjectStudyPeriodCapacitiesService.capacityClassifiers(schoolId, container);
         List<String> capacityCodes = StreamUtil.toMappedList(c -> EntityUtil.getCode(c), capacities);
         
@@ -116,6 +129,7 @@ public class SubjectStudyPeriodSubjectService {
             period.put("teachers", studyPeriod.getTeachers().stream().map(t -> t.getName()).collect(Collectors.joining(", ")));
             period.put("groups", studyPeriod.getStudentGroupObjects().stream().map(g -> g.getNameEt()).collect(Collectors.joining(", ")));
             period.put("groupProportion", studyPeriod.getGroupProportion());
+            period.put("subgroups", studyPeriod.getSubgroups() != null ? studyPeriod.getSubgroups().size() : 0);
             
             Map<String, Short> capacityHours = subjectStudyPeriodCapacitiesService.emptyOrderedCapacityHours(capacityCodes);
             
@@ -133,6 +147,16 @@ public class SubjectStudyPeriodSubjectService {
                 totals.put(capacity, Short.valueOf((short) (totalHours.shortValue() + periodHours.shortValue())));
             }
         }
+
+        Map<String, Short> planHours = null;
+        if (!container.getSubjectStudyPeriodPlans().isEmpty()) {
+            SubjectStudyPeriodPlanDto planDto = container.getSubjectStudyPeriodPlans().get(0);
+
+            planHours = planDto.getCapacities().stream()
+                    .filter(pc -> pc.getHours() != null)
+                    .collect(Collectors.toMap(SubjectStudyPeriodPlanCapacityDto::getCapacityType,
+                            SubjectStudyPeriodPlanCapacityDto::getHours));
+        }
         
         
         Map<String, Object> data = new HashMap<>();
@@ -144,7 +168,46 @@ public class SubjectStudyPeriodSubjectService {
         data.put("capacities", capacities);
         data.put("subjectStudyPeriods", subjectStudyPeriods);
         data.put("totals", totals);
+        data.put("plan", planHours);
 
         return xlsService.generate("subjectstudyperiodsubject.xls", data);
+    }
+
+    public void setSubjectStudyPeriodsPlanToSubjectContainer(SubjectStudyPeriodDtoContainer container) {
+        if (container.getSubjectStudyPeriodDtos().isEmpty()) {
+            container.setSubjectStudyPeriodPlans(Collections.emptyList());
+            return;
+        }
+        List<?> result = em.createNativeQuery("select sspp.plan_id, ssp.id" +
+                " from subject_study_period ssp" +
+                " join (" + SubjectStudyPeriodPlanService.SQL_JOIN_SELECT_PLAN_BY_SSP +
+                ") sspp on ssp.id = sspp.ssp_id and sspp.priority != 999" +
+                " where ssp.id in :sspIds" +
+                " order by ssp.id")
+                .setParameter("sspIds", StreamUtil.toMappedList(SubjectStudyPeriodDto::getId,
+                        container.getSubjectStudyPeriodDtos()))
+                .getResultList();
+        Map<Long, Long> planIds = result.stream()
+                .collect(Collectors.toMap(r -> resultAsLong(r, 1), r -> resultAsLong(r, 0),
+                        (o, n) -> o, LinkedHashMap::new));
+
+        if (!planIds.isEmpty()) {
+            em.createQuery("select sspp from SubjectStudyPeriodPlan sspp" +
+                    " left join fetch sspp.capacities" +
+                    " where sspp.id in :planIds", SubjectStudyPeriodPlan.class)
+                    .setParameter("planIds", planIds.values())
+                    .getResultList();
+        }
+
+        container.setSubjectStudyPeriodPlans(planIds.entrySet().stream().map(planId -> {
+            SubjectStudyPeriodPlan plan = em.getReference(SubjectStudyPeriodPlan.class, planId.getValue());
+            SubjectStudyPeriodPlanDto dto = new SubjectStudyPeriodPlanDto();
+            dto.setId(EntityUtil.getId(plan));
+            dto.setSubject(EntityUtil.getId(plan.getSubject()));
+            dto.setCapacities(StreamUtil.toMappedSet(SubjectStudyPeriodPlanCapacityDto::of, plan.getCapacities()));
+
+            dto.setSspId(planId.getKey());
+            return dto;
+        }).collect(Collectors.toList()));
     }
 }

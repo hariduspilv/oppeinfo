@@ -6,6 +6,11 @@ import java.time.LocalDate;
 public class SubjectResult extends AutocompleteResult {
 
     private String code;
+
+    // name without credits or any other extra
+    private String subjectNameEt;
+    private String subjectNameEn;
+
     private String assessment;
     private String gradeCode;
     private LocalDate gradeDate;
@@ -14,19 +19,19 @@ public class SubjectResult extends AutocompleteResult {
 
     public SubjectResult(Long id, String nameEt, String nameEn, String code, BigDecimal credits) {
         super(id, nameEt, nameEn);
+        this.subjectNameEt = nameEt;
+        this.subjectNameEn = nameEn;
         this.code = code;
         this.credits = credits;
     }
 
-    public SubjectResult(Long id, String nameEt, String nameEn, String code, BigDecimal credits, String assessment,
-            String gradeCode, LocalDate gradeDate, String teachers) {
+    public SubjectResult(Long id, String nameEt, String nameEn, String subjectNameEt, String subjectNameEn,
+            String code, BigDecimal credits) {
         super(id, nameEt, nameEn);
+        this.subjectNameEt = subjectNameEt;
+        this.subjectNameEn = subjectNameEn;
         this.code = code;
         this.credits = credits;
-        this.assessment = assessment;
-        this.gradeCode = gradeCode;
-        this.gradeDate = gradeDate;
-        this.teachers = teachers;
     }
 
     public String getCode() {
@@ -35,6 +40,22 @@ public class SubjectResult extends AutocompleteResult {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public String getSubjectNameEt() {
+        return subjectNameEt;
+    }
+
+    public void setSubjectNameEt(String subjectNameEt) {
+        this.subjectNameEt = subjectNameEt;
+    }
+
+    public String getSubjectNameEn() {
+        return subjectNameEn;
+    }
+
+    public void setSubjectNameEn(String subjectNameEn) {
+        this.subjectNameEn = subjectNameEn;
     }
 
     public String getAssessment() {

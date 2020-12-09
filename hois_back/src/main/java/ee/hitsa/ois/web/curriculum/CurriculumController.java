@@ -10,6 +10,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.JAXBException;
 
+import ee.hitsa.ois.web.dto.PersonResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -405,7 +406,7 @@ public class CurriculumController {
     }
     
     @GetMapping("/teachers")
-    public List<OccupiedAutocompleteResult> getTeachers(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
+    public List<PersonResult> getTeachers(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
         lookup.setValid(Boolean.TRUE);
         return autocompleteService.teachers(user.getSchoolId(), lookup, true);
     }

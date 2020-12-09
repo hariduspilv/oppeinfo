@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.commandobject.timetable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import javax.validation.constraints.Max;
@@ -20,6 +21,7 @@ public class TimetableEventHigherForm extends TimetableEventForm {
     private Long lessonAmount;
     @ClassifierRestriction(MainClassCode.TUNNIPLAAN_SYNDMUS_KORDUS)
     private String repeatCode;
+    private LocalDate repeatUntil;
     private RoomDto room;
     private Boolean isSubjectTeacherPair;
     private Boolean isForAllGroups;
@@ -62,6 +64,14 @@ public class TimetableEventHigherForm extends TimetableEventForm {
 
     public void setRepeatCode(String repeatCode) {
         this.repeatCode = repeatCode;
+    }
+
+    public LocalDate getRepeatUntil() {
+        return repeatUntil;
+    }
+
+    public void setRepeatUntil(LocalDate repeatUntil) {
+        this.repeatUntil = repeatUntil;
     }
 
     public RoomDto getRoom() {

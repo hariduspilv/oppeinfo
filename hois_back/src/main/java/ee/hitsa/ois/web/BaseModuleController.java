@@ -6,6 +6,7 @@ import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import ee.hitsa.ois.web.dto.PersonResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -88,7 +89,7 @@ public class BaseModuleController {
     }
 
     @GetMapping("/teachers")
-    public List<OccupiedAutocompleteResult> getTeachers(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
+    public List<PersonResult> getTeachers(HoisUserDetails user, TeacherAutocompleteCommand lookup) {
         if (!(BaseModuleUserRights.canViewBaseModule(user)
                 || UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEKAVA))) {
             throw new ValidationFailedException("main.messages.error.nopermission");

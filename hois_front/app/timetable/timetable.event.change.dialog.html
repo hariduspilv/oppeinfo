@@ -116,8 +116,8 @@
                   <span ng-if="teacher.capacity">
                     <span ng-if="!teacher.subjectStudyPeriod">
                       <span title="{{'timetable.timetablePlan.weekPlannedLessons' | translate}} / {{'timetable.timetablePlan.weekAllocatedLessons' | translate}}"
-                        ng-style="{'color': isUnderAllocatedWeekLessons(teacher.capacity) ? 'rgba(0,0,0,0.87)' : 'red'}">
-                        {{teacher.capacity.thisPlannedLessons}}/{{teacher.capacity.thisPlannedLessons - teacher.capacity.lessonsLeft}}
+                        ng-style="{'color': teacher.isUnderAllocatedWeekLessons ? 'rgba(0,0,0,0.87)' : 'red'}">
+                        {{teacher.capacity.currentWeekPlannedLessons}}/{{teacher.capacity.currentWeekAllocatedLessons}}
                       </span>
                     </span>
                     <span ng-if="teacher.subjectStudyPeriod">
@@ -127,15 +127,24 @@
                       </span>
                     </span>
                     <span ng-if="displayPeriodLessons">
+                      <span>&nbsp;</span>
                       <span title="{{'timetable.timetablePlan.periodPlannedLessons' | translate}} / {{'timetable.timetablePlan.periodAllocatedLessons' | translate}}"
-                        ng-style="{'color': isUnderAllocatedTotalLessons(teacher.capacity) ? 'rgba(0,0,0,0.87)' : 'red'}">
-                        ({{teacher.capacity.totalPlannedLessons}}/{{teacher.capacity.totalAllocatedLessons}})
+                        ng-style="{'color': teacher.isUnderAllocatedStudyPeriodLessons ? 'rgba(0,0,0,0.87)' : 'red'}">
+                        {{teacher.capacity.studyPeriodPlannedLessons}}/{{teacher.capacity.studyPeriodAllocatedLessons}}
                       </span>
                     </span>
                     <span ng-if="displayLeftOverLessons">
-                      <span title="{{'timetable.timetablePlan.periodPlannedLessons' | translate}} + {{'timetable.timetablePlan.previousPeriodNotAllocatedLessons' | translate}} /&#10;{{'timetable.timetablePlan.periodAllocatedLessons' | translate}}"
-                        ng-style="{'color': isUnderLeftOverTotalLessons(teacher.capacity) ? 'rgba(0,0,0,0.87)' : 'red'}">
-                        ({{teacher.capacity.totalPlannedLessons + teacher.capacity.leftOverLessons}}/{{teacher.capacity.totalAllocatedLessons}})
+                      <span>&nbsp;</span>
+                      <span title="{{'timetable.timetablePlan.periodPlannedLessons' | translate}} + {{'timetable.timetablePlan.previousPeriodNotAllocatedLessons' | translate}} / {{'timetable.timetablePlan.periodAllocatedLessons' | translate}}"
+                        ng-style="{'color': teacher.isUnderLeftOverStudyPeriodLessons ? 'rgba(0,0,0,0.87)' : 'red'}">
+                        {{teacher.capacity.studyPeriodPlannedLessons + teacher.capacity.leftOverLessons}}/{{teacher.capacity.studyPeriodAllocatedLessons}}
+                      </span>
+                    </span>
+                    <span ng-if="!teacher.subjectStudyPeriod">
+                      <span>&nbsp;</span>
+                      <span title="{{'timetable.timetablePlan.yearPlannedLessons' | translate}} / {{'timetable.timetablePlan.yearAllocatedLessons' | translate}}"
+                            ng-style="{'color': teacher.isUnderAllocatedStudyYearLessons ? 'rgba(0,0,0,0.87)' : 'red'}">
+                        ({{teacher.capacity.studyYearPlannedLessons}}/{{teacher.capacity.studyYearAllocatedLessons}})
                       </span>
                     </span>
                   </span>

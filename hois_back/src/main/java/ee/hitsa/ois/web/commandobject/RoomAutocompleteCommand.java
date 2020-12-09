@@ -15,8 +15,8 @@ public class RoomAutocompleteCommand extends SearchCommand {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String repeatCode;
+    private LocalDate repeatUntil;
     private Long weekAmount;
-    private Long timetable;
 
     public List<Long> getBuildingIds() {
         return buildingIds;
@@ -78,6 +78,14 @@ public class RoomAutocompleteCommand extends SearchCommand {
         return repeatCode;
     }
 
+    public LocalDate getRepeatUntil() {
+        return repeatUntil;
+    }
+
+    public void setRepeatUntil(LocalDate repeatUntil) {
+        this.repeatUntil = repeatUntil;
+    }
+
     public void setRepeatCode(String repeatCode) {
         this.repeatCode = repeatCode;
     }
@@ -88,14 +96,6 @@ public class RoomAutocompleteCommand extends SearchCommand {
 
     public void setWeekAmount(Long weekAmount) {
         this.weekAmount = weekAmount;
-    }
-
-    public Long getTimetable() {
-        return timetable;
-    }
-
-    public void setTimetable(Long timetable) {
-        this.timetable = timetable;
     }
 
 }

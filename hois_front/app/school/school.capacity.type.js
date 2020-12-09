@@ -20,6 +20,7 @@ angular.module('hitsaOis')
         return mapped;
       }, {});
     });
+    $scope.coefficients = Classifier.queryForDropdown({mainClassCode: 'KOEFITSIENT', order: 'code'});
 
     function loadCapacityTypes() {
       $scope.capacityTypes = QueryUtils.endpoint(baseUrl).query({ isHigher: $scope.isHigher });
@@ -30,7 +31,7 @@ angular.module('hitsaOis')
       $scope.isHigher = value;
       loadCapacityTypes();
     };
-    
+
     $scope.updateAllCheckBoxes = function (value) {
       $scope.capacityTypes.forEach(function (capacityType) {
         capacityType.isUsable = value;
@@ -38,7 +39,7 @@ angular.module('hitsaOis')
     };
 
     $scope.isUsableChanged = function (capacityType) {
-      if (!capacityType.isUsable) {
+      if (!capacityType.isUsable && capacityType.id) {
         capacityType.isTimetable = false;
         dialogService.confirmDialog(
           { prompt: $scope.auth.higher ? 'schoolCapacityType.removeUsableConfirmHigher' : 'schoolCapacityType.removeUsableConfirmVocational' }, function () {
@@ -62,17 +63,47 @@ angular.module('hitsaOis')
     $scope.changeLoads = function (capacityType) {
       dialogService.showDialog('school/school.capacity.type.load.dialog.html', function (dialogScope) {
         dialogScope.capacityType = $scope.capacityMap[capacityType.typeCode];
-        var loadPerYear = capacityType.loads.reduce(function(mapped, load) {
-          mapped[load.studyYearId] = load.loadPercentage;
+        dialogScope.coefficients = $scope.coefficients;
+
+        var coefSource = dialogScope.coefficients.reduce(function (acc, obj) {
+          acc[obj.code] = null;
+          return acc;
+        }, {});
+
+        var loadsPerYear = capacityType.loads.reduce(function(mapped, load) {
+          if (!mapped[load.studyYearId]) {
+            mapped[load.studyYearId] = angular.copy(coefSource, {});
+          }
+          mapped[load.studyYearId][load.coefficient] = load.loadPercentage;
           return mapped;
         }, {});
+
         dialogScope.studyYears = [];
         $scope.studyYears.forEach(function (studyYear) {
-          dialogScope.studyYears.push({ studyYearId: studyYear.id, loadPercentage: loadPerYear[studyYear.id] });
+          dialogScope.studyYears.push({
+            studyYearId: studyYear.id,
+            startDate: studyYear.startDate,
+            loads: loadsPerYear[studyYear.id]
+          });
         });
         dialogScope.studyYearMap = $scope.studyYearMap;
       }, function (dialogScope) {
-        QueryUtils.endpoint(baseUrl + '/loads').save({ id: capacityType.id, loads: dialogScope.studyYears}, function () {
+        QueryUtils.endpoint(baseUrl + '/loads').save({
+            id: capacityType.id,
+            loads: (dialogScope.studyYears||[]).reduce(function (acc, it) {
+              for (var loadCoef in it.loads) {
+                if (!it.loads.hasOwnProperty(loadCoef)) {
+                  continue;
+                }
+                acc.push({
+                  studyYearId: it.studyYearId,
+                  loadPercentage: it.loads[loadCoef],
+                  coefficient: loadCoef
+                })
+              }
+              return acc;
+            }, [])
+          }, function () {
           message.updateSuccess();
           loadCapacityTypes();
         });

@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.student;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +26,12 @@ public class StudentHigherSubjectResultDto {
     private Boolean isOk;
     private Boolean isApelTransfer;
     private Boolean isFormalLearning;
+    private Boolean isNewApel;
+    private Long replacedSubjectHigherModuleId;
+    private BigDecimal recordTransferredCredits;
     private Boolean isAddedFromDirective;
+    private BigDecimal consideredReplacedCredits;
+    private Boolean leftOverCreditsResult;
     private List<SubjectResultReplacedSubjectDto> replacedSubjects = new ArrayList<>();
     private String allTeachers;
 
@@ -38,6 +44,27 @@ public class StudentHigherSubjectResultDto {
         dto.setElectiveModule(EntityUtil.getNullableId(higherModuleSubject.getElectiveModule()));
         dto.setHigherModule(getHigherModuleDto(higherModuleSubject.getModule()));
         return dto;
+    }
+
+    public static StudentHigherSubjectResultDto copy(StudentHigherSubjectResultDto dto) {
+        StudentHigherSubjectResultDto copyDto = new StudentHigherSubjectResultDto();
+        copyDto.setId(dto.getId());
+        copyDto.setSubject(dto.getSubject());
+        copyDto.setGrades(dto.getGrades());
+        copyDto.setLastGrade(dto.getLastGrade());
+        copyDto.setElectiveModule(dto.getElectiveModule());
+        copyDto.setHigherModule(dto.getHigherModule());
+        copyDto.setIsOptional(dto.getIsOptional());
+        copyDto.setIsExtraCurriculum(dto.getIsExtraCurriculum());
+        copyDto.setIsOk(dto.getIsOk());
+        copyDto.setIsApelTransfer(dto.getIsApelTransfer());
+        copyDto.setIsFormalLearning(dto.getIsFormalLearning());
+        copyDto.setIsNewApel(dto.getIsNewApel());
+        copyDto.setReplacedSubjectHigherModuleId(dto.getReplacedSubjectHigherModuleId());
+        copyDto.setRecordTransferredCredits(dto.getRecordTransferredCredits());
+        copyDto.setIsAddedFromDirective(dto.getIsAddedFromDirective());
+        copyDto.setAllTeachers(dto.getAllTeachers());
+        return copyDto;
     }
 
     private static SubjectSearchDto getSubjectDto(Subject subject) {
@@ -151,6 +178,46 @@ public class StudentHigherSubjectResultDto {
 
     public void setIsFormalLearning(Boolean isFormalLearning) {
         this.isFormalLearning = isFormalLearning;
+    }
+
+    public Boolean getIsNewApel() {
+        return isNewApel;
+    }
+
+    public void setIsNewApel(Boolean isNewApel) {
+        this.isNewApel = isNewApel;
+    }
+
+    public Long getReplacedSubjectHigherModuleId() {
+        return replacedSubjectHigherModuleId;
+    }
+
+    public void setReplacedSubjectHigherModuleId(Long replacedSubjectHigherModuleId) {
+        this.replacedSubjectHigherModuleId = replacedSubjectHigherModuleId;
+    }
+
+    public BigDecimal getRecordTransferredCredits() {
+        return recordTransferredCredits;
+    }
+
+    public void setRecordTransferredCredits(BigDecimal recordTransferredCredits) {
+        this.recordTransferredCredits = recordTransferredCredits;
+    }
+
+    public BigDecimal getConsideredReplacedCredits() {
+        return consideredReplacedCredits;
+    }
+
+    public void setConsideredReplacedCredits(BigDecimal consideredReplacedCredits) {
+        this.consideredReplacedCredits = consideredReplacedCredits;
+    }
+
+    public Boolean getLeftOverCreditsResult() {
+        return leftOverCreditsResult;
+    }
+
+    public void setLeftOverCreditsResult(Boolean leftOverCreditsResult) {
+        this.leftOverCreditsResult = leftOverCreditsResult;
     }
 
     public List<SubjectResultReplacedSubjectDto> getReplacedSubjects() {

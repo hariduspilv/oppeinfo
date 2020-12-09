@@ -214,6 +214,21 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$lo
         if (angular.isDefined($scope.plan.journals)) {
           $scope.plan.journals.forEach(function (item, index) {
             item.color = $scope.journalColors[index % 19];
+
+            item.currentWeekPlannedLessons = $scope.getTotalsByJournal(item, 'currentWeekPlannedLessons');
+            item.currentWeekAllocatedLessons = $scope.getTotalsByJournal(item, 'currentWeekAllocatedLessons');
+            item.isUnderAllocatedWeekLessons = item.currentWeekPlannedLessons >= item.currentWeekAllocatedLessons;
+
+            item.studyPeriodPlannedLessons = $scope.getTotalsByJournal(item, 'studyPeriodPlannedLessons');
+            item.studyPeriodAllocatedLessons = $scope.getTotalsByJournal(item, 'studyPeriodAllocatedLessons');
+            item.leftOverLessons = $scope.getTotalsByJournal(item, 'leftOverLessons');
+            item.studyPeriodLeftOverLessons = item.studyPeriodPlannedLessons + item.leftOverLessons;
+            item.isUnderAllocatedStudyPeriodLessons = item.studyPeriodPlannedLessons >= item.studyPeriodAllocatedLessons;
+            item.isUnderLeftOverStudyPeriodLessons = item.studyPeriodLeftOverLessons >= item.studyPeriodAllocatedLessons;
+
+            item.studyYearPlannedLessons = $scope.getTotalsByJournal(item, 'studyYearPlannedLessons');
+            item.studyYearAllocatedLessons = $scope.getTotalsByJournal(item, 'studyYearAllocatedLessons');
+            item.isUnderLeftOverStudyYearLessons = item.studyYearPlannedLessons >= item.studyYearAllocatedLessons;
           });
           $scope.plan.currentJournals = $scope.plan.journals.filter(function (t) {
             return currentCapacities.indexOf(t.id) !== -1;
@@ -255,11 +270,11 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$lo
 
     $scope.showCurrentCapacitiesGrouped = function (capacities) {
       if (!($scope.plan.displayPeriodLessons || $scope.plan.displayLeftOverLessons)) {
-        return areTherePlannedLessons(capacities, 'thisPlannedLessons');
+        return areTherePlannedLessons(capacities, 'currentWeekPlannedLessons');
       } else if ($scope.plan.displayPeriodLessons) {
-        return areTherePlannedLessons(capacities, 'totalPlannedLessons');
+        return areTherePlannedLessons(capacities, 'studyPeriodPlannedLessons');
       } else if ($scope.plan.displayLeftOverLessons) {
-        return areTherePlannedLessons(capacities, 'totalPlannedLessons') || areTherePlannedLessons(capacities, 'leftOverLessons');
+        return areTherePlannedLessons(capacities, 'studyPeriodPlannedLessons') || areTherePlannedLessons(capacities, 'leftOverLessons');
       }
       return false;
     };
@@ -272,20 +287,6 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$lo
       }
       return false;
     }
-
-    $scope.isUnderAllocatedWeekLessons = function (journal) {
-      return $scope.getTotalsByJournal(journal, 'thisPlannedLessons') >=
-        $scope.getTotalsByJournal(journal, 'thisPlannedLessons') - $scope.getTotalsByJournal(journal, 'lessonsLeft');
-    };
-
-    $scope.isUnderAllocatedTotalLessons = function (journal) {
-      return $scope.getTotalsByJournal(journal, 'totalPlannedLessons') >= $scope.getTotalsByJournal(journal, 'totalAllocatedLessons');
-    };
-
-    $scope.isUnderLeftOverTotalLessons = function (journal) {
-      return $scope.getTotalsByJournal(journal, 'totalPlannedLessons') + $scope.getTotalsByJournal(journal, 'leftOverLessons') >=
-        $scope.getTotalsByJournal(journal, 'totalAllocatedLessons');
-    };
 
     $scope.getByCapacity = function (capacity, param) {
       var journal = $scope.plan.currentJournals.find(function (it) {
@@ -305,11 +306,6 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$lo
       return $scope.capacityTypes.find(function (it) {
         return it.code === code;
       });
-    };
-
-    $scope.getCountForCapacity = function (capacity) {
-      capacity.thisAllocatedLessons = 0;
-      return capacity.thisPlannedLessons - capacity.thisAllocatedLessons;
     };
 
     $scope.getRoomCodes = function (rooms) {
@@ -422,9 +418,16 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$lo
           } else {
             it.isTeaching = true;
           }
-          it.capacity = (it.capacities || []).filter(function (c) {
+          it.capacity = (it.capacities || []).find(function (c) {
             return c.capacityType === currentEvent.capacityType;
-          })[0];
+          });
+          if (angular.isDefined(it.capacity)) {
+            it.isUnderAllocatedWeekLessons = it.capacity.currentWeekPlannedLessons >= it.capacity.currentWeekAllocatedLessons;
+            it.isUnderAllocatedStudyPeriodLessons = it.capacity.studyPeriodPlannedLessons >= it.capacity.studyPeriodAllocatedLessons;
+            it.isUnderLeftOverStudyPeriodLessons = it.capacity.studyPeriodPlannedLessons + it.capacity.leftOverLessons >= it.capacity.studyPeriodAllocatedLessons;
+            it.isUnderAllocatedStudyYearLessons = it.capacity.studyYearPlannedLessons >= it.capacity.studyYearAllocatedLessons;
+          }
+
         });
         dialogScope.students = currentEvent.journalObject.students;
         if (currentEvent.students.length > 0) {
@@ -472,18 +475,6 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$lo
           time = moment(time, 'HH:mm');
           return new Date(date.year(), date.month(), date.date(), time.hours(), time.minutes());
         }
-
-        dialogScope.isUnderAllocatedWeekLessons = function (capacity) {
-          return capacity.thisPlannedLessons >= capacity.thisPlannedLessons - capacity.lessonsLeft;
-        };
-
-        dialogScope.isUnderAllocatedTotalLessons = function (capacity) {
-          return capacity.totalPlannedLessons >= capacity.totalAllocatedLessons;
-        };
-
-        dialogScope.isUnderLeftOverTotalLessons = function (capacity) {
-          return capacity.totalPlannedLessons + capacity.leftOverLessons >= capacity.totalAllocatedLessons;
-        };
 
         dialogScope.$watchGroup(['lesson.eventRooms.length', 'lesson.startTime', 'lesson.endTime'], function () {
           var occupiedQuery = {

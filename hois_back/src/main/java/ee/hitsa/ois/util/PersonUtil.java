@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import ee.hitsa.ois.enums.Language;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Person;
@@ -57,7 +58,12 @@ public abstract class PersonUtil {
     }
     
     public static String fullnameAndIdcodeTypeSpecific(String firstname, String lastname, String idcode, String type) {
-        return fullnameAndIdcodeTypeSpecific(fullname(firstname, lastname), idcode, type);
+        return fullnameAndIdcodeAndStudentGroupTypeSpecific(fullname(firstname, lastname), idcode, null, type);
+    }
+
+    public static String fullnameAndIdcodeAndStudentGroupTypeSpecific(String firstname, String lastname, String idcode,
+            String studentGroup, String type) {
+        return fullnameAndIdcodeAndStudentGroupTypeSpecific(fullname(firstname, lastname), idcode, studentGroup, type);
     }
     
     public static String fullnameAndIdcodeOptionalGuestForCertificate(String firstname, String lastname, String idcode, String sGroup, String type, LocalDate guestStart) {
@@ -116,19 +122,23 @@ public abstract class PersonUtil {
         return fullname + " (" + idcode + ")";
     }
     
-    public static String fullnameAndIdcodeTypeSpecific(String fullname, String idcode, String type) {
-        if(StringUtils.hasText(idcode) && StudentType.OPPUR_K.name().equals(type)) {
-            return fullname + " (" + idcode + " KY)";
-        } else if (StringUtils.hasText(idcode) && StudentType.OPPUR_E.name().equals(type)) {
-            return fullname + " (" + idcode + " E)";
-        } else if (StringUtils.hasText(idcode)) {
-            return  fullname + " (" + idcode + ")";
-        } else if (StudentType.OPPUR_E.name().equals(type)) {
-            return  fullname + " (E)";
-        } else if (StudentType.OPPUR_K.name().equals(type)) {
-            return  fullname + " (KY)";
+    public static String fullnameAndIdcodeAndStudentGroupTypeSpecific(String fullname, String idcode,
+            String studentGroup, String type) {
+        String parentheses = Stream.of(idcode, studentGroup, studentTypeShort(type)).filter(StringUtils::hasText)
+                .collect(Collectors.joining("; "));
+        if (StringUtils.hasText(parentheses)) {
+            return fullname + " (" + parentheses + ")";
         }
         return fullname;
+    }
+
+    public static String studentTypeShort(String type) {
+        if (StudentType.OPPUR_K.name().equals(type)) {
+            return TranslateUtil.translate("student.type.guestShort", Language.ET);
+        } else if (StudentType.OPPUR_E.name().equals(type)) {
+            return TranslateUtil.translate("student.type.externalShort", Language.ET);
+        }
+        return null;
     }
     
     public static String fullnameAndIdcodeOptionalGuestForCertificate(String fullname, String idcode, String sGroup, String type, LocalDate guestStart) {

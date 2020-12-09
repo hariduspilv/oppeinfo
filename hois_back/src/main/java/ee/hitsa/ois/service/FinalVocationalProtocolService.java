@@ -11,12 +11,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
 import ee.hitsa.ois.domain.gradingschema.GradingSchemaRow;
+import ee.hitsa.ois.util.StudentUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,7 +35,6 @@ import ee.hitsa.ois.domain.protocol.ProtocolStudentOccupation;
 import ee.hitsa.ois.domain.protocol.ProtocolVdata;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.domain.student.StudentOccupationCertificate;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
@@ -254,6 +253,8 @@ public class FinalVocationalProtocolService extends AbstractProtocolService {
                         removeGrade(ps);
                     }
                     saveOccupationCertificates(ps, dto);
+                    ps.setLanguage(!StudentUtil.isStudyingInEstonian(ps.getStudent()) ?
+                            EntityUtil.getOptionalOne(dto.getLanguage(), em) : null);
                 });
     }
 

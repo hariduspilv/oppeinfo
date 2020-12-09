@@ -34,18 +34,18 @@
             <th md-column>{{'student.result.grade' | translate}}</th>
             <th md-column>{{'student.result.date' | translate}}</th>
             <th md-column>{{auth.higher ? ('student.result.teacherHigher' | translate) : ('student.result.teacherVocational' | translate)}}</th>
-            <th md-column>{{'student.result.isOk' | translate}}</th>
+            <th md-column colspan="2" width="5%">{{'student.result.isOk' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-repeat-start="row in module.themes"
             ng-include="'student/templates/view.results.vocational.curriculumfulfillment.theme.tmpl.html'"></tr>
-          <tr md-row ng-repeat-end ng-repeat="outcome in row.curriculumModuleOutcomes | orderBy: 'orderNr' track by $index"
+          <tr ng-if="formState.showOutcomes" md-row ng-repeat-end ng-repeat="outcome in row.curriculumModuleOutcomes | orderBy: 'orderNr' track by $index"
             ng-include="'student/templates/view.results.vocational.curriculumfulfillment.theme.outcome.tmpl.html'"></tr>
           </tr>
           <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" ng-repeat-start="row in module.otherCurriculumVersionModuleThemes"
             ng-include="'student/templates/view.results.vocational.curriculumfulfillment.theme.tmpl.html'"></tr>
-          <tr md-row ng-repeat-end ng-repeat="outcome in row.curriculumModuleOutcomes | orderBy: 'orderNr' track by $index"
+          <tr ng-if="formState.showOutcomes" md-row ng-repeat-end ng-repeat="outcome in row.curriculumModuleOutcomes | orderBy: 'orderNr' track by $index"
             ng-include="'student/templates/view.results.vocational.curriculumfulfillment.theme.outcome.tmpl.html'"></tr>
         </tbody>
       </table>

@@ -31,7 +31,9 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherEditController',
         $scope.record.$promise.then(function(response){
             $scope.capacitiesUtil = new SspCapacities(response);
             $scope.capacityTypes = response.capacityTypes;
-            $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
+            $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes, true);
+            $scope.$broadcast('refreshFixedColumns');
+            $scope.$broadcast('refreshFixedTableHeight');
         });
         $scope.teacher = QueryUtils.endpoint('/subjectStudyPeriods/teacher/' + teacher).get();
         $scope.formState = {xlsUrl: 'subjectStudyPeriods/teachers/subjectstudyperiodteacher.xls'};
@@ -92,8 +94,10 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherEditController',
       $scope.record.$put().then(function(response) {
           message.updateSuccess();
           $scope.record = response;
-          $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
+          $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes,true);
           $scope.subjectStudyPeriodTeacherEditForm.$setPristine();
+          $scope.$broadcast('refreshFixedColumns');
+          $scope.$broadcast('refreshFixedTableHeight');
       });
     }
 }]);

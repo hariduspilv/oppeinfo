@@ -47,7 +47,6 @@ public class ApelApplicationFormalSubjectOrModule extends BaseEntityWithId imple
     @ManyToOne(fetch = FetchType.LAZY)
     private Subject subject;
 
-    @Required(groups = {ExternalOtherSubject.class, InternalCurriculumSubject.class, InternalOtherSubject.class, InternalPreviouslyPassedSubject.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumVersionHigherModule curriculumVersionHmodule;
 

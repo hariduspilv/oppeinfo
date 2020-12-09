@@ -20,18 +20,22 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
+import javax.persistence.LockModeType;
+import javax.persistence.PessimisticLockException;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
+import ee.hitsa.ois.domain.school.SchoolStudentRegNr;
 import ee.hitsa.ois.enums.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.PropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
@@ -120,6 +124,9 @@ public class DirectiveConfirmService {
     private PersonService personService;
     @Autowired
     private SchoolService schoolService;
+
+    @Value("${hois.pessimisticLock.timeout}")
+    private Integer pessimisticLockTimeout;
 
     private static final String ABSENCE_REJECT_DIRECTIVE_CANCELED = "Käskkiri tühistatud";
 
@@ -637,14 +644,17 @@ public class DirectiveConfirmService {
             Classifier studentStatus = directiveType.studentStatus() != null ? em.getReference(Classifier.class, directiveType.studentStatus().name()) : null;
             Classifier applicationStatus = em.getReference(Classifier.class, ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name());
             Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
+            SchoolStudentRegNr schoolStudentRegNr = lockSchoolStudentRegNr(directive, directiveType);
             for(DirectiveStudent ds : directive.getStudents()) {
                 Student student = ds.getStudent();
                 // store student version for undo
                 ds.setStudentHistory(student != null ? student.getStudentHistory() : null);
                 updateApplicationStatus(ds, applicationStatus);
-                updateStudentData(directiveType, ds, studentStatus, student != null ? academicLeaves.get(student.getId()) : null);
+                DirectiveStudent academicLeave = student != null ? academicLeaves.get(student.getId()) : null;
+                updateStudentData(directiveType, ds, studentStatus, academicLeave, schoolStudentRegNr);
             }
         }
+
         directive = EntityUtil.save(directive, em);
         em.flush();
         return directive;
@@ -712,13 +722,14 @@ public class DirectiveConfirmService {
         }
     }
 
-    private void updateStudentData(DirectiveType directiveType, DirectiveStudent directiveStudent, Classifier studentStatus, DirectiveStudent academicLeave) {
+    private void updateStudentData(DirectiveType directiveType, DirectiveStudent directiveStudent,
+            Classifier studentStatus, DirectiveStudent academicLeave, SchoolStudentRegNr schoolStudentRegNr) {
         Student student = directiveStudent.getStudent();
         boolean newStudent = false;
         if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType) 
                 || DirectiveType.KASKKIRI_KYLALIS.equals(directiveType)
                 || (EntityUtil.getNullableId(student) == null && DirectiveType.KASKKIRI_EKSTERN.equals(directiveType))) {
-            student = createStudent(directiveStudent);
+            student = createStudent(directiveStudent, schoolStudentRegNr);
             newStudent = true;
         }
 
@@ -833,6 +844,9 @@ public class DirectiveConfirmService {
             student.setStudyEnd(null);
             if (!newStudent) {
                 // already existing user
+                if (student.getRegNr() == null) {
+                    setStudentRegNr(student, schoolStudentRegNr);
+                }
                 // new students are enabled during creation
                 userService.enableUser(student, confirmDate);
             }
@@ -846,6 +860,9 @@ public class DirectiveConfirmService {
         case KASKKIRI_ENNIST:
             student.setStudyStart(confirmDate);
             student.setStudyEnd(null);
+            if (student.getRegNr() == null) {
+                setStudentRegNr(student, schoolStudentRegNr);
+            }
             userService.enableUser(student, confirmDate);
             break;
         case KASKKIRI_IMMATV:
@@ -1240,7 +1257,7 @@ public class DirectiveConfirmService {
         directive.setStatus(em.getReference(Classifier.class, status.name()));
     }
 
-    private Student createStudent(DirectiveStudent directiveStudent) {
+    private Student createStudent(DirectiveStudent directiveStudent, SchoolStudentRegNr schoolStudentRegNr) {
         School school = directiveStudent.getDirective().getSchool();
 
         Student student = new Student();
@@ -1251,7 +1268,6 @@ public class DirectiveConfirmService {
         student.setIsSpecialNeed(Boolean.FALSE);
         student.setIsContractAgreed(Boolean.FALSE);
         student.setType(EntityUtil.getOptionalOne(StudentType.OPPUR_T.name(), em));
-        
         // fill student's email
         Person person = student.getPerson();
         String email = emailGeneratorService.lookupSchoolEmail(school, person);
@@ -1273,9 +1289,37 @@ public class DirectiveConfirmService {
             }
         }
 
+        setStudentRegNr(student, schoolStudentRegNr);
         // new role for student
         userService.enableUser(student, directiveStudent.getDirective().getConfirmDate());
         return student;
+    }
+
+    private SchoolStudentRegNr lockSchoolStudentRegNr(Directive directive, DirectiveType directiveType) {
+        if (DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType)
+                || DirectiveType.KASKKIRI_KYLALIS.equals(directiveType) || DirectiveType.KASKKIRI_EKSTERN.equals(directiveType)
+                || DirectiveType.KASKKIRI_ENNIST.equals(directiveType)) {
+            try {
+                em.createNativeQuery("set local lock_timeout = " + pessimisticLockTimeout.toString()).executeUpdate();
+                SchoolStudentRegNr schoolStudentRegNr = schoolService.getSchoolStudentRegNr(directive.getSchool());
+                em.lock(schoolStudentRegNr, LockModeType.PESSIMISTIC_WRITE);
+
+                em.refresh(schoolStudentRegNr);
+                return schoolStudentRegNr;
+            } catch (PessimisticLockException e) {
+                LOG.info("directive {} student data update failed because of pessimistic locking conflict",
+                        EntityUtil.getId(directive));
+                throw new HoisException("directive.regNrGenerationFailed");
+            }
+        }
+        return null;
+    }
+
+    private void setStudentRegNr(Student student, SchoolStudentRegNr schoolStudentRegNr) {
+        if (schoolStudentRegNr != null) {
+            schoolStudentRegNr.setRegNr(schoolStudentRegNr.getRegNr() + 1);
+            student.setRegNr(schoolStudentRegNr.getRegNr());
+        }
     }
 
     private static DirectiveViewStudentDto createInvalidStudent(DirectiveStudent ds, String reason) {

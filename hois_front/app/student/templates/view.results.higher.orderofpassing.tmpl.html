@@ -28,7 +28,10 @@
         <td md-cell>{{row.subject.code}}</td>
         <td md-cell ng-if="!student.isGuestStudent">{{currentLanguageNameField(row.higherModule)}}</td>
         <td md-cell ng-if="!student.isGuestStudent">
-          <span ng-if="!row.isModule">{{row.isOptional ? 'main.no' : 'main.yes' | translate}}</span>
+          <span ng-if="!row.isModule">
+            <span ng-if="row.isOptional === true">{{'main.no' | translate}}</span>
+            <span ng-if="row.isOptional === false">{{'main.yes' | translate}}</span>
+          </span>
         </td>
         <td md-cell>
           <span ng-if="row.isModule" class="bold">{{row.module.credits}}</span>

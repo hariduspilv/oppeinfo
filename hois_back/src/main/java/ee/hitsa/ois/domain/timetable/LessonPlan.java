@@ -11,6 +11,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.school.School;
@@ -30,6 +31,9 @@ public class LessonPlan extends BaseEntityWithId {
     private StudentGroup studentGroup;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private CurriculumVersion curriculumVersion;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private Classifier coefficient;
+
     @OneToMany(mappedBy = "lessonPlan", cascade = CascadeType.ALL)
     private List<LessonPlanModule> lessonPlanModules = new ArrayList<>();
 
@@ -79,6 +83,14 @@ public class LessonPlan extends BaseEntityWithId {
 
     public void setCurriculumVersion(CurriculumVersion curriculumVersion) {
         this.curriculumVersion = curriculumVersion;
+    }
+
+    public Classifier getCoefficient() {
+        return coefficient;
+    }
+
+    public void setCoefficient(Classifier coefficient) {
+        this.coefficient = coefficient;
     }
 
     public List<LessonPlanModule> getLessonPlanModules() {

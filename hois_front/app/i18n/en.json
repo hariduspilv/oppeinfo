@@ -3560,7 +3560,6 @@
       "notAllowedWithStatus": "On application, due to its status, order forbidden has been given",
       "atLeastOneFormalOrInformalLearning": "At least one formal or informal learning must be added",
       "atLeastOneOtherInformalLearning": "At least one work experience/refresher training/other subject must be added",
-      "atLeastOneSubstitutableSubject": "At least one substitutable subject must be added",
       "atLeastOneSubstitutableModule": "At least one substitutable module must be added",
       "atLeastOneTransferableModule": "At least one transferrable module must be added",
       "thereMustBeMoreTransferableCreditsThanSubstitutableCredits":"Sum of volumes of transferrable modules must be bigger than sum of volumes of substitutable modules",

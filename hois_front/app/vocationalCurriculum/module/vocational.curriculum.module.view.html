@@ -68,7 +68,8 @@
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.studyOutcome' | translate}}</legend>
           <div layout="column">
             <div ng-repeat="item in module.outcomes track by $index" class="occupation-row align-center" layout="row" flex>
-              <div flex="45">
+              <div flex="2">{{'module.outcome' | translate}}{{item.orderNr + 1}}</div>
+              <div flex="40" flex-offset="5">
                 <p class="scrollable">{{item.outcomeEt}}</p>
               </div>
               <div flex="40" flex-offset="5">

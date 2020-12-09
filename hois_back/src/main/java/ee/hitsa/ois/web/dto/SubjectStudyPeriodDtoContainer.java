@@ -1,7 +1,9 @@
 package ee.hitsa.ois.web.dto;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -21,6 +23,15 @@ public class SubjectStudyPeriodDtoContainer {
     private Long studentGroup;
     private Long teacher;
     private Long subject;
+
+    /*
+     * For teacher container data
+     */
+    private Short studyLoad;
+    private Boolean isStudyPeriodScheduleLoad;
+    private Map<String, Integer> teacherPeriodVocationalCapacities;
+    private Map<String, Integer> teacherYearVocationalCapacities;
+    private List<ClassifierDto> vocationalCapacityTypes;
 
     @Valid
     private List<SubjectStudyPeriodDto> subjectStudyPeriodDtos;
@@ -45,6 +56,42 @@ public class SubjectStudyPeriodDtoContainer {
 
     public void setTeacher(Long teacher) {
         this.teacher = teacher;
+    }
+
+    public Short getStudyLoad() {
+        return studyLoad;
+    }
+
+    public void setStudyLoad(Short studyLoad) {
+        this.studyLoad = studyLoad;
+    }
+
+    public Boolean getIsStudyPeriodScheduleLoad() {
+        return isStudyPeriodScheduleLoad;
+    }
+
+    public void setIsStudyPeriodScheduleLoad(Boolean studyPeriodScheduleLoad) {
+        isStudyPeriodScheduleLoad = studyPeriodScheduleLoad;
+    }
+
+    public Map<String, Integer> getTeacherPeriodVocationalCapacities() {
+        return teacherPeriodVocationalCapacities != null
+                ? teacherPeriodVocationalCapacities : (teacherPeriodVocationalCapacities = new HashMap<>());
+    }
+
+    public void setTeacherPeriodVocationalCapacities(Map<String, Integer> teacherPeriodVocationalCapacities) {
+        getTeacherPeriodVocationalCapacities().clear();
+        getTeacherPeriodVocationalCapacities().putAll(teacherPeriodVocationalCapacities);
+    }
+
+    public Map<String, Integer> getTeacherYearVocationalCapacities() {
+        return teacherYearVocationalCapacities != null
+                ? teacherYearVocationalCapacities : (teacherYearVocationalCapacities = new HashMap<>());
+    }
+
+    public void setTeacherYearVocationalCapacities(Map<String, Integer> teacherYearVocationalCapacities) {
+        getTeacherYearVocationalCapacities().clear();
+        getTeacherYearVocationalCapacities().putAll(teacherYearVocationalCapacities);
     }
 
     public List<AutocompleteResult> getSubjects() {
@@ -93,5 +140,14 @@ public class SubjectStudyPeriodDtoContainer {
 
     public void setStudentGroup(Long studentGroup) {
         this.studentGroup = studentGroup;
+    }
+
+    public List<ClassifierDto> getVocationalCapacityTypes() {
+        return vocationalCapacityTypes != null ? vocationalCapacityTypes : (vocationalCapacityTypes = new ArrayList<>());
+    }
+
+    public void setVocationalCapacityTypes(List<ClassifierDto> vocationalCapacityTypes) {
+        getVocationalCapacityTypes().clear();
+        getVocationalCapacityTypes().addAll(vocationalCapacityTypes);
     }
 }

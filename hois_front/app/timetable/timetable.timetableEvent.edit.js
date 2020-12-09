@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TimetableEventEditController', ['$location', '$route', '$scope', 'USER_ROLES', 'AuthService' , 'DataUtils', 'QueryUtils', 'dialogService', 'message',
-  function ($location, $route, $scope, USER_ROLES, AuthService, DataUtils, QueryUtils, dialogService, message) {
+angular.module('hitsaOis').controller('TimetableEventEditController', ['$filter', '$location', '$route', '$scope', 'USER_ROLES', 'ArrayUtils', 'AuthService' , 'DataUtils', 'QueryUtils', 'dialogService', 'message',
+  function ($filter, $location, $route, $scope, USER_ROLES, ArrayUtils, AuthService, DataUtils, QueryUtils, dialogService, message) {
     $scope.auth = $route.current.locals.auth;
     var baseUrl = '/timetableevents';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -45,7 +45,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$locatio
       $scope.timetableEvent.date = autofill.date;
       $scope.timetableEvent.startTime = autofill.start;
       $scope.timetableEvent.endTime = autofill.end;
-      
+
       if (autofill.roomId) {
         // Same parameters as for autocomplete directive in edit.html. Only added `id`.
         QueryUtils.endpoint('/autocomplete/rooms').search({
@@ -64,7 +64,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$locatio
           }
         });
       }
-      
+
       if ($scope.auth.isTeacher()) {
         $scope.timetableEvent.teachers = [];
         $scope.timetableEvent.teachers.push({teacher: {id:$scope.auth.teacher, nameEt: $scope.auth.fullname, nameEn: $scope.auth.fullname, nameRu: $scope.auth.fullname}});
@@ -148,7 +148,7 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$locatio
         });
       }
     }
-    
+
     $scope.delete = function () {
       dialogService.confirmDialog({
         prompt: 'timetable.deleteConfirm',
@@ -170,6 +170,42 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$locatio
 
     $scope.sortTeachers = function (teacher) {
       return $scope.currentLanguageNameField(teacher.teacher);
+    };
+
+    $scope.addAllTeachers = function () {
+      QueryUtils.endpoint('/autocomplete/teachersList').query({ valid: true }, function (teachers) {
+        teachers.forEach(function (teacher) {
+          if (!angular.isArray($scope.timetableEvent.teachers)) {
+            $scope.timetableEvent.teachers = [];
+          }
+          if ($scope.timetableEvent.teachers.some(function (teacher2) {
+            return teacher2.teacher.id === teacher.id;
+            })) {
+            return;
+          }
+          $scope.timetableEvent.teachers.push({
+            id: $scope.removedJournalTeacherIds ? $scope.removedJournalTeacherIds[teacher.id] : null,
+            teacher: teacher
+          });
+          $scope.eventForm.$setDirty();
+        });
+      });
+    };
+
+    $scope.removeAllTeachers = function () {
+      if (angular.isArray($scope.timetableEvent.teachers)) {
+        if ($scope.auth.isTeacher()) {
+          for (var i = $scope.timetableEvent.teachers.length - 1; i >= 0; i--) {
+            var teacher = $scope.timetableEvent.teachers[i];
+            if (teacher.teacher.id !== $scope.auth.teacher) {
+              ArrayUtils.remove($scope.timetableEvent.teachers, teacher);
+            }
+          }
+        } else {
+          $scope.timetableEvent.teachers = [];
+        }
+        $scope.eventForm.$setDirty();
+      }
     };
 
     $scope.addTeacher = function () {
@@ -236,6 +272,30 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$locatio
       }
     });
 
+    $scope.addAllStudentGroups = function () {
+      QueryUtils.endpoint('/autocomplete/studentgroups').query({ valid: true }, function (studentGroups) {
+        studentGroups.forEach(function (studentGroup) {
+          if (!angular.isArray($scope.timetableEvent.studentGroups)) {
+            $scope.timetableEvent.studentGroups = [];
+          }
+          if ($scope.timetableEvent.studentGroups.some(function (studentGroup2) {
+              return studentGroup2.id === studentGroup.id;
+            })) {
+            return;
+          }
+          $scope.timetableEvent.studentGroups.push(studentGroup);
+          $scope.eventForm.$setDirty();
+        });
+      });
+    };
+
+    $scope.removeAllStudentGroups = function () {
+      if (angular.isArray($scope.timetableEvent.studentGroups)) {
+        $scope.timetableEvent.studentGroups = [];
+        $scope.eventForm.$setDirty();
+      }
+    };
+
     $scope.addStudentGroup = function () {
       if (!angular.isArray($scope.timetableEvent.studentGroups)) {
         $scope.timetableEvent.studentGroups = [];
@@ -256,6 +316,52 @@ angular.module('hitsaOis').controller('TimetableEventEditController', ['$locatio
         $scope.timetableEvent.studentGroups.splice(index, 1);
         $scope.eventForm.$setDirty();
       }
+    };
+
+    $scope.$watch('timetableEvent.student', function () {
+      if (angular.isDefined($scope.timetableEvent.student) && $scope.timetableEvent.student !== null) {
+        $scope.addStudent();
+      }
+    });
+
+    $scope.addStudent = function () {
+      if (!angular.isArray($scope.timetableEvent.students)) {
+        $scope.timetableEvent.students = [];
+      }
+      if ($scope.timetableEvent.students.some(function (student) {
+          return student.id === $scope.timetableEvent.student.id;
+        })) {
+        message.error('timetable.timetableEvent.error.duplicateStudent');
+        return;
+      }
+      $scope.timetableEvent.students.push($scope.timetableEvent.student);
+      $scope.timetableEvent.student = undefined;
+    };
+
+    $scope.deleteStudent = function (student) {
+      ArrayUtils.remove($scope.timetableEvent.students, student);
+      $scope.eventForm.$setDirty();
+    };
+
+    $scope.openEventRelatedEntitiesDialog = function (entityType) {
+      dialogService.showDialog('timetable/timetable.timetableEvent.related.entities.dialog.html', function (dialogScope) {
+        dialogScope.auth = $scope.auth;
+        dialogScope.entityType = entityType;
+        dialogScope.isView = $route.current.locals.isView;
+
+        dialogScope.tableData = { size: 10, form: $scope.eventForm };
+        if (entityType === 'teacher') {
+          $scope.timetableEvent.teachers = $filter('orderBy')($scope.timetableEvent.teachers, ['teacher.lastname', 'teacher.firstname']);
+          dialogScope.tableData.content = $scope.timetableEvent.teachers;
+          dialogScope.searchLabel = $scope.auth.higher ? 'timetable.timetableEvent.teachersHigher' : 'timetable.timetableEvent.teachersVocational';
+          dialogScope.searchParam = 'teacher.' + $scope.currentLanguageNameVariable();
+        } else if (entityType === 'studentGroup') {
+          $scope.timetableEvent.studentGroups = $filter('orderBy')($scope.timetableEvent.studentGroups, $scope.currentLanguageNameField());
+          dialogScope.tableData.content = $scope.timetableEvent.studentGroups;
+          dialogScope.searchLabel = 'timetable.timetableEvent.studentGroup';
+          dialogScope.searchParam = $scope.currentLanguageNameVariable();
+        }
+      });
     };
   }
 ]);

@@ -2,6 +2,9 @@ package ee.hitsa.ois.web;
 
 import java.util.List;
 
+import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.service.StudyYearService;
+import ee.hitsa.ois.util.EntityUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,17 +21,26 @@ import ee.hitsa.ois.web.commandobject.schoolcapacity.SchoolCapacityTypeForms;
 import ee.hitsa.ois.web.commandobject.schoolcapacity.SchoolCapacityTypeLoadForms;
 import ee.hitsa.ois.web.dto.schoolcapacity.SchoolCapacityTypeDto;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/schoolCapacityType")
 public class SchoolCapacityTypeController {
 
     @Autowired
     private SchoolCapacityTypeService schoolCapacityTypeService;
+    @Autowired
+    private StudyYearService studyYearService;
 
     @GetMapping
     public List<SchoolCapacityTypeDto> get(HoisUserDetails user, Boolean isHigher) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPETOOLIIK);
-        return schoolCapacityTypeService.get(user, isHigher);
+        StudyYear currentStudyYear = studyYearService.getCurrentStudyYear(user.getSchoolId());
+        StudyYear previousStudyYear = currentStudyYear != null
+                ? studyYearService.getPreviousStudyYear(currentStudyYear) : null;
+        StudyYear nextStudyYear = studyYearService.getNextStudyYear(user.getSchoolId());
+        return schoolCapacityTypeService.get(user, isHigher, EntityUtil.getNullableId(previousStudyYear),
+                EntityUtil.getNullableId(currentStudyYear), EntityUtil.getNullableId(nextStudyYear));
     }
     
     @PostMapping
@@ -38,7 +50,7 @@ public class SchoolCapacityTypeController {
     }
     
     @PostMapping("/loads")
-    public void saveLoads(HoisUserDetails user, @RequestBody SchoolCapacityTypeLoadForms forms) {
+    public void saveLoads(HoisUserDetails user, @RequestBody @Valid SchoolCapacityTypeLoadForms forms) {
         UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPETOOLIIK);
         schoolCapacityTypeService.saveLoads(user, forms);
     }

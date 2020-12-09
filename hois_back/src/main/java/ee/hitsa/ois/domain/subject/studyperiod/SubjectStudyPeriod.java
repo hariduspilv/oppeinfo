@@ -24,6 +24,11 @@ import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodCapacity;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
 
+/**
+ * NB! BeanUtils.copyProperties has been used on this class.
+ * When you change/add properties, check:
+ * SubjectStudyPeriodStudentGroupService.copyPlan
+ */
 @Entity
 public class SubjectStudyPeriod extends BaseEntityWithId {
 
@@ -69,6 +74,9 @@ public class SubjectStudyPeriod extends BaseEntityWithId {
 
     @Column(name = "is_capacity_diff")
     private Boolean capacityDiff;
+    private Short places;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier coefficient;
     
     @OneToMany(mappedBy = "period", fetch = FetchType.LAZY, cascade = {CascadeType.ALL}, orphanRemoval = true)
     private Set<SubjectStudyPeriodSubgroup> subgroups;
@@ -182,6 +190,14 @@ public class SubjectStudyPeriod extends BaseEntityWithId {
         this.capacityDiff = isCapacityDiff;
     }
 
+    public Short getPlaces() {
+        return places;
+    }
+
+    public void setPlaces(Short places) {
+        this.places = places;
+    }
+
     public Set<SubjectStudyPeriodSubgroup> getSubgroups() {
         return subgroups != null ? subgroups : (subgroups = new HashSet<>());
     }
@@ -191,4 +207,11 @@ public class SubjectStudyPeriod extends BaseEntityWithId {
         getSubgroups().addAll(subgroups);
     }
 
+    public Classifier getCoefficient() {
+        return coefficient;
+    }
+
+    public void setCoefficient(Classifier coefficient) {
+        this.coefficient = coefficient;
+    }
 }

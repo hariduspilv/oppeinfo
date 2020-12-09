@@ -7,6 +7,7 @@ import ee.hitsa.ois.web.commandobject.ProtocolStudentSaveForm;
 public class FinalVocationalProtocolStudentSaveForm extends ProtocolStudentSaveForm {
 
     private List<String> occupationCodes;
+    private String language;
 
     public List<String> getOccupationCodes() {
         return occupationCodes;
@@ -14,6 +15,13 @@ public class FinalVocationalProtocolStudentSaveForm extends ProtocolStudentSaveF
 
     public void setOccupationCodes(List<String> occupationCodes) {
         this.occupationCodes = occupationCodes;
-    } 
+    }
 
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
 }

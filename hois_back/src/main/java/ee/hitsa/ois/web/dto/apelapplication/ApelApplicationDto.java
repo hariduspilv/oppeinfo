@@ -3,8 +3,10 @@ package ee.hitsa.ois.web.dto.apelapplication;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.apelapplication.ApelApplication;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -29,12 +31,14 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
     private List<ApelApplicationRecordDto> records;
     private List<ApelApplicationCommentDto> comments;
     private List<ApelApplicationFileDto> files;
-    private AutocompleteResult committee;
+    private List<AutocompleteResult> committees;
+
     private String decision;
     private String nominalType;
     private LocalDate newNominalStudyEnd;
     private LocalDate oldNominalStudyEnd;
     private Boolean isEhisSent;
+    private Boolean isNew;
 
     private List<DateRangeDto> abroadStudyPeriods;
     private Boolean hasAbroadStudies;
@@ -52,8 +56,9 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
     private Boolean canConfirm;
     private Boolean canRemoveConfirmation;
     private Boolean canChangeTransferStatus;
+    private Boolean canComment;
 
-    public static ApelApplicationDto of(ApelApplication application) {
+    public static ApelApplicationDto of(HoisUserDetails user, ApelApplication application) {
         if (application == null) {
             return null;
         }
@@ -65,8 +70,12 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
         }
         dto.setCurriculumVersion(AutocompleteResult.of(application.getStudent().getCurriculumVersion()));
         dto.setRecords(StreamUtil.toMappedList(ApelApplicationRecordDto::of, application.getRecords()));
-        dto.setComments(StreamUtil.toMappedList(ApelApplicationCommentDto::of, application.getComments()));
+        dto.setComments(StreamUtil.toMappedList(ApelApplicationCommentDto::of, user.isStudent() ? 
+                application.getComments().stream().filter(p -> Boolean.TRUE.equals(p.getIsStudent())).collect(Collectors.toList()) : 
+                application.getComments()));
         dto.setFiles(StreamUtil.toMappedList(ApelApplicationFileDto::of, application.getFiles()));
+        dto.setCommittees(StreamUtil.toMappedList(AutocompleteResult::of, application.getCommittees().stream().map(p -> p.getCommittee())));
+        dto.setIsNew(Boolean.TRUE.equals(application.getIsNew()));
         dto.setConfirmedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(application.getConfirmedBy()));
         dto.setSubmittedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(application.getSubmittedBy()));
         return dto;
@@ -161,12 +170,12 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
         this.files = files;
     }
 
-    public AutocompleteResult getCommittee() {
-        return committee;
+    public List<AutocompleteResult> getCommittees() {
+        return committees;
     }
 
-    public void setCommittee(AutocompleteResult committee) {
-        this.committee = committee;
+    public void setCommittees(List<AutocompleteResult> committees) {
+        this.committees = committees;
     }
 
     public String getDecision() {
@@ -207,6 +216,14 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
 
     public void setIsEhisSent(Boolean isEhisSent) {
         this.isEhisSent = isEhisSent;
+    }
+
+    public Boolean getIsNew() {
+        return isNew;
+    }
+
+    public void setIsNew(Boolean isNew) {
+        this.isNew = isNew;
     }
 
     public List<DateRangeDto> getAbroadStudyPeriods() {
@@ -351,6 +368,14 @@ public class ApelApplicationDto extends InsertedChangedVersionDto {
 
     public void setSubmitted(LocalDate submitted) {
         this.submitted = submitted;
+    }
+
+    public Boolean getCanComment() {
+        return canComment;
+    }
+
+    public void setCanComment(Boolean canComment) {
+        this.canComment = canComment;
     }
 
 }

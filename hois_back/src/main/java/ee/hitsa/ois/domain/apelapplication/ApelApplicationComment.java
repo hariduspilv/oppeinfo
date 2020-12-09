@@ -16,6 +16,8 @@ public class ApelApplicationComment extends BaseEntityWithId {
     
     @JoinColumn(nullable = false)
     private String addInfo;
+    /** Is comment visible for student */
+    private Boolean isStudent;
     
     public ApelApplication getApelApplication() {
         return apelApplication;
@@ -31,6 +33,14 @@ public class ApelApplicationComment extends BaseEntityWithId {
 
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+
+    public Boolean getIsStudent() {
+        return isStudent;
+    }
+
+    public void setIsStudent(Boolean isStudent) {
+        this.isStudent = isStudent;
     }
     
 }

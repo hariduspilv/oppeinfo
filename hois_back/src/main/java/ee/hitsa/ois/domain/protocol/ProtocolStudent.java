@@ -58,6 +58,9 @@ public class ProtocolStudent extends BaseEntityWithId {
     @ManyToOne(fetch = FetchType.LAZY)
     private GradingSchemaRow gradingSchemaRow;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier language;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "protocol_student_id", nullable = false, updatable = false)
     private List<ProtocolStudentHistory> protocolStudentHistories;
@@ -144,6 +147,14 @@ public class ProtocolStudent extends BaseEntityWithId {
 
     public void setGradingSchemaRow(GradingSchemaRow gradingSchemaRow) {
         this.gradingSchemaRow = gradingSchemaRow;
+    }
+
+    public Classifier getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(Classifier language) {
+        this.language = language;
     }
 
     public List<ProtocolStudentHistory> getProtocolStudentHistories() {

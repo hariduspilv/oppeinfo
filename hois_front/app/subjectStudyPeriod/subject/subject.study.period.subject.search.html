@@ -8,21 +8,25 @@
     <fieldset>
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
         <form name="searchForm" ng-submit="load()" layout="column" novalidate >
-                <div layout="row" layout-sm="column" layout-xs="column">
-
-                    <md-input-container flex="25" flex-sm="100" flex-xs="100">
-                        <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
-                        <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required sorted-query="true"></hois-select>
-                    </md-input-container>
-
-                    <hois-autocomplete flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5" ha-controller="directiveControllers"
-                    ng-model="criteria.teacherObject" url="/subjectStudyPeriods/teachers/page" name="teacher"
-                    label="subjectStudyPeriod.teacher"></hois-autocomplete>
-
-                    <hois-autocomplete flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5" ha-controller="directiveControllers"
-                    ng-model="criteria.subjectObject" url="/autocomplete/subjects" name="subject"
-                    label="subjectStudyPeriod.subject"></hois-autocomplete>
-                </div>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="45" flex-sm="100" flex-xs="100">
+              <label>{{'subjectStudyPeriod.studyYear' | translate}}</label>
+              <hois-select ng-model="criteria.studyYear" values="studyYears" sorted-query="true"></hois-select>
+            </md-input-container>
+            <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+              <label>{{'subjectStudyPeriod.period' | translate}}</label>
+              <hois-select ng-model="criteria.studyPeriod" values="filteredStudyPeriods"
+                           sorted-query="true" ng-disabled="!criteria.studyYear"></hois-select>
+            </md-input-container>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <hois-autocomplete flex="45" flex-sm="100" flex-xs="100" ha-controller="directiveControllers"
+                               ng-model="hiddenCriteria.teacherObject" url="/subjectStudyPeriods/teachers/page" name="teacher"
+                               label="subjectStudyPeriod.teacher"></hois-autocomplete>
+            <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5"
+                               ha-controller="directiveControllers" ng-model="hiddenCriteria.subjectObject"
+                               url="/autocomplete/subjects" name="subject" label="subjectStudyPeriod.subject"></hois-autocomplete>
+          </div>
             <div layout="row">
                 <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
                 <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
@@ -40,7 +44,8 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="code,{{currentLanguageNameField()}}">{{'subjectStudyPeriod.nameCode' | translate}}</th>
+            <th md-column md-order-by="s.code,s.{{currentLanguageNameField()}}">{{'subjectStudyPeriod.nameCode' | translate}}</th>
+            <th md-column md-order-by="sp.startDate">{{'subjectStudyPeriod.studyPeriod' | translate}}</th>
             <th md-column>{{'subjectStudyPeriod.hoursTotal' | translate}}</th>
             <th md-column>{{'subjectStudyPeriod.teacher' | translate}}</th>
             <th md-column></th>
@@ -48,7 +53,8 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell><a ng-href="#/subjectStudyPeriods/subjects/{{row.subject.id}}/{{criteria.studyPeriod}}/view">{{currentLanguageNameField(row.subject)}}</a></td>
+            <td md-cell><a ng-href="#/subjectStudyPeriods/subjects/{{row.subject.id}}/{{row.studyPeriod.id}}/view">{{currentLanguageNameField(row.subject)}}</a></td>
+            <td md-cell>{{currentLanguageNameField(row.studyPeriod)}}</td>
             <td md-cell>{{row.hours}}</td>
             <td md-cell>
                 <table>
@@ -58,7 +64,7 @@
                 </table>
             </td>
             <td md-cell>
-                <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriods/subjects/{{row.subject.id}}/{{periodId}}/edit">{{'main.button.change' | translate}}
+                <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriods/subjects/{{row.subject.id}}/{{row.studyPeriod.id}}/edit">{{'main.button.change' | translate}}
                 </md-button>
             </td>
           </tr>

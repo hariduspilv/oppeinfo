@@ -1,7 +1,10 @@
 <td md-cell>
   <span ng-style="{'font-style': row.otherCurriculumVersionModuleTheme ? 'italic' : 'normal'}">
     <span ng-if="moduleResultById[module.curriculumModule.id].themeResultById[row.id].isApelTransfer" class="apelAsterisk">*</span>
-    <span>{{row.nameEt}}</span>
+    <span>
+      <span>{{row.nameEt}}</span>
+      <span ng-if="row.studyYearNumber">({{row.studyYearNumber}}. {{'main.studyYearShort' | translate}})</span>
+    </span>
     <span ng-if="moduleResultById[module.curriculumModule.id].themeResultById[row.id].isApelTransfer
         && !moduleResultById[module.curriculumModule.id].themeResultById[row.id].isFormalLearning">
       - {{'student.result.informal' | translate}}</span>
@@ -26,3 +29,4 @@
 <td md-cell>
   <span ng-if="row.isOk !== undefined">{{row.isOk ? 'main.yes' : 'main.no' | translate}}</span>
 </td>
+<td md-cell md-colors="{background: row.isOk ? 'green-600' : 'red-500'}"></td>

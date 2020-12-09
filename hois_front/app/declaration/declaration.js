@@ -18,7 +18,7 @@ function ($q, $location, $scope, $route, GRADING_SCHEMA_TYPE, ArrayUtils, DataUt
 
   var gradeMapper;
   var gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.HIGHER);
-  $q.all(gradingSchema.promises).then(function () {
+  var gradePromise = $q.all(gradingSchema.promises).then(function () {
     $scope.existsSchoolGradingSchema = gradingSchema.existsSchoolGradingSchema();
     gradeMapper = gradingSchema.gradeMapper(gradingSchema.gradeSelection(), ['grade']);
   });
@@ -78,12 +78,14 @@ function ($q, $location, $scope, $route, GRADING_SCHEMA_TYPE, ArrayUtils, DataUt
 
   function afterLoad(declaration) {
     $scope.isGuestStudent = declaration.student.type === 'OPPUR_K';
-    (declaration.subjects || []).forEach(function (subject) {
-      subject.mandatoryPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
-        gradeMapper.objectmapper(prerequisiteSubject);
-      });
-      subject.recommendedPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
-        gradeMapper.objectmapper(prerequisiteSubject);
+    gradePromise.then(function () {
+      (declaration.subjects || []).forEach(function (subject) {
+        subject.mandatoryPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
+          gradeMapper.objectmapper(prerequisiteSubject);
+        });
+        subject.recommendedPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
+          gradeMapper.objectmapper(prerequisiteSubject);
+        });
       });
     });
   }
@@ -250,7 +252,7 @@ function ($q, $location, $scope, $route, GRADING_SCHEMA_TYPE, ArrayUtils, DataUt
 
   var gradeMapper;
   var gradingSchema = new GradingSchema(GRADING_SCHEMA_TYPE.HIGHER);
-  $q.all(gradingSchema.promises).then(function () {
+  var gradePromise = $q.all(gradingSchema.promises).then(function () {
     $scope.existsSchoolGradingSchema = gradingSchema.existsSchoolGradingSchema();
     gradeMapper = gradingSchema.gradeMapper(gradingSchema.gradeSelection(), ['grade']);
   });
@@ -304,7 +306,7 @@ function ($q, $location, $scope, $route, GRADING_SCHEMA_TYPE, ArrayUtils, DataUt
           }
         }
 
-        if (wrapper.formState.type === $scope.DECLARATION_PERIOD_TYPE.CURRENT && !response.id) {
+        if (($scope.auth.isAdmin() || wrapper.formState.type === $scope.DECLARATION_PERIOD_TYPE.CURRENT) && !response.id) {
           var endpointUrl = '/declarations/canCreate?next=' + !!next;
           if ($scope.inStudentData) {
             endpointUrl = '/declarations/canCreate/'+ id +'?next=' + !!next;
@@ -341,12 +343,14 @@ function ($q, $location, $scope, $route, GRADING_SCHEMA_TYPE, ArrayUtils, DataUt
   }
 
   function afterLoad(declaration) {
-    (declaration.subjects || []).forEach(function (subject) {
-      subject.mandatoryPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
-        gradeMapper.objectmapper(prerequisiteSubject);
-      });
-      subject.recommendedPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
-        gradeMapper.objectmapper(prerequisiteSubject);
+    gradePromise.then(function () {
+      (declaration.subjects || []).forEach(function (subject) {
+        subject.mandatoryPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
+          gradeMapper.objectmapper(prerequisiteSubject);
+        });
+        subject.recommendedPrerequisiteSubjects.forEach(function (prerequisiteSubject) {
+          gradeMapper.objectmapper(prerequisiteSubject);
+        });
       });
     });
   }
@@ -539,12 +543,13 @@ function ($q, $location, $scope, $route, GRADING_SCHEMA_TYPE, ArrayUtils, DataUt
       $scope.controller.period = $scope.studyPeriod.id;
     });
 
-    $scope.nextPeriod = QueryUtils.endpoint('/declarations/nextStudyPeriod').search();
-    $scope.nextPeriod.$promise.then(function () {
-      if (!$scope.nextPeriod.id) {
+    QueryUtils.endpoint('/declarations/nextStudyPeriods').query({}, function (result) {
+      if (!angular.isArray(result)) {
         return;
       }
-      $scope.periods.push($scope.nextPeriod);
+      result.forEach(function (it) {
+        $scope.periods.push(it);
+      });
     });
 
     $scope.save = function() {
@@ -554,8 +559,9 @@ function ($q, $location, $scope, $route, GRADING_SCHEMA_TYPE, ArrayUtils, DataUt
         if(!validStudyPeriod($scope.studyPeriod)) {
           return;
         }
-        var isNextPeriod = !!$scope.nextPeriod.id && $scope.nextPeriod.id === $scope.controller.period;
-        var Endpoint = QueryUtils.endpoint('/declarations/create/' + $scope.controller.student.id + "?next=" + isNextPeriod);
+        var isNextPeriod = $scope.studyPeriod.id !== $scope.controller.period;
+        var Endpoint = QueryUtils.endpoint('/declarations/create/' +
+          $scope.controller.student.id + "?next=" + isNextPeriod + '&period=' + $scope.controller.period);
         new Endpoint().$save().then(function(response) {
           message.info('main.messages.create.success');
           $location.url("/declarations/" + response.id + "/edit?_noback");

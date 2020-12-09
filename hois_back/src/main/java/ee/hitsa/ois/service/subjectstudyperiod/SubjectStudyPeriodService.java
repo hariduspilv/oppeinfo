@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacherCapacity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -69,10 +70,11 @@ public class SubjectStudyPeriodService {
     public SubjectStudyPeriod update(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod,
             SubjectStudyPeriodForm form, MoodleContext context) {
         EntityUtil.bindToEntity(form, subjectStudyPeriod, classifierRepository, "subject", "studyPeriod", "teachers",
-                "studentGroups", "subgroups");
+                "studentGroups", "subgroups", "places", "coefficient");
         if (user.isSchoolAdmin()) {
             updateSubjectStudyPeriodTeachers(subjectStudyPeriod, form);
             updateStudentGroups(subjectStudyPeriod, form.getStudentGroups());
+            subjectStudyPeriod.setPlaces(form.getPlaces());
         }
         updateSubgroups(subjectStudyPeriod, form.getSubgroups());
         if (!subjectStudyPeriod.getSubgroups().isEmpty()) {
@@ -183,4 +185,14 @@ public class SubjectStudyPeriodService {
         EntityUtil.deleteEntity(subjectStudyPeriod, em);
     }
 
+    public boolean hasSubgroupAnyCapacities(SubjectStudyPeriodSubgroup subgroup) {
+        if (subgroup == null) {
+            return false;
+        }
+        return !em.createQuery("select ssptc from SubjectStudyPeriodTeacherCapacity ssptc" +
+                " where ssptc.subgroup.id = :subgroupId", SubjectStudyPeriodTeacherCapacity.class)
+                .setParameter("subgroupId", EntityUtil.getId(subgroup))
+                .setMaxResults(1)
+                .getResultList().isEmpty();
+    }
 }

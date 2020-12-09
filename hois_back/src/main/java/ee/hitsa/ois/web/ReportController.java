@@ -419,6 +419,14 @@ public class ReportController {
         return teacherDetailLoadService.teacherDetailLoadSubjects(user.getSchoolId(), criteria, teacher);
     }
 
+    @GetMapping("/teachers/detailload/teachersdetailloadsubjectjournal.xlsx")
+    public void teacherDetailLoadSubjectJournalAsExcel(HoisUserDetails user, @Valid TeacherDetailLoadCommand criteria,
+            HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PARING);
+        HttpUtil.xls(response, "teachersdetailloadsubjectjournal.xlsx",
+                teacherDetailLoadService.teacherDetailLoadSubjectJournalAsExcel(user.getSchoolId(), criteria));
+    }
+    
     @GetMapping("/teachers/detailload/teachersdetailload.xlsx")
     public void teacherDetailLoadAsExcel(HoisUserDetails user, @Valid TeacherDetailLoadCommand criteria,
             HttpServletResponse response) throws IOException {

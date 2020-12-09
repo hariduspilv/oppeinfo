@@ -33,6 +33,8 @@ import ee.hois.soap.ekis.service.generated.EnforceContract;
 import ee.hois.soap.ekis.service.generated.EnforceContractResponse;
 import ee.hois.soap.ekis.service.generated.EnforceDirective;
 import ee.hois.soap.ekis.service.generated.EnforceDirectiveResponse;
+import ee.hois.soap.ekis.service.generated.RejectContract;
+import ee.hois.soap.ekis.service.generated.RejectContractResponse;
 import ee.hois.soap.ekis.service.generated.RejectDirective;
 import ee.hois.soap.ekis.service.generated.RejectDirectiveResponse;
 
@@ -141,5 +143,19 @@ public class EkisSoapService implements EkisTahvelPort {
             log.error(SYSTEM_FAULT, e);
             throw new HoisException(SYSTEM_FAULT);
         }
+    }
+
+    @Override
+    public RejectContractResponse rejectContract(RejectContract request) {
+        log.info("EkisSoapService: rejectContract");
+        Contract contract = withExceptionHandler(() ->
+            contractService.rejectByEkis(request.getOisContractId(), request.getRejectComment(),
+                    request.getWdContractId(), request.getSchoolId() != null ? request.getSchoolId() : 0));
+
+        RejectContractResponse response = new RejectContractResponse();
+        response.setOisContractId(request.getOisContractId());
+        response.setStatus(status(contract.getStatus()));
+        //response.setRejectComment(request.getRejectComment());
+        return response;
     }
 }

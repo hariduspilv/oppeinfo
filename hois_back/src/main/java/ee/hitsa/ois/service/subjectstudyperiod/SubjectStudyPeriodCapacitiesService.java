@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service.subjectstudyperiod;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
 
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -47,6 +49,13 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodTeacherDto;
 @Transactional
 @Service
 public class SubjectStudyPeriodCapacitiesService {
+
+    public static final String SQL_SELECT_TEACHER_CAPACITY =
+            "select distinct on (ssptc.subject_study_period_teacher_id, ssptc.subject_study_period_capacity_id)" +
+                    " ssptc.subject_study_period_teacher_id, ssptc.hours, ssptc.subject_study_period_capacity_id" +
+            " from subject_study_period_teacher_capacity ssptc" +
+            " order by ssptc.subject_study_period_teacher_id, ssptc.subject_study_period_capacity_id," +
+            " ssptc.subject_study_period_subgroup_id is not null, ssptc.hours desc";
 
     @Autowired
     private SubjectService subjectService;
@@ -106,6 +115,9 @@ public class SubjectStudyPeriodCapacitiesService {
 
             ssp.setCapacities(capacities);
             ssp.setCapacityDiff(dto.getCapacityDiff());
+            if (dto.getCoefficient() != null) {
+                ssp.setCoefficient(em.getReference(Classifier.class, dto.getCoefficient()));
+            }
             updateTeacherCapacities(ssp, dto);
             ssps.add(ssp);
         }
@@ -132,6 +144,8 @@ public class SubjectStudyPeriodCapacitiesService {
                             newCapacity.setSubjectStudyPeriodTeacher(teacher);
                             newCapacity.setSubjectStudyPeriodCapacity(sspCapacitiesMap.get(dto3.getCapacityType()));
                             newCapacity.setHours(dto3.getHours());
+                            newCapacity.setSubgroup(dto3.getSubgroup() != null
+                                    ? em.getReference(SubjectStudyPeriodSubgroup.class, dto3.getSubgroup()) : null);
                             return newCapacity;
                         }, (dto2, c) -> {
                             c.setHours(dto2.getHours());
@@ -243,6 +257,8 @@ public class SubjectStudyPeriodCapacitiesService {
         }
 
         period.put("groupProportion", periodDto.getGroupProportion());
+        period.put("subgroups", periodDto.getSubgroups() != null ? periodDto.getSubgroups().size() : 0);
+        period.put("coefficient", periodDto.getCoefficient());
         period.put("hours", periodCapacityHours);
 
         return period;
@@ -267,8 +283,8 @@ public class SubjectStudyPeriodCapacitiesService {
         return periodDtos;
     }
 
-    public Map<Long, Map<Long, Short>> subjectStudyPeriodTeacherPlannedLoads(List<SubjectStudyPeriod> subjectStudyPeriods) {
-        Map<Long, Map<Long, Short>> teacherPlannedLoads = new HashMap<>();
+    public Map<Long, Map<Long, Integer>> subjectStudyPeriodTeacherPlannedLoads(List<SubjectStudyPeriod> subjectStudyPeriods) {
+        Map<Long, Map<Long, Integer>> teacherPlannedLoads = new HashMap<>();
 
         Set<Long> subjectStudyPeriodIds = StreamUtil.toMappedSet(ssp -> EntityUtil.getId(ssp.getStudyPeriod()),
                 subjectStudyPeriods);
@@ -279,19 +295,61 @@ public class SubjectStudyPeriodCapacitiesService {
         if (!teacherIds.isEmpty()) {
             JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period_teacher sspt"
                     + " join subject_study_period ssp on ssp.id = sspt.subject_study_period_id"
-                    + " join subject_study_period_capacity ssppc on ssppc.subject_study_period_id = ssp.id"
-                    + " left join subject_study_period_teacher_capacity ssptc on ssptc.subject_study_period_capacity_id = ssppc.id"
-                    + " and ssptc.subject_study_period_teacher_id = sspt.id");
+                    + " join teacher t on sspt.teacher_id = t.id"
+                    + " join study_period sp on ssp.study_period_id = sp.id");
             qb.requiredCriteria("ssp.study_period_id in (:subjectStudyPeriodIds)", "subjectStudyPeriodIds", subjectStudyPeriodIds);
             qb.requiredCriteria("sspt.teacher_id in (:teacherIds)", "teacherIds", teacherIds);
 
-            qb.groupBy("sspt.teacher_id, ssp.study_period_id");
-            List<?> data = qb.select("ssp.study_period_id, sspt.teacher_id,"
-                    + " coalesce(sum(case when ssp.is_capacity_diff is null or ssp.is_capacity_diff is false then ssppc.hours end), 0) +"
-                    + " coalesce(sum(case when ssp.is_capacity_diff then ssptc.hours end), 0)", em).getResultList();
+            qb.groupBy("sspt.teacher_id, ssp.study_period_id, sp.study_year_id, t.is_study_period_schedule_load");
+            List<?> data = qb.select("ssp.study_period_id, sspt.teacher_id," +
+                    " coalesce((select sum(sspc2.hours)" +
+                        " from subject_study_period_teacher sspt2" +
+                        " join subject_study_period ssp2 on sspt2.subject_study_period_id = ssp2.id" +
+                        " join study_period sp2 on ssp2.study_period_id = sp2.id" +
+                        " join subject_study_period_capacity sspc2 on ssp2.id = sspc2.subject_study_period_id" +
+                        " where sspt2.teacher_id = sspt.teacher_id" +
+                            " and (ssp2.is_capacity_diff is null or ssp2.is_capacity_diff is false)" +
+                            " and (case when t.is_study_period_schedule_load = true" +
+                                " then ssp.study_period_id = ssp2.study_period_id" +
+                                " else sp.study_year_id = sp2.study_year_id end)" +
+                        " group by sspt2.teacher_id), 0) +" +
+                    " coalesce((select sum(ssptc2.hours)" +
+                        " from subject_study_period_teacher sspt2" +
+                        " join subject_study_period ssp2 on sspt2.subject_study_period_id = ssp2.id" +
+                        " join study_period sp2 on ssp2.study_period_id = sp2.id" +
+                        " join subject_study_period_capacity sspc2 on ssp2.id = sspc2.subject_study_period_id" +
+                        " join (" + SQL_SELECT_TEACHER_CAPACITY + ") ssptc2" +
+                            " on ssptc2.subject_study_period_capacity_id = sspc2.id and" +
+                            " ssptc2.subject_study_period_teacher_id = sspt2.id" +
+                        " where sspt2.teacher_id = sspt.teacher_id" +
+                            " and ssp2.is_capacity_diff = true" +
+                            " and (case when t.is_study_period_schedule_load = true" +
+                                " then ssp.study_period_id = ssp2.study_period_id" +
+                                " else sp.study_year_id = sp2.study_year_id end)" +
+                        " group by sspt2.teacher_id), 0) +" +
+                    " coalesce((select sum(jc.hours)" +
+                        " from journal_teacher jt" +
+                        " join journal j on j.id = jt.journal_id" +
+                        " join journal_capacity jc on j.id = jc.journal_id" +
+                        " where (j.is_capacity_diff is null or j.is_capacity_diff = false)" +
+                            " and jt.teacher_id = sspt.teacher_id" +
+                            " and (case when t.is_study_period_schedule_load = true" +
+                                " then ssp.study_period_id = jc.study_period_id" +
+                                " else sp.study_year_id = j.study_year_id end)" +
+                        " group by jt.teacher_id), 0) +" +
+                    " coalesce((select sum(jtc.hours)" +
+                        " from journal_teacher jt2" +
+                        " join journal j2 on j2.id = jt2.journal_id" +
+                        " join journal_teacher_capacity jtc on jt2.id = jtc.journal_teacher_id" +
+                        " where j2.is_capacity_diff = true" +
+                            " and sspt.teacher_id = jt2.teacher_id" +
+                            " and (case when t.is_study_period_schedule_load = true" +
+                                " then ssp.study_period_id = jtc.study_period_id" +
+                                " else sp.study_year_id = j2.study_year_id end)" +
+                        " group by jt2.teacher_id), 0) as hours", em).getResultList();
 
             teacherPlannedLoads = StreamUtil.nullSafeList(data).stream().collect(Collectors.groupingBy(
-                    r -> resultAsLong(r, 0), Collectors.toMap(r -> resultAsLong(r, 1), r -> resultAsShort(r, 2))));
+                    r -> resultAsLong(r, 0), Collectors.toMap(r -> resultAsLong(r, 1), r -> resultAsInteger(r, 2))));
         }
         return teacherPlannedLoads;
     }

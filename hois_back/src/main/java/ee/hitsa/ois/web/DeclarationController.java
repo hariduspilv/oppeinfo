@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.validation.Valid;
 
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.web.commandobject.StudentDeclarationCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -189,9 +190,12 @@ public class DeclarationController {
     }
 
     @PostMapping("/create/{id:\\d+}")
-    public DeclarationDto createForSchoolAdmin(HoisUserDetails user, @WithEntity Student student, @RequestParam(name="next", defaultValue="false") boolean isNextDeclaration) {
+    public DeclarationDto createForSchoolAdmin(HoisUserDetails user,
+                                               @WithEntity Student student,
+                                               @RequestParam(name="next", defaultValue="false") boolean isNextDeclaration,
+                                               @RequestParam(name="period", required = false) Long period) {
         UserUtil.isSchoolAdminOrStudent(user, student.getSchool());
-        return get(user, declarationService.create(user, student.getId(), isNextDeclaration));
+        return get(user, declarationService.create(user, student.getId(), isNextDeclaration, period));
     }
 
     @PutMapping("/confirm/{id:\\d+}")
@@ -233,10 +237,10 @@ public class DeclarationController {
     }
 
     @GetMapping("/students")
-    public Page<AutocompleteResult> getStudentsWithoutDeclaration(UsersSearchCommand command, 
+    public Page<AutocompleteResult> getStudentsWithoutDeclaration(StudentDeclarationCommand command,
             Pageable pageable, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return declarationService.getStudentsWithoutDeclaration(command, pageable, user.getSchoolId());
+        return declarationService.getStudentsWithoutDeclaration(user, command, pageable);
     }
     
     /**
@@ -245,20 +249,21 @@ public class DeclarationController {
     @GetMapping("/withoutDeclaration")
     public Page<StudentSearchDto> searchStudentsWithoutDeclaration(HoisUserDetails user, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return declarationService.searchStudentsWithoutDeclaration(new UsersSearchCommand(), user.getSchoolId(), pageable);
+        return declarationService.searchStudentsWithoutDeclaration(user, new StudentDeclarationCommand(), pageable);
     }
 
     @GetMapping("/currentStudyPeriod")
     public AutocompleteResult getCurrentStudyPeriod(HoisUserDetails user) {
         return declarationService.getCurrentStudyPeriod(user.getSchoolId());
     }
-    
-    /**
-     * @param user
-     * @return next study period in case if declaration period is open.
-     */
+
     @GetMapping("/nextStudyPeriod")
-    public AutocompleteResult getNextStudyPeriodIfOpenDeclarationPeriod(HoisUserDetails user) {
-        return declarationService.getNextStudyPeriodIfOpenDeclarationPeriod(user.getSchoolId());
+    public AutocompleteResult getNextStudyPeriod(HoisUserDetails user) {
+        return declarationService.getNextStudyPeriod(user.getSchoolId());
+    }
+
+    @GetMapping("/nextStudyPeriods")
+    public List<AutocompleteResult> getNextStudyPeriods(HoisUserDetails user) {
+        return declarationService.getNextStudyPeriods(user.getSchoolId());
     }
 }

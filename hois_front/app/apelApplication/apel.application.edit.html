@@ -71,22 +71,14 @@
       <div ng-hide="!application.student">
         <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">
-            {{'apel.formalLearnings.label' | translate}} {{application.isVocational ? ('apel.formalLearnings.vocationalSubtitle' | translate) : ('apel.formalLearnings.higherSubtitle' | translate)}}
+            {{application.isVocational ? ('apel.formalLearnings.vocationalSubtitle' | translate) : ('apel.formalLearnings.higherSubtitle' | translate)}} ({{'apel.formalLearnings.label' | translate}})
           </legend>
           <span ng-if="application.isVocational" ng-repeat="record in application.records | filter:{isFormalLearning: true} | orderBy:'id'">
-            <div ng-if="record.errorMessages && record.errorMessages.length > 0">
-              <hois-whiteframe-warning ng-repeat="error in record.errorMessages">
-                <span>{{error | translate}}</span>
-              </hois-whiteframe-warning>
-            </div>
+            <div ng-include="'apelApplication/templates/apel.application.record.errors.html'"></div>
             <div ng-include="'apelApplication/templates/apel.application.formal.learning.vocational.list.html'" style="margin-bottom: 20px"></div>
           </span>
           <span ng-if="!application.isVocational" ng-repeat="record in application.records | filter:{isFormalLearning: true} | orderBy:'id'">
-            <div ng-if="record.errorMessages && record.errorMessages.length > 0">
-              <hois-whiteframe-warning ng-repeat="error in record.errorMessages">
-                <span>{{error | translate}}</span>
-              </hois-whiteframe-warning>
-            </div>
+            <div ng-include="'apelApplication/templates/apel.application.record.errors.html'"></div>
             <div ng-include="'apelApplication/templates/apel.application.formal.learning.higher.list.html'" style="margin-bottom: 20px"></div>
           </span>
           <md-button ng-if="application.canEdit" class="md-raised md-default" ng-click="editFormalLearning()">{{'main.button.create' | translate}}</md-button>
@@ -99,7 +91,7 @@
       <div ng-hide="!application.student">
         <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">
-            {{'apel.informalLearnings.label' | translate}} {{application.isVocational ? ('apel.informalLearnings.vocationalSubtitle' | translate) : ('apel.informalLearnings.higherSubtitle' | translate)}}
+            {{application.isVocational ? ('apel.informalLearnings.vocationalSubtitle' | translate) : ('apel.informalLearnings.higherSubtitle' | translate)}} ({{'apel.informalLearnings.label' | translate}})
           </legend>
           <span ng-repeat="record in application.records | filter:{isFormalLearning: false} | orderBy:'id'">
               <div ng-if="application.isVocational" ng-include="'apelApplication/templates/apel.application.informal.learning.vocational.list.html'"
@@ -115,7 +107,7 @@
       <div ng-hide="!application.student" layout="column" flex>
         <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'apel.addInfo.addInfos' | translate}}</legend>
-          <md-button ng-if="application.canEdit" class="md-raised" ng-click="openEditCommentDialog()">{{'main.button.create' | translate}}</md-button>
+          <md-button ng-if="application.canComment" class="md-raised" ng-click="openEditCommentDialog()">{{'main.button.create' | translate}}</md-button>
           <md-table-container>
             <table md-table md-progress="tabledata.$promise" class="secondary-table">
               <thead md-head>
@@ -123,7 +115,7 @@
                   <th md-column width="55%">{{'apel.addInfo.label' | translate}}</th>
                   <th md-column width="20%">{{'apel.addInfo.additionDate' | translate}}</th>
                   <th md-column width="20%">{{'apel.addInfo.addedBy' | translate}}</th>
-                  <th md-column width="5%"></th>
+                  <th md-column width="5%" ng-if="!(auth.isParent() || auth.isStudent())">{{'apel.addInfo.isStudent' | translate}}</th>
                 </tr>
               </thead>
               <tbody md-body>
@@ -131,7 +123,7 @@
                   <td md-cell ng-bind-html="comment.addInfo | linky: '_blank'"></td>
                   <td md-cell>{{comment.inserted | hoisDateTime}}</td>
                   <td md-cell>{{comment.insertedBy}}</td>
-                  <td md-cell></td>
+                  <td md-cell ng-if="!(auth.isParent() || auth.isStudent())">{{comment.isStudent ? ('main.yes' | translate) : ('main.no' | translate)}}</td>
                 </tr>
               </tbody>
             </table>
@@ -189,13 +181,19 @@
         <div>&nbsp;</div>
       </div>
 
-      <div ng-if="(application.status !== 'VOTA_STAATUS_K' && (auth.isAdmin() || auth.isLeadingTeacher())) || application.committee || application.decision">
+      <div ng-if="(application.status !== 'VOTA_STAATUS_K' && (auth.isAdmin() || auth.isLeadingTeacher())) || (application.committeeIds && application.committeeIds.length !== 0) || application.decision">
         <fieldset>
           <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'apel.committee ' | translate}}</legend>
           <div ng-if="application.status === 'VOTA_STAATUS_E'" flex="45" flex-sm="100" flex-xs="100">
+            <div ng-if="application.committeeIds && application.committeeIds.length > 1">
+              <hois-whiteframe-warning>
+                <span>{{'apel.error.committee' | translate}}</span>
+              </hois-whiteframe-warning>
+            </div>
             <md-input-container style="width: 100%">
               <label>{{'apel.committee' | translate}}</label>
-              <hois-select ng-model="application.committeeId" values="committees" ng-disabled="!application.canEdit" required></hois-select>
+              <hois-select ng-model="application.committeeIds" values="committees"
+              ng-disabled="!application.canEdit" required multiple></hois-select>
             </md-input-container>
           </div>
           <div ng-if="application.status !== 'VOTA_STAATUS_E' || (application.status === 'VOTA_STAATUS_E' && !application.canEdit)"
@@ -203,7 +201,7 @@
             <div>&nbsp;</div>
             <md-input-container>
               <label>{{'apel.committee' | translate}}</label>
-              <hois-value value="currentLanguageNameField(application.committee)"></hois-value>
+              <hois-value value="application.committees.map(currentLanguageNameField).join(', ')"></hois-value>
             </md-input-container>
           </div>
           <div ng-if="application.decision" layout="column" flex>
@@ -225,7 +223,7 @@
         <md-button class="md-raised md-default" ng-if="application.canSendToConfirm"
           ng-click="sendToConfirm()">{{'apel.sendToConfirm' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-if="application.canSendToCommittee" ng-click="sendToCommittee()"
-          ng-disabled="!application.committeeId">{{'apel.sendToCommittee' | translate}}</md-button>
+          ng-disabled="!application.committeeIds || application.committeeIds.length === 0">{{'apel.sendToCommittee' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-if="application.canSendBackToCreation"
           ng-click="sendBackToCreation()">{{'apel.sendBackToCreation' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-if="application.canConfirm"

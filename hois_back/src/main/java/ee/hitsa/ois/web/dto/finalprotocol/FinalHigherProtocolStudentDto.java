@@ -48,7 +48,8 @@ public class FinalHigherProtocolStudentDto extends HigherProtocolStudentDto {
                         .add(new FinalProtocolStudentOccupationDto(
                                 certificate != null ? certificate.getCertificateNr() : null, 
                                 oc.getOccupation().getCode(), null, null,
-                                certificate != null ? certificate.getId() : null));
+                                certificate != null ? certificate.getId() : null,
+                                null));
             });
         }
         

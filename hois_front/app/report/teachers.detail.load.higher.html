@@ -1,3 +1,8 @@
+<style>
+.md-chips .md-chip-input-container {
+  min-width: 100%;
+}
+</style>
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
     <fieldset>
@@ -8,20 +13,67 @@
             <label class="textInput">{{'report.teachersDetailLoad.studyYear' | translate}}</label>
             <hois-select ng-model="criteria.studyYear" values="formState.studyYears" required></hois-select>
           </md-input-container>
-
           <md-input-container flex="30" flex-offset="5" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'report.teachersDetailLoad.studyPeriod' | translate}}</label>
             <hois-select ng-model="criteria.studyPeriod" ng-change="studyPeriodChanged()" values="formState.studyPeriods[criteria.studyYear]"></hois-select>
           </md-input-container>
-
-          <div flex="30" flex-offset="5" flex-sm="100" flex-xs="100">
-            <hois-autocomplete ng-model="criteria.teacher" ha-controller="directiveControllers" ha-attribute="id"
-              method="teachers" additional-query-params="{valid: true, higher: true}" label="teacher.labelHigher"></hois-autocomplete>
+          <div flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <hois-autocomplete ha-controller="directiveControllers" ng-model="criteria.curriculum" ha-attribute="id" 
+              method="curriculums" name="curriculum" additional-query-params="{higher: true}" 
+              label="report.teachersDetailLoad.curriculum"></hois-autocomplete>
           </div>
         </div>
 
+        <div layout="row">
+          <div flex="30" flex-sm="100" flex-xs="100">
+            <hois-autocomplete ng-model="criteria.studentGroups" ha-controller="directiveControllers" ha-attribute="id" multiple
+              method="studentgroups" additional-query-params="{valid: true, higher: true}" label="report.teachersDetailLoad.studentGroups"></hois-autocomplete>
+          </div>
+          <div flex="30" flex-offset="5" flex-sm="100" flex-xs="100">
+            <hois-autocomplete ng-model="criteria.teachers" ha-controller="directiveControllers" ha-attribute="id" multiple
+              method="teachers" additional-query-params="{valid: true, higher: true}" label="teacher.labelHigher"></hois-autocomplete>
+          </div>
+          <md-input-container flex="30" flex-offset="5" flex-sm="100" flex-xs="100">
+            <label>{{'report.teachersDetailLoad.teacherPosition' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.teacherPosition" main-classifier-code="EHIS_AMETIKOHT" 
+              model-value-attr="code" criteria="{higher: true}"></hois-classifier-select>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <md-input-container>
+            <label>{{'main.from' | translate}}</label>
+            <md-datepicker ng-model="criteria.from" ng-change="dateFromThruChange()"
+              md-min-date="criteria.studyYearStart" md-max-date="criteria.thru ? criteria.thru : criteria.studyYearEnd" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+          </md-input-container>
+          <md-input-container flex-offset="5">
+            <label>{{'main.thru' | translate}}</label>
+            <md-datepicker ng-model="criteria.thru" ng-change="dateFromThruChange()"
+              md-min-date="criteria.from ? criteria.from : criteria.studyYearStart" md-max-date="criteria.studyYearEnd" hois-datepicker-extension hd-controller="directiveControllers"></md-datepicker>
+          </md-input-container>
+        </div>
+
         <div layout="row" layout-sm="column" layout-xs="column">
-          <md-checkbox flex="15" flex-md="30" flex-sm="100" flex-xs="100" ng-model="criteria.byCapacities" aria-label="{{'report.teachersDetailLoad.byCapacities' | translate}}">
+          <md-checkbox flex="15" flex-md="30" flex-sm="100" flex-xs="100" ng-model="criteria.byStudyPeriods"
+            ng-change="periodChanged('byStudyPeriods')" ng-disabled="criteria.thru || criteria.from"
+            aria-label="{{'report.teachersDetailLoad.byStudyPeriods' | translate}}">
+            {{'report.teachersDetailLoad.byStudyPeriods' | translate}}
+          </md-checkbox>
+          <md-checkbox flex="15" flex-md="30" flex-sm="100" flex-xs="100" ng-model="criteria.byWeeks"
+            ng-change="periodChanged('byWeeks')" ng-disabled="criteria.thru || criteria.from"
+            aria-label="{{'report.teachersDetailLoad.byWeeks' | translate}}">
+            {{'report.teachersDetailLoad.byWeeks' | translate}}
+          </md-checkbox>
+          <md-checkbox flex="15" flex-md="30" flex-sm="100" flex-xs="100" ng-model="criteria.byMonths"
+            ng-change="periodChanged('byMonths')" ng-disabled="criteria.studyPeriod"
+            aria-label="{{'report.teachersDetailLoad.byMonths' | translate}}">
+            {{'report.teachersDetailLoad.byMonths' | translate}}
+          </md-checkbox>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-checkbox flex="15" flex-md="30" flex-sm="100" flex-xs="100" ng-model="criteria.byCapacities" 
+            aria-label="{{'report.teachersDetailLoad.byCapacities' | translate}}">
             {{'report.teachersDetailLoad.byCapacities' | translate}}
           </md-checkbox>
           <md-checkbox flex="15" flex-md="30" flex-sm="100" flex-xs="100" ng-model="criteria.showPlannedLessons"
@@ -38,6 +90,7 @@
           <md-button class="md-raised md-primary" type="submit">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
           <md-button ng-href="{{excelUrl()}}" ng-disabled="!criteria.studyYear" class="md-button md-raised">{{'main.button.printXls'| translate}}</md-button>
+          <md-button ng-href="{{excelUrlDetail()}}" ng-disabled="!criteria.studyYear" class="md-button md-raised">{{'main.button.printXlsDetail'| translate}}</md-button>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
       </form>
@@ -55,6 +108,14 @@
         <span ng-if="entriesWithoutCapacity">
           <span>|</span>
           <span> ? - {{'report.teachersDetailLoad.capacityMissing' | translate}}</span>
+        </span>
+        <span>
+          <span>|</span>
+          <span>{{'report.teachersDetailLoad.contactLesson' | translate}} - {{'report.teachersDetailLoad.contactLessonLong' | translate}}</span>
+        </span>
+        <span>
+          <span>|</span>
+          <span>{{'report.teachersDetailLoad.koefLesson' | translate}} - {{'report.teachersDetailLoad.koefLessonLong' | translate}}</span>
         </span>
       </div>
     </div>

@@ -6,6 +6,7 @@ import java.util.Map;
 
 import javax.validation.Valid;
 
+import ee.hitsa.ois.web.dto.SubjectResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -55,6 +56,7 @@ public class SubjectStudyPeriodPlanController {
     public SubjectStudyPeriodPlanDto get(HoisUserDetails user, @WithEntity SubjectStudyPeriodPlan plan) {
         UserUtil.assertSameSchool(user, plan.getSubject().getSchool());
         UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KOORM);
+        UserUtil.throwAccessDeniedIf(plan.getStudyPeriod() != null);
         return SubjectStudyPeriodPlanDto.of(plan);
     }
 
@@ -101,7 +103,8 @@ public class SubjectStudyPeriodPlanController {
 
     @GetMapping("/subject/{id:\\d+}")
     public AutocompleteResult subject(@WithEntity Subject subject) {
-        return AutocompleteResult.of(subject);
+        return new SubjectResult(subject.getId(), subject.getNameEt(), subject.getNameEn(),
+                subject.getCode(), subject.getCredits());
     }
 
     @GetMapping("/subjects")

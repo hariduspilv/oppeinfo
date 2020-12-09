@@ -53,7 +53,8 @@ public class StudentResultCardService {
             + "join diploma_supplement_form dsf on dsf.diploma_supplement_id = ds.id "
             + "join form f2 on f2.id = dsf.form_id "
             + "where ds.student_id = s.id and ds.status_code in ('LOPUDOK_STAATUS_T', 'LOPUDOK_STAATUS_V', 'LOPUDOK_STAATUS_C') "
-            + "order by ordernr, ds.diploma_supplement_id asc nulls first, ds.id asc, f2.numeral) nrs) supplement_nrs";
+            + "order by ordernr, ds.diploma_supplement_id asc nulls first, ds.id asc, f2.numeral) nrs) supplement_nrs, "
+            + "s.reg_nr";
 
     @Autowired
     private EntityManager em;
@@ -87,6 +88,7 @@ public class StudentResultCardService {
             dto.setStudyLanguage(resultAsString(r, 10));
             dto.setDiplomaNrs(resultAsString(r, 11));
             dto.setSupplementNrs(resultAsString(r, 12));
+            dto.setRegNr(resultAsLong(r, 13));
             return dto;
         }, data);
         setStudentMatriculation(students);

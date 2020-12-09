@@ -32,6 +32,7 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.web.commandobject.StudentDeclarationCommand;
 import ee.hitsa.ois.web.dto.GradeDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -135,11 +136,14 @@ public class DeclarationService {
 
     private static final String SUBJECT_CURRICULUM_SELECT = " ssp.id as ssp1Id, s.id as subjectId, "
             + "s.name_et, s.name_en, s.code, s.credits, c.value, cvhm.id as moduleId, "
-            + "cvhms.is_optional, array_to_string(teachers.teacher, ', ') as teachers, cvhm.name_et as moduleEt, cvhm.name_en as moduleEn";
+            + "cvhms.is_optional, array_to_string(teachers.teacher, ', ') as teachers, "
+            + "cvhm.name_et as moduleEt, cvhm.name_en as moduleEn, "
+            + "(select count(*) from declaration_subject ds3 where ds3.subject_study_period_id = ssp.id) < coalesce(ssp.places, 9999) as has_places";
     
     private static final String SUBJECT_EXTRACURRICULUM_SELECT = " distinct ssp.id as ssp1Id, s.id as subjectId, "
             + "s.name_et, s.name_en, s.code, s.credits, c.value, null as moduleId, "
-            + " false as isOptional, array_to_string(teachers.teacher, ', ') as teachers, null as moduleEt, null as moduleEn";
+            + "false as isOptional, array_to_string(teachers.teacher, ', ') as teachers, null as moduleEt, null as moduleEn, "
+            + "(select count(*) from declaration_subject ds3 where ds3.subject_study_period_id = ssp.id) < coalesce(ssp.places, 9999) as has_places";
     
     private static final String WITHOUT_DECLARATION_SELECT = " s.id, p.firstname, p.lastname, p.idcode, "
             + "cv.id as cv_id, cv.code as cv_code, sg.id as sg_id, sg.code as sg_code ";
@@ -320,10 +324,24 @@ public class DeclarationService {
         }
         return canCreate(user, studentId);
     }
-    
+
     public boolean canCreateNext(HoisUserDetails user, Long studentId) {
-        if (getNext(user.getSchoolId(), studentId) != null) {
-            // declaration already created
+        return canCreateNext(user, studentId, null);
+    }
+    
+    public boolean canCreateNext(HoisUserDetails user, Long studentId, Long period) {
+        if (user.isSchoolAdmin()) {
+            if (period != null) {
+                if (getByPeriod(studentId, period) != null) {
+                    return false;
+                }
+            } else if (getNext(user.getSchoolId(), studentId) != null) {
+                return false;
+            }
+        } else if (getNext(user.getSchoolId(), studentId) != null) {
+            return false;
+        }
+        if (getNextStudyPeriod(user.getSchoolId()) == null) {
             return false;
         }
         return canCreate(user, studentId);
@@ -377,8 +395,11 @@ public class DeclarationService {
         UserUtil.assertSameSchool(user, ssp.getStudyPeriod().getStudyYear().getSchool());
         ValidationFailedException.throwIf(declaration.getSubjects().stream()
                 .map(ds -> EntityUtil.getId(ds.getSubjectStudyPeriod().getSubject()))
-                .filter(sId -> sId.equals(EntityUtil.getId(ssp.getSubject())))
-                .findAny().isPresent(), "declaration.error.subjectExists");
+                .anyMatch(sId -> sId.equals(EntityUtil.getId(ssp.getSubject()))),
+                "declaration.error.subjectExists");
+        ValidationFailedException.throwIf(ssp.getPlaces() != null &&
+                ssp.getDeclarationSubjects().size() >= ssp.getPlaces().intValue(),
+                "declaration.noPlaces");
 
         DeclarationSubject declarationSubject = new DeclarationSubject();
         declarationSubject.setDeclaration(declaration);
@@ -395,15 +416,21 @@ public class DeclarationService {
     }
 
     public Declaration create(HoisUserDetails user, Long studentId, boolean nextPeriod) {
-        AssertionFailedException.throwIf(nextPeriod ? !canCreateNext(user, studentId) : !canCreateCurrent(user, studentId), "You cannot create declaration!");
+        return create(user, studentId, nextPeriod, null);
+    }
+
+    public Declaration create(HoisUserDetails user, Long studentId, boolean nextPeriod, Long period) {
+        AssertionFailedException.throwIf(nextPeriod ? !canCreateNext(user, studentId, period) : !canCreateCurrent(user, studentId), "You cannot create declaration!");
 
         Student student = em.getReference(Student.class, studentId);
-        Long studyPeriodId;
+        Long studyPeriodId = nextPeriod ? period : null;
         if (nextPeriod) {
-            studyPeriodId = studyYearService.getNextStudyPeriod(user.getSchoolId());
-            if(studyPeriodId == null) {
-                throw new ValidationFailedException("studyYear.studyPeriod.missingCurrent");
-            }   
+            if (studyPeriodId == null) {
+                studyPeriodId = studyYearService.getNextStudyPeriod(user.getSchoolId());
+                if(studyPeriodId == null) {
+                    throw new ValidationFailedException("studyYear.studyPeriod.missingCurrent");
+                }
+            }
         } else {
             studyPeriodId = studyYearService.getCurrentStudyPeriod(user.getSchoolId());
             if(studyPeriodId == null) {
@@ -444,6 +471,14 @@ public class DeclarationService {
         List<Declaration> result = em.createQuery("select d from Declaration d where d.student.id = ?1 and d.studyPeriod.id = ?2", Declaration.class)
                 .setParameter(1, studentId)
                 .setParameter(2, studyPeriodId)
+                .setMaxResults(1).getResultList();
+        return result.isEmpty() ? null : result.get(0);
+    }
+
+    public Declaration getByPeriod(Long studentId, Long periodId) {
+        List<Declaration> result = em.createQuery("select d from Declaration d where d.student.id = ?1 and d.studyPeriod.id = ?2", Declaration.class)
+                .setParameter(1, studentId)
+                .setParameter(2, periodId)
                 .setMaxResults(1).getResultList();
         return result.isEmpty() ? null : result.get(0);
     }
@@ -622,6 +657,7 @@ public class DeclarationService {
         }
         dto.setIsOptional(resultAsBoolean(r, 8));
         dto.setTeachers(Arrays.asList(resultAsString(r, 9).split(", ")));
+        dto.setHasPlaces(resultAsBoolean(r, 12));
         return dto;
     }
     
@@ -661,21 +697,18 @@ public class DeclarationService {
         return studyPeriodId != null ? AutocompleteResult.ofWithYear(em.getReference(StudyPeriod.class, studyPeriodId)) : null;
     }
     
-    public AutocompleteResult getNextStudyPeriodIfOpenDeclarationPeriod(Long schoolId) {
+    public AutocompleteResult getNextStudyPeriod(Long schoolId) {
         Long studyPeriodId = studyYearService.getNextStudyPeriod(schoolId);
         if (studyPeriodId == null) {
             return null;
         }
-        StudyPeriodEventDto declaration = getDeclarationPeriodByStudyPeriod(studyPeriodId);
-        if (declaration == null) {
-            return null;
-        }
-        LocalDateTime now = LocalDateTime.now();
-        if (declaration.getStart() != null && !declaration.getStart().isAfter(now)
-                && declaration.getEnd() != null && !declaration.getEnd().isBefore(now)) {
-            return AutocompleteResult.ofWithYear(em.getReference(StudyPeriod.class, studyPeriodId));
-        }
-        return null;
+        return AutocompleteResult.ofWithYear(em.getReference(StudyPeriod.class, studyPeriodId));
+    }
+
+    public List<AutocompleteResult> getNextStudyPeriods(Long schoolId) {
+        return studyYearService.getNextStudyPeriods(schoolId).stream()
+                .map(AutocompleteResult::ofWithYear)
+                .collect(Collectors.toList());
     }
     
     private StudyPeriodEventDto getDeclarationPeriodByStudyPeriod(Long studyPeriodId) {
@@ -837,23 +870,27 @@ public class DeclarationService {
         return resultAsBoolean(result.get(0), 0);
     }
     
-    public Page<AutocompleteResult> getStudentsWithoutDeclaration(UsersSearchCommand command, Pageable pageable,
-            Long schoolId) {
-        return searchStudentsWithoutDeclaration(command, schoolId, pageable)
+    public Page<AutocompleteResult> getStudentsWithoutDeclaration(
+            HoisUserDetails user, StudentDeclarationCommand command, Pageable pageable) {
+        return searchStudentsWithoutDeclaration(user, command, pageable)
                 .map(s -> new AutocompleteResult(s.getId(), s.getFullname(), s.getFullname()));
     }
 
-    public Page<StudentSearchDto> searchStudentsWithoutDeclaration(UsersSearchCommand command, Long schoolId, Pageable pageable) {
+    public Page<StudentSearchDto> searchStudentsWithoutDeclaration(
+            HoisUserDetails user, StudentDeclarationCommand command, Pageable pageable) {
         Long studyPeriodId = Boolean.TRUE.equals(command.getNextPeriod())
-                ? studyYearService.getNextStudyPeriod(schoolId)
-                : studyYearService.getCurrentStudyPeriod(schoolId);
+                ? user.isSchoolAdmin() && command.getPeriod() != null
+                    ? command.getPeriod()
+                    : studyYearService.getNextStudyPeriod(user.getSchoolId())
+                : studyYearService.getCurrentStudyPeriod(user.getSchoolId());
         if(studyPeriodId == null) {
             return new PageImpl<>(Arrays.asList());
         }
+        UserUtil.assertSameSchool(user, em.getReference(StudyPeriod.class, studyPeriodId).getStudyYear().getSchool());
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(WITHOUT_DECLARATION_FROM).sort(pageable);
 
-        qb.requiredCriteria("s.school_id = :schoolId ", "schoolId", schoolId);
+        qb.requiredCriteria("s.school_id = :schoolId ", "schoolId", user.getSchoolId());
         qb.requiredCriteria("s.status_code in :active ", "active", StudentStatus.STUDENT_STATUS_ACTIVE);
         qb.filter("(case when c.id is not null then c.is_higher = true else true end)");
 

@@ -1,6 +1,8 @@
-<md-checkbox ng-model="formState.openAllCollapsables" ng-change="changeModulesExpandedStatus()" name="openAll">
+<md-checkbox ng-model="formState.openAllCollapsables" ng-change="changeModulesExpandedStatus()" aria-label="open all modules">
   {{'student.result.openAll' | translate}}
 </md-checkbox>
+
+<md-checkbox ng-model="formState.showOutcomes" aria-label="show outcomes">{{'student.result.showOutcomes' | translate}}</md-checkbox>
 
 <div ng-repeat="module in ::vocationalResultsCurriculum.vocationalResultsModules">
   <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.list.tmpl.html'"></div>

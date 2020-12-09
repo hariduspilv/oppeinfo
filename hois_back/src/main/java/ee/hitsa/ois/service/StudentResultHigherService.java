@@ -88,7 +88,7 @@ public class StudentResultHigherService {
             modules = getStudentModules(student);
             moduleSubjects = getModuleSubjects(modules);
         }
-        List<StudentHigherSubjectResultDto> studentResults = getStudentSubjectResults(student, true, false);
+        List<StudentHigherSubjectResultDto> studentResults = getStudentSubjectResults(student, true, false, showModules);
         List<StudentHigherSubjectResultDto> mergedSubjects = mergeModuleSubjectsAndResults(student, modules,
                 moduleSubjects, studentResults, showUncompleted);
         calculateIsOk(mergedSubjects, showUncompleted);
@@ -122,7 +122,7 @@ public class StudentResultHigherService {
             moduleSubjects = getModuleSubjects(modules);
             curriculumCredits = student.getCurriculumVersion().getCurriculum().getCredits();
         }
-        List<StudentHigherSubjectResultDto> subjectResults = getStudentSubjectResults(student, false, true);
+        List<StudentHigherSubjectResultDto> subjectResults = getStudentSubjectResults(student, false, true, true);
         List<StudentHigherSubjectResultDto> mergedSubjects = mergeModuleSubjectsAndResults(student, modules,
                 moduleSubjects, subjectResults, false);
         calculateIsOk(mergedSubjects, false);
@@ -305,10 +305,13 @@ public class StudentResultHigherService {
     }
 
     private List<StudentHigherSubjectResultDto> getStudentSubjectResults(Student student, boolean onlyActiveResults,
-            boolean generateNameBeforehand) {
+            boolean generateNameBeforehand, boolean showReplacedSubjects) {
         String query = "from student_higher_result shr "
                 + "left join student_higher_result_module shrm on shr.id = shrm.student_higher_result_id "
-                + "left join curriculum_version_hmodule cvh on cvh.id = coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id) "
+                + (showReplacedSubjects ? "left join student_higher_result_replaced_subject shrs on shrs.student_higher_result_id = shr.id " : "")
+                + "left join curriculum_version_hmodule cvh on cvh.id = coalesce("
+                    + (showReplacedSubjects ? "shrs.curriculum_version_hmodule_id, " : "")
+                    + "shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id) "
                 + "left join classifier cl on shr.grade_code = cl.code "
                 + "left join grading_schema_row gsr on shr.grading_schema_row_id = gsr.id "
                 + "left join apel_application_record aar on shr.apel_application_record_id = aar.id "
@@ -327,12 +330,16 @@ public class StudentResultHigherService {
         List<?> rows = qb.select(
                 "distinct shr.id, shr.subject_id, shr.subject_name_et, shr.subject_name_en, shr.subject_code, shr.credits, "
                 + "cvh.id curriculum_version_hmodule_id, cvh.name_et cvh_name_et, cvh.name_en cvh_name_en, "
-                + "coalesce(shrm.is_optional, shr.is_optional) is_optional, "
+                + "coalesce(" + (showReplacedSubjects ? "shrs.is_optional, " : "") + "shrm.is_optional, shr.is_optional) is_optional, "
                 + "shr.apel_application_record_id, aar.is_formal_learning, a_s.id as school_id, a_s.name_et, a_s.name_en, "
                 + "shr.grade_code, shr.grade, shr.grade_date, shr.teachers, shr.study_period_id, "
                 + "cl.name_et grade_name_et, cl.name_en grade_name_en, shr.is_active, "
                 + "country.name_et c_name_et, coalesce(country.name_en, country.name_et) c_name_en, "
-                + "shr.grading_schema_row_id, gsr.grade gsr_grade_et, gsr.grade_en gsr_grade_en",
+                + "shr.grading_schema_row_id, gsr.grade gsr_grade_et, gsr.grade_en gsr_grade_en, "
+                + (showReplacedSubjects ? "aa.is_new, shrs.curriculum_version_hmodule_id shrs_hmodule_id, "
+                        + "(select sum(shr2.credits) from student_higher_result shr2 "
+                        + "where shr2.apel_application_record_id = shr.apel_application_record_id) transferred_credits "
+                    : "null is_new, null shrs_hmodule_id, null transferred_credits"),
                 em).getResultList();
 
         List<StudentHigherSubjectResultDto> studentResults = new ArrayList<>();
@@ -371,6 +378,9 @@ public class StudentResultHigherService {
                     schoolNameEt = schoolNameEt + " (" + resultAsString(r, 23) + ")";
                     subject.setSchool(new AutocompleteResult(resultAsLong(r, 12), schoolNameEt, schoolNameEn));
                 }
+                dto.setIsNewApel(resultAsBoolean(r, 28));
+                dto.setReplacedSubjectHigherModuleId(resultAsLong(r, 29));
+                dto.setRecordTransferredCredits(resultAsDecimal(r, 30));
             }
 
             StudentHigherResultGradeDto grade = new StudentHigherResultGradeDto();
@@ -389,29 +399,108 @@ public class StudentResultHigherService {
             dto.getGrades().add(grade);
             studentResults.add(dto);
         }
-        setResultReplacedSubjects(studentResults);
+        if (showReplacedSubjects) {
+            setResultReplacedSubjects(studentResults);
+        }
         return studentResults;
     }
 
     private void setResultReplacedSubjects(List<StudentHigherSubjectResultDto> studentResults) {
-        Map<Long, StudentHigherSubjectResultDto> resultMap = StreamUtil.toMap(sr -> sr.getId(), studentResults);
-        if (!resultMap.isEmpty()) {
-            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(REPLACED_SUBJECTS_FROM);
-            qb.requiredCriteria("shr.id in (:resultIds)", "resultIds", resultMap.keySet());
+        Map<Long, StudentHigherSubjectResultDto> resultById = StreamUtil.nullSafeList(studentResults).stream()
+                .filter(StreamUtil.distinctByKey(StudentHigherSubjectResultDto::getId))
+                .collect(Collectors.toMap(StudentHigherSubjectResultDto::getId, sr -> sr));
 
-            List<?> data = qb.select("shr.id, s.id s_id, s.name_et s_name_et, s.name_en s_name_en, "
-                    + "s.code, s.credits", em).getResultList();
-            Map<Long, List<SubjectResultReplacedSubjectDto>> replacedSubjects = StreamUtil.nullSafeList(data).stream()
-                    .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(
-                            r -> new SubjectResultReplacedSubjectDto(resultAsLong(r, 1), resultAsString(r, 2),
-                                    resultAsString(r, 3), resultAsString(r, 4), resultAsDecimal(r, 5)),
-                            Collectors.toList())));
+        Map<String, StudentHigherSubjectResultDto> resultByKey = StreamUtil.toMap(
+                sr -> replacedSubjectKey(sr.getId(), sr.getReplacedSubjectHigherModuleId(), sr.getIsOptional(), sr.getIsNewApel()),
+                studentResults);
 
-            for (Long resultId : replacedSubjects.keySet()) {
-                List<SubjectResultReplacedSubjectDto> subjectReplacedSubjects = replacedSubjects.get(resultId);
-                resultMap.get(resultId).getReplacedSubjects().addAll(subjectReplacedSubjects);
+        if (!resultById.isEmpty()) {
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_higher_result shr "
+                    + "join apel_application_record aar on shr.apel_application_record_id = aar.id "
+                    + "join apel_application aa on aa.id = aar.apel_application_id "
+                    + "join apel_application_formal_replaced_subject_or_module aafrs on aafrs.apel_application_record_id = aar.id "
+                    + "join subject s on s.id = aafrs.subject_id");
+            qb.requiredCriteria("shr.id in (:resultIds)", "resultIds", resultById.keySet());
+            qb.filter("(aa.is_new is null or aa.is_new = false)");
+
+            String oldApplicationSubjects = qb.querySql("shr.id, s.id s_id, s.name_et s_name_et, s.name_en s_name_en, "
+                    + "s.code, s.credits, null curriculum_version_hmodule_id, null is_optional, false is_new", false);
+            Map<String, Object> parameters = new HashMap<>(qb.queryParameters());
+
+            qb = new JpaNativeQueryBuilder("from student_higher_result shr "
+                    + "join student_higher_result_replaced_subject shrs on shrs.student_higher_result_id = shr.id "
+                    + "join subject s on s.id = shrs.subject_id");
+            qb.requiredCriteria("shr.id in (:resultIds)", "resultIds", resultById.keySet());
+
+            String newApplicationSubjects = qb.querySql("shr.id, s.id s_id, s.name_et s_name_et, s.name_en s_name_en, "
+                    + "s.code, s.credits, shrs.curriculum_version_hmodule_id, shrs.is_optional, true is_new", false);
+            parameters.putAll(qb.queryParameters());
+
+            qb = new JpaNativeQueryBuilder("from (" + oldApplicationSubjects + " union all " + newApplicationSubjects
+                    + ") as replaced_subjects");
+            List<?> data = qb.select("*", em, parameters).getResultList();
+
+            Map<String, List<SubjectResultReplacedSubjectDto>> replacedSubjects = StreamUtil.nullSafeList(data).stream()
+                    .collect(Collectors.groupingBy(r -> replacedSubjectKey(resultAsLong(r, 0), resultAsLong(r, 6),
+                            resultAsBoolean(r, 7), resultAsBoolean(r, 8)),
+                            Collectors.mapping(r -> new SubjectResultReplacedSubjectDto(resultAsLong(r, 1), resultAsString(r, 2),
+                                            resultAsString(r, 3), resultAsString(r, 4), resultAsDecimal(r, 5)),
+                                    Collectors.toList())));
+
+            Map<Long, BigDecimal> transferredSubjectCredits = new HashMap<>();
+            Map<Long, BigDecimal> consideredSubjectCredits = new HashMap<>();
+            for (String key : replacedSubjects.keySet()) {
+                StudentHigherSubjectResultDto result = resultByKey.get(key);
+                List<SubjectResultReplacedSubjectDto> subjectReplacedSubjects = replacedSubjects.get(key);
+                result.getReplacedSubjects().addAll(subjectReplacedSubjects);
+
+                // apel formal learning transferred subject credits are divided between modules
+                if (Boolean.TRUE.equals(result.getIsNewApel())) {
+                    transferredSubjectCredits.put(result.getId(), result.getSubject().getCredits());
+
+                    BigDecimal replacedSubjectCredits = StreamUtil.nullSafeList(subjectReplacedSubjects).stream()
+                            .map(s -> s.getSubject().getCredits())
+                            .reduce(BigDecimal::add).orElse(BigDecimal.ZERO);
+
+                    // record with multiple transferred subjects needs credits distribution dependent on transferred subject credits
+                    BigDecimal consideredReplacedCredits = replacedSubjectCredits.multiply(result.getSubject().getCredits())
+                            .divide(result.getRecordTransferredCredits(), 2, RoundingMode.HALF_UP);
+                    result.setConsideredReplacedCredits(consideredReplacedCredits);
+
+                    if (consideredSubjectCredits.containsKey(result.getId())) {
+                        consideredSubjectCredits.put(result.getId(),
+                                consideredSubjectCredits.get(result.getId()).add(consideredReplacedCredits));
+                    } else {
+                        consideredSubjectCredits.put(result.getId(), consideredReplacedCredits);
+                    }
+                }
+            }
+
+            // if there are any leftover transferred subject credits then add that subject to free module results
+            for (Long resultId : transferredSubjectCredits.keySet()) {
+                BigDecimal resultTransferredCredits = transferredSubjectCredits.get(resultId);
+                BigDecimal resultConsideredCredits = consideredSubjectCredits.get(resultId);
+                if (resultTransferredCredits.compareTo(resultConsideredCredits) > 0) {
+                    StudentHigherSubjectResultDto resultDto = StudentHigherSubjectResultDto.copy(resultById.get(resultId));
+                    resultDto.setHigherModule(null);
+                    resultDto.setConsideredReplacedCredits(resultTransferredCredits.subtract(resultConsideredCredits));
+                    resultDto.setIsExtraCurriculum(Boolean.TRUE);
+                    resultDto.setIsOptional(Boolean.TRUE); // extra curriculum subjects should be all optional
+                    resultDto.setLeftOverCreditsResult(Boolean.TRUE); // needed to skip merging grades for subjects with ids
+                    studentResults.add(resultDto);
+                }
             }
         }
+    }
+
+    private String replacedSubjectKey(Long resultId, Long replacedSubjectHigherModuleId, Boolean isOptional,
+            Boolean isNew) {
+        String key = resultId.toString();
+        if (Boolean.TRUE.equals(isNew)) {
+            key += "_" + (replacedSubjectHigherModuleId != null ? replacedSubjectHigherModuleId.toString() : "null");
+            key += "_" + (isOptional != null ? isOptional.toString() : "null");
+        }
+        return key;
     }
 
     private List<StudentHigherSubjectResultDto> mergeModuleSubjectsAndResults(Student student,
@@ -549,6 +638,10 @@ public class StudentResultHigherService {
         Iterator<StudentHigherSubjectResultDto> iterator = extraCurriculumResults.iterator();
         while(iterator.hasNext()) {
             StudentHigherSubjectResultDto studentResult = iterator.next();
+            // leftover transferred subject credits result would be removed without this skip when result has subject id
+            if (Boolean.TRUE.equals(studentResult.getLeftOverCreditsResult())) {
+                continue;
+            }
             Long subjectId = studentResult.getSubject().getId();
             if(map.containsKey(subjectId)) {
                 map.get(subjectId).getGrades().addAll(studentResult.getGrades());
@@ -636,7 +729,8 @@ public class StudentResultHigherService {
 
     private static BigDecimal calculateCredits(List<StudentHigherSubjectResultDto> modulesPositiveResults, Boolean isOptional) {
         Optional<BigDecimal> credits = modulesPositiveResults.stream().filter(r -> isOptional.equals(r.getIsOptional()))
-                .map(r -> r.getSubject().getCredits()).reduce((c, sum) -> c.add(sum));
+                .map(r -> r.getConsideredReplacedCredits() != null ? r.getConsideredReplacedCredits() : r.getSubject().getCredits())
+                .reduce((c, sum) -> c.add(sum));
         return credits.orElse(BigDecimal.ZERO);
     }
 
@@ -685,9 +779,13 @@ public class StudentResultHigherService {
     
     private static List<StudentHigherSubjectResultDto> filterSubjectsByStudyPeriod(
             StudentHigherStudyPeriodResultDto result, List<StudentHigherSubjectResultDto> studyPeriodResults) {
-        return StreamUtil.toFilteredList(s -> s.getLastGrade() != null && Boolean.TRUE.equals(s.getIsOk())
-                && s.getLastGrade().getStudyPeriod() != null
-                && s.getLastGrade().getStudyPeriod().equals(result.getStudyPeriod().getId()), studyPeriodResults);
+        return StreamUtil.nullSafeList(studyPeriodResults).stream()
+                .filter(s -> s.getLastGrade() != null && Boolean.TRUE.equals(s.getIsOk())
+                                && s.getLastGrade().getStudyPeriod() != null
+                                && s.getLastGrade().getStudyPeriod().equals(result.getStudyPeriod().getId()))
+                // formal apel application result might have multiple rows because of replaced subjects
+                .filter(StreamUtil.distinctByKey(s -> s.getLastGrade().getId()))
+                .collect(Collectors.toList());
     }
 
     private static BigDecimal calculateTotalCredits(List<StudentHigherSubjectResultDto> subjects) {
@@ -723,10 +821,12 @@ public class StudentResultHigherService {
 
     public List<StudentModuleResultDto> higherChangeableModules(Student student) {
         Query q = em.createNativeQuery("select shr.id, cvh.id curriculum_version_hmodule_id, shr.subject_name_et, shr.subject_name_en, "
-                + "shr.subject_code, shr.credits, shr.grade_code, shr.grade, shr.grade_date, coalesce(shrm.is_optional, shr.is_optional) is_optional "
+                + "shr.subject_code, shr.credits, shr.grade_code, shr.grade, shr.grade_date, "
+                + "coalesce(shrm.is_optional, shr.is_optional) is_optional, aar.is_formal_learning "
                 + "from student_higher_result shr "
                 + "left join student_higher_result_module shrm on shrm.student_higher_result_id = shr.id "
                 + "left join curriculum_version_hmodule cvh on cvh.id = coalesce(shrm.curriculum_version_hmodule_id, shr.curriculum_version_hmodule_id) "
+                + "left join apel_application_record aar on aar.id = shr.apel_application_record_id "
                 + "where student_id = ?1 and (cvh.id is null or cvh.type_code not in (?2)) and shr.is_active = true and shr.is_module = false");
         q.setParameter(1, EntityUtil.getId(student));
         q.setParameter(2, HigherModuleType.FINAL_MODULES);
@@ -734,7 +834,8 @@ public class StudentResultHigherService {
 
         return StreamUtil.toMappedList(r -> new StudentModuleResultDto(resultAsLong(r, 0), resultAsLong(r, 1),
                 resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4), resultAsDecimal(r, 5),
-                resultAsString(r, 6), resultAsString(r, 7), resultAsLocalDate(r, 8), resultAsBoolean(r, 9)), data);
+                resultAsString(r, 6), resultAsString(r, 7), resultAsLocalDate(r, 8), resultAsBoolean(r, 9),
+                Boolean.valueOf(!Boolean.TRUE.equals(resultAsBoolean(r, 10)))), data);
     }
 
     public List<AutocompleteResult> higherCurriculumModulesForSelection(Student student) {

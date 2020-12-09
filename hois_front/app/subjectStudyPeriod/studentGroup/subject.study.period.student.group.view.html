@@ -40,15 +40,16 @@
               </span>
             </div>
             <div>&nbsp;</div>
-            <md-table-container>
-                <table class="subject-study-period">
+            <md-table-container fixed-column-table fixed-columns="1" resize-table search-criteria-height="250">
+                <table class="subject-study-period pre-last-col-wide">
                     <thead>
                       <tr>
                         <th>
-                            <span>{{'subjectStudyPeriod.subjects' | translate}}</span>
+                            <span>{{'subjectStudyPeriod.subjectStudyPeriod' | translate}}</span>
                         </th>
                         <th ng-repeat="capacityType in capacityTypes">{{capacityType.value.toUpperCase()}}</th>
-                        <th>{{'subjectStudyPeriod.overall' | translate}}</th>
+                        <th>{{'subjectStudyPeriod.overallTeacher' | translate}}</th>
+                        <th>{{'subjectStudyPeriod.eap' | translate}}</th>
                       </tr>
                     </thead>
                     <tbody ng-repeat="subject in record.subjects">
@@ -57,18 +58,23 @@
                                 <span>{{currentLanguageNameField(subject)}}</span>
                             </td>
                             <td ng-repeat="type in capacityTypes">{{capacitiesUtil.getSubjectsCapacityByType(subject.id, type.code)}}</td>
-                            <td>{{capacitiesUtil.getSubjectsTotalCapacity(subject.id, capacityTypes)}}</td>
+                          <td>{{capacitiesUtil.getSubjectsTotalCapacity(subject.id, capacityTypes)}}</td>
+                          <td>{{capacitiesUtil.toEap(capacitiesUtil.getSubjectsTotalCapacity(subject.id, capacityTypes)) | number: 2}}</td>
                         </tr>
                         <tr ng-repeat="ssp in record.subjectStudyPeriodDtos | filter:{ subject: subject.id }">
                             <td>
                                 <span ng-repeat="teacher in ssp.teachers">
-                                    <span ng-if="$index > 0">, </span>
-                                    <span title="{{'subjectStudyPeriod.teacherLoad' | translate : teacherPlannedLoad(teacher) }}">{{teacher.name}}</span>
+                                    <span title="{{'subjectStudyPeriod.teacherLoad' | translate : teacherPlannedLoad(teacher) }}">{{teacher.name}}{{!$last ? ', ' : ''}}</span>
                                 </span>
-                                <span ng-if="ssp.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'">
-                                    <span class="subject-study-period-proportion">{{'subjectStudyPeriod.proportion' | translate | lowercase}}:
-                                        <hois-classifier-value ng-model="ssp.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
-                                    </span>
+                                <span ng-if="ssp.subgroups.length > 0">
+                                  <span class="subject-study-period-proportion">{{'subjectStudyPeriod.subgroups.label' | translate | lowercase}}:
+                                    {{ssp.subgroups.length}}
+                                  </span>
+                                </span>
+                                <span ng-repeat="group in ssp.studentGroupObjects | filter: {id: '!' + record.studentGroup}">
+                                  <br ng-if="$first"/>
+                                  <br ng-if="$first"/>
+                                  {{currentLanguageNameField(group)}}{{!$last ? ', ' : ''}}
                                 </span>
                             </td>
                             <td ng-repeat="type in capacityTypes">
@@ -77,17 +83,32 @@
                                 </span>
                             </td>
                             <td>{{capacitiesUtil.capacitiesSumBySsp(ssp)}}</td>
+                            <td>{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySsp(ssp)) | number: 2}}</td>
                         </tr>
                         <tr class="bold">
-                          <td>{{'subjectStudyPeriod.overall' | translate}}</td>
+                          <td>{{'subjectStudyPeriod.overallSubject' | translate}}</td>
                           <td ng-repeat="type in capacityTypes">{{capacitiesUtil.capacitiesSumBySubjectAndType(subject.id, type.code)}}</td>
                           <td>{{capacitiesUtil.capacitiesSumBySubject(subject.id)}}</td>
+                          <td></td>
+                        </tr>
+                        <tr class="bold">
+                          <td>{{'subjectStudyPeriod.eap' | translate}}</td>
+                          <td ng-repeat="type in capacityTypes">{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySubjectAndType(subject.id, type.code)) | number: 2}}</td>
+                          <td></td>
+                          <td>{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumBySubject(subject.id)) | number: 2}}</td>
                         </tr>
                     </tbody>
                     <tr class="bold bold-top-line" md-colors="{background: 'background-200'}">
                         <td>{{'subjectStudyPeriod.overall' | translate | uppercase}}</td>
                         <td ng-repeat="type in capacityTypes">{{capacitiesUtil.capacitiesSumByType(type.code)}}</td>
                         <td>{{capacitiesUtil.capacitiesSumOverall()}}</td>
+                        <td></td>
+                    </tr>
+                    <tr class="bold" md-colors="{background: 'background-200'}">
+                      <td>{{'subjectStudyPeriod.eap' | translate | uppercase}}</td>
+                      <td ng-repeat="type in capacityTypes" >{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumByType(type.code)) | number: 2}}</td>
+                      <td></td>
+                      <td>{{capacitiesUtil.toEap(capacitiesUtil.capacitiesSumOverall()) | number: 2}}</td>
                     </tr>
                 </table>
             </md-table-container>
@@ -95,7 +116,7 @@
         </div>
         <div layout="row">
             <md-button ng-if="!readOnly && canEdit" class="md-raised md-primary" ng-href="#/subjectStudyPeriods/studentGroups/{{record.studentGroup}}/{{studyPeriod.id}}/edit?_noback">{{'main.button.change' | translate}}</md-button>
-            <a ng-if="auth.isAdmin() || auth.isTeacher()" ng-href="{{excel(formState.xlsUrl, container)}}" 
+            <a ng-if="auth.isAdmin() || auth.isTeacher()" ng-href="{{excel(formState.xlsUrl, container)}}"
                 target="_blank" class="md-button md-raised">{{'main.button.printXls' | translate}}</a>
             <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/studentGroups')">{{'main.button.back' | translate}}</md-button>
         </div>
@@ -110,5 +131,9 @@
     .subject-study-period td,
     .subject-study-period th {
         border-bottom: none !important;
+    }
+    .subject-study-period.pre-last-col-wide td:nth-last-child(2),
+    .subject-study-period.pre-last-col-wide th:nth-last-child(2) {
+      min-width: 120px;
     }
 </style>

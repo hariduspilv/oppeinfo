@@ -110,10 +110,13 @@ public class SubjectStudyPeriodSearchService {
         return StreamUtil.toMappedList(r -> {
             String code = resultAsString(r, 3);
             BigDecimal credits = resultAsDecimal(r, 4);
-            String nameEt = SubjectUtil.subjectName(code, resultAsString(r, 1), null);
-            String nameEn = SubjectUtil.subjectName(code, resultAsString(r, 2), null);
-            return new SubjectResult(resultAsLong(r, 0), nameEt, nameEn, code, credits, resultAsString(r, 5), null,
-                    null, null);
+            String nameEt = resultAsString(r, 1);
+            String nameEn = resultAsString(r, 2);
+
+            SubjectResult result = new SubjectResult(resultAsLong(r, 0), SubjectUtil.subjectName(code, nameEt),
+                    SubjectUtil.subjectName(code, nameEn), nameEt, nameEn, code, credits);
+            result.setAssessment(resultAsString(r, 5));
+            return result;
         }, data);
     }
 
@@ -160,8 +163,12 @@ public class SubjectStudyPeriodSearchService {
             dto.setId(resultAsLong(r, 0));
             dto.setStudyPeriod(new AutocompleteResult(resultAsLong(r, 1), resultAsString(r, 2), resultAsString(r, 3)));
             dto.setSubject(getSubject(r));
-            dto.setTeachers(teachersAndPrograms.get(dto.getId()).stream().map(d -> d.getTeacherName()).collect(Collectors.toList()));
-            dto.setPrograms(teachersAndPrograms.get(dto.getId()));
+            if (teachersAndPrograms.containsKey(dto.getId())) {
+                dto.setTeachers(teachersAndPrograms.get(dto.getId()).stream()
+                        .map(SubjectProgramResult::getTeacherName)
+                        .collect(Collectors.toList()));
+                dto.setPrograms(teachersAndPrograms.get(dto.getId()));
+            }
             dto.setCredits(resultAsDecimal(r, 8));
             dto.setStudentsNumber(resultAsLong(r, 9));
             if (user.isTeacher()) {
@@ -197,9 +204,9 @@ public class SubjectStudyPeriodSearchService {
 
         List<?> data = em.createNativeQuery("select ssp.id as sspId, t.id as tId, p.firstname || ' ' || p.lastname, sp.id as spId, coalesce( sp.status_code, 'AINEPROGRAMM_STAATUS_L' ) "
                 + "from subject_study_period ssp "
-                + "left join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
-                + "left join teacher t on t.id = sspt.teacher_id "
-                + "left join person p on p.id = t.person_id "
+                + "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
+                + "join teacher t on t.id = sspt.teacher_id "
+                + "join person p on p.id = t.person_id "
                 + "left join subject_program sp on sp.subject_study_period_teacher_id = sspt.id "
                 + "where ssp.id in (?1)")
             .setParameter(1, subjectStudyPeriods)

@@ -3,7 +3,7 @@
     padding-top: 10px !important;
     padding-bottom: 10px !important;
   }
-  md-select{ 
+  md-select{
     background: #F5F5F5;
   }
   .custom-tooltip {
@@ -126,7 +126,8 @@
                     </md-input-container>
                   </td>
                   <td md-cell>
-                    <a href="" ng-click="addCurriculumSubject(subject)">{{'declaration.addSubjectToDeclaration' | translate}}</a>
+                    <a href="" ng-click="addCurriculumSubject(subject)" ng-if="subject.hasPlaces">{{'declaration.addSubjectToDeclaration' | translate}}</a>
+                    <span ng-if="!subject.hasPlaces">{{'declaration.noPlaces' | translate }}</span>
                   </td>
                 </tr>
                 <tr ng-repeat-end>
@@ -150,7 +151,7 @@
               label="higherProtocol.subjectRequired" no-paging="true" display="display">
             </hois-autocomplete>
             <div layout="column" ng-if="subject.subgroups.length > 0" flex="20" flex-sm="100" flex-xs="100">
-              <md-input-container flex="100" style="padding-top: 3px;" class="md-input" 
+              <md-input-container flex="100" style="padding-top: 3px;" class="md-input"
                 ng-class="{'md-input-has-value' : subject.subgroup !== null}">
                 <label class="md-required">{{'declaration.subgroup' | translate}}</label>
               </md-input-container>
@@ -163,7 +164,9 @@
             </div>
           </div>
           <md-button class="md-raised md-primary" type="submit"
-          ng-disabled="!subject || (!subject.subgroup && subject.subgroups.length > 0) || subject.subgroups === null || subject.subgroups === undefined || !subject.subgroups.$resolved">{{"main.button.add" | translate}}</md-button>
+          ng-disabled="!subject || !subject.hasPlaces || (!subject.subgroup && subject.subgroups.length > 0) || subject.subgroups === null ||
+           subject.subgroups === undefined || !subject.subgroups.$resolved">{{"main.button.add" | translate}}</md-button>
+          <span class="md-body-1" ng-if="subject && !subject.hasPlaces">{{'declaration.noPlaces' | translate}}</span>
         </form>
       </fieldset>
       <div>&nbsp;</div>
@@ -214,7 +217,7 @@
               </td>
               <td md-cell><a ng-href="/#/declaration/studyMaterial/higher/{{subject.subjectStudyPeriod}}/view">{{'studyMaterial.openfolder' | translate}}</a></td>
               <td md-cell>
-                <a ng-if="!subject.isAssessed && (!auth.isStudent() || (subject.isOptional || (!subject.isOptional && declaration.isStudentDeclarationDelete)))" 
+                <a ng-if="!subject.isAssessed && (!auth.isStudent() || (subject.isOptional || (!subject.isOptional && declaration.isStudentDeclarationDelete)))"
                   class="remove nomargin" ng-click="removeSubject(subject)">&times;</a>
               </td>
             </tr>

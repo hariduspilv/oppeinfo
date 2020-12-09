@@ -23,6 +23,7 @@ import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
 import ee.hitsa.ois.domain.timetable.LessonPlanModule;
+import ee.hitsa.ois.enums.Coefficient;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.LessonPlanUtil;
@@ -32,6 +33,8 @@ import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
+
+import static ee.hitsa.ois.util.JpaQueryUtil.getOrDefault;
 
 public class LessonPlanDto extends LessonPlanForm {
 
@@ -50,8 +53,10 @@ public class LessonPlanDto extends LessonPlanForm {
     private List<ClassifierDto> lessonPlanCapacities;
 
     public static LessonPlanDto of(LessonPlan lessonPlan, Map<Long, Long> weekNrsLegends) {
-        LessonPlanDto dto = EntityUtil.bindToDto(lessonPlan, new LessonPlanDto());
+        LessonPlanDto dto = EntityUtil.bindToDto(lessonPlan, new LessonPlanDto(), "coefficient");
         dto.setStudyYearCode(EntityUtil.getCode(lessonPlan.getStudyYear().getYear()));
+        dto.setCoefficient(getOrDefault(EntityUtil.getNullableCode(lessonPlan.getCoefficient()),
+                Coefficient.KOEFITSIENT_K1.name()));
         
         StudentGroup studentGroup = lessonPlan.getStudentGroup();
         dto.setStudentGroupCode(studentGroup.getCode());

@@ -12,26 +12,29 @@
     if (reportData.criteria.byCapacities) {
       setTeacherCapacities(scope, teachers);
     }
-    scope.plannedLessonsColspan = reportData.criteria.showPlannedLessons ? (scope.reportData.teacherCapacities.length || 1) : 0;
+    
+    scope.plannedLessonsColspan = reportData.criteria.showPlannedLessons ? 
+      (scope.reportData.teacherCapacities.length != 0 ? scope.reportData.teacherCapacities.length + 2 : (2 + (scope.reportData.criteria.byCapacities ? 0 : 1))) : 0;
     
     scope.journalOccurredLessonsColspan = 0;
     if (!reportData.criteria.isHigher) {
-      scope.journalOccurredLessonsColspan = (scope.reportData.teacherCapacities.length || 1) + (scope.entriesWithoutCapacity ? 1 : 0);
+      scope.journalOccurredLessonsColspan = (scope.reportData.teacherCapacities.length != 0 ? scope.reportData.teacherCapacities.length + 2 : 2 + (scope.reportData.criteria.byCapacities ? 0 : 1)) 
+      + (scope.entriesWithoutCapacity ? 1 : 0);
     }
     // last addition is because of substitutable lessons
     scope.timetableOccurredLessonsColspan = 0;
     if (reportData.criteria.isHigher || reportData.criteria.showTimetableLoad) {
-      scope.timetableOccurredLessonsColspan = (scope.reportData.teacherCapacities.length || 1) + (scope.entriesWithoutCapacity ? 1 : 0) +
-        (reportData.criteria.showSingleEvents ? 1 : 0) + 1;
+      scope.timetableOccurredLessonsColspan = (scope.reportData.teacherCapacities.length) + (scope.entriesWithoutCapacity ? 1 : 0) +
+        (reportData.criteria.showSingleEvents ? 1 : 0) + 3 + (scope.reportData.criteria.byCapacities ? 0 : 1);
     }
-
+    
     scope.periodColspan = scope.plannedLessonsColspan + scope.journalOccurredLessonsColspan + scope.timetableOccurredLessonsColspan;
     // last addition is because of timetable occured lessons totals
     scope.totalsColspan = scope.periodColspan + (scope.reportData.criteria.byCapacities ? 1 : 0) + 1;
 
     scope.periodTypesRow = [];
     scope.periodCapacitiesRow = [];
-    if (reportData.criteria.byStudyPeriods || reportData.criteria.isHigher) {
+    if (reportData.criteria.byStudyPeriods) {
       if (reportData.criteria.studyPeriod) {
         reportData.studyPeriods = reportData.studyPeriods.filter(function (sp) {
           return sp.id === reportData.criteria.studyPeriod;
@@ -155,31 +158,23 @@
         scope.periodCapacitiesRow = scope.periodCapacitiesRow.concat(teacherCapacities.map(function (c) {
           return { index: periodIndex, plannedLessons: true, value: c.value, code: c.code };
         }));
-        if (teacherCapacities.length === 0) {
-          scope.periodCapacitiesRow.push({});
-        }
+        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'contactLesson', plannedContactLessons: true });
+        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'koefLesson', plannedKoefLessons: true });
       }
       
       if (!criteria.isHigher) {
-        if (teacherCapacities.length === 0) {
-          scope.periodCapacitiesRow.push({ divider: !scope.entriesWithoutCapacity && !criteria.showTimetableLoad });
-        }
-
         scope.periodCapacitiesRow = scope.periodCapacitiesRow.concat(teacherCapacities.map(function (c) {
           return { index: periodIndex, journalOccurredLessons: true, value: c.value, code: c.code };
         }));
         if (scope.entriesWithoutCapacity) {
           scope.periodCapacitiesRow.push({ index: periodIndex, value: NO_CAPACITY_TYPE, code: NO_CAPACITY_TYPE, 
-            journalOccurredLessons: true, divider: !criteria.showTimetableLoad });
-        } else if (teacherCapacities.length !== 0) {
-          scope.periodCapacitiesRow[scope.periodCapacitiesRow.length - 1].divider = !criteria.showTimetableLoad;
+            journalOccurredLessons: true});
         }
+        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'contactLesson', journalOccurredContactLessons: true });
+        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'koefLesson', journalOccurredKoefLessons: true, divider: !criteria.showSingleEvents && !criteria.showSingleEvents && !(criteria.isHigher || criteria.showTimetableLoad)});
       }
   
       if (criteria.isHigher || criteria.showTimetableLoad) {
-        if (teacherCapacities.length === 0) {
-          scope.periodCapacitiesRow.push({});
-        }
         
         scope.periodCapacitiesRow = scope.periodCapacitiesRow.concat(teacherCapacities.map(function (c) {
           return { index: periodIndex, timetableOccurredLessons: true, value: c.value, code: c.code };
@@ -188,18 +183,26 @@
           scope.periodCapacitiesRow.push({ index: periodIndex, value: NO_CAPACITY_TYPE, code: NO_CAPACITY_TYPE, 
             timetableOccurredLessons: true });
         }
+        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'contactLesson', timetableOccurredContactLessons: true });
+        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'koefLesson', timetableOccurredKoefLessons: true, divider: !criteria.showSingleEvents && !criteria.showSingleEvents && !(criteria.isHigher || criteria.showTimetableLoad)});
       }
     } else {
       if (criteria.showPlannedLessons) {
         scope.periodCapacitiesRow.push({ index: periodIndex, name: 'study', plannedLessons: true });
+        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'contactLesson', plannedContactLessons: true });
+        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'koefLesson', plannedKoefLessons: true });
       }
 
       if (!criteria.isHigher) {
-        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'study', journalOccurredLessons: true, divider: !criteria.isHigher && !criteria.showTimetableLoad});
+        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'study', journalOccurredLessons: true });
+        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'contactLesson', journalOccurredContactLessons: true });
+        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'koefLesson', journalOccurredKoefLessons: true, divider: !criteria.isHigher && !criteria.showTimetableLoad});
       }
   
       if (criteria.isHigher || criteria.showTimetableLoad) {
         scope.periodCapacitiesRow.push({ index: periodIndex, name: 'study', timetableOccurredLessons: true});
+        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'contactLesson', timetableOccurredContactLessons: true });
+        scope.periodCapacitiesRow.push({ index: periodIndex, name: 'koefLesson', timetableOccurredKoefLessons: true });
       }
     }
 
@@ -225,7 +228,8 @@
         studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(),
         allStudyPeriods: QueryUtils.endpoint('/autocomplete/studyPeriods').query(),
         studyPeriods: {},
-        xlsUrl: 'reports/teachers/detailload/teachersdetailload.xlsx'
+        xlsUrl: 'reports/teachers/detailload/teachersdetailload.xlsx',
+        xlsUrlDetail: 'reports/teachers/detailload/teachersdetailloadsubjectjournal.xlsx'
       };
 
       function loadReportData() {
@@ -331,6 +335,11 @@
         return $scope.excel($scope.formState.xlsUrl, $scope.criteria);
       };
 
+      $scope.excelUrlDetail = function () {
+        $scope.criteria.isHigher = false;
+        return $scope.excel($scope.formState.xlsUrlDetail, $scope.criteria);
+      };
+
       var loadData = $scope.loadData;
       $scope.loadData = function() {
         $scope.criteria.isHigher = false;
@@ -362,8 +371,8 @@
         });
       };
     }
-  ]).controller('ReportTeacherDetailLoadHigherController', ['$scope', '$route', 'Classifier', 'DataUtils', 'FormUtils', 'QueryUtils', 'dialogService',
-    function ($scope, $route, Classifier, DataUtils, FormUtils, QueryUtils, dialogService) {
+  ]).controller('ReportTeacherDetailLoadHigherController', ['$scope', '$route', 'Classifier', 'DataUtils', 'FormUtils', 'QueryUtils', 'dialogService', 'MONTH',
+    function ($scope, $route, Classifier, DataUtils, FormUtils, QueryUtils, dialogService, MONTH) {
       $scope.auth = $route.current.locals.auth;
       var baseUrl = '/reports/teachers/detailload/higher';
 
@@ -371,18 +380,26 @@
         $scope.capacityTypes = Classifier.toMap(result);
       });
 
+      $scope.dateFromThruChange = function () {
+        if ($scope.criteria.from || $scope.criteria.thru) {
+          $scope.criteria.byStudyPeriods = false;
+          $scope.criteria.byWeeks = false;
+        }
+      };
+
       $scope.formState = {
         studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query(),
         allStudyPeriods: QueryUtils.endpoint('/autocomplete/studyPeriods').query(),
         studyPeriods: {},
-        xlsUrl: 'reports/teachers/detailload/teachersdetailload.xlsx'
+        xlsUrl: 'reports/teachers/detailload/teachersdetailload.xlsx',
+        xlsUrlDetail: 'reports/teachers/detailload/teachersdetailloadsubjectjournal.xlsx'
       };
 
       function loadReportData() {
         $scope.content = $scope.tabledata.content;
         QueryUtils.endpoint('/reports/teachers/detailload/data').get($scope.criteria).$promise.then(function (reportData) {
           var teachers = $scope.tabledata ? $scope.tabledata.content : null;
-          setReportData($scope, null, teachers, reportData);
+          setReportData($scope, MONTH, teachers, reportData);
           $scope.reportData.byTeachers = true;
           $scope.$broadcast('refreshFixedColumns');
           QueryUtils.loadingWheel($scope, false);
@@ -461,6 +478,11 @@
         return $scope.excel($scope.formState.xlsUrl, $scope.criteria);
       };
 
+      $scope.excelUrlDetail = function () {
+        $scope.criteria.isHigher = true;
+        return $scope.excel($scope.formState.xlsUrlDetail, $scope.criteria);
+      };
+
       var loadData = $scope.loadData;
       $scope.loadData = function() {
         $scope.criteria.isHigher = true;
@@ -483,7 +505,7 @@
             QueryUtils.endpoint('/reports/teachers/detailload/data').get(dialogScope.criteria).$promise.then(function (reportData) {
               var teachers = [];
               teachers.push(result);
-              setReportData(dialogScope, null, teachers, reportData);
+              setReportData(dialogScope, MONTH, teachers, reportData);
               dialogScope.reportData.byStudyPeriods = true;
               dialogScope.$broadcast('refreshFixedColumns');
             });

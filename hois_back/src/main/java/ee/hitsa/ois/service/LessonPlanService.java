@@ -1,7 +1,10 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodCapacitiesService.SQL_SELECT_TEACHER_CAPACITY;
+import static ee.hitsa.ois.util.JpaQueryUtil.getOrDefault;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsShort;
@@ -34,6 +37,7 @@ import javax.transaction.Transactional;
 
 import ee.hitsa.ois.domain.timetable.JournalSub;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.service.subjectstudyperiod.SubjectStudyPeriodCapacitiesService;
 import ee.hitsa.ois.util.JournalUtil;
 import ee.hitsa.ois.util.TranslateUtil;
 import ee.hitsa.ois.web.dto.StudyPeriodWithWeeksDto;
@@ -306,7 +310,6 @@ public class LessonPlanService {
     private List<ClassifierDto> lessonPlanSchoolCapacityTypeDtos(Long schoolId, Boolean isHigher) {
         SchoolCapacityTypeCommand command = new SchoolCapacityTypeCommand();
         command.setIsHigher(isHigher);
-        command.setIsTimetable(Boolean.TRUE);
         return autocompleteService.schoolCapacityTypeDtos(schoolId, command);
     }
     
@@ -550,7 +553,8 @@ public class LessonPlanService {
     }
 
     public LessonPlan save(LessonPlan lessonPlan, LessonPlanForm form) {
-        EntityUtil.bindToEntity(form, lessonPlan);
+        EntityUtil.bindToEntity(form, lessonPlan, "coefficient");
+        lessonPlan.setCoefficient(EntityUtil.getOptionalOne(form.getCoefficient(), em));
 
         Map<Long, LessonPlanModule> modules = StreamUtil.toMap(LessonPlanModule::getId,
                 lessonPlan.getLessonPlanModules());
@@ -725,8 +729,7 @@ public class LessonPlanService {
                 "  left join (  " +
                 "    select  " +
                 "      sum(sspc.hours) as num,  " +
-//                "      sum(case when sct.is_contact then sspc.hours end) as contact,  " +
-                "      0 as contact,  " + //
+                "      sum(case when ssppc.is_contact then sspc.hours end) as contact,  " +
                 "      sspt.teacher_id  " +
                 "    from  " +
                 "      subject_study_period_teacher sspt  " +
@@ -735,9 +738,11 @@ public class LessonPlanService {
                 "    join subject_study_period_capacity sspc on  " +
                 "      sspc.subject_study_period_id = ssp.id  " +
                 "    join study_period sp on  " +
-                "      sp.id = ssp.study_period_id  " +
-//                "    join classifier c on sspc.capacity_type_code = c.code  " +
-//                "    join school_capacity_type sct on sct.school_id = :schoolId and c.code = sct.capacity_type_code and sct.is_higher = true " +
+                "      sp.id = ssp.study_period_id " +
+                "   left join (" + SubjectStudyPeriodPlanService.SQL_JOIN_SELECT_PLAN_BY_SSP + ") sspp" +
+                    " on ssp.id = sspp.ssp_id and sspp.priority != 999" +
+                "   left join subject_study_period_plan_capacity ssppc" +
+                    " on sspp.plan_id = ssppc.subject_study_period_plan_id and sspc.capacity_type_code = ssppc.capacity_type_code" +
                 "    where  " +
                 "      (ssp.is_capacity_diff is null  " +
                 "      or ssp.is_capacity_diff = false)  " +
@@ -747,21 +752,22 @@ public class LessonPlanService {
                 "  left join (  " +
                 "    select  " +
                 "      sum(ssptc.hours) as num,  " +
-//                "      sum(case when sct.is_contact then ssptc.hours end) as contact,  " +
-                "      0 as contact,  " +
+                "      sum(case when ssppc.is_contact then ssptc.hours end) as contact,  " +
                 "      sspt2.teacher_id  " +
                 "    from  " +
                 "      subject_study_period_teacher sspt2  " +
-                "    join subject_study_period_teacher_capacity ssptc on  " +
+                "    join (" + SQL_SELECT_TEACHER_CAPACITY + ") ssptc on  " +
                 "      ssptc.subject_study_period_teacher_id = sspt2.id  " +
                 "    join subject_study_period ssp2 on  " +
                 "      ssp2.id = sspt2.subject_study_period_id  " +
                 "    join study_period sp2 on  " +
                 "      sp2.id = ssp2.study_period_id  " +
-//                "    join subject_study_period_capacity sspc on  " +
-//                "      ssptc.subject_study_period_capacity_id = sspc.id  " +
-//                "    join classifier c on sspc.capacity_type_code = c.code  " +
-//                "    join school_capacity_type sct on sct.school_id = :schoolId and c.code = sct.capacity_type_code and sct.is_higher = true " +
+                "    join subject_study_period_capacity sspc on  " +
+                "      ssptc.subject_study_period_capacity_id = sspc.id  " +
+                "   left join (" + SubjectStudyPeriodPlanService.SQL_JOIN_SELECT_PLAN_BY_SSP + ") sspp" +
+                " on ssp2.id = sspp.ssp_id and sspp.priority != 999" +
+                "   left join subject_study_period_plan_capacity ssppc" +
+                " on sspp.plan_id = ssppc.subject_study_period_plan_id and sspc.capacity_type_code = ssppc.capacity_type_code" +
                 "    where  " +
                 "      ssp2.is_capacity_diff = true  " +
                 "      and sp2.study_year_id = :studyYear  " +
@@ -810,7 +816,7 @@ public class LessonPlanService {
                 .collect(Collectors.toList());
 
         LessonPlanByTeacherDto dto = new LessonPlanByTeacherDto(studyYear, journals, subjects,
-                getSubjectTotals(subjects), teacher);
+                getSubjectTotals(subjects), getSubjectContactTotals(subjects), teacher);
         setTeacherLessonPlanCapacities(dto, EntityUtil.getId(teacher.getSchool()), journals, subjects);
 
         Set<Long> journalTeachers = lessonPlanByTeacherJournalTeachers(
@@ -865,7 +871,7 @@ public class LessonPlanService {
         });
     }
 
-    private Map<Long, LessonPlanByTeacherSubjectDto> getTeacherSubjects(Long teacherId, Long studyYearId) {
+    public Map<Long, LessonPlanByTeacherSubjectDto> getTeacherSubjects(Long teacherId, Long studyYearId) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period ssp "+
                 "inner join study_period sp on ssp.study_period_id = sp.id " +
                 "inner join subject_study_period_teacher sspt on ssp.id = sspt.subject_study_period_id " +
@@ -878,35 +884,46 @@ public class LessonPlanService {
         
         qb.sort("s.name_et");
 
-        List<?> teacherSubjects = qb.select("distinct s.id, s.name_et, s.name_en, sg.student_group_id, sg.code, ssp.id as ssp_id, ssp.group_proportion_code", em).getResultList();
+        List<?> teacherSubjects = qb.select("distinct s.id, s.name_et, s.name_en, sg.student_group_id, sg.code, ssp.id as ssp_id," +
+                " (select count(*) from subject_study_period_subgroup subgroup where subgroup.subject_study_period_id = ssp.id) as subgroups", em).getResultList();
         
-        Query capacityQuery = em.createNativeQuery("select ssp.study_period_id, sspc.capacity_type_code, sspc.hours"
+        Query capacityQuery = em.createNativeQuery("select ssp.study_period_id, sspc.capacity_type_code, sspc.hours, coalesce(ssppc.is_contact, false) as contact"
                 + " from subject_study_period_capacity sspc"
                 + " join subject_study_period ssp on ssp.id = sspc.subject_study_period_id"
+                + " left join (" + SubjectStudyPeriodPlanService.SQL_JOIN_SELECT_PLAN_BY_SSP
+                + ") sspp on ssp.id = sspp.ssp_id and sspp.priority != 999"
+                + " left join subject_study_period_plan_capacity ssppc on sspp.plan_id = ssppc.subject_study_period_plan_id and sspc.capacity_type_code = ssppc.capacity_type_code"
                 + " where sspc.subject_study_period_id = ?1 and (ssp.is_capacity_diff is null or ssp.is_capacity_diff = false)"
                 + " union all"
-                + " select ssp.study_period_id, sspc.capacity_type_code, ssptc.hours from subject_study_period_teacher_capacity ssptc"
+                + " select ssp.study_period_id, sspc.capacity_type_code, ssptc.hours, coalesce(ssppc.is_contact, false) as contact"
+                + " from (" + SQL_SELECT_TEACHER_CAPACITY + ") ssptc"
                 + " join subject_study_period_teacher sspt on sspt.id = ssptc.subject_study_period_teacher_id"
                 + " join subject_study_period_capacity sspc on sspc.id = ssptc.subject_study_period_capacity_id"
                 + " join subject_study_period ssp on ssp.id = sspt.subject_study_period_id"
+                + " left join (" + SubjectStudyPeriodPlanService.SQL_JOIN_SELECT_PLAN_BY_SSP
+                + ") sspp on ssp.id = sspp.ssp_id and sspp.priority != 999"
+                + " left join subject_study_period_plan_capacity ssppc on sspp.plan_id = ssppc.subject_study_period_plan_id and sspc.capacity_type_code = ssppc.capacity_type_code"
                 + " where sspc.subject_study_period_id = ?1 and sspt.teacher_id = ?2 and ssp.is_capacity_diff = true");
 
         Map<Long, LessonPlanByTeacherSubjectDto> subjects = new HashMap<>();
         Map<Long, Long> subjectStudyPeriodToSubject = new HashMap<>();
+        Map<Long, Integer> subjectStudyPeriodToSubgroups = new HashMap<>();
         Map<Long, List<String>> studentGroups = new HashMap<>();
         Map<Long, Map<Long, Map<String, Long>>> studentGroupHours = new HashMap<>();
+        Map<Long, Map<Long, Map<String, Long>>> studentGroupContactHours = new HashMap<>();
         for(Object r : teacherSubjects) {
             Long subjectId = resultAsLong(r, 0);
-            LessonPlanByTeacherSubjectDto subject = subjects.computeIfAbsent(subjectId, 
+            LessonPlanByTeacherSubjectDto subject = subjects.computeIfAbsent(subjectId,
                     k -> new LessonPlanByTeacherSubjectDto(subjectId, resultAsString(r, 1), resultAsString(r, 2)));
-            subject.setGroupProportion(resultAsString(r, 6));
             String studentGroupCode = resultAsString(r, 4);
             Long subjectStudyPeriodId = resultAsLong(r, 5);
             if (studentGroupCode != null) {
+                subjectStudyPeriodToSubgroups.put(subjectStudyPeriodId, getOrDefault(resultAsInteger(r, 6), 0));
                 subjectStudyPeriodToSubject.put(subjectStudyPeriodId, subjectId);
                 studentGroups.computeIfAbsent(subjectStudyPeriodId, k -> new ArrayList<>()).add(studentGroupCode);
             }
             Map<Long, Map<String, Long>> periodCapacityHours = new HashMap<>();
+            Map<Long, Map<String, Long>> periodContactCapacityHours = new HashMap<>();
             List<?> capacities = capacityQuery
                     .setParameter(1, subjectStudyPeriodId)
                     .setParameter(2, teacherId)
@@ -917,22 +934,34 @@ public class LessonPlanService {
                 Long hours = resultAsLong(cr, 2);
                 periodCapacityHours.computeIfAbsent(studyPeriodId, k -> new HashMap<>())
                     .put(capacityTypeCode, hours);
+                if (Boolean.TRUE.equals(resultAsBoolean(cr, 3))) {
+                    periodContactCapacityHours.computeIfAbsent(studyPeriodId, k -> new HashMap<>())
+                            .put(capacityTypeCode, hours);
+                }
             }
             if (studentGroupCode != null) {
                 studentGroupHours.put(subjectStudyPeriodId, periodCapacityHours);
+                studentGroupContactHours.put(subjectStudyPeriodId, periodContactCapacityHours);
             } else {
                 subject.setHours(periodCapacityHours);
+                subject.setContactHours(periodContactCapacityHours);
             }
         }
         for (Entry<Long, Long> entry : subjectStudyPeriodToSubject.entrySet()) {
             subjects.get(entry.getValue()).getStudentGroups().add(new LessonPlanByTeacherSubjectStudentGroupDto(
-                    studentGroups.get(entry.getKey()), studentGroupHours.get(entry.getKey())));
+                    studentGroups.get(entry.getKey()),
+                    studentGroupHours.get(entry.getKey()),
+                    studentGroupContactHours.get(entry.getKey()),
+                    subjectStudyPeriodToSubgroups.get(entry.getKey())));
         }
         for (LessonPlanByTeacherSubjectDto subject : subjects.values()) {
             Map<Long, Map<String, Long>> totals = subject.getCapacityTotals();
+            Map<Long, Map<String, Long>> contactTotals = subject.getContactCapacityTotals();
             addSubjectHours(subject.getHours(), totals);
+            addSubjectHours(subject.getContactHours(), contactTotals);
             for (LessonPlanByTeacherSubjectStudentGroupDto studentGroup : subject.getStudentGroups()) {
                 addSubjectHours(studentGroup.getHours(), totals);
+                addSubjectHours(studentGroup.getContactHours(), contactTotals);
             }
         }
         return subjects;
@@ -951,10 +980,18 @@ public class LessonPlanService {
         }
     }
     
-    private static Map<Long, Map<String, Long>> getSubjectTotals(List<LessonPlanByTeacherSubjectDto> subjects) {
+    public static Map<Long, Map<String, Long>> getSubjectTotals(List<LessonPlanByTeacherSubjectDto> subjects) {
         Map<Long, Map<String, Long>> result = new HashMap<>();
         for (LessonPlanByTeacherSubjectDto subject : subjects) {
             addSubjectHours(subject.getCapacityTotals(), result);
+        }
+        return result;
+    }
+
+    public static Map<Long, Map<String, Long>> getSubjectContactTotals(List<LessonPlanByTeacherSubjectDto> subjects) {
+        Map<Long, Map<String, Long>> result = new HashMap<>();
+        for (LessonPlanByTeacherSubjectDto subject : subjects) {
+            addSubjectHours(subject.getContactCapacityTotals(), result);
         }
         return result;
     }
@@ -1672,6 +1709,7 @@ public class LessonPlanService {
         data.put("totals", totals);
         data.put("subjects", dto.getSubjects());
         data.put("subjectTotals", dto.getSubjectTotals());
+        data.put("subjectContactTotals", dto.getSubjectContactTotals());
         
         return xlsService.generate("lessonplanbyteacher.xls", data);
     }
@@ -1836,6 +1874,10 @@ public class LessonPlanService {
                     + "from journal_omodule_theme jot "
                     + "join journal j on jot.journal_id = j.id) j on j.lesson_plan_module_id = lpm.id "
                 + "join journal_teacher jt on j.id = jt.journal_id "
+                + " left join classifier lp_coefficient on lp_coefficient.code = (select min(lp2.coefficient_code) from lesson_plan lp2"
+                    + " join lesson_plan_module lpm2 on lpm2.lesson_plan_id = lp2.id"
+                    + " join journal_omodule_theme jot2 on jot2.lesson_plan_module_id = lpm2.id"
+                    + " where jot2.journal_id = jt.journal_id)"
                 + "join study_period sp on sp.study_year_id = sy.id "
                 + "join classifier c_type on c_type.code in (:capacityTypes) "
                 + "left join (select jtc.hours, jct.capacity_type_code, jtc.journal_teacher_id, jtc.study_period_id "
@@ -1847,7 +1889,8 @@ public class LessonPlanService {
                     + "join journal_capacity_type jct on jct.id = jc.journal_capacity_type_id"
                     + ") journalCap on j.is_capacity_diff is not true and journalCap.journal_id = j.id and sp.id = journalCap.study_period_id and c_type.code = journalCap.capacity_type_code "
                 + "left join school_capacity_type sct on sct.capacity_type_code = c_type.code and sct.school_id = lp.school_id and sct.is_higher is not true "
-                + "left join school_capacity_type_load sctl on sctl.school_capacity_type_id = sct.id and sctl.study_year_id = sy.id");
+                + "left join school_capacity_type_load sctl on sctl.school_capacity_type_id = sct.id"
+                    + " and sctl.study_year_id = sy.id and coalesce(lp_coefficient.code, 'KOEFITSIENT_K1') = sctl.coefficient_code ");
 
         qb.requiredCriteria("lp.id in (:lessonPlanIds)", "lessonPlanIds", lessonPlanIds);
         if (user.isTeacher()) {

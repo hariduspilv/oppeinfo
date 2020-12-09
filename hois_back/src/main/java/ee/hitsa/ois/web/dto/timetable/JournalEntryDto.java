@@ -28,12 +28,16 @@ public class JournalEntryDto extends VersionedCommand  {
     private Long moodleGradeItemId;
     private Long journalStudent;
     private List<String> journalEntryCapacityTypes = new ArrayList<>();
+    private List<Long> journalEntryTeachers = new ArrayList<>();
     private List<JournalEntryStudentDto> journalEntryStudents = new ArrayList<>();
 
     public static JournalEntryDto of(JournalEntry journalEntry) {
-        JournalEntryDto dto = EntityUtil.bindToDto(journalEntry, new JournalEntryDto(), "journalEntryStudents", "journalEntryCapacityTypes");
+        JournalEntryDto dto = EntityUtil.bindToDto(journalEntry, new JournalEntryDto(), "journalEntryStudents",
+                "journalEntryCapacityTypes", "journalEntryTeachers");
         dto.setJournalEntryStudents(StreamUtil.toMappedList(JournalEntryStudentDto::of, journalEntry.getJournalEntryStudents()));
         dto.setJournalEntryCapacityTypes(StreamUtil.toMappedList(type -> EntityUtil.getCode(type.getCapacityType()), journalEntry.getJournalEntryCapacityTypes()));
+        dto.setJournalEntryTeachers(StreamUtil.toMappedList(jt -> EntityUtil.getId(jt.getTeacher()),
+                journalEntry.getJournalEntryTeachers()));
         return dto;
     }
 
@@ -139,6 +143,14 @@ public class JournalEntryDto extends VersionedCommand  {
 
     public void setJournalEntryCapacityTypes(List<String> journalEntryCapacityTypes) {
         this.journalEntryCapacityTypes = journalEntryCapacityTypes;
+    }
+
+    public List<Long> getJournalEntryTeachers() {
+        return journalEntryTeachers;
+    }
+
+    public void setJournalEntryTeachers(List<Long> journalEntryTeachers) {
+        this.journalEntryTeachers = journalEntryTeachers;
     }
 
     public List<JournalEntryStudentDto> getJournalEntryStudents() {

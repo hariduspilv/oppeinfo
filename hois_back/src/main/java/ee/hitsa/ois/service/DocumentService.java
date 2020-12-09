@@ -116,6 +116,9 @@ public class DocumentService {
     private static final String PROFESSIONAL_DIPLOMA_KEY = "diploma.qualification.name.professional";
     private static final String EXAM_OCCUPATION_KEY = "diploma.exam.occupation";
     private static final String EXAM_PARTOCCUPATION_KEY = "diploma.exam.partoccupation";
+    private static final String EXAM_IN_ESTONIAN_KEY = "diploma.exam.inEstonian";
+    private static final String EXAM_IN_ENGLISH_KEY = "diploma.exam.inEnglish";
+    private static final String EXAM_IN_RUSSIAN_KEY = "diploma.exam.inRussian";
 
     @Autowired
     private EntityManager em;
@@ -1189,8 +1192,10 @@ public class DocumentService {
                 + " case when (select count (*) from apel_application_formal_subject_or_module aaf where sv.apel_application_record_id=aaf.apel_application_record_id and not aaf.is_my_school) > 0 then true else false end as is_apel_formal,"
                 + " case when (select count (*) from apel_application_informal_subject_or_module aaf where sv.apel_application_record_id=aaf.apel_application_record_id) > 0 then true else false end as is_apel_informal,"
                 + " aps.name_et,aps.name_en,case when pp.is_final=true then true else false end as is_final,"
-                + " occup.name_et as occup_name_et, partoccup.name_et as partoccup_name_et, speciality.name_et as speciality_name_et"
+                + " occup.name_et as occup_name_et, partoccup.name_et as partoccup_name_et, speciality.name_et as speciality_name_et,"
+                + " case when pp.is_final = true and s.language_code != 'OPPEKEEL_E' then ps.language_code end as lang"
                 + " from student_vocational_result sv"
+                + " join student s on sv.student_id = s.id"
                 + " join ("
                 + " select distinct cm.curriculum_module_id, first_value(sv.id) over (partition by student_id, cm.curriculum_module_id order by sv.grade_date desc, sv.grade desc) as id,"
                 + " cmm.module_code as md"
@@ -1251,11 +1256,28 @@ public class DocumentService {
                             if (!StringUtils.isEmpty(speciality)) {
                                 nameBuilder.append(", ").append(speciality);
                             }
+                            String language = resultAsString(r, 17);
+                            if (!StringUtils.isEmpty(language)) {
+                                nameBuilder.append(" (").append(resultLanguage(language)).append(")");
+                            }
                             studyResult.setNameEt(nameBuilder.toString());
                         }
                     }
                     return studyResult;
                 }, Collectors.toList())));
+    }
+
+    private String resultLanguage(String language) {
+        switch (EnumUtil.valueOf(StudyLanguage.class, language)) {
+            case OPPEKEEL_E:
+                return TranslateUtil.translate(EXAM_IN_ESTONIAN_KEY, Language.ET);
+            case OPPEKEEL_I:
+                return TranslateUtil.translate(EXAM_IN_ENGLISH_KEY, Language.ET);
+            case OPPEKEEL_V:
+                return TranslateUtil.translate(EXAM_IN_RUSSIAN_KEY, Language.ET);
+            default:
+                return null;
+        }
     }
 
     private void setStudyResultsVocational(DiplomaSupplement supplement, Long studentId) {

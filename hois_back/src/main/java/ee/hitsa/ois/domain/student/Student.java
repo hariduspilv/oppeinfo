@@ -67,6 +67,7 @@ public class Student extends StudentBase {
     private String otherContact;
     private Boolean isAcadStudyAllowed;
     private String representativeOtherContact;
+    private Long regNr;
 
     public Person getPerson() {
         return person;
@@ -269,5 +270,12 @@ public class Student extends StudentBase {
     public void setStudentLanguages(List<StudentLanguages> studentLanguages) {
         this.studentLanguages = studentLanguages;
     }
-    
+
+    public Long getRegNr() {
+        return regNr;
+    }
+
+    public void setRegNr(Long regNr) {
+        this.regNr = regNr;
+    }
 }

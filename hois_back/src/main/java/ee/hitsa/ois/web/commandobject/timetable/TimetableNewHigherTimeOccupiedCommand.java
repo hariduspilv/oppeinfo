@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.commandobject.timetable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class TimetableNewHigherTimeOccupiedCommand {
@@ -10,6 +11,7 @@ public class TimetableNewHigherTimeOccupiedCommand {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private String repeatCode;
+    private LocalDate repeatUntil;
     private Long lessonAmount;
     private Long room;
     
@@ -60,7 +62,15 @@ public class TimetableNewHigherTimeOccupiedCommand {
     public void setRepeatCode(String repeatCode) {
         this.repeatCode = repeatCode;
     }
-    
+
+    public LocalDate getRepeatUntil() {
+        return repeatUntil;
+    }
+
+    public void setRepeatUntil(LocalDate repeatUntil) {
+        this.repeatUntil = repeatUntil;
+    }
+
     public Long getLessonAmount() {
         return lessonAmount;
     }

@@ -2,8 +2,6 @@ package ee.hitsa.ois.util;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.timetable.TimetableEvent;
@@ -33,27 +31,13 @@ public abstract class TimetableUserRights {
         TimetableEvent event = eventTime.getTimetableEvent();
         School school = event.getSchool();
         if (UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_SYNDMUS)) {
-            return UserUtil.isSchoolAdmin(user, school) || (UserUtil.isLeadingTeacher(user, school)
-                    && (isLeadingTeacherStudentGroupsEvent(user, eventTime, event) || isPersonalEvent(user, eventTime)))
+            return UserUtil.isSchoolAdmin(user, school) || UserUtil.isLeadingTeacher(user, school)
                     || (UserUtil.isTeacher(user, school) && !Boolean.TRUE.equals(event.getIsPersonal()));
         } else if (UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_PERSYNDMUS)) {
             return (UserUtil.isSchoolAdmin(user, school) || UserUtil.isLeadingTeacher(user, school))
                     && isPersonalEvent(user, eventTime);
         }
         return false;
-    }
-
-    private static boolean isLeadingTeacherStudentGroupsEvent(HoisUserDetails user, TimetableEventTime eventTime,
-            TimetableEvent event) {
-        Set<Long> sgCurriculums = StreamUtil.nullSafeList(eventTime.getTimetableEventStudentGroups()).stream()
-                .map(sg -> EntityUtil.getNullableId(sg.getStudentGroup().getCurriculum())).filter(id -> id != null)
-                .collect(Collectors.toSet());
-        if (event.getTimetableObject() != null) {
-            sgCurriculums.addAll(StreamUtil.nullSafeList(event.getTimetableObject().getTimetableObjectStudentGroups())
-                    .stream().map(sg -> EntityUtil.getNullableId(sg.getStudentGroup().getCurriculum()))
-                    .filter(id -> id != null).collect(Collectors.toSet()));
-        }
-        return UserUtil.isLeadingTeacher(user, sgCurriculums);
     }
 
     public static void assertCanViewEvent(HoisUserDetails user, TimetableEventTime eventTime) {
@@ -83,11 +67,12 @@ public abstract class TimetableUserRights {
     }
 
     public static boolean canEditOrDeleteEvent(HoisUserDetails user, TimetableEventTime eventTime) {
-        if (eventTime.getTimetableEvent().getJuhanEventId() != null || eventTime.getStart().isBefore(LocalDateTime.now())) {
+        TimetableEvent event = eventTime.getTimetableEvent();
+        if (event.getJuhanEventId() != null || (EntityUtil.getNullableId(event.getTimetableObject()) != null
+                && eventTime.getStart().isBefore(LocalDateTime.now()))) {
             return false;
         }
 
-        TimetableEvent event = eventTime.getTimetableEvent();
         School school = event.getSchool();
         if (Boolean.TRUE.equals(event.getIsPersonal())) {
             return UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_PERSYNDMUS)
@@ -96,13 +81,24 @@ public abstract class TimetableUserRights {
         }
 
         if (UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_SYNDMUS)) {
-            return UserUtil.isSchoolAdmin(user, eventTime.getTimetableEvent().getSchool())
-                    || (UserUtil.isLeadingTeacher(user, school) && isLeadingTeacherStudentGroupsEvent(user, eventTime, event))
-                    || (UserUtil.isTeacher(user, school)
-                            && isTeachersEvent(user, StreamUtil.toMappedList(t -> EntityUtil.getId(t.getTeacher()),
-                                    eventTime.getTimetableEventTeachers())));
+            return UserUtil.isSchoolAdmin(user, school) || UserUtil.isLeadingTeacher(user, school)
+                    || canTeacherEditOrDeleteEvent(user, eventTime);
         }
 
+        return false;
+    }
+
+    private static boolean canTeacherEditOrDeleteEvent(HoisUserDetails user, TimetableEventTime eventTime) {
+        TimetableEvent event = eventTime.getTimetableEvent();
+        if (UserUtil.isTeacher(user, event.getSchool())) {
+            boolean isSingleEvent = EntityUtil.getNullableId(event.getTimetableObject()) == null;
+            if (isSingleEvent) {
+                return user.getTeacherId().equals(EntityUtil.getNullableId(event.getInsertedTeacher()));
+            } else {
+                return isTeachersEvent(user, StreamUtil.toMappedList(t -> EntityUtil.getId(t.getTeacher()),
+                        eventTime.getTimetableEventTeachers()));
+            }
+        }
         return false;
     }
 

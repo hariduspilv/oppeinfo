@@ -16,6 +16,8 @@ public class LoadTypeDto {
     private Boolean singleEvents = Boolean.FALSE;
     private Boolean journalGrandTotal  = Boolean.FALSE;
     private Boolean timetableGrandTotal  = Boolean.FALSE;
+    private Boolean koefLesson = Boolean.FALSE;
+    private Boolean contactLesson = Boolean.FALSE;
 
     public Long getPeriodIndex() {
         return periodIndex;
@@ -112,5 +114,21 @@ public class LoadTypeDto {
     public void setTimetableGrandTotal(Boolean timetableGrandTotal) {
         this.timetableGrandTotal = timetableGrandTotal;
     }
+
+	public Boolean getKoefLesson() {
+		return koefLesson;
+	}
+
+	public void setKoefLesson(Boolean koefLesson) {
+		this.koefLesson = koefLesson;
+	}
+
+	public Boolean getContactLesson() {
+		return contactLesson;
+	}
+
+	public void setContactLesson(Boolean contactLesson) {
+		this.contactLesson = contactLesson;
+	}
 
 }

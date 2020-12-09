@@ -3,7 +3,10 @@ package ee.hitsa.ois.util;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
@@ -13,6 +16,7 @@ import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.web.dto.SubjectStudyPeriodCapacityDto;
 
 public abstract class SubjectStudyPeriodUtil {
     
@@ -73,7 +77,15 @@ public abstract class SubjectStudyPeriodUtil {
                 List<SubjectStudyPeriodTeacher> teacherSsps = StreamUtil
                         .toFilteredList(t -> EntityUtil.getId(t.getTeacher()).equals(teacherId), ssp.getTeachers());
                 for (SubjectStudyPeriodTeacher teacherSsp : teacherSsps) {
-                    sum += teacherSsp.getCapacities().stream().mapToLong(SubjectStudyPeriodTeacherCapacity::getHours)
+                    Map<String, SubjectStudyPeriodTeacherCapacity> mappedCap = StreamUtil.nullSafeSet(teacherSsp.getCapacities()).stream()
+                            .sorted(Comparator
+                                    .comparingInt((SubjectStudyPeriodTeacherCapacity cap) -> cap.getSubgroup() == null ? 0 : 1)
+                                    .thenComparing(Comparator.comparingInt(SubjectStudyPeriodTeacherCapacity::getHours).reversed()))
+                            .collect(Collectors.toMap((SubjectStudyPeriodTeacherCapacity cap) ->
+                                            EntityUtil.getCode(cap.getSubjectStudyPeriodCapacity().getCapacityType()), cap -> cap,
+                                    (o, n) -> o, LinkedHashMap::new));
+
+                    sum += mappedCap.values().stream().mapToLong(SubjectStudyPeriodTeacherCapacity::getHours)
                             .sum();
                 }
             } else {

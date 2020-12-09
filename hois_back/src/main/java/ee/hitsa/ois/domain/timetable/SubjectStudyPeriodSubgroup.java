@@ -14,6 +14,7 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacherCapacity;
 
 @Entity
 public class SubjectStudyPeriodSubgroup extends BaseEntityWithId {
@@ -30,6 +31,8 @@ public class SubjectStudyPeriodSubgroup extends BaseEntityWithId {
     private Set<TimetableEventSubgroup> timetableEventSubgroups;
     @OneToMany(mappedBy = "subgroup", fetch = FetchType.LAZY, orphanRemoval = false, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     private Set<DeclarationSubject> declarationSubjects;
+    @OneToMany(mappedBy = "subgroup", fetch = FetchType.LAZY, cascade = {CascadeType.REMOVE})
+    private Set<SubjectStudyPeriodTeacherCapacity> capacities;
 
     public SubjectStudyPeriod getPeriod() {
         return period;
@@ -86,5 +89,14 @@ public class SubjectStudyPeriodSubgroup extends BaseEntityWithId {
     public void setDeclarationSubjects(Set<DeclarationSubject> declarationSubjects) {
         getDeclarationSubjects().clear();
         getDeclarationSubjects().addAll(declarationSubjects);
+    }
+
+    public Set<SubjectStudyPeriodTeacherCapacity> getCapacities() {
+        return capacities != null ? capacities : (capacities = new HashSet<>());
+    }
+
+    public void setCapacities(Set<SubjectStudyPeriodTeacherCapacity> capacities) {
+        getCapacities().clear();
+        getCapacities().addAll(capacities);
     }
 }

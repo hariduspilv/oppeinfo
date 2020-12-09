@@ -7,14 +7,16 @@ public class FinalProtocolStudentOccupationDto {
     private String partOccupationCode;
     private String specialityCode;
     private Long studentOccupationCertificateId;
+    private String language;
 
     public FinalProtocolStudentOccupationDto(String certificateNr, String occupationCode, String partOccupationCode,
-            String specialityCode, Long studentOccupationCertificateId) {
+            String specialityCode, Long studentOccupationCertificateId, String language) {
         this.certificateNr = certificateNr;
         this.occupationCode = occupationCode;
         this.partOccupationCode = partOccupationCode;
         this.specialityCode = specialityCode;
         this.studentOccupationCertificateId = studentOccupationCertificateId;
+        this.language = language;
     }
 
     public String getCertificateNr() {
@@ -57,4 +59,11 @@ public class FinalProtocolStudentOccupationDto {
         this.studentOccupationCertificateId = studentOccupationCertificateId;
     }
 
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
 }

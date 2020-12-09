@@ -9,6 +9,7 @@ public class ApelApplicationCommentDto extends InsertedChangedVersionDto {
     private Long id;
     
     private String addInfo;
+    private Boolean isStudent;
     
     public static ApelApplicationCommentDto of(ApelApplicationComment applicationComment) {
         ApelApplicationCommentDto dto = EntityUtil.bindToDto(applicationComment, new ApelApplicationCommentDto());
@@ -29,6 +30,14 @@ public class ApelApplicationCommentDto extends InsertedChangedVersionDto {
 
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+
+    public Boolean getIsStudent() {
+        return isStudent;
+    }
+
+    public void setIsStudent(Boolean isStudent) {
+        this.isStudent = isStudent;
     }
     
 }

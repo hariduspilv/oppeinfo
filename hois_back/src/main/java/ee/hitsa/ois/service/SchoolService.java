@@ -10,6 +10,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.domain.school.SchoolStudentRegNr;
 import ee.hitsa.ois.enums.EducationLevel;
 import ee.hitsa.ois.util.StreamUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,8 +48,13 @@ public class SchoolService {
     private EntityManager em;
 
     public SchoolDto getWithLogo(Long schoolId) {
-        SchoolDto dto = EntityUtil.withEntity(schoolId, id -> em.find(School.class, id), school -> SchoolDto.ofWithLogo(school));
-        dto.setType(schoolType(schoolId));
+        return EntityUtil.withEntity(schoolId, id -> em.find(School.class, id), this::getWithLogo);
+    }
+
+    private SchoolDto getWithLogo(School school) {
+        SchoolDto dto = SchoolDto.ofWithLogo(school);
+        dto.setType(schoolType(school.getId()));
+        dto.setLastStudentRegNr(getSchoolStudentRegNr(school).getRegNr());
         return dto;
     }
 
@@ -92,11 +98,16 @@ public class SchoolService {
         school.setNameEt(school.getEhisSchool().getNameEt());
 
         school = EntityUtil.save(school, em);
+        if (school.getSchoolStudentRegNrs().isEmpty()) {
+            SchoolStudentRegNr schoolStudentRegNr = new SchoolStudentRegNr();
+            schoolStudentRegNr.setSchool(school);
+            schoolStudentRegNr.setRegNr(Long.valueOf(0));
+            schoolStudentRegNr.setVersion(Long.valueOf(0));
+            school.getSchoolStudentRegNrs().add(schoolStudentRegNr);
+        }
         em.flush();
 
-        SchoolDto dto = SchoolDto.ofWithLogo(school);
-        dto.setType(schoolType(school.getId()));
-        return dto;
+        return getWithLogo(school);
     }
 
     public Page<SchoolDto> search(SchoolSearchCommand searchCommand, Pageable pageable) {
@@ -154,6 +165,15 @@ public class SchoolService {
                 !Collections.disjoint(EducationLevel.VOCATIONAL, educationLevels),
                 !Collections.disjoint(EducationLevel.HIGHER, educationLevels),
                 !Collections.disjoint(EducationLevel.DOCTOR, educationLevels));
+    }
+
+    public SchoolStudentRegNr getSchoolStudentRegNr(School school) {
+        List<SchoolStudentRegNr> data = em.createQuery("select srn from SchoolStudentRegNr srn "
+                + "where srn.school.id = ?1", SchoolStudentRegNr.class)
+                .setParameter(1, school.getId())
+                .setMaxResults(1)
+                .getResultList();
+        return !data.isEmpty() ? data.get(0) : null;
     }
     
     /**

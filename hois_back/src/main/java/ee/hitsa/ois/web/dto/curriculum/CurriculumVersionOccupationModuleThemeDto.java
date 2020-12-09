@@ -101,6 +101,7 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
         dto.setCurriculumModuleOutcomes(StreamUtil.toMappedSet(o -> CurriculumModuleOutcomeDto.of(o.getOutcome()),
                 theme.getOutcomes()));
         dto.setAssessment(EntityUtil.getNullableCode(theme.getAssessment()));
+        dto.setStudyYearNumber(theme.getStudyYearNumber());
         return dto;
     }
 

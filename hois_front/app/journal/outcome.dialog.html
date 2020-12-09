@@ -51,14 +51,12 @@
                     </td>
                     <td md-cell>
                       <div layout="row" layout-align="space-between center" flex>
-                        <span ng-if="journalOccupationStudents[row.studentId].history.length > 0" layout="row" layout-align="start center" flex>
-                          <span ng-repeat="gradeHistory in journalOccupationStudents[row.studentId].history | orderBy: 'gradeInserted'">
-                            <span>
-                              <hois-vocational-result value="gradeHistory.grade" exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
-                              <md-tooltip>{{gradeHistory.gradeInsertedBy}}, {{gradeHistory.gradeInserted | hoisDate}}</md-tooltip>
-                            </span>
-                            <span ng-if="gradeHistory.grade.value && !$last">/</span>
+                        <span ng-if="!journalOccupationStudents[row.studentId].removeStudentHistory" layout="row" layout-align="start center" flex>
+                          <span ng-repeat-start="gradeHistory in journalOccupationStudents[row.studentId].history | orderBy: 'gradeInserted'">
+                            <hois-vocational-result value="gradeHistory.grade" exists-grading-schema="existsSchoolGradingSchema"></hois-vocational-result>
+                            <md-tooltip>{{gradeHistory.gradeInsertedBy}}, {{gradeHistory.gradeInserted | hoisDate}}</md-tooltip>
                           </span>
+                          <span ng-repeat-end ng-if="gradeHistory.grade && !$last">&nbsp;/&nbsp;</span>
                         </span>
                         <span ng-if="row.canEdit && journalOccupationStudents[row.studentId].canEdit">
                           <md-input-container ng-if="gradeInputAsSelect">
@@ -73,6 +71,12 @@
                             <md-input-container ng-if="journalOccupationStudents[row.studentId].grade.gradingSchemaRowId" class="gradeAsInput">
                               <input value="{{journalOccupationStudents[row.studentId].grade | hoisVocationalGrade}}" disabled>
                             </md-input-container>
+                          </span>
+                          <span>
+                            <md-button class="md-icon-button" ng-click="removeStudentHistory(row)">
+                              <md-icon md-font-set="material-icons">delete_forever</md-icon>
+                              <md-tooltip>{{'journal.removeStudentHistory' | translate}}</md-tooltip>
+                            </md-button>
                           </span>
                         </span>
                         <span ng-if="!row.canEdit || !journalOccupationStudents[row.studentId].canEdit">

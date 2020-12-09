@@ -129,7 +129,8 @@ public class StudentService {
 
     private static final String STUDENT_LIST_SELECT = "s.id, person.firstname, person.lastname, person.idcode, "+
             "curriculum_version.id curriculum_version_id, curriculum_version.code curriculum_version_code, curriculum.id curriculum_id, curriculum.name_et, curriculum.name_en, " +
-            "student_group.id student_group_id, student_group.code student_group_code, s.study_form_code, s.status_code, s.person_id, s.type_code";
+            "student_group.id student_group_id, student_group.code student_group_code, s.study_form_code, " +
+            "s.status_code, s.person_id, s.type_code, s.reg_nr";
     private static final String STUDENT_LIST_FROM = "from student s inner join person person on s.person_id=person.id "+
             "left join curriculum_version curriculum_version on s.curriculum_version_id=curriculum_version.id "+
             "left join curriculum curriculum on curriculum_version.curriculum_id=curriculum.id "+
@@ -164,7 +165,7 @@ public class StudentService {
     /**
      * Search students
      *
-     * @param schoolId
+     * @param user
      * @param criteria
      * @param pageable
      * @return
@@ -238,13 +239,14 @@ public class StudentService {
             dto.setStudyForm(resultAsString(r, 11));
             dto.setStatus(resultAsString(r, 12));
             dto.setPersonId(user.isStudent() ? null : resultAsLong(r, 13));
+            dto.setRegNr(resultAsLong(r, 15));
             if (isJournalUsed) {
-                dto.setJournal(new AutocompleteResult(resultAsLong(r, 15), resultAsString(r, 16), resultAsString(r, 16)));
+                dto.setJournal(new AutocompleteResult(resultAsLong(r, 16), resultAsString(r, 17), resultAsString(r, 17)));
                 if (isSubjectUsed) {
-                    dto.setSubject(new AutocompleteResult(resultAsLong(r, 17), resultAsString(r, 18), resultAsString(r, 19)));
+                    dto.setSubject(new AutocompleteResult(resultAsLong(r, 18), resultAsString(r, 19), resultAsString(r, 20)));
                 }
             } else if (isSubjectUsed) {
-                dto.setSubject(new AutocompleteResult(resultAsLong(r, 15), resultAsString(r, 16), resultAsString(r, 17)));
+                dto.setSubject(new AutocompleteResult(resultAsLong(r, 16), resultAsString(r, 17), resultAsString(r, 18)));
             }
             return dto;
         });
@@ -898,7 +900,7 @@ public class StudentService {
         }
     }
 
-    public Collection<StudentVocationalResultByTimeDto> vocationalResultsByTimeResults(Student student) {
+    public Collection<StudentVocationalResultByTimeDto> vocationalResultsByTimeResults(Student student, String sort) {
         String journalResults = 
                 "select false as module, coalesce(je.entry_date,jes.grade_inserted) as kp, j.id, j.name_et, " + 
                     "(select string_agg(tp.firstname||' '||tp.lastname,', ') " + 
@@ -940,7 +942,14 @@ public class StudentService {
                         "join curriculum_version cv on cv.id = cvo.curriculum_version_id " +
                    "where jot.journal_id = js.journal_id and cv.id!=ss.curriculum_version_id) as foreign_theme_en, " +
                    "jes.grade_code, jes.grading_schema_row_id, jes.verbal_grade, sy.year_code, sy.start_date, " +
-                   "false as informal, false as formal, false as practice " +
+                   "false as informal, false as formal, false as practice, " +
+                   "(select string_agg(name_et, ', ') from (select distinct(cm.name_et), cv.id = ss.curriculum_version_id as is_student_cv from journal_omodule_theme jot " +
+                        "join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id " +
+                        "join curriculum_version_omodule cvo on cvo.id = cvot.curriculum_version_omodule_id " +
+                        "join curriculum_module cm on cm.id = cvo.curriculum_module_id " +
+                        "join curriculum_version cv on cv.id = cvo.curriculum_version_id " +
+                    "where jot.journal_id = js.journal_id " +
+                    "order by cv.id = ss.curriculum_version_id desc, cm.name_et) modules) as modules_et " +
                 "from journal_student js " +
                 "join journal j on j.id = js.journal_id " +
                 "join journal_entry je on je.journal_id = js.journal_id " +
@@ -953,7 +962,7 @@ public class StudentService {
                     "cvot.name_et || ' (' || cm.name_et || ' - ' || mcl.name_et || ')' as my_theme, " +
                     "cvot.name_et || ' (' || coalesce(cm.name_en,cm.name_et) || ' - ' || coalesce(cm.name_en,cm.name_et) || ')' as my_theme_en, " +
                     "null, null, pj.grade_code, pj.grading_schema_row_id, null as verbal_grade, sy.year_code, sy.start_date, " +
-                    "false as informal, false as formal, true as practice " +
+                    "false as informal, false as formal, true as practice, cm.name_et as modules_et " +
                 "from practice_journal pj " +
                 "join practice_journal_module_subject pjms on pj.id = pjms.practice_journal_id " +
                 "join curriculum_version_omodule_theme cvot on cvot.id = pjms.curriculum_version_omodule_theme_id " +
@@ -974,7 +983,7 @@ public class StudentService {
                     "cm.name_et||' - '||mcl.name_et ||case when cv.id!=ss.curriculum_version_id then ' ('||cv.code||')' else '' end, " +
                     "coalesce(cm.name_en,cm.name_et)||' - '||coalesce(mcl.name_en,mcl.name_et) ||case when cv.id!=ss.curriculum_version_id then ' ('||cv.code||')' else '' end, " +
                     "null, null, ps.grade_code, ps.grading_schema_row_id, null as verbal_grade, sy.year_code, sy.start_date, " +
-                    "false as informal, false as formal, false as practice " +
+                    "false as informal, false as formal, false as practice, cm.name_et as modules_et " +
                 "from protocol pp " +
                 "join protocol_vdata pv on pp.id=pv.protocol_id " +
                 "join protocol_student ps on pp.id=ps.protocol_id " +
@@ -995,7 +1004,7 @@ public class StudentService {
                     "case when aai.curriculum_version_omodule_theme_id is not null then cvot.name_et || ' (' || cm.name_en || ' - ' || mcl.name_en || ')' " +
                         "else cm.name_en || ' - ' || mcl.name_en end as my_theme_en, " +
                     "null, null, aai.grade_code, null as grading_schema_row_id, null as verbal_grade, sy.year_code, sy.start_date, " +
-                    "true as informal, false as formal, false as practice " +
+                    "true as informal, false as formal, false as practice, cm.name_et as modules_et " +
                 "from apel_application aa " + 
                 "join apel_application_record aar on aa.id=aar.apel_application_id " + 
                 "join apel_application_informal_subject_or_module aai on aar.id=aai.apel_application_record_id " + 
@@ -1012,7 +1021,7 @@ public class StudentService {
                     "aaf.name_et || ' - ' || a_s.name_et as foreign_theme, " +
                     "aaf.name_en || ' - ' || a_s.name_en as foreign_theme_en, " +
                     "aaf.grade_code, null as grading_schema_row_id, null as verbal_grade, sy.year_code, sy.start_date, " +
-                    "false as informal, true as formal, false as practice " +
+                    "false as informal, true as formal, false as practice, cm.name_et as modules_et " +
                 "from apel_application aa " + 
                 "join apel_application_record aar on aa.id=aar.apel_application_id " + 
                 "join apel_application_formal_subject_or_module aaf on aar.id=aaf.apel_application_record_id " + 
@@ -1025,12 +1034,12 @@ public class StudentService {
                 "join study_year sy on sy.id = get_study_year(cast(aa.confirmed as date), cast(aa.school_id as int)) " + 
             "where aa.student_id=:studentId and aa.status_code='VOTA_STAATUS_C' and aaf.transfer = true";
 
-        String outocomeResults = "select false as module, scmor.grade_date, scmor.curriculum_module_outcomes_id, null, " +
+        String outcomeResults = "select false as module, scmor.grade_date, scmor.curriculum_module_outcomes_id, null, " +
                     "p.firstname || ' ' || p.lastname as teachers, '" + JournalEntryType.SISSEKANNE_O.name() + "', " +
                     "cmo.outcome_et || ' (' || cm.name_et || ' - ' || mcl.name_et || ')' as my_theme, " +
                     "cmo.outcome_en || ' (' || coalesce(cm.name_en,cm.name_et) || ' - ' || coalesce(cm.name_en,cm.name_et) || ')' as my_theme_en, " +
                     "null, null, scmor.grade_code, scmor.grading_schema_row_id, null as verbal_grade, sy.year_code, sy.start_date, " +
-                    "false as informal, false as formal, false as practice " +
+                    "false as informal, false as formal, false as practice, cm.name_et as modules_et " +
                 "from student_curriculum_module_outcomes_result scmor " +
                 "join curriculum_module_outcomes cmo on cmo.id = scmor.curriculum_module_outcomes_id " +
                 "join curriculum_module cm on cm.id = cmo.curriculum_module_id " +
@@ -1043,14 +1052,13 @@ public class StudentService {
         
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from (" + journalResults + " union all " + practiceJournalResults + " union all " + protocolResults + 
-                " union all " + informalApelResults + " union all " + formalApelResults + " union all " + outocomeResults +
+                " union all " + informalApelResults + " union all " + formalApelResults + " union all " + outcomeResults +
                 ") xx where grade_code is not null");
         qb.parameter("studentId", EntityUtil.getId(student));
         qb.parameter("entryTypeCodes", JOURNAL_RESULT_ENTRY_TYPES);
-        
-        qb.sort("kp desc, my_theme");
-        
-        List<?> rows = qb.select("*",em).getResultList();
+
+        qb.sort(sort);
+        List<?> rows = qb.select("*", em).getResultList();
         
         List<StudentVocationalResultByTimeDto> result = new ArrayList<>();
         for (Object r : rows) {

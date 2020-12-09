@@ -18,6 +18,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.Required;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.PersonResult;
 import ee.hitsa.ois.web.dto.timetable.TimetableSingleEventTeacherForm;
 
 public class TimetableSingleEventForm {
@@ -39,12 +40,17 @@ public class TimetableSingleEventForm {
     private List<AutocompleteResult> subgroups;
     private List<AutocompleteResult> students;
     private Long weekAmount;
+    @Size(max = 1000)
     private String otherTeacher;
+    @Size(max = 1000)
     private String otherRoom;
+    @Size(max = 4000)
+    private String addInfo;
     private Boolean isSingleEvent;
     private Boolean isPersonal = Boolean.FALSE;
     private AutocompleteResult person;
-
+    private Boolean isPublic;
+    private Boolean isJuhanEvent;
     private Boolean canEdit;
 
     public static TimetableSingleEventForm of(TimetableEventTime event) {
@@ -90,7 +96,7 @@ public class TimetableSingleEventForm {
         form.setSubgroups(StreamUtil.toMappedList(eg -> AutocompleteResult.of(eg.getSubjectStudyPeriodSubgroup(), false),
                 event.getTimetableEventSubgroups()));
 
-        form.setStudents(StreamUtil.toMappedList(s -> AutocompleteResult.of(s.getStudent(), false),
+        form.setStudents(StreamUtil.toMappedList(s -> PersonResult.of(s.getStudent(), false, true, true),
                 event.getTimetableEventStudents()));
 
         LocalDateTime maxDate = event.getTimetableEvent().getTimetableEventTimes().stream()
@@ -101,6 +107,9 @@ public class TimetableSingleEventForm {
         if (Boolean.TRUE.equals(form.getIsPersonal())) {
             form.setPerson(AutocompleteResult.of(event.getTimetableEvent().getPerson()));
         }
+        form.setIsPublic(event.getTimetableEvent().getIsPublic());
+        form.setIsJuhanEvent(Boolean.valueOf(event.getTimetableEvent().getJuhanEventId() != null));
+        form.setAddInfo(event.getAddInfo());
         return form;
     }
 
@@ -231,6 +240,14 @@ public class TimetableSingleEventForm {
         this.otherRoom = otherRoom;
     }
 
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
+    }
+
     public Boolean getIsSingleEvent() {
         return isSingleEvent;
     }
@@ -247,20 +264,36 @@ public class TimetableSingleEventForm {
         this.isPersonal = isPersonal;
     }
 
-    public Boolean getCanEdit() {
-        return canEdit;
-    }
-
-    public void setCanEdit(Boolean canEdit) {
-        this.canEdit = canEdit;
-    }
-
     public AutocompleteResult getPerson() {
         return person;
     }
 
     public void setPerson(AutocompleteResult person) {
         this.person = person;
+    }
+
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+    public Boolean getIsJuhanEvent() {
+        return isJuhanEvent;
+    }
+
+    public void setIsJuhanEvent(Boolean isJuhanEvent) {
+        this.isJuhanEvent = isJuhanEvent;
+    }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
     }
 
 }

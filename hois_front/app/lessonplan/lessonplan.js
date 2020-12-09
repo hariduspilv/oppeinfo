@@ -135,7 +135,7 @@
         vocational: school.vocational,
         xlsUrl: 'lessonplans/lessonplansummary.xls'
       };
-      
+
       $scope.currentNavItem = $route.current.$$route.data.currentNavItem;
       var baseUrl = '/lessonplans';
       QueryUtils.createQueryForm($scope, baseUrl, {order: 'sg.code'});
@@ -157,7 +157,7 @@
           c.clear();
         });
       };
-      
+
       $scope.newLessonplan = function () {
         var formState = $scope.formState;
         var studyYear = $scope.criteria.studyYear;
@@ -335,7 +335,7 @@
       QueryUtils.createQueryForm($scope, baseUrl, {});
     }
   ).controller('LessonplanController', ['$rootScope', '$route', '$scope', '$timeout', '$window', 'USER_ROLES', 'Classifier', 'LessonPlanTableService', 'QueryUtils', 'dialogService', 'message', 'stateStorageService',
-    
+
   function ($rootScope, $route, $scope, $timeout, $window , USER_ROLES, Classifier, LessonPlanTableService, QueryUtils, dialogService, message, stateStorageService) {
       $scope.auth = $route.current.locals.auth;
 
@@ -402,7 +402,7 @@
         $scope.formState.weekNrs.forEach(function (weekNr) {
           weekNr.show = selectedStudyPeriods.indexOf(weekNr.spId) !== -1;
         });
-        
+
         $scope.atLeastOneShownPeriod = atLeastOneShownPeriod();
         stateStorageService.changeState(schoolId, stateKey, {
           showWeeks: $scope.formState.showWeeks,
@@ -469,7 +469,7 @@
         grandTotals[capacityType][index] = sum;
         updateTotals($scope, grandTotals, capacityType, index);
       }
-      
+
       var copyOfRecord;
       QueryUtils.loadingWheel($scope, true);
       QueryUtils.endpoint(baseUrl).get({
@@ -543,7 +543,7 @@
         if (!selectedStudyPeriods) {
           selectedStudyPeriods = $scope.formState.studyPeriods.map(function (sp) { return sp.id; });
         }
-        
+
         $scope.formState.studyPeriods.forEach(function (sp) {
           sp._selected = selectedStudyPeriods.indexOf(sp.id) !== -1;
         });
@@ -739,7 +739,7 @@
         });
         journal.spHours[capacityType][sp.arrayIndex] = rowSum(hours.slice(sp.weekIndex[0], sp.weekIndex[1]));
       };
-      
+
       $scope.update = function () {
         var record = new LessonPlanEndpoint($scope.record);
         record.$update().then(function(result) {
@@ -797,12 +797,12 @@
           };
 
           dialogScope.getPlannedLessonsTitle = function (teacherId) {
-            return LessonPlanTableService.getPlannedLessonsTitle(teacherId, dialogScope.formState.teachers, 
+            return LessonPlanTableService.getPlannedLessonsTitle(teacherId, dialogScope.formState.teachers,
               dialogScope.formState.capacityTypes);
           };
 
           dialogScope.getStudyLoadTitle = function (teacherId, weekIndex) {
-            return LessonPlanTableService.getStudyLoadTitle(teacherId, dialogScope.formState.teachers, 
+            return LessonPlanTableService.getStudyLoadTitle(teacherId, dialogScope.formState.teachers,
               dialogScope.formState.capacityTypes, weekIndex);
           };
 
@@ -850,8 +850,8 @@
       }
 
     }
-  ]).controller('LessonplanTeacherViewController', ['$route', '$scope', 'LessonPlanTableService', 'QueryUtils',
-    function ($route, $scope, LessonPlanTableService, QueryUtils) {
+  ]).controller('LessonplanTeacherViewController', ['$route', '$scope', 'LessonPlanTableService', 'QueryUtils', 'DataUtils',
+    function ($route, $scope, LessonPlanTableService, QueryUtils, DataUtils) {
       $scope.auth = $route.current.locals.auth;
       var id = $route.current.params.id;
       var studyYearId = $route.current.params.studyYear;
@@ -895,12 +895,14 @@
         }
       };
 
+      $scope.toEap = DataUtils.hoursToCredits;
+
       QueryUtils.endpoint(baseUrl + '/:id/:studyYear').search({
         id: id,
         studyYear: studyYearId
       }).$promise.then(function (result) {
         $scope.formState.capacityTypes = result.lessonPlanCapacities;
-        
+
         $scope.formState.studyPeriods = result.studyPeriods;
         var spLocationPointer = 0;
         $scope.formState.studyPeriods.forEach(function (sp, spIndex) {
@@ -927,7 +929,7 @@
             _: createWeekTotalsRow($scope)
           }
         };
-        
+
         // initialize totals
         result.journals.forEach(function (journal) {
           journal.spHours = {};

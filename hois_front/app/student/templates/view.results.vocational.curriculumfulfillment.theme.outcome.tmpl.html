@@ -1,4 +1,4 @@
-<td md-cell style="padding-left: 50px;">{{$index + 1}}. {{currentLanguage()==='en' ? outcome.outcomeEn : outcome.outcomeEt}}</td>
+<td md-cell style="padding-left: 50px;">{{'student.result.outcome' | translate}}{{outcome.orderNr + 1}} {{currentLanguage()==='en' ? outcome.outcomeEn : outcome.outcomeEt}}</td>
 <td md-cell></td>
 <td md-cell>
   <hois-vocational-result value="moduleResultById[module.curriculumModule.id].outcomeResultById[outcome.id].grade"
@@ -6,4 +6,5 @@
 </td>
 <td md-cell>{{moduleResultById[module.curriculumModule.id].outcomeResultById[outcome.id].date | hoisDate}}</td>
 <td md-cell>{{displayTeachers(moduleResultById[module.curriculumModule.id].outcomeResultById[outcome.id].teachers)}}</td>
+<td md-cell></td>
 <td md-cell></td>

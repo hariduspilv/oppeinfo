@@ -120,6 +120,11 @@ public class Application {
     public JuhanLogRequestFilterRegistration juhanLogRequestFilterRegistration() {
         return new JuhanLogRequestFilterRegistration();
     }
+    
+    @Bean
+    public AdLogRequestFilterRegistration adLogRequestFilterRegistration() {
+        return new AdLogRequestFilterRegistration();
+    }
 
     @Bean
     public Jackson2ObjectMapperBuilderCustomizer configureJackson2ObjectMapperBuilder() {
@@ -193,7 +198,7 @@ public class Application {
     public SAMLMessageHandler samlMessageHandler() {
         return new SAMLMessageHandler();
     }
-
+    
     static class WebMvcConfig extends WebMvcConfigurerAdapter {
         @Autowired
         private ConversionService conversionService;
@@ -234,6 +239,7 @@ public class Application {
                 defaultContentType(MediaType.APPLICATION_JSON).
                 mediaType("xml", MediaType.APPLICATION_XML);
         }
+
     }
 
     static class CustomRequestMappingHandler extends WebMvcRegistrationsAdapter {
@@ -253,6 +259,20 @@ public class Application {
             return new VersionedInvocableHandlerMethod(handlerMethod);
         }
     }
+    
+    static class AdLogRequestFilterRegistration {
+    	
+    	@Autowired
+    	private AdLogRequestFilter filter;
+    	
+    	@Bean
+        public FilterRegistrationBean apiLogFilter() {
+            FilterRegistrationBean registrationBean = new FilterRegistrationBean();
+            registrationBean.setFilter(filter);
+            registrationBean.addUrlPatterns("/api/student/*");
+            return registrationBean;
+        }
+    }
 
     static class JuhanLogRequestFilterRegistration {
         // injecting EntityManager and persisting log throws "No EntityManager with actual transaction available"
@@ -260,7 +280,7 @@ public class Application {
         private JuhanService juhanService;
 
         @Bean
-        public FilterRegistrationBean logFilter() {
+        public FilterRegistrationBean juhanLogFilter() {
             FilterRegistrationBean registrationBean = new FilterRegistrationBean();
             registrationBean.setFilter(new JuhanLogRequestFilter(juhanService));
             registrationBean.addUrlPatterns("/juhan/*");

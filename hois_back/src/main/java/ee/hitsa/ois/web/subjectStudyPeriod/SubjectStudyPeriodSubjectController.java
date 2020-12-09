@@ -54,6 +54,7 @@ public class SubjectStudyPeriodSubjectController {
         UserUtil.assertHasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_KOORM);
         subjectStudyPeriodSubjectService.setSubjectStudyPeriodsToSubjectsContainer(user.getSchoolId(), container);
         subjectStudyPeriodCapacitiesService.setCapacityTypes(user.getSchoolId(), container);
+        subjectStudyPeriodSubjectService.setSubjectStudyPeriodsPlanToSubjectContainer(container);
         return container;
     }
 

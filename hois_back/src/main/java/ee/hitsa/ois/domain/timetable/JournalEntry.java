@@ -49,6 +49,10 @@ public class JournalEntry extends BaseEntityWithId {
     @JoinColumn(name = "journal_entry_id", nullable = false, updatable = true)
     private Set<JournalEntryStudent> journalEntryStudents = new HashSet<>();
 
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, orphanRemoval = true)
+    @JoinColumn(name = "journal_entry_id", nullable = false, updatable = true)
+    private Set<JournalEntryTeacher> journalEntryTeachers = new HashSet<>();
+
     public Journal getJournal() {
         return journal;
     }
@@ -133,5 +137,10 @@ public class JournalEntry extends BaseEntityWithId {
     public void setJournalEntryStudents(Set<JournalEntryStudent> journalEntryStudents) {
         this.journalEntryStudents = journalEntryStudents;
     }
-
+    public Set<JournalEntryTeacher> getJournalEntryTeachers() {
+        return journalEntryTeachers;
+    }
+    public void setJournalEntryTeachers(Set<JournalEntryTeacher> journalEntryTeachers) {
+        this.journalEntryTeachers = journalEntryTeachers;
+    }
 }

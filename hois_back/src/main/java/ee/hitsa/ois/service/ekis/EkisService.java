@@ -65,7 +65,9 @@ import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.repository.PersonRepository;
+import ee.hitsa.ois.service.ContractService;
 import ee.hitsa.ois.service.StudentAbsenceService;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.DirectiveUtil;
 import ee.hitsa.ois.util.EntityUtil;
@@ -75,8 +77,10 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.ContractCancelForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hois.soap.LogResult;
+import ee.hois.soap.ekis.client.CancelPracticeContractRequest;
 import ee.hois.soap.ekis.client.DeleteDirectiveRequest;
 import ee.hois.soap.ekis.client.EkisClient;
 import ee.hois.soap.ekis.client.EkisRequestContext;
@@ -108,6 +112,7 @@ public class EkisService {
     private static final int MISSING_WD_ID = 0;
     // XXX we send 0 as missing int value
     private static final int MISSING_INT = 0;
+    private static final String ABSENCE_REJECT_CONTRACT_CANCELED = "Leping tühistatud";
 
     @Autowired
     private EkisClient ekis;
@@ -408,8 +413,43 @@ public class EkisService {
             if (Boolean.TRUE.equals(contract.getIsPracticeAbsence()) || Boolean.TRUE.equals(contract.getIsPracticeHidden())) {
                 studentAbsenceService.createContractAbsence(contract);
             }
+            contract.setEkisDate(LocalDateTime.now());
             return save(contract);
         }, contract.getStudent().getSchool(), contract, l -> l.setContract(contract));
+    }
+    
+    /**
+     * Send cancel practice contract to EKIS
+     * @param contractId
+     */
+    public Contract cancelPracticeContract(HoisUserDetails user, Contract contract, ContractCancelForm contractForm) {
+        CancelPracticeContractRequest request = new CancelPracticeContractRequest();
+        request.setQguid(qguid());
+        request.setOisId(contract.getId().toString());
+        request.setWdId(contract.getWdId().intValue());
+        Classifier cancelReason = em.getReference(Classifier.class, contractForm.getCancelReason());
+        if (cancelReason != null) {
+            request.setReasonType(cancelReason.getNameEt());
+        }
+        request.setReasonText(contractForm.getCancelDesc());
+        Person canceller = em.getReference(Person.class, user.getPersonId());
+        request.setCancelUserFirstname(canceller.getFirstname());
+        request.setCancelUserLastname(canceller.getLastname());
+        
+        return withResponse(ekis.cancelPracticeContract(ctx(contract.getStudent().getSchool()), request), (result) -> {
+            EntityUtil.bindToEntity(contractForm, contract, "cancelReason");
+            if (contract.getStudentAbsence() != null) {
+                studentAbsenceService.reject(user, contract.getStudentAbsence(), ABSENCE_REJECT_CONTRACT_CANCELED);
+            }
+            contract.setWdId(Long.valueOf(result.getWdId()));
+            contract.setStatus(em.getReference(Classifier.class, ContractStatus.LEPING_STAATUS_T.name()));
+            contract.setCanceledBy(canceller.getFullname());
+            contract.setCancelReason(em.getReference(Classifier.class, contractForm.getCancelReason()));
+            EntityUtil.setUsername(user.getUsername(), em);
+            
+            ContractService.deleteRelatedPracticeJournals(contract, em);
+            return save(contract);
+        }, contract.getStudent().getSchool(), contract, l -> {});
     }
 
     protected <T extends BaseEntityWithId> T save(T entity) {
@@ -519,6 +559,7 @@ public class EkisService {
             content.setLoad(name(ds.getStudyLoad()));
             content.setForm(name(ds.getStudyForm()));
             content.setCurricula(curriculum(ds));
+            content.setCurriculaMerCode(curriculumMerCode(ds));
             StudentGroup studentGroup = ds.getStudentGroup();
             if (studentGroup != null) {
                 content.setGroup(studentGroup.getCode());
@@ -527,7 +568,6 @@ public class EkisService {
             CurriculumVersion curriculumVersion = ds.getCurriculumVersion();
             if (curriculumVersion != null) {
                 Curriculum curriculum = curriculumVersion.getCurriculum();
-                content.setCurriculaMerCode(curriculum.getMerCode());
                 content.setStudyLevel(name(curriculum.getOrigStudyLevel()));
                 content.setCurriculaStudyPeriod(intValue(curriculum.getStudyPeriod()));
             }
@@ -541,6 +581,7 @@ public class EkisService {
             content.setLoad(name(ds.getStudyLoad()));
             content.setForm(name(ds.getStudyForm()));
             content.setCurricula(curriculum(ds));
+            content.setCurriculaMerCode(curriculumMerCode(ds));
             content.setGroup(studentGroup(ds));
             content.setFinsource(name(ds.getFin()));
             content.setLang(name(ds.getLanguage()));
@@ -689,6 +730,14 @@ public class EkisService {
                 .map(StudentBase::getCurriculumVersion)
                 .map(CurriculumVersion::getCurriculum)
                 .map(Curriculum::getNameEt)
+                .orElse(null);
+    }
+
+    private static String curriculumMerCode(DirectiveStudent ds) {
+        return Optional.of(ds)
+                .map(DirectiveStudent::getCurriculumVersion)
+                .map(CurriculumVersion::getCurriculum)
+                .map(Curriculum::getMerCode)
                 .orElse(null);
     }
 

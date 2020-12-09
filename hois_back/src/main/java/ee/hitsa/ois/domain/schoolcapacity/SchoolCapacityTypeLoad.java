@@ -7,6 +7,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyYear;
 
 @Entity
@@ -20,6 +21,8 @@ public class SchoolCapacityTypeLoad extends BaseEntityWithId {
     private StudyYear studyYear;
     @Column(nullable = false)
     private Integer loadPercentage;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private Classifier coefficient;
     
     public SchoolCapacityType getSchoolCapacityType() {
         return schoolCapacityType;
@@ -41,5 +44,12 @@ public class SchoolCapacityTypeLoad extends BaseEntityWithId {
     public void setLoadPercentage(Integer loadPercentage) {
         this.loadPercentage = loadPercentage;
     }
-    
+
+    public Classifier getCoefficient() {
+        return coefficient;
+    }
+
+    public void setCoefficient(Classifier coefficient) {
+        this.coefficient = coefficient;
+    }
 }

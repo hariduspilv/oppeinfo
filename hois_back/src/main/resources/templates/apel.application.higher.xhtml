@@ -75,7 +75,6 @@
               <td class="label">{{ "report.apel.application.formalReplacedSubjectsOrModules.code" | translate }}</td>
               <td class="label">{{ "report.apel.application.formalReplacedSubjectsOrModules.name" | translate }}</td>
               <td class="label">{{ "report.apel.application.formalReplacedSubjectsOrModules.creditsEAP" | translate }}</td>
-              <td class="label">{{ "report.apel.application.formalReplacedSubjectsOrModules.module" | translate }}</td>
           </tr>
         {% endif %}
 
@@ -83,7 +82,6 @@
             <td>{{ replacedSubjectOrModule.code }}</td>
             <td><p style="word-wrap: break-word;">{{ replacedSubjectOrModule.name }}</p></td>
             <td>{{ replacedSubjectOrModule.credits }}</td>
-            <td>{{ replacedSubjectOrModule.module }}</td>
           </tr>
 
         {% if loop.index == loop.length - 1 %}
@@ -96,25 +94,21 @@
         {% if loop.index == 0 %}
           <table class="reporttable">
             <tr>
-                <td class="reporttableheader" colspan="11">{{ "report.apel.application.formalSubjectsOrModules.subjectsTitle" | translate }}</td>
+                <td class="reporttableheader" colspan="{{content.isNew ? 10 : 11}}">{{ "report.apel.application.formalSubjectsOrModules.subjectsTitle" | translate }}</td>
             </tr>
             <tr>
               <td class="label">{{ "report.apel.application.formalSubjectsOrModules.school" | translate }}</td>
               <td class="label">{{ "report.apel.application.formalSubjectsOrModules.code" | translate }}</td>
               <td class="label">{{ "report.apel.application.formalSubjectsOrModules.name" | translate }}</td>
-              <td class="label">{{ "report.apel.application.formalSubjectsOrModules.compulsory" | translate }}</td>
               <td class="label">{{ "report.apel.application.formalSubjectsOrModules.creditsEAP" | translate }}</td>
-              <td class="label">{{ "report.apel.application.formalSubjectsOrModules.module" | translate }}</td>
+              {% if content.isNew == false %}
+                <td class="label">{{ "report.apel.application.formalSubjectsOrModules.module" | translate }}</td>
+                <td class="label">{{ "report.apel.application.formalSubjectsOrModules.compulsory" | translate }}</td>
+              {% endif %}
               <td class="label">{{ "report.apel.application.formalSubjectsOrModules.assessment" | translate }}</td>
               <td class="label">{{ "report.apel.application.formalSubjectsOrModules.grade" | translate }}</td>
               <td class="label">{{ "report.apel.application.formalSubjectsOrModules.gradeDate" | translate }}</td>
-              <td class="label">
-                {% if content.isHigherSchool %}
-                  {{ "report.apel.application.formalSubjectsOrModules.teachersHigher" | translate }}
-                {% else %}
-                  {{ "report.apel.application.formalSubjectsOrModules.teachersVocational" | translate }}
-                {% endif %}
-              </td>
+              <td class="label">{{ "report.apel.application.formalSubjectsOrModules.teachersHigher" | translate }}</td>
               <td class="label">{{ "report.apel.application.formalSubjectsOrModules.transfer" | translate }}</td>
             </tr>
         {% endif %}
@@ -123,15 +117,19 @@
             <td>{{ formalSubjectOrModule.school }}</td>
             <td>{{ formalSubjectOrModule.code }}</td>
             <td><p style="word-wrap: break-word;">{{ formalSubjectOrModule.name }}</p></td>
-            <td>
+            <td>{{ formalSubjectOrModule.credits }}</td>
+            {% if content.isNew == false %}
+              <td>
+                <p style="word-wrap: break-word;">{{ formalSubjectOrModule.module }}</p>
+              </td>
+              <td>
                 {% if formalSubjectOrModule.isCompulsory %}
                   {{ "yes" | translate }}
                 {% else %}
                   {{ "no" | translate }}
                 {% endif %}
-            </td>
-            <td>{{ formalSubjectOrModule.credits }}</td>
-            <td><p style="word-wrap: break-word;">{{ formalSubjectOrModule.module }}</p></td>
+              </td>
+            {% endif %}
             <td>{{ formalSubjectOrModule.assessment }}</td>
             <td>{{ formalSubjectOrModule.grade }}</td>
             <td>{{ formalSubjectOrModule.gradeDate | hoisDate }}</td>

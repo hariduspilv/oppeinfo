@@ -2,6 +2,7 @@ package ee.hitsa.ois.service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -9,6 +10,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.web.dto.schoolcapacity.SchoolCapacityTypeLoadDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +39,8 @@ public class SchoolCapacityTypeService {
     @Autowired
     private ClassifierService classifierService;
 
-    public List<SchoolCapacityTypeDto> get(HoisUserDetails user, Boolean isHigher) {
+    public List<SchoolCapacityTypeDto> get(HoisUserDetails user, Boolean isHigher,
+                                           Long previousYear, Long currentYear, Long nextYear) {
         List<Classifier> capacityClassifiers = classifierService.findAllByMainClassCode(MainClassCode.MAHT).stream()
                 .sorted(Comparator.comparing(EntityUtil::getCode, String.CASE_INSENSITIVE_ORDER))
                 .collect(Collectors.toList());
@@ -58,11 +61,32 @@ public class SchoolCapacityTypeService {
                 dto.setIsTimetable(capacityType.getIsTimetable());
                 dto.setIsContact(capacityType.getIsContact());
                 dto.setLoads(StreamUtil.toMappedList(load -> {
-                    SchoolCapacityTypeLoadForm loadDto = new SchoolCapacityTypeLoadForm();
+                    SchoolCapacityTypeLoadDto loadDto = new SchoolCapacityTypeLoadDto();
                     loadDto.setStudyYearId(EntityUtil.getId(load.getStudyYear()));
                     loadDto.setLoadPercentage(load.getLoadPercentage());
+                    loadDto.setCoefficient(EntityUtil.getCode(load.getCoefficient()));
+                    loadDto.setStartDate(load.getStudyYear().getStartDate());
                     return loadDto;
                 }, capacityType.getTypeLoads()));
+                dto.setMappedLoads(StreamUtil.nullSafeList(capacityType.getTypeLoads())
+                        .stream()
+                        .collect(Collectors.groupingBy(load -> EntityUtil.getCode(load.getCoefficient()),
+                            Collectors.mapping(load -> {
+                                SchoolCapacityTypeLoadDto loadDto = new SchoolCapacityTypeLoadDto();
+                                loadDto.setStudyYearId(EntityUtil.getId(load.getStudyYear()));
+                                loadDto.setLoadPercentage(load.getLoadPercentage());
+                                loadDto.setCoefficient(EntityUtil.getCode(load.getCoefficient()));
+                                if (previousYear != null && previousYear.equals(loadDto.getStudyYearId())) {
+                                    loadDto.setType(SchoolCapacityTypeLoadDto.Type.PREVIOUS);
+                                } else if (currentYear != null && currentYear.equals(loadDto.getStudyYearId())) {
+                                    loadDto.setType(SchoolCapacityTypeLoadDto.Type.CURRENT);
+                                } else if (nextYear != null && nextYear.equals(loadDto.getStudyYearId())) {
+                                    loadDto.setType(SchoolCapacityTypeLoadDto.Type.NEXT);
+                                }
+                                loadDto.setStartDate(load.getStudyYear().getStartDate());
+                                return loadDto;
+                            }, Collectors.toList())))
+                );
             }
             return dto;
         }, capacityClassifiers);
@@ -89,16 +113,21 @@ public class SchoolCapacityTypeService {
 
     public void saveLoads(HoisUserDetails user, SchoolCapacityTypeLoadForms form) {
         SchoolCapacityType capacityType = capacityType(user, form.getId());
-        Map<Long, SchoolCapacityTypeLoad> loadByStudyYear = StreamUtil.toMap(load -> EntityUtil.getId(load.getStudyYear()), 
-                capacityType.getTypeLoads());
+        Map<Long, Map<String, SchoolCapacityTypeLoad>> mappedLoads = StreamUtil.nullSafeList(capacityType.getTypeLoads()).stream()
+                .collect(Collectors.groupingBy(load -> EntityUtil.getId(load.getStudyYear()),
+                        Collectors.toMap(load -> EntityUtil.getCode(load.getCoefficient()), load -> load)));
         for (SchoolCapacityTypeLoadForm loadForm : form.getLoads()) {
-            SchoolCapacityTypeLoad load = loadByStudyYear.get(loadForm.getStudyYearId());
+            SchoolCapacityTypeLoad load = null;
+            if (mappedLoads.containsKey(loadForm.getStudyYearId()) && mappedLoads.get(loadForm.getStudyYearId()).containsKey(loadForm.getCoefficient())) {
+                load = mappedLoads.get(loadForm.getStudyYearId()).get(loadForm.getCoefficient());
+            }
             Integer percentage = loadForm.getLoadPercentage();
             if (percentage != null) {
                 if (load == null) {
                     load = new SchoolCapacityTypeLoad();
                     load.setSchoolCapacityType(capacityType);
                     load.setStudyYear(studyYear(user, loadForm.getStudyYearId()));
+                    load.setCoefficient(em.getReference(Classifier.class, loadForm.getCoefficient()));
                 }
                 load.setLoadPercentage(percentage);
                 EntityUtil.save(load, em);

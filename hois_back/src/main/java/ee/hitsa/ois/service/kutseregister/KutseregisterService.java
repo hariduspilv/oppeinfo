@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.enums.StudyLanguage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -229,6 +230,7 @@ public class KutseregisterService {
                         studentCertificate.setIssuer(certificate.getValjastaja());
                         studentCertificate.setIssueDate(certificate.getValjaantud());
                         studentCertificate.setLanguage(certificate.getKeel());
+                        studentCertificate.setLanguageCode(findLanguage(certificate.getKeel()));
                         em.persist(studentCertificate);
                         existingCertificates.put(certificateNr, studentCertificate);
                     }
@@ -370,6 +372,23 @@ public class KutseregisterService {
         }).findAny().orElse(null);
 
         return match != null ? em.getReference(Classifier.class, match.getCode()) : null;
+    }
+
+    private Classifier findLanguage(String languageName) {
+        // currently there is no other info about language choices
+        StudyLanguage studyLanguage = null;
+        switch (languageName) {
+            case "eesti keel":
+                studyLanguage = StudyLanguage.OPPEKEEL_E;
+                break;
+            case "inglise keel":
+                studyLanguage = StudyLanguage.OPPEKEEL_I;
+                break;
+            case "vene keel":
+                studyLanguage = StudyLanguage.OPPEKEEL_V;
+                break;
+        }
+        return studyLanguage != null ? em.getReference(Classifier.class, studyLanguage.name()) : null;
     }
 
     static class StudentDto {

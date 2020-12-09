@@ -10,6 +10,7 @@ public class StudentResultCardDto extends DiplomaSupplementResultReport {
 
     private Long studentId;
     private String studentStatus;
+    private Long regNr;
     private String idcode;
     private LocalDate birthdate;
     private String firstname;
@@ -29,10 +30,6 @@ public class StudentResultCardDto extends DiplomaSupplementResultReport {
     private String diplomaNrs;
     private String supplementNrs;
 
-    public String getIdcode() {
-        return idcode;
-    }
-
     public Long getStudentId() {
         return studentId;
     }
@@ -47,6 +44,18 @@ public class StudentResultCardDto extends DiplomaSupplementResultReport {
 
     public void setStudentStatus(String studentStatus) {
         this.studentStatus = studentStatus;
+    }
+
+    public Long getRegNr() {
+        return regNr;
+    }
+
+    public void setRegNr(Long regNr) {
+        this.regNr = regNr;
+    }
+
+    public String getIdcode() {
+        return idcode;
     }
 
     public void setIdcode(String idcode) {

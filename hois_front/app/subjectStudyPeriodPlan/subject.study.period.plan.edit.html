@@ -2,13 +2,11 @@
     <form name="subjectStudyPeriodPlanEditForm">
         <div layout="column">
             <div layout="row" layout-sm="column" layout-xs="column" class="form-readonly">
-                <md-input-container flex="45" flex-sm="100" flex-xs="100">
-                    <label>{{'subjectStudyPeriodPlan.studyPeriod' | translate}}</label>
-                    <hois-value value="currentLanguageNameField(studyPeriod)"></hois-value>
-                </md-input-container>
-                <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                <md-input-container flex="50" flex-sm="100" flex-xs="100">
                     <label>{{'subjectStudyPeriodPlan.subject' | translate}}</label>
-                    <hois-value value="currentLanguageNameField(subject)"></hois-value>
+                    <hois-value value="'subjectStudyPeriodPlan.subjectTemplate'
+                     | translate: {code: subject.code, name: currentLanguageNameField(subject),
+                       credits: subject.credits, hours: toHours(subject.credits)}"></hois-value>
                 </md-input-container>
             </div>
             <h2>{{'subjectStudyPeriodPlan.volumes' | translate}}</h2>
@@ -18,6 +16,7 @@
                     <tr md-row>
                         <th md-column></th>
                         <th md-column>{{'subjectStudyPeriodPlan.volume' | translate}}</th>
+                        <th md-column>{{'subjectStudyPeriodPlan.eap' | translate}}</th>
                         <th md-column>{{'subjectStudyPeriodPlan.isContact' | translate}}</th>
                     </tr>
                 </thead>
@@ -31,18 +30,19 @@
                                 <input ng-model="capacity.hours" type="number" min="0" max="1000" pattern="^\d+$" ng-readonly="readOnly" aria-label="{{'subjectStudyPeriodPlan.volume' | translate}}">
                             </md-input-container>
                         </td>
+                        <td md-cell>{{toEap(capacity.hours) | number: 2}}</td>
                          <td md-cell>
                             <md-checkbox ng-model="capacity.isContact" aria-label="{{'subjectStudyPeriodPlan.isContact' | translate}}" ng-disabled="readOnly"></md-checkbox>
                         </td>
                     </tr>
                 </tbody>
             </table>
-            <h2>{{'subjectStudyPeriodPlan.volumeTotal' | translate}}: {{getTotalCapacity()}}</h2>
+            <h2>{{'subjectStudyPeriodPlan.volumeTotal' | translate}}: {{getTotalCapacity()}}; {{'subjectStudyPeriodPlan.eapTotal' | translate}}: {{toEap(getTotalCapacity()) | number: 2}}</h2>
             <br>
 
             <h2>{{'subjectStudyPeriodPlan.validInCurriculums' | translate}}</h2>
             <div layout="row">
-                <md-checkbox ng-repeat="curriculum in curriculums" ng-model="curriculum.selected" 
+                <md-checkbox ng-repeat="curriculum in curriculums" ng-model="curriculum.selected"
                 aria-label="{{'subjectStudyPeriodPlan.validInCurriculums' | translate}}" ng-disabled="readOnly">
                     {{currentLanguageNameField(curriculum)}}
                 </md-checkbox>
@@ -50,7 +50,7 @@
 
             <h2>{{'subjectStudyPeriodPlan.validInStudyForms' | translate}}</h2>
             <div layout="row">
-                <md-checkbox ng-repeat="studyForm in studyForms" ng-model="studyForm.selected" 
+                <md-checkbox ng-repeat="studyForm in studyForms" ng-model="studyForm.selected"
                 aria-label="{{'subjectStudyPeriodPlan.validInCurriculums' | translate}}" ng-disabled="readOnly">
                     {{currentLanguageNameField(studyForm)}}
                 </md-checkbox>

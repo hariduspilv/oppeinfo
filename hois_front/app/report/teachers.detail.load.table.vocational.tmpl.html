@@ -41,20 +41,42 @@
         <th ng-repeat="column in periodCapacitiesRow track by $index" ng-class="{dividerBorder: column.divider}">
           <span ng-if="column.value">{{column.value.toUpperCase()}}</span>
           <span ng-if="column.name">{{'report.teachersDetailLoad.' + column.name | translate}}</span>
-          <span ng-if="column.timetableOccurredLessons">{{'report.teachersDetailLoad.timetableShort' | translate}}</span>
+          <span ng-if="column.timetableOccurredLessons || column.timetableOccurredContactLessons || column.timetableOccurredKoefLessons">
+            {{'report.teachersDetailLoad.timetableShort' | translate}}</span>
         </th>
         <!-- TOTALS -->
         <th ng-if="!reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons">{{'report.teachersDetailLoad.study' | translate}}</th>
-        <th ng-if="!reportData.criteria.byCapacities" ng-class="{dividerBorder: !reportData.criteria.showTimetableLoad}">
+        <th ng-if="!reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons">{{'report.teachersDetailLoad.contactLesson' | translate}}</th>
+        <th ng-if="!reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons">{{'report.teachersDetailLoad.koefLesson' | translate}}</th>
+
+        <th ng-if="!reportData.criteria.byCapacities">
           {{'report.teachersDetailLoad.study' | translate}}</th>
+        <th ng-if="!reportData.criteria.byCapacities">
+          {{'report.teachersDetailLoad.contactLesson' | translate}}</th>
+        <th ng-if="!reportData.criteria.byCapacities" ng-class="{dividerBorder: !reportData.criteria.showTimetableLoad}">
+          {{'report.teachersDetailLoad.koefLesson' | translate}}</th>
+
         <th ng-if="!reportData.criteria.byCapacities && reportData.criteria.showTimetableLoad">
           {{'report.teachersDetailLoad.study' | translate}} {{'report.teachersDetailLoad.timetableShort' | translate}}
+        </th>
+        <th ng-if="!reportData.criteria.byCapacities && reportData.criteria.showTimetableLoad">
+          {{'report.teachersDetailLoad.contactLesson' | translate}} {{'report.teachersDetailLoad.timetableShort' | translate}}
+        </th>
+        <th ng-if="!reportData.criteria.byCapacities && reportData.criteria.showTimetableLoad">
+          {{'report.teachersDetailLoad.koefLesson' | translate}} {{'report.teachersDetailLoad.timetableShort' | translate}}
         </th>
         
         <th ng-if="reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons" 
           ng-repeat="c in reportData.teacherCapacities">{{c.value.toUpperCase()}}</th>
+        <th ng-if="reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons">
+          {{'report.teachersDetailLoad.contactLesson' | translate}}</th>
+        <th ng-if="reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons">
+          {{'report.teachersDetailLoad.koefLesson' | translate}}</th>
+
         <th ng-if="reportData.criteria.byCapacities" ng-repeat="c in reportData.teacherCapacities">{{c.value.toUpperCase()}}</th>
         <th ng-if="reportData.criteria.byCapacities && entriesWithoutCapacity">?</th>
+        <th ng-if="reportData.criteria.byCapacities">{{'report.teachersDetailLoad.contactLesson' | translate}}</th>
+        <th ng-if="reportData.criteria.byCapacities">{{'report.teachersDetailLoad.koefLesson' | translate}}</th>
         <th ng-if="reportData.criteria.byCapacities" ng-class="{dividerBorder: !reportData.criteria.showTimetableLoad}">
           {{('report.teachersDetailLoad.total' | translate).toUpperCase()}}</th>
 
@@ -62,6 +84,10 @@
           ng-repeat="c in reportData.teacherCapacities">{{c.value.toUpperCase()}} {{'report.teachersDetailLoad.timetableShort' | translate}}</th>
         <th ng-if="reportData.criteria.byCapacities && reportData.criteria.showTimetableLoad && entriesWithoutCapacity">
           ? {{'report.teachersDetailLoad.timetableShort' | translate}}</th>
+        <th ng-if="reportData.criteria.byCapacities && reportData.criteria.showTimetableLoad">
+          {{'report.teachersDetailLoad.contactLesson' | translate}} {{'report.teachersDetailLoad.timetableShort' | translate}}</th>
+        <th ng-if="reportData.criteria.byCapacities && reportData.criteria.showTimetableLoad">
+          {{'report.teachersDetailLoad.koefLesson' | translate}} {{'report.teachersDetailLoad.timetableShort' | translate}}</th>
         <th ng-if="reportData.criteria.showTimetableLoad">{{'report.teachersDetailLoad.substitute' | translate}}</th>
 
         <th ng-if="reportData.criteria.showSingleEvents">
@@ -82,36 +108,67 @@
         <!-- PERIODS -->
         <td ng-repeat="column in periodCapacitiesRow track by $index" ng-class="{dividerBorder: column.divider}">
           <span ng-if="reportData.criteria.byCapacities">
-            <span ng-if="column.plannedLessons">{{row.capacityPlannedHours[column.index][column.code] || ''}}</span>
-            <span ng-if="column.journalOccurredLessons">{{row.capacityJournalOccurredLessons[column.index][column.code] || ''}}</span>
-            <span ng-if="column.timetableOccurredLessons">{{row.capacityTimetableOccurredLessons[column.index][column.code] || ''}}</span>
+            <span ng-if="column.plannedLessons">{{row.capacityPlannedHours[column.index].capacity[column.code] || ''}}</span>
+            <span ng-if="column.timetableOccurredLessons">{{row.capacityTimetableOccurredLessons[column.index].capacity[column.code] || ''}}</span>
+            <span ng-if="column.timetableOccurredContactLessons">{{row.capacityTimetableOccurredLessons[column.index].contactLesson || ''}}</span>
+            <span ng-if="column.timetableOccurredKoefLessons">{{row.capacityTimetableOccurredLessons[column.index].koefLesson || ''}}</span>
+            <span ng-if="column.plannedContactLessons">{{row.capacityPlannedHours[column.index].contactLesson || ''}}</span>
+            <span ng-if="column.plannedKoefLessons">{{row.capacityPlannedHours[column.index].koefLesson || ''}}</span>
+            <span ng-if="column.journalOccurredLessons">{{row.capacityJournalOccurredLessons[column.index].capacity[column.code] || ''}}</span>
+            <span ng-if="column.journalOccurredContactLessons">{{row.capacityJournalOccurredLessons[column.index].contactLesson || ''}}</span>
+            <span ng-if="column.journalOccurredKoefLessons">{{row.capacityJournalOccurredLessons[column.index].koefLesson || ''}}</span>
           </span>
           <span ng-if="!reportData.criteria.byCapacities">
-            <span ng-if="column.plannedLessons">{{row.plannedHours[column.index] || ''}}</span>
-            <span ng-if="column.journalOccurredLessons">{{row.journalOccurredLessons[column.index] || ''}}</span>
-            <span ng-if="column.timetableOccurredLessons">{{row.timetableOccurredLessons[column.index] || ''}}</span>
+            <span ng-if="column.plannedLessons">{{row.plannedHours[column.index].lesson || ''}}</span>
+            <span ng-if="column.plannedContactLessons">{{row.plannedHours[column.index].contactLesson || ''}}</span>
+            <span ng-if="column.plannedKoefLessons">{{row.plannedHours[column.index].koefLesson || ''}}</span>
+            <span ng-if="column.timetableOccurredLessons">{{row.timetableOccurredLessons[column.index].lesson || ''}}</span>
+            <span ng-if="column.timetableOccurredContactLessons">{{row.timetableOccurredLessons[column.index].contactLesson || ''}}</span>
+            <span ng-if="column.timetableOccurredKoefLessons">{{row.timetableOccurredLessons[column.index].koefLesson || ''}}</span>
+            <span ng-if="column.journalOccurredLessons">{{row.journalOccurredLessons[column.index].lesson || ''}}</span>
+            <span ng-if="column.journalOccurredContactLessons">{{row.journalOccurredLessons[column.index].contactLesson || ''}}</span>
+            <span ng-if="column.journalOccurredKoefLessons">{{row.journalOccurredLessons[column.index].koefLesson || ''}}</span>
           </span>
-          <span ng-if="column.substitutableEvents">{{row.substitutedLessons[column.index] || ''}}</span>
-          <span ng-if="column.singleEvent">{{row.singleEvents[column.index] || ''}}</span>
+          <span ng-if="column.substitutableEvents">{{row.substitutedLessons[column.index].lesson || ''}}</span>
+          <span ng-if="column.singleEvent">{{row.singleEvents[column.index].lesson || ''}}</span>
         </td>
         <!-- TOTALS -->
         <td ng-if="!reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons">{{row.totalPlannedHours || ''}}</td>
-        <td ng-if="!reportData.criteria.byCapacities" ng-class="{dividerBorder: !reportData.criteria.showTimetableLoad}">
+        <td ng-if="!reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons">{{row.totalPlannedContactHours || ''}}</td>
+        <td ng-if="!reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons">{{row.totalPlannedKoefHours || ''}}</td>
+
+        <td ng-if="!reportData.criteria.byCapacities">
           {{row.journalTotalOccurredLessons || ''}}</td>
-        <td ng-if="!reportData.criteria.byCapacities && reportData.criteria.showTimetableLoad">{{row.timetableTotalOccurredLessons || ''}}</td>
+        <td ng-if="!reportData.criteria.byCapacities">{{row.journalTotalOccurredContactLessons || ''}}</td>
+        <td ng-if="!reportData.criteria.byCapacities" ng-class="{dividerBorder: !reportData.criteria.showTimetableLoad}">
+          {{row.journalTotalOccurredKoefLessons || ''}}</td>
+
+        <td ng-if="!reportData.criteria.byCapacities && reportData.criteria.showTimetableLoad">
+          {{row.timetableTotalOccurredLessons || ''}}</td>
+        <td ng-if="!reportData.criteria.byCapacities && reportData.criteria.showTimetableLoad">
+          {{row.timetableTotalOccurredContactLessons || ''}}</td>
+        <td ng-if="!reportData.criteria.byCapacities && reportData.criteria.showTimetableLoad">
+          {{row.timetableTotalOccurredKoefLessons || ''}}</td>
 
         <td ng-if="reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons" ng-repeat="c in reportData.teacherCapacities">
           {{row.totalCapacityPlannedHours[c.code] || ''}}</td>
+        <td ng-if="reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons">{{row.totalPlannedContactHours || ''}}</td>
+        <td ng-if="reportData.criteria.byCapacities && reportData.criteria.showPlannedLessons">{{row.totalPlannedKoefHours || ''}}</td>
+
         <td ng-if="reportData.criteria.byCapacities" ng-repeat="c in reportData.teacherCapacities">
           {{row.journalTotalCapacityOccurredLessons[c.code] || ''}}</td>
         <td ng-if="reportData.criteria.byCapacities && entriesWithoutCapacity">{{row.journalTotalCapacityOccurredLessons['?'] || ''}}</td>
-        <td ng-if="reportData.criteria.byCapacities" ng-class="{dividerBorder: !reportData.criteria.showTimetableLoad}">
-          {{row.journalTotalOccurredLessons || ''}}</td>
+        <td ng-if="reportData.criteria.byCapacities">{{row.journalTotalOccurredContactLessons || ''}}</td>
+        <td ng-if="reportData.criteria.byCapacities">{{row.journalTotalOccurredKoefLessons || ''}}</td>
+        <td ng-if="reportData.criteria.byCapacities" ng-class="{dividerBorder: !reportData.criteria.showTimetableLoad}">{{row.journalTotalOccurredLessons || ''}}</td>
 
         <td ng-if="reportData.criteria.byCapacities && reportData.criteria.showTimetableLoad"
           ng-repeat="c in reportData.teacherCapacities">{{row.timetableTotalCapacityOccurredLessons[c.code] || ''}}</td>
         <td ng-if="reportData.criteria.byCapacities && reportData.criteria.showTimetableLoad && entriesWithoutCapacity">
           {{row.timetableTotalCapacityOccurredLessons['?'] || ''}}</td>
+        <td ng-if="reportData.criteria.byCapacities && reportData.criteria.showTimetableLoad">{{row.timetableTotalOccurredContactLessons || ''}}</td>
+        <td ng-if="reportData.criteria.byCapacities && reportData.criteria.showTimetableLoad">{{row.timetableTotalOccurredKoefLessons || ''}}</td>
+
         <td ng-if="reportData.criteria.showTimetableLoad">{{row.totalSubstitutedLessons || ''}}</td>
 
         <td ng-if="reportData.criteria.showSingleEvents">{{row.totalSingleEvents || ''}}</td>

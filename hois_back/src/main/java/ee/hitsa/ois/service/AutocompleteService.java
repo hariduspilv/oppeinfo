@@ -28,6 +28,7 @@ import javax.transaction.Transactional;
 
 import ee.hitsa.ois.domain.scholarship.ScholarshipTerm;
 import ee.hitsa.ois.enums.ScholarshipType;
+import ee.hitsa.ois.web.dto.PersonResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -230,8 +231,8 @@ public class AutocompleteService {
                 LocalTime.of(lookup.getEndTime().getHour(), lookup.getEndTime().getMinute())));
         if (lookup.getWeekAmount() != null) {
             eventRepeatStartAndEndTimes(lookup.getRepeatCode(), lookup.getWeekAmount(), starts, ends);
-        } else if (lookup.getTimetable() != null) {
-            eventRepeatStartAndEndTimes(lookup.getTimetable(), lookup.getRepeatCode(), starts, ends);
+        } else if (lookup.getRepeatUntil() != null) {
+            eventRepeatStartAndEndTimes(lookup.getRepeatCode(), lookup.getRepeatUntil(), starts, ends);
         }
         
         JpaNativeQueryBuilder occupiedQb = new JpaNativeQueryBuilder("from timetable_event te "
@@ -1087,17 +1088,19 @@ public class AutocompleteService {
                 + "join user_ u on u.id = uc.user_id where cv2.id = s.curriculum_version_id "
                 + "and u.id = :userId)", "userId", lookup.getUserId());
 
-        String select = "s.id, p.firstname, p.lastname, p.idcode"
+        String select = "s.id, p.firstname, p.lastname"
+                + (!Boolean.TRUE.equals(lookup.getHideIdcode()) ? ", p.idcode" : ", null" + " idcode")
                 + (Boolean.TRUE.equals(lookup.getShowStudentGroup()) ? ", sg.code" : ", null") + " sg_code"
                 + (Boolean.TRUE.equals(lookup.getShowGuestStudent()) ? ", s.type_code studentType, DS1.study_start as guestStart" : ", null studentType, null as guestStart");
         return qb.select(select, em).setMaxResults(MAX_ITEM_COUNT).getResultList();
     }
     
-    public List<AutocompleteResult> students(Long schoolId, StudentAutocompleteCommand lookup) {
+    public List<PersonResult> students(Long schoolId, StudentAutocompleteCommand lookup) {
         List<?> data = studentResults(schoolId, lookup);
         return StreamUtil.toMappedList(r -> {
-            String name = PersonUtil.fullnameAndIdcodeTypeSpecific(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 5));
-            return new AutocompleteResult(resultAsLong(r, 0), name, name);
+            String name = PersonUtil.fullnameAndIdcodeAndStudentGroupTypeSpecific(resultAsString(r, 1),
+                    resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 4), resultAsString(r, 5));
+            return new PersonResult(resultAsLong(r, 0), name, resultAsString(r, 1), resultAsString(r, 2));
         }, data);
     }
     
@@ -1163,7 +1166,6 @@ public class AutocompleteService {
         if (otherStudents) {
             from += " inner join student_higher_result shr on s.id = shr.subject_id";
         }
-        
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
         if (!Boolean.TRUE.equals(lookup.getIgnoreCurriculumVersionStatus())) {
@@ -1253,38 +1255,50 @@ public class AutocompleteService {
 
         qb.sort(Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et");
 
-        String query;
-        if (otherStudents) {
-            query = "distinct s.id, s.name_et, s.name_en, s.code, s.credits, s.assessment_code,"
-                    + " shr.grade_code, shr.grade_date, shr.teachers";
-        } else {
-            query = "distinct s.id, s.name_et, s.name_en, s.code, s.credits, s.assessment_code,"
-                    + " null as grade_code, null as grade_date, null as teachers";
+        String query = "distinct s.id, s.name_et, s.name_en, s.code, s.credits, s.assessment_code";
+        query += otherStudents ? ", shr.grade_code, shr.grade_date, shr.teachers"
+                : ", null as grade_code, null as grade_date, null as teachers";
+        if (Boolean.TRUE.equals(lookup.getWithModule())) {
+            query += ", cvh.name_et cvh_name_et, cvh.name_en cvh_name_en, cvhs.is_optional";
         }
+
         List<?> data = qb.select(query, em).getResultList();
 
         return StreamUtil.toMappedList(r -> {
+            String subjectNameEt = resultAsString(r, 1);
+            String subjectNameEn = resultAsString(r, 2);
             String code = resultAsString(r, 3);
             BigDecimal credits = resultAsDecimal(r, 4);
             String nameEt;
             String nameEn;
-            if (Boolean.TRUE.equals(lookup.getWithCode())) {
-                nameEt = SubjectUtil.subjectName(code, resultAsString(r, 1),
+            if (Boolean.TRUE.equals(lookup.getWithModule())) {
+                nameEt = SubjectUtil.subjectWithModule(code, subjectNameEt, credits, resultAsString(r, 9),
+                        resultAsBoolean(r, 11), Language.ET);
+                nameEn = SubjectUtil.subjectWithModule(code, subjectNameEn, credits, resultAsString(r, 10),
+                        resultAsBoolean(r, 11), Language.EN);
+            } else if (Boolean.TRUE.equals(lookup.getWithCode())) {
+                nameEt = SubjectUtil.subjectName(code, subjectNameEt,
                         Boolean.TRUE.equals(lookup.getWithCredits()) ? credits : null);
-                nameEn = SubjectUtil.subjectName(code, resultAsString(r, 2),
+                nameEn = SubjectUtil.subjectName(code, subjectNameEn,
                         Boolean.TRUE.equals(lookup.getWithCredits()) ? credits : null);
             } else {
-                nameEt = SubjectUtil.subjectNameWithoutCode(resultAsString(r, 1),
+                nameEt = SubjectUtil.subjectNameWithoutCode(subjectNameEt,
                         Boolean.TRUE.equals(lookup.getWithCredits()) ? credits : null);
-                nameEn = SubjectUtil.subjectNameWithoutCode(resultAsString(r, 2),
+                nameEn = SubjectUtil.subjectNameWithoutCode(subjectNameEn,
                         Boolean.TRUE.equals(lookup.getWithCredits()) ? credits : null);
             }
-            return new SubjectResult(resultAsLong(r, 0), nameEt, nameEn, code, credits, resultAsString(r, 5),
-                    resultAsString(r, 6), resultAsLocalDate(r, 7), resultAsString(r, 8));
+
+            SubjectResult result = new SubjectResult(resultAsLong(r, 0), nameEt, nameEn,
+                    subjectNameEt, subjectNameEn, code, credits);
+            result.setAssessment(resultAsString(r, 5));
+            result.setGradeCode(resultAsString(r, 6));
+            result.setGradeDate(resultAsLocalDate(r, 7));
+            result.setTeachers(resultAsString(r, 8));
+            return result;
         }, data);
     }
 
-    public List<OccupiedAutocompleteResult> teachers(Long schoolId, TeacherAutocompleteCommand lookup, boolean setMaxResults) {
+    public List<PersonResult> teachers(Long schoolId, TeacherAutocompleteCommand lookup, boolean setMaxResults) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from teacher t inner join person p on t.person_id = p.id").sort("p.lastname", "p.firstname");
 
@@ -1304,12 +1318,11 @@ public class AutocompleteService {
         List<?> data = qb.select("t.id, p.firstname, p.lastname", em)
                 .setMaxResults(setMaxResults ? MAX_ITEM_COUNT : Integer.MAX_VALUE).getResultList();
 
-        Map<Long, OccupiedAutocompleteResult> teachersResult = new LinkedHashMap<>();
+        Map<Long, PersonResult> teachersResult = new LinkedHashMap<>();
         if (!data.isEmpty()) {
-            teachersResult = data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
-                String name = PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2));
-                return new OccupiedAutocompleteResult(resultAsLong(r, 0), name, name);
-            }, (v1, v2) -> v1, LinkedHashMap::new));
+            teachersResult = data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0),
+                    r -> new PersonResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)),
+                    (v1, v2) -> v1, LinkedHashMap::new));
         }
 
         if (Boolean.TRUE.equals(lookup.getOccupied()) && !teachersResult.isEmpty()) {
@@ -1320,7 +1333,7 @@ public class AutocompleteService {
         return new ArrayList<>(teachersResult.values());
     }
     
-    private void setTeachersOccupationStatus(TeacherAutocompleteCommand lookup, Map<Long, OccupiedAutocompleteResult> teachersResult) {
+    private void setTeachersOccupationStatus(TeacherAutocompleteCommand lookup, Map<Long, PersonResult> teachersResult) {
         List<Long> teacherIds = teachersResult.values().stream().map(t -> t.getId()).collect(Collectors.toList());
         
         List<LocalDateTime> starts = new ArrayList<>();
@@ -1332,8 +1345,8 @@ public class AutocompleteService {
         
         if (lookup.getWeekAmount() != null) {
             eventRepeatStartAndEndTimes(lookup.getRepeatCode(), lookup.getWeekAmount(), starts, ends);
-        } else if (lookup.getTimetable() != null) {
-            eventRepeatStartAndEndTimes(lookup.getTimetable(), lookup.getRepeatCode(), starts, ends);
+        } else if (lookup.getRepeatUntil() != null) {
+            eventRepeatStartAndEndTimes(lookup.getRepeatCode(), lookup.getRepeatUntil(), starts, ends);
         }
         
         JpaNativeQueryBuilder occupiedQb = new JpaNativeQueryBuilder("from timetable_event te "
@@ -1368,16 +1381,14 @@ public class AutocompleteService {
         }
     }
     
-    public void eventRepeatStartAndEndTimes(Long timetableId, String repeatCode, List<LocalDateTime> starts, List<LocalDateTime> ends) {
+    public void eventRepeatStartAndEndTimes(String repeatCode, LocalDate repeatUntil, List<LocalDateTime> starts,
+            List<LocalDateTime> ends) {
         long daysToAdd = daysToAdd(repeatCode);
         if (daysToAdd == 0) {
             return;
         }
-        
-        Timetable timetable = em.getReference(Timetable.class, timetableId);
-        StudyPeriod sp = timetable.getStudyPeriod();
-        
-        LocalDateTime endTime = DateUtils.lastMomentOfDay(sp.getEndDate());
+
+        LocalDateTime endTime = DateUtils.lastMomentOfDay(repeatUntil);
         LocalDateTime start = starts.get(0).plusDays(daysToAdd);
         LocalDateTime end = ends.get(0).plusDays(daysToAdd);
         while (endTime.isAfter(start)) {

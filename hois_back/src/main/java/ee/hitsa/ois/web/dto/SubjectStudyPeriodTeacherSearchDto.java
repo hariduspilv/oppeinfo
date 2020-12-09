@@ -4,12 +4,14 @@ public class SubjectStudyPeriodTeacherSearchDto {
 
     private Long id;
     private String name;
-    private Long studyPeriod;
+    private AutocompleteResult studyPeriod;
     private Long timetable;
     /**
      * Planned number of hours in studyPeriod
      */
     private Long hours;
+    private Long higherHours;
+    private Long vocationalHours;
 
     public Long getId() {
         return id;
@@ -27,11 +29,11 @@ public class SubjectStudyPeriodTeacherSearchDto {
         this.name = name;
     }
 
-    public Long getStudyPeriod() {
+    public AutocompleteResult getStudyPeriod() {
         return studyPeriod;
     }
 
-    public void setStudyPeriod(Long studyPeriod) {
+    public void setStudyPeriod(AutocompleteResult studyPeriod) {
         this.studyPeriod = studyPeriod;
     }
 
@@ -49,5 +51,21 @@ public class SubjectStudyPeriodTeacherSearchDto {
 
     public void setHours(Long hours) {
         this.hours = hours;
+    }
+
+    public Long getHigherHours() {
+        return higherHours;
+    }
+
+    public void setHigherHours(Long higherHours) {
+        this.higherHours = higherHours;
+    }
+
+    public Long getVocationalHours() {
+        return vocationalHours;
+    }
+
+    public void setVocationalHours(Long vocationalHours) {
+        this.vocationalHours = vocationalHours;
     }
 }

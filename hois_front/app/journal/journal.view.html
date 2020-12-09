@@ -48,7 +48,7 @@
 
         <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{auth.higher ? ('journal.teachersHigher' | translate) : ('journal.teachersVocational' | translate)}}</label>
-          <hois-value value="journal.journalTeachers.join(', ')"></hois-value>
+          <hois-value value="journal.journalTeachers.map(currentLanguageNameField).join(', ')"></hois-value>
         </md-input-container>
       </div>
 

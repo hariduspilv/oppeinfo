@@ -492,7 +492,7 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
 
   $scope.loadStudyYearResults = function () {
     if (!angular.isObject($scope.vocationalResultsStudyYear)) {
-      loadVocationalResultsByTime().$promise.then(function (vocationalResults) {
+      loadVocationalResultsByTime("modules_et, module desc, kp desc, my_theme").$promise.then(function (vocationalResults) {
         var yearToModule = {};
         vocationalResults.forEach(function (it) {
           if (!angular.isObject(yearToModule[it.studyYear.code])) {
@@ -512,13 +512,13 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
 
 
   $scope.loadModuleThemeResults = function () {
-    if (!angular.isObject($scope.vocationalResultsByTime)) {
-      $scope.vocationalResultsPassing = loadVocationalResultsByTime();
+    if (!angular.isObject($scope.vocationalResultsPassing)) {
+      $scope.vocationalResultsPassing = loadVocationalResultsByTime("kp desc, my_theme");
     }
   };
 
-  function loadVocationalResultsByTime() {
-    return QueryUtils.endpoint('/students/' + $scope.studentId + '/vocationalResultsByTime/').query(function (vocationalResults) {
+  function loadVocationalResultsByTime(sort) {
+    return QueryUtils.endpoint('/students/' + $scope.studentId + '/vocationalResultsByTime?sort=' + sort).query(function (vocationalResults) {
       entryMapper.objectmapper(vocationalResults);
       gradeMapper.objectmapper(vocationalResults);
       return vocationalResults;
@@ -685,11 +685,25 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
             allResults.push(moduleResult);
           }
         });
+
+        var addedStudentHigherResultIds = [];
         response.subjectResults.forEach(function (result) {
           result.grades.forEach(function (grade) {
             gradeMapper.objectmapper(grade);
           });
-          allResults.push(result);
+
+          var subjectResult = angular.copy(result);
+          // apel formal learning is divided between multiple modules, show them only once
+          if (subjectResult.id === null || addedStudentHigherResultIds.indexOf(subjectResult.id) === -1) {
+            addedStudentHigherResultIds.push(subjectResult.id);
+
+            // remove module specific info from divided result
+            if (subjectResult.replacedSubjectHigherModuleId !== null) {
+              subjectResult.higherModule = null;
+              subjectResult.isOptional = null;
+            }
+            allResults.push(subjectResult);
+          }
 
           if (result.replacedSubjects.length > 0) {
             if (!angular.isObject(replacedSubjectsByModule[result.higherModule.id])) {
@@ -836,6 +850,7 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
     };
 
     function setChangeableModules(changeableModules) {
+      var canSave = false; // all "changeableModules" aren't actually changable anymore
       changeableModules.forEach(function (changeableModule) {
         gradeMapper.objectmapper(changeableModule);
         changeableModule.oldCurriculumVersionModuleId = changeableModule.curriculumVersionModuleId;
@@ -845,8 +860,12 @@ function ($filter, $q, $route, $scope, GRADING_SCHEMA_TYPE, Classifier, GradingS
             changeableModule.curriculumVersionModule = curriculumModule;
           }
         });
+        if (!canSave) {
+          canSave = changeableModule.canEdit;
+        }
       });
       $scope.changeableModules = changeableModules;
+      $scope.canSaveChangeableModules = canSave;
     }
 
     $scope.saveChangedModules = function () {

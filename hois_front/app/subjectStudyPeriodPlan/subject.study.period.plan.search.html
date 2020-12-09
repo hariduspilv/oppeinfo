@@ -11,15 +11,22 @@
     <fieldset>
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
         <form name="searchForm" ng-submit="load()" layout="column" novalidate >
-            <md-input-container>
-                <label class="textInput">{{'subjectStudyPeriodPlan.studyPeriod' | translate}}</label>
-                <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required sorted-query="true"></hois-select>
-            </md-input-container>
-            <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" ng-model="criteria.curriculum"
-                ha-controller="directiveControllers" ha-search="searchCurriculums" label="subjectStudyPeriodPlan.curriculum"></hois-autocomplete>
-            <hois-autocomplete ha-controller="directiveControllers" ng-model="criteria.subjectObject" url="/subjectStudyPeriodPlans/subjects" name="subject"
-                    label="subjectStudyPeriodPlan.subject"
-                    additional-query-params="subjectQueryParams"></hois-autocomplete>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <hois-autocomplete flex="45" flex-sm="100" flex-xs="100" ng-model="hiddenCriteria.curriculum"
+                               ha-controller="directiveControllers" ha-search="searchCurriculums"
+                               label="subjectStudyPeriodPlan.curriculum"></hois-autocomplete>
+            <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0"
+                               ng-model="hiddenCriteria.curriculumVersion"
+                               ha-controller="directiveControllers" method="curriculumversions"
+                               label="subjectStudyPeriodPlan.curriculumVersion"
+                               additional-query-params="{curriculumId: criteria.curriculum}"></hois-autocomplete>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <hois-autocomplete flex="45" flex-sm="100" flex-xs="100" ha-controller="directiveControllers"
+                               ng-model="hiddenCriteria.subject" url="/subjectStudyPeriodPlans/subjects"
+                               name="subject" label="subjectStudyPeriodPlan.subject"
+                               additional-query-params="subjectQueryParams"></hois-autocomplete>
+          </div>
             <div layout="row">
                 <md-button type="submit" class="md-raised md-primary" ng-click="checkIfStudyPeriodIsPast()">{{'main.button.search' | translate}}</md-button>
                 <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
@@ -50,7 +57,7 @@
                 <td md-cell></td>
                 <td md-cell colspan="{{capacityTypes.length + 1}}"></td>
                 <td md-cell>
-                    <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriodPlans/{{::row.subject.id}}/{{periodId}}/new" ng-disabled="pastStudyPeriodSelected">{{'subjectStudyPeriodPlan.add' | translate}}
+                    <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriodPlans/{{::row.subject.id}}/new">{{'subjectStudyPeriodPlan.add' | translate}}
                     </md-button>
                 </td>
             </tr>
@@ -71,7 +78,7 @@
                     &nbsp;{{getCapacitiesHours(capacityType.code, plan)}}
                 </td>
                 <td md-cell class="cell">
-                    <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriodPlans/{{::plan.id}}/edit" ng-disabled="pastStudyPeriodSelected">{{'main.button.change' | translate}}
+                    <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriodPlans/{{::plan.id}}/edit">{{'main.button.change' | translate}}
                     </md-button>
                 </td>
             </tr>
@@ -89,5 +96,8 @@
     }
     .center {
         text-align: center !important;
+    }
+    table.md-table > tbody + tbody > tr:first-child > td {
+      border-top: 2px solid #525252;
     }
 </style>

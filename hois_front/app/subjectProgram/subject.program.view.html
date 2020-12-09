@@ -138,7 +138,7 @@
                 <fieldset tabindex="2">
                   <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'subject.subjectIsPrerequisite' | translate}}</legend>
                   <div ng-repeat="row in subject.primarySubjects | orderBy: currentLanguageNameField()">
-                    <a class="md-body-1" ng-href="#/subject/{{row.id}}/edit">{{currentLanguageNameField(row)}}</a>
+                    <a class="md-body-1" ng-href="#/subject{{isPublic ? '/public' : ''}}/{{row.id}}">{{currentLanguageNameField(row)}}</a>
                   </div>
                 </fieldset>
               </div>
@@ -166,7 +166,7 @@
                   <md-input-container flex="30">
                     <label>{{'subjectProgram.studyType' | translate}}</label>
                     <hois-classifier-value ng-model="sc.capacityType" main-classifier-code="MAHT" ></hois-classifier-value>
-                  </md-input-container> 
+                  </md-input-container>
                   <md-input-container flex="10">
                     <label>{{'subjectProgram.credits' | translate}}</label>
                     <hois-value type="text" value="sc.capacity" ></hois-value>
@@ -196,7 +196,7 @@
                 <md-input-container flex="30">
                   <label>{{'subjectProgram.studyType' | translate}}</label>
                   <hois-classifier-value ng-model="sc.capacityType" main-classifier-code="MAHT" ></hois-classifier-value>
-                </md-input-container> 
+                </md-input-container>
                 <md-input-container flex="10">
                   <label>{{'subjectProgram.credits' | translate}}</label>
                   <hois-value type="text" value="sc.capacity" ></hois-value>
@@ -334,7 +334,7 @@
       <br>
     </div>
     <md-button class="md-raised md-primary" ng-if="!isPublic && subjectProgram.id
-      && (subjectProgram.subjectStudyPeriodTeacher.teacherId === userTeacherId || (auth.isAdmin() 
+      && (subjectProgram.subjectStudyPeriodTeacher.teacherId === userTeacherId || (auth.isAdmin()
       && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA')))" ng-click="edit()">{{"main.button.change" | translate}}</md-button>
     <md-button class="md-raised" ng-if="!isPublic && subjectProgram.id && (isSupervisor || (auth.isAdmin()
       && isAuthorized('ROLE_OIGUS_M_TEEMAOIGUS_AINEOPPETAJA'))) && subjectProgram.status === 'AINEPROGRAMM_STAATUS_V'"

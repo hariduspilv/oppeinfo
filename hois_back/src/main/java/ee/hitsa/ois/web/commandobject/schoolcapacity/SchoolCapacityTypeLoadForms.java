@@ -1,10 +1,12 @@
 package ee.hitsa.ois.web.commandobject.schoolcapacity;
 
+import javax.validation.Valid;
 import java.util.List;
 
 public class SchoolCapacityTypeLoadForms {
 
     private Long id;
+    @Valid
     private List<SchoolCapacityTypeLoadForm> loads;
     
     public Long getId() {

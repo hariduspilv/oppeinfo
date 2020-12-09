@@ -25,7 +25,6 @@ import javax.transaction.Transactional;
 import javax.validation.Validator;
 
 import ee.hitsa.ois.enums.*;
-import ee.hitsa.ois.exception.AssertionFailedException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -522,7 +521,15 @@ public class ContractService {
      * @return
      */
     public Contract sendToEkis(HoisUserDetails user, Contract contract) {
-        EntityUtil.save(createPracticeJournal(contract, user.getSchoolId()), em);
+    	List<PracticeJournal> practiceJournals = em.createQuery("select pj from PracticeJournal pj where pj.contract.id = ?1", PracticeJournal.class)
+    			.setParameter(1, EntityUtil.getId(contract)).getResultList();
+    	if (practiceJournals == null || practiceJournals.isEmpty()) {
+    		EntityUtil.save(createPracticeJournal(contract, user.getSchoolId()), em);
+    	} else {
+    		for (PracticeJournal practiceJournal : practiceJournals) {
+    			savePracticeJournal(practiceJournal, contract, user.getSchoolId());
+    		}
+    	}
         contract = EntityUtil.save(contract, em);
         boolean firstSend = contract.getWdId() == null;
         ekisService.registerPracticeContract(EntityUtil.getId(contract));
@@ -566,6 +573,33 @@ public class ContractService {
         contract.setConfirmDate(confirmDate);
         setContractStatus(contract, ContractStatus.LEPING_STAATUS_K);
         return EntityUtil.save(contract, em);
+    }
+    
+    /**
+     * EKIS has rejected practice contract.
+     *
+     * @param contractId
+     * @param contractNr
+     * @param confirmDate
+     * @param wdId
+     * @return
+     */
+    public Contract rejectByEkis(long contractId, String comment, long wdId, long schoolId) {
+        Contract contract = findContract(contractId, wdId, schoolId);
+        contract.setWdId(Long.valueOf(wdId));
+        setContractStatus(contract, ContractStatus.LEPING_STAATUS_S);
+        deleteRelatedPracticeJournals(contract, em);
+        return EntityUtil.save(contract, em);
+    }
+    
+    public static void deleteRelatedPracticeJournals(Contract contract, EntityManager em) {
+        List<PracticeJournal> journals = em.createQuery("select pj from PracticeJournal pj "
+        		+ "where pj.contract.id = ?1 "
+        		+ "and not exists(select pje from PracticeJournalEntry pje where pje.practiceJournal = pj)", PracticeJournal.class)
+                .setParameter(1, EntityUtil.getId(contract)).getResultList();
+        for(PracticeJournal pj : journals) {
+            EntityUtil.deleteEntity(pj, em);
+        }
     }
 
     /**
@@ -624,6 +658,32 @@ public class ContractService {
         }
 
         return practiceJournal;
+    }
+    
+    private PracticeJournal savePracticeJournal(PracticeJournal journal, Contract contract, Long schoolId) {
+        PracticeJournal practiceJournal = EntityUtil.bindToEntity(contract, journal, "contract", "school", "studyYear", "status");
+        if (practiceJournal.getPracticePlace() == null) {
+            if (contract.getIsPracticeSchool() != null && contract.getIsPracticeSchool().booleanValue()) {
+                practiceJournal.setPracticePlace("Praktika sooritatakse koolis");
+            } else if (contract.getIsPracticeTelework() != null && contract.getIsPracticeTelework().booleanValue()) {
+                practiceJournal.setPracticePlace("Praktika sooritatakse kaugtööna");
+            }
+        }
+        practiceJournal.setContract(contract);
+        StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
+        if(studyYear == null) {
+            throw new ValidationFailedException("studyYear.missingCurrent");
+        }
+        practiceJournal.setStudyYear(studyYear);
+        practiceJournal.getModuleSubjects().clear();
+        for (ContractModuleSubject contractModuleSubject : contract.getModuleSubjects()) {
+            PracticeJournalModuleSubject moduleSubject = EntityUtil.bindToEntity(contractModuleSubject,
+                    new PracticeJournalModuleSubject());
+            moduleSubject.setPracticeJournal(practiceJournal);
+            practiceJournal.getModuleSubjects().add(moduleSubject);
+        }
+
+        return EntityUtil.save(practiceJournal, em);
     }
 
     private Contract findContract(long contractId, long wdId, long schoolId) {
@@ -689,6 +749,10 @@ public class ContractService {
     }
 
     public Contract cancel(HoisUserDetails user, Contract contract, ContractCancelForm contractForm) {
+        return ekisService.cancelPracticeContract(user, contract, contractForm);
+    }
+    
+    public Contract cancelWithoutEkis(HoisUserDetails user, Contract contract, ContractCancelForm contractForm) {
         EntityUtil.bindToEntity(contractForm, contract, "cancelReason");
         contract.setCancelReason(em.getReference(Classifier.class, contractForm.getCancelReason()));
         Person canceler = em.getReference(Person.class, user.getPersonId());

@@ -1,5 +1,11 @@
 <div layout-padding ng-cloak class="form-readonly">
   <div flex>
+    <div ng-if="resultCard.regNr" layout="row">
+      <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+        <label>{{'student.resultcard.regNr' | translate}}</label>
+        <hois-value value="resultCard.regNr"></hois-value>
+      </md-input-container>
+    </div>
     <div ng-if="resultCard.idcode" layout="row">
       <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
         <label>{{'student.resultcard.idcode' | translate}}</label>

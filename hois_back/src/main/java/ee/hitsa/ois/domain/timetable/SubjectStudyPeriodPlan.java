@@ -38,6 +38,12 @@ public class SubjectStudyPeriodPlan extends BaseEntityWithId {
         return studyPeriod;
     }
 
+    /**
+     * System does not support setting periods starting from 01.12.2020.
+     * Plan is not connected to {@link StudyPeriod} anymore
+     * @param studyPeriod
+     */
+    @Deprecated
     public void setStudyPeriod(StudyPeriod studyPeriod) {
         this.studyPeriod = studyPeriod;
     }

@@ -79,7 +79,10 @@
             <span ng-if="!subjectResult.isFormalLearning && subjectResult.isApelTransfer"> - {{'student.result.informal' | translate}}</span>
           </td>
           <td md-cell>{{subjectResult.subject.code}}</td>
-          <td md-cell>{{subjectResult.subject.credits}}</td>
+          <td md-cell>
+            <span ng-if="subjectResult.consideredReplacedCredits">{{subjectResult.consideredReplacedCredits}} / </span>
+            <span>{{subjectResult.subject.credits}}</span>
+          </td>
           <td md-cell>
             <table>
               <tr class="one-row">
@@ -139,7 +142,10 @@
             <span ng-if="!subjectResult.isFormalLearning && subjectResult.isApelTransfer"> - {{'student.result.informal' | translate}}</span>
           </td>
           <td md-cell>{{subjectResult.subject.code}}</td>
-          <td md-cell>{{subjectResult.subject.credits}}</td>
+          <td md-cell>
+            <span ng-if="subjectResult.consideredReplacedCredits">{{subjectResult.consideredReplacedCredits}} / </span>
+            <span>{{subjectResult.subject.credits}}</span>
+          </td>
           <td md-cell>
             <table>
               <tr>
@@ -186,7 +192,10 @@
                                 filter: {electiveModule: electiveModule.referenceNumber} | orderBy: 'subject.' + currentLanguageNameVariable()">
           <td md-cell>{{currentLanguageNameField(subjectResult.subject)}}</td>
           <td md-cell>{{subjectResult.subject.code}}</td>
-          <td md-cell>{{subjectResult.subject.credits}}</td>
+          <td md-cell>
+            <span ng-if="subjectResult.consideredReplacedCredits">{{subjectResult.consideredReplacedCredits}} / </span>
+            <span>{{subjectResult.subject.credits}}</span>
+          </td>
           <td md-cell>
             <table>
               <tr>

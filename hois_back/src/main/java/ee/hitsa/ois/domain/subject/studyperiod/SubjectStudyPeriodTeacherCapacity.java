@@ -7,6 +7,7 @@ import javax.persistence.ManyToOne;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodCapacity;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodSubgroup;
 
 @Entity
 public class SubjectStudyPeriodTeacherCapacity extends BaseEntityWithId {
@@ -18,6 +19,10 @@ public class SubjectStudyPeriodTeacherCapacity extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(updatable = false, nullable = false)
     private SubjectStudyPeriodTeacher subjectStudyPeriodTeacher;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false, name = "subject_study_period_subgroup_id")
+    private SubjectStudyPeriodSubgroup subgroup;
 
     private Short hours;
 
@@ -43,5 +48,13 @@ public class SubjectStudyPeriodTeacherCapacity extends BaseEntityWithId {
 
     public void setHours(Short hours) {
         this.hours = hours;
+    }
+
+    public SubjectStudyPeriodSubgroup getSubgroup() {
+        return subgroup;
+    }
+
+    public void setSubgroup(SubjectStudyPeriodSubgroup subgroup) {
+        this.subgroup = subgroup;
     }
 }

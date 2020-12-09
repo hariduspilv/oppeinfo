@@ -16,6 +16,7 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.teacher.Teacher;
 
 @Entity
 public class TimetableEvent extends BaseEntityWithId {
@@ -47,6 +48,10 @@ public class TimetableEvent extends BaseEntityWithId {
     private Person person;
 
     private Long juhanEventId;
+    private Boolean isPublic;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Teacher insertedTeacher;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "timetable_event_id", nullable = false, updatable = false)
@@ -164,14 +169,6 @@ public class TimetableEvent extends BaseEntityWithId {
         this.juhanEventId = juhanEventId;
     }
 
-    public List<TimetableEventTime> getTimetableEventTimes() {
-        return timetableEventTimes;
-    }
-
-    public void setTimetableEventTimes(List<TimetableEventTime> timetableEventTimes) {
-        this.timetableEventTimes = timetableEventTimes;
-    }
-
     public School getSchool() {
         return school;
     }
@@ -180,12 +177,35 @@ public class TimetableEvent extends BaseEntityWithId {
         this.school = school;
     }
 
-	public Boolean getIsImported() {
+    public Boolean getIsImported() {
 		return isImported;
 	}
 
-	public void setIsImported(Boolean isImported) {
+    public void setIsImported(Boolean isImported) {
 		this.isImported = isImported;
 	}
 
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+    public Teacher getInsertedTeacher() {
+        return insertedTeacher;
+    }
+
+    public void setInsertedTeacher(Teacher insertedTeacher) {
+        this.insertedTeacher = insertedTeacher;
+    }
+
+    public List<TimetableEventTime> getTimetableEventTimes() {
+        return timetableEventTimes;
+    }
+
+    public void setTimetableEventTimes(List<TimetableEventTime> timetableEventTimes) {
+        this.timetableEventTimes = timetableEventTimes;
+    }
 }

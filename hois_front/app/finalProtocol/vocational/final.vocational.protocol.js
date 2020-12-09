@@ -5,7 +5,7 @@ function ($location, $route, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, Gradin
   var endpoint = '/finalVocationalProtocols';
   $scope.auth = $route.current.locals.auth;
   var clMapper = Classifier.valuemapper({ status: 'PROTOKOLL_STAATUS', studyLevel: 'OPPEASTE' });
-  var studentClMapper = Classifier.valuemapper({ status: 'OPPURSTAATUS' });
+  var studentClMapper = Classifier.valuemapper({ status: 'OPPURSTAATUS', language: 'OPPEKEEL' });
   var gradingSchema, gradeMapper;
   var hiddenGrades = ['KUTSEHINDAMINE_1', 'KUTSEHINDAMINE_X'];
   $scope.formState = {};
@@ -36,8 +36,15 @@ function ($location, $route, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, Gradin
     $q.all(clMapper.promises.concat(gradingSchema.promises)).then(function () {
       $scope.finalProtocolForm.$setPristine();
       $scope.protocol = clMapper.objectmapper(entity);
+      var showLanguageColumn = false;
       $scope.protocol.protocolStudents.forEach(function (protocolStudent) {
         gradeMapper.objectmapper(protocolStudent);
+        if ($route.current.locals.isView) {
+          studentClMapper.objectmapper(protocolStudent);
+        }
+        if (!showLanguageColumn) {
+          showLanguageColumn = protocolStudent.foreignStudyLanguage || protocolStudent.language;
+        }
       });
       $scope.savedStudents = angular.copy($scope.protocol.protocolStudents);
 
@@ -61,6 +68,8 @@ function ($location, $route, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, Gradin
         canAddDeleteStudents: ProtocolUtils.canAddDeleteStudents($scope.auth, $scope.protocol),
         canConfirm: ProtocolUtils.canConfirm($scope.auth, $scope.protocol),
         canChangeConfirmedProtocolGrade: ProtocolUtils.canChangeConfirmedProtocolGrade($scope.auth, $scope.protocol),
+        showLanguageColumn: showLanguageColumn,
+        allowedLanguages: ['OPPEKEEL_E', 'OPPEKEEL_I', 'OPPEKEEL_V'],
         protocolPdfUrl: config.apiUrl + endpoint + '/' + entity.id + '/print/protocol.pdf'
       };
       resolveDeferredIfExists();
@@ -80,6 +89,7 @@ function ($location, $route, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, Gradin
 
   function loadProtocolStudentOccupations() {
     $scope.protocol.protocolStudents.forEach(function (protocolStudent) {
+      protocolStudent.hasCertificates = false;
       if (!protocolStudent.occupations) {
         protocolStudent.occupations = [];
       }
@@ -109,6 +119,10 @@ function ($location, $route, $scope, $q, GRADING_SCHEMA_TYPE, Classifier, Gradin
               granted: true
             };
           }
+        }
+
+        if (!protocolStudent.hasCertificates && curriculumOccupation.studentOccupationCertificateId !== null) {
+          protocolStudent.hasCertificates = true;
         }
       });
     });

@@ -10,8 +10,6 @@ public class SubjectStudyPeriodPlanUniqueCommand {
     
     private Long id;
     @NotNull
-    private Long studyPeriod;
-    @NotNull
     private Long subject;
     private Set<String> studyForms;
     private Set<Long> curriculums;
@@ -19,7 +17,6 @@ public class SubjectStudyPeriodPlanUniqueCommand {
     public static SubjectStudyPeriodPlanUniqueCommand of(SubjectStudyPeriodPlanDto dto) {
         SubjectStudyPeriodPlanUniqueCommand command = new SubjectStudyPeriodPlanUniqueCommand();
         command.setId(dto.getId());
-        command.setStudyPeriod(dto.getStudyPeriod());
         command.setSubject(dto.getSubject());
         command.setStudyForms(dto.getStudyForms());
         command.setCurriculums(dto.getCurriculums());
@@ -31,12 +28,6 @@ public class SubjectStudyPeriodPlanUniqueCommand {
     }
     public void setId(Long id) {
         this.id = id;
-    }
-    public Long getStudyPeriod() {
-        return studyPeriod;
-    }
-    public void setStudyPeriod(Long studyPeriod) {
-        this.studyPeriod = studyPeriod;
     }
     public Long getSubject() {
         return subject;

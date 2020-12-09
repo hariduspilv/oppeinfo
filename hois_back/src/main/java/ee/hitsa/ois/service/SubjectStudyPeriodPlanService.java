@@ -61,6 +61,31 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanSearchDtoContainer;
 @Service
 public class SubjectStudyPeriodPlanService {
 
+    public static final String SQL_JOIN_SELECT_PLAN_BY_SSP =
+            "select distinct on (ssp.id) ssp.id as ssp_id, sspp.id as plan_id," +
+                " case when sg.curriculum_id = ANY (sspp.cids)" +
+                    " then case when sg.study_form_code = ANY (sspp.fids) then 0" +
+                        " when cardinality(sspp.fids) = 0 then 1" +
+                        " else 999 end" +
+                " when cardinality(sspp.cids) = 0" +
+                    " then case when sg.study_form_code = ANY (sspp.fids) then 2" +
+                        " when cardinality(sspp.fids) = 0 then 3" +
+                        " else 999 end" +
+                " else 999 end as priority" +
+            " from subject_study_period ssp" +
+                " left join subject_study_period_student_group sspsg on ssp.id = sspsg.subject_study_period_id" +
+                " left join student_group sg on sspsg.student_group_id = sg.id" +
+                " left join (select sspp.id, sspp.subject_id," +
+                    " array_remove(array_agg(distinct ssppc.curriculum_id), null) as cids," +
+                    " array_remove(array_agg(distinct sspps.study_form_code), null) as fids," +
+                    " sspp.inserted" +
+                    " from subject_study_period_plan sspp" +
+                    " left join subject_study_period_plan_curriculum ssppc on sspp.id = ssppc.subject_study_period_plan_id" +
+                    " left join subject_study_period_plan_studyform sspps on sspp.id = sspps.subject_study_period_plan_id" +
+                    " where sspp.study_period_id is null" +
+                    " group by sspp.id) sspp on sspp.subject_id = ssp.subject_id" +
+            " order by ssp.id, priority, sspp.inserted desc, sspsg.id desc";
+
     @Autowired
     private SubjectStudyPeriodPlanRepository subjectStudyPeriodPlanRepository;
     @Autowired
@@ -85,18 +110,19 @@ public class SubjectStudyPeriodPlanService {
             if(criteria.getSubject() != null) {
                 filters.add(cb.equal(root.get("id"), criteria.getSubject()));
             }
-            Long curriculum = criteria.getCurriculum() != null ? criteria.getCurriculum().getId() : null;
-            if (curriculum != null) {
+            if (criteria.getCurriculum() != null || criteria.getCurriculumVersion() != null) {
                 Subquery<Long> curriculaQuery = query.subquery(Long.class);
                 Root<CurriculumVersion> curriculumVersionRoot = curriculaQuery.from(CurriculumVersion.class);
                 curriculaQuery = curriculaQuery
                         .select(curriculumVersionRoot.join("modules").join("subjects").get("subject").get("id"))
-                        .where(curriculumVersionRoot.get("curriculum").get("id").in(Arrays.asList(curriculum)));
+                        .where(criteria.getCurriculumVersion() != null
+                                ? curriculumVersionRoot.get("id").in(Arrays.asList(criteria.getCurriculumVersion()))
+                                : curriculumVersionRoot.get("curriculum").get("id").in(Arrays.asList(criteria.getCurriculum())));
                 filters.add(root.get("id").in(curriculaQuery));
             }
             
             return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(s -> SubjectStudyPeriodPlanSearchDtoContainer.of(s, criteria.getStudyPeriod()));
+        }, pageable).map(SubjectStudyPeriodPlanSearchDtoContainer::of);
     }
 
     public List<AutocompleteResult> curriculums(Long schoolId, CurriculumSearchCommand criteria) {
@@ -131,19 +157,10 @@ public class SubjectStudyPeriodPlanService {
                 "User and subject have different schools!");
         plan.setSubject(subject);
 
-        StudyPeriod studyPeriod = em.getReference(StudyPeriod.class, form.getStudyPeriod());
-        AssertionFailedException.throwIf(!EntityUtil.getId(studyPeriod.getStudyYear().getSchool()).equals(schoolId),
-                "User and studyPeriod have different schools!");
-        plan.setStudyPeriod(studyPeriod);
-
         return save(schoolId, plan, form);
     }
 
     public SubjectStudyPeriodPlan save(Long schoolId, SubjectStudyPeriodPlan plan, SubjectStudyPeriodPlanDto form) {
-        StudyPeriod studyPeriod = em.getReference(StudyPeriod.class, form.getStudyPeriod());
-        AssertionFailedException.throwIf(studyPeriod.getEndDate().isBefore(LocalDate.now()) ,
-                "Past subjectStudyPeriods cannot be updated or created");
-
         deleteDuplicates(form);
         updateCurriculums(plan, form.getCurriculums(),schoolId);
         updateStudyForms(plan, form.getStudyForms());
@@ -195,14 +212,6 @@ public class SubjectStudyPeriodPlanService {
     }
 
     public void delete(HoisUserDetails user, SubjectStudyPeriodPlan plan) {
-        Long schoolId = user.getSchoolId();
-        StudyPeriod studyPeriod = plan.getStudyPeriod();
-        AssertionFailedException.throwIf(studyPeriod.getEndDate().isBefore(LocalDate.now()),
-                "Past subjectStudyPeriods cannot be deleted");
-
-        AssertionFailedException.throwIf(!EntityUtil.getId(studyPeriod.getStudyYear().getSchool()).equals(schoolId),
-                "User and SubjectStudyPeriodsPlan's schools does not match");
-
         EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(plan, em);
     }
@@ -219,7 +228,6 @@ public class SubjectStudyPeriodPlanService {
         return subjectStudyPeriodPlanRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("subject").get("id"), form.getSubject()));
-            filters.add(cb.equal(root.get("studyPeriod").get("id"), form.getStudyPeriod()));
             
             if(form.getId() != null) {
                 filters.add(cb.notEqual(root.get("id"), form.getId()));

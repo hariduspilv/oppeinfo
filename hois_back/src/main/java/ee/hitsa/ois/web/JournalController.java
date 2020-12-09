@@ -318,7 +318,7 @@ public class JournalController {
     @PostMapping("/addAllSuitableStudentsRequest")
     public Map<String, Object> addAllSuitableStudents(HoisUserDetails user,
             @RequestBody @Valid JournalSuitableStudentsCommand criteria) {
-        JournalUtil.asserCanAddAllSuitableStudents(user);
+        JournalUtil.assertCanAddAllSuitableStudents(user);
         String requestHash = journalAsyncService.addAllSuitableStudentsRequest(user, criteria.getStudyYearId());
         return Collections.singletonMap("key", requestHash);
     }

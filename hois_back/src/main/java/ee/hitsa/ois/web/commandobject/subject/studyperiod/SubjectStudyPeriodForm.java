@@ -32,6 +32,7 @@ public class SubjectStudyPeriodForm  extends VersionedCommand {
     
     private Long moodleCourseId;
     private Boolean capacityDiff;
+    private Short places;
     
     private List<SubjectStudyPeriodSubgroupForm> subgroups;
 
@@ -105,6 +106,14 @@ public class SubjectStudyPeriodForm  extends VersionedCommand {
 
     public void setCapacityDiff(Boolean capacityDiff) {
         this.capacityDiff = capacityDiff;
+    }
+
+    public Short getPlaces() {
+        return places;
+    }
+
+    public void setPlaces(Short places) {
+        this.places = places;
     }
 
     public List<SubjectStudyPeriodSubgroupForm> getSubgroups() {

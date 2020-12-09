@@ -32,7 +32,8 @@ public class CertificateStudentResult {
     private String theme;
     private String outcome;
     private String outcomeEn;
-    private BigDecimal hours;
+    private BigDecimal credits;
+    private BigDecimal consideredReplacedCredits;
     private BigDecimal moduleCredits;
     private String gradeValue;
     private String gradeValueEn;
@@ -57,7 +58,8 @@ public class CertificateStudentResult {
         SubjectSearchDto subject = dto.getSubject();
         result.setSubject(subject.getNameEt());
         result.setSubjectEn(TranslateUtil.getNonNullableNameEn(subject));
-        result.setHours(subject.getCredits());
+        result.setCredits(subject.getCredits());
+        result.setConsideredReplacedCredits(dto.getConsideredReplacedCredits());
         result.setSubjectCode(subject.getCode());
         result.setModule(dto.getHigherModule());
 
@@ -124,7 +126,7 @@ public class CertificateStudentResult {
             // in case of outcomes, it does not have any version code, so we put curriculum code instead
             result.setVersionCode(dto.getCurriculum() != null ? dto.getCurriculum().getCode() : null);
         }
-        result.setHours(dto.getCredits());
+        result.setCredits(dto.getCredits());
         result.setModuleCredits(dto.getModule() != null ? dto.getModule().getCredits() : null);
         result.setOccupationModuleId(dto.getCurriculumVersionModuleId());
         result.setCurriculumId(dto.getCurriculum() != null ? dto.getCurriculum().getId() : null);
@@ -198,12 +200,20 @@ public class CertificateStudentResult {
         this.subject = subject;
     }
 
-    public BigDecimal getHours() {
-        return hours;
+    public BigDecimal getCredits() {
+        return credits;
     }
 
-    public void setHours(BigDecimal hours) {
-        this.hours = hours;
+    public void setCredits(BigDecimal credits) {
+        this.credits = credits;
+    }
+
+    public BigDecimal getConsideredReplacedCredits() {
+        return consideredReplacedCredits;
+    }
+
+    public void setConsideredReplacedCredits(BigDecimal consideredReplacedCredits) {
+        this.consideredReplacedCredits = consideredReplacedCredits;
     }
 
     public String getGradeValue() {

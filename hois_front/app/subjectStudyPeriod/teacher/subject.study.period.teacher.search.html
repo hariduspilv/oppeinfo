@@ -8,15 +8,22 @@
   <fieldset>
     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
     <form name="searchForm" ng-submit="load()" layout="column" novalidate >
-            <div layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="50" flex-sm="100" flex-xs="100">
-                    <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
-                    <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required sorted-query="true"></hois-select>
-                </md-input-container>
-                <hois-autocomplete flex="50" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5" ha-controller="directiveControllers" 
-                ng-model="criteria.teacherObject" url="/subjectStudyPeriods/teachers/page" name="teacher" multiple
-                label="subjectStudyPeriod.teacher"></hois-autocomplete>
-            </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'subjectStudyPeriod.studyYear' | translate}}</label>
+            <hois-select ng-model="criteria.studyYear" values="studyYears" sorted-query="true"></hois-select>
+          </md-input-container>
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-sm="0" flex-offset-xs="0">
+            <label>{{'subjectStudyPeriod.period' | translate}}</label>
+            <hois-select ng-model="criteria.studyPeriod" values="filteredStudyPeriods"
+                         sorted-query="true" ng-disabled="!criteria.studyYear"></hois-select>
+          </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <hois-autocomplete flex="45" flex-sm="100" flex-xs="100" ha-controller="directiveControllers"
+                             ng-model="criteria.teacherObject" url="/subjectStudyPeriods/teachers/page" name="teacher" multiple
+                             label="subjectStudyPeriod.teacher"></hois-autocomplete>
+        </div>
         <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
@@ -36,17 +43,23 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="person.lastname,person.firstname">{{'subjectStudyPeriod.teacher' | translate}}</th>
+            <th md-column md-order-by="p.lastname,p.firstname">{{'subjectStudyPeriod.teacher' | translate}}</th>
+            <th md-column md-order-by="sp.startDate">{{'subjectStudyPeriod.studyPeriod' | translate}}</th>
             <th md-column>{{'subjectStudyPeriod.hoursTotal' | translate}}</th>
+            <th md-column ng-if="auth.school.vocational">{{'subjectStudyPeriod.hoursTotalHigher' | translate}}</th>
+            <th md-column ng-if="auth.school.vocational">{{'subjectStudyPeriod.hoursTotalVocational' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell><a ng-href="#/subjectStudyPeriods/teachers/{{row.id}}/{{criteria.studyPeriod}}/view">{{row.name}}</a></td>
+            <td md-cell><a ng-href="#/subjectStudyPeriods/teachers/{{row.id}}/{{row.studyPeriod.id}}/view">{{row.name}}</a></td>
+            <td md-cell>{{currentLanguageNameField(row.studyPeriod)}}</td>
             <td md-cell>{{row.hours}}</td>
+            <td md-cell ng-if="auth.school.vocational">{{row.higherHours}}</td>
+            <td md-cell ng-if="auth.school.vocational">{{row.vocationalHours}}</td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriods/teachers/{{row.id}}/{{periodId}}/edit">
+              <md-button md-no-ink class="md-primary change-button" ng-if="canEdit" ng-href="#/subjectStudyPeriods/teachers/{{row.id}}/{{row.studyPeriod.id}}/edit">
                 {{'main.button.change' | translate}}
               </md-button>
             </td>

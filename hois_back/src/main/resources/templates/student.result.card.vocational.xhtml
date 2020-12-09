@@ -21,6 +21,9 @@
 				<div class="padding-top"></div>
 				<div class="general-info">
 						<div class="title">{{ "studentresultcard.title" | translate }}</div>
+						{% if card.regNr is not empty %}
+							<div><span>{{ "studentresultcard.regNr" | translate }}: </span><span class="label">{{ card.regNr }}</span></div>
+						{% endif %}
 						{% if card.idcode is not empty %}
 							<div><span>{{ "studentresultcard.idcode" | translate }}: </span><span class="label">{{ card.idcode }}</span></div>
 						{% else %}

@@ -14,6 +14,7 @@ public class StudentVocationalResultModuleThemeDto {
     private Long curriculumVersionModuleId;
     private CurriculumModuleResult module;
     private AutocompleteResult theme;
+    private Short themeStudyYearNumber;
     private AutocompleteResult outcome;
     private CurriculumResult curriculum;
     private BigDecimal credits;
@@ -50,6 +51,14 @@ public class StudentVocationalResultModuleThemeDto {
 
     public void setTheme(AutocompleteResult theme) {
         this.theme = theme;
+    }
+
+    public Short getThemeStudyYearNumber() {
+        return themeStudyYearNumber;
+    }
+
+    public void setThemeStudyYearNumber(Short themeStudyYearNumber) {
+        this.themeStudyYearNumber = themeStudyYearNumber;
     }
 
     public AutocompleteResult getOutcome() {

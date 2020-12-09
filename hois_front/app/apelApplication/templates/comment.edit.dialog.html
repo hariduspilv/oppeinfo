@@ -18,6 +18,12 @@
             <label>{{'apel.addInfo.label' | translate}}</label>
             <textarea ng-model="comment.addInfo" md-maxlength="4000" max-rows="5" required md-autofocus></textarea>
           </md-input-container>
+          <md-input-container ng-if="isStudentAllowed">
+            <md-checkbox ng-model="comment.isStudent" style="margin-bottom: 0px"
+              aria-label="{{'apel.addInfo.isStudent' | translate}}"> 
+              {{'apel.addInfo.isStudent' | translate}} 
+            </md-checkbox>
+          </md-input-container>
         </div>
       </div>
     </md-dialog-content>

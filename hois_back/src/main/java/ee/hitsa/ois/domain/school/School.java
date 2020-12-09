@@ -104,6 +104,10 @@ public class School extends BaseEntityWithId implements Translatable {
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "school", orphanRemoval = true)
     private Set<ScholarshipNoApplication> scholarshipNoApplicationTypes;
 
+    @JsonIgnore
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "school", orphanRemoval = true)
+    private List<SchoolStudentRegNr> schoolStudentRegNrs;
+
     @Override
     public String getNameEt() {
         return nameEt;
@@ -420,6 +424,14 @@ public class School extends BaseEntityWithId implements Translatable {
     public void setScholarshipNoApplicationTypes(Set<ScholarshipNoApplication> scholarshipNoApplicationTypes) {
         getScholarshipNoApplicationTypes().clear();
         getScholarshipNoApplicationTypes().addAll(scholarshipNoApplicationTypes);
+    }
+
+    public List<SchoolStudentRegNr> getSchoolStudentRegNrs() {
+        return schoolStudentRegNrs != null ? schoolStudentRegNrs : (schoolStudentRegNrs = new ArrayList<>());
+    }
+
+    public void setSchoolStudentRegNrs(List<SchoolStudentRegNr> schoolStudentRegNrs) {
+        this.schoolStudentRegNrs = schoolStudentRegNrs;
     }
 
     public Boolean getIsNotAbsence() {

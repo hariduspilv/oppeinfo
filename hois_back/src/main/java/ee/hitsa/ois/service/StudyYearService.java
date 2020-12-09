@@ -1,6 +1,7 @@
 package ee.hitsa.ois.service;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -8,6 +9,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Transactional;
 
+import ee.hitsa.ois.util.JpaQueryUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -195,7 +197,26 @@ public class StudyYearService {
         if (result.isEmpty()) {
             return null;
         }
-        return Long.valueOf(((Number) result.get(0)).longValue());
+        return JpaQueryUtil.resultAsLong(result.get(0), 0);
+    }
+
+    public List<StudyPeriod> getNextStudyPeriods(Long schoolId) {
+        Long currentPeriodId = getCurrentStudyPeriod(schoolId);
+
+        if (currentPeriodId == null) {
+            return Collections.emptyList();
+        }
+
+        return em.createQuery("select sp from StudyPeriod sp" +
+                        " join fetch sp.studyYear sy" +
+                        " where sy.school.id = :schoolId" +
+                        " and sp.startDate > (select sp2.startDate from StudyPeriod sp2" +
+                        " where sp2.studyYear.school.id = :schoolId and sp2.id = :periodId)" +
+                        " order by sp.startDate asc",
+                StudyPeriod.class)
+                .setParameter("schoolId", schoolId)
+                .setParameter("periodId", currentPeriodId)
+                .getResultList();
     }
 
     /**

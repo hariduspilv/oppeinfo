@@ -54,18 +54,18 @@ angular.module('hitsaOis').factory('DataUtils',
       });
       return sortedArray;
     }
-    
+
     function getStudyYearOrPeriodAt(date, list) {
       var sortedList = sortStudyYearsOrPeriods(list);
       return sortedList.find(function (item) {
         return date <= item.endDate;
       });
     }
-    
+
     function getCurrentStudyYearOrPeriod(list) {
       return getStudyYearOrPeriodAt(new Date().withoutTime(), list);
     }
-    
+
     function isPastStudyYearOrPeriod(period) {
       convertStringToDates(period, ["endDate"]);
       return new Date().withoutTime() > period.endDate;
@@ -111,9 +111,9 @@ angular.module('hitsaOis').factory('DataUtils',
 
     /**
      * Decides if object (its `validFrom` and `validThru` ) is valid within given period.
-     * 
-     * @param {Date} startDate 
-     * @param {Date} endDate 
+     *
+     * @param {Date} startDate
+     * @param {Date} endDate
      * @param {Date} validFrom
      * @param {Date} validThru
      */
@@ -170,8 +170,9 @@ angular.module('hitsaOis').factory('DataUtils',
         }, obj);
       },
 
-      hoursToCredits: function(hours) {
-        return Math.round((hours / HOURS_PER_CREDIT_POINT) * 10) / 10;
+      hoursToCredits: function(hours, digitsAfter) {
+        var roundFactor = Math.pow(10, !!digitsAfter ? digitsAfter : 1);
+        return Math.round((hours / HOURS_PER_CREDIT_POINT) * roundFactor) / roundFactor;
       },
 
       getMinutesFromString: function (astroString) {
@@ -198,7 +199,7 @@ angular.module('hitsaOis').factory('DataUtils',
       },
 
       isSameDay: function(date1, date2) {
-        return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && 
+        return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() &&
           date1.getDate() === date2.getDate();
       },
 
@@ -208,14 +209,8 @@ angular.module('hitsaOis').factory('DataUtils',
       },
 
       /**
-       * @callback arrayFilter
-       * @param {Object} obj - object in array
-       * @param {RegExp} regex - regex to test
-       */
-
-      /**
        * Filters the array by given. Text controlled in UPPER case.
-       * 
+       *
        * @param {Array<T>} array - array of given objects
        * @param {String} text - text for filtering
        * @param {arrayFilter} filter - filter with 2 arguments.
@@ -230,19 +225,19 @@ angular.module('hitsaOis').factory('DataUtils',
           return filter(obj, regExp);
         });
       },
-      
+
       /**
        * https://stackoverflow.com/a/49634926
-       * 
-       * @param {String} inputText 
+       *
+       * @param {String} inputText
        */
       linkifyText: function(inputText) {
         if (!inputText) {
           return inputText;
         }
-        
+
         var replacedText, replacePattern1;
-    
+
         //URLs starting with http://, https://, or ftp://
         replacePattern1 = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
         replacedText = inputText.replace(replacePattern1, '<a href="$1" target="_blank">$1</a>');

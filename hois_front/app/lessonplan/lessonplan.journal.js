@@ -412,7 +412,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$loca
     };
 
     $scope.openSubJournal = function (subJournal) {
-      var url = '/lessonplans/journals/' + subJournal.id +'/edit?lessonPlanModule=' + $scope.lessonPlanModule;
+      var url = '/lessonplans/journals/' + subJournal.id +'/edit?_noback&lessonPlanModule=' + $scope.lessonPlanModule;
       if (angular.isDefined($scope.journalForm) && $scope.journalForm.$dirty === true) {
         dialogService.confirmDialog({prompt: 'main.messages.confirmFormDataNotSaved'}, function () {
           $location.url(url);

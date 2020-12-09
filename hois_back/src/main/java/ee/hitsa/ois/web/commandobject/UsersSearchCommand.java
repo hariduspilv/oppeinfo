@@ -20,9 +20,6 @@ public class UsersSearchCommand {
 
     private Long userRole;
     private Long occupation;
-    
-    /** used for declaration student search */
-    private Boolean nextPeriod;
 
     public Long getSchool() {
         return school;
@@ -70,14 +67,6 @@ public class UsersSearchCommand {
 
     public void setOccupation(Long occupation) {
         this.occupation = occupation;
-    }
-
-    public Boolean getNextPeriod() {
-        return nextPeriod;
-    }
-
-    public void setNextPeriod(Boolean nextPeriod) {
-        this.nextPeriod = nextPeriod;
     }
 
     public String getForeignIdcode() {

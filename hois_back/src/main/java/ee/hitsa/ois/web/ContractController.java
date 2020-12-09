@@ -147,6 +147,18 @@ public class ContractController {
         }
         return get(user, contractService.cancel(user, contract, contractForm));
     }
+    
+    @PutMapping("/cancelWithoutEkis/{id:\\d+}")
+    public ContractDto cancelWithoutEkis(HoisUserDetails user,
+            @WithVersionedEntity(versionRequestBody = true) Contract contract,
+            @Valid @RequestBody ContractCancelForm contractForm) {
+        UserUtil.assertIsSchoolAdminOrLeadingTeacher(user, contract.getStudent().getSchool(), Permission.OIGUS_M,
+                PermissionObject.TEEMAOIGUS_LEPING);
+        if (!ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_K, contract.getStatus()) && !ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_Y, contract.getStatus())) {
+            throw new ValidationFailedException("contract.messages.updatingOnlyAllowedForStatusKandY");
+        }
+        return get(user, contractService.cancelWithoutEkis(user, contract, contractForm));
+    }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user,

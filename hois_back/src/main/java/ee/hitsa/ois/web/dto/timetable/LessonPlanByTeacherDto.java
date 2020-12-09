@@ -30,12 +30,14 @@ public class LessonPlanByTeacherDto {
     private final List<LessonPlanModuleJournalDto> journals;
     private final List<LessonPlanByTeacherSubjectDto> subjects;
     private final Map<Long, Map<String, Long>> subjectTotals;
+    private final Map<Long, Map<String, Long>> subjectContactTotals;
     private final List<LocalDate> weekBeginningDates;
     private List<LessonPlanTeacherDto> teachers;
     private List<ClassifierDto> lessonPlanCapacities;
 
     public LessonPlanByTeacherDto(StudyYear studyYear, List<Journal> journals, List<LessonPlanByTeacherSubjectDto> subjects,
-            Map<Long, Map<String, Long>> subjectTotals, Teacher teacher) {
+                                  Map<Long, Map<String, Long>> subjectTotals, Map<Long, Map<String, Long>> subjectContactTotals,
+                                  Teacher teacher) {
         studyYearCode = EntityUtil.getCode(studyYear.getYear());
         teacherName = teacher.getPerson().getFullname();
         studyPeriods = studyYear.getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate))
@@ -50,6 +52,7 @@ public class LessonPlanByTeacherDto {
                 .collect(Collectors.toList());
         this.subjects = subjects;
         this.subjectTotals = subjectTotals;
+        this.subjectContactTotals = subjectContactTotals;
     }
 
     public String getStudyYearCode() {
@@ -100,6 +103,9 @@ public class LessonPlanByTeacherDto {
         this.lessonPlanCapacities = lessonPlanCapacities;
     }
 
+    public Map<Long, Map<String, Long>> getSubjectContactTotals() {
+        return subjectContactTotals;
+    }
 
     public static class LessonPlanByTeacherSubjectDto {
         private final Long id;
@@ -107,8 +113,10 @@ public class LessonPlanByTeacherDto {
         private final String nameEn;
         private String groupProportion;
         private Map<Long, Map<String, Long>> hours = new HashMap<>();
+        private Map<Long, Map<String, Long>> contactHours = new HashMap<>();
         private final List<LessonPlanByTeacherSubjectStudentGroupDto> studentGroups = new ArrayList<>();
         private Map<Long, Map<String, Long>> capacityTotals = new HashMap<>();
+        private Map<Long, Map<String, Long>> contactCapacityTotals = new HashMap<>();
 
         public LessonPlanByTeacherSubjectDto(Long id, String nameEt, String nameEn) {
             this.id = id;
@@ -155,25 +163,56 @@ public class LessonPlanByTeacherDto {
         public void setCapacityTotals(Map<Long, Map<String, Long>> capacityTotals) {
             this.capacityTotals = capacityTotals;
         }
-        
+
+        public Map<Long, Map<String, Long>> getContactHours() {
+            return contactHours;
+        }
+
+        public void setContactHours(Map<Long, Map<String, Long>> contactHours) {
+            this.contactHours = contactHours;
+        }
+
+        public Map<Long, Map<String, Long>> getContactCapacityTotals() {
+            return contactCapacityTotals;
+        }
+
+        public void setContactCapacityTotals(Map<Long, Map<String, Long>> contactCapacityTotals) {
+            this.contactCapacityTotals = contactCapacityTotals;
+        }
     }
 
     public static class LessonPlanByTeacherSubjectStudentGroupDto {
         private final List<String> studentGroups;
+        private final Integer subgroups;
         // {study period: {capacity type: hours}}
         private final Map<Long, Map<String, Long>> hours;
+        private final Map<Long, Map<String, Long>> contactHours;
 
-        public LessonPlanByTeacherSubjectStudentGroupDto(List<String> studentGroups, Map<Long, Map<String, Long>> hours) {
+        public LessonPlanByTeacherSubjectStudentGroupDto(
+                List<String> studentGroups,
+                Map<Long, Map<String, Long>> hours,
+                Map<Long, Map<String, Long>> contactHours,
+                Integer subgroups) {
             this.studentGroups = studentGroups;
             this.hours = hours;
+            this.contactHours = contactHours;
+            this.subgroups = subgroups;
         }
 
         public List<String> getStudentGroups() {
             return studentGroups;
         }
 
+        public Integer getSubgroups() {
+            return subgroups;
+        }
+
         public Map<Long, Map<String, Long>> getHours() {
             return hours;
+        }
+
+        public Map<Long, Map<String, Long>> getContactHours() {
+            return contactHours;
         }
     }
 }

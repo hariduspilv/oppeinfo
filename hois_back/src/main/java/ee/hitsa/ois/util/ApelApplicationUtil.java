@@ -1,9 +1,10 @@
 package ee.hitsa.ois.util;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.apelapplication.ApelApplication;
+import ee.hitsa.ois.domain.apelapplication.ApelApplicationCommittee;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApelApplicationStatus;
@@ -58,6 +59,23 @@ public abstract class ApelApplicationUtil {
                 || ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status)) {
             return UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA)
                     && UserUtil.isSchoolAdminOrLeadingTeacher(user, application.getStudent());
+        }
+        return false;
+    }
+    
+    public static boolean canComment(HoisUserDetails user, ApelApplication application) {
+        String status = EntityUtil.getCode(application.getStatus());
+        if (UserUtil.isStudent(user, application.getStudent())) {
+            return ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status);
+        } else if (ApelApplicationStatus.VOTA_STAATUS_K.name().equals(status)
+                || ApelApplicationStatus.VOTA_STAATUS_E.name().equals(status)) {
+            return UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA)
+                    && UserUtil.isSchoolAdminOrLeadingTeacher(user, application.getStudent());
+        } else if (ApelApplicationStatus.VOTA_STAATUS_V.name().equals(status)) {
+            return ((UserUtil.isTeacher(user, application.getSchool()) || UserUtil.isSchoolAdminOrLeadingTeacher(user, application.getStudent())) 
+            		&& isCommitteeMember(user, application))
+            		|| (UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA)
+                    && UserUtil.isSchoolAdminOrLeadingTeacher(user, application.getStudent()));
         }
         return false;
     }
@@ -127,13 +145,26 @@ public abstract class ApelApplicationUtil {
         }
         return false;
     }
+    
+    public static boolean canAdminOrChairmanChangeWhileBeingConfirmed(HoisUserDetails user, ApelApplication application) {
+        if (ApelApplicationStatus.VOTA_STAATUS_V.name().equals(EntityUtil.getCode(application.getStatus()))
+                && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTAKOM)) {
+            if (UserUtil.isSchoolAdmin(user, application.getSchool())) {
+                return true;
+            } else if (UserUtil.isTeacher(user, application.getSchool())
+                    || UserUtil.isLeadingTeacher(user, application.getSchool())) {
+                return isCommitteeChairman(user, application);
+            }
+        }
+        return false;
+    }
 
     public static boolean canSendToConfirm(HoisUserDetails user, ApelApplication application) {
         if (ApelApplicationStatus.VOTA_STAATUS_E.name().equals(EntityUtil.getCode(application.getStatus()))) {
             return UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA)
                     && UserUtil.isSchoolAdminOrLeadingTeacher(user, application.getStudent());
         }
-        return canReview(user, application);
+        return canAdminOrChairmanChangeWhileBeingConfirmed(user, application);
     }
 
     public static boolean canSendToCommittee(HoisUserDetails user, ApelApplication application) {
@@ -145,11 +176,8 @@ public abstract class ApelApplicationUtil {
     }
 
     public static boolean canSendBackToCreation(HoisUserDetails user, ApelApplication application) {
-        if (ApelApplicationStatus.VOTA_STAATUS_E.name().equals(EntityUtil.getCode(application.getStatus()))) {
-            return UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA)
-                    && UserUtil.isSchoolAdminOrLeadingTeacher(user, application.getStudent());
-        }
-        return canReview(user, application);
+        /** Same rights as 'canSendToConfirm */
+        return canSendToConfirm(user, application);
     }
 
     public static boolean canConfirm(HoisUserDetails user, ApelApplication application) {
@@ -183,15 +211,31 @@ public abstract class ApelApplicationUtil {
             return UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_VOTA)
                     && UserUtil.isSchoolAdminOrLeadingTeacher(user, application.getStudent());
         }
-        return canReview(user, application);
+        return canAdminOrChairmanChangeWhileBeingConfirmed(user, application);
     }
 
     public static boolean isCommitteeMember(HoisUserDetails user, ApelApplication application) {
-        Committee committee = application.getCommittee();
-        if (committee == null) {
+        List<ApelApplicationCommittee> committees = application.getCommittees();
+        if (committees == null) {
             return false;
         }
-        List<Long> members = StreamUtil.toMappedList(m -> EntityUtil.getId(m.getPerson()), committee.getMembers());
+        List<Long> members = committees.stream()
+                .map(p -> p.getCommittee())
+                .flatMap(p -> p.getMembers().stream())
+                .map(p -> EntityUtil.getId(p.getPerson())).collect(Collectors.toList());
+        return members.contains(user.getPersonId());
+    }
+    
+    public static boolean isCommitteeChairman(HoisUserDetails user, ApelApplication application) {
+        List<ApelApplicationCommittee> committees = application.getCommittees();
+        if (committees == null) {
+            return false;
+        }
+        List<Long> members = committees.stream()
+            .map(p -> p.getCommittee())
+            .flatMap(p -> p.getMembers().stream())
+            .filter(p -> Boolean.TRUE.equals(p.getIsChairman()))
+            .map(p -> EntityUtil.getId(p.getPerson())).collect(Collectors.toList());
         return members.contains(user.getPersonId());
     }
 

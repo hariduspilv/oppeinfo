@@ -14,7 +14,7 @@
             <input ng-model="criteria.idcode" name="idcode" type="text" minlength="11" md-maxlength="11">
           </md-input-container>
         </div>
-        
+
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'student.curriculum' | translate}}</label>
@@ -31,7 +31,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'student.studyForm' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.studyForm" criteria="{vocational: true}" name="studyForm" 
+            <hois-classifier-select ng-model="criteria.studyForm" criteria="{vocational: true}" name="studyForm"
               model-value-attr="code" main-classifier-code="OPPEVORM" multiple></hois-classifier-select>
           </md-input-container>
 
@@ -61,6 +61,7 @@
             <th md-column md-order-by="person.lastname,person.firstname">{{'student.name' | translate}}</th>
             <th md-column md-order-by="studentGroup.code">{{'student.studentGroup' | translate}}</th>
             <th md-column md-order-by="person.idcode">{{'student.idcode' | translate}}</th>
+            <th md-column md-order-by="s.regNr">{{'student.regNr' | translate}}</th>
             <th md-column md-order-by="curriculumVersion.code">{{'student.curriculum' | translate}}</th>
             <th md-column md-order-by="{{currentLanguage()==='en' ? 'studyForm.nameEn' : 'studyForm.nameEt'}}">{{'student.studyForm' | translate}}</th>
             <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}">{{'student.status' | translate}}</th>
@@ -73,6 +74,7 @@
             </td>
             <td md-cell>{{currentLanguageNameField(row.studentGroup)}}</td>
             <td md-cell>{{::row.idcode}}</td>
+            <td md-cell>{{::row.regNr}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
             <td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
@@ -90,4 +92,3 @@
     <md-button class="md-raised" ng-click="print()" ng-disabled="selectedStudents.length === 0">{{'student.resultcard.print' | translate}}</md-button>
   </div>
 </div>
-  
