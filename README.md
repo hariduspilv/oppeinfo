@@ -16,11 +16,11 @@ EELDUS: ver. 2.4.0/20201112
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
 
-KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20201210.sql
+KIRJELDUS: olemasolev andmebaas "hois" täiendatakse. Andmebaasi skript on db/install20201210.sql ja db/install20201210_1.sql
 EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
 
 Andmebaasi installeerimiseks:
-1. käivitada install20201210.sql skript, nt
+1. käivitada install20201210 ja install20201210_1.sql.sql skript, nt
    
    psql -h devhois -f install20201210.sql 2>&1 | tee log.txt
    
