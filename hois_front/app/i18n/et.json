@@ -3757,7 +3757,7 @@
         "relationToTimetable": "Puudub päevik",
         "journalNotFound": "Puudub päevik",
         "wrongSchool": "Puudub päevik"
-      },
+      }, 
       "messages": {
         "invalidDocument": "Dokumendi formaat on vale",
         "cardInfo": "{{day}}, tund {{period}}\nTunni id: {{lessonId}}\nPäevik: {{subject}}",
@@ -3765,6 +3765,7 @@
         "notFoundGroup": "Puudub õpperühm: {{groups}}",
         "notFoundRoom": "Puudub ruum: {{rooms}}",
         "notFoundEverything": "Puuduvad õpetaja, ruum ja õpperühm",
+		"notFoundStudent": "Puudub õppija: {{students}}",
         "noLesson": "Tunnil puuduvad andmed",
         "notAdded": "Tund ei ole lisatud",
         "wrongPeriod": "Puudub tunni algus- ja/või lõppaeg"
@@ -3811,6 +3812,7 @@
       "studyPeriod": "Õppeperiood",
       "type": "Tunniplaani liik",
       "selectCopyTarget": "Tunniplaan millesse tunnid lisada",
+      "individualTimetable": "Individ. tunniplaan",	  
       "difference": "Erinevus XLS",
       "plan": "Plaan XLSX",
       "xmlExport": "Tunniplaani eksport",
